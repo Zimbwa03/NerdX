@@ -52,7 +52,7 @@ def is_user_registered(whatsapp_id: str) -> bool:
             return False
         
         cursor = conn.cursor()
-        cursor.execute("SELECT 1 FROM users WHERE whatsapp_id = %s", (whatsapp_id,))
+        cursor.execute("SELECT 1 FROM users_registration WHERE chat_id = %s", (whatsapp_id,))
         result = cursor.fetchone()
         
         conn.close()
@@ -71,17 +71,27 @@ def get_user_registration(whatsapp_id: str) -> Optional[Dict]:
         
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         cursor.execute("""
-            SELECT whatsapp_id, nerdx_id, name, surname, date_of_birth, 
-                   phone_number, email, credits, total_points, streak_count,
-                   last_activity, referred_by, is_active, created_at
-            FROM users WHERE whatsapp_id = %s
+            SELECT chat_id as whatsapp_id, nerdx_id, name, surname, date_of_birth, 
+                   referred_by_nerdx_id as referred_by, created_at
+            FROM users_registration WHERE chat_id = %s
         """, (whatsapp_id,))
         
         result = cursor.fetchone()
         conn.close()
         
         if result:
-            return dict(result)
+            # Add default values for fields not in users_registration table
+            user_dict = dict(result)
+            user_dict.update({
+                'phone_number': whatsapp_id,  # Use WhatsApp ID as phone
+                'email': None,
+                'credits': 50,  # Default credits
+                'total_points': 0,
+                'streak_count': 0,
+                'last_activity': None,
+                'is_active': True
+            })
+            return user_dict
         return None
         
     except Exception as e:
@@ -97,23 +107,36 @@ def create_user_registration(user_data: Dict) -> bool:
         
         cursor = conn.cursor()
         
-        # Convert date string to date object if needed
+        # Use date of birth as string (matches schema)
         dob = user_data.get('date_of_birth')
-        if isinstance(dob, str):
-            dob = datetime.strptime(dob, '%d/%m/%Y').date()
         
         cursor.execute("""
+            INSERT INTO users_registration (chat_id, nerdx_id, name, surname, date_of_birth, 
+                                          referred_by_nerdx_id, created_at, updated_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """, (
+            user_data['whatsapp_id'],  # chat_id = whatsapp_id
+            user_data['nerdx_id'],
+            user_data['name'],
+            user_data['surname'],
+            dob,  # Keep as string
+            user_data.get('referred_by'),
+            datetime.utcnow(),
+            datetime.utcnow()
+        ))
+        
+        # Also create entry in users table for credits tracking
+        cursor.execute("""
             INSERT INTO users (whatsapp_id, nerdx_id, name, surname, date_of_birth, 
-                             phone_number, email, credits, referred_by, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                             phone_number, credits, referred_by, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """, (
             user_data['whatsapp_id'],
             user_data['nerdx_id'],
             user_data['name'],
             user_data['surname'],
             dob,
-            user_data.get('phone_number'),
-            user_data.get('email'),
+            user_data['whatsapp_id'],  # Use WhatsApp ID as phone
             50,  # Welcome credits
             user_data.get('referred_by'),
             datetime.utcnow()
@@ -137,8 +160,22 @@ def get_user_credits(user_id: str) -> int:
             return 0
         
         cursor = conn.cursor()
+        # First check users table for credits
         cursor.execute("SELECT credits FROM users WHERE whatsapp_id = %s", (user_id,))
         result = cursor.fetchone()
+        
+        # If not found in users table, check if they exist in users_registration
+        if not result:
+            cursor.execute("SELECT 1 FROM users_registration WHERE chat_id = %s", (user_id,))
+            reg_result = cursor.fetchone()
+            if reg_result:
+                # User exists in registration but not in users table, create users entry
+                cursor.execute("""INSERT INTO users (whatsapp_id, credits, created_at) 
+                                  VALUES (%s, %s, %s) ON CONFLICT (whatsapp_id) DO NOTHING""",
+                              (user_id, 50, datetime.utcnow()))
+                conn.commit()
+                conn.close()
+                return 50
         
         conn.close()
         return result[0] if result else 0
