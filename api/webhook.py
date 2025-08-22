@@ -384,65 +384,43 @@ def send_main_menu(user_id: str, user_name: str = None):
             welcome_text = "🎓 *I'm NerdX a Combined Science Bot for ZIMSEC Board* 🎓\n\n"
             welcome_text += "🌟 *Welcome to your personalized ZIMSEC Combined Science learning companion!*\n\n"
 
-        if user_name:
-            welcome_text += f"✨ *What I Can Do For You, {user_name}:*\n"
-        else:
-            welcome_text += "✨ *What I Can Do For You:*\n"
-            
-        welcome_text += "🧬 Biology • ⚗️ Chemistry • ⚡ Physics\n"
-        welcome_text += "🤖 AI-Generated Questions\n"
-        welcome_text += "📈 Progress Tracking & Analytics\n"
-        welcome_text += "💡 Detailed Step-by-Step Explanations\n"
-        welcome_text += "🏆 Achievement System & Rewards\n"
-        welcome_text += "📷 Math Problem Solving from Images\n\n"
+        # Clean and concise feature list
+        welcome_text += f"✨ *Features:* 🧬 Biology • ⚗️ Chemistry • ⚡ Physics • 📰 Math • 📝 English\n"
+        welcome_text += f"🤖 AI Questions • 📊 Progress Tracking • 🎤 Audio Chat\n\n"
         
-        if user_name:
-            welcome_text += f"📊 *{user_name}'s Academic Profile:*\n"
-        else:
-            welcome_text += f"📊 *Your Academic Profile:*\n"
-            
+        # User stats in compact format
         level = user_stats.get('level', 1)
         xp_points = user_stats.get('xp_points', 0)
         correct_answers = user_stats.get('correct_answers', 0)
         success_rate = (correct_answers/max(total_attempts,1)*100) if total_attempts > 0 else 0
         
-        welcome_text += f"🎯 Level: {level} | ⭐ XP: {xp_points}\n"
-        welcome_text += f"💳 Credits Available: *{current_credits}*\n"
-        welcome_text += f"📚 Questions Completed: {total_attempts}\n"
-        welcome_text += f"✅ Success Rate: {success_rate:.1f}%\n\n"
-        
-        if user_name:
-            welcome_text += f"🎁 *Hey {user_name}!* Share NerdX with friends and get *50 FREE CREDITS* for each friend who registers!\n\n"
-            welcome_text += f"🚀 *Ready to boost your ZIMSEC performance, {user_name}?* Let's achieve greatness together!"
-        else:
-            welcome_text += f"🎁 *BONUS:* Share NerdX with friends and get *50 FREE CREDITS* for each friend who registers!\n\n"
-            welcome_text += "🚀 Ready to boost your ZIMSEC performance? Let's get started!"
+        welcome_text += f"📊 Level {level} • ⭐ {xp_points} XP • 💳 {current_credits} Credits\n"
+        welcome_text += f"📚 {total_attempts} Questions • ✅ {success_rate:.1f}% Success\n\n"
+        welcome_text += f"🎁 Share with friends = 50 FREE CREDITS each!"
 
-        # Use list message for main menu to show all 5 options (WhatsApp button limit is 3)
+        # Send first 3 main buttons
         if current_credits < 20:  # Low credits - emphasize buying
-            sections = [{
-                'title': 'Main Menu',
-                'rows': [
-                    {"id": "start_quiz", "title": "🎯 Start Quiz", "description": "Begin your ZIMSEC journey"},
-                    {"id": "buy_credits", "title": "💎 Buy Credits", "description": "Get more credits to continue"},
-                    {"id": "audio_chat_menu", "title": "🎤 Audio Chat", "description": "Voice learning experience"},
-                    {"id": "share_to_friend", "title": "📤 Share to Friend", "description": "Earn 50 credits per referral"},
-                    {"id": "referrals_menu", "title": "👥 Referrals", "description": "View your referral stats"}
-                ]
-            }]
+            main_buttons = [
+                {"id": "start_quiz", "title": "🎯 Start Quiz"},
+                {"id": "buy_credits", "title": "💎 Buy Credits"},
+                {"id": "audio_chat_menu", "title": "🎤 Audio Chat"}
+            ]
         else:  # Normal credit level
-            sections = [{
-                'title': 'Main Menu',
-                'rows': [
-                    {"id": "start_quiz", "title": "🎯 Start Quiz", "description": "Begin your ZIMSEC journey"},
-                    {"id": "audio_chat_menu", "title": "🎤 Audio Chat", "description": "Voice learning experience"},
-                    {"id": "buy_credits", "title": "💎 Buy Credits", "description": "Get more credits"},
-                    {"id": "share_to_friend", "title": "📤 Share to Friend", "description": "Earn 50 credits per referral"},
-                    {"id": "referrals_menu", "title": "👥 Referrals", "description": "View your referral stats"}
-                ]
-            }]
+            main_buttons = [
+                {"id": "start_quiz", "title": "🎯 Start Quiz"},
+                {"id": "audio_chat_menu", "title": "🎤 Audio Chat"},
+                {"id": "buy_credits", "title": "💎 Buy Credits"}
+            ]
 
-        whatsapp_service.send_list_message(user_id, "🎓 NerdX Menu", welcome_text, sections)
+        whatsapp_service.send_interactive_message(user_id, welcome_text, main_buttons)
+        
+        # Send additional buttons separately
+        additional_buttons = [
+            {"id": "share_to_friend", "title": "📤 Share to Friend"},
+            {"id": "referrals_menu", "title": "👥 Referrals"}
+        ]
+        
+        whatsapp_service.send_interactive_message(user_id, "💎 *More Options:*", additional_buttons)
         
     except Exception as e:
         logger.error(f"Error sending main menu: {e}")
