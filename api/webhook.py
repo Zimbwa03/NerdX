@@ -83,20 +83,27 @@ def handle_webhook():
             logger.warning(f"Invalid WhatsApp ID: {user_id}")
             return jsonify({'status': 'invalid_user_id'}), 400
         
-        # Check rate limiting - check_session_rate_limit returns True when rate limited
-        if rate_limiter.check_session_rate_limit(user_id, 'message'):
-            whatsapp_service.send_message(
-                user_id, 
-                f"⏳ Please wait before sending another message. You're being rate limited to prevent spam."
-            )
-            return jsonify({'status': 'rate_limited'}), 200
-        
         # Handle different message types
         if message_type == 'text':
+            # Check rate limiting for text messages only
+            if rate_limiter.check_session_rate_limit(user_id, 'text_message'):
+                whatsapp_service.send_message(
+                    user_id, 
+                    f"⏳ Please wait before sending another message. You're being rate limited to prevent spam."
+                )
+                return jsonify({'status': 'rate_limited'}), 200
             handle_text_message(user_id, message_text)
         elif message_type == 'image':
+            # Check rate limiting for image processing
+            if rate_limiter.check_session_rate_limit(user_id, 'image_message'):
+                whatsapp_service.send_message(
+                    user_id, 
+                    f"⏳ Please wait before sending another image. Processing takes time."
+                )
+                return jsonify({'status': 'rate_limited'}), 200
             handle_image_message(user_id, message['image'])
         elif message_type == 'interactive':
+            # No rate limiting for menu navigation - handled internally for specific actions
             handle_interactive_message(user_id, message['interactive'])
         
         return jsonify({'status': 'success'}), 200
@@ -466,6 +473,20 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         if not selection_id:
             return
         
+        # Define actions that need rate limiting (content generation/expensive operations)
+        rate_limited_actions = [
+            'science_',  # Topic selection that generates questions
+            'generate_',  # Question generation
+            'package_',  # Payment processing
+        ]
+        
+        # Check if this action needs rate limiting
+        needs_rate_limit = any(selection_id.startswith(action) for action in rate_limited_actions)
+        
+        if needs_rate_limit and rate_limiter.check_session_rate_limit(user_id, f"action_{selection_id}"):
+            whatsapp_service.send_message(user_id, "⏳ Please wait before performing this action again.")
+            return
+        
         if selection_id.startswith('subject_'):
             subject = selection_id.replace('subject_', '').title()
             handle_subject_selection(user_id, subject)
@@ -512,13 +533,13 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         # Add handlers for the Combined Science buttons
         elif selection_id.startswith('science_'):
             subject = selection_id.replace('science_', '')
-            # Add rate limiting check before proceeding
-            if not rate_limiter.check_session_rate_limit(user_id, f"science_topic_{subject}"):
-                # Handle Combined Science topic selection
+            # Handle Combined Science topic selection
+            try:
                 from modules.combined_science_handlers import handle_topic_selection
                 handle_topic_selection(user_id, whatsapp_service, subject)
-            else:
-                whatsapp_service.send_message(user_id, "⏳ Please wait before selecting another topic.")
+            except ImportError:
+                # Fallback if module doesn't exist
+                whatsapp_service.send_message(user_id, f"🧬 {subject} questions coming soon!")
         elif selection_id == 'combined_exam':
             # Handle combined exam
             whatsapp_service.send_message(user_id, "🌟 Combined Exam feature coming soon!")
