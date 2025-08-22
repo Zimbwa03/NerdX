@@ -533,16 +533,28 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         # Add handlers for the Combined Science buttons
         elif selection_id.startswith('science_'):
             subject = selection_id.replace('science_', '')
-            # Handle Combined Science topic selection
-            try:
-                from modules.combined_science_handlers import handle_topic_selection
-                handle_topic_selection(user_id, whatsapp_service, subject)
-            except ImportError:
-                # Fallback if module doesn't exist
-                whatsapp_service.send_message(user_id, f"🧬 {subject} questions coming soon!")
+            handle_science_resources_menu(user_id, subject)
         elif selection_id == 'combined_exam':
-            # Handle combined exam
-            whatsapp_service.send_message(user_id, "🌟 Combined Exam feature coming soon!")
+            handle_combined_exam(user_id)
+        elif selection_id.startswith('resource_'):
+            # Handle resource type selection (questions/notes)
+            parts = selection_id.replace('resource_', '').split('_', 1)
+            if len(parts) == 2:
+                resource_type, subject = parts
+                if resource_type == 'questions':
+                    handle_topic_menu(user_id, subject)
+                elif resource_type == 'notes':
+                    handle_notes_menu(user_id, subject)
+        elif selection_id.startswith('topic_'):
+            # Handle topic selection for questions
+            parts = selection_id.replace('topic_', '').split('_', 1)
+            if len(parts) == 2:
+                subject, topic = parts
+                handle_smart_question_generation(user_id, subject, topic)
+        elif selection_id.startswith('answer_'):
+            # Handle quiz answers
+            answer = selection_id.replace('answer_', '')
+            handle_quiz_answer(user_id, answer)
         elif selection_id.startswith('math_'):
             # Handle math menu selections
             math_action = selection_id.replace('math_', '')
@@ -1046,6 +1058,210 @@ def handle_audio_chat_message(user_id: str, message_text: str):
     except Exception as e:
         logger.error(f"Error handling audio chat message: {e}")
         whatsapp_service.send_message(user_id, "❌ Error processing your message. Please try again or type 'menu' to return.")
+
+def handle_science_resources_menu(user_id: str, subject: str):
+    """Show learning resources for a science subject"""
+    try:
+        text = f"📚 *{subject} Learning Resources:*\nChoose how you want to learn:"
+
+        buttons = [
+            {"text": "❓ Questions", "callback_data": f"resource_questions_{subject}"},
+            {"text": "📝 Notes", "callback_data": f"resource_notes_{subject}"},
+            {"text": "🔙 Back", "callback_data": "subject_ordinary_combined_science"}
+        ]
+
+        whatsapp_service.send_interactive_message(user_id, text, buttons)
+        
+    except Exception as e:
+        logger.error(f"Error handling science resources menu: {e}")
+
+def handle_topic_menu(user_id: str, subject: str):
+    """Show topic selection menu for a subject"""
+    try:
+        from constants import TOPICS
+        
+        topics = TOPICS.get(subject, [])
+        if not topics:
+            whatsapp_service.send_message(user_id, "❌ No topics available for this subject.")
+            return
+
+        text = f"📖 *{subject} Topics:*\nSelect a topic for your quiz:"
+
+        # Send topics in groups of 3 for WhatsApp compatibility
+        for i in range(0, len(topics), 3):
+            topic_group = topics[i:i+3]
+            buttons = []
+
+            for topic in topic_group:
+                callback_data = f"topic_{subject}_{topic.replace(' ', '_')}"
+                buttons.append({"text": topic[:20], "callback_data": callback_data})
+
+            if i == 0:
+                group_text = text
+            else:
+                group_text = f"📖 *{subject} Topics (Part {i//3 + 1}):*"
+            
+            whatsapp_service.send_interactive_message(user_id, group_text, buttons)
+
+        # Add back button
+        back_buttons = [{"text": "🔙 Back", "callback_data": f"science_{subject}"}]
+        whatsapp_service.send_interactive_message(user_id, "Choose an option:", back_buttons)
+        
+    except Exception as e:
+        logger.error(f"Error handling topic menu: {e}")
+
+def handle_notes_menu(user_id: str, subject: str):
+    """Show notes menu for a subject"""
+    try:
+        text = f"📝 *{subject} Notes:*\nSelect a topic to read comprehensive notes:"
+        
+        from constants import TOPICS
+        topics = TOPICS.get(subject, [])
+        
+        buttons = []
+        for topic in topics:
+            callback_data = f"notes_{subject}_{topic.replace(' ', '_')}"
+            buttons.append({"text": topic[:20], "callback_data": callback_data})
+
+        buttons.append({"text": "🔙 Back", "callback_data": f"science_{subject}"})
+
+        # Send in groups of 3 for WhatsApp compatibility
+        for i in range(0, len(buttons), 3):
+            button_group = buttons[i:i+3]
+            group_text = f"📝 *{subject} Notes (Part {i//3 + 1}):*" if i > 0 else text
+            whatsapp_service.send_interactive_message(user_id, group_text, button_group)
+            
+    except Exception as e:
+        logger.error(f"Error handling notes menu: {e}")
+
+def handle_combined_exam(user_id: str):
+    """Handle Combined Exam - questions from all subjects"""
+    try:
+        # Check if user is registered
+        from database.external_db import is_user_registered, get_user_credits, deduct_credits
+        
+        if not is_user_registered(user_id):
+            message = """🚫 *Registration Required*
+            
+Please register first to access Combined Exam features.
+
+Send 'register' to create your account."""
+            
+            buttons = [
+                {"text": "📝 Register Now", "callback_data": "register"},
+                {"text": "❓ Help", "callback_data": "help"}
+            ]
+            
+            return whatsapp_service.send_interactive_message(user_id, message, buttons)
+        
+        # Check credits for Combined Exam
+        credits_cost = 15  # 15 credits for combined exam
+        current_credits = get_user_credits(user_id)
+        
+        if current_credits < credits_cost:
+            message = f"❌ *Insufficient Credits for Combined Exam*\n\n"
+            message += f"Combined Exam requires {credits_cost} credits.\n"
+            message += f"You have {current_credits} credits remaining.\n\n"
+            message += f"💳 Purchase more credits to access this premium feature!"
+            
+            buttons = [
+                {"text": "💳 Buy Credits", "callback_data": "buy_credits"},
+                {"text": "🔙 Back to Quiz", "callback_data": "start_quiz"}
+            ]
+            
+            return whatsapp_service.send_interactive_message(user_id, message, buttons)
+        
+        # Deduct credits and start exam
+        if deduct_credits(user_id, credits_cost, 'combined_exam', 'Combined Exam Question'):
+            whatsapp_service.send_message(user_id, "🌟 Preparing your Combined Exam question... Please wait.")
+            # Here you would generate and send the combined exam question
+            whatsapp_service.send_message(user_id, "🌟 Combined Exam feature is being prepared! Check back soon.")
+        else:
+            whatsapp_service.send_message(user_id, "❌ Error processing credits. Please try again.")
+            
+    except Exception as e:
+        logger.error(f"Error handling combined exam: {e}")
+        whatsapp_service.send_message(user_id, "❌ Error loading Combined Exam. Please try again.")
+
+def handle_smart_question_generation(user_id: str, subject: str, topic: str):
+    """Generate question using smart strategy"""
+    try:
+        from database.external_db import get_user_credits, deduct_credits
+        from utils.credit_system import credit_system
+        
+        # Check credits
+        credits_cost = credit_system.get_credit_cost('quiz_question')
+        current_credits = get_user_credits(user_id)
+
+        if current_credits < credits_cost:
+            message = f"❌ *Insufficient Credits*\n\n"
+            message += f"You need {credits_cost} credits for topic-specific questions.\n"
+            message += f"You have {current_credits} credits remaining.\n\n"
+            message += f"💳 Purchase more credits to continue learning!"
+
+            buttons = [
+                {"text": "💳 Buy Credits", "callback_data": "buy_credits"},
+                {"text": "🔙 Back", "callback_data": f"science_{subject}"}
+            ]
+
+            whatsapp_service.send_interactive_message(user_id, message, buttons)
+            return
+
+        # Deduct credits
+        if not deduct_credits(user_id, credits_cost, 'smart_quiz', f'Smart question - {subject} - {topic}'):
+            whatsapp_service.send_message(user_id, "❌ Error processing credits. Please try again.")
+            return
+
+        # Show loading message
+        loading_text = f"🧬 Generating {subject} question on {topic}... Please wait."
+        whatsapp_service.send_message(user_id, loading_text)
+        
+        # Generate question using question service
+        question_result = question_service.generate_topic_question(subject, topic)
+        
+        if question_result and question_result.get('success'):
+            question_data = question_result['question']
+            
+            # Send question to user
+            send_quiz_question(user_id, question_data, subject, topic)
+        else:
+            # Refund credits on failure
+            from database.external_db import add_credits
+            add_credits(user_id, credits_cost, 'refund', f'Failed {subject} question generation')
+            whatsapp_service.send_message(user_id, "❌ Unable to generate question. Credits refunded. Please try again.")
+            
+    except Exception as e:
+        logger.error(f"Error generating smart question: {e}")
+        whatsapp_service.send_message(user_id, "❌ Error generating question. Please try again.")
+
+def send_quiz_question(user_id: str, question_data: dict, subject: str, topic: str):
+    """Send quiz question to user"""
+    try:
+        # Format question message
+        message = f"🧬 *{subject} - {topic}*\n\n"
+        message += f"❓ *Question:*\n{question_data.get('question', '')}\n\n"
+        message += "*Options:*\n"
+        
+        options = question_data.get('options', [])
+        for i, option in enumerate(options):
+            message += f"{chr(65+i)}. {option}\n"
+        
+        message += "\nChoose your answer:"
+        
+        # Create answer buttons
+        buttons = []
+        for i in range(len(options)):
+            letter = chr(65+i)
+            buttons.append({"text": letter, "callback_data": f"answer_{letter}"})
+        
+        whatsapp_service.send_interactive_message(user_id, message, buttons)
+        
+        # Store question session
+        from utils.session_manager import session_manager
+        session_manager.start_question_session(user_id, subject, topic, question_data)
+        
+    except Exception as e:
+        logger.error(f"Error sending quiz question: {e}")
 
 def handle_credit_package_selection(user_id: str, package_id: str):
     """Handle credit package selection"""
