@@ -47,14 +47,14 @@ def verify_webhook():
         mode = request.args.get('hub.mode')
         token = request.args.get('hub.verify_token')
         challenge = request.args.get('hub.challenge')
-        
+
         result = whatsapp_service.verify_webhook(mode or '', token or '', challenge or '')
-        
+
         if result:
             return result
         else:
             return 'Verification failed', 403
-            
+
     except Exception as e:
         logger.error(f"Webhook verification error: {e}")
         return 'Error', 500
@@ -64,25 +64,25 @@ def handle_webhook():
     """Handle incoming WhatsApp messages"""
     try:
         data = request.get_json()
-        
+
         if not data:
             return jsonify({'status': 'no_data'}), 400
-        
+
         # Parse message
         message = whatsapp_service.parse_webhook_message(data)
-        
+
         if not message:
             return jsonify({'status': 'no_message'}), 200
-        
+
         user_id = message['from']
         message_text = message['text']
         message_type = message['type']
-        
+
         # Validate WhatsApp ID
         if not validators.validate_whatsapp_id(user_id):
             logger.warning(f"Invalid WhatsApp ID: {user_id}")
             return jsonify({'status': 'invalid_user_id'}), 400
-        
+
         # Handle different message types
         if message_type == 'text':
             # Check rate limiting for text messages only
@@ -105,9 +105,9 @@ def handle_webhook():
         elif message_type == 'interactive':
             # No rate limiting for menu navigation - handled internally for specific actions
             handle_interactive_message(user_id, message['interactive'])
-        
+
         return jsonify({'status': 'success'}), 200
-        
+
     except Exception as e:
         logger.error(f"Webhook handling error: {e}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
@@ -117,10 +117,10 @@ def handle_text_message(user_id: str, message_text: str):
     try:
         # Sanitize input
         message_text = validators.sanitize_text_input(message_text)
-        
+
         # Check if user is registered
         registration_status = user_service.check_user_registration(user_id)
-        
+
         if not registration_status['is_registered']:
             if registration_status.get('registration_in_progress'):
                 # Continue registration process
@@ -129,10 +129,10 @@ def handle_text_message(user_id: str, message_text: str):
                 # Start registration
                 handle_new_user(user_id, message_text)
             return
-        
+
         # Handle registered user commands
         command = message_text.lower().strip()
-        
+
         if command in ['hi', 'hello', 'start', 'menu']:
             send_main_menu(user_id)
         elif command == 'credits':
@@ -158,7 +158,7 @@ def handle_text_message(user_id: str, message_text: str):
         else:
             # Check if user is in a session
             handle_session_message(user_id, message_text)
-        
+
     except Exception as e:
         logger.error(f"Error handling text message: {e}")
         whatsapp_service.send_message(user_id, "Sorry, an error occurred. Please try again.")
@@ -169,12 +169,12 @@ def handle_new_user(user_id: str, message_text: str):
         # Send welcome message and start registration
         welcome_msg = MESSAGE_TEMPLATES['welcome']
         welcome_msg += "\n\nLet's get you registered!\n\nPlease enter your first name:"
-        
+
         whatsapp_service.send_message(user_id, welcome_msg)
-        
+
         # Start registration process
         user_service.start_registration(user_id)
-        
+
     except Exception as e:
         logger.error(f"Error handling new user: {e}")
 
@@ -182,7 +182,7 @@ def handle_registration_flow(user_id: str, user_input: str):
     """Handle user registration steps"""
     try:
         result = user_service.process_registration_step(user_id, user_input)
-        
+
         if result['success']:
             if result.get('completed'):
                 # Registration complete
@@ -194,7 +194,7 @@ def handle_registration_flow(user_id: str, user_input: str):
         else:
             # Error in registration step
             whatsapp_service.send_message(user_id, result['message'])
-            
+
     except Exception as e:
         logger.error(f"Error in registration flow: {e}")
         whatsapp_service.send_message(user_id, "Registration error. Please try again.")
@@ -203,7 +203,7 @@ def handle_session_message(user_id: str, message_text: str):
     """Handle messages when user is in an active session"""
     try:
         session_type = session_manager.get_session_type(user_id)
-        
+
         if session_type == 'question':
             handle_question_answer(user_id, message_text)
         elif session_type == 'topic_selection':
@@ -215,7 +215,7 @@ def handle_session_message(user_id: str, message_text: str):
         else:
             # No active session, show main menu
             send_main_menu(user_id)
-            
+
     except Exception as e:
         logger.error(f"Error handling session message: {e}")
 
@@ -224,19 +224,19 @@ def handle_question_answer(user_id: str, answer: str):
     try:
         # Get current question session
         question_session = session_manager.get_question_session(user_id)
-        
+
         if not question_session:
             whatsapp_service.send_message(user_id, "No active question found. Use the menu to start a new question.")
             send_main_menu(user_id)
             return
-        
+
         question_data = question_session['question_data']
         subject = question_session['subject']
         topic = question_session['topic']
-        
+
         # Validate answer
         result = question_service.validate_answer(question_data, answer)
-        
+
         if result['is_correct'] is None:
             # Essay question - cannot auto-grade
             whatsapp_service.send_message(user_id, result['feedback'])
@@ -247,7 +247,7 @@ def handle_question_answer(user_id: str, answer: str):
                 user_id, 
                 f"✅ Correct! You earned {points} points.\n\n{result['explanation']}"
             )
-            
+
             # Award bonus credits for correct answers
             bonus = credit_system.calculate_bonus_credits('question_correct', True)
             if bonus > 0:
@@ -259,20 +259,20 @@ def handle_question_answer(user_id: str, answer: str):
                 user_id,
                 f"❌ Incorrect. The correct answer is: {result['correct_answer']}\n\n{result['explanation']}"
             )
-        
+
         # Update user stats
         from database.external_db import update_user_stats
         update_user_stats(
             user_id, subject, topic, question_data.get('difficulty', 'medium'),
             result['is_correct'] or False, result['points_awarded']
         )
-        
+
         # Clear question session
         session_manager.clear_question_session(user_id)
-        
+
         # Show main menu
         send_main_menu(user_id)
-        
+
     except Exception as e:
         logger.error(f"Error handling question answer: {e}")
         whatsapp_service.send_message(user_id, "Error processing your answer. Please try again.")
@@ -286,10 +286,10 @@ def handle_image_message(user_id: str, image_data: dict):
             # Handle image in audio chat mode
             handle_audio_chat_image(user_id, image_data)
             return
-        
+
         # Check if user has sufficient credits
         credit_check = credit_system.check_sufficient_credits(user_id, 'image_solve')
-        
+
         if not credit_check['sufficient']:
             shortage = credit_check['shortage']
             whatsapp_service.send_message(
@@ -298,7 +298,7 @@ def handle_image_message(user_id: str, image_data: dict):
             )
             show_credit_packages(user_id)
             return
-        
+
         # Check rate limiting for image processing
         if rate_limiter.check_active_generation(user_id, 'image_solve'):
             whatsapp_service.send_message(
@@ -306,35 +306,35 @@ def handle_image_message(user_id: str, image_data: dict):
                 "🔄 Image processing already in progress. Please wait..."
             )
             return
-        
+
         whatsapp_service.send_message(user_id, "🔍 Processing your image... This may take a moment.")
-        
+
         # Process the image
         result = image_service.process_whatsapp_image(image_data)
-        
+
         if result and result.get('success'):
             # Deduct credits
             credit_system.deduct_credits_for_action(user_id, 'image_solve')
-            
+
             solution = result.get('solution', {})
             response = f"📸 **Image Math Solution**\n\n"
             response += f"**Problem:** {solution.get('problem_identified', 'Unknown')}\n\n"
             response += f"**Solution:**\n{solution.get('solution_steps', 'No steps available')}\n\n"
             response += f"**Answer:** {solution.get('final_answer', 'No answer')}\n\n"
-            
+
             if solution.get('notes'):
                 response += f"**Notes:** {solution['notes']}\n"
-            
+
             response += f"💰 Cost: {credit_system.get_credit_cost('image_solve')} credits"
-            
+
             whatsapp_service.send_message(user_id, response)
         else:
             message = result.get('message', 'Error processing image') if result else 'Error processing image'
             whatsapp_service.send_message(user_id, message)
-        
+
         # Clear active generation
         rate_limiter.clear_active_generation(user_id, 'image_solve')
-        
+
     except Exception as e:
         logger.error(f"Error handling image message: {e}")
         whatsapp_service.send_message(user_id, "Error processing image. Please try again.")
@@ -348,13 +348,13 @@ def handle_audio_chat_image(user_id: str, image_data: dict):
             image_data.get('id'), 
             image_data.get('mime_type', 'image/jpeg')
         )
-        
+
         if image_path:
             # Process through audio chat service
             audio_chat_service.handle_audio_input(user_id, file_path=image_path, file_type='image')
         else:
             whatsapp_service.send_message(user_id, "❌ Could not download image. Please try again.")
-            
+
     except Exception as e:
         logger.error(f"Error handling audio chat image: {e}")
         whatsapp_service.send_message(user_id, "❌ Error processing your image. Please try again.")
@@ -364,7 +364,7 @@ def send_main_menu(user_id: str, user_name: str = None):
     try:
         # Get user registration data for personalization
         from database.external_db import get_user_registration, get_user_credits, get_or_create_user_stats
-        
+
         if not user_name:
             registration = get_user_registration(user_id)
             user_name = registration['name'] if registration else None
@@ -374,13 +374,13 @@ def send_main_menu(user_id: str, user_name: str = None):
 
         # Professional welcome message with clear structure and spacing
         welcome_text = ""
-        
+
         # Personalized greeting section
         if user_name:
             welcome_text += f"🎓 *Welcome back, {user_name}!* 🎓\n"
             welcome_text += f"═══════════════════\n\n"
             welcome_text += f"*Hi {user_name}, I'm NerdX - Your Personal ZIMSEC Tutor*\n\n"
-            
+
             # Add personalized motivational message based on stats
             total_attempts = user_stats.get('total_attempts', 0)
             if total_attempts == 0:
@@ -402,21 +402,21 @@ def send_main_menu(user_id: str, user_name: str = None):
         welcome_text += "🧬 *Biology*     ⚗️ *Chemistry*\n"
         welcome_text += "⚡ *Physics*     📰 *Mathematics*\n"
         welcome_text += "📝 *English*     🎤 *Audio Chat*\n\n"
-        
+
         welcome_text += "🤖 *SMART FEATURES*\n"
         welcome_text += "━━━━━━━━━━━━━━━━━\n"
         welcome_text += "• AI-Generated Questions\n"
         welcome_text += "• Progress Tracking\n"
         welcome_text += "• Step-by-Step Solutions\n"
         welcome_text += "• Achievement System\n\n"
-        
+
         # User stats section with clear formatting
         level = user_stats.get('level', 1)
         xp_points = user_stats.get('xp_points', 0)
         correct_answers = user_stats.get('correct_answers', 0)
         total_attempts = user_stats.get('total_attempts', 0)
         success_rate = (correct_answers/max(total_attempts,1)*100) if total_attempts > 0 else 0
-        
+
         if user_name:
             welcome_text += f"📊 *{user_name}'s ACADEMIC PROFILE*\n"
         else:
@@ -425,13 +425,13 @@ def send_main_menu(user_id: str, user_name: str = None):
         welcome_text += f"🎯 *Level:* {level}          ⭐ *XP:* {xp_points}\n"
         welcome_text += f"💳 *Credits:* {current_credits}       📚 *Questions:* {total_attempts}\n"
         welcome_text += f"✅ *Success Rate:* {success_rate:.1f}%\n\n"
-        
+
         # Call to action section
         welcome_text += "🎁 *BONUS OPPORTUNITY*\n"
         welcome_text += "━━━━━━━━━━━━━━━━━\n"
         welcome_text += "*Share NerdX with friends*\n"
         welcome_text += "*Get 50 FREE CREDITS each!*\n\n"
-        
+
         welcome_text += "👇 *Choose an option below to get started:*"
 
         # Send first 3 main buttons
@@ -449,15 +449,15 @@ def send_main_menu(user_id: str, user_name: str = None):
             ]
 
         whatsapp_service.send_interactive_message(user_id, welcome_text, main_buttons)
-        
+
         # Send additional buttons separately
         additional_buttons = [
             {"text": "📤 Share to Friend", "callback_data": "share_to_friend"},
             {"text": "👥 Referrals", "callback_data": "referrals_menu"}
         ]
-        
+
         whatsapp_service.send_interactive_message(user_id, "💎 *More Options:*", additional_buttons)
-        
+
     except Exception as e:
         logger.error(f"Error sending main menu: {e}")
         whatsapp_service.send_message(user_id, "Error loading menu. Please try again.")
@@ -467,26 +467,26 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
     try:
         button_reply = interactive_data.get('button_reply', {})
         list_reply = interactive_data.get('list_reply', {})
-        
+
         selection_id = button_reply.get('id') or list_reply.get('id')
-        
+
         if not selection_id:
             return
-        
+
         # Define actions that need rate limiting (content generation/expensive operations)
         rate_limited_actions = [
             'science_',  # Topic selection that generates questions
             'generate_',  # Question generation
             'package_',  # Payment processing
         ]
-        
+
         # Check if this action needs rate limiting
         needs_rate_limit = any(selection_id.startswith(action) for action in rate_limited_actions)
-        
+
         if needs_rate_limit and rate_limiter.check_session_rate_limit(user_id, f"action_{selection_id}"):
             whatsapp_service.send_message(user_id, "⏳ Please wait before performing this action again.")
             return
-        
+
         if selection_id.startswith('subject_'):
             subject = selection_id.replace('subject_', '').title()
             handle_subject_selection(user_id, subject)
@@ -532,9 +532,14 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             handle_english_menu(user_id)
         # Add handlers for the Combined Science buttons
         elif selection_id.startswith('science_'):
-            subject = selection_id.replace('science_', '')
-            handle_science_resources_menu(user_id, subject)
-        elif selection_id == 'combined_exam':
+            handle_subject_topics(user_id, selection_id.replace('science_', ''))
+        elif selection_id == "science_Biology":
+            handle_subject_topics(user_id, "Biology")
+        elif selection_id == "science_Chemistry":
+            handle_subject_topics(user_id, "Chemistry")
+        elif selection_id == "science_Physics":
+            handle_subject_topics(user_id, "Physics")
+        elif selection_id == "combined_exam":
             handle_combined_exam(user_id)
         elif selection_id.startswith('resource_'):
             # Handle resource type selection (questions/notes)
@@ -574,7 +579,7 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             show_user_stats(user_id)
         elif selection_id.startswith('package_'):
             handle_credit_package_selection(user_id, selection_id)
-        
+
     except Exception as e:
         logger.error(f"Error handling interactive message: {e}")
 
@@ -585,18 +590,18 @@ def handle_subject_selection(user_id: str, subject: str):
             whatsapp_service.send_message(user_id, "Invalid subject selection.")
             send_main_menu(user_id)
             return
-        
+
         # Send difficulty selection
         message = f"📚 You selected **{subject}**\n\nChoose difficulty level:"
-        
+
         buttons = [
             {'id': f'difficulty_easy_{subject}', 'title': '🟢 Easy'},
             {'id': f'difficulty_medium_{subject}', 'title': '🟡 Medium'},
             {'id': f'difficulty_difficult_{subject}', 'title': '🔴 Difficult'}
         ]
-        
+
         whatsapp_service.send_interactive_message(user_id, message, buttons)
-        
+
     except Exception as e:
         logger.error(f"Error handling subject selection: {e}")
 
@@ -606,34 +611,34 @@ def handle_difficulty_selection(user_id: str, difficulty_subject: str):
         parts = difficulty_subject.split('_')
         if len(parts) < 2:
             return
-        
+
         difficulty = parts[0]
         subject = '_'.join(parts[1:])
-        
+
         # Send topic selection
         message = f"📚 **{subject}** - {difficulty.title()}\n\nChoose a topic:"
-        
+
         topics = TOPICS.get(subject, [])
         if not topics:
             whatsapp_service.send_message(user_id, "No topics available for this subject.")
             send_main_menu(user_id)
             return
-        
+
         # Create topic list
         sections = [{
             'title': f'{subject} Topics',
             'rows': [
                 {
-                    'id': f'generate_{subject}_{topic}_{difficulty}',
+                    'id': f'generate_{subject}_{topic}',
                     'title': topic[:24],  # WhatsApp title limit
                     'description': f'{difficulty.title()} level'
                 }
                 for topic in topics
             ]
         }]
-        
+
         whatsapp_service.send_list_message(user_id, f"{subject} - {difficulty.title()}", message, sections)
-        
+
     except Exception as e:
         logger.error(f"Error handling difficulty selection: {e}")
 
@@ -642,13 +647,13 @@ def payment_callback():
     """Handle payment callbacks"""
     try:
         data = request.get_json()
-        
+
         if not data:
             return jsonify({'status': 'no_data'}), 400
-        
+
         # Process payment callback
         success = payment_service.process_payment_callback(data)
-        
+
         if success:
             # Notify user of successful payment
             user_id = data.get('user_id')
@@ -657,11 +662,11 @@ def payment_callback():
                     user_id,
                     "✅ Payment successful! Credits have been added to your account."
                 )
-            
+
             return jsonify({'status': 'success'}), 200
         else:
             return jsonify({'status': 'failed'}), 400
-        
+
     except Exception as e:
         logger.error(f"Payment callback error: {e}")
         return jsonify({'status': 'error'}), 500
@@ -678,7 +683,7 @@ def show_user_stats(user_id: str):
     """Show user statistics"""
     try:
         stats = user_service.get_user_stats_summary(user_id)
-        
+
         if stats['success']:
             data = stats['stats']
             message = f"📊 **Your Statistics**\n\n"
@@ -688,11 +693,11 @@ def show_user_stats(user_id: str):
             message += f"📝 Questions Answered: {data['questions_answered']}\n"
             message += f"✅ Accuracy: {data['accuracy']}%\n"
             message += f"🎯 Level: {data['level']['name']}\n"
-            
+
             if data['level']['next_threshold']:
                 progress = data['level']['progress_percent']
                 message += f"📈 Progress: {progress}%"
-            
+
             whatsapp_service.send_message(user_id, message)
         else:
             whatsapp_service.send_message(user_id, "Unable to retrieve statistics.")
@@ -703,7 +708,7 @@ def show_credit_packages(user_id: str):
     """Show available credit packages"""
     try:
         packages = credit_system.get_credit_packages()
-        
+
         message = "💰 **Credit Packages**\n\n"
         for pkg in packages:
             message += f"💎 {pkg['credits']} credits - ${pkg['amount']}\n"
@@ -711,9 +716,9 @@ def show_credit_packages(user_id: str):
             if pkg.get('savings'):
                 message += f"   💚 Save {pkg['savings']}!\n"
             message += "\n"
-        
+
         message += "Select a package to purchase:"
-        
+
         # Create package buttons
         buttons = []
         for i, pkg in enumerate(packages[:3]):  # Limit to 3 for buttons
@@ -721,9 +726,9 @@ def show_credit_packages(user_id: str):
                 'id': f'package_{i}',
                 'title': f'{pkg["credits"]} - ${pkg["amount"]}'
             })
-        
+
         whatsapp_service.send_interactive_message(user_id, message, buttons)
-        
+
     except Exception as e:
         logger.error(f"Error showing credit packages: {e}")
 
@@ -763,20 +768,20 @@ def handle_graph_request(user_id: str, function_text: str):
         if not credit_system.can_use_feature(user_id, "graph"):
             whatsapp_service.send_message(user_id, "❌ Insufficient credits for graph generation.")
             return
-        
+
         # Generate graph using graph service
         result = graph_service.generate_function_graph(function_text)
-        
+
         if result and result.get('success'):
             # Deduct credits
             credit_system.deduct_credits(user_id, "graph")
-            
+
             # Send graph image
             image_path = result.get('image_path', '')
             whatsapp_service.send_image(user_id, image_path, f"Graph for: {function_text}")
         else:
             whatsapp_service.send_message(user_id, "❌ Could not generate graph. Please check your function syntax.")
-            
+
     except Exception as e:
         logger.error(f"Error handling graph request: {e}")
         whatsapp_service.send_message(user_id, "❌ Error generating graph.")
@@ -788,17 +793,17 @@ def handle_topic_selection(user_id: str, subject: str):
         if not topics:
             whatsapp_service.send_message(user_id, "❌ No topics available for this subject.")
             return
-        
+
         buttons = []
         for topic in topics:
             buttons.append({
                 'id': f'topic_{subject}_{topic}',
                 'title': topic
             })
-        
+
         message = f"📚 Select a topic for {subject.title()}:"
         whatsapp_service.send_interactive_message(user_id, message, buttons)
-        
+
     except Exception as e:
         logger.error(f"Error handling topic selection: {e}")
 
@@ -807,7 +812,7 @@ def handle_payment_confirmation(user_id: str, package_data: str):
     try:
         # Process payment for selected package
         whatsapp_service.send_message(user_id, "💳 Processing your payment... You'll receive confirmation shortly.")
-        
+
     except Exception as e:
         logger.error(f"Error handling payment confirmation: {e}")
 
@@ -819,11 +824,11 @@ def handle_topic_selection_from_button(user_id: str, button_id: str):
         if len(parts) >= 3:
             subject = parts[1]
             topic = parts[2]
-            
+
             # Start question session
             session_manager.start_question_session(user_id, subject, topic)
             whatsapp_service.send_message(user_id, f"📖 Starting {subject.title()} - {topic} questions!")
-        
+
     except Exception as e:
         logger.error(f"Error handling topic selection from button: {e}")
 
@@ -861,22 +866,22 @@ def handle_level_menu(user_id: str, level: str):
     else:
         whatsapp_service.send_message(user_id, "❌ Invalid education level.")
         return
-        
+
     whatsapp_service.send_interactive_message(user_id, text, buttons)
 
 def handle_share_to_friend(user_id: str):
     """Handle share to friend button - matches backup exactly"""
     try:
         from database.external_db import get_user_registration
-        
+
         registration = get_user_registration(user_id)
         if not registration:
             whatsapp_service.send_message(user_id, "❌ Registration not found. Please try again.")
             return
-            
+
         nerdx_id = registration.get('nerdx_id', 'N00000')
         name = registration.get('name', 'Student')
-        
+
         share_message = f"📤 *Share NerdX with Friends!*\n\n"
         share_message += f"Hey {name}! 👋\n\n"
         share_message += f"💎 Earn *50 FREE CREDITS* for every friend who registers using your ID!\n\n"
@@ -890,14 +895,14 @@ def handle_share_to_friend(user_id: str):
         share_message += f"💎 Register with ID: {nerdx_id} and get bonus credits!\n\n"
         share_message += f"Start here: https://wa.me/+263784257773?text=Hello%20NerdX%20ID:%20{nerdx_id}\n"
         share_message += f"---"
-        
+
         buttons = [
             {"text": "👥 View Referrals", "callback_data": "referrals_menu"},
             {"text": "🏠 Main Menu", "callback_data": "main_menu"}
         ]
-        
+
         whatsapp_service.send_interactive_message(user_id, share_message, buttons)
-        
+
     except Exception as e:
         logger.error(f"Error in handle_share_to_friend: {e}")
         whatsapp_service.send_message(user_id, "❌ Error sharing referral link.")
@@ -906,20 +911,20 @@ def show_referral_info(user_id: str):
     """Show referral information and stats - matches backup exactly"""
     try:
         from database.external_db import get_user_registration, get_referral_stats
-        
+
         registration = get_user_registration(user_id)
         if not registration:
             whatsapp_service.send_message(user_id, "❌ Registration not found.")
             return
-            
+
         nerdx_id = registration.get('nerdx_id', 'N00000')
         name = registration.get('name', 'Student')
-        
+
         # Get referral stats using nerdx_id (not chat_id)
         referral_stats = get_referral_stats(nerdx_id)
         total_referrals = referral_stats.get('total_referrals', 0)
         total_earned = referral_stats.get('total_credits_earned', 0)
-        
+
         referral_message = f"👥 *{name}'s Referral Center* 👥\n\n"
         referral_message += f"🎯 *Your Referral ID:* `{nerdx_id}`\n\n"
         referral_message += f"📊 *Referral Stats:*\n"
@@ -927,14 +932,14 @@ def show_referral_info(user_id: str):
         referral_message += f"• Credits Earned: {total_earned}\n\n"
         referral_message += f"💎 *Earn 50 credits* for each friend who registers!\n\n"
         referral_message += f"📲 Share your ID with friends so they can get bonus credits too!"
-        
+
         buttons = [
             {"text": "📤 Share to Friend", "callback_data": "share_to_friend"},
             {"text": "🏠 Main Menu", "callback_data": "main_menu"}
         ]
-        
+
         whatsapp_service.send_interactive_message(user_id, referral_message, buttons)
-        
+
     except Exception as e:
         logger.error(f"Error showing referral info: {e}")
         whatsapp_service.send_message(user_id, "❌ Error loading referral information.")
@@ -943,11 +948,11 @@ def handle_combined_science_menu(user_id: str):
     """Show Combined Science subject menu - matches backup exactly"""
     try:
         from database.external_db import get_user_registration, get_user_credits
-        
+
         registration = get_user_registration(user_id)
         user_name = registration['name'] if registration else "Student"
         credits = get_user_credits(user_id)
-        
+
         text = "🧬 *Combined Science Subjects:*\nSelect a science subject:"
 
         buttons = [
@@ -957,9 +962,9 @@ def handle_combined_science_menu(user_id: str):
             {"text": "🌟 Combined Exam", "callback_data": "combined_exam"},
             {"text": "🔙 Back", "callback_data": "level_ordinary"}
         ]
-        
+
         whatsapp_service.send_interactive_message(user_id, text, buttons)
-        
+
     except Exception as e:
         logger.error(f"Error in handle_combined_science_menu: {e}")
         whatsapp_service.send_message(user_id, "❌ Error loading Combined Science menu.")
@@ -968,7 +973,7 @@ def handle_mathematics_menu(user_id: str):
     """Show Mathematics menu - matches backup exactly"""
     try:
         from database.external_db import get_user_registration, get_user_credits, get_user_stats
-        
+
         registration = get_user_registration(user_id)
         user_name = registration['name'] if registration else "Student"
         current_credits = get_user_credits(user_id)
@@ -976,29 +981,29 @@ def handle_mathematics_menu(user_id: str):
         current_level = user_stats.get('level', 1)
         current_xp = user_stats.get('xp_points', 0)
         current_streak = user_stats.get('streak_days', 0)
-        
+
         # Calculate XP needed for next level
         xp_for_next_level = (current_level * 100) - current_xp
         if xp_for_next_level <= 0:
             xp_for_next_level = 100  # Base XP for next level
-        
+
         text = f"📐 *Hey {user_name}! Welcome to MathMentor* 📐\n\n"
         text += f"🎓 *{user_name}, I'm your personal O-Level Mathematics tutor!*\n\n"
-        
+
         # Enhanced user stats display
         text += f"📊 **Your Math Journey:**\n"
         text += f"💳 Credits: **{current_credits}**\n"
         text += f"⭐ Level: **{current_level}** (XP: {current_xp})\n"
         text += f"🔥 Streak: **{current_streak} days**\n"
         text += f"🎯 Next Level: **{xp_for_next_level} XP needed**\n\n"
-        
+
         text += f"I'm here to help you master math, {user_name}, with:\n\n"
         text += f"📚 **Practice Questions:** Earn 5-10 XP per question\n"
         text += f"📷 **Image Math Solver:** Earn 30 XP per solution\n"
         text += f"📈 **Graph Generation:** Earn 25 XP per graph\n"
         text += f"📊 **Sample Graphs:** Earn 15 XP for learning\n"
         text += f"🔥 **Daily Streaks:** Maintain consistent learning\n\n"
-        
+
         text += f"🚀 *{user_name}, choose how you'd like to earn XP and level up:*"
 
         buttons = [
@@ -1008,9 +1013,9 @@ def handle_mathematics_menu(user_id: str):
             {"text": "📊 My Progress", "callback_data": "stats"},
             {"text": "🔙 Back", "callback_data": "level_ordinary"}
         ]
-        
+
         whatsapp_service.send_interactive_message(user_id, text, buttons)
-        
+
     except Exception as e:
         logger.error(f"Error in handle_mathematics_menu: {e}")
         whatsapp_service.send_message(user_id, "❌ Error loading Mathematics menu.")
@@ -1019,11 +1024,11 @@ def handle_english_menu(user_id: str):
     """Show English menu - matches backup exactly"""
     try:
         from database.external_db import get_user_registration, get_user_credits
-        
+
         registration = get_user_registration(user_id)
         user_name = registration['name'] if registration else "Student"
         current_credits = get_user_credits(user_id)
-        
+
         text = f"📝 *Welcome to NerdX English Excellence Program* 📝\n\n"
         text += f"👋 *Hello {user_name}!* I'm your personal English Language tutor for ZIMSEC O-Level!\n\n"
         text += f"💳 *Your Credits:* {current_credits}\n\n"
@@ -1042,9 +1047,9 @@ def handle_english_menu(user_id: str):
             {"text": "🎤 Audio English Lessons", "callback_data": "english_audio_lessons"},
             {"text": "🔙 Back to Subjects", "callback_data": "level_ordinary"}
         ]
-        
+
         whatsapp_service.send_interactive_message(user_id, text, buttons)
-        
+
     except Exception as e:
         logger.error(f"Error in handle_english_menu: {e}")
         whatsapp_service.send_message(user_id, "❌ Error loading English menu.")
@@ -1054,70 +1059,49 @@ def handle_audio_chat_message(user_id: str, message_text: str):
     try:
         # Handle audio chat input using the audio chat service
         audio_chat_service.handle_audio_input(user_id, message_text=message_text)
-        
+
     except Exception as e:
         logger.error(f"Error handling audio chat message: {e}")
         whatsapp_service.send_message(user_id, "❌ Error processing your message. Please try again or type 'menu' to return.")
 
-def handle_science_resources_menu(user_id: str, subject: str):
-    """Show learning resources for a science subject"""
-    try:
-        text = f"📚 *{subject} Learning Resources:*\nChoose how you want to learn:"
-
-        buttons = [
-            {"text": "❓ Questions", "callback_data": f"resource_questions_{subject}"},
-            {"text": "📝 Notes", "callback_data": f"resource_notes_{subject}"},
-            {"text": "🔙 Back", "callback_data": "subject_ordinary_combined_science"}
-        ]
-
-        whatsapp_service.send_interactive_message(user_id, text, buttons)
-        
-    except Exception as e:
-        logger.error(f"Error handling science resources menu: {e}")
-
-def handle_topic_menu(user_id: str, subject: str):
-    """Show topic selection menu for a subject"""
+def handle_subject_topics(user_id: str, subject: str):
+    """Show topics for a given subject"""
     try:
         from constants import TOPICS
-        
         topics = TOPICS.get(subject, [])
+
         if not topics:
             whatsapp_service.send_message(user_id, "❌ No topics available for this subject.")
             return
 
-        text = f"📖 *{subject} Topics:*\nSelect a topic for your quiz:"
+        text = f"📚 *{subject} Topics:*\nChoose a topic to get practice questions:"
 
-        # Send topics in groups of 3 for WhatsApp compatibility
-        for i in range(0, len(topics), 3):
-            topic_group = topics[i:i+3]
-            buttons = []
+        buttons = []
+        for topic in topics:
+            callback_data = f"topic_{subject}_{topic.replace(' ', '_')}"
+            buttons.append({"text": topic[:20], "callback_data": callback_data}) # Limit button text length
 
-            for topic in topic_group:
-                callback_data = f"topic_{subject}_{topic.replace(' ', '_')}"
-                buttons.append({"text": topic[:20], "callback_data": callback_data})
+        # Send in groups of 3 for better WhatsApp compatibility
+        for i in range(0, len(buttons), 3):
+            button_group = buttons[i:i+3]
+            group_text = text if i == 0 else f"📚 *{subject} Topics (Part {i//3 + 1}):*"
+            whatsapp_service.send_interactive_message(user_id, group_text, button_group)
 
-            if i == 0:
-                group_text = text
-            else:
-                group_text = f"📖 *{subject} Topics (Part {i//3 + 1}):*"
-            
-            whatsapp_service.send_interactive_message(user_id, group_text, buttons)
-
-        # Add back button
-        back_buttons = [{"text": "🔙 Back", "callback_data": f"science_{subject}"}]
+        # Add a back button to the last message
+        back_buttons = [{"text": "🔙 Back", "callback_data": "level_ordinary"}]
         whatsapp_service.send_interactive_message(user_id, "Choose an option:", back_buttons)
-        
+
     except Exception as e:
-        logger.error(f"Error handling topic menu: {e}")
+        logger.error(f"Error handling subject topics: {e}")
 
 def handle_notes_menu(user_id: str, subject: str):
     """Show notes menu for a subject"""
     try:
         text = f"📝 *{subject} Notes:*\nSelect a topic to read comprehensive notes:"
-        
+
         from constants import TOPICS
         topics = TOPICS.get(subject, [])
-        
+
         buttons = []
         for topic in topics:
             callback_data = f"notes_{subject}_{topic.replace(' ', '_')}"
@@ -1130,65 +1114,39 @@ def handle_notes_menu(user_id: str, subject: str):
             button_group = buttons[i:i+3]
             group_text = f"📝 *{subject} Notes (Part {i//3 + 1}):*" if i > 0 else text
             whatsapp_service.send_interactive_message(user_id, group_text, button_group)
-            
+
     except Exception as e:
         logger.error(f"Error handling notes menu: {e}")
 
 def handle_combined_exam(user_id: str):
-    """Handle Combined Exam - questions from all subjects"""
+    """Handle Combined Science exam mode"""
     try:
-        # Check if user is registered
-        from database.external_db import is_user_registered, get_user_credits, deduct_credits
-        
-        if not is_user_registered(user_id):
-            message = """🚫 *Registration Required*
-            
-Please register first to access Combined Exam features.
+        text = "🌟 *Combined Science Exam Mode*\n\n"
+        text += "This mode gives you questions from all three science subjects (Biology, Chemistry, Physics) mixed together, just like the real ZIMSEC Combined Science exam!\n\n"
+        text += "💡 *Features:*\n"
+        text += "• Random questions from all subjects\n"
+        text += "• Exam-style difficulty progression\n"
+        text += "• Mixed topic coverage\n"
+        text += "• Real exam simulation\n\n"
+        text += "Ready to start your Combined Science practice exam?"
 
-Send 'register' to create your account."""
-            
-            buttons = [
-                {"text": "📝 Register Now", "callback_data": "register"},
-                {"text": "❓ Help", "callback_data": "help"}
-            ]
-            
-            return whatsapp_service.send_interactive_message(user_id, message, buttons)
-        
-        # Check credits for Combined Exam
-        credits_cost = 15  # 15 credits for combined exam
-        current_credits = get_user_credits(user_id)
-        
-        if current_credits < credits_cost:
-            message = f"❌ *Insufficient Credits for Combined Exam*\n\n"
-            message += f"Combined Exam requires {credits_cost} credits.\n"
-            message += f"You have {current_credits} credits remaining.\n\n"
-            message += f"💳 Purchase more credits to access this premium feature!"
-            
-            buttons = [
-                {"text": "💳 Buy Credits", "callback_data": "buy_credits"},
-                {"text": "🔙 Back to Quiz", "callback_data": "start_quiz"}
-            ]
-            
-            return whatsapp_service.send_interactive_message(user_id, message, buttons)
-        
-        # Deduct credits and start exam
-        if deduct_credits(user_id, credits_cost, 'combined_exam', 'Combined Exam Question'):
-            whatsapp_service.send_message(user_id, "🌟 Preparing your Combined Exam question... Please wait.")
-            # Here you would generate and send the combined exam question
-            whatsapp_service.send_message(user_id, "🌟 Combined Exam feature is being prepared! Check back soon.")
-        else:
-            whatsapp_service.send_message(user_id, "❌ Error processing credits. Please try again.")
-            
+        buttons = [
+            {"text": "🚀 Start Combined Exam", "callback_data": "start_combined_exam"},
+            {"text": "🔙 Back to Subjects", "callback_data": "subject_ordinary_combined_science"}
+        ]
+
+        whatsapp_service.send_interactive_message(user_id, text, buttons)
+
     except Exception as e:
         logger.error(f"Error handling combined exam: {e}")
-        whatsapp_service.send_message(user_id, "❌ Error loading Combined Exam. Please try again.")
+        whatsapp_service.send_message(user_id, "❌ Error loading combined exam mode.")
 
 def handle_smart_question_generation(user_id: str, subject: str, topic: str):
     """Generate question using smart strategy"""
     try:
         from database.external_db import get_user_credits, deduct_credits
         from utils.credit_system import credit_system
-        
+
         # Check credits
         credits_cost = credit_system.get_credit_cost('quiz_question')
         current_credits = get_user_credits(user_id)
@@ -1215,13 +1173,13 @@ def handle_smart_question_generation(user_id: str, subject: str, topic: str):
         # Show loading message
         loading_text = f"🧬 Generating {subject} question on {topic}... Please wait."
         whatsapp_service.send_message(user_id, loading_text)
-        
+
         # Generate question using question service
         question_result = question_service.generate_topic_question(subject, topic)
-        
+
         if question_result and question_result.get('success'):
             question_data = question_result['question']
-            
+
             # Send question to user
             send_quiz_question(user_id, question_data, subject, topic)
         else:
@@ -1229,7 +1187,7 @@ def handle_smart_question_generation(user_id: str, subject: str, topic: str):
             from database.external_db import add_credits
             add_credits(user_id, credits_cost, 'refund', f'Failed {subject} question generation')
             whatsapp_service.send_message(user_id, "❌ Unable to generate question. Credits refunded. Please try again.")
-            
+
     except Exception as e:
         logger.error(f"Error generating smart question: {e}")
         whatsapp_service.send_message(user_id, "❌ Error generating question. Please try again.")
@@ -1241,25 +1199,25 @@ def send_quiz_question(user_id: str, question_data: dict, subject: str, topic: s
         message = f"🧬 *{subject} - {topic}*\n\n"
         message += f"❓ *Question:*\n{question_data.get('question', '')}\n\n"
         message += "*Options:*\n"
-        
+
         options = question_data.get('options', [])
         for i, option in enumerate(options):
             message += f"{chr(65+i)}. {option}\n"
-        
+
         message += "\nChoose your answer:"
-        
+
         # Create answer buttons
         buttons = []
         for i in range(len(options)):
             letter = chr(65+i)
             buttons.append({"text": letter, "callback_data": f"answer_{letter}"})
-        
+
         whatsapp_service.send_interactive_message(user_id, message, buttons)
-        
+
         # Store question session
         from utils.session_manager import session_manager
         session_manager.start_question_session(user_id, subject, topic, question_data)
-        
+
     except Exception as e:
         logger.error(f"Error sending quiz question: {e}")
 
@@ -1268,12 +1226,17 @@ def handle_credit_package_selection(user_id: str, package_id: str):
     try:
         packages = payment_service.calculate_credit_packages()
         selected_package = None
-        
-        for pkg in packages:
-            if package_id == str(pkg['credits']):
-                selected_package = pkg
-                break
-        
+
+        # Extract package index from package_id
+        try:
+            package_index = int(package_id.split('_')[1])
+            if 0 <= package_index < len(packages):
+                selected_package = packages[package_index]
+        except (IndexError, ValueError):
+            logger.warning(f"Invalid package_id format: {package_id}")
+            whatsapp_service.send_message(user_id, "❌ Invalid package selection. Please try again.")
+            return
+
         if selected_package:
             # Initiate payment process
             whatsapp_service.send_message(
@@ -1282,6 +1245,6 @@ def handle_credit_package_selection(user_id: str, package_id: str):
                 f"Amount: ${selected_package['amount']}\n\n"
                 "Please reply with your EcoCash number to proceed."
             )
-        
+
     except Exception as e:
         logger.error(f"Error handling credit package selection: {e}")
