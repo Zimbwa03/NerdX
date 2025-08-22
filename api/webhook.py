@@ -352,54 +352,91 @@ def handle_audio_chat_image(user_id: str, image_data: dict):
         logger.error(f"Error handling audio chat image: {e}")
         whatsapp_service.send_message(user_id, "❌ Error processing your image. Please try again.")
 
-def send_main_menu(user_id: str):
-    """Send main menu to user"""
+def send_main_menu(user_id: str, user_name: str = None):
+    """Send main menu to user - matches backup structure exactly"""
     try:
-        # Get user stats for menu
-        user_stats = user_service.get_user_stats_summary(user_id)
-        credits = user_stats.get('stats', {}).get('credits', 0) if user_stats and user_stats.get('success') else 0
+        # Get user registration data for personalization
+        from database.external_db import get_user_registration, get_user_credits, get_or_create_user_stats
         
-        menu_message = "🎓 **NerdX Quiz Bot - Main Menu**\n\n"
-        menu_message += f"💳 Credits: {credits}\n\n"
-        menu_message += "Choose a subject to start learning:\n\n"
-        
-        # Create subject buttons
-        buttons = []
-        for subject in TOPICS.keys():
-            buttons.append({
-                'id': f'subject_{subject.lower()}',
-                'title': subject
-            })
-        
-        # Add other options
-        buttons.append({'id': 'audio_chat', 'title': '🎧 Audio Chat'})
-        buttons.append({'id': 'buy_credits', 'title': '💰 Buy Credits'})
-        buttons.append({'id': 'stats', 'title': '📊 My Stats'})
-        
-        # Send as interactive message if possible, otherwise as list
-        if len(buttons) <= 3:
-            whatsapp_service.send_interactive_message(user_id, menu_message, buttons[:3])
-        else:
-            # Send as list message
-            sections = [
-                {
-                    'title': 'Subjects',
-                    'rows': [
-                        {'id': f'subject_{s.lower()}', 'title': s, 'description': f'Study {s}'}
-                        for s in TOPICS.keys()
-                    ]
-                },
-                {
-                    'title': 'Other Options',
-                    'rows': [
-                        {'id': 'audio_chat', 'title': '🎧 Audio Chat', 'description': 'Chat with AI and get audio responses'},
-                        {'id': 'buy_credits', 'title': '💰 Buy Credits', 'description': 'Purchase more credits'},
-                        {'id': 'stats', 'title': '📊 My Stats', 'description': 'View your progress'}
-                    ]
-                }
-            ]
+        if not user_name:
+            registration = get_user_registration(user_id)
+            user_name = registration['name'] if registration else None
+
+        user_stats = get_or_create_user_stats(user_id)
+        current_credits = get_user_credits(user_id)
+
+        # Enhanced welcome message with heavy personalization - exactly like backup
+        if user_name:
+            welcome_text = f"🎓 *Hey {user_name}! Welcome back to your learning journey!* 🎓\n\n"
+            welcome_text += f"*Hi {user_name}, I'm NerdX - Your Personal ZIMSEC Combined Science Tutor!*\n\n"
             
-            whatsapp_service.send_list_message(user_id, "Main Menu", menu_message, sections)
+            # Add personalized motivational message based on stats
+            total_attempts = user_stats.get('total_attempts', 0)
+            if total_attempts == 0:
+                welcome_text += f"🌟 *{user_name}, I'm excited to start this amazing learning adventure with you!*\n\n"
+            elif total_attempts < 10:
+                welcome_text += f"🚀 *Great to see you again, {user_name}! You're building excellent study habits!*\n\n"
+            elif total_attempts < 50:
+                welcome_text += f"⭐ *Impressive progress, {user_name}! You're becoming a ZIMSEC champion!*\n\n"
+            else:
+                welcome_text += f"🏆 *Amazing dedication, {user_name}! You're truly committed to excellence!*\n\n"
+        else:
+            welcome_text = "🎓 *I'm NerdX a Combined Science Bot for ZIMSEC Board* 🎓\n\n"
+            welcome_text += "🌟 *Welcome to your personalized ZIMSEC Combined Science learning companion!*\n\n"
+
+        if user_name:
+            welcome_text += f"✨ *What I Can Do For You, {user_name}:*\n"
+        else:
+            welcome_text += "✨ *What I Can Do For You:*\n"
+            
+        welcome_text += "🧬 Biology • ⚗️ Chemistry • ⚡ Physics\n"
+        welcome_text += "🤖 AI-Generated Questions\n"
+        welcome_text += "📈 Progress Tracking & Analytics\n"
+        welcome_text += "💡 Detailed Step-by-Step Explanations\n"
+        welcome_text += "🏆 Achievement System & Rewards\n"
+        welcome_text += "📷 Math Problem Solving from Images\n\n"
+        
+        if user_name:
+            welcome_text += f"📊 *{user_name}'s Academic Profile:*\n"
+        else:
+            welcome_text += f"📊 *Your Academic Profile:*\n"
+            
+        level = user_stats.get('level', 1)
+        xp_points = user_stats.get('xp_points', 0)
+        correct_answers = user_stats.get('correct_answers', 0)
+        success_rate = (correct_answers/max(total_attempts,1)*100) if total_attempts > 0 else 0
+        
+        welcome_text += f"🎯 Level: {level} | ⭐ XP: {xp_points}\n"
+        welcome_text += f"💳 Credits Available: *{current_credits}*\n"
+        welcome_text += f"📚 Questions Completed: {total_attempts}\n"
+        welcome_text += f"✅ Success Rate: {success_rate:.1f}%\n\n"
+        
+        if user_name:
+            welcome_text += f"🎁 *Hey {user_name}!* Share NerdX with friends and get *50 FREE CREDITS* for each friend who registers!\n\n"
+            welcome_text += f"🚀 *Ready to boost your ZIMSEC performance, {user_name}?* Let's achieve greatness together!"
+        else:
+            welcome_text += f"🎁 *BONUS:* Share NerdX with friends and get *50 FREE CREDITS* for each friend who registers!\n\n"
+            welcome_text += "🚀 Ready to boost your ZIMSEC performance? Let's get started!"
+
+        # Dynamic button arrangement based on credit status - exactly like backup
+        if current_credits < 20:  # Low credits - emphasize buying
+            buttons = [
+                {"id": "start_quiz", "title": "🎯 Start Quiz"},
+                {"id": "buy_credits", "title": "💎 Buy Credits"},
+                {"id": "audio_chat_menu", "title": "🎤 Audio Chat"},
+                {"id": "share_to_friend", "title": "📤 Share to Friend"},
+                {"id": "referrals_menu", "title": "👥 Referrals"}
+            ]
+        else:  # Normal credit level
+            buttons = [
+                {"id": "start_quiz", "title": "🎯 Start Quiz"},
+                {"id": "audio_chat_menu", "title": "🎤 Audio Chat"},
+                {"id": "buy_credits", "title": "💎 Buy Credits"},
+                {"id": "share_to_friend", "title": "📤 Share to Friend"},
+                {"id": "referrals_menu", "title": "👥 Referrals"}
+            ]
+
+        whatsapp_service.send_interactive_message(user_id, welcome_text, buttons)
         
     except Exception as e:
         logger.error(f"Error sending main menu: {e}")
@@ -425,7 +462,9 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         elif selection_id.startswith('difficulty_'):
             difficulty = selection_id.replace('difficulty_', '')
             handle_difficulty_selection(user_id, difficulty)
-        elif selection_id == 'audio_chat':
+        elif selection_id == 'start_quiz':
+            handle_quiz_menu(user_id)
+        elif selection_id == 'audio_chat_menu':
             audio_chat_service.handle_audio_chat_command(user_id)
         elif selection_id == 'audio_female_voice':
             audio_chat_service.handle_voice_selection(user_id, 'female')
@@ -433,6 +472,24 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             audio_chat_service.handle_voice_selection(user_id, 'male')
         elif selection_id == 'buy_credits':
             show_credit_packages(user_id)
+        elif selection_id == 'share_to_friend':
+            handle_share_to_friend(user_id)
+        elif selection_id == 'referrals_menu':
+            show_referral_info(user_id)
+        elif selection_id == 'level_ordinary':
+            handle_level_menu(user_id, 'ordinary')
+        elif selection_id == 'level_advanced':
+            handle_level_menu(user_id, 'advanced')
+        elif selection_id == 'main_menu' or selection_id == 'back_to_menu':
+            send_main_menu(user_id)
+        elif selection_id.startswith('subject_ordinary_'):
+            subject = selection_id.replace('subject_ordinary_', '').replace('_', ' ').title()
+            if subject == 'Combined Science':
+                handle_combined_science_menu(user_id)
+            elif subject == 'Mathematics':
+                handle_mathematics_menu(user_id)
+            elif subject == 'English':
+                handle_english_menu(user_id)
         elif selection_id == 'stats':
             show_user_stats(user_id)
         elif selection_id.startswith('package_'):
@@ -689,6 +746,201 @@ def handle_topic_selection_from_button(user_id: str, button_id: str):
         
     except Exception as e:
         logger.error(f"Error handling topic selection from button: {e}")
+
+def handle_quiz_menu(user_id: str):
+    """Show the education level selection menu - matches backup exactly"""
+    text = "🎓 *Choose your education level:*"
+
+    buttons = [
+        {"id": "level_ordinary", "title": "📚 Ordinary Level"},
+        {"id": "level_advanced", "title": "🎯 Advanced Level"},
+        {"id": "main_menu", "title": "🔙 Back to Menu"}
+    ]
+
+    whatsapp_service.send_interactive_message(user_id, text, buttons)
+
+def handle_level_menu(user_id: str, level: str):
+    """Show subject selection menu for education level - matches backup exactly"""
+    if level == "ordinary":
+        text = "📚 *Ordinary Level Subjects:*\nSelect a subject:"
+        buttons = [
+            {"id": "subject_ordinary_combined_science", "title": "🧬 Combined Science"},
+            {"id": "subject_ordinary_mathematics", "title": "📰 Mathematics"},
+            {"id": "subject_ordinary_english", "title": "📝 English"},
+            {"id": "start_quiz", "title": "🔙 Back"}
+        ]
+    elif level == "advanced":
+        text = "🎯 *Advanced Level Subjects:*\nSelect a subject:"
+        buttons = [
+            {"id": "subject_advanced_biology", "title": "🧬 Biology"},
+            {"id": "subject_advanced_chemistry", "title": "⚗️ Chemistry"},
+            {"id": "subject_advanced_physics", "title": "⚡ Physics"},
+            {"id": "subject_advanced_mathematics", "title": "📰 Mathematics"},
+            {"id": "start_quiz", "title": "🔙 Back"}
+        ]
+    else:
+        whatsapp_service.send_message(user_id, "❌ Invalid education level.")
+        return
+        
+    whatsapp_service.send_interactive_message(user_id, text, buttons)
+
+def handle_share_to_friend(user_id: str):
+    """Handle share to friend button - matches backup exactly"""
+    try:
+        from database.external_db import get_user_registration
+        
+        registration = get_user_registration(user_id)
+        if not registration:
+            whatsapp_service.send_message(user_id, "❌ Registration not found. Please try again.")
+            return
+            
+        nerdx_id = registration.get('nerdx_id', 'N00000')
+        name = registration.get('name', 'Student')
+        
+        share_message = f"📤 *Share NerdX with Friends!*\n\n"
+        share_message += f"Hey {name}! 👋\n\n"
+        share_message += f"💎 Earn *50 FREE CREDITS* for every friend who registers using your ID!\n\n"
+        share_message += f"🎯 *Your Referral ID:* `{nerdx_id}`\n\n"
+        share_message += f"📲 *Share this message:*\n\n"
+        share_message += f"---\n"
+        share_message += f"🎓 Join NerdX - The #1 ZIMSEC Quiz Bot!\n\n"
+        share_message += f"🧬 Study Biology, Chemistry & Physics\n"
+        share_message += f"🤖 AI-powered questions\n"
+        share_message += f"📊 Track your progress\n\n"
+        share_message += f"💎 Register with ID: {nerdx_id} and get bonus credits!\n\n"
+        share_message += f"Start here: https://wa.me/+263784257773?text=Hello%20NerdX%20ID:%20{nerdx_id}\n"
+        share_message += f"---"
+        
+        buttons = [
+            {"id": "referrals_menu", "title": "👥 View Referrals"},
+            {"id": "main_menu", "title": "🏠 Main Menu"}
+        ]
+        
+        whatsapp_service.send_interactive_message(user_id, share_message, buttons)
+        
+    except Exception as e:
+        logger.error(f"Error in handle_share_to_friend: {e}")
+        whatsapp_service.send_message(user_id, "❌ Error sharing referral link.")
+
+def show_referral_info(user_id: str):
+    """Show referral information and stats - matches backup exactly"""
+    try:
+        from database.external_db import get_user_registration, get_referral_stats
+        
+        registration = get_user_registration(user_id)
+        if not registration:
+            whatsapp_service.send_message(user_id, "❌ Registration not found.")
+            return
+            
+        nerdx_id = registration.get('nerdx_id', 'N00000')
+        name = registration.get('name', 'Student')
+        
+        # Get referral stats
+        referral_stats = get_referral_stats(user_id)
+        total_referrals = referral_stats.get('total_referrals', 0)
+        total_earned = referral_stats.get('total_credits_earned', 0)
+        
+        referral_message = f"👥 *{name}'s Referral Center* 👥\n\n"
+        referral_message += f"🎯 *Your Referral ID:* `{nerdx_id}`\n\n"
+        referral_message += f"📊 *Referral Stats:*\n"
+        referral_message += f"• Friends Referred: {total_referrals}\n"
+        referral_message += f"• Credits Earned: {total_earned}\n\n"
+        referral_message += f"💎 *Earn 50 credits* for each friend who registers!\n\n"
+        referral_message += f"📲 Share your ID with friends so they can get bonus credits too!"
+        
+        buttons = [
+            {"id": "share_to_friend", "title": "📤 Share to Friend"},
+            {"id": "main_menu", "title": "🏠 Main Menu"}
+        ]
+        
+        whatsapp_service.send_interactive_message(user_id, referral_message, buttons)
+        
+    except Exception as e:
+        logger.error(f"Error showing referral info: {e}")
+        whatsapp_service.send_message(user_id, "❌ Error loading referral information.")
+
+def handle_combined_science_menu(user_id: str):
+    """Show Combined Science subject menu - matches backup exactly"""
+    try:
+        from database.external_db import get_user_registration, get_user_credits
+        
+        registration = get_user_registration(user_id)
+        user_name = registration['name'] if registration else "Student"
+        credits = get_user_credits(user_id)
+        
+        menu_message = f"🧬 *Combined Science Menu*\n\n"
+        menu_message += f"Welcome {user_name}! 👋\n\n"
+        menu_message += f"💳 Credits: {credits}\n\n"
+        menu_message += f"Select your science subject:"
+        
+        buttons = [
+            {"id": "biology_topics", "title": "🧬 Biology"},
+            {"id": "chemistry_topics", "title": "⚗️ Chemistry"},
+            {"id": "physics_topics", "title": "⚡ Physics"},
+            {"id": "level_ordinary", "title": "🔙 Back"}
+        ]
+        
+        whatsapp_service.send_interactive_message(user_id, menu_message, buttons)
+        
+    except Exception as e:
+        logger.error(f"Error in handle_combined_science_menu: {e}")
+        whatsapp_service.send_message(user_id, "❌ Error loading Combined Science menu.")
+
+def handle_mathematics_menu(user_id: str):
+    """Show Mathematics menu - matches backup exactly"""
+    try:
+        from database.external_db import get_user_registration, get_user_credits, get_or_create_user_stats
+        
+        registration = get_user_registration(user_id)
+        user_name = registration['name'] if registration else "Student"
+        credits = get_user_credits(user_id)
+        user_stats = get_or_create_user_stats(user_id)
+        
+        menu_message = f"📰 *Mathematics Menu*\n\n"
+        menu_message += f"Welcome {user_name}! 👋\n\n"
+        menu_message += f"💳 Credits: {credits}\n"
+        menu_message += f"⭐ Level: {user_stats.get('level', 1)} | XP: {user_stats.get('xp_points', 0)}\n\n"
+        menu_message += f"Choose your math learning option:"
+        
+        buttons = [
+            {"id": "math_topics", "title": "📰 Math Topics"},
+            {"id": "math_image_solver", "title": "📷 Solve from Image"},
+            {"id": "math_graph_generator", "title": "📈 Generate Graph"},
+            {"id": "level_ordinary", "title": "🔙 Back"}
+        ]
+        
+        whatsapp_service.send_interactive_message(user_id, menu_message, buttons)
+        
+    except Exception as e:
+        logger.error(f"Error in handle_mathematics_menu: {e}")
+        whatsapp_service.send_message(user_id, "❌ Error loading Mathematics menu.")
+
+def handle_english_menu(user_id: str):
+    """Show English menu - matches backup exactly"""
+    try:
+        from database.external_db import get_user_registration, get_user_credits
+        
+        registration = get_user_registration(user_id)
+        user_name = registration['name'] if registration else "Student"
+        credits = get_user_credits(user_id)
+        
+        menu_message = f"📝 *English Menu*\n\n"
+        menu_message += f"Welcome {user_name}! 👋\n\n"
+        menu_message += f"💳 Credits: {credits}\n\n"
+        menu_message += f"Choose your English learning option:"
+        
+        buttons = [
+            {"id": "english_comprehension", "title": "📚 Comprehension"},
+            {"id": "english_grammar", "title": "📝 Grammar"},
+            {"id": "english_essay", "title": "✍️ Essay Writing"},
+            {"id": "level_ordinary", "title": "🔙 Back"}
+        ]
+        
+        whatsapp_service.send_interactive_message(user_id, menu_message, buttons)
+        
+    except Exception as e:
+        logger.error(f"Error in handle_english_menu: {e}")
+        whatsapp_service.send_message(user_id, "❌ Error loading English menu.")
 
 def handle_audio_chat_message(user_id: str, message_text: str):
     """Handle messages in audio chat mode"""

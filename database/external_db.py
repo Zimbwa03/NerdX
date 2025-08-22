@@ -98,59 +98,48 @@ def get_user_registration(whatsapp_id: str) -> Optional[Dict]:
         logger.error(f"Error getting user registration: {e}")
         return None
 
-def create_user_registration(user_data: Dict) -> bool:
-    """Create new user registration"""
+def create_user_registration(chat_id: str, name: str, surname: str, nerdx_id: str, referred_by_nerdx_id: str = None) -> dict:
+    """Create user registration - matches backup function signature exactly"""
     try:
         conn = get_connection()
         if not conn:
-            return False
+            return None
         
         cursor = conn.cursor()
         
-        # Use date of birth as string (matches schema)
-        dob = user_data.get('date_of_birth')
-        
         cursor.execute("""
-            INSERT INTO users_registration (chat_id, nerdx_id, name, surname, date_of_birth, 
+            INSERT INTO users_registration (chat_id, nerdx_id, name, surname, 
                                           referred_by_nerdx_id, created_at, updated_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        """, (
-            user_data['whatsapp_id'],  # chat_id = whatsapp_id
-            user_data['nerdx_id'],
-            user_data['name'],
-            user_data['surname'],
-            dob,  # Keep as string
-            user_data.get('referred_by'),
-            datetime.utcnow(),
-            datetime.utcnow()
-        ))
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            RETURNING chat_id, name, surname, nerdx_id, referred_by_nerdx_id, created_at
+        """, (chat_id, nerdx_id, name, surname, referred_by_nerdx_id, datetime.utcnow(), datetime.utcnow()))
+        
+        result = cursor.fetchone()
         
         # Also create entry in users table for credits tracking
         cursor.execute("""
-            INSERT INTO users (whatsapp_id, nerdx_id, name, surname, date_of_birth, 
-                             phone_number, credits, referred_by, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """, (
-            user_data['whatsapp_id'],
-            user_data['nerdx_id'],
-            user_data['name'],
-            user_data['surname'],
-            dob,
-            user_data['whatsapp_id'],  # Use WhatsApp ID as phone
-            50,  # Welcome credits
-            user_data.get('referred_by'),
-            datetime.utcnow()
-        ))
+            INSERT INTO users (whatsapp_id, nerdx_id, name, surname, phone_number, credits, referred_by, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """, (chat_id, nerdx_id, name, surname, chat_id, 50, referred_by_nerdx_id, datetime.utcnow()))
         
         conn.commit()
         conn.close()
         
-        logger.info(f"User registration created: {user_data['nerdx_id']}")
-        return True
+        if result:
+            logger.info(f"User registration created: {nerdx_id}")
+            return {
+                'chat_id': result[0],
+                'name': result[1],
+                'surname': result[2],
+                'nerdx_id': result[3],
+                'referred_by_nerdx_id': result[4],
+                'created_at': result[5]
+            }
+        return None
         
     except Exception as e:
         logger.error(f"Error creating user registration: {e}")
-        return False
+        return None
 
 def get_user_credits(user_id: str) -> int:
     """Get user's current credit balance"""
@@ -242,7 +231,7 @@ def deduct_credits(user_id: str, amount: int) -> bool:
         logger.error(f"Error deducting credits: {e}")
         return False
 
-def get_or_create_user_stats(user_id: str, subject: str, topic: str, difficulty: str) -> Dict:
+def get_or_create_user_topic_stats(user_id: str, subject: str, topic: str, difficulty: str) -> Dict:
     """Get or create user statistics"""
     try:
         conn = get_connection()
@@ -281,6 +270,93 @@ def get_or_create_user_stats(user_id: str, subject: str, topic: str, difficulty:
     except Exception as e:
         logger.error(f"Error getting/creating user stats: {e}")
         return {}
+
+def get_referral_stats(chat_id: str) -> dict:
+    """Get user referral statistics - matches backup functionality"""
+    try:
+        conn = get_connection()
+        if not conn:
+            return {'total_referrals': 0, 'total_credits_earned': 0}
+        
+        cursor = conn.cursor()
+        
+        # Get the user's nerdx_id first
+        cursor.execute("SELECT nerdx_id FROM users_registration WHERE chat_id = %s", (chat_id,))
+        result = cursor.fetchone()
+        
+        if not result:
+            conn.close()
+            return {'total_referrals': 0, 'total_credits_earned': 0}
+            
+        nerdx_id = result[0]
+        
+        # Count total referrals
+        cursor.execute("""
+            SELECT COUNT(*) FROM users_registration 
+            WHERE referred_by_nerdx_id = %s
+        """, (nerdx_id,))
+        
+        total_referrals = cursor.fetchone()[0] or 0
+        
+        # Calculate total credits earned (50 per referral)
+        total_credits_earned = total_referrals * 50
+        
+        conn.close()
+        
+        return {
+            'total_referrals': total_referrals,
+            'total_credits_earned': total_credits_earned
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting referral stats: {e}")
+        return {'total_referrals': 0, 'total_credits_earned': 0}
+
+def get_or_create_user_stats(chat_id: str) -> dict:
+    """Get or create comprehensive user stats - matches backup function"""
+    try:
+        conn = get_connection()
+        if not conn:
+            return {'level': 1, 'xp_points': 0, 'total_attempts': 0, 'correct_answers': 0}
+        
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Get aggregated stats across all subjects/topics
+        cursor.execute("""
+            SELECT 
+                COALESCE(SUM(total_questions), 0) as total_attempts,
+                COALESCE(SUM(correct_answers), 0) as correct_answers,
+                COALESCE(SUM(total_points), 0) as total_points
+            FROM user_stats 
+            WHERE user_id = %s
+        """, (chat_id,))
+        
+        result = cursor.fetchone()
+        
+        if result:
+            total_attempts = result['total_attempts'] or 0
+            correct_answers = result['correct_answers'] or 0
+            total_points = result['total_points'] or 0
+            
+            # Calculate level based on total points (100 points per level)
+            level = max(1, total_points // 100 + 1)
+            xp_points = total_points % 100
+            
+            conn.close()
+            return {
+                'level': level,
+                'xp_points': xp_points,
+                'total_attempts': total_attempts,
+                'correct_answers': correct_answers,
+                'total_points': total_points
+            }
+        
+        conn.close()
+        return {'level': 1, 'xp_points': 0, 'total_attempts': 0, 'correct_answers': 0}
+        
+    except Exception as e:
+        logger.error(f"Error getting user stats: {e}")
+        return {'level': 1, 'xp_points': 0, 'total_attempts': 0, 'correct_answers': 0}
 
 def update_user_stats(user_id: str, subject: str, topic: str, difficulty: str, 
                      correct: bool, points: int) -> bool:
