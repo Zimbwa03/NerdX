@@ -58,11 +58,15 @@ class WhatsAppService:
             
             interactive_buttons = []
             for i, button in enumerate(buttons[:3]):  # WhatsApp supports max 3 buttons
+                # Support both formats: {"text": "...", "callback_data": "..."} and {"id": "...", "title": "..."}
+                button_id = button.get('callback_data') or button.get('id', f"btn_{i}")
+                button_title = button.get('text') or button.get('title', '')
+                
                 interactive_buttons.append({
                     "type": "reply",
                     "reply": {
-                        "id": button.get('id', f"btn_{i}"),
-                        "title": button.get('title', '')[:20]  # Max 20 characters
+                        "id": button_id,
+                        "title": button_title[:20]  # Max 20 characters
                     }
                 })
             
