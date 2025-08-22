@@ -20,6 +20,7 @@ from utils.session_manager import session_manager
 from utils.credit_system import credit_system
 from utils.validators import validators
 from constants import TOPICS, MESSAGE_TEMPLATES, DIFFICULTY_LEVELS
+from database.external_db import get_user_registration, get_user_stats, get_user_credits, deduct_credits
 
 logger = logging.getLogger(__name__)
 
