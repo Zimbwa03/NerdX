@@ -487,7 +487,22 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             whatsapp_service.send_message(user_id, "⏳ Please wait before performing this action again.")
             return
 
-        if selection_id.startswith('subject_'):
+        # Handle specific subject menu selections first (most specific patterns first)
+        if selection_id == 'subject_ordinary_combined_science':
+            handle_combined_science_menu(user_id)
+        elif selection_id == 'subject_ordinary_mathematics':
+            handle_mathematics_menu(user_id)
+        elif selection_id == 'subject_ordinary_english':
+            handle_english_menu(user_id)
+        elif selection_id.startswith('subject_ordinary_'):
+            subject = selection_id.replace('subject_ordinary_', '').replace('_', ' ').title()
+            if subject == 'Combined Science':
+                handle_combined_science_menu(user_id)
+            elif subject == 'Mathematics':
+                handle_mathematics_menu(user_id)
+            elif subject == 'English':
+                handle_english_menu(user_id)
+        elif selection_id.startswith('subject_'):
             subject = selection_id.replace('subject_', '').title()
             handle_subject_selection(user_id, subject)
         elif selection_id.startswith('topic_'):
@@ -516,20 +531,6 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             handle_level_menu(user_id, 'advanced')
         elif selection_id == 'main_menu' or selection_id == 'back_to_menu':
             send_main_menu(user_id)
-        elif selection_id.startswith('subject_ordinary_'):
-            subject = selection_id.replace('subject_ordinary_', '').replace('_', ' ').title()
-            if subject == 'Combined Science':
-                handle_combined_science_menu(user_id)
-            elif subject == 'Mathematics':
-                handle_mathematics_menu(user_id)
-            elif subject == 'English':
-                handle_english_menu(user_id)
-        elif selection_id == 'subject_ordinary_combined_science':
-            handle_combined_science_menu(user_id)
-        elif selection_id == 'subject_ordinary_mathematics':
-            handle_mathematics_menu(user_id)
-        elif selection_id == 'subject_ordinary_english':
-            handle_english_menu(user_id)
         # Add handlers for the Combined Science buttons
         elif selection_id.startswith('science_'):
             handle_subject_topics(user_id, selection_id.replace('science_', ''))
