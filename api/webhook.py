@@ -365,38 +365,67 @@ def send_main_menu(user_id: str, user_name: str = None):
         user_stats = get_or_create_user_stats(user_id)
         current_credits = get_user_credits(user_id)
 
-        # Enhanced welcome message with heavy personalization - exactly like backup
+        # Professional welcome message with clear structure and spacing
+        welcome_text = ""
+        
+        # Personalized greeting section
         if user_name:
-            welcome_text = f"🎓 *Hey {user_name}! Welcome back to your learning journey!* 🎓\n\n"
-            welcome_text += f"*Hi {user_name}, I'm NerdX - Your Personal ZIMSEC Combined Science Tutor!*\n\n"
+            welcome_text += f"🎓 *Welcome back, {user_name}!* 🎓\n"
+            welcome_text += f"═══════════════════════════\n\n"
+            welcome_text += f"*Hi {user_name}, I'm NerdX - Your Personal ZIMSEC Tutor*\n\n"
             
             # Add personalized motivational message based on stats
             total_attempts = user_stats.get('total_attempts', 0)
             if total_attempts == 0:
-                welcome_text += f"🌟 *{user_name}, I'm excited to start this amazing learning adventure with you!*\n\n"
+                welcome_text += f"🌟 *Ready to start your learning journey? Let's make it amazing!*\n\n"
             elif total_attempts < 10:
-                welcome_text += f"🚀 *Great to see you again, {user_name}! You're building excellent study habits!*\n\n"
+                welcome_text += f"🚀 *Great to see you building excellent study habits!*\n\n"
             elif total_attempts < 50:
-                welcome_text += f"⭐ *Impressive progress, {user_name}! You're becoming a ZIMSEC champion!*\n\n"
+                welcome_text += f"⭐ *Impressive progress! You're becoming a ZIMSEC champion!*\n\n"
             else:
-                welcome_text += f"🏆 *Amazing dedication, {user_name}! You're truly committed to excellence!*\n\n"
+                welcome_text += f"🏆 *Amazing dedication! Your commitment to excellence shows!*\n\n"
         else:
-            welcome_text = "🎓 *I'm NerdX a Combined Science Bot for ZIMSEC Board* 🎓\n\n"
-            welcome_text += "🌟 *Welcome to your personalized ZIMSEC Combined Science learning companion!*\n\n"
+            welcome_text += "🎓 *NerdX ZIMSEC Learning Bot* 🎓\n"
+            welcome_text += "═══════════════════════════\n\n"
+            welcome_text += "🌟 *Your Personalized ZIMSEC Study Companion*\n\n"
 
-        # Clean and concise feature list
-        welcome_text += f"✨ *Features:* 🧬 Biology • ⚗️ Chemistry • ⚡ Physics • 📰 Math • 📝 English\n"
-        welcome_text += f"🤖 AI Questions • 📊 Progress Tracking • 🎤 Audio Chat\n\n"
+        # Features section with clear structure
+        welcome_text += "✨ *AVAILABLE SUBJECTS*\n"
+        welcome_text += "━━━━━━━━━━━━━━━━━━━━━━\n"
+        welcome_text += "🧬 *Biology*     ⚗️ *Chemistry*\n"
+        welcome_text += "⚡ *Physics*     📰 *Mathematics*\n"
+        welcome_text += "📝 *English*     🎤 *Audio Chat*\n\n"
         
-        # User stats in compact format
+        welcome_text += "🤖 *SMART FEATURES*\n"
+        welcome_text += "━━━━━━━━━━━━━━━━━━━━━━\n"
+        welcome_text += "• AI-Generated Questions\n"
+        welcome_text += "• Progress Tracking\n"
+        welcome_text += "• Step-by-Step Solutions\n"
+        welcome_text += "• Achievement System\n\n"
+        
+        # User stats section with clear formatting
         level = user_stats.get('level', 1)
         xp_points = user_stats.get('xp_points', 0)
         correct_answers = user_stats.get('correct_answers', 0)
+        total_attempts = user_stats.get('total_attempts', 0)
         success_rate = (correct_answers/max(total_attempts,1)*100) if total_attempts > 0 else 0
         
-        welcome_text += f"📊 Level {level} • ⭐ {xp_points} XP • 💳 {current_credits} Credits\n"
-        welcome_text += f"📚 {total_attempts} Questions • ✅ {success_rate:.1f}% Success\n\n"
-        welcome_text += f"🎁 Share with friends = 50 FREE CREDITS each!"
+        if user_name:
+            welcome_text += f"📊 *{user_name}'s ACADEMIC PROFILE*\n"
+        else:
+            welcome_text += "📊 *YOUR ACADEMIC PROFILE*\n"
+        welcome_text += "━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        welcome_text += f"🎯 *Level:* {level}          ⭐ *XP:* {xp_points}\n"
+        welcome_text += f"💳 *Credits:* {current_credits}       📚 *Questions:* {total_attempts}\n"
+        welcome_text += f"✅ *Success Rate:* {success_rate:.1f}%\n\n"
+        
+        # Call to action section
+        welcome_text += "🎁 *BONUS OPPORTUNITY*\n"
+        welcome_text += "━━━━━━━━━━━━━━━━━━━━━━\n"
+        welcome_text += "*Share NerdX with friends*\n"
+        welcome_text += "*Get 50 FREE CREDITS each!*\n\n"
+        
+        welcome_text += "👇 *Choose an option below to get started:*"
 
         # Send first 3 main buttons
         if current_credits < 20:  # Low credits - emphasize buying
