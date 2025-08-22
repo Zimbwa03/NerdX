@@ -121,3 +121,43 @@ class ActivityLog(db.Model):
     description = db.Column(db.Text, nullable=True)
     additional_data = db.Column(db.Text, nullable=True)  # JSON string for additional data
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class ReferralCode(db.Model):
+    """Model for user referral codes"""
+    __tablename__ = 'referral_codes'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.String(50), unique=True, nullable=False)
+    referral_code = db.Column(db.String(20), unique=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Referral(db.Model):
+    """Model for tracking referrals"""
+    __tablename__ = 'referrals'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    referrer_id = db.Column(db.String(50), nullable=False)
+    referee_id = db.Column(db.String(50), nullable=False)
+    referral_code = db.Column(db.String(20), nullable=False)
+    bonus_awarded = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class ReferralStats(db.Model):
+    """Model for referral statistics"""
+    __tablename__ = 'referral_stats'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.String(50), unique=True, nullable=False)
+    total_referrals = db.Column(db.Integer, default=0)
+    successful_referrals = db.Column(db.Integer, default=0)
+    total_bonus_earned = db.Column(db.Integer, default=0)
+    last_referral_date = db.Column(db.DateTime, nullable=True)
+
+class QuestionCache(db.Model):
+    """Model for caching questions"""
+    __tablename__ = 'question_cache'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    cache_key = db.Column(db.String(100), unique=True, nullable=False)
+    question_data = db.Column(db.Text, nullable=False)  # JSON string
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)

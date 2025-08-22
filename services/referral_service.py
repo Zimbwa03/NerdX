@@ -1,109 +1,51 @@
 import logging
-import sqlite3
 from typing import Dict, Optional, List
 from datetime import datetime, timedelta
 import random
 import string
+from app import db
+from models import ReferralCode, Referral, ReferralStats
 
 logger = logging.getLogger(__name__)
 
 class ReferralService:
     """Handle user referral system with bonus credits"""
     
-    def __init__(self, db_path='nerdx_quiz.db'):
-        self.db_path = db_path
-        self.init_referral_tables()
-        
+    def __init__(self):
         # Referral rewards
         self.referral_bonus = {
             'referrer': 50,  # Credits for the person who referred
             'referee': 25,   # Credits for the new user
         }
     
-    def init_referral_tables(self):
-        """Initialize referral tables in SQLite"""
-        try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
-            # Referral codes table
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS referral_codes (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_id TEXT UNIQUE,
-                    referral_code TEXT UNIQUE,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            ''')
-            
-            # Referrals table  
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS referrals (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    referrer_id TEXT,
-                    referee_id TEXT,
-                    referral_code TEXT,
-                    bonus_awarded BOOLEAN DEFAULT FALSE,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            ''')
-            
-            # Referral stats table
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS referral_stats (
-                    user_id TEXT PRIMARY KEY,
-                    total_referrals INTEGER DEFAULT 0,
-                    successful_referrals INTEGER DEFAULT 0,
-                    total_bonus_earned INTEGER DEFAULT 0,
-                    last_referral_date TIMESTAMP
-                )
-            ''')
-            
-            conn.commit()
-            conn.close()
-            logger.info("Referral tables initialized successfully")
-            
-        except Exception as e:
-            logger.error(f"Error initializing referral tables: {e}")
-    
     def generate_referral_code(self, user_id: str) -> Optional[str]:
         """Generate a unique referral code for user"""
         try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
             # Check if user already has a referral code
-            cursor.execute('SELECT referral_code FROM referral_codes WHERE user_id = ?', (user_id,))
-            existing_code = cursor.fetchone()
-            
+            existing_code = ReferralCode.query.filter_by(user_id=user_id).first()
             if existing_code:
-                conn.close()
-                return existing_code[0]
+                return existing_code.referral_code
             
             # Generate new unique code
             for _ in range(10):  # Try 10 times to generate unique code
                 code = self._generate_code()
                 
-                cursor.execute('SELECT COUNT(*) FROM referral_codes WHERE referral_code = ?', (code,))
-                if cursor.fetchone()[0] == 0:
+                # Check if code is unique
+                if not ReferralCode.query.filter_by(referral_code=code).first():
                     # Code is unique, save it
-                    cursor.execute('''
-                        INSERT INTO referral_codes (user_id, referral_code)
-                        VALUES (?, ?)
-                    ''', (user_id, code))
-                    
-                    conn.commit()
-                    conn.close()
+                    new_code = ReferralCode(user_id=user_id, referral_code=code)
+                    db.session.add(new_code)
+                    db.session.commit()
                     
                     logger.info(f"Generated referral code {code} for user {user_id}")
                     return code
             
-            conn.close()
             logger.error("Could not generate unique referral code")
             return None
             
         except Exception as e:
             logger.error(f"Error generating referral code: {e}")
+            db.session.rollback()
             return None
     
     def _generate_code(self) -> str:
@@ -123,21 +65,8 @@ class ReferralService:
     def validate_referral_code(self, referral_code: str) -> Optional[str]:
         """Validate referral code and return referrer user_id"""
         try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
-            cursor.execute('''
-                SELECT user_id FROM referral_codes 
-                WHERE referral_code = ?
-            ''', (referral_code.upper(),))
-            
-            result = cursor.fetchone()
-            conn.close()
-            
-            if result:
-                return result[0]
-            else:
-                return None
+            referral_record = ReferralCode.query.filter_by(referral_code=referral_code.upper()).first()
+            return referral_record.user_id if referral_record else None
                 
         except Exception as e:
             logger.error(f"Error validating referral code: {e}")
@@ -151,44 +80,44 @@ class ReferralService:
                 logger.warning(f"Self-referral attempt blocked: {referee_id}")
                 return False
             
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
             # Check if referee was already referred
-            cursor.execute('''
-                SELECT COUNT(*) FROM referrals WHERE referee_id = ?
-            ''', (referee_id,))
-            
-            if cursor.fetchone()[0] > 0:
-                conn.close()
+            existing_referral = Referral.query.filter_by(referee_id=referee_id).first()
+            if existing_referral:
                 logger.warning(f"User {referee_id} already has been referred")
                 return False
             
             # Record the referral
-            cursor.execute('''
-                INSERT INTO referrals (referrer_id, referee_id, referral_code)
-                VALUES (?, ?, ?)
-            ''', (referrer_id, referee_id, referral_code))
+            new_referral = Referral(
+                referrer_id=referrer_id,
+                referee_id=referee_id,
+                referral_code=referral_code
+            )
+            db.session.add(new_referral)
             
-            # Update referral stats
-            cursor.execute('''
-                INSERT OR REPLACE INTO referral_stats 
-                (user_id, total_referrals, successful_referrals, total_bonus_earned, last_referral_date)
-                VALUES (?, 
-                    COALESCE((SELECT total_referrals FROM referral_stats WHERE user_id = ?), 0) + 1,
-                    COALESCE((SELECT successful_referrals FROM referral_stats WHERE user_id = ?), 0) + 1,
-                    COALESCE((SELECT total_bonus_earned FROM referral_stats WHERE user_id = ?), 0) + ?,
-                    ?)
-            ''', (referrer_id, referrer_id, referrer_id, referrer_id, self.referral_bonus['referrer'], datetime.now()))
+            # Update or create referral stats
+            stats = ReferralStats.query.filter_by(user_id=referrer_id).first()
+            if stats:
+                stats.total_referrals += 1
+                stats.successful_referrals += 1
+                stats.total_bonus_earned += self.referral_bonus['referrer']
+                stats.last_referral_date = datetime.utcnow()
+            else:
+                stats = ReferralStats(
+                    user_id=referrer_id,
+                    total_referrals=1,
+                    successful_referrals=1,
+                    total_bonus_earned=self.referral_bonus['referrer'],
+                    last_referral_date=datetime.utcnow()
+                )
+                db.session.add(stats)
             
-            conn.commit()
-            conn.close()
-            
+            db.session.commit()
             logger.info(f"Referral processed: {referrer_id} referred {referee_id}")
             return True
             
         except Exception as e:
             logger.error(f"Error processing referral: {e}")
+            db.session.rollback()
             return False
     
     def award_referral_bonuses(self, referrer_id: str, referee_id: str, referral_id: int) -> Dict:
@@ -203,23 +132,21 @@ class ReferralService:
                 'success': False
             }
             
-            # Award bonus to referrer (placeholder - user_service integration)
-            # referrer_bonus = user_service.add_credits(referrer_id, self.referral_bonus['referrer'], "Referral bonus")
-            results['referrer_bonus'] = self.referral_bonus['referrer']
+            # Award bonus to referrer
+            referrer_success = user_service.add_credits(referrer_id, self.referral_bonus['referrer'])
+            if referrer_success:
+                results['referrer_bonus'] = self.referral_bonus['referrer']
             
-            # Award bonus to referee (placeholder - user_service integration)
-            # referee_bonus = user_service.add_credits(referee_id, self.referral_bonus['referee'], "Welcome bonus")  
-            results['referee_bonus'] = self.referral_bonus['referee']
+            # Award bonus to referee
+            referee_success = user_service.add_credits(referee_id, self.referral_bonus['referee'])
+            if referee_success:
+                results['referee_bonus'] = self.referral_bonus['referee']
             
             # Mark bonus as awarded
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            cursor.execute('''
-                UPDATE referrals SET bonus_awarded = TRUE 
-                WHERE id = ?
-            ''', (referral_id,))
-            conn.commit()
-            conn.close()
+            referral = Referral.query.get(referral_id)
+            if referral:
+                referral.bonus_awarded = True
+                db.session.commit()
             
             results['success'] = True
             logger.info(f"Referral bonuses awarded: referrer +{results['referrer_bonus']}, referee +{results['referee_bonus']}")
@@ -228,49 +155,40 @@ class ReferralService:
             
         except Exception as e:
             logger.error(f"Error awarding referral bonuses: {e}")
+            db.session.rollback()
             return {'referrer_bonus': 0, 'referee_bonus': 0, 'success': False}
     
     def get_referral_stats(self, user_id: str) -> Dict:
         """Get referral statistics for a user"""
         try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
             # Get referral code
-            cursor.execute('SELECT referral_code FROM referral_codes WHERE user_id = ?', (user_id,))
-            code_result = cursor.fetchone()
-            referral_code = code_result[0] if code_result else None
+            code_record = ReferralCode.query.filter_by(user_id=user_id).first()
+            referral_code = code_record.referral_code if code_record else None
             
             # Get stats
-            cursor.execute('''
-                SELECT total_referrals, successful_referrals, total_bonus_earned 
-                FROM referral_stats WHERE user_id = ?
-            ''', (user_id,))
+            stats = ReferralStats.query.filter_by(user_id=user_id).first()
             
-            stats_result = cursor.fetchone()
-            
-            if stats_result:
-                total_referrals, successful_referrals, total_bonus_earned = stats_result
+            if stats:
+                total_referrals = stats.total_referrals
+                successful_referrals = stats.successful_referrals
+                total_bonus_earned = stats.total_bonus_earned
             else:
                 total_referrals = successful_referrals = total_bonus_earned = 0
             
             # Get recent referrals
-            cursor.execute('''
-                SELECT referee_id, created_at FROM referrals 
-                WHERE referrer_id = ? AND bonus_awarded = TRUE
-                ORDER BY created_at DESC LIMIT 5
-            ''', (user_id,))
+            recent_referrals = Referral.query.filter_by(
+                referrer_id=user_id, 
+                bonus_awarded=True
+            ).order_by(Referral.created_at.desc()).limit(5).all()
             
-            recent_referrals = cursor.fetchall()
-            
-            conn.close()
+            recent_referrals_data = [(ref.referee_id, ref.created_at) for ref in recent_referrals]
             
             return {
                 'referral_code': referral_code,
                 'total_referrals': total_referrals,
                 'successful_referrals': successful_referrals,
                 'total_bonus_earned': total_bonus_earned,
-                'recent_referrals': recent_referrals,
+                'recent_referrals': recent_referrals_data,
                 'referrer_bonus': self.referral_bonus['referrer'],
                 'referee_bonus': self.referral_bonus['referee']
             }
@@ -290,27 +208,18 @@ class ReferralService:
     def get_top_referrers(self, limit: int = 10) -> List[Dict]:
         """Get top users by referral count"""
         try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
-            cursor.execute('''
-                SELECT user_id, successful_referrals, total_bonus_earned
-                FROM referral_stats
-                WHERE successful_referrals > 0
-                ORDER BY successful_referrals DESC
-                LIMIT ?
-            ''', (limit,))
-            
-            results = cursor.fetchall()
-            conn.close()
+            top_stats = ReferralStats.query.filter(
+                ReferralStats.successful_referrals > 0
+            ).order_by(
+                ReferralStats.successful_referrals.desc()
+            ).limit(limit).all()
             
             top_referrers = []
-            for result in results:
-                user_id, referrals, bonus = result
+            for stats in top_stats:
                 top_referrers.append({
-                    'user_id': user_id,
-                    'referrals': referrals,
-                    'bonus_earned': bonus
+                    'user_id': stats.user_id,
+                    'referrals': stats.successful_referrals,
+                    'bonus_earned': stats.total_bonus_earned
                 })
             
             return top_referrers

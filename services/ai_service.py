@@ -22,9 +22,9 @@ class AIService:
         """Generate mathematics questions using DeepSeek AI with fallback and caching"""
         try:
             from utils.fallback_questions import generate_fallback_math_questions
-            from utils.question_cache import QuestionCache
+            from utils.question_cache import QuestionCacheService
             
-            question_cache = QuestionCache()
+            question_cache = QuestionCacheService()
             questions = []
             
             # Try to get questions from cache first

@@ -10,7 +10,7 @@ from services.graph_service import GraphService
 from services.english_service import EnglishService
 from services.referral_service import ReferralService
 from utils.rate_limiter import RateLimiter
-from utils.question_cache import QuestionCache  
+from utils.question_cache import QuestionCacheService  
 from utils.latex_converter import LaTeXConverter
 from utils.pdf_generator import PDFGenerator
 from utils.session_manager import session_manager
@@ -34,7 +34,7 @@ referral_service = ReferralService()
 
 # Initialize utilities
 rate_limiter = RateLimiter()
-question_cache = QuestionCache()
+question_cache = QuestionCacheService()
 latex_converter = LaTeXConverter()
 pdf_generator = PDFGenerator()
 
