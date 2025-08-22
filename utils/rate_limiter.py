@@ -31,8 +31,17 @@ class RateLimiter:
             return True  # Allow on error
     
     def check_session_rate_limit(self, chat_id: str, action: str) -> bool:
-        """Check if user is rate limited for specific action - legacy compatibility"""
-        return not self.check_rate_limit(chat_id, action)
+        """Check if user is rate limited for specific action - returns True when rate limited"""
+        session_key = f"{chat_id}_{action}"
+        current_time = time.time()
+        
+        if session_key in self.session_limits:
+            last_request = self.session_limits[session_key]
+            if current_time - last_request < self.session_cooldown:
+                return True  # Rate limited
+        
+        self.session_limits[session_key] = current_time
+        return False  # Not rate limited
             
     def check_active_generation(self, user_id: str, generation_type: str) -> bool:
         """Check if user already has an active generation process"""

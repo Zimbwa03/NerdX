@@ -83,7 +83,7 @@ def handle_webhook():
             logger.warning(f"Invalid WhatsApp ID: {user_id}")
             return jsonify({'status': 'invalid_user_id'}), 400
         
-        # Check rate limiting
+        # Check rate limiting - check_session_rate_limit returns True when rate limited
         if rate_limiter.check_session_rate_limit(user_id, 'message'):
             whatsapp_service.send_message(
                 user_id, 
@@ -430,23 +430,23 @@ def send_main_menu(user_id: str, user_name: str = None):
         # Send first 3 main buttons
         if current_credits < 20:  # Low credits - emphasize buying
             main_buttons = [
-                {"id": "start_quiz", "title": "🎯 Start Quiz"},
-                {"id": "buy_credits", "title": "💎 Buy Credits"},
-                {"id": "audio_chat_menu", "title": "🎤 Audio Chat"}
+                {"text": "🎯 Start Quiz", "callback_data": "start_quiz"},
+                {"text": "💎 Buy Credits", "callback_data": "buy_credits"},
+                {"text": "🎤 Audio Chat", "callback_data": "audio_chat_menu"}
             ]
         else:  # Normal credit level
             main_buttons = [
-                {"id": "start_quiz", "title": "🎯 Start Quiz"},
-                {"id": "audio_chat_menu", "title": "🎤 Audio Chat"},
-                {"id": "buy_credits", "title": "💎 Buy Credits"}
+                {"text": "🎯 Start Quiz", "callback_data": "start_quiz"},
+                {"text": "🎤 Audio Chat", "callback_data": "audio_chat_menu"},
+                {"text": "💎 Buy Credits", "callback_data": "buy_credits"}
             ]
 
         whatsapp_service.send_interactive_message(user_id, welcome_text, main_buttons)
         
         # Send additional buttons separately
         additional_buttons = [
-            {"id": "share_to_friend", "title": "📤 Share to Friend"},
-            {"id": "referrals_menu", "title": "👥 Referrals"}
+            {"text": "📤 Share to Friend", "callback_data": "share_to_friend"},
+            {"text": "👥 Referrals", "callback_data": "referrals_menu"}
         ]
         
         whatsapp_service.send_interactive_message(user_id, "💎 *More Options:*", additional_buttons)
@@ -509,6 +509,34 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             handle_mathematics_menu(user_id)
         elif selection_id == 'subject_ordinary_english':
             handle_english_menu(user_id)
+        # Add handlers for the Combined Science buttons
+        elif selection_id.startswith('science_'):
+            subject = selection_id.replace('science_', '')
+            # Add rate limiting check before proceeding
+            if not rate_limiter.check_session_rate_limit(user_id, f"science_topic_{subject}"):
+                # Handle Combined Science topic selection
+                from modules.combined_science_handlers import handle_topic_selection
+                handle_topic_selection(user_id, whatsapp_service, subject)
+            else:
+                whatsapp_service.send_message(user_id, "⏳ Please wait before selecting another topic.")
+        elif selection_id == 'combined_exam':
+            # Handle combined exam
+            whatsapp_service.send_message(user_id, "🌟 Combined Exam feature coming soon!")
+        elif selection_id.startswith('math_'):
+            # Handle math menu selections
+            math_action = selection_id.replace('math_', '')
+            if math_action == 'practice':
+                # Handle math practice
+                whatsapp_service.send_message(user_id, "📚 Math practice feature coming soon!")
+            elif math_action == 'graphing':
+                # Handle math graphing
+                whatsapp_service.send_message(user_id, "📈 Math graphing feature coming soon!")
+        elif selection_id.startswith('english_'):
+            # Handle english menu selections
+            english_action = selection_id.replace('english_', '')
+            whatsapp_service.send_message(user_id, f"📝 {english_action.title()} feature coming soon!")
+        elif selection_id == 'upload_math_image':
+            whatsapp_service.send_message(user_id, "📷 Please send an image of your math problem to solve it!")
         elif selection_id == 'stats':
             show_user_stats(user_id)
         elif selection_id.startswith('package_'):
@@ -771,9 +799,9 @@ def handle_quiz_menu(user_id: str):
     text = "🎓 *Choose your education level:*"
 
     buttons = [
-        {"id": "level_ordinary", "title": "📚 Ordinary Level"},
-        {"id": "level_advanced", "title": "🎯 Advanced Level"},
-        {"id": "main_menu", "title": "🔙 Back to Menu"}
+        {"text": "📚 Ordinary Level", "callback_data": "level_ordinary"},
+        {"text": "🎯 Advanced Level", "callback_data": "level_advanced"},
+        {"text": "🔙 Back to Menu", "callback_data": "main_menu"}
     ]
 
     whatsapp_service.send_interactive_message(user_id, text, buttons)
@@ -831,8 +859,8 @@ def handle_share_to_friend(user_id: str):
         share_message += f"---"
         
         buttons = [
-            {"id": "referrals_menu", "title": "👥 View Referrals"},
-            {"id": "main_menu", "title": "🏠 Main Menu"}
+            {"text": "👥 View Referrals", "callback_data": "referrals_menu"},
+            {"text": "🏠 Main Menu", "callback_data": "main_menu"}
         ]
         
         whatsapp_service.send_interactive_message(user_id, share_message, buttons)
@@ -868,8 +896,8 @@ def show_referral_info(user_id: str):
         referral_message += f"📲 Share your ID with friends so they can get bonus credits too!"
         
         buttons = [
-            {"id": "share_to_friend", "title": "📤 Share to Friend"},
-            {"id": "main_menu", "title": "🏠 Main Menu"}
+            {"text": "📤 Share to Friend", "callback_data": "share_to_friend"},
+            {"text": "🏠 Main Menu", "callback_data": "main_menu"}
         ]
         
         whatsapp_service.send_interactive_message(user_id, referral_message, buttons)
