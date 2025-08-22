@@ -154,18 +154,8 @@ class QuestionService:
             if 'options' in question_data:
                 options_json = json.dumps(question_data['options'])
             
-            # Save to database
-            save_ai_question_to_database(
-                subject=subject,
-                topic=topic,
-                difficulty=difficulty,
-                question_type=question_type,
-                question_text=question_data['question'],
-                options=options_json or '',
-                correct_answer=question_data.get('correct_answer') or '',
-                solution=question_data.get('solution', question_data.get('explanation', '')),
-                points=question_data.get('points', POINT_VALUES[difficulty])
-            )
+            # Save to database with correct function signature
+            save_ai_question_to_database(question_data, subject, topic)
             
             logger.info(f"Saved AI-generated question to database: {subject}/{topic}/{difficulty}")
             

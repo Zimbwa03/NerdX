@@ -327,21 +327,28 @@ Generate ONE high-quality {subject} MCQ question for {topic} now:
             prompt = f"""
 You are an expert English Language tutor for ZIMSEC O-Level curriculum.
 
-Generate ONE English question for: {topic}
+Generate ONE multiple choice English question for: {topic}
 Difficulty: {difficulty}
 
 Requirements:
 1. Align with ZIMSEC English Language syllabus
 2. Age-appropriate for Forms 1-4 students
-3. Clear instructions and examples where needed
-4. Practical and educational
+3. Multiple choice format with 4 options (A, B, C, D)
+4. Clear question with one correct answer
+5. Practical and educational
 
-JSON format:
+MANDATORY JSON format:
 {{
-    "question": "Question text with clear instructions",
-    "sample_answer": "Example or guidelines for answering",
-    "marking_criteria": "How the answer should be evaluated",
-    "points": {10 if difficulty == 'easy' else 20 if difficulty == 'medium' else 50}
+    "question": "Clear English language question",
+    "options": {{
+        "A": "First option",
+        "B": "Second option", 
+        "C": "Third option",
+        "D": "Fourth option"
+    }},
+    "correct_answer": "A",
+    "explanation": "Detailed explanation of why the answer is correct",
+    "points": {10 if difficulty == 'easy' else 20 if difficulty == 'medium' else 30}
 }}
 """
 
@@ -383,21 +390,28 @@ JSON format:
             prompt = f"""
 You are an expert English Language tutor for ZIMSEC O-Level curriculum.
 
-Generate ONE English question for: {topic}
+Generate ONE multiple choice English question for: {topic}
 Difficulty: {difficulty}
 
 Requirements:
 1. Align with ZIMSEC English Language syllabus
 2. Age-appropriate for Forms 1-4 students
-3. Clear instructions and examples where needed
-4. Practical and educational
+3. Multiple choice format with 4 options (A, B, C, D)
+4. Clear question with one correct answer
+5. Practical and educational
 
-JSON format:
+MANDATORY JSON format:
 {{
-    "question": "Question text with clear instructions",
-    "sample_answer": "Example or guidelines for answering",
-    "marking_criteria": "How the answer should be evaluated",
-    "points": {10 if difficulty == 'easy' else 20 if difficulty == 'medium' else 50}
+    "question": "Clear English language question",
+    "options": {{
+        "A": "First option",
+        "B": "Second option", 
+        "C": "Third option", 
+        "D": "Fourth option"
+    }},
+    "correct_answer": "A",
+    "explanation": "Detailed explanation of why the answer is correct",
+    "points": {10 if difficulty == 'easy' else 20 if difficulty == 'medium' else 30}
 }}
 """
 
