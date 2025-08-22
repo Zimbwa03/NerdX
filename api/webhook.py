@@ -835,8 +835,8 @@ def show_referral_info(user_id: str):
         nerdx_id = registration.get('nerdx_id', 'N00000')
         name = registration.get('name', 'Student')
         
-        # Get referral stats
-        referral_stats = get_referral_stats(user_id)
+        # Get referral stats using nerdx_id (not chat_id)
+        referral_stats = get_referral_stats(nerdx_id)
         total_referrals = referral_stats.get('total_referrals', 0)
         total_earned = referral_stats.get('total_credits_earned', 0)
         
@@ -889,12 +889,12 @@ def handle_combined_science_menu(user_id: str):
 def handle_mathematics_menu(user_id: str):
     """Show Mathematics menu - matches backup exactly"""
     try:
-        from database.external_db import get_user_registration, get_user_credits, get_or_create_user_stats
+        from database.external_db import get_user_registration, get_user_credits, get_user_stats
         
         registration = get_user_registration(user_id)
         user_name = registration['name'] if registration else "Student"
         credits = get_user_credits(user_id)
-        user_stats = get_or_create_user_stats(user_id)
+        user_stats = get_user_stats(user_id) or {'level': 1, 'xp_points': 0}
         
         menu_message = f"📰 *Mathematics Menu*\n\n"
         menu_message += f"Welcome {user_name}! 👋\n\n"
