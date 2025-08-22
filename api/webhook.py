@@ -371,7 +371,7 @@ def send_main_menu(user_id: str, user_name: str = None):
         # Personalized greeting section
         if user_name:
             welcome_text += f"🎓 *Welcome back, {user_name}!* 🎓\n"
-            welcome_text += f"═══════════════════════════\n\n"
+            welcome_text += f"═══════════════════\n\n"
             welcome_text += f"*Hi {user_name}, I'm NerdX - Your Personal ZIMSEC Tutor*\n\n"
             
             # Add personalized motivational message based on stats
@@ -386,18 +386,18 @@ def send_main_menu(user_id: str, user_name: str = None):
                 welcome_text += f"🏆 *Amazing dedication! Your commitment to excellence shows!*\n\n"
         else:
             welcome_text += "🎓 *NerdX ZIMSEC Learning Bot* 🎓\n"
-            welcome_text += "═══════════════════════════\n\n"
+            welcome_text += "═══════════════════\n\n"
             welcome_text += "🌟 *Your Personalized ZIMSEC Study Companion*\n\n"
 
         # Features section with clear structure
         welcome_text += "✨ *AVAILABLE SUBJECTS*\n"
-        welcome_text += "━━━━━━━━━━━━━━━━━━━━━━\n"
+        welcome_text += "━━━━━━━━━━━━━━━━━\n"
         welcome_text += "🧬 *Biology*     ⚗️ *Chemistry*\n"
         welcome_text += "⚡ *Physics*     📰 *Mathematics*\n"
         welcome_text += "📝 *English*     🎤 *Audio Chat*\n\n"
         
         welcome_text += "🤖 *SMART FEATURES*\n"
-        welcome_text += "━━━━━━━━━━━━━━━━━━━━━━\n"
+        welcome_text += "━━━━━━━━━━━━━━━━━\n"
         welcome_text += "• AI-Generated Questions\n"
         welcome_text += "• Progress Tracking\n"
         welcome_text += "• Step-by-Step Solutions\n"
@@ -414,14 +414,14 @@ def send_main_menu(user_id: str, user_name: str = None):
             welcome_text += f"📊 *{user_name}'s ACADEMIC PROFILE*\n"
         else:
             welcome_text += "📊 *YOUR ACADEMIC PROFILE*\n"
-        welcome_text += "━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        welcome_text += "━━━━━━━━━━━━━━━━━━━━━\n"
         welcome_text += f"🎯 *Level:* {level}          ⭐ *XP:* {xp_points}\n"
         welcome_text += f"💳 *Credits:* {current_credits}       📚 *Questions:* {total_attempts}\n"
         welcome_text += f"✅ *Success Rate:* {success_rate:.1f}%\n\n"
         
         # Call to action section
         welcome_text += "🎁 *BONUS OPPORTUNITY*\n"
-        welcome_text += "━━━━━━━━━━━━━━━━━━━━━━\n"
+        welcome_text += "━━━━━━━━━━━━━━━━━\n"
         welcome_text += "*Share NerdX with friends*\n"
         welcome_text += "*Get 50 FREE CREDITS each!*\n\n"
         
