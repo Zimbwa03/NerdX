@@ -1387,7 +1387,7 @@ def generate_and_send_question(chat_id: str, subject: str, topic: str, difficult
         logger.info(f"Successfully generated question for {subject}/{topic}/{difficulty}")
 
         # Deduct credits
-        deduct_credits(chat_id, credit_cost)
+        deduct_credits(chat_id, credit_cost, f"{difficulty}_{subject.lower()}_question", f"{difficulty} {subject} question on {topic}")
 
         # Send the question
         send_question_to_user(chat_id, question_data, subject, topic, difficulty, user_name)

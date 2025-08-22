@@ -10,34 +10,34 @@ logger = logging.getLogger(__name__)
 
 class AIService:
     """Service for AI-powered question generation using DeepSeek and Gemini"""
-    
+
     def __init__(self):
         self.deepseek_api_key = Config.DEEPSEEK_API_KEY
         self.gemini_api_key = Config.GEMINI_API_KEY
-        
+
         if not self.deepseek_api_key:
             raise ValueError("DEEPSEEK_API_KEY is required")
-    
+
     def generate_math_questions(self, topic: str, difficulty: str, count: int = 1, chat_id: Optional[str] = None):
         """Generate mathematics questions using DeepSeek AI with fallback and caching"""
         try:
             from utils.fallback_questions import generate_fallback_math_questions
             from utils.question_cache import QuestionCacheService
-            
+
             question_cache = QuestionCacheService()
             questions = []
-            
+
             # Try to get questions from cache first
             if chat_id:
                 cached_question = question_cache.get_cached_question(topic, difficulty, chat_id)
                 if cached_question:
                     question_cache.save_question_to_history(chat_id, cached_question.get('question', ''), topic, difficulty)
                     return [cached_question]
-            
+
             # Generate new questions using API
             for i in range(count):
                 question = self.generate_math_question(topic, difficulty)
-                
+
                 if question:
                     # Cache the question
                     if chat_id:
@@ -52,14 +52,14 @@ class AIService:
                         if chat_id:
                             question_cache.save_question_to_history(chat_id, fallback_questions[0].get('question', ''), topic, difficulty)
                         questions.extend(fallback_questions)
-            
+
             return questions if questions else generate_fallback_math_questions(topic, difficulty, count)
-                
+
         except Exception as e:
             logger.error(f"Error generating math questions: {e}")
             from utils.fallback_questions import generate_fallback_math_questions
             return generate_fallback_math_questions(topic, difficulty, count)
-    
+
     def generate_math_question(self, topic: str, difficulty: str) -> Optional[Dict]:
         """Generate a mathematics question using DeepSeek AI"""
         try:
@@ -68,7 +68,7 @@ class AIService:
                 "medium": "Requires understanding of multiple concepts, moderate calculations, 2-3 steps",
                 "difficult": "Complex problem-solving, multi-step reasoning, synthesis of several concepts"
             }
-            
+
             prompt = f"""
 You are MathMentor, an expert O-Level Mathematics tutor for ZIMSEC curriculum.
 
@@ -98,13 +98,13 @@ EXAMPLE for {topic}:
 
 Generate ONE question now (not multiple, not an array):
 """
-            
+
             return self._call_deepseek_api(prompt)
-            
+
         except Exception as e:
             logger.error(f"Error generating math question: {e}")
             return None
-    
+
     def generate_science_question(self, subject: str, topic: str, difficulty: str) -> Optional[Dict]:
         """Generate a ZIMSEC O-level Combined Science question using Gemini AI (primary) with DeepSeek fallback"""
         try:
@@ -115,14 +115,14 @@ Generate ONE question now (not multiple, not an array):
                     return result
                 else:
                     logger.warning("Gemini AI failed, falling back to DeepSeek")
-            
+
             # Fallback to DeepSeek if Gemini fails or is not available
             return self._generate_science_with_deepseek(subject, topic, difficulty)
-            
+
         except Exception as e:
             logger.error(f"Error generating science question: {e}")
             return None
-    
+
     def _generate_science_with_gemini(self, subject: str, topic: str, difficulty: str) -> Optional[Dict]:
         """Generate science question using Gemini AI"""
         try:
@@ -131,14 +131,14 @@ Generate ONE question now (not multiple, not an array):
                 "medium": "Application of concepts with moderate analysis and problem-solving", 
                 "difficult": "Complex analysis, synthesis, evaluation and higher-order thinking"
             }
-            
+
             # Enhanced ZIMSEC-specific context prompts
             zimsec_context = {
                 "Biology": "ZIMSEC O-Level Combined Science Biology syllabus covering cell biology, human biology, plant biology, genetics, ecology, and evolution for Forms 1-4 students in Zimbabwe",
                 "Chemistry": "ZIMSEC O-Level Combined Science Chemistry syllabus covering atomic structure, chemical bonding, acids/bases, metals, organic chemistry, and chemical reactions for Forms 1-4 students in Zimbabwe",
                 "Physics": "ZIMSEC O-Level Combined Science Physics syllabus covering mechanics, heat, light, sound, electricity, magnetism, and modern physics for Forms 1-4 students in Zimbabwe"
             }
-            
+
             prompt = f"""
 You are ScienceMentor, an expert ZIMSEC Combined Science tutor with deep knowledge of Zimbabwe's O-Level curriculum.
 
@@ -175,32 +175,32 @@ MANDATORY JSON FORMAT:
 
 Generate ONE high-quality {subject} MCQ question for {topic} now:
 """
-            
+
             headers = {
                 'Content-Type': 'application/json'
             }
-            
+
             data = {
                 'contents': [{
                     'parts': [{'text': prompt}]
                 }]
             }
-            
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={self.gemini_api_key}"
-            
+
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={self.gemini_api_key}"
+
             response = requests.post(url, headers=headers, json=data, timeout=30)
-            
+
             if response.status_code == 200:
                 result = response.json()
                 content = result['candidates'][0]['content']['parts'][0]['text']
-                
+
                 # Extract JSON from response
                 json_start = content.find('{')
                 json_end = content.rfind('}') + 1
                 json_str = content[json_start:json_end]
-                
+
                 question_data = json.loads(json_str)
-                
+
                 # Validate response structure
                 if self._validate_science_question_data(question_data):
                     logger.info("✅ Successfully generated science question with Gemini AI")
@@ -211,11 +211,11 @@ Generate ONE high-quality {subject} MCQ question for {topic} now:
             else:
                 logger.error(f"Gemini API error: {response.status_code} - {response.text}")
                 return None
-                
+
         except Exception as e:
             logger.error(f"Error with Gemini API for science questions: {e}")
             return None
-    
+
     def _generate_science_with_deepseek(self, subject: str, topic: str, difficulty: str) -> Optional[Dict]:
         """Generate science question using DeepSeek AI as fallback"""
         try:
@@ -224,14 +224,14 @@ Generate ONE high-quality {subject} MCQ question for {topic} now:
                 "medium": "Application of concepts with moderate analysis and problem-solving",
                 "difficult": "Complex analysis, synthesis, evaluation and higher-order thinking"
             }
-            
+
             # Enhanced ZIMSEC-specific context prompts
             zimsec_context = {
                 "Biology": "ZIMSEC O-Level Combined Science Biology syllabus covering cell biology, human biology, plant biology, genetics, ecology, and evolution for Forms 1-4 students in Zimbabwe",
                 "Chemistry": "ZIMSEC O-Level Combined Science Chemistry syllabus covering atomic structure, chemical bonding, acids/bases, metals, organic chemistry, and chemical reactions for Forms 1-4 students in Zimbabwe", 
                 "Physics": "ZIMSEC O-Level Combined Science Physics syllabus covering mechanics, heat, light, sound, electricity, magnetism, and modern physics for Forms 1-4 students in Zimbabwe"
             }
-            
+
             prompt = f"""
 You are ScienceMentor, an expert ZIMSEC Combined Science tutor with deep knowledge of Zimbabwe's O-Level curriculum.
 
@@ -268,37 +268,37 @@ MANDATORY JSON FORMAT:
 
 Generate ONE high-quality {subject} MCQ question for {topic} now:
 """
-            
+
             return self._call_deepseek_api(prompt)
-            
+
         except Exception as e:
             logger.error(f"Error generating science question with DeepSeek: {e}")
             return None
-    
+
     def _validate_science_question_data(self, data: Dict) -> bool:
         """Validate the structure of generated science question data"""
         if not isinstance(data, dict):
             return False
-        
+
         # Check for required fields for science MCQs
         required_fields = ['question', 'options', 'correct_answer', 'explanation', 'points']
         for field in required_fields:
             if field not in data:
                 return False
-        
+
         # Validate question is not empty
         if not data['question'].strip():
             return False
-        
+
         # Validate options structure (should be a dict with A, B, C, D keys)
         options = data.get('options', {})
         if not isinstance(options, dict) or not all(key in options for key in ['A', 'B', 'C', 'D']):
             return False
-        
+
         # Validate correct answer is one of A, B, C, D
         if data.get('correct_answer') not in ['A', 'B', 'C', 'D']:
             return False
-        
+
         # Validate points is a positive integer
         try:
             points = int(data['points'])
@@ -306,9 +306,9 @@ Generate ONE high-quality {subject} MCQ question for {topic} now:
                 return False
         except (ValueError, TypeError):
             return False
-        
+
         return True
-    
+
     def generate_english_question(self, topic: str, difficulty: str) -> Optional[Dict]:
         """Generate an English question using Gemini AI (fallback to DeepSeek)"""
         try:
@@ -316,11 +316,11 @@ Generate ONE high-quality {subject} MCQ question for {topic} now:
                 return self._generate_english_with_gemini(topic, difficulty)
             else:
                 return self._generate_english_with_deepseek(topic, difficulty)
-                
+
         except Exception as e:
             logger.error(f"Error generating English question: {e}")
             return None
-    
+
     def _generate_english_with_gemini(self, topic: str, difficulty: str) -> Optional[Dict]:
         """Generate English question using Gemini AI"""
         try:
@@ -344,39 +344,39 @@ JSON format:
     "points": {10 if difficulty == 'easy' else 20 if difficulty == 'medium' else 50}
 }}
 """
-            
+
             headers = {
                 'Content-Type': 'application/json'
             }
-            
+
             data = {
                 'contents': [{
                     'parts': [{'text': prompt}]
                 }]
             }
-            
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={self.gemini_api_key}"
-            
+
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={self.gemini_api_key}"
+
             response = requests.post(url, headers=headers, json=data, timeout=30)
-            
+
             if response.status_code == 200:
                 result = response.json()
                 content = result['candidates'][0]['content']['parts'][0]['text']
-                
+
                 # Extract JSON from response
                 json_start = content.find('{')
                 json_end = content.rfind('}') + 1
                 json_str = content[json_start:json_end]
-                
+
                 return json.loads(json_str)
             else:
                 logger.error(f"Gemini API error: {response.status_code}")
                 return self._generate_english_with_deepseek(topic, difficulty)
-                
+
         except Exception as e:
             logger.error(f"Error with Gemini API: {e}")
             return self._generate_english_with_deepseek(topic, difficulty)
-    
+
     def _generate_english_with_deepseek(self, topic: str, difficulty: str) -> Optional[Dict]:
         """Generate English question using DeepSeek AI as fallback"""
         try:
@@ -400,13 +400,13 @@ JSON format:
     "points": {10 if difficulty == 'easy' else 20 if difficulty == 'medium' else 50}
 }}
 """
-            
+
             return self._call_deepseek_api(prompt)
-            
+
         except Exception as e:
             logger.error(f"Error generating English question with DeepSeek: {e}")
             return None
-    
+
     def _call_deepseek_api(self, prompt: str) -> Optional[Dict]:
         """Make API call to DeepSeek with retry logic"""
         try:
@@ -414,7 +414,7 @@ JSON format:
                 'Authorization': f'Bearer {self.deepseek_api_key}',
                 'Content-Type': 'application/json'
             }
-            
+
             data = {
                 'model': 'deepseek-chat',
                 'messages': [
@@ -426,31 +426,31 @@ JSON format:
                 'max_tokens': 3000,
                 'temperature': 0.7
             }
-            
+
             # Retry with different timeouts
             for attempt in range(Config.AI_MAX_RETRIES):
                 try:
                     timeout = Config.AI_REQUEST_TIMEOUT[min(attempt, len(Config.AI_REQUEST_TIMEOUT) - 1)]
                     logger.info(f"DeepSeek API attempt {attempt + 1}/{Config.AI_MAX_RETRIES} with {timeout}s timeout")
-                    
+
                     response = requests.post(
                         'https://api.deepseek.com/chat/completions',
                         headers=headers,
                         json=data,
                         timeout=timeout
                     )
-                    
+
                     if response.status_code == 200:
                         result = response.json()
                         content = result['choices'][0]['message']['content']
-                        
+
                         # Extract JSON from response
                         json_start = content.find('{')
                         json_end = content.rfind('}') + 1
                         json_str = content[json_start:json_end]
-                        
+
                         question_data = json.loads(json_str)
-                        
+
                         # Validate response structure
                         if self._validate_question_data(question_data):
                             logger.info(f"✅ Successfully generated question on attempt {attempt + 1}")
@@ -462,32 +462,32 @@ JSON format:
                         logger.error(f"DeepSeek API error: {response.status_code} - {response.text}")
                         if attempt < Config.AI_MAX_RETRIES - 1:
                             time.sleep(2 ** attempt)  # Exponential backoff
-                        
+
                 except requests.Timeout:
                     logger.warning(f"Timeout on attempt {attempt + 1}")
                     if attempt < Config.AI_MAX_RETRIES - 1:
                         time.sleep(2 ** attempt)
-                        
+
             logger.error("All DeepSeek API attempts failed")
             return None
-            
+
         except Exception as e:
             logger.error(f"Error calling DeepSeek API: {e}")
             return None
-    
+
     def _validate_question_data(self, data: Dict) -> bool:
         """Validate the structure of generated question data"""
         if not isinstance(data, dict):
             return False
-        
+
         # Check for required fields based on question type
         if 'question' not in data or 'points' not in data:
             return False
-        
+
         # Validate question is not empty
         if not data['question'].strip():
             return False
-        
+
         # Validate points is a positive integer
         try:
             points = int(data['points'])
@@ -495,5 +495,5 @@ JSON format:
                 return False
         except (ValueError, TypeError):
             return False
-        
+
         return True
