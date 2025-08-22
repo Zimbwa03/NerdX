@@ -418,25 +418,31 @@ def send_main_menu(user_id: str, user_name: str = None):
             welcome_text += f"🎁 *BONUS:* Share NerdX with friends and get *50 FREE CREDITS* for each friend who registers!\n\n"
             welcome_text += "🚀 Ready to boost your ZIMSEC performance? Let's get started!"
 
-        # Dynamic button arrangement based on credit status - exactly like backup
+        # Use list message for main menu to show all 5 options (WhatsApp button limit is 3)
         if current_credits < 20:  # Low credits - emphasize buying
-            buttons = [
-                {"id": "start_quiz", "title": "🎯 Start Quiz"},
-                {"id": "buy_credits", "title": "💎 Buy Credits"},
-                {"id": "audio_chat_menu", "title": "🎤 Audio Chat"},
-                {"id": "share_to_friend", "title": "📤 Share to Friend"},
-                {"id": "referrals_menu", "title": "👥 Referrals"}
-            ]
+            sections = [{
+                'title': 'Main Menu',
+                'rows': [
+                    {"id": "start_quiz", "title": "🎯 Start Quiz", "description": "Begin your ZIMSEC journey"},
+                    {"id": "buy_credits", "title": "💎 Buy Credits", "description": "Get more credits to continue"},
+                    {"id": "audio_chat_menu", "title": "🎤 Audio Chat", "description": "Voice learning experience"},
+                    {"id": "share_to_friend", "title": "📤 Share to Friend", "description": "Earn 50 credits per referral"},
+                    {"id": "referrals_menu", "title": "👥 Referrals", "description": "View your referral stats"}
+                ]
+            }]
         else:  # Normal credit level
-            buttons = [
-                {"id": "start_quiz", "title": "🎯 Start Quiz"},
-                {"id": "audio_chat_menu", "title": "🎤 Audio Chat"},
-                {"id": "buy_credits", "title": "💎 Buy Credits"},
-                {"id": "share_to_friend", "title": "📤 Share to Friend"},
-                {"id": "referrals_menu", "title": "👥 Referrals"}
-            ]
+            sections = [{
+                'title': 'Main Menu',
+                'rows': [
+                    {"id": "start_quiz", "title": "🎯 Start Quiz", "description": "Begin your ZIMSEC journey"},
+                    {"id": "audio_chat_menu", "title": "🎤 Audio Chat", "description": "Voice learning experience"},
+                    {"id": "buy_credits", "title": "💎 Buy Credits", "description": "Get more credits"},
+                    {"id": "share_to_friend", "title": "📤 Share to Friend", "description": "Earn 50 credits per referral"},
+                    {"id": "referrals_menu", "title": "👥 Referrals", "description": "View your referral stats"}
+                ]
+            }]
 
-        whatsapp_service.send_interactive_message(user_id, welcome_text, buttons)
+        whatsapp_service.send_list_message(user_id, "🎓 NerdX Menu", welcome_text, sections)
         
     except Exception as e:
         logger.error(f"Error sending main menu: {e}")
