@@ -84,7 +84,7 @@ def handle_webhook():
             return jsonify({'status': 'invalid_user_id'}), 400
         
         # Check rate limiting
-        if not rate_limiter.check_rate_limit(user_id, 'message'):
+        if rate_limiter.check_session_rate_limit(user_id, 'message'):
             whatsapp_service.send_message(
                 user_id, 
                 f"⏳ Please wait before sending another message. You're being rate limited to prevent spam."
@@ -503,6 +503,12 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
                 handle_mathematics_menu(user_id)
             elif subject == 'English':
                 handle_english_menu(user_id)
+        elif selection_id == 'subject_ordinary_combined_science':
+            handle_combined_science_menu(user_id)
+        elif selection_id == 'subject_ordinary_mathematics':
+            handle_mathematics_menu(user_id)
+        elif selection_id == 'subject_ordinary_english':
+            handle_english_menu(user_id)
         elif selection_id == 'stats':
             show_user_stats(user_id)
         elif selection_id.startswith('package_'):
@@ -777,19 +783,19 @@ def handle_level_menu(user_id: str, level: str):
     if level == "ordinary":
         text = "📚 *Ordinary Level Subjects:*\nSelect a subject:"
         buttons = [
-            {"id": "subject_ordinary_combined_science", "title": "🧬 Combined Science"},
-            {"id": "subject_ordinary_mathematics", "title": "📰 Mathematics"},
-            {"id": "subject_ordinary_english", "title": "📝 English"},
-            {"id": "start_quiz", "title": "🔙 Back"}
+            {"text": "🧬 Combined Science", "callback_data": "subject_ordinary_combined_science"},
+            {"text": "📐 Mathematics", "callback_data": "subject_ordinary_mathematics"},
+            {"text": "📝 English", "callback_data": "subject_ordinary_english"},
+            {"text": "🔙 Back", "callback_data": "start_quiz"}
         ]
     elif level == "advanced":
         text = "🎯 *Advanced Level Subjects:*\nSelect a subject:"
         buttons = [
-            {"id": "subject_advanced_biology", "title": "🧬 Biology"},
-            {"id": "subject_advanced_chemistry", "title": "⚗️ Chemistry"},
-            {"id": "subject_advanced_physics", "title": "⚡ Physics"},
-            {"id": "subject_advanced_mathematics", "title": "📰 Mathematics"},
-            {"id": "start_quiz", "title": "🔙 Back"}
+            {"text": "📐 Mathematics", "callback_data": "subject_advanced_mathematics"},
+            {"text": "⚗️ Chemistry", "callback_data": "subject_advanced_chemistry"},
+            {"text": "⚡ Physics", "callback_data": "subject_advanced_physics"},
+            {"text": "🧬 Biology", "callback_data": "subject_advanced_biology"},
+            {"text": "🔙 Back", "callback_data": "start_quiz"}
         ]
     else:
         whatsapp_service.send_message(user_id, "❌ Invalid education level.")
@@ -881,19 +887,17 @@ def handle_combined_science_menu(user_id: str):
         user_name = registration['name'] if registration else "Student"
         credits = get_user_credits(user_id)
         
-        menu_message = f"🧬 *Combined Science Menu*\n\n"
-        menu_message += f"Welcome {user_name}! 👋\n\n"
-        menu_message += f"💳 Credits: {credits}\n\n"
-        menu_message += f"Select your science subject:"
-        
+        text = "🧬 *Combined Science Subjects:*\nSelect a science subject:"
+
         buttons = [
-            {"id": "biology_topics", "title": "🧬 Biology"},
-            {"id": "chemistry_topics", "title": "⚗️ Chemistry"},
-            {"id": "physics_topics", "title": "⚡ Physics"},
-            {"id": "level_ordinary", "title": "🔙 Back"}
+            {"text": "🧬 Biology", "callback_data": "science_Biology"},
+            {"text": "⚗️ Chemistry", "callback_data": "science_Chemistry"},
+            {"text": "⚡ Physics", "callback_data": "science_Physics"},
+            {"text": "🌟 Combined Exam", "callback_data": "combined_exam"},
+            {"text": "🔙 Back", "callback_data": "level_ordinary"}
         ]
         
-        whatsapp_service.send_interactive_message(user_id, menu_message, buttons)
+        whatsapp_service.send_interactive_message(user_id, text, buttons)
         
     except Exception as e:
         logger.error(f"Error in handle_combined_science_menu: {e}")
@@ -906,23 +910,45 @@ def handle_mathematics_menu(user_id: str):
         
         registration = get_user_registration(user_id)
         user_name = registration['name'] if registration else "Student"
-        credits = get_user_credits(user_id)
-        user_stats = get_user_stats(user_id) or {'level': 1, 'xp_points': 0}
+        current_credits = get_user_credits(user_id)
+        user_stats = get_user_stats(user_id) or {'level': 1, 'xp_points': 0, 'streak_days': 0}
+        current_level = user_stats.get('level', 1)
+        current_xp = user_stats.get('xp_points', 0)
+        current_streak = user_stats.get('streak_days', 0)
         
-        menu_message = f"📰 *Mathematics Menu*\n\n"
-        menu_message += f"Welcome {user_name}! 👋\n\n"
-        menu_message += f"💳 Credits: {credits}\n"
-        menu_message += f"⭐ Level: {user_stats.get('level', 1)} | XP: {user_stats.get('xp_points', 0)}\n\n"
-        menu_message += f"Choose your math learning option:"
+        # Calculate XP needed for next level
+        xp_for_next_level = (current_level * 100) - current_xp
+        if xp_for_next_level <= 0:
+            xp_for_next_level = 100  # Base XP for next level
         
+        text = f"📐 *Hey {user_name}! Welcome to MathMentor* 📐\n\n"
+        text += f"🎓 *{user_name}, I'm your personal O-Level Mathematics tutor!*\n\n"
+        
+        # Enhanced user stats display
+        text += f"📊 **Your Math Journey:**\n"
+        text += f"💳 Credits: **{current_credits}**\n"
+        text += f"⭐ Level: **{current_level}** (XP: {current_xp})\n"
+        text += f"🔥 Streak: **{current_streak} days**\n"
+        text += f"🎯 Next Level: **{xp_for_next_level} XP needed**\n\n"
+        
+        text += f"I'm here to help you master math, {user_name}, with:\n\n"
+        text += f"📚 **Practice Questions:** Earn 5-10 XP per question\n"
+        text += f"📷 **Image Math Solver:** Earn 30 XP per solution\n"
+        text += f"📈 **Graph Generation:** Earn 25 XP per graph\n"
+        text += f"📊 **Sample Graphs:** Earn 15 XP for learning\n"
+        text += f"🔥 **Daily Streaks:** Maintain consistent learning\n\n"
+        
+        text += f"🚀 *{user_name}, choose how you'd like to earn XP and level up:*"
+
         buttons = [
-            {"id": "math_topics", "title": "📰 Math Topics"},
-            {"id": "math_image_solver", "title": "📷 Solve from Image"},
-            {"id": "math_graph_generator", "title": "📈 Generate Graph"},
-            {"id": "level_ordinary", "title": "🔙 Back"}
+            {"text": "📚 Practice Questions", "callback_data": "math_practice"},
+            {"text": "📷 Image Math Solver", "callback_data": "upload_math_image"},
+            {"text": "📈 Graph Practice", "callback_data": "math_graphing"},
+            {"text": "📊 My Progress", "callback_data": "stats"},
+            {"text": "🔙 Back", "callback_data": "level_ordinary"}
         ]
         
-        whatsapp_service.send_interactive_message(user_id, menu_message, buttons)
+        whatsapp_service.send_interactive_message(user_id, text, buttons)
         
     except Exception as e:
         logger.error(f"Error in handle_mathematics_menu: {e}")
@@ -935,21 +961,28 @@ def handle_english_menu(user_id: str):
         
         registration = get_user_registration(user_id)
         user_name = registration['name'] if registration else "Student"
-        credits = get_user_credits(user_id)
+        current_credits = get_user_credits(user_id)
         
-        menu_message = f"📝 *English Menu*\n\n"
-        menu_message += f"Welcome {user_name}! 👋\n\n"
-        menu_message += f"💳 Credits: {credits}\n\n"
-        menu_message += f"Choose your English learning option:"
-        
+        text = f"📝 *Welcome to NerdX English Excellence Program* 📝\n\n"
+        text += f"👋 *Hello {user_name}!* I'm your personal English Language tutor for ZIMSEC O-Level!\n\n"
+        text += f"💳 *Your Credits:* {current_credits}\n\n"
+        text += f"🎯 *What I can help you master:*\n"
+        text += f"📚 **Comprehension:** Reading skills & text analysis\n"
+        text += f"✍️ **Essay Writing:** All essay types with AI feedback\n"
+        text += f"📝 **Grammar:** Rules, exercises & practice\n"
+        text += f"🎤 **Audio Lessons:** Listen and learn effectively\n\n"
+        text += f"⭐ *Earn XP and level up* with every practice session!\n\n"
+        text += f"🚀 *{user_name}, choose your English learning path:*"
+
         buttons = [
-            {"id": "english_comprehension", "title": "📚 Comprehension"},
-            {"id": "english_grammar", "title": "📝 Grammar"},
-            {"id": "english_essay", "title": "✍️ Essay Writing"},
-            {"id": "level_ordinary", "title": "🔙 Back"}
+            {"text": "📚 Comprehension Practice", "callback_data": "english_comprehension"},
+            {"text": "✍️ Essay Writing", "callback_data": "english_essay_writing"},
+            {"text": "📝 Grammar & Language", "callback_data": "english_grammar"},
+            {"text": "🎤 Audio English Lessons", "callback_data": "english_audio_lessons"},
+            {"text": "🔙 Back to Subjects", "callback_data": "level_ordinary"}
         ]
         
-        whatsapp_service.send_interactive_message(user_id, menu_message, buttons)
+        whatsapp_service.send_interactive_message(user_id, text, buttons)
         
     except Exception as e:
         logger.error(f"Error in handle_english_menu: {e}")
