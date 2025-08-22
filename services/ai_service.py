@@ -18,6 +18,48 @@ class AIService:
         if not self.deepseek_api_key:
             raise ValueError("DEEPSEEK_API_KEY is required")
     
+    def generate_math_questions(self, topic: str, difficulty: str, count: int = 1, chat_id: Optional[str] = None):
+        """Generate mathematics questions using DeepSeek AI with fallback and caching"""
+        try:
+            from utils.fallback_questions import generate_fallback_math_questions
+            from utils.question_cache import QuestionCache
+            
+            question_cache = QuestionCache()
+            questions = []
+            
+            # Try to get questions from cache first
+            if chat_id:
+                cached_question = question_cache.get_cached_question(topic, difficulty, chat_id)
+                if cached_question:
+                    question_cache.save_question_to_history(chat_id, cached_question.get('question', ''), topic, difficulty)
+                    return [cached_question]
+            
+            # Generate new questions using API
+            for i in range(count):
+                question = self.generate_math_question(topic, difficulty)
+                
+                if question:
+                    # Cache the question
+                    if chat_id:
+                        question_cache.cache_question(topic, difficulty, question)
+                        question_cache.save_question_to_history(chat_id, question.get('question', ''), topic, difficulty)
+                    questions.append(question)
+                else:
+                    # Use fallback system
+                    logger.info(f"Using fallback questions for {topic} ({difficulty})")
+                    fallback_questions = generate_fallback_math_questions(topic, difficulty, 1)
+                    if fallback_questions:
+                        if chat_id:
+                            question_cache.save_question_to_history(chat_id, fallback_questions[0].get('question', ''), topic, difficulty)
+                        questions.extend(fallback_questions)
+            
+            return questions if questions else generate_fallback_math_questions(topic, difficulty, count)
+                
+        except Exception as e:
+            logger.error(f"Error generating math questions: {e}")
+            from utils.fallback_questions import generate_fallback_math_questions
+            return generate_fallback_math_questions(topic, difficulty, count)
+    
     def generate_math_question(self, topic: str, difficulty: str) -> Optional[Dict]:
         """Generate a mathematics question using DeepSeek AI"""
         try:

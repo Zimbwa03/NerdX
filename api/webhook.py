@@ -7,7 +7,12 @@ from services.question_service import QuestionService
 from services.payment_service import PaymentService
 from services.image_service import ImageService
 from services.graph_service import GraphService
-from utils.rate_limiting import rate_limiter
+from services.english_service import EnglishService
+from services.referral_service import ReferralService
+from utils.rate_limiter import RateLimiter
+from utils.question_cache import QuestionCache  
+from utils.latex_converter import LaTeXConverter
+from utils.pdf_generator import PDFGenerator
 from utils.session_manager import session_manager
 from utils.credit_system import credit_system
 from utils.validators import validators
@@ -24,6 +29,14 @@ question_service = QuestionService()
 payment_service = PaymentService()
 image_service = ImageService()
 graph_service = GraphService()
+english_service = EnglishService()
+referral_service = ReferralService()
+
+# Initialize utilities
+rate_limiter = RateLimiter()
+question_cache = QuestionCache()
+latex_converter = LaTeXConverter()
+pdf_generator = PDFGenerator()
 
 @webhook_bp.route('/whatsapp', methods=['GET'])
 def verify_webhook():
@@ -69,11 +82,10 @@ def handle_webhook():
             return jsonify({'status': 'invalid_user_id'}), 400
         
         # Check rate limiting
-        if rate_limiter.check_rate_limit(user_id, 'message'):
-            remaining = rate_limiter.get_remaining_cooldown(user_id, 'message')
+        if not rate_limiter.check_rate_limit(user_id, 'message'):
             whatsapp_service.send_message(
                 user_id, 
-                f"⏳ Please wait {remaining} seconds before sending another message."
+                f"⏳ Please wait before sending another message. You're being rate limited to prevent spam."
             )
             return jsonify({'status': 'rate_limited'}), 200
         
@@ -122,6 +134,14 @@ def handle_text_message(user_id: str, message_text: str):
             send_help_message(user_id)
         elif command == 'buy credits':
             show_credit_packages(user_id)
+        elif command == 'referral':
+            show_referral_info(user_id)
+        elif command.startswith('refer '):
+            process_referral_code(user_id, command.replace('refer ', '').strip())
+        elif command == 'english':
+            show_english_menu(user_id)
+        elif command == 'essay':
+            start_essay_session(user_id)
         elif command.startswith('graph '):
             handle_graph_request(user_id, command[6:])
         else:
