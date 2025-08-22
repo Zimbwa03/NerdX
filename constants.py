@@ -1,11 +1,10 @@
-
 # Constants for NerdX Quiz Bot
 
 # ZIMSEC Combined Science and English Topics
 TOPICS = {
     "Biology": [
         "Laboratory rules and safety",
-        "Cells and levels of organization", 
+        "Cells and levels of organization",
         "Nutrition",
         "Respiratory system",
         "Transport systems",
@@ -15,7 +14,7 @@ TOPICS = {
     "Chemistry": [
         "Matter",
         "Acids, Bases and Salts",
-        "Oxidation and Reduction", 
+        "Oxidation and Reduction",
         "Industrial Processes",
         "Organic Chemistry"
     ],
@@ -23,7 +22,7 @@ TOPICS = {
         "Measurements",
         "Force",
         "Energy",
-        "Magnetism", 
+        "Magnetism",
         "Electricity"
     ],
     "Mathematics": [
@@ -46,7 +45,7 @@ TOPICS = {
         "Formal Letter Writing",
         "Informal Letter Writing",
         "Article Writing",
-        "Report Writing", 
+        "Report Writing",
         "Speech Writing",
         "Narrative Essays",
         "Descriptive Essays",
@@ -60,6 +59,33 @@ TOPICS = {
     ]
 }
 
+# Difficulty levels
+DIFFICULTY_LEVELS = {
+    'easy': {
+        'name': 'Easy',
+        'credit_cost': 5,
+        'point_value': 10
+    },
+    'medium': {
+        'name': 'Medium',
+        'credit_cost': 10,
+        'point_value': 20
+    },
+    'difficult': {
+        'name': 'Difficult',
+        'credit_cost': 15,
+        'point_value': 30
+    }
+}
+
+# Point values for different question types
+POINT_VALUES = {
+    'easy': 10,
+    'medium': 20,
+    'difficult': 30,
+    'bonus': 5
+}
+
 # Credit costs for different features
 CREDIT_COSTS = {
     'quiz_question': 10,
@@ -71,10 +97,16 @@ CREDIT_COSTS = {
 
 # Message templates
 MESSAGE_TEMPLATES = {
-    'welcome': "🎓 Welcome to NerdX - Your ZIMSEC Study Companion! 🎓",
-    'insufficient_credits': "❌ Insufficient credits. Purchase more to continue.",
-    'question_loading': "🔄 Generating your question... Please wait.",
-    'error_generic': "❌ An error occurred. Please try again."
+    'welcome': """🎓 Welcome to NerdX Quiz Bot! 🎓
+
+Your personal ZIMSEC study companion for Biology, Chemistry, Physics, Mathematics, and English.
+
+📚 Get AI-generated questions
+📊 Track your progress  
+🏆 Earn points and achievements
+💡 Learn with detailed explanations
+
+Ready to boost your grades? Let's start learning! 🚀"""
 }
 
 # Rate limiting settings

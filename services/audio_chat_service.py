@@ -330,11 +330,7 @@ Type 'menu' to return to the main menu."""
             
             # Set session state
             from utils.session_manager import session_manager
-            session_manager.set_session_data(user_id, {
-                'mode': 'audio_chat',
-                'voice_type': 'female',
-                'step': 'waiting_for_input'
-            })
+            session_manager.save_audio_chat_session(user_id, 'audio_chat', 'female')
             
         except Exception as e:
             logger.error(f"Error handling audio chat command: {e}")
@@ -349,11 +345,7 @@ Type 'menu' to return to the main menu."""
             whatsapp_service = WhatsAppService()
             
             # Update session with voice preference
-            session_manager.set_session_data(user_id, {
-                'mode': 'audio_chat',
-                'voice_type': voice_type,
-                'step': 'ready'
-            })
+            session_manager.save_audio_chat_session(user_id, 'audio_chat', voice_type)
             
             voice_name = "Female" if voice_type == 'female' else "Male"
             response_message = f"✅ **{voice_name} voice selected!**\n\n"
@@ -378,7 +370,7 @@ Type 'menu' to return to the main menu."""
             whatsapp_service = WhatsAppService()
             
             # Get user's voice preference
-            session_data = session_manager.get_session_data(user_id)
+            session_data = session_manager.get_audio_chat_session(user_id)
             voice_type = session_data.get('voice_type', 'female') if session_data else 'female'
             
             # Show processing message

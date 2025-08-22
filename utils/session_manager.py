@@ -210,6 +210,66 @@ class SessionManager:
         except Exception as e:
             logger.error(f"Error checking active session: {e}")
             return False
+    
+    def set_session_data(self, user_id: str, data: Dict) -> bool:
+        """Set session data for user"""
+        try:
+            # Convert data to session format
+            session_data = {
+                'session_type': data.get('mode', 'general'),
+                'session_data': json.dumps(data)
+            }
+            
+            return save_user_session(user_id, session_data)
+            
+        except Exception as e:
+            logger.error(f"Error setting session data: {e}")
+            return False
+    
+    def get_session_data(self, user_id: str) -> Optional[Dict]:
+        """Get session data for user"""
+        try:
+            session = get_user_session(user_id)
+            if session:
+                session_data = json.loads(session.get('session_data', '{}'))
+                return session_data
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error getting session data: {e}")
+            return None
+    
+    def save_audio_chat_session(self, user_id: str, mode: str, voice_type: str = 'female') -> bool:
+        """Save audio chat session"""
+        try:
+            session_data = {
+                'mode': mode,
+                'voice_type': voice_type,
+                'step': 'ready',
+                'session_type': 'audio_chat'
+            }
+            
+            return save_user_session(user_id, {
+                'session_type': 'audio_chat',
+                'session_data': json.dumps(session_data)
+            })
+            
+        except Exception as e:
+            logger.error(f"Error saving audio chat session: {e}")
+            return False
+    
+    def get_audio_chat_session(self, user_id: str) -> Optional[Dict]:
+        """Get audio chat session"""
+        try:
+            session = get_user_session(user_id)
+            if session and session.get('session_type') == 'audio_chat':
+                session_data = json.loads(session.get('session_data', '{}'))
+                return session_data
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error getting audio chat session: {e}")
+            return None
 
 # Global session manager instance
 session_manager = SessionManager()
