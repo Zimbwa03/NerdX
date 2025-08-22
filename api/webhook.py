@@ -9,6 +9,7 @@ from services.image_service import ImageService
 from services.graph_service import GraphService
 from services.english_service import EnglishService
 from services.referral_service import ReferralService
+from services.audio_chat_service import AudioChatService
 from utils.rate_limiter import RateLimiter
 from utils.question_cache import QuestionCacheService  
 from utils.latex_converter import LaTeXConverter
@@ -31,6 +32,7 @@ image_service = ImageService()
 graph_service = GraphService()
 english_service = EnglishService()
 referral_service = ReferralService()
+audio_chat_service = AudioChatService()
 
 # Initialize utilities
 rate_limiter = RateLimiter()
@@ -138,6 +140,8 @@ def handle_text_message(user_id: str, message_text: str):
             show_referral_info(user_id)
         elif command.startswith('refer '):
             process_referral_code(user_id, command.replace('refer ', '').strip())
+        elif command in ['audio chat', 'audio', 'chat']:
+            audio_chat_service.handle_audio_chat_command(user_id)
         elif command == 'english':
             show_english_menu(user_id)
         elif command == 'essay':
@@ -199,6 +203,8 @@ def handle_session_message(user_id: str, message_text: str):
             handle_topic_selection(user_id, message_text)
         elif session_type == 'payment':
             handle_payment_confirmation(user_id, message_text)
+        elif session_type == 'audio_chat':
+            handle_audio_chat_message(user_id, message_text)
         else:
             # No active session, show main menu
             send_main_menu(user_id)
@@ -267,6 +273,13 @@ def handle_question_answer(user_id: str, answer: str):
 def handle_image_message(user_id: str, image_data: dict):
     """Handle image messages for math problem solving"""
     try:
+        # Check if user is in audio chat mode
+        session_data = session_manager.get_session_data(user_id)
+        if session_data and session_data.get('mode') == 'audio_chat':
+            # Handle image in audio chat mode
+            handle_audio_chat_image(user_id, image_data)
+            return
+        
         # Check if user has sufficient credits
         credit_check = credit_system.check_sufficient_credits(user_id, 'image_solve')
         
@@ -320,6 +333,25 @@ def handle_image_message(user_id: str, image_data: dict):
         whatsapp_service.send_message(user_id, "Error processing image. Please try again.")
         rate_limiter.clear_active_generation(user_id, 'image_solve')
 
+def handle_audio_chat_image(user_id: str, image_data: dict):
+    """Handle image messages in audio chat mode"""
+    try:
+        # Download image first
+        image_path = whatsapp_service.download_whatsapp_media(
+            image_data.get('id'), 
+            image_data.get('mime_type', 'image/jpeg')
+        )
+        
+        if image_path:
+            # Process through audio chat service
+            audio_chat_service.handle_audio_input(user_id, file_path=image_path, file_type='image')
+        else:
+            whatsapp_service.send_message(user_id, "❌ Could not download image. Please try again.")
+            
+    except Exception as e:
+        logger.error(f"Error handling audio chat image: {e}")
+        whatsapp_service.send_message(user_id, "❌ Error processing your image. Please try again.")
+
 def send_main_menu(user_id: str):
     """Send main menu to user"""
     try:
@@ -340,6 +372,7 @@ def send_main_menu(user_id: str):
             })
         
         # Add other options
+        buttons.append({'id': 'audio_chat', 'title': '🎧 Audio Chat'})
         buttons.append({'id': 'buy_credits', 'title': '💰 Buy Credits'})
         buttons.append({'id': 'stats', 'title': '📊 My Stats'})
         
@@ -359,6 +392,7 @@ def send_main_menu(user_id: str):
                 {
                     'title': 'Other Options',
                     'rows': [
+                        {'id': 'audio_chat', 'title': '🎧 Audio Chat', 'description': 'Chat with AI and get audio responses'},
                         {'id': 'buy_credits', 'title': '💰 Buy Credits', 'description': 'Purchase more credits'},
                         {'id': 'stats', 'title': '📊 My Stats', 'description': 'View your progress'}
                     ]
@@ -391,6 +425,12 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         elif selection_id.startswith('difficulty_'):
             difficulty = selection_id.replace('difficulty_', '')
             handle_difficulty_selection(user_id, difficulty)
+        elif selection_id == 'audio_chat':
+            audio_chat_service.handle_audio_chat_command(user_id)
+        elif selection_id == 'audio_female_voice':
+            audio_chat_service.handle_voice_selection(user_id, 'female')
+        elif selection_id == 'audio_male_voice':
+            audio_chat_service.handle_voice_selection(user_id, 'male')
         elif selection_id == 'buy_credits':
             show_credit_packages(user_id)
         elif selection_id == 'stats':
@@ -649,6 +689,16 @@ def handle_topic_selection_from_button(user_id: str, button_id: str):
         
     except Exception as e:
         logger.error(f"Error handling topic selection from button: {e}")
+
+def handle_audio_chat_message(user_id: str, message_text: str):
+    """Handle messages in audio chat mode"""
+    try:
+        # Handle audio chat input using the audio chat service
+        audio_chat_service.handle_audio_input(user_id, message_text=message_text)
+        
+    except Exception as e:
+        logger.error(f"Error handling audio chat message: {e}")
+        whatsapp_service.send_message(user_id, "❌ Error processing your message. Please try again or type 'menu' to return.")
 
 def handle_credit_package_selection(user_id: str, package_id: str):
     """Handle credit package selection"""
