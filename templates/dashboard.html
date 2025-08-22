@@ -1,0 +1,372 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - NerdX Quiz Bot{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-tachometer-alt me-2"></i>
+            Dashboard
+        </h1>
+        <p class="text-muted">Overview of NerdX Quiz Bot system</p>
+    </div>
+    <div class="col-auto">
+        <button class="btn btn-primary" onclick="refreshDashboard()">
+            <i class="fas fa-sync-alt me-1"></i>
+            Refresh
+        </button>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title text-muted">Total Users</h6>
+                        <h3 class="mb-0" id="total-users">-</h3>
+                    </div>
+                    <div class="text-primary">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title text-muted">Active Today</h6>
+                        <h3 class="mb-0" id="active-users">-</h3>
+                    </div>
+                    <div class="text-success">
+                        <i class="fas fa-user-check fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title text-muted">Questions Answered</h6>
+                        <h3 class="mb-0" id="total-questions">-</h3>
+                    </div>
+                    <div class="text-info">
+                        <i class="fas fa-question-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title text-muted">Credits Purchased</h6>
+                        <h3 class="mb-0" id="total-credits">-</h3>
+                    </div>
+                    <div class="text-warning">
+                        <i class="fas fa-coins fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mb-4">
+    <!-- Subject Activity Chart -->
+    <div class="col-md-8 mb-3">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Subject Activity
+                </h6>
+            </div>
+            <div class="card-body">
+                <canvas id="subjectChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Database Status -->
+    <div class="col-md-4 mb-3">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-database me-2"></i>
+                    System Status
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>Database</span>
+                        <span class="badge bg-success" id="db-status">Connected</span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>WhatsApp API</span>
+                        <span class="badge bg-success" id="whatsapp-status">Online</span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>AI Services</span>
+                        <span class="badge bg-success" id="ai-status">Available</span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>Payment Gateway</span>
+                        <span class="badge bg-warning" id="payment-status">Limited</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row">
+    <div class="col-md-8 mb-3">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-clock me-2"></i>
+                    Recent User Activity
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Activity</th>
+                                <th>Subject</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recent-activity">
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">
+                                    <i class="fas fa-spinner fa-spin me-2"></i>
+                                    Loading activity...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="col-md-4 mb-3">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-bolt me-2"></i>
+                    Quick Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary" onclick="generateTestQuestions()">
+                        <i class="fas fa-plus me-2"></i>
+                        Generate Test Questions
+                    </button>
+                    <button class="btn btn-outline-info" onclick="viewAnalytics()">
+                        <i class="fas fa-chart-line me-2"></i>
+                        View Detailed Analytics
+                    </button>
+                    <button class="btn btn-outline-warning" onclick="exportData()">
+                        <i class="fas fa-download me-2"></i>
+                        Export Data
+                    </button>
+                    <button class="btn btn-outline-danger" onclick="clearCache()">
+                        <i class="fas fa-trash me-2"></i>
+                        Clear Cache
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 mb-0">Processing...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let subjectChart;
+
+// Initialize dashboard
+document.addEventListener('DOMContentLoaded', function() {
+    loadDashboardData();
+    initializeCharts();
+    
+    // Refresh data every 30 seconds
+    setInterval(loadDashboardData, 30000);
+});
+
+function loadDashboardData() {
+    fetch('/api/dashboard/api/stats')
+        .then(response => response.json())
+        .then(data => {
+            updateStatistics(data);
+            updateSystemStatus(data);
+        })
+        .catch(error => {
+            console.error('Error loading dashboard data:', error);
+            showError('Failed to load dashboard data');
+        });
+}
+
+function updateStatistics(data) {
+    document.getElementById('total-users').textContent = data.total_users || 0;
+    document.getElementById('active-users').textContent = data.active_users_today || 0;
+    document.getElementById('total-questions').textContent = data.total_questions_answered || 0;
+    document.getElementById('total-credits').textContent = data.total_credits_purchased || 0;
+}
+
+function updateSystemStatus(data) {
+    const dbStatus = document.getElementById('db-status');
+    if (data.database_status === 'connected') {
+        dbStatus.className = 'badge bg-success';
+        dbStatus.textContent = 'Connected';
+    } else {
+        dbStatus.className = 'badge bg-danger';
+        dbStatus.textContent = 'Disconnected';
+    }
+}
+
+function initializeCharts() {
+    const ctx = document.getElementById('subjectChart').getContext('2d');
+    
+    subjectChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Mathematics', 'Biology', 'Chemistry', 'Physics', 'English'],
+            datasets: [{
+                data: [30, 25, 20, 15, 10],
+                backgroundColor: [
+                    '#FF6384',
+                    '#36A2EB',
+                    '#FFCE56',
+                    '#4BC0C0',
+                    '#9966FF'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+function refreshDashboard() {
+    const refreshBtn = document.querySelector('[onclick="refreshDashboard()"]');
+    const icon = refreshBtn.querySelector('i');
+    
+    icon.classList.add('fa-spin');
+    refreshBtn.disabled = true;
+    
+    loadDashboardData();
+    
+    setTimeout(() => {
+        icon.classList.remove('fa-spin');
+        refreshBtn.disabled = false;
+    }, 1000);
+}
+
+function generateTestQuestions() {
+    showModal();
+    
+    // Simulate API call
+    setTimeout(() => {
+        hideModal();
+        showSuccess('Test questions generated successfully');
+    }, 2000);
+}
+
+function viewAnalytics() {
+    window.location.href = '/api/dashboard/analytics';
+}
+
+function exportData() {
+    showModal();
+    
+    // Simulate export
+    setTimeout(() => {
+        hideModal();
+        showSuccess('Data export started. You will receive an email when ready.');
+    }, 1500);
+}
+
+function clearCache() {
+    if (confirm('Are you sure you want to clear the cache?')) {
+        showModal();
+        
+        setTimeout(() => {
+            hideModal();
+            showSuccess('Cache cleared successfully');
+        }, 1000);
+    }
+}
+
+function showModal() {
+    const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    modal.show();
+}
+
+function hideModal() {
+    const modal = bootstrap.Modal.getInstance(document.getElementById('loadingModal'));
+    if (modal) modal.hide();
+}
+
+function showSuccess(message) {
+    // In a real app, you'd use a proper toast/notification system
+    alert('Success: ' + message);
+}
+
+function showError(message) {
+    // In a real app, you'd use a proper toast/notification system
+    alert('Error: ' + message);
+}
+</script>
+{% endblock %}

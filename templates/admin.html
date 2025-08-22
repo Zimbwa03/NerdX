@@ -1,0 +1,830 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Panel - NerdX Quiz Bot{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-cog me-2"></i>
+            Admin Panel
+        </h1>
+        <p class="text-muted">Manage users, credits, and system settings</p>
+    </div>
+</div>
+
+<!-- Admin Navigation Tabs -->
+<ul class="nav nav-tabs mb-4" id="adminTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab">
+            <i class="fas fa-users me-1"></i>
+            User Management
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="credits-tab" data-bs-toggle="tab" data-bs-target="#credits" type="button" role="tab">
+            <i class="fas fa-coins me-1"></i>
+            Credit Management
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="questions-tab" data-bs-toggle="tab" data-bs-target="#questions" type="button" role="tab">
+            <i class="fas fa-question-circle me-1"></i>
+            Question Generation
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments" type="button" role="tab">
+            <i class="fas fa-credit-card me-1"></i>
+            Payments
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab">
+            <i class="fas fa-sliders-h me-1"></i>
+            Settings
+        </button>
+    </li>
+</ul>
+
+<!-- Tab Content -->
+<div class="tab-content" id="adminTabContent">
+    <!-- User Management Tab -->
+    <div class="tab-pane fade show active" id="users" role="tabpanel">
+        <div class="row mb-3">
+            <div class="col-md-8">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="userSearch" placeholder="Search users by name, NerdX ID, or WhatsApp ID">
+                    <select class="form-select" id="searchType" style="max-width: 150px;">
+                        <option value="name">Name</option>
+                        <option value="nerdx_id">NerdX ID</option>
+                        <option value="whatsapp_id">WhatsApp ID</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="searchUsers()">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-4 text-end">
+                <button class="btn btn-success" onclick="exportUsers()">
+                    <i class="fas fa-download me-1"></i>
+                    Export Users
+                </button>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>NerdX ID</th>
+                                <th>Name</th>
+                                <th>Credits</th>
+                                <th>Points</th>
+                                <th>Streak</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTable">
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">
+                                    <i class="fas fa-search me-2"></i>
+                                    Search for users to display results
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Credit Management Tab -->
+    <div class="tab-pane fade" id="credits" role="tabpanel">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-plus me-2"></i>
+                            Add/Deduct Credits
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <form id="creditForm">
+                            <div class="mb-3">
+                                <label for="creditUserId" class="form-label">User ID (WhatsApp ID)</label>
+                                <input type="text" class="form-control" id="creditUserId" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="creditAction" class="form-label">Action</label>
+                                <select class="form-select" id="creditAction" required>
+                                    <option value="">Select action</option>
+                                    <option value="add">Add Credits</option>
+                                    <option value="deduct">Deduct Credits</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="creditAmount" class="form-label">Amount</label>
+                                <input type="number" class="form-control" id="creditAmount" min="1" max="10000" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="creditReason" class="form-label">Reason</label>
+                                <input type="text" class="form-control" id="creditReason" placeholder="e.g., admin adjustment, bonus" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-coins me-1"></i>
+                                Process Credits
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-chart-pie me-2"></i>
+                            Credit Statistics
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="creditChart" width="400" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Question Generation Tab -->
+    <div class="tab-pane fade" id="questions" role="tabpanel">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-plus me-2"></i>
+                            Generate Questions
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <form id="questionForm">
+                            <div class="mb-3">
+                                <label for="questionSubject" class="form-label">Subject</label>
+                                <select class="form-select" id="questionSubject" required>
+                                    <option value="">Select subject</option>
+                                    <option value="Mathematics">Mathematics</option>
+                                    <option value="Biology">Biology</option>
+                                    <option value="Chemistry">Chemistry</option>
+                                    <option value="Physics">Physics</option>
+                                    <option value="English">English</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="questionTopic" class="form-label">Topic</label>
+                                <select class="form-select" id="questionTopic" required>
+                                    <option value="">Select topic</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="questionDifficulty" class="form-label">Difficulty</label>
+                                <select class="form-select" id="questionDifficulty" required>
+                                    <option value="">Select difficulty</option>
+                                    <option value="easy">Easy</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="difficult">Difficult</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="questionCount" class="form-label">Number of Questions</label>
+                                <input type="number" class="form-control" id="questionCount" min="1" max="10" value="1" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-magic me-1"></i>
+                                Generate Questions
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-list me-2"></i>
+                            Generated Questions
+                        </h6>
+                    </div>
+                    <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                        <div id="generatedQuestions">
+                            <p class="text-muted text-center">
+                                <i class="fas fa-lightbulb me-2"></i>
+                                Generated questions will appear here
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payments Tab -->
+    <div class="tab-pane fade" id="payments" role="tabpanel">
+        <div class="row mb-3">
+            <div class="col">
+                <h5>Payment Overview</h5>
+            </div>
+        </div>
+        
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-dollar-sign fa-2x text-success mb-2"></i>
+                        <h4 class="mb-0" id="totalRevenue">$0</h4>
+                        <small class="text-muted">Total Revenue</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-credit-card fa-2x text-primary mb-2"></i>
+                        <h4 class="mb-0" id="totalTransactions">0</h4>
+                        <small class="text-muted">Total Transactions</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                        <h4 class="mb-0" id="successfulPayments">0</h4>
+                        <small class="text-muted">Successful</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-times-circle fa-2x text-danger mb-2"></i>
+                        <h4 class="mb-0" id="failedPayments">0</h4>
+                        <small class="text-muted">Failed</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Recent Transactions</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Reference</th>
+                                <th>User</th>
+                                <th>Amount</th>
+                                <th>Credits</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paymentsTable">
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">
+                                    <i class="fas fa-spinner fa-spin me-2"></i>
+                                    Loading transactions...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div class="tab-pane fade" id="settings" role="tabpanel">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-cog me-2"></i>
+                            System Settings
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <form id="settingsForm">
+                            <h6 class="mb-3">Credit Costs</h6>
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Math Easy</label>
+                                    <input type="number" class="form-control" id="mathEasy" value="5">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Math Medium</label>
+                                    <input type="number" class="form-control" id="mathMedium" value="10">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Math Difficult</label>
+                                    <input type="number" class="form-control" id="mathDifficult" value="20">
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Science Easy</label>
+                                    <input type="number" class="form-control" id="scienceEasy" value="5">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Science Medium</label>
+                                    <input type="number" class="form-control" id="scienceMedium" value="10">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Science Difficult</label>
+                                    <input type="number" class="form-control" id="scienceDifficult" value="15">
+                                </div>
+                            </div>
+
+                            <hr>
+                            
+                            <h6 class="mb-3">Rate Limiting</h6>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Session Cooldown (seconds)</label>
+                                    <input type="number" class="form-control" id="sessionCooldown" value="30">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Generation Timeout (seconds)</label>
+                                    <input type="number" class="form-control" id="generationTimeout" value="120">
+                                </div>
+                            </div>
+
+                            <hr>
+                            
+                            <h6 class="mb-3">Bonuses</h6>
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Welcome Credits</label>
+                                    <input type="number" class="form-control" id="welcomeCredits" value="50">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Referrer Bonus</label>
+                                    <input type="number" class="form-control" id="referrerBonus" value="25">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">New User Referral Bonus</label>
+                                    <input type="number" class="form-control" id="newUserBonus" value="15">
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-1"></i>
+                                Save Settings
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-broadcast-tower me-2"></i>
+                            Broadcast Message
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <form id="broadcastForm">
+                            <div class="mb-3">
+                                <label for="broadcastTarget" class="form-label">Target</label>
+                                <select class="form-select" id="broadcastTarget">
+                                    <option value="all">All Users</option>
+                                    <option value="active">Active Users</option>
+                                    <option value="inactive">Inactive Users</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="broadcastMessage" class="form-label">Message</label>
+                                <textarea class="form-control" id="broadcastMessage" rows="4" maxlength="1000" placeholder="Enter broadcast message..."></textarea>
+                                <div class="form-text">Max 1000 characters</div>
+                            </div>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-bullhorn me-1"></i>
+                                Send Broadcast
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Details Modal -->
+<div class="modal fade" id="userDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">User Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="userDetailsContent">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Topics data for dynamic loading
+const TOPICS = {
+    "Mathematics": ["Real Numbers", "Sets", "Financial Mathematics", "Measures and Mensuration", "Graphs", "Variation", "Algebra", "Geometry", "Statistics", "Trigonometry", "Vectors", "Matrices", "Transformation", "Probability"],
+    "Biology": ["Laboratory rules and safety", "Cells and levels of organization", "Nutrition", "Respiratory system", "Transport systems", "Reproduction in plants and animals", "Health and diseases"],
+    "Chemistry": ["Matter", "Acids, Bases and Salts", "Oxidation and Reduction", "Industrial Processes", "Organic Chemistry"],
+    "Physics": ["Measurements", "Force", "Energy", "Magnetism", "Electricity"],
+    "English": ["Formal Letter Writing", "Informal Letter Writing", "Article Writing", "Report Writing", "Speech Writing", "Narrative Essays", "Descriptive Essays", "Argumentative Essays", "Comprehension Skills", "Vocabulary Building", "Grammar and Language", "Literary Devices", "Reading Skills", "Writing Skills"]
+};
+
+// Initialize admin panel
+document.addEventListener('DOMContentLoaded', function() {
+    loadPaymentStats();
+    loadSystemSettings();
+    
+    // Setup subject change handler
+    document.getElementById('questionSubject').addEventListener('change', updateTopics);
+    
+    // Setup form handlers
+    document.getElementById('creditForm').addEventListener('submit', handleCreditForm);
+    document.getElementById('questionForm').addEventListener('submit', handleQuestionForm);
+    document.getElementById('settingsForm').addEventListener('submit', handleSettingsForm);
+    document.getElementById('broadcastForm').addEventListener('submit', handleBroadcastForm);
+});
+
+function updateTopics() {
+    const subjectSelect = document.getElementById('questionSubject');
+    const topicSelect = document.getElementById('questionTopic');
+    const subject = subjectSelect.value;
+    
+    topicSelect.innerHTML = '<option value="">Select topic</option>';
+    
+    if (subject && TOPICS[subject]) {
+        TOPICS[subject].forEach(topic => {
+            const option = document.createElement('option');
+            option.value = topic;
+            option.textContent = topic;
+            topicSelect.appendChild(option);
+        });
+    }
+}
+
+function searchUsers() {
+    const query = document.getElementById('userSearch').value.trim();
+    const searchType = document.getElementById('searchType').value;
+    
+    if (!query) {
+        alert('Please enter a search query');
+        return;
+    }
+    
+    const tableBody = document.getElementById('usersTable');
+    tableBody.innerHTML = '<tr><td colspan="7" class="text-center"><i class="fas fa-spinner fa-spin me-2"></i>Searching...</td></tr>';
+    
+    fetch(`/api/admin/api/users/search?q=${encodeURIComponent(query)}&type=${searchType}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.users && data.users.length > 0) {
+                displayUsers(data.users);
+            } else {
+                tableBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No users found</td></tr>';
+            }
+        })
+        .catch(error => {
+            console.error('Error searching users:', error);
+            tableBody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error searching users</td></tr>';
+        });
+}
+
+function displayUsers(users) {
+    const tableBody = document.getElementById('usersTable');
+    
+    tableBody.innerHTML = users.map(user => `
+        <tr>
+            <td>${user.nerdx_id || 'N/A'}</td>
+            <td>${user.name || 'N/A'} ${user.surname || ''}</td>
+            <td>${user.credits || 0}</td>
+            <td>${user.total_points || 0}</td>
+            <td>${user.streak_count || 0}</td>
+            <td>
+                <span class="badge ${user.is_active ? 'bg-success' : 'bg-secondary'}">
+                    ${user.is_active ? 'Active' : 'Inactive'}
+                </span>
+            </td>
+            <td>
+                <button class="btn btn-sm btn-primary me-1" onclick="viewUserDetails('${user.whatsapp_id}')">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn btn-sm btn-warning me-1" onclick="editCredits('${user.whatsapp_id}')">
+                    <i class="fas fa-coins"></i>
+                </button>
+                <button class="btn btn-sm btn-secondary" onclick="toggleUserStatus('${user.whatsapp_id}', ${!user.is_active})">
+                    <i class="fas fa-${user.is_active ? 'ban' : 'check'}"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function handleCreditForm(e) {
+    e.preventDefault();
+    
+    const userId = document.getElementById('creditUserId').value;
+    const action = document.getElementById('creditAction').value;
+    const amount = parseInt(document.getElementById('creditAmount').value);
+    const reason = document.getElementById('creditReason').value;
+    
+    if (!userId || !action || !amount || !reason) {
+        alert('Please fill all fields');
+        return;
+    }
+    
+    fetch(`/api/admin/api/users/${userId}/credits`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            action: action,
+            amount: amount,
+            reason: reason
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            document.getElementById('creditForm').reset();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error managing credits:', error);
+        alert('Error processing credit operation');
+    });
+}
+
+function handleQuestionForm(e) {
+    e.preventDefault();
+    
+    const subject = document.getElementById('questionSubject').value;
+    const topic = document.getElementById('questionTopic').value;
+    const difficulty = document.getElementById('questionDifficulty').value;
+    const count = parseInt(document.getElementById('questionCount').value);
+    
+    if (!subject || !topic || !difficulty || !count) {
+        alert('Please fill all fields');
+        return;
+    }
+    
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Generating...';
+    
+    fetch('/api/admin/api/questions/generate', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            subject: subject,
+            topic: topic,
+            difficulty: difficulty,
+            count: count
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayGeneratedQuestions(data.questions);
+            alert(`Successfully generated ${data.generated} out of ${data.requested} questions`);
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error generating questions:', error);
+        alert('Error generating questions');
+    })
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-magic me-1"></i>Generate Questions';
+    });
+}
+
+function displayGeneratedQuestions(questions) {
+    const container = document.getElementById('generatedQuestions');
+    
+    if (!questions || questions.length === 0) {
+        container.innerHTML = '<p class="text-muted">No questions generated</p>';
+        return;
+    }
+    
+    container.innerHTML = questions.map(q => `
+        <div class="card mb-2">
+            <div class="card-body">
+                <h6 class="card-title">${q.subject} - ${q.topic}</h6>
+                <p class="card-text">${q.question}</p>
+                <small class="text-muted">Difficulty: ${q.difficulty} | Points: ${q.points}</small>
+            </div>
+        </div>
+    `).join('');
+}
+
+function loadPaymentStats() {
+    fetch('/api/admin/api/payments/stats')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('totalRevenue').textContent = `$${data.total_revenue || 0}`;
+            document.getElementById('totalTransactions').textContent = data.total_transactions || 0;
+            document.getElementById('successfulPayments').textContent = data.successful_payments || 0;
+            document.getElementById('failedPayments').textContent = data.failed_transactions || 0;
+        })
+        .catch(error => {
+            console.error('Error loading payment stats:', error);
+        });
+}
+
+function loadSystemSettings() {
+    fetch('/api/admin/api/system/settings')
+        .then(response => response.json())
+        .then(data => {
+            // Load credit costs
+            document.getElementById('mathEasy').value = data.credit_costs?.math_easy || 5;
+            document.getElementById('mathMedium').value = data.credit_costs?.math_medium || 10;
+            document.getElementById('mathDifficult').value = data.credit_costs?.math_difficult || 20;
+            document.getElementById('scienceEasy').value = data.credit_costs?.science_easy || 5;
+            document.getElementById('scienceMedium').value = data.credit_costs?.science_medium || 10;
+            document.getElementById('scienceDifficult').value = data.credit_costs?.science_difficult || 15;
+            
+            // Load rate limits
+            document.getElementById('sessionCooldown').value = data.rate_limits?.session_cooldown || 30;
+            document.getElementById('generationTimeout').value = data.rate_limits?.generation_timeout || 120;
+            
+            // Load bonuses
+            document.getElementById('welcomeCredits').value = data.welcome_credits || 50;
+            document.getElementById('referrerBonus').value = data.referral_credits?.referrer_bonus || 25;
+            document.getElementById('newUserBonus').value = data.referral_credits?.new_user_bonus || 15;
+        })
+        .catch(error => {
+            console.error('Error loading system settings:', error);
+        });
+}
+
+function handleSettingsForm(e) {
+    e.preventDefault();
+    
+    const settings = {
+        credit_costs: {
+            math_easy: parseInt(document.getElementById('mathEasy').value),
+            math_medium: parseInt(document.getElementById('mathMedium').value),
+            math_difficult: parseInt(document.getElementById('mathDifficult').value),
+            science_easy: parseInt(document.getElementById('scienceEasy').value),
+            science_medium: parseInt(document.getElementById('scienceMedium').value),
+            science_difficult: parseInt(document.getElementById('scienceDifficult').value)
+        },
+        rate_limits: {
+            session_cooldown: parseInt(document.getElementById('sessionCooldown').value),
+            generation_timeout: parseInt(document.getElementById('generationTimeout').value)
+        },
+        welcome_credits: parseInt(document.getElementById('welcomeCredits').value),
+        referral_credits: {
+            referrer_bonus: parseInt(document.getElementById('referrerBonus').value),
+            new_user_bonus: parseInt(document.getElementById('newUserBonus').value)
+        }
+    };
+    
+    fetch('/api/admin/api/system/settings', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(settings)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Settings saved successfully');
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error saving settings:', error);
+        alert('Error saving settings');
+    });
+}
+
+function handleBroadcastForm(e) {
+    e.preventDefault();
+    
+    const target = document.getElementById('broadcastTarget').value;
+    const message = document.getElementById('broadcastMessage').value.trim();
+    
+    if (!message) {
+        alert('Please enter a message');
+        return;
+    }
+    
+    if (confirm(`Send broadcast to ${target} users?`)) {
+        fetch('/api/admin/api/broadcast', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                target: target,
+                message: message
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                document.getElementById('broadcastForm').reset();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error sending broadcast:', error);
+            alert('Error sending broadcast');
+        });
+    }
+}
+
+function viewUserDetails(userId) {
+    const modal = new bootstrap.Modal(document.getElementById('userDetailsModal'));
+    modal.show();
+    
+    fetch(`/api/dashboard/api/user/${userId}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('userDetailsContent').innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Basic Information</h6>
+                        <p><strong>Credits:</strong> ${data.credits || 0}</p>
+                        <p><strong>Total Points:</strong> ${data.total_points || 0}</p>
+                        <p><strong>Current Streak:</strong> ${data.streak_count || 0} days</p>
+                        <p><strong>Level:</strong> ${data.level?.name || 'Unknown'}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Activity</h6>
+                        <p><strong>Questions Answered:</strong> ${data.questions_answered || 0}</p>
+                        <p><strong>Accuracy:</strong> ${data.accuracy || 0}%</p>
+                        <p><strong>Last Activity:</strong> ${data.last_activity || 'Never'}</p>
+                    </div>
+                </div>
+            `;
+        })
+        .catch(error => {
+            document.getElementById('userDetailsContent').innerHTML = '<p class="text-danger">Error loading user details</p>';
+        });
+}
+
+function editCredits(userId) {
+    document.getElementById('creditUserId').value = userId;
+    document.querySelector('[href="#credits"]').click();
+}
+
+function exportUsers() {
+    fetch('/api/dashboard/api/export/users')
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message || 'Export started');
+        })
+        .catch(error => {
+            console.error('Error exporting users:', error);
+            alert('Error starting export');
+        });
+}
+</script>
+{% endblock %}

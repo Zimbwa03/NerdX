@@ -1,0 +1,298 @@
+import os
+import json
+import logging
+import requests
+import time
+from typing import Dict, List, Optional
+from config import Config
+
+logger = logging.getLogger(__name__)
+
+class AIService:
+    """Service for AI-powered question generation using DeepSeek and Gemini"""
+    
+    def __init__(self):
+        self.deepseek_api_key = Config.DEEPSEEK_API_KEY
+        self.gemini_api_key = Config.GEMINI_API_KEY
+        
+        if not self.deepseek_api_key:
+            raise ValueError("DEEPSEEK_API_KEY is required")
+    
+    def generate_math_question(self, topic: str, difficulty: str) -> Optional[Dict]:
+        """Generate a mathematics question using DeepSeek AI"""
+        try:
+            difficulty_descriptions = {
+                "easy": "Direct application of basic concepts, straightforward calculations, minimal steps",
+                "medium": "Requires understanding of multiple concepts, moderate calculations, 2-3 steps",
+                "difficult": "Complex problem-solving, multi-step reasoning, synthesis of several concepts"
+            }
+            
+            prompt = f"""
+You are MathMentor, an expert O-Level Mathematics tutor for ZIMSEC curriculum.
+
+CRITICAL INSTRUCTION: Generate EXACTLY ONE single question - never return arrays or multiple questions.
+
+Topic: {topic}
+Difficulty: {difficulty} - {difficulty_descriptions[difficulty]}
+
+STRICT REQUIREMENTS:
+1. NEVER use arrays or lists - generate ONE single question only
+2. Questions must be ZIMSEC O-Level Mathematics standard (Forms 1-4, 2015-2022)
+3. Use simple mathematical notation (x², not complex LaTeX)
+4. Provide clear, step-by-step solutions with explanations
+5. Make the question educational and unique
+
+MANDATORY JSON FORMAT (single object, not array):
+{{
+    "question": "A clear mathematics problem statement",
+    "solution": "Step 1: Clear explanation\\nStep 2: Next step\\nStep 3: Final answer",
+    "points": {10 if difficulty == 'easy' else 20 if difficulty == 'medium' else 50}
+}}
+
+EXAMPLE for {topic}:
+- Question should be concise and clear
+- Solution should show ALL working steps
+- Points are: Easy=10, Medium=20, Difficult=50
+
+Generate ONE question now (not multiple, not an array):
+"""
+            
+            return self._call_deepseek_api(prompt)
+            
+        except Exception as e:
+            logger.error(f"Error generating math question: {e}")
+            return None
+    
+    def generate_science_question(self, subject: str, topic: str, difficulty: str) -> Optional[Dict]:
+        """Generate a science question (Biology, Chemistry, Physics)"""
+        try:
+            difficulty_map = {
+                "easy": "Basic understanding and recall of facts",
+                "medium": "Application of concepts and moderate analysis",
+                "difficult": "Complex analysis, synthesis, and evaluation"
+            }
+            
+            prompt = f"""
+You are ScienceMentor, an expert ZIMSEC Combined Science tutor.
+
+Generate ONE single {subject} question for the topic: {topic}
+Difficulty: {difficulty} - {difficulty_map[difficulty]}
+
+REQUIREMENTS:
+1. Generate EXACTLY ONE question (not multiple, not an array)
+2. Must align with ZIMSEC Combined Science syllabus
+3. Include 4 multiple choice options (A, B, C, D)
+4. Provide detailed explanation for the correct answer
+5. Make it educational and age-appropriate for Forms 1-4
+
+MANDATORY JSON FORMAT:
+{{
+    "question": "Clear question statement",
+    "options": {{
+        "A": "Option A text",
+        "B": "Option B text", 
+        "C": "Option C text",
+        "D": "Option D text"
+    }},
+    "correct_answer": "A",
+    "explanation": "Detailed explanation of why the answer is correct",
+    "points": {10 if difficulty == 'easy' else 20 if difficulty == 'medium' else 50}
+}}
+
+Generate ONE {subject} question for {topic} now:
+"""
+            
+            return self._call_deepseek_api(prompt)
+            
+        except Exception as e:
+            logger.error(f"Error generating science question: {e}")
+            return None
+    
+    def generate_english_question(self, topic: str, difficulty: str) -> Optional[Dict]:
+        """Generate an English question using Gemini AI (fallback to DeepSeek)"""
+        try:
+            if self.gemini_api_key:
+                return self._generate_english_with_gemini(topic, difficulty)
+            else:
+                return self._generate_english_with_deepseek(topic, difficulty)
+                
+        except Exception as e:
+            logger.error(f"Error generating English question: {e}")
+            return None
+    
+    def _generate_english_with_gemini(self, topic: str, difficulty: str) -> Optional[Dict]:
+        """Generate English question using Gemini AI"""
+        try:
+            prompt = f"""
+You are an expert English Language tutor for ZIMSEC O-Level curriculum.
+
+Generate ONE English question for: {topic}
+Difficulty: {difficulty}
+
+Requirements:
+1. Align with ZIMSEC English Language syllabus
+2. Age-appropriate for Forms 1-4 students
+3. Clear instructions and examples where needed
+4. Practical and educational
+
+JSON format:
+{{
+    "question": "Question text with clear instructions",
+    "sample_answer": "Example or guidelines for answering",
+    "marking_criteria": "How the answer should be evaluated",
+    "points": {10 if difficulty == 'easy' else 20 if difficulty == 'medium' else 50}
+}}
+"""
+            
+            headers = {
+                'Content-Type': 'application/json'
+            }
+            
+            data = {
+                'contents': [{
+                    'parts': [{'text': prompt}]
+                }]
+            }
+            
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={self.gemini_api_key}"
+            
+            response = requests.post(url, headers=headers, json=data, timeout=30)
+            
+            if response.status_code == 200:
+                result = response.json()
+                content = result['candidates'][0]['content']['parts'][0]['text']
+                
+                # Extract JSON from response
+                json_start = content.find('{')
+                json_end = content.rfind('}') + 1
+                json_str = content[json_start:json_end]
+                
+                return json.loads(json_str)
+            else:
+                logger.error(f"Gemini API error: {response.status_code}")
+                return self._generate_english_with_deepseek(topic, difficulty)
+                
+        except Exception as e:
+            logger.error(f"Error with Gemini API: {e}")
+            return self._generate_english_with_deepseek(topic, difficulty)
+    
+    def _generate_english_with_deepseek(self, topic: str, difficulty: str) -> Optional[Dict]:
+        """Generate English question using DeepSeek AI as fallback"""
+        try:
+            prompt = f"""
+You are an expert English Language tutor for ZIMSEC O-Level curriculum.
+
+Generate ONE English question for: {topic}
+Difficulty: {difficulty}
+
+Requirements:
+1. Align with ZIMSEC English Language syllabus
+2. Age-appropriate for Forms 1-4 students
+3. Clear instructions and examples where needed
+4. Practical and educational
+
+JSON format:
+{{
+    "question": "Question text with clear instructions",
+    "sample_answer": "Example or guidelines for answering",
+    "marking_criteria": "How the answer should be evaluated",
+    "points": {10 if difficulty == 'easy' else 20 if difficulty == 'medium' else 50}
+}}
+"""
+            
+            return self._call_deepseek_api(prompt)
+            
+        except Exception as e:
+            logger.error(f"Error generating English question with DeepSeek: {e}")
+            return None
+    
+    def _call_deepseek_api(self, prompt: str) -> Optional[Dict]:
+        """Make API call to DeepSeek with retry logic"""
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.deepseek_api_key}',
+                'Content-Type': 'application/json'
+            }
+            
+            data = {
+                'model': 'deepseek-chat',
+                'messages': [
+                    {
+                        'role': 'user',
+                        'content': prompt
+                    }
+                ],
+                'max_tokens': 3000,
+                'temperature': 0.7
+            }
+            
+            # Retry with different timeouts
+            for attempt in range(Config.AI_MAX_RETRIES):
+                try:
+                    timeout = Config.AI_REQUEST_TIMEOUT[min(attempt, len(Config.AI_REQUEST_TIMEOUT) - 1)]
+                    logger.info(f"DeepSeek API attempt {attempt + 1}/{Config.AI_MAX_RETRIES} with {timeout}s timeout")
+                    
+                    response = requests.post(
+                        'https://api.deepseek.com/chat/completions',
+                        headers=headers,
+                        json=data,
+                        timeout=timeout
+                    )
+                    
+                    if response.status_code == 200:
+                        result = response.json()
+                        content = result['choices'][0]['message']['content']
+                        
+                        # Extract JSON from response
+                        json_start = content.find('{')
+                        json_end = content.rfind('}') + 1
+                        json_str = content[json_start:json_end]
+                        
+                        question_data = json.loads(json_str)
+                        
+                        # Validate response structure
+                        if self._validate_question_data(question_data):
+                            logger.info(f"✅ Successfully generated question on attempt {attempt + 1}")
+                            return question_data
+                        else:
+                            logger.warning(f"Invalid question format on attempt {attempt + 1}")
+                            continue
+                    else:
+                        logger.error(f"DeepSeek API error: {response.status_code} - {response.text}")
+                        if attempt < Config.AI_MAX_RETRIES - 1:
+                            time.sleep(2 ** attempt)  # Exponential backoff
+                        
+                except requests.Timeout:
+                    logger.warning(f"Timeout on attempt {attempt + 1}")
+                    if attempt < Config.AI_MAX_RETRIES - 1:
+                        time.sleep(2 ** attempt)
+                        
+            logger.error("All DeepSeek API attempts failed")
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error calling DeepSeek API: {e}")
+            return None
+    
+    def _validate_question_data(self, data: Dict) -> bool:
+        """Validate the structure of generated question data"""
+        if not isinstance(data, dict):
+            return False
+        
+        # Check for required fields based on question type
+        if 'question' not in data or 'points' not in data:
+            return False
+        
+        # Validate question is not empty
+        if not data['question'].strip():
+            return False
+        
+        # Validate points is a positive integer
+        try:
+            points = int(data['points'])
+            if points <= 0:
+                return False
+        except (ValueError, TypeError):
+            return False
+        
+        return True

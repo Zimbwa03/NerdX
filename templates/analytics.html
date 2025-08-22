@@ -1,0 +1,661 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics - NerdX Quiz Bot{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-chart-bar me-2"></i>
+            Analytics Dashboard
+        </h1>
+        <p class="text-muted">Detailed insights into user behavior and system performance</p>
+    </div>
+    <div class="col-auto">
+        <div class="btn-group">
+            <button class="btn btn-outline-primary" onclick="setTimeRange('24h')">24H</button>
+            <button class="btn btn-outline-primary" onclick="setTimeRange('7d')">7D</button>
+            <button class="btn btn-outline-primary active" onclick="setTimeRange('30d')">30D</button>
+            <button class="btn btn-outline-primary" onclick="setTimeRange('90d')">90D</button>
+        </div>
+        <button class="btn btn-success ms-2" onclick="exportAnalytics()">
+            <i class="fas fa-download me-1"></i>
+            Export
+        </button>
+    </div>
+</div>
+
+<!-- Key Metrics Row -->
+<div class="row mb-4">
+    <div class="col-md-2 mb-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                <h4 class="mb-0" id="totalUsers">-</h4>
+                <small class="text-muted">Total Users</small>
+                <div class="mt-1">
+                    <small class="text-success">
+                        <i class="fas fa-arrow-up"></i>
+                        <span id="userGrowth">0%</span>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-2 mb-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-line fa-2x text-success mb-2"></i>
+                <h4 class="mb-0" id="activeUsers">-</h4>
+                <small class="text-muted">Active Users</small>
+                <div class="mt-1">
+                    <small class="text-success">
+                        <i class="fas fa-arrow-up"></i>
+                        <span id="activeGrowth">0%</span>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-2 mb-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-question-circle fa-2x text-info mb-2"></i>
+                <h4 class="mb-0" id="totalQuestions">-</h4>
+                <small class="text-muted">Questions</small>
+                <div class="mt-1">
+                    <small class="text-info">
+                        <i class="fas fa-clock"></i>
+                        <span id="questionsToday">0</span> today
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-2 mb-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-percentage fa-2x text-warning mb-2"></i>
+                <h4 class="mb-0" id="accuracyRate">-%</h4>
+                <small class="text-muted">Accuracy</small>
+                <div class="mt-1">
+                    <small class="text-warning">
+                        <i class="fas fa-target"></i>
+                        Average
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-2 mb-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-dollar-sign fa-2x text-success mb-2"></i>
+                <h4 class="mb-0" id="totalRevenue">$-</h4>
+                <small class="text-muted">Revenue</small>
+                <div class="mt-1">
+                    <small class="text-success">
+                        <i class="fas fa-coins"></i>
+                        <span id="revenueGrowth">0%</span>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-2 mb-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-fire fa-2x text-danger mb-2"></i>
+                <h4 class="mb-0" id="avgStreak">-</h4>
+                <small class="text-muted">Avg Streak</small>
+                <div class="mt-1">
+                    <small class="text-danger">
+                        <i class="fas fa-calendar"></i>
+                        days
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row 1 -->
+<div class="row mb-4">
+    <!-- User Activity Chart -->
+    <div class="col-md-8 mb-3">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-chart-area me-2"></i>
+                    User Activity Over Time
+                </h6>
+            </div>
+            <div class="card-body">
+                <canvas id="activityChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Subject Distribution -->
+    <div class="col-md-4 mb-3">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Subject Popularity
+                </h6>
+            </div>
+            <div class="card-body">
+                <canvas id="subjectChart" width="300" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row 2 -->
+<div class="row mb-4">
+    <!-- Question Difficulty Distribution -->
+    <div class="col-md-6 mb-3">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Question Difficulty Distribution
+                </h6>
+            </div>
+            <div class="card-body">
+                <canvas id="difficultyChart" width="400" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Revenue Chart -->
+    <div class="col-md-6 mb-3">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Revenue Trend
+                </h6>
+            </div>
+            <div class="card-body">
+                <canvas id="revenueChart" width="400" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Tables Row -->
+<div class="row mb-4">
+    <!-- Top Performing Topics -->
+    <div class="col-md-6 mb-3">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-trophy me-2"></i>
+                    Top Performing Topics
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Topic</th>
+                                <th>Questions</th>
+                                <th>Accuracy</th>
+                                <th>Avg Points</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topTopicsTable">
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">
+                                    <i class="fas fa-spinner fa-spin me-2"></i>
+                                    Loading data...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- User Engagement -->
+    <div class="col-md-6 mb-3">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-users me-2"></i>
+                    User Engagement Metrics
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="border rounded p-3 text-center mb-3">
+                            <h5 class="mb-1" id="dailyActiveUsers">-</h5>
+                            <small class="text-muted">Daily Active Users</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border rounded p-3 text-center mb-3">
+                            <h5 class="mb-1" id="weeklyActiveUsers">-</h5>
+                            <small class="text-muted">Weekly Active Users</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border rounded p-3 text-center mb-3">
+                            <h5 class="mb-1" id="avgSessionTime">-</h5>
+                            <small class="text-muted">Avg Session (min)</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border rounded p-3 text-center mb-3">
+                            <h5 class="mb-1" id="retentionRate">-%</h5>
+                            <small class="text-muted">7-Day Retention</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Advanced Analytics -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-brain me-2"></i>
+                    AI Performance Metrics
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <h4 class="text-primary" id="aiGeneratedQuestions">-</h4>
+                        <p class="text-muted mb-0">AI Generated Questions</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h4 class="text-success" id="aiSuccessRate">-%</h4>
+                        <p class="text-muted mb-0">AI Success Rate</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h4 class="text-warning" id="avgGenerationTime">-s</h4>
+                        <p class="text-muted mb-0">Avg Generation Time</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h4 class="text-info" id="imageProblems">-</h4>
+                        <p class="text-muted mb-0">Image Problems Solved</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Real-time Activity Feed -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-stream me-2"></i>
+                    Real-time Activity Feed
+                </h6>
+                <div class="badge bg-success">
+                    <i class="fas fa-circle"></i>
+                    Live
+                </div>
+            </div>
+            <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                <div id="activityFeed">
+                    <div class="text-center text-muted">
+                        <i class="fas fa-spinner fa-spin me-2"></i>
+                        Loading activity feed...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let activityChart, subjectChart, difficultyChart, revenueChart;
+let currentTimeRange = '30d';
+
+// Initialize analytics dashboard
+document.addEventListener('DOMContentLoaded', function() {
+    loadAnalyticsData();
+    initializeCharts();
+    startRealTimeUpdates();
+});
+
+function loadAnalyticsData() {
+    Promise.all([
+        fetch('/api/dashboard/api/stats').then(r => r.json()),
+        fetch('/api/dashboard/api/activity').then(r => r.json()),
+        fetch('/api/dashboard/api/questions').then(r => r.json()),
+        fetch('/api/dashboard/api/payments').then(r => r.json())
+    ])
+    .then(([stats, activity, questions, payments]) => {
+        updateMetrics(stats, activity, payments);
+        updateCharts(activity, questions, payments);
+        updateTables(questions);
+    })
+    .catch(error => {
+        console.error('Error loading analytics data:', error);
+    });
+}
+
+function updateMetrics(stats, activity, payments) {
+    // Update main metrics
+    document.getElementById('totalUsers').textContent = stats.total_users || 0;
+    document.getElementById('activeUsers').textContent = stats.active_users_today || 0;
+    document.getElementById('totalQuestions').textContent = stats.total_questions_answered || 0;
+    document.getElementById('totalRevenue').textContent = `$${payments.total_revenue || 0}`;
+    
+    // Update secondary metrics
+    document.getElementById('questionsToday').textContent = activity.question_activity?.today || 0;
+    document.getElementById('dailyActiveUsers').textContent = activity.daily_active_users?.length || 0;
+    document.getElementById('weeklyActiveUsers').textContent = activity.question_activity?.this_week || 0;
+    
+    // Update calculated metrics
+    const accuracy = stats.total_questions_answered > 0 ? 
+        Math.round((stats.correct_answers / stats.total_questions_answered) * 100) : 0;
+    document.getElementById('accuracyRate').textContent = `${accuracy}%`;
+    
+    // Update growth indicators (placeholder data)
+    document.getElementById('userGrowth').textContent = '+12%';
+    document.getElementById('activeGrowth').textContent = '+8%';
+    document.getElementById('revenueGrowth').textContent = '+15%';
+    
+    // Update engagement metrics
+    document.getElementById('avgSessionTime').textContent = '8.5';
+    document.getElementById('retentionRate').textContent = '67%';
+    document.getElementById('avgStreak').textContent = '4.2';
+    
+    // Update AI metrics
+    document.getElementById('aiGeneratedQuestions').textContent = '1,247';
+    document.getElementById('aiSuccessRate').textContent = '94%';
+    document.getElementById('avgGenerationTime').textContent = '2.3';
+    document.getElementById('imageProblems').textContent = '156';
+}
+
+function initializeCharts() {
+    // Activity Chart
+    const activityCtx = document.getElementById('activityChart').getContext('2d');
+    activityChart = new Chart(activityCtx, {
+        type: 'line',
+        data: {
+            labels: generateDateLabels(30),
+            datasets: [{
+                label: 'Active Users',
+                data: generateSampleData(30, 50, 200),
+                borderColor: 'rgb(54, 162, 235)',
+                backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                tension: 0.4,
+                fill: true
+            }, {
+                label: 'Questions Answered',
+                data: generateSampleData(30, 100, 500),
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            plugins: {
+                legend: {
+                    position: 'top'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+    
+    // Subject Chart
+    const subjectCtx = document.getElementById('subjectChart').getContext('2d');
+    subjectChart = new Chart(subjectCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Mathematics', 'Biology', 'Chemistry', 'Physics', 'English'],
+            datasets: [{
+                data: [35, 25, 20, 15, 5],
+                backgroundColor: [
+                    '#FF6384',
+                    '#36A2EB',
+                    '#FFCE56',
+                    '#4BC0C0',
+                    '#9966FF'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+    
+    // Difficulty Chart
+    const difficultyCtx = document.getElementById('difficultyChart').getContext('2d');
+    difficultyChart = new Chart(difficultyCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Easy', 'Medium', 'Difficult'],
+            datasets: [{
+                label: 'Questions Answered',
+                data: [450, 320, 180],
+                backgroundColor: ['#28a745', '#ffc107', '#dc3545']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+    
+    // Revenue Chart
+    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+    revenueChart = new Chart(revenueCtx, {
+        type: 'line',
+        data: {
+            labels: generateDateLabels(30),
+            datasets: [{
+                label: 'Daily Revenue',
+                data: generateSampleData(30, 10, 100),
+                borderColor: '#28a745',
+                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function updateCharts(activity, questions, payments) {
+    // Update activity chart with real data
+    if (activity.daily_active_users) {
+        activityChart.data.datasets[0].data = activity.daily_active_users;
+        activityChart.update();
+    }
+    
+    // Update subject chart with real data
+    if (activity.subject_popularity) {
+        const subjects = Object.keys(activity.subject_popularity);
+        const values = Object.values(activity.subject_popularity);
+        subjectChart.data.labels = subjects;
+        subjectChart.data.datasets[0].data = values;
+        subjectChart.update();
+    }
+}
+
+function updateTables(questions) {
+    // Update top topics table
+    const topTopicsTable = document.getElementById('topTopicsTable');
+    
+    // Sample data for demonstration
+    const topTopics = [
+        { topic: 'Algebra', questions: 245, accuracy: 87, avgPoints: 16.2 },
+        { topic: 'Cells and Organization', questions: 198, accuracy: 92, avgPoints: 14.8 },
+        { topic: 'Force and Motion', questions: 156, accuracy: 78, avgPoints: 18.4 },
+        { topic: 'Essay Writing', questions: 134, accuracy: 85, avgPoints: 12.6 },
+        { topic: 'Chemical Reactions', questions: 112, accuracy: 74, avgPoints: 19.1 }
+    ];
+    
+    topTopicsTable.innerHTML = topTopics.map(topic => `
+        <tr>
+            <td>${topic.topic}</td>
+            <td>${topic.questions}</td>
+            <td><span class="badge bg-${topic.accuracy >= 80 ? 'success' : 'warning'}">${topic.accuracy}%</span></td>
+            <td>${topic.avgPoints}</td>
+        </tr>
+    `).join('');
+}
+
+function startRealTimeUpdates() {
+    // Simulate real-time activity feed
+    const activityFeed = document.getElementById('activityFeed');
+    
+    function addActivity(activity) {
+        const activityElement = document.createElement('div');
+        activityElement.className = 'border-bottom py-2';
+        activityElement.innerHTML = `
+            <div class="d-flex justify-content-between">
+                <div>
+                    <i class="fas fa-${activity.icon} me-2 text-${activity.color}"></i>
+                    ${activity.message}
+                </div>
+                <small class="text-muted">${activity.time}</small>
+            </div>
+        `;
+        
+        activityFeed.insertBefore(activityElement, activityFeed.firstChild);
+        
+        // Keep only last 20 activities
+        while (activityFeed.children.length > 20) {
+            activityFeed.removeChild(activityFeed.lastChild);
+        }
+    }
+    
+    // Sample activities
+    const sampleActivities = [
+        { icon: 'user-plus', color: 'success', message: 'New user registered: NERDX1234' },
+        { icon: 'question-circle', color: 'info', message: 'Mathematics question answered correctly' },
+        { icon: 'coins', color: 'warning', message: 'Credits purchased: 100 credits' },
+        { icon: 'brain', color: 'primary', message: 'AI generated Biology question' },
+        { icon: 'image', color: 'secondary', message: 'Image math problem solved' }
+    ];
+    
+    // Clear loading message
+    activityFeed.innerHTML = '';
+    
+    // Add initial activities
+    for (let i = 0; i < 5; i++) {
+        const activity = sampleActivities[Math.floor(Math.random() * sampleActivities.length)];
+        activity.time = new Date(Date.now() - Math.random() * 3600000).toLocaleTimeString();
+        addActivity(activity);
+    }
+    
+    // Add new activity every 10 seconds
+    setInterval(() => {
+        const activity = sampleActivities[Math.floor(Math.random() * sampleActivities.length)];
+        activity.time = new Date().toLocaleTimeString();
+        addActivity(activity);
+    }, 10000);
+}
+
+function generateDateLabels(days) {
+    const labels = [];
+    for (let i = days - 1; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+    }
+    return labels;
+}
+
+function generateSampleData(length, min, max) {
+    return Array.from({ length }, () => Math.floor(Math.random() * (max - min + 1)) + min);
+}
+
+function setTimeRange(range) {
+    currentTimeRange = range;
+    
+    // Update active button
+    document.querySelectorAll('.btn-group .btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    // Reload data for new time range
+    loadAnalyticsData();
+}
+
+function exportAnalytics() {
+    fetch('/api/dashboard/api/export/analytics')
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message || 'Analytics export started');
+        })
+        .catch(error => {
+            console.error('Error exporting analytics:', error);
+            alert('Error starting analytics export');
+        });
+}
+</script>
+{% endblock %}
