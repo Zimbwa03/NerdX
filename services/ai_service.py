@@ -106,42 +106,56 @@ Generate ONE question now (not multiple, not an array):
             return None
     
     def generate_science_question(self, subject: str, topic: str, difficulty: str) -> Optional[Dict]:
-        """Generate a science question (Biology, Chemistry, Physics)"""
+        """Generate a ZIMSEC O-level Combined Science question (Biology, Chemistry, Physics)"""
         try:
             difficulty_map = {
-                "easy": "Basic understanding and recall of facts",
-                "medium": "Application of concepts and moderate analysis",
-                "difficult": "Complex analysis, synthesis, and evaluation"
+                "easy": "Basic recall and understanding of fundamental concepts",
+                "medium": "Application of concepts with moderate analysis and problem-solving",
+                "difficult": "Complex analysis, synthesis, evaluation and higher-order thinking"
+            }
+            
+            # Enhanced ZIMSEC-specific context prompts
+            zimsec_context = {
+                "Biology": "ZIMSEC O-Level Combined Science Biology syllabus covering cell biology, human biology, plant biology, genetics, ecology, and evolution for Forms 1-4 students in Zimbabwe",
+                "Chemistry": "ZIMSEC O-Level Combined Science Chemistry syllabus covering atomic structure, chemical bonding, acids/bases, metals, organic chemistry, and chemical reactions for Forms 1-4 students in Zimbabwe", 
+                "Physics": "ZIMSEC O-Level Combined Science Physics syllabus covering mechanics, heat, light, sound, electricity, magnetism, and modern physics for Forms 1-4 students in Zimbabwe"
             }
             
             prompt = f"""
-You are ScienceMentor, an expert ZIMSEC Combined Science tutor.
+You are ScienceMentor, an expert ZIMSEC Combined Science tutor with deep knowledge of Zimbabwe's O-Level curriculum.
 
-Generate ONE single {subject} question for the topic: {topic}
-Difficulty: {difficulty} - {difficulty_map[difficulty]}
+CONTEXT: {zimsec_context.get(subject, '')}
 
-REQUIREMENTS:
+Generate ONE single {subject} MCQ question for the topic: {topic}
+Difficulty Level: {difficulty} - {difficulty_map[difficulty]}
+
+STRICT ZIMSEC O-LEVEL REQUIREMENTS:
 1. Generate EXACTLY ONE question (not multiple, not an array)
-2. Must align with ZIMSEC Combined Science syllabus
-3. Include 4 multiple choice options (A, B, C, D)
-4. Provide detailed explanation for the correct answer
-5. Make it educational and age-appropriate for Forms 1-4
+2. Must strictly align with ZIMSEC Combined Science syllabus (Forms 1-4)
+3. Use terminology and concepts familiar to Zimbabwean O-Level students
+4. Include 4 realistic multiple choice options (A, B, C, D)
+5. Ensure distractors are plausible but clearly incorrect
+6. Provide comprehensive explanation with scientific reasoning
+7. Make it culturally relevant to Zimbabwe where appropriate
+8. Use proper scientific terminology expected at O-Level
 
 MANDATORY JSON FORMAT:
 {{
-    "question": "Clear question statement",
+    "question": "Clear, precise question statement with proper scientific terminology",
     "options": {{
-        "A": "Option A text",
-        "B": "Option B text", 
-        "C": "Option C text",
-        "D": "Option D text"
+        "A": "Option A - scientifically accurate or plausible distractor",
+        "B": "Option B - scientifically accurate or plausible distractor", 
+        "C": "Option C - scientifically accurate or plausible distractor",
+        "D": "Option D - scientifically accurate or plausible distractor"
     }},
     "correct_answer": "A",
-    "explanation": "Detailed explanation of why the answer is correct",
-    "points": {10 if difficulty == 'easy' else 20 if difficulty == 'medium' else 50}
+    "explanation": "Detailed scientific explanation including why the correct answer is right and why other options are incorrect. Include relevant ZIMSEC syllabus concepts.",
+    "points": {10 if difficulty == 'easy' else 20 if difficulty == 'medium' else 50},
+    "zimsec_topic": "{topic}",
+    "curriculum_reference": "ZIMSEC O-Level Combined Science"
 }}
 
-Generate ONE {subject} question for {topic} now:
+Generate ONE high-quality {subject} MCQ question for {topic} now:
 """
             
             return self._call_deepseek_api(prompt)
