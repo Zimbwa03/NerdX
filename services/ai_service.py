@@ -106,7 +106,118 @@ Generate ONE question now (not multiple, not an array):
             return None
     
     def generate_science_question(self, subject: str, topic: str, difficulty: str) -> Optional[Dict]:
-        """Generate a ZIMSEC O-level Combined Science question (Biology, Chemistry, Physics)"""
+        """Generate a ZIMSEC O-level Combined Science question using Gemini AI (primary) with DeepSeek fallback"""
+        try:
+            # Try Gemini AI first for science questions
+            if self.gemini_api_key:
+                result = self._generate_science_with_gemini(subject, topic, difficulty)
+                if result:
+                    return result
+                else:
+                    logger.warning("Gemini AI failed, falling back to DeepSeek")
+            
+            # Fallback to DeepSeek if Gemini fails or is not available
+            return self._generate_science_with_deepseek(subject, topic, difficulty)
+            
+        except Exception as e:
+            logger.error(f"Error generating science question: {e}")
+            return None
+    
+    def _generate_science_with_gemini(self, subject: str, topic: str, difficulty: str) -> Optional[Dict]:
+        """Generate science question using Gemini AI"""
+        try:
+            difficulty_map = {
+                "easy": "Basic recall and understanding of fundamental concepts",
+                "medium": "Application of concepts with moderate analysis and problem-solving", 
+                "difficult": "Complex analysis, synthesis, evaluation and higher-order thinking"
+            }
+            
+            # Enhanced ZIMSEC-specific context prompts
+            zimsec_context = {
+                "Biology": "ZIMSEC O-Level Combined Science Biology syllabus covering cell biology, human biology, plant biology, genetics, ecology, and evolution for Forms 1-4 students in Zimbabwe",
+                "Chemistry": "ZIMSEC O-Level Combined Science Chemistry syllabus covering atomic structure, chemical bonding, acids/bases, metals, organic chemistry, and chemical reactions for Forms 1-4 students in Zimbabwe",
+                "Physics": "ZIMSEC O-Level Combined Science Physics syllabus covering mechanics, heat, light, sound, electricity, magnetism, and modern physics for Forms 1-4 students in Zimbabwe"
+            }
+            
+            prompt = f"""
+You are ScienceMentor, an expert ZIMSEC Combined Science tutor with deep knowledge of Zimbabwe's O-Level curriculum.
+
+CONTEXT: {zimsec_context.get(subject, '')}
+
+Generate ONE single {subject} MCQ question for the topic: {topic}
+Difficulty Level: {difficulty} - {difficulty_map[difficulty]}
+
+STRICT ZIMSEC O-LEVEL REQUIREMENTS:
+1. Generate EXACTLY ONE question (not multiple, not an array)
+2. Must strictly align with ZIMSEC Combined Science syllabus (Forms 1-4)
+3. Use terminology and concepts familiar to Zimbabwean O-Level students
+4. Include 4 realistic multiple choice options (A, B, C, D)
+5. Ensure distractors are plausible but clearly incorrect
+6. Provide comprehensive explanation with scientific reasoning
+7. Make it culturally relevant to Zimbabwe where appropriate
+8. Use proper scientific terminology expected at O-Level
+
+MANDATORY JSON FORMAT:
+{{
+    "question": "Clear, precise question statement with proper scientific terminology",
+    "options": {{
+        "A": "Option A - scientifically accurate or plausible distractor",
+        "B": "Option B - scientifically accurate or plausible distractor",
+        "C": "Option C - scientifically accurate or plausible distractor", 
+        "D": "Option D - scientifically accurate or plausible distractor"
+    }},
+    "correct_answer": "A",
+    "explanation": "Detailed scientific explanation including why the correct answer is right and why other options are incorrect. Include relevant ZIMSEC syllabus concepts.",
+    "points": {10 if difficulty == 'easy' else 20 if difficulty == 'medium' else 50},
+    "zimsec_topic": "{topic}",
+    "curriculum_reference": "ZIMSEC O-Level Combined Science"
+}}
+
+Generate ONE high-quality {subject} MCQ question for {topic} now:
+"""
+            
+            headers = {
+                'Content-Type': 'application/json'
+            }
+            
+            data = {
+                'contents': [{
+                    'parts': [{'text': prompt}]
+                }]
+            }
+            
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={self.gemini_api_key}"
+            
+            response = requests.post(url, headers=headers, json=data, timeout=30)
+            
+            if response.status_code == 200:
+                result = response.json()
+                content = result['candidates'][0]['content']['parts'][0]['text']
+                
+                # Extract JSON from response
+                json_start = content.find('{')
+                json_end = content.rfind('}') + 1
+                json_str = content[json_start:json_end]
+                
+                question_data = json.loads(json_str)
+                
+                # Validate response structure
+                if self._validate_science_question_data(question_data):
+                    logger.info("✅ Successfully generated science question with Gemini AI")
+                    return question_data
+                else:
+                    logger.warning("Invalid science question format from Gemini")
+                    return None
+            else:
+                logger.error(f"Gemini API error: {response.status_code} - {response.text}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Error with Gemini API for science questions: {e}")
+            return None
+    
+    def _generate_science_with_deepseek(self, subject: str, topic: str, difficulty: str) -> Optional[Dict]:
+        """Generate science question using DeepSeek AI as fallback"""
         try:
             difficulty_map = {
                 "easy": "Basic recall and understanding of fundamental concepts",
@@ -161,8 +272,42 @@ Generate ONE high-quality {subject} MCQ question for {topic} now:
             return self._call_deepseek_api(prompt)
             
         except Exception as e:
-            logger.error(f"Error generating science question: {e}")
+            logger.error(f"Error generating science question with DeepSeek: {e}")
             return None
+    
+    def _validate_science_question_data(self, data: Dict) -> bool:
+        """Validate the structure of generated science question data"""
+        if not isinstance(data, dict):
+            return False
+        
+        # Check for required fields for science MCQs
+        required_fields = ['question', 'options', 'correct_answer', 'explanation', 'points']
+        for field in required_fields:
+            if field not in data:
+                return False
+        
+        # Validate question is not empty
+        if not data['question'].strip():
+            return False
+        
+        # Validate options structure (should be a dict with A, B, C, D keys)
+        options = data.get('options', {})
+        if not isinstance(options, dict) or not all(key in options for key in ['A', 'B', 'C', 'D']):
+            return False
+        
+        # Validate correct answer is one of A, B, C, D
+        if data.get('correct_answer') not in ['A', 'B', 'C', 'D']:
+            return False
+        
+        # Validate points is a positive integer
+        try:
+            points = int(data['points'])
+            if points <= 0:
+                return False
+        except (ValueError, TypeError):
+            return False
+        
+        return True
     
     def generate_english_question(self, topic: str, difficulty: str) -> Optional[Dict]:
         """Generate an English question using Gemini AI (fallback to DeepSeek)"""

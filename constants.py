@@ -1,56 +1,29 @@
 # Constants for NerdX Quiz Bot
 
-# ZIMSEC Combined Science and English Topics
+# ZIMSEC Combined Science and English Topics - Restored from backup
 TOPICS = {
     "Biology": [
-        "Cell Structure and Organisation",
-        "Human Biology - Circulation System",
-        "Human Biology - Respiratory System",
-        "Human Biology - Digestive System",
-        "Human Biology - Excretory System",
-        "Human Biology - Nervous System",
-        "Human Biology - Reproduction",
-        "Plant Biology - Structure and Function",
-        "Plant Biology - Nutrition and Transport",
-        "Plant Biology - Reproduction",
-        "Genetics and Heredity",
-        "Ecology and Environment",
-        "Classification of Living Organisms",
-        "Evolution and Natural Selection",
-        "Disease and Immunity",
-        "Microorganisms"
+        "Laboratory rules and safety",
+        "Cells and levels of organization",
+        "Nutrition",
+        "Respiratory system",
+        "Transport systems",
+        "Reproduction in plants and animals",
+        "Health and diseases"
     ],
     "Chemistry": [
-        "Atomic Structure",
-        "Chemical Bonding",
+        "Matter",
         "Acids, Bases and Salts",
-        "Metals and Metal Extraction",
-        "Non-metals and their Compounds",
-        "Organic Chemistry - Hydrocarbons",
-        "Organic Chemistry - Alcohols",
-        "Chemical Reactions and Equations",
         "Oxidation and Reduction",
-        "Rates of Reaction",
-        "Electrochemistry",
-        "Water and Solutions",
-        "Air and Atmosphere",
-        "Chemical Industry"
+        "Industrial Processes",
+        "Organic Chemistry"
     ],
     "Physics": [
-        "Mechanics - Motion in a Straight Line",
-        "Mechanics - Forces and Motion",
-        "Mechanics - Energy, Work and Power",
-        "Heat and Temperature",
-        "Kinetic Theory of Matter",
-        "Light - Reflection and Mirrors",
-        "Light - Refraction and Lenses",
-        "Sound and Waves",
-        "Static Electricity",
-        "Current Electricity",
-        "Magnetism and Electromagnetism",
-        "Electronics",
-        "Atomic Physics",
-        "Space Physics"
+        "Measurements",
+        "Force",
+        "Energy",
+        "Magnetism",
+        "Electricity"
     ],
     "Mathematics": [
         "Real Numbers",
