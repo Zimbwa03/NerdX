@@ -213,6 +213,7 @@ Ready to boost your reading skills? 🚀"""
                 return
             
             # Save active session to prevent duplicates
+            from datetime import datetime
             session_data = {
                 'session_type': 'comprehension_active',
                 'user_name': user_name,
