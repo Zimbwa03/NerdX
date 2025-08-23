@@ -383,13 +383,24 @@ Study the question and when ready, click "Show Graph" to see the correct graph w
                 }
                 expression = fallback_expressions.get(module_id, 'y = x')
 
-            # Create graph using Desmos API with user's name watermark
-            graph_result = self.graph_service.create_graph(
-                user_id,
-                expression,
-                module_id.replace('_', ' ').title(),
-                user_name
-            )
+            # Create graph - special handling for linear programming
+            if module_id == 'linear_programming':
+                # Extract constraints and use linear programming graph generator
+                constraints = expression.split(', ') if expression else ["x + y <= 10", "2x + y <= 16", "x >= 0", "y >= 2"]
+                graph_result = self.graph_service.generate_linear_programming_graph(
+                    constraints,
+                    objective_function=None,
+                    user_name=user_name,
+                    title=f"ZIMSEC Linear Programming - {user_name}"
+                )
+            else:
+                # Use regular graph creation for other modules
+                graph_result = self.graph_service.create_graph(
+                    user_id,
+                    expression,
+                    module_id.replace('_', ' ').title(),
+                    user_name
+                )
 
             if graph_result and 'image_path' in graph_result:
                 # Send success message with graph
@@ -503,14 +514,29 @@ Wait {user_name} NerdX is processing your Graph...
 
             self.whatsapp_service.send_message(user_id, processing_msg)
 
-            # Create graph using Desmos API
+            # Create graph - special handling for linear programming
             module_info = self.graph_modules[module_id]
-            graph_result = self.graph_service.create_graph(
-                user_id,
-                expression,
-                module_info['title'],
-                user_name
-            )
+            if module_id == 'linear_programming':
+                # Handle linear programming constraints
+                if ',' in expression:
+                    constraints = [c.strip() for c in expression.split(',')]
+                else:
+                    constraints = [expression]
+                
+                graph_result = self.graph_service.generate_linear_programming_graph(
+                    constraints,
+                    objective_function=None,
+                    user_name=user_name,
+                    title=f"Custom Linear Programming - {user_name}"
+                )
+            else:
+                # Use regular graph creation for other modules
+                graph_result = self.graph_service.create_graph(
+                    user_id,
+                    expression,
+                    module_info['title'],
+                    user_name
+                )
 
             if graph_result and 'image_path' in graph_result:
                 # Send success message with graph
@@ -687,6 +713,10 @@ Wait {user_name} NerdX is processing your Graph...
         try:
             import re
 
+            # Special handling for linear programming
+            if module_id == 'linear_programming':
+                return self._extract_linear_programming_constraints(question_text)
+
             # Common patterns for different types of functions
             patterns = {
                 'linear_functions': r'y\s*=\s*[+-]?\d*[.]?\d*x\s*[+-]?\s*\d+',
@@ -710,6 +740,42 @@ Wait {user_name} NerdX is processing your Graph...
         except Exception as e:
             logger.error("Error extracting expression from question: %s", e)
             return None
+
+    def _extract_linear_programming_constraints(self, question_text: str) -> str:
+        """Extract linear programming constraints from question text"""
+        try:
+            import re
+            
+            # Look for constraints in the format (i) constraint, (ii) constraint, etc.
+            constraint_pattern = r'\([iv]+\)\s*([^(\n]+?)(?=\s*\([iv]+\)|$)'
+            matches = re.findall(constraint_pattern, question_text, re.IGNORECASE | re.DOTALL)
+            
+            if matches:
+                # Clean and format constraints
+                constraints = []
+                for match in matches:
+                    constraint = match.strip()
+                    # Replace unicode symbols with standard operators
+                    constraint = constraint.replace('≤', '<=').replace('≥', '>=').replace('>', '>')
+                    if constraint and any(op in constraint for op in ['<=', '>=', '>', '<', '=']):
+                        constraints.append(constraint)
+                
+                if constraints:
+                    return ', '.join(constraints)
+            
+            # Alternative: look for direct constraint format
+            direct_pattern = r'([x\d\s+\-*]+[<>=≤≥]+\s*\d+)'
+            direct_matches = re.findall(direct_pattern, question_text)
+            if direct_matches:
+                constraints = [match.replace('≤', '<=').replace('≥', '>=') for match in direct_matches[:4]]
+                return ', '.join(constraints)
+            
+            # Fallback constraints for linear programming
+            return "x + y <= 10, 2x + y <= 16, x >= 0, y >= 2"
+            
+        except Exception as e:
+            logger.error(f"Error extracting linear programming constraints: {e}")
+            return "x + y <= 10, 2x + y <= 16, x >= 0, y >= 2"
 
     def _get_sample_expressions(self, module_id: str) -> List[str]:
         """Get 3 sample expressions for each graph module to create visual examples"""
