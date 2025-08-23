@@ -525,7 +525,7 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             parts = selection_id.split("_", 2)
             if len(parts) >= 3:
                 subject = parts[1].title()
-                topic = parts[2].replace("_", " ").title()
+                topic = parts[2].replace("_", " ")  # Remove .title() to preserve original case
 
                 # Validate subject and topic
                 if subject in TOPICS and topic in TOPICS.get(subject, []):
@@ -541,7 +541,7 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             if len(parts) >= 4:
                 difficulty = parts[1]
                 subject = parts[2].title()
-                topic = parts[3].replace("_", " ").title()
+                topic = parts[3].replace("_", " ")  # Remove .title() to preserve original case
 
                 logger.info(f"Generating {difficulty} {subject} question for topic: {topic}")
 
@@ -1016,7 +1016,7 @@ def handle_topic_selection_from_button(user_id: str, button_id: str):
         parts = button_id.split('_', 2)
         if len(parts) >= 3:
             subject = parts[1].title()
-            topic = parts[2].replace("_", " ").title()
+            topic = parts[2].replace("_", " ")  # Remove .title() to preserve original case
 
             # Start question session
             session_manager.start_question_session(user_id, subject, topic)
