@@ -200,7 +200,7 @@ Ready to boost your reading skills? 🚀"""
             session_type = existing_session.get('session_type', '') if existing_session else ''
             
             # Block ALL comprehension-related sessions - no exceptions!
-            comprehension_sessions = ['comprehension_active', 'comprehension_questions', 'comprehension_generating', 'comprehension_started']
+            comprehension_sessions = ['comprehension_active', 'comprehension_questions', 'comprehension_generating', 'comprehension_started', 'comprehension_passage_ready']
             
             if session_type in comprehension_sessions:
                 logger.warning(f"BLOCKED duplicate comprehension attempt for {user_id} - session: {session_type}")
@@ -513,9 +513,51 @@ Great job on completing your comprehension practice! 📚✨"""
             else:
                 self.whatsapp_service.send_message(user_id, passage_text)
             
-            # Step 2: Send completion message
+            # Step 2: Send completion message with Continue button
             ready_message = f"✅ **Passage Complete**\n\nNow answer the 10 questions below, {user_name}!"
-            self.whatsapp_service.send_message(user_id, ready_message)
+            
+            continue_buttons = [
+                {"text": "📝 Load Questions", "callback_data": "comprehension_load_questions"},
+                {"text": "🔙 Back to Menu", "callback_data": "english_menu"}
+            ]
+            
+            self.whatsapp_service.send_interactive_message(user_id, ready_message, continue_buttons)
+            
+            # Save passage data to session for question loading
+            from database.session_db import save_user_session
+            import json
+            session_data = {
+                'session_type': 'comprehension_passage_ready',
+                'passage_data': json.dumps(passage_data),
+                'user_name': user_name,
+                'passage_title': passage.get('title', 'Comprehension Passage')
+            }
+            save_user_session(user_id, session_data)
+            
+            logger.info(f"Passage ready for {user_id}, waiting for user to load questions")
+            
+        except Exception as e:
+            logger.error(f"Error in professional comprehension flow: {e}")
+            self.whatsapp_service.send_message(user_id, "❌ Error displaying comprehension. Please try again.")
+
+    def handle_comprehension_load_questions(self, user_id: str):
+        """Load and display questions after user clicks Continue"""
+        try:
+            from database.session_db import save_user_session, get_user_session
+            import json
+            
+            # Get session data
+            session = get_user_session(user_id)
+            if not session or session.get('session_type') != 'comprehension_passage_ready':
+                self.whatsapp_service.send_message(user_id, "❌ No passage found. Please start a new comprehension.")
+                return
+            
+            # Get passage data
+            passage_data = json.loads(session.get('passage_data', '{}'))
+            user_name = session.get('user_name', 'Student')
+            passage_title = session.get('passage_title', 'Comprehension Passage')
+            
+            questions = passage_data.get('questions', [])
             
             # Step 3: Debug and send questions with error handling
             logger.info(f"Questions data for {user_id}: {len(questions)} questions available")
@@ -589,8 +631,6 @@ Great job on completing your comprehension practice! 📚✨"""
                 logger.error(f"Error sending questions 6-10 to {user_id}: {e}")
             
             # Step 4: Save session and send answer button
-            from database.session_db import save_user_session
-            import json
             session_data = {
                 'session_type': 'comprehension_questions',
                 'questions_data': json.dumps(questions[:10]),
@@ -608,11 +648,11 @@ Great job on completing your comprehension practice! 📚✨"""
             button_message = f"📌 **Ready to check your answers, {user_name}?**"
             self.whatsapp_service.send_interactive_message(user_id, button_message, buttons)
             
-            logger.info(f"Professional comprehension flow completed for {user_id}")
+            logger.info(f"Questions loaded successfully for {user_id}")
             
         except Exception as e:
-            logger.error(f"Error in professional comprehension flow: {e}")
-            self.whatsapp_service.send_message(user_id, "❌ Error displaying comprehension. Please try again.")
+            logger.error(f"Error loading questions for {user_id}: {e}")
+            self.whatsapp_service.send_message(user_id, "❌ Error loading questions. Please try again.")
 
     def handle_comprehension_reset(self, user_id: str):
         """Reset active comprehension session and start fresh with strong duplicate prevention"""

@@ -711,7 +711,7 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             session_type = existing_session.get('session_type', '') if existing_session else ''
             
             # Block ALL comprehension-related sessions at webhook level too
-            comprehension_sessions = ['comprehension_active', 'comprehension_questions', 'comprehension_generating', 'comprehension_started']
+            comprehension_sessions = ['comprehension_active', 'comprehension_questions', 'comprehension_generating', 'comprehension_started', 'comprehension_passage_ready']
             
             if session_type in comprehension_sessions:
                 logger.warning(f"WEBHOOK BLOCKED duplicate comprehension attempt for {user_id} - session: {session_type}")
@@ -726,6 +726,8 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             
             # Only proceed if no active session
             english_handler.handle_comprehension_start(user_id)
+        elif selection_id == 'comprehension_load_questions':
+            english_handler.handle_comprehension_load_questions(user_id)
         elif selection_id == 'comprehension_show_answers':
             english_handler.handle_comprehension_show_answers(user_id)
         elif selection_id == 'comprehension_reset':
