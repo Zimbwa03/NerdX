@@ -73,7 +73,7 @@ def verify_webhook():
     """Verify WhatsApp webhook"""
     try:
         mode = request.args.get('hub.mode')
-        token = request.args.get('hub.verify_token')
+        token = request.args.get('hub.token')
         challenge = request.args.get('hub.challenge')
 
         result = whatsapp_service.verify_webhook(mode or '', token or '', challenge or '')
@@ -151,14 +151,14 @@ def handle_text_message(user_id: str, message_text: str):
         if session_type:
             handle_session_message(user_id, message_text)
             return
-        
+
         # Check for graph practice custom input session
         from database.session_db import get_user_session
         session_data = get_user_session(user_id)
         if session_data and session_data.get('awaiting_custom_graph'):
             graph_practice_handler.handle_custom_graph_input(user_id, message_text)
             return
-        
+
         # Check for English essay submission session
         if session_data and session_data.get('awaiting_essay'):
             english_handler.handle_essay_submission(user_id, message_text)
@@ -633,7 +633,7 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             audio_chat_service.end_audio_chat(user_id)
         elif selection_id == 'continue_audio_chat':
             handle_continue_audio_chat(user_id)
-        
+
         # Graph Practice Callbacks - Comprehensive ZIMSEC Graph Learning System
         elif selection_id == 'graph_practice_start':
             graph_practice_handler.handle_graph_practice_start(user_id)
@@ -659,7 +659,7 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             graph_practice_handler.handle_custom_graph_creator(user_id)
         elif selection_id == 'graph_tutorial':
             graph_practice_handler.handle_graph_tutorial(user_id)
-        
+
         # Comprehensive English Learning System Callbacks
         elif selection_id == 'english_menu':
             english_handler.handle_english_menu(user_id)
@@ -685,7 +685,7 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         elif selection_id.startswith('english_essay_b_'):
             format_type = selection_id.replace('english_essay_b_', '')
             english_handler.handle_essay_prompt_generation(user_id, 'B', format_type)
-        
+
         elif selection_id == 'buy_credits':
             show_credit_packages(user_id)
         elif selection_id == 'share_to_friend':
@@ -693,7 +693,7 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         elif selection_id == 'referrals_menu':
             show_referral_info(user_id)
         elif selection_id == 'combined_exam':
-            handle_combined_exam_mode(user_id) # Corrected to call handle_combined_exam_mode
+            handle_combined_exam(user_id) # Corrected to call handle_combined_exam_mode
         elif selection_id == 'next_combined_question':
             load_next_combined_question(user_id)
         elif selection_id == 'level_ordinary':
@@ -820,10 +820,7 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
 
         # Handle subject topic selections
         elif selection_id.startswith('science_'):
-            subject_name = selection_id.replace('science_', '')
-            handle_subject_topics(user_id, subject_name)
-
-        # Handle science question generation with difficulty
+            handle_subject_topics(user_id, selection_id.replace('science_', ''))
         elif selection_id.startswith('science_question_'):
             parts = selection_id.split('_')
             if len(parts) >= 4:
@@ -834,10 +831,6 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             else:
                 logger.warning(f"Invalid callback_data for science_question_: {selection_id}")
                 whatsapp_service.send_message(user_id, "❌ Invalid question request.")
-
-        # Handle science question answers (already handled by 'answer_' prefix)
-
-        # Handle next science question
         elif selection_id.startswith('next_science_'):
             parts = selection_id.split('_')
             if len(parts) >= 5:
@@ -852,8 +845,6 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             else:
                 logger.warning(f"Invalid callback_data for next_science_: {selection_id}")
                 whatsapp_service.send_message(user_id, "❌ Error navigating questions.")
-
-        # Handle previous science question
         elif selection_id.startswith('prev_science_'):
             parts = selection_id.split('_')
             if len(parts) >= 5:
@@ -871,25 +862,26 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             else:
                 logger.warning(f"Invalid callback_data for prev_science_: {selection_id}")
                 whatsapp_service.send_message(user_id, "❌ Error navigating questions.")
-
         # Handle Combined Science answers
         elif selection_id.startswith('combined_answer_'):
             parts = selection_id.split('_')
             if len(parts) >= 3:
                 user_answer = parts[2]  # A, B, C, or D
                 handle_combined_exam_answer(user_id, user_answer)
-            return jsonify({'status': 'success'})
 
         # Handle Combined Exam
         elif selection_id == 'combined_exam':
             handle_combined_exam(user_id)
-            return jsonify({'status': 'success'})
 
         # Handle Combined Exam answers
         elif selection_id.startswith('exam_answer_'):
             user_answer = selection_id.split('_')[-1]  # Gets A, B, C, or D
             handle_combined_exam_answer(user_id, user_answer)
-            return jsonify({'status': 'success'})
+
+        else:
+            # Log unhandled selection for debugging
+            logger.warning(f"Unhandled selection_id: {selection_id} from user {user_id}")
+            whatsapp_service.send_message(user_id, "🔄 Button not recognized. Please try again or type 'menu' for main menu.")
 
     except Exception as e:
         logger.error(f"Error handling interactive message for {user_id}: {e}", exc_info=True)
@@ -1747,7 +1739,7 @@ def handle_combined_exam_answer(user_id: str, user_answer: str):
         is_correct = user_answer == correct_answer
         points_earned = 15 if is_correct else 0  # Combined Exam points
 
-        # Update stats if correct
+        # Update user stats
         if is_correct:
             new_xp = current_xp + points_earned
             new_level = max(1, (new_xp // 100) + 1)  # Level up every 100 XP
