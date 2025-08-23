@@ -41,7 +41,7 @@ class EnglishService:
         
         logger.info("Enhanced ZIMSEC English Service initialized with Gemini AI")
 
-    def generate_grammar_question(self) -> Dict:
+    def generate_grammar_question(self) -> Optional[Dict]:
         """Generate a single grammar question"""
         try:
             prompt = f"""Generate ONE high-quality ZIMSEC O-Level Grammar and Usage question.
@@ -75,17 +75,32 @@ Return ONLY a JSON object in this format:
             )
 
             if response.text:
-                question_data = json.loads(response.text)
-                logger.info("✅ Generated grammar question successfully")
-                return question_data
-            
-            return None
+                logger.info(f"Grammar question raw response: {response.text}")
+                try:
+                    # Clean the response text - remove markdown code blocks if present
+                    clean_text = response.text.strip()
+                    if clean_text.startswith('```json'):
+                        clean_text = clean_text[7:]  # Remove ```json
+                    if clean_text.endswith('```'):
+                        clean_text = clean_text[:-3]  # Remove ```
+                    clean_text = clean_text.strip()
+                    
+                    question_data = json.loads(clean_text)
+                    logger.info("✅ Generated grammar question successfully")
+                    return question_data
+                except json.JSONDecodeError as json_err:
+                    logger.error(f"JSON parsing error for grammar question: {json_err}")
+                    logger.error(f"Raw response that failed to parse: {response.text}")
+                    return None
+            else:
+                logger.error("Empty response from Gemini for grammar question")
+                return None
             
         except Exception as e:
             logger.error(f"Error generating grammar question: {e}")
             return None
 
-    def generate_vocabulary_mcq(self) -> Dict:
+    def generate_vocabulary_mcq(self) -> Optional[Dict]:
         """Generate a single vocabulary MCQ"""
         try:
             prompt = f"""Generate ONE high-quality ZIMSEC O-Level Vocabulary Building MCQ question.
@@ -120,11 +135,26 @@ Note: correct_answer should be the index (0-3) of the correct option."""
             )
 
             if response.text:
-                question_data = json.loads(response.text)
-                logger.info("✅ Generated vocabulary MCQ successfully")
-                return question_data
-            
-            return None
+                logger.info(f"Vocabulary question raw response: {response.text}")
+                try:
+                    # Clean the response text - remove markdown code blocks if present
+                    clean_text = response.text.strip()
+                    if clean_text.startswith('```json'):
+                        clean_text = clean_text[7:]  # Remove ```json
+                    if clean_text.endswith('```'):
+                        clean_text = clean_text[:-3]  # Remove ```
+                    clean_text = clean_text.strip()
+                    
+                    question_data = json.loads(clean_text)
+                    logger.info("✅ Generated vocabulary MCQ successfully")
+                    return question_data
+                except json.JSONDecodeError as json_err:
+                    logger.error(f"JSON parsing error for vocabulary question: {json_err}")
+                    logger.error(f"Raw response that failed to parse: {response.text}")
+                    return None
+            else:
+                logger.error("Empty response from Gemini for vocabulary question")
+                return None
             
         except Exception as e:
             logger.error(f"Error generating vocabulary MCQ: {e}")
