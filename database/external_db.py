@@ -185,8 +185,8 @@ def update_streak(user_id):
         if not user_stats:
             return False
 
-        current_streak = user_stats.get('streak_days', 0)
-        last_activity = user_stats.get('last_activity_date')
+        current_streak = user_stats.get('streak', 0)
+        last_activity = user_stats.get('last_activity')
 
         today = datetime.now().date()
 
@@ -210,8 +210,8 @@ def update_streak(user_id):
 
         # Update user stats
         updates = {
-            'streak_days': new_streak,
-            'last_activity_date': today.isoformat()
+            'streak': new_streak,
+            'last_activity': today.isoformat()
         }
 
         # Update max streak if needed

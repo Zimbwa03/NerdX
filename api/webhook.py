@@ -1791,16 +1791,17 @@ def handle_science_answer(user_id: str, selected_answer: str, session_key: str):
             # Check for level up (every 100 XP)
             if new_xp // 100 > new_level:
                 new_level = new_xp // 100 + 1
-                update_user_stats(user_id, level=new_level)
+                update_user_stats(user_id, {'level': new_level})
         else:
             # Reset streak on incorrect answer
             update_streak(user_id)
             new_streak = 0
 
         # Update total attempts and correct answers
-        update_user_stats(user_id,
-                         total_attempts=current_stats.get('total_attempts', 0) + 1,
-                         correct_answers=current_stats.get('correct_answers', 0) + (1 if is_correct else 0))
+        update_user_stats(user_id, {
+            'total_attempts': current_stats.get('total_attempts', 0) + 1,
+            'correct_answers': current_stats.get('correct_answers', 0) + (1 if is_correct else 0)
+        })
 
         # Get updated stats
         updated_stats = get_user_stats(user_id)
@@ -2011,14 +2012,15 @@ def handle_combined_science_answer(user_id: str, subject: str, user_answer: str)
             new_streak += 1
             if new_xp // 100 > new_level:
                 new_level = new_xp // 100 + 1
-                update_user_stats(user_id, level=new_level)
+                update_user_stats(user_id, {'level': new_level})
         else:
             update_streak(user_id)
             new_streak = 0
 
-        update_user_stats(user_id,
-                         total_attempts=current_stats.get('total_attempts', 0) + 1,
-                         correct_answers=current_stats.get('correct_answers', 0) + (1 if is_correct else 0))
+        update_user_stats(user_id, {
+            'total_attempts': current_stats.get('total_attempts', 0) + 1,
+            'correct_answers': current_stats.get('correct_answers', 0) + (1 if is_correct else 0)
+        })
 
         updated_stats = get_user_stats(user_id)
         final_credits = updated_stats.get('credits', 0)
@@ -2183,14 +2185,15 @@ def handle_combined_science_answer(user_id: str, subject: str, user_answer: str)
             new_streak += 1
             if new_xp // 100 > new_level:
                 new_level = new_xp // 100 + 1
-                update_user_stats(user_id, level=new_level)
+                update_user_stats(user_id, {'level': new_level})
         else:
             update_streak(user_id)
             new_streak = 0
 
-        update_user_stats(user_id,
-                         total_attempts=current_stats.get('total_attempts', 0) + 1,
-                         correct_answers=current_stats.get('correct_answers', 0) + (1 if is_correct else 0))
+        update_user_stats(user_id, {
+            'total_attempts': current_stats.get('total_attempts', 0) + 1,
+            'correct_answers': current_stats.get('correct_answers', 0) + (1 if is_correct else 0)
+        })
 
         updated_stats = get_user_stats(user_id)
         final_credits = updated_stats.get('credits', 0)
@@ -2355,14 +2358,15 @@ def handle_combined_science_answer(user_id: str, subject: str, user_answer: str)
             new_streak += 1
             if new_xp // 100 > new_level:
                 new_level = new_xp // 100 + 1
-                update_user_stats(user_id, level=new_level)
+                update_user_stats(user_id, {'level': new_level})
         else:
             update_streak(user_id)
             new_streak = 0
 
-        update_user_stats(user_id,
-                         total_attempts=current_stats.get('total_attempts', 0) + 1,
-                         correct_answers=current_stats.get('correct_answers', 0) + (1 if is_correct else 0))
+        update_user_stats(user_id, {
+            'total_attempts': current_stats.get('total_attempts', 0) + 1,
+            'correct_answers': current_stats.get('correct_answers', 0) + (1 if is_correct else 0)
+        })
 
         updated_stats = get_user_stats(user_id)
         final_credits = updated_stats.get('credits', 0)
