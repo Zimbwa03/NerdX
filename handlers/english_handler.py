@@ -308,10 +308,7 @@ Choose your format:"""
                 'awaiting_answer': True,
                 'user_name': user_name
             }
-            
-            if not save_user_session(user_id, session_data):
-                self.whatsapp_service.send_message(user_id, "❌ Error saving question session. Please try again.")
-                return
+            save_user_session(user_id, session_data)
             
             # Send question
             message = f"""📝 Grammar and Usage Question
@@ -361,10 +358,7 @@ Type your answer below:"""
                 'question_data': question_data,
                 'user_name': user_name
             }
-            
-            if not save_user_session(user_id, session_data):
-                self.whatsapp_service.send_message(user_id, "❌ Error saving question session. Please try again.")
-                return
+            save_user_session(user_id, session_data)
             
             # Send MCQ question with option buttons
             message = f"""📚 Vocabulary Building Question
@@ -732,10 +726,7 @@ _(Send your complete essay as your next message)_"""
                 'essay_prompt': prompt_data,
                 'session_type': 'english_essay'
             })
-            
-            if not save_user_session(user_id, session_data):
-                self.whatsapp_service.send_message(user_id, "❌ Error saving essay session. Please try again.")
-                return
+            save_user_session(user_id, session_data)
 
         except Exception as e:
             logger.error(f"Error sending essay prompt: {e}")

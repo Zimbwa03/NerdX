@@ -8,15 +8,10 @@ logger = logging.getLogger(__name__)
 
 DATABASE_NAME = 'nerdx_sessions.db'
 
-# Helper function to get database connection
-def get_session_db_connection():
-    """Returns a connection to the SQLite database."""
-    return sqlite3.connect(DATABASE_NAME)
-
 def init_session_database():
     """Initialize local SQLite database for session management"""
     try:
-        conn = get_session_db_connection()
+        conn = sqlite3.connect(DATABASE_NAME)
         cursor = conn.cursor()
 
         # Create user sessions table for managing current questions
@@ -34,14 +29,14 @@ def init_session_database():
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
-
+        
         # Add custom_data column if it doesn't exist (for existing databases)
         try:
             cursor.execute('ALTER TABLE user_sessions ADD COLUMN custom_data TEXT')
         except sqlite3.OperationalError:
             # Column already exists
             pass
-
+        
         # Create table to track previously asked questions to prevent duplicates
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS user_question_history (
@@ -84,24 +79,21 @@ def init_session_database():
         conn.close()
         logger.info("Session database initialized successfully")
         return True
-
+        
     except Exception as e:
         logger.error(f"Error initializing session database: {e}")
         return False
 
 def save_user_session(user_id: str, session_data: Dict) -> bool:
-    """Save user session data"""
+    """Save or update user session"""
     try:
-        conn = get_session_db_connection()
+        conn = sqlite3.connect(DATABASE_NAME)
         cursor = conn.cursor()
-
+        
         # Separate standard fields from custom data
         standard_fields = ['question_data', 'subject', 'topic', 'question_id', 'question_source', 'session_type']
         custom_data = {k: v for k, v in session_data.items() if k not in standard_fields}
-
-        # Serialize dict to JSON string for custom_data
-        custom_data_json = json.dumps(custom_data) if custom_data else None
-
+        
         cursor.execute('''
             INSERT OR REPLACE INTO user_sessions 
             (user_id, question_data, subject, topic, question_id, question_source, session_type, custom_data, updated_at)
@@ -114,33 +106,33 @@ def save_user_session(user_id: str, session_data: Dict) -> bool:
             session_data.get('question_id'),
             session_data.get('question_source'),
             session_data.get('session_type'),
-            custom_data_json,
+            json.dumps(custom_data) if custom_data else None,
             datetime.utcnow()
         ))
-
+        
         conn.commit()
         conn.close()
         return True
-
+        
     except Exception as e:
         logger.error(f"Error saving user session: {e}")
         return False
 
 def get_user_session(user_id: str) -> Optional[Dict]:
-    """Get user session data"""
+    """Get current user session"""
     try:
-        conn = get_session_db_connection()
+        conn = sqlite3.connect(DATABASE_NAME)
         cursor = conn.cursor()
-
+        
         cursor.execute('''
             SELECT question_data, subject, topic, question_id, question_source, session_type, custom_data, created_at, updated_at
             FROM user_sessions 
             WHERE user_id = ?
         ''', (user_id,))
-
+        
         row = cursor.fetchone()
         conn.close()
-
+        
         if row:
             session_data = {
                 'question_data': row[0],
@@ -152,7 +144,7 @@ def get_user_session(user_id: str) -> Optional[Dict]:
                 'created_at': row[7],
                 'updated_at': row[8]
             }
-
+            
             # Parse custom data if exists
             if row[6]:  # custom_data field
                 try:
@@ -160,11 +152,11 @@ def get_user_session(user_id: str) -> Optional[Dict]:
                     session_data.update(custom_data)
                 except json.JSONDecodeError:
                     logger.warning(f"Failed to parse custom_data for user {user_id}")
-
+            
             return session_data
-
+        
         return None
-
+        
     except Exception as e:
         logger.error(f"Error getting user session: {e}")
         return None
@@ -172,15 +164,15 @@ def get_user_session(user_id: str) -> Optional[Dict]:
 def clear_user_session(user_id: str) -> bool:
     """Clear user session"""
     try:
-        conn = get_session_db_connection()
+        conn = sqlite3.connect(DATABASE_NAME)
         cursor = conn.cursor()
-
+        
         cursor.execute('DELETE FROM user_sessions WHERE user_id = ?', (user_id,))
-
+        
         conn.commit()
         conn.close()
         return True
-
+        
     except Exception as e:
         logger.error(f"Error clearing user session: {e}")
         return False
@@ -197,7 +189,7 @@ def save_combined_exam_session(user_id: str, question_data: Dict) -> bool:
             'session_type': 'combined_exam'
         }
         return save_user_session(user_id, session_data)
-
+        
     except Exception as e:
         logger.error(f"Error saving combined exam session: {e}")
         return False
@@ -212,7 +204,7 @@ def get_combined_exam_session(user_id: str) -> Optional[Dict]:
                 session['question_data'] = json.loads(session['question_data'])
             return session
         return None
-
+        
     except Exception as e:
         logger.error(f"Error getting combined exam session: {e}")
         return None
@@ -220,18 +212,18 @@ def get_combined_exam_session(user_id: str) -> Optional[Dict]:
 def get_registration_session(user_id: str) -> Optional[Dict]:
     """Get registration session data"""
     try:
-        conn = get_session_db_connection()
+        conn = sqlite3.connect(DATABASE_NAME)
         cursor = conn.cursor()
-
+        
         cursor.execute('''
             SELECT step, name, surname, date_of_birth, referred_by_nerdx_id, created_at, updated_at
             FROM registration_sessions 
             WHERE user_id = ?
         ''', (user_id,))
-
+        
         row = cursor.fetchone()
         conn.close()
-
+        
         if row:
             return {
                 'step': row[0],
@@ -242,9 +234,9 @@ def get_registration_session(user_id: str) -> Optional[Dict]:
                 'created_at': row[5],
                 'updated_at': row[6]
             }
-
+        
         return None
-
+        
     except Exception as e:
         logger.error(f"Error getting registration session: {e}")
         return None
@@ -252,9 +244,9 @@ def get_registration_session(user_id: str) -> Optional[Dict]:
 def update_registration_session(user_id: str, session_data: Dict) -> bool:
     """Update registration session"""
     try:
-        conn = get_session_db_connection()
+        conn = sqlite3.connect(DATABASE_NAME)
         cursor = conn.cursor()
-
+        
         cursor.execute('''
             INSERT OR REPLACE INTO registration_sessions 
             (user_id, step, name, surname, date_of_birth, referred_by_nerdx_id, updated_at)
@@ -268,11 +260,11 @@ def update_registration_session(user_id: str, session_data: Dict) -> bool:
             session_data.get('referred_by_nerdx_id'),
             datetime.utcnow()
         ))
-
+        
         conn.commit()
         conn.close()
         return True
-
+        
     except Exception as e:
         logger.error(f"Error updating registration session: {e}")
         return False
@@ -280,15 +272,15 @@ def update_registration_session(user_id: str, session_data: Dict) -> bool:
 def clear_registration_session(user_id: str) -> bool:
     """Clear registration session"""
     try:
-        conn = get_session_db_connection()
+        conn = sqlite3.connect(DATABASE_NAME)
         cursor = conn.cursor()
-
+        
         cursor.execute('DELETE FROM registration_sessions WHERE user_id = ?', (user_id,))
-
+        
         conn.commit()
         conn.close()
         return True
-
+        
     except Exception as e:
         logger.error(f"Error clearing registration session: {e}")
         return False
@@ -296,19 +288,19 @@ def clear_registration_session(user_id: str) -> bool:
 def add_question_to_history(user_id: str, question_hash: str, topic: str, difficulty: str) -> bool:
     """Add question to user's history to prevent duplicates"""
     try:
-        conn = get_session_db_connection()
+        conn = sqlite3.connect(DATABASE_NAME)
         cursor = conn.cursor()
-
+        
         cursor.execute('''
             INSERT OR IGNORE INTO user_question_history 
             (user_id, question_hash, topic, difficulty)
             VALUES (?, ?, ?, ?)
         ''', (user_id, question_hash, topic, difficulty))
-
+        
         conn.commit()
         conn.close()
         return True
-
+        
     except Exception as e:
         logger.error(f"Error adding question to history: {e}")
         return False
@@ -316,22 +308,22 @@ def add_question_to_history(user_id: str, question_hash: str, topic: str, diffic
 def get_recent_question_hashes(user_id: str, days: int = 7) -> List[str]:
     """Get recently asked question hashes for a user"""
     try:
-        conn = get_session_db_connection()
+        conn = sqlite3.connect(DATABASE_NAME)
         cursor = conn.cursor()
-
+        
         cutoff_date = datetime.utcnow() - timedelta(days=days)
-
+        
         cursor.execute('''
             SELECT question_hash 
             FROM user_question_history 
             WHERE user_id = ? AND asked_at >= ?
         ''', (user_id, cutoff_date))
-
+        
         rows = cursor.fetchall()
         conn.close()
-
+        
         return [row[0] for row in rows]
-
+        
     except Exception as e:
         logger.error(f"Error getting recent question hashes: {e}")
         return []
@@ -339,18 +331,18 @@ def get_recent_question_hashes(user_id: str, days: int = 7) -> List[str]:
 def save_rate_limit(user_id: str, action: str) -> bool:
     """Save rate limit entry"""
     try:
-        conn = get_session_db_connection()
+        conn = sqlite3.connect(DATABASE_NAME)
         cursor = conn.cursor()
-
+        
         cursor.execute('''
             INSERT OR REPLACE INTO rate_limits (user_id, action, last_request)
             VALUES (?, ?, ?)
         ''', (user_id, action, datetime.utcnow()))
-
+        
         conn.commit()
         conn.close()
         return True
-
+        
     except Exception as e:
         logger.error(f"Error saving rate limit: {e}")
         return False
@@ -358,32 +350,25 @@ def save_rate_limit(user_id: str, action: str) -> bool:
 def check_rate_limit(user_id: str, action: str, cooldown_seconds: int = 30) -> bool:
     """Check if user is rate limited for action"""
     try:
-        conn = get_session_db_connection()
+        conn = sqlite3.connect(DATABASE_NAME)
         cursor = conn.cursor()
-
+        
         cursor.execute('''
             SELECT last_request 
             FROM rate_limits 
             WHERE user_id = ? AND action = ?
         ''', (user_id, action))
-
+        
         row = cursor.fetchone()
         conn.close()
-
+        
         if row:
-            # Ensure the date string is correctly parsed
-            last_request_str = row[0]
-            try:
-                last_request = datetime.fromisoformat(last_request_str)
-            except ValueError:
-                logger.error(f"Invalid timestamp format in rate_limits for user {user_id}: {last_request_str}")
-                return True # Treat as rate-limited if timestamp is invalid
-
+            last_request = datetime.fromisoformat(row[0])
             time_since = (datetime.utcnow() - last_request).total_seconds()
             return time_since < cooldown_seconds
-
+        
         return False
-
+        
     except Exception as e:
         logger.error(f"Error checking rate limit: {e}")
         return False
@@ -391,53 +376,49 @@ def check_rate_limit(user_id: str, action: str, cooldown_seconds: int = 30) -> b
 def complete_registration_session(user_id: str) -> bool:
     """Complete and remove registration session"""
     try:
-        conn = get_session_db_connection()
+        conn = sqlite3.connect(DATABASE_NAME)
         cursor = conn.cursor()
-
+        
         cursor.execute('DELETE FROM registration_sessions WHERE user_id = ?', (user_id,))
-
+        
         conn.commit()
         conn.close()
         return True
-
+        
     except Exception as e:
         logger.error(f"Error completing registration session: {e}")
         return False
 
-# This function seems redundant as clear_registration_session already exists.
-# If intended to be different, its purpose needs clarification.
-# For now, it's kept as is, but it essentially calls the same function.
 def clear_registration_session(user_id: str) -> bool:
     """Clear/remove registration session"""
     return complete_registration_session(user_id)
 
-
 def cleanup_old_sessions():
     """Clean up old session data"""
     try:
-        conn = get_session_db_connection()
+        conn = sqlite3.connect(DATABASE_NAME)
         cursor = conn.cursor()
-
+        
         # Remove sessions older than 24 hours
         cutoff = datetime.utcnow() - timedelta(hours=24)
-
+        
         cursor.execute('DELETE FROM user_sessions WHERE created_at < ?', (cutoff,))
         cursor.execute('DELETE FROM registration_sessions WHERE created_at < ?', (cutoff,))
-
+        
         # Remove question history older than 30 days
         question_cutoff = datetime.utcnow() - timedelta(days=30)
         cursor.execute('DELETE FROM user_question_history WHERE asked_at < ?', (question_cutoff,))
-
+        
         # Remove rate limits older than 1 hour
         rate_cutoff = datetime.utcnow() - timedelta(hours=1)
         cursor.execute('DELETE FROM rate_limits WHERE last_request < ?', (rate_cutoff,))
-
+        
         conn.commit()
         conn.close()
-
+        
         logger.info("Session cleanup completed")
         return True
-
+        
     except Exception as e:
         logger.error(f"Error during session cleanup: {e}")
         return False
