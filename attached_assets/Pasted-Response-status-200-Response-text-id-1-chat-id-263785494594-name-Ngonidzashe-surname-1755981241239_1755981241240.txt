@@ -1,0 +1,109 @@
+Response status: 200
+Response text: [{"id":1,"chat_id":"263785494594","name":"Ngonidzashe","surname":"Zimbwa","date_of_birth":"03/10/2003","nerdx_id":"NEYHAI","referred_by_nerdx_id":null,"created_at":"2025-07-18T09:00:39.968177","updated_at":"2025-07-18T09:00:40.589828"}]
+2025-08-23 20:33:14,949 - services.whatsapp_service - INFO - Message sent successfully to 263785494594
+2025-08-23 20:33:14,950 - services.math_question_generator - INFO - AI API attempt 1/2 (timeout: 10s)
+2025-08-23 20:33:14,950 - services.math_question_generator - INFO - AI API attempt 1/2 (timeout: 10s)
+2025-08-23 20:33:25,325 - services.math_question_generator - WARNING - AI API connection error: HTTPSConnectionPool(host='api.deepseek.com', port=443): Read timed out. - will fallback if no more retries
+2025-08-23 20:33:26,326 - services.math_question_generator - INFO - AI API attempt 2/2 (timeout: 10s)
+2025-08-23 20:33:36,658 - services.math_question_generator - WARNING - AI API connection error: HTTPSConnectionPool(host='api.deepseek.com', port=443): Read timed out. - will fallback if no more retries
+2025-08-23 20:33:36,659 - services.math_question_generator - ERROR - All AI API attempts failed, returning None for fallback
+2025-08-23 20:33:36,659 - services.math_question_generator - INFO - AI API attempt 2/2 (timeout: 10s)
+2025-08-23 20:33:36,659 - services.math_question_generator - INFO - AI API attempt 1/2 (timeout: 10s)
+[2025-08-23 20:33:43 +0000] [19949] [CRITICAL] WORKER TIMEOUT (pid:19960)
+[2025-08-23 20:33:43 +0000] [19960] [ERROR] Error handling request /webhook/whatsapp
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 134, in handle
+    self.handle_request(listener, req, client, addr)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 177, in handle_request
+    respiter = self.wsgi(environ, resp.start_response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/werkzeug/middleware/proxy_fix.py", line 183, in __call__
+    return self.app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/api/webhook.py", line 135, in handle_webhook
+    handle_interactive_message(user_id, message['interactive'])
+  File "/home/runner/workspace/api/webhook.py", line 652, in handle_interactive_message
+    graph_practice_handler.handle_graph_generate(user_id, module_id)
+  File "/home/runner/workspace/handlers/graph_practice_handler.py", line 243, in handle_graph_generate
+    question_data = self.question_generator.generate_question(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/services/math_question_generator.py", line 47, in generate_question
+    response = self._send_api_request(prompt)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/services/math_question_generator.py", line 297, in _send_api_request
+    response = requests.post(
+               ^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/requests/api.py", line 115, in post
+    return request("post", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/requests/api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/requests/sessions.py", line 746, in send
+    r.content
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/requests/models.py", line 902, in content
+    self._content = b"".join(self.iter_content(CONTENT_CHUNK_SIZE)) or b""
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/requests/models.py", line 820, in generate
+    yield from self.raw.stream(chunk_size, decode_content=True)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/urllib3/response.py", line 1088, in stream
+    yield from self.read_chunked(amt, decode_content=decode_content)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/urllib3/response.py", line 1248, in read_chunked
+    self._update_chunk_length()
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/urllib3/response.py", line 1167, in _update_chunk_length
+    line = self._fp.fp.readline()  # type: ignore[union-attr]
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python3.11/socket.py", line 718, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python3.11/ssl.py", line 1314, in recv_into
+    return self.read(nbytes, buffer)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python3.11/ssl.py", line 1166, in read
+    return self._sslobj.read(len, buffer)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/base.py", line 204, in handle_abort
+    sys.exit(1)
+SystemExit: 1
+[2025-08-23 20:33:43 +0000] [19960] [INFO] Worker exiting (pid: 19960)
+[2025-08-23 20:33:43 +0000] [20310] [INFO] Booting worker with pid: 20310
+2025-08-23 20:33:47,234 - root - INFO - Database tables created successfully
+2025-08-23 20:33:47,280 - database.session_db - INFO - Session database initialized successfully
+Supabase URL: https://hvlvwvzliqrlmqjbfgoa.supabase.co
+Supabase Key: eyJhbGciOiJIUzI1NiIs...
+2025-08-23 20:33:48,881 - services.payment_service - WARNING - EcoCash API key not configured - payment features will be limited
+2025-08-23 20:33:48,881 - services.graph_service - INFO - Enhanced Graph Service initialized for ZIMSEC educational graphs
+2025-08-23 20:33:48,919 - services.english_service - INFO - Enhanced ZIMSEC English Service initialized with Gemini AI
+2025-08-23 20:33:48,920 - handlers.graph_practice_handler - INFO - Graph Practice Handler initialized for ZIMSEC O-Level
+2025-08-23 20:33:48,920 - handlers.english_handler - INFO - ZIMSEC English Handler initialized with comprehensive modules
+2025-08-23 20:33:48,931 - app - INFO - NerdX Quiz Bot startup
+Making GET request to https://hvlvwvzliqrlmqjbfgoa.supabase.co/rest/v1/users_registration
+Headers: {'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Content-Type': 'application/json'}
+Params: {'select': '*', 'chat_id': 'eq.263785494594'}
+Data: None
+Response status: 200
+Response text: [{"id":1,"chat_id":"263785494594","name":"Ngonidzashe","surname":"Zimbwa","date_of_birth":"03/10/2003","nerdx_id":"NEYHAI","referred_by_nerdx_id":null,"created_at":"2025-07-18T09:00:39.968177","updated_at":"2025-07-18T09:00:40.589828"}]
+Making GET request to https://hvlvwvzliqrlmqjbfgoa.supabase.co/rest/v1/users_registration
+Headers: {'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Content-Type': 'application/json'}
+Params: {'select': '*', 'chat_id': 'eq.263785494594'}
+Data: None
+Response status: 200
+Response text: [{"id":1,"chat_id":"263785494594","name":"Ngonidzashe","surname":"Zimbwa","date_of_birth":"03/10/2003","nerdx_id":"NEYHAI","referred_by_nerdx_id":null,"created_at":"2025-07-18T09:00:39.968177","updated_at":"2025-07-18T09:00:40.589828"}]
+2025-08-23 20:33:51,066 - services.whatsapp_service - INFO - Message sent successfully to 263785494594
+2025-08-23 20:33:51,068 - services.math_question_generator - INFO - AI API attempt 1/2 (timeout: 10s)
+2025-08-23 20:33:51,068 - services.math_question_generator - INFO - AI API attempt 1/2 (timeout: 10s)
