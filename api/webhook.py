@@ -663,12 +663,18 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         # Handle next science question
         elif selection_id.startswith('next_science_'):
             parts = selection_id.split('_')
-            if len(parts) >= 6:
+            if len(parts) >= 5:
                 subject = parts[2].title()
                 topic = parts[3].replace('_', ' ').title()
                 difficulty = parts[4]
-                question_number = int(parts[5])
-                generate_and_send_question(user_id, subject, topic, difficulty, user_name, question_number + 1) # Pass question_number to fetch next
+                # Get question number if available, otherwise default to 1
+                question_number = 1
+                if len(parts) >= 6:
+                    try:
+                        question_number = int(parts[5])
+                    except ValueError:
+                        question_number = 1
+                generate_and_send_question(user_id, subject, topic, difficulty, user_name)
             else:
                 logger.warning(f"Invalid callback_data for next_science_: {selection_id}")
                 whatsapp_service.send_message(user_id, "❌ Error navigating questions.")
@@ -676,12 +682,18 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         # Handle previous science question
         elif selection_id.startswith('prev_science_'):
             parts = selection_id.split('_')
-            if len(parts) >= 6:
+            if len(parts) >= 5:
                 subject = parts[2].title()
                 topic = parts[3].replace('_', ' ').title()
                 difficulty = parts[4]
-                question_number = int(parts[5])
-                generate_and_send_question(user_id, subject, topic, difficulty, user_name, max(1, question_number - 1)) # Pass question_number to fetch previous
+                # Get question number if available, otherwise default to 1
+                question_number = 1
+                if len(parts) >= 6:
+                    try:
+                        question_number = int(parts[5])
+                    except ValueError:
+                        question_number = 1
+                generate_and_send_question(user_id, subject, topic, difficulty, user_name)
             else:
                 logger.warning(f"Invalid callback_data for prev_science_: {selection_id}")
                 whatsapp_service.send_message(user_id, "❌ Error navigating questions.")
@@ -1877,8 +1889,7 @@ def handle_science_answer(user_id: str, selected_answer: str, session_key: str):
 
         # Navigation buttons
         buttons = [
-            {"text": "➡️ Next Question", "callback_data": f"next_science_{subject.lower()}_{topic.replace(' ', '_')}_{difficulty}_{session_data.get('question_number', 1)}"}, # Use get with default for safety
-            {"text": "🔙 Previous Question", "callback_data": f"prev_science_{subject.lower()}_{topic.replace(' ', '_')}_{difficulty}_{max(1, session_data.get('question_number', 1) - 1)}"}, # Use get with default for safety
+            {"text": "➡️ Next Question", "callback_data": f"next_science_{subject.lower()}_{topic.replace(' ', '_')}_{difficulty}"},
             {"text": "📚 Change Topic", "callback_data": f"subject_combined_{subject.lower()}"},
             {"text": "🏠 Main Menu", "callback_data": "main_menu"}
         ]
