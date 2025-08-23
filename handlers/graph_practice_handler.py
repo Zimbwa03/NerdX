@@ -61,6 +61,14 @@ class GraphPracticeHandler:
         
         logger.info("Graph Practice Handler initialized for ZIMSEC O-Level")
 
+    def is_awaiting_expression_input(self, user_id: str) -> bool:
+        """Check if user session is awaiting expression input"""
+        try:
+            session_data = get_user_session(user_id)
+            return session_data and session_data.get('awaiting_expression', False)
+        except:
+            return False
+
     def handle_graph_practice_start(self, user_id: str):
         """Start graph practice session with comprehensive learning menu"""
         try:
@@ -127,7 +135,7 @@ class GraphPracticeHandler:
             self.whatsapp_service.send_message(user_id, "❌ Error starting graph practice. Please try again.")
 
     def handle_graph_module(self, user_id: str, module_id: str):
-        """Handle specific graph module selection"""
+        """Handle specific graph module selection with new button structure"""
         try:
             if module_id not in self.graph_modules:
                 self.whatsapp_service.send_message(user_id, "❌ Invalid module selected.")
@@ -155,12 +163,12 @@ class GraphPracticeHandler:
 
 🚀 Ready to start learning?"""
 
-            # Create learning path buttons
+            # New button structure as requested
             buttons = [
+                {"text": "📝 Practice Questions", "callback_data": f"graph_practice_{module_id}"},
+                {"text": "📄 Sample Questions", "callback_data": f"graph_samples_{module_id}"},
                 {"text": "📖 Learn Theory", "callback_data": f"graph_theory_{module_id}"},
-                {"text": "🎯 Practice Problems", "callback_data": f"graph_practice_{module_id}"},
-                {"text": "📊 Create Graph", "callback_data": f"graph_create_{module_id}"},
-                {"text": "🔙 Back to Menu", "callback_data": "graph_practice_start"}
+                {"text": "🔙 Back Topics", "callback_data": "graph_practice_start"}
             ]
 
             self.whatsapp_service.send_interactive_message(user_id, message, buttons)
@@ -176,6 +184,459 @@ class GraphPracticeHandler:
         except Exception as e:
             logger.error(f"Error handling graph module {module_id} for {user_id}: {e}")
             self.whatsapp_service.send_message(user_id, "❌ Error loading module. Please try again.")
+
+    def handle_graph_practice_questions(self, user_id: str, module_id: str):
+        """Handle Practice Questions - show Generate Graph and Plot options"""
+        try:
+            if module_id not in self.graph_modules:
+                self.whatsapp_service.send_message(user_id, "❌ Invalid module selected.")
+                return
+                
+            module_info = self.graph_modules[module_id]
+            registration = get_user_registration(user_id)
+            user_name = registration['name'] if registration else "Student"
+            
+            message = f"""📝 Practice Questions - {module_info['title']}
+
+👤 Student: {user_name}
+📚 Topic: {module_info['description']}
+
+🎯 Choose your practice method:
+
+🤖 **Generate Graph**: AI creates ZIMSEC-style questions for you to plot
+📐 **Plot**: Enter your own expression and see the graph
+
+🚀 Ready to practice?"""
+
+            # Practice Questions sub-menu
+            buttons = [
+                {"text": "🤖 Generate Graph", "callback_data": f"graph_generate_{module_id}"},
+                {"text": "📐 Plot", "callback_data": f"graph_plot_{module_id}"},
+                {"text": "🔙 Back", "callback_data": f"graph_module_{module_id}"}
+            ]
+
+            self.whatsapp_service.send_interactive_message(user_id, message, buttons)
+            
+            # Update session
+            session_data = get_user_session(user_id) or {}
+            session_data.update({
+                'practice_mode': 'questions',
+                'current_module': module_id
+            })
+            save_user_session(user_id, session_data)
+
+        except Exception as e:
+            logger.error(f"Error handling practice questions {module_id} for {user_id}: {e}")
+            self.whatsapp_service.send_message(user_id, "❌ Error loading practice questions. Please try again.")
+
+    def handle_graph_generate(self, user_id: str, module_id: str):
+        """Generate AI question using DeepSeek for specific graph topic"""
+        try:
+            if module_id not in self.graph_modules:
+                return
+                
+            module_info = self.graph_modules[module_id]
+            registration = get_user_registration(user_id)
+            user_name = registration['name'] if registration else "Student"
+            
+            # Send generating message
+            generating_msg = f"""🤖 **Generating ZIMSEC Question** 🤖
+
+👤 Student: {user_name}
+📂 Topic: {module_info['title']}
+⏳ DeepSeek AI is creating an authentic O-Level question...
+
+🧠 Please wait while we generate your personalized graph question!"""
+            
+            self.whatsapp_service.send_message(user_id, generating_msg)
+            
+            # Generate question using DeepSeek AI
+            topic_name = module_info['title'].replace('📈 ', '').replace('📊 ', '').replace('🌊 ', '').replace('⭐ ', '')
+            
+            try:
+                # Use question generator to create graph-specific question
+                question_data = self.question_generator.generate_question(
+                    'Mathematics', 
+                    f"Graph - {topic_name}", 
+                    'medium'
+                )
+                
+                if not question_data:
+                    raise Exception("Failed to generate question")
+                    
+                # Format the generated question
+                question_text = question_data.get('question', 'Graph plotting question')
+                
+                # Create message with Show Graph button
+                message = f"""📝 **ZIMSEC O-Level Question** (AI Generated)
+
+👤 Student: {user_name}
+📂 Topic: {topic_name}
+🎯 Instructions: Plot the graph for this question
+
+❓ **Question:**
+{question_text}
+
+📐 **Your Task:** 
+Study the question and when ready, click "Show Graph" to see the correct graph with guidelines and your personalized NerdX watermark.
+
+🤖 *This question was generated by AI to match ZIMSEC standards*"""
+
+                buttons = [
+                    {"text": "📊 Show Graph", "callback_data": f"show_generated_graph_{module_id}"},
+                    {"text": "🔄 Generate New Question", "callback_data": f"graph_generate_{module_id}"},
+                    {"text": "🔙 Back", "callback_data": f"graph_practice_{module_id}"}
+                ]
+                
+                self.whatsapp_service.send_interactive_message(user_id, message, buttons)
+                
+                # Save question data in session
+                session_data = get_user_session(user_id) or {}
+                session_data.update({
+                    'generated_question': question_data,
+                    'current_module': module_id,
+                    'question_text': question_text
+                })
+                save_user_session(user_id, session_data)
+                
+            except Exception as ai_error:
+                logger.error(f"AI generation failed for {user_id}: {ai_error}")
+                self.whatsapp_service.send_message(user_id, "❌ AI question generation failed. Please try again or contact support.")
+                
+        except Exception as e:
+            logger.error(f"Error generating graph question for {user_id}: {e}")
+            self.whatsapp_service.send_message(user_id, "❌ Error generating question. Please try again.")
+
+    def handle_show_generated_graph(self, user_id: str, module_id: str):
+        """Show the graph for the AI-generated question using Desmos API"""
+        try:
+            session_data = get_user_session(user_id)
+            if not session_data or 'generated_question' not in session_data:
+                self.whatsapp_service.send_message(user_id, "❌ No question found. Please generate a question first.")
+                return
+                
+            registration = get_user_registration(user_id)
+            user_name = registration['name'] if registration else "Student"
+            module_info = self.graph_modules[module_id]
+            
+            # Send processing message
+            processing_msg = f"""📊 **Generating Your Graph** 📊
+
+👤 Student: {user_name}
+🎨 NerdX is creating your personalized graph...
+⏳ Adding guidelines, watermark, and your name...
+
+🚀 Almost ready!"""
+            
+            self.whatsapp_service.send_message(user_id, processing_msg)
+            
+            # Extract function/expression from the generated question
+            question_data = session_data['generated_question']
+            question_text = session_data.get('question_text', '')
+            
+            # Try to extract mathematical expression from question
+            # This is a simplified approach - in production you'd want more sophisticated parsing
+            expression = self._extract_expression_from_question(question_text, module_id)
+            
+            if not expression:
+                # Fallback expressions based on module
+                fallback_expressions = {
+                    'linear_functions': 'y = 2x + 3',
+                    'quadratic_functions': 'y = x^2 - 4x + 3',
+                    'trigonometric_functions': 'y = sin(x)',
+                    'exponential_logarithmic': 'y = 2^x',
+                    'statistics_graphs': 'histogram',
+                    'linear_programming': '2x + 3y <= 12'
+                }
+                expression = fallback_expressions.get(module_id, 'y = x')
+            
+            # Create graph using Desmos API with user's name watermark
+            graph_result = self.graph_service.create_graph(
+                user_id, 
+                expression, 
+                module_id.replace('_', ' ').title(),
+                user_name
+            )
+            
+            if graph_result and 'image_path' in graph_result:
+                # Send success message with graph
+                success_msg = f"""✅ **Your Personalized Graph** ✅
+
+👤 Student: {user_name}
+📊 Expression: {expression}
+📂 Topic: {module_info['title']}
+🎨 Created with NerdX watermark
+
+📈 Study this graph carefully and compare with your manual plotting!
+
+💰 Credits Remaining: {get_user_credits(user_id)}"""
+                
+                # Send the graph image
+                self.whatsapp_service.send_image(user_id, graph_result['image_path'], success_msg)
+                
+                # Add navigation buttons
+                buttons = [
+                    {"text": "🔄 Generate New Question", "callback_data": f"graph_generate_{module_id}"},
+                    {"text": "📐 Plot Your Own", "callback_data": f"graph_plot_{module_id}"},
+                    {"text": "🔙 Back", "callback_data": f"graph_practice_{module_id}"}
+                ]
+                
+                self.whatsapp_service.send_interactive_message(user_id, "🚀 What would you like to do next?", buttons)
+                
+            else:
+                self.whatsapp_service.send_message(user_id, "❌ Failed to generate graph. Please try again.")
+                
+        except Exception as e:
+            logger.error(f"Error showing generated graph for {user_id}: {e}")
+            self.whatsapp_service.send_message(user_id, "❌ Error creating graph. Please try again.")
+
+    def handle_graph_plot(self, user_id: str, module_id: str):
+        """Handle Plot option - ask user for expression input"""
+        try:
+            if module_id not in self.graph_modules:
+                return
+                
+            module_info = self.graph_modules[module_id]
+            registration = get_user_registration(user_id)
+            user_name = registration['name'] if registration else "Student"
+            
+            # Create input instruction based on graph type
+            format_examples = {
+                'linear_functions': 'y = mx + c\nExample: y = 2x + 3',
+                'quadratic_functions': 'y = ax² + bx + c\nExample: y = x^2 - 4x + 3',
+                'trigonometric_functions': 'y = sin(x), y = cos(x), y = tan(x)\nExample: y = 2sin(x)',
+                'exponential_logarithmic': 'y = a^x or y = log(x)\nExample: y = 2^x',
+                'statistics_graphs': 'Data format: 1,2,3,4,5\nExample: 10,15,20,25,30',
+                'linear_programming': 'Constraint format: ax + by <= c\nExample: 2x + 3y <= 12'
+            }
+            
+            format_info = format_examples.get(module_id, 'y = expression\nExample: y = x')
+            
+            message = f"""📐 **Plot Your Own Graph** 📐
+
+👤 Student: {user_name}
+📂 Topic: {module_info['title']}
+
+📝 **Please type your {module_info['title'].lower()} in this format:**
+
+{format_info}
+
+💡 **Instructions:**
+1. Type your expression below
+2. NerdX will process and create your personalized graph
+3. Graph will include guidelines and your name watermark
+
+⌨️ Type your expression now:"""
+            
+            self.whatsapp_service.send_message(user_id, message)
+            
+            # Update session to expect user input
+            session_data = get_user_session(user_id) or {}
+            session_data.update({
+                'awaiting_expression': True,
+                'plot_module': module_id,
+                'session_type': 'graph_practice'
+            })
+            save_user_session(user_id, session_data)
+            
+        except Exception as e:
+            logger.error(f"Error handling plot request for {user_id}: {e}")
+            self.whatsapp_service.send_message(user_id, "❌ Error setting up plot. Please try again.")
+
+    def handle_user_expression_input(self, user_id: str, expression: str):
+        """Process user's mathematical expression and create graph"""
+        try:
+            session_data = get_user_session(user_id)
+            if not session_data or not session_data.get('awaiting_expression'):
+                return False  # Not expecting input
+                
+            module_id = session_data.get('plot_module')
+            if not module_id:
+                return False
+                
+            registration = get_user_registration(user_id)
+            user_name = registration['name'] if registration else "Student"
+            
+            # Send processing message with user's name
+            processing_msg = f"""⏳ **Processing Your Graph** ⏳
+
+Wait {user_name} NerdX is processing your Graph...
+
+📊 Expression: {expression}
+🎨 Adding guidelines and watermark
+👤 Personalizing with your name
+
+🚀 Almost ready!"""
+            
+            self.whatsapp_service.send_message(user_id, processing_msg)
+            
+            # Create graph using Desmos API
+            module_info = self.graph_modules[module_id]
+            graph_result = self.graph_service.create_graph(
+                user_id, 
+                expression, 
+                module_info['title'],
+                user_name
+            )
+            
+            if graph_result and 'image_path' in graph_result:
+                # Send success message with graph
+                success_msg = f"""✅ **Your Custom Graph Created!** ✅
+
+👤 Student: {user_name}
+📊 Expression: {expression}
+📂 Topic: {module_info['title']}
+🎨 Personalized with NerdX watermark
+
+💰 Credits Remaining: {get_user_credits(user_id)}"""
+                
+                # Send the graph image
+                self.whatsapp_service.send_image(user_id, graph_result['image_path'], success_msg)
+                
+                # Add navigation buttons
+                buttons = [
+                    {"text": "📐 Type Another Graph", "callback_data": f"graph_plot_{module_id}"},
+                    {"text": "🔙 Back", "callback_data": f"graph_practice_{module_id}"}
+                ]
+                
+                self.whatsapp_service.send_interactive_message(user_id, "🚀 What would you like to do next?", buttons)
+                
+            else:
+                self.whatsapp_service.send_message(user_id, "❌ Failed to create graph. Please check your expression format and try again.")
+                
+            # Clear awaiting state
+            session_data['awaiting_expression'] = False
+            save_user_session(user_id, session_data)
+            
+            return True  # Successfully handled input
+            
+        except Exception as e:
+            logger.error(f"Error processing user expression for {user_id}: {e}")
+            self.whatsapp_service.send_message(user_id, "❌ Error processing your expression. Please try again.")
+            return True  # Handled but with error
+
+    def handle_sample_questions(self, user_id: str, module_id: str):
+        """Handle Sample Questions option"""
+        try:
+            if module_id not in self.graph_modules:
+                return
+                
+            module_info = self.graph_modules[module_id]
+            registration = get_user_registration(user_id)
+            user_name = registration['name'] if registration else "Student"
+            
+            # Create sample questions based on module type
+            sample_questions = self._get_sample_questions(module_id)
+            
+            message = f"""📄 **Sample Questions** - {module_info['title']}
+
+👤 Student: {user_name}
+📚 Topic: {module_info['description']}
+
+📝 **ZIMSEC-Style Practice Questions:**
+
+{chr(10).join([f"{i+1}. {q}" for i, q in enumerate(sample_questions)])}
+
+💡 **Study Tips:**
+• Practice plotting these by hand first
+• Check your work using the graph generator
+• Focus on key characteristics and transformations
+
+🎯 Ready to practice?"""
+
+            buttons = [
+                {"text": "🤖 Generate Similar Questions", "callback_data": f"graph_generate_{module_id}"},
+                {"text": "📐 Plot These Graphs", "callback_data": f"graph_plot_{module_id}"},
+                {"text": "🔙 Back", "callback_data": f"graph_module_{module_id}"}
+            ]
+            
+            self.whatsapp_service.send_interactive_message(user_id, message, buttons)
+            
+        except Exception as e:
+            logger.error(f"Error showing sample questions for {user_id}: {e}")
+            self.whatsapp_service.send_message(user_id, "❌ Error loading sample questions. Please try again.")
+    
+    def _extract_expression_from_question(self, question_text: str, module_id: str) -> str:
+        """Extract mathematical expression from AI-generated question text"""
+        try:
+            import re
+            
+            # Common patterns for different types of functions
+            patterns = {
+                'linear_functions': r'y\s*=\s*[+-]?\d*[.]?\d*x\s*[+-]?\s*\d+',
+                'quadratic_functions': r'y\s*=\s*[+-]?\d*[.]?\d*x\^?2\s*[+-]?\s*\d*[.]?\d*x?\s*[+-]?\s*\d*',
+                'trigonometric_functions': r'y\s*=\s*\d*[.]?\d*\s*(sin|cos|tan)\s*\([^)]+\)',
+                'exponential_logarithmic': r'y\s*=\s*\d*[.]?\d*\s*\^\s*x|y\s*=\s*log\s*\([^)]+\)'
+            }
+            
+            if module_id in patterns:
+                matches = re.findall(patterns[module_id], question_text, re.IGNORECASE)
+                if matches:
+                    return matches[0].strip()
+            
+            # Fallback: look for any y = expression
+            fallback_match = re.search(r'y\s*=\s*[^\n]+', question_text, re.IGNORECASE)
+            if fallback_match:
+                return fallback_match.group().strip()
+                
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error extracting expression from question: {e}")
+            return None
+    
+    def _get_sample_questions(self, module_id: str) -> List[str]:
+        """Get sample questions for specific graph module"""
+        sample_questions = {
+            'linear_functions': [
+                "Plot the graph of y = 2x + 3. Mark the y-intercept and find where it crosses the x-axis.",
+                "Draw the line y = -x + 4. What is the gradient and y-intercept?",
+                "Graph y = 0.5x - 2 and y = -0.5x + 2 on the same axes. Where do they intersect?",
+                "Plot y = 3x and identify three points on this line.",
+                "Draw the graph of 2x + 3y = 12. Find the x and y intercepts."
+            ],
+            'quadratic_functions': [
+                "Sketch the graph of y = x² - 4x + 3. Find the vertex and roots.",
+                "Plot y = -x² + 2x + 3. Determine the maximum point and y-intercept.",
+                "Graph y = 2x² - 8x + 6 and find where it crosses the x-axis.",
+                "Draw y = x² - 6x + 9. What is special about this parabola?",
+                "Sketch y = -2x² + 4x and find the turning point."
+            ],
+            'trigonometric_functions': [
+                "Plot y = sin(x) for x from 0° to 360°. Mark the maximum and minimum points.",
+                "Graph y = 2cos(x) and compare it to y = cos(x). What is the amplitude?",
+                "Sketch y = sin(2x) for one complete cycle. What is the period?",
+                "Plot y = tan(x) from -90° to 270°. Mark the asymptotes.",
+                "Draw y = sin(x) + 2. How does this compare to y = sin(x)?"
+            ],
+            'exponential_logarithmic': [
+                "Sketch y = 2^x. Find the y-intercept and describe the behavior as x increases.",
+                "Plot y = 3^x and y = (1/3)^x on the same axes. How are they related?",
+                "Graph y = log₂(x). What is the domain and where does it cross the x-axis?",
+                "Draw y = e^x and identify key points.",
+                "Sketch y = 2^(x-1) and compare it to y = 2^x."
+            ],
+            'statistics_graphs': [
+                "Create a histogram for the data: 2, 3, 3, 4, 4, 4, 5, 5, 6.",
+                "Draw a box plot for the values: 10, 12, 15, 18, 20, 22, 25.",
+                "Plot a scatter graph for (x,y) pairs: (1,2), (2,4), (3,5), (4,7), (5,8).",
+                "Create a bar chart for subjects and student numbers: Math(25), English(30), Science(28).",
+                "Draw a pie chart for transport methods: Bus(40%), Walk(30%), Car(20%), Bike(10%)."
+            ],
+            'linear_programming': [
+                "Graph the constraints: x + y ≤ 8, 2x + y ≤ 10, x ≥ 0, y ≥ 0. Find the feasible region.",
+                "Plot 3x + 2y ≤ 12 and x + 3y ≤ 9 with non-negativity constraints.",
+                "Draw the constraint lines for x + 2y ≤ 10, 2x + y ≤ 8, x ≥ 1, y ≥ 1.",
+                "Graph the system: 4x + 3y ≤ 24, x + y ≤ 7, x ≥ 0, y ≥ 0.",
+                "Plot the constraints and find vertices: x + y ≤ 6, 2x + 3y ≤ 12, x ≥ 0, y ≥ 0."
+            ]
+        }
+        
+        return sample_questions.get(module_id, [
+            "Practice plotting basic functions.",
+            "Find key points and characteristics.",
+            "Compare different function types."
+        ])
 
     def handle_graph_theory(self, user_id: str, module_id: str):
         """Provide comprehensive theory explanation with AI assistance"""

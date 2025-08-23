@@ -269,6 +269,11 @@ def handle_session_message(user_id: str, message_text: str):
             # Handle mathematics answer
             mathematics_handler.handle_math_answer(user_id, message_text)
             return
+            
+        # Check for graph expression input
+        if graph_practice_handler.is_awaiting_expression_input(user_id):
+            if graph_practice_handler.handle_user_expression_input(user_id, message_text):
+                return  # Successfully handled expression input
 
         if session_type == 'question':
             handle_question_answer(user_id, message_text)
@@ -639,15 +644,24 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         elif selection_id.startswith('graph_module_'):
             module_id = selection_id.replace('graph_module_', '')
             graph_practice_handler.handle_graph_module(user_id, module_id)
+        elif selection_id.startswith('graph_practice_'):
+            module_id = selection_id.replace('graph_practice_', '')
+            graph_practice_handler.handle_graph_practice_questions(user_id, module_id)
+        elif selection_id.startswith('graph_generate_'):
+            module_id = selection_id.replace('graph_generate_', '')
+            graph_practice_handler.handle_graph_generate(user_id, module_id)
+        elif selection_id.startswith('show_generated_graph_'):
+            module_id = selection_id.replace('show_generated_graph_', '')
+            graph_practice_handler.handle_show_generated_graph(user_id, module_id)
+        elif selection_id.startswith('graph_plot_'):
+            module_id = selection_id.replace('graph_plot_', '')
+            graph_practice_handler.handle_graph_plot(user_id, module_id)
+        elif selection_id.startswith('graph_samples_'):
+            module_id = selection_id.replace('graph_samples_', '')
+            graph_practice_handler.handle_sample_questions(user_id, module_id)
         elif selection_id.startswith('graph_theory_'):
             module_id = selection_id.replace('graph_theory_', '')
             graph_practice_handler.handle_graph_theory(user_id, module_id)
-        elif selection_id.startswith('graph_practice_'):
-            if selection_id == 'graph_practice_start':
-                graph_practice_handler.handle_graph_practice_start(user_id)
-            else:
-                module_id = selection_id.replace('graph_practice_', '')
-                graph_practice_handler.handle_graph_practice_problems(user_id, module_id)
         elif selection_id.startswith('graph_create_'):
             module_id = selection_id.replace('graph_create_', '')
             graph_practice_handler.handle_graph_creation(user_id, module_id)
