@@ -238,21 +238,17 @@ class GraphPracticeHandler:
             # Generate question using DeepSeek AI
             topic_name = module_info['title'].replace('📈 ', '').replace('📊 ', '').replace('🌊 ', '').replace('⭐ ', '')
 
-            try:
-                # Use DeepSeek AI for ALL graph topics
-                question_data = self.question_generator.generate_question(
-                    'Mathematics',
-                    f"Graph - {topic_name}",
-                    'medium'
-                )
+            # Use DeepSeek AI for ALL graph topics with immediate fallback
+            question_data = self.question_generator.generate_question(
+                'Mathematics',
+                f"Graph - {topic_name}",
+                'medium'
+            )
 
-                if not question_data:
-                    raise Exception("Failed to generate question")
-
-                # Format the generated question
+            if question_data:
+                # AI successful - format the generated question
                 question_text = question_data.get('question', 'Graph plotting question')
 
-                # Create message with Show Graph button
                 message = f"""📝 **ZIMSEC O-Level Question** (AI Generated)
 
 👤 Student: {user_name}
@@ -284,12 +280,12 @@ Study the question and when ready, click "Show Graph" to see the correct graph w
                 })
                 save_user_session(user_id, session_data)
 
-            except Exception as ai_error:
-                logger.error("AI generation failed for %s: %s", user_id, ai_error)
-                # Provide a fallback question instead of complete failure
+            else:
+                # AI failed - use immediate fallback
+                logger.info(f"Generated fallback question for {subject}/{topic}/{difficulty}")
                 fallback_question = self._get_fallback_question(module_id)
-                if fallback_question:
-                    message = f"""📝 **ZIMSEC Practice Question** (Fallback)
+                
+                message = f"""📝 **ZIMSEC Practice Question**
 
 👤 Student: {user_name}
 📂 Topic: {topic_name}
@@ -301,26 +297,24 @@ Study the question and when ready, click "Show Graph" to see the correct graph w
 📐 **Your Task:**
 Study the question and when ready, click "Show Graph" to see the correct graph with guidelines and your personalized NerdX watermark.
 
-⚠️ *AI service temporarily unavailable - showing practice question*"""
+💡 *Practice question from our curriculum bank*"""
 
-                    buttons = [
-                        {"text": "📊 Show Graph", "callback_data": f"show_generated_graph_{module_id}"},
-                        {"text": "🔄 Try AI Again", "callback_data": f"graph_generate_{module_id}"},
-                        {"text": "🔙 Back", "callback_data": f"graph_practice_{module_id}"}
-                    ]
+                buttons = [
+                    {"text": "📊 Show Graph", "callback_data": f"show_generated_graph_{module_id}"},
+                    {"text": "🔄 Try Generate New", "callback_data": f"graph_generate_{module_id}"},
+                    {"text": "🔙 Back", "callback_data": f"graph_practice_{module_id}"}
+                ]
 
-                    self.whatsapp_service.send_interactive_message(user_id, message, buttons)
+                self.whatsapp_service.send_interactive_message(user_id, message, buttons)
 
-                    # Save fallback question in session
-                    session_data = get_user_session(user_id) or {}
-                    session_data.update({
-                        'generated_question': {'question': fallback_question},
-                        'current_module': module_id,
-                        'question_text': fallback_question
-                    })
-                    save_user_session(user_id, session_data)
-                else:
-                    self.whatsapp_service.send_message(user_id, "❌ AI service temporarily unavailable. Please try again.")
+                # Save fallback question in session
+                session_data = get_user_session(user_id) or {}
+                session_data.update({
+                    'generated_question': {'question': fallback_question},
+                    'current_module': module_id,
+                    'question_text': fallback_question
+                })
+                save_user_session(user_id, session_data)
 
         except Exception as e:
             logger.error("Error generating graph question for %s: %s", user_id, e)

@@ -35,38 +35,33 @@ class MathQuestionGenerator:
             # Create comprehensive prompt for DeepSeek AI
             prompt = self._create_question_prompt(subject, topic, difficulty)
 
-            # Set timeout based on complexity - balanced for success and speed
-            timeout = 10  # Balanced timeout for better AI success rate
-            max_attempts = 2  # Keep attempts low for efficiency
+            # Reduced timeout and attempts for faster response
+            timeout = 5  # Shorter timeout to prevent worker timeouts
+            max_attempts = 1  # Single attempt to prevent blocking
 
-            for attempt in range(1, max_attempts + 1):
-                logger.info(f"AI API attempt {attempt}/{max_attempts} (timeout: {timeout}s)")
+            logger.info(f"AI API attempt 1/{max_attempts} (timeout: {timeout}s)")
 
-                try:
-                    # Make request to DeepSeek AI
-                    response = self._send_api_request(prompt)
+            try:
+                # Make single request to DeepSeek AI with short timeout
+                response = self._send_api_request(prompt, timeout)
 
-                    if response:
-                        # Validate and format response
-                        question_data = self._validate_and_format_question(response, subject, topic, difficulty)
-                        if question_data:
-                            logger.info(f"Successfully generated question for {subject}/{topic}")
-                            return question_data
+                if response:
+                    # Validate and format response
+                    question_data = self._validate_and_format_question(response, subject, topic, difficulty)
+                    if question_data:
+                        logger.info(f"Successfully generated question for {subject}/{topic}")
+                        return question_data
 
-                except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
-                    logger.warning(f"AI API connection error: {e}")
-                    if attempt < max_attempts:
-                        time.sleep(1)  # Shorter pause before retry
-                        continue
+            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+                logger.warning(f"AI API connection error: {e}")
+                # Immediately fall back - no retries to prevent worker timeout
 
-                except Exception as e:
-                    logger.error(f"AI API error on attempt {attempt}: {e}")
-                    if attempt < max_attempts:
-                        time.sleep(1)
-                        continue
+            except Exception as e:
+                logger.error(f"AI API error: {e}")
+                # Immediately fall back - no retries to prevent worker timeout
 
-            # All attempts failed
-            logger.error("All AI API attempts failed, returning None for fallback")
+            # AI failed, return None for immediate fallback
+            logger.warning("AI API failed, using fallback")
             return None
 
         except Exception as e:
@@ -272,8 +267,8 @@ The solution should explain how to plot each inequality and identify the feasibl
 
         return guidelines.get(subject, {}).get(topic, f"Focus on {topic} concepts appropriate for ZIMSEC O-Level standard")
 
-    def _send_api_request(self, prompt: str) -> Optional[Dict]:
-        """Send request to DeepSeek API with retries"""
+    def _send_api_request(self, prompt: str, timeout: int = 5) -> Optional[Dict]:
+        """Send request to DeepSeek API with configurable timeout"""
 
         headers = {
             'Authorization': f'Bearer {self.api_key}',
@@ -283,70 +278,51 @@ The solution should explain how to plot each inequality and identify the feasibl
         data = {
             'model': 'deepseek-chat',
             'messages': [{'role': 'user', 'content': prompt}],
-            'max_tokens': 3000,
+            'max_tokens': 1500,  # Reduced for faster response
             'temperature': 0.7
         }
 
-        # Define timeout outside try block to avoid unbound variable error
-        timeout = self.base_timeout
-        
-        for attempt in range(self.max_retries):
-            try:
-                logger.info(f"AI API attempt {attempt + 1}/{self.max_retries} (timeout: {timeout}s)")
+        try:
+            response = requests.post(
+                self.api_url,
+                headers=headers,
+                json=data,
+                timeout=timeout
+            )
 
-                response = requests.post(
-                    self.api_url,
-                    headers=headers,
-                    json=data,
-                    timeout=timeout
-                )
+            if response.status_code == 200:
+                result = response.json()
+                content = result['choices'][0]['message']['content']
 
-                if response.status_code == 200:
-                    result = response.json()
-                    content = result['choices'][0]['message']['content']
+                # Extract JSON from response
+                json_start = content.find('{')
+                json_end = content.rfind('}') + 1
 
-                    # Extract JSON from response
-                    json_start = content.find('{')
-                    json_end = content.rfind('}') + 1
+                if json_start >= 0 and json_end > json_start:
+                    json_str = content[json_start:json_end]
+                    question_data = json.loads(json_str)
 
-                    if json_start >= 0 and json_end > json_start:
-                        json_str = content[json_start:json_end]
-                        question_data = json.loads(json_str)
-
-                        logger.info(f"✅ Successfully generated question on attempt {attempt + 1}")
-                        return question_data
-                    else:
-                        logger.error("No valid JSON found in AI response")
-
+                    logger.info(f"✅ Successfully generated question")
+                    return question_data
                 else:
-                    logger.error(f"AI API error: {response.status_code} - {response.text}")
+                    logger.error("No valid JSON found in AI response")
+                    return None
+            else:
+                logger.error(f"AI API error: {response.status_code} - {response.text}")
+                return None
 
-            except requests.exceptions.Timeout:
-                logger.warning(f"AI API timeout on attempt {attempt + 1}/{self.max_retries} (waited {timeout}s) - using fallback")
-                if attempt < self.max_retries - 1:
-                    time.sleep(self.retry_delay)
-                continue
-
-            except requests.exceptions.ConnectionError as e:
-                logger.warning(f"AI API connection error: {e} - will fallback if no more retries")
-                if attempt < self.max_retries - 1:
-                    time.sleep(self.retry_delay)
-                continue
-
-            except json.JSONDecodeError as e:
-                logger.error(f"Failed to parse JSON from AI response: {e} - will fallback if no more retries")
-                if attempt < self.max_retries - 1:
-                    time.sleep(self.retry_delay)
-                continue
-
-            except Exception as e:
-                logger.error(f"AI API error on attempt {attempt + 1}: {e} - will fallback if no more retries")
-                if attempt < self.max_retries - 1:
-                    time.sleep(self.retry_delay)
-                continue
-
-        logger.error("All AI API attempts failed, returning None for fallback")
-        return None
+        except requests.exceptions.Timeout:
+            logger.warning(f"AI API request timed out after {timeout}s")
+            return None
+        except requests.exceptions.ConnectionError as e:
+            logger.warning(f"AI API connection error: {e}")
+            return None
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse JSON from AI response: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"An unexpected error occurred during AI API request: {e}")
+            return None
 
     def _validate_and_format_question(self, question_data: Dict, subject: str, topic: str, difficulty: str) -> Dict:
         """Validate and format the question response"""
