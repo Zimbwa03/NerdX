@@ -1903,7 +1903,7 @@ def handle_science_answer(user_id: str, selected_answer: str, session_key: str):
         topic_encoded = topic.replace(' ', '_').lower()
         buttons = [
             {"text": "➡️ Next Question", "callback_data": f"next_science_{subject.lower()}_{topic_encoded}_{difficulty}"},
-            {"text": "📚 Change Topic", "callback_data": f"subject_combined_{subject.lower()}"},
+            {"text": "📚 Change Topic", "callback_data": f"science_{subject}"},
             {"text": "🏠 Main Menu", "callback_data": "main_menu"}
         ]
 
