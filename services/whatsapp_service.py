@@ -349,29 +349,45 @@ class WhatsAppService:
     def send_image(self, to: str, image_url: str, caption: str = "") -> bool:
         """Send an image message"""
         try:
+            # Validate image URL format
+            if not image_url or not image_url.startswith(('http://', 'https://')):
+                logger.error(f"Invalid image URL format: {image_url}")
+                return False
+            
             url = f"{self.base_url}/{self.phone_number_id}/messages"
             headers = {
                 'Authorization': f'Bearer {self.access_token}',
                 'Content-Type': 'application/json'
             }
             
+            # Ensure caption is not too long (WhatsApp limit)
+            if len(caption) > 1024:
+                caption = caption[:1021] + "..."
+            
             data = {
                 'messaging_product': 'whatsapp',
                 'to': to,
                 'type': 'image',
                 'image': {
-                    'link': image_url,
-                    'caption': caption
+                    'link': image_url
                 }
             }
             
-            response = requests.post(url, headers=headers, json=data, timeout=30)
+            # Only add caption if it's not empty
+            if caption.strip():
+                data['image']['caption'] = caption
+            
+            logger.info(f"Sending image to {to} with URL: {image_url}")
+            response = requests.post(url, headers=headers, json=data, timeout=45)
             
             if response.status_code == 200:
-                logger.info(f"Image sent successfully to {to}")
+                response_data = response.json()
+                logger.info(f"Image sent successfully to {to}. Message ID: {response_data.get('messages', [{}])[0].get('id', 'unknown')}")
                 return True
             else:
                 logger.error(f"Failed to send image: {response.status_code} - {response.text}")
+                # Log the exact request data for debugging
+                logger.error(f"Request data was: {data}")
                 return False
                 
         except Exception as e:
@@ -383,6 +399,7 @@ class WhatsAppService:
         try:
             import os
             import requests
+            import time
             from services.image_hosting_service import ImageHostingService
             
             # Check if file exists
@@ -400,23 +417,44 @@ class WhatsAppService:
             
             logger.info(f"Got public URL for {file_path}: {public_url}")
             
-            # Test if the URL is accessible
+            # Test if the URL is accessible with a GET request (not just HEAD)
             try:
-                test_response = requests.head(public_url, timeout=10)
-                if test_response.status_code != 200:
-                    logger.warning(f"Public URL not accessible: {test_response.status_code}")
-                else:
+                test_response = requests.get(public_url, timeout=15, stream=True)
+                if test_response.status_code == 200:
                     logger.info(f"Public URL is accessible: {test_response.status_code}")
+                    # Verify it's actually an image
+                    content_type = test_response.headers.get('content-type', '')
+                    if not content_type.startswith('image/'):
+                        logger.warning(f"URL doesn't return image content-type: {content_type}")
+                else:
+                    logger.warning(f"Public URL not accessible: {test_response.status_code}")
+                    return False
             except Exception as url_test_error:
-                logger.warning(f"Could not test URL accessibility: {url_test_error}")
+                logger.error(f"Could not verify URL accessibility: {url_test_error}")
+                return False
             
-            # Send the image using the public URL
-            result = self.send_image(to, public_url, caption)
-            if result:
-                logger.info(f"Successfully sent image file {file_path} to {to}")
-            else:
-                logger.error(f"Failed to send image file {file_path} to {to}")
-            return result
+            # Wait a moment to ensure URL is fully propagated
+            time.sleep(2)
+            
+            # Try sending the image with retry logic
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    result = self.send_image(to, public_url, caption)
+                    if result:
+                        logger.info(f"Successfully sent image file {file_path} to {to} on attempt {attempt + 1}")
+                        return True
+                    else:
+                        logger.warning(f"Failed to send image on attempt {attempt + 1}")
+                        if attempt < max_retries - 1:
+                            time.sleep(3)  # Wait before retry
+                except Exception as send_error:
+                    logger.error(f"Error on send attempt {attempt + 1}: {send_error}")
+                    if attempt < max_retries - 1:
+                        time.sleep(3)
+            
+            logger.error(f"Failed to send image file {file_path} to {to} after {max_retries} attempts")
+            return False
                 
         except Exception as e:
             logger.error(f"Error sending image file {file_path}: {e}")
