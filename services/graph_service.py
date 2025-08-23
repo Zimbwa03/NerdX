@@ -25,7 +25,7 @@ class GraphService:
     def __init__(self):
         self.desmos_api_key = Config.DESMOS_API_KEY
         self.temp_dir = os.path.join('static', 'graphs')
-        
+
         # Ensure temp directory exists
         os.makedirs(self.temp_dir, exist_ok=True)
 
@@ -686,7 +686,7 @@ class GraphService:
             import numpy as np
             import os
             from datetime import datetime
-            
+
             # Generate unique filename with user info
             timestamp = int(datetime.now().timestamp())
             filename = f"graph_{user_id}_{timestamp}.png"
@@ -697,69 +697,69 @@ class GraphService:
 
             # Generate x values
             x_vals = np.linspace(-10, 10, 1000)
-            
+
             # Clean and evaluate the expression
             clean_expr = self._clean_expression(expression)
-            
+
             try:
                 # Use sympy to safely evaluate the expression
                 from sympy import symbols, sympify, lambdify
                 x = symbols('x')
                 expr_sympy = sympify(clean_expr)
                 func = lambdify(x, expr_sympy, 'numpy')
-                
+
                 # Calculate y values
                 y_vals = func(x_vals)
-                
+
                 # Handle complex numbers and infinite values
                 if np.iscomplexobj(y_vals):
                     y_vals = np.real(y_vals)
-                
+
                 # Remove infinite and NaN values
                 mask = np.isfinite(y_vals)
                 x_clean = x_vals[mask]
                 y_clean = y_vals[mask]
-                
+
                 # Plot the function
                 ax.plot(x_clean, y_clean, 'b-', linewidth=3, label=f'f(x) = {expression}', alpha=0.8)
-                
+
             except Exception as eval_error:
                 logger.error(f"Error evaluating expression '{expression}': {eval_error}")
                 # Fallback: show error message on graph
                 ax.text(0.5, 0.5, f"Error: Cannot plot '{expression}'", 
                        transform=ax.transAxes, fontsize=16, ha='center', va='center',
                        bbox=dict(boxstyle="round,pad=0.3", facecolor="yellow", alpha=0.7))
-            
+
             # Customize the graph for ZIMSEC standards
             ax.set_xlim(-10, 10)
             ax.set_ylim(-10, 10)
             ax.set_xlabel('x', fontsize=14, fontweight='bold')
             ax.set_ylabel('y', fontsize=14, fontweight='bold')
             ax.set_title(title, fontsize=16, fontweight='bold', pad=20)
-            
+
             # Add enhanced grid
             ax.grid(True, which='major', alpha=0.7, linestyle='-', linewidth=0.8, color='gray')
             ax.grid(True, which='minor', alpha=0.6, linestyle=':', linewidth=0.7, color='darkgray')
             ax.minorticks_on()
-            
+
             # Add axes through origin
             ax.axhline(y=0, color='k', linewidth=1.5, alpha=0.7)
             ax.axvline(x=0, color='k', linewidth=1.5, alpha=0.7)
-            
+
             # Add legend
             ax.legend(fontsize=12, loc='upper right')
-            
+
             # Add NerdX educational watermark with user name
             watermark_text = f"NerdX ZIMSEC Education • {user_name} • Graph Practice"
             ax.text(0.02, 0.02, watermark_text, transform=ax.transAxes, fontsize=10, 
                    alpha=0.6, bbox=dict(boxstyle="round,pad=0.3", facecolor="lightblue", alpha=0.3))
-            
+
             # Save with high quality
             plt.tight_layout()
             plt.savefig(filepath, dpi=150, bbox_inches='tight', 
                        facecolor='white', edgecolor='none')
             plt.close(fig)
-            
+
             # Verify file was created
             if os.path.exists(filepath):
                 file_size = os.path.getsize(filepath)
@@ -767,7 +767,7 @@ class GraphService:
             else:
                 logger.error(f"❌ Graph file not created: {filepath}")
                 return None
-            
+
             # Return in expected format
             return {
                 'image_path': filepath,
@@ -775,7 +775,7 @@ class GraphService:
                 'title': title,
                 'user_name': user_name
             }
-            
+
         except Exception as e:
             logger.error(f"Error creating matplotlib graph: {e}")
             return None
@@ -789,36 +789,36 @@ class GraphService:
 
             # Create the figure
             fig, ax = plt.subplots(figsize=(12, 10), dpi=150)
-            
+
             # Parse constraints
             parsed_constraints = []
             constraint_lines = []
-            
+
             for constraint in constraints:
                 parsed = self._parse_linear_constraint(constraint)
                 if parsed:
                     parsed_constraints.append(parsed)
                     constraint_lines.append(constraint)
-            
+
             if not parsed_constraints:
                 return None
 
             # Set up coordinate system
             x_range = (-2, 15)
             y_range = (-2, 15)
-            
+
             # Create meshgrid for shading
             x = np.linspace(x_range[0], x_range[1], 400)
             y = np.linspace(y_range[0], y_range[1], 400)
             X, Y = np.meshgrid(x, y)
-            
+
             # Plot constraint boundaries and find feasible region
             feasible_region = np.ones_like(X, dtype=bool)
             colors = ['red', 'blue', 'green', 'orange', 'purple', 'brown']
-            
+
             for i, (a, b, c, operator, original_constraint) in enumerate(parsed_constraints):
                 color = colors[i % len(colors)]
-                
+
                 # Plot constraint boundary line
                 if b != 0:  # Not a vertical line
                     y_line = (c - a * x) / b
@@ -830,7 +830,7 @@ class GraphService:
                     if x_range[0] <= x_line <= x_range[1]:
                         ax.axvline(x=x_line, color=color, linewidth=2.5, 
                                  label=f'{original_constraint}', alpha=0.8)
-                
+
                 # Update feasible region
                 if operator in ['<=', '≤']:
                     if b != 0:
@@ -845,73 +845,73 @@ class GraphService:
                 elif operator == '=':
                     # For equality constraints, we'll show the line but not restrict the region
                     pass
-            
+
             # Add non-negativity constraints if not explicitly provided
             has_x_nonneg = any('x' in constraint and '>=' in constraint and '0' in constraint for constraint in constraints)
             has_y_nonneg = any('y' in constraint and '>=' in constraint and '0' in constraint for constraint in constraints)
-            
+
             if not has_x_nonneg:
                 feasible_region &= (X >= 0)
                 ax.axvline(x=0, color='gray', linewidth=1.5, linestyle='--', alpha=0.6, label='x ≥ 0')
-            
+
             if not has_y_nonneg:
                 feasible_region &= (Y >= 0)
                 ax.axhline(y=0, color='gray', linewidth=1.5, linestyle='--', alpha=0.6, label='y ≥ 0')
-            
+
             # Shade the feasible region (wanted region) in light green
             ax.contourf(X, Y, feasible_region.astype(int), levels=[0.5, 1.5], 
                        colors=['lightgreen'], alpha=0.4, label='Feasible Region R')
-            
+
             # Shade the unwanted regions (outside constraints) in light red/gray
             unwanted_region = ~feasible_region
             ax.contourf(X, Y, unwanted_region.astype(int), levels=[0.5, 1.5], 
                        colors=['lightcoral'], alpha=0.3, label='Unwanted Region')
-            
+
             # Find and mark corner points (vertices of feasible region)
             corner_points = self._find_corner_points(parsed_constraints, x_range, y_range)
             if corner_points:
                 corner_x, corner_y = zip(*corner_points)
                 ax.scatter(corner_x, corner_y, color='red', s=100, zorder=5, 
                           edgecolors='darkred', linewidth=2, label='Corner Points')
-                
+
                 # Annotate corner points
                 for i, (cx, cy) in enumerate(corner_points):
                     ax.annotate(f'({cx:.1f}, {cy:.1f})', (cx, cy), xytext=(5, 5), 
                               textcoords='offset points', fontsize=10, fontweight='bold',
                               bbox=dict(boxstyle="round,pad=0.3", facecolor="yellow", alpha=0.8))
-            
+
             # Plot objective function direction if provided
             if objective_function:
                 self._plot_objective_function(ax, objective_function, corner_points, x_range, y_range)
-            
+
             # Customize the graph
             ax.set_xlim(x_range)
             ax.set_ylim(y_range)
             ax.set_xlabel('x', fontsize=14, fontweight='bold')
             ax.set_ylabel('y', fontsize=14, fontweight='bold')
-            
+
             graph_title = title if title else 'Linear Programming - Feasible Region Analysis'
             ax.set_title(graph_title, fontsize=16, fontweight='bold', pad=20)
-            
+
             # Enhanced grid for ZIMSEC standards
             ax.grid(True, which='major', alpha=0.7, linestyle='-', linewidth=0.8, color='gray')
             ax.grid(True, which='minor', alpha=0.6, linestyle=':', linewidth=0.7, color='lightgray')
             ax.minorticks_on()
-            
+
             # Add legend with proper spacing
             ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=10)
-            
+
             # Find center of feasible region and add large "R" marker
             if corner_points:
                 # Calculate centroid of feasible region
                 center_x = np.mean([point[0] for point in corner_points])
                 center_y = np.mean([point[1] for point in corner_points])
-                
+
                 # Add large "R" marker in the center of feasible region
                 ax.text(center_x, center_y, 'R', fontsize=48, fontweight='bold', 
                        ha='center', va='center', color='darkgreen', alpha=0.8,
                        bbox=dict(boxstyle="circle,pad=0.3", facecolor="white", alpha=0.8, edgecolor='darkgreen', linewidth=2))
-            
+
             # Add educational notes
             notes = f"""
 📋 ZIMSEC Linear Programming:
@@ -921,28 +921,28 @@ class GraphService:
 • Lines = Constraint boundaries
 • Large R marks the required region
             """.strip()
-            
+
             ax.text(0.02, 0.98, notes, transform=ax.transAxes, fontsize=9, 
                    verticalalignment='top', fontweight='bold',
                    bbox=dict(boxstyle="round,pad=0.5", facecolor="lightyellow", alpha=0.9))
-            
+
             # Add NerdX educational watermark
             watermark_text = f"NerdX ZIMSEC Linear Programming • {user_name}"
             ax.text(0.02, 0.02, watermark_text, transform=ax.transAxes, fontsize=10, 
                    alpha=0.6, bbox=dict(boxstyle="round,pad=0.3", facecolor="lightblue", alpha=0.3))
-            
+
             # Save with high quality
             filename = f"linear_prog_{user_name}_{int(time.time())}.png"
             filepath = os.path.join('static', 'graphs', filename)
-            
+
             plt.tight_layout()
             plt.subplots_adjust(right=0.8)  # Make room for legend
             plt.savefig(filepath, dpi=150, bbox_inches='tight', 
                        facecolor='white', edgecolor='none')
             plt.close(fig)
-            
+
             logger.info(f"✅ Linear programming graph created: {filepath}")
-            
+
             return {
                 'image_path': filepath,
                 'constraints': constraint_lines,
@@ -950,7 +950,7 @@ class GraphService:
                 'title': graph_title,
                 'user_name': user_name
             }
-            
+
         except Exception as e:
             logger.error(f"Error creating linear programming graph: {e}")
             return None
@@ -960,7 +960,7 @@ class GraphService:
         try:
             # Clean up the constraint
             constraint = constraint.replace(' ', '').replace('≤', '<=').replace('≥', '>=')
-            
+
             # Find the operator
             operators = ['<=', '>=', '=']
             operator = None
@@ -968,29 +968,29 @@ class GraphService:
                 if op in constraint:
                     operator = op
                     break
-            
+
             if not operator:
                 return None
-            
+
             # Split by operator
             left, right = constraint.split(operator)
-            
+
             # Parse right side (should be a number)
             try:
                 c = float(right)
             except:
                 return None
-            
+
             # Parse left side to extract coefficients of x and y
             # Handle cases like: 2x+3y, x+y, 2x, 3y, x-y, etc.
             a, b = 0, 0
-            
+
             # Replace common patterns
             left = left.replace('-', '+-')
-            
+
             # Split into terms
             terms = [term for term in left.split('+') if term]
-            
+
             for term in terms:
                 if 'x' in term:
                     coeff = term.replace('x', '')
@@ -1008,9 +1008,9 @@ class GraphService:
                         b = -1
                     else:
                         b = float(coeff)
-            
+
             return (a, b, c, operator, constraint.replace('<=', '≤').replace('>=', '≥'))
-            
+
         except Exception as e:
             logger.error(f"Error parsing constraint '{constraint}': {e}")
             return None
@@ -1019,7 +1019,7 @@ class GraphService:
         """Find corner points (vertices) of the feasible region"""
         try:
             points = []
-            
+
             # Add boundary intersections
             for i in range(len(constraints)):
                 for j in range(i + 1, len(constraints)):
@@ -1030,20 +1030,20 @@ class GraphService:
                         if (x_range[0] <= x <= x_range[1] and y_range[0] <= y <= y_range[1]):
                             if self._point_satisfies_constraints(x, y, constraints):
                                 points.append((round(x, 2), round(y, 2)))
-            
+
             # Add axis intersections and origin if relevant
             origin_satisfies = self._point_satisfies_constraints(0, 0, constraints)
             if origin_satisfies:
                 points.append((0, 0))
-            
+
             # Remove duplicates
             unique_points = []
             for point in points:
                 if point not in unique_points:
                     unique_points.append(point)
-            
+
             return unique_points
-            
+
         except Exception as e:
             logger.error(f"Error finding corner points: {e}")
             return []
@@ -1053,18 +1053,18 @@ class GraphService:
         try:
             a1, b1, c1, _, _ = constraint1
             a2, b2, c2, _, _ = constraint2
-            
+
             # Solve the system: a1*x + b1*y = c1, a2*x + b2*y = c2
             det = a1 * b2 - a2 * b1
-            
+
             if abs(det) < 1e-10:  # Lines are parallel
                 return None
-            
+
             x = (c1 * b2 - c2 * b1) / det
             y = (a1 * c2 - a2 * c1) / det
-            
+
             return (x, y)
-            
+
         except:
             return None
 
@@ -1073,17 +1073,17 @@ class GraphService:
         try:
             for a, b, c, operator, _ in constraints:
                 value = a * x + b * y
-                
+
                 if operator in ['<=', '≤'] and value > c + 1e-10:
                     return False
                 elif operator in ['>=', '≥'] and value < c - 1e-10:
                     return False
                 elif operator == '=' and abs(value - c) > 1e-10:
                     return False
-            
+
             # Check non-negativity (standard assumption)
             return x >= -1e-10 and y >= -1e-10
-            
+
         except:
             return False
 
@@ -1092,19 +1092,19 @@ class GraphService:
         try:
             # Parse objective function (e.g., "3x + 2y" or "maximize 3x + 2y")
             obj_clean = objective.lower().replace('maximize', '').replace('minimize', '').strip()
-            
+
             # Find coefficients
             parsed = self._parse_linear_constraint(f"{obj_clean}=0")
             if not parsed:
                 return
-            
+
             a, b, c, _, _ = parsed
-            
+
             if corner_points:
                 # Calculate objective values at corner points
                 obj_values = [a * x + b * y for x, y in corner_points]
                 min_val, max_val = min(obj_values), max(obj_values)
-                
+
                 # Plot iso-lines
                 for obj_val in [min_val, max_val]:
                     if b != 0:
@@ -1112,6 +1112,6 @@ class GraphService:
                         y_iso = (obj_val - a * x) / b
                         ax.plot(x, y_iso, '--', alpha=0.7, 
                                label=f'Objective = {obj_val:.1f}')
-            
+
         except Exception as e:
             logger.error(f"Error plotting objective function: {e}")

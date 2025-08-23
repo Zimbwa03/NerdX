@@ -132,7 +132,21 @@ Generate your ZIMSEC-standard {difficulty} {subject} question on {topic} now:"""
                 "Simultaneous Equations": "Use substitution and elimination methods, practical applications",
                 "Inequalities": "Include number line representations, compound inequalities",
                 "Factorization": "Cover common factors, difference of squares, trinomial factoring",
-                "Algebraic Expressions": "Simplification, substitution, expanding brackets"
+                "Algebraic Expressions": "Simplification, substitution, expanding brackets",
+                "Graph - Linear Programming": """Generate questions in this EXACT format:
+
+Answer the whole of this question on the grid on page 26.
+
+(a) Draw the graphs of these inequalities by shading the unwanted region.
+
+(i) [inequality 1, e.g., 2x+y≤40]
+(ii) [inequality 2, e.g., x+2y≤48] 
+(iii) [inequality 3, e.g., x≥0]
+(iv) [inequality 4, e.g., y≥5]
+
+(b) Mark R the region defined by the four inequalities in (a).
+
+The solution should explain how to plot each inequality and identify the feasible region R."""
             },
             "Geometry": {
                 "Angles": "Include angle relationships, parallel lines, triangles, polygons",
@@ -309,6 +323,26 @@ Generate your ZIMSEC-standard {difficulty} {subject} question on {topic} now:"""
                         "solution": "Step 1: Expand the left side\n2(x - 3) = 2x - 6\n\nStep 2: Set up the equation\n2x - 6 = 4x + 8\n\nStep 3: Collect like terms\n2x - 4x = 8 + 6\n-2x = 14\n\nStep 4: Divide by -2\nx = -7\n\nTherefore: x = -7",
                         "answer": "x = -7",
                         "points": 20
+                    }
+                },
+                "Graph - Linear Programming": {
+                    "easy": {
+                        "question": "Answer the whole of this question on the grid on page 26.\n\n(a) Draw the graphs of these inequalities by shading the unwanted region.\n\n(i) x + y ≤ 10\n(ii) 2x + y ≤ 16\n(iii) x ≥ 0\n(iv) y ≥ 2\n\n(b) Mark R the region defined by the four inequalities in (a).",
+                        "solution": "Step 1: Plot x + y ≤ 10\nDraw line x + y = 10, passes through (0,10) and (10,0)\nShade below the line\n\nStep 2: Plot 2x + y ≤ 16\nDraw line 2x + y = 16, passes through (0,16) and (8,0)\nShade below the line\n\nStep 3: Plot x ≥ 0\nThis is the right side of the y-axis\nShade to the right of y-axis\n\nStep 4: Plot y ≥ 2\nThis is above the line y = 2\nShade above the line y = 2\n\nStep 5: Region R\nThe feasible region R is where all four conditions are satisfied simultaneously\nR is bounded by vertices approximately at (0,2), (0,10), (6,4), and (7,2)",
+                        "answer": "Feasible region R bounded by the four inequalities with vertices at (0,2), (0,10), (6,4), and (7,2)",
+                        "points": 20
+                    },
+                    "medium": {
+                        "question": "Answer the whole of this question on the grid on page 26.\n\n(a) Draw the graphs of these inequalities by shading the unwanted region.\n\n(i) 2x + y ≤ 40\n(ii) x + 2y ≤ 48\n(iii) x ≥ 0\n(iv) y ≥ 5\n\n(b) Mark R the region defined by the four inequalities in (a).",
+                        "solution": "Step 1: Plot 2x + y ≤ 40\nDraw line 2x + y = 40, passes through (0,40) and (20,0)\nShade below the line (unwanted region above)\n\nStep 2: Plot x + 2y ≤ 48\nDraw line x + 2y = 48, passes through (0,24) and (48,0)\nShade below the line (unwanted region above)\n\nStep 3: Plot x ≥ 0\nThis represents the right side of the y-axis\nShade to the right of the y-axis (unwanted region to the left)\n\nStep 4: Plot y ≥ 5\nThis is above the horizontal line y = 5\nShade above the line y = 5 (unwanted region below)\n\nStep 5: Region R\nThe feasible region R is the unshaded area where all conditions are satisfied\nR has vertices at (0,5), (0,24), (14.4,11.2), and (17.5,5)",
+                        "answer": "Feasible region R with vertices at (0,5), (0,24), (14.4,11.2), and (17.5,5)",
+                        "points": 20
+                    },
+                    "difficult": {
+                        "question": "Answer the whole of this question on the grid on page 26.\n\n(a) Draw the graphs of these inequalities by shading the unwanted region.\n\n(i) 3x + 2y ≤ 60\n(ii) x + 3y ≤ 54\n(iii) x ≥ 0\n(iv) y ≥ 3\n\n(b) Mark R the region defined by the four inequalities in (a).",
+                        "solution": "Step 1: Plot 3x + 2y ≤ 60\nDraw line 3x + 2y = 60\nIntercepts: (0,30) and (20,0)\nShade below the line (unwanted region above)\n\nStep 2: Plot x + 3y ≤ 54\nDraw line x + 3y = 54\nIntercepts: (0,18) and (54,0)\nShade below the line (unwanted region above)\n\nStep 3: Plot x ≥ 0\nVertical boundary at x = 0 (y-axis)\nShade to the right (unwanted region to the left)\n\nStep 4: Plot y ≥ 3\nHorizontal boundary at y = 3\nShade above the line (unwanted region below)\n\nStep 5: Find intersection points\n3x + 2y = 60 and x + 3y = 54:\nSolving: 3x + 2y = 60 and x + 3y = 54\nFrom second: x = 54 - 3y\nSubstitute: 3(54 - 3y) + 2y = 60\n162 - 9y + 2y = 60\n-7y = -102\ny = 14.57, x = 10.29\n\nStep 6: Region R vertices\nR is bounded by (0,3), (0,18), (10.29,14.57), and (18,3)",
+                        "answer": "Feasible region R with vertices at (0,3), (0,18), (10.29,14.57), and (18,3)",
+                        "points": 50
                     }
                 }
             }
