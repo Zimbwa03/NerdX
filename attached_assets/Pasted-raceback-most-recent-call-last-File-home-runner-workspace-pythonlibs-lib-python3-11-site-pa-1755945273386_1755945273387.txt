@@ -1,0 +1,111 @@
+raceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 134, in handle
+    self.handle_request(listener, req, client, addr)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 177, in handle_request
+    respiter = self.wsgi(environ, resp.start_response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/werkzeug/middleware/proxy_fix.py", line 183, in __call__
+    return self.app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/api/webhook.py", line 123, in handle_webhook
+    handle_interactive_message(user_id, message['interactive'])
+  File "/home/runner/workspace/api/webhook.py", line 656, in handle_interactive_message
+    mathematics_handler.handle_question_generation(user_id, topic_key, difficulty)
+  File "/home/runner/workspace/handlers/mathematics_handler.py", line 117, in handle_question_generation
+    question_data = self.question_generator.generate_question("Mathematics", formatted_topic, difficulty)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/services/math_question_generator.py", line 41, in generate_question
+    question_data = self._send_api_request(prompt)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/services/math_question_generator.py", line 200, in _send_api_request
+    response = requests.post(
+               ^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/requests/api.py", line 115, in post
+    return request("post", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/requests/api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/requests/sessions.py", line 746, in send
+    r.content
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/requests/models.py", line 902, in content
+    self._content = b"".join(self.iter_content(CONTENT_CHUNK_SIZE)) or b""
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/requests/models.py", line 820, in generate
+    yield from self.raw.stream(chunk_size, decode_content=True)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/urllib3/response.py", line 1088, in stream
+    yield from self.read_chunked(amt, decode_content=decode_content)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/urllib3/response.py", line 1248, in read_chunked
+    self._update_chunk_length()
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/urllib3/response.py", line 1167, in _update_chunk_length
+    line = self._fp.fp.readline()  # type: ignore[union-attr]
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python3.11/socket.py", line 718, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python3.11/ssl.py", line 1314, in recv_into
+    return self.read(nbytes, buffer)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python3.11/ssl.py", line 1166, in read
+    return self._sslobj.read(len, buffer)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/base.py", line 204, in handle_abort
+    sys.exit(1)
+SystemExit: 1
+[2025-08-23 10:32:46 +0000] [13892] [INFO] Worker exiting (pid: 13892)
+[2025-08-23 10:32:46 +0000] [13911] [INFO] Booting worker with pid: 13911
+2025-08-23 10:32:47,669 - root - INFO - Database tables created successfully
+2025-08-23 10:32:47,726 - database.session_db - INFO - Session database initialized successfully
+Supabase URL: https://hvlvwvzliqrlmqjbfgoa.supabase.co
+Supabase Key: eyJhbGciOiJIUzI1NiIs...
+2025-08-23 10:32:48,471 - services.payment_service - WARNING - EcoCash API key not configured - payment features will be limited
+2025-08-23 10:32:48,485 - app - INFO - NerdX Quiz Bot startup
+Making GET request to https://hvlvwvzliqrlmqjbfgoa.supabase.co/rest/v1/users_registration
+Headers: {'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Content-Type': 'application/json'}
+Params: {'select': '*', 'chat_id': 'eq.263785494594'}
+Data: None
+Response status: 200
+Response text: [{"id":1,"chat_id":"263785494594","name":"Ngonidzashe","surname":"Zimbwa","date_of_birth":"03/10/2003","nerdx_id":"NEYHAI","referred_by_nerdx_id":null,"created_at":"2025-07-18T09:00:39.968177","updated_at":"2025-07-18T09:00:40.589828"}]
+Making GET request to https://hvlvwvzliqrlmqjbfgoa.supabase.co/rest/v1/user_stats
+Headers: {'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Content-Type': 'application/json'}
+Params: {'select': 'credits', 'user_id': 'eq.263785494594'}
+Data: None
+Response status: 200
+Response text: [{"credits":480}]
+Making GET request to https://hvlvwvzliqrlmqjbfgoa.supabase.co/rest/v1/user_stats
+Headers: {'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Content-Type': 'application/json'}
+Params: {'select': 'credits', 'user_id': 'eq.263785494594'}
+Data: None
+Response status: 200
+Response text: [{"credits":480}]
+Making PATCH request to https://hvlvwvzliqrlmqjbfgoa.supabase.co/rest/v1/user_stats
+Headers: {'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Content-Type': 'application/json', 'Prefer': 'return=representation'}
+Params: {'user_id': 'eq.263785494594'}
+Data: {'credits': 475}
+Response status: 200
+Response text: [{"id":4,"user_id":"263785494594","username":"user_4594","first_name":"User","level":2,"xp_points":253,"streak":1,"max_streak":6,"total_attempts":29,"correct_answers":11,"current_question_id":null,"last_question_time":null,"last_activity":"2025-08-23T00:00:00","created_at":"2025-07-17T23:34:34.037331","updated_at":"2025-07-17T23:34:34.037331","credits":475}]
+Making POST request to https://hvlvwvzliqrlmqjbfgoa.supabase.co/rest/v1/credit_transactions
+Headers: {'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Content-Type': 'application/json', 'Prefer': 'return=representation'}
+Params: {}
+Data: {'user_id': '263785494594', 'transaction_type': 'easy_math_question', 'credits_used': 5, 'credits_before': 480, 'credits_after': 475, 'description': 'easy Mathematics question on Real Numbers', 'created_at': '2025-08-23T10:32:51.504017'}
+Response status: 201
+Response text: [{"id":615,"user_id":"263785494594","transaction_type":"easy_math_question","credits_used":5,"credits_before":480,"credits_after":475,"description":"easy Mathematics question on Real Numbers","created_at":"2025-08-23T10:32:51.504017"}]
+2025-08-23 10:32:52,422 - services.whatsapp_service - INFO - Message sent successfully to 263785494594
+2025-08-23 10:32:52,423 - handlers.mathematics_handler - INFO - Generating math question: Mathematics/Real Numbers/easy
+2025-08-23 10:32:52,423 - services.math_question_generator - INFO - AI API attempt 1/5 (timeout: 10s)
+2025-08-23 10:33:02,756 - services.math_question_generator - WARNING - AI API connection
