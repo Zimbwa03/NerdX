@@ -1628,6 +1628,19 @@ def send_question_to_user(chat_id: str, question_data: Dict, subject: str, topic
             ])
 
             whatsapp_service.send_interactive_message(chat_id, message, buttons)
+            
+            # Store question session for answer processing
+            from database.session_db import save_user_session
+            session_data = {
+                'question_data': json.dumps(question_data),
+                'subject': subject,
+                'topic': topic,
+                'question_id': question_data.get('question_id'),
+                'question_source': 'ai_generated',
+                'session_type': 'question'
+            }
+            save_user_session(chat_id, session_data)
+            logger.info(f"Stored question session for {chat_id}")
 
         elif subject == "Mathematics":
             # Math format
@@ -1638,6 +1651,19 @@ def send_question_to_user(chat_id: str, question_data: Dict, subject: str, topic
             message += "_(You can type just the final answer or show your working)_"
 
             whatsapp_service.send_message(chat_id, message)
+            
+            # Store question session for answer processing
+            from database.session_db import save_user_session
+            session_data = {
+                'question_data': json.dumps(question_data),
+                'subject': subject,
+                'topic': topic,
+                'question_id': question_data.get('question_id'),
+                'question_source': 'ai_generated',
+                'session_type': 'question'
+            }
+            save_user_session(chat_id, session_data)
+            logger.info(f"Stored question session for {chat_id}")
 
         elif subject == "English":
             # English format
@@ -1648,9 +1674,21 @@ def send_question_to_user(chat_id: str, question_data: Dict, subject: str, topic
             message += "_(Take your time to write a thoughtful response)_"
 
             whatsapp_service.send_message(chat_id, message)
+            
+            # Store question session for answer processing
+            from database.session_db import save_user_session
+            session_data = {
+                'question_data': json.dumps(question_data),
+                'subject': subject,
+                'topic': topic,
+                'question_id': question_data.get('question_id'),
+                'question_source': 'ai_generated',
+                'session_type': 'question'
+            }
+            save_user_session(chat_id, session_data)
+            logger.info(f"Stored question session for {chat_id}")
 
-        # Store question data for answer validation
-        store_question_session(chat_id, question_data, subject, topic, difficulty)
+        # Session already stored above per subject type
         logger.info(f"Question sent successfully to {chat_id}")
 
     except Exception as e:
@@ -1662,19 +1700,22 @@ def handle_science_answer(user_id: str, selected_answer: str, session_key: str):
     """Handle science question answer with detailed feedback and navigation"""
     try:
         from database.external_db import update_user_stats, add_xp, update_streak, get_user_stats
-        from utils.session_manager import session_manager
+        from database.session_db import get_user_session
+        import json
 
         # Get session data
-        session_data = get_question_session(session_key) # Use get_question_session from utils
-        if not session_data:
+        session_data = get_user_session(user_id)
+        if not session_data or session_data.get('session_type') != 'question':
             whatsapp_service.send_message(user_id, "❌ Session expired. Please start a new question.")
             return
+        
+        # Parse question data from JSON
+        question_data = json.loads(session_data.get('question_data', '{}'))
 
-        question_data = session_data['question_data']
         subject = session_data['subject']
         topic = session_data['topic']
-        difficulty = session_data['difficulty']
-        user_name = session_data.get('user_name', 'Student') # Use stored user_name
+        # Note: difficulty is not stored in session, we'll extract from session_key
+        difficulty = 'easy'  # Default fallback
 
         correct_answer = question_data['correct_answer']
         is_correct = selected_answer.upper() == correct_answer.upper()
@@ -1744,7 +1785,8 @@ def handle_science_answer(user_id: str, selected_answer: str, session_key: str):
         whatsapp_service.send_interactive_message(user_id, message, buttons)
 
         # Clear session
-        clear_question_session(session_key) # Use the session_key directly
+        from database.session_db import clear_user_session
+        clear_user_session(user_id)
 
     except Exception as e:
         logger.error(f"Error handling science answer for {user_id}: {e}", exc_info=True)
@@ -1880,18 +1922,21 @@ def handle_combined_science_answer(user_id: str, subject: str, user_answer: str)
     """Handle Combined Science answer processing"""
     try:
         from database.external_db import get_user_stats, add_xp, update_streak, update_user_stats
-        from utils.session_db import get_user_session # Assuming get_user_session is in session_db
+        from database.session_db import get_user_session
+        import json
 
-        session_data = get_user_session(user_id) # Get session data for the user
+        session_data = get_user_session(user_id)
 
-        if not session_data or session_data.get('session_type') != 'combined_science':
+        if not session_data or session_data.get('session_type') != 'question':
             whatsapp_service.send_message(user_id, "❌ Session expired or invalid. Please start a new question.")
             return
+        
+        # Parse question data from JSON
+        question_data = json.loads(session_data.get('question_data', '{}'))
 
-        question_data = session_data['question_data']
         topic = session_data['topic']
-        difficulty = session_data['difficulty']
-        user_name = session_data.get('user_name', 'Student')
+        # Extract difficulty from user's previous selection, default to 'easy'  
+        difficulty = 'easy'  # Default fallback
 
         correct_answer = question_data.get('correct_answer')
         points = question_data.get('points', 10)
@@ -1965,15 +2010,17 @@ def handle_combined_exam_answer(user_id: str, user_answer: str):
     """Handle answers for the Combined Exam mode"""
     try:
         from database.external_db import get_user_stats, add_xp, update_streak, update_user_stats
-        from utils.session_db import get_user_session, clear_user_session
+        from database.session_db import get_user_session, clear_user_session
+        import json
 
         session_data = get_user_session(user_id)
 
-        if not session_data or session_data.get('session_type') != 'combined_exam':
+        if not session_data or session_data.get('session_type') not in ['combined_exam', 'question']:
             whatsapp_service.send_message(user_id, "❌ Session expired or invalid. Please start a new exam.")
             return
-
-        question_data = session_data['question_data']
+        
+        # Parse question data from JSON
+        question_data = json.loads(session_data.get('question_data', '{}'))
         subject = session_data['subject']
         topic = session_data['topic']
         difficulty = session_data['difficulty']
@@ -2156,18 +2203,21 @@ def handle_combined_science_answer(user_id: str, subject: str, user_answer: str)
     """Handle Combined Science answer processing"""
     try:
         from database.external_db import get_user_stats, add_xp, update_streak, update_user_stats
-        from utils.session_db import get_user_session # Assuming get_user_session is in session_db
+        from database.session_db import get_user_session
+        import json
 
-        session_data = get_user_session(user_id) # Get session data for the user
+        session_data = get_user_session(user_id)
 
-        if not session_data or session_data.get('session_type') != 'combined_science':
+        if not session_data or session_data.get('session_type') != 'question':
             whatsapp_service.send_message(user_id, "❌ Session expired or invalid. Please start a new question.")
             return
+        
+        # Parse question data from JSON
+        question_data = json.loads(session_data.get('question_data', '{}'))
 
-        question_data = session_data['question_data']
         topic = session_data['topic']
-        difficulty = session_data['difficulty']
-        user_name = session_data.get('user_name', 'Student')
+        # Extract difficulty from user's previous selection, default to 'easy'  
+        difficulty = 'easy'  # Default fallback
 
         correct_answer = question_data.get('correct_answer')
         points = question_data.get('points', 10)
@@ -2242,15 +2292,17 @@ def handle_combined_exam_answer(user_id: str, user_answer: str):
     """Handle answers for the Combined Exam mode"""
     try:
         from database.external_db import get_user_stats, add_xp, update_streak, update_user_stats
-        from utils.session_db import get_user_session, clear_user_session
+        from database.session_db import get_user_session, clear_user_session
+        import json
 
         session_data = get_user_session(user_id)
 
-        if not session_data or session_data.get('session_type') != 'combined_exam':
+        if not session_data or session_data.get('session_type') not in ['combined_exam', 'question']:
             whatsapp_service.send_message(user_id, "❌ Session expired or invalid. Please start a new exam.")
             return
-
-        question_data = session_data['question_data']
+        
+        # Parse question data from JSON
+        question_data = json.loads(session_data.get('question_data', '{}'))
         subject = session_data['subject']
         topic = session_data['topic']
         difficulty = session_data['difficulty']
@@ -2432,18 +2484,21 @@ def handle_combined_science_answer(user_id: str, subject: str, user_answer: str)
     """Handle Combined Science answer processing"""
     try:
         from database.external_db import get_user_stats, add_xp, update_streak, update_user_stats
-        from utils.session_db import get_user_session # Assuming get_user_session is in session_db
+        from database.session_db import get_user_session
+        import json
 
-        session_data = get_user_session(user_id) # Get session data for the user
+        session_data = get_user_session(user_id)
 
-        if not session_data or session_data.get('session_type') != 'combined_science':
+        if not session_data or session_data.get('session_type') != 'question':
             whatsapp_service.send_message(user_id, "❌ Session expired or invalid. Please start a new question.")
             return
+        
+        # Parse question data from JSON
+        question_data = json.loads(session_data.get('question_data', '{}'))
 
-        question_data = session_data['question_data']
         topic = session_data['topic']
-        difficulty = session_data['difficulty']
-        user_name = session_data.get('user_name', 'Student')
+        # Extract difficulty from user's previous selection, default to 'easy'  
+        difficulty = 'easy'  # Default fallback
 
         correct_answer = question_data.get('correct_answer')
         points = question_data.get('points', 10)
@@ -2518,15 +2573,17 @@ def handle_combined_exam_answer(user_id: str, user_answer: str):
     """Handle answers for the Combined Exam mode"""
     try:
         from database.external_db import get_user_stats, add_xp, update_streak, update_user_stats
-        from utils.session_db import get_user_session, clear_user_session
+        from database.session_db import get_user_session, clear_user_session
+        import json
 
         session_data = get_user_session(user_id)
 
-        if not session_data or session_data.get('session_type') != 'combined_exam':
+        if not session_data or session_data.get('session_type') not in ['combined_exam', 'question']:
             whatsapp_service.send_message(user_id, "❌ Session expired or invalid. Please start a new exam.")
             return
-
-        question_data = session_data['question_data']
+        
+        # Parse question data from JSON
+        question_data = json.loads(session_data.get('question_data', '{}'))
         subject = session_data['subject']
         topic = session_data['topic']
         difficulty = session_data['difficulty']
