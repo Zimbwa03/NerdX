@@ -3,8 +3,6 @@ import hashlib
 import json
 from typing import Dict, List, Optional
 from datetime import datetime
-from app import db
-from models import UserQuestionHistory
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +21,10 @@ class QuestionCacheService:
     def has_question_been_asked(self, chat_id: str, question_hash: str) -> bool:
         """Check if a question has already been asked to this user"""
         try:
+            # Import here to avoid circular imports
+            from app import db
+            from models import UserQuestionHistory
+            
             existing = UserQuestionHistory.query.filter_by(
                 user_id=chat_id, 
                 question_hash=question_hash
@@ -37,6 +39,10 @@ class QuestionCacheService:
     def save_question_to_history(self, chat_id: str, question_text: str, topic: str, difficulty: str):
         """Save a question to user's history to prevent duplicates"""
         try:
+            # Import here to avoid circular imports
+            from app import db
+            from models import UserQuestionHistory
+            
             question_hash = self.generate_question_hash(question_text)
             
             # Check if already exists
@@ -102,6 +108,10 @@ class QuestionCacheService:
     def clear_user_history(self, chat_id: str, topic: Optional[str] = None):
         """Clear question history for a user (optionally for specific topic)"""
         try:
+            # Import here to avoid circular imports
+            from app import db
+            from models import UserQuestionHistory
+            
             query = UserQuestionHistory.query.filter_by(user_id=chat_id)
             
             if topic:
@@ -114,4 +124,6 @@ class QuestionCacheService:
             
         except Exception as e:
             logger.error(f"Error clearing user history: {e}")
+            # Import here to avoid circular imports
+            from app import db
             db.session.rollback()

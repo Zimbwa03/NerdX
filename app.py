@@ -56,5 +56,4 @@ with app.app_context():
         # Continue startup even if database fails - will retry on first request
         pass
 
-# Import and register routes
-import routes
+# Routes will be imported by main.py to avoid circular imports
