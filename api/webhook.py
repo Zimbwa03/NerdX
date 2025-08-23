@@ -164,17 +164,14 @@ def handle_text_message(user_id: str, message_text: str):
         # Sanitize input
         message_text = validators.sanitize_text_input(message_text)
 
-        # Check if user is in a session
-        session_type = session_manager.get_session_type(user_id)
-        if session_type:
-            handle_session_message(user_id, message_text)
-            return
-        
-        # Check for graph practice custom input session
+        # Check for specific English sessions first (highest priority)
         from database.session_db import get_user_session
         session_data = get_user_session(user_id)
-        if session_data and session_data.get('awaiting_custom_graph'):
-            graph_practice_handler.handle_graph_practice_start(user_id)
+        
+        # Check for English grammar answer session
+        if session_data and session_data.get('session_type') == 'english_grammar' and session_data.get('awaiting_answer'):
+            logger.info(f"Processing English grammar answer for user {user_id}")
+            english_handler.handle_grammar_answer(user_id, message_text)
             return
         
         # Check for English essay submission session
@@ -182,9 +179,15 @@ def handle_text_message(user_id: str, message_text: str):
             english_handler.handle_essay_submission(user_id, message_text)
             return
         
-        # Check for English grammar answer session
-        if session_data and session_data.get('session_type') == 'english_grammar' and session_data.get('awaiting_answer'):
-            english_handler.handle_grammar_answer(user_id, message_text)
+        # Check for graph practice custom input session
+        if session_data and session_data.get('awaiting_custom_graph'):
+            graph_practice_handler.handle_graph_practice_start(user_id)
+            return
+
+        # Check if user is in a general session
+        session_type = session_manager.get_session_type(user_id)
+        if session_type:
+            handle_session_message(user_id, message_text)
             return
 
         # Check if user is registered
