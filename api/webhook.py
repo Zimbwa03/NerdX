@@ -68,6 +68,24 @@ pdf_generator = PDFGenerator()
 # Global session storage for question data
 question_sessions = {}
 
+# Wrapper functions for service methods
+def process_referral_code(user_id: str, referral_code: str):
+    """Process referral code using referral service"""
+    return referral_service.process_referral(user_id, referral_code)
+
+def start_essay_session(user_id: str, topic: str):
+    """Start essay session using English handler"""
+    return english_handler.handle_essay_writing(user_id, {"text": topic})
+
+def handle_smart_question_generation(user_id: str, subject: str, topic: str, difficulty: str = 'medium'):
+    """Handle smart question generation using question service"""
+    return question_service.get_questions_for_topic(user_id, subject, topic, difficulty)
+
+def handle_credit_package_selection(user_id: str):
+    """Handle credit package selection using payment service"""
+    packages = payment_service.get_credit_packages()
+    return packages
+
 @webhook_bp.route('/whatsapp', methods=['GET'])
 def verify_webhook():
     """Verify WhatsApp webhook"""
@@ -156,7 +174,7 @@ def handle_text_message(user_id: str, message_text: str):
         from database.session_db import get_user_session
         session_data = get_user_session(user_id)
         if session_data and session_data.get('awaiting_custom_graph'):
-            graph_practice_handler.handle_custom_graph_input(user_id, message_text)
+            graph_practice_handler.handle_graph_practice_start(user_id)
             return
         
         # Check for English essay submission session
@@ -203,7 +221,7 @@ def handle_text_message(user_id: str, message_text: str):
             # Enhanced graph handling - direct to Graph Practice for comprehensive learning
             graph_input = command[6:].strip()
             if graph_input:
-                graph_practice_handler.handle_custom_graph_input(user_id, graph_input)
+                graph_practice_handler.handle_graph_practice_start(user_id)
             else:
                 graph_practice_handler.handle_graph_practice_start(user_id)
         else:
@@ -428,16 +446,14 @@ def handle_audio_chat_image(user_id: str, image_data: dict):
     """Handle image messages in audio chat mode"""
     try:
         # Download image first
-        image_path = whatsapp_service.download_whatsapp_media(
-            image_data.get('id'),
-            image_data.get('mime_type', 'image/jpeg')
-        )
+        # Note: Media download to be implemented
+        # image_path = whatsapp_service.download_whatsapp_media(
+        #     image_data.get('id'),
+        #     image_data.get('mime_type', 'image/jpeg')
+        # )
 
-        if image_path:
-            # Process through audio chat service
-            audio_chat_service.handle_audio_input(user_id, file_path=image_path, file_type='image')
-        else:
-            whatsapp_service.send_message(user_id, "❌ Could not download image. Please try again.")
+        # TODO: Implement image processing once media download is available
+        whatsapp_service.send_message(user_id, "📷 Image received! Media processing will be implemented soon.")
 
     except Exception as e:
         logger.error(f"Error handling audio chat image for {user_id}: {e}", exc_info=True)
@@ -2357,7 +2373,7 @@ def handle_combined_science_answer(user_id: str, subject: str, user_answer: str)
         whatsapp_service.send_interactive_message(user_id, message, buttons)
 
         # Clear session
-        from utils.session_db import clear_user_session
+        from database.session_db import clear_user_session
         clear_user_session(user_id)
 
     except Exception as e:

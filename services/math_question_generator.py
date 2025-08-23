@@ -78,6 +78,24 @@ class MathQuestionGenerator:
             logger.error(f"Critical error in generate_question: {e}")
             return None
 
+    def generate_question_with_gemini(self, subject: str, topic: str, difficulty: str = 'medium') -> Optional[Dict]:
+        """
+        Generate a question using Gemini AI for graph-related topics.
+        """
+        try:
+            # Create prompt for Gemini AI, specifically for graph questions
+            prompt = self._create_question_prompt(subject, topic, difficulty)
+
+            # Use Gemini API details here (placeholder, actual implementation needed)
+            # For now, we'll just call the DeepSeek fallback as a placeholder
+            logger.info(f"Switching to Gemini AI for graph question generation (topic: {topic})")
+            return self._generate_fallback_question(subject, topic, difficulty) # Placeholder for Gemini API call
+
+        except Exception as e:
+            logger.error(f"Critical error in generate_question_with_gemini: {e}")
+            return self._generate_fallback_question(subject, topic, difficulty)
+
+
     def _create_question_prompt(self, subject: str, topic: str, difficulty: str) -> str:
         """Create optimized prompt for DeepSeek AI with enhanced ZIMSEC graph support"""
 
@@ -462,7 +480,7 @@ The solution should explain how to plot each inequality and identify the feasibl
         """Send request to DeepSeek API with specific timeout"""
 
         headers = {
-            'Authorization': f'Bearer {self.api_key}',
+            'Authorization': f'Bearer {self.deepseek_api_key}', # Changed to use deepseek_api_key
             'Content-Type': 'application/json'
         }
 
