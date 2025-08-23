@@ -302,9 +302,10 @@ Choose your format:"""
             
             # Save question in session
             from database.session_db import save_user_session
+            import json
             session_data = {
                 'session_type': 'english_grammar',
-                'question_data': question_data,
+                'question_data': json.dumps(question_data),  # Convert dict to JSON string
                 'awaiting_answer': True,
                 'user_name': user_name
             }
@@ -353,9 +354,10 @@ Type your answer below:"""
             
             # Save question in session
             from database.session_db import save_user_session
+            import json
             session_data = {
                 'session_type': 'english_vocabulary',
-                'question_data': question_data,
+                'question_data': json.dumps(question_data),  # Convert dict to JSON string
                 'user_name': user_name
             }
             save_user_session(user_id, session_data)
@@ -393,7 +395,10 @@ Type your answer below:"""
                 self.whatsapp_service.send_message(user_id, "❌ No active grammar session found.")
                 return
             
-            question_data = session_data.get('question_data', {})
+            # Parse question_data from JSON string
+            import json
+            question_data_str = session_data.get('question_data', '{}')
+            question_data = json.loads(question_data_str) if question_data_str else {}
             user_name = session_data.get('user_name', 'Student')
             
             # Get user stats
@@ -440,7 +445,10 @@ Type your answer below:"""
                 self.whatsapp_service.send_message(user_id, "❌ No active vocabulary session found.")
                 return
             
-            question_data = session_data.get('question_data', {})
+            # Parse question_data from JSON string
+            import json
+            question_data_str = session_data.get('question_data', '{}')
+            question_data = json.loads(question_data_str) if question_data_str else {}
             user_name = session_data.get('user_name', 'Student')
             
             correct_answer = question_data.get('correct_answer', 0)
