@@ -655,16 +655,16 @@ Wait {user_name} NerdX is processing your Graph...
 🎨 Example for visual learning
 
 💡 Study this graph pattern and characteristics!"""
+                            
+                            # Convert local file path to public URL for WhatsApp
+                            from utils.url_utils import convert_local_path_to_public_url
+                            public_image_url = convert_local_path_to_public_url(graph_result['image_path'])
+                            
+                            self.whatsapp_service.send_image(user_id, public_image_url, caption)
                         
-                        # Convert local file path to public URL for WhatsApp
-                        from utils.url_utils import convert_local_path_to_public_url
-                        public_image_url = convert_local_path_to_public_url(graph_result['image_path'])
-                        
-                        self.whatsapp_service.send_image(user_id, public_image_url, caption)
-                    
-                except Exception as graph_error:
-                    logger.error(f"Error generating sample graph {i} for {user_id}: {graph_error}")
-                    self.whatsapp_service.send_message(user_id, f"⚠️ Sample graph {i} failed to generate.")
+                    except Exception as graph_error:
+                        logger.error(f"Error generating sample graph {i} for {user_id}: {graph_error}")
+                        self.whatsapp_service.send_message(user_id, f"⚠️ Sample graph {i} failed to generate.")
             
             # Send completion message with navigation buttons
             completion_msg = f"""✅ **Sample Graphs Complete!**
