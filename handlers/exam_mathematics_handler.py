@@ -155,7 +155,7 @@ class ExamMathematicsHandler:
             
             # Send question image first (this is the main content)
             if question_data.get('question_image_url'):
-                self.whatsapp_service.send_image_message(
+                self.whatsapp_service.send_image(
                     user_id, 
                     question_data['question_image_url'], 
                     f"📝 ZIMSEC Exam Question {question_count}"
@@ -295,21 +295,21 @@ class ExamMathematicsHandler:
 
             # Send solution images in order
             if question_data.get('answer_image_url1'):
-                self.whatsapp_service.send_image_message(
+                self.whatsapp_service.send_image(
                     user_id, 
                     question_data['answer_image_url1'], 
                     "✅ Complete Solution"
                 )
             
             if question_data.get('answer_image_url2'):
-                self.whatsapp_service.send_image_message(
+                self.whatsapp_service.send_image(
                     user_id, 
                     question_data['answer_image_url2'], 
                     "✅ Solution Part 2"
                 )
                 
             if question_data.get('answer_image_url3'):
-                self.whatsapp_service.send_image_message(
+                self.whatsapp_service.send_image(
                     user_id, 
                     question_data['answer_image_url3'], 
                     "✅ Solution Part 3"
