@@ -583,19 +583,72 @@ Wait {user_name} NerdX is processing your Graph...
             sample_expressions = self._get_sample_expressions(module_id)
             
             # Generate and send 3 sample graphs
-            for i, expression in enumerate(sample_expressions[:3], 1):
-                try:
-                    # Create graph using the graph service
-                    graph_result = self.graph_service.create_graph(
-                        user_id, 
-                        expression, 
-                        f"{module_info['title']} - Example {i}",
-                        user_name
-                    )
-                    
-                    if graph_result and 'image_path' in graph_result:
-                        # Send the sample graph
-                        caption = f"""📊 **Sample Graph {i}/3**
+            if module_id == "linear_programming":
+                # Special handling for linear programming sample problems
+                linear_programs = [
+                    {
+                        "constraints": ["x + y <= 10", "2x + y <= 16", "x <= 8", "y <= 6", "x >= 0", "y >= 0"],
+                        "objective": "maximize 3x + 2y",
+                        "title": "Production Planning Problem"
+                    },
+                    {
+                        "constraints": ["2x + 3y <= 18", "x + 2y <= 12", "3x + y <= 15", "x >= 0", "y >= 0"],
+                        "objective": "minimize 4x + 5y",
+                        "title": "Resource Allocation Problem"
+                    },
+                    {
+                        "constraints": ["x + 2y <= 14", "3x + y <= 15", "x + y >= 4", "x >= 0", "y >= 0"],
+                        "objective": "maximize x + 3y",
+                        "title": "Diet/Nutrition Problem"
+                    }
+                ]
+                
+                for i, lp_problem in enumerate(linear_programs, 1):
+                    try:
+                        # Create linear programming graph
+                        graph_result = self.graph_service.generate_linear_programming_graph(
+                            lp_problem["constraints"],
+                            objective_function=lp_problem["objective"],
+                            user_name=user_name,
+                            title=f"Example {i}: {lp_problem['title']}"
+                        )
+                        
+                        if graph_result and 'image_path' in graph_result:
+                            # Send the sample linear programming graph
+                            caption = f"""📊 **Linear Programming Example {i}/3**
+
+🏭 Problem Type: {lp_problem['title']}
+🎯 Objective: {lp_problem['objective']}
+📐 Constraints: {len(lp_problem['constraints'])} conditions
+🟢 Green area = Feasible solutions
+🔴 Red dots = Corner points (optimal candidates)
+
+💡 Study the shaded region and constraint boundaries!"""
+                            
+                            # Convert local file path to public URL for WhatsApp
+                            from utils.url_utils import convert_local_path_to_public_url
+                            public_image_url = convert_local_path_to_public_url(graph_result['image_path'])
+                            
+                            self.whatsapp_service.send_image(user_id, public_image_url, caption)
+                        
+                    except Exception as graph_error:
+                        logger.error(f"Error generating LP sample graph {i} for {user_id}: {graph_error}")
+                        self.whatsapp_service.send_message(user_id, f"⚠️ Linear programming example {i} failed to generate.")
+            else:
+                # Standard handling for other modules
+                for i, expression in enumerate(sample_expressions[:3], 1):
+                    try:
+                        # Create graph using the graph service
+                        graph_result = self.graph_service.create_graph(
+                            user_id, 
+                            expression, 
+                            f"{module_info['title']} - Example {i}",
+                            user_name
+                        )
+                        
+                        if graph_result and 'image_path' in graph_result:
+                            # Send the sample graph
+                            caption = f"""📊 **Sample Graph {i}/3**
 
 📈 Expression: {expression}
 📂 Topic: {module_info['title']}
@@ -692,9 +745,9 @@ Wait {user_name} NerdX is processing your Graph...
                 "scatter_data_1_2_3_4_5"
             ],
             'linear_programming': [
-                "x + y <= 8",
-                "2x + 3y <= 12",
-                "3x + y <= 9"
+                "lp: 2x + 3y <= 12, x + y <= 8, x >= 0, y >= 0",
+                "lp: x + 2y <= 10, 3x + y <= 15, x >= 0, y >= 0", 
+                "lp: x + y <= 6, 2x + y <= 10, x >= 0, y >= 0"
             ]
         }
         
@@ -1052,12 +1105,13 @@ Ready for more learning?"""
                 )
                 
             elif module_id == "linear_programming":
-                # Create linear programming graph
+                # Create linear programming graph with shaded feasible region
                 constraints = ["2x + 3y <= 12", "x + y <= 8", "x >= 0", "y >= 0"]
-                return self.graph_service.create_linear_programming_graph(
+                return self.graph_service.generate_linear_programming_graph(
                     constraints,
-                    "maximize x + y",
-                    title="ZIMSEC Linear Programming Example"
+                    objective_function="maximize x + y",
+                    user_name="Student",
+                    title="ZIMSEC Linear Programming - Feasible Region"
                 )
                 
             return None
@@ -1090,12 +1144,15 @@ Ready for more learning?"""
                 except ValueError:
                     return None
             
-            # Linear programming
+            # Linear programming with constraints
             elif input_lower.startswith("linear:") or input_lower.startswith("lp:"):
                 constraints_str = user_input.split(":", 1)[1].strip()
                 constraints = [c.strip() for c in constraints_str.split(",")]
-                return self.graph_service.create_linear_programming_graph(
-                    constraints, "objective", title="Custom Linear Programming"
+                return self.graph_service.generate_linear_programming_graph(
+                    constraints, 
+                    objective_function=None,
+                    user_name=user_name, 
+                    title="Custom Linear Programming Problem"
                 )
             
             # Regular functions

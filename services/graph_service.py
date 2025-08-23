@@ -15,6 +15,7 @@ from math import pi, e, sin, cos, tan, log, sqrt, exp
 import time
 from typing import Dict, List, Optional, Tuple
 from config import Config
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -772,3 +773,322 @@ class GraphService:
         except Exception as e:
             logger.error(f"Error creating matplotlib graph: {e}")
             return None
+
+    def generate_linear_programming_graph(self, constraints: List[str], objective_function: str = None, 
+                                        user_name: str = "Student", title: str = None) -> Optional[Dict]:
+        """Generate a linear programming graph with constraints, feasible region, and shading"""
+        try:
+            if not constraints:
+                return None
+
+            # Create the figure
+            fig, ax = plt.subplots(figsize=(12, 10), dpi=150)
+            
+            # Parse constraints
+            parsed_constraints = []
+            constraint_lines = []
+            
+            for constraint in constraints:
+                parsed = self._parse_linear_constraint(constraint)
+                if parsed:
+                    parsed_constraints.append(parsed)
+                    constraint_lines.append(constraint)
+            
+            if not parsed_constraints:
+                return None
+
+            # Set up coordinate system
+            x_range = (-2, 15)
+            y_range = (-2, 15)
+            
+            # Create meshgrid for shading
+            x = np.linspace(x_range[0], x_range[1], 400)
+            y = np.linspace(y_range[0], y_range[1], 400)
+            X, Y = np.meshgrid(x, y)
+            
+            # Plot constraint boundaries and find feasible region
+            feasible_region = np.ones_like(X, dtype=bool)
+            colors = ['red', 'blue', 'green', 'orange', 'purple', 'brown']
+            
+            for i, (a, b, c, operator, original_constraint) in enumerate(parsed_constraints):
+                color = colors[i % len(colors)]
+                
+                # Plot constraint boundary line
+                if b != 0:  # Not a vertical line
+                    y_line = (c - a * x) / b
+                    valid_mask = (y_line >= y_range[0]) & (y_line <= y_range[1])
+                    ax.plot(x[valid_mask], y_line[valid_mask], color=color, linewidth=2.5, 
+                           label=f'{original_constraint}', alpha=0.8)
+                else:  # Vertical line (x = constant)
+                    x_line = c / a
+                    if x_range[0] <= x_line <= x_range[1]:
+                        ax.axvline(x=x_line, color=color, linewidth=2.5, 
+                                 label=f'{original_constraint}', alpha=0.8)
+                
+                # Update feasible region
+                if operator in ['<=', '≤']:
+                    if b != 0:
+                        feasible_region &= (a * X + b * Y <= c)
+                    else:
+                        feasible_region &= (X <= c / a if a > 0 else X >= c / a)
+                elif operator in ['>=', '≥']:
+                    if b != 0:
+                        feasible_region &= (a * X + b * Y >= c)
+                    else:
+                        feasible_region &= (X >= c / a if a > 0 else X <= c / a)
+                elif operator == '=':
+                    # For equality constraints, we'll show the line but not restrict the region
+                    pass
+            
+            # Add non-negativity constraints if not explicitly provided
+            has_x_nonneg = any('x' in constraint and '>=' in constraint and '0' in constraint for constraint in constraints)
+            has_y_nonneg = any('y' in constraint and '>=' in constraint and '0' in constraint for constraint in constraints)
+            
+            if not has_x_nonneg:
+                feasible_region &= (X >= 0)
+                ax.axvline(x=0, color='gray', linewidth=1.5, linestyle='--', alpha=0.6, label='x ≥ 0')
+            
+            if not has_y_nonneg:
+                feasible_region &= (Y >= 0)
+                ax.axhline(y=0, color='gray', linewidth=1.5, linestyle='--', alpha=0.6, label='y ≥ 0')
+            
+            # Shade the feasible region
+            ax.contourf(X, Y, feasible_region.astype(int), levels=[0.5, 1.5], 
+                       colors=['lightgreen'], alpha=0.4, label='Feasible Region')
+            
+            # Find and mark corner points (vertices of feasible region)
+            corner_points = self._find_corner_points(parsed_constraints, x_range, y_range)
+            if corner_points:
+                corner_x, corner_y = zip(*corner_points)
+                ax.scatter(corner_x, corner_y, color='red', s=100, zorder=5, 
+                          edgecolors='darkred', linewidth=2, label='Corner Points')
+                
+                # Annotate corner points
+                for i, (cx, cy) in enumerate(corner_points):
+                    ax.annotate(f'({cx:.1f}, {cy:.1f})', (cx, cy), xytext=(5, 5), 
+                              textcoords='offset points', fontsize=10, fontweight='bold',
+                              bbox=dict(boxstyle="round,pad=0.3", facecolor="yellow", alpha=0.8))
+            
+            # Plot objective function direction if provided
+            if objective_function:
+                self._plot_objective_function(ax, objective_function, corner_points, x_range, y_range)
+            
+            # Customize the graph
+            ax.set_xlim(x_range)
+            ax.set_ylim(y_range)
+            ax.set_xlabel('x', fontsize=14, fontweight='bold')
+            ax.set_ylabel('y', fontsize=14, fontweight='bold')
+            
+            graph_title = title if title else 'Linear Programming - Feasible Region Analysis'
+            ax.set_title(graph_title, fontsize=16, fontweight='bold', pad=20)
+            
+            # Enhanced grid for ZIMSEC standards
+            ax.grid(True, which='major', alpha=0.7, linestyle='-', linewidth=0.8, color='gray')
+            ax.grid(True, which='minor', alpha=0.6, linestyle=':', linewidth=0.7, color='lightgray')
+            ax.minorticks_on()
+            
+            # Add legend with proper spacing
+            ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=10)
+            
+            # Add educational notes
+            notes = f"""
+📋 Linear Programming Analysis:
+• Green region = Feasible solutions
+• Red dots = Corner points (vertices) 
+• Lines = Constraint boundaries
+• Optimal solution at corner points
+            """.strip()
+            
+            ax.text(0.02, 0.98, notes, transform=ax.transAxes, fontsize=9, 
+                   verticalalignment='top', fontweight='bold',
+                   bbox=dict(boxstyle="round,pad=0.5", facecolor="lightyellow", alpha=0.9))
+            
+            # Add NerdX educational watermark
+            watermark_text = f"NerdX ZIMSEC Linear Programming • {user_name}"
+            ax.text(0.02, 0.02, watermark_text, transform=ax.transAxes, fontsize=10, 
+                   alpha=0.6, bbox=dict(boxstyle="round,pad=0.3", facecolor="lightblue", alpha=0.3))
+            
+            # Save with high quality
+            filename = f"linear_prog_{user_name}_{int(time.time())}.png"
+            filepath = os.path.join('static', 'graphs', filename)
+            
+            plt.tight_layout()
+            plt.subplots_adjust(right=0.8)  # Make room for legend
+            plt.savefig(filepath, dpi=150, bbox_inches='tight', 
+                       facecolor='white', edgecolor='none')
+            plt.close(fig)
+            
+            logger.info(f"✅ Linear programming graph created: {filepath}")
+            
+            return {
+                'image_path': filepath,
+                'constraints': constraint_lines,
+                'corner_points': corner_points,
+                'title': graph_title,
+                'user_name': user_name
+            }
+            
+        except Exception as e:
+            logger.error(f"Error creating linear programming graph: {e}")
+            return None
+
+    def _parse_linear_constraint(self, constraint: str) -> Optional[Tuple]:
+        """Parse a linear constraint into coefficients and operator"""
+        try:
+            # Clean up the constraint
+            constraint = constraint.replace(' ', '').replace('≤', '<=').replace('≥', '>=')
+            
+            # Find the operator
+            operators = ['<=', '>=', '=']
+            operator = None
+            for op in operators:
+                if op in constraint:
+                    operator = op
+                    break
+            
+            if not operator:
+                return None
+            
+            # Split by operator
+            left, right = constraint.split(operator)
+            
+            # Parse right side (should be a number)
+            try:
+                c = float(right)
+            except:
+                return None
+            
+            # Parse left side to extract coefficients of x and y
+            # Handle cases like: 2x+3y, x+y, 2x, 3y, x-y, etc.
+            a, b = 0, 0
+            
+            # Replace common patterns
+            left = left.replace('-', '+-')
+            
+            # Split into terms
+            terms = [term for term in left.split('+') if term]
+            
+            for term in terms:
+                if 'x' in term:
+                    coeff = term.replace('x', '')
+                    if coeff == '' or coeff == '+':
+                        a = 1
+                    elif coeff == '-':
+                        a = -1
+                    else:
+                        a = float(coeff)
+                elif 'y' in term:
+                    coeff = term.replace('y', '')
+                    if coeff == '' or coeff == '+':
+                        b = 1
+                    elif coeff == '-':
+                        b = -1
+                    else:
+                        b = float(coeff)
+            
+            return (a, b, c, operator, constraint.replace('<=', '≤').replace('>=', '≥'))
+            
+        except Exception as e:
+            logger.error(f"Error parsing constraint '{constraint}': {e}")
+            return None
+
+    def _find_corner_points(self, constraints: List[Tuple], x_range: Tuple, y_range: Tuple) -> List[Tuple]:
+        """Find corner points (vertices) of the feasible region"""
+        try:
+            points = []
+            
+            # Add boundary intersections
+            for i in range(len(constraints)):
+                for j in range(i + 1, len(constraints)):
+                    intersection = self._find_intersection(constraints[i], constraints[j])
+                    if intersection:
+                        x, y = intersection
+                        # Check if point is within bounds and satisfies all constraints
+                        if (x_range[0] <= x <= x_range[1] and y_range[0] <= y <= y_range[1]):
+                            if self._point_satisfies_constraints(x, y, constraints):
+                                points.append((round(x, 2), round(y, 2)))
+            
+            # Add axis intersections and origin if relevant
+            origin_satisfies = self._point_satisfies_constraints(0, 0, constraints)
+            if origin_satisfies:
+                points.append((0, 0))
+            
+            # Remove duplicates
+            unique_points = []
+            for point in points:
+                if point not in unique_points:
+                    unique_points.append(point)
+            
+            return unique_points
+            
+        except Exception as e:
+            logger.error(f"Error finding corner points: {e}")
+            return []
+
+    def _find_intersection(self, constraint1: Tuple, constraint2: Tuple) -> Optional[Tuple]:
+        """Find intersection point of two linear constraints"""
+        try:
+            a1, b1, c1, _, _ = constraint1
+            a2, b2, c2, _, _ = constraint2
+            
+            # Solve the system: a1*x + b1*y = c1, a2*x + b2*y = c2
+            det = a1 * b2 - a2 * b1
+            
+            if abs(det) < 1e-10:  # Lines are parallel
+                return None
+            
+            x = (c1 * b2 - c2 * b1) / det
+            y = (a1 * c2 - a2 * c1) / det
+            
+            return (x, y)
+            
+        except:
+            return None
+
+    def _point_satisfies_constraints(self, x: float, y: float, constraints: List[Tuple]) -> bool:
+        """Check if a point satisfies all constraints"""
+        try:
+            for a, b, c, operator, _ in constraints:
+                value = a * x + b * y
+                
+                if operator in ['<=', '≤'] and value > c + 1e-10:
+                    return False
+                elif operator in ['>=', '≥'] and value < c - 1e-10:
+                    return False
+                elif operator == '=' and abs(value - c) > 1e-10:
+                    return False
+            
+            # Check non-negativity (standard assumption)
+            return x >= -1e-10 and y >= -1e-10
+            
+        except:
+            return False
+
+    def _plot_objective_function(self, ax, objective: str, corner_points: List, x_range: Tuple, y_range: Tuple):
+        """Plot objective function iso-lines"""
+        try:
+            # Parse objective function (e.g., "3x + 2y" or "maximize 3x + 2y")
+            obj_clean = objective.lower().replace('maximize', '').replace('minimize', '').strip()
+            
+            # Find coefficients
+            parsed = self._parse_linear_constraint(f"{obj_clean}=0")
+            if not parsed:
+                return
+            
+            a, b, c, _, _ = parsed
+            
+            if corner_points:
+                # Calculate objective values at corner points
+                obj_values = [a * x + b * y for x, y in corner_points]
+                min_val, max_val = min(obj_values), max(obj_values)
+                
+                # Plot iso-lines
+                for obj_val in [min_val, max_val]:
+                    if b != 0:
+                        x = np.linspace(x_range[0], x_range[1], 100)
+                        y_iso = (obj_val - a * x) / b
+                        ax.plot(x, y_iso, '--', alpha=0.7, 
+                               label=f'Objective = {obj_val:.1f}')
+            
+        except Exception as e:
+            logger.error(f"Error plotting objective function: {e}")
