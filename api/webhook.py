@@ -705,6 +705,26 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         elif selection_id == 'english_comprehension':
             english_handler.handle_comprehension_practice(user_id)
         elif selection_id == 'comprehension_start':
+            # BULLETPROOF DOUBLE-CHECK: Block any comprehension start if session exists
+            from database.session_db import get_user_session
+            existing_session = get_user_session(user_id)
+            session_type = existing_session.get('session_type', '') if existing_session else ''
+            
+            # Block ALL comprehension-related sessions at webhook level too
+            comprehension_sessions = ['comprehension_active', 'comprehension_questions', 'comprehension_generating', 'comprehension_started']
+            
+            if session_type in comprehension_sessions:
+                logger.warning(f"WEBHOOK BLOCKED duplicate comprehension attempt for {user_id} - session: {session_type}")
+                # Send direct message instead of calling handler
+                buttons = [
+                    {"text": "🔄 Start New Session", "callback_data": "comprehension_reset"},
+                    {"text": "🔙 Back to Menu", "callback_data": "english_menu"}
+                ]
+                message = "⚠️ You have an active comprehension session.\n\nWould you like to start a fresh new comprehension practice?"
+                whatsapp_service.send_interactive_message(user_id, message, buttons)
+                return jsonify({'status': 'blocked', 'message': 'Duplicate comprehension prevented'})
+            
+            # Only proceed if no active session
             english_handler.handle_comprehension_start(user_id)
         elif selection_id == 'comprehension_show_answers':
             english_handler.handle_comprehension_show_answers(user_id)

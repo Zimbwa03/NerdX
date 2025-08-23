@@ -189,15 +189,22 @@ Ready to boost your reading skills? 🚀"""
             self.whatsapp_service.send_message(user_id, "❌ Error loading comprehension. Please try again.")
 
     def handle_comprehension_start(self, user_id: str):
-        """Start new comprehension session with professional smooth flow and strong duplicate prevention"""
+        """Start new comprehension session with BULLETPROOF duplicate prevention"""
         try:
             from database.session_db import save_user_session, get_user_session, clear_user_session
             from datetime import datetime
+            import time
             
-            # Strong session check with immediate lock to prevent race conditions
+            # BULLETPROOF CHECK #1: Check for ANY existing comprehension session
             existing_session = get_user_session(user_id)
-            if existing_session and existing_session.get('session_type') in ['comprehension_active', 'comprehension_questions', 'comprehension_generating']:
-                # Already generating or active - show reset option
+            session_type = existing_session.get('session_type', '') if existing_session else ''
+            
+            # Block ALL comprehension-related sessions - no exceptions!
+            comprehension_sessions = ['comprehension_active', 'comprehension_questions', 'comprehension_generating', 'comprehension_started']
+            
+            if session_type in comprehension_sessions:
+                logger.warning(f"BLOCKED duplicate comprehension attempt for {user_id} - session: {session_type}")
+                # Show reset option immediately - no more generating messages
                 buttons = [
                     {"text": "🔄 Start New Session", "callback_data": "comprehension_reset"},
                     {"text": "🔙 Back to Menu", "callback_data": "english_menu"}
@@ -206,13 +213,20 @@ Ready to boost your reading skills? 🚀"""
                 self.whatsapp_service.send_interactive_message(user_id, message, buttons)
                 return
             
-            # Immediately save "generating" session to block other attempts
-            generation_session = {
+            # BULLETPROOF LOCK #1: Immediately save generating lock to prevent race conditions
+            lock_session = {
                 'session_type': 'comprehension_generating',
                 'user_name': 'Student',
-                'started_at': str(datetime.now())
+                'started_at': str(datetime.now()),
+                'locked': True
             }
-            save_user_session(user_id, generation_session)
+            save_user_session(user_id, lock_session)
+            
+            # BULLETPROOF CHECK #2: Double-check after lock to ensure no race condition
+            verification_session = get_user_session(user_id)
+            if not verification_session or verification_session.get('session_type') != 'comprehension_generating':
+                logger.error(f"Session lock failed for {user_id} - aborting")
+                return
             
             # Get user data
             registration = get_user_registration(user_id)
