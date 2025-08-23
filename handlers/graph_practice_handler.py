@@ -39,18 +39,6 @@ class GraphPracticeHandler:
                 "examples": ["y = sin(x)", "y = 2cos(x)", "y = tan(x/2)"],
                 "difficulty": "medium"
             },
-            "exponential_logarithmic": {
-                "title": "📈 Exponential & Logarithmic Functions",
-                "description": "Master exponential growth/decay and log functions",
-                "examples": ["y = 2^x", "y = e^x", "y = log(x)"],
-                "difficulty": "hard"
-            },
-            "statistics_graphs": {
-                "title": "📊 Statistics & Data Visualization",
-                "description": "Histograms, box plots, scatter plots, bar charts",
-                "examples": ["Histogram", "Box Plot", "Scatter Plot", "Bar Chart"],
-                "difficulty": "easy"
-            },
             "linear_programming": {
                 "title": "⭐ Linear Programming",
                 "description": "Constraint graphs, feasible regions, optimization",
@@ -84,12 +72,10 @@ class GraphPracticeHandler:
 
 👋 Welcome {user_name}!
 
-🎯 Master All O-Level Graph Types:
+🎯 Master Core O-Level Graph Types:
 📈 Linear Functions & Straight Lines
 📊 Quadratic Functions & Parabolas
 🌊 Trigonometric Functions
-📈 Exponential & Logarithmic
-📊 Statistics & Data Visualization
 ⭐ Linear Programming
 
 💰 Your Credits: {credits}
@@ -253,17 +239,12 @@ class GraphPracticeHandler:
             topic_name = module_info['title'].replace('📈 ', '').replace('📊 ', '').replace('🌊 ', '').replace('⭐ ', '')
 
             try:
-                # For linear programming, skip AI to prevent timeouts and use immediate fallback
-                if 'linear programming' in topic_name.lower():
-                    logger.info(f"Skipping AI for linear programming to prevent worker timeouts")
-                    question_data = None
-                else:
-                    # Use question generator to create graph-specific question for other topics
-                    question_data = self.question_generator.generate_question(
-                        'Mathematics',
-                        f"Graph - {topic_name}",
-                        'medium'
-                    )
+                # Use DeepSeek AI for ALL graph topics
+                question_data = self.question_generator.generate_question(
+                    'Mathematics',
+                    f"Graph - {topic_name}",
+                    'medium'
+                )
 
                 if not question_data:
                     raise Exception("Failed to generate question")
@@ -382,8 +363,6 @@ Study the question and when ready, click "Show Graph" to see the correct graph w
                     'linear_functions': 'y = 2x + 3',
                     'quadratic_functions': 'y = x^2 - 4x + 3',
                     'trigonometric_functions': 'y = sin(x)',
-                    'exponential_logarithmic': 'y = 2^x',
-                    'statistics_graphs': 'histogram',
                     'linear_programming': '2x + 3y <= 12'
                 }
                 expression = fallback_expressions.get(module_id, 'y = x')
@@ -454,8 +433,6 @@ Study the question and when ready, click "Show Graph" to see the correct graph w
                 'linear_functions': 'y = mx + c\nExample: y = 2x + 3',
                 'quadratic_functions': 'y = ax² + bx + c\nExample: y = x^2 - 4x + 3',
                 'trigonometric_functions': 'y = sin(x), y = cos(x), y = tan(x)\nExample: y = 2sin(x)',
-                'exponential_logarithmic': 'y = a^x or y = log(x)\nExample: y = 2^x',
-                'statistics_graphs': 'Data format: 1,2,3,4,5\nExample: 10,15,20,25,30',
                 'linear_programming': 'Constraint format: ax + by <= c\nExample: 2x + 3y <= 12'
             }
 
@@ -727,7 +704,6 @@ Wait {user_name} NerdX is processing your Graph...
                 'linear_functions': r'y\s*=\s*[+-]?\d*[.]?\d*x\s*[+-]?\s*\d+',
                 'quadratic_functions': r'y\s*=\s*[+-]?\d*[.]?\d*x\^?2\s*[+-]?\s*\d*[.]?\d*x?\s*[+-]?\s*\d*',
                 'trigonometric_functions': r'y\s*=\s*\d*[.]?\d*\s*(sin|cos|tan)\s*\([^)]+\)',
-                'exponential_logarithmic': r'y\s*=\s*\d*[.]?\d*\s*\^\s*x|y\s*=\s*log\s*\([^)]+\)'
             }
 
             if module_id in patterns:
@@ -800,16 +776,6 @@ Wait {user_name} NerdX is processing your Graph...
                 "y = 2*cos(x)",
                 "y = tan(x)"
             ],
-            'exponential_logarithmic': [
-                "y = 2^x",
-                "y = 3^x",
-                "y = 0.5^x"
-            ],
-            'statistics_graphs': [
-                "histogram_data_10_15_20_25_30",
-                "boxplot_data_5_10_15_20_25",
-                "scatter_data_1_2_3_4_5"
-            ],
             'linear_programming': [
                 "2x + y <= 40, x + 2y <= 48, x >= 0, y > 5",
                 "3x + 2y <= 60, x + 3y <= 45, x >= 0, y > 3", 
@@ -847,20 +813,6 @@ Wait {user_name} NerdX is processing your Graph...
                 "Plot y = tan(x) from -90° to 270°. Mark the asymptotes.",
                 "Draw y = sin(x) + 2. How does this compare to y = sin(x)?"
             ],
-            'exponential_logarithmic': [
-                "Sketch y = 2^x. Find the y-intercept and describe the behavior as x increases.",
-                "Plot y = 3^x and y = (1/3)^x on the same axes. How are they related?",
-                "Graph y = log₂(x). What is the domain and where does it cross the x-axis?",
-                "Draw y = e^x and identify key points.",
-                "Sketch y = 2^(x-1) and compare it to y = 2^x."
-            ],
-            'statistics_graphs': [
-                "Create a histogram for the data: 2, 3, 3, 4, 4, 4, 5, 5, 6.",
-                "Draw a box plot for the values: 10, 12, 15, 18, 20, 22, 25.",
-                "Plot a scatter graph for (x,y) pairs: (1,2), (2,4), (3,5), (4,7), (5,8).",
-                "Create a bar chart for subjects and student numbers: Math(25), English(30), Science(28).",
-                "Draw a pie chart for transport methods: Bus(40%), Walk(30%), Car(20%), Bike(10%)."
-            ],
             'linear_programming': [
                 "Graph the constraints: x + y ≤ 8, 2x + y ≤ 10, x ≥ 0, y ≥ 0. Find the feasible region.",
                 "Plot 3x + 2y ≤ 12 and x + 3y ≤ 9 with non-negativity constraints.",
@@ -882,8 +834,6 @@ Wait {user_name} NerdX is processing your Graph...
             'linear_functions': "Plot the straight line y = 2x + 3. Mark the y-intercept clearly and find where the line crosses the x-axis.",
             'quadratic_functions': "Sketch the parabola y = x² - 4x + 3. Find and mark the vertex, y-intercept, and x-intercepts on your graph.",
             'trigonometric_functions': "Draw the graph of y = sin(x) for x from 0° to 360°. Mark the maximum and minimum points clearly.",
-            'exponential_logarithmic': "Sketch the exponential function y = 2^x. Show the y-intercept and describe what happens as x increases.",
-            'statistics_graphs': "Create a histogram for the following data: 2, 3, 3, 4, 4, 4, 5, 5, 6. Use appropriate class intervals.",
             'linear_programming': """Answer the whole of this question on the grid.
 
 (a) Draw the graphs of these inequalities by shading the unwanted region.
@@ -1052,25 +1002,6 @@ Ready for more learning?"""
                     viewport
                 )
 
-            elif module_id == "exponential_logarithmic":
-                # Create exponential/log function graph
-                example = random.choice(module_info["examples"])
-                viewport = {"xmin": -5, "xmax": 5, "ymin": -2, "ymax": 10}
-                return self.graph_service.create_advanced_function_graph(
-                    example,
-                    f"ZIMSEC Exponential/Log Functions: {example}",
-                    viewport
-                )
-
-            elif module_id == "statistics_graphs":
-                # Create statistics graph
-                sample_data = [random.normalvariate(50, 15) for _ in range(100)]
-                graph_type = random.choice(["histogram", "boxplot", "scatter", "bar"])
-                return self.graph_service.create_statistics_graph(
-                    sample_data,
-                    graph_type,
-                    f"ZIMSEC Statistics: {graph_type.title()}"
-                )
 
             elif module_id == "linear_programming":
                 # Create linear programming graph with shaded feasible region

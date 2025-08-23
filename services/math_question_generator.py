@@ -22,10 +22,10 @@ class MathQuestionGenerator:
         self.api_key = os.environ.get('DEEPSEEK_API_KEY')
         self.api_url = 'https://api.deepseek.com/chat/completions'
 
-        # Optimized timeout and retry parameters to prevent worker timeouts
-        self.max_retries = 2  # Reduced retries to prevent long blocking
-        self.base_timeout = 8  # Reduced timeout to prevent worker timeouts
-        self.retry_delay = 1   # Shorter delay between retries
+        # Optimized timeout and retry parameters for reliability
+        self.max_retries = 2  # Keep retries low for efficiency
+        self.base_timeout = 10  # Slightly increased timeout for better success
+        self.retry_delay = 1   # Short delay between retries
 
     def generate_question(self, subject: str, topic: str, difficulty: str = 'medium') -> Optional[Dict]:
         """
@@ -35,9 +35,9 @@ class MathQuestionGenerator:
             # Create comprehensive prompt for DeepSeek AI
             prompt = self._create_question_prompt(subject, topic, difficulty)
 
-            # Set timeout based on complexity - optimized to prevent worker timeouts
-            timeout = 8  # Shorter timeout to prevent blocking
-            max_attempts = 2  # Reduced attempts for faster fallback
+            # Set timeout based on complexity - balanced for success and speed
+            timeout = 10  # Balanced timeout for better AI success rate
+            max_attempts = 2  # Keep attempts low for efficiency
 
             for attempt in range(1, max_attempts + 1):
                 logger.info(f"AI API attempt {attempt}/{max_attempts} (timeout: {timeout}s)")
