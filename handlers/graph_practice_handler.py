@@ -282,7 +282,7 @@ Study the question and when ready, click "Show Graph" to see the correct graph w
 
             else:
                 # AI failed - use immediate fallback
-                logger.info(f"Generated fallback question for {subject}/{topic}/{difficulty}")
+                logger.info(f"Generated fallback question for {topic_name}")
                 fallback_question = self._get_fallback_question(module_id)
                 
                 message = f"""📝 **ZIMSEC Practice Question**
