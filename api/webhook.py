@@ -181,6 +181,11 @@ def handle_text_message(user_id: str, message_text: str):
         if session_data and session_data.get('awaiting_essay'):
             english_handler.handle_essay_submission(user_id, message_text)
             return
+        
+        # Check for English grammar answer session
+        if session_data and session_data.get('session_type') == 'english_grammar' and session_data.get('awaiting_answer'):
+            english_handler.handle_grammar_answer(user_id, message_text)
+            return
 
         # Check if user is registered
         registration_status = user_service.check_user_registration(user_id)
@@ -702,6 +707,13 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             english_handler.handle_essay_section_a(user_id)
         elif selection_id == 'english_essay_section_b':
             english_handler.handle_essay_section_b(user_id)
+        elif selection_id == 'english_grammar_usage':
+            english_handler.handle_grammar_usage(user_id)
+        elif selection_id == 'english_vocabulary_building':
+            english_handler.handle_vocabulary_building(user_id)
+        elif selection_id.startswith('vocab_answer_'):
+            option_index = int(selection_id.replace('vocab_answer_', ''))
+            english_handler.handle_vocabulary_answer(user_id, option_index)
         elif selection_id.startswith('english_topic_'):
             topic = selection_id.replace('english_topic_', '').replace('_', ' ').title()
             english_handler.handle_topic_questions_generation(user_id, topic)

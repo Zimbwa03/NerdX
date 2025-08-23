@@ -41,6 +41,95 @@ class EnglishService:
         
         logger.info("Enhanced ZIMSEC English Service initialized with Gemini AI")
 
+    def generate_grammar_question(self) -> Dict:
+        """Generate a single grammar question"""
+        try:
+            prompt = f"""Generate ONE high-quality ZIMSEC O-Level Grammar and Usage question.
+            
+Requirements:
+- Question should test understanding of English grammar, syntax, punctuation, or usage
+- Include clear instructions  
+- Provide the correct answer
+- Include a brief explanation
+- Use Zimbabwean context where appropriate
+- Suitable for Form 3-4 students
+
+Return ONLY a JSON object in this format:
+{{
+    "question": "The grammar question text",
+    "instructions": "What the student should do",
+    "answer": "The correct answer",
+    "explanation": "Brief explanation of why this is correct"
+}}"""
+
+            logger.info("Generating grammar question using Gemini AI")
+            
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.7,
+                    max_output_tokens=500
+                ),
+            )
+
+            if response.text:
+                question_data = json.loads(response.text)
+                logger.info("✅ Generated grammar question successfully")
+                return question_data
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error generating grammar question: {e}")
+            return None
+
+    def generate_vocabulary_mcq(self) -> Dict:
+        """Generate a single vocabulary MCQ"""
+        try:
+            prompt = f"""Generate ONE high-quality ZIMSEC O-Level Vocabulary Building MCQ question.
+            
+Requirements:
+- Test vocabulary, word meanings, synonyms, antonyms, or usage in context
+- Provide 4 multiple choice options (A, B, C, D)
+- Use Zimbabwean context where appropriate
+- Include brief explanation
+- Suitable for Form 3-4 students
+
+Return ONLY a JSON object in this format:
+{{
+    "question": "The vocabulary question text",
+    "options": ["Option A", "Option B", "Option C", "Option D"],
+    "correct_answer": 0,
+    "explanation": "Brief explanation of the correct answer"
+}}
+
+Note: correct_answer should be the index (0-3) of the correct option."""
+
+            logger.info("Generating vocabulary MCQ using Gemini AI")
+            
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.7,
+                    max_output_tokens=600
+                ),
+            )
+
+            if response.text:
+                question_data = json.loads(response.text)
+                logger.info("✅ Generated vocabulary MCQ successfully")
+                return question_data
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error generating vocabulary MCQ: {e}")
+            return None
+
     def generate_topical_questions(self, topic: str, form_level: int, count: int = 10) -> List[Dict]:
         """Generate topical questions for specific topic and form level"""
         

@@ -131,21 +131,16 @@ Choose your learning path:"""
             message = f"""📚 ZIMSEC Topical Questions
 
 👤 Student: {user_name}
-💰 Cost: {module_info["credit_cost"]} credits
+💰 Your Credits: {credits}
 
 📝 Choose your topic:"""
 
-            buttons = []
-            for topic in module_info["topics"][:10]:  # Show first 10 topics
-                buttons.append({
-                    "text": topic,
-                    "callback_data": f"english_topic_{topic.replace(' ', '_').lower()}"
-                })
-            
-            buttons.extend([
+            buttons = [
+                {"text": "📝 Grammar and Usage", "callback_data": "english_grammar_usage"},
+                {"text": "📚 Vocabulary Building", "callback_data": "english_vocabulary_building"},
                 {"text": "📚 More Topics", "callback_data": "english_more_topics"},
                 {"text": "🔙 Back to English", "callback_data": "english_menu"}
-            ])
+            ]
             
             self.whatsapp_service.send_interactive_message(user_id, message, buttons)
 
@@ -279,39 +274,220 @@ Choose your format:"""
             logger.error(f"Error in essay section B for {user_id}: {e}")
             self.whatsapp_service.send_message(user_id, "❌ Error loading Section B options.")
 
-    def handle_topic_questions_generation(self, user_id: str, topic: str):
-        """Generate and send topical questions"""
+    def handle_grammar_usage(self, user_id: str):
+        """Handle Grammar and Usage - one question at a time"""
         try:
             registration = get_user_registration(user_id)
             user_name = registration['name'] if registration else "Student"
-            form_level = registration.get('form_level', 3) if registration else 3
+            credits = get_user_credits(user_id)
+            
+            if credits < 2:
+                self.whatsapp_service.send_message(user_id, f"❌ Insufficient credits! You need 2 credits but have {credits}. Purchase more credits to continue.")
+                return
             
             # Deduct credits
-            if not deduct_credits(user_id, 2, "english_topical", f"Topical questions: {topic}"):
+            if not deduct_credits(user_id, 2, "english_grammar", "Grammar and Usage question"):
                 self.whatsapp_service.send_message(user_id, "❌ Error processing credits. Please try again.")
                 return
             
             # Send loading message
-            self.whatsapp_service.send_message(
-                user_id, 
-                f"🧠 Generating ZIMSEC {topic} questions for Form {form_level}...\n⏳ Please wait while our AI creates authentic questions..."
-            )
+            self.whatsapp_service.send_message(user_id, "🧠 Generating Grammar question...\n⏳ Please wait...")
             
-            # Generate questions using Gemini
-            questions = self.english_service.generate_topical_questions(topic, form_level, count=5)
+            # Generate one grammar question
+            question_data = self.english_service.generate_grammar_question()
             
-            if not questions:
-                self.whatsapp_service.send_message(user_id, "❌ Error generating questions. Please try again.")
+            if not question_data:
+                self.whatsapp_service.send_message(user_id, "❌ Error generating question. Please try again.")
                 return
             
-            # Send questions to user
-            self._send_topical_questions(user_id, user_name, topic, questions)
+            # Save question in session
+            from database.session_db import save_user_session
+            session_data = {
+                'session_type': 'english_grammar',
+                'question_data': question_data,
+                'awaiting_answer': True,
+                'user_name': user_name
+            }
+            save_user_session(user_id, session_data)
             
-            logger.info(f"Topical questions generated for {user_id}: {topic}")
+            # Send question
+            message = f"""📝 Grammar and Usage Question
 
+{question_data['question']}
+
+💡 Instructions: {question_data.get('instructions', 'Please provide your answer.')}
+
+Type your answer below:"""
+            
+            self.whatsapp_service.send_message(user_id, message)
+            
         except Exception as e:
-            logger.error(f"Error generating topic questions for {user_id}: {e}")
-            self.whatsapp_service.send_message(user_id, "❌ Error generating questions. Please try again.")
+            logger.error(f"Error in grammar usage for {user_id}: {e}")
+            self.whatsapp_service.send_message(user_id, "❌ Error generating grammar question. Please try again.")
+
+    def handle_vocabulary_building(self, user_id: str):
+        """Handle Vocabulary Building - MCQ format"""
+        try:
+            registration = get_user_registration(user_id)
+            user_name = registration['name'] if registration else "Student"
+            credits = get_user_credits(user_id)
+            
+            if credits < 2:
+                self.whatsapp_service.send_message(user_id, f"❌ Insufficient credits! You need 2 credits but have {credits}. Purchase more credits to continue.")
+                return
+            
+            # Deduct credits
+            if not deduct_credits(user_id, 2, "english_vocabulary", "Vocabulary Building question"):
+                self.whatsapp_service.send_message(user_id, "❌ Error processing credits. Please try again.")
+                return
+            
+            # Send loading message
+            self.whatsapp_service.send_message(user_id, "🧠 Generating Vocabulary question...\n⏳ Please wait...")
+            
+            # Generate one vocabulary MCQ
+            question_data = self.english_service.generate_vocabulary_mcq()
+            
+            if not question_data:
+                self.whatsapp_service.send_message(user_id, "❌ Error generating question. Please try again.")
+                return
+            
+            # Save question in session
+            from database.session_db import save_user_session
+            session_data = {
+                'session_type': 'english_vocabulary',
+                'question_data': question_data,
+                'user_name': user_name
+            }
+            save_user_session(user_id, session_data)
+            
+            # Send MCQ question with option buttons
+            message = f"""📚 Vocabulary Building Question
+
+{question_data['question']}"""
+            
+            # Create option buttons
+            buttons = []
+            options = question_data.get('options', [])
+            for i, option in enumerate(options):
+                buttons.append({
+                    "text": f"{chr(65+i)}. {option}",
+                    "callback_data": f"vocab_answer_{i}"
+                })
+            
+            buttons.append({"text": "🔙 Back to Topics", "callback_data": "english_topical_questions"})
+            
+            self.whatsapp_service.send_interactive_message(user_id, message, buttons)
+            
+        except Exception as e:
+            logger.error(f"Error in vocabulary building for {user_id}: {e}")
+            self.whatsapp_service.send_message(user_id, "❌ Error generating vocabulary question. Please try again.")
+
+    def handle_grammar_answer(self, user_id: str, user_answer: str):
+        """Handle grammar answer submission"""
+        try:
+            from database.session_db import get_user_session, clear_user_session
+            from database.external_db import get_user_stats, get_user_credits
+            
+            session_data = get_user_session(user_id)
+            if not session_data or session_data.get('session_type') != 'english_grammar':
+                self.whatsapp_service.send_message(user_id, "❌ No active grammar session found.")
+                return
+            
+            question_data = session_data.get('question_data', {})
+            user_name = session_data.get('user_name', 'Student')
+            
+            # Get user stats
+            stats = get_user_stats(user_id) or {}
+            credits = get_user_credits(user_id)
+            
+            # Show answer and stats
+            message = f"""✅ Answer Submitted!
+
+📝 **Your Answer:** {user_answer}
+
+🎯 **Correct Answer:** {question_data.get('answer', 'N/A')}
+
+📚 **Explanation:** {question_data.get('explanation', 'Well done!')}
+
+📊 **Your Stats:**
+💳 Credits: {credits}
+⚡ XP: {stats.get('xp_points', 0)}
+🔥 Streak: {stats.get('streak', 0)}
+🏆 Level: {stats.get('level', 1)}"""
+            
+            buttons = [
+                {"text": "➡️ Next Question", "callback_data": "english_grammar_usage"},
+                {"text": "🔙 Back to Topics", "callback_data": "english_topical_questions"}
+            ]
+            
+            self.whatsapp_service.send_interactive_message(user_id, message, buttons)
+            
+            # Clear session
+            clear_user_session(user_id)
+            
+        except Exception as e:
+            logger.error(f"Error handling grammar answer for {user_id}: {e}")
+            self.whatsapp_service.send_message(user_id, "❌ Error processing answer. Please try again.")
+
+    def handle_vocabulary_answer(self, user_id: str, selected_option: int):
+        """Handle vocabulary MCQ answer"""
+        try:
+            from database.session_db import get_user_session, clear_user_session
+            from database.external_db import get_user_stats, get_user_credits
+            
+            session_data = get_user_session(user_id)
+            if not session_data or session_data.get('session_type') != 'english_vocabulary':
+                self.whatsapp_service.send_message(user_id, "❌ No active vocabulary session found.")
+                return
+            
+            question_data = session_data.get('question_data', {})
+            user_name = session_data.get('user_name', 'Student')
+            
+            correct_answer = question_data.get('correct_answer', 0)
+            options = question_data.get('options', [])
+            
+            # Check if answer is correct
+            is_correct = selected_option == correct_answer
+            
+            # Get user stats  
+            stats = get_user_stats(user_id) or {}
+            credits = get_user_credits(user_id)
+            
+            # Show result
+            if is_correct:
+                result_emoji = "✅"
+                result_text = "Correct!"
+            else:
+                result_emoji = "❌"
+                result_text = "Incorrect"
+            
+            message = f"""{result_emoji} **{result_text}**
+
+📚 **Question:** {question_data.get('question', '')}
+
+🎯 **Correct Answer:** {options[correct_answer] if correct_answer < len(options) else 'N/A'}
+
+💡 **Explanation:** {question_data.get('explanation', 'Keep learning!')}
+
+📊 **Your Stats:**
+💳 Credits: {credits}
+⚡ XP: {stats.get('xp_points', 0)}
+🔥 Streak: {stats.get('streak', 0)}
+🏆 Level: {stats.get('level', 1)}"""
+            
+            buttons = [
+                {"text": "➡️ Next Question", "callback_data": "english_vocabulary_building"},
+                {"text": "🔙 Back to Topics", "callback_data": "english_topical_questions"}
+            ]
+            
+            self.whatsapp_service.send_interactive_message(user_id, message, buttons)
+            
+            # Clear session
+            clear_user_session(user_id)
+            
+        except Exception as e:
+            logger.error(f"Error handling vocabulary answer for {user_id}: {e}")
+            self.whatsapp_service.send_message(user_id, "❌ Error processing answer. Please try again.")
 
     def handle_comprehension_generation(self, user_id: str, theme: str):
         """Generate and send comprehension passage"""
