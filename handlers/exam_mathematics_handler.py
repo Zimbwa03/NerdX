@@ -118,19 +118,16 @@ class ExamMathematicsHandler:
             
             # Get a random question from database using make_supabase_request
             from database.external_db import make_supabase_request
-            import random
             
-            result = make_supabase_request("GET", "olevel_math_questions", limit=50)
+            result = make_supabase_request("GET", "olevel_math_questions")
             
             if not result or len(result) == 0:
-                logger.warning("No questions found in olevel_math_questions table, falling back to AI")
                 # Fallback to AI question if no database questions
                 self._load_ai_question(user_id, user_name, question_count)
                 return
             
             # Select random question from results
             question_data = random.choice(result)
-            logger.info(f"Selected database question ID: {question_data.get('id')} for user {user_id}")
             
             # Format exam question message
             topic_display = question_data.get('topic') or 'General Mathematics'
@@ -156,7 +153,7 @@ class ExamMathematicsHandler:
             
             # Send question image first (this is the main content)
             if question_data.get('question_image_url'):
-                self.whatsapp_service.send_image(
+                self.whatsapp_service.send_image_message(
                     user_id, 
                     question_data['question_image_url'], 
                     f"📝 ZIMSEC Exam Question {question_count}"
@@ -288,21 +285,21 @@ class ExamMathematicsHandler:
 
             # Send solution images in order
             if question_data.get('answer_image_url1'):
-                self.whatsapp_service.send_image(
+                self.whatsapp_service.send_image_message(
                     user_id, 
                     question_data['answer_image_url1'], 
                     "✅ Complete Solution"
                 )
             
             if question_data.get('answer_image_url2'):
-                self.whatsapp_service.send_image(
+                self.whatsapp_service.send_image_message(
                     user_id, 
                     question_data['answer_image_url2'], 
                     "✅ Solution Part 2"
                 )
                 
             if question_data.get('answer_image_url3'):
-                self.whatsapp_service.send_image(
+                self.whatsapp_service.send_image_message(
                     user_id, 
                     question_data['answer_image_url3'], 
                     "✅ Solution Part 3"
@@ -328,7 +325,7 @@ class ExamMathematicsHandler:
         try:
             # Get session data
             session_data = get_user_session(user_id)
-            if not session_data or session_data.get('session_type') != 'math_exam' or session_data.get('current_question_type') != 'ai':
+            if not session_data or session_data.get('current_question_type') != 'ai':
                 self.whatsapp_service.send_message(user_id, "❌ No active AI question found.")
                 return
             
