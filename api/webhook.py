@@ -1895,7 +1895,7 @@ def handle_science_answer(user_id: str, selected_answer: str, session_key: str):
         # Show updated stats
         message += f"📊 *Your Stats:*\n"
         message += f"💳 Credits: {final_credits}\n"
-        message += f"⚡ XP: {final_xp} (+{final_xp - session_data.get('xp_before', 0)})\n" # Corrected to use session_data
+        message += f"⚡ XP: {final_xp} (+{final_xp - session_data.get('xp_before', final_xp)})\n"
         message += f"🔥 Streak: {final_streak}\n"
         message += f"🏆 Level: {final_level}\n\n"
 

@@ -111,6 +111,15 @@ class WhatsAppService:
     def send_interactive_message(self, to: str, message: str, buttons: List[Dict]) -> bool:
         """Send buttons in groups of 3, with additional messages for remaining buttons"""
         try:
+            # Validate and truncate message length (WhatsApp limit: 1-1024 characters)
+            if not message or len(message.strip()) == 0:
+                logger.error("Message body cannot be empty for interactive message")
+                return False
+            
+            if len(message) > 1024:
+                logger.warning(f"Message too long ({len(message)} chars), truncating to 1024 characters")
+                message = message[:1021] + "..."
+            
             # If 4 or more buttons, send them in groups of 3
             if len(buttons) >= 4:
                 return self.send_grouped_buttons(to, message, buttons)
@@ -163,6 +172,15 @@ class WhatsAppService:
     def send_grouped_buttons(self, to: str, message: str, buttons: List[Dict]) -> bool:
         """Send buttons in groups of 3 like existing menu format"""
         try:
+            # Validate message length
+            if not message or len(message.strip()) == 0:
+                logger.error("Message body cannot be empty for grouped buttons")
+                return False
+            
+            if len(message) > 1024:
+                logger.warning(f"Message too long ({len(message)} chars), truncating to 1024 characters")
+                message = message[:1021] + "..."
+            
             # First send message with first 3 buttons
             first_group = buttons[:3]
             if not self.send_single_button_group(to, message, first_group):
@@ -189,6 +207,15 @@ class WhatsAppService:
     def send_single_button_group(self, to: str, message: str, buttons: List[Dict]) -> bool:
         """Send a single group of up to 3 buttons"""
         try:
+            # Validate message length
+            if not message or len(message.strip()) == 0:
+                logger.error("Message body cannot be empty for button group")
+                return False
+            
+            if len(message) > 1024:
+                logger.warning(f"Message too long ({len(message)} chars), truncating to 1024 characters")
+                message = message[:1021] + "..."
+            
             url = f"{self.base_url}/{self.phone_number_id}/messages"
             headers = {
                 'Authorization': f'Bearer {self.access_token}',
