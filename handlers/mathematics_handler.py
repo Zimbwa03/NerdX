@@ -78,7 +78,16 @@ class MathematicsHandler:
         """Handle mathematics question generation"""
         try:
             from database.external_db import get_user_registration, get_user_credits, deduct_credits
-            from database.session_db import save_user_session
+            from database.session_db import save_user_session, get_user_session
+            
+            # Check if user already has an active math question session
+            existing_session = get_user_session(user_id)
+            if existing_session and existing_session.get('session_type') == 'math_question':
+                self.whatsapp_service.send_message(
+                    user_id, 
+                    "⏳ You already have an active math question. Please answer the current question or type 'cancel' to start over."
+                )
+                return
             
             # Format topic name
             formatted_topic = self.mathematics_service.format_topic_name(topic)
@@ -112,6 +121,16 @@ class MathematicsHandler:
                 f"💳 Credits deducted: {credit_cost}"
             )
             
+            # Create a temporary session to prevent duplicate generation
+            temp_session = {
+                'session_type': 'math_generating',
+                'subject': "Mathematics",
+                'topic': formatted_topic,
+                'difficulty': difficulty,
+                'generating': True
+            }
+            save_user_session(user_id, temp_session)
+            
             # Generate question using DeepSeek AI
             logger.info(f"Generating math question: Mathematics/{formatted_topic}/{difficulty}")
             try:
@@ -119,6 +138,10 @@ class MathematicsHandler:
                 
                 if not question_data:
                     logger.error("Question generator returned None, using fallback")
+                    # Clear generating session
+                    from database.session_db import clear_user_session
+                    clear_user_session(user_id)
+                    
                     # Send error message and return early to prevent loops
                     self.whatsapp_service.send_message(
                         user_id, 
@@ -131,6 +154,10 @@ class MathematicsHandler:
                     
             except Exception as e:
                 logger.error(f"Exception during question generation: {e}")
+                # Clear generating session
+                from database.session_db import clear_user_session
+                clear_user_session(user_id)
+                
                 self.whatsapp_service.send_message(
                     user_id, 
                     "❌ Service temporarily unavailable. Please try again in a few minutes.\n\n💳 Your credits have been refunded."
@@ -143,7 +170,7 @@ class MathematicsHandler:
             # Send question to user
             self._send_question_to_user(user_id, question_data, "Mathematics", formatted_topic, difficulty)
             
-            # Store session
+            # Store final session with question data
             session_data = {
                 'session_type': 'math_question',
                 'subject': "Mathematics",
@@ -151,7 +178,8 @@ class MathematicsHandler:
                 'difficulty': difficulty,
                 'question_data': json.dumps(question_data),
                 'generated_at': question_data.get('generated_at'),
-                'source': question_data.get('source', 'deepseek_ai')
+                'source': question_data.get('source', 'deepseek_ai'),
+                'awaiting_answer': True
             }
             
             save_user_session(user_id, session_data)
