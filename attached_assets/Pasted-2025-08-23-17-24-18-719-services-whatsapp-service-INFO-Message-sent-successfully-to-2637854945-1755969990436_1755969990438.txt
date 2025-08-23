@@ -1,0 +1,17 @@
+2025-08-23 17:24:18,719 - services.whatsapp_service - INFO - Message sent successfully to 263785494594
+2025-08-23 17:24:18,726 - handlers.graph_practice_handler - ERROR - Error generating sample graph 1 for 263785494594: GraphService.create_graph() takes from 2 to 3 positional arguments but 5 were given
+2025-08-23 17:24:19,530 - services.whatsapp_service - INFO - Message sent successfully to 263785494594
+2025-08-23 17:24:19,531 - handlers.graph_practice_handler - ERROR - Error generating sample graph 2 for 263785494594: GraphService.create_graph() takes from 2 to 3 positional arguments but 5 were given
+2025-08-23 17:24:20,208 - services.whatsapp_service - INFO - Message sent successfully to 263785494594
+2025-08-23 17:24:20,209 - handlers.graph_practice_handler - ERROR - Error generating sample graph 3 for 263785494594: GraphService.create_graph() takes from 2 to 3 positional arguments but 5 were given
+2025-08-23 17:24:20,851 - services.whatsapp_service - INFO - Message sent successfully to 263785494594
+Making GET request to https://hvlvwvzliqrlmqjbfgoa.supabase.co/rest/v1/user_stats
+Headers: {'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Content-Type': 'application/json'}
+Params: {'select': 'credits', 'user_id': 'eq.263785494594'}
+Data: None
+Response status: 200
+Response text: [{"credits":318}]
+2025-08-23 17:24:21,696 - services.whatsapp_service - INFO - Interactive message sent successfully to 263785494594
+^C[2025-08-23 17:24:45 +0000] [4740] [INFO] Handling signal: int
+[2025-08-23 17:24:45 +0000] [4752] [INFO] Worker exiting (pid: 4752)
+[2025-08-23 17:24:46 +0000] [4740] [INFO] Shutting down: Master

@@ -678,102 +678,97 @@ class GraphService:
             plt.close('all')
             return None
 
-    def create_graph(self, graph_type: str, title: str = None, **kwargs) -> str:
-        """Create a graph based on type and return the file path"""
+    def create_graph(self, user_id: str, expression: str, title: str, user_name: str) -> Dict:
+        """Create a matplotlib graph from mathematical expression and return result dict"""
         try:
             import matplotlib.pyplot as plt
             import numpy as np
             import os
             from datetime import datetime
-
-            # Generate unique filename
+            
+            # Generate unique filename with user info
             timestamp = int(datetime.now().timestamp())
-            filename = f"{graph_type}_{timestamp}.png"
+            filename = f"graph_{user_id}_{timestamp}.png"
             filepath = os.path.join(self.temp_dir, filename)
 
-            # Create figure
-            plt.figure(figsize=(10, 6))
+            # Create figure with educational styling
+            fig, ax = plt.subplots(figsize=(12, 8), dpi=150)
 
-            if graph_type == "linear":
-                # Create linear function graph
-                x = np.linspace(-10, 10, 100)
-                m = kwargs.get('slope', 2)
-                b = kwargs.get('intercept', 1)
-                y = m * x + b
-                plt.plot(x, y, 'b-', linewidth=2, label=f'y = {m}x + {b}')
-                plt.title(title or f'Linear Function: y = {m}x + {b}')
-
-            elif graph_type == "quadratic":
-                # Create quadratic function graph
-                x = np.linspace(-10, 10, 100)
-                a = kwargs.get('a', 1)
-                b = kwargs.get('b', 0)
-                c = kwargs.get('c', 0)
-                y = a * x**2 + b * x + c
-                plt.plot(x, y, 'r-', linewidth=2, label=f'y = {a}x² + {b}x + {c}')
-                plt.title(title or f'Quadratic Function: y = {a}x² + {b}x + {c}')
-
-            elif graph_type == "sine":
-                # Create sine wave graph
-                x = np.linspace(0, 4*np.pi, 100)
-                amplitude = kwargs.get('amplitude', 1)
-                frequency = kwargs.get('frequency', 1)
-                y = amplitude * np.sin(frequency * x)
-                plt.plot(x, y, 'g-', linewidth=2, label=f'y = {amplitude}sin({frequency}x)')
-                plt.title(title or f'Sine Function: y = {amplitude}sin({frequency}x)')
-
-            elif graph_type == "cosine":
-                # Create cosine wave graph
-                x = np.linspace(0, 4*np.pi, 100)
-                amplitude = kwargs.get('amplitude', 1)
-                frequency = kwargs.get('frequency', 1)
-                y = amplitude * np.cos(frequency * x)
-                plt.plot(x, y, 'm-', linewidth=2, label=f'y = {amplitude}cos({frequency}x)')
-                plt.title(title or f'Cosine Function: y = {amplitude}cos({frequency}x)')
-
-            elif graph_type == "exponential":
-                # Create exponential function graph
-                x = np.linspace(-2, 3, 100)
-                base = kwargs.get('base', 2)
-                y = base ** x
-                plt.plot(x, y, 'orange', linewidth=2, label=f'y = {base}^x')
-                plt.title(title or f'Exponential Function: y = {base}^x')
-
-            elif graph_type == "logarithmic":
-                # Create logarithmic function graph
-                x = np.linspace(0.1, 10, 100)
-                base = kwargs.get('base', 10)
-                if base == 10:
-                    y = np.log10(x)
-                    plt.plot(x, y, 'brown', linewidth=2, label='y = log₁₀(x)')
-                    plt.title(title or 'Logarithmic Function: y = log₁₀(x)')
-                else:
-                    y = np.log(x) / np.log(base)
-                    plt.plot(x, y, 'brown', linewidth=2, label=f'y = log_{base}(x)')
-                    plt.title(title or f'Logarithmic Function: y = log_{base}(x)')
-
-            else:
-                # Default to simple linear graph
-                x = np.linspace(-5, 5, 100)
-                y = x
-                plt.plot(x, y, 'b-', linewidth=2, label='y = x')
-                plt.title(title or 'Linear Function: y = x')
-
-            # Add grid and labels
-            plt.grid(True, alpha=0.3)
-            plt.xlabel('x')
-            plt.ylabel('y')
-            plt.legend()
-            plt.axhline(y=0, color='k', linewidth=0.5)
-            plt.axvline(x=0, color='k', linewidth=0.5)
-
-            # Save the plot
+            # Generate x values
+            x_vals = np.linspace(-10, 10, 1000)
+            
+            # Clean and evaluate the expression
+            clean_expr = self._clean_expression(expression)
+            
+            try:
+                # Use sympy to safely evaluate the expression
+                from sympy import symbols, sympify, lambdify
+                x = symbols('x')
+                expr_sympy = sympify(clean_expr)
+                func = lambdify(x, expr_sympy, 'numpy')
+                
+                # Calculate y values
+                y_vals = func(x_vals)
+                
+                # Handle complex numbers and infinite values
+                if np.iscomplexobj(y_vals):
+                    y_vals = np.real(y_vals)
+                
+                # Remove infinite and NaN values
+                mask = np.isfinite(y_vals)
+                x_clean = x_vals[mask]
+                y_clean = y_vals[mask]
+                
+                # Plot the function
+                ax.plot(x_clean, y_clean, 'b-', linewidth=3, label=f'f(x) = {expression}', alpha=0.8)
+                
+            except Exception as eval_error:
+                logger.error(f"Error evaluating expression '{expression}': {eval_error}")
+                # Fallback: show error message on graph
+                ax.text(0.5, 0.5, f"Error: Cannot plot '{expression}'", 
+                       transform=ax.transAxes, fontsize=16, ha='center', va='center',
+                       bbox=dict(boxstyle="round,pad=0.3", facecolor="yellow", alpha=0.7))
+            
+            # Customize the graph for ZIMSEC standards
+            ax.set_xlim(-10, 10)
+            ax.set_ylim(-10, 10)
+            ax.set_xlabel('x', fontsize=14, fontweight='bold')
+            ax.set_ylabel('y', fontsize=14, fontweight='bold')
+            ax.set_title(title, fontsize=16, fontweight='bold', pad=20)
+            
+            # Add enhanced grid
+            ax.grid(True, which='major', alpha=0.7, linestyle='-', linewidth=0.8, color='gray')
+            ax.grid(True, which='minor', alpha=0.6, linestyle=':', linewidth=0.7, color='darkgray')
+            ax.minorticks_on()
+            
+            # Add axes through origin
+            ax.axhline(y=0, color='k', linewidth=1.5, alpha=0.7)
+            ax.axvline(x=0, color='k', linewidth=1.5, alpha=0.7)
+            
+            # Add legend
+            ax.legend(fontsize=12, loc='upper right')
+            
+            # Add NerdX educational watermark with user name
+            watermark_text = f"NerdX ZIMSEC Education • {user_name} • Graph Practice"
+            ax.text(0.02, 0.02, watermark_text, transform=ax.transAxes, fontsize=10, 
+                   alpha=0.6, bbox=dict(boxstyle="round,pad=0.3", facecolor="lightblue", alpha=0.3))
+            
+            # Save with high quality
             plt.tight_layout()
-            plt.savefig(filepath, dpi=300, bbox_inches='tight')
-            plt.close()
-
-            return filepath
-
+            plt.savefig(filepath, dpi=150, bbox_inches='tight', 
+                       facecolor='white', edgecolor='none')
+            plt.close(fig)
+            
+            logger.info(f"✅ Matplotlib graph created successfully: {filepath}")
+            
+            # Return in expected format
+            return {
+                'image_path': filepath,
+                'expression': expression,
+                'title': title,
+                'user_name': user_name
+            }
+            
         except Exception as e:
-            logger.error(f"Error creating graph: {e}")
+            logger.error(f"Error creating matplotlib graph: {e}")
             return None
