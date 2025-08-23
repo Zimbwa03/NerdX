@@ -79,8 +79,8 @@ class AudioChatService:
         """Get task by ID"""
         return audio_tasks.get(task_id)
 
-    def clean_text_for_audio(self, text: str) -> str:
-        """Clean text by removing markdown formatting and other characters that interfere with audio"""
+    def clean_text_for_audio(self, text: str, max_duration_seconds: int = 45) -> str:
+        """Clean text by removing markdown formatting and limit length for maximum 45 seconds of audio"""
         import re
         
         # Remove markdown bold/italic formatting
@@ -111,6 +111,26 @@ class AudioChatService:
         # Clean up and normalize
         text = text.strip()
         text = ' '.join(text.split())  # Normalize whitespace
+        
+        # Limit text length for maximum audio duration (approximately 150 words per minute)
+        # For 45 seconds max: 45/60 * 150 = ~112 words maximum
+        words = text.split()
+        max_words = int(max_duration_seconds / 60 * 150)  # Dynamic calculation
+        
+        if len(words) > max_words:
+            text = ' '.join(words[:max_words])
+            # Ensure we end on a complete sentence
+            if not text.endswith(('.', '!', '?')):
+                # Find the last sentence ending
+                last_sentence_end = max(
+                    text.rfind('.'),
+                    text.rfind('!'),
+                    text.rfind('?')
+                )
+                if last_sentence_end > len(text) * 0.7:  # If we can keep at least 70% of text
+                    text = text[:last_sentence_end + 1]
+                else:
+                    text += '.'  # Add period if no good sentence ending found
         
         return text
 
@@ -315,15 +335,16 @@ Welcome to NerdX Audio Chat! I can help you with:
 
 Just send me your question or content and I'll respond with helpful audio!
 
-*Note: Audio features require API keys to be configured*
+⏱️ *Audio responses are limited to 45 seconds maximum*
+💡 *Send shorter questions for better audio quality*
 
-Type 'menu' to return to the main menu."""
+Choose your preferred voice and start chatting!"""
 
             # Send voice preference buttons
             buttons = [
                 {'id': 'audio_female_voice', 'title': '👩 Female Voice'},
                 {'id': 'audio_male_voice', 'title': '👨 Male Voice'},
-                {'id': 'menu', 'title': '🔙 Main Menu'}
+                {'id': 'end_audio_chat', 'title': '❌ End Audio Chat'}
             ]
             
             whatsapp_service.send_interactive_message(user_id, welcome_message, buttons)
@@ -354,9 +375,16 @@ Type 'menu' to return to the main menu."""
             response_message += "• Images of problems or notes\n"
             response_message += "• PDF documents to summarize\n"
             response_message += "• Voice messages to chat\n\n"
-            response_message += "I'll respond with helpful audio explanations!"
+            response_message += "🎵 I'll respond with helpful audio explanations!\n"
+            response_message += "⏱️ Audio responses limited to 45 seconds\n\n"
+            response_message += "Type 'end audio' to exit audio chat mode."
             
-            whatsapp_service.send_message(user_id, response_message)
+            # Add end audio chat button
+            buttons = [
+                {'id': 'end_audio_chat', 'title': '❌ End Audio Chat'}
+            ]
+            
+            whatsapp_service.send_interactive_message(user_id, response_message, buttons)
             
         except Exception as e:
             logger.error(f"Error handling voice selection: {e}")
@@ -373,8 +401,13 @@ Type 'menu' to return to the main menu."""
             session_data = session_manager.get_audio_chat_session(user_id)
             voice_type = session_data.get('voice_type', 'female') if session_data else 'female'
             
+            # Check for end audio chat command
+            if message_text and message_text.lower().strip() in ['end audio', 'end audio chat', 'exit audio', 'stop audio']:
+                self.end_audio_chat(user_id)
+                return
+            
             # Show processing message
-            whatsapp_service.send_message(user_id, "🎵 Processing your request and generating audio response...")
+            whatsapp_service.send_message(user_id, "🎵 Generating your audio response...")
             
             content = ""
             ai_response = ""
@@ -391,17 +424,17 @@ Type 'menu' to return to the main menu."""
             else:
                 ai_response = self.generate_ai_response(message_text or "", 'text')
             
-            # Generate audio response
-            clean_response = self.clean_text_for_audio(ai_response)
+            # Generate audio response with 45-second limit
+            clean_response = self.clean_text_for_audio(ai_response, max_duration_seconds=45)
             audio_path = self.generate_audio(clean_response, voice_type)
             
             if audio_path and os.path.exists(audio_path):
-                # Send audio file via WhatsApp
-                try:
-                    whatsapp_service.send_audio_message(user_id, audio_path)
-                except:
-                    # Fallback to text if audio sending fails
-                    whatsapp_service.send_message(user_id, f"🎧 **Audio Response:**\n\n{ai_response}")
+                # Send ONLY audio file via WhatsApp (no text)
+                success = whatsapp_service.send_audio_message(user_id, audio_path)
+                
+                if not success:
+                    # If audio sending fails, send error message
+                    whatsapp_service.send_message(user_id, "❌ Failed to send audio. Please try again or type 'end audio' to exit.")
                 
                 # Clean up temporary file
                 try:
@@ -409,11 +442,39 @@ Type 'menu' to return to the main menu."""
                 except:
                     pass
             else:
-                # Send text response as fallback
-                whatsapp_service.send_message(user_id, f"🎧 **Audio Response (Text Fallback):**\n\n{ai_response}")
+                # If audio generation fails, send error message
+                whatsapp_service.send_message(user_id, "❌ Failed to generate audio. Please try again or type 'end audio' to exit.")
             
         except Exception as e:
             logger.error(f"Error handling audio input: {e}")
             from services.whatsapp_service import WhatsAppService
             whatsapp_service = WhatsAppService()
-            whatsapp_service.send_message(user_id, "❌ Error processing your audio request. Please try again or type 'menu' to return to main menu.")
+            whatsapp_service.send_message(user_id, "❌ Error processing your audio request. Please try again or type 'end audio' to exit audio chat.")
+
+    def end_audio_chat(self, user_id: str):
+        """End audio chat session and return to main menu"""
+        try:
+            from services.whatsapp_service import WhatsAppService
+            from utils.session_manager import session_manager
+            
+            whatsapp_service = WhatsAppService()
+            
+            # Clear audio chat session
+            session_manager.clear_audio_chat_session(user_id)
+            
+            # Send confirmation message
+            exit_message = "✅ **Audio Chat Ended**\n\n"
+            exit_message += "Thanks for using NerdX Audio Chat!\n"
+            exit_message += "You've returned to the main menu."
+            
+            whatsapp_service.send_message(user_id, exit_message)
+            
+            # Show main menu
+            from api.webhook import send_main_menu
+            send_main_menu(user_id)
+            
+        except Exception as e:
+            logger.error(f"Error ending audio chat: {e}")
+            from services.whatsapp_service import WhatsAppService
+            whatsapp_service = WhatsAppService()
+            whatsapp_service.send_message(user_id, "Audio chat ended. Type 'menu' to return to main menu.")

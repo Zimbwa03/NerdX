@@ -46,6 +46,67 @@ class WhatsAppService:
         except Exception as e:
             logger.error(f"Error sending WhatsApp message: {e}")
             return False
+
+    def send_audio_message(self, to: str, audio_file_path: str) -> bool:
+        """Send audio message via WhatsApp"""
+        try:
+            import requests
+            
+            # First upload the audio file
+            upload_url = f"{self.base_url}/{self.phone_number_id}/media"
+            
+            headers = {
+                'Authorization': f'Bearer {self.access_token}'
+            }
+            
+            with open(audio_file_path, 'rb') as audio_file:
+                files = {
+                    'file': ('audio.mp3', audio_file, 'audio/mpeg'),
+                    'type': (None, 'audio'),
+                    'messaging_product': (None, 'whatsapp')
+                }
+                
+                upload_response = requests.post(upload_url, headers=headers, files=files, timeout=60)
+                
+                if upload_response.status_code != 200:
+                    logger.error(f"Failed to upload audio: {upload_response.status_code} - {upload_response.text}")
+                    return False
+                
+                media_id = upload_response.json().get('id')
+                
+                if not media_id:
+                    logger.error("No media ID returned from upload")
+                    return False
+            
+            # Now send the audio message
+            send_url = f"{self.base_url}/{self.phone_number_id}/messages"
+            
+            headers = {
+                'Authorization': f'Bearer {self.access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            data = {
+                'messaging_product': 'whatsapp',
+                'to': to,
+                'type': 'audio',
+                'audio': {
+                    'id': media_id
+                }
+            }
+            
+            response = requests.post(send_url, headers=headers, json=data, timeout=30)
+            
+            if response.status_code == 200:
+                logger.info(f"Audio message sent successfully to {to}")
+                return True
+            else:
+                logger.error(f"Failed to send audio message: {response.status_code} - {response.text}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Error sending WhatsApp audio message: {e}")
+            return False
     
     def send_interactive_message(self, to: str, message: str, buttons: List[Dict]) -> bool:
         """Send buttons in groups of 3, with additional messages for remaining buttons"""

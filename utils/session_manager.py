@@ -271,5 +271,16 @@ class SessionManager:
             logger.error(f"Error getting audio chat session: {e}")
             return None
 
+    def clear_audio_chat_session(self, user_id: str) -> bool:
+        """Clear audio chat session for user"""
+        try:
+            clear_user_session(user_id)
+            logger.info(f"Cleared audio chat session for user {user_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error clearing audio chat session: {e}")
+            return False
+
 # Global session manager instance
 session_manager = SessionManager()

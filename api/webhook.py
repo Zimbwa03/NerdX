@@ -561,6 +561,8 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             audio_chat_service.handle_voice_selection(user_id, 'female')
         elif selection_id == 'audio_male_voice':
             audio_chat_service.handle_voice_selection(user_id, 'male')
+        elif selection_id == 'end_audio_chat':
+            audio_chat_service.end_audio_chat(user_id)
         elif selection_id == 'buy_credits':
             show_credit_packages(user_id)
         elif selection_id == 'share_to_friend':
