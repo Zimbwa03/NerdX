@@ -1747,7 +1747,7 @@ def handle_science_answer(user_id: str, selected_answer: str, session_key: str):
 
         if is_correct:
             # Award points and XP
-            add_xp(user_id, points)
+            add_xp(user_id, points, 'science_questions')
             update_streak(user_id, increment=True)
             new_xp += points
             new_streak += 1
@@ -1969,7 +1969,7 @@ def handle_combined_science_answer(user_id: str, subject: str, user_answer: str)
         new_level = current_stats.get('level', 1)
 
         if is_correct:
-            add_xp(user_id, points)
+            add_xp(user_id, points, 'combined_exam')
             update_streak(user_id, increment=True)
             new_xp += points
             new_streak += 1
@@ -2058,7 +2058,7 @@ def handle_combined_exam_answer(user_id: str, user_answer: str):
         new_level = current_stats.get('level', 1)
 
         if is_correct:
-            add_xp(user_id, points)
+            add_xp(user_id, points, 'combined_exam')
             update_streak(user_id, increment=True)
             new_xp += points
             new_streak += 1
@@ -2250,7 +2250,7 @@ def handle_combined_science_answer(user_id: str, subject: str, user_answer: str)
         new_level = current_stats.get('level', 1)
 
         if is_correct:
-            add_xp(user_id, points)
+            add_xp(user_id, points, 'combined_exam')
             update_streak(user_id, increment=True)
             new_xp += points
             new_streak += 1
@@ -2340,7 +2340,7 @@ def handle_combined_exam_answer(user_id: str, user_answer: str):
         new_level = current_stats.get('level', 1)
 
         if is_correct:
-            add_xp(user_id, points)
+            add_xp(user_id, points, 'combined_exam')
             update_streak(user_id, increment=True)
             new_xp += points
             new_streak += 1
@@ -2531,7 +2531,7 @@ def handle_combined_science_answer(user_id: str, subject: str, user_answer: str)
         new_level = current_stats.get('level', 1)
 
         if is_correct:
-            add_xp(user_id, points)
+            add_xp(user_id, points, 'combined_exam')
             update_streak(user_id, increment=True)
             new_xp += points
             new_streak += 1
@@ -2621,7 +2621,7 @@ def handle_combined_exam_answer(user_id: str, user_answer: str):
         new_level = current_stats.get('level', 1)
 
         if is_correct:
-            add_xp(user_id, points)
+            add_xp(user_id, points, 'combined_exam')
             update_streak(user_id, increment=True)
             new_xp += points
             new_streak += 1
