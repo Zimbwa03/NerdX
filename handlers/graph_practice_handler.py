@@ -405,8 +405,12 @@ Study the question and when ready, click "Show Graph" to see the correct graph w
 
 💰 Credits Remaining: {get_user_credits(user_id)}"""
                 
+                # Convert local file path to public URL for WhatsApp
+                from utils.url_utils import convert_local_path_to_public_url
+                public_image_url = convert_local_path_to_public_url(graph_result['image_path'])
+                
                 # Send the graph image
-                self.whatsapp_service.send_image(user_id, graph_result['image_path'], success_msg)
+                self.whatsapp_service.send_image(user_id, public_image_url, success_msg)
                 
                 # Add navigation buttons
                 buttons = [
@@ -524,8 +528,12 @@ Wait {user_name} NerdX is processing your Graph...
 
 💰 Credits Remaining: {get_user_credits(user_id)}"""
                 
+                # Convert local file path to public URL for WhatsApp
+                from utils.url_utils import convert_local_path_to_public_url
+                public_image_url = convert_local_path_to_public_url(graph_result['image_path'])
+                
                 # Send the graph image
-                self.whatsapp_service.send_image(user_id, graph_result['image_path'], success_msg)
+                self.whatsapp_service.send_image(user_id, public_image_url, success_msg)
                 
                 # Add navigation buttons
                 buttons = [
@@ -595,7 +603,11 @@ Wait {user_name} NerdX is processing your Graph...
 
 💡 Study this graph pattern and characteristics!"""
                         
-                        self.whatsapp_service.send_image(user_id, graph_result['image_path'], caption)
+                        # Convert local file path to public URL for WhatsApp
+                        from utils.url_utils import convert_local_path_to_public_url
+                        public_image_url = convert_local_path_to_public_url(graph_result['image_path'])
+                        
+                        self.whatsapp_service.send_image(user_id, public_image_url, caption)
                     
                 except Exception as graph_error:
                     logger.error(f"Error generating sample graph {i} for {user_id}: {graph_error}")

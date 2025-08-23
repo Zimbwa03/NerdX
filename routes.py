@@ -1,5 +1,5 @@
 import logging
-from flask import request, jsonify
+from flask import request, jsonify, send_from_directory
 from app import app
 from api.webhook import webhook_bp
 from api.dashboard import dashboard_bp
@@ -11,6 +11,12 @@ logger = logging.getLogger(__name__)
 app.register_blueprint(webhook_bp, url_prefix='/webhook')
 app.register_blueprint(dashboard_bp, url_prefix='/api/dashboard')
 app.register_blueprint(admin_bp, url_prefix='/api/admin')
+
+# Add route to serve graph images for WhatsApp access
+@app.route('/static/graphs/<filename>')
+def serve_graph_image(filename):
+    """Serve graph images for WhatsApp access"""
+    return send_from_directory('static/graphs', filename)
 
 @app.route('/')
 def index():
