@@ -516,18 +516,76 @@ Ready for more learning?"""
             logger.error(f"Error processing custom graph input: {e}")
             return None
 
-    def _get_ai_explanation(self, prompt: str) -> str:
-        """Get AI explanation using DeepSeek"""
-        try:
-            # Use the question generator's AI to get explanation
-            ai_response = self.question_generator._send_api_request(prompt)
-            if ai_response and 'choices' in ai_response:
-                return ai_response['choices'][0]['message']['content']
-            else:
-                return self._get_fallback_explanation()
-        except Exception as e:
-            logger.error(f"Error getting AI explanation: {e}")
-            return self._get_fallback_explanation()
+    def _get_practice_problem(self, module_id: str) -> str:
+        """Get pre-built practice problem for specific module"""
+        practice_problems = {
+            "linear_functions": """📝 **Practice Problem: Linear Functions**
+
+**Problem:** A taxi company charges a base fee of $3 plus $2 per kilometer traveled.
+
+**Tasks:**
+1. Write the equation relating cost (C) to distance (d)
+2. Find the cost for a 15km journey
+3. What distance gives a cost of $25?
+
+**Solution Guide:**
+• Step 1: C = 3 + 2d (base fee + rate × distance)
+• Step 2: C = 3 + 2(15) = 3 + 30 = $33
+• Step 3: 25 = 3 + 2d → 22 = 2d → d = 11km
+
+**Graph Features:** y-intercept = 3, slope = 2, straight line""",
+            
+            "quadratic_functions": """📝 **Practice Problem: Quadratic Functions**
+
+**Problem:** A ball is thrown upward with initial velocity. Its height h (in meters) after t seconds is: h = -5t² + 20t + 2
+
+**Tasks:**
+1. Find the maximum height and when it occurs
+2. When does the ball hit the ground?
+3. What is the initial height?
+
+**Solution Guide:**
+• Maximum at t = -b/2a = -20/(-10) = 2 seconds
+• Maximum height: h = -5(4) + 20(2) + 2 = 22m
+• Ground: -5t² + 20t + 2 = 0 → t ≈ 4.1 seconds
+• Initial height: h(0) = 2m
+
+**Graph Features:** Parabola opening downward, vertex at (2, 22)""",
+            
+            "trigonometric_functions": """📝 **Practice Problem: Trigonometric Functions**
+
+**Problem:** The height of a Ferris wheel rider above ground is given by: h = 10 + 8sin(2πt/30)
+
+**Tasks:**
+1. What is the minimum and maximum height?
+2. How long does one complete rotation take?
+3. What height at t = 7.5 minutes?
+
+**Solution Guide:**
+• Maximum: 10 + 8 = 18m, Minimum: 10 - 8 = 2m
+• Period = 30 minutes (one rotation)
+• h(7.5) = 10 + 8sin(π/2) = 10 + 8 = 18m
+
+**Graph Features:** Sine wave, amplitude = 8, period = 30, vertical shift = 10""",
+            
+            "exponential_functions": """📝 **Practice Problem: Exponential Functions**
+
+**Problem:** A bacteria population doubles every 3 hours. Starting with 100 bacteria: P = 100 × 2^(t/3)
+
+**Tasks:**
+1. Find population after 6 hours
+2. When will population reach 1600?
+3. What was population 3 hours ago?
+
+**Solution Guide:**
+• After 6h: P = 100 × 2^(6/3) = 100 × 4 = 400 bacteria
+• For 1600: 1600 = 100 × 2^(t/3) → 16 = 2^(t/3) → t = 12 hours
+• 3h ago: P = 100 × 2^(-1) = 50 bacteria
+
+**Graph Features:** Exponential growth, starts at 100, increases rapidly"""
+        }
+        
+        return practice_problems.get(module_id, self._get_fallback_explanation())
 
     def _get_graph_explanation(self, user_input: str) -> str:
         """Get explanation for a specific graph"""
@@ -634,20 +692,8 @@ Ready to practice?"""
             registration = get_user_registration(user_id)
             user_name = registration['name'] if registration else "Student"
             
-            # Generate practice problem using AI
-            practice_prompt = f"""
-            Create a ZIMSEC O-Level practice problem for {module_info['title']}.
-            
-            Include:
-            1. A clear problem statement
-            2. Step-by-step solution approach
-            3. Final answer
-            4. Common mistakes to avoid
-            
-            Make it challenging but appropriate for O-Level students.
-            """
-            
-            problem_explanation = self._get_ai_explanation(practice_prompt)
+            # Use pre-built practice problems to avoid timeout issues
+            problem_explanation = self._get_practice_problem(module_id)
             
             message = f"""🎯 {module_info['title']} - Practice Problem
 
