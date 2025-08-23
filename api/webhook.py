@@ -1445,6 +1445,10 @@ def load_next_combined_question(user_id: str):
             image_caption = f"🖼️ **Combined Science Exam - Question Image**\n📖 Subject: {question_data.get('category', 'Combined Science')}\n📝 Topic: {question_data.get('topic', 'General')}"
             whatsapp_service.send_image(user_id, image_url, image_caption)
             
+            # Wait to ensure image appears first in chat
+            import time
+            time.sleep(2)
+            
             # Then send question text with options
             message = f"📚 **Combined Science Exam** 📚\n\n"
             message += f"❓ **Question:**\n{question_text_content}\n\n"
