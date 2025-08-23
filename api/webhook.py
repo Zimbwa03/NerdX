@@ -273,11 +273,24 @@ def handle_question_answer(user_id: str, answer: str):
             )
 
         # Update user stats
-        from database.external_db import update_user_stats
-        update_user_stats(
-            user_id, subject, topic, question_data.get('difficulty', 'medium'),
-            result['is_correct'] or False, result['points_awarded']
-        )
+        from database.external_db import update_user_stats, get_user_stats
+        current_stats = get_user_stats(user_id)
+        if current_stats:
+            new_total_attempts = current_stats.get('total_attempts', 0) + 1
+            new_correct_answers = current_stats.get('correct_answers', 0) + (1 if result['is_correct'] else 0)
+            
+            stats_updates = {
+                'total_attempts': new_total_attempts,
+                'correct_answers': new_correct_answers
+            }
+            
+            if result['is_correct']:
+                new_xp = current_stats.get('xp_points', 0) + result['points_awarded']
+                new_level = max(1, (new_xp // 100) + 1)
+                stats_updates['xp_points'] = new_xp
+                stats_updates['level'] = new_level
+            
+            update_user_stats(user_id, stats_updates)
 
         # Clear question session
         session_manager.clear_question_session(user_id)
