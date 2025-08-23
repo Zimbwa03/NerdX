@@ -247,18 +247,44 @@ Ready to boost your reading skills? 🚀"""
                 logger.error("Invalid passage data structure")
                 return
             
-            # Send the long passage first as separate message
-            passage_message = f"""📖 **{passage.get('title', 'Comprehension Passage')}**
+            # Send the long passage first as separate message with length check
+            passage_text = passage.get('text', 'Passage content not available')
+            passage_title = passage.get('title', 'Comprehension Passage')
+            word_count = passage.get('word_count', len(passage_text.split()))
+            reading_time = max(2, len(passage_text.split()) // 200)
+            
+            # Check if message is too long for WhatsApp (4096 char limit)
+            full_message = f"""📖 **{passage_title}**
 
-{passage.get('text', 'Passage content not available')}
+{passage_text}
 
 ---
-📊 **Word Count:** {passage.get('word_count', len(passage.get('text', '').split()))} words
-⏱️ **Reading Time:** ~{max(2, len(passage.get('text', '').split()) // 200)} minutes
+📊 **Word Count:** {word_count} words
+⏱️ **Reading Time:** ~{reading_time} minutes
 
 *Read the passage carefully and answer ALL questions that follow.*"""
-
-            self.whatsapp_service.send_message(user_id, passage_message)
+            
+            if len(full_message) > 4000:  # WhatsApp limit with safety margin
+                # Send title and intro first
+                title_message = f"📖 **{passage_title}**\n\n📊 **Word Count:** {word_count} words\n⏱️ **Reading Time:** ~{reading_time} minutes\n\n*Read carefully - passage follows:*"
+                self.whatsapp_service.send_message(user_id, title_message)
+                
+                # Split passage text into chunks
+                chunks = self._split_text(passage_text, 3000)  # Leave room for formatting
+                for i, chunk in enumerate(chunks):
+                    chunk_message = f"**Part {i+1}:**\n\n{chunk}"
+                    if i == len(chunks) - 1:  # Last chunk
+                        chunk_message += "\n\n---\n*Now answer ALL questions that follow.*"
+                    self.whatsapp_service.send_message(user_id, chunk_message)
+            else:
+                # Send as single message if within limit
+                try:
+                    self.whatsapp_service.send_message(user_id, full_message)
+                except Exception as e:
+                    logger.error(f"Error sending passage message: {e}")
+                    # Send fallback shorter message
+                    fallback_message = f"📖 **{passage_title}**\n\n{passage_text[:2000]}...\n\n*Passage continues - please read carefully and answer the questions below.*"
+                    self.whatsapp_service.send_message(user_id, fallback_message)
             
             # Format and send 10 questions with Show Answer button
             questions_message = f"""📝 **COMPREHENSION QUESTIONS**
@@ -364,6 +390,45 @@ Great job on completing your comprehension practice! 📚✨"""
         except Exception as e:
             logger.error(f"Error showing comprehension answers for {user_id}: {e}")
             self.whatsapp_service.send_message(user_id, "❌ Error showing answers. Please try again.")
+    
+    def _split_text(self, text: str, max_length: int = 3000) -> list:
+        """Split long text into chunks that fit WhatsApp message limits"""
+        if len(text) <= max_length:
+            return [text]
+        
+        chunks = []
+        paragraphs = text.split('\n\n')
+        current_chunk = ""
+        
+        for paragraph in paragraphs:
+            # If adding this paragraph would exceed limit, start new chunk
+            if len(current_chunk) + len(paragraph) + 2 > max_length:
+                if current_chunk:
+                    chunks.append(current_chunk.strip())
+                    current_chunk = paragraph
+                else:
+                    # Single paragraph is too long, split by sentences
+                    sentences = paragraph.split('. ')
+                    temp_chunk = ""
+                    for sentence in sentences:
+                        if len(temp_chunk) + len(sentence) + 2 > max_length:
+                            if temp_chunk:
+                                chunks.append(temp_chunk.strip() + ".")
+                                temp_chunk = sentence
+                            else:
+                                # Single sentence too long, hard split
+                                chunks.append(sentence[:max_length])
+                                temp_chunk = sentence[max_length:]
+                        else:
+                            temp_chunk += sentence + ". "
+                    current_chunk = temp_chunk.strip()
+            else:
+                current_chunk += "\n\n" + paragraph if current_chunk else paragraph
+        
+        if current_chunk:
+            chunks.append(current_chunk.strip())
+        
+        return chunks
 
     def handle_essay_writing(self, user_id: str):
         """Handle essay writing module"""

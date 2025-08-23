@@ -19,8 +19,13 @@ class WhatsAppService:
             raise ValueError("Missing required WhatsApp configuration")
     
     def send_message(self, to: str, message: str) -> bool:
-        """Send a text message to a WhatsApp user"""
+        """Send a text message to a WhatsApp user with enhanced error handling"""
         try:
+            # Check message length and truncate if needed
+            if len(message) > 4096:
+                logger.warning(f"Message too long ({len(message)} chars), truncating")
+                message = message[:4090] + "..."
+            
             url = f"{self.base_url}/{self.phone_number_id}/messages"
             headers = {
                 'Authorization': f'Bearer {self.access_token}',
@@ -34,7 +39,7 @@ class WhatsAppService:
                 'text': {'body': message}
             }
             
-            response = requests.post(url, headers=headers, json=data, timeout=30)
+            response = requests.post(url, headers=headers, json=data, timeout=15)  # Reduced timeout
             
             if response.status_code == 200:
                 logger.info(f"Message sent successfully to {to}")
@@ -43,6 +48,12 @@ class WhatsAppService:
                 logger.error(f"Failed to send message: {response.status_code} - {response.text}")
                 return False
                 
+        except requests.exceptions.Timeout:
+            logger.error(f"WhatsApp API timeout for {to}")
+            return False
+        except requests.exceptions.ConnectionError:
+            logger.error(f"Connection error to WhatsApp API for {to}")
+            return False
         except Exception as e:
             logger.error(f"Error sending WhatsApp message: {e}")
             return False
