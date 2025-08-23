@@ -87,7 +87,7 @@ class MathematicsHandler:
                 message = "⏳ You already have an active math question session. Please complete your current question first or type 'cancel' to reset."
                 
                 buttons = [
-                    {"text": "❌ Cancel Session", "callback_data": f"math_cancel_session_{topic}_{difficulty}"},
+                    {"text": "❌ Cancel", "callback_data": f"math_cancel_session_{topic}_{difficulty}"},
                     {"text": "🏠 Main Menu", "callback_data": "main_menu"}
                 ]
                 
@@ -285,7 +285,7 @@ class MathematicsHandler:
 
             # Create answer buttons for common responses
             buttons = [
-                {"text": "💡 Show Solution", "callback_data": f"math_show_solution_{user_id}"},
+                {"text": "💡 Show Solution", "callback_data": f"math_show_solution_{topic.lower().replace(' ', '_')}"},
                 {"text": "🏠 Main Menu", "callback_data": "main_menu"}
             ]
             
@@ -424,6 +424,7 @@ class MathematicsHandler:
             # Get question data
             question_data = json.loads(session_data.get('question_data', '{}'))
             difficulty = session_data.get('difficulty')
+            topic = session_data.get('topic')
             
             # Get hint from AI
             hint = self.math_solver.get_hint(question_data['question'], difficulty)
@@ -436,7 +437,7 @@ class MathematicsHandler:
             
             # Add Show Solution button to hint message
             buttons = [
-                {"text": "💡 Show Solution", "callback_data": f"math_show_solution_{user_id}"}
+                {"text": "💡 Show Solution", "callback_data": f"math_show_solution_{topic.lower().replace(' ', '_')}"}
             ]
             
             self.whatsapp_service.send_interactive_message(user_id, hint_message, buttons)

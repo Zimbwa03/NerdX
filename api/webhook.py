@@ -683,6 +683,9 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         elif selection_id.startswith('math_show_solution_'):
             # Handle show solution request
             mathematics_handler.handle_show_solution(user_id)
+        elif selection_id.startswith('math_hint_'):
+            # Handle hint request  
+            mathematics_handler.handle_hint_request(user_id)
         elif selection_id.startswith('math_cancel_session_'):
             # Handle session cancellation
             parts = selection_id.replace('math_cancel_session_', '').split('_')
