@@ -683,6 +683,15 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         elif selection_id.startswith('math_show_solution_'):
             # Handle show solution request
             mathematics_handler.handle_show_solution(user_id)
+        elif selection_id.startswith('math_cancel_session_'):
+            # Handle session cancellation
+            parts = selection_id.replace('math_cancel_session_', '').split('_')
+            if len(parts) >= 2:
+                topic = '_'.join(parts[:-1])  # All parts except last
+                difficulty = parts[-1]  # Last part is difficulty
+                mathematics_handler.handle_cancel_session(user_id, topic, difficulty)
+            else:
+                mathematics_handler.handle_cancel_session(user_id, '', 'medium')
         elif selection_id == 'math_topical_questions':
             # Handle topical questions - transfer existing mathematics topic functionality
             mathematics_handler.handle_mathematics_main_menu(user_id)

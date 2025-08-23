@@ -83,10 +83,15 @@ class MathematicsHandler:
             # Check if user already has an active math question session
             existing_session = get_user_session(user_id)
             if existing_session and existing_session.get('session_type') == 'math_question':
-                self.whatsapp_service.send_message(
-                    user_id, 
-                    "⏳ You already have an active math question. Please answer the current question or type 'cancel' to start over."
-                )
+                # Send message with cancel button
+                message = "⏳ You already have an active math question session. Please complete your current question first or type 'cancel' to reset."
+                
+                buttons = [
+                    {"text": "❌ Cancel Session", "callback_data": f"math_cancel_session_{topic}_{difficulty}"},
+                    {"text": "🏠 Main Menu", "callback_data": "main_menu"}
+                ]
+                
+                self.whatsapp_service.send_interactive_message(user_id, message, buttons)
                 return
             
             # Format topic name
@@ -280,7 +285,7 @@ class MathematicsHandler:
 
             # Create answer buttons for common responses
             buttons = [
-                {"text": "💡 Get Hint", "callback_data": f"math_hint_{user_id}"},
+                {"text": "💡 Show Solution", "callback_data": f"math_show_solution_{user_id}"},
                 {"text": "🏠 Main Menu", "callback_data": "main_menu"}
             ]
             
@@ -349,7 +354,7 @@ class MathematicsHandler:
             
             buttons = [
                 {"text": "➡️ Next Question", "callback_data": f"math_question_{topic_encoded}_{difficulty}"},
-                {"text": "📚 Change Topic", "callback_data": "mathematics_mcq"},
+                {"text": "📚 Change Topic", "callback_data": "math_topical_questions"},
                 {"text": "🏠 Main Menu", "callback_data": "main_menu"}
             ]
             
@@ -391,7 +396,7 @@ class MathematicsHandler:
             topic_encoded = (topic or '').lower().replace(' ', '_')
             buttons = [
                 {"text": "➡️ Next Question", "callback_data": f"math_question_{topic_encoded}_{difficulty}"},
-                {"text": "📚 Change Topic", "callback_data": "mathematics_mcq"},
+                {"text": "📚 Change Topic", "callback_data": "math_topical_questions"},
                 {"text": "🏠 Main Menu", "callback_data": "main_menu"}
             ]
             
@@ -439,5 +444,33 @@ class MathematicsHandler:
         except Exception as e:
             logger.error(f"Error handling hint request for {user_id}: {e}")
             self.whatsapp_service.send_message(user_id, "💡 Take your time and work through each step carefully!")
+
+    def handle_cancel_session(self, user_id: str, topic: str, difficulty: str):
+        """Handle session cancellation and offer to continue with new question"""
+        try:
+            from database.session_db import clear_user_session
+            
+            # Clear the session
+            clear_user_session(user_id)
+            
+            # Format topic name
+            formatted_topic = self.mathematics_service.format_topic_name(topic)
+            
+            # Send confirmation message with continue option
+            message = "✅ Session cancelled. You can now start a new question."
+            
+            buttons = [
+                {"text": "▶️ Continue", "callback_data": f"math_question_{topic}_{difficulty}"},
+                {"text": "📚 Change Topic", "callback_data": "mathematics_mcq"},
+                {"text": "🏠 Main Menu", "callback_data": "main_menu"}
+            ]
+            
+            self.whatsapp_service.send_interactive_message(user_id, message, buttons)
+            
+            logger.info(f"Cancelled math session for {user_id}")
+            
+        except Exception as e:
+            logger.error(f"Error handling session cancellation for {user_id}: {e}")
+            self.whatsapp_service.send_message(user_id, "✅ Session cancelled. You can now start a new question.")
 
     
