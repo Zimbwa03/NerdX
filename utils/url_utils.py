@@ -1,71 +1,58 @@
 import os
 from urllib.parse import urljoin
-
-def convert_local_path_to_public_url(local_file_path: str) -> str:
-    """Convert a local file path to a publicly accessible URL for WhatsApp"""
-    try:
-        # Get the base URL for this Replit
-        base_url = os.environ.get('REPL_SLUG', 'localhost')
-        if not base_url.startswith('http'):
-            base_url = f'https://{base_url}.replit.dev'
-        
-        # Extract filename from path
-        if '/' in local_file_path:
-            # Handle paths like "static/graphs/filename.png"
-            path_parts = local_file_path.split('/')
-            if 'static' in path_parts and 'graphs' in path_parts:
-                filename = os.path.basename(local_file_path)
-                public_url = urljoin(base_url, f'/static/graphs/{filename}')
-                return public_url
-        
-        # Fallback: assume it's just a filename in static/graphs
-        filename = os.path.basename(local_file_path)
-        public_url = urljoin(base_url, f'/static/graphs/{filename}')
-        return public_url
-        
-    except Exception as e:
-        # If URL conversion fails, return original path as fallback
-        return local_file_path
-import os
 import logging
 from config import Config
 
 logger = logging.getLogger(__name__)
 
 def convert_local_path_to_public_url(local_path: str) -> str:
-    """Convert a local file path to a public URL that can be accessed via WhatsApp"""
+    """Convert a local file path to a public URL accessible by WhatsApp"""
     try:
-        # Get the base URL from config or use default
-        base_url = getattr(Config, 'BASE_URL', 'https://your-app-name.replit.app')
-        
-        # Remove leading 'static/' if present since we'll serve from /static/
-        if local_path.startswith('static/'):
-            relative_path = local_path[7:]  # Remove 'static/'
-        else:
-            relative_path = local_path
-            
-        # Construct the public URL
-        public_url = f"{base_url}/static/{relative_path}"
-        
-        logger.info(f"Converted local path '{local_path}' to public URL '{public_url}'")
+        # Ensure the path is relative to the project root
+        if local_path.startswith('./'):
+            local_path = local_path[2:]
+        elif local_path.startswith('/home/runner/workspace/'):
+            # Convert absolute Replit path to relative
+            local_path = local_path.replace('/home/runner/workspace/', '')
+        elif local_path.startswith('/'):
+            # Remove leading slash for relative path
+            local_path = local_path[1:]
+
+        # Get the base URL from config or use default Replit URL
+        base_url = getattr(Config, 'BASE_URL', None)
+        if not base_url:
+            # Default Replit URL format
+            repl_name = os.environ.get('REPL_SLUG', 'your-repl')
+            repl_owner = os.environ.get('REPL_OWNER', 'your-username')
+            if repl_name and repl_owner:
+                base_url = f"https://{repl_name}.{repl_owner}.repl.co"
+            else:
+                # Fallback to current domain
+                base_url = "https://0.0.0.0:5000"
+
+        # Construct the full public URL
+        public_url = f"{base_url}/{local_path}"
+
+        logger.info(f"Converted local path '{local_path}' to public URL: {public_url}")
         return public_url
-        
+
     except Exception as e:
         logger.error(f"Error converting local path to public URL: {e}")
-        return local_path
+        # Return a fallback URL
+        return f"https://example.com/{local_path}"
 
 def get_static_file_url(filename: str, subfolder: str = '') -> str:
     """Get a public URL for a static file"""
     try:
         base_url = getattr(Config, 'BASE_URL', 'https://your-app-name.replit.app')
-        
+
         if subfolder:
             url = f"{base_url}/static/{subfolder}/{filename}"
         else:
             url = f"{base_url}/static/{filename}"
-            
+
         return url
-        
+
     except Exception as e:
         logger.error(f"Error getting static file URL: {e}")
         return filename

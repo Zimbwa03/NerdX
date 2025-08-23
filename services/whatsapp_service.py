@@ -381,13 +381,25 @@ class WhatsAppService:
     def send_image_file(self, to: str, file_path: str, caption: str = "") -> bool:
         """Send an image from a local file path by converting it to a public URL"""
         try:
+            import os
             from utils.url_utils import convert_local_path_to_public_url
+            
+            # Check if file exists
+            if not os.path.exists(file_path):
+                logger.error(f"Image file does not exist: {file_path}")
+                return False
             
             # Convert local file path to public URL
             public_url = convert_local_path_to_public_url(file_path)
+            logger.info(f"Converted {file_path} to public URL: {public_url}")
             
             # Send the image using the public URL
-            return self.send_image(to, public_url, caption)
+            result = self.send_image(to, public_url, caption)
+            if result:
+                logger.info(f"Successfully sent image file {file_path} to {to}")
+            else:
+                logger.error(f"Failed to send image file {file_path} to {to}")
+            return result
                 
         except Exception as e:
             logger.error(f"Error sending image file {file_path}: {e}")

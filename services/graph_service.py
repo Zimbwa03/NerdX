@@ -760,7 +760,13 @@ class GraphService:
                        facecolor='white', edgecolor='none')
             plt.close(fig)
             
-            logger.info(f"✅ Matplotlib graph created successfully: {filepath}")
+            # Verify file was created
+            if os.path.exists(filepath):
+                file_size = os.path.getsize(filepath)
+                logger.info(f"✅ Matplotlib graph created successfully: {filepath} (size: {file_size} bytes)")
+            else:
+                logger.error(f"❌ Graph file not created: {filepath}")
+                return None
             
             # Return in expected format
             return {

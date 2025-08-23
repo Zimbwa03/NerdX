@@ -524,12 +524,11 @@ Wait {user_name} NerdX is processing your Graph...
 
 💰 Credits Remaining: {get_user_credits(user_id)}"""
 
-                # Convert local file path to public URL for WhatsApp
-                from utils.url_utils import convert_local_path_to_public_url
-                public_image_url = convert_local_path_to_public_url(graph_result['image_path'])
-
-                # Send the graph image
-                self.whatsapp_service.send_image(user_id, public_image_url, success_msg)
+                # Send the graph image using send_image_file method
+                success = self.whatsapp_service.send_image_file(user_id, graph_result['image_path'], success_msg)
+                if not success:
+                    logger.error(f"Failed to send custom graph to WhatsApp for user {user_id}")
+                    self.whatsapp_service.send_message(user_id, "❌ Graph created but failed to send. Please try again.")
 
                 # Add navigation buttons
                 buttons = [
@@ -621,11 +620,11 @@ Wait {user_name} NerdX is processing your Graph...
 
 💡 Study the shaded region and constraint boundaries!"""
 
-                            # Convert local file path to public URL for WhatsApp
-                            from utils.url_utils import convert_local_path_to_public_url
-                            public_image_url = convert_local_path_to_public_url(graph_result['image_path'])
-
-                            self.whatsapp_service.send_image(user_id, public_image_url, caption)
+                            # Use send_image_file method which handles file paths properly
+                            success = self.whatsapp_service.send_image_file(user_id, graph_result['image_path'], caption)
+                            if not success:
+                                logger.error(f"Failed to send LP graph {i} to WhatsApp for user {user_id}")
+                                self.whatsapp_service.send_message(user_id, f"⚠️ Linear programming example {i} failed to send.")
 
                     except Exception as graph_error:
                         logger.error(f"Error generating LP sample graph {i} for {user_id}: {graph_error}")
@@ -652,7 +651,11 @@ Wait {user_name} NerdX is processing your Graph...
 
 💡 Study this graph pattern and characteristics!"""
 
-                            self.whatsapp_service.send_image_file(user_id, graph_result['image_path'], caption)
+                            # Use send_image_file method which handles file paths properly
+                            success = self.whatsapp_service.send_image_file(user_id, graph_result['image_path'], caption)
+                            if not success:
+                                logger.error(f"Failed to send sample graph {i} to WhatsApp for user {user_id}")
+                                self.whatsapp_service.send_message(user_id, f"⚠️ Sample graph {i} failed to send.")
 
                     except Exception as graph_error:
                         logger.error(f"Error generating sample graph {i} for {user_id}: {graph_error}")
