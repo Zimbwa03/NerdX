@@ -1359,3 +1359,11 @@ Ready to practice?"""
         except Exception as graph_error:
             logger.error(f"Error in graph practice handler: {graph_error}")
             self.whatsapp_service.send_message(user_id, "❌ Error processing graph request. Please try again.")
+
+    def _get_ai_explanation(self, prompt: str) -> str:
+        """
+        Placeholder for fetching explanation from an AI model.
+        In a real implementation, this would call an LLM API.
+        """
+        # Simulate AI response
+        return f"This is a comprehensive explanation for ZIMSEC O-Level graphs based on your prompt: '{prompt}'.\n\nKey concepts, characteristics, problem-solving steps, and common mistakes are covered here to help you master this topic."

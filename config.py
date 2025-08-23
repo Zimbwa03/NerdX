@@ -7,7 +7,7 @@ class Config:
     DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY')
     GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
     DESMOS_API_KEY = os.getenv('DESMOS_API_KEY')
-    
+
     # Base URL for public file access
     BASE_URL = os.getenv('BASE_URL')
 
@@ -46,6 +46,18 @@ class Config:
     # AI API timeouts and retries
     AI_REQUEST_TIMEOUT = [30, 45, 60]
     AI_MAX_RETRIES = 3
+
+    # Enhanced Learning Features
+    ENGLISH_AI_MODEL = os.getenv('ENGLISH_AI_MODEL', 'gemini-1.5-flash')
+    MATHEMATICS_AI_MODEL = os.getenv('MATHEMATICS_AI_MODEL', 'deepseek-chat')
+
+    # Audio Processing
+    AUDIO_MODEL = os.getenv('AUDIO_MODEL', 'whisper-1')
+    TTS_MODEL = os.getenv('TTS_MODEL', 'tts-1')
+    TTS_VOICE = os.getenv('TTS_VOICE', 'alloy')
+
+    # Image Hosting
+    IMGBB_API_KEY = os.getenv('IMGBB_API_KEY')
 
     @classmethod
     def validate_config(cls):

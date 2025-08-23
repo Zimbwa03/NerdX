@@ -379,26 +379,34 @@ class WhatsAppService:
             return False
 
     def send_image_file(self, to: str, file_path: str, caption: str = "") -> bool:
-        """Send an image from a local file path by converting it to a public URL"""
+        """Send an image from a local file path using ImgBB hosting"""
         try:
             import os
             import requests
-            from utils.url_utils import convert_local_path_to_public_url
+            from services.image_hosting_service import ImageHostingService
             
             # Check if file exists
             if not os.path.exists(file_path):
                 logger.error(f"Image file does not exist: {file_path}")
                 return False
             
-            # Convert local file path to public URL
-            public_url = convert_local_path_to_public_url(file_path)
-            logger.info(f"Converted {file_path} to public URL: {public_url}")
+            # Use ImgBB to host the image
+            hosting_service = ImageHostingService()
+            public_url = hosting_service.upload_image_with_fallback(file_path)
+            
+            if not public_url:
+                logger.error(f"Failed to get public URL for {file_path}")
+                return False
+            
+            logger.info(f"Got public URL for {file_path}: {public_url}")
             
             # Test if the URL is accessible
             try:
                 test_response = requests.head(public_url, timeout=10)
                 if test_response.status_code != 200:
                     logger.warning(f"Public URL not accessible: {test_response.status_code}")
+                else:
+                    logger.info(f"Public URL is accessible: {test_response.status_code}")
             except Exception as url_test_error:
                 logger.warning(f"Could not test URL accessibility: {url_test_error}")
             
