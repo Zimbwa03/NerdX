@@ -23,6 +23,10 @@ class GraphService:
 
     def __init__(self):
         self.desmos_api_key = Config.DESMOS_API_KEY
+        self.temp_dir = os.path.join('static', 'graphs')
+        
+        # Ensure temp directory exists
+        os.makedirs(self.temp_dir, exist_ok=True)
 
         # Set professional matplotlib style for ZIMSEC educational graphs
         plt.style.use('seaborn-v0_8') if 'seaborn-v0_8' in plt.style.available else plt.style.use('default')
@@ -668,6 +672,11 @@ class GraphService:
 
             logger.info(f"✅ Advanced graph created successfully: {save_path}")
             return save_path
+
+        except Exception as e:
+            logger.error(f"Error creating advanced function graph: {str(e)}")
+            plt.close('all')
+            return None
 
     def create_graph(self, graph_type: str, title: str = None, **kwargs) -> str:
         """Create a graph based on type and return the file path"""
