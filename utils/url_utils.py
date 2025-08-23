@@ -18,17 +18,24 @@ def convert_local_path_to_public_url(local_path: str) -> str:
             # Remove leading slash for relative path
             local_path = local_path[1:]
 
-        # Get the base URL from config or use default Replit URL
+        # Get the base URL from config or use Replit's public URL
         base_url = getattr(Config, 'BASE_URL', None)
         if not base_url:
-            # Default Replit URL format
-            repl_name = os.environ.get('REPL_SLUG', 'your-repl')
-            repl_owner = os.environ.get('REPL_OWNER', 'your-username')
-            if repl_name and repl_owner:
-                base_url = f"https://{repl_name}.{repl_owner}.repl.co"
+            # Try to get the Replit URL from environment variables
+            repl_slug = os.environ.get('REPL_SLUG')
+            repl_owner = os.environ.get('REPL_OWNER')
+            
+            if repl_slug and repl_owner:
+                # Use the standard Replit domain format
+                base_url = f"https://{repl_slug}-{repl_owner}.replit.app"
             else:
-                # Fallback to current domain
-                base_url = "https://0.0.0.0:5000"
+                # Fallback: try to construct from REPLIT_URL
+                replit_url = os.environ.get('REPLIT_URL')
+                if replit_url:
+                    base_url = replit_url.rstrip('/')
+                else:
+                    # Last resort: use the workspace URL pattern
+                    base_url = "https://workspace.privilegemutsam.repl.co"
 
         # Construct the full public URL
         public_url = f"{base_url}/{local_path}"
@@ -38,8 +45,8 @@ def convert_local_path_to_public_url(local_path: str) -> str:
 
     except Exception as e:
         logger.error(f"Error converting local path to public URL: {e}")
-        # Return a fallback URL
-        return f"https://example.com/{local_path}"
+        # Return a fallback URL using the workspace pattern
+        return f"https://workspace.privilegemutsam.repl.co/{local_path}"
 
 def get_static_file_url(filename: str, subfolder: str = '') -> str:
     """Get a public URL for a static file"""

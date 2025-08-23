@@ -382,6 +382,7 @@ class WhatsAppService:
         """Send an image from a local file path by converting it to a public URL"""
         try:
             import os
+            import requests
             from utils.url_utils import convert_local_path_to_public_url
             
             # Check if file exists
@@ -392,6 +393,14 @@ class WhatsAppService:
             # Convert local file path to public URL
             public_url = convert_local_path_to_public_url(file_path)
             logger.info(f"Converted {file_path} to public URL: {public_url}")
+            
+            # Test if the URL is accessible
+            try:
+                test_response = requests.head(public_url, timeout=10)
+                if test_response.status_code != 200:
+                    logger.warning(f"Public URL not accessible: {test_response.status_code}")
+            except Exception as url_test_error:
+                logger.warning(f"Could not test URL accessibility: {url_test_error}")
             
             # Send the image using the public URL
             result = self.send_image(to, public_url, caption)

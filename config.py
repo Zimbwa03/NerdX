@@ -7,6 +7,9 @@ class Config:
     DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY')
     GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
     DESMOS_API_KEY = os.getenv('DESMOS_API_KEY')
+    
+    # Base URL for public file access
+    BASE_URL = os.getenv('BASE_URL')
 
     # WhatsApp API configuration
     WHATSAPP_ACCESS_TOKEN = os.getenv('WHATSAPP_ACCESS_TOKEN')
