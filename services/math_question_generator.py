@@ -35,33 +35,43 @@ class MathQuestionGenerator:
             # Create comprehensive prompt for DeepSeek AI
             prompt = self._create_question_prompt(subject, topic, difficulty)
 
-            # Reduced timeout and attempts for faster response
-            timeout = 5  # Shorter timeout to prevent worker timeouts
-            max_attempts = 1  # Single attempt to prevent blocking
+            # Optimized timeout settings for better success rate
+            timeouts = [15, 20]  # Increased timeouts for better API success
+            max_attempts = 2     # Two attempts with different timeouts
 
-            logger.info(f"AI API attempt 1/{max_attempts} (timeout: {timeout}s)")
+            for attempt in range(max_attempts):
+                timeout = timeouts[min(attempt, len(timeouts) - 1)]
+                logger.info(f"AI API attempt {attempt + 1}/{max_attempts} (timeout: {timeout}s)")
 
-            try:
-                # Make single request to DeepSeek AI with short timeout
-                response = self._send_api_request(prompt, timeout)
+                try:
+                    # Make request to DeepSeek AI with progressive timeout
+                    response = self._send_api_request(prompt, timeout)
 
-                if response:
-                    # Validate and format response
-                    question_data = self._validate_and_format_question(response, subject, topic, difficulty)
-                    if question_data:
-                        logger.info(f"Successfully generated question for {subject}/{topic}")
-                        return question_data
+                    if response:
+                        # Validate and format response
+                        question_data = self._validate_and_format_question(response, subject, topic, difficulty)
+                        if question_data:
+                            logger.info(f"✅ Successfully generated question for {subject}/{topic} on attempt {attempt + 1}")
+                            return question_data
 
-            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
-                logger.warning(f"AI API connection error: {e}")
-                # Immediately fall back - no retries to prevent worker timeout
+                except requests.exceptions.Timeout:
+                    logger.warning(f"AI API timeout on attempt {attempt + 1}/{max_attempts} (waited {timeout}s)")
+                    if attempt < max_attempts - 1:
+                        time.sleep(1)  # Brief wait before retry
+                    continue
 
-            except Exception as e:
-                logger.error(f"AI API error: {e}")
-                # Immediately fall back - no retries to prevent worker timeout
+                except requests.exceptions.ConnectionError as e:
+                    logger.warning(f"AI API connection error on attempt {attempt + 1}/{max_attempts}: {e}")
+                    if attempt < max_attempts - 1:
+                        time.sleep(1)  # Brief wait before retry
+                    continue
 
-            # AI failed, return None for immediate fallback
-            logger.warning("AI API failed, using fallback")
+                except Exception as e:
+                    logger.error(f"AI API error on attempt {attempt + 1}: {e}")
+                    break  # Don't retry on other errors
+
+            # All attempts failed, return None for immediate fallback
+            logger.warning("All AI API attempts failed, using fallback")
             return None
 
         except Exception as e:
