@@ -377,6 +377,21 @@ class WhatsAppService:
         except Exception as e:
             logger.error(f"Error sending WhatsApp image: {e}")
             return False
+
+    def send_image_file(self, to: str, file_path: str, caption: str = "") -> bool:
+        """Send an image from a local file path by converting it to a public URL"""
+        try:
+            from utils.url_utils import convert_local_path_to_public_url
+            
+            # Convert local file path to public URL
+            public_url = convert_local_path_to_public_url(file_path)
+            
+            # Send the image using the public URL
+            return self.send_image(to, public_url, caption)
+                
+        except Exception as e:
+            logger.error(f"Error sending image file {file_path}: {e}")
+            return False
     
     def verify_webhook(self, mode: str, token: str, challenge: str) -> Optional[str]:
         """Verify webhook for WhatsApp"""
