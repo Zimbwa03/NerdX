@@ -30,7 +30,6 @@ TOPICS = {
         "Sets",
         "Financial Mathematics",
         "Measures and Mensuration",
-        "Graphs",
         "Variation",
         "Algebra",
         "Geometry",

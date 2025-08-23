@@ -799,7 +799,7 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             whatsapp_service.send_message(user_id, "📝 Math Exam feature coming soon!")
         elif selection_id == 'math_graph_practices':
             # Handle graph practices
-            whatsapp_service.send_message(user_id, "📊 Graph Practices feature coming soon!")
+            graph_practice_handler.handle_graph_practice_start(user_id)
         elif selection_id.startswith('math_'):
             # Handle any other math menu selections (fallback)
             math_action = selection_id.replace('math_', '')
