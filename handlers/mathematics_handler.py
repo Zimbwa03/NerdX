@@ -114,10 +114,30 @@ class MathematicsHandler:
             
             # Generate question using DeepSeek AI
             logger.info(f"Generating math question: Mathematics/{formatted_topic}/{difficulty}")
-            question_data = self.question_generator.generate_question("Mathematics", formatted_topic, difficulty)
-            
-            if not question_data:
-                self.whatsapp_service.send_message(user_id, "❌ Error generating question. Please try again.")
+            try:
+                question_data = self.question_generator.generate_question("Mathematics", formatted_topic, difficulty)
+                
+                if not question_data:
+                    logger.error("Question generator returned None, using fallback")
+                    # Send error message and return early to prevent loops
+                    self.whatsapp_service.send_message(
+                        user_id, 
+                        "❌ Unable to generate question at this time. Our AI service is experiencing delays. Please try again in a few minutes.\n\n💳 Your credits have been refunded."
+                    )
+                    # Refund credits
+                    from database.external_db import add_credits
+                    add_credits(user_id, credit_cost, 'refund', f'Refund for failed {difficulty} Mathematics question')
+                    return
+                    
+            except Exception as e:
+                logger.error(f"Exception during question generation: {e}")
+                self.whatsapp_service.send_message(
+                    user_id, 
+                    "❌ Service temporarily unavailable. Please try again in a few minutes.\n\n💳 Your credits have been refunded."
+                )
+                # Refund credits
+                from database.external_db import add_credits
+                add_credits(user_id, credit_cost, 'refund', f'Refund for failed {difficulty} Mathematics question')
                 return
             
             # Send question to user

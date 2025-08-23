@@ -23,9 +23,9 @@ class MathQuestionGenerator:
         self.api_url = 'https://api.deepseek.com/chat/completions'
         
         # Rate limiting parameters
-        self.max_retries = 5
-        self.base_timeout = 10
-        self.retry_delay = 1
+        self.max_retries = 3
+        self.base_timeout = 30
+        self.retry_delay = 2
         
     def generate_question(self, subject: str, topic: str, difficulty: str) -> Optional[Dict]:
         """Generate a mathematics question using DeepSeek AI"""
@@ -194,7 +194,7 @@ Generate your ZIMSEC-standard {difficulty} {subject} question on {topic} now:"""
 
         for attempt in range(self.max_retries):
             try:
-                timeout = self.base_timeout + (attempt * 2)
+                timeout = self.base_timeout + (attempt * 5)
                 logger.info(f"AI API attempt {attempt + 1}/{self.max_retries} (timeout: {timeout}s)")
                 
                 response = requests.post(
@@ -225,26 +225,30 @@ Generate your ZIMSEC-standard {difficulty} {subject} question on {topic} now:"""
                     logger.error(f"AI API error: {response.status_code} - {response.text}")
                     
             except requests.exceptions.Timeout:
-                logger.warning(f"AI API timeout on attempt {attempt + 1}/{self.max_retries}")
+                logger.warning(f"AI API timeout on attempt {attempt + 1}/{self.max_retries} (waited {timeout}s)")
                 if attempt < self.max_retries - 1:
                     time.sleep(self.retry_delay)
+                continue
                     
             except requests.exceptions.ConnectionError as e:
                 logger.warning(f"AI API connection error: {e}")
                 if attempt < self.max_retries - 1:
                     time.sleep(self.retry_delay)
+                continue
                     
             except json.JSONDecodeError as e:
                 logger.error(f"Failed to parse JSON from AI response: {e}")
                 if attempt < self.max_retries - 1:
                     time.sleep(self.retry_delay)
+                continue
                     
             except Exception as e:
                 logger.error(f"AI API error on attempt {attempt + 1}: {e}")
                 if attempt < self.max_retries - 1:
                     time.sleep(self.retry_delay)
+                continue
 
-        logger.error("All AI API attempts failed")
+        logger.error("All AI API attempts failed, returning None for fallback")
         return None
 
     def _validate_and_format_question(self, question_data: Dict, subject: str, topic: str, difficulty: str) -> Dict:
