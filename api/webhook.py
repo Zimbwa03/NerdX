@@ -479,21 +479,20 @@ def send_main_menu(user_id: str, user_name: str = None):
         if current_credits < 20:  # Low credits - emphasize buying
             main_buttons = [
                 {"text": "🎯 Start Quiz", "callback_data": "start_quiz"},
-                {"text": "🧮 Mathematics", "callback_data": "mathematics_mcq"},
+                {"text": "🎤 Audio Chat", "callback_data": "audio_chat_menu"},
                 {"text": "💎 Buy Credits", "callback_data": "buy_credits"}
             ]
         else:  # Normal credit level
             main_buttons = [
                 {"text": "🎯 Start Quiz", "callback_data": "start_quiz"},
-                {"text": "🧮 Mathematics", "callback_data": "mathematics_mcq"},
-                {"text": "🎤 Audio Chat", "callback_data": "audio_chat_menu"}
+                {"text": "🎤 Audio Chat", "callback_data": "audio_chat_menu"},
+                {"text": "💎 Buy Credits", "callback_data": "buy_credits"}
             ]
 
         whatsapp_service.send_interactive_message(user_id, welcome_text, main_buttons)
 
         # Send additional buttons separately
         additional_buttons = [
-            {"text": "💎 Buy Credits", "callback_data": "buy_credits"} if current_credits >= 20 else {"text": "🎤 Audio Chat", "callback_data": "audio_chat_menu"},
             {"text": "📤 Share to Friend", "callback_data": "share_to_friend"},
             {"text": "👥 Referrals", "callback_data": "referrals_menu"}
         ]
@@ -537,12 +536,16 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         # Handle specific subject menu selections first (most specific patterns first)
         if selection_id == 'subject_ordinary_combined_science':
             handle_combined_science_menu(user_id)
+        elif selection_id == 'subject_ordinary_mathematics':
+            handle_ordinary_mathematics_menu(user_id)
         elif selection_id == 'subject_ordinary_english':
             handle_english_menu(user_id)
         elif selection_id.startswith('subject_ordinary_'):
             subject_name = selection_id.replace('subject_ordinary_', '').replace('_', ' ').title()
             if subject_name == 'Combined Science':
                 handle_combined_science_menu(user_id)
+            elif subject_name == 'Mathematics':
+                handle_ordinary_mathematics_menu(user_id)
             elif subject_name == 'English':
                 handle_english_menu(user_id)
         elif selection_id.startswith('subject_'): # General subject selection (e.g., Advanced Level)
@@ -666,6 +669,15 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         elif selection_id.startswith('math_alternative_'):
             # Handle alternative solution request
             mathematics_handler.handle_alternative_solution(user_id)
+        elif selection_id == 'math_topical_questions':
+            # Handle topical questions - transfer existing mathematics topic functionality
+            mathematics_handler.handle_mathematics_main_menu(user_id)
+        elif selection_id == 'math_exam':
+            # Handle math exam
+            whatsapp_service.send_message(user_id, "📝 Math Exam feature coming soon!")
+        elif selection_id == 'math_graph_practices':
+            # Handle graph practices
+            whatsapp_service.send_message(user_id, "📊 Graph Practices feature coming soon!")
         elif selection_id.startswith('math_'):
             # Handle any other math menu selections (fallback)
             math_action = selection_id.replace('math_', '')
@@ -1117,6 +1129,7 @@ def handle_level_menu(user_id: str, level: str):
         text = "📚 *Ordinary Level Subjects:*\nSelect a subject:"
         buttons = [
             {"text": "🧬 Combined Science", "callback_data": "subject_ordinary_combined_science"},
+            {"text": "🧮 Mathematics", "callback_data": "subject_ordinary_mathematics"},
             {"text": "📝 English", "callback_data": "subject_ordinary_english"},
             {"text": "🔙 Back", "callback_data": "start_quiz"}
         ]
@@ -1284,6 +1297,51 @@ def handle_mathematics_menu(user_id: str):
 
     except Exception as e:
         logger.error(f"Error in handle_mathematics_menu for {user_id}: {e}", exc_info=True)
+        whatsapp_service.send_message(user_id, "❌ Error loading Mathematics menu.")
+
+def handle_ordinary_mathematics_menu(user_id: str):
+    """Show Mathematics menu under Ordinary Level with new structure"""
+    try:
+        from database.external_db import get_user_registration, get_user_credits, get_user_stats
+
+        registration = get_user_registration(user_id)
+        user_name = registration['name'] if registration else "Student"
+        current_credits = get_user_credits(user_id)
+        user_stats = get_user_stats(user_id) or {'level': 1, 'xp_points': 0, 'streak': 0}
+        current_level = user_stats.get('level', 1)
+        current_xp = user_stats.get('xp_points', 0)
+        current_streak = user_stats.get('streak', 0)
+
+        # Calculate XP needed for next level
+        xp_for_next_level = (current_level * 100) - current_xp
+        if xp_for_next_level <= 0:
+            xp_for_next_level = 100
+
+        text = f"🧮 *ZIMSEC Mathematics Hub* 🧮\n\n"
+        text += f"👋 *Hello {user_name}!* Welcome to your personal O-Level Mathematics tutor!\n\n"
+        text += f"📊 *Your Math Journey:*\n"
+        text += f"💳 Credits: **{current_credits}**\n"
+        text += f"⭐ Level: **{current_level}** (XP: {current_xp})\n"
+        text += f"🔥 Streak: **{current_streak} days**\n"
+        text += f"🎯 Next Level: **{xp_for_next_level} XP needed**\n\n"
+        text += f"📚 *Master O-Level Mathematics with:*\n"
+        text += f"• Topic-based practice questions\n"
+        text += f"• Full exam simulations\n"
+        text += f"• Interactive graph practice\n"
+        text += f"• Step-by-step solutions\n\n"
+        text += f"🚀 *{user_name}, choose your learning path:*"
+
+        buttons = [
+            {"text": "📚 Topical Questions", "callback_data": "math_topical_questions"},
+            {"text": "📝 Math Exam", "callback_data": "math_exam"},
+            {"text": "📊 Graph Practices", "callback_data": "math_graph_practices"},
+            {"text": "🔙 Back to Subjects", "callback_data": "level_ordinary"}
+        ]
+
+        whatsapp_service.send_interactive_message(user_id, text, buttons)
+
+    except Exception as e:
+        logger.error(f"Error in handle_ordinary_mathematics_menu for {user_id}: {e}", exc_info=True)
         whatsapp_service.send_message(user_id, "❌ Error loading Mathematics menu.")
 
 def handle_english_menu(user_id: str):
