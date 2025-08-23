@@ -579,22 +579,22 @@ Wait {user_name} NerdX is processing your Graph...
 
             # Generate and send 3 sample graphs
             if module_id == "linear_programming":
-                # Special handling for linear programming sample problems
+                # Special handling for linear programming sample problems in ZIMSEC format
                 linear_programs = [
                     {
-                        "constraints": ["x + y <= 10", "2x + y <= 16", "x <= 8", "y <= 6", "x >= 0", "y >= 0"],
-                        "objective": "maximize 3x + 2y",
-                        "title": "Production Planning Problem"
+                        "constraints": ["2x + y <= 40", "x + 2y <= 48", "x >= 0", "y > 5"],
+                        "objective": None,
+                        "title": "ZIMSEC Example 1: Production Constraints"
                     },
                     {
-                        "constraints": ["2x + 3y <= 18", "x + 2y <= 12", "3x + y <= 15", "x >= 0", "y >= 0"],
-                        "objective": "minimize 4x + 5y",
-                        "title": "Resource Allocation Problem"
+                        "constraints": ["3x + 2y <= 60", "x + 3y <= 45", "x >= 0", "y > 3"],
+                        "objective": None,
+                        "title": "ZIMSEC Example 2: Resource Allocation"
                     },
                     {
-                        "constraints": ["x + 2y <= 14", "3x + y <= 15", "x + y >= 4", "x >= 0", "y >= 0"],
-                        "objective": "maximize x + 3y",
-                        "title": "Diet/Nutrition Problem"
+                        "constraints": ["x + y <= 30", "2x + 3y <= 54", "x >= 0", "y > 4"],
+                        "objective": None,
+                        "title": "ZIMSEC Example 3: Manufacturing Problem"
                     }
                 ]
 
@@ -610,15 +610,16 @@ Wait {user_name} NerdX is processing your Graph...
 
                         if graph_result and 'image_path' in graph_result:
                             # Send the sample linear programming graph
-                            caption = f"""📊 **Linear Programming Example {i}/3**
+                            caption = f"""📊 **ZIMSEC Linear Programming Example {i}/3**
 
 🏭 Problem Type: {lp_problem['title']}
-🎯 Objective: {lp_problem['objective']}
-📐 Constraints: {len(lp_problem['constraints'])} conditions
-🟢 Green area = Feasible solutions
-🔴 Red dots = Corner points (optimal candidates)
+📐 Constraints: {', '.join(lp_problem['constraints'])}
+🟢 Green area R = Feasible region (wanted)
+🔴 Red/Gray areas = Unwanted regions (shaded)
+🔴 Red dots = Corner points 
+📍 Large R = Required region marker
 
-💡 Study the shaded region and constraint boundaries!"""
+💡 This matches ZIMSEC exam format exactly!"""
 
                             # Use send_image_file method which handles file paths properly
                             success = self.whatsapp_service.send_image_file(user_id, graph_result['image_path'], caption)
@@ -740,9 +741,9 @@ Wait {user_name} NerdX is processing your Graph...
                 "scatter_data_1_2_3_4_5"
             ],
             'linear_programming': [
-                "lp: 2x + 3y <= 12, x + y <= 8, x >= 0, y >= 0",
-                "lp: x + 2y <= 10, 3x + y <= 15, x >= 0, y >= 0",
-                "lp: x + y <= 6, 2x + y <= 10, x >= 0, y >= 0"
+                "2x + y <= 40, x + 2y <= 48, x >= 0, y > 5",
+                "3x + 2y <= 60, x + 3y <= 45, x >= 0, y > 3", 
+                "x + y <= 30, 2x + 3y <= 54, x >= 0, y > 4"
             ]
         }
 
@@ -813,7 +814,16 @@ Wait {user_name} NerdX is processing your Graph...
             'trigonometric_functions': "Draw the graph of y = sin(x) for x from 0° to 360°. Mark the maximum and minimum points clearly.",
             'exponential_logarithmic': "Sketch the exponential function y = 2^x. Show the y-intercept and describe what happens as x increases.",
             'statistics_graphs': "Create a histogram for the following data: 2, 3, 3, 4, 4, 4, 5, 5, 6. Use appropriate class intervals.",
-            'linear_programming': "Graph the constraint x + y ≤ 8 with x ≥ 0 and y ≥ 0. Shade the feasible region clearly."
+            'linear_programming': """Answer the whole of this question on the grid.
+
+(a) Draw the graphs of these inequalities by shading the unwanted region.
+
+(i) 2x + y ≤ 40
+(ii) x + 2y ≤ 48  
+(iii) x ≥ 0
+(iv) y > 5
+
+(b) Mark R the region defined by the four inequalities in (a)."""
         }
 
         return fallback_questions.get(module_id, "Plot a basic mathematical function and identify its key characteristics.")

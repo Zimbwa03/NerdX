@@ -17,43 +17,43 @@ logger = logging.getLogger(__name__)
 
 class MathQuestionGenerator:
     """DeepSeek AI-powered mathematics question generator"""
-    
+
     def __init__(self):
         self.api_key = os.environ.get('DEEPSEEK_API_KEY')
         self.api_url = 'https://api.deepseek.com/chat/completions'
-        
+
         # Rate limiting parameters - reduced timeout to prevent worker timeouts
         self.max_retries = 2
         self.base_timeout = 8  # Reduced from 30 to 8 seconds
         self.retry_delay = 1
-        
+
     def generate_question(self, subject: str, topic: str, difficulty: str) -> Optional[Dict]:
         """Generate a mathematics question using DeepSeek AI"""
         try:
             if not self.api_key:
                 logger.error("AI API key not configured")
                 return self._generate_fallback_question(subject, topic, difficulty)
-            
+
             # Create the prompt for DeepSeek AI
             prompt = self._create_question_prompt(subject, topic, difficulty)
-            
+
             # Send request to DeepSeek API
             question_data = self._send_api_request(prompt)
-            
+
             if question_data:
                 # Validate and format the response
                 return self._validate_and_format_question(question_data, subject, topic, difficulty)
             else:
                 logger.warning("AI API failed, using fallback")
                 return self._generate_fallback_question(subject, topic, difficulty)
-                
+
         except Exception as e:
             logger.error(f"Error generating math question: {e}")
             return self._generate_fallback_question(subject, topic, difficulty)
 
     def _create_question_prompt(self, subject: str, topic: str, difficulty: str) -> str:
         """Create a detailed prompt for DeepSeek AI"""
-        
+
         difficulty_specs = {
             "easy": {
                 "description": "Direct application of basic concepts, straightforward calculations, minimal steps",
@@ -71,12 +71,12 @@ class MathQuestionGenerator:
                 "complexity": "4+ steps, deep understanding"
             }
         }
-        
+
         spec = difficulty_specs[difficulty]
-        
+
         # Topic-specific guidelines
         topic_guidelines = self._get_topic_guidelines(subject, topic)
-        
+
         prompt = f"""You are MathMentor, an expert ZIMSEC O-Level Mathematics tutor with deep knowledge of the Zimbabwe curriculum (Forms 1-4, 2015-2024).
 
 TASK: Generate EXACTLY ONE mathematics question for the ZIMSEC O-Level examination.
@@ -124,7 +124,7 @@ Generate your ZIMSEC-standard {difficulty} {subject} question on {topic} now:"""
 
     def _get_topic_guidelines(self, subject: str, topic: str) -> str:
         """Get specific guidelines for each topic"""
-        
+
         guidelines = {
             "Algebra": {
                 "Linear Equations": "Focus on solving for unknowns, word problems involving linear relationships",
@@ -174,12 +174,12 @@ Generate your ZIMSEC-standard {difficulty} {subject} question on {topic} now:"""
                 "Curve Sketching": "Using derivatives to analyze graphs"
             }
         }
-        
+
         return guidelines.get(subject, {}).get(topic, f"Focus on {topic} concepts appropriate for ZIMSEC O-Level standard")
 
     def _send_api_request(self, prompt: str) -> Optional[Dict]:
         """Send request to DeepSeek API with retries"""
-        
+
         headers = {
             'Authorization': f'Bearer {self.api_key}',
             'Content-Type': 'application/json'
@@ -196,7 +196,7 @@ Generate your ZIMSEC-standard {difficulty} {subject} question on {topic} now:"""
             try:
                 timeout = self.base_timeout  # Fixed timeout, no increase per attempt
                 logger.info(f"AI API attempt {attempt + 1}/{self.max_retries} (timeout: {timeout}s)")
-                
+
                 response = requests.post(
                     self.api_url,
                     headers=headers,
@@ -207,41 +207,41 @@ Generate your ZIMSEC-standard {difficulty} {subject} question on {topic} now:"""
                 if response.status_code == 200:
                     result = response.json()
                     content = result['choices'][0]['message']['content']
-                    
+
                     # Extract JSON from response
                     json_start = content.find('{')
                     json_end = content.rfind('}') + 1
-                    
+
                     if json_start >= 0 and json_end > json_start:
                         json_str = content[json_start:json_end]
                         question_data = json.loads(json_str)
-                        
+
                         logger.info(f"✅ Successfully generated question on attempt {attempt + 1}")
                         return question_data
                     else:
                         logger.error("No valid JSON found in AI response")
-                        
+
                 else:
                     logger.error(f"AI API error: {response.status_code} - {response.text}")
-                    
+
             except requests.exceptions.Timeout:
                 logger.warning(f"AI API timeout on attempt {attempt + 1}/{self.max_retries} (waited {timeout}s)")
                 if attempt < self.max_retries - 1:
                     time.sleep(self.retry_delay)
                 continue
-                    
+
             except requests.exceptions.ConnectionError as e:
                 logger.warning(f"AI API connection error: {e}")
                 if attempt < self.max_retries - 1:
                     time.sleep(self.retry_delay)
                 continue
-                    
+
             except json.JSONDecodeError as e:
                 logger.error(f"Failed to parse JSON from AI response: {e}")
                 if attempt < self.max_retries - 1:
                     time.sleep(self.retry_delay)
                 continue
-                    
+
             except Exception as e:
                 logger.error(f"AI API error on attempt {attempt + 1}: {e}")
                 if attempt < self.max_retries - 1:
@@ -256,12 +256,12 @@ Generate your ZIMSEC-standard {difficulty} {subject} question on {topic} now:"""
         try:
             # Required fields validation
             required_fields = ['question', 'solution', 'answer']
-            
+
             for field in required_fields:
                 if field not in question_data:
                     logger.error(f"Missing required field: {field}")
                     return self._generate_fallback_question(subject, topic, difficulty)
-            
+
             # Format the question data
             formatted_question = {
                 'question': str(question_data['question']).strip(),
@@ -275,26 +275,26 @@ Generate your ZIMSEC-standard {difficulty} {subject} question on {topic} now:"""
                 'generated_at': datetime.now().isoformat(),
                 'source': 'ai_generated'
             }
-            
+
             # Validation checks
             if len(formatted_question['question']) < 10:
                 logger.error("Question too short")
                 return self._generate_fallback_question(subject, topic, difficulty)
-                
+
             if len(formatted_question['solution']) < 20:
                 logger.error("Solution too short")
                 return self._generate_fallback_question(subject, topic, difficulty)
-                
+
             logger.info(f"Successfully validated AI question: {formatted_question['question'][:50]}...")
             return formatted_question
-            
+
         except Exception as e:
             logger.error(f"Error validating question: {e}")
             return self._generate_fallback_question(subject, topic, difficulty)
 
     def _generate_fallback_question(self, subject: str, topic: str, difficulty: str) -> Dict:
         """Generate fallback questions when DeepSeek API fails"""
-        
+
         fallback_questions = {
             "Algebra": {
                 "Linear Equations": {
@@ -313,11 +313,11 @@ Generate your ZIMSEC-standard {difficulty} {subject} question on {topic} now:"""
                 }
             }
         }
-        
+
         # Get fallback question or create a basic one
         try:
             fallback = fallback_questions.get(subject, {}).get(topic, {}).get(difficulty)
-            
+
             if not fallback:
                 # Create a very basic fallback
                 fallback = {
@@ -326,7 +326,7 @@ Generate your ZIMSEC-standard {difficulty} {subject} question on {topic} now:"""
                     "answer": "x = 7",
                     "points": 10
                 }
-            
+
             # Add metadata
             fallback.update({
                 'explanation': f'This is a {difficulty} level {topic} problem.',
@@ -336,10 +336,10 @@ Generate your ZIMSEC-standard {difficulty} {subject} question on {topic} now:"""
                 'generated_at': datetime.now().isoformat(),
                 'source': 'fallback'
             })
-            
+
             logger.info(f"Generated fallback question for {subject}/{topic}/{difficulty}")
             return fallback
-            
+
         except Exception as e:
             logger.error(f"Error generating fallback question: {e}")
             return {

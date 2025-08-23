@@ -858,9 +858,14 @@ class GraphService:
                 feasible_region &= (Y >= 0)
                 ax.axhline(y=0, color='gray', linewidth=1.5, linestyle='--', alpha=0.6, label='y ≥ 0')
             
-            # Shade the feasible region
+            # Shade the feasible region (wanted region) in light green
             ax.contourf(X, Y, feasible_region.astype(int), levels=[0.5, 1.5], 
-                       colors=['lightgreen'], alpha=0.4, label='Feasible Region')
+                       colors=['lightgreen'], alpha=0.4, label='Feasible Region R')
+            
+            # Shade the unwanted regions (outside constraints) in light red/gray
+            unwanted_region = ~feasible_region
+            ax.contourf(X, Y, unwanted_region.astype(int), levels=[0.5, 1.5], 
+                       colors=['lightcoral'], alpha=0.3, label='Unwanted Region')
             
             # Find and mark corner points (vertices of feasible region)
             corner_points = self._find_corner_points(parsed_constraints, x_range, y_range)
@@ -896,13 +901,25 @@ class GraphService:
             # Add legend with proper spacing
             ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=10)
             
+            # Find center of feasible region and add large "R" marker
+            if corner_points:
+                # Calculate centroid of feasible region
+                center_x = np.mean([point[0] for point in corner_points])
+                center_y = np.mean([point[1] for point in corner_points])
+                
+                # Add large "R" marker in the center of feasible region
+                ax.text(center_x, center_y, 'R', fontsize=48, fontweight='bold', 
+                       ha='center', va='center', color='darkgreen', alpha=0.8,
+                       bbox=dict(boxstyle="circle,pad=0.3", facecolor="white", alpha=0.8, edgecolor='darkgreen', linewidth=2))
+            
             # Add educational notes
             notes = f"""
-📋 Linear Programming Analysis:
-• Green region = Feasible solutions
+📋 ZIMSEC Linear Programming:
+• Green region R = Feasible solutions
+• Red/Gray = Unwanted (shaded) regions
 • Red dots = Corner points (vertices) 
 • Lines = Constraint boundaries
-• Optimal solution at corner points
+• Large R marks the required region
             """.strip()
             
             ax.text(0.02, 0.98, notes, transform=ax.transAxes, fontsize=9, 
