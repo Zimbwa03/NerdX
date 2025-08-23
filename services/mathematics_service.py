@@ -84,6 +84,8 @@ class MathematicsService:
                 "callback_data": f"math_topic_{topic_encoded}"
             })
 
+        # Add exam practice button
+        buttons.append({"text": "📚 Exam Practice", "callback_data": "exam_mathematics_start"})
         buttons.append({"text": "🏠 Back to Main Menu", "callback_data": "main_menu"})
         return buttons
 

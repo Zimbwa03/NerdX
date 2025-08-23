@@ -47,6 +47,10 @@ math_question_generator = MathQuestionGenerator()
 math_solver = MathSolver()
 mathematics_handler = MathematicsHandler(whatsapp_service, mathematics_service, math_question_generator, math_solver)
 
+# Initialize exam mathematics handler
+from handlers.exam_mathematics_handler import ExamMathematicsHandler
+exam_mathematics_handler = ExamMathematicsHandler(whatsapp_service, mathematics_service, math_question_generator)
+
 # Initialize utilities
 rate_limiter = RateLimiter()
 question_cache = QuestionCacheService()
@@ -649,6 +653,19 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         elif selection_id == 'mathematics_mcq':
             # Handle mathematics main menu
             mathematics_handler.handle_mathematics_main_menu(user_id)
+        elif selection_id == 'exam_mathematics_start':
+            # Handle exam mathematics start
+            exam_mathematics_handler.handle_exam_start(user_id)
+        elif selection_id == 'exam_math_next_question':
+            # Handle next exam question
+            exam_mathematics_handler.handle_next_question(user_id)
+        elif selection_id.startswith('exam_show_solution_'):
+            # Handle show database solution
+            question_id = selection_id.replace('exam_show_solution_', '')
+            exam_mathematics_handler.handle_show_database_solution(user_id, question_id)
+        elif selection_id.startswith('exam_ai_solution_'):
+            # Handle show AI solution
+            exam_mathematics_handler.handle_show_ai_solution(user_id)
         elif selection_id.startswith('math_topic_'):
             # Handle mathematics topic selection (show difficulty menu)
             topic_key = selection_id.replace('math_topic_', '')
