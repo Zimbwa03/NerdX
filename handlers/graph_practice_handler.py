@@ -253,12 +253,17 @@ class GraphPracticeHandler:
             topic_name = module_info['title'].replace('📈 ', '').replace('📊 ', '').replace('🌊 ', '').replace('⭐ ', '')
 
             try:
-                # Use question generator to create graph-specific question
-                question_data = self.question_generator.generate_question(
-                    'Mathematics',
-                    f"Graph - {topic_name}",
-                    'medium'
-                )
+                # For linear programming, skip AI to prevent timeouts and use immediate fallback
+                if 'linear programming' in topic_name.lower():
+                    logger.info(f"Skipping AI for linear programming to prevent worker timeouts")
+                    question_data = None
+                else:
+                    # Use question generator to create graph-specific question for other topics
+                    question_data = self.question_generator.generate_question(
+                        'Mathematics',
+                        f"Graph - {topic_name}",
+                        'medium'
+                    )
 
                 if not question_data:
                     raise Exception("Failed to generate question")

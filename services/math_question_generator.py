@@ -22,10 +22,10 @@ class MathQuestionGenerator:
         self.api_key = os.environ.get('DEEPSEEK_API_KEY')
         self.api_url = 'https://api.deepseek.com/chat/completions'
 
-        # Improved timeout and retry parameters for better success rate
-        self.max_retries = 3  # Increased retries for better reliability
-        self.base_timeout = 20  # Increased timeout for complex graph questions
-        self.retry_delay = 2   # Longer delay between retries
+        # Optimized timeout and retry parameters to prevent worker timeouts
+        self.max_retries = 2  # Reduced retries to prevent long blocking
+        self.base_timeout = 8  # Reduced timeout to prevent worker timeouts
+        self.retry_delay = 1   # Shorter delay between retries
 
     def generate_question(self, subject: str, topic: str, difficulty: str = 'medium') -> Optional[Dict]:
         """
@@ -35,9 +35,9 @@ class MathQuestionGenerator:
             # Create comprehensive prompt for DeepSeek AI
             prompt = self._create_question_prompt(subject, topic, difficulty)
 
-            # Set timeout based on complexity - increased for better reliability
-            timeout = 15  # increased timeout for better success rate
-            max_attempts = 3  # increased attempts
+            # Set timeout based on complexity - optimized to prevent worker timeouts
+            timeout = 8  # Shorter timeout to prevent blocking
+            max_attempts = 2  # Reduced attempts for faster fallback
 
             for attempt in range(1, max_attempts + 1):
                 logger.info(f"AI API attempt {attempt}/{max_attempts} (timeout: {timeout}s)")
@@ -56,13 +56,13 @@ class MathQuestionGenerator:
                 except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
                     logger.warning(f"AI API connection error: {e}")
                     if attempt < max_attempts:
-                        time.sleep(2)  # Longer pause before retry
+                        time.sleep(1)  # Shorter pause before retry
                         continue
 
                 except Exception as e:
                     logger.error(f"AI API error on attempt {attempt}: {e}")
                     if attempt < max_attempts:
-                        time.sleep(2)
+                        time.sleep(1)
                         continue
 
             # All attempts failed
@@ -322,25 +322,25 @@ The solution should explain how to plot each inequality and identify the feasibl
                     logger.error(f"AI API error: {response.status_code} - {response.text}")
 
             except requests.exceptions.Timeout:
-                logger.warning(f"AI API timeout on attempt {attempt + 1}/{self.max_retries} (waited {timeout}s)")
+                logger.warning(f"AI API timeout on attempt {attempt + 1}/{self.max_retries} (waited {timeout}s) - using fallback")
                 if attempt < self.max_retries - 1:
                     time.sleep(self.retry_delay)
                 continue
 
             except requests.exceptions.ConnectionError as e:
-                logger.warning(f"AI API connection error: {e}")
+                logger.warning(f"AI API connection error: {e} - will fallback if no more retries")
                 if attempt < self.max_retries - 1:
                     time.sleep(self.retry_delay)
                 continue
 
             except json.JSONDecodeError as e:
-                logger.error(f"Failed to parse JSON from AI response: {e}")
+                logger.error(f"Failed to parse JSON from AI response: {e} - will fallback if no more retries")
                 if attempt < self.max_retries - 1:
                     time.sleep(self.retry_delay)
                 continue
 
             except Exception as e:
-                logger.error(f"AI API error on attempt {attempt + 1}: {e}")
+                logger.error(f"AI API error on attempt {attempt + 1}: {e} - will fallback if no more retries")
                 if attempt < self.max_retries - 1:
                     time.sleep(self.retry_delay)
                 continue
