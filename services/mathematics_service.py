@@ -101,19 +101,19 @@ class MathematicsService:
 
     def format_main_menu_message(self, user_name: str) -> str:
         """Format mathematics main menu message"""
-        return f"""🧮 **ZIMSEC Mathematics Hub** 🧮
+        return f"""🧮 ZIMSEC Mathematics Hub
 
 Welcome {user_name}! Master O-Level Mathematics with AI-powered questions.
 
-📚 **Available Topics ({len(self.mathematics_topics)}):**
-Real Numbers • Sets • Financial Mathematics • Algebra  
-Geometry • Statistics • Trigonometry • Probability
-Graphs • Variation • Vectors • Matrices & More!
+📚 Available Topics ({len(self.mathematics_topics)}):
+Real Numbers • Sets • Financial Mathematics 
+Algebra • Geometry • Statistics • Trigonometry 
+Probability • Graphs • Variation • Vectors • Matrices
 
-🎯 **Difficulty Levels:**
-🟢 **Easy** - Basic concepts & formulas
-🟡 **Medium** - Applied problems  
-🔴 **Difficult** - Complex reasoning
+🎯 Difficulty Levels:
+🟢 Easy - Basic concepts
+🟡 Medium - Applied problems  
+🔴 Difficult - Complex reasoning
 
 💡 Authentic ZIMSEC-style problems with step-by-step solutions!
 
@@ -140,23 +140,29 @@ Choose your topic to begin:"""
 
         emoji = topic_emojis.get(topic, "📚")
 
-        message = f"{emoji} **{topic}** {emoji}\n\n"
-        message += f"Ready for {topic}, {user_name}? Choose your challenge level:\n\n"
-        message += f"💳 **Your Credits:** {credits}\n\n"
+        return f"""{emoji} {topic} {emoji}
 
-        message += f"🎯 Choose Your Challenge Level:\n\n"
-        message += f"🟢 Easy - {self.difficulty_descriptions['easy']}\n"
-        message += f"   • Foundation concepts\n"
-        message += f"   • {self.difficulty_points['easy']} XP points\n\n"
-        message += f"🟡 Medium - {self.difficulty_descriptions['medium']}\n"
-        message += f"   • Problem-solving skills\n"
-        message += f"   • {self.difficulty_points['medium']} XP points\n\n"
-        message += f"🔴 Difficult - {self.difficulty_descriptions['difficult']}\n"
-        message += f"   • Critical thinking\n"
-        message += f"   • {self.difficulty_points['difficult']} XP points\n\n"
-        message += f"💡 Authentic ZIMSEC-style problems with step-by-step solutions!\n\n"
-        message += f"Select your difficulty:"
-        return message
+Ready for {topic}, {user_name}? Choose your challenge level:
+
+💳 Your Credits: {credits}
+
+🎯 Choose Your Challenge Level:
+
+🟢 Easy - {self.difficulty_descriptions['easy']}
+   • Foundation concepts
+   • {self.difficulty_points['easy']} XP points
+
+🟡 Medium - {self.difficulty_descriptions['medium']}
+   • Problem-solving skills
+   • {self.difficulty_points['medium']} XP points
+
+🔴 Difficult - {self.difficulty_descriptions['difficult']}
+   • Critical thinking
+   • {self.difficulty_points['difficult']} XP points
+
+💡 Authentic ZIMSEC-style problems with step-by-step solutions!
+
+Select your difficulty:"""
 
 
     def check_sufficient_credits(self, user_credits: int, difficulty: str) -> Tuple[bool, str]:

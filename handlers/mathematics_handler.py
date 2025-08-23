@@ -204,8 +204,8 @@ class MathematicsHandler:
             
             # Parse question data
             question_data = json.loads(session_data.get('question_data', '{}'))
-            topic = session_data.get('topic')
-            difficulty = session_data.get('difficulty')
+            topic = session_data.get('topic') or 'Unknown'
+            difficulty = session_data.get('difficulty') or 'unknown'
             
             # Get user info
             registration = get_user_registration(user_id)
@@ -265,7 +265,7 @@ class MathematicsHandler:
             difficulty_emoji = {"easy": "🟢", "medium": "🟡", "difficult": "🔴"}
             emoji = difficulty_emoji.get(difficulty, "📝")
             
-            message = f"""🧮 Mathematics Question 🧮
+            message = f"""🧮 Mathematics Question
 
 📝 Topic: {topic}
 {emoji} Difficulty: {difficulty.title()}
@@ -280,7 +280,6 @@ class MathematicsHandler:
 
             # Create answer buttons for common responses
             buttons = [
-                {"text": "💡 Show Solution", "callback_data": f"math_show_solution_{user_id}"},
                 {"text": "💡 Get Hint", "callback_data": f"math_hint_{user_id}"},
                 {"text": "🏠 Main Menu", "callback_data": "main_menu"}
             ]
@@ -346,7 +345,7 @@ class MathematicsHandler:
                 message += f"🌟 {analysis.get('encouragement')}"
             
             # Create navigation buttons
-            topic_encoded = topic.lower().replace(' ', '_')
+            topic_encoded = (topic or '').lower().replace(' ', '_')
             
             buttons = [
                 {"text": "➡️ Next Question", "callback_data": f"math_question_{topic_encoded}_{difficulty}"},
@@ -378,18 +377,18 @@ class MathematicsHandler:
             difficulty = session_data.get('difficulty')
             
             # Create solution message
-            message = f"💡 **Complete Solution** 💡\n\n"
-            message += f"📝 **Question:** {question_data['question']}\n\n"
-            message += f"✅ **Answer:** {question_data['answer']}\n\n"
-            message += f"📋 **Step-by-Step Solution:**\n{question_data['solution']}\n\n"
+            message = f"💡 Complete Solution\n\n"
+            message += f"📝 Question: {question_data['question']}\n\n"
+            message += f"✅ Answer: {question_data['answer']}\n\n"
+            message += f"📋 Step-by-Step Solution:\n{question_data['solution']}\n\n"
             
             if question_data.get('explanation'):
-                message += f"💭 **Explanation:** {question_data['explanation']}\n\n"
+                message += f"💭 Explanation: {question_data['explanation']}\n\n"
             
             message += f"Ready for another challenge?"
             
             # Create navigation buttons
-            topic_encoded = topic.lower().replace(' ', '_')
+            topic_encoded = (topic or '').lower().replace(' ', '_')
             buttons = [
                 {"text": "➡️ Next Question", "callback_data": f"math_question_{topic_encoded}_{difficulty}"},
                 {"text": "📚 Change Topic", "callback_data": "mathematics_mcq"},
