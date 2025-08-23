@@ -29,21 +29,32 @@ app.config.update(
     JSONIFY_PRETTYPRINT_REGULAR=False  # Faster JSON responses
 )
 
-# Configure the database
+# Configure the database with better connection handling
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///nerdx_quiz.db")
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
+    "pool_timeout": 20,
+    "max_overflow": 0,
+    "connect_args": {
+        "connect_timeout": 10,
+        "sslmode": "prefer"  # Handle SSL connections more gracefully
+    } if os.environ.get("DATABASE_URL", "").startswith("postgresql") else {}
 }
 
 # Initialize the app with the extension
 db.init_app(app)
 
 with app.app_context():
-    # Import models to ensure tables are created
-    import models
-    db.create_all()
-    logging.info("Database tables created successfully")
+    try:
+        # Import models to ensure tables are created
+        import models
+        db.create_all()
+        logging.info("Database tables created successfully")
+    except Exception as e:
+        logging.error(f"Database initialization error: {e}")
+        # Continue startup even if database fails - will retry on first request
+        pass
 
 # Import and register routes
 import routes

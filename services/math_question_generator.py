@@ -22,10 +22,10 @@ class MathQuestionGenerator:
         self.api_key = os.environ.get('DEEPSEEK_API_KEY')
         self.api_url = 'https://api.deepseek.com/chat/completions'
         
-        # Rate limiting parameters
-        self.max_retries = 3
-        self.base_timeout = 30
-        self.retry_delay = 2
+        # Rate limiting parameters - reduced timeout to prevent worker timeouts
+        self.max_retries = 2
+        self.base_timeout = 8  # Reduced from 30 to 8 seconds
+        self.retry_delay = 1
         
     def generate_question(self, subject: str, topic: str, difficulty: str) -> Optional[Dict]:
         """Generate a mathematics question using DeepSeek AI"""
@@ -194,7 +194,7 @@ Generate your ZIMSEC-standard {difficulty} {subject} question on {topic} now:"""
 
         for attempt in range(self.max_retries):
             try:
-                timeout = self.base_timeout + (attempt * 5)
+                timeout = self.base_timeout  # Fixed timeout, no increase per attempt
                 logger.info(f"AI API attempt {attempt + 1}/{self.max_retries} (timeout: {timeout}s)")
                 
                 response = requests.post(

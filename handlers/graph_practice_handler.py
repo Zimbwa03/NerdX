@@ -301,7 +301,41 @@ Study the question and when ready, click "Show Graph" to see the correct graph w
                 
             except Exception as ai_error:
                 logger.error(f"AI generation failed for {user_id}: {ai_error}")
-                self.whatsapp_service.send_message(user_id, "❌ AI question generation failed. Please try again or contact support.")
+                # Provide a fallback question instead of complete failure
+                fallback_question = self._get_fallback_question(module_id)
+                if fallback_question:
+                    message = f"""📝 **ZIMSEC Practice Question** (Fallback)
+
+👤 Student: {user_name}
+📂 Topic: {topic_name}
+🎯 Instructions: Plot the graph for this question
+
+❓ **Question:**
+{fallback_question}
+
+📐 **Your Task:** 
+Study the question and when ready, click "Show Graph" to see the correct graph with guidelines and your personalized NerdX watermark.
+
+⚠️ *AI service temporarily unavailable - showing practice question*"""
+
+                    buttons = [
+                        {"text": "📊 Show Graph", "callback_data": f"show_generated_graph_{module_id}"},
+                        {"text": "🔄 Try AI Again", "callback_data": f"graph_generate_{module_id}"},
+                        {"text": "🔙 Back", "callback_data": f"graph_practice_{module_id}"}
+                    ]
+                    
+                    self.whatsapp_service.send_interactive_message(user_id, message, buttons)
+                    
+                    # Save fallback question in session
+                    session_data = get_user_session(user_id) or {}
+                    session_data.update({
+                        'generated_question': {'question': fallback_question},
+                        'current_module': module_id,
+                        'question_text': fallback_question
+                    })
+                    save_user_session(user_id, session_data)
+                else:
+                    self.whatsapp_service.send_message(user_id, "❌ AI service temporarily unavailable. Please try again.")
                 
         except Exception as e:
             logger.error(f"Error generating graph question for {user_id}: {e}")
@@ -710,6 +744,19 @@ Wait {user_name} NerdX is processing your Graph...
             "Find key points and characteristics.",
             "Compare different function types."
         ])
+    
+    def _get_fallback_question(self, module_id: str) -> str:
+        """Get fallback questions when AI fails"""
+        fallback_questions = {
+            'linear_functions': "Plot the straight line y = 2x + 3. Mark the y-intercept clearly and find where the line crosses the x-axis.",
+            'quadratic_functions': "Sketch the parabola y = x² - 4x + 3. Find and mark the vertex, y-intercept, and x-intercepts on your graph.",
+            'trigonometric_functions': "Draw the graph of y = sin(x) for x from 0° to 360°. Mark the maximum and minimum points clearly.",
+            'exponential_logarithmic': "Sketch the exponential function y = 2^x. Show the y-intercept and describe what happens as x increases.",
+            'statistics_graphs': "Create a histogram for the following data: 2, 3, 3, 4, 4, 4, 5, 5, 6. Use appropriate class intervals.",
+            'linear_programming': "Graph the constraint x + y ≤ 8 with x ≥ 0 and y ≥ 0. Shade the feasible region clearly."
+        }
+        
+        return fallback_questions.get(module_id, "Plot a basic mathematical function and identify its key characteristics.")
 
     def handle_graph_theory(self, user_id: str, module_id: str):
         """Provide comprehensive theory explanation with AI assistance"""
