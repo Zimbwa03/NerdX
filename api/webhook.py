@@ -55,6 +55,10 @@ exam_mathematics_handler = ExamMathematicsHandler(whatsapp_service, mathematics_
 from handlers.graph_practice_handler import GraphPracticeHandler
 graph_practice_handler = GraphPracticeHandler(whatsapp_service, graph_service, math_question_generator)
 
+# Initialize comprehensive English handler
+from handlers.english_handler import EnglishHandler
+english_handler = EnglishHandler(whatsapp_service, english_service)
+
 # Initialize utilities
 rate_limiter = RateLimiter()
 question_cache = QuestionCacheService()
@@ -154,6 +158,11 @@ def handle_text_message(user_id: str, message_text: str):
         if session_data and session_data.get('awaiting_custom_graph'):
             graph_practice_handler.handle_custom_graph_input(user_id, message_text)
             return
+        
+        # Check for English essay submission session
+        if session_data and session_data.get('awaiting_essay'):
+            english_handler.handle_essay_submission(user_id, message_text)
+            return
 
         # Check if user is registered
         registration_status = user_service.check_user_registration(user_id)
@@ -187,7 +196,7 @@ def handle_text_message(user_id: str, message_text: str):
         elif command in ['audio chat', 'audio', 'chat']:
             audio_chat_service.handle_audio_chat_command(user_id)
         elif command == 'english':
-            show_english_menu(user_id)
+            english_handler.handle_english_menu(user_id)
         elif command == 'essay':
             start_essay_session(user_id)
         elif command.startswith('graph '):
@@ -566,7 +575,7 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         elif selection_id == 'subject_ordinary_mathematics':
             handle_ordinary_mathematics_menu(user_id)
         elif selection_id == 'subject_ordinary_english':
-            handle_english_menu(user_id)
+            english_handler.handle_english_menu(user_id)
         elif selection_id.startswith('subject_ordinary_'):
             subject_name = selection_id.replace('subject_ordinary_', '').replace('_', ' ').title()
             if subject_name == 'Combined Science':
@@ -574,7 +583,7 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             elif subject_name == 'Mathematics':
                 handle_ordinary_mathematics_menu(user_id)
             elif subject_name == 'English':
-                handle_english_menu(user_id)
+                english_handler.handle_english_menu(user_id)
         elif selection_id.startswith('subject_'): # General subject selection (e.g., Advanced Level)
             subject_name = selection_id.replace('subject_', '').title()
             handle_subject_selection(user_id, subject_name)
@@ -649,6 +658,32 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             graph_practice_handler.handle_custom_graph_creator(user_id)
         elif selection_id == 'graph_tutorial':
             graph_practice_handler.handle_graph_tutorial(user_id)
+        
+        # Comprehensive English Learning System Callbacks
+        elif selection_id == 'english_menu':
+            english_handler.handle_english_menu(user_id)
+        elif selection_id == 'english_topical_questions':
+            english_handler.handle_topical_questions(user_id)
+        elif selection_id == 'english_comprehension':
+            english_handler.handle_comprehension_practice(user_id)
+        elif selection_id == 'english_essay_writing':
+            english_handler.handle_essay_writing(user_id)
+        elif selection_id == 'english_essay_section_a':
+            english_handler.handle_essay_section_a(user_id)
+        elif selection_id == 'english_essay_section_b':
+            english_handler.handle_essay_section_b(user_id)
+        elif selection_id.startswith('english_topic_'):
+            topic = selection_id.replace('english_topic_', '').replace('_', ' ').title()
+            english_handler.handle_topic_questions_generation(user_id, topic)
+        elif selection_id.startswith('english_comprehension_'):
+            theme = selection_id.replace('english_comprehension_', '').replace('_', ' ').title()
+            english_handler.handle_comprehension_generation(user_id, theme)
+        elif selection_id.startswith('english_essay_a_'):
+            essay_type = selection_id.replace('english_essay_a_', '')
+            english_handler.handle_essay_prompt_generation(user_id, 'A', essay_type)
+        elif selection_id.startswith('english_essay_b_'):
+            format_type = selection_id.replace('english_essay_b_', '')
+            english_handler.handle_essay_prompt_generation(user_id, 'B', format_type)
         
         elif selection_id == 'buy_credits':
             show_credit_packages(user_id)
