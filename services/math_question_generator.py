@@ -31,7 +31,7 @@ class MathQuestionGenerator:
         """Generate a mathematics question using DeepSeek AI"""
         try:
             if not self.api_key:
-                logger.error("DeepSeek API key not configured")
+                logger.error("AI API key not configured")
                 return self._generate_fallback_question(subject, topic, difficulty)
             
             # Create the prompt for DeepSeek AI
@@ -44,7 +44,7 @@ class MathQuestionGenerator:
                 # Validate and format the response
                 return self._validate_and_format_question(question_data, subject, topic, difficulty)
             else:
-                logger.warning("DeepSeek API failed, using fallback")
+                logger.warning("AI API failed, using fallback")
                 return self._generate_fallback_question(subject, topic, difficulty)
                 
         except Exception as e:
@@ -195,7 +195,7 @@ Generate your ZIMSEC-standard {difficulty} {subject} question on {topic} now:"""
         for attempt in range(self.max_retries):
             try:
                 timeout = self.base_timeout + (attempt * 2)
-                logger.info(f"DeepSeek API attempt {attempt + 1}/{self.max_retries} (timeout: {timeout}s)")
+                logger.info(f"AI API attempt {attempt + 1}/{self.max_retries} (timeout: {timeout}s)")
                 
                 response = requests.post(
                     self.api_url,
@@ -219,32 +219,32 @@ Generate your ZIMSEC-standard {difficulty} {subject} question on {topic} now:"""
                         logger.info(f"✅ Successfully generated question on attempt {attempt + 1}")
                         return question_data
                     else:
-                        logger.error("No valid JSON found in DeepSeek response")
+                        logger.error("No valid JSON found in AI response")
                         
                 else:
-                    logger.error(f"DeepSeek API error: {response.status_code} - {response.text}")
+                    logger.error(f"AI API error: {response.status_code} - {response.text}")
                     
             except requests.exceptions.Timeout:
-                logger.warning(f"DeepSeek API timeout on attempt {attempt + 1}/{self.max_retries}")
+                logger.warning(f"AI API timeout on attempt {attempt + 1}/{self.max_retries}")
                 if attempt < self.max_retries - 1:
                     time.sleep(self.retry_delay)
                     
             except requests.exceptions.ConnectionError as e:
-                logger.warning(f"DeepSeek API connection error: {e}")
+                logger.warning(f"AI API connection error: {e}")
                 if attempt < self.max_retries - 1:
                     time.sleep(self.retry_delay)
                     
             except json.JSONDecodeError as e:
-                logger.error(f"Failed to parse JSON from DeepSeek response: {e}")
+                logger.error(f"Failed to parse JSON from AI response: {e}")
                 if attempt < self.max_retries - 1:
                     time.sleep(self.retry_delay)
                     
             except Exception as e:
-                logger.error(f"DeepSeek API error on attempt {attempt + 1}: {e}")
+                logger.error(f"AI API error on attempt {attempt + 1}: {e}")
                 if attempt < self.max_retries - 1:
                     time.sleep(self.retry_delay)
 
-        logger.error("All DeepSeek API attempts failed")
+        logger.error("All AI API attempts failed")
         return None
 
     def _validate_and_format_question(self, question_data: Dict, subject: str, topic: str, difficulty: str) -> Dict:
@@ -269,7 +269,7 @@ Generate your ZIMSEC-standard {difficulty} {subject} question on {topic} now:"""
                 'topic': topic,
                 'subject': subject,
                 'generated_at': datetime.now().isoformat(),
-                'source': 'deepseek_ai'
+                'source': 'ai_generated'
             }
             
             # Validation checks
@@ -281,7 +281,7 @@ Generate your ZIMSEC-standard {difficulty} {subject} question on {topic} now:"""
                 logger.error("Solution too short")
                 return self._generate_fallback_question(subject, topic, difficulty)
                 
-            logger.info(f"Successfully validated DeepSeek question: {formatted_question['question'][:50]}...")
+            logger.info(f"Successfully validated AI question: {formatted_question['question'][:50]}...")
             return formatted_question
             
         except Exception as e:
