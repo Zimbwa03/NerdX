@@ -3,8 +3,14 @@ from typing import Dict, Optional, List
 from datetime import datetime, timedelta
 import random
 import string
-from app import db
-from models import ReferralCode, Referral, ReferralStats
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+import os
+
+# Use direct database connection instead of app context
+DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///nerdx_quiz.db")
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 logger = logging.getLogger(__name__)
 
@@ -20,9 +26,12 @@ class ReferralService:
     
     def generate_referral_code(self, user_id: str) -> Optional[str]:
         """Generate a unique referral code for user"""
+        session = SessionLocal()
         try:
+            from models import ReferralCode
+            
             # Check if user already has a referral code
-            existing_code = ReferralCode.query.filter_by(user_id=user_id).first()
+            existing_code = session.query(ReferralCode).filter_by(user_id=user_id).first()
             if existing_code:
                 return existing_code.referral_code
             
@@ -31,11 +40,11 @@ class ReferralService:
                 code = self._generate_code()
                 
                 # Check if code is unique
-                if not ReferralCode.query.filter_by(referral_code=code).first():
+                if not session.query(ReferralCode).filter_by(referral_code=code).first():
                     # Code is unique, save it
                     new_code = ReferralCode(user_id=user_id, referral_code=code)
-                    db.session.add(new_code)
-                    db.session.commit()
+                    session.add(new_code)
+                    session.commit()
                     
                     logger.info(f"Generated referral code {code} for user {user_id}")
                     return code
@@ -45,8 +54,10 @@ class ReferralService:
             
         except Exception as e:
             logger.error(f"Error generating referral code: {e}")
-            db.session.rollback()
+            session.rollback()
             return None
+        finally:
+            session.close()
     
     def _generate_code(self) -> str:
         """Generate a random 8-character referral code"""
@@ -64,24 +75,31 @@ class ReferralService:
     
     def validate_referral_code(self, referral_code: str) -> Optional[str]:
         """Validate referral code and return referrer user_id"""
+        session = SessionLocal()
         try:
-            referral_record = ReferralCode.query.filter_by(referral_code=referral_code.upper()).first()
+            from models import ReferralCode
+            referral_record = session.query(ReferralCode).filter_by(referral_code=referral_code.upper()).first()
             return referral_record.user_id if referral_record else None
                 
         except Exception as e:
             logger.error(f"Error validating referral code: {e}")
             return None
+        finally:
+            session.close()
     
     def process_referral(self, referrer_id: str, referee_id: str, referral_code: str) -> bool:
         """Process a referral and award bonuses"""
+        session = SessionLocal()
         try:
+            from models import Referral, ReferralStats
+            
             # Prevent self-referral
             if referrer_id == referee_id:
                 logger.warning(f"Self-referral attempt blocked: {referee_id}")
                 return False
             
             # Check if referee was already referred
-            existing_referral = Referral.query.filter_by(referee_id=referee_id).first()
+            existing_referral = session.query(Referral).filter_by(referee_id=referee_id).first()
             if existing_referral:
                 logger.warning(f"User {referee_id} already has been referred")
                 return False
@@ -92,10 +110,10 @@ class ReferralService:
                 referee_id=referee_id,
                 referral_code=referral_code
             )
-            db.session.add(new_referral)
+            session.add(new_referral)
             
             # Update or create referral stats
-            stats = ReferralStats.query.filter_by(user_id=referrer_id).first()
+            stats = session.query(ReferralStats).filter_by(user_id=referrer_id).first()
             if stats:
                 stats.total_referrals += 1
                 stats.successful_referrals += 1
@@ -109,21 +127,26 @@ class ReferralService:
                     total_bonus_earned=self.referral_bonus['referrer'],
                     last_referral_date=datetime.utcnow()
                 )
-                db.session.add(stats)
+                session.add(stats)
             
-            db.session.commit()
+            session.commit()
             logger.info(f"Referral processed: {referrer_id} referred {referee_id}")
             return True
             
         except Exception as e:
             logger.error(f"Error processing referral: {e}")
-            db.session.rollback()
+            session.rollback()
             return False
+        finally:
+            session.close()
     
     def award_referral_bonuses(self, referrer_id: str, referee_id: str, referral_id: int) -> Dict:
         """Award bonus credits to referrer and referee"""
+        session = SessionLocal()
         try:
             from services.user_service import UserService
+            from models import Referral
+            
             user_service = UserService()
             
             results = {
@@ -143,10 +166,10 @@ class ReferralService:
                 results['referee_bonus'] = self.referral_bonus['referee']
             
             # Mark bonus as awarded
-            referral = Referral.query.get(referral_id)
+            referral = session.query(Referral).get(referral_id)
             if referral:
                 referral.bonus_awarded = True
-                db.session.commit()
+                session.commit()
             
             results['success'] = True
             logger.info(f"Referral bonuses awarded: referrer +{results['referrer_bonus']}, referee +{results['referee_bonus']}")
@@ -155,18 +178,23 @@ class ReferralService:
             
         except Exception as e:
             logger.error(f"Error awarding referral bonuses: {e}")
-            db.session.rollback()
+            session.rollback()
             return {'referrer_bonus': 0, 'referee_bonus': 0, 'success': False}
+        finally:
+            session.close()
     
     def get_referral_stats(self, user_id: str) -> Dict:
         """Get referral statistics for a user"""
+        session = SessionLocal()
         try:
+            from models import ReferralCode, ReferralStats, Referral
+            
             # Get referral code
-            code_record = ReferralCode.query.filter_by(user_id=user_id).first()
+            code_record = session.query(ReferralCode).filter_by(user_id=user_id).first()
             referral_code = code_record.referral_code if code_record else None
             
             # Get stats
-            stats = ReferralStats.query.filter_by(user_id=user_id).first()
+            stats = session.query(ReferralStats).filter_by(user_id=user_id).first()
             
             if stats:
                 total_referrals = stats.total_referrals
@@ -176,7 +204,7 @@ class ReferralService:
                 total_referrals = successful_referrals = total_bonus_earned = 0
             
             # Get recent referrals
-            recent_referrals = Referral.query.filter_by(
+            recent_referrals = session.query(Referral).filter_by(
                 referrer_id=user_id, 
                 bonus_awarded=True
             ).order_by(Referral.created_at.desc()).limit(5).all()
@@ -204,11 +232,16 @@ class ReferralService:
                 'referrer_bonus': self.referral_bonus['referrer'],
                 'referee_bonus': self.referral_bonus['referee']
             }
+        finally:
+            session.close()
     
     def get_top_referrers(self, limit: int = 10) -> List[Dict]:
         """Get top users by referral count"""
+        session = SessionLocal()
         try:
-            top_stats = ReferralStats.query.filter(
+            from models import ReferralStats
+            
+            top_stats = session.query(ReferralStats).filter(
                 ReferralStats.successful_referrals > 0
             ).order_by(
                 ReferralStats.successful_referrals.desc()
@@ -227,3 +260,5 @@ class ReferralService:
         except Exception as e:
             logger.error(f"Error getting top referrers: {e}")
             return []
+        finally:
+            session.close()
