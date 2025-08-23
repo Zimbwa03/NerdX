@@ -708,6 +708,8 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             english_handler.handle_comprehension_start(user_id)
         elif selection_id == 'comprehension_show_answers':
             english_handler.handle_comprehension_show_answers(user_id)
+        elif selection_id == 'comprehension_reset':
+            english_handler.handle_comprehension_reset(user_id)
         elif selection_id == 'english_essay_writing':
             english_handler.handle_essay_writing(user_id)
         elif selection_id == 'english_essay_section_a':
