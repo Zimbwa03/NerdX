@@ -89,19 +89,14 @@ class ExamMathematicsHandler:
             db_questions = session_data.get('database_questions_used', 0)
             ai_questions = session_data.get('ai_questions_used', 0)
             
-            # Determine question type based on 2:1 ratio
-            if db_questions < 2 or (db_questions >= 2 and ai_questions == 0 and question_count % 3 == 0):
-                # Load database question
-                if db_questions >= 2 and ai_questions == 0:
-                    question_type = 'ai'
-                else:
-                    question_type = 'database'
+            # Determine question type based on 2:1 ratio (2 database : 1 AI)
+            # Every 3rd question should be AI, others should be database
+            if question_count % 3 == 0:
+                # Every 3rd question should be AI
+                question_type = 'ai'
             else:
-                # Alternate: 2 database, then 1 AI
-                if (db_questions - ai_questions * 2) >= 2:
-                    question_type = 'ai'
-                else:
-                    question_type = 'database'
+                # 1st and 2nd questions should be database
+                question_type = 'database'
             
             if question_type == 'database':
                 self._load_database_question(user_id, user_name, question_count)
