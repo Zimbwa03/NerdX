@@ -160,6 +160,10 @@ class ExamMathematicsHandler:
                     question_data['question_image_url'], 
                     f"📝 ZIMSEC Exam Question {question_count}"
                 )
+                
+                # Wait to ensure image loads and appears first in chat
+                import time
+                time.sleep(2)
             
             # Send interactive message with buttons
             self.whatsapp_service.send_interactive_message(user_id, message, buttons)
@@ -314,6 +318,10 @@ class ExamMathematicsHandler:
                     question_data['answer_image_url3'], 
                     "✅ Solution Part 3"
                 )
+            
+            # Wait to ensure images load and appear first in chat
+            import time
+            time.sleep(2)
             
             # Create navigation buttons
             buttons = [
