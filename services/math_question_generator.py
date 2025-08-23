@@ -27,100 +27,141 @@ class MathQuestionGenerator:
         self.base_timeout = 8  # Reduced from 30 to 8 seconds
         self.retry_delay = 1
 
-    def generate_question(self, subject: str, topic: str, difficulty: str) -> Optional[Dict]:
-        """Generate a mathematics question using DeepSeek AI"""
+    def generate_question(self, subject: str, topic: str, difficulty: str = 'medium') -> Optional[Dict]:
+        """
+        Generate a question using DeepSeek AI with improved error handling and timeout management
+        """
         try:
-            if not self.api_key:
-                logger.error("AI API key not configured")
-                return self._generate_fallback_question(subject, topic, difficulty)
+            # Create comprehensive prompt for DeepSeek AI
+            prompt = self._create_prompt(subject, topic, difficulty)
 
-            # Create the prompt for DeepSeek AI
-            prompt = self._create_question_prompt(subject, topic, difficulty)
+            # Set timeout based on complexity - increased for better reliability
+            timeout = 15  # increased timeout for better success rate
+            max_attempts = 3  # increased attempts
 
-            # Send request to DeepSeek API
-            question_data = self._send_api_request(prompt)
+            for attempt in range(1, max_attempts + 1):
+                logger.info(f"AI API attempt {attempt}/{max_attempts} (timeout: {timeout}s)")
 
-            if question_data:
-                # Validate and format the response
-                return self._validate_and_format_question(question_data, subject, topic, difficulty)
-            else:
-                logger.warning("AI API failed, using fallback")
-                return self._generate_fallback_question(subject, topic, difficulty)
+                try:
+                    # Make request to DeepSeek AI
+                    response = self._make_ai_request(prompt, timeout)
+
+                    if response:
+                        # Parse and validate response
+                        question_data = self._parse_ai_response(response, subject, topic, difficulty)
+                        if question_data:
+                            logger.info(f"Successfully generated question for {subject}/{topic}")
+                            return question_data
+
+                except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+                    logger.warning(f"AI API connection error: {e}")
+                    if attempt < max_attempts:
+                        time.sleep(2)  # Longer pause before retry
+                        continue
+
+                except Exception as e:
+                    logger.error(f"AI API error on attempt {attempt}: {e}")
+                    if attempt < max_attempts:
+                        time.sleep(2)
+                        continue
+
+            # All attempts failed
+            logger.error("All AI API attempts failed, returning None for fallback")
+            return None
 
         except Exception as e:
-            logger.error(f"Error generating math question: {e}")
-            return self._generate_fallback_question(subject, topic, difficulty)
+            logger.error(f"Critical error in generate_question: {e}")
+            return None
 
     def _create_question_prompt(self, subject: str, topic: str, difficulty: str) -> str:
-        """Create a detailed prompt for DeepSeek AI"""
+        """Create optimized prompt for DeepSeek AI with enhanced graph support"""
 
-        difficulty_specs = {
-            "easy": {
-                "description": "Direct application of basic concepts, straightforward calculations, minimal steps",
-                "points": 10,
-                "complexity": "1-2 steps, basic formulas"
-            },
-            "medium": {
-                "description": "Requires understanding of multiple concepts, moderate calculations, 2-3 steps",
-                "points": 20,
-                "complexity": "2-3 steps, combine concepts"
-            },
-            "difficult": {
-                "description": "Complex problem-solving, multi-step reasoning, synthesis of several concepts",
-                "points": 50,
-                "complexity": "4+ steps, deep understanding"
-            }
-        }
+        # Enhanced prompts for different subjects and topics
+        if 'graph' in topic.lower() or 'linear programming' in topic.lower():
+            # Specific prompts for each remaining graph module
+            if 'linear functions' in topic.lower() or 'straight lines' in topic.lower():
+                return f"""Generate a ZIMSEC O-Level Mathematics question about Linear Functions and Straight Lines.
 
-        spec = difficulty_specs[difficulty]
+Create a question that requires plotting a linear graph in the format y = mx + c.
 
-        # Topic-specific guidelines
-        topic_guidelines = self._get_topic_guidelines(subject, topic)
+Requirements:
+- Use specific numerical coefficients (e.g., y = 2x + 3, y = -x + 4, y = 0.5x - 2)
+- Ask students to plot the line and identify key features
+- Include instructions to find intercepts, gradient, or specific points
+- Difficulty level: {difficulty}
+- Use ZIMSEC exam format
 
-        prompt = f"""You are MathMentor, an expert ZIMSEC O-Level Mathematics tutor with deep knowledge of the Zimbabwe curriculum (Forms 1-4, 2015-2024).
+Example format: "Plot the graph of y = 2x + 3. Mark the y-intercept clearly and find where the line crosses the x-axis."
 
-TASK: Generate EXACTLY ONE mathematics question for the ZIMSEC O-Level examination.
+Return only the question text."""
 
-SPECIFICATIONS:
-- Subject: {subject}
-- Topic: {topic}
-- Difficulty: {difficulty} ({spec['description']})
-- Complexity: {spec['complexity']}
-- Points: {spec['points']}
+            elif 'quadratic' in topic.lower() or 'parabola' in topic.lower():
+                return f"""Generate a ZIMSEC O-Level Mathematics question about Quadratic Functions and Parabolas.
 
-TOPIC GUIDELINES:
-{topic_guidelines}
+Create a question that requires plotting a quadratic graph in the format y = ax² + bx + c.
 
-CRITICAL REQUIREMENTS:
-1. Generate EXACTLY ONE question (never arrays or multiple questions)
-2. Follow ZIMSEC O-Level standards and marking schemes
-3. Use clear mathematical notation (x², √, ÷, not complex LaTeX)
-4. Provide complete step-by-step solutions with explanations
-5. Include proper mathematical reasoning at each step
-6. Make the question unique and educational
-7. Ensure answers can be verified mathematically
+Requirements:
+- Use specific numerical coefficients (e.g., y = x² - 4x + 3, y = -x² + 2x + 3)
+- Ask students to sketch the parabola and find key features
+- Include instructions to find vertex, roots, y-intercept, or turning point
+- Difficulty level: {difficulty}
+- Use ZIMSEC exam format
 
-MANDATORY JSON FORMAT (single object only):
-{{
-    "question": "Clear, concise mathematics problem statement appropriate for ZIMSEC O-Level",
-    "solution": "Step 1: [Clear explanation of first step]\\nStep 2: [Next logical step with reasoning]\\nStep 3: [Continue until final answer]\\nTherefore: [Final answer with units if applicable]",
-    "answer": "Final numerical or algebraic answer only",
-    "points": {spec['points']},
-    "explanation": "Brief explanation of the mathematical concept being tested",
-    "difficulty": "{difficulty}",
-    "topic": "{topic}",
-    "subject": "{subject}"
-}}
+Example format: "Sketch the graph of y = x² - 4x + 3. Find and mark the vertex, y-intercept, and x-intercepts on your graph."
 
-EXAMPLE QUALITY STANDARDS:
-- Question: Clear, unambiguous, realistic scenario if applicable
-- Solution: Each step justified with mathematical reasoning
-- Answer: Exact final result (numerical, algebraic, or descriptive)
-- All work must be mathematically sound and verifiable
+Return only the question text."""
 
-Generate your ZIMSEC-standard {difficulty} {subject} question on {topic} now:"""
+            elif 'trigonometric' in topic.lower():
+                return f"""Generate a ZIMSEC O-Level Mathematics question about Trigonometric Functions.
 
-        return prompt
+Create a question that requires plotting trigonometric graphs like y = sin(x), y = cos(x), or y = tan(x).
+
+Requirements:
+- Use specific trigonometric functions (e.g., y = sin(x), y = 2cos(x), y = tan(x))
+- Ask students to plot the graph for a specific range (e.g., 0° to 360°)
+- Include instructions to mark key points like maximum, minimum, or asymptotes
+- Difficulty level: {difficulty}
+- Use ZIMSEC exam format
+
+Example format: "Plot y = sin(x) for x from 0° to 360°. Mark the maximum and minimum points clearly."
+
+Return only the question text."""
+
+            elif 'linear programming' in topic.lower():
+                return f"""Generate a ZIMSEC O-Level Mathematics Linear Programming question.
+
+Use this exact format:
+"Answer the whole of this question on the grid.
+
+(a) Draw the graphs of these inequalities by shading the unwanted region.
+
+(i) [constraint like: 2x + y ≤ 40]
+(ii) [constraint like: x + 2y ≤ 48] 
+(iii) x ≥ 0
+(iv) y > [number like 5]
+
+(b) Mark R the region defined by the four inequalities in (a)."
+
+Requirements:
+- Use realistic constraints with different coefficients
+- Include non-negativity constraints (x ≥ 0)
+- Include a constraint like y > [number]
+- Difficulty level: {difficulty}
+- Follow ZIMSEC exam format exactly
+
+Return only the question text."""
+
+        # Standard academic question prompt for non-graph topics
+        return f"""Generate a {difficulty} level {subject} question about {topic} suitable for ZIMSEC O-Level students.
+
+The question should:
+- Be clear and specific
+- Match ZIMSEC examination standards
+- Include proper mathematical notation
+- Be appropriate for the {difficulty} difficulty level
+- Focus specifically on {topic}
+
+Return only the question text without answers or explanations."""
 
     def _get_topic_guidelines(self, subject: str, topic: str) -> str:
         """Get specific guidelines for each topic"""
@@ -388,3 +429,99 @@ The solution should explain how to plot each inequality and identify the feasibl
                 'generated_at': datetime.now().isoformat(),
                 'source': 'emergency_fallback'
             }
+
+    def _make_ai_request(self, prompt: str, timeout: int) -> Optional[Dict]:
+        """Send request to DeepSeek API with specific timeout"""
+
+        headers = {
+            'Authorization': f'Bearer {self.api_key}',
+            'Content-Type': 'application/json'
+        }
+
+        data = {
+            'model': 'deepseek-chat',
+            'messages': [{'role': 'user', 'content': prompt}],
+            'max_tokens': 3000,
+            'temperature': 0.7
+        }
+
+        try:
+            logger.info(f"Sending request to AI API with timeout: {timeout}s")
+            response = requests.post(
+                self.api_url,
+                headers=headers,
+                json=data,
+                timeout=timeout
+            )
+
+            if response.status_code == 200:
+                result = response.json()
+                content = result['choices'][0]['message']['content']
+
+                # Extract JSON from response
+                json_start = content.find('{')
+                json_end = content.rfind('}') + 1
+
+                if json_start >= 0 and json_end > json_start:
+                    json_str = content[json_start:json_end]
+                    question_data = json.loads(json_str)
+                    return question_data
+                else:
+                    logger.error("No valid JSON found in AI response")
+                    return None
+            else:
+                logger.error(f"AI API error: {response.status_code} - {response.text}")
+                return None
+
+        except requests.exceptions.Timeout:
+            logger.warning(f"AI API request timed out after {timeout}s")
+            return None
+        except requests.exceptions.ConnectionError as e:
+            logger.warning(f"AI API connection error: {e}")
+            return None
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse JSON from AI response: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"An unexpected error occurred during AI API request: {e}")
+            return None
+
+    def _parse_ai_response(self, response_data: Dict, subject: str, topic: str, difficulty: str) -> Optional[Dict]:
+        """Parse and validate the AI response for question data"""
+        try:
+            # Required fields validation
+            required_fields = ['question', 'solution', 'answer']
+            for field in required_fields:
+                if field not in response_data or not response_data[field]:
+                    logger.error(f"AI response missing or empty required field: '{field}'")
+                    return self._generate_fallback_question(subject, topic, difficulty)
+
+            # Format the question data
+            formatted_question = {
+                'question': str(response_data['question']).strip(),
+                'solution': str(response_data['solution']).strip(),
+                'answer': str(response_data['answer']).strip(),
+                'points': response_data.get('points', 10),
+                'explanation': response_data.get('explanation', 'No explanation provided'),
+                'difficulty': difficulty,
+                'topic': topic,
+                'subject': subject,
+                'generated_at': datetime.now().isoformat(),
+                'source': 'ai_generated'
+            }
+
+            # Basic validation checks on content length
+            if len(formatted_question['question']) < 10:
+                logger.error("AI generated question is too short.")
+                return self._generate_fallback_question(subject, topic, difficulty)
+
+            if len(formatted_question['solution']) < 10:
+                logger.error("AI generated solution is too short.")
+                return self._generate_fallback_question(subject, topic, difficulty)
+
+            logger.info(f"Successfully parsed and validated AI question for {subject}/{topic}")
+            return formatted_question
+
+        except Exception as e:
+            logger.error(f"Error parsing AI response: {e}")
+            return self._generate_fallback_question(subject, topic, difficulty)

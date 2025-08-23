@@ -112,7 +112,6 @@ class GraphPracticeHandler:
 
             # Add utility buttons
             buttons.extend([
-                {"text": "📝 Custom Graph Creator", "callback_data": "graph_custom_creator"},
                 {"text": "🎓 Graph Tutorial", "callback_data": "graph_tutorial"},
                 {"text": "🏠 Main Menu", "callback_data": "main_menu"}
             ])
@@ -128,10 +127,10 @@ class GraphPracticeHandler:
             }
             save_user_session(user_id, graph_session)
 
-            logger.info(f"Graph practice started for user {user_id}")
+            logger.info("Graph practice started for user %s", user_id)
 
         except Exception as e:
-            logger.error(f"Error starting graph practice for {user_id}: {e}")
+            logger.error("Error starting graph practice for %s: %s", user_id, e)
             self.whatsapp_service.send_message(user_id, "❌ Error starting graph practice. Please try again.")
 
     def handle_graph_module(self, user_id: str, module_id: str):
@@ -182,7 +181,7 @@ class GraphPracticeHandler:
             save_user_session(user_id, session_data)
 
         except Exception as e:
-            logger.error(f"Error handling graph module {module_id} for {user_id}: {e}")
+            logger.error("Error handling graph module %s for %s: %s", module_id, user_id, e)
             self.whatsapp_service.send_message(user_id, "❌ Error loading module. Please try again.")
 
     def handle_graph_practice_questions(self, user_id: str, module_id: str):
@@ -226,7 +225,7 @@ class GraphPracticeHandler:
             save_user_session(user_id, session_data)
 
         except Exception as e:
-            logger.error(f"Error handling practice questions {module_id} for {user_id}: {e}")
+            logger.error("Error handling practice questions %s for %s: %s", module_id, user_id, e)
             self.whatsapp_service.send_message(user_id, "❌ Error loading practice questions. Please try again.")
 
     def handle_graph_generate(self, user_id: str, module_id: str):
@@ -300,7 +299,7 @@ Study the question and when ready, click "Show Graph" to see the correct graph w
                 save_user_session(user_id, session_data)
 
             except Exception as ai_error:
-                logger.error(f"AI generation failed for {user_id}: {ai_error}")
+                logger.error("AI generation failed for %s: %s", user_id, ai_error)
                 # Provide a fallback question instead of complete failure
                 fallback_question = self._get_fallback_question(module_id)
                 if fallback_question:
@@ -338,7 +337,7 @@ Study the question and when ready, click "Show Graph" to see the correct graph w
                     self.whatsapp_service.send_message(user_id, "❌ AI service temporarily unavailable. Please try again.")
 
         except Exception as e:
-            logger.error(f"Error generating graph question for {user_id}: {e}")
+            logger.error("Error generating graph question for %s: %s", user_id, e)
             self.whatsapp_service.send_message(user_id, "❌ Error generating question. Please try again.")
 
     def handle_show_generated_graph(self, user_id: str, module_id: str):
@@ -421,7 +420,7 @@ Study the question and when ready, click "Show Graph" to see the correct graph w
                 self.whatsapp_service.send_message(user_id, "❌ Failed to generate graph. Please try again.")
 
         except Exception as e:
-            logger.error(f"Error showing generated graph for {user_id}: {e}")
+            logger.error("Error showing generated graph for %s: %s", user_id, e)
             self.whatsapp_service.send_message(user_id, "❌ Error creating graph. Please try again.")
 
     def handle_graph_plot(self, user_id: str, module_id: str):
@@ -474,7 +473,7 @@ Study the question and when ready, click "Show Graph" to see the correct graph w
             save_user_session(user_id, session_data)
 
         except Exception as e:
-            logger.error(f"Error handling plot request for {user_id}: {e}")
+            logger.error("Error handling plot request for %s: %s", user_id, e)
             self.whatsapp_service.send_message(user_id, "❌ Error setting up plot. Please try again.")
 
     def handle_user_expression_input(self, user_id: str, expression: str):
@@ -527,7 +526,7 @@ Wait {user_name} NerdX is processing your Graph...
                 # Send the graph image using send_image_file method
                 success = self.whatsapp_service.send_image_file(user_id, graph_result['image_path'], success_msg)
                 if not success:
-                    logger.error(f"Failed to send custom graph to WhatsApp for user {user_id}")
+                    logger.error("Failed to send custom graph to WhatsApp for user %s", user_id)
                     self.whatsapp_service.send_message(user_id, "❌ Graph created but failed to send. Please try again.")
 
                 # Add navigation buttons
@@ -548,7 +547,7 @@ Wait {user_name} NerdX is processing your Graph...
             return True  # Successfully handled input
 
         except Exception as e:
-            logger.error(f"Error processing user expression for {user_id}: {e}")
+            logger.error("Error processing user expression for %s: %s", user_id, e)
             self.whatsapp_service.send_message(user_id, "❌ Error processing your expression. Please try again.")
             return True  # Handled but with error
 
@@ -624,11 +623,11 @@ Wait {user_name} NerdX is processing your Graph...
                             # Use send_image_file method which handles file paths properly
                             success = self.whatsapp_service.send_image_file(user_id, graph_result['image_path'], caption)
                             if not success:
-                                logger.error(f"Failed to send LP graph {i} to WhatsApp for user {user_id}")
+                                logger.error("Failed to send LP graph %i to WhatsApp for user %s", i, user_id)
                                 self.whatsapp_service.send_message(user_id, f"⚠️ Linear programming example {i} failed to send.")
 
                     except Exception as graph_error:
-                        logger.error(f"Error generating LP sample graph {i} for {user_id}: {graph_error}")
+                        logger.error("Error generating LP sample graph %i for %s: %s", i, user_id, graph_error)
                         self.whatsapp_service.send_message(user_id, f"⚠️ Linear programming example {i} failed to generate.")
             else:
                 # Standard handling for other modules
@@ -655,11 +654,11 @@ Wait {user_name} NerdX is processing your Graph...
                             # Use send_image_file method which handles file paths properly
                             success = self.whatsapp_service.send_image_file(user_id, graph_result['image_path'], caption)
                             if not success:
-                                logger.error(f"Failed to send sample graph {i} to WhatsApp for user {user_id}")
+                                logger.error("Failed to send sample graph %i to WhatsApp for user %s", i, user_id)
                                 self.whatsapp_service.send_message(user_id, f"⚠️ Sample graph {i} failed to send.")
 
                     except Exception as graph_error:
-                        logger.error(f"Error generating sample graph {i} for {user_id}: {graph_error}")
+                        logger.error("Error generating sample graph %i for %s: %s", i, user_id, graph_error)
                         self.whatsapp_service.send_message(user_id, f"⚠️ Sample graph {i} failed to generate.")
 
             # Send completion message with navigation buttons
@@ -680,7 +679,7 @@ Wait {user_name} NerdX is processing your Graph...
             self.whatsapp_service.send_interactive_message(user_id, completion_msg, buttons)
 
         except Exception as e:
-            logger.error(f"Error showing sample graphs for {user_id}: {e}")
+            logger.error("Error showing sample graphs for %s: %s", user_id, e)
             self.whatsapp_service.send_message(user_id, "❌ Error loading sample graphs. Please try again.")
 
     def _extract_expression_from_question(self, question_text: str, module_id: str) -> str:
@@ -709,7 +708,7 @@ Wait {user_name} NerdX is processing your Graph...
             return None
 
         except Exception as e:
-            logger.error(f"Error extracting expression from question: {e}")
+            logger.error("Error extracting expression from question: %s", e)
             return None
 
     def _get_sample_expressions(self, module_id: str) -> List[str]:
@@ -874,7 +873,7 @@ Wait {user_name} NerdX is processing your Graph...
             self.whatsapp_service.send_interactive_message(user_id, message, buttons)
 
         except Exception as e:
-            logger.error(f"Error providing theory for {module_id}: {e}")
+            logger.error("Error providing theory for %s: %s", module_id, e)
             self.whatsapp_service.send_message(user_id, "❌ Error loading theory. Please try again.")
 
     def handle_graph_creation(self, user_id: str, module_id: str):
@@ -938,127 +937,20 @@ Ready for more learning?"""
                     {"text": "🔙 Back to Module", "callback_data": f"graph_module_{module_id}"}
                 ]
 
-                # Send graph image first
+                # Send graph image
                 self.whatsapp_service.send_image(user_id, graph_path, "Professional ZIMSEC Graph")
 
                 # Then send interactive message
                 self.whatsapp_service.send_interactive_message(user_id, message, buttons)
 
-                logger.info(f"Graph created for module {module_id} for user {user_id}")
+                logger.info("Graph created for module %s for user %s", module_id, user_id)
             else:
                 self.whatsapp_service.send_message(user_id, "❌ Error creating graph. Please try again.")
 
         except Exception as e:
-            logger.error(f"Error creating graph for module {module_id}: {e}")
+            logger.error("Error creating graph for module %s: %s", module_id, e)
             self.whatsapp_service.send_message(user_id, "❌ Error creating graph. Please try again.")
 
-    def handle_custom_graph_creator(self, user_id: str):
-        """Handle custom graph creation where user inputs any function"""
-        try:
-            registration = get_user_registration(user_id)
-            user_name = registration['name'] if registration else "Student"
-
-            message = f"""📝 Custom Graph Creator
-
-👤 Student: {user_name}
-
-🎯 Create ANY graph you want!
-
-📊 Supported formats:
-• Functions: y = x^2, y = sin(x), y = 2x + 3
-• Statistics: histogram, boxplot, scatter, bar
-• Linear Programming: constraints with shading
-• Parametric: x = t, y = t^2
-
-💡 Examples:
-• "y = x^2 + 2x - 1"
-• "y = sin(2x)"
-• "statistics: 1,2,3,4,5,4,3,2,1"
-• "linear: 2x + 3y <= 12, x + y <= 8"
-
-✍️ Type your function or graph request:"""
-
-            self.whatsapp_service.send_message(user_id, message)
-
-            # Update session for custom input
-            session_data = get_user_session(user_id) or {}
-            session_data.update({
-                'awaiting_custom_graph': True,
-                'session_type': 'graph_practice'
-            })
-            save_user_session(user_id, session_data)
-
-        except Exception as e:
-            logger.error(f"Error in custom graph creator for {user_id}: {e}")
-            self.whatsapp_service.send_message(user_id, "❌ Error starting custom creator. Please try again.")
-
-    def handle_custom_graph_input(self, user_id: str, user_input: str):
-        """Process custom graph input from user"""
-        try:
-            registration = get_user_registration(user_id)
-            user_name = registration['name'] if registration else "Student"
-
-            # Check credits (3 credits for custom graphs)
-            credits = get_user_credits(user_id)
-            if credits < 3:
-                message = f"""💰 Insufficient Credits
-
-👤 Student: {user_name}
-💰 Current Credits: {credits}
-🎯 Required: 3 credits for custom graph
-
-🔄 Please purchase more credits."""
-
-                self.whatsapp_service.send_message(user_id, message)
-                return
-
-            # Deduct credits
-            if not deduct_credits(user_id, 3, "custom_graph", f"Custom graph: {user_input}"):
-                self.whatsapp_service.send_message(user_id, "❌ Error processing credits. Please try again.")
-                return
-
-            # Process the input and create graph
-            graph_path = self._process_custom_graph_input(user_input)
-
-            if graph_path:
-                # Get AI explanation for the graph
-                explanation = self._get_graph_explanation(user_input)
-
-                message = f"""📊 Custom Graph Created!
-
-👤 Student: {user_name}
-📝 Your Input: {user_input}
-💰 Credits Used: 3 (Remaining: {credits - 3})
-
-🤖 AI Explanation:
-{explanation}
-
-🎯 Want to create another graph?"""
-
-                buttons = [
-                    {"text": "📝 Create Another", "callback_data": "graph_custom_creator"},
-                    {"text": "📚 Learn More", "callback_data": "graph_tutorial"},
-                    {"text": "🏠 Main Menu", "callback_data": "main_menu"}
-                ]
-
-                # Send graph image
-                self.whatsapp_service.send_image(user_id, graph_path, f"Custom Graph: {user_input}")
-
-                # Send explanation
-                self.whatsapp_service.send_interactive_message(user_id, message, buttons)
-
-                # Clear awaiting state
-                session_data = get_user_session(user_id) or {}
-                session_data.pop('awaiting_custom_graph', None)
-                save_user_session(user_id, session_data)
-
-                logger.info(f"Custom graph created for user {user_id}: {user_input}")
-            else:
-                self.whatsapp_service.send_message(user_id, "❌ Error creating your graph. Please check your input and try again.")
-
-        except Exception as e:
-            logger.error(f"Error processing custom graph input for {user_id}: {e}")
-            self.whatsapp_service.send_message(user_id, "❌ Error processing your graph. Please try again.")
 
     def _create_module_graph(self, module_id: str, module_info: Dict) -> Optional[str]:
         """Create a graph based on the module type"""
@@ -1122,53 +1014,7 @@ Ready for more learning?"""
             return None
 
         except Exception as e:
-            logger.error(f"Error creating module graph for {module_id}: {e}")
-            return None
-
-    def _process_custom_graph_input(self, user_input: str) -> Optional[str]:
-        """Process custom graph input and create appropriate graph"""
-        try:
-            input_lower = user_input.lower().strip()
-
-            # Statistics graphs
-            if input_lower.startswith("statistics:") or input_lower.startswith("stats:"):
-                data_str = user_input.split(":", 1)[1].strip()
-                try:
-                    data = [float(x.strip()) for x in data_str.split(",")]
-                    graph_type = "histogram"  # Default
-                    if "boxplot" in input_lower or "box" in input_lower:
-                        graph_type = "boxplot"
-                    elif "scatter" in input_lower:
-                        graph_type = "scatter"
-                    elif "bar" in input_lower:
-                        graph_type = "bar"
-
-                    return self.graph_service.create_statistics_graph(
-                        data, graph_type, f"Custom Statistics: {graph_type.title()}"
-                    )
-                except ValueError:
-                    return None
-
-            # Linear programming with constraints
-            elif input_lower.startswith("linear:") or input_lower.startswith("lp:"):
-                constraints_str = user_input.split(":", 1)[1].strip()
-                constraints = [c.strip() for c in constraints_str.split(",")]
-                return self.graph_service.generate_linear_programming_graph(
-                    constraints,
-                    objective_function=None,
-                    user_name=user_name,
-                    title="Custom Linear Programming Problem"
-                )
-
-            # Regular functions
-            else:
-                # Assume it's a mathematical function
-                return self.graph_service.create_advanced_function_graph(
-                    user_input, f"Custom Function: {user_input}"
-                )
-
-        except Exception as e:
-            logger.error(f"Error processing custom graph input: {e}")
+            logger.error("Error creating module graph for %s: %s", module_id, e)
             return None
 
     def _get_practice_problem(self, module_id: str) -> str:
@@ -1259,7 +1105,7 @@ Ready for more learning?"""
 
             return self._get_ai_explanation(prompt)
         except Exception as e:
-            logger.error(f"Error getting graph explanation: {e}")
+            logger.error("Error getting graph explanation: %s", e)
             return f"This is a graph of: {user_input}\n\nStudy the shape, intercepts, and behavior of the function."
 
     def _get_fallback_explanation(self) -> str:
@@ -1334,7 +1180,7 @@ Ready to practice?"""
             self.whatsapp_service.send_interactive_message(user_id, message, buttons)
 
         except Exception as e:
-            logger.error(f"Error providing graph tutorial for {user_id}: {e}")
+            logger.error("Error providing graph tutorial for %s: %s", user_id, e)
             self.whatsapp_service.send_message(user_id, "❌ Error loading tutorial. Please try again.")
 
     def handle_graph_practice_problems(self, user_id: str, module_id: str):
@@ -1367,7 +1213,7 @@ Ready to practice?"""
             self.whatsapp_service.send_interactive_message(user_id, message, buttons)
 
         except Exception as graph_error:
-            logger.error(f"Error in graph practice handler: {graph_error}")
+            logger.error("Error in graph practice handler: %s", graph_error)
             self.whatsapp_service.send_message(user_id, "❌ Error processing graph request. Please try again.")
 
     def _get_ai_explanation(self, prompt: str) -> str:
