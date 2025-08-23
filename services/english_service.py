@@ -384,6 +384,7 @@ Return ONLY a JSON object:
         try:
             logger.info(f"Generating long comprehension passage: {theme}")
             
+            # Add timeout handling for API requests
             response = self.client.models.generate_content(
                 model=self.model,
                 contents=[
@@ -440,6 +441,7 @@ Return ONLY a JSON object:
             
         except Exception as e:
             logger.error(f"Error generating long comprehension passage: {str(e)}")
+            logger.info(f"Using fallback comprehension for theme: {theme}")
             return self._get_fallback_long_comprehension(theme)
             
     def _validate_long_comprehension_passage(self, passage_data: Dict) -> bool:

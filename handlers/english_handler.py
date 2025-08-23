@@ -211,7 +211,18 @@ Ready to boost your reading skills? 🚀"""
             import random
             random_theme = random.choice(themes)
             
-            passage_data = self.english_service.generate_long_comprehension_passage(random_theme, form_level)
+            try:
+                passage_data = self.english_service.generate_long_comprehension_passage(random_theme, form_level)
+                
+                if not passage_data:
+                    logger.warning(f"No passage data returned for theme: {random_theme}")
+                    # Use fallback comprehension directly from service
+                    passage_data = self.english_service._get_fallback_long_comprehension(random_theme)
+                    
+            except Exception as e:
+                logger.error(f"Error generating comprehension passage: {e}")
+                # Use fallback comprehension when API fails
+                passage_data = self.english_service._get_fallback_long_comprehension(random_theme)
             
             if not passage_data:
                 self.whatsapp_service.send_message(user_id, "❌ Error generating comprehension. Please try again.")
