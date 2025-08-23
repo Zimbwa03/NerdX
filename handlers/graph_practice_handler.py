@@ -166,7 +166,7 @@ class GraphPracticeHandler:
             # New button structure as requested
             buttons = [
                 {"text": "📝 Practice Questions", "callback_data": f"graph_practice_{module_id}"},
-                {"text": "📄 Sample Questions", "callback_data": f"graph_samples_{module_id}"},
+                {"text": "📊 Sample Graphs", "callback_data": f"graph_sample_graphs_{module_id}"},
                 {"text": "📖 Learn Theory", "callback_data": f"graph_theory_{module_id}"},
                 {"text": "🔙 Back Topics", "callback_data": "graph_practice_start"}
             ]
@@ -515,8 +515,8 @@ Wait {user_name} NerdX is processing your Graph...
             self.whatsapp_service.send_message(user_id, "❌ Error processing your expression. Please try again.")
             return True  # Handled but with error
 
-    def handle_sample_questions(self, user_id: str, module_id: str):
-        """Handle Sample Questions option"""
+    def handle_sample_graphs(self, user_id: str, module_id: str):
+        """Handle Sample Graphs option - show 3 plotted graph images for the topic"""
         try:
             if module_id not in self.graph_modules:
                 return
@@ -525,36 +525,68 @@ Wait {user_name} NerdX is processing your Graph...
             registration = get_user_registration(user_id)
             user_name = registration['name'] if registration else "Student"
             
-            # Create sample questions based on module type
-            sample_questions = self._get_sample_questions(module_id)
-            
-            message = f"""📄 **Sample Questions** - {module_info['title']}
+            # Send initial message
+            message = f"""📊 **Sample Graphs** - {module_info['title']}
 
 👤 Student: {user_name}
 📚 Topic: {module_info['description']}
 
-📝 **ZIMSEC-Style Practice Questions:**
+🎨 Loading 3 sample graphs to show you how {module_info['title'].lower()} look like...
 
-{chr(10).join([f"{i+1}. {q}" for i, q in enumerate(sample_questions)])}
+⏳ NerdX is generating visual examples for you!"""
 
-💡 **Study Tips:**
-• Practice plotting these by hand first
-• Check your work using the graph generator
-• Focus on key characteristics and transformations
+            self.whatsapp_service.send_message(user_id, message)
+            
+            # Get 3 sample expressions for this topic
+            sample_expressions = self._get_sample_expressions(module_id)
+            
+            # Generate and send 3 sample graphs
+            for i, expression in enumerate(sample_expressions[:3], 1):
+                try:
+                    # Create graph using the graph service
+                    graph_result = self.graph_service.create_graph(
+                        user_id, 
+                        expression, 
+                        f"{module_info['title']} - Example {i}",
+                        user_name
+                    )
+                    
+                    if graph_result and 'image_path' in graph_result:
+                        # Send the sample graph
+                        caption = f"""📊 **Sample Graph {i}/3**
 
-🎯 Ready to practice?"""
+📈 Expression: {expression}
+📂 Topic: {module_info['title']}
+🎨 Example for visual learning
+
+💡 Study this graph pattern and characteristics!"""
+                        
+                        self.whatsapp_service.send_image(user_id, graph_result['image_path'], caption)
+                    
+                except Exception as graph_error:
+                    logger.error(f"Error generating sample graph {i} for {user_id}: {graph_error}")
+                    self.whatsapp_service.send_message(user_id, f"⚠️ Sample graph {i} failed to generate.")
+            
+            # Send completion message with navigation buttons
+            completion_msg = f"""✅ **Sample Graphs Complete!**
+
+👁️ You've seen 3 examples of {module_info['title'].lower()}
+📚 Study these patterns and characteristics
+🎯 Ready to practice creating your own?
+
+💰 Credits Remaining: {get_user_credits(user_id)}"""
 
             buttons = [
-                {"text": "🤖 Generate Similar Questions", "callback_data": f"graph_generate_{module_id}"},
-                {"text": "📐 Plot These Graphs", "callback_data": f"graph_plot_{module_id}"},
+                {"text": "🤖 Generate Practice Question", "callback_data": f"graph_generate_{module_id}"},
+                {"text": "📐 Plot Your Own Graph", "callback_data": f"graph_plot_{module_id}"},
                 {"text": "🔙 Back", "callback_data": f"graph_module_{module_id}"}
             ]
             
-            self.whatsapp_service.send_interactive_message(user_id, message, buttons)
+            self.whatsapp_service.send_interactive_message(user_id, completion_msg, buttons)
             
         except Exception as e:
-            logger.error(f"Error showing sample questions for {user_id}: {e}")
-            self.whatsapp_service.send_message(user_id, "❌ Error loading sample questions. Please try again.")
+            logger.error(f"Error showing sample graphs for {user_id}: {e}")
+            self.whatsapp_service.send_message(user_id, "❌ Error loading sample graphs. Please try again.")
     
     def _extract_expression_from_question(self, question_text: str, module_id: str) -> str:
         """Extract mathematical expression from AI-generated question text"""
@@ -585,6 +617,47 @@ Wait {user_name} NerdX is processing your Graph...
             logger.error(f"Error extracting expression from question: {e}")
             return None
     
+    def _get_sample_expressions(self, module_id: str) -> List[str]:
+        """Get 3 sample expressions for each graph module to create visual examples"""
+        sample_expressions = {
+            'linear_functions': [
+                "y = 2x + 3",
+                "y = -x + 4", 
+                "y = 0.5x - 2"
+            ],
+            'quadratic_functions': [
+                "y = x^2 - 4x + 3",
+                "y = -x^2 + 2x + 3",
+                "y = 2x^2 - 8x + 6"
+            ],
+            'trigonometric_functions': [
+                "y = sin(x)",
+                "y = 2*cos(x)",
+                "y = tan(x)"
+            ],
+            'exponential_logarithmic': [
+                "y = 2^x",
+                "y = 3^x",
+                "y = 0.5^x"
+            ],
+            'statistics_graphs': [
+                "histogram_data_10_15_20_25_30",
+                "boxplot_data_5_10_15_20_25", 
+                "scatter_data_1_2_3_4_5"
+            ],
+            'linear_programming': [
+                "x + y <= 8",
+                "2x + 3y <= 12",
+                "3x + y <= 9"
+            ]
+        }
+        
+        return sample_expressions.get(module_id, [
+            "y = x",
+            "y = 2x", 
+            "y = x + 1"
+        ])
+
     def _get_sample_questions(self, module_id: str) -> List[str]:
         """Get sample questions for specific graph module"""
         sample_questions = {

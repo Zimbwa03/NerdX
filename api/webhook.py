@@ -656,9 +656,9 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         elif selection_id.startswith('graph_plot_'):
             module_id = selection_id.replace('graph_plot_', '')
             graph_practice_handler.handle_graph_plot(user_id, module_id)
-        elif selection_id.startswith('graph_samples_'):
-            module_id = selection_id.replace('graph_samples_', '')
-            graph_practice_handler.handle_sample_questions(user_id, module_id)
+        elif selection_id.startswith('graph_sample_graphs_'):
+            module_id = selection_id.replace('graph_sample_graphs_', '')
+            graph_practice_handler.handle_sample_graphs(user_id, module_id)
         elif selection_id.startswith('graph_theory_'):
             module_id = selection_id.replace('graph_theory_', '')
             graph_practice_handler.handle_graph_theory(user_id, module_id)
