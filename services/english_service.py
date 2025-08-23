@@ -44,22 +44,20 @@ class EnglishService:
     def generate_grammar_question(self) -> Optional[Dict]:
         """Generate a single grammar question"""
         try:
-            prompt = f"""Generate ONE high-quality ZIMSEC O-Level Grammar and Usage question.
+            prompt = f"""Generate ONE ZIMSEC O-Level Grammar and Usage question.
             
 Requirements:
-- Question should test understanding of English grammar, syntax, punctuation, or usage
-- Include clear instructions  
-- Provide the correct answer
-- Include a brief explanation
-- Use Zimbabwean context where appropriate
-- Suitable for Form 3-4 students
+- Test basic grammar: tenses, subject-verb agreement, punctuation, sentence structure
+- Use simple Zimbabwean names and contexts  
+- Suitable for Form 3-4 students (moderate difficulty)
+- Keep explanations SHORT (1-2 sentences max)
 
-Return ONLY a JSON object in this format:
+Return ONLY a JSON object:
 {{
     "question": "The grammar question text",
     "instructions": "What the student should do",
-    "answer": "The correct answer",
-    "explanation": "Brief explanation of why this is correct"
+    "answer": "The correct answer", 
+    "explanation": "Short explanation (max 30 words)"
 }}"""
 
             logger.info("Generating grammar question using Gemini AI")
@@ -70,7 +68,7 @@ Return ONLY a JSON object in this format:
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
                     temperature=0.7,
-                    max_output_tokens=1000
+                    max_output_tokens=1500
                 ),
             )
 
@@ -116,21 +114,22 @@ Return ONLY a JSON object in this format:
     def generate_vocabulary_mcq(self) -> Optional[Dict]:
         """Generate a single vocabulary MCQ"""
         try:
-            prompt = f"""Generate ONE high-quality ZIMSEC O-Level Vocabulary Building MCQ question.
+            prompt = f"""Generate ONE ZIMSEC O-Level Vocabulary Building MCQ question.
             
 Requirements:
-- Test vocabulary, word meanings, synonyms, antonyms, or usage in context
-- Provide 4 multiple choice options (A, B, C, D)
-- Use Zimbabwean context where appropriate
-- Include brief explanation
-- Suitable for Form 3-4 students
+- Use MEDIUM difficulty vocabulary suitable for Form 3-4 students
+- Test common English words, simple synonyms, antonyms, or word meanings
+- Use familiar Zimbabwean contexts (school, home, community)
+- Include 4 simple options (A, B, C, D)
+- Keep explanation SHORT (1 sentence max)
+- Avoid advanced/complex vocabulary
 
-Return ONLY a JSON object in this format:
+Return ONLY a JSON object:
 {{
-    "question": "The vocabulary question text",
-    "options": ["Option A", "Option B", "Option C", "Option D"],
+    "question": "The vocabulary question with simple words",
+    "options": ["Simple option A", "Simple option B", "Simple option C", "Simple option D"],
     "correct_answer": 0,
-    "explanation": "Brief explanation of the correct answer"
+    "explanation": "Short explanation (max 20 words)"
 }}
 
 Note: correct_answer should be the index (0-3) of the correct option."""
@@ -143,7 +142,7 @@ Note: correct_answer should be the index (0-3) of the correct option."""
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
                     temperature=0.7,
-                    max_output_tokens=1200
+                    max_output_tokens=1500
                 ),
             )
 
