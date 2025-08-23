@@ -429,7 +429,7 @@ class MathematicsHandler:
             # Get hint from AI
             hint = self.math_solver.get_hint(question_data['question'], difficulty)
             
-            hint_message = f"💡 **Hint** 💡\n\n"
+            hint_message = f"💡 Hint\n\n"
             if hint:
                 hint_message += hint
             else:
@@ -437,7 +437,7 @@ class MathematicsHandler:
             
             # Add Show Solution button to hint message
             buttons = [
-                {"text": "💡 Show Solution", "callback_data": f"math_show_solution_{topic.lower().replace(' ', '_')}"}
+                {"text": "💡 Show Solution", "callback_data": f"math_show_solution_{(topic or '').lower().replace(' ', '_')}"}
             ]
             
             self.whatsapp_service.send_interactive_message(user_id, hint_message, buttons)
