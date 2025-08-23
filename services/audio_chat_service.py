@@ -134,21 +134,24 @@ class AudioChatService:
         
         return text
 
-    def generate_ai_response(self, content: str, content_type: str = "text", user_query: str = "") -> str:
+    def generate_ai_response(self, content: str, content_type: str = "text", user_query: str = "", user_name: str = "") -> str:
         """Generate AI response using DeepSeek API"""
         try:
             if not DEEPSEEK_API_KEY:
                 return "AI service is currently unavailable. Please ensure your DeepSeek API key is configured."
 
+            # Add user name personalization if available
+            name_intro = f"Hi {user_name}, " if user_name else ""
+            
             # Construct prompt based on content type
             if content_type == "image":
-                prompt = f"User uploaded an image. Extracted text: '{content}'. User's question: {user_query}. Please analyze this image content and provide helpful educational insights."
+                prompt = f"User uploaded an image. Extracted text: '{content}'. User's question: {user_query}. Please analyze this image content and provide helpful educational insights. Start your response with '{name_intro}' to personalize it."
             elif content_type == "pdf":
-                prompt = f"User uploaded a PDF document. Extracted text: '{content[:2000]}...'. User's question: {user_query}. Please summarize this document and answer any educational questions."
+                prompt = f"User uploaded a PDF document. Extracted text: '{content[:2000]}...'. User's question: {user_query}. Please summarize this document and answer any educational questions. Start your response with '{name_intro}' to personalize it."
             elif content_type == "audio":
-                prompt = f"User sent an audio message. Transcribed text: '{content}'. Please respond to this audio message in a conversational educational manner."
+                prompt = f"User sent an audio message. Transcribed text: '{content}'. Please respond to this audio message in a conversational educational manner. Start your response with '{name_intro}' to personalize it."
             else:
-                prompt = f"As an educational assistant for ZIMSEC students, please provide a helpful response to: {content}"
+                prompt = f"As an educational assistant for ZIMSEC students, please provide a helpful response to: {content}. Start your response with '{name_intro}' to personalize it."
 
             headers = {
                 'Authorization': f'Bearer {DEEPSEEK_API_KEY}',
@@ -312,7 +315,7 @@ class AudioChatService:
                 return audio_path
             else:
                 # Fallback to text response
-                return ai_response
+                return str(ai_response)
                 
         except Exception as e:
             logger.error(f"Error processing text chat: {e}")
@@ -394,6 +397,7 @@ Choose your preferred voice and start chatting!"""
         try:
             from services.whatsapp_service import WhatsAppService
             from utils.session_manager import session_manager
+            from database.external_db import get_user_registration
             
             whatsapp_service = WhatsAppService()
             
@@ -406,6 +410,15 @@ Choose your preferred voice and start chatting!"""
                 self.end_audio_chat(user_id)
                 return
             
+            # Get user's name for personalization
+            user_name = ""
+            try:
+                user_data = get_user_registration(user_id)
+                if user_data:
+                    user_name = user_data.get('name', '')
+            except:
+                pass
+            
             # Show processing message
             whatsapp_service.send_message(user_id, "🎵 Generating your audio response...")
             
@@ -414,15 +427,15 @@ Choose your preferred voice and start chatting!"""
             
             if file_type == 'image' and file_path:
                 content = self.process_image(file_path)
-                ai_response = self.generate_ai_response(content, 'image', message_text or "")
+                ai_response = self.generate_ai_response(content, 'image', message_text or "", user_name)
             elif file_type == 'pdf' and file_path:
                 content = self.process_pdf(file_path)
-                ai_response = self.generate_ai_response(content, 'pdf', message_text or "")
+                ai_response = self.generate_ai_response(content, 'pdf', message_text or "", user_name)
             elif file_type == 'audio' and file_path:
                 content = self.process_audio(file_path)
-                ai_response = self.generate_ai_response(content, 'audio')
+                ai_response = self.generate_ai_response(content, 'audio', "", user_name)
             else:
-                ai_response = self.generate_ai_response(message_text or "", 'text')
+                ai_response = self.generate_ai_response(message_text or "", 'text', "", user_name)
             
             # Generate audio response with 45-second limit
             clean_response = self.clean_text_for_audio(ai_response, max_duration_seconds=45)
@@ -432,7 +445,10 @@ Choose your preferred voice and start chatting!"""
                 # Send ONLY audio file via WhatsApp (no text)
                 success = whatsapp_service.send_audio_message(user_id, audio_path)
                 
-                if not success:
+                if success:
+                    # Send buttons after audio response
+                    self.send_audio_response_buttons(user_id)
+                else:
                     # If audio sending fails, send error message
                     whatsapp_service.send_message(user_id, "❌ Failed to send audio. Please try again or type 'end audio' to exit.")
                 
@@ -478,3 +494,22 @@ Choose your preferred voice and start chatting!"""
             from services.whatsapp_service import WhatsAppService
             whatsapp_service = WhatsAppService()
             whatsapp_service.send_message(user_id, "Audio chat ended. Type 'menu' to return to main menu.")
+
+    def send_audio_response_buttons(self, user_id: str):
+        """Send buttons after audio response"""
+        try:
+            from services.whatsapp_service import WhatsAppService
+            
+            whatsapp_service = WhatsAppService()
+            
+            # Send buttons for user to choose next action
+            buttons = [
+                {'id': 'end_audio_chat', 'title': '❌ End Audio Chat'},
+                {'id': 'continue_audio_chat', 'title': '🔄 Continue'}
+            ]
+            
+            message = "What would you like to do next?"
+            whatsapp_service.send_interactive_message(user_id, message, buttons)
+            
+        except Exception as e:
+            logger.error(f"Error sending audio response buttons: {e}")

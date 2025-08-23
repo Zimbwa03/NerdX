@@ -563,6 +563,8 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             audio_chat_service.handle_voice_selection(user_id, 'male')
         elif selection_id == 'end_audio_chat':
             audio_chat_service.end_audio_chat(user_id)
+        elif selection_id == 'continue_audio_chat':
+            handle_continue_audio_chat(user_id)
         elif selection_id == 'buy_credits':
             show_credit_packages(user_id)
         elif selection_id == 'share_to_friend':
@@ -1261,6 +1263,20 @@ def handle_audio_chat_message(user_id: str, message_text: str):
     except Exception as e:
         logger.error(f"Error handling audio chat message for {user_id}: {e}", exc_info=True)
         whatsapp_service.send_message(user_id, "❌ Error processing your message. Please try again or type 'menu' to return.")
+
+def handle_continue_audio_chat(user_id: str):
+    """Handle continue audio chat option"""
+    try:
+        # Send a message asking user to type their next question
+        continue_message = "🎵 **Ready for your next question!**\n\n"
+        continue_message += "Type any question, send an image, or upload a document and I'll respond with audio!\n\n"
+        continue_message += "Type 'end audio' to exit audio chat mode."
+        
+        whatsapp_service.send_message(user_id, continue_message)
+        
+    except Exception as e:
+        logger.error(f"Error handling continue audio chat for {user_id}: {e}", exc_info=True)
+        whatsapp_service.send_message(user_id, "❌ Error continuing audio chat. Please try again.")
 
 def handle_subject_topics(user_id: str, subject: str):
     """Show topics for a given subject"""
