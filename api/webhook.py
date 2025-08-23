@@ -661,18 +661,19 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
                 difficulty = parts[-1]  # Last part is difficulty
                 topic_key = '_'.join(parts[:-1])  # Everything except last part is topic
 
-                # Check if user has an active generation or question session
+                # Only check for active generation session (not question session)
+                # This allows "Next Question" to work after completing a question
                 from database.session_db import get_user_session
                 existing_session = get_user_session(user_id)
                 if existing_session:
                     session_type = existing_session.get('session_type')
-                    if session_type in ['math_generating', 'math_question']:
-                        # Send message instead of generating new question
+                    if session_type == 'math_generating':
+                        # Only prevent during active generation, not after completion
                         whatsapp_service.send_message(
                             user_id,
-                            "⏳ You already have an active math question session. Please complete your current question first or type 'cancel' to reset."
+                            "⏳ Question is being generated. Please wait a moment."
                         )
-                        return jsonify({'status': 'success', 'message': 'Duplicate request prevented'})
+                        return jsonify({'status': 'success', 'message': 'Generation in progress'})
 
                 mathematics_handler.handle_question_generation(user_id, topic_key, difficulty)
             else:

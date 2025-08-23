@@ -354,7 +354,7 @@ class MathematicsHandler:
             
             buttons = [
                 {"text": "➡️ Next Question", "callback_data": f"math_question_{topic_encoded}_{difficulty}"},
-                {"text": "📚 Change Topic", "callback_data": "math_topical_questions"},
+                {"text": "📚 Change Topic", "callback_data": "mathematics_mcq"},
                 {"text": "🏠 Main Menu", "callback_data": "main_menu"}
             ]
             
@@ -396,7 +396,7 @@ class MathematicsHandler:
             topic_encoded = (topic or '').lower().replace(' ', '_')
             buttons = [
                 {"text": "➡️ Next Question", "callback_data": f"math_question_{topic_encoded}_{difficulty}"},
-                {"text": "📚 Change Topic", "callback_data": "math_topical_questions"},
+                {"text": "📚 Change Topic", "callback_data": "mathematics_mcq"},
                 {"text": "🏠 Main Menu", "callback_data": "main_menu"}
             ]
             
