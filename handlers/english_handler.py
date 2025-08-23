@@ -189,8 +189,20 @@ Ready to boost your reading skills? 🚀"""
             self.whatsapp_service.send_message(user_id, "❌ Error loading comprehension. Please try again.")
 
     def handle_comprehension_start(self, user_id: str):
-        """Start new comprehension session with loading message"""
+        """Start new comprehension session with professional smooth flow"""
         try:
+            from database.session_db import save_user_session, get_user_session, clear_user_session
+            import time
+            
+            # Check for active session to prevent duplicates
+            existing_session = get_user_session(user_id)
+            if existing_session and existing_session.get('session_type') in ['comprehension_active', 'comprehension_questions']:
+                self.whatsapp_service.send_message(user_id, "⚠️ You have an active comprehension session. Please complete it first.")
+                return
+            
+            # Clear any old sessions
+            clear_user_session(user_id)
+            
             registration = get_user_registration(user_id)
             user_name = registration['name'] if registration else "Student"
             form_level = registration.get('form_level', 4) if registration else 4
@@ -200,11 +212,22 @@ Ready to boost your reading skills? 🚀"""
                 self.whatsapp_service.send_message(user_id, "❌ Insufficient credits. Please buy more credits.")
                 return
             
-            # Send personalized generating message
+            # Save active session to prevent duplicates
+            session_data = {
+                'session_type': 'comprehension_active',
+                'user_name': user_name,
+                'started_at': str(datetime.now())
+            }
+            save_user_session(user_id, session_data)
+            
+            # Send professional loading message
             self.whatsapp_service.send_message(
                 user_id,
-                f"⏳ Wait patiently {user_name}, NerdX is generating your comprehension...\n\n🎯 Creating an engaging passage with 10 ZIMSEC-style questions just for you!"
+                f"⏳ Please wait {user_name}...\n\n📚 NerdX is creating your personalized comprehension practice."
             )
+            
+            # Small delay for smooth experience
+            time.sleep(1.5)
             
             # Generate random comprehension passage
             themes = ["Zimbabwean Culture", "African Wildlife", "Technology & Society", "Education", "Sports", "Environment", "History", "Science Discovery"]
@@ -225,16 +248,19 @@ Ready to boost your reading skills? 🚀"""
                 passage_data = self.english_service._get_fallback_long_comprehension(random_theme)
             
             if not passage_data:
+                clear_user_session(user_id)
                 self.whatsapp_service.send_message(user_id, "❌ Error generating comprehension. Please try again.")
                 return
             
-            # Send passage and questions with new format
-            self._send_enhanced_comprehension_passage(user_id, user_name, passage_data)
+            # Send passage and questions with professional smooth format
+            self._send_professional_comprehension_flow(user_id, user_name, passage_data)
             
-            logger.info(f"Enhanced comprehension generated for {user_id}: {random_theme}")
+            logger.info(f"Professional comprehension delivered for {user_id}: {random_theme}")
             
         except Exception as e:
             logger.error(f"Error starting comprehension for {user_id}: {e}")
+            from database.session_db import clear_user_session
+            clear_user_session(user_id)
             self.whatsapp_service.send_message(user_id, "❌ Error generating comprehension. Please try again.")
 
     def _send_enhanced_comprehension_passage(self, user_id: str, user_name: str, passage_data: Dict):
@@ -429,6 +455,94 @@ Great job on completing your comprehension practice! 📚✨"""
             chunks.append(current_chunk.strip())
         
         return chunks
+
+    def _send_professional_comprehension_flow(self, user_id: str, user_name: str, passage_data: Dict):
+        """Send comprehension with professional smooth flow - one message at a time"""
+        try:
+            import time
+            
+            passage = passage_data.get('passage', {})
+            questions = passage_data.get('questions', [])
+            
+            if not passage or not questions:
+                logger.error("Invalid passage data structure")
+                return
+            
+            # Step 1: Send passage with professional formatting
+            passage_text = passage.get('text', 'Passage content not available')
+            passage_title = passage.get('title', 'Comprehension Passage')
+            word_count = len(passage_text.split())
+            reading_time = max(2, word_count // 200)
+            
+            # Send title first
+            title_message = f"📖 **{passage_title}**\n\n📊 Words: {word_count} | ⏱️ Time: ~{reading_time} min\n\n*Please read carefully:*"
+            self.whatsapp_service.send_message(user_id, title_message)
+            time.sleep(2)  # Smooth delivery
+            
+            # Send passage in manageable chunks
+            if len(passage_text) > 3500:
+                chunks = self._split_text(passage_text, 3200)
+                for i, chunk in enumerate(chunks):
+                    chunk_message = f"**Part {i+1}:**\n\n{chunk}"
+                    self.whatsapp_service.send_message(user_id, chunk_message)
+                    time.sleep(1.5)  # Smooth delivery between chunks
+            else:
+                self.whatsapp_service.send_message(user_id, passage_text)
+                time.sleep(2)
+            
+            # Step 2: Send completion message
+            ready_message = f"✅ **Passage Complete**\n\nNow answer the 10 questions below, {user_name}!"
+            self.whatsapp_service.send_message(user_id, ready_message)
+            time.sleep(2)
+            
+            # Step 3: Split questions into two messages (5 questions each)
+            questions_part1 = questions[:5]
+            questions_part2 = questions[5:10]
+            
+            # Send first 5 questions
+            questions_message_1 = f"📝 **QUESTIONS 1-5**\n\n"
+            for i, q in enumerate(questions_part1, 1):
+                marks = q.get('marks', 1)
+                questions_message_1 += f"**{i}.** {q.get('question', f'Question {i} not available')} [{marks} mark{'s' if marks != 1 else ''}]\n\n"
+            
+            self.whatsapp_service.send_message(user_id, questions_message_1)
+            time.sleep(2)
+            
+            # Send last 5 questions
+            questions_message_2 = f"📝 **QUESTIONS 6-10**\n\n"
+            for i, q in enumerate(questions_part2, 6):
+                marks = q.get('marks', 1)
+                questions_message_2 += f"**{i}.** {q.get('question', f'Question {i} not available')} [{marks} mark{'s' if marks != 1 else ''}]\n\n"
+            
+            questions_message_2 += "✅ *Answer all questions based on the passage above*"
+            self.whatsapp_service.send_message(user_id, questions_message_2)
+            time.sleep(1.5)
+            
+            # Step 4: Save session and send answer button
+            from database.session_db import save_user_session
+            import json
+            session_data = {
+                'session_type': 'comprehension_questions',
+                'questions_data': json.dumps(questions[:10]),
+                'user_name': user_name,
+                'passage_title': passage_title
+            }
+            save_user_session(user_id, session_data)
+            
+            # Send button for answers
+            buttons = [
+                {"text": "📋 Show Answers", "callback_data": "comprehension_show_answers"},
+                {"text": "🔙 Back", "callback_data": "english_menu"}
+            ]
+            
+            button_message = f"📌 **Ready to check your answers, {user_name}?**"
+            self.whatsapp_service.send_interactive_message(user_id, button_message, buttons)
+            
+            logger.info(f"Professional comprehension flow completed for {user_id}")
+            
+        except Exception as e:
+            logger.error(f"Error in professional comprehension flow: {e}")
+            self.whatsapp_service.send_message(user_id, "❌ Error displaying comprehension. Please try again.")
 
     def handle_essay_writing(self, user_id: str):
         """Handle essay writing module"""

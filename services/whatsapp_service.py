@@ -39,7 +39,7 @@ class WhatsAppService:
                 'text': {'body': message}
             }
             
-            response = requests.post(url, headers=headers, json=data, timeout=15)  # Reduced timeout
+            response = requests.post(url, headers=headers, json=data, timeout=10)  # Further reduced timeout
             
             if response.status_code == 200:
                 logger.info(f"Message sent successfully to {to}")
@@ -167,7 +167,7 @@ class WhatsAppService:
                 }
             }
             
-            response = requests.post(url, headers=headers, json=data, timeout=30)
+            response = requests.post(url, headers=headers, json=data, timeout=10)
             
             if response.status_code == 200:
                 logger.info(f"Interactive message sent successfully to {to}")
@@ -257,7 +257,7 @@ class WhatsAppService:
                 }
             }
             
-            response = requests.post(url, headers=headers, json=data, timeout=30)
+            response = requests.post(url, headers=headers, json=data, timeout=10)
             
             if response.status_code == 200:
                 return True
@@ -307,7 +307,7 @@ class WhatsAppService:
                 }
             }
             
-            response = requests.post(url, headers=headers, json=data, timeout=30)
+            response = requests.post(url, headers=headers, json=data, timeout=10)
             
             if response.status_code == 200:
                 logger.info(f"MCQ list message sent successfully to {to}")
@@ -344,7 +344,7 @@ class WhatsAppService:
                 }
             }
             
-            response = requests.post(url, headers=headers, json=data, timeout=30)
+            response = requests.post(url, headers=headers, json=data, timeout=10)
             
             if response.status_code == 200:
                 logger.info(f"List message sent successfully to {to}")
