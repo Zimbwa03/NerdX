@@ -24,10 +24,18 @@ def init_session_database():
                 question_id TEXT,
                 question_source TEXT,
                 session_type TEXT,
+                custom_data TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
+        
+        # Add custom_data column if it doesn't exist (for existing databases)
+        try:
+            cursor.execute('ALTER TABLE user_sessions ADD COLUMN custom_data TEXT')
+        except sqlite3.OperationalError:
+            # Column already exists
+            pass
         
         # Create table to track previously asked questions to prevent duplicates
         cursor.execute('''
@@ -82,10 +90,14 @@ def save_user_session(user_id: str, session_data: Dict) -> bool:
         conn = sqlite3.connect(DATABASE_NAME)
         cursor = conn.cursor()
         
+        # Separate standard fields from custom data
+        standard_fields = ['question_data', 'subject', 'topic', 'question_id', 'question_source', 'session_type']
+        custom_data = {k: v for k, v in session_data.items() if k not in standard_fields}
+        
         cursor.execute('''
             INSERT OR REPLACE INTO user_sessions 
-            (user_id, question_data, subject, topic, question_id, question_source, session_type, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            (user_id, question_data, subject, topic, question_id, question_source, session_type, custom_data, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             user_id,
             session_data.get('question_data'),
@@ -94,6 +106,7 @@ def save_user_session(user_id: str, session_data: Dict) -> bool:
             session_data.get('question_id'),
             session_data.get('question_source'),
             session_data.get('session_type'),
+            json.dumps(custom_data) if custom_data else None,
             datetime.utcnow()
         ))
         
@@ -112,7 +125,7 @@ def get_user_session(user_id: str) -> Optional[Dict]:
         cursor = conn.cursor()
         
         cursor.execute('''
-            SELECT question_data, subject, topic, question_id, question_source, session_type, created_at, updated_at
+            SELECT question_data, subject, topic, question_id, question_source, session_type, custom_data, created_at, updated_at
             FROM user_sessions 
             WHERE user_id = ?
         ''', (user_id,))
@@ -121,16 +134,26 @@ def get_user_session(user_id: str) -> Optional[Dict]:
         conn.close()
         
         if row:
-            return {
+            session_data = {
                 'question_data': row[0],
                 'subject': row[1],
                 'topic': row[2],
                 'question_id': row[3],
                 'question_source': row[4],
                 'session_type': row[5],
-                'created_at': row[6],
-                'updated_at': row[7]
+                'created_at': row[7],
+                'updated_at': row[8]
             }
+            
+            # Parse custom data if exists
+            if row[6]:  # custom_data field
+                try:
+                    custom_data = json.loads(row[6])
+                    session_data.update(custom_data)
+                except json.JSONDecodeError:
+                    logger.warning(f"Failed to parse custom_data for user {user_id}")
+            
+            return session_data
         
         return None
         
