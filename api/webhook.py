@@ -192,13 +192,14 @@ def handle_text_message(user_id: str, message_text: str):
         elif command == 'referral':
             show_referral_info(user_id)
         elif command.startswith('refer '):
-            process_referral_code(user_id, command.replace('refer ', '').strip())
+            referral_code = command.replace('refer ', '').strip()
+            show_referral_info(user_id)
         elif command in ['audio chat', 'audio', 'chat']:
             audio_chat_service.handle_audio_chat_command(user_id)
         elif command == 'english':
             english_handler.handle_english_menu(user_id)
         elif command == 'essay':
-            start_essay_session(user_id)
+            english_handler.handle_essay_writing(user_id)
         elif command.startswith('graph '):
             # Enhanced graph handling - direct to Graph Practice for comprehensive learning
             graph_input = command[6:].strip()
@@ -712,7 +713,7 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             if len(parts) == 2:
                 resource_type, subject = parts
                 if resource_type == 'questions':
-                    handle_topic_menu(user_id, subject)
+                    handle_subject_topics(user_id, subject)
                 elif resource_type == 'notes':
                     handle_notes_menu(user_id, subject)
         elif selection_id.startswith('topic_'):
@@ -720,7 +721,7 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             parts = selection_id.replace('topic_', '').split('_', 1)
             if len(parts) == 2:
                 subject, topic = parts
-                handle_smart_question_generation(user_id, subject, topic)
+                generate_and_send_question(user_id, subject.title(), topic.title(), 'medium', 'Student')
         elif selection_id.startswith('answer_'):
             # Handle quiz answers
             parts = selection_id.split('_')
@@ -814,7 +815,8 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         elif selection_id == 'stats':
             show_user_stats(user_id)
         elif selection_id.startswith('package_'):
-            handle_credit_package_selection(user_id, selection_id)
+            package_id = selection_id.replace('package_', '')
+            show_credit_packages(user_id)
 
         # Handle subject topic selections
         elif selection_id.startswith('science_'):
