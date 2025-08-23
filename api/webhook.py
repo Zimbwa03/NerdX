@@ -1406,7 +1406,7 @@ def handle_combined_exam_mode(user_id: str):
         whatsapp_service.send_message(user_id, "❌ Error starting Combined Exam mode.")
 
 def load_next_combined_question(user_id: str):
-    """Load next random question from database for Combined Science"""
+    """Load next random question from database for Combined Science with image/text handling"""
     try:
         import json
         from database.external_db import get_user_registration, get_random_exam_question
@@ -1422,34 +1422,60 @@ def load_next_combined_question(user_id: str):
             whatsapp_service.send_message(user_id, "❌ No Combined Science questions available in database. Please try again later.")
             return
         
-        # Parse options from JSON if stored as JSON string
-        options = question_data.get('options', {})
-        if isinstance(options, str):
-            try:
-                options = json.loads(options)
-            except:
-                options = {}
-                
-        # Format question message
-        question_text = f"📚 **Combined Science Exam** 📚\n\n"
-        question_text += f"📖 **Subject:** {question_data.get('subject', 'Combined Science')}\n"
-        question_text += f"📝 **Topic:** {question_data.get('topic', 'General')}\n\n"
-        question_text += f"❓ **Question:**\n{question_data.get('question_text', 'Question not available')}\n\n"
+        # Extract question text from correct field
+        question_text_content = question_data.get('question', question_data.get('question_text', 'Question not available'))
         
-        # Create answer buttons (A, B, C, D)
-        buttons = [
-            {"id": "combined_answer_A", "title": f"A. {options.get('A', options.get('a', 'Option A'))}"},
-            {"id": "combined_answer_B", "title": f"B. {options.get('B', options.get('b', 'Option B'))}"},
-            {"id": "combined_answer_C", "title": f"C. {options.get('C', options.get('c', 'Option C'))}"},
-            {"id": "combined_answer_D", "title": f"D. {options.get('D', options.get('d', 'Option D'))}"}
-        ]
+        # Check if question has an image
+        has_image = question_data.get('has_image', False)
+        image_url = question_data.get('image_url', None)
+        
+        # Build options from database fields
+        option_a = question_data.get('option_a', 'Option A')
+        option_b = question_data.get('option_b', 'Option B') 
+        option_c = question_data.get('option_c', 'Option C')
+        option_d = question_data.get('option_d', 'Option D')
         
         # Store question in session for answer validation
         from database.session_db import save_combined_exam_session
         save_combined_exam_session(user_id, question_data)
         
-        # Send question with 4 options using list format
-        whatsapp_service.send_interactive_message(user_id, question_text, buttons)
+        # Handle questions with images first
+        if has_image and image_url:
+            # Send image first
+            image_caption = f"🖼️ **Combined Science Exam - Question Image**\n📖 Subject: {question_data.get('category', 'Combined Science')}\n📝 Topic: {question_data.get('topic', 'General')}"
+            whatsapp_service.send_image_message(user_id, image_url, image_caption)
+            
+            # Then send question text with options
+            message = f"📚 **Combined Science Exam** 📚\n\n"
+            message += f"❓ **Question:**\n{question_text_content}\n\n"
+            message += f"🅰️ A) {option_a}\n"
+            message += f"🅱️ B) {option_b}\n" 
+            message += f"🅾️ C) {option_c}\n"
+            message += f"🆎 D) {option_d}\n\n"
+            message += f"💭 **Choose your answer, {user_name}!**"
+            
+        else:
+            # Text-only question - send directly
+            message = f"📚 **Combined Science Exam** 📚\n\n"
+            message += f"📖 **Subject:** {question_data.get('category', 'Combined Science')}\n"
+            message += f"📝 **Topic:** {question_data.get('topic', 'General')}\n\n"
+            message += f"❓ **Question:**\n{question_text_content}\n\n"
+            message += f"🅰️ A) {option_a}\n"
+            message += f"🅱️ B) {option_b}\n"
+            message += f"🅾️ C) {option_c}\n"
+            message += f"🆎 D) {option_d}\n\n"
+            message += f"💭 **Choose your answer, {user_name}!**"
+        
+        # Create answer buttons (A, B, C, D)
+        buttons = [
+            {"text": "A", "callback_data": "combined_answer_A"},
+            {"text": "B", "callback_data": "combined_answer_B"},
+            {"text": "C", "callback_data": "combined_answer_C"},
+            {"text": "D", "callback_data": "combined_answer_D"}
+        ]
+        
+        # Send question message with answer buttons
+        whatsapp_service.send_interactive_message(user_id, message, buttons)
         
     except Exception as e:
         logger.error(f"Error loading combined question for {user_id}: {e}", exc_info=True)
@@ -1511,7 +1537,7 @@ def handle_combined_exam_answer(user_id: str, user_answer: str):
             message += f"✅ **Correct answer: {correct_answer}**\n\n"
             
         # Add explanation if available
-        explanation = question_data.get('solution', '')
+        explanation = question_data.get('explanation', question_data.get('solution', ''))
         if explanation:
             message += f"💡 **Explanation:**\n{explanation}\n\n"
             
