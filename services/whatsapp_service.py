@@ -48,7 +48,7 @@ class WhatsAppService:
             return False
     
     def send_interactive_message(self, to: str, message: str, buttons: List[Dict]) -> bool:
-        """Send an interactive message with buttons"""
+        """Send an interactive message with buttons (max 3) or list (for 4+ options)"""
         try:
             url = f"{self.base_url}/{self.phone_number_id}/messages"
             headers = {
@@ -56,6 +56,11 @@ class WhatsAppService:
                 'Content-Type': 'application/json'
             }
             
+            # If 4 or more buttons, use list format for MCQ questions
+            if len(buttons) >= 4:
+                return self.send_mcq_list_message(to, message, buttons)
+            
+            # Otherwise use regular buttons (max 3)
             interactive_buttons = []
             for i, button in enumerate(buttons[:3]):  # WhatsApp supports max 3 buttons
                 # Support both formats: {"text": "...", "callback_data": "..."} and {"id": "...", "title": "..."}
@@ -92,6 +97,57 @@ class WhatsAppService:
                 
         except Exception as e:
             logger.error(f"Error sending WhatsApp interactive message: {e}")
+            return False
+
+    def send_mcq_list_message(self, to: str, message: str, buttons: List[Dict]) -> bool:
+        """Send MCQ question as list message to support 4 options (A, B, C, D)"""
+        try:
+            url = f"{self.base_url}/{self.phone_number_id}/messages"
+            headers = {
+                'Authorization': f'Bearer {self.access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            # Create list rows for each option
+            rows = []
+            for button in buttons:
+                button_id = button.get('callback_data') or button.get('id', '')
+                button_title = button.get('text') or button.get('title', '')
+                
+                rows.append({
+                    "id": button_id,
+                    "title": button_title[:24],  # Max 24 characters for list items
+                    "description": ""
+                })
+            
+            data = {
+                'messaging_product': 'whatsapp',
+                'to': to,
+                'type': 'interactive',
+                'interactive': {
+                    'type': 'list',
+                    'body': {'text': message},
+                    'action': {
+                        'button': 'Choose Answer',
+                        'sections': [{
+                            'title': 'Answer Options',
+                            'rows': rows
+                        }]
+                    }
+                }
+            }
+            
+            response = requests.post(url, headers=headers, json=data, timeout=30)
+            
+            if response.status_code == 200:
+                logger.info(f"MCQ list message sent successfully to {to}")
+                return True
+            else:
+                logger.error(f"Failed to send MCQ list message: {response.status_code} - {response.text}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Error sending MCQ list message: {e}")
             return False
     
     def send_list_message(self, to: str, header: str, body: str, sections: List[Dict]) -> bool:

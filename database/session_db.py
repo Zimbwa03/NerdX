@@ -154,6 +154,38 @@ def clear_user_session(user_id: str) -> bool:
         logger.error(f"Error clearing user session: {e}")
         return False
 
+def save_combined_exam_session(user_id: str, question_data: Dict) -> bool:
+    """Save Combined Exam session"""
+    try:
+        session_data = {
+            'question_data': json.dumps(question_data),
+            'subject': 'Combined Science',
+            'topic': question_data.get('topic', 'Mixed'),
+            'question_id': str(question_data.get('id', '')),
+            'question_source': 'database',
+            'session_type': 'combined_exam'
+        }
+        return save_user_session(user_id, session_data)
+        
+    except Exception as e:
+        logger.error(f"Error saving combined exam session: {e}")
+        return False
+
+def get_combined_exam_session(user_id: str) -> Optional[Dict]:
+    """Get Combined Exam session"""
+    try:
+        session = get_user_session(user_id)
+        if session and session.get('session_type') == 'combined_exam':
+            # Parse question data from JSON
+            if session.get('question_data'):
+                session['question_data'] = json.loads(session['question_data'])
+            return session
+        return None
+        
+    except Exception as e:
+        logger.error(f"Error getting combined exam session: {e}")
+        return None
+
 def get_registration_session(user_id: str) -> Optional[Dict]:
     """Get registration session data"""
     try:
