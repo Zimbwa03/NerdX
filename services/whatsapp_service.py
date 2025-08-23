@@ -48,19 +48,19 @@ class WhatsAppService:
             return False
     
     def send_interactive_message(self, to: str, message: str, buttons: List[Dict]) -> bool:
-        """Send an interactive message with buttons (max 3) or list (for 4+ options)"""
+        """Send buttons as separate messages when more than 3, otherwise as interactive buttons"""
         try:
+            # If 4 or more buttons, send them as separate button messages
+            if len(buttons) >= 4:
+                return self.send_separate_buttons(to, message, buttons)
+            
+            # Otherwise use regular interactive buttons (max 3)
             url = f"{self.base_url}/{self.phone_number_id}/messages"
             headers = {
                 'Authorization': f'Bearer {self.access_token}',
                 'Content-Type': 'application/json'
             }
             
-            # If 4 or more buttons, use list format for MCQ questions
-            if len(buttons) >= 4:
-                return self.send_mcq_list_message(to, message, buttons)
-            
-            # Otherwise use regular buttons (max 3)
             interactive_buttons = []
             for i, button in enumerate(buttons[:3]):  # WhatsApp supports max 3 buttons
                 # Support both formats: {"text": "...", "callback_data": "..."} and {"id": "...", "title": "..."}
@@ -97,6 +97,55 @@ class WhatsAppService:
                 
         except Exception as e:
             logger.error(f"Error sending WhatsApp interactive message: {e}")
+            return False
+
+    def send_separate_buttons(self, to: str, message: str, buttons: List[Dict]) -> bool:
+        """Send message with text and then separate single-button messages for each option"""
+        try:
+            # First send the main message
+            if not self.send_message(to, message):
+                return False
+            
+            # Then send each button as a separate interactive message
+            for button in buttons:
+                button_id = button.get('callback_data') or button.get('id', '')
+                button_title = button.get('text') or button.get('title', '')
+                
+                # Send each option as a separate single-button message
+                url = f"{self.base_url}/{self.phone_number_id}/messages"
+                headers = {
+                    'Authorization': f'Bearer {self.access_token}',
+                    'Content-Type': 'application/json'
+                }
+                
+                data = {
+                    'messaging_product': 'whatsapp',
+                    'to': to,
+                    'type': 'interactive',
+                    'interactive': {
+                        'type': 'button',
+                        'body': {'text': button_title},
+                        'action': {
+                            'buttons': [{
+                                "type": "reply",
+                                "reply": {
+                                    "id": button_id,
+                                    "title": "Select"
+                                }
+                            }]
+                        }
+                    }
+                }
+                
+                response = requests.post(url, headers=headers, json=data, timeout=30)
+                if response.status_code != 200:
+                    logger.error(f"Failed to send button {button_title}: {response.status_code} - {response.text}")
+                    
+            logger.info(f"Separate buttons sent successfully to {to}")
+            return True
+                
+        except Exception as e:
+            logger.error(f"Error sending separate buttons: {e}")
             return False
 
     def send_mcq_list_message(self, to: str, message: str, buttons: List[Dict]) -> bool:
