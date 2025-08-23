@@ -765,7 +765,7 @@ def show_difficulty_selection(chat_id: str, subject: str, topic: str, user_name:
             {"text": "🟢 Easy", "callback_data": f"difficulty_easy_{subject.lower()}_{topic.replace(' ', '_')}"},
             {"text": "🟡 Medium", "callback_data": f"difficulty_medium_{subject.lower()}_{topic.replace(' ', '_')}"},
             {"text": "🔴 Difficult", "callback_data": f"difficulty_difficult_{subject.lower()}_{topic.replace(' ', '_')}"},
-            {"text": "🔙 Back to Topics", "callback_data": f"subject_combined_{subject.lower()}"}
+            {"text": "🔙 Back to Topics", "callback_data": f"science_{subject}"}
         ]
 
         whatsapp_service.send_interactive_message(chat_id, message, buttons)
@@ -1323,7 +1323,7 @@ def handle_subject_topics(user_id: str, subject: str):
             whatsapp_service.send_interactive_message(user_id, group_text, button_group)
 
         # Add a back button to the last message
-        back_buttons = [{"text": "🔙 Back", "callback_data": f"level_ordinary"}]
+        back_buttons = [{"text": "🔙 Back to Combined Science", "callback_data": "subject_ordinary_combined_science"}]
         whatsapp_service.send_interactive_message(user_id, "Choose an option:", back_buttons)
 
     except Exception as e:
