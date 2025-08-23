@@ -12,6 +12,10 @@ from services.graph_service import GraphService
 from services.english_service import EnglishService
 from services.referral_service import ReferralService
 from services.audio_chat_service import AudioChatService
+from services.mathematics_service import MathematicsService
+from services.math_question_generator import MathQuestionGenerator
+from services.math_solver import MathSolver
+from handlers.mathematics_handler import MathematicsHandler
 from utils.rate_limiter import RateLimiter
 from utils.question_cache import QuestionCacheService
 from utils.latex_converter import LaTeXConverter
@@ -36,6 +40,12 @@ graph_service = GraphService()
 english_service = EnglishService()
 referral_service = ReferralService()
 audio_chat_service = AudioChatService()
+
+# Initialize mathematics services
+mathematics_service = MathematicsService()
+math_question_generator = MathQuestionGenerator()
+math_solver = MathSolver()
+mathematics_handler = MathematicsHandler(whatsapp_service, mathematics_service, math_question_generator, math_solver)
 
 # Initialize utilities
 rate_limiter = RateLimiter()
@@ -215,6 +225,14 @@ def handle_session_message(user_id: str, message_text: str):
     """Handle messages when user is in an active session"""
     try:
         session_type = session_manager.get_session_type(user_id)
+
+        # Also check for mathematics question sessions from session_db
+        from database.session_db import get_user_session
+        math_session = get_user_session(user_id)
+        if math_session and math_session.get('session_type') == 'math_question':
+            # Handle mathematics answer
+            mathematics_handler.handle_math_answer(user_id, message_text)
+            return
 
         if session_type == 'question':
             handle_question_answer(user_id, message_text)
@@ -461,20 +479,21 @@ def send_main_menu(user_id: str, user_name: str = None):
         if current_credits < 20:  # Low credits - emphasize buying
             main_buttons = [
                 {"text": "🎯 Start Quiz", "callback_data": "start_quiz"},
-                {"text": "💎 Buy Credits", "callback_data": "buy_credits"},
-                {"text": "🎤 Audio Chat", "callback_data": "audio_chat_menu"}
+                {"text": "🧮 Mathematics", "callback_data": "mathematics_mcq"},
+                {"text": "💎 Buy Credits", "callback_data": "buy_credits"}
             ]
         else:  # Normal credit level
             main_buttons = [
                 {"text": "🎯 Start Quiz", "callback_data": "start_quiz"},
-                {"text": "🎤 Audio Chat", "callback_data": "audio_chat_menu"},
-                {"text": "💎 Buy Credits", "callback_data": "buy_credits"}
+                {"text": "🧮 Mathematics", "callback_data": "mathematics_mcq"},
+                {"text": "🎤 Audio Chat", "callback_data": "audio_chat_menu"}
             ]
 
         whatsapp_service.send_interactive_message(user_id, welcome_text, main_buttons)
 
         # Send additional buttons separately
         additional_buttons = [
+            {"text": "💎 Buy Credits", "callback_data": "buy_credits"} if current_credits >= 20 else {"text": "🎤 Audio Chat", "callback_data": "audio_chat_menu"},
             {"text": "📤 Share to Friend", "callback_data": "share_to_friend"},
             {"text": "👥 Referrals", "callback_data": "referrals_menu"}
         ]
@@ -621,8 +640,38 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
                 answer = parts[1]
                 session_key = '_'.join(parts[2:]) # Reconstruct session key if it contains underscores
                 handle_science_answer(user_id, answer, session_key)
+        elif selection_id == 'mathematics_mcq':
+            # Handle mathematics main menu
+            mathematics_handler.handle_mathematics_main_menu(user_id)
+        elif selection_id.startswith('math_topic_'):
+            # Handle mathematics topic selection (show difficulty menu)
+            topic_key = selection_id.replace('math_topic_', '')
+            mathematics_handler.handle_topic_selection(user_id, topic_key)
+        elif selection_id.startswith('math_question_'):
+            # Handle mathematics question generation
+            parts = selection_id.replace('math_question_', '').split('_')
+            if len(parts) >= 2:
+                # Extract topic and difficulty
+                difficulty = parts[-1]  # Last part is difficulty
+                topic_key = '_'.join(parts[:-1])  # Everything except last part is topic
+                mathematics_handler.handle_question_generation(user_id, topic_key, difficulty)
+            else:
+                whatsapp_service.send_message(user_id, "❌ Invalid question format.")
+        elif selection_id.startswith('math_hint_'):
+            # Handle hint request
+            mathematics_handler.handle_hint_request(user_id)
+        elif selection_id.startswith('math_concept_'):
+            # Handle concept explanation request
+            parts = selection_id.replace('math_concept_', '').split('_')
+            if len(parts) >= 2:
+                topic = '_'.join(parts[:-1])
+                difficulty = parts[-1]
+                mathematics_handler.handle_concept_explanation(user_id, topic, difficulty)
+        elif selection_id.startswith('math_alternative_'):
+            # Handle alternative solution request
+            mathematics_handler.handle_alternative_solution(user_id)
         elif selection_id.startswith('math_'):
-            # Handle math menu selections
+            # Handle any other math menu selections (fallback)
             math_action = selection_id.replace('math_', '')
             if math_action == 'practice':
                 # Handle math practice
