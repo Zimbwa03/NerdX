@@ -189,15 +189,15 @@ Ready to boost your reading skills? 🚀"""
             self.whatsapp_service.send_message(user_id, "❌ Error loading comprehension. Please try again.")
 
     def handle_comprehension_start(self, user_id: str):
-        """Start new comprehension session with professional smooth flow"""
+        """Start new comprehension session with professional smooth flow and strong duplicate prevention"""
         try:
             from database.session_db import save_user_session, get_user_session, clear_user_session
-            import time
+            from datetime import datetime
             
-            # Check for active session to prevent duplicates
+            # Strong session check with immediate lock to prevent race conditions
             existing_session = get_user_session(user_id)
-            if existing_session and existing_session.get('session_type') in ['comprehension_active', 'comprehension_questions']:
-                # Send interactive message with reset option
+            if existing_session and existing_session.get('session_type') in ['comprehension_active', 'comprehension_questions', 'comprehension_generating']:
+                # Already generating or active - show reset option
                 buttons = [
                     {"text": "🔄 Start New Session", "callback_data": "comprehension_reset"},
                     {"text": "🔙 Back to Menu", "callback_data": "english_menu"}
@@ -206,20 +206,26 @@ Ready to boost your reading skills? 🚀"""
                 self.whatsapp_service.send_interactive_message(user_id, message, buttons)
                 return
             
-            # Clear any old sessions
-            clear_user_session(user_id)
+            # Immediately save "generating" session to block other attempts
+            generation_session = {
+                'session_type': 'comprehension_generating',
+                'user_name': 'Student',
+                'started_at': str(datetime.now())
+            }
+            save_user_session(user_id, generation_session)
             
+            # Get user data
             registration = get_user_registration(user_id)
             user_name = registration['name'] if registration else "Student"
             form_level = registration.get('form_level', 4) if registration else 4
             
-            # Deduct credits first
+            # Deduct credits
             if not deduct_credits(user_id, 3, "english_comprehension", "Comprehension Practice"):
+                clear_user_session(user_id)  # Clear generating lock on failure
                 self.whatsapp_service.send_message(user_id, "❌ Insufficient credits. Please buy more credits.")
                 return
             
-            # Save active session to prevent duplicates
-            from datetime import datetime
+            # Update session with proper user name
             session_data = {
                 'session_type': 'comprehension_active',
                 'user_name': user_name,
@@ -545,12 +551,16 @@ Great job on completing your comprehension practice! 📚✨"""
             self.whatsapp_service.send_message(user_id, "❌ Error displaying comprehension. Please try again.")
 
     def handle_comprehension_reset(self, user_id: str):
-        """Reset active comprehension session and start fresh"""
+        """Reset active comprehension session and start fresh with strong duplicate prevention"""
         try:
             from database.session_db import clear_user_session
+            import time
             
-            # Clear the active session
+            # Force clear any existing session
             clear_user_session(user_id)
+            
+            # Small delay to ensure session is cleared before starting new one
+            time.sleep(0.5)
             
             # Start a new comprehension session
             self.handle_comprehension_start(user_id)
