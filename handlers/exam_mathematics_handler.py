@@ -98,6 +98,8 @@ class ExamMathematicsHandler:
                 # 1st and 2nd questions should be database
                 question_type = 'database'
             
+            logger.info(f"Question {question_count} for {user_id}: type={question_type}, db_used={db_questions}, ai_used={ai_questions}")
+            
             if question_type == 'database':
                 self._load_database_question(user_id, user_name, question_count)
             else:
@@ -209,7 +211,9 @@ class ExamMathematicsHandler:
             
             if not question_data:
                 logger.error(f"Failed to generate AI question for {user_id}: {topic}/{difficulty}")
-                self.whatsapp_service.send_message(user_id, "❌ Error generating AI question. Please try next question.")
+                self.whatsapp_service.send_message(user_id, "❌ Error generating AI question. Trying database question instead...")
+                # Fallback to database question instead of just returning
+                self._load_database_question(user_id, user_name, question_count)
                 return
             
             logger.info(f"Successfully generated AI question for {user_id}: {topic}/{difficulty}")
@@ -241,7 +245,7 @@ class ExamMathematicsHandler:
             session_data = get_user_session(user_id)
             if not session_data:
                 logger.error(f"No session found for {user_id} when saving AI question")
-                session_data = {'session_type': 'math_exam'}
+                session_data = {'session_type': 'math_exam', 'database_questions_used': 0, 'ai_questions_used': 0}
             
             session_data.update({
                 'question_count': question_count,
@@ -252,7 +256,7 @@ class ExamMathematicsHandler:
                 'current_ai_question_data': json.dumps(question_data)
             })
             save_user_session(user_id, session_data)
-            logger.info(f"Saved AI question session for {user_id}: {topic}/{difficulty}")
+            logger.info(f"Updated session for {user_id}: Q{question_count}, DB={session_data.get('database_questions_used', 0)}, AI={session_data.get('ai_questions_used', 0)}")
             
             logger.info(f"Generated AI question for {user_id}: {topic}/{difficulty}")
             
