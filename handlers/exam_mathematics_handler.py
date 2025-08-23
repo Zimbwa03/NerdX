@@ -30,14 +30,15 @@ class ExamMathematicsHandler:
             # Clear any existing exam session
             clear_user_session(user_id)
             
-            # Initialize exam session
+            # Initialize exam session with proper tracking
             exam_session = {
                 'session_type': 'math_exam',
                 'question_count': 0,
                 'database_questions_used': 0,
                 'ai_questions_used': 0,
                 'current_question_type': None,
-                'started_at': str(json.dumps({}))  # Will be replaced with timestamp
+                'started_at': str(json.dumps({})),  # Will be replaced with timestamp
+                'force_next_ai': False  # Flag to force AI generation
             }
             
             save_user_session(user_id, exam_session)
@@ -89,16 +90,21 @@ class ExamMathematicsHandler:
             db_questions = session_data.get('database_questions_used', 0)
             ai_questions = session_data.get('ai_questions_used', 0)
             
-            # Determine question type based on 2:1 ratio (2 database : 1 AI)
-            # Every 3rd question should be AI, others should be database
-            if question_count % 3 == 0:
-                # Every 3rd question should be AI
-                question_type = 'ai'
-            else:
-                # 1st and 2nd questions should be database
-                question_type = 'database'
+            # Improved 2:1 ratio logic
+            # Force AI generation every 3rd, 6th, 9th, 12th, etc. question
+            should_generate_ai = (question_count % 3 == 0)
             
-            logger.info(f"Question {question_count} for {user_id}: type={question_type}, db_used={db_questions}, ai_used={ai_questions}")
+            # Also force AI if we have too many database questions compared to AI
+            total_questions = db_questions + ai_questions
+            if total_questions > 0:
+                ai_ratio = ai_questions / total_questions
+                # If AI ratio is below 0.25 (should be ~0.33 for 2:1), force AI
+                if ai_ratio < 0.25 and question_count > 3:
+                    should_generate_ai = True
+            
+            question_type = 'ai' if should_generate_ai else 'database'
+            
+            logger.info(f"Question {question_count} for {user_id}: type={question_type}, db_used={db_questions}, ai_used={ai_questions}, should_ai={should_generate_ai}")
             
             if question_type == 'database':
                 self._load_database_question(user_id, user_name, question_count)
@@ -197,7 +203,7 @@ class ExamMathematicsHandler:
             generating_message = f"""🤖 **Generating AI Question** 🤖
 
 👤 **Student:** {user_name}
-📝 **Question {question_count}**
+📝 **Question {question_count}** (AI Generated)
 📂 **Topic:** {topic}
 🎯 **Difficulty:** {difficulty.title()}
 
@@ -206,31 +212,41 @@ class ExamMathematicsHandler:
 
             self.whatsapp_service.send_message(user_id, generating_message)
             
-            # Generate question using AI
-            question_data = self.question_generator.generate_question('Mathematics', topic, difficulty)
-            
-            if not question_data:
-                logger.error(f"Failed to generate AI question for {user_id}: {topic}/{difficulty}")
-                self.whatsapp_service.send_message(user_id, "❌ Error generating AI question. Trying database question instead...")
-                # Fallback to database question instead of just returning
+            # Check if AI service is available
+            if not hasattr(self.question_generator, 'api_key') or not self.question_generator.api_key:
+                logger.error(f"AI API key not configured for {user_id}")
+                self.whatsapp_service.send_message(user_id, "⚠️ AI service not configured. Loading database question...")
                 self._load_database_question(user_id, user_name, question_count)
                 return
             
-            logger.info(f"Successfully generated AI question for {user_id}: {topic}/{difficulty}")
+            # Generate question using AI with longer timeout
+            logger.info(f"🤖 Attempting AI generation for {user_id}: {topic}/{difficulty}")
+            question_data = self.question_generator.generate_question('Mathematics', topic, difficulty)
             
-            # Format AI question message  
-            message = f"""🤖 AI-Generated Exam Question
+            if not question_data:
+                logger.error(f"AI generation failed for {user_id}: {topic}/{difficulty} - Using fallback")
+                self.whatsapp_service.send_message(user_id, "⚠️ AI generation taking longer than expected. Loading database question...")
+                # Don't increment AI counter on failure, try database instead
+                self._load_database_question(user_id, user_name, question_count)
+                return
+            
+            logger.info(f"✅ Successfully generated AI question for {user_id}: {topic}/{difficulty}")
+            
+            # Format AI question message with clear AI indicator
+            message = f"""🤖 **AI-Generated Exam Question** 🤖
 
 👤 Student: {user_name}
-📝 Question {question_count}
+📝 Question {question_count} (AI Generated)
 📂 Topic: {topic}
 🎯 Difficulty: {difficulty.title()}
 💎 Points: {question_data.get('points', 10)}
 
-❓ Question:
+❓ **Question:**
 {question_data['question']}
 
-📝 Instructions: Solve this step-by-step as you would in an exam."""
+📝 **Instructions:** Solve this step-by-step as you would in an exam.
+
+🧠 *This question was generated using AI to provide unlimited practice.*"""
 
             # Create exam-style buttons
             buttons = [
@@ -241,28 +257,32 @@ class ExamMathematicsHandler:
             
             self.whatsapp_service.send_interactive_message(user_id, message, buttons)
             
-            # Update session
+            # Update session - CRITICAL: Increment AI counter ONLY on success
             session_data = get_user_session(user_id)
             if not session_data:
                 logger.error(f"No session found for {user_id} when saving AI question")
                 session_data = {'session_type': 'math_exam', 'database_questions_used': 0, 'ai_questions_used': 0}
             
+            # Increment AI questions counter
+            new_ai_count = session_data.get('ai_questions_used', 0) + 1
+            
             session_data.update({
                 'question_count': question_count,
-                'ai_questions_used': session_data.get('ai_questions_used', 0) + 1,
+                'ai_questions_used': new_ai_count,
                 'current_question_type': 'ai',
                 'current_ai_topic': topic,
                 'current_ai_difficulty': difficulty,
                 'current_ai_question_data': json.dumps(question_data)
             })
             save_user_session(user_id, session_data)
-            logger.info(f"Updated session for {user_id}: Q{question_count}, DB={session_data.get('database_questions_used', 0)}, AI={session_data.get('ai_questions_used', 0)}")
             
-            logger.info(f"Generated AI question for {user_id}: {topic}/{difficulty}")
+            logger.info(f"✅ AI question session updated for {user_id}: Q{question_count}, DB={session_data.get('database_questions_used', 0)}, AI={new_ai_count}")
             
         except Exception as e:
-            logger.error(f"Error generating AI question for {user_id}: {e}")
-            self.whatsapp_service.send_message(user_id, "❌ Error generating AI question. Please try again.")
+            logger.error(f"Exception in AI question generation for {user_id}: {e}")
+            self.whatsapp_service.send_message(user_id, "❌ AI service temporarily unavailable. Loading database question...")
+            # Fallback to database question without incrementing AI counter
+            self._load_database_question(user_id, user_name, question_count)
 
     def handle_show_database_solution(self, user_id: str, question_id: str):
         """Show solution for database question with images"""
