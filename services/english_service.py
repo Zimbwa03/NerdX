@@ -70,7 +70,7 @@ Return ONLY a JSON object in this format:
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
                     temperature=0.7,
-                    max_output_tokens=500
+                    max_output_tokens=1000
                 ),
             )
 
@@ -85,7 +85,20 @@ Return ONLY a JSON object in this format:
                         clean_text = clean_text[:-3]  # Remove ```
                     clean_text = clean_text.strip()
                     
+                    # Check if JSON is complete (basic validation)
+                    if not clean_text.endswith('}'):
+                        logger.error("Incomplete JSON response detected - response was truncated")
+                        logger.error(f"Truncated response: {clean_text}")
+                        return None
+                    
                     question_data = json.loads(clean_text)
+                    
+                    # Validate required fields
+                    required_fields = ['question', 'answer', 'explanation']
+                    if not all(field in question_data for field in required_fields):
+                        logger.error(f"Missing required fields in grammar question: {question_data}")
+                        return None
+                    
                     logger.info("✅ Generated grammar question successfully")
                     return question_data
                 except json.JSONDecodeError as json_err:
@@ -130,7 +143,7 @@ Note: correct_answer should be the index (0-3) of the correct option."""
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
                     temperature=0.7,
-                    max_output_tokens=600
+                    max_output_tokens=1200
                 ),
             )
 
@@ -145,7 +158,31 @@ Note: correct_answer should be the index (0-3) of the correct option."""
                         clean_text = clean_text[:-3]  # Remove ```
                     clean_text = clean_text.strip()
                     
+                    # Check if JSON is complete (basic validation)
+                    if not clean_text.endswith('}'):
+                        logger.error("Incomplete JSON response detected - response was truncated")
+                        logger.error(f"Truncated response: {clean_text}")
+                        return None
+                    
                     question_data = json.loads(clean_text)
+                    
+                    # Validate required fields for vocabulary MCQ
+                    required_fields = ['question', 'options', 'correct_answer', 'explanation']
+                    if not all(field in question_data for field in required_fields):
+                        logger.error(f"Missing required fields in vocabulary question: {question_data}")
+                        return None
+                    
+                    # Validate options array has 4 items
+                    if not isinstance(question_data.get('options'), list) or len(question_data['options']) != 4:
+                        logger.error(f"Invalid options array in vocabulary question: {question_data.get('options')}")
+                        return None
+                    
+                    # Validate correct_answer is valid index
+                    correct_answer = question_data.get('correct_answer')
+                    if not isinstance(correct_answer, int) or correct_answer < 0 or correct_answer > 3:
+                        logger.error(f"Invalid correct_answer in vocabulary question: {correct_answer}")
+                        return None
+                    
                     logger.info("✅ Generated vocabulary MCQ successfully")
                     return question_data
                 except json.JSONDecodeError as json_err:
