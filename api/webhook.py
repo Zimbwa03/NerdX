@@ -1771,12 +1771,17 @@ def handle_science_answer(user_id: str, selected_answer: str, session_key: str):
         # Note: difficulty is not stored in session, we'll extract from session_key
         difficulty = 'easy'  # Default fallback
 
+        # Get user info
+        from database.external_db import get_user_registration
+        registration = get_user_registration(user_id)
+        user_name = registration['name'] if registration else "Student"
+
         correct_answer = question_data['correct_answer']
         is_correct = selected_answer.upper() == correct_answer.upper()
         points = question_data.get('points', 10)
 
         # Update user stats
-        current_stats = get_user_stats(user_id)
+        current_stats = get_user_stats(user_id) or {}
         new_xp = current_stats.get('xp_points', 0)
         new_streak = current_stats.get('streak', 0)
         new_level = current_stats.get('level', 1)
@@ -1804,7 +1809,7 @@ def handle_science_answer(user_id: str, selected_answer: str, session_key: str):
         })
 
         # Get updated stats
-        updated_stats = get_user_stats(user_id)
+        updated_stats = get_user_stats(user_id) or {}
         final_credits = updated_stats.get('credits', 0)
         final_xp = updated_stats.get('xp_points', 0)
         final_streak = updated_stats.get('streak', 0)
