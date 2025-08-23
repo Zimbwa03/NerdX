@@ -20,10 +20,10 @@ logger = logging.getLogger(__name__)
 
 class GraphService:
     """Enhanced service for generating professional educational mathematical graphs and visualizations"""
-    
+
     def __init__(self):
         self.desmos_api_key = Config.DESMOS_API_KEY
-        
+
         # Set professional matplotlib style for ZIMSEC educational graphs
         plt.style.use('seaborn-v0_8') if 'seaborn-v0_8' in plt.style.available else plt.style.use('default')
         plt.rcParams['figure.figsize'] = (12, 8)
@@ -32,9 +32,9 @@ class GraphService:
         plt.rcParams['grid.alpha'] = 0.7
         plt.rcParams['grid.linewidth'] = 0.8
         plt.rcParams['axes.axisbelow'] = True
-        
+
         logger.info("Enhanced Graph Service initialized for ZIMSEC educational graphs")
-        
+
     def generate_function_graph(self, function: str, x_range: tuple = (-10, 10), title: Optional[str] = None) -> Optional[str]:
         """Generate a graph for a mathematical function"""
         try:
@@ -42,88 +42,88 @@ class GraphService:
             parsed_function = self._parse_function(function)
             if not parsed_function:
                 return None
-            
+
             # Generate graph using matplotlib
             x_min, x_max = x_range
             x = np.linspace(x_min, x_max, 1000)
-            
+
             try:
                 # Evaluate the function
                 y = self._evaluate_function(parsed_function, x)
-                
+
                 # Create professional plot with enhanced educational features
                 fig, ax = plt.subplots(figsize=(12, 8), dpi=150)
-                
+
                 # Handle complex numbers and infinite values
                 if np.iscomplexobj(y):
                     y = np.real(y)
-                
+
                 # Remove infinite and NaN values for clean plotting
                 mask = np.isfinite(y)
                 x_clean = x[mask]
                 y_clean = y[mask]
-                
+
                 ax.plot(x_clean, y_clean, 'b-', linewidth=3, label=f'f(x) = {function}', alpha=0.8)
-                
+
                 # Add enhanced grid with major and minor gridlines for ZIMSEC standards
                 ax.grid(True, which='major', alpha=0.7, linestyle='-', linewidth=0.8, color='gray')
                 ax.grid(True, which='minor', alpha=0.6, linestyle=':', linewidth=0.7, color='darkgray')
                 ax.minorticks_on()
-                
+
                 # Professional axes through origin
                 ax.axhline(y=0, color='k', linewidth=1.5, alpha=0.7)
                 ax.axvline(x=0, color='k', linewidth=1.5, alpha=0.7)
-                
+
                 # Enhanced labeling
                 ax.set_xlabel('x', fontsize=14, fontweight='bold')
                 ax.set_ylabel('y', fontsize=14, fontweight='bold')
-                
+
                 graph_title = title if title else f'NerdX Mathematics: y = {function}'
                 ax.set_title(graph_title, fontsize=16, fontweight='bold', pad=20)
-                
+
                 # Professional legend
                 ax.legend(fontsize=12, loc='upper right')
-                
+
                 # Add educational watermark
                 self._add_educational_watermark(ax)
-                
+
                 # Save with professional quality
                 filename = f"nerdx_graph_{int(time.time())}_{hash(function) % 10000}.png"
                 filepath = os.path.join('static', 'graphs', filename)
-                
+
                 # Ensure directory exists
                 os.makedirs(os.path.dirname(filepath), exist_ok=True)
-                
+
                 plt.tight_layout()
                 plt.savefig(filepath, dpi=150, bbox_inches='tight', 
                            facecolor='white', edgecolor='none')
                 plt.close(fig)
-                
+
                 logger.info(f"Generated graph for function: {function}")
                 return filepath
-                
+
             except Exception as e:
                 logger.error(f"Error evaluating function {function}: {e}")
                 return None
-                
+
         except Exception as e:
             logger.error(f"Error generating function graph: {e}")
             return None
-    
+
     def generate_multi_function_graph(self, functions: List[str], x_range: tuple = (-10, 10), title: str = None) -> Optional[str]:
         """Generate a graph with multiple functions"""
         try:
             if not functions:
                 return None
-            
+
             x_min, x_max = x_range
             x = np.linspace(x_min, x_max, 1000)
-            
+
             plt.figure(figsize=(12, 8))
             colors = ['blue', 'red', 'green', 'purple', 'orange', 'brown']
-            
+
             valid_functions = []
-            
+
             for i, function in enumerate(functions[:6]):  # Limit to 6 functions
                 parsed_function = self._parse_function(function)
                 if parsed_function:
@@ -134,90 +134,90 @@ class GraphService:
                         valid_functions.append(function)
                     except Exception as e:
                         logger.warning(f"Skipping invalid function {function}: {e}")
-            
+
             if not valid_functions:
                 return None
-            
+
             plt.grid(True, alpha=0.3)
             plt.axhline(y=0, color='k', linewidth=0.5)
             plt.axvline(x=0, color='k', linewidth=0.5)
-            
+
             plt.xlabel('x', fontsize=12)
             plt.ylabel('y', fontsize=12)
-            
+
             if title:
                 plt.title(title, fontsize=14)
             else:
                 plt.title('Graph of Multiple Functions', fontsize=14)
-            
+
             plt.legend()
-            
+
             # Save the plot
             filename = f"multi_graph_{hash(str(functions)) % 10000}.png"
             filepath = os.path.join('static', 'graphs', filename)
-            
+
             # Ensure directory exists
             os.makedirs(os.path.dirname(filepath), exist_ok=True)
-            
+
             plt.savefig(filepath, dpi=150, bbox_inches='tight')
             plt.close()
-            
+
             logger.info(f"Generated multi-function graph for: {valid_functions}")
             return filepath
-            
+
         except Exception as e:
             logger.error(f"Error generating multi-function graph: {e}")
             return None
-    
+
     def generate_parametric_graph(self, x_function: str, y_function: str, t_range: tuple = (0, 10)) -> Optional[str]:
         """Generate a parametric graph"""
         try:
             t_min, t_max = t_range
             t = np.linspace(t_min, t_max, 1000)
-            
+
             # Parse and evaluate parametric functions
             x_parsed = self._parse_function(x_function, parameter='t')
             y_parsed = self._parse_function(y_function, parameter='t')
-            
+
             if not x_parsed or not y_parsed:
                 return None
-            
+
             x_vals = self._evaluate_function(x_parsed, t)
             y_vals = self._evaluate_function(y_parsed, t)
-            
+
             plt.figure(figsize=(10, 8))
             plt.plot(x_vals, y_vals, 'b-', linewidth=2)
             plt.grid(True, alpha=0.3)
             plt.axhline(y=0, color='k', linewidth=0.5)
             plt.axvline(x=0, color='k', linewidth=0.5)
-            
+
             plt.xlabel('x', fontsize=12)
             plt.ylabel('y', fontsize=12)
             plt.title(f'Parametric Graph: x = {x_function}, y = {y_function}', fontsize=14)
-            
+
             # Save the plot
             filename = f"parametric_{hash(x_function + y_function) % 10000}.png"
             filepath = os.path.join('static', 'graphs', filename)
-            
+
             # Ensure directory exists
             os.makedirs(os.path.dirname(filepath), exist_ok=True)
-            
+
             plt.savefig(filepath, dpi=150, bbox_inches='tight')
             plt.close()
-            
+
             logger.info(f"Generated parametric graph: x={x_function}, y={y_function}")
             return filepath
-            
+
         except Exception as e:
             logger.error(f"Error generating parametric graph: {e}")
             return None
-    
+
     def _parse_function(self, function: str, parameter: str = 'x') -> Optional[str]:
         """Parse and validate a mathematical function"""
         try:
             # Clean up the function string
             function = function.strip().lower()
-            
+
             # Replace common mathematical notations
             replacements = {
                 '^': '**',
@@ -232,27 +232,27 @@ class GraphService:
                 'pi': 'np.pi',
                 'e': 'np.e'
             }
-            
+
             for old, new in replacements.items():
                 function = function.replace(old, new)
-            
+
             # Ensure the parameter is properly referenced
             if parameter not in function:
                 function = function.replace('x', parameter)
-            
+
             # Basic validation - check for dangerous functions
             dangerous_keywords = ['import', 'exec', 'eval', 'open', 'file', '__']
             for keyword in dangerous_keywords:
                 if keyword in function:
                     logger.warning(f"Dangerous keyword '{keyword}' found in function")
                     return None
-            
+
             return function
-            
+
         except Exception as e:
             logger.error(f"Error parsing function: {e}")
             return None
-    
+
     def _evaluate_function(self, function: str, values: np.ndarray) -> np.ndarray:
         """Safely evaluate a mathematical function"""
         try:
@@ -263,104 +263,104 @@ class GraphService:
                 't': values,
                 '__builtins__': {}
             }
-            
+
             # Evaluate the function
             result = eval(function, namespace)
-            
+
             # Handle scalar results
             if np.isscalar(result):
                 result = np.full_like(values, result)
-            
+
             # Handle infinite or NaN values
             result = np.where(np.isfinite(result), result, np.nan)
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"Error evaluating function: {e}")
             raise
-    
+
     def generate_statistical_graph(self, data: List[float], graph_type: str = 'histogram') -> Optional[str]:
         """Generate statistical graphs (histogram, box plot, etc.)"""
         try:
             if not data:
                 return None
-            
+
             plt.figure(figsize=(10, 6))
-            
+
             if graph_type == 'histogram':
                 plt.hist(data, bins=20, alpha=0.7, edgecolor='black')
                 plt.title('Histogram')
                 plt.xlabel('Value')
                 plt.ylabel('Frequency')
-                
+
             elif graph_type == 'boxplot':
                 plt.boxplot(data)
                 plt.title('Box Plot')
                 plt.ylabel('Value')
-                
+
             elif graph_type == 'line':
                 plt.plot(range(len(data)), data, marker='o')
                 plt.title('Line Plot')
                 plt.xlabel('Index')
                 plt.ylabel('Value')
-                
+
             else:
                 logger.error(f"Unsupported graph type: {graph_type}")
                 return None
-            
+
             plt.grid(True, alpha=0.3)
-            
+
             # Save the plot
             filename = f"stats_{graph_type}_{hash(str(data)) % 10000}.png"
             filepath = os.path.join('static', 'graphs', filename)
-            
+
             # Ensure directory exists
             os.makedirs(os.path.dirname(filepath), exist_ok=True)
-            
+
             plt.savefig(filepath, dpi=150, bbox_inches='tight')
             plt.close()
-            
+
             logger.info(f"Generated {graph_type} graph")
             return filepath
-            
+
         except Exception as e:
             logger.error(f"Error generating statistical graph: {e}")
             return None
-    
+
     def create_geometry_diagram(self, shape_type: str, parameters: Dict) -> Optional[str]:
         """Create geometry diagrams for educational purposes"""
         try:
             plt.figure(figsize=(8, 8))
             plt.axis('equal')
-            
+
             if shape_type == 'circle':
                 radius = parameters.get('radius', 1)
                 center = parameters.get('center', (0, 0))
-                
+
                 circle = Circle(center, radius, fill=False, linewidth=2)
                 plt.gca().add_patch(circle)
                 plt.xlim(center[0] - radius - 1, center[0] + radius + 1)
                 plt.ylim(center[1] - radius - 1, center[1] + radius + 1)
                 plt.title(f'Circle (radius = {radius})')
-                
+
             elif shape_type == 'triangle':
                 vertices = parameters.get('vertices', [(0, 0), (1, 0), (0.5, 0.866)])
                 triangle = Polygon(vertices, fill=False, linewidth=2)
                 plt.gca().add_patch(triangle)
-                
+
                 # Calculate bounds
                 x_coords = [v[0] for v in vertices]
                 y_coords = [v[1] for v in vertices]
                 plt.xlim(min(x_coords) - 0.5, max(x_coords) + 0.5)
                 plt.ylim(min(y_coords) - 0.5, max(y_coords) + 0.5)
                 plt.title('Triangle')
-                
+
             elif shape_type == 'rectangle':
                 width = parameters.get('width', 2)
                 height = parameters.get('height', 1)
                 center = parameters.get('center', (0, 0))
-                
+
                 x = center[0] - width/2
                 y = center[1] - height/2
                 rectangle = Rectangle((x, y), width, height, fill=False, linewidth=2)
@@ -368,28 +368,28 @@ class GraphService:
                 plt.xlim(x - 0.5, x + width + 0.5)
                 plt.ylim(y - 0.5, y + height + 0.5)
                 plt.title(f'Rectangle ({width} × {height})')
-                
+
             else:
                 logger.error(f"Unsupported shape type: {shape_type}")
                 return None
-            
+
             plt.grid(True, alpha=0.3)
             plt.axhline(y=0, color='k', linewidth=0.5)
             plt.axvline(x=0, color='k', linewidth=0.5)
-            
+
             # Save the plot
             filename = f"geometry_{shape_type}_{hash(str(parameters)) % 10000}.png"
             filepath = os.path.join('static', 'graphs', filename)
-            
+
             # Ensure directory exists
             os.makedirs(os.path.dirname(filepath), exist_ok=True)
-            
+
             plt.savefig(filepath, dpi=150, bbox_inches='tight')
             plt.close()
-            
+
             logger.info(f"Generated {shape_type} diagram")
             return filepath
-            
+
         except Exception as e:
             logger.error(f"Error creating geometry diagram: {e}")
             return None
@@ -446,12 +446,12 @@ class GraphService:
                 viewport = {"xmin": 0, "xmax": 10, "ymin": 0, "ymax": 10}
 
             fig, ax = plt.subplots(figsize=(12, 8), dpi=150)
-            
+
             x_vals = np.linspace(viewport["xmin"], viewport["xmax"], 1000)
-            
+
             # Colors for different constraints
             colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD']
-            
+
             # Plot constraint lines
             constraint_lines = []
             for i, constraint in enumerate(constraints):
@@ -460,7 +460,7 @@ class GraphService:
                     constraint_clean = constraint.replace('<=', '=').replace('>=', '=').replace('<', '=').replace('>', '=')
                     # Extract coefficients (simplified parsing)
                     color = colors[i % len(colors)]
-                    
+
                     # For demo, create sample constraint lines
                     if i == 0:
                         y_vals = (12 - 2*x_vals) / 3  # 2x + 3y = 12
@@ -468,11 +468,11 @@ class GraphService:
                         y_vals = 8 - x_vals  # x + y = 8
                     else:
                         y_vals = np.full_like(x_vals, 5)  # y = 5
-                    
+
                     ax.plot(x_vals, y_vals, color=color, linewidth=3, 
                            label=f'Constraint {i+1}: {constraint}', alpha=0.8)
                     constraint_lines.append((x_vals, y_vals))
-                    
+
                 except Exception as e:
                     logger.warning(f"Could not plot constraint '{constraint}': {e}")
                     continue
@@ -495,7 +495,7 @@ class GraphService:
             ax.grid(True, which='major', alpha=0.7, linestyle='-', linewidth=0.8, color='gray')
             ax.grid(True, which='minor', alpha=0.6, linestyle=':', linewidth=0.7, color='darkgray')
             ax.minorticks_on()
-            
+
             ax.axhline(y=0, color='k', linewidth=1.5, alpha=0.7)
             ax.axvline(x=0, color='k', linewidth=1.5, alpha=0.7)
             ax.legend(fontsize=10, loc='best')
@@ -505,7 +505,7 @@ class GraphService:
             # Save the graph
             filename = f"linear_programming_{int(time.time())}.png"
             filepath = os.path.join('static', 'graphs', filename)
-            
+
             os.makedirs(os.path.dirname(filepath), exist_ok=True)
             plt.tight_layout()
             plt.savefig(filepath, dpi=150, bbox_inches='tight', 
@@ -528,32 +528,32 @@ class GraphService:
                 return None
 
             fig, ax = plt.subplots(figsize=(12, 8), dpi=150)
-            
+
             if graph_type == 'histogram':
                 ax.hist(data, bins=20, alpha=0.7, edgecolor='black', color='skyblue')
                 ax.set_title(title or 'ZIMSEC Statistics: Histogram', fontsize=16, fontweight='bold', pad=20)
                 ax.set_xlabel('Value', fontsize=14, fontweight='bold')
                 ax.set_ylabel('Frequency', fontsize=14, fontweight='bold')
-                
+
             elif graph_type == 'boxplot':
                 ax.boxplot(data, patch_artist=True, boxprops=dict(facecolor='lightblue'))
                 ax.set_title(title or 'ZIMSEC Statistics: Box Plot', fontsize=16, fontweight='bold', pad=20)
                 ax.set_ylabel('Value', fontsize=14, fontweight='bold')
-                
+
             elif graph_type == 'scatter':
                 x_data = list(range(len(data)))
                 ax.scatter(x_data, data, alpha=0.7, s=60, color='red')
                 ax.set_title(title or 'ZIMSEC Statistics: Scatter Plot', fontsize=16, fontweight='bold', pad=20)
                 ax.set_xlabel('Index', fontsize=14, fontweight='bold')
                 ax.set_ylabel('Value', fontsize=14, fontweight='bold')
-                
+
             elif graph_type == 'bar':
                 categories = [f'Cat {i+1}' for i in range(len(data))]
                 ax.bar(categories, data, alpha=0.7, color='green')
                 ax.set_title(title or 'ZIMSEC Statistics: Bar Chart', fontsize=16, fontweight='bold', pad=20)
                 ax.set_xlabel('Category', fontsize=14, fontweight='bold')
                 ax.set_ylabel('Value', fontsize=14, fontweight='bold')
-                
+
             else:
                 logger.error(f"Unsupported statistics graph type: {graph_type}")
                 return None
@@ -569,7 +569,7 @@ class GraphService:
             # Save the graph
             filename = f"statistics_{graph_type}_{int(time.time())}.png"
             filepath = os.path.join('static', 'graphs', filename)
-            
+
             os.makedirs(os.path.dirname(filepath), exist_ok=True)
             plt.tight_layout()
             plt.savefig(filepath, dpi=150, bbox_inches='tight', 
@@ -669,7 +669,102 @@ class GraphService:
             logger.info(f"✅ Advanced graph created successfully: {save_path}")
             return save_path
 
+    def create_graph(self, graph_type: str, title: str = None, **kwargs) -> str:
+        """Create a graph based on type and return the file path"""
+        try:
+            import matplotlib.pyplot as plt
+            import numpy as np
+            import os
+            from datetime import datetime
+
+            # Generate unique filename
+            timestamp = int(datetime.now().timestamp())
+            filename = f"{graph_type}_{timestamp}.png"
+            filepath = os.path.join(self.temp_dir, filename)
+
+            # Create figure
+            plt.figure(figsize=(10, 6))
+
+            if graph_type == "linear":
+                # Create linear function graph
+                x = np.linspace(-10, 10, 100)
+                m = kwargs.get('slope', 2)
+                b = kwargs.get('intercept', 1)
+                y = m * x + b
+                plt.plot(x, y, 'b-', linewidth=2, label=f'y = {m}x + {b}')
+                plt.title(title or f'Linear Function: y = {m}x + {b}')
+
+            elif graph_type == "quadratic":
+                # Create quadratic function graph
+                x = np.linspace(-10, 10, 100)
+                a = kwargs.get('a', 1)
+                b = kwargs.get('b', 0)
+                c = kwargs.get('c', 0)
+                y = a * x**2 + b * x + c
+                plt.plot(x, y, 'r-', linewidth=2, label=f'y = {a}x² + {b}x + {c}')
+                plt.title(title or f'Quadratic Function: y = {a}x² + {b}x + {c}')
+
+            elif graph_type == "sine":
+                # Create sine wave graph
+                x = np.linspace(0, 4*np.pi, 100)
+                amplitude = kwargs.get('amplitude', 1)
+                frequency = kwargs.get('frequency', 1)
+                y = amplitude * np.sin(frequency * x)
+                plt.plot(x, y, 'g-', linewidth=2, label=f'y = {amplitude}sin({frequency}x)')
+                plt.title(title or f'Sine Function: y = {amplitude}sin({frequency}x)')
+
+            elif graph_type == "cosine":
+                # Create cosine wave graph
+                x = np.linspace(0, 4*np.pi, 100)
+                amplitude = kwargs.get('amplitude', 1)
+                frequency = kwargs.get('frequency', 1)
+                y = amplitude * np.cos(frequency * x)
+                plt.plot(x, y, 'm-', linewidth=2, label=f'y = {amplitude}cos({frequency}x)')
+                plt.title(title or f'Cosine Function: y = {amplitude}cos({frequency}x)')
+
+            elif graph_type == "exponential":
+                # Create exponential function graph
+                x = np.linspace(-2, 3, 100)
+                base = kwargs.get('base', 2)
+                y = base ** x
+                plt.plot(x, y, 'orange', linewidth=2, label=f'y = {base}^x')
+                plt.title(title or f'Exponential Function: y = {base}^x')
+
+            elif graph_type == "logarithmic":
+                # Create logarithmic function graph
+                x = np.linspace(0.1, 10, 100)
+                base = kwargs.get('base', 10)
+                if base == 10:
+                    y = np.log10(x)
+                    plt.plot(x, y, 'brown', linewidth=2, label='y = log₁₀(x)')
+                    plt.title(title or 'Logarithmic Function: y = log₁₀(x)')
+                else:
+                    y = np.log(x) / np.log(base)
+                    plt.plot(x, y, 'brown', linewidth=2, label=f'y = log_{base}(x)')
+                    plt.title(title or f'Logarithmic Function: y = log_{base}(x)')
+
+            else:
+                # Default to simple linear graph
+                x = np.linspace(-5, 5, 100)
+                y = x
+                plt.plot(x, y, 'b-', linewidth=2, label='y = x')
+                plt.title(title or 'Linear Function: y = x')
+
+            # Add grid and labels
+            plt.grid(True, alpha=0.3)
+            plt.xlabel('x')
+            plt.ylabel('y')
+            plt.legend()
+            plt.axhline(y=0, color='k', linewidth=0.5)
+            plt.axvline(x=0, color='k', linewidth=0.5)
+
+            # Save the plot
+            plt.tight_layout()
+            plt.savefig(filepath, dpi=300, bbox_inches='tight')
+            plt.close()
+
+            return filepath
+
         except Exception as e:
-            logger.error(f"Error creating advanced function graph: {str(e)}")
-            plt.close('all')  # Clean up any open figures
+            logger.error(f"Error creating graph: {e}")
             return None
