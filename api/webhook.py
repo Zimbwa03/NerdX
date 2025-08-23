@@ -51,6 +51,10 @@ mathematics_handler = MathematicsHandler(whatsapp_service, mathematics_service, 
 from handlers.exam_mathematics_handler import ExamMathematicsHandler
 exam_mathematics_handler = ExamMathematicsHandler(whatsapp_service, mathematics_service, math_question_generator)
 
+# Initialize graph practice handler
+from handlers.graph_practice_handler import GraphPracticeHandler
+graph_practice_handler = GraphPracticeHandler(whatsapp_service, graph_service, math_question_generator)
+
 # Initialize utilities
 rate_limiter = RateLimiter()
 question_cache = QuestionCacheService()
@@ -143,6 +147,13 @@ def handle_text_message(user_id: str, message_text: str):
         if session_type:
             handle_session_message(user_id, message_text)
             return
+        
+        # Check for graph practice custom input session
+        from database.session_db import get_user_session
+        session_data = get_user_session(user_id)
+        if session_data and session_data.get('awaiting_custom_graph'):
+            graph_practice_handler.handle_custom_graph_input(user_id, message_text)
+            return
 
         # Check if user is registered
         registration_status = user_service.check_user_registration(user_id)
@@ -180,7 +191,12 @@ def handle_text_message(user_id: str, message_text: str):
         elif command == 'essay':
             start_essay_session(user_id)
         elif command.startswith('graph '):
-            handle_graph_request(user_id, command[6:])
+            # Enhanced graph handling - direct to Graph Practice for comprehensive learning
+            graph_input = command[6:].strip()
+            if graph_input:
+                graph_practice_handler.handle_custom_graph_input(user_id, graph_input)
+            else:
+                graph_practice_handler.handle_graph_practice_start(user_id)
         else:
             # If no active session and command is not recognized, show main menu
             send_main_menu(user_id)
@@ -607,6 +623,33 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             audio_chat_service.end_audio_chat(user_id)
         elif selection_id == 'continue_audio_chat':
             handle_continue_audio_chat(user_id)
+        
+        # Graph Practice Callbacks - Comprehensive ZIMSEC Graph Learning System
+        elif selection_id == 'graph_practice_start':
+            graph_practice_handler.handle_graph_practice_start(user_id)
+        elif selection_id.startswith('graph_module_'):
+            module_id = selection_id.replace('graph_module_', '')
+            graph_practice_handler.handle_graph_module(user_id, module_id)
+        elif selection_id.startswith('graph_theory_'):
+            module_id = selection_id.replace('graph_theory_', '')
+            graph_practice_handler.handle_graph_theory(user_id, module_id)
+        elif selection_id.startswith('graph_practice_'):
+            if selection_id == 'graph_practice_start':
+                graph_practice_handler.handle_graph_practice_start(user_id)
+            else:
+                module_id = selection_id.replace('graph_practice_', '')
+                graph_practice_handler.handle_graph_practice_problems(user_id, module_id)
+        elif selection_id.startswith('graph_create_'):
+            module_id = selection_id.replace('graph_create_', '')
+            graph_practice_handler.handle_graph_creation(user_id, module_id)
+        elif selection_id.startswith('graph_example_'):
+            module_id = selection_id.replace('graph_example_', '')
+            graph_practice_handler.handle_graph_creation(user_id, module_id)
+        elif selection_id == 'graph_custom_creator':
+            graph_practice_handler.handle_custom_graph_creator(user_id)
+        elif selection_id == 'graph_tutorial':
+            graph_practice_handler.handle_graph_tutorial(user_id)
+        
         elif selection_id == 'buy_credits':
             show_credit_packages(user_id)
         elif selection_id == 'share_to_friend':
@@ -1328,7 +1371,7 @@ def handle_mathematics_menu(user_id: str):
         buttons = [
             {"text": "📚 Practice Questions", "callback_data": "math_practice"},
             {"text": "📷 Image Math Solver", "callback_data": "upload_math_image"},
-            {"text": "📈 Graph Practice", "callback_data": "math_graphing"},
+            {"text": "📊 Graph Practice", "callback_data": "graph_practice_start"},
             {"text": "📊 My Progress", "callback_data": "stats"},
             {"text": "🔙 Back", "callback_data": "level_ordinary"}
         ]

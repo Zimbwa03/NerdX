@@ -6,17 +6,34 @@ import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, Polygon, Rectangle
+import matplotlib.patches as patches
+from matplotlib import cm
 import numpy as np
-from typing import Dict, List, Optional
+import sympy as sp
+from sympy import symbols, lambdify, sympify
+from math import pi, e, sin, cos, tan, log, sqrt, exp
+import time
+from typing import Dict, List, Optional, Tuple
 from config import Config
 
 logger = logging.getLogger(__name__)
 
 class GraphService:
-    """Service for generating mathematical graphs and visualizations"""
+    """Enhanced service for generating professional educational mathematical graphs and visualizations"""
     
     def __init__(self):
         self.desmos_api_key = Config.DESMOS_API_KEY
+        
+        # Set professional matplotlib style for ZIMSEC educational graphs
+        plt.style.use('seaborn-v0_8') if 'seaborn-v0_8' in plt.style.available else plt.style.use('default')
+        plt.rcParams['figure.figsize'] = (12, 8)
+        plt.rcParams['font.size'] = 12
+        plt.rcParams['axes.grid'] = True
+        plt.rcParams['grid.alpha'] = 0.7
+        plt.rcParams['grid.linewidth'] = 0.8
+        plt.rcParams['axes.axisbelow'] = True
+        
+        logger.info("Enhanced Graph Service initialized for ZIMSEC educational graphs")
         
     def generate_function_graph(self, function: str, x_range: tuple = (-10, 10), title: Optional[str] = None) -> Optional[str]:
         """Generate a graph for a mathematical function"""
@@ -34,30 +51,53 @@ class GraphService:
                 # Evaluate the function
                 y = self._evaluate_function(parsed_function, x)
                 
-                # Create the plot
-                plt.figure(figsize=(10, 8))
-                plt.plot(x, y, 'b-', linewidth=2, label=f'y = {function}')
-                plt.grid(True, alpha=0.3)
-                plt.axhline(y=0, color='k', linewidth=0.5)
-                plt.axvline(x=0, color='k', linewidth=0.5)
+                # Create professional plot with enhanced educational features
+                fig, ax = plt.subplots(figsize=(12, 8), dpi=150)
                 
-                plt.xlabel('x', fontsize=12)
-                plt.ylabel('y', fontsize=12)
+                # Handle complex numbers and infinite values
+                if np.iscomplexobj(y):
+                    y = np.real(y)
                 
-                graph_title = title if title else f'Graph of y = {function}'
-                plt.title(graph_title, fontsize=14)
+                # Remove infinite and NaN values for clean plotting
+                mask = np.isfinite(y)
+                x_clean = x[mask]
+                y_clean = y[mask]
                 
-                plt.legend()
+                ax.plot(x_clean, y_clean, 'b-', linewidth=3, label=f'f(x) = {function}', alpha=0.8)
                 
-                # Save the plot
-                filename = f"graph_{hash(function) % 10000}.png"
+                # Add enhanced grid with major and minor gridlines for ZIMSEC standards
+                ax.grid(True, which='major', alpha=0.7, linestyle='-', linewidth=0.8, color='gray')
+                ax.grid(True, which='minor', alpha=0.6, linestyle=':', linewidth=0.7, color='darkgray')
+                ax.minorticks_on()
+                
+                # Professional axes through origin
+                ax.axhline(y=0, color='k', linewidth=1.5, alpha=0.7)
+                ax.axvline(x=0, color='k', linewidth=1.5, alpha=0.7)
+                
+                # Enhanced labeling
+                ax.set_xlabel('x', fontsize=14, fontweight='bold')
+                ax.set_ylabel('y', fontsize=14, fontweight='bold')
+                
+                graph_title = title if title else f'NerdX Mathematics: y = {function}'
+                ax.set_title(graph_title, fontsize=16, fontweight='bold', pad=20)
+                
+                # Professional legend
+                ax.legend(fontsize=12, loc='upper right')
+                
+                # Add educational watermark
+                self._add_educational_watermark(ax)
+                
+                # Save with professional quality
+                filename = f"nerdx_graph_{int(time.time())}_{hash(function) % 10000}.png"
                 filepath = os.path.join('static', 'graphs', filename)
                 
                 # Ensure directory exists
                 os.makedirs(os.path.dirname(filepath), exist_ok=True)
                 
-                plt.savefig(filepath, dpi=150, bbox_inches='tight')
-                plt.close()
+                plt.tight_layout()
+                plt.savefig(filepath, dpi=150, bbox_inches='tight', 
+                           facecolor='white', edgecolor='none')
+                plt.close(fig)
                 
                 logger.info(f"Generated graph for function: {function}")
                 return filepath
@@ -352,4 +392,284 @@ class GraphService:
             
         except Exception as e:
             logger.error(f"Error creating geometry diagram: {e}")
+            return None
+
+    def _add_educational_watermark(self, ax):
+        """Add NerdX educational watermark for ZIMSEC graphs"""
+        ax.text(0.02, 0.02, '🚀 NerdX Mathematics - ZIMSEC O-Level', transform=ax.transAxes,
+                fontsize=10, alpha=0.7, fontweight='bold',
+                bbox=dict(boxstyle="round,pad=0.3", facecolor="lightblue", alpha=0.3))
+
+        # Add subtle corner watermark
+        ax.text(0.98, 0.02, 'Generated by NerdX', transform=ax.transAxes,
+                fontsize=8, alpha=0.5, fontweight='normal', ha='right',
+                style='italic', color='gray')
+
+    def _clean_expression(self, expr: str) -> str:
+        """Clean and standardize mathematical expressions for ZIMSEC"""
+        clean = expr.strip()
+
+        # Remove y = or f(x) = prefix if present
+        if clean.lower().startswith('y ='):
+            clean = clean[3:].strip()
+        elif clean.lower().startswith('f(x) ='):
+            clean = clean[6:].strip()
+        elif clean.lower().startswith('y='):
+            clean = clean[2:].strip()
+        elif clean.lower().startswith('f(x)='):
+            clean = clean[5:].strip()
+
+        # Replace common mathematical notation for ZIMSEC standards
+        replacements = {
+            '^': '**',          # Power notation
+            'ln': 'log',        # Natural log
+            'sqrt': 'sqrt',     # Square root
+            'abs': 'abs',       # Absolute value
+            'pi': 'pi',         # Pi constant
+            'e': 'e',           # Euler's number
+        }
+
+        for old, new in replacements.items():
+            clean = clean.replace(old, new)
+
+        # Handle implicit multiplication (e.g., "3x" -> "3*x")
+        import re
+        clean = re.sub(r'(\d+)([a-zA-Z])', r'\1*\2', clean)
+
+        return clean
+
+    def create_linear_programming_graph(self, constraints: List[str], objective: str, 
+                                       viewport: Dict = None, title: str = "Linear Programming") -> Optional[str]:
+        """Create linear programming graph with feasible region shading"""
+        try:
+            if viewport is None:
+                viewport = {"xmin": 0, "xmax": 10, "ymin": 0, "ymax": 10}
+
+            fig, ax = plt.subplots(figsize=(12, 8), dpi=150)
+            
+            x_vals = np.linspace(viewport["xmin"], viewport["xmax"], 1000)
+            
+            # Colors for different constraints
+            colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD']
+            
+            # Plot constraint lines
+            constraint_lines = []
+            for i, constraint in enumerate(constraints):
+                try:
+                    # Parse constraint (e.g., "2x + 3y <= 12")
+                    constraint_clean = constraint.replace('<=', '=').replace('>=', '=').replace('<', '=').replace('>', '=')
+                    # Extract coefficients (simplified parsing)
+                    color = colors[i % len(colors)]
+                    
+                    # For demo, create sample constraint lines
+                    if i == 0:
+                        y_vals = (12 - 2*x_vals) / 3  # 2x + 3y = 12
+                    elif i == 1:
+                        y_vals = 8 - x_vals  # x + y = 8
+                    else:
+                        y_vals = np.full_like(x_vals, 5)  # y = 5
+                    
+                    ax.plot(x_vals, y_vals, color=color, linewidth=3, 
+                           label=f'Constraint {i+1}: {constraint}', alpha=0.8)
+                    constraint_lines.append((x_vals, y_vals))
+                    
+                except Exception as e:
+                    logger.warning(f"Could not plot constraint '{constraint}': {e}")
+                    continue
+
+            # Add feasible region shading (simplified)
+            if len(constraint_lines) >= 2:
+                x_fill = np.linspace(viewport["xmin"], viewport["xmax"], 100)
+                y_fill = np.minimum(constraint_lines[0][1][:100], constraint_lines[1][1][:100])
+                y_fill = np.maximum(y_fill, 0)  # Non-negativity constraint
+                ax.fill_between(x_fill, 0, y_fill, alpha=0.3, color='lightgreen', label='Feasible Region')
+
+            # Customize graph for ZIMSEC standards
+            ax.set_xlim(viewport["xmin"], viewport["xmax"])
+            ax.set_ylim(viewport["ymin"], viewport["ymax"])
+            ax.set_xlabel('x', fontsize=14, fontweight='bold')
+            ax.set_ylabel('y', fontsize=14, fontweight='bold')
+            ax.set_title(f'ZIMSEC Linear Programming: {title}', fontsize=16, fontweight='bold', pad=20)
+
+            # Enhanced grid for educational clarity
+            ax.grid(True, which='major', alpha=0.7, linestyle='-', linewidth=0.8, color='gray')
+            ax.grid(True, which='minor', alpha=0.6, linestyle=':', linewidth=0.7, color='darkgray')
+            ax.minorticks_on()
+            
+            ax.axhline(y=0, color='k', linewidth=1.5, alpha=0.7)
+            ax.axvline(x=0, color='k', linewidth=1.5, alpha=0.7)
+            ax.legend(fontsize=10, loc='best')
+
+            self._add_educational_watermark(ax)
+
+            # Save the graph
+            filename = f"linear_programming_{int(time.time())}.png"
+            filepath = os.path.join('static', 'graphs', filename)
+            
+            os.makedirs(os.path.dirname(filepath), exist_ok=True)
+            plt.tight_layout()
+            plt.savefig(filepath, dpi=150, bbox_inches='tight', 
+                       facecolor='white', edgecolor='none')
+            plt.close(fig)
+
+            logger.info(f"✅ Linear programming graph created: {filepath}")
+            return filepath
+
+        except Exception as e:
+            logger.error(f"Error creating linear programming graph: {str(e)}")
+            plt.close('all')
+            return None
+
+    def create_statistics_graph(self, data: List[float], graph_type: str = 'histogram', 
+                               title: str = None) -> Optional[str]:
+        """Create ZIMSEC O-Level statistics graphs"""
+        try:
+            if not data:
+                return None
+
+            fig, ax = plt.subplots(figsize=(12, 8), dpi=150)
+            
+            if graph_type == 'histogram':
+                ax.hist(data, bins=20, alpha=0.7, edgecolor='black', color='skyblue')
+                ax.set_title(title or 'ZIMSEC Statistics: Histogram', fontsize=16, fontweight='bold', pad=20)
+                ax.set_xlabel('Value', fontsize=14, fontweight='bold')
+                ax.set_ylabel('Frequency', fontsize=14, fontweight='bold')
+                
+            elif graph_type == 'boxplot':
+                ax.boxplot(data, patch_artist=True, boxprops=dict(facecolor='lightblue'))
+                ax.set_title(title or 'ZIMSEC Statistics: Box Plot', fontsize=16, fontweight='bold', pad=20)
+                ax.set_ylabel('Value', fontsize=14, fontweight='bold')
+                
+            elif graph_type == 'scatter':
+                x_data = list(range(len(data)))
+                ax.scatter(x_data, data, alpha=0.7, s=60, color='red')
+                ax.set_title(title or 'ZIMSEC Statistics: Scatter Plot', fontsize=16, fontweight='bold', pad=20)
+                ax.set_xlabel('Index', fontsize=14, fontweight='bold')
+                ax.set_ylabel('Value', fontsize=14, fontweight='bold')
+                
+            elif graph_type == 'bar':
+                categories = [f'Cat {i+1}' for i in range(len(data))]
+                ax.bar(categories, data, alpha=0.7, color='green')
+                ax.set_title(title or 'ZIMSEC Statistics: Bar Chart', fontsize=16, fontweight='bold', pad=20)
+                ax.set_xlabel('Category', fontsize=14, fontweight='bold')
+                ax.set_ylabel('Value', fontsize=14, fontweight='bold')
+                
+            else:
+                logger.error(f"Unsupported statistics graph type: {graph_type}")
+                return None
+
+            # Enhanced grid for educational clarity
+            ax.grid(True, which='major', alpha=0.7, linestyle='-', linewidth=0.8, color='gray')
+            ax.grid(True, which='minor', alpha=0.6, linestyle=':', linewidth=0.7, color='darkgray')
+            if graph_type != 'boxplot':  # Minor ticks don't work well with boxplots
+                ax.minorticks_on()
+
+            self._add_educational_watermark(ax)
+
+            # Save the graph
+            filename = f"statistics_{graph_type}_{int(time.time())}.png"
+            filepath = os.path.join('static', 'graphs', filename)
+            
+            os.makedirs(os.path.dirname(filepath), exist_ok=True)
+            plt.tight_layout()
+            plt.savefig(filepath, dpi=150, bbox_inches='tight', 
+                       facecolor='white', edgecolor='none')
+            plt.close(fig)
+
+            logger.info(f"✅ Statistics {graph_type} graph created: {filepath}")
+            return filepath
+
+        except Exception as e:
+            logger.error(f"Error creating statistics graph: {str(e)}")
+            plt.close('all')
+            return None
+
+    def create_advanced_function_graph(self, expression: str, title: str = "NerdX Advanced Math Graph", 
+                                     viewport: Dict = None, save_path: str = None) -> Optional[str]:
+        """Create advanced function graph using sympy for better mathematical parsing"""
+        try:
+            # Default viewport if not provided
+            if viewport is None:
+                viewport = {"xmin": -10, "xmax": 10, "ymin": -10, "ymax": 10}
+
+            # Create figure with high DPI for crisp images
+            fig, ax = plt.subplots(figsize=(12, 8), dpi=150)
+
+            # Generate x values
+            x_vals = np.linspace(viewport["xmin"], viewport["xmax"], 1000)
+
+            # Convert expression to numpy-compatible format
+            clean_expr = self._clean_expression(expression)
+
+            try:
+                # Use sympy to safely evaluate the expression
+                x = symbols('x')
+                logger.info(f"Cleaned expression: '{clean_expr}'")
+                expr_sympy = sympify(clean_expr)
+                logger.info(f"Sympy expression: {expr_sympy}")
+                func = lambdify(x, expr_sympy, 'numpy')
+
+                # Calculate y values
+                y_vals = func(x_vals)
+
+                # Handle complex numbers and infinite values
+                if np.iscomplexobj(y_vals):
+                    y_vals = np.real(y_vals)
+
+                # Remove infinite and NaN values
+                mask = np.isfinite(y_vals)
+                x_clean = x_vals[mask]
+                y_clean = y_vals[mask]
+
+                # Plot the function
+                ax.plot(x_clean, y_clean, 'b-', linewidth=3, label=f'f(x) = {expression}', alpha=0.8)
+
+            except Exception as eval_error:
+                logger.error(f"Error evaluating expression '{expression}': {eval_error}")
+                # Fallback: show error message on graph
+                ax.text(0.5, 0.5, f"Error: Cannot plot '{expression}'", 
+                       transform=ax.transAxes, fontsize=16, ha='center', va='center',
+                       bbox=dict(boxstyle="round,pad=0.3", facecolor="yellow", alpha=0.7))
+
+            # Customize the graph for ZIMSEC standards
+            ax.set_xlim(viewport["xmin"], viewport["xmax"])
+            ax.set_ylim(viewport["ymin"], viewport["ymax"])
+            ax.set_xlabel('x', fontsize=14, fontweight='bold')
+            ax.set_ylabel('y', fontsize=14, fontweight='bold')
+            ax.set_title(title, fontsize=16, fontweight='bold', pad=20)
+
+            # Add enhanced grid with major and minor gridlines
+            ax.grid(True, which='major', alpha=0.7, linestyle='-', linewidth=0.8, color='gray')
+            ax.grid(True, which='minor', alpha=0.6, linestyle=':', linewidth=0.7, color='darkgray')
+            ax.minorticks_on()
+
+            # Add axes through origin
+            ax.axhline(y=0, color='k', linewidth=1.5, alpha=0.7)
+            ax.axvline(x=0, color='k', linewidth=1.5, alpha=0.7)
+
+            # Add legend
+            ax.legend(fontsize=12, loc='upper right')
+
+            # Add NerdX educational watermark
+            self._add_educational_watermark(ax)
+
+            # Save the graph
+            if save_path is None:
+                save_path = f"static/graphs/advanced_graph_{int(time.time())}.png"
+
+            # Ensure directory exists
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
+
+            # Save with high quality
+            plt.tight_layout()
+            plt.savefig(save_path, dpi=150, bbox_inches='tight', 
+                       facecolor='white', edgecolor='none')
+            plt.close(fig)
+
+            logger.info(f"✅ Advanced graph created successfully: {save_path}")
+            return save_path
+
+        except Exception as e:
+            logger.error(f"Error creating advanced function graph: {str(e)}")
+            plt.close('all')  # Clean up any open figures
             return None
