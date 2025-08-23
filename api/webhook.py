@@ -795,8 +795,8 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             # Handle topical questions - transfer existing mathematics topic functionality
             mathematics_handler.handle_mathematics_main_menu(user_id)
         elif selection_id == 'math_exam':
-            # Handle math exam
-            whatsapp_service.send_message(user_id, "📝 Math Exam feature coming soon!")
+            # Handle math exam - start exam mode with database questions
+            exam_mathematics_handler.handle_exam_start(user_id)
         elif selection_id == 'math_graph_practices':
             # Handle graph practices
             graph_practice_handler.handle_graph_practice_start(user_id)

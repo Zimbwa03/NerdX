@@ -130,32 +130,36 @@ class ExamMathematicsHandler:
             question_data = random.choice(result)
             
             # Format exam question message
+            topic_display = question_data.get('topic') or 'General Mathematics'
+            year_display = question_data.get('year') or 'Practice'
+            
             message = f"""📚 ZIMSEC Mathematics Exam
 
 👤 Student: {user_name}
 📝 Question {question_count}
-📂 Topic: {question_data.get('topic', 'General')}
-🎯 Marks: {question_data.get('marks', 1)}
+📂 Topic: {topic_display}
+📅 Year: {year_display}
 
-❓ Question:
-{question_data.get('question_text', 'Question text not available')}"""
+📷 Question image sent above ⬆️
+
+🎯 Study the question carefully and work through it step by step!"""
 
             # Create exam-style buttons
             buttons = [
-                {"text": "💡 Show Solution", "callback_data": f"exam_show_solution_{question_data['id']}"},
+                {"text": "💡 Show Answer", "callback_data": f"exam_show_solution_{question_data['id']}"},
                 {"text": "➡️ Next Question", "callback_data": "exam_math_next_question"},
-                {"text": "📚 Main Menu", "callback_data": "main_menu"}
+                {"text": "📚 Mathematics Hub", "callback_data": "mathematics_mcq"}
             ]
             
-            # Send question image if available
+            # Send question image first (this is the main content)
             if question_data.get('question_image_url'):
                 self.whatsapp_service.send_image_message(
                     user_id, 
                     question_data['question_image_url'], 
-                    "📝 Exam Question Image"
+                    f"📝 ZIMSEC Exam Question {question_count}"
                 )
             
-            # Send text message
+            # Send interactive message with buttons
             self.whatsapp_service.send_interactive_message(user_id, message, buttons)
             
             # Update session
@@ -266,33 +270,39 @@ class ExamMathematicsHandler:
             user_name = registration['name'] if registration else "Student"
             
             # Create solution message
+            topic_display = question_data.get('topic') or 'General Mathematics'
+            year_display = question_data.get('year') or 'Practice'
+            
             message = f"""💡 **Complete Solution** 💡
 
 👤 **Student:** {user_name}
-📂 **Topic:** {question_data.get('topic', 'General')}
-🎯 **Marks:** {question_data.get('marks', 1)}
+📂 **Topic:** {topic_display}
+📅 **Year:** {year_display}
 
-📝 **Question:**
-{question_data.get('question_text', '')}
+✅ **Answer images sent above** ⬆️
 
-✅ **Answer:**
-{question_data.get('answer_text', 'Solution images below')}
-
-📚 **Ready for the next challenge?**"""
+📚 **Study the solution carefully - Ready for the next challenge?**"""
 
             # Send solution images in order
-            if question_data.get('answer_image_1_url'):
+            if question_data.get('answer_image_url1'):
                 self.whatsapp_service.send_image_message(
                     user_id, 
-                    question_data['answer_image_1_url'], 
-                    "✅ Solution Step 1"
+                    question_data['answer_image_url1'], 
+                    "✅ Complete Solution"
                 )
             
-            if question_data.get('answer_image_2_url'):
+            if question_data.get('answer_image_url2'):
                 self.whatsapp_service.send_image_message(
                     user_id, 
-                    question_data['answer_image_2_url'], 
-                    "✅ Solution Step 2"
+                    question_data['answer_image_url2'], 
+                    "✅ Solution Part 2"
+                )
+                
+            if question_data.get('answer_image_url3'):
+                self.whatsapp_service.send_image_message(
+                    user_id, 
+                    question_data['answer_image_url3'], 
+                    "✅ Solution Part 3"
                 )
             
             # Create navigation buttons
