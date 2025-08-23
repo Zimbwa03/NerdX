@@ -338,6 +338,258 @@ Note: correct_answer should be the index (0-3) of the correct option."""
             logger.error(f"Error generating comprehension passage: {str(e)}")
             return self._get_fallback_comprehension_passage(theme, form_level)
 
+    def generate_long_comprehension_passage(self, theme: str, form_level: int = 4) -> Dict:
+        """Generate a long, engaging comprehension passage with exactly 10 ZIMSEC-style questions"""
+        
+        prompt = f"""Generate ONE comprehensive ZIMSEC O-Level comprehension passage with exactly 10 questions.
+
+**Requirements:**
+- Theme: {theme}  
+- Form {form_level} level (age 15-16)
+- Passage should be 800-1200 words (long but within WhatsApp limits)
+- Zimbabwean context and cultural relevance
+- Engaging, educational content suitable for teenagers
+- Follow ZIMSEC comprehension standards
+
+**Question Requirements:**
+- Exactly 10 questions (no more, no less)
+- Mix of question types: recall, inference, vocabulary, analysis, opinion
+- Questions should reference specific paragraphs where relevant  
+- Include mark allocations (1-2 marks per question)
+- Provide clear, complete answers
+- Brief explanations for each answer
+
+Return ONLY a JSON object:
+{{
+    "passage": {{
+        "title": "Engaging title for the passage",
+        "text": "Complete passage text (800-1200 words with clear paragraphs)",
+        "word_count": 950,
+        "theme": "{theme}"
+    }},
+    "questions": [
+        {{
+            "question": "Question text with paragraph reference if needed",
+            "correct_answer": "Complete answer",
+            "explanation": "Brief explanation why this is correct", 
+            "marks": 1,
+            "question_type": "recall"
+        }},
+        // ... exactly 9 more questions for total of 10
+    ],
+    "total_marks": 15,
+    "instructions": "Read the passage carefully and answer ALL questions."
+}}"""
+        
+        try:
+            logger.info(f"Generating long comprehension passage: {theme}")
+            
+            response = self.client.models.generate_content(
+                model=self.model,
+                contents=[
+                    types.Content(role="user", parts=[types.Part(text=prompt)])
+                ],
+                config=types.GenerateContentConfig(
+                    system_instruction="You are a ZIMSEC examination expert creating authentic O-Level comprehension materials with Zimbabwean cultural context.",
+                    response_mime_type="application/json",
+                    temperature=0.7,
+                    max_output_tokens=5000  # Higher limit for longer passages
+                )
+            )
+            
+            if response.text:
+                logger.info(f"Long comprehension raw response length: {len(response.text)} characters")
+                
+                # Check for truncation
+                if not response.text.strip().endswith('}'):
+                    logger.error("Incomplete JSON response detected - response was truncated")
+                    logger.error(f"Truncated response: {response.text[-200:]}")  # Show last 200 chars
+                    return self._get_fallback_long_comprehension(theme)
+                
+                try:
+                    passage_data = json.loads(response.text)
+                    
+                    # Validate that we have exactly 10 questions
+                    questions = passage_data.get('questions', [])
+                    if len(questions) != 10:
+                        logger.warning(f"Generated {len(questions)} questions instead of 10, adjusting...")
+                        # Ensure we have exactly 10 questions
+                        if len(questions) > 10:
+                            questions = questions[:10]
+                        elif len(questions) < 10:
+                            # Add simple questions if needed
+                            while len(questions) < 10:
+                                questions.append({
+                                    "question": f"What is your overall impression of this passage? (Question {len(questions) + 1})",
+                                    "correct_answer": "Personal response based on passage content",
+                                    "explanation": "This is an opinion-based question",
+                                    "marks": 1,
+                                    "question_type": "opinion"
+                                })
+                        passage_data['questions'] = questions
+                    
+                    if self._validate_long_comprehension_passage(passage_data):
+                        logger.info(f"✅ Generated long comprehension: {passage_data.get('passage', {}).get('title', 'Untitled')} with {len(questions)} questions")
+                        return passage_data
+                        
+                except json.JSONDecodeError as e:
+                    logger.error(f"JSON parsing error: {e}")
+                    return self._get_fallback_long_comprehension(theme)
+            
+            return self._get_fallback_long_comprehension(theme)
+            
+        except Exception as e:
+            logger.error(f"Error generating long comprehension passage: {str(e)}")
+            return self._get_fallback_long_comprehension(theme)
+            
+    def _validate_long_comprehension_passage(self, passage_data: Dict) -> bool:
+        """Validate long comprehension passage structure with exactly 10 questions"""
+        try:
+            if not isinstance(passage_data, dict):
+                return False
+                
+            passage = passage_data.get('passage')
+            questions = passage_data.get('questions', [])
+            
+            if not passage or not questions:
+                return False
+                
+            # Check passage structure
+            if not all(key in passage for key in ['title', 'text']):
+                return False
+                
+            # Must have exactly 10 questions
+            if len(questions) != 10:
+                logger.warning(f"Expected 10 questions, got {len(questions)}")
+                return False
+                
+            # Check questions structure
+            for i, q in enumerate(questions):
+                if not all(key in q for key in ['question', 'correct_answer']):
+                    logger.warning(f"Question {i+1} missing required fields")
+                    return False
+                    
+            # Check passage length (should be substantial)
+            word_count = len(passage.get('text', '').split())
+            if word_count < 500:
+                logger.warning(f"Passage too short: {word_count} words")
+                return False
+                    
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error validating long passage: {e}")
+            return False
+
+    def _get_fallback_long_comprehension(self, theme: str) -> Dict:
+        """Get fallback long comprehension passage when AI generation fails"""
+        return {
+            "passage": {
+                "title": f"Zimbabwean Excellence: A Story of {theme}",
+                "text": """Zimbabwe has always been a land of rich cultural heritage and remarkable achievements. From the ancient ruins of Great Zimbabwe to the modern innovations happening in Harare and Bulawayo, our nation continues to demonstrate resilience and creativity.
+
+In the heart of Mbare, a bustling township in Harare, lives a young entrepreneur named Chipo Moyo. At just 22 years old, she has established a successful business that combines traditional Shona crafts with modern technology. Her company, 'Heritage Tech', creates beautiful pottery using ancient techniques while incorporating solar-powered kilns and digital marketing strategies.
+
+Chipo's journey began during her Form 4 year at Prince Edward High School. While studying for her ZIMSEC examinations, she noticed how many of her classmates struggled with understanding traditional culture. "We were so focused on modern subjects that we were losing touch with our roots," she recalls.
+
+Determined to bridge this gap, Chipo spent her holidays in Nyanga, learning pottery from her grandmother, Gogo Patience Moyo. The elderly woman had been making clay pots for over fifty years, using methods passed down through generations. "My grandmother taught me that each pot tells a story," Chipo explains. "The clay from our soil, the patterns we create, the function it serves – everything connects us to our ancestors."
+
+After completing her A-Levels with outstanding results, Chipo could have easily secured a place at the University of Zimbabwe for engineering studies. Instead, she chose to pursue her passion for preserving Zimbabwean culture through entrepreneurship. Her parents were initially concerned about this unconventional path, but they soon became her biggest supporters.
+
+Chipo's business model is innovative yet rooted in tradition. She employs fifteen local artisans, mostly women from Mbare, teaching them both traditional pottery techniques and basic computer skills. The women learn to photograph their creations, write product descriptions in English and Shona, and even manage social media accounts.
+
+The company's products range from traditional water pots and cooking vessels to modern decorative pieces designed for urban homes. Each item comes with a QR code that customers can scan to learn about the artisan who made it, the cultural significance of the design, and the traditional uses of the piece.
+
+What makes Heritage Tech truly special is its commitment to environmental sustainability. The solar-powered kilns reduce carbon emissions, while the clay is sourced from sustainable deposits in Wedza district. Rainwater harvesting systems provide water for the workshop, and all packaging is made from recycled materials.
+
+The business has attracted international attention. Orders now come from South Africa, Botswana, and even as far as the United Kingdom. Chipo recently signed a partnership with a fair-trade organization in London, ensuring that the artisans receive fair wages for their work.
+
+Despite this international success, Chipo remains committed to her local community. Heritage Tech sponsors ten students at nearby primary schools, providing them with uniforms, books, and educational materials. The company also runs weekend workshops where local children learn basic pottery skills and Shona cultural history.
+
+"Education and culture must go hand in hand," Chipo emphasizes. "We cannot progress as a nation if we forget who we are and where we come from. Technology should enhance our culture, not replace it."
+
+Looking toward the future, Chipo plans to expand Heritage Tech to other provinces. She envisions workshops in Mutare focusing on basket weaving, centers in Gweru specializing in traditional textiles, and facilities in Victoria Falls creating tourist-oriented crafts that showcase Zimbabwean culture authentically.
+
+Her story demonstrates that young Zimbabweans can successfully blend tradition with innovation, creating opportunities that benefit entire communities while preserving cultural heritage for future generations.""",
+                "word_count": 587,
+                "theme": theme
+            },
+            "questions": [
+                {
+                    "question": "What is the name of Chipo's business and what does it specialize in?",
+                    "correct_answer": "Heritage Tech - it combines traditional Shona crafts with modern technology, particularly pottery using ancient techniques with solar-powered kilns and digital marketing.",
+                    "explanation": "This information is clearly stated in the second paragraph.",
+                    "marks": 2,
+                    "question_type": "recall"
+                },
+                {
+                    "question": "Where did Chipo learn traditional pottery techniques and from whom?",
+                    "correct_answer": "In Nyanga from her grandmother, Gogo Patience Moyo, who had been making clay pots for over fifty years.",
+                    "explanation": "This is mentioned in the fourth paragraph.",
+                    "marks": 2,
+                    "question_type": "recall"
+                },
+                {
+                    "question": "What does the phrase 'each pot tells a story' mean according to Gogo Patience?",
+                    "correct_answer": "It means that every element - the clay from their soil, the patterns created, and the function it serves - connects them to their ancestors.",
+                    "explanation": "This shows understanding of cultural significance and metaphorical language.",
+                    "marks": 2,
+                    "question_type": "inference"
+                },
+                {
+                    "question": "How many local artisans does Heritage Tech employ and what skills do they learn?",
+                    "correct_answer": "Fifteen local artisans, mostly women from Mbare, who learn traditional pottery techniques and basic computer skills including photography, writing product descriptions, and managing social media.",
+                    "explanation": "This information is found in the sixth paragraph.",
+                    "marks": 2,
+                    "question_type": "recall"
+                },
+                {
+                    "question": "What makes Heritage Tech environmentally sustainable? Give three examples.",
+                    "correct_answer": "Solar-powered kilns reduce carbon emissions, clay is sourced from sustainable deposits in Wedza district, rainwater harvesting provides water, and all packaging is made from recycled materials.",
+                    "explanation": "Multiple examples of environmental consciousness are provided in the eighth paragraph.",
+                    "marks": 3,
+                    "question_type": "recall"
+                },
+                {
+                    "question": "Which countries does Heritage Tech export to?",
+                    "correct_answer": "South Africa, Botswana, and the United Kingdom.",
+                    "explanation": "These countries are specifically mentioned in the ninth paragraph.",
+                    "marks": 1,
+                    "question_type": "recall"
+                },
+                {
+                    "question": "How does Heritage Tech support the local community beyond providing employment?",
+                    "correct_answer": "It sponsors ten students at nearby primary schools with uniforms, books, and materials, and runs weekend workshops teaching children pottery skills and Shona cultural history.",
+                    "explanation": "Community support activities are detailed in the eleventh paragraph.",
+                    "marks": 2,
+                    "question_type": "recall"
+                },
+                {
+                    "question": "What is Chipo's philosophy about education and culture?",
+                    "correct_answer": "'Education and culture must go hand in hand. We cannot progress as a nation if we forget who we are and where we come from. Technology should enhance our culture, not replace it.'",
+                    "explanation": "This direct quote summarizes her educational philosophy.",
+                    "marks": 2,
+                    "question_type": "recall"
+                },
+                {
+                    "question": "What are Chipo's future expansion plans for Heritage Tech?",
+                    "correct_answer": "She plans workshops in Mutare for basket weaving, centers in Gweru for traditional textiles, and facilities in Victoria Falls for tourist-oriented crafts showcasing Zimbabwean culture.",
+                    "explanation": "Future plans are outlined in the thirteenth paragraph.",
+                    "marks": 2,
+                    "question_type": "recall"
+                },
+                {
+                    "question": "In your opinion, what is the most important lesson from Chipo's story for young Zimbabweans?",
+                    "correct_answer": "Young people can successfully blend tradition with innovation to create opportunities that benefit communities while preserving cultural heritage. (Accept reasonable personal responses based on the passage)",
+                    "explanation": "This requires personal reflection based on the passage content.",
+                    "marks": 2,
+                    "question_type": "opinion"
+                }
+            ],
+            "total_marks": 20,
+            "instructions": "Read the passage carefully and answer ALL questions."
+        }
+
     def mark_essay(self, essay_text: str, prompt: str, form_level: int, section: str = 'A') -> Dict:
         """Mark essay using Gemini AI with detailed ZIMSEC feedback"""
         
