@@ -22,10 +22,10 @@ class MathQuestionGenerator:
         self.api_key = os.environ.get('DEEPSEEK_API_KEY')
         self.api_url = 'https://api.deepseek.com/chat/completions'
 
-        # Rate limiting parameters - reduced timeout to prevent worker timeouts
-        self.max_retries = 2
-        self.base_timeout = 8  # Reduced from 30 to 8 seconds
-        self.retry_delay = 1
+        # Improved timeout and retry parameters for better success rate
+        self.max_retries = 3  # Increased retries for better reliability
+        self.base_timeout = 20  # Increased timeout for complex graph questions
+        self.retry_delay = 2   # Longer delay between retries
 
     def generate_question(self, subject: str, topic: str, difficulty: str = 'medium') -> Optional[Dict]:
         """
@@ -33,7 +33,7 @@ class MathQuestionGenerator:
         """
         try:
             # Create comprehensive prompt for DeepSeek AI
-            prompt = self._create_prompt(subject, topic, difficulty)
+            prompt = self._create_question_prompt(subject, topic, difficulty)
 
             # Set timeout based on complexity - increased for better reliability
             timeout = 15  # increased timeout for better success rate
@@ -44,11 +44,11 @@ class MathQuestionGenerator:
 
                 try:
                     # Make request to DeepSeek AI
-                    response = self._make_ai_request(prompt, timeout)
+                    response = self._send_api_request(prompt)
 
                     if response:
-                        # Parse and validate response
-                        question_data = self._parse_ai_response(response, subject, topic, difficulty)
+                        # Validate and format response
+                        question_data = self._validate_and_format_question(response, subject, topic, difficulty)
                         if question_data:
                             logger.info(f"Successfully generated question for {subject}/{topic}")
                             return question_data
@@ -74,7 +74,7 @@ class MathQuestionGenerator:
             return None
 
     def _create_question_prompt(self, subject: str, topic: str, difficulty: str) -> str:
-        """Create optimized prompt for DeepSeek AI with enhanced graph support"""
+        """Create optimized prompt for DeepSeek AI with enhanced ZIMSEC graph support"""
 
         # Enhanced prompts for different subjects and topics
         if 'graph' in topic.lower() or 'linear programming' in topic.lower():
@@ -93,7 +93,14 @@ Requirements:
 
 Example format: "Plot the graph of y = 2x + 3. Mark the y-intercept clearly and find where the line crosses the x-axis."
 
-Return only the question text."""
+Return your response in this EXACT JSON format:
+{{
+    "question": "Your generated linear functions question here",
+    "solution": "Complete step-by-step solution showing how to plot the graph and find intercepts",
+    "answer": "Final answer with coordinates",
+    "points": 15,
+    "explanation": "Testing understanding of linear functions and graphing skills"
+}}"""
 
             elif 'quadratic' in topic.lower() or 'parabola' in topic.lower():
                 return f"""Generate a ZIMSEC O-Level Mathematics question about Quadratic Functions and Parabolas.
@@ -109,7 +116,14 @@ Requirements:
 
 Example format: "Sketch the graph of y = x² - 4x + 3. Find and mark the vertex, y-intercept, and x-intercepts on your graph."
 
-Return only the question text."""
+Return your response in this EXACT JSON format:
+{{
+    "question": "Your generated quadratic functions question here",
+    "solution": "Complete step-by-step solution showing how to find vertex, intercepts and sketch the parabola",
+    "answer": "Final answer with all key coordinates",
+    "points": 20,
+    "explanation": "Testing understanding of quadratic functions and parabola properties"
+}}"""
 
             elif 'trigonometric' in topic.lower():
                 return f"""Generate a ZIMSEC O-Level Mathematics question about Trigonometric Functions.
@@ -125,7 +139,14 @@ Requirements:
 
 Example format: "Plot y = sin(x) for x from 0° to 360°. Mark the maximum and minimum points clearly."
 
-Return only the question text."""
+Return your response in this EXACT JSON format:
+{{
+    "question": "Your generated trigonometric functions question here",
+    "solution": "Complete step-by-step solution showing how to plot the trigonometric graph",
+    "answer": "Final answer with key coordinates and points",
+    "points": 15,
+    "explanation": "Testing understanding of trigonometric functions and their graphs"
+}}"""
 
             elif 'linear programming' in topic.lower():
                 return f"""Generate a ZIMSEC O-Level Mathematics Linear Programming question.
@@ -149,19 +170,38 @@ Requirements:
 - Difficulty level: {difficulty}
 - Follow ZIMSEC exam format exactly
 
-Return only the question text."""
+Return your response in this EXACT JSON format:
+{{
+    "question": "Your generated linear programming question here",
+    "solution": "Complete step-by-step solution showing how to plot constraints and identify feasible region",
+    "answer": "Final answer identifying the feasible region R",
+    "points": 25,
+    "explanation": "Testing understanding of linear programming and constraint visualization"
+}}"""
 
-        # Standard academic question prompt for non-graph topics
-        return f"""Generate a {difficulty} level {subject} question about {topic} suitable for ZIMSEC O-Level students.
+        # Enhanced standard academic question prompt for non-graph topics
+        return f"""Generate a high-quality {difficulty} level {subject} question about {topic} for ZIMSEC O-Level students.
 
-The question should:
-- Be clear and specific
-- Match ZIMSEC examination standards
-- Include proper mathematical notation
-- Be appropriate for the {difficulty} difficulty level
+Requirements:
+- Create a clear, specific question following ZIMSEC exam format
+- Use proper mathematical notation and terminology
+- Include specific numbers and realistic scenarios
+- Appropriate for {difficulty} difficulty level
 - Focus specifically on {topic}
+- Question should test understanding, not just recall
+- Provide a complete step-by-step solution
+- Give the final answer clearly
 
-Return only the question text without answers or explanations."""
+Return your response in this EXACT JSON format:
+{{
+    "question": "Your generated question here",
+    "solution": "Complete step-by-step solution with clear working",
+    "answer": "Final answer only",
+    "points": 10,
+    "explanation": "Brief explanation of the concept being tested"
+}}
+
+Generate the question now:"""
 
     def _get_topic_guidelines(self, subject: str, topic: str) -> str:
         """Get specific guidelines for each topic"""
@@ -247,9 +287,11 @@ The solution should explain how to plot each inequality and identify the feasibl
             'temperature': 0.7
         }
 
+        # Define timeout outside try block to avoid unbound variable error
+        timeout = self.base_timeout
+        
         for attempt in range(self.max_retries):
             try:
-                timeout = self.base_timeout  # Fixed timeout, no increase per attempt
                 logger.info(f"AI API attempt {attempt + 1}/{self.max_retries} (timeout: {timeout}s)")
 
                 response = requests.post(
