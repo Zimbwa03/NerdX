@@ -1,0 +1,16 @@
+sponse status: 200
+Response text: [{"id":1,"chat_id":"263785494594","name":"Ngonidzashe","surname":"Zimbwa","date_of_birth":"03/10/2003","nerdx_id":"NEYHAI","referred_by_nerdx_id":null,"created_at":"2025-07-18T09:00:39.968177","updated_at":"2025-07-18T09:00:40.589828"}]
+2025-08-23 17:02:57,679 - services.whatsapp_service - INFO - Message sent successfully to 263785494594
+2025-08-23 17:02:57,681 - handlers.graph_practice_handler - ERROR - Error generating sample graph 1 for 263785494594: 'GraphService' object has no attribute 'create_graph'
+2025-08-23 17:02:58,159 - services.whatsapp_service - INFO - Message sent successfully to 263785494594
+2025-08-23 17:02:58,161 - handlers.graph_practice_handler - ERROR - Error generating sample graph 2 for 263785494594: 'GraphService' object has no attribute 'create_graph'
+2025-08-23 17:02:58,677 - services.whatsapp_service - INFO - Message sent successfully to 263785494594
+2025-08-23 17:02:58,679 - handlers.graph_practice_handler - ERROR - Error generating sample graph 3 for 263785494594: 'GraphService' object has no attribute 'create_graph'
+2025-08-23 17:02:59,341 - services.whatsapp_service - INFO - Message sent successfully to 263785494594
+Making GET request to https://hvlvwvzliqrlmqjbfgoa.supabase.co/rest/v1/user_stats
+Headers: {'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Content-Type': 'application/json'}
+Params: {'select': 'credits', 'user_id': 'eq.263785494594'}
+Data: None
+Response status: 200
+Response text: [{"credits":318}]
+2025-08-23 17:03:00,737 - services.whatsapp_service - INFO - Interactive message sent successfully to 263785494594
