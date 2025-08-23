@@ -665,15 +665,12 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             parts = selection_id.split('_')
             if len(parts) >= 5:
                 subject = parts[2].title()
-                topic = parts[3].replace('_', ' ').title()
-                difficulty = parts[4]
-                # Get question number if available, otherwise default to 1
-                question_number = 1
-                if len(parts) >= 6:
-                    try:
-                        question_number = int(parts[5])
-                    except ValueError:
-                        question_number = 1
+                # Reconstruct topic properly - it may contain underscores
+                topic_parts = parts[3:-1] if len(parts) > 5 else [parts[3]]
+                topic = ' '.join(topic_parts).replace('_', ' ').title()
+                difficulty = parts[-1]  # Last part is always difficulty
+                
+                logger.info(f"Next question request: subject={subject}, topic={topic}, difficulty={difficulty}")
                 generate_and_send_question(user_id, subject, topic, difficulty, user_name)
             else:
                 logger.warning(f"Invalid callback_data for next_science_: {selection_id}")
@@ -1604,7 +1601,19 @@ def handle_combined_exam_answer(user_id: str, user_answer: str):
 def generate_and_send_question(chat_id: str, subject: str, topic: str, difficulty: str, user_name: str):
     """Generate and send a question to the user"""
     try:
+        # Validate input parameters
+        if not all([chat_id, subject, topic, difficulty, user_name]):
+            logger.error(f"Missing required parameters: chat_id={chat_id}, subject={subject}, topic={topic}, difficulty={difficulty}, user_name={user_name}")
+            whatsapp_service.send_message(chat_id, "❌ Invalid request parameters. Please try again.")
+            return
+
         logger.info(f"Starting question generation for {chat_id}: {subject}/{topic}/{difficulty}")
+
+        # Validate difficulty level
+        if difficulty not in ['easy', 'medium', 'difficult']:
+            logger.error(f"Invalid difficulty level: {difficulty}")
+            whatsapp_service.send_message(chat_id, "❌ Invalid difficulty level. Please try again.")
+            return
 
         # Get user stats
         user_stats = get_user_stats(chat_id)
@@ -1613,7 +1622,10 @@ def generate_and_send_question(chat_id: str, subject: str, topic: str, difficult
             return
 
         credits = user_stats.get('credits', 0)
-        credit_cost = DIFFICULTY_LEVELS[difficulty]['credit_cost']
+        
+        # Get credit cost based on difficulty
+        credit_costs = {'easy': 5, 'medium': 10, 'difficult': 15}
+        credit_cost = credit_costs.get(difficulty, 10)
 
         # Check if user has enough credits
         if credits < credit_cost:
@@ -1888,8 +1900,9 @@ def handle_science_answer(user_id: str, selected_answer: str, session_key: str):
         message += f"🏆 Level: {final_level}\n\n"
 
         # Navigation buttons
+        topic_encoded = topic.replace(' ', '_').lower()
         buttons = [
-            {"text": "➡️ Next Question", "callback_data": f"next_science_{subject.lower()}_{topic.replace(' ', '_')}_{difficulty}"},
+            {"text": "➡️ Next Question", "callback_data": f"next_science_{subject.lower()}_{topic_encoded}_{difficulty}"},
             {"text": "📚 Change Topic", "callback_data": f"subject_combined_{subject.lower()}"},
             {"text": "🏠 Main Menu", "callback_data": "main_menu"}
         ]
