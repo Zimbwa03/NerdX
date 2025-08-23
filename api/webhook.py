@@ -741,7 +741,7 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             # Handle show database solution
             question_id = selection_id.replace('exam_show_solution_', '')
             exam_mathematics_handler.handle_show_database_solution(user_id, question_id)
-        elif selection_id.startswith('exam_ai_solution_'):
+        elif selection_id == 'exam_ai_solution':
             # Handle show AI solution
             exam_mathematics_handler.handle_show_ai_solution(user_id)
         elif selection_id.startswith('math_topic_'):

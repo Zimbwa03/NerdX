@@ -119,10 +119,12 @@ class ExamMathematicsHandler:
             # Get a random question from database using make_supabase_request
             from database.external_db import make_supabase_request
             
-            result = make_supabase_request("GET", "olevel_math_questions")
+            # Get random subset of questions for better performance
+            result = make_supabase_request("GET", "olevel_math_questions", limit=50)
             
             if not result or len(result) == 0:
                 # Fallback to AI question if no database questions
+                logger.warning("No database questions found, falling back to AI generation")
                 self._load_ai_question(user_id, user_name, question_count)
                 return
             
@@ -207,8 +209,11 @@ class ExamMathematicsHandler:
             question_data = self.question_generator.generate_question('Mathematics', topic, difficulty)
             
             if not question_data:
-                self.whatsapp_service.send_message(user_id, "❌ Error generating question. Please try next question.")
+                logger.error(f"Failed to generate AI question for {user_id}: {topic}/{difficulty}")
+                self.whatsapp_service.send_message(user_id, "❌ Error generating AI question. Please try next question.")
                 return
+            
+            logger.info(f"Successfully generated AI question for {user_id}: {topic}/{difficulty}")
             
             # Format AI question message  
             message = f"""🤖 AI-Generated Exam Question
@@ -226,7 +231,7 @@ class ExamMathematicsHandler:
 
             # Create exam-style buttons
             buttons = [
-                {"text": "💡 Show Solution", "callback_data": f"exam_ai_solution_{user_id}"},
+                {"text": "💡 Show Solution", "callback_data": "exam_ai_solution"},
                 {"text": "➡️ Next Question", "callback_data": "exam_math_next_question"},
                 {"text": "📚 Main Menu", "callback_data": "main_menu"}
             ]
@@ -235,6 +240,10 @@ class ExamMathematicsHandler:
             
             # Update session
             session_data = get_user_session(user_id)
+            if not session_data:
+                logger.error(f"No session found for {user_id} when saving AI question")
+                session_data = {'session_type': 'math_exam'}
+            
             session_data.update({
                 'question_count': question_count,
                 'ai_questions_used': session_data.get('ai_questions_used', 0) + 1,
@@ -244,6 +253,7 @@ class ExamMathematicsHandler:
                 'current_ai_question_data': json.dumps(question_data)
             })
             save_user_session(user_id, session_data)
+            logger.info(f"Saved AI question session for {user_id}: {topic}/{difficulty}")
             
             logger.info(f"Generated AI question for {user_id}: {topic}/{difficulty}")
             
@@ -325,8 +335,9 @@ class ExamMathematicsHandler:
         try:
             # Get session data
             session_data = get_user_session(user_id)
-            if not session_data or session_data.get('current_question_type') != 'ai':
-                self.whatsapp_service.send_message(user_id, "❌ No active AI question found.")
+            if not session_data or session_data.get('session_type') != 'math_exam' or session_data.get('current_question_type') != 'ai':
+                logger.warning(f"No AI question session found for {user_id}: session_type={session_data.get('session_type') if session_data else None}, question_type={session_data.get('current_question_type') if session_data else None}")
+                self.whatsapp_service.send_message(user_id, "❌ No active AI question found. Please generate a new question.")
                 return
             
             # Get AI question data
