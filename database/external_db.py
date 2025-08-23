@@ -454,36 +454,53 @@ def get_random_exam_question(subject=None):
     try:
         filters = {}
         if subject:
-            # Map subject names to database values
+            # For Combined Science, get questions from Biology, Chemistry, Physics categories
             if subject == "Combined Science":
-                filters["subject"] = "eq.Combined Science"
+                # Get questions from all science subjects
+                science_subjects = ["Biology", "Chemistry", "Physics"]
+                all_questions = []
+                
+                for science_subject in science_subjects:
+                    subject_filters = {"category": f"eq.{science_subject}"}
+                    questions = make_supabase_request("GET", "questions", filters=subject_filters, limit=20)
+                    if questions:
+                        all_questions.extend(questions)
+                
+                if all_questions:
+                    question = random.choice(all_questions)
+                    # Ensure consistency in field names
+                    if 'answer' in question:
+                        question['correct_answer'] = question['answer']
+                    logger.info(f"Retrieved combined science question ID: {question.get('id')} from category: {question.get('category')}")
+                    return question
             else:
                 filters["subject"] = f"eq.{subject}"
 
         # First try to get questions with images (40% preference)
-        if random.random() < 0.4:  # 40% chance to prioritize image questions
-            image_filters = filters.copy()
-            image_filters["image_url"] = "not.is.null"
-            result = make_supabase_request("GET", "questions", filters=image_filters, limit=20)
+        if not subject or subject != "Combined Science":
+            if random.random() < 0.4:  # 40% chance to prioritize image questions
+                image_filters = filters.copy()
+                image_filters["image_url"] = "not.is.null"
+                result = make_supabase_request("GET", "questions", filters=image_filters, limit=20)
+
+                if result and len(result) > 0:
+                    question = random.choice(result)
+                    # Ensure consistency in field names
+                    if 'answer' in question:
+                        question['correct_answer'] = question['answer']
+                    logger.info(f"Retrieved image question ID: {question.get('id')}")
+                    return question
+
+            # Fallback to any question from the subject
+            result = make_supabase_request("GET", "questions", filters=filters, limit=50)
 
             if result and len(result) > 0:
                 question = random.choice(result)
                 # Ensure consistency in field names
                 if 'answer' in question:
                     question['correct_answer'] = question['answer']
-                logger.info(f"Retrieved image question ID: {question.get('id')}")
+                logger.info(f"Retrieved exam question ID: {question.get('id')}")
                 return question
-
-        # Fallback to any question from the subject
-        result = make_supabase_request("GET", "questions", filters=filters, limit=50)
-
-        if result and len(result) > 0:
-            question = random.choice(result)
-            # Ensure consistency in field names
-            if 'answer' in question:
-                question['correct_answer'] = question['answer']
-            logger.info(f"Retrieved exam question ID: {question.get('id')}")
-            return question
 
         logger.warning(f"No exam questions found for subject: {subject}")
         return None

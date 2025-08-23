@@ -13,7 +13,7 @@ from services.english_service import EnglishService
 from services.referral_service import ReferralService
 from services.audio_chat_service import AudioChatService
 from utils.rate_limiter import RateLimiter
-from utils.question_cache import QuestionCacheService  
+from utils.question_cache import QuestionCacheService
 from utils.latex_converter import LaTeXConverter
 from utils.pdf_generator import PDFGenerator
 from utils.session_manager import session_manager
@@ -94,7 +94,7 @@ def handle_webhook():
             # Check rate limiting for text messages only
             if rate_limiter.check_session_rate_limit(user_id, 'text_message'):
                 whatsapp_service.send_message(
-                    user_id, 
+                    user_id,
                     f"⏳ Please wait before sending another message. You're being rate limited to prevent spam."
                 )
                 return jsonify({'status': 'rate_limited'}), 200
@@ -103,7 +103,7 @@ def handle_webhook():
             # Check rate limiting for image processing
             if rate_limiter.check_session_rate_limit(user_id, 'image_message'):
                 whatsapp_service.send_message(
-                    user_id, 
+                    user_id,
                     f"⏳ Please wait before sending another image. Processing takes time."
                 )
                 return jsonify({'status': 'rate_limited'}), 200
@@ -256,7 +256,7 @@ def handle_question_answer(user_id: str, answer: str):
             # Correct answer
             points = result['points_awarded']
             whatsapp_service.send_message(
-                user_id, 
+                user_id,
                 f"✅ Correct! You earned {points} points.\n\n{result['explanation']}"
             )
 
@@ -357,7 +357,7 @@ def handle_audio_chat_image(user_id: str, image_data: dict):
     try:
         # Download image first
         image_path = whatsapp_service.download_whatsapp_media(
-            image_data.get('id'), 
+            image_data.get('id'),
             image_data.get('mime_type', 'image/jpeg')
         )
 
@@ -624,7 +624,7 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         elif selection_id.startswith('science_'):
             subject_name = selection_id.replace('science_', '')
             handle_subject_topics(user_id, subject_name)
-        
+
         # Handle science question generation with difficulty
         elif selection_id.startswith('science_question_'):
             parts = selection_id.split('_')
@@ -664,6 +664,26 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             else:
                 logger.warning(f"Invalid callback_data for prev_science_: {selection_id}")
                 whatsapp_service.send_message(user_id, "❌ Error navigating questions.")
+
+        # Handle Combined Science answers
+        elif selection_id.startswith('combined_answer_'):
+            parts = selection_id.split('_')
+            if len(parts) >= 4:
+                subject = parts[2]
+                user_answer = parts[3]
+                handle_combined_science_answer(user_id, subject, user_answer)
+            return jsonify({'status': 'success'})
+
+        # Handle Combined Exam
+        elif selection_id == 'combined_exam':
+            handle_combined_exam(user_id)
+            return jsonify({'status': 'success'})
+
+        # Handle Combined Exam answers
+        elif selection_id.startswith('exam_answer_'):
+            user_answer = selection_id.split('_')[-1]  # Gets A, B, C, or D
+            handle_combined_exam_answer(user_id, user_answer)
+            return jsonify({'status': 'success'})
 
     except Exception as e:
         logger.error(f"Error handling interactive message for {user_id}: {e}", exc_info=True)
@@ -884,7 +904,7 @@ def send_help_message(user_id: str):
 
 **Commands:**
 • `menu` - Show main menu
-• `credits` - Check credit balance  
+• `credits` - Check credit balance
 • `stats` - View your statistics
 • `help` - Show this help message
 • `buy credits` - Purchase credits
@@ -898,7 +918,7 @@ def send_help_message(user_id: str):
 
 **Credit Costs:**
 • Easy questions: 5-10 credits
-• Medium questions: 10-20 credits  
+• Medium questions: 10-20 credits
 • Hard questions: 15-50 credits
 • Image solving: 15 credits
 
@@ -1132,7 +1152,7 @@ def handle_combined_science_menu(user_id: str):
             {"text": "🧬 Biology", "callback_data": "science_Biology"},
             {"text": "⚗️ Chemistry", "callback_data": "science_Chemistry"},
             {"text": "⚡ Physics", "callback_data": "science_Physics"},
-            {"text": "🌟 Combined Exam", "callback_data": "combined_exam"},
+            {"text": "📚 Combined Exam", "callback_data": "combined_exam"},
             {"text": "🔙 Back", "callback_data": "level_ordinary"}
         ]
 
@@ -1260,7 +1280,7 @@ def handle_subject_topics(user_id: str, subject: str):
             whatsapp_service.send_interactive_message(user_id, group_text, button_group)
 
         # Add a back button to the last message
-        back_buttons = [{"text": "🔙 Back", "callback_data": "level_ordinary"}]
+        back_buttons = [{"text": "🔙 Back", "callback_data": f"level_ordinary"}]
         whatsapp_service.send_interactive_message(user_id, "Choose an option:", back_buttons)
 
     except Exception as e:
@@ -1349,7 +1369,7 @@ def generate_and_send_question(chat_id: str, subject: str, topic: str, difficult
         # Check if user has enough credits
         if credits < credit_cost:
             whatsapp_service.send_message(
-                chat_id, 
+                chat_id,
                 f"❌ Insufficient credits! You need {credit_cost} credits for a {difficulty} question.\n"
                 f"💰 Current balance: {credits} credits\n\n"
                 "💳 Top up your credits to continue learning!"
@@ -1404,15 +1424,16 @@ def send_question_to_user(chat_id: str, question_data: Dict, subject: str, topic
         # Format the question message
         if subject in ["Biology", "Chemistry", "Physics"]:
             # Science MCQ format
-            message = f"🧬 *{subject} - {topic}*\n"
+            message = f"🧪 *{subject} - {topic}*\n"
             message += f"👤 {user_name} | 🎯 {difficulty.title()} Level | 💎 {question_data.get('points', 10)} points\n\n"
-            message += f"📝 *Question:*\n{question_data['question']}\n\n"
+            message += f"❓ *Question:*\n{question_data['question']}\n\n"
 
             if 'options' in question_data and isinstance(question_data['options'], dict):
                 message += "*Choose your answer:*\n"
-                for key, value in question_data['options'].items():
-                    message += f"*{key}.* {value}\n"
-                message += "\n"
+                message += f"A) {question_data['options'].get('A', '')}\n"
+                message += f"B) {question_data['options'].get('B', '')}\n"
+                message += f"C) {question_data['options'].get('C', '')}\n"
+                message += f"D) {question_data['options'].get('D', '')}\n\n"
 
             # Create answer buttons
             buttons = []
@@ -1420,9 +1441,16 @@ def send_question_to_user(chat_id: str, question_data: Dict, subject: str, topic
                 for option in ['A', 'B', 'C', 'D']:
                     if option in question_data['options']:
                         buttons.append({
-                            "text": f"Option {option}",
+                            "text": option,
                             "callback_data": f"answer_{option}_{subject.lower()}_{topic.replace(' ', '_')}_{difficulty}"
                         })
+            elif 'options' in question_data and isinstance(question_data['options'], list) and len(question_data['options']) >= 4:
+                 for i, option_text in enumerate(['A', 'B', 'C', 'D']):
+                    buttons.append({
+                        "text": option_text,
+                        "callback_data": f"answer_{option_text}_{subject.lower()}_{topic.replace(' ', '_')}_{difficulty}"
+                    })
+
 
             # Add navigation buttons
             buttons.extend([
@@ -1436,7 +1464,7 @@ def send_question_to_user(chat_id: str, question_data: Dict, subject: str, topic
             # Math format
             message = f"📊 *Mathematics - {topic}*\n"
             message += f"👤 {user_name} | 🎯 {difficulty.title()} Level | 💎 {question_data.get('points', 10)} points\n\n"
-            message += f"📝 *Question:*\n{question_data['question']}\n\n"
+            message += f"❓ *Question:*\n{question_data['question']}\n\n"
             message += "💡 *Type your answer below:*\n"
             message += "_(You can type just the final answer or show your working)_"
 
@@ -1446,7 +1474,7 @@ def send_question_to_user(chat_id: str, question_data: Dict, subject: str, topic
             # English format
             message = f"📚 *English - {topic}*\n"
             message += f"👤 {user_name} | 🎯 {difficulty.title()} Level | 💎 {question_data.get('points', 10)} points\n\n"
-            message += f"📝 *Question:*\n{question_data['question']}\n\n"
+            message += f"❓ *Question:*\n{question_data['question']}\n\n"
             message += "✍️ *Type your answer below:*\n"
             message += "_(Take your time to write a thoughtful response)_"
 
@@ -1506,7 +1534,7 @@ def handle_science_answer(user_id: str, selected_answer: str, session_key: str):
             new_streak = 0
 
         # Update total attempts and correct answers
-        update_user_stats(user_id, 
+        update_user_stats(user_id,
                          total_attempts=current_stats.get('total_attempts', 0) + 1,
                          correct_answers=current_stats.get('correct_answers', 0) + (1 if is_correct else 0))
 
@@ -1576,7 +1604,7 @@ def handle_combined_science_topic_selection(user_id: str, subject: str, topic: s
         message += "   • 5 credits • 10 XP points\n"
         message += "   • Foundation concepts\n\n"
 
-        message += "🟡 *Medium* - Applied knowledge\n" 
+        message += "🟡 *Medium* - Applied knowledge\n"
         message += "   • 10 credits • 20 XP points\n"
         message += "   • Problem-solving skills\n\n"
 
@@ -1599,30 +1627,829 @@ def handle_combined_science_topic_selection(user_id: str, subject: str, topic: s
         logger.error(f"Error handling combined science topic selection for {user_id}: {e}", exc_info=True)
         whatsapp_service.send_message(user_id, f"❌ Error loading {subject} topic {topic}.")
 
-def handle_credit_package_selection(user_id: str, package_id: str):
-    """Handle credit package selection"""
-    try:
-        packages = payment_service.calculate_credit_packages()
-        selected_package = None
 
-        # Extract package index from package_id
-        try:
-            package_index = int(package_id.split('_')[1])
-            if 0 <= package_index < len(packages):
-                selected_package = packages[package_index]
-        except (IndexError, ValueError):
-            logger.warning(f"Invalid package_id format: {package_id}")
-            whatsapp_service.send_message(user_id, "❌ Invalid package selection. Please try again.")
+def handle_combined_science_question(user_id: str, subject: str):
+    """Handle Combined Science question generation and display"""
+    try:
+        from services.question_service import QuestionService
+        from database.external_db import get_user_registration, get_user_stats
+
+        question_service = QuestionService()
+        registration = get_user_registration(user_id)
+        user_name = registration['name'] if registration else "Student"
+
+        # Get a random topic for the subject
+        from constants import TOPICS
+        topics = TOPICS.get(subject, [])
+        if not topics:
+            whatsapp_service.send_message(user_id, f"❌ No topics available for {subject}")
             return
 
-        if selected_package:
-            # Initiate payment process
-            whatsapp_service.send_message(
-                user_id, 
-                f"💰 Selected: {selected_package['description']}\n"
-                f"Amount: ${selected_package['amount']}\n\n"
-                "Please reply with your EcoCash number to proceed."
-            )
+        import random
+        topic = random.choice(topics)
+        difficulty = "medium"  # Default difficulty
+
+        # Get question
+        question_data = question_service.get_question(user_id, subject, topic, difficulty, force_ai=True)
+
+        if not question_data:
+            whatsapp_service.send_message(user_id, f"❌ Could not generate {subject} question. Please try again.")
+            return
+
+        # Store question in session
+        from database.session_db import store_user_session
+        store_user_session(user_id, {
+            'question_data': question_data,
+            'subject': subject,
+            'topic': topic,
+            'difficulty': difficulty,
+            'session_type': 'combined_science'
+        })
+
+        # Display question with proper formatting
+        user_stats = get_user_stats(user_id)
+        current_credits = user_stats.get('credits', 0)
+        current_level = user_stats.get('level', 1)
+
+        message = f"🧪 *{subject} - {topic}*\n\n"
+        message += f"👤 Welcome {user_name}! (Level {current_level})\n"
+        message += f"💳 Credits: {current_credits}\n\n"
+
+        message += f"❓ *Question:*\n{question_data['question']}\n\n"
+
+        # Format options properly - ensure all 4 options (A, B, C, D) are shown
+        if 'options' in question_data and question_data['options']:
+            if isinstance(question_data['options'], dict):
+                message += f"A) {question_data['options'].get('A', '')}\n"
+                message += f"B) {question_data['options'].get('B', '')}\n"
+                message += f"C) {question_data['options'].get('C', '')}\n"
+                message += f"D) {question_data['options'].get('D', '')}\n\n"
+            elif isinstance(question_data['options'], list) and len(question_data['options']) >= 4:
+                message += f"A) {question_data['options'][0].replace('A. ', '').replace('A) ', '')}\n"
+                message += f"B) {question_data['options'][1].replace('B. ', '').replace('B) ', '')}\n"
+                message += f"C) {question_data['options'][2].replace('C. ', '').replace('C) ', '')}\n"
+                message += f"D) {question_data['options'][3].replace('D. ', '').replace('D) ', '')}\n\n"
+
+        message += f"💭 *Choose your answer!*"
+
+        # Create all 4 answer buttons (A, B, C, D)
+        buttons = [
+            {"text": "A", "callback_data": f"combined_answer_{subject}_A"},
+            {"text": "B", "callback_data": f"combined_answer_{subject}_B"},
+            {"text": "C", "callback_data": f"combined_answer_{subject}_C"},
+            {"text": "D", "callback_data": f"combined_answer_{subject}_D"}
+        ]
+
+        whatsapp_service.send_interactive_message(user_id, message, buttons)
 
     except Exception as e:
-        logger.error(f"Error handling credit package selection for {user_id}: {e}", exc_info=True)
+        logger.error(f"Error in combined science question for {user_id}: {e}", exc_info=True)
+        whatsapp_service.send_message(user_id, f"❌ Error generating {subject} question. Please try again.")
+
+
+def handle_combined_science_answer(user_id: str, subject: str, user_answer: str):
+    """Handle Combined Science answer processing"""
+    try:
+        from database.external_db import get_user_stats, add_xp, update_streak, update_user_stats
+        from utils.session_db import get_user_session # Assuming get_user_session is in session_db
+
+        session_data = get_user_session(user_id) # Get session data for the user
+
+        if not session_data or session_data.get('session_type') != 'combined_science':
+            whatsapp_service.send_message(user_id, "❌ Session expired or invalid. Please start a new question.")
+            return
+
+        question_data = session_data['question_data']
+        topic = session_data['topic']
+        difficulty = session_data['difficulty']
+        user_name = session_data.get('user_name', 'Student')
+
+        correct_answer = question_data.get('correct_answer')
+        points = question_data.get('points', 10)
+        explanation = question_data.get('explanation', 'No explanation available.')
+
+        is_correct = user_answer.upper() == correct_answer.upper()
+
+        # Update user stats
+        current_stats = get_user_stats(user_id)
+        new_xp = current_stats.get('xp_points', 0)
+        new_streak = current_stats.get('streak', 0)
+        new_level = current_stats.get('level', 1)
+
+        if is_correct:
+            add_xp(user_id, points)
+            update_streak(user_id, increment=True)
+            new_xp += points
+            new_streak += 1
+            if new_xp // 100 > new_level:
+                new_level = new_xp // 100 + 1
+                update_user_stats(user_id, level=new_level)
+        else:
+            update_streak(user_id, increment=False)
+            new_streak = 0
+
+        update_user_stats(user_id,
+                         total_attempts=current_stats.get('total_attempts', 0) + 1,
+                         correct_answers=current_stats.get('correct_answers', 0) + (1 if is_correct else 0))
+
+        updated_stats = get_user_stats(user_id)
+        final_credits = updated_stats.get('credits', 0)
+        final_xp = updated_stats.get('xp_points', 0)
+        final_streak = updated_stats.get('streak', 0)
+        final_level = updated_stats.get('level', 1)
+
+        if is_correct:
+            message = f"✅ *Excellent {user_name}!*\n\n"
+            message += f"🎯 *Correct Answer: {correct_answer}*\n"
+            message += f"💎 *+{points} XP Points*\n\n"
+        else:
+            message = f"❌ *Not quite right, {user_name}*\n\n"
+            message += f"🎯 *Correct Answer: {correct_answer}*\n"
+            message += f"📚 *Keep learning!*\n\n"
+
+        message += f"💡 *Explanation:*\n{explanation}\n\n"
+        message += f"📊 *Your Stats:*\n"
+        message += f"💳 Credits: {final_credits}\n"
+        message += f"⚡ XP: {final_xp} (+{final_xp - session_data.get('xp_before', 0)})\n"
+        message += f"🔥 Streak: {final_streak}\n"
+        message += f"🏆 Level: {final_level}\n\n"
+
+        # Buttons for next question or menu
+        buttons = [
+            {"text": "➡️ Next Question", "callback_data": f"combined_answer_{subject}_next"}, # Placeholder for next question logic
+            {"text": "📚 Change Topic", "callback_data": f"subject_combined_{subject.lower()}"},
+            {"text": "🏠 Main Menu", "callback_data": "main_menu"}
+        ]
+
+        whatsapp_service.send_interactive_message(user_id, message, buttons)
+
+        # Clear session
+        from utils.session_db import clear_user_session
+        clear_user_session(user_id)
+
+    except Exception as e:
+        logger.error(f"Error handling combined science answer for {user_id}: {e}", exc_info=True)
+        whatsapp_service.send_message(user_id, "❌ Error processing your answer. Please try again.")
+
+
+def handle_combined_exam_answer(user_id: str, user_answer: str):
+    """Handle answers for the Combined Exam mode"""
+    try:
+        from database.external_db import get_user_stats, add_xp, update_streak, update_user_stats
+        from utils.session_db import get_user_session, clear_user_session
+
+        session_data = get_user_session(user_id)
+
+        if not session_data or session_data.get('session_type') != 'combined_exam':
+            whatsapp_service.send_message(user_id, "❌ Session expired or invalid. Please start a new exam.")
+            return
+
+        question_data = session_data['question_data']
+        subject = session_data['subject']
+        topic = session_data['topic']
+        difficulty = session_data['difficulty']
+        user_name = session_data.get('user_name', 'Student')
+        current_question_index = session_data.get('current_question_index', 0)
+
+        correct_answer = question_data.get('correct_answer')
+        points = question_data.get('points', 10)
+        explanation = question_data.get('explanation', 'No explanation available.')
+
+        is_correct = user_answer.upper() == correct_answer.upper()
+
+        # Update stats
+        current_stats = get_user_stats(user_id)
+        new_xp = current_stats.get('xp_points', 0)
+        new_streak = current_stats.get('streak', 0)
+        new_level = current_stats.get('level', 1)
+
+        if is_correct:
+            add_xp(user_id, points)
+            update_streak(user_id, increment=True)
+            new_xp += points
+            new_streak += 1
+            if new_xp // 100 > new_level:
+                new_level = new_xp // 100 + 1
+                update_user_stats(user_id, level=new_level)
+        else:
+            update_streak(user_id, increment=False)
+            new_streak = 0
+
+        update_user_stats(user_id,
+                         total_attempts=current_stats.get('total_attempts', 0) + 1,
+                         correct_answers=current_stats.get('correct_answers', 0) + (1 if is_correct else 0))
+
+        updated_stats = get_user_stats(user_id)
+        final_credits = updated_stats.get('credits', 0)
+        final_xp = updated_stats.get('xp_points', 0)
+        final_streak = updated_stats.get('streak', 0)
+        final_level = updated_stats.get('level', 1)
+
+        # Construct response message
+        if is_correct:
+            message = f"✅ *Excellent {user_name}!*\n\n"
+            message += f"🎯 *Correct Answer: {correct_answer}*\n"
+            message += f"💎 *+{points} XP Points*\n\n"
+        else:
+            message = f"❌ *Not quite right, {user_name}*\n\n"
+            message += f"🎯 *Correct Answer: {correct_answer}*\n"
+            message += f"📚 *Keep learning!*\n\n"
+
+        message += f"💡 *Explanation:*\n{explanation}\n\n"
+        message += f"📊 *Your Stats:*\n"
+        message += f"💳 Credits: {final_credits}\n"
+        message += f"⚡ XP: {final_xp} (+{final_xp - session_data.get('xp_before', 0)})\n"
+        message += f"🔥 Streak: {final_streak}\n"
+        message += f"🏆 Level: {final_level}\n\n"
+
+        # Navigate to the next question or end exam
+        next_question_index = current_question_index + 1
+        if next_question_index < len(question_data['questions']): # Assuming question_data contains a list of questions
+            session_data['current_question_index'] = next_question_index
+            # Update session with new index
+            from utils.session_db import store_user_session
+            store_user_session(user_id, session_data)
+
+            # Prepare next question data
+            next_q_data = question_data['questions'][next_question_index]
+            message += f"➡️ *Next Question ({next_question_index + 1}/{len(question_data['questions'])}):*\n"
+            message += f"❓ {next_q_data['question']}\n\n"
+            # Display options for next question
+            options = next_q_data.get('options', {})
+            message += "Choose your answer:\n"
+            message += f"A) {options.get('A', '')}\n"
+            message += f"B) {options.get('B', '')}\n"
+            message += f"C) {options.get('C', '')}\n"
+            message += f"D) {options.get('D', '')}\n\n"
+
+            buttons = [
+                {"text": "A", "callback_data": f"exam_answer_{next_q_data.get('correct_answer', 'A')}"},
+                {"text": "B", "callback_data": f"exam_answer_{next_q_data.get('correct_answer', 'B')}"},
+                {"text": "C", "callback_data": f"exam_answer_{next_q_data.get('correct_answer', 'C')}"},
+                {"text": "D", "callback_data": f"exam_answer_{next_q_data.get('correct_answer', 'D')}"}
+            ]
+        else:
+            message += "*You have completed the Combined Science Exam!*"
+            buttons = [
+                {"text": "📊 View Results", "callback_data": "view_exam_results"},
+                {"text": "🏠 Main Menu", "callback_data": "main_menu"}
+            ]
+
+        whatsapp_service.send_interactive_message(user_id, message, buttons)
+
+    except Exception as e:
+        logger.error(f"Error handling combined exam answer for {user_id}: {e}", exc_info=True)
+        whatsapp_service.send_message(user_id, "❌ Error processing your answer. Please try again.")
+
+
+# Placeholder for handle_combined_science_question
+def handle_combined_science_question(user_id: str, subject: str):
+    """Handle Combined Science question generation and display"""
+    try:
+        from services.question_service import QuestionService
+        from database.external_db import get_user_registration, get_user_stats
+
+        question_service = QuestionService()
+        registration = get_user_registration(user_id)
+        user_name = registration['name'] if registration else "Student"
+
+        # Get a random topic for the subject
+        from constants import TOPICS
+        topics = TOPICS.get(subject, [])
+        if not topics:
+            whatsapp_service.send_message(user_id, f"❌ No topics available for {subject}")
+            return
+
+        import random
+        topic = random.choice(topics)
+        difficulty = "medium"  # Default difficulty
+
+        # Get question
+        question_data = question_service.get_question(user_id, subject, topic, difficulty, force_ai=True)
+
+        if not question_data:
+            whatsapp_service.send_message(user_id, f"❌ Could not generate {subject} question. Please try again.")
+            return
+
+        # Store question in session
+        from database.session_db import store_user_session
+        store_user_session(user_id, {
+            'question_data': question_data,
+            'subject': subject,
+            'topic': topic,
+            'difficulty': difficulty,
+            'session_type': 'combined_science'
+        })
+
+        # Display question with proper formatting
+        user_stats = get_user_stats(user_id)
+        current_credits = user_stats.get('credits', 0)
+        current_level = user_stats.get('level', 1)
+
+        message = f"🧪 *{subject} - {topic}*\n\n"
+        message += f"👤 Welcome {user_name}! (Level {current_level})\n"
+        message += f"💳 Credits: {current_credits}\n\n"
+
+        message += f"❓ *Question:*\n{question_data['question']}\n\n"
+
+        # Format options properly - ensure all 4 options (A, B, C, D) are shown
+        if 'options' in question_data and question_data['options']:
+            if isinstance(question_data['options'], dict):
+                message += f"A) {question_data['options'].get('A', '')}\n"
+                message += f"B) {question_data['options'].get('B', '')}\n"
+                message += f"C) {question_data['options'].get('C', '')}\n"
+                message += f"D) {question_data['options'].get('D', '')}\n\n"
+            elif isinstance(question_data['options'], list) and len(question_data['options']) >= 4:
+                message += f"A) {question_data['options'][0].replace('A. ', '').replace('A) ', '')}\n"
+                message += f"B) {question_data['options'][1].replace('B. ', '').replace('B) ', '')}\n"
+                message += f"C) {question_data['options'][2].replace('C. ', '').replace('C) ', '')}\n"
+                message += f"D) {question_data['options'][3].replace('D. ', '').replace('D) ', '')}\n\n"
+
+        message += f"💭 *Choose your answer!*"
+
+        # Create all 4 answer buttons (A, B, C, D)
+        buttons = [
+            {"text": "A", "callback_data": f"combined_answer_{subject}_A"},
+            {"text": "B", "callback_data": f"combined_answer_{subject}_B"},
+            {"text": "C", "callback_data": f"combined_answer_{subject}_C"},
+            {"text": "D", "callback_data": f"combined_answer_{subject}_D"}
+        ]
+
+        whatsapp_service.send_interactive_message(user_id, message, buttons)
+
+    except Exception as e:
+        logger.error(f"Error in combined science question for {user_id}: {e}", exc_info=True)
+        whatsapp_service.send_message(user_id, f"❌ Error generating {subject} question. Please try again.")
+
+
+# Placeholder for handle_combined_science_answer
+def handle_combined_science_answer(user_id: str, subject: str, user_answer: str):
+    """Handle Combined Science answer processing"""
+    try:
+        from database.external_db import get_user_stats, add_xp, update_streak, update_user_stats
+        from utils.session_db import get_user_session # Assuming get_user_session is in session_db
+
+        session_data = get_user_session(user_id) # Get session data for the user
+
+        if not session_data or session_data.get('session_type') != 'combined_science':
+            whatsapp_service.send_message(user_id, "❌ Session expired or invalid. Please start a new question.")
+            return
+
+        question_data = session_data['question_data']
+        topic = session_data['topic']
+        difficulty = session_data['difficulty']
+        user_name = session_data.get('user_name', 'Student')
+
+        correct_answer = question_data.get('correct_answer')
+        points = question_data.get('points', 10)
+        explanation = question_data.get('explanation', 'No explanation available.')
+
+        is_correct = user_answer.upper() == correct_answer.upper()
+
+        # Update user stats
+        current_stats = get_user_stats(user_id)
+        new_xp = current_stats.get('xp_points', 0)
+        new_streak = current_stats.get('streak', 0)
+        new_level = current_stats.get('level', 1)
+
+        if is_correct:
+            add_xp(user_id, points)
+            update_streak(user_id, increment=True)
+            new_xp += points
+            new_streak += 1
+            if new_xp // 100 > new_level:
+                new_level = new_xp // 100 + 1
+                update_user_stats(user_id, level=new_level)
+        else:
+            update_streak(user_id, increment=False)
+            new_streak = 0
+
+        update_user_stats(user_id,
+                         total_attempts=current_stats.get('total_attempts', 0) + 1,
+                         correct_answers=current_stats.get('correct_answers', 0) + (1 if is_correct else 0))
+
+        updated_stats = get_user_stats(user_id)
+        final_credits = updated_stats.get('credits', 0)
+        final_xp = updated_stats.get('xp_points', 0)
+        final_streak = updated_stats.get('streak', 0)
+        final_level = updated_stats.get('level', 1)
+
+        if is_correct:
+            message = f"✅ *Excellent {user_name}!*\n\n"
+            message += f"🎯 *Correct Answer: {correct_answer}*\n"
+            message += f"💎 *+{points} XP Points*\n\n"
+        else:
+            message = f"❌ *Not quite right, {user_name}*\n\n"
+            message += f"🎯 *Correct Answer: {correct_answer}*\n"
+            message += f"📚 *Keep learning!*\n\n"
+
+        message += f"💡 *Explanation:*\n{explanation}\n\n"
+        message += f"📊 *Your Stats:*\n"
+        message += f"💳 Credits: {final_credits}\n"
+        message += f"⚡ XP: {final_xp} (+{final_xp - session_data.get('xp_before', 0)})\n"
+        message += f"🔥 Streak: {final_streak}\n"
+        message += f"🏆 Level: {final_level}\n\n"
+
+        # Buttons for next question or menu
+        buttons = [
+            {"text": "➡️ Next Question", "callback_data": f"combined_answer_{subject}_next"}, # Placeholder for next question logic
+            {"text": "📚 Change Topic", "callback_data": f"subject_combined_{subject.lower()}"},
+            {"text": "🏠 Main Menu", "callback_data": "main_menu"}
+        ]
+
+        whatsapp_service.send_interactive_message(user_id, message, buttons)
+
+        # Clear session
+        from utils.session_db import clear_user_session
+        clear_user_session(user_id)
+
+    except Exception as e:
+        logger.error(f"Error handling combined science answer for {user_id}: {e}", exc_info=True)
+        whatsapp_service.send_message(user_id, "❌ Error processing your answer. Please try again.")
+
+
+# Placeholder for handle_combined_exam_answer
+def handle_combined_exam_answer(user_id: str, user_answer: str):
+    """Handle answers for the Combined Exam mode"""
+    try:
+        from database.external_db import get_user_stats, add_xp, update_streak, update_user_stats
+        from utils.session_db import get_user_session, clear_user_session
+
+        session_data = get_user_session(user_id)
+
+        if not session_data or session_data.get('session_type') != 'combined_exam':
+            whatsapp_service.send_message(user_id, "❌ Session expired or invalid. Please start a new exam.")
+            return
+
+        question_data = session_data['question_data']
+        subject = session_data['subject']
+        topic = session_data['topic']
+        difficulty = session_data['difficulty']
+        user_name = session_data.get('user_name', 'Student')
+        current_question_index = session_data.get('current_question_index', 0)
+
+        correct_answer = question_data.get('correct_answer')
+        points = question_data.get('points', 10)
+        explanation = question_data.get('explanation', 'No explanation available.')
+
+        is_correct = user_answer.upper() == correct_answer.upper()
+
+        # Update stats
+        current_stats = get_user_stats(user_id)
+        new_xp = current_stats.get('xp_points', 0)
+        new_streak = current_stats.get('streak', 0)
+        new_level = current_stats.get('level', 1)
+
+        if is_correct:
+            add_xp(user_id, points)
+            update_streak(user_id, increment=True)
+            new_xp += points
+            new_streak += 1
+            if new_xp // 100 > new_level:
+                new_level = new_xp // 100 + 1
+                update_user_stats(user_id, level=new_level)
+        else:
+            update_streak(user_id, increment=False)
+            new_streak = 0
+
+        update_user_stats(user_id,
+                         total_attempts=current_stats.get('total_attempts', 0) + 1,
+                         correct_answers=current_stats.get('correct_answers', 0) + (1 if is_correct else 0))
+
+        updated_stats = get_user_stats(user_id)
+        final_credits = updated_stats.get('credits', 0)
+        final_xp = updated_stats.get('xp_points', 0)
+        final_streak = updated_stats.get('streak', 0)
+        final_level = updated_stats.get('level', 1)
+
+        # Construct response message
+        if is_correct:
+            message = f"✅ *Excellent {user_name}!*\n\n"
+            message += f"🎯 *Correct Answer: {correct_answer}*\n"
+            message += f"💎 *+{points} XP Points*\n\n"
+        else:
+            message = f"❌ *Not quite right, {user_name}*\n\n"
+            message += f"🎯 *Correct Answer: {correct_answer}*\n"
+            message += f"📚 *Keep learning!*\n\n"
+
+        message += f"💡 *Explanation:*\n{explanation}\n\n"
+        message += f"📊 *Your Stats:*\n"
+        message += f"💳 Credits: {final_credits}\n"
+        message += f"⚡ XP: {final_xp} (+{final_xp - session_data.get('xp_before', 0)})\n"
+        message += f"🔥 Streak: {final_streak}\n"
+        message += f"🏆 Level: {final_level}\n\n"
+
+        # Navigate to the next question or end exam
+        next_question_index = current_question_index + 1
+        if next_question_index < len(question_data['questions']): # Assuming question_data contains a list of questions
+            session_data['current_question_index'] = next_question_index
+            # Update session with new index
+            from utils.session_db import store_user_session
+            store_user_session(user_id, session_data)
+
+            # Prepare next question data
+            next_q_data = question_data['questions'][next_question_index]
+            message += f"➡️ *Next Question ({next_question_index + 1}/{len(question_data['questions'])}):*\n"
+            message += f"❓ {next_q_data['question']}\n\n"
+            # Display options for next question
+            options = next_q_data.get('options', {})
+            message += "Choose your answer:\n"
+            message += f"A) {options.get('A', '')}\n"
+            message += f"B) {options.get('B', '')}\n"
+            message += f"C) {options.get('C', '')}\n"
+            message += f"D) {options.get('D', '')}\n\n"
+
+            buttons = [
+                {"text": "A", "callback_data": f"exam_answer_{next_q_data.get('correct_answer', 'A')}"},
+                {"text": "B", "callback_data": f"exam_answer_{next_q_data.get('correct_answer', 'B')}"},
+                {"text": "C", "callback_data": f"exam_answer_{next_q_data.get('correct_answer', 'C')}"},
+                {"text": "D", "callback_data": f"exam_answer_{next_q_data.get('correct_answer', 'D')}"}
+            ]
+        else:
+            message += "*You have completed the Combined Science Exam!*"
+            buttons = [
+                {"text": "📊 View Results", "callback_data": "view_exam_results"},
+                {"text": "🏠 Main Menu", "callback_data": "main_menu"}
+            ]
+
+        whatsapp_service.send_interactive_message(user_id, message, buttons)
+
+    except Exception as e:
+        logger.error(f"Error handling combined exam answer for {user_id}: {e}", exc_info=True)
+        whatsapp_service.send_message(user_id, "❌ Error processing your answer. Please try again.")
+
+
+# Placeholder for handle_combined_science_question
+def handle_combined_science_question(user_id: str, subject: str):
+    """Handle Combined Science question generation and display"""
+    try:
+        from services.question_service import QuestionService
+        from database.external_db import get_user_registration, get_user_stats
+
+        question_service = QuestionService()
+        registration = get_user_registration(user_id)
+        user_name = registration['name'] if registration else "Student"
+
+        # Get a random topic for the subject
+        from constants import TOPICS
+        topics = TOPICS.get(subject, [])
+        if not topics:
+            whatsapp_service.send_message(user_id, f"❌ No topics available for {subject}")
+            return
+
+        import random
+        topic = random.choice(topics)
+        difficulty = "medium"  # Default difficulty
+
+        # Get question
+        question_data = question_service.get_question(user_id, subject, topic, difficulty, force_ai=True)
+
+        if not question_data:
+            whatsapp_service.send_message(user_id, f"❌ Could not generate {subject} question. Please try again.")
+            return
+
+        # Store question in session
+        from database.session_db import store_user_session
+        store_user_session(user_id, {
+            'question_data': question_data,
+            'subject': subject,
+            'topic': topic,
+            'difficulty': difficulty,
+            'session_type': 'combined_science'
+        })
+
+        # Display question with proper formatting
+        user_stats = get_user_stats(user_id)
+        current_credits = user_stats.get('credits', 0)
+        current_level = user_stats.get('level', 1)
+
+        message = f"🧪 *{subject} - {topic}*\n\n"
+        message += f"👤 Welcome {user_name}! (Level {current_level})\n"
+        message += f"💳 Credits: {current_credits}\n\n"
+
+        message += f"❓ *Question:*\n{question_data['question']}\n\n"
+
+        # Format options properly - ensure all 4 options (A, B, C, D) are shown
+        if 'options' in question_data and question_data['options']:
+            if isinstance(question_data['options'], dict):
+                message += f"A) {question_data['options'].get('A', '')}\n"
+                message += f"B) {question_data['options'].get('B', '')}\n"
+                message += f"C) {question_data['options'].get('C', '')}\n"
+                message += f"D) {question_data['options'].get('D', '')}\n\n"
+            elif isinstance(question_data['options'], list) and len(question_data['options']) >= 4:
+                message += f"A) {question_data['options'][0].replace('A. ', '').replace('A) ', '')}\n"
+                message += f"B) {question_data['options'][1].replace('B. ', '').replace('B) ', '')}\n"
+                message += f"C) {question_data['options'][2].replace('C. ', '').replace('C) ', '')}\n"
+                message += f"D) {question_data['options'][3].replace('D. ', '').replace('D) ', '')}\n\n"
+
+        message += f"💭 *Choose your answer!*"
+
+        # Create all 4 answer buttons (A, B, C, D)
+        buttons = [
+            {"text": "A", "callback_data": f"combined_answer_{subject}_A"},
+            {"text": "B", "callback_data": f"combined_answer_{subject}_B"},
+            {"text": "C", "callback_data": f"combined_answer_{subject}_C"},
+            {"text": "D", "callback_data": f"combined_answer_{subject}_D"}
+        ]
+
+        whatsapp_service.send_interactive_message(user_id, message, buttons)
+
+    except Exception as e:
+        logger.error(f"Error in combined science question for {user_id}: {e}", exc_info=True)
+        whatsapp_service.send_message(user_id, f"❌ Error generating {subject} question. Please try again.")
+
+# Placeholder for handle_combined_science_answer
+def handle_combined_science_answer(user_id: str, subject: str, user_answer: str):
+    """Handle Combined Science answer processing"""
+    try:
+        from database.external_db import get_user_stats, add_xp, update_streak, update_user_stats
+        from utils.session_db import get_user_session # Assuming get_user_session is in session_db
+
+        session_data = get_user_session(user_id) # Get session data for the user
+
+        if not session_data or session_data.get('session_type') != 'combined_science':
+            whatsapp_service.send_message(user_id, "❌ Session expired or invalid. Please start a new question.")
+            return
+
+        question_data = session_data['question_data']
+        topic = session_data['topic']
+        difficulty = session_data['difficulty']
+        user_name = session_data.get('user_name', 'Student')
+
+        correct_answer = question_data.get('correct_answer')
+        points = question_data.get('points', 10)
+        explanation = question_data.get('explanation', 'No explanation available.')
+
+        is_correct = user_answer.upper() == correct_answer.upper()
+
+        # Update user stats
+        current_stats = get_user_stats(user_id)
+        new_xp = current_stats.get('xp_points', 0)
+        new_streak = current_stats.get('streak', 0)
+        new_level = current_stats.get('level', 1)
+
+        if is_correct:
+            add_xp(user_id, points)
+            update_streak(user_id, increment=True)
+            new_xp += points
+            new_streak += 1
+            if new_xp // 100 > new_level:
+                new_level = new_xp // 100 + 1
+                update_user_stats(user_id, level=new_level)
+        else:
+            update_streak(user_id, increment=False)
+            new_streak = 0
+
+        update_user_stats(user_id,
+                         total_attempts=current_stats.get('total_attempts', 0) + 1,
+                         correct_answers=current_stats.get('correct_answers', 0) + (1 if is_correct else 0))
+
+        updated_stats = get_user_stats(user_id)
+        final_credits = updated_stats.get('credits', 0)
+        final_xp = updated_stats.get('xp_points', 0)
+        final_streak = updated_stats.get('streak', 0)
+        final_level = updated_stats.get('level', 1)
+
+        if is_correct:
+            message = f"✅ *Excellent {user_name}!*\n\n"
+            message += f"🎯 *Correct Answer: {correct_answer}*\n"
+            message += f"💎 *+{points} XP Points*\n\n"
+        else:
+            message = f"❌ *Not quite right, {user_name}*\n\n"
+            message += f"🎯 *Correct Answer: {correct_answer}*\n"
+            message += f"📚 *Keep learning!*\n\n"
+
+        message += f"💡 *Explanation:*\n{explanation}\n\n"
+        message += f"📊 *Your Stats:*\n"
+        message += f"💳 Credits: {final_credits}\n"
+        message += f"⚡ XP: {final_xp} (+{final_xp - session_data.get('xp_before', 0)})\n"
+        message += f"🔥 Streak: {final_streak}\n"
+        message += f"🏆 Level: {final_level}\n\n"
+
+        # Buttons for next question or menu
+        buttons = [
+            {"text": "➡️ Next Question", "callback_data": f"combined_answer_{subject}_next"}, # Placeholder for next question logic
+            {"text": "📚 Change Topic", "callback_data": f"subject_combined_{subject.lower()}"},
+            {"text": "🏠 Main Menu", "callback_data": "main_menu"}
+        ]
+
+        whatsapp_service.send_interactive_message(user_id, message, buttons)
+
+        # Clear session
+        from utils.session_db import clear_user_session
+        clear_user_session(user_id)
+
+    except Exception as e:
+        logger.error(f"Error handling combined science answer for {user_id}: {e}", exc_info=True)
+        whatsapp_service.send_message(user_id, "❌ Error processing your answer. Please try again.")
+
+
+# Placeholder for handle_combined_exam_answer
+def handle_combined_exam_answer(user_id: str, user_answer: str):
+    """Handle answers for the Combined Exam mode"""
+    try:
+        from database.external_db import get_user_stats, add_xp, update_streak, update_user_stats
+        from utils.session_db import get_user_session, clear_user_session
+
+        session_data = get_user_session(user_id)
+
+        if not session_data or session_data.get('session_type') != 'combined_exam':
+            whatsapp_service.send_message(user_id, "❌ Session expired or invalid. Please start a new exam.")
+            return
+
+        question_data = session_data['question_data']
+        subject = session_data['subject']
+        topic = session_data['topic']
+        difficulty = session_data['difficulty']
+        user_name = session_data.get('user_name', 'Student')
+        current_question_index = session_data.get('current_question_index', 0)
+
+        correct_answer = question_data.get('correct_answer')
+        points = question_data.get('points', 10)
+        explanation = question_data.get('explanation', 'No explanation available.')
+
+        is_correct = user_answer.upper() == correct_answer.upper()
+
+        # Update stats
+        current_stats = get_user_stats(user_id)
+        new_xp = current_stats.get('xp_points', 0)
+        new_streak = current_stats.get('streak', 0)
+        new_level = current_stats.get('level', 1)
+
+        if is_correct:
+            add_xp(user_id, points)
+            update_streak(user_id, increment=True)
+            new_xp += points
+            new_streak += 1
+            if new_xp // 100 > new_level:
+                new_level = new_xp // 100 + 1
+                update_user_stats(user_id, level=new_level)
+        else:
+            update_streak(user_id, increment=False)
+            new_streak = 0
+
+        update_user_stats(user_id,
+                         total_attempts=current_stats.get('total_attempts', 0) + 1,
+                         correct_answers=current_stats.get('correct_answers', 0) + (1 if is_correct else 0))
+
+        updated_stats = get_user_stats(user_id)
+        final_credits = updated_stats.get('credits', 0)
+        final_xp = updated_stats.get('xp_points', 0)
+        final_streak = updated_stats.get('streak', 0)
+        final_level = updated_stats.get('level', 1)
+
+        # Construct response message
+        if is_correct:
+            message = f"✅ *Excellent {user_name}!*\n\n"
+            message += f"🎯 *Correct Answer: {correct_answer}*\n"
+            message += f"💎 *+{points} XP Points*\n\n"
+        else:
+            message = f"❌ *Not quite right, {user_name}*\n\n"
+            message += f"🎯 *Correct Answer: {correct_answer}*\n"
+            message += f"📚 *Keep learning!*\n\n"
+
+        message += f"💡 *Explanation:*\n{explanation}\n\n"
+        message += f"📊 *Your Stats:*\n"
+        message += f"💳 Credits: {final_credits}\n"
+        message += f"⚡ XP: {final_xp} (+{final_xp - session_data.get('xp_before', 0)})\n"
+        message += f"🔥 Streak: {final_streak}\n"
+        message += f"🏆 Level: {final_level}\n\n"
+
+        # Navigate to the next question or end exam
+        next_question_index = current_question_index + 1
+        if next_question_index < len(question_data['questions']): # Assuming question_data contains a list of questions
+            session_data['current_question_index'] = next_question_index
+            # Update session with new index
+            from utils.session_db import store_user_session
+            store_user_session(user_id, session_data)
+
+            # Prepare next question data
+            next_q_data = question_data['questions'][next_question_index]
+            message += f"➡️ *Next Question ({next_question_index + 1}/{len(question_data['questions'])}):*\n"
+            message += f"❓ {next_q_data['question']}\n\n"
+            # Display options for next question
+            options = next_q_data.get('options', {})
+            message += "Choose your answer:\n"
+            message += f"A) {options.get('A', '')}\n"
+            message += f"B) {options.get('B', '')}\n"
+            message += f"C) {options.get('C', '')}\n"
+            message += f"D) {options.get('D', '')}\n\n"
+
+            buttons = [
+                {"text": "A", "callback_data": f"exam_answer_{next_q_data.get('correct_answer', 'A')}"},
+                {"text": "B", "callback_data": f"exam_answer_{next_q_data.get('correct_answer', 'B')}"},
+                {"text": "C", "callback_data": f"exam_answer_{next_q_data.get('correct_answer', 'C')}"},
+                {"text": "D", "callback_data": f"exam_answer_{next_q_data.get('correct_answer', 'D')}"}
+            ]
+        else:
+            message += "*You have completed the Combined Science Exam!*"
+            buttons = [
+                {"text": "📊 View Results", "callback_data": "view_exam_results"},
+                {"text": "🏠 Main Menu", "callback_data": "main_menu"}
+            ]
+
+        whatsapp_service.send_interactive_message(user_id, message, buttons)
+
+    except Exception as e:
+        logger.error(f"Error handling combined exam answer for {user_id}: {e}", exc_info=True)
+        whatsapp_service.send_message(user_id, "❌ Error processing your answer. Please try again.")
