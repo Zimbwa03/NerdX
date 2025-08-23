@@ -503,26 +503,76 @@ Great job on completing your comprehension practice! 📚✨"""
             ready_message = f"✅ **Passage Complete**\n\nNow answer the 10 questions below, {user_name}!"
             self.whatsapp_service.send_message(user_id, ready_message)
             
-            # Step 3: Split questions into two messages (5 questions each)
+            # Step 3: Debug and send questions with error handling
+            logger.info(f"Questions data for {user_id}: {len(questions)} questions available")
+            
+            if not questions or len(questions) < 5:
+                logger.error(f"Insufficient questions for {user_id}: {len(questions)} questions")
+                self.whatsapp_service.send_message(user_id, "❌ Error loading questions. Please try again.")
+                return
+            
+            # Ensure we have at least 10 questions, pad if needed
+            while len(questions) < 10:
+                questions.append({
+                    'question': f'Additional question {len(questions) + 1} - What is your understanding of the main theme in this passage?',
+                    'answer': 'Based on your reading comprehension.',
+                    'marks': 2
+                })
+            
+            # Split questions into two messages (5 questions each)
             questions_part1 = questions[:5]
             questions_part2 = questions[5:10]
             
-            # Send first 5 questions
-            questions_message_1 = f"📝 **QUESTIONS 1-5**\n\n"
-            for i, q in enumerate(questions_part1, 1):
-                marks = q.get('marks', 1)
-                questions_message_1 += f"**{i}.** {q.get('question', f'Question {i} not available')} [{marks} mark{'s' if marks != 1 else ''}]\n\n"
+            # Send first 5 questions with error handling
+            try:
+                questions_message_1 = f"📝 **QUESTIONS 1-5**\n\n"
+                for i, q in enumerate(questions_part1, 1):
+                    marks = q.get('marks', 1)
+                    question_text = q.get('question', f'Question {i} not available')
+                    questions_message_1 += f"**{i}.** {question_text} [{marks} mark{'s' if marks != 1 else ''}]\n\n"
+                
+                if len(questions_message_1) > 4000:
+                    # Split if too long
+                    self.whatsapp_service.send_message(user_id, "📝 **QUESTIONS 1-5**")
+                    for i, q in enumerate(questions_part1, 1):
+                        marks = q.get('marks', 1)
+                        question_text = q.get('question', f'Question {i} not available')
+                        single_question = f"**{i}.** {question_text} [{marks} mark{'s' if marks != 1 else ''}]"
+                        self.whatsapp_service.send_message(user_id, single_question)
+                else:
+                    success = self.whatsapp_service.send_message(user_id, questions_message_1)
+                    if not success:
+                        logger.error(f"Failed to send questions 1-5 to {user_id}")
+                        
+            except Exception as e:
+                logger.error(f"Error sending questions 1-5 to {user_id}: {e}")
             
-            self.whatsapp_service.send_message(user_id, questions_message_1)
-            
-            # Send last 5 questions
-            questions_message_2 = f"📝 **QUESTIONS 6-10**\n\n"
-            for i, q in enumerate(questions_part2, 6):
-                marks = q.get('marks', 1)
-                questions_message_2 += f"**{i}.** {q.get('question', f'Question {i} not available')} [{marks} mark{'s' if marks != 1 else ''}]\n\n"
-            
-            questions_message_2 += "✅ *Answer all questions based on the passage above*"
-            self.whatsapp_service.send_message(user_id, questions_message_2)
+            # Send last 5 questions with error handling
+            try:
+                questions_message_2 = f"📝 **QUESTIONS 6-10**\n\n"
+                for i, q in enumerate(questions_part2, 6):
+                    marks = q.get('marks', 1)
+                    question_text = q.get('question', f'Question {i} not available')
+                    questions_message_2 += f"**{i}.** {question_text} [{marks} mark{'s' if marks != 1 else ''}]\n\n"
+                
+                questions_message_2 += "✅ *Answer all questions based on the passage above*"
+                
+                if len(questions_message_2) > 4000:
+                    # Split if too long
+                    self.whatsapp_service.send_message(user_id, "📝 **QUESTIONS 6-10**")
+                    for i, q in enumerate(questions_part2, 6):
+                        marks = q.get('marks', 1)
+                        question_text = q.get('question', f'Question {i} not available')
+                        single_question = f"**{i}.** {question_text} [{marks} mark{'s' if marks != 1 else ''}]"
+                        self.whatsapp_service.send_message(user_id, single_question)
+                    self.whatsapp_service.send_message(user_id, "✅ *Answer all questions based on the passage above*")
+                else:
+                    success = self.whatsapp_service.send_message(user_id, questions_message_2)
+                    if not success:
+                        logger.error(f"Failed to send questions 6-10 to {user_id}")
+                        
+            except Exception as e:
+                logger.error(f"Error sending questions 6-10 to {user_id}: {e}")
             
             # Step 4: Save session and send answer button
             from database.session_db import save_user_session
