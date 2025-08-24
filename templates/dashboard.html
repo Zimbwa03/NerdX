@@ -1,372 +1,380 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard - NerdX Quiz Bot{% endblock %}
+{% block title %}System Overview - NerdX Dashboard{% endblock %}
 
-{% block content %}
-<div class="row mb-4">
-    <div class="col">
-        <h1 class="h3 mb-0">
-            <i class="fas fa-tachometer-alt me-2"></i>
-            Dashboard
-        </h1>
-        <p class="text-muted">Overview of NerdX Quiz Bot system</p>
-    </div>
-    <div class="col-auto">
-        <button class="btn btn-primary" onclick="refreshDashboard()">
-            <i class="fas fa-sync-alt me-1"></i>
-            Refresh
-        </button>
-    </div>
-</div>
-
-<!-- Statistics Cards -->
-<div class="row mb-4">
-    <div class="col-md-3 mb-3">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="card-title text-muted">Total Users</h6>
-                        <h3 class="mb-0" id="total-users">-</h3>
-                    </div>
-                    <div class="text-primary">
-                        <i class="fas fa-users fa-2x"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-3 mb-3">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="card-title text-muted">Active Today</h6>
-                        <h3 class="mb-0" id="active-users">-</h3>
-                    </div>
-                    <div class="text-success">
-                        <i class="fas fa-user-check fa-2x"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-3 mb-3">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="card-title text-muted">Questions Answered</h6>
-                        <h3 class="mb-0" id="total-questions">-</h3>
-                    </div>
-                    <div class="text-info">
-                        <i class="fas fa-question-circle fa-2x"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-3 mb-3">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="card-title text-muted">Credits Purchased</h6>
-                        <h3 class="mb-0" id="total-credits">-</h3>
-                    </div>
-                    <div class="text-warning">
-                        <i class="fas fa-coins fa-2x"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Charts Row -->
-<div class="row mb-4">
-    <!-- Subject Activity Chart -->
-    <div class="col-md-8 mb-3">
-        <div class="card">
-            <div class="card-header">
-                <h6 class="card-title mb-0">
-                    <i class="fas fa-chart-bar me-2"></i>
-                    Subject Activity
-                </h6>
-            </div>
-            <div class="card-body">
-                <canvas id="subjectChart" width="400" height="200"></canvas>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Database Status -->
-    <div class="col-md-4 mb-3">
-        <div class="card">
-            <div class="card-header">
-                <h6 class="card-title mb-0">
-                    <i class="fas fa-database me-2"></i>
-                    System Status
-                </h6>
-            </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span>Database</span>
-                        <span class="badge bg-success" id="db-status">Connected</span>
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span>WhatsApp API</span>
-                        <span class="badge bg-success" id="whatsapp-status">Online</span>
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span>AI Services</span>
-                        <span class="badge bg-success" id="ai-status">Available</span>
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span>Payment Gateway</span>
-                        <span class="badge bg-warning" id="payment-status">Limited</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Recent Activity -->
-<div class="row">
-    <div class="col-md-8 mb-3">
-        <div class="card">
-            <div class="card-header">
-                <h6 class="card-title mb-0">
-                    <i class="fas fa-clock me-2"></i>
-                    Recent User Activity
-                </h6>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>User</th>
-                                <th>Activity</th>
-                                <th>Subject</th>
-                                <th>Time</th>
-                            </tr>
-                        </thead>
-                        <tbody id="recent-activity">
-                            <tr>
-                                <td colspan="4" class="text-center text-muted">
-                                    <i class="fas fa-spinner fa-spin me-2"></i>
-                                    Loading activity...
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Quick Actions -->
-    <div class="col-md-4 mb-3">
-        <div class="card">
-            <div class="card-header">
-                <h6 class="card-title mb-0">
-                    <i class="fas fa-bolt me-2"></i>
-                    Quick Actions
-                </h6>
-            </div>
-            <div class="card-body">
-                <div class="d-grid gap-2">
-                    <button class="btn btn-outline-primary" onclick="generateTestQuestions()">
-                        <i class="fas fa-plus me-2"></i>
-                        Generate Test Questions
-                    </button>
-                    <button class="btn btn-outline-info" onclick="viewAnalytics()">
-                        <i class="fas fa-chart-line me-2"></i>
-                        View Detailed Analytics
-                    </button>
-                    <button class="btn btn-outline-warning" onclick="exportData()">
-                        <i class="fas fa-download me-2"></i>
-                        Export Data
-                    </button>
-                    <button class="btn btn-outline-danger" onclick="clearCache()">
-                        <i class="fas fa-trash me-2"></i>
-                        Clear Cache
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Loading Modal -->
-<div class="modal fade" id="loadingModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-sm modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-body text-center">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <p class="mt-2 mb-0">Processing...</p>
-            </div>
-        </div>
-    </div>
-</div>
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 {% endblock %}
 
-{% block scripts %}
-<script>
-let subjectChart;
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-0">🎯 System Overview</h1>
+                    <p class="text-muted">NerdX ZIMSEC Education Assistant - Real-time monitoring</p>
+                </div>
+                <div>
+                    <button class="btn btn-primary" onclick="refreshData()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-// Initialize dashboard
+    <!-- Key Metrics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Students
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalUsers">
+                                0
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Active Today
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="activeToday">
+                                0
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Questions Answered
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="questionsAnswered">
+                                0
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-question-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Total Revenue
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalRevenue">
+                                $0.00
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Growth Metrics -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Growth Metrics</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6 text-center border-right">
+                            <div class="h5 mb-0 font-weight-bold text-success" id="newUsersWeek">0</div>
+                            <div class="text-xs text-muted">New Users (7 days)</div>
+                        </div>
+                        <div class="col-6 text-center">
+                            <div class="h5 mb-0 font-weight-bold text-info" id="arpu">$0.00</div>
+                            <div class="text-xs text-muted">ARPU (Average Revenue Per User)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">System Health</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between">
+                            <span>Database</span>
+                            <span class="badge" id="dbStatus">Checking...</span>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between">
+                            <span>WhatsApp API</span>
+                            <span class="badge bg-success">Connected</span>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between">
+                            <span>AI Services</span>
+                            <span class="badge bg-success">Active</span>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between">
+                            <span>Payment Gateway</span>
+                            <span class="badge bg-warning">Limited</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Chart and Recent Users -->
+    <div class="row mb-4">
+        <!-- Daily Activity Chart -->
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Daily Active Users (Last 30 Days)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="dailyActivityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Registrations -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Registrations</h6>
+                </div>
+                <div class="card-body">
+                    <div id="recentUsers">
+                        <div class="text-center">
+                            <i class="fas fa-spinner fa-spin"></i> Loading...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <a href="/analytics" class="btn btn-outline-primary btn-block">
+                                <i class="fas fa-users"></i> View User Analytics
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="/revenue" class="btn btn-outline-success btn-block">
+                                <i class="fas fa-chart-line"></i> Revenue Dashboard
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="/payments" class="btn btn-outline-warning btn-block">
+                                <i class="fas fa-credit-card"></i> Review Payments
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <button class="btn btn-outline-info btn-block" onclick="exportSystemReport()">
+                                <i class="fas fa-download"></i> Export Report
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let dailyActivityChart;
+
 document.addEventListener('DOMContentLoaded', function() {
-    loadDashboardData();
-    initializeCharts();
-    
-    // Refresh data every 30 seconds
-    setInterval(loadDashboardData, 30000);
+    loadOverviewData();
+    createDailyActivityChart();
+    loadRecentUsers();
 });
 
-function loadDashboardData() {
-    fetch('/api/dashboard/api/stats')
-        .then(response => response.json())
-        .then(data => {
-            updateStatistics(data);
-            updateSystemStatus(data);
-        })
-        .catch(error => {
-            console.error('Error loading dashboard data:', error);
-            showError('Failed to load dashboard data');
-        });
-}
-
-function updateStatistics(data) {
-    document.getElementById('total-users').textContent = data.total_users || 0;
-    document.getElementById('active-users').textContent = data.active_users_today || 0;
-    document.getElementById('total-questions').textContent = data.total_questions_answered || 0;
-    document.getElementById('total-credits').textContent = data.total_credits_purchased || 0;
-}
-
-function updateSystemStatus(data) {
-    const dbStatus = document.getElementById('db-status');
-    if (data.database_status === 'connected') {
-        dbStatus.className = 'badge bg-success';
-        dbStatus.textContent = 'Connected';
-    } else {
-        dbStatus.className = 'badge bg-danger';
-        dbStatus.textContent = 'Disconnected';
+async function loadOverviewData() {
+    try {
+        const response = await fetch('/api/stats');
+        const data = await response.json();
+        
+        // Update metrics
+        document.getElementById('totalUsers').textContent = data.total_users || 0;
+        document.getElementById('activeToday').textContent = data.active_users_today || 0;
+        document.getElementById('questionsAnswered').textContent = data.total_questions_answered || 0;
+        document.getElementById('totalRevenue').textContent = `$${data.total_revenue || 0}`;
+        
+        // Update growth metrics
+        document.getElementById('newUsersWeek').textContent = data.new_registrations_week || 0;
+        document.getElementById('arpu').textContent = `$${data.arpu || 0}`;
+        
+        // Update database status
+        const dbStatus = document.getElementById('dbStatus');
+        if (data.database_status === 'connected') {
+            dbStatus.className = 'badge bg-success';
+            dbStatus.textContent = 'Connected';
+        } else {
+            dbStatus.className = 'badge bg-danger';
+            dbStatus.textContent = 'Disconnected';
+        }
+        
+    } catch (error) {
+        console.error('Error loading overview data:', error);
     }
 }
 
-function initializeCharts() {
-    const ctx = document.getElementById('subjectChart').getContext('2d');
-    
-    subjectChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Mathematics', 'Biology', 'Chemistry', 'Physics', 'English'],
-            datasets: [{
-                data: [30, 25, 20, 15, 10],
-                backgroundColor: [
-                    '#FF6384',
-                    '#36A2EB',
-                    '#FFCE56',
-                    '#4BC0C0',
-                    '#9966FF'
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom'
+async function createDailyActivityChart() {
+    try {
+        const response = await fetch('/api/activity');
+        const data = await response.json();
+        
+        const ctx = document.getElementById('dailyActivityChart').getContext('2d');
+        
+        const chartData = data.daily_active_users || [];
+        const labels = chartData.map(item => new Date(item.date).toLocaleDateString());
+        const users = chartData.map(item => item.users);
+        
+        dailyActivityChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Daily Active Users',
+                    data: users,
+                    borderColor: 'rgb(78, 115, 223)',
+                    backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
                 }
             }
-        }
-    });
-}
-
-function refreshDashboard() {
-    const refreshBtn = document.querySelector('[onclick="refreshDashboard()"]');
-    const icon = refreshBtn.querySelector('i');
-    
-    icon.classList.add('fa-spin');
-    refreshBtn.disabled = true;
-    
-    loadDashboardData();
-    
-    setTimeout(() => {
-        icon.classList.remove('fa-spin');
-        refreshBtn.disabled = false;
-    }, 1000);
-}
-
-function generateTestQuestions() {
-    showModal();
-    
-    // Simulate API call
-    setTimeout(() => {
-        hideModal();
-        showSuccess('Test questions generated successfully');
-    }, 2000);
-}
-
-function viewAnalytics() {
-    window.location.href = '/api/dashboard/analytics';
-}
-
-function exportData() {
-    showModal();
-    
-    // Simulate export
-    setTimeout(() => {
-        hideModal();
-        showSuccess('Data export started. You will receive an email when ready.');
-    }, 1500);
-}
-
-function clearCache() {
-    if (confirm('Are you sure you want to clear the cache?')) {
-        showModal();
+        });
         
-        setTimeout(() => {
-            hideModal();
-            showSuccess('Cache cleared successfully');
-        }, 1000);
+    } catch (error) {
+        console.error('Error creating activity chart:', error);
     }
 }
 
-function showModal() {
-    const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
-    modal.show();
+async function loadRecentUsers() {
+    try {
+        const response = await fetch('/api/users?limit=5');
+        const data = await response.json();
+        
+        const container = document.getElementById('recentUsers');
+        
+        if (data.users && data.users.length > 0) {
+            container.innerHTML = '';
+            
+            data.users.slice(0, 5).forEach(user => {
+                const userDiv = document.createElement('div');
+                userDiv.className = 'mb-3 pb-2 border-bottom';
+                
+                const registrationDate = new Date(user.registration_date).toLocaleDateString();
+                
+                userDiv.innerHTML = `
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="font-weight-bold">${user.name} ${user.surname}</div>
+                            <small class="text-muted">ID: ${user.nerdx_id}</small>
+                        </div>
+                        <div class="text-right">
+                            <small class="text-muted">${registrationDate}</small>
+                            <div class="badge bg-info">${user.credits} credits</div>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(userDiv);
+            });
+        } else {
+            container.innerHTML = '<div class="text-muted text-center">No recent users</div>';
+        }
+        
+    } catch (error) {
+        console.error('Error loading recent users:', error);
+        document.getElementById('recentUsers').innerHTML = '<div class="text-danger text-center">Error loading users</div>';
+    }
 }
 
-function hideModal() {
-    const modal = bootstrap.Modal.getInstance(document.getElementById('loadingModal'));
-    if (modal) modal.hide();
+function refreshData() {
+    loadOverviewData();
+    if (dailyActivityChart) {
+        dailyActivityChart.destroy();
+    }
+    createDailyActivityChart();
+    loadRecentUsers();
 }
 
-function showSuccess(message) {
-    // In a real app, you'd use a proper toast/notification system
-    alert('Success: ' + message);
-}
-
-function showError(message) {
-    // In a real app, you'd use a proper toast/notification system
-    alert('Error: ' + message);
+function exportSystemReport() {
+    // Placeholder for export functionality
+    alert('System report export feature coming soon!');
 }
 </script>
 {% endblock %}

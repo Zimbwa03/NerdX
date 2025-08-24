@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block title %}Revenue & Credit Management - NerdX Dashboard{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-0">💰 Revenue & Credit Management</h1>
+                    <p class="text-muted">Track financial performance and credit usage</p>
+                </div>
+                <div>
+                    <button class="btn btn-primary" onclick="refreshData()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue Overview Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Revenue
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalRevenue">
+                                $0.00
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Successful Payments
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="successfulPayments">
+                                0
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Credits Purchased
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="creditsPurchased">
+                                0
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-coins fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Pending Payments
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="pendingPayments">
+                                0
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <!-- Revenue vs Credits Chart -->
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Credits Purchased vs Consumed</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="creditsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Methods Breakdown -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Payment Methods</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie pt-4 pb-2">
+                        <canvas id="paymentMethodsChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-center small">
+                        <span class="mr-2">
+                            <i class="fas fa-circle text-primary"></i> EcoCash
+                        </span>
+                        <span class="mr-2">
+                            <i class="fas fa-circle text-success"></i> Mobile Money
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Credit Transactions Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Credit Transaction History</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="creditTransactionsTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>User ID</th>
+                            <th>Type</th>
+                            <th>Credits</th>
+                            <th>Before</th>
+                            <th>After</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody id="creditTransactionsBody">
+                        <tr>
+                            <td colspan="7" class="text-center">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let creditsChart, paymentMethodsChart;
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadRevenueData();
+    loadCreditTransactions();
+});
+
+async function loadRevenueData() {
+    try {
+        const response = await fetch('/api/payments');
+        const data = await response.json();
+        
+        // Update cards
+        document.getElementById('totalRevenue').textContent = `$${data.total_revenue}`;
+        document.getElementById('successfulPayments').textContent = data.successful_payments;
+        document.getElementById('pendingPayments').textContent = data.pending_payments;
+        
+        // Create charts
+        createCreditsChart();
+        createPaymentMethodsChart(data);
+        
+    } catch (error) {
+        console.error('Error loading revenue data:', error);
+    }
+}
+
+async function loadCreditTransactions() {
+    try {
+        const response = await fetch('/api/credit-transactions');
+        const data = await response.json();
+        
+        const tbody = document.getElementById('creditTransactionsBody');
+        tbody.innerHTML = '';
+        
+        if (data.transactions && data.transactions.length > 0) {
+            data.transactions.forEach(transaction => {
+                const row = document.createElement('tr');
+                const date = new Date(transaction.created_at).toLocaleDateString();
+                
+                row.innerHTML = `
+                    <td>${date}</td>
+                    <td>${transaction.user_id}</td>
+                    <td>
+                        <span class="badge badge-${transaction.credits_used > 0 ? 'danger' : 'success'}">
+                            ${transaction.transaction_type}
+                        </span>
+                    </td>
+                    <td>${Math.abs(transaction.credits_used)}</td>
+                    <td>${transaction.credits_before}</td>
+                    <td>${transaction.credits_after}</td>
+                    <td>${transaction.description}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        } else {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center">No transactions found</td></tr>';
+        }
+    } catch (error) {
+        console.error('Error loading credit transactions:', error);
+    }
+}
+
+function createCreditsChart() {
+    const ctx = document.getElementById('creditsChart').getContext('2d');
+    
+    // Sample data - in production, this would come from API
+    const data = {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        datasets: [{
+            label: 'Credits Purchased',
+            data: [1200, 1900, 3000, 5000, 2000, 3000],
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            tension: 0.1
+        }, {
+            label: 'Credits Consumed',
+            data: [1000, 1800, 2800, 4500, 1900, 2800],
+            borderColor: 'rgb(255, 99, 132)',
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            tension: 0.1
+        }]
+    };
+
+    creditsChart = new Chart(ctx, {
+        type: 'line',
+        data: data,
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Credits Purchased vs Consumed Over Time'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+function createPaymentMethodsChart(paymentData) {
+    const ctx = document.getElementById('paymentMethodsChart').getContext('2d');
+    
+    paymentMethodsChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['EcoCash', 'Mobile Money'],
+            datasets: [{
+                data: [85, 15], // Sample data
+                backgroundColor: ['#4e73df', '#1cc88a'],
+                hoverBackgroundColor: ['#2e59d9', '#17a673'],
+                hoverBorderColor: "rgba(234, 236, 244, 1)",
+            }],
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            },
+            cutout: '80%',
+        },
+    });
+}
+
+function refreshData() {
+    loadRevenueData();
+    loadCreditTransactions();
+}
+</script>
+{% endblock %}
