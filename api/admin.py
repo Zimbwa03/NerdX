@@ -192,8 +192,13 @@ def system_settings():
                     'graph_generation': 10
                 },
                 'rate_limits': {
-                    'session_cooldown': 30,
-                    'generation_timeout': 120
+                    'session_cooldown': 5,  # Updated from 30 to 5 seconds
+                    'generation_timeout': 120,
+                    'text_message': 3,      # New: 3 seconds between text messages
+                    'image_message': 10,    # New: 10 seconds between image uploads
+                    'quiz_action': 5,       # New: 5 seconds between quiz actions
+                    'ai_generation': 15,    # New: 15 seconds between AI generations
+                    'menu_navigation': 1    # New: 1 second between menu navigation
                 },
                 'welcome_credits': 50,
                 'referral_credits': {
@@ -310,4 +315,60 @@ def get_system_logs():
         
     except Exception as e:
         logger.error(f"Error getting system logs: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/api/users/<user_id>/rate-limits', methods=['GET', 'DELETE'])
+def manage_user_rate_limits(user_id: str):
+    """Get or reset user's rate limits"""
+    try:
+        from utils.rate_limiter import rate_limiter
+        
+        if request.method == 'GET':
+            # Get current rate limit status
+            status = rate_limiter.get_user_rate_limit_status(user_id)
+            return jsonify({
+                'user_id': user_id,
+                'rate_limits': status,
+                'has_active_limits': len(status) > 0
+            })
+        
+        elif request.method == 'DELETE':
+            # Reset all rate limits for user
+            rate_limiter.reset_all_user_limits(user_id)
+            return jsonify({
+                'success': True,
+                'message': f'Rate limits reset for user {user_id}',
+                'user_id': user_id
+            })
+        
+    except Exception as e:
+        logger.error(f"Error managing rate limits for user {user_id}: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/api/rate-limits/overview')
+def get_rate_limits_overview():
+    """Get overview of current rate limiting system"""
+    try:
+        from config import Config
+        
+        overview = {
+            'current_config': {
+                'session_cooldown': getattr(Config, 'SESSION_COOLDOWN', 5),
+                'rate_limits': getattr(Config, 'RATE_LIMITS', {})
+            },
+            'system_info': {
+                'description': 'Improved rate limiting system with context-aware cooldowns',
+                'features': [
+                    'Different cooldowns for different action types',
+                    'Active users get 50% reduced cooldown',
+                    'Users can reset their own limits with "reset limits" command',
+                    'Better user feedback with remaining time display'
+                ]
+            }
+        }
+        
+        return jsonify(overview)
+        
+    except Exception as e:
+        logger.error(f"Error getting rate limits overview: {e}")
         return jsonify({'error': str(e)}), 500

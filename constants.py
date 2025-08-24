@@ -110,7 +110,7 @@ Ready to boost your grades? Let's start learning! 🚀"""
 
 # Rate limiting settings
 RATE_LIMITS = {
-    'messages_per_minute': 10,
-    'questions_per_hour': 20,
-    'session_cooldown': 30
+    'messages_per_minute': 20,  # Increased from 10
+    'questions_per_hour': 50,   # Increased from 20
+    'session_cooldown': 5       # Reduced from 30 to 5 seconds
 }

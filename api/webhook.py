@@ -25,6 +25,9 @@ from utils.credit_system import credit_system
 from utils.validators import validators
 from constants import TOPICS, MESSAGE_TEMPLATES, DIFFICULTY_LEVELS
 from database.external_db import get_user_registration, get_user_stats, get_user_credits, deduct_credits
+from services.advanced_credit_service import advanced_credit_service
+from datetime import datetime
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -133,19 +136,33 @@ def handle_webhook():
         if message_type == 'text':
             # Check rate limiting for text messages only
             if rate_limiter.check_session_rate_limit(user_id, 'text_message'):
-                whatsapp_service.send_message(
-                    user_id,
-                    f"⏳ Please wait before sending another message. You're being rate limited to prevent spam."
-                )
+                remaining_time = rate_limiter.get_remaining_cooldown(user_id, 'text_message')
+                if remaining_time > 0:
+                    whatsapp_service.send_message(
+                        user_id,
+                        f"⏳ Please wait {remaining_time} seconds before sending another message. This helps prevent spam and ensures smooth operation."
+                    )
+                else:
+                    whatsapp_service.send_message(
+                        user_id,
+                        "⏳ Please wait a moment before sending another message. This helps prevent spam and ensures smooth operation."
+                    )
                 return jsonify({'status': 'rate_limited'}), 200
             handle_text_message(user_id, message_text)
         elif message_type == 'image':
             # Check rate limiting for image processing
             if rate_limiter.check_session_rate_limit(user_id, 'image_message'):
-                whatsapp_service.send_message(
-                    user_id,
-                    f"⏳ Please wait before sending another image. Processing takes time."
-                )
+                remaining_time = rate_limiter.get_remaining_cooldown(user_id, 'image_message')
+                if remaining_time > 0:
+                    whatsapp_service.send_message(
+                        user_id,
+                        f"⏳ Please wait {remaining_time} seconds before sending another image. Image processing takes time and resources."
+                    )
+                else:
+                    whatsapp_service.send_message(
+                        user_id,
+                        "⏳ Please wait a moment before sending another image. Image processing takes time and resources."
+                    )
                 return jsonify({'status': 'rate_limited'}), 200
             handle_image_message(user_id, message['image'])
         elif message_type == 'interactive':
@@ -232,6 +249,14 @@ def handle_text_message(user_id: str, message_text: str):
                 graph_practice_handler.handle_graph_practice_start(user_id)
             else:
                 graph_practice_handler.handle_graph_practice_start(user_id)
+        elif command == 'reset limits':
+            # Allow users to reset their own rate limits if they're experiencing issues
+            rate_limiter.reset_all_user_limits(user_id)
+            whatsapp_service.send_message(
+                user_id, 
+                "✅ Your rate limits have been reset. You can now use the bot normally."
+            )
+            return
         else:
             # If no active session and command is not recognized, show main menu
             send_main_menu(user_id)
@@ -475,17 +500,21 @@ def handle_audio_chat_image(user_id: str, image_data: dict):
         whatsapp_service.send_message(user_id, "❌ Error processing your image. Please try again.")
 
 def send_main_menu(user_id: str, user_name: str = None):
-    """Send main menu to user - matches backup structure exactly"""
+    """Send main menu to user with advanced credit system integration"""
     try:
         # Get user registration data for personalization
-        from database.external_db import get_user_registration, get_user_credits, get_user_stats
+        from database.external_db import get_user_registration, get_user_stats
+        from services.advanced_credit_service import advanced_credit_service
 
         if not user_name:
             registration = get_user_registration(user_id)
             user_name = registration['name'] if registration else None
 
         user_stats = get_user_stats(user_id) or {'level': 1, 'xp_points': 0, 'streak': 0, 'correct_answers': 0, 'total_attempts': 0}
-        current_credits = get_user_credits(user_id)
+        
+        # Get comprehensive credit status using advanced credit service
+        credit_status = advanced_credit_service.get_user_credit_status(user_id)
+        current_credits = credit_status['credits']
 
         # Personalized greeting section
         welcome_text = ""
@@ -508,6 +537,9 @@ def send_main_menu(user_id: str, user_name: str = None):
             welcome_text += "🎓 *NerdX ZIMSEC Learning Bot* 🎓\n"
             welcome_text += "═══════════════════\n\n"
             welcome_text += "🌟 *Your Personalized ZIMSEC Study Companion*\n\n"
+
+        # Credit display section using advanced credit system
+        welcome_text += f"{advanced_credit_service.format_credit_display(user_id)}\n\n"
 
         # Features section with clear structure
         welcome_text += "✨ *AVAILABLE SUBJECTS*\n"
@@ -536,42 +568,34 @@ def send_main_menu(user_id: str, user_name: str = None):
             welcome_text += "📊 *YOUR ACADEMIC PROFILE*\n"
         welcome_text += "━━━━━━━━━━━━━━━━━━━━━\n"
         welcome_text += f"🎯 *Level:* {level}          ⭐ *XP:* {xp_points}\n"
-        # Enhanced credit display with low credit alert
-        from utils.credit_display import credit_display_manager
-        if current_credits <= 20:
-            welcome_text += f"⚠️ *Credits:* {current_credits} (LOW!) 📚 *Questions:* {total_attempts}\n"
-        else:
-            welcome_text += f"💳 *Credits:* {current_credits}       📚 *Questions:* {total_attempts}\n"
-        welcome_text += f"✅ *Success Rate:* {success_rate:.1f}%\n\n"
+        welcome_text += f"📚 *Questions:* {total_attempts}       ✅ *Success Rate:* {success_rate:.1f}%\n\n"
 
         # Call to action section
         welcome_text += "🎁 *BONUS OPPORTUNITY*\n"
         welcome_text += "━━━━━━━━━━━━━━━━━\n"
         welcome_text += "*Share NerdX with friends*\n"
-        welcome_text += "*Get 5 FREE CREDITS each!*\n\n"
+        welcome_text += f"*Get {Config.REFERRAL_BONUS} FREE CREDITS each!*\n\n"
 
         welcome_text += "👇 *Choose an option below to get started:*"
 
-        # Send first 3 main buttons
-        if current_credits < 20:  # Low credits - emphasize buying
-            main_buttons = [
-                {"text": "🎯 Start Quiz", "callback_data": "start_quiz"},
-                {"text": "🎤 Audio Chat", "callback_data": "audio_chat_menu"},
-                {"text": "💎 Buy Credits", "callback_data": "buy_credits"}
-            ]
-        else:  # Normal credit level
-            main_buttons = [
-                {"text": "🎯 Start Quiz", "callback_data": "start_quiz"},
-                {"text": "🎤 Audio Chat", "callback_data": "audio_chat_menu"},
-                {"text": "💎 Buy Credits", "callback_data": "buy_credits"}
-            ]
+        # Create main buttons with advanced credit system integration
+        main_buttons = [
+            {"text": "🎯 Start Quiz", "callback_data": "start_quiz"},
+            {"text": "🎤 Audio Chat", "callback_data": "audio_chat_menu"},
+            {"text": "📊 My Stats", "callback_data": "user_stats"},
+            {"text": "👥 Referrals", "callback_data": "referrals_menu"}
+        ]
+        
+        # Add low credit button if applicable using advanced credit system
+        main_buttons = advanced_credit_service.add_low_credit_button(main_buttons, user_id)
 
         whatsapp_service.send_interactive_message(user_id, welcome_text, main_buttons)
 
         # Send additional buttons separately
         additional_buttons = [
             {"text": "📤 Share to Friend", "callback_data": "share_to_friend"},
-            {"text": "👥 Referrals", "callback_data": "referrals_menu"}
+            {"text": "💎 Credit Store", "callback_data": "credit_store"},
+            {"text": "❓ Help", "callback_data": "help_menu"}
         ]
 
         whatsapp_service.send_interactive_message(user_id, "💎 *More Options:*", additional_buttons)
@@ -607,7 +631,17 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         needs_rate_limit = any(selection_id.startswith(action) for action in rate_limited_actions)
 
         if needs_rate_limit and rate_limiter.check_session_rate_limit(user_id, f"action_{selection_id}"):
-            whatsapp_service.send_message(user_id, "⏳ Please wait before performing this action again.")
+            remaining_time = rate_limiter.get_remaining_cooldown(user_id, f"action_{selection_id}")
+            if remaining_time > 0:
+                whatsapp_service.send_message(
+                    user_id, 
+                    f"⏳ Please wait {remaining_time} seconds before performing this action again. This helps ensure smooth operation."
+                )
+            else:
+                whatsapp_service.send_message(
+                    user_id, 
+                    "⏳ Please wait a moment before performing this action again. This helps ensure smooth operation."
+                )
             return
 
         # Handle specific subject menu selections first (most specific patterns first)
@@ -982,6 +1016,31 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             handle_combined_exam_answer(user_id, user_answer)
             return jsonify({'status': 'success'})
 
+        elif selection_id == 'start_quiz':
+            handle_quiz_menu(user_id)
+        elif selection_id == 'audio_chat_menu':
+            audio_chat_service.handle_audio_chat_command(user_id)
+        elif selection_id == 'credit_store':
+            handle_credit_store(user_id)
+        elif selection_id.startswith('select_package_'):
+            package_id = selection_id.replace('select_package_', '')
+            handle_package_selection(user_id, package_id)
+        elif selection_id.startswith('purchase_package_'):
+            package_id = selection_id.replace('purchase_package_', '')
+            handle_purchase_confirmation(user_id, package_id)
+        elif selection_id.startswith('submit_proof_'):
+            # Handle payment proof submission
+            parts = selection_id.split('_', 2)
+            if len(parts) >= 3:
+                package_id = parts[1]
+                reference_code = parts[2]
+                handle_payment_proof_submission(user_id, package_id, reference_code)
+        elif selection_id == 'back_to_menu':
+            send_main_menu(user_id)
+        elif selection_id == 'continue_current':
+            # User clicked continue on referral notification - do nothing to maintain flow
+            pass
+
     except Exception as e:
         logger.error(f"Error handling interactive message for {user_id}: {e}", exc_info=True)
 
@@ -1204,6 +1263,7 @@ def send_help_message(user_id: str):
 • `stats` - View your statistics
 • `help` - Show this help message
 • `buy credits` - Purchase credits
+• `reset limits` - Reset rate limits if experiencing delays
 
 **Features:**
 📚 Study ZIMSEC subjects (Biology, Chemistry, Physics, Math, English)
@@ -2445,35 +2505,117 @@ def handle_combined_science_answer(user_id: str, subject: str, user_answer: str)
 
 # Payment system handlers
 def handle_package_selection(user_id: str, package_id: str):
-    """Handle package selection for payment"""
+    """Handle credit package selection"""
     try:
-        from services.payment_service import payment_service
-        from database.session_db import save_user_session
+        from services.advanced_credit_service import advanced_credit_service
         
-        # Get package details and payment instructions
-        result = payment_service.get_payment_instructions_message(user_id, package_id)
+        # Get package details
+        packages = advanced_credit_service.get_credit_packages()
+        selected_package = next((p for p in packages if p['id'] == package_id), None)
         
-        if result['success']:
-            # Store payment context in session
-            save_user_session(user_id, {
-                'session_type': 'payment_flow',
-                'package_id': package_id,
-                'reference_code': result['reference_code'],
-                'step': 'instructions_shown'
-            })
-            
-            # Show payment instructions
-            message = payment_service.get_package_details_message(package_id) + "\n\n"
-            message += result['message']
-            
-            buttons = payment_service.get_payment_instructions_buttons()
-            whatsapp_service.send_interactive_message(user_id, message, buttons)
-        else:
-            whatsapp_service.send_message(user_id, result['message'])
-            
+        if not selected_package:
+            whatsapp_service.send_message(user_id, "❌ Package not found. Please try again.")
+            return
+        
+        # Create package details message
+        message = f"""[{selected_package['icon']}] **[{selected_package['name'].upper()}] - ${selected_package['price']:.2f}**
+
+📊 **PACKAGE DETAILS:**
+💳 Credits: {selected_package['credits']} credits
+⏰ Duration: {selected_package['duration']} days typical usage
+💰 Cost per credit: ${selected_package['price'] / selected_package['credits']:.3f}
+🎯 Perfect for: {selected_package['description']}
+
+✅ **PURCHASE THIS PACKAGE**
+🔍 View Other Packages
+❌ Cancel Purchase"""
+        
+        buttons = [
+            {"text": "✅ PURCHASE THIS PACKAGE", "callback_data": f"purchase_package_{package_id}"},
+            {"text": "🔍 View Other Packages", "callback_data": "credit_store"},
+            {"text": "❌ Cancel Purchase", "callback_data": "back_to_menu"}
+        ]
+        
+        whatsapp_service.send_interactive_message(user_id, message, buttons)
+        
     except Exception as e:
-        logger.error(f"Error handling package selection for {user_id}: {e}", exc_info=True)
-        whatsapp_service.send_message(user_id, "❌ Error processing package selection. Please try again.")
+        logger.error(f"Error handling package selection for {user_id}: {e}")
+        whatsapp_service.send_message(user_id, "❌ Error loading package details. Please try again.")
+
+def handle_purchase_confirmation(user_id: str, package_id: str):
+    """Handle purchase confirmation and show payment instructions"""
+    try:
+        from services.advanced_credit_service import advanced_credit_service
+        
+        # Get package details
+        packages = advanced_credit_service.get_credit_packages()
+        selected_package = next((p for p in packages if p['id'] == package_id), None)
+        
+        if not selected_package:
+            whatsapp_service.send_message(user_id, "❌ Package not found. Please try again.")
+            return
+        
+        # Generate unique reference code
+        import uuid
+        reference_code = str(uuid.uuid4())[:8].upper()
+        
+        message = f"""💳 **PAYMENT INSTRUCTIONS**
+
+📱 **PAY VIA ECOCASH:**
+📞 **Number**: +263 785494594
+💰 **Amount**: ${selected_package['price']:.2f} USD
+📋 **Reference**: {reference_code}
+
+⚠️ **IMPORTANT STEPS:**
+1️⃣ Send ${selected_package['price']:.2f} to +263 785494594
+2️⃣ Copy your EcoCash confirmation SMS
+3️⃣ Paste it in the next message
+4️⃣ Wait for approval (usually within 30 minutes)
+
+💡 **Why this process?**
+Secure verification ensures your payment is protected and credits are accurately added.
+
+✅ **I'VE SENT THE MONEY - SUBMIT PROOF**
+❓ **NEED HELP?**
+⬅️ **BACK**"""
+        
+        buttons = [
+            {"text": "✅ I'VE SENT THE MONEY - SUBMIT PROOF", "callback_data": f"submit_proof_{package_id}_{reference_code}"},
+            {"text": "❓ NEED HELP?", "callback_data": "payment_help"},
+            {"text": "⬅️ BACK", "callback_data": f"select_package_{package_id}"}
+        ]
+        
+        # Store payment session
+        from database.session_db import update_payment_session
+        payment_data = {
+            'package_id': package_id,
+            'reference_code': reference_code,
+            'amount': selected_package['price'],
+            'credits': selected_package['credits'],
+            'timestamp': datetime.now().isoformat()
+        }
+        update_payment_session(user_id, payment_data)
+        
+        whatsapp_service.send_interactive_message(user_id, message, buttons)
+        
+    except Exception as e:
+        logger.error(f"Error handling purchase confirmation for {user_id}: {e}")
+        whatsapp_service.send_message(user_id, "❌ Error processing purchase. Please try again.")
+
+def handle_credit_store(user_id: str):
+    """Handle credit store interactions"""
+    try:
+        from services.advanced_credit_service import advanced_credit_service
+        
+        # Get credit store message and buttons
+        message, buttons = advanced_credit_service.format_credit_store_message(user_id)
+        
+        # Send credit store
+        whatsapp_service.send_interactive_message(user_id, message, buttons)
+        
+    except Exception as e:
+        logger.error(f"Error handling credit store for {user_id}: {e}")
+        whatsapp_service.send_message(user_id, "❌ Error loading credit store. Please try again.")
 
 def handle_payment_proof_request(user_id: str):
     """Handle payment proof submission request"""
@@ -2541,48 +2683,56 @@ def handle_payment_help(user_id: str):
         logger.error(f"Error handling payment help for {user_id}: {e}", exc_info=True)
         whatsapp_service.send_message(user_id, "❌ Error loading payment help. Please try again.")
 
-def handle_payment_proof_submission(user_id: str, proof_text: str):
-    """Handle actual payment proof submission"""
+def handle_payment_proof_submission(user_id: str, package_id: str, reference_code: str):
+    """Handle payment proof submission from user"""
     try:
-        from database.session_db import get_user_session, clear_user_session
-        from services.payment_service import payment_service
+        from database.session_db import get_payment_session, update_payment_session
         
-        # Get payment session
-        session = get_user_session(user_id)
-        
-        if not session or session.get('session_type') != 'payment_flow' or session.get('step') != 'awaiting_proof':
-            whatsapp_service.send_message(user_id, "❌ No active payment proof session found.")
+        # Get payment session data
+        payment_data = get_payment_session(user_id)
+        if not payment_data or payment_data.get('reference_code') != reference_code:
+            whatsapp_service.send_message(user_id, "❌ Payment session not found or expired. Please try again.")
             return
         
-        reference_code = session.get('reference_code')
-        if not reference_code:
-            whatsapp_service.send_message(user_id, "❌ Payment reference not found.")
-            return
+        # Update payment status to pending
+        payment_data['status'] = 'pending'
+        payment_data['proof_submitted'] = True
+        payment_data['proof_timestamp'] = datetime.now().isoformat()
+        update_payment_session(user_id, payment_data)
         
-        # Submit payment proof
-        result = payment_service.submit_payment_proof(user_id, reference_code, proof_text)
+        message = f"""⏳ **PAYMENT UNDER REVIEW**
+
+✅ **Submission Successful!**
+
+📋 **Details:**
+💰 Package: {payment_data.get('package_name', 'Unknown')}
+💳 Amount: ${payment_data.get('amount', 0):.2f}
+🔢 Reference: {reference_code}
+⏰ Submitted: {datetime.now().strftime('%Y-%m-%d %H:%M')}
+
+🕐 **Processing Time**: Usually 5-30 minutes
+📧 **Status**: Payment verification in progress...
+
+💡 **What happens next?**
+• Our team verifies your EcoCash transaction
+• Once confirmed, credits are instantly added
+• You'll receive a confirmation message
+
+🔔 **You'll be notified when approved!**
+
+🏠 **CONTINUE USING APP**
+❓ **SUPPORT**"""
         
-        if result['success']:
-            # Clear payment session
-            clear_user_session(user_id)
-            
-            # Show success message
-            whatsapp_service.send_message(user_id, result['message'])
-            
-            # Show follow-up buttons
-            buttons = [
-                {'text': "🏠 CONTINUE USING APP", 'callback_data': 'main_menu'},
-                {'text': "❓ SUPPORT", 'callback_data': 'payment_help'}
-            ]
-            
-            whatsapp_service.send_interactive_message(
-                user_id,
-                "Your payment is being reviewed. You'll be notified when approved!",
-                buttons
-            )
-        else:
-            whatsapp_service.send_message(user_id, result['message'])
-            
+        buttons = [
+            {"text": "🏠 CONTINUE USING APP", "callback_data": "back_to_menu"},
+            {"text": "❓ SUPPORT", "callback_data": "payment_support"}
+        ]
+        
+        whatsapp_service.send_interactive_message(user_id, message, buttons)
+        
+        # Send notification to admin (in production, this would be a proper admin notification)
+        logger.info(f"Payment proof submitted by {user_id} for package {package_id}, reference {reference_code}")
+        
     except Exception as e:
-        logger.error(f"Error handling payment proof submission for {user_id}: {e}", exc_info=True)
-        whatsapp_service.send_message(user_id, "❌ Error submitting payment proof. Please try again.")
+        logger.error(f"Error handling payment proof submission for {user_id}: {e}")
+        whatsapp_service.send_message(user_id, "❌ Error processing payment proof. Please try again.")

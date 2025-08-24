@@ -12,6 +12,7 @@ from database.session_db import (
     get_registration_session, update_registration_session, 
     complete_registration_session, clear_registration_session
 )
+from services.advanced_credit_service import advanced_credit_service
 
 logger = logging.getLogger(__name__)
 
@@ -261,37 +262,49 @@ class UserService:
             success = create_user_registration(user_data)
             
             if success:
-                # Add welcome credits (updated to 75 credits)
-                add_credits(whatsapp_id, 75, 'registration_bonus')
+                # Award registration bonus credits using advanced credit service
+                advanced_credit_service.award_registration_credits(whatsapp_id)
                 
-                # Add referral credits if applicable
+                # Handle referral if applicable
                 if referral_code:
-                    # Give referrer 5 credits
-                    add_referral_credits(referral_code, whatsapp_id)
-                    # Give referee (new user) 5 additional credits
-                    add_credits(whatsapp_id, 5, 'referral_bonus', 'Referral bonus for using referral code')
+                    # Find the referrer by referral code
+                    from services.referral_service import ReferralService
+                    referral_service = ReferralService()
+                    referrer_id = referral_service.validate_referral_code(referral_code)
+                    
+                    if referrer_id:
+                        # Award referral credits to referrer
+                        new_user_name = f"{session['name']} {session['surname']}"
+                        advanced_credit_service.award_referral_credits(referrer_id, new_user_name)
+                        
+                        # Award referral bonus to new user
+                        add_credits(whatsapp_id, 5, 'referral_bonus')
                 
                 # Clear registration session
                 clear_registration_session(whatsapp_id)
                 
-                message = f"🎉 Registration complete!\n\n"
-                message += f"Welcome {session['name']} {session['surname']}!\n"
-                message += f"Your NerdX ID: {nerdx_id}\n\n"
-                message += f"✨ You've received 75 welcome credits!\n"
+                # Get final credit balance
+                final_credits = get_user_credits(whatsapp_id)
+                
+                message = f"🎉 **Registration Complete!**\n\n"
+                message += f"Welcome **{session['name']} {session['surname']}**!\n"
+                message += f"🆔 **Your NerdX ID**: {nerdx_id}\n\n"
+                message += f"✨ **You've received {final_credits} welcome credits!**\n"
                 
                 if referral_code:
-                    message += f"🎁 Thanks for using referral code {referral_code}!\n"
-                    message += f"✨ You've received an additional 5 referral bonus credits!\n"
-                    message += f"💳 Total Credits: 80 (75 welcome + 5 referral bonus)\n"
-                    message += f"Your referrer also received 5 bonus credits!\n"
+                    message += f"🎁 **Referral Bonus Applied!**\n"
+                    message += f"Thanks for using referral code: {referral_code}\n"
+                    message += f"Your referrer also received +5 bonus credits!\n"
                 
-                message += f"\nYou can now start using NerdX Quiz Bot!"
+                message += f"\n🚀 **Ready to start learning!**\n"
+                message += f"Type 'menu' to begin your educational journey!"
                 
                 return {
                     'success': True,
                     'completed': True,
                     'user_data': user_data,
-                    'message': message
+                    'message': message,
+                    'credits_awarded': final_credits
                 }
             else:
                 return {

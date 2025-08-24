@@ -18,10 +18,11 @@ class ReferralService:
     """Handle user referral system with bonus credits"""
     
     def __init__(self):
-        # Referral rewards
+        # Referral rewards - updated to match new credit system
+        from config import Config
         self.referral_bonus = {
-            'referrer': 50,  # Credits for the person who referred
-            'referee': 25,   # Credits for the new user
+            'referrer': Config.REFERRAL_BONUS,  # 5 credits for the person who referred
+            'referee': Config.REFERRAL_BONUS,   # 5 credits for the new user
         }
     
     def generate_referral_code(self, user_id: str) -> Optional[str]:

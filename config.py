@@ -24,24 +24,35 @@ class Config:
     DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///nerdx_quiz.db')
 
     # Session configuration
-    SESSION_COOLDOWN = 30  # 30 seconds between same actions
+    SESSION_COOLDOWN = 5  # 5 seconds between same actions (reduced from 30)
+    RATE_LIMITS = {
+        'text_message': 3,      # 3 seconds between text messages
+        'image_message': 10,    # 10 seconds between image uploads
+        'quiz_action': 5,       # 5 seconds between quiz actions
+        'ai_generation': 15,    # 15 seconds between AI generations
+        'menu_navigation': 1    # 1 second between menu navigation
+    }
 
-    # Credit system configuration - Updated according to advanced credit system specification
+    # Credit system configuration - Advanced Credit System
     CREDIT_COSTS = {
         # Combined Science
-        'combined_science_topical': 1,
-        'combined_science_exam': 2,
+        'combined_science_topical': 1,      # Topical Questions
+        'combined_science_exam': 2,        # Combined Exam
+        
         # Mathematics
-        'math_topical': 1,
-        'math_exam': 2,
-        'math_graph_practice': 3,
+        'math_topical': 1,                 # Topical Questions
+        'math_exam': 2,                    # Math Exam
+        'math_graph_practice': 3,          # Graph Practices
+        
         # English
-        'english_topical': 1,
-        'english_comprehension': 3,
-        'english_essay_writing': 3,
+        'english_topical': 1,              # Topical Questions
+        'english_comprehension': 3,        # Comprehension
+        'english_essay_writing': 3,        # Essay Writing
+        
         # Audio Features
-        'audio_feature': 10,
-        'voice_chat': 10,
+        'audio_feature': 10,               # Audio Feature
+        'voice_chat': 10,                  # Voice Chat
+        
         # Legacy compatibility (keep lower costs for existing handlers)
         'math': 1,
         'science': 1,
@@ -49,6 +60,13 @@ class Config:
         'image_solve': 3,
         'graph_generation': 3
     }
+    
+    # Registration and Referral Credits
+    REGISTRATION_BONUS = 75               # Credits given to new users (once off)
+    REFERRAL_BONUS = 5                    # Credits for successful referrals
+    
+    # Low Credit Threshold
+    LOW_CREDIT_THRESHOLD = 20             # Show "Buy Credits" button when credits <= 20
 
     # AI API timeouts and retries
     AI_REQUEST_TIMEOUT = [30, 45, 60]
