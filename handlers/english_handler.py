@@ -676,28 +676,27 @@ Great job on completing your comprehension practice! 📚✨"""
             self.whatsapp_service.send_message(user_id, "❌ Error resetting session. Please try again.")
 
     def handle_essay_writing(self, user_id: str):
-        """Handle essay writing module"""
+        """Handle ZIMSEC Essay Writing - New Implementation"""
         try:
             registration = get_user_registration(user_id)
             user_name = registration['name'] if registration else "Student"
             credits = get_user_credits(user_id)
             
-            module_info = self.english_modules["essay_writing"]
-            
-            if credits < module_info["credit_cost"]:
-                self._send_insufficient_credits_message(user_id, user_name, credits, module_info["credit_cost"])
+            if credits < 3:  # Standard essay writing cost
+                self.whatsapp_service.send_message(user_id, f"❌ Insufficient credits! You need 3 credits but have {credits}. Purchase more credits to continue.")
                 return
             
-            message = f"""✍️ ZIMSEC Essay Writing
+            message = f"""✍️ **ZIMSEC O Level English Essay Writing**
 
 👤 Student: {user_name}
-💰 Cost: {module_info["credit_cost"]} credits
+💰 Cost: 3 credits per essay
+📄 Format: Official ZIMSEC Paper 1 Section A
 
-📝 Choose your section:"""
+**Choose your writing mode:**"""
 
             buttons = [
-                {"text": "📝 Section A: Free Choice (30 marks)", "callback_data": "english_essay_section_a"},
-                {"text": "📋 Section B: Guided Writing (20 marks)", "callback_data": "english_essay_section_b"},
+                {"text": "📝 Free Response", "callback_data": "essay_free_response"},
+                {"text": "🎯 Guided Composition", "callback_data": "essay_guided_composition"},
                 {"text": "🔙 Back to English", "callback_data": "english_menu"}
             ]
             
@@ -707,63 +706,519 @@ Great job on completing your comprehension practice! 📚✨"""
             logger.error(f"Error in essay writing for {user_id}: {e}")
             self.whatsapp_service.send_message(user_id, "❌ Error loading essay options. Please try again.")
 
-    def handle_essay_section_a(self, user_id: str):
-        """Handle Section A essay selection"""
+    def handle_essay_free_response(self, user_id: str):
+        """Handle Free Response Mode - Generate 4 ZIMSEC prompts (A, B, C, D)"""
         try:
             registration = get_user_registration(user_id)
             user_name = registration['name'] if registration else "Student"
             
-            message = f"""📝 Section A: Free Choice Essays (30 marks)
-
-👤 Student: {user_name}
-
-Choose your essay type:"""
-
-            section_a_types = self.english_modules["essay_writing"]["section_a_types"]
-            buttons = []
+            # Generate 4 ZIMSEC-style prompts
+            prompts = self._generate_zimsec_essay_prompts()
             
-            for essay_type in section_a_types:
-                buttons.append({
-                    "text": f"{essay_type.title()} Essay",
-                    "callback_data": f"english_essay_a_{essay_type}"
-                })
+            message = f"""📝 **SECTION A (30 marks)**
+
+Write a composition (300–600 words) on ONE of the following topics. Choose ONLY ONE.
+
+**(A)** {prompts['A']}
+
+**(B)** {prompts['B']} 
+
+**(C)** {prompts['C']}
+
+**(D)** {prompts['D']}"""
+
+            buttons = [
+                {"text": "A", "callback_data": "essay_choice_A"},
+                {"text": "B", "callback_data": "essay_choice_B"},
+                {"text": "C", "callback_data": "essay_choice_C"},
+                {"text": "D", "callback_data": "essay_choice_D"},
+                {"text": "🔙 Back", "callback_data": "english_essay_writing"}
+            ]
             
-            buttons.append({"text": "🔙 Back to Essays", "callback_data": "english_essay_writing"})
+            # Save prompts to session for later use
+            from database.session_db import save_user_session
+            import json
+            session_data = {
+                'session_type': 'essay_free_response',
+                'prompts': json.dumps(prompts),
+                'user_name': user_name
+            }
+            save_user_session(user_id, session_data)
             
             self.whatsapp_service.send_interactive_message(user_id, message, buttons)
 
         except Exception as e:
-            logger.error(f"Error in essay section A for {user_id}: {e}")
-            self.whatsapp_service.send_message(user_id, "❌ Error loading Section A options.")
+            logger.error(f"Error in essay free response for {user_id}: {e}")
+            self.whatsapp_service.send_message(user_id, "❌ Error loading essay prompts. Please try again.")
 
-    def handle_essay_section_b(self, user_id: str):
-        """Handle Section B guided composition selection"""
+    def handle_essay_guided_composition(self, user_id: str):
+        """Handle Guided Composition Mode - Generate 1 ZIMSEC prompt with guidance"""
         try:
             registration = get_user_registration(user_id)
             user_name = registration['name'] if registration else "Student"
             
-            message = f"""📋 Section B: Guided Composition (20 marks)
-
-👤 Student: {user_name}
-
-Choose your format:"""
-
-            section_b_types = self.english_modules["essay_writing"]["section_b_types"]
-            buttons = []
+            # Generate 1 ZIMSEC-style prompt
+            prompt_data = self._generate_single_zimsec_prompt()
             
-            for format_type in section_b_types:
-                buttons.append({
-                    "text": f"{format_type.title()} Writing",
-                    "callback_data": f"english_essay_b_{format_type}"
-                })
+            message = f"""📝 **SECTION A (30 marks)**
+
+Write a composition (300–600 words) on the following topic:
+
+**{prompt_data['prompt']}**
+
+*Essay Type: {prompt_data['type'].title()}*"""
+
+            buttons = [
+                {"text": "📝 Start Writing", "callback_data": "essay_start_writing"},
+                {"text": "💡 Hint", "callback_data": "essay_show_hint"},
+                {"text": "🔙 Back", "callback_data": "english_essay_writing"}
+            ]
             
-            buttons.append({"text": "🔙 Back to Essays", "callback_data": "english_essay_writing"})
+            # Save prompt to session for later use
+            from database.session_db import save_user_session
+            import json
+            session_data = {
+                'session_type': 'essay_guided_composition',
+                'prompt_data': json.dumps(prompt_data),
+                'user_name': user_name
+            }
+            save_user_session(user_id, session_data)
             
             self.whatsapp_service.send_interactive_message(user_id, message, buttons)
 
         except Exception as e:
-            logger.error(f"Error in essay section B for {user_id}: {e}")
-            self.whatsapp_service.send_message(user_id, "❌ Error loading Section B options.")
+            logger.error(f"Error in essay guided composition for {user_id}: {e}")
+            self.whatsapp_service.send_message(user_id, "❌ Error loading guided composition. Please try again.")
+
+    def handle_essay_choice(self, user_id: str, choice: str):
+        """Handle essay choice selection (A, B, C, D)"""
+        try:
+            from database.session_db import get_user_session
+            import json
+            
+            session = get_user_session(user_id)
+            if not session or session.get('session_type') != 'essay_free_response':
+                self.whatsapp_service.send_message(user_id, "❌ No active essay session found.")
+                return
+            
+            prompts = json.loads(session.get('prompts', '{}'))
+            user_name = session.get('user_name', 'Student')
+            selected_prompt = prompts.get(choice, 'Prompt not found')
+            
+            message = f"""📝 **You selected option {choice}:**
+
+{selected_prompt}
+
+Now write your composition between **300–600 words** in the box below. After you submit, NerdX will mark your work for you.
+
+Please type your essay:"""
+
+            self.whatsapp_service.send_message(user_id, message)
+            
+            # Update session to await essay submission
+            from database.session_db import save_user_session
+            session_data = {
+                'session_type': 'essay_writing',
+                'selected_choice': choice,
+                'selected_prompt': selected_prompt,
+                'user_name': user_name,
+                'awaiting_essay': True
+            }
+            save_user_session(user_id, session_data)
+            
+        except Exception as e:
+            logger.error(f"Error in essay choice for {user_id}: {e}")
+            self.whatsapp_service.send_message(user_id, "❌ Error processing choice. Please try again.")
+
+    def handle_essay_start_writing(self, user_id: str):
+        """Handle start writing for guided composition"""
+        try:
+            from database.session_db import get_user_session, save_user_session
+            import json
+            
+            session = get_user_session(user_id)
+            if not session or session.get('session_type') != 'essay_guided_composition':
+                self.whatsapp_service.send_message(user_id, "❌ No active guided composition session found.")
+                return
+            
+            prompt_data = json.loads(session.get('prompt_data', '{}'))
+            user_name = session.get('user_name', 'Student')
+            
+            message = f"""📝 **Your Essay Topic:**
+
+{prompt_data.get('prompt', 'No prompt found')}
+
+Please start writing your composition (300–600 words) based on the question provided. Follow the format in the ZIMSEC paper.
+
+Type your essay below:"""
+
+            self.whatsapp_service.send_message(user_id, message)
+            
+            # Update session to await essay submission
+            session_data = {
+                'session_type': 'essay_writing',
+                'prompt_data': json.dumps(prompt_data),
+                'user_name': user_name,
+                'awaiting_essay': True
+            }
+            save_user_session(user_id, session_data)
+            
+        except Exception as e:
+            logger.error(f"Error starting essay writing for {user_id}: {e}")
+            self.whatsapp_service.send_message(user_id, "❌ Error starting essay. Please try again.")
+
+    def handle_essay_show_hint(self, user_id: str):
+        """Show writing hints based on essay type"""
+        try:
+            from database.session_db import get_user_session
+            import json
+            
+            session = get_user_session(user_id)
+            if not session or session.get('session_type') != 'essay_guided_composition':
+                self.whatsapp_service.send_message(user_id, "❌ No active guided composition session found.")
+                return
+            
+            prompt_data = json.loads(session.get('prompt_data', '{}'))
+            essay_type = prompt_data.get('type', 'narrative').lower()
+            
+            hints = self._get_essay_writing_hints(essay_type)
+            
+            message = f"""💡 **Writing Guide for {essay_type.title()} Essay:**
+
+{hints}"""
+
+            buttons = [
+                {"text": "📝 Continue Writing", "callback_data": "essay_start_writing"},
+                {"text": "🔙 Back", "callback_data": "essay_guided_composition"}
+            ]
+            
+            self.whatsapp_service.send_interactive_message(user_id, message, buttons)
+            
+        except Exception as e:
+            logger.error(f"Error showing essay hints for {user_id}: {e}")
+            self.whatsapp_service.send_message(user_id, "❌ Error loading hints. Please try again.")
+
+    def _generate_zimsec_essay_prompts(self):
+        """Generate 4 ZIMSEC-style essay prompts (A, B, C, D)"""
+        import random
+        
+        # ZIMSEC-style prompts covering different essay types
+        narrative_prompts = [
+            "Write a story that begins with: 'The day I thought would never end finally came to a close...'",
+            "Describe an experience where you had to make a difficult choice that changed your life.",
+            "Write about a time when you discovered something unexpected about yourself or someone close to you.",
+            "Tell the story of a journey that taught you an important lesson about life."
+        ]
+        
+        descriptive_prompts = [
+            "Describe a place in Zimbabwe that holds special significance to you and explain why it is important.",
+            "Write a detailed account of a traditional ceremony or celebration in your community.",
+            "Describe the effects of technology on modern Zimbabwean society.",
+            "Write about the challenges facing young people in Zimbabwe today and suggest possible solutions."
+        ]
+        
+        letter_prompts = [
+            "Write a letter to your local councillor suggesting ways to improve facilities in your area.",
+            "Write a letter to a friend who lives abroad, describing recent changes in Zimbabwe.",
+            "Write a letter to the editor of a newspaper expressing your views on environmental conservation.",
+            "Write a letter to your former primary school teacher, telling them about your experiences in secondary school."
+        ]
+        
+        article_prompts = [
+            "Write an article for your school magazine about the importance of preserving Zimbabwean culture.",
+            "Write an article discussing the benefits and challenges of online learning.",
+            "Write an article about a successful young entrepreneur in Zimbabwe who inspires you.",
+            "Write an article on the role of sports in promoting national unity in Zimbabwe."
+        ]
+        
+        speech_prompts = [
+            "Write a speech to be delivered at your school's speech day on the topic: 'Education is the key to success'.",
+            "Prepare a speech for your community on the importance of caring for the elderly.",
+            "Write a speech to motivate your fellow students to work hard despite challenges.",
+            "Prepare a speech on environmental conservation to be delivered at a youth conference."
+        ]
+        
+        all_prompts = narrative_prompts + descriptive_prompts + letter_prompts + article_prompts + speech_prompts
+        selected_prompts = random.sample(all_prompts, 4)
+        
+        return {
+            'A': selected_prompts[0],
+            'B': selected_prompts[1], 
+            'C': selected_prompts[2],
+            'D': selected_prompts[3]
+        }
+
+    def _generate_single_zimsec_prompt(self):
+        """Generate a single ZIMSEC-style prompt with type information"""
+        import random
+        
+        prompt_types = [
+            {'type': 'narrative', 'prompts': [
+                "Write a story that begins with: 'The day I thought would never end finally came to a close...'",
+                "Describe an experience where you had to make a difficult choice that changed your life.",
+                "Write about a time when you discovered something unexpected about yourself or someone close to you."
+            ]},
+            {'type': 'letter', 'prompts': [
+                "Write a letter to your local councillor suggesting ways to improve facilities in your area.",
+                "Write a letter to a friend who lives abroad, describing recent changes in Zimbabwe.",
+                "Write a letter to the editor of a newspaper expressing your views on environmental conservation."
+            ]},
+            {'type': 'article', 'prompts': [
+                "Write an article for your school magazine about the importance of preserving Zimbabwean culture.",
+                "Write an article discussing the benefits and challenges of online learning.",
+                "Write an article about a successful young entrepreneur in Zimbabwe who inspires you."
+            ]},
+            {'type': 'speech', 'prompts': [
+                "Write a speech to be delivered at your school's speech day on the topic: 'Education is the key to success'.",
+                "Prepare a speech for your community on the importance of caring for the elderly.",
+                "Write a speech to motivate your fellow students to work hard despite challenges."
+            ]},
+            {'type': 'report', 'prompts': [
+                "Write a report on the state of library facilities in your school and suggest improvements.",
+                "Prepare a report on the impact of social media on teenagers in Zimbabwe.",
+                "Write a report on environmental challenges in your community and recommend solutions."
+            ]}
+        ]
+        
+        selected_type = random.choice(prompt_types)
+        selected_prompt = random.choice(selected_type['prompts'])
+        
+        return {
+            'type': selected_type['type'],
+            'prompt': selected_prompt
+        }
+
+    def _get_essay_writing_hints(self, essay_type):
+        """Get structured writing hints for different essay types"""
+        hints = {
+            'letter': """📮 **Letter Format:**
+• Sender's address (top right)
+• Date
+• Recipient's address (left side)  
+• Salutation (Dear Sir/Madam, Dear...)
+• Body paragraphs with clear points
+• Appropriate closing (Yours faithfully/sincerely)
+• Signature and printed name""",
+            
+            'report': """📊 **Report Structure:**
+• Title (clear and specific)
+• Introduction (purpose and scope)
+• Findings/Main body (organized sections)
+• Conclusion with recommendations
+• Use formal, objective language
+• Include headings and subheadings""",
+            
+            'speech': """🎤 **Speech Format:**
+• Greeting and acknowledgments
+• Introduction (capture attention)
+• Main body (3-4 key points)
+• Conclusion (call to action/memorable ending)
+• Use engaging, persuasive language
+• Include rhetorical questions""",
+            
+            'article': """📰 **Article Structure:**
+• Catchy headline
+• Introduction (hook the reader)
+• Main points in logical order
+• Supporting evidence/examples
+• Conclusion that reinforces main message
+• Use clear, engaging language""",
+            
+            'narrative': """📖 **Narrative Structure:**
+• Introduction (set scene, introduce characters)
+• Build-up (develop tension/conflict)
+• Climax (turning point/main event)
+• Resolution/Conclusion
+• Use descriptive language and dialogue
+• Show, don't just tell"""
+        }
+        
+        return hints.get(essay_type, "Focus on clear structure, good grammar, and staying within 300-600 words.")
+
+    def handle_essay_submission(self, user_id: str, essay_text: str):
+        """Handle essay submission and generate PDF marking report"""
+        try:
+            from database.session_db import get_user_session, clear_user_session
+            from database.external_db import deduct_credits
+            import json
+            
+            session = get_user_session(user_id)
+            if not session or session.get('session_type') != 'essay_writing':
+                self.whatsapp_service.send_message(user_id, "❌ No active essay session found.")
+                return
+            
+            user_name = session.get('user_name', 'Student')
+            
+            # Check word count
+            word_count = len(essay_text.split())
+            if word_count < 50:
+                self.whatsapp_service.send_message(user_id, f"❌ Essay too short! You wrote {word_count} words. Please write at least 50 words for proper evaluation.")
+                return
+            
+            # Deduct credits before processing
+            if not deduct_credits(user_id, 3, "english_essay", "Essay writing and marking"):
+                self.whatsapp_service.send_message(user_id, "❌ Error processing credits. Please try again.")
+                return
+            
+            # Send processing message
+            self.whatsapp_service.send_message(user_id, "📝 Processing your essay...\n⏳ Generating marking report (this may take a moment)...")
+            
+            # Generate marking and create PDF
+            marking_result = self._generate_essay_marking(essay_text, user_name, user_id)
+            
+            if marking_result:
+                # Send the PDF
+                self.whatsapp_service.send_document(user_id, marking_result['pdf_path'], "📄 Your Essay Marking Report")
+                
+                # Send summary message
+                message = f"""✅ **Essay Marked Successfully!**
+
+📊 **Your Score:** {marking_result['score']}/30
+📝 **Word Count:** {word_count} words
+📈 **Grade:** {marking_result['grade']}
+
+{marking_result['summary_feedback']}
+
+🎯 Keep practicing to improve your writing skills!"""
+
+                buttons = [
+                    {"text": "✍️ Write Another Essay", "callback_data": "english_essay_writing"},
+                    {"text": "📚 Back to English", "callback_data": "english_menu"}
+                ]
+                
+                self.whatsapp_service.send_interactive_message(user_id, message, buttons)
+            else:
+                self.whatsapp_service.send_message(user_id, "❌ Error processing essay. Please try again later.")
+            
+            # Clear session
+            clear_user_session(user_id)
+            
+        except Exception as e:
+            logger.error(f"Error handling essay submission for {user_id}: {e}")
+            self.whatsapp_service.send_message(user_id, "❌ Error processing essay. Please try again.")
+
+    def _generate_essay_marking(self, essay_text: str, user_name: str, user_id: str):
+        """Generate essay marking using Gemini AI and create PDF report"""
+        try:
+            import json
+            from reportlab.lib.pagesizes import A4
+            from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+            from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+            from reportlab.lib.colors import red, black
+            from reportlab.lib.units import inch
+            import os
+            from datetime import datetime
+            
+            # Use Gemini AI to mark the essay
+            marking_prompt = f"""
+You are a ZIMSEC O Level English teacher marking a composition. Please evaluate this essay and provide:
+
+1. A mark out of 30 (following ZIMSEC marking criteria)
+2. Brief supportive feedback (2-3 sentences, encouraging tone)
+3. Specific grammar/vocabulary corrections with line references
+4. An improved version of the essay
+5. A grade (A, B, C, D, E based on the mark)
+
+Essay to mark:
+{essay_text}
+
+Please respond in this JSON format:
+{{
+    "score": 17,
+    "grade": "C",
+    "summary_feedback": "Well attempted essay with good ideas...",
+    "corrections": [
+        {{"line": 1, "error": "incorrect word", "correction": "correct word", "type": "grammar"}},
+        {{"line": 3, "error": "wrong spelling", "correction": "correct spelling", "type": "spelling"}}
+    ],
+    "improved_essay": "The corrected full essay text here..."
+}}
+
+Remember: Be encouraging and supportive - these are O Level students learning.
+"""
+
+            # Get marking from Gemini
+            marking_response = self.english_service.generate_essay_marking(marking_prompt)
+            
+            if not marking_response:
+                return None
+            
+            marking_data = json.loads(marking_response)
+            
+            # Create PDF report
+            timestamp = int(datetime.now().timestamp())
+            pdf_filename = f"essay_marked_{user_id}_{timestamp}.pdf"
+            pdf_path = os.path.join("static", "pdfs", pdf_filename)
+            
+            # Ensure directory exists
+            os.makedirs(os.path.dirname(pdf_path), exist_ok=True)
+            
+            doc = SimpleDocTemplate(pdf_path, pagesize=A4)
+            styles = getSampleStyleSheet()
+            story = []
+            
+            # Create custom styles
+            title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], textColor=red, spaceAfter=20)
+            red_style = ParagraphStyle('RedText', parent=styles['Normal'], textColor=red)
+            
+            # Header
+            story.append(Paragraph("ZIMSEC English Essay Marking Report", title_style))
+            story.append(Paragraph(f"<b>Student:</b> {user_name}", styles['Normal']))
+            story.append(Paragraph(f"<b>Date:</b> {datetime.now().strftime('%d/%m/%Y')}", styles['Normal']))
+            story.append(Paragraph(f"<font color='red'><b>Mark: {marking_data['score']}/30</b></font>", styles['Normal']))
+            story.append(Paragraph(f"<font color='red'><i>{self._get_teacher_remark(marking_data['score'])}</i></font>", styles['Normal']))
+            story.append(Spacer(1, 20))
+            
+            # Original essay with corrections
+            story.append(Paragraph("<b>Original Essay with Corrections:</b>", styles['Heading2']))
+            corrected_text = self._apply_corrections_to_text(essay_text, marking_data.get('corrections', []))
+            story.append(Paragraph(corrected_text, styles['Normal']))
+            story.append(Spacer(1, 20))
+            
+            # Teacher feedback
+            story.append(Paragraph("<b>Teacher Feedback:</b>", styles['Heading2']))
+            story.append(Paragraph(marking_data.get('summary_feedback', 'Good effort!'), styles['Normal']))
+            story.append(Spacer(1, 20))
+            
+            # Improved version
+            story.append(Paragraph("<b>Improved Version:</b>", styles['Heading2']))
+            story.append(Paragraph(marking_data.get('improved_essay', essay_text), styles['Normal']))
+            
+            doc.build(story)
+            
+            return {
+                'score': marking_data['score'],
+                'grade': marking_data['grade'],
+                'summary_feedback': marking_data['summary_feedback'],
+                'pdf_path': pdf_path
+            }
+            
+        except Exception as e:
+            logger.error(f"Error generating essay marking: {e}")
+            return None
+
+    def _get_teacher_remark(self, score):
+        """Get teacher remark based on score"""
+        if score >= 25:
+            return "Excellent"
+        elif score >= 20:
+            return "Very Good"
+        elif score >= 15:
+            return "Good"
+        elif score >= 10:
+            return "Fair"
+        else:
+            return "Needs Improvement"
+
+    def _apply_corrections_to_text(self, text, corrections):
+        """Apply corrections to text with red underlines"""
+        corrected_text = text
+        for correction in corrections:
+            error = correction.get('error', '')
+            fix = correction.get('correction', '')
+            if error and fix:
+                corrected_text = corrected_text.replace(error, f"<u><font color='red'>{error}</font></u> <font color='red'>[{fix}]</font>")
+        return corrected_text
 
     def handle_grammar_usage(self, user_id: str):
         """Handle Grammar and Usage - one question at a time"""

@@ -681,6 +681,31 @@ Her story demonstrates that young Zimbabweans can successfully blend tradition w
             logger.error(f"Error marking essay: {str(e)}")
             return self._get_fallback_essay_marking()
 
+    def generate_essay_marking(self, marking_prompt: str) -> str:
+        """Simple essay marking method for new essay system"""
+        try:
+            response = self.client.models.generate_content(
+                model=self.model,
+                contents=[
+                    types.Content(role="user", parts=[types.Part(text=marking_prompt)])
+                ],
+                config=types.GenerateContentConfig(
+                    system_instruction="You are a senior ZIMSEC examiner with 20+ years experience marking O-Level essays. Be fair but encouraging.",
+                    response_mime_type="application/json",
+                    temperature=0.3,
+                    max_output_tokens=2000
+                )
+            )
+            
+            if response.text:
+                return response.text
+                
+            return ""
+            
+        except Exception as e:
+            logger.error(f"Error generating essay marking: {str(e)}")
+            return ""
+
     def generate_essay_prompt(self, section: str, essay_type: str, form_level: int) -> Dict:
         """Generate essay prompts for Section A (Free Choice) or Section B (Guided)"""
         

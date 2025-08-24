@@ -734,10 +734,17 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             english_handler.handle_comprehension_reset(user_id)
         elif selection_id == 'english_essay_writing':
             english_handler.handle_essay_writing(user_id)
-        elif selection_id == 'english_essay_section_a':
-            english_handler.handle_essay_section_a(user_id)
-        elif selection_id == 'english_essay_section_b':
-            english_handler.handle_essay_section_b(user_id)
+        elif selection_id == 'essay_free_response':
+            english_handler.handle_essay_free_response(user_id)
+        elif selection_id == 'essay_guided_composition':
+            english_handler.handle_essay_guided_composition(user_id)
+        elif selection_id.startswith('essay_choice_'):
+            choice = selection_id.replace('essay_choice_', '')
+            english_handler.handle_essay_choice(user_id, choice)
+        elif selection_id == 'essay_start_writing':
+            english_handler.handle_essay_start_writing(user_id)
+        elif selection_id == 'essay_show_hint':
+            english_handler.handle_essay_show_hint(user_id)
         elif selection_id == 'english_grammar_usage':
             english_handler.handle_grammar_usage(user_id)
         elif selection_id == 'english_vocabulary_building':
@@ -751,12 +758,6 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         elif selection_id.startswith('english_comprehension_'):
             theme = selection_id.replace('english_comprehension_', '').replace('_', ' ').title()
             english_handler.handle_comprehension_generation(user_id, theme)
-        elif selection_id.startswith('english_essay_a_'):
-            essay_type = selection_id.replace('english_essay_a_', '')
-            english_handler.handle_essay_prompt_generation(user_id, 'A', essay_type)
-        elif selection_id.startswith('english_essay_b_'):
-            format_type = selection_id.replace('english_essay_b_', '')
-            english_handler.handle_essay_prompt_generation(user_id, 'B', format_type)
         
         elif selection_id == 'buy_credits':
             show_credit_packages(user_id)
