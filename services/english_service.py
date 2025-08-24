@@ -42,22 +42,33 @@ class EnglishService:
         logger.info("Enhanced ZIMSEC English Service initialized with Gemini AI")
 
     def generate_grammar_question(self) -> Optional[Dict]:
-        """Generate a single grammar question"""
+        """Generate diverse grammar questions covering comprehensive areas"""
         try:
-            prompt = f"""Generate ONE ZIMSEC O-Level Grammar and Usage question.
-            
+            prompt = f"""Generate ONE ZIMSEC O-Level Grammar and Usage exercise covering diverse grammar topics.
+
+**MUST cover ONE of these specific areas:**
+
+**Parts of Speech:** Exercises identifying and using nouns, pronouns, verbs, adjectives, adverbs, prepositions, conjunctions, and interjections correctly.
+
+**Verb Tenses:** Practice with simple, continuous, perfect, and perfect continuous tenses. Include irregular verbs and conditional sentences (if clauses).
+
+**Sentence Structure:** Exercises on simple, compound, and complex sentences - identifying types, combining sentences, or restructuring.
+
 Requirements:
-- Test basic grammar: tenses, subject-verb agreement, punctuation, sentence structure
-- Use simple Zimbabwean names and contexts  
-- Suitable for Form 3-4 students (moderate difficulty)
+- Focus on ONE specific area from above (randomly choose)
+- Use Zimbabwean names and familiar contexts
+- Form 3-4 student level (moderate difficulty)
+- Include clear instructions for what students should do
+- Provide specific correct answers
 - Keep explanations SHORT (1-2 sentences max)
 
 Return ONLY a JSON object:
 {{
-    "question": "The grammar question text",
-    "instructions": "What the student should do",
-    "answer": "The correct answer", 
-    "explanation": "Short explanation (max 30 words)"
+    "question": "The complete grammar exercise with clear context",
+    "instructions": "Specific task (e.g., 'Identify the adverbs', 'Change to past perfect continuous', 'Combine into one complex sentence')",
+    "answer": "The complete correct answer", 
+    "explanation": "Brief explanation of the grammar rule (max 30 words)",
+    "topic_area": "One of: Parts of Speech, Verb Tenses, Sentence Structure"
 }}"""
 
             logger.info("Generating grammar question using Gemini AI")
@@ -92,7 +103,7 @@ Return ONLY a JSON object:
                     question_data = json.loads(clean_text)
                     
                     # Validate required fields
-                    required_fields = ['question', 'answer', 'explanation']
+                    required_fields = ['question', 'instructions', 'answer', 'explanation', 'topic_area']
                     if not all(field in question_data for field in required_fields):
                         logger.error(f"Missing required fields in grammar question: {question_data}")
                         return None
@@ -710,10 +721,12 @@ Her story demonstrates that young Zimbabweans can successfully blend tradition w
                 candidate = response.candidates[0]
                 if hasattr(candidate, 'content') and candidate.content:
                     content = candidate.content
-                    if hasattr(content, 'parts') and content.parts:
-                        text_content = content.parts[0].text
-                        logger.info(f"Got text from candidates: {text_content[:200]}...")
-                        return text_content
+                    if hasattr(content, 'parts') and content.parts and len(content.parts) > 0:
+                        part = content.parts[0]
+                        if hasattr(part, 'text') and part.text:
+                            text_content = part.text
+                            logger.info(f"Got text from candidates: {text_content[:200]}...")
+                            return text_content
                         
             logger.error("No text content found in response")
             logger.error(f"Full response object: {response}")

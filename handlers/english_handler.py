@@ -47,16 +47,6 @@ class EnglishHandler:
                 "section_a_types": ["narrative", "descriptive", "argumentative", "discursive"],
                 "section_b_types": ["letter", "report", "article", "speech", "memo"]
             },
-            "language_exercises": {
-                "title": "🔤 Language Exercises",
-                "description": "Grammar, vocabulary, and language skills practice",
-                "credit_cost": 2,
-                "topics": [
-                    "Parts of Speech", "Verb Tenses", "Subject-Verb Agreement",
-                    "Punctuation", "Sentence Structure", "Active and Passive Voice",
-                    "Direct and Indirect Speech", "Vocabulary in Context"
-                ]
-            }
         }
         
         logger.info("ZIMSEC English Handler initialized with comprehensive modules")
@@ -82,9 +72,6 @@ Reading passages with cultural context
 
 ✍️ **Essay Writing** (4 credits)
 Section A & B with AI-powered marking
-
-🔤 **Language Exercises** (2 credits)
-Grammar, vocabulary, and language skills
 
 💰 Your Credits: {credits}
 
