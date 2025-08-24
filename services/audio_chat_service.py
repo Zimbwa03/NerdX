@@ -54,6 +54,10 @@ class AudioChatService:
     """Audio Chat service for WhatsApp bot with multi-modal support"""
     
     def __init__(self):
+        # Initialize threading lock for single audio generation
+        self.audio_generation_lock = threading.Lock()
+        self.is_generating_audio = False
+        
         # Initialize Gemini AI client for audio generation
         self.gemini_client = None
         if GEMINI_API_KEY and genai:
@@ -211,12 +215,22 @@ class AudioChatService:
             return "I encountered an error while processing your request. Please try again."
 
     def generate_audio(self, text: str, voice_type: str = 'female') -> Optional[str]:
-        """Generate audio from text using Gemini AI TTS"""
+        """Generate audio from text using Gemini AI TTS - SINGLE AUDIO AT A TIME"""
+        # Check if audio generation is already in progress
+        with self.audio_generation_lock:
+            if self.is_generating_audio:
+                logger.warning("Audio generation already in progress - skipping request")
+                return None
+            
+            self.is_generating_audio = True
+            
         try:
             if not self.gemini_client:
                 logger.error("Gemini AI client not configured")
                 return None
 
+            logger.info(f"Starting audio generation for text: {text[:50]}...")
+            
             # Get voice name for Gemini TTS
             voice_name = self.gemini_voices.get(voice_type, self.gemini_voices['female'])
             
@@ -294,6 +308,12 @@ class AudioChatService:
             logger.error(f"Error generating audio with Gemini AI: {e}")
             logger.error(f"Text being converted: {text[:100]}...")
             return None
+        
+        finally:
+            # Always release the lock
+            with self.audio_generation_lock:
+                self.is_generating_audio = False
+                logger.info("Audio generation completed - ready for next request")
 
     def process_image(self, file_path: str) -> str:
         """Extract text from image using OCR"""
@@ -476,6 +496,11 @@ Choose your preferred voice and start chatting!"""
                     user_name = user_data.get('name', '')
             except:
                 pass
+            
+            # Check if audio generation is already in progress
+            if self.is_generating_audio:
+                whatsapp_service.send_message(user_id, "⏳ Another audio is being generated, please wait a moment...")
+                return
             
             # Show processing message
             whatsapp_service.send_message(user_id, "🎵 Generating your audio response...")
