@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Audio Chat Service - Multi-Modal AI Assistant with Audio Responses
-Integrated for WhatsApp Bot with DeepSeek AI and ElevenLabs TTS
+Integrated for WhatsApp Bot with DeepSeek AI and Gemini AI TTS
 """
 
 import os
@@ -35,9 +35,17 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+# Import Google Gemini AI for audio generation
+try:
+    from google import genai
+    from google.genai import types
+except ImportError:
+    genai = None
+    types = None
+
 # Environment variables
 DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY')
-ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
 # Task storage (in production, use Redis or database)
 audio_tasks = {}
@@ -46,9 +54,19 @@ class AudioChatService:
     """Audio Chat service for WhatsApp bot with multi-modal support"""
     
     def __init__(self):
-        self.voice_ids = {
-            'female': 'EXAVITQu4vr4xnSDxMaL',  # Bella
-            'male': 'ErXwobaYiN019PkySvjV'     # Antoni
+        # Initialize Gemini AI client for audio generation
+        self.gemini_client = None
+        if GEMINI_API_KEY and genai:
+            try:
+                self.gemini_client = genai.Client(api_key=GEMINI_API_KEY)
+                logger.info("Gemini AI client initialized for audio generation")
+            except Exception as e:
+                logger.error(f"Failed to initialize Gemini AI client: {e}")
+        
+        # Gemini TTS voice configurations
+        self.gemini_voices = {
+            'female': 'Kore',   # Female voice
+            'male': 'Antoni'    # Male voice (assuming Antoni is available)
         }
         
         # Create temp directory for audio files
@@ -193,48 +211,51 @@ class AudioChatService:
             return "I encountered an error while processing your request. Please try again."
 
     def generate_audio(self, text: str, voice_type: str = 'female') -> Optional[str]:
-        """Generate audio from text using ElevenLabs"""
+        """Generate audio from text using Gemini AI TTS"""
         try:
-            if not ELEVENLABS_API_KEY:
-                logger.error("ElevenLabs API key not configured")
+            if not self.gemini_client:
+                logger.error("Gemini AI client not configured")
                 return None
 
-            voice_id = self.voice_ids.get(voice_type, self.voice_ids['female'])
+            # Get voice name for Gemini TTS
+            voice_name = self.gemini_voices.get(voice_type, self.gemini_voices['female'])
+            
+            # Generate audio using Gemini 2.5 Flash TTS
+            response = self.gemini_client.models.generate_content(
+                model="gemini-2.5-flash-preview-tts",
+                contents=text,
+                config=types.GenerateContentConfig(
+                    response_modalities=["AUDIO"],
+                    speech_config=types.SpeechConfig(
+                        voice_config=types.VoiceConfig(
+                            prebuilt_voice_config=types.PrebuiltVoiceConfig(
+                                voice_name=voice_name
+                            )
+                        )
+                    )
+                )
+            )
 
-            url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+            # Extract audio data from response
+            if response.candidates and response.candidates[0].content.parts:
+                for part in response.candidates[0].content.parts:
+                    if part.inline_data and part.inline_data.data:
+                        # Save audio to temporary file
+                        audio_filename = f"audio_{uuid.uuid4().hex}.wav"
+                        audio_path = os.path.join(self.audio_dir, audio_filename)
 
-            headers = {
-                'Accept': 'audio/mpeg',
-                'Content-Type': 'application/json',
-                'xi-api-key': ELEVENLABS_API_KEY
-            }
+                        # Save the raw audio data (PCM format from Gemini)
+                        with open(audio_path, 'wb') as f:
+                            f.write(part.inline_data.data)
 
-            data = {
-                'text': text,
-                'model_id': 'eleven_monolingual_v1',
-                'voice_settings': {
-                    'stability': 0.5,
-                    'similarity_boost': 0.5
-                }
-            }
-
-            response = requests.post(url, json=data, headers=headers, timeout=30)
-
-            if response.status_code == 200:
-                # Save audio to temporary file
-                audio_filename = f"audio_{uuid.uuid4().hex}.mp3"
-                audio_path = os.path.join(self.audio_dir, audio_filename)
-
-                with open(audio_path, 'wb') as f:
-                    f.write(response.content)
-
-                return audio_path
-            else:
-                logger.error(f"ElevenLabs API error: {response.status_code} - {response.text}")
-                return None
+                        logger.info(f"Audio generated successfully with Gemini AI: {audio_filename}")
+                        return audio_path
+            
+            logger.error("No audio data received from Gemini AI")
+            return None
 
         except Exception as e:
-            logger.error(f"Error generating audio: {e}")
+            logger.error(f"Error generating audio with Gemini AI: {e}")
             return None
 
     def process_image(self, file_path: str) -> str:
