@@ -1194,10 +1194,6 @@ Type your essay below:"""
                 # Send status update
                 self.whatsapp_service.send_message(user_id, "📄 Sending your detailed marking report...")
                 
-                # Add small delay to ensure proper sequencing
-                import time
-                time.sleep(2)
-                
                 # Send the PDF document first
                 pdf_sent = self.whatsapp_service.send_document(
                     user_id, 
@@ -1205,9 +1201,6 @@ Type your essay below:"""
                     "📄 Your ZIMSEC Essay Marking Report", 
                     f"ZIMSEC_Essay_Report_{user_name}.pdf"
                 )
-                
-                # Wait for PDF to be processed
-                time.sleep(3)
                 
                 if pdf_sent:
                     # Send comprehensive feedback summary after PDF
@@ -1227,7 +1220,14 @@ Type your essay below:"""
 
 🎯 The PDF shows your original essay with all errors marked in red with corrections!"""
                 else:
-                    # Fallback if PDF sending fails
+                    # Enhanced fallback with direct text feedback
+                    corrections_list = marking_result.get('specific_errors', [])
+                    corrections_display = ""
+                    if corrections_list:
+                        corrections_display = "\n".join([f"• {error.get('wrong', '')} → {error.get('correct', '')} ({error.get('type', 'error')})" for error in corrections_list[:5]])
+                    else:
+                        corrections_display = "No major corrections needed."
+                    
                     feedback_message = f"""✅ **Essay Marked Successfully!**
 
 📊 **Your Score:** {marking_result['score']}/30
@@ -1237,10 +1237,10 @@ Type your essay below:"""
 **📝 Teacher Feedback:**
 {marking_result['summary_feedback']}
 
-**🔍 Key Corrections:**
-{marking_result.get('corrections_text', 'No major corrections needed.')}
+**🔍 Key Corrections Found:**
+{corrections_display}
 
-📄 **Download Your PDF Report:** {marking_result['pdf_url']}
+⚠️ **PDF Upload Issue** - We're having trouble sending your detailed report right now. Your essay has been marked and scored above.
 
 🎯 Keep practicing to improve your writing skills!"""
 

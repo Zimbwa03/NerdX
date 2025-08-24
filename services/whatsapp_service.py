@@ -77,7 +77,7 @@ class WhatsAppService:
                     'messaging_product': (None, 'whatsapp')
                 }
                 
-                upload_response = requests.post(upload_url, headers=headers, files=files, timeout=60)
+                upload_response = requests.post(upload_url, headers=headers, files=files, timeout=120)
                 
                 if upload_response.status_code != 200:
                     logger.error(f"Failed to upload audio: {upload_response.status_code} - {upload_response.text}")
@@ -545,24 +545,47 @@ class WhatsAppService:
                 'Authorization': f'Bearer {self.access_token}'
             }
             
-            with open(file_path, 'rb') as doc_file:
-                files = {
-                    'file': (display_filename, doc_file, mime_type),
-                    'type': (None, 'document'),
-                    'messaging_product': (None, 'whatsapp')
-                }
+            # Add retry logic for file uploads
+            max_retries = 3
+            retry_count = 0
+            media_id = None
+            
+            while retry_count < max_retries and media_id is None:
+                try:
+                    with open(file_path, 'rb') as doc_file:
+                        files = {
+                            'file': (display_filename, doc_file, mime_type),
+                            'type': (None, 'document'),
+                            'messaging_product': (None, 'whatsapp')
+                        }
+                        
+                        logger.info(f"Uploading document (attempt {retry_count + 1}/{max_retries})...")
+                        upload_response = requests.post(upload_url, headers=headers, files=files, timeout=120)
+                        
+                        if upload_response.status_code == 200:
+                            media_id = upload_response.json().get('id')
+                            if media_id:
+                                logger.info(f"Document uploaded successfully: {media_id}")
+                                break
+                            else:
+                                logger.error("No media ID returned from document upload")
+                        else:
+                            logger.error(f"Upload failed (attempt {retry_count + 1}): {upload_response.status_code} - {upload_response.text}")
+                            
+                except requests.exceptions.Timeout:
+                    logger.error(f"Upload timeout (attempt {retry_count + 1})")
+                except Exception as e:
+                    logger.error(f"Upload error (attempt {retry_count + 1}): {str(e)}")
                 
-                upload_response = requests.post(upload_url, headers=headers, files=files, timeout=60)
-                
-                if upload_response.status_code != 200:
-                    logger.error(f"Failed to upload document: {upload_response.status_code} - {upload_response.text}")
-                    return False
-                
-                media_id = upload_response.json().get('id')
-                
-                if not media_id:
-                    logger.error("No media ID returned from document upload")
-                    return False
+                retry_count += 1
+                if retry_count < max_retries:
+                    logger.info(f"Retrying upload in 2 seconds...")
+                    import time
+                    time.sleep(2)
+            
+            if not media_id:
+                logger.error("Failed to upload document after all retries")
+                return False
             
             # Now send the document message
             send_url = f"{self.base_url}/{self.phone_number_id}/messages"
