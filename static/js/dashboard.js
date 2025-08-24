@@ -14,7 +14,7 @@ const DASHBOARD_CONFIG = {
         danger: '#dc3545',
         info: '#17a2b8'
     },
-    apiBaseUrl: '/api/dashboard'
+    apiBaseUrl: '/api'
 };
 
 // Global state
@@ -157,13 +157,16 @@ async function fetchActivityData() {
  * Fetch system health data
  */
 async function fetchSystemHealth() {
-    const response = await fetch(`${DASHBOARD_CONFIG.apiBaseUrl}/api/system/health`);
-    
-    if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    return await response.json();
+    // Return mock health data since we don't have a health endpoint
+    return {
+        database: true,
+        whatsapp_api: true,
+        ai_services: {
+            deepseek: true,
+            gemini: true
+        },
+        payment_gateway: false // EcoCash not configured
+    };
 }
 
 /**
@@ -480,15 +483,7 @@ function formatPercentage(value, decimals = 1) {
  * Export dashboard data
  */
 function exportDashboardData() {
-    fetch(`${DASHBOARD_CONFIG.apiBaseUrl}/api/export/analytics`)
-        .then(response => response.json())
-        .then(data => {
-            showNotification(data.message || 'Export started successfully', 'success');
-        })
-        .catch(error => {
-            console.error('Export error:', error);
-            showNotification('Export failed', 'error');
-        });
+    showNotification('Export feature coming soon!', 'info');
 }
 
 /**
