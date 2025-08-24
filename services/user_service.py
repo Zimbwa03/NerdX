@@ -261,12 +261,15 @@ class UserService:
             success = create_user_registration(user_data)
             
             if success:
-                # Add welcome credits
-                add_credits(whatsapp_id, 50, 'registration_bonus')
+                # Add welcome credits (updated to 75 credits)
+                add_credits(whatsapp_id, 75, 'registration_bonus')
                 
                 # Add referral credits if applicable
                 if referral_code:
+                    # Give referrer 5 credits
                     add_referral_credits(referral_code, whatsapp_id)
+                    # Give referee (new user) 5 additional credits
+                    add_credits(whatsapp_id, 5, 'referral_bonus', 'Referral bonus for using referral code')
                 
                 # Clear registration session
                 clear_registration_session(whatsapp_id)
@@ -274,11 +277,13 @@ class UserService:
                 message = f"🎉 Registration complete!\n\n"
                 message += f"Welcome {session['name']} {session['surname']}!\n"
                 message += f"Your NerdX ID: {nerdx_id}\n\n"
-                message += f"✨ You've received 50 welcome credits!\n"
+                message += f"✨ You've received 75 welcome credits!\n"
                 
                 if referral_code:
                     message += f"🎁 Thanks for using referral code {referral_code}!\n"
-                    message += f"Both you and your referrer will receive bonus credits.\n"
+                    message += f"✨ You've received an additional 5 referral bonus credits!\n"
+                    message += f"💳 Total Credits: 80 (75 welcome + 5 referral bonus)\n"
+                    message += f"Your referrer also received 5 bonus credits!\n"
                 
                 message += f"\nYou can now start using NerdX Quiz Bot!"
                 

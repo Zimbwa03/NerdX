@@ -26,21 +26,28 @@ class Config:
     # Session configuration
     SESSION_COOLDOWN = 30  # 30 seconds between same actions
 
-    # Credit system configuration
+    # Credit system configuration - Updated according to advanced credit system specification
     CREDIT_COSTS = {
-        'math_easy': 5,
-        'math_medium': 10,
-        'math_difficult': 20,
-        'science_question_easy': 5,
-        'science_question_medium': 10,
-        'science_question_difficult': 15,
-        'english_easy': 5,
-        'english_medium': 10,
-        'english_difficult': 15,
-        'image_solve': 15,
-        'graph_generation': 10,
-        'combined_exam': 25,
-        'voice_chat': 20
+        # Combined Science
+        'combined_science_topical': 1,
+        'combined_science_exam': 2,
+        # Mathematics
+        'math_topical': 1,
+        'math_exam': 2,
+        'math_graph_practice': 3,
+        # English
+        'english_topical': 1,
+        'english_comprehension': 3,
+        'english_essay_writing': 3,
+        # Audio Features
+        'audio_feature': 10,
+        'voice_chat': 10,
+        # Legacy compatibility (keep lower costs for existing handlers)
+        'math': 1,
+        'science': 1,
+        'english': 1,
+        'image_solve': 3,
+        'graph_generation': 3
     }
 
     # AI API timeouts and retries

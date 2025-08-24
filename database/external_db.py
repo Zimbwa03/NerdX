@@ -381,8 +381,8 @@ def add_referral_credits(referred_by_nerdx_id, new_user_chat_id):
         new_user = get_user_registration(new_user_chat_id)
         new_user_name = new_user.get('name', 'Unknown') if new_user else 'Unknown'
 
-        # Add referral bonus credits (50 credits)
-        referral_bonus = 50
+        # Add referral bonus credits (updated to 5 credits)
+        referral_bonus = 5
         description = f'Referral bonus: {new_user_name} joined using your code'
         success = add_credits(referrer_chat_id, referral_bonus, 'referral_bonus', description)
 
@@ -405,7 +405,7 @@ def get_referral_stats(nerdx_id):
 
         referrals = result if result else []
         total_referrals = len(referrals)
-        total_credits_earned = total_referrals * 50  # 50 credits per referral
+        total_credits_earned = total_referrals * 5  # 5 credits per referral
 
         # Format recent referrals with names and dates
         recent_referrals = []
