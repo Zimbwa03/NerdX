@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 # Register API blueprints
 app.register_blueprint(webhook_bp, url_prefix='/webhook')
-app.register_blueprint(dashboard_bp, url_prefix='/api/dashboard')
+app.register_blueprint(dashboard_bp, url_prefix='')
 app.register_blueprint(admin_bp, url_prefix='/api/admin')
 
 # Add route to serve graph images for WhatsApp access
