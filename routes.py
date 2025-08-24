@@ -55,14 +55,33 @@ def internal_error(error):
 # Configure logging for production
 if not app.debug:
     import logging
+    import os
     from logging.handlers import RotatingFileHandler
     
-    file_handler = RotatingFileHandler('logs/nerdx.log', maxBytes=10240000, backupCount=10)
-    file_handler.setFormatter(logging.Formatter(
-        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
-    ))
-    file_handler.setLevel(logging.INFO)
-    app.logger.addHandler(file_handler)
+    # Create logs directory if it doesn't exist
+    logs_dir = 'logs'
+    
+    try:
+        # Try to create logs directory and use file logging
+        if not os.path.exists(logs_dir):
+            os.makedirs(logs_dir, exist_ok=True)
+        
+        file_handler = RotatingFileHandler('logs/nerdx.log', maxBytes=10240000, backupCount=10)
+        file_handler.setFormatter(logging.Formatter(
+            '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+        ))
+        file_handler.setLevel(logging.INFO)
+        app.logger.addHandler(file_handler)
+        
+    except (OSError, PermissionError) as e:
+        # If file logging fails (common in deployment environments), use console logging
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(logging.Formatter(
+            '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+        ))
+        console_handler.setLevel(logging.INFO)
+        app.logger.addHandler(console_handler)
+        print(f"File logging failed, using console logging: {e}")
     
     app.logger.setLevel(logging.INFO)
     app.logger.info('NerdX Quiz Bot startup')

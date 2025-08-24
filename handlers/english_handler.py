@@ -1345,8 +1345,14 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
                 timestamp = int(datetime.now().timestamp())
                 
                 # Ensure the static/pdfs directory exists
-                os.makedirs('static/pdfs', exist_ok=True)
-                pdf_path = f"static/pdfs/essay_marked_{user_id}_{timestamp}.pdf"
+                try:
+                    os.makedirs('static/pdfs', exist_ok=True)
+                except (OSError, PermissionError) as e:
+                    logger.error(f"Error creating pdfs directory: {e}")
+                    # Fall back to current directory if static/pdfs creation fails
+                    pdf_path = f"essay_marked_{user_id}_{timestamp}.pdf"
+                else:
+                    pdf_path = f"static/pdfs/essay_marked_{user_id}_{timestamp}.pdf"
 
                 logger.info(f"Creating PDF at: {pdf_path}")
 

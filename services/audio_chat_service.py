@@ -75,7 +75,12 @@ class AudioChatService:
         
         # Create temp directory for audio files
         self.audio_dir = "temp_audio"
-        os.makedirs(self.audio_dir, exist_ok=True)
+        try:
+            os.makedirs(self.audio_dir, exist_ok=True)
+        except (OSError, PermissionError) as e:
+            logger.error(f"Error creating audio directory {self.audio_dir}: {e}")
+            # Fall back to current directory if temp_audio creation fails
+            self.audio_dir = "."
     
     def create_task(self, task_type: str, data: Dict) -> str:
         """Create a new processing task"""

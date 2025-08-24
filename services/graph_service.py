@@ -27,7 +27,12 @@ class GraphService:
         self.temp_dir = os.path.join('static', 'graphs')
 
         # Ensure temp directory exists
-        os.makedirs(self.temp_dir, exist_ok=True)
+        try:
+            os.makedirs(self.temp_dir, exist_ok=True)
+        except (OSError, PermissionError) as e:
+            logger.error(f"Error creating graph directory {self.temp_dir}: {e}")
+            # Fall back to current directory if static/graphs creation fails
+            self.temp_dir = "."
 
         # Set professional matplotlib style for ZIMSEC educational graphs
         plt.style.use('seaborn-v0_8') if 'seaborn-v0_8' in plt.style.available else plt.style.use('default')
