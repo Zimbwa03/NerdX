@@ -330,7 +330,25 @@ def handle_session_message(user_id: str, message_text: str):
         from database.session_db import get_user_session
         payment_session = get_user_session(user_id)
         if payment_session and payment_session.get('session_type') == 'payment_flow' and payment_session.get('step') == 'awaiting_proof':
-            handle_payment_proof_submission(user_id, message_text)
+            # Extract package_id and reference_code from session custom_data
+            custom_data = payment_session.get('custom_data', {})
+            if isinstance(custom_data, str):
+                try:
+                    custom_data = json.loads(custom_data)
+                except:
+                    custom_data = {}
+            
+            package_id = custom_data.get('package_id')
+            reference_code = custom_data.get('reference_code')
+            
+            if package_id and reference_code:
+                handle_payment_proof_submission(user_id, package_id, reference_code)
+            else:
+                # Session data incomplete, send error message
+                whatsapp_service.send_message(user_id, "❌ Payment session data incomplete. Please try the payment process again.")
+                # Clear the session
+                from database.session_db import clear_user_session
+                clear_user_session(user_id)
             return
 
         if session_type == 'question':
@@ -2605,16 +2623,20 @@ Secure verification ensures your payment is protected and credits are accurately
             {"text": "⬅️ BACK", "callback_data": f"select_package_{package_id}"}
         ]
         
-        # Store payment session
-        from database.session_db import update_payment_session
-        payment_data = {
-            'package_id': package_id,
-            'reference_code': reference_code,
-            'amount': selected_package['price'],
-            'credits': selected_package['credits'],
-            'timestamp': datetime.now().isoformat()
+        # Store payment session in user session
+        from database.session_db import save_user_session
+        payment_session_data = {
+            'session_type': 'payment_flow',
+            'step': 'awaiting_proof',
+            'custom_data': json.dumps({
+                'package_id': package_id,
+                'reference_code': reference_code,
+                'amount': selected_package['price'],
+                'credits': selected_package['credits'],
+                'timestamp': datetime.now().isoformat()
+            })
         }
-        update_payment_session(user_id, payment_data)
+        save_user_session(user_id, payment_session_data)
         
         whatsapp_service.send_interactive_message(user_id, message, buttons)
         
@@ -2643,7 +2665,7 @@ def handle_payment_proof_request(user_id: str):
         from database.session_db import get_user_session, save_user_session
         from services.payment_service import payment_service
         
-        # Get payment session
+        # Get user session
         session = get_user_session(user_id)
         
         if not session or session.get('session_type') != 'payment_flow':
@@ -2651,7 +2673,15 @@ def handle_payment_proof_request(user_id: str):
             show_credit_packages(user_id)
             return
         
-        reference_code = session.get('reference_code')
+        # Get custom data from session
+        custom_data = session.get('custom_data', {})
+        if isinstance(custom_data, str):
+            try:
+                custom_data = json.loads(custom_data)
+            except:
+                custom_data = {}
+        
+        reference_code = custom_data.get('reference_code')
         if not reference_code:
             whatsapp_service.send_message(user_id, "❌ Payment reference not found. Please start a new payment.")
             show_credit_packages(user_id)
@@ -2707,14 +2737,27 @@ def handle_payment_proof_submission(user_id: str, package_id: str, reference_cod
     """Handle payment proof submission from user"""
     try:
         from services.payment_service import PaymentService
-        from database.session_db import get_payment_session, update_payment_session
+        from database.session_db import get_user_session, save_user_session
         
         payment_service = PaymentService()
         
-        # Get payment session data
-        payment_data = get_payment_session(user_id)
-        if not payment_data or payment_data.get('reference_code') != reference_code:
-            whatsapp_service.send_message(user_id, "❌ Payment session not found or expired. Please try again.")
+        # Get user session data
+        user_session = get_user_session(user_id)
+        if not user_session or user_session.get('session_type') != 'payment_flow':
+            whatsapp_service.send_message(user_id, "❌ No active payment session found. Please try again.")
+            return
+        
+        # Get custom data from session
+        custom_data = user_session.get('custom_data', {})
+        if isinstance(custom_data, str):
+            try:
+                custom_data = json.loads(custom_data)
+            except:
+                custom_data = {}
+        
+        # Verify reference code
+        if custom_data.get('reference_code') != reference_code:
+            whatsapp_service.send_message(user_id, "❌ Payment reference code mismatch. Please try again.")
             return
         
         # Get package details
@@ -2727,11 +2770,13 @@ def handle_payment_proof_submission(user_id: str, package_id: str, reference_cod
         result = payment_service.submit_payment_proof(user_id, package_id, reference_code, "Payment proof submitted")
         
         if result['success']:
-            # Update payment session status
-            payment_data['status'] = 'submitted_for_review'
-            payment_data['proof_submitted'] = True
-            payment_data['proof_timestamp'] = datetime.now().isoformat()
-            update_payment_session(user_id, payment_data)
+            # Update user session status
+            custom_data['status'] = 'submitted_for_review'
+            custom_data['proof_submitted'] = True
+            custom_data['proof_timestamp'] = datetime.now().isoformat()
+            user_session['custom_data'] = json.dumps(custom_data)
+            user_session['step'] = 'proof_submitted'
+            save_user_session(user_id, user_session)
             
             message = f"""⏳ **PAYMENT UNDER REVIEW**
 
