@@ -209,17 +209,17 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-3 mb-2">
-                            <a href="/analytics" class="btn btn-outline-primary btn-block">
+                            <a href="/api/dashboard/analytics" class="btn btn-outline-primary btn-block">
                                 <i class="fas fa-users"></i> View User Analytics
                             </a>
                         </div>
                         <div class="col-md-3 mb-2">
-                            <a href="/revenue" class="btn btn-outline-success btn-block">
+                            <a href="/api/dashboard/revenue" class="btn btn-outline-success btn-block">
                                 <i class="fas fa-chart-line"></i> Revenue Dashboard
                             </a>
                         </div>
                         <div class="col-md-3 mb-2">
-                            <a href="/payments" class="btn btn-outline-warning btn-block">
+                            <a href="/api/dashboard/payments" class="btn btn-outline-warning btn-block">
                                 <i class="fas fa-credit-card"></i> Review Payments
                             </a>
                         </div>
@@ -246,7 +246,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function loadOverviewData() {
     try {
-        const response = await fetch('/api/stats');
+        const response = await fetch('/api/dashboard/api/stats');
         const data = await response.json();
         
         // Update metrics
@@ -276,7 +276,7 @@ async function loadOverviewData() {
 
 async function createDailyActivityChart() {
     try {
-        const response = await fetch('/api/activity');
+        const response = await fetch('/api/dashboard/api/activity');
         const data = await response.json();
         
         const ctx = document.getElementById('dailyActivityChart').getContext('2d');
@@ -324,7 +324,7 @@ async function createDailyActivityChart() {
 
 async function loadRecentUsers() {
     try {
-        const response = await fetch('/api/users?limit=5');
+        const response = await fetch('/api/dashboard/api/users?limit=5');
         const data = await response.json();
         
         const container = document.getElementById('recentUsers');

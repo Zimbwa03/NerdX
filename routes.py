@@ -30,15 +30,9 @@ def serve_pdf_file(filename):
 
 @app.route('/')
 def index():
-    """Main landing page"""
-    return """
-    <h1>NerdX ZIMSEC Quiz Bot</h1>
-    <p>WhatsApp Education Bot for ZIMSEC Students</p>
-    <ul>
-        <li><a href="/api/dashboard">Dashboard</a></li>
-        <li><a href="/api/admin">Admin Panel</a></li>
-    </ul>
-    """
+    """Redirect to dashboard"""
+    from flask import redirect, url_for
+    return redirect('/api/dashboard')
 
 @app.route('/health')
 def health_check():
