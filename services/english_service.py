@@ -666,7 +666,7 @@ Her story demonstrates that young Zimbabweans can successfully blend tradition w
                     system_instruction="You are a senior Zimsec examiner with 20+ years experience marking O-Level essays. Be fair but thorough.",
                     response_mime_type="application/json",
                     temperature=0.3,
-                    max_output_tokens=3000
+                    max_output_tokens=4000
                 )
             )
             
@@ -695,7 +695,7 @@ Her story demonstrates that young Zimbabweans can successfully blend tradition w
                     system_instruction="You are a senior ZIMSEC examiner with 20+ years experience marking O-Level essays. Be fair but encouraging.",
                     response_mime_type="application/json",
                     temperature=0.3,
-                    max_output_tokens=2000
+                    max_output_tokens=4000
                 )
             )
             
