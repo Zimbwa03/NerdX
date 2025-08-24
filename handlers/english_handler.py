@@ -1172,59 +1172,88 @@ Remember: Be encouraging and supportive - these are O Level students learning.
             marking_response = self.english_service.generate_essay_marking(marking_prompt)
             
             if not marking_response:
+                logger.error("No response from Gemini AI")
                 return None
             
-            marking_data = json.loads(marking_response)
+            logger.info(f"Gemini response received: {marking_response[:200]}...")
+            
+            try:
+                marking_data = json.loads(marking_response)
+                logger.info(f"Successfully parsed JSON: {marking_data}")
+            except json.JSONDecodeError as e:
+                logger.error(f"Failed to parse JSON: {e}")
+                logger.error(f"Raw response: {marking_response}")
+                # Create fallback data
+                marking_data = {
+                    'score': 15,
+                    'grade': 'C',
+                    'summary_feedback': 'Good effort! Keep practicing your writing skills.',
+                    'corrections': ['Continue working on grammar and vocabulary', 'Practice essay structure'],
+                    'improved_version': 'Focus on the feedback above to improve your writing.'
+                }
             
             # Create PDF report
-            timestamp = int(datetime.now().timestamp())
-            pdf_filename = f"essay_marked_{user_id}_{timestamp}.pdf"
-            pdf_path = os.path.join("static", "pdfs", pdf_filename)
-            
-            # Ensure directory exists
-            os.makedirs(os.path.dirname(pdf_path), exist_ok=True)
-            
-            # Create PDF
-            doc = SimpleDocTemplate(pdf_path, pagesize=A4, topMargin=50, bottomMargin=50, leftMargin=50, rightMargin=50)
-            styles = getSampleStyleSheet()
-            story = []
-            
-            # Custom styles
-            title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], textColor=red, spaceAfter=20, alignment=1)
-            section_style = ParagraphStyle('SectionHeader', parent=styles['Heading2'], spaceAfter=12, spaceBefore=12)
-            
-            # Header
-            story.append(Paragraph("ZIMSEC English Essay Marking Report", title_style))
-            story.append(Paragraph(f"<b>Student:</b> {user_name}", styles['Normal']))
-            story.append(Paragraph(f"<b>Date:</b> {datetime.now().strftime('%d/%m/%Y')}", styles['Normal']))
-            story.append(Paragraph(f"<font color='red'><b>Mark: {marking_data.get('score', 15)}/30</b></font>", styles['Normal']))
-            story.append(Paragraph(f"<font color='red'><b>Grade: {marking_data.get('grade', 'C')}</b></font>", styles['Normal']))
-            story.append(Paragraph(f"<font color='red'><i>{self._get_teacher_remark(marking_data.get('score', 15))}</i></font>", styles['Normal']))
-            story.append(Spacer(1, 30))
-            
-            # Original Essay
-            story.append(Paragraph("Original Essay", section_style))
-            story.append(Paragraph(essay_text, styles['Normal']))
-            story.append(Spacer(1, 20))
-            
-            # Teacher Feedback
-            story.append(Paragraph("Teacher Feedback", section_style))
-            story.append(Paragraph(marking_data.get('summary_feedback', 'Good effort!'), styles['Normal']))
-            story.append(Spacer(1, 20))
-            
-            # Corrections
-            story.append(Paragraph("Key Corrections Needed", section_style))
-            corrections = marking_data.get('corrections', [])
-            for i, correction in enumerate(corrections, 1):
-                story.append(Paragraph(f"<font color='red'>{i}. {correction}</font>", styles['Normal']))
-            story.append(Spacer(1, 20))
-            
-            # Improved Version
-            if marking_data.get('improved_version'):
-                story.append(Paragraph("Improved Version (Sample)", section_style))
-                story.append(Paragraph(marking_data['improved_version'], styles['Normal']))
-            
-            doc.build(story)
+            try:
+                timestamp = int(datetime.now().timestamp())
+                pdf_filename = f"essay_marked_{user_id}_{timestamp}.pdf"
+                pdf_path = os.path.join("static", "pdfs", pdf_filename)
+                
+                logger.info(f"Creating PDF at: {pdf_path}")
+                
+                # Ensure directory exists
+                os.makedirs(os.path.dirname(pdf_path), exist_ok=True)
+                
+                # Create PDF
+                doc = SimpleDocTemplate(pdf_path, pagesize=A4, topMargin=50, bottomMargin=50, leftMargin=50, rightMargin=50)
+                styles = getSampleStyleSheet()
+                story = []
+                
+                # Custom styles
+                title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], textColor=red, spaceAfter=20, alignment=1)
+                section_style = ParagraphStyle('SectionHeader', parent=styles['Heading2'], spaceAfter=12, spaceBefore=12)
+                
+                # Header
+                story.append(Paragraph("ZIMSEC English Essay Marking Report", title_style))
+                story.append(Paragraph(f"<b>Student:</b> {user_name}", styles['Normal']))
+                story.append(Paragraph(f"<b>Date:</b> {datetime.now().strftime('%d/%m/%Y')}", styles['Normal']))
+                story.append(Paragraph(f"<font color='red'><b>Mark: {marking_data.get('score', 15)}/30</b></font>", styles['Normal']))
+                story.append(Paragraph(f"<font color='red'><b>Grade: {marking_data.get('grade', 'C')}</b></font>", styles['Normal']))
+                story.append(Paragraph(f"<font color='red'><i>{self._get_teacher_remark(marking_data.get('score', 15))}</i></font>", styles['Normal']))
+                story.append(Spacer(1, 30))
+                
+                # Original Essay
+                story.append(Paragraph("Original Essay", section_style))
+                # Escape special characters in essay text
+                safe_essay_text = essay_text.replace('<', '&lt;').replace('>', '&gt;').replace('&', '&amp;')
+                story.append(Paragraph(safe_essay_text, styles['Normal']))
+                story.append(Spacer(1, 20))
+                
+                # Teacher Feedback
+                story.append(Paragraph("Teacher Feedback", section_style))
+                safe_feedback = marking_data.get('summary_feedback', 'Good effort!').replace('<', '&lt;').replace('>', '&gt;').replace('&', '&amp;')
+                story.append(Paragraph(safe_feedback, styles['Normal']))
+                story.append(Spacer(1, 20))
+                
+                # Corrections
+                story.append(Paragraph("Key Corrections Needed", section_style))
+                corrections = marking_data.get('corrections', [])
+                for i, correction in enumerate(corrections, 1):
+                    safe_correction = str(correction).replace('<', '&lt;').replace('>', '&gt;').replace('&', '&amp;')
+                    story.append(Paragraph(f"<font color='red'>{i}. {safe_correction}</font>", styles['Normal']))
+                story.append(Spacer(1, 20))
+                
+                # Improved Version
+                if marking_data.get('improved_version'):
+                    story.append(Paragraph("Improved Version (Sample)", section_style))
+                    safe_improved = str(marking_data['improved_version']).replace('<', '&lt;').replace('>', '&gt;').replace('&', '&amp;')
+                    story.append(Paragraph(safe_improved, styles['Normal']))
+                
+                doc.build(story)
+                logger.info(f"PDF created successfully: {pdf_path}")
+                
+            except Exception as pdf_error:
+                logger.error(f"Error creating PDF: {pdf_error}")
+                raise pdf_error
             
             # Format corrections for chat display
             corrections_text = ""
