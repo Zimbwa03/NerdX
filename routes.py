@@ -18,6 +18,16 @@ def serve_graph_image(filename):
     """Serve graph images for WhatsApp access"""
     return send_from_directory('static/graphs', filename)
 
+# Add route to serve PDF files for essay reports
+@app.route('/download/pdf/<filename>')
+def serve_pdf_file(filename):
+    """Serve PDF essay marking reports for download"""
+    try:
+        return send_from_directory('static/pdfs', filename, as_attachment=True, 
+                                 download_name=f"ZIMSEC_Essay_Report_{filename}")
+    except FileNotFoundError:
+        return jsonify({'error': 'PDF file not found'}), 404
+
 @app.route('/')
 def index():
     """Main landing page"""

@@ -1063,11 +1063,11 @@ Type your essay below:"""
             # Send processing message
             self.whatsapp_service.send_message(user_id, "📝 Processing your essay...\n⏳ Generating marking report (this may take a moment)...")
             
-            # Generate marking using AI
-            marking_result = self._generate_essay_marking_simple(essay_text, user_name)
+            # Generate marking using AI and create PDF
+            marking_result = self._generate_essay_marking_with_pdf(essay_text, user_name, user_id)
             
             if marking_result:
-                # Send comprehensive feedback
+                # Send comprehensive feedback with PDF link
                 feedback_message = f"""✅ **Essay Marked Successfully!**
 
 📊 **Your Score:** {marking_result['score']}/30
@@ -1080,8 +1080,7 @@ Type your essay below:"""
 **🔍 Key Corrections:**
 {marking_result.get('corrections_text', 'No major corrections needed.')}
 
-**💡 Improved Version Preview:**
-{marking_result.get('improved_preview', 'See areas for improvement above.')}
+📄 **Download Your PDF Report:** {marking_result['pdf_url']}
 
 🎯 Keep practicing to improve your writing skills!"""
 
@@ -1101,10 +1100,16 @@ Type your essay below:"""
             logger.error(f"Error handling essay submission for {user_id}: {e}")
             self.whatsapp_service.send_message(user_id, "❌ Error processing essay. Please try again.")
 
-    def _generate_essay_marking_simple(self, essay_text: str, user_name: str):
-        """Generate essay marking using Gemini AI - simplified text-based version"""
+    def _generate_essay_marking_with_pdf(self, essay_text: str, user_name: str, user_id: str):
+        """Generate essay marking using Gemini AI and create PDF report"""
         try:
             import json
+            import os
+            from datetime import datetime
+            from reportlab.lib.pagesizes import A4
+            from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+            from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+            from reportlab.lib.colors import red, black
             
             # Use Gemini AI to mark the essay
             marking_prompt = f"""
@@ -1112,8 +1117,9 @@ You are a ZIMSEC O Level English teacher marking a composition. Please evaluate 
 
 1. A mark out of 30 (following ZIMSEC marking criteria)
 2. Brief supportive feedback (2-3 sentences, encouraging tone)
-3. Top 3 specific corrections needed
-4. A grade (A, B, C, D, E based on the mark)
+3. Top 5 specific corrections needed with explanations
+4. An improved version of the essay (first 200 words)
+5. A grade (A, B, C, D, E based on the mark)
 
 Essay to mark:
 {essay_text}
@@ -1126,8 +1132,11 @@ Please respond in this JSON format:
     "corrections": [
         "Fix spelling: 'recieve' should be 'receive'",
         "Grammar: 'I was went' should be 'I went'",
-        "Vocabulary: Use 'magnificent' instead of 'very good'"
-    ]
+        "Vocabulary: Use 'magnificent' instead of 'very good'",
+        "Punctuation: Add comma after 'However'",
+        "Structure: Start new paragraph for new idea"
+    ],
+    "improved_version": "The corrected opening of your essay..."
 }}
 
 Remember: Be encouraging and supportive - these are O Level students learning.
@@ -1141,21 +1150,75 @@ Remember: Be encouraging and supportive - these are O Level students learning.
             
             marking_data = json.loads(marking_response)
             
-            # Format corrections for display
+            # Create PDF report
+            timestamp = int(datetime.now().timestamp())
+            pdf_filename = f"essay_marked_{user_id}_{timestamp}.pdf"
+            pdf_path = os.path.join("static", "pdfs", pdf_filename)
+            
+            # Ensure directory exists
+            os.makedirs(os.path.dirname(pdf_path), exist_ok=True)
+            
+            # Create PDF
+            doc = SimpleDocTemplate(pdf_path, pagesize=A4, topMargin=50, bottomMargin=50, leftMargin=50, rightMargin=50)
+            styles = getSampleStyleSheet()
+            story = []
+            
+            # Custom styles
+            title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], textColor=red, spaceAfter=20, alignment=1)
+            section_style = ParagraphStyle('SectionHeader', parent=styles['Heading2'], spaceAfter=12, spaceBefore=12)
+            
+            # Header
+            story.append(Paragraph("ZIMSEC English Essay Marking Report", title_style))
+            story.append(Paragraph(f"<b>Student:</b> {user_name}", styles['Normal']))
+            story.append(Paragraph(f"<b>Date:</b> {datetime.now().strftime('%d/%m/%Y')}", styles['Normal']))
+            story.append(Paragraph(f"<font color='red'><b>Mark: {marking_data.get('score', 15)}/30</b></font>", styles['Normal']))
+            story.append(Paragraph(f"<font color='red'><b>Grade: {marking_data.get('grade', 'C')}</b></font>", styles['Normal']))
+            story.append(Paragraph(f"<font color='red'><i>{self._get_teacher_remark(marking_data.get('score', 15))}</i></font>", styles['Normal']))
+            story.append(Spacer(1, 30))
+            
+            # Original Essay
+            story.append(Paragraph("Original Essay", section_style))
+            story.append(Paragraph(essay_text, styles['Normal']))
+            story.append(Spacer(1, 20))
+            
+            # Teacher Feedback
+            story.append(Paragraph("Teacher Feedback", section_style))
+            story.append(Paragraph(marking_data.get('summary_feedback', 'Good effort!'), styles['Normal']))
+            story.append(Spacer(1, 20))
+            
+            # Corrections
+            story.append(Paragraph("Key Corrections Needed", section_style))
+            corrections = marking_data.get('corrections', [])
+            for i, correction in enumerate(corrections, 1):
+                story.append(Paragraph(f"<font color='red'>{i}. {correction}</font>", styles['Normal']))
+            story.append(Spacer(1, 20))
+            
+            # Improved Version
+            if marking_data.get('improved_version'):
+                story.append(Paragraph("Improved Version (Sample)", section_style))
+                story.append(Paragraph(marking_data['improved_version'], styles['Normal']))
+            
+            doc.build(story)
+            
+            # Format corrections for chat display
             corrections_text = ""
-            if marking_data.get('corrections'):
-                corrections_text = "\n".join([f"• {correction}" for correction in marking_data['corrections']])
+            if corrections:
+                corrections_text = "\n".join([f"• {correction}" for correction in corrections[:3]])  # Show first 3 in chat
+            
+            # Create download URL
+            pdf_url = f"https://{os.environ.get('REPL_SLUG')}.{os.environ.get('REPL_OWNER')}.repl.co/download/pdf/{pdf_filename}"
             
             return {
                 'score': marking_data.get('score', 15),
                 'grade': marking_data.get('grade', 'C'),
                 'summary_feedback': marking_data.get('summary_feedback', 'Good effort! Keep practicing.'),
                 'corrections_text': corrections_text or "No major corrections needed.",
-                'improved_preview': "Focus on the corrections above to improve your writing."
+                'pdf_url': pdf_url,
+                'pdf_path': pdf_path
             }
             
         except Exception as e:
-            logger.error(f"Error generating essay marking: {e}")
+            logger.error(f"Error generating essay marking with PDF: {e}")
             return None
 
     def _get_teacher_remark(self, score):
