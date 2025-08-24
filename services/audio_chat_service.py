@@ -63,10 +63,10 @@ class AudioChatService:
             except Exception as e:
                 logger.error(f"Failed to initialize Gemini AI client: {e}")
         
-        # Gemini TTS voice configurations
+        # Gemini TTS voice configurations (using valid voice names)
         self.gemini_voices = {
-            'female': 'Kore',   # Female voice
-            'male': 'Antoni'    # Male voice (assuming Antoni is available)
+            'female': 'kore',      # Female voice (confirmed available)
+            'male': 'fenrir'       # Male voice (confirmed available)
         }
         
         # Create temp directory for audio files
@@ -240,16 +240,43 @@ class AudioChatService:
             if response.candidates and response.candidates[0].content.parts:
                 for part in response.candidates[0].content.parts:
                     if part.inline_data and part.inline_data.data:
-                        # Save audio to temporary file
-                        audio_filename = f"audio_{uuid.uuid4().hex}.wav"
+                        # Save audio to temporary file as MP3 for WhatsApp compatibility
+                        audio_filename = f"audio_{uuid.uuid4().hex}.mp3"
                         audio_path = os.path.join(self.audio_dir, audio_filename)
 
-                        # Save the raw audio data (PCM format from Gemini)
-                        with open(audio_path, 'wb') as f:
+                        # Convert Gemini's PCM audio to MP3 format using ffmpeg
+                        temp_wav_path = audio_path.replace('.mp3', '_temp.wav')
+                        
+                        # First save as WAV
+                        with open(temp_wav_path, 'wb') as f:
                             f.write(part.inline_data.data)
-
-                        logger.info(f"Audio generated successfully with Gemini AI: {audio_filename}")
-                        return audio_path
+                        
+                        # Convert WAV to MP3 for WhatsApp compatibility
+                        try:
+                            import subprocess
+                            result = subprocess.run([
+                                'ffmpeg', '-y', '-i', temp_wav_path, 
+                                '-acodec', 'mp3', '-ab', '128k', 
+                                audio_path
+                            ], capture_output=True, text=True, timeout=30)
+                            
+                            if result.returncode == 0:
+                                # Clean up temporary WAV file
+                                os.remove(temp_wav_path)
+                                logger.info(f"Audio converted to MP3 successfully: {audio_filename}")
+                                return audio_path
+                            else:
+                                logger.error(f"FFmpeg conversion failed: {result.stderr}")
+                                # Fallback: rename WAV to MP3 (may not work but worth trying)
+                                os.rename(temp_wav_path, audio_path)
+                                logger.warning("Using WAV renamed as MP3 - may cause delivery issues")
+                                return audio_path
+                                
+                        except (subprocess.TimeoutExpired, FileNotFoundError):
+                            logger.warning("FFmpeg not available - using WAV renamed as MP3")
+                            # Fallback: just rename the file
+                            os.rename(temp_wav_path, audio_path)
+                            return audio_path
             
             logger.error("No audio data received from Gemini AI")
             return None
