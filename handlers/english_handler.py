@@ -1043,8 +1043,8 @@ Type your essay below:"""
             import json
             
             session = get_user_session(user_id)
-            if not session or session.get('session_type') != 'essay_writing':
-                self.whatsapp_service.send_message(user_id, "❌ No active essay session found.")
+            if not session or not session.get('awaiting_essay'):
+                self.whatsapp_service.send_message(user_id, "❌ No active essay session found. Please start a new essay.")
                 return
             
             user_name = session.get('user_name', 'Student')
@@ -1511,55 +1511,6 @@ Type your answer below:"""
             logger.error(f"Error generating essay prompt for {user_id}: {e}")
             self.whatsapp_service.send_message(user_id, "❌ Error generating essay prompt. Please try again.")
 
-    def handle_essay_submission(self, user_id: str, essay_text: str):
-        """Handle essay submission and marking"""
-        try:
-            session_data = get_user_session(user_id)
-            
-            if not session_data or not session_data.get('awaiting_essay'):
-                self.whatsapp_service.send_message(user_id, "❌ No essay prompt found. Please start a new essay.")
-                return
-            
-            prompt_data = session_data.get('essay_prompt')
-            if not prompt_data:
-                self.whatsapp_service.send_message(user_id, "❌ Essay prompt data missing. Please start a new essay.")
-                return
-            
-            registration = get_user_registration(user_id)
-            user_name = registration['name'] if registration else "Student"
-            form_level = registration.get('form_level', 3) if registration else 3
-            
-            # Send marking message
-            self.whatsapp_service.send_message(
-                user_id,
-                "🔍 Marking your essay using AI technology...\n⏳ This may take a moment for thorough analysis..."
-            )
-            
-            # Mark essay using Gemini
-            marking_result = self.english_service.mark_essay(
-                essay_text, 
-                prompt_data.get('prompt_text', ''),
-                form_level,
-                prompt_data.get('section', 'A')
-            )
-            
-            if not marking_result:
-                self.whatsapp_service.send_message(user_id, "❌ Error marking essay. Please try again.")
-                return
-            
-            # Send detailed feedback
-            self._send_essay_feedback(user_id, user_name, marking_result, prompt_data)
-            
-            # Clear session
-            session_data.pop('awaiting_essay', None)
-            session_data.pop('essay_prompt', None)
-            save_user_session(user_id, session_data)
-            
-            logger.info(f"Essay marked for {user_id}: {marking_result.get('marks', {}).get('total', 0)} marks")
-
-        except Exception as e:
-            logger.error(f"Error handling essay submission for {user_id}: {e}")
-            self.whatsapp_service.send_message(user_id, "❌ Error processing your essay. Please try again.")
 
     def _send_topical_questions(self, user_id: str, user_name: str, topic: str, questions: List[Dict]):
         """Send topical questions to user"""
