@@ -684,6 +684,8 @@ Her story demonstrates that young Zimbabweans can successfully blend tradition w
     def generate_essay_marking(self, marking_prompt: str) -> str:
         """Simple essay marking method for new essay system"""
         try:
+            logger.info("Sending essay marking request to Gemini...")
+            
             response = self.client.models.generate_content(
                 model=self.model,
                 contents=[
@@ -697,13 +699,30 @@ Her story demonstrates that young Zimbabweans can successfully blend tradition w
                 )
             )
             
-            if response.text:
+            logger.info(f"Gemini response received. Response object: {response}")
+            logger.info(f"Response text available: {hasattr(response, 'text')}")
+            
+            if hasattr(response, 'text') and response.text:
+                logger.info(f"Response text content: {response.text[:200]}...")
                 return response.text
-                
+            elif hasattr(response, 'candidates') and response.candidates:
+                # Try accessing through candidates
+                candidate = response.candidates[0]
+                if hasattr(candidate, 'content') and candidate.content:
+                    content = candidate.content
+                    if hasattr(content, 'parts') and content.parts:
+                        text_content = content.parts[0].text
+                        logger.info(f"Got text from candidates: {text_content[:200]}...")
+                        return text_content
+                        
+            logger.error("No text content found in response")
+            logger.error(f"Full response object: {response}")
             return ""
             
         except Exception as e:
             logger.error(f"Error generating essay marking: {str(e)}")
+            import traceback
+            logger.error(f"Full traceback: {traceback.format_exc()}")
             return ""
 
     def generate_essay_prompt(self, section: str, essay_type: str, form_level: int) -> Dict:
