@@ -27,6 +27,55 @@ if SUPABASE_KEY == "your-anon-key":
 print(f"Supabase URL: {SUPABASE_URL}")
 print(f"Supabase Key: {SUPABASE_KEY[:20]}..." if SUPABASE_KEY else "No key found")
 
+def create_payment_transactions_table():
+    """Create payment_transactions table via SQL execution"""
+    try:
+        # SQL to create the payment_transactions table
+        sql_query = """
+        CREATE TABLE IF NOT EXISTS payment_transactions (
+            id SERIAL PRIMARY KEY,
+            user_id VARCHAR(255) NOT NULL,
+            package_id VARCHAR(50) NOT NULL,
+            reference_code VARCHAR(100) UNIQUE NOT NULL,
+            amount DECIMAL(10,2) NOT NULL,
+            credits INTEGER NOT NULL,
+            status VARCHAR(50) DEFAULT 'pending',
+            payment_proof TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            proof_submitted_at TIMESTAMP,
+            approved_at TIMESTAMP,
+            credits_added INTEGER DEFAULT 0
+        );
+        
+        CREATE INDEX IF NOT EXISTS idx_payment_transactions_user_id ON payment_transactions(user_id);
+        CREATE INDEX IF NOT EXISTS idx_payment_transactions_status ON payment_transactions(status);
+        CREATE INDEX IF NOT EXISTS idx_payment_transactions_created_at ON payment_transactions(created_at);
+        """
+        
+        # Try to execute via RPC
+        headers = {
+            "apikey": SUPABASE_KEY,
+            "Authorization": f"Bearer {SUPABASE_KEY}",
+            "Content-Type": "application/json"
+        }
+        
+        # Use SQL RPC endpoint
+        url = f"{SUPABASE_URL}/rest/v1/rpc/exec_sql"
+        data = {"sql": sql_query}
+        
+        response = requests.post(url, headers=headers, json=data, timeout=30)
+        
+        if response.status_code == 200:
+            logger.info("Payment transactions table created successfully")
+            return True
+        else:
+            logger.error(f"Failed to create table: {response.status_code} - {response.text}")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Error creating payment_transactions table: {e}")
+        return False
+
 def make_supabase_request(method, table, data=None, select="*", filters=None, limit=None):
     """Make a request to Supabase REST API"""
     headers = {

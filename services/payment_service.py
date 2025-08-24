@@ -131,9 +131,20 @@ class PaymentService:
         }
         
         try:
+            # Try to save to payment_transactions table
             make_supabase_request("POST", "payment_transactions", payment_data)
         except Exception as e:
             logger.error(f"Error saving payment intent: {e}")
+            # Save to session database as fallback if Supabase table doesn't exist
+            try:
+                from database.session_db import save_user_session
+                save_user_session(f"payment_{user_id}", {
+                    'session_type': 'payment_transaction',
+                    'payment_data': payment_data
+                })
+                logger.info(f"Payment intent saved to session database as fallback")
+            except Exception as session_e:
+                logger.error(f"Error saving to session database: {session_e}")
         
         message = f"💳 **PAYMENT INSTRUCTIONS**\n\n"
         message += f"📱 **PAY VIA ECOCASH:**\n"
@@ -224,12 +235,26 @@ class PaymentService:
                 'status': 'proof_submitted'
             }
             
-            success = make_supabase_request(
-                "PATCH", 
-                "payment_transactions", 
-                update_data,
-                filters={"reference_code": f"eq.{reference_code}"}
-            )
+            try:
+                success = make_supabase_request(
+                    "PATCH", 
+                    "payment_transactions", 
+                    update_data,
+                    filters={"reference_code": f"eq.{reference_code}"}
+                )
+            except Exception as e:
+                logger.error(f"Error updating Supabase table: {e}")
+                # Fallback to session database
+                from database.session_db import save_user_session
+                save_user_session(f"payment_proof_{user_id}", {
+                    'session_type': 'payment_proof',
+                    'reference_code': reference_code,
+                    'proof_text': proof_text,
+                    'submitted_at': datetime.now().isoformat(),
+                    'status': 'proof_submitted'
+                })
+                logger.info(f"Payment proof saved to session database as fallback")
+                success = True  # Treat as success since we saved to fallback
             
             if success:
                 return {
