@@ -765,39 +765,108 @@ Her story demonstrates that young Zimbabweans can successfully blend tradition w
             }}
             """
         else:
+            # Dynamic Section B templates for different writing types
+            section_b_templates = {
+                'report': [
+                    {
+                        'role': 'Ward Youth Officer',
+                        'audience': 'Member of Parliament for your area',
+                        'scenario': 'Youth meeting to find solutions for improving livelihoods',
+                        'points': ['Vocational training centers', 'Opening of industries', 'Business seminars', 'Non-formal education', 'Youth development programs', 'Job creation initiatives']
+                    },
+                    {
+                        'role': 'School Environment Prefect',
+                        'audience': 'District Education Officer',
+                        'scenario': 'Environmental challenges at your school',
+                        'points': ['Water shortage issues', 'Waste management problems', 'Tree planting initiatives', 'Solar energy projects', 'Recycling programs', 'Garden maintenance']
+                    },
+                    {
+                        'role': 'Sports Captain',
+                        'audience': 'School Development Committee',
+                        'scenario': 'Improving sports facilities and programs',
+                        'points': ['Equipment needs', 'Ground maintenance', 'Inter-school competitions', 'Coaching programs', 'Health and fitness', 'Talent development']
+                    }
+                ],
+                'letter': [
+                    {
+                        'type': 'formal',
+                        'role': 'Head Boy/Girl',
+                        'audience': 'School Principal',
+                        'scenario': 'Request for improved library facilities',
+                        'points': ['Current library conditions', 'Need for more books', 'Study space requirements', 'Technology integration', 'Extended hours', 'Student suggestions']
+                    },
+                    {
+                        'type': 'informal',
+                        'role': 'Student',
+                        'audience': 'Friend studying abroad',
+                        'scenario': 'Describing changes in your community',
+                        'points': ['Development projects', 'New businesses', 'Technology adoption', 'Cultural events', 'Educational improvements', 'Economic changes']
+                    }
+                ],
+                'article': [
+                    {
+                        'publication': 'School Magazine',
+                        'topic': 'Youth entrepreneurship in Zimbabwe',
+                        'points': ['Success stories', 'Available opportunities', 'Government support', 'Skills development', 'Innovation examples', 'Future prospects']
+                    },
+                    {
+                        'publication': 'Community Newsletter',
+                        'topic': 'Preserving Zimbabwean culture in modern times',
+                        'points': ['Traditional practices', 'Language preservation', 'Cultural festivals', 'Modern challenges', 'Youth involvement', 'Future sustainability']
+                    }
+                ],
+                'speech': [
+                    {
+                        'occasion': 'School Speech Day',
+                        'topic': 'The role of technology in education',
+                        'audience': 'Students, teachers, and parents',
+                        'points': ['Online learning benefits', 'Digital skills importance', 'Access challenges', 'Future opportunities', 'Balanced approach', 'Local solutions']
+                    },
+                    {
+                        'occasion': 'Community meeting',
+                        'topic': 'Youth participation in community development',
+                        'audience': 'Community members and leaders',
+                        'points': ['Youth capabilities', 'Local projects', 'Skills contribution', 'Leadership development', 'Partnership opportunities', 'Sustainable development']
+                    }
+                ]
+            }
+            
+            # Select random template based on essay type
+            import random
+            template = random.choice(section_b_templates.get(essay_type, section_b_templates['report']))
+            
             prompt_instruction = f"""
-            Generate a Section B (Guided Composition) prompt for Zimsec O-Level Form {form_level} English.
+            Generate a Section B (Guided Composition) prompt for ZIMSEC O-Level Form {form_level} English.
 
-            Format Type: {essay_type} (letter/report/article/speech/memo)
+            Format Type: {essay_type}
             Maximum Marks: {max_marks}
 
-            Requirements:
-            - Specific practical writing scenario
-            - Clear audience and purpose
-            - Include Zimbabwean context and settings
-            - Detailed guidance and structure requirements
-            - Real-world application
+            Use this template structure:
+            Template: {template}
 
-            Settings: {', '.join(self.settings[:4])}
-            Names: {', '.join(self.african_names[:6])}
+            Create a complete guided composition prompt following ZIMSEC format:
 
             Format as JSON:
             {{
                 "section": "B",
                 "format_type": "{essay_type}",
-                "prompt_text": "Complete guided writing prompt with scenario",
+                "prompt_text": "Section B (20 Marks)\\n\\nThis section requires candidates to write a {essay_type}...",
+                "detailed_instructions": "Complete scenario and role description",
                 "word_count": "250-350 words",
                 "time_allocation": "35 minutes", 
                 "max_marks": {max_marks},
                 "marking_criteria": {{
                     "content_ideas": "Content and development (/7)",
                     "language_expression": "Language and expression (/7)",
-                    "structure_format": "Structure and format (/6)"
+                    "structure_format": "Format and structure (/6)"
                 }},
-                "format_requirements": ["specific format requirement 1", "requirement 2"],
-                "scenario_details": "Detailed scenario background",
-                "audience": "Target audience description"
+                "required_points": ["point 1", "point 2", "point 3", "point 4", "point 5"],
+                "format_hints": "Specific format requirements for this writing type",
+                "scenario_details": "Detailed background and context",
+                "target_audience": "Who you are writing to/for"
             }}
+            
+            Make the prompt dynamic and different each time, using Zimbabwean context.
             """
         
         try:

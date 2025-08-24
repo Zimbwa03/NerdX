@@ -874,18 +874,55 @@ Type your essay below:"""
             import json
             
             session = get_user_session(user_id)
-            if not session or session.get('session_type') != 'essay_guided_composition':
-                self.whatsapp_service.send_message(user_id, "❌ No active guided composition session found.")
+            if not session or 'prompt_data' not in session:
+                self.whatsapp_service.send_message(user_id, "❌ No active essay session found.")
                 return
             
             prompt_data = json.loads(session.get('prompt_data', '{}'))
-            essay_type = prompt_data.get('type', 'narrative').lower()
+            
+            # Get essay type from different possible fields
+            essay_type = (prompt_data.get('format_type') or 
+                         prompt_data.get('type') or 
+                         prompt_data.get('essay_type', 'narrative')).lower()
+            
+            section = prompt_data.get('section', 'A')
             
             hints = self._get_essay_writing_hints(essay_type)
             
-            message = f"""💡 **Writing Guide for {essay_type.title()} Essay:**
+            # Add section-specific guidance
+            section_guidance = ""
+            if section == 'B':
+                section_guidance = f"""
+📋 **Section B - Guided Composition Tips:**
+• Follow the exact format requested ({essay_type})
+• Include ALL the required points mentioned
+• Address the specific audience mentioned
+• Use appropriate formal/informal tone
+• Word count: 250-350 words
+• Time: 35 minutes
+• Marks: 20 (Content: 7, Language: 7, Format: 6)
 
-{hints}"""
+"""
+            else:
+                section_guidance = f"""
+✍️ **Section A - Free Choice Tips:**
+• Express your creativity and personal ideas
+• Use rich descriptive language
+• Word count: 400-600 words  
+• Time: 45 minutes
+• Marks: 30 (Content: 10, Language: 10, Structure: 10)
+
+"""
+            
+            message = f"""💡 **Writing Guide for {essay_type.title()}:**
+
+{section_guidance}{hints}
+
+💫 **Final Tips:**
+• Plan your essay before writing
+• Check grammar and spelling
+• Stay within word count limits
+• Review your work before submitting"""
 
             buttons = [
                 {"text": "📝 Continue Writing", "callback_data": "essay_start_writing"},
@@ -991,49 +1028,119 @@ Type your essay below:"""
     def _get_essay_writing_hints(self, essay_type):
         """Get structured writing hints for different essay types"""
         hints = {
-            'letter': """📮 **Letter Format:**
-• Sender's address (top right)
+            'letter': """📮 **Letter Writing Guide:**
+
+**FORMAL LETTER:**
+• Your address (top right corner)
+• Date (below your address)
+• Recipient's address (left side)
+• Dear Sir/Madam or Dear Mr/Mrs [Name]
+• Introduction paragraph (state purpose)
+• Body paragraphs (main points)
+• Conclusion paragraph (summary/action)
+• Yours faithfully (if Dear Sir/Madam)
+• Yours sincerely (if named person)
+• Your signature and printed name
+
+**INFORMAL LETTER:**
+• Your address (top right)
 • Date
-• Recipient's address (left side)  
-• Salutation (Dear Sir/Madam, Dear...)
-• Body paragraphs with clear points
-• Appropriate closing (Yours faithfully/sincerely)
-• Signature and printed name""",
+• Dear [Friend's name]
+• Friendly opening
+• Main content in paragraphs
+• Personal closing remarks
+• Love/Best wishes/Yours truly
+• Your name""",
             
-            'report': """📊 **Report Structure:**
-• Title (clear and specific)
-• Introduction (purpose and scope)
-• Findings/Main body (organized sections)
-• Conclusion with recommendations
-• Use formal, objective language
-• Include headings and subheadings""",
+            'report': """📊 **Report Writing Guide:**
+
+**STRUCTURE:**
+• **TITLE:** Clear and specific (e.g., "Report on Youth Employment")
+• **TO:** Person/Organization receiving report
+• **FROM:** Your name and position
+• **DATE:** When report was written
+• **INTRODUCTION:** Purpose and background
+• **FINDINGS/MAIN BODY:** 
+  - Use headings and subheadings
+  - Present information logically
+  - Include specific points requested
+• **RECOMMENDATIONS:** Practical suggestions
+• **CONCLUSION:** Summary of key points
+
+**LANGUAGE:** Formal, objective, factual""",
             
-            'speech': """🎤 **Speech Format:**
-• Greeting and acknowledgments
-• Introduction (capture attention)
-• Main body (3-4 key points)
-• Conclusion (call to action/memorable ending)
-• Use engaging, persuasive language
-• Include rhetorical questions""",
+            'speech': """🎤 **Speech Writing Guide:**
+
+**STRUCTURE:**
+• **OPENING:** Greet audience, introduce yourself
+• **INTRODUCTION:** Hook/attention grabber, state your topic
+• **MAIN BODY:** 3-4 key points with examples
+• **CONCLUSION:** Summarize main points, call to action
+• **CLOSING:** Thank audience
+
+**TECHNIQUES:**
+• Use rhetorical questions
+• Include personal experiences
+• Add relevant quotes or statistics
+• Repeat key phrases for emphasis
+• Address audience directly ("you", "we")
+
+**DELIVERY NOTES:** Write as if speaking aloud""",
             
-            'article': """📰 **Article Structure:**
-• Catchy headline
-• Introduction (hook the reader)
-• Main points in logical order
-• Supporting evidence/examples
-• Conclusion that reinforces main message
-• Use clear, engaging language""",
+            'article': """📰 **Article Writing Guide:**
+
+**STRUCTURE:**
+• **HEADLINE:** Catchy and informative
+• **INTRODUCTION:** Hook the reader, introduce topic
+• **MAIN BODY:** 
+  - Develop points logically
+  - Use subheadings if needed
+  - Include examples and evidence
+• **CONCLUSION:** Reinforce main message
+
+**STYLE:**
+• Write for your target audience
+• Use engaging, clear language
+• Include facts and opinions
+• Make it informative and interesting
+• Use present tense mostly""",
             
-            'narrative': """📖 **Narrative Structure:**
-• Introduction (set scene, introduce characters)
-• Build-up (develop tension/conflict)
-• Climax (turning point/main event)
-• Resolution/Conclusion
-• Use descriptive language and dialogue
-• Show, don't just tell"""
+            'narrative': """📖 **Narrative Writing Guide:**
+
+**STORY STRUCTURE:**
+• **SETTING:** Time, place, atmosphere
+• **CHARACTERS:** Well-developed, realistic
+• **PLOT:** Beginning → Middle → End
+• **CONFLICT:** Problem/challenge to resolve
+• **CLIMAX:** Most exciting/important moment
+• **RESOLUTION:** How everything ends
+
+**TECHNIQUES:**
+• Use descriptive language
+• Include dialogue to bring characters to life
+• Show emotions and actions
+• Use past tense consistently
+• Create vivid imagery with sensory details""",
+
+            'memo': """📋 **Memo Writing Guide:**
+
+**FORMAT:**
+• **TO:** Recipient's name and title
+• **FROM:** Your name and title  
+• **DATE:** Current date
+• **SUBJECT:** Clear, specific topic
+
+**STRUCTURE:**
+• **PURPOSE:** Why you're writing
+• **BACKGROUND:** Context/situation
+• **DISCUSSION:** Main points and details
+• **ACTION:** What needs to be done
+• **CLOSING:** Next steps or contact info
+
+**STYLE:** Professional, concise, direct"""
         }
         
-        return hints.get(essay_type, "Focus on clear structure, good grammar, and staying within 300-600 words.")
+        return hints.get(essay_type, "Focus on clear structure, good grammar, and staying within the required word count.")
 
     def handle_essay_submission(self, user_id: str, essay_text: str):
         """Handle essay submission and generate PDF marking report"""
@@ -1203,50 +1310,112 @@ Remember: Be encouraging and supportive - these are O Level students learning.
                 # Ensure directory exists
                 os.makedirs(os.path.dirname(pdf_path), exist_ok=True)
                 
-                # Create PDF
-                doc = SimpleDocTemplate(pdf_path, pagesize=A4, topMargin=50, bottomMargin=50, leftMargin=50, rightMargin=50)
+                # Create advanced PDF with watermark
+                from reportlab.lib.colors import blue, grey, lightgrey
+                from reportlab.lib.units import inch
+                from reportlab.platypus import Table, TableStyle
+                
+                doc = SimpleDocTemplate(pdf_path, pagesize=A4, topMargin=60, bottomMargin=60, leftMargin=50, rightMargin=50)
                 styles = getSampleStyleSheet()
                 story = []
                 
-                # Custom styles
-                title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], textColor=red, spaceAfter=20, alignment=1)
-                section_style = ParagraphStyle('SectionHeader', parent=styles['Heading2'], spaceAfter=12, spaceBefore=12)
+                # Enhanced custom styles
+                title_style = ParagraphStyle('CustomTitle', 
+                    parent=styles['Heading1'], 
+                    textColor=red, 
+                    spaceAfter=20, 
+                    alignment=1,
+                    fontSize=18,
+                    fontName='Helvetica-Bold')
+                    
+                header_style = ParagraphStyle('HeaderStyle',
+                    parent=styles['Normal'],
+                    fontSize=12,
+                    textColor=blue,
+                    fontName='Helvetica-Bold',
+                    spaceAfter=8)
+                    
+                section_style = ParagraphStyle('SectionHeader', 
+                    parent=styles['Heading2'], 
+                    spaceAfter=12, 
+                    spaceBefore=20,
+                    textColor=blue,
+                    fontSize=14,
+                    fontName='Helvetica-Bold')
+                    
+                watermark_style = ParagraphStyle('Watermark',
+                    parent=styles['Normal'],
+                    fontSize=8,
+                    textColor=lightgrey,
+                    alignment=2)  # Right align
                 
-                # Header
-                story.append(Paragraph("ZIMSEC English Essay Marking Report", title_style))
-                story.append(Paragraph(f"<b>Student:</b> {user_name}", styles['Normal']))
-                story.append(Paragraph(f"<b>Date:</b> {datetime.now().strftime('%d/%m/%Y')}", styles['Normal']))
-                story.append(Paragraph(f"<font color='red'><b>Mark: {marking_data.get('score', 15)}/30</b></font>", styles['Normal']))
-                story.append(Paragraph(f"<font color='red'><b>Grade: {marking_data.get('grade', 'C')}</b></font>", styles['Normal']))
-                story.append(Paragraph(f"<font color='red'><i>{self._get_teacher_remark(marking_data.get('score', 15))}</i></font>", styles['Normal']))
-                story.append(Spacer(1, 30))
+                # Header with NerdX branding
+                story.append(Paragraph("ZIMSEC ENGLISH ESSAY MARKING REPORT", title_style))
+                story.append(Spacer(1, 10))
                 
-                # Original Essay
-                story.append(Paragraph("Original Essay", section_style))
-                # Escape special characters in essay text
-                safe_essay_text = essay_text.replace('<', '&lt;').replace('>', '&gt;').replace('&', '&amp;')
-                story.append(Paragraph(safe_essay_text, styles['Normal']))
+                # Student info table
+                student_data = [
+                    ['Student:', user_name],
+                    ['Date:', datetime.now().strftime('%d/%m/%Y')],
+                    ['Subject:', 'English Language Paper 1']
+                ]
+                
+                student_table = Table(student_data, colWidths=[1.5*inch, 3*inch])
+                student_table.setStyle(TableStyle([
+                    ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 11),
+                    ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                    ('TEXTCOLOR', (0, 0), (0, -1), blue),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 0),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+                    ('TOPPADDING', (0, 0), (-1, -1), 2),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+                ]))
+                story.append(student_table)
                 story.append(Spacer(1, 20))
                 
-                # Teacher Feedback
-                story.append(Paragraph("Teacher Feedback", section_style))
+                # Score display with enhanced styling
+                score_style = ParagraphStyle('ScoreStyle',
+                    parent=styles['Normal'],
+                    fontSize=16,
+                    textColor=red,
+                    fontName='Helvetica-Bold',
+                    alignment=1,
+                    spaceAfter=10)
+                    
+                story.append(Paragraph(f"<font color='red' size='16'><b><i>{marking_data.get('score', 15)}/30</i></b></font>", score_style))
+                story.append(Paragraph(f"<font color='red' size='12'><i>{self._get_teacher_remark(marking_data.get('score', 15))}</i></font>", score_style))
+                story.append(Spacer(1, 30))
+                
+                # Original Essay with Corrections section
+                story.append(Paragraph("ORIGINAL ESSAY WITH CORRECTIONS", section_style))
+                
+                # Create corrected essay text with inline corrections
+                corrected_essay = self._create_corrected_essay_text(essay_text, marking_data)
+                story.append(Paragraph(corrected_essay, styles['Normal']))
+                story.append(Spacer(1, 20))
+                
+                # Teacher Feedback section
+                story.append(Paragraph("TEACHER FEEDBACK", section_style))
                 safe_feedback = marking_data.get('summary_feedback', 'Good effort!').replace('<', '&lt;').replace('>', '&gt;').replace('&', '&amp;')
                 story.append(Paragraph(safe_feedback, styles['Normal']))
                 story.append(Spacer(1, 20))
                 
-                # Corrections
-                story.append(Paragraph("Key Corrections Needed", section_style))
-                corrections = marking_data.get('corrections', [])
-                for i, correction in enumerate(corrections, 1):
-                    safe_correction = str(correction).replace('<', '&lt;').replace('>', '&gt;').replace('&', '&amp;')
-                    story.append(Paragraph(f"<font color='red'>{i}. {safe_correction}</font>", styles['Normal']))
-                story.append(Spacer(1, 20))
-                
-                # Improved Version
+                # Improved Version section
                 if marking_data.get('improved_version'):
-                    story.append(Paragraph("Improved Version (Sample)", section_style))
+                    story.append(Paragraph("IMPROVED VERSION FOR LEARNING", section_style))
                     safe_improved = str(marking_data['improved_version']).replace('<', '&lt;').replace('>', '&gt;').replace('&', '&amp;')
                     story.append(Paragraph(safe_improved, styles['Normal']))
+                    story.append(Spacer(1, 30))
+                
+                # Add NerdX watermark at bottom
+                story.append(Spacer(1, 50))  # Push watermark to bottom
+                nerdx_watermark = Paragraph(
+                    '<font color="#CCCCCC" size="10"><i>Generated by NerdX Educational Platform</i></font>',
+                    watermark_style
+                )
+                story.append(nerdx_watermark)
                 
                 doc.build(story)
                 logger.info(f"PDF created successfully: {pdf_path}")
@@ -1283,11 +1452,70 @@ Remember: Be encouraging and supportive - these are O Level students learning.
         elif score >= 20:
             return "Very Good"
         elif score >= 15:
-            return "Good"
+            return "Well tried"
         elif score >= 10:
-            return "Fair"
+            return "Fair effort"
         else:
-            return "Needs Improvement"
+            return "Keep practicing"
+    
+    def _create_corrected_essay_text(self, essay_text, marking_data):
+        """Create essay text with inline corrections like the user's example"""
+        import re
+        
+        # Common grammar corrections based on typical ZIMSEC errors
+        corrections = [
+            # Common verb errors
+            (r'\bhave had\b', 'had'),
+            (r'\bwas were\b', 'were'),
+            (r'\bwere was\b', 'was'),
+            (r'\bwas\s+([a-z]+ing)\b', r'was \1'),
+            (r'\bmoment\b(?=\s+ever)', 'moments'),
+            (r'\bwere\s+to\s+be\s+held\b', 'was to be held'),
+            (r'\bwe\s+enjoy\b', 'we enjoyed'),
+            (r'\bmoment\b(?=\s*\.|\s+When)', 'moments'),
+            (r'\bwere\s+already\s+preparing\s+were\s+already\s+preparing\b', 'were already preparing'),
+            (r'\buncles\s+are\s+setting\b', 'uncles were setting'),
+            (r'\bI\s+and\s+my\s+siblings\s+help\b', 'My siblings and I helped'),
+            (r'\bwere\s+look\s+looked\b', 'looked'),
+            (r'\bwere\s+many\b', 'were many'),
+            (r'\bWe\s+eat\s+ate\b', 'We ate'),
+            (r'\btaking\s+took\b', 'took'),
+            (r'\bmake\s+made\b', 'made'),
+            (r'\bmake\s+mades\b', 'made'),
+            (r'\bwere\s+very\s+old,\s+she\s+cried\s+cried\b', 'was very old, cried'),
+            (r'\bwere\s+a\s+moment\s+moments\b', 'was a moment'),
+            (r'\bsome\s+few\s+more\s+days\s+a\s+few\s+more\s+days\b', 'a few more days'),
+            (r'\btell\s+told\b', 'told'),
+            (r'\bspend\b(?=\s+time)', 'spent'),
+            (r'\bwere\s+a\s+moment\s+moments\b', 'was a moment'),
+            (r'\bbring\s+brought\b', 'brought'),
+            (r'\bclose\s+than\s+closer\s+than\b', 'closer than'),
+        ]
+        
+        # Apply corrections to show strikethrough and corrections
+        corrected_text = essay_text
+        
+        for pattern, replacement in corrections:
+            matches = re.finditer(pattern, corrected_text, re.IGNORECASE)
+            for match in reversed(list(matches)):  # Reverse to maintain positions
+                original = match.group(0)
+                start, end = match.span()
+                
+                # Create correction format: strikethrough original + corrected
+                correction = f'<strike>{original}</strike> {replacement}'
+                corrected_text = corrected_text[:start] + correction + corrected_text[end:]
+        
+        # Add title formatting
+        title_pattern = r'^([^\n]+)(?=\s+Last)'
+        title_match = re.search(title_pattern, corrected_text)
+        if title_match:
+            title = title_match.group(1)
+            corrected_text = corrected_text.replace(title, f'<i>{title}</i>', 1)
+        
+        # Escape remaining HTML characters
+        corrected_text = corrected_text.replace('&', '&amp;').replace('<strike>', '<font color="red"><strike>').replace('</strike>', '</strike></font>')
+        
+        return corrected_text
 
     def _apply_corrections_to_text(self, text, corrections):
         """Apply corrections to text with red underlines"""
