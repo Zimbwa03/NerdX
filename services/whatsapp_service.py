@@ -95,10 +95,16 @@ class WhatsAppService:
             elif file_extension == 'ogg':
                 content_type = 'audio/ogg'
                 filename = 'audio.ogg'
+            elif file_extension == 'm4a':
+                content_type = 'audio/mp4'
+                filename = 'audio.m4a'
+            elif file_extension == 'aac':
+                content_type = 'audio/aac'
+                filename = 'audio.aac'
             else:
-                # Default to OGG for unknown extensions (WhatsApp compatible)
-                content_type = 'audio/ogg'
-                filename = 'audio.ogg'
+                # Default to M4A for unknown extensions (better WhatsApp compatibility)
+                content_type = 'audio/mp4'
+                filename = 'audio.m4a'
             
             logger.info(f"Uploading as {content_type} with filename {filename}")
             
@@ -153,10 +159,14 @@ class WhatsAppService:
             logger.info(f"Send response: {response.text}")
             
             if response.status_code == 200:
-                logger.info(f"Audio message sent successfully to {to}")
+                response_data = response.json()
+                message_id = response_data.get('messages', [{}])[0].get('id', 'unknown')
+                logger.info(f"Audio message sent successfully to {to}. Message ID: {message_id}")
+                logger.info(f"Full response: {response_data}")
                 return True
             else:
                 logger.error(f"Failed to send audio message: {response.status_code} - {response.text}")
+                logger.error(f"Request data was: {data}")
                 return False
                 
         except Exception as e:

@@ -244,11 +244,15 @@ class AudioChatService:
                         audio_filename = f"audio_{uuid.uuid4().hex}.ogg"
                         audio_path = os.path.join(self.audio_dir, audio_filename)
 
-                        # Convert Gemini's raw PCM audio (24kHz, 16-bit) directly to OGG using ffmpeg
+                        # Convert Gemini's raw PCM audio to MP4/AAC format for better WhatsApp compatibility
                         try:
                             import subprocess
                             
-                            # Use ffmpeg to convert raw PCM data to OGG format
+                            # Use MP4 with AAC codec for better WhatsApp compatibility
+                            audio_filename = f"audio_{uuid.uuid4().hex}.m4a"
+                            audio_path = os.path.join(self.audio_dir, audio_filename)
+                            
+                            # Use ffmpeg to convert raw PCM data to M4A/AAC format
                             # Gemini outputs: 24kHz, 16-bit, mono PCM
                             process = subprocess.Popen([
                                 'ffmpeg', '-y',
@@ -256,8 +260,10 @@ class AudioChatService:
                                 '-ar', '24000',          # 24kHz sample rate
                                 '-ac', '1',              # 1 channel (mono)
                                 '-i', 'pipe:0',          # Read from stdin
-                                '-c:a', 'libvorbis',     # Use Vorbis codec for OGG
-                                '-q:a', '4',             # Quality level 4 (good quality, small size)
+                                '-c:a', 'aac',           # Use AAC codec for M4A
+                                '-b:a', '64k',           # 64kbps bitrate (good for voice)
+                                '-ar', '16000',          # Downsample to 16kHz for WhatsApp
+                                '-ac', '1',              # Ensure mono output
                                 audio_path
                             ], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                             
@@ -281,10 +287,12 @@ class AudioChatService:
                             return None
             
             logger.error("No audio data received from Gemini AI")
+            logger.error(f"Response structure: {response}")
             return None
 
         except Exception as e:
             logger.error(f"Error generating audio with Gemini AI: {e}")
+            logger.error(f"Text being converted: {text[:100]}...")
             return None
 
     def process_image(self, file_path: str) -> str:
@@ -504,8 +512,11 @@ Choose your preferred voice and start chatting!"""
                         self.send_audio_response_buttons(user_id)
                     else:
                         logger.error(f"WhatsApp audio sending failed for {user_id}")
-                        # If audio sending fails, send error message
-                        whatsapp_service.send_message(user_id, "❌ Failed to send audio. Please try again or type 'end audio' to exit.")
+                        # If audio sending fails, send the text response as fallback
+                        fallback_message = f"🎵 **Audio Response** (Text fallback):\n\n{clean_response}\n\n"
+                        fallback_message += "❌ *Audio delivery failed - showing text version*"
+                        whatsapp_service.send_message(user_id, fallback_message)
+                        self.send_audio_response_buttons(user_id)
                         
                 except Exception as e:
                     logger.error(f"Exception during audio sending for {user_id}: {e}")
