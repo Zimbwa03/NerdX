@@ -1067,8 +1067,34 @@ Type your essay below:"""
             marking_result = self._generate_essay_marking_with_pdf(essay_text, user_name, user_id)
             
             if marking_result:
-                # Send comprehensive feedback with PDF link
-                feedback_message = f"""✅ **Essay Marked Successfully!**
+                # Send the PDF document directly to WhatsApp
+                pdf_sent = self.whatsapp_service.send_document(
+                    user_id, 
+                    marking_result['pdf_path'], 
+                    "📄 Your ZIMSEC Essay Marking Report", 
+                    f"ZIMSEC_Essay_Report_{user_name}.pdf"
+                )
+                
+                if pdf_sent:
+                    # Send comprehensive feedback summary
+                    feedback_message = f"""✅ **Essay Marked Successfully!**
+
+📊 **Your Score:** {marking_result['score']}/30
+📝 **Word Count:** {word_count} words  
+📈 **Grade:** {marking_result['grade']}
+
+**📝 Teacher Feedback:**
+{marking_result['summary_feedback']}
+
+**🔍 Key Corrections:**
+{marking_result.get('corrections_text', 'No major corrections needed.')}
+
+📄 **Your detailed PDF report has been sent above** - you can download it directly from WhatsApp!
+
+🎯 Keep practicing to improve your writing skills!"""
+                else:
+                    # Fallback if PDF sending fails
+                    feedback_message = f"""✅ **Essay Marked Successfully!**
 
 📊 **Your Score:** {marking_result['score']}/30
 📝 **Word Count:** {word_count} words  

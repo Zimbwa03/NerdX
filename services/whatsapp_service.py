@@ -514,3 +514,88 @@ class WhatsAppService:
         except Exception as e:
             logger.error(f"Error parsing webhook message: {e}")
             return None
+    
+    def send_document(self, to: str, file_path: str, caption: str = "", filename: str = None) -> bool:
+        """Send a document (PDF, etc.) via WhatsApp"""
+        try:
+            import os
+            import requests
+            
+            # Check if file exists
+            if not os.path.exists(file_path):
+                logger.error(f"Document file does not exist: {file_path}")
+                return False
+            
+            # Determine file type and MIME type
+            file_extension = os.path.splitext(file_path)[1].lower()
+            mime_types = {
+                '.pdf': 'application/pdf',
+                '.doc': 'application/msword',
+                '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                '.txt': 'text/plain'
+            }
+            
+            mime_type = mime_types.get(file_extension, 'application/octet-stream')
+            display_filename = filename or os.path.basename(file_path)
+            
+            # First upload the document
+            upload_url = f"{self.base_url}/{self.phone_number_id}/media"
+            
+            headers = {
+                'Authorization': f'Bearer {self.access_token}'
+            }
+            
+            with open(file_path, 'rb') as doc_file:
+                files = {
+                    'file': (display_filename, doc_file, mime_type),
+                    'type': (None, 'document'),
+                    'messaging_product': (None, 'whatsapp')
+                }
+                
+                upload_response = requests.post(upload_url, headers=headers, files=files, timeout=60)
+                
+                if upload_response.status_code != 200:
+                    logger.error(f"Failed to upload document: {upload_response.status_code} - {upload_response.text}")
+                    return False
+                
+                media_id = upload_response.json().get('id')
+                
+                if not media_id:
+                    logger.error("No media ID returned from document upload")
+                    return False
+            
+            # Now send the document message
+            send_url = f"{self.base_url}/{self.phone_number_id}/messages"
+            
+            headers = {
+                'Authorization': f'Bearer {self.access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            document_data = {
+                'id': media_id,
+                'filename': display_filename
+            }
+            
+            if caption:
+                document_data['caption'] = caption[:1024]  # WhatsApp caption limit
+            
+            data = {
+                'messaging_product': 'whatsapp',
+                'to': to,
+                'type': 'document',
+                'document': document_data
+            }
+            
+            response = requests.post(send_url, headers=headers, json=data, timeout=30)
+            
+            if response.status_code == 200:
+                logger.info(f"Document sent successfully to {to}")
+                return True
+            else:
+                logger.error(f"Failed to send document: {response.status_code} - {response.text}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Error sending WhatsApp document: {e}")
+            return False
