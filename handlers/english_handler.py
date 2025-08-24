@@ -1425,6 +1425,7 @@ Remember: Be encouraging and supportive - these are O Level students learning.
                 raise pdf_error
             
             # Format corrections for chat display
+            corrections = marking_data.get('corrections', [])
             corrections_text = ""
             if corrections:
                 corrections_text = "\n".join([f"• {correction}" for correction in corrections[:3]])  # Show first 3 in chat
