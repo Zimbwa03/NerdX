@@ -62,6 +62,19 @@ class WhatsAppService:
         """Send audio message via WhatsApp"""
         try:
             import requests
+            import os
+            
+            # Validate file exists and has content
+            if not os.path.exists(audio_file_path):
+                logger.error(f"Audio file does not exist: {audio_file_path}")
+                return False
+                
+            file_size = os.path.getsize(audio_file_path)
+            if file_size == 0:
+                logger.error(f"Audio file is empty: {audio_file_path}")
+                return False
+                
+            logger.info(f"Uploading audio file: {audio_file_path} (size: {file_size} bytes)")
             
             # First upload the audio file
             upload_url = f"{self.base_url}/{self.phone_number_id}/media"
@@ -87,6 +100,8 @@ class WhatsAppService:
                 content_type = 'audio/ogg'
                 filename = 'audio.ogg'
             
+            logger.info(f"Uploading as {content_type} with filename {filename}")
+            
             with open(audio_file_path, 'rb') as audio_file:
                 files = {
                     'file': (filename, audio_file, content_type),
@@ -94,17 +109,24 @@ class WhatsAppService:
                     'messaging_product': (None, 'whatsapp')
                 }
                 
-                upload_response = requests.post(upload_url, headers=headers, files=files, timeout=30)
+                upload_response = requests.post(upload_url, headers=headers, files=files, timeout=45)
+                
+                logger.info(f"Upload response status: {upload_response.status_code}")
                 
                 if upload_response.status_code != 200:
                     logger.error(f"Failed to upload audio: {upload_response.status_code} - {upload_response.text}")
                     return False
                 
-                media_id = upload_response.json().get('id')
+                upload_data = upload_response.json()
+                media_id = upload_data.get('id')
+                
+                logger.info(f"Upload response: {upload_data}")
                 
                 if not media_id:
                     logger.error("No media ID returned from upload")
                     return False
+                    
+                logger.info(f"Audio uploaded successfully with media ID: {media_id}")
             
             # Now send the audio message
             send_url = f"{self.base_url}/{self.phone_number_id}/messages"
@@ -123,7 +145,12 @@ class WhatsAppService:
                 }
             }
             
+            logger.info(f"Sending audio message with data: {data}")
+            
             response = requests.post(send_url, headers=headers, json=data, timeout=30)
+            
+            logger.info(f"Send response status: {response.status_code}")
+            logger.info(f"Send response: {response.text}")
             
             if response.status_code == 200:
                 logger.info(f"Audio message sent successfully to {to}")

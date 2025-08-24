@@ -265,8 +265,13 @@ class AudioChatService:
                             stdout, stderr = process.communicate(input=part.inline_data.data, timeout=15)
                             
                             if process.returncode == 0:
-                                logger.info(f"Audio converted to OGG successfully: {audio_filename}")
-                                return audio_path
+                                # Verify the file was created and has content
+                                if os.path.exists(audio_path) and os.path.getsize(audio_path) > 0:
+                                    logger.info(f"Audio converted to OGG successfully: {audio_filename} (size: {os.path.getsize(audio_path)} bytes)")
+                                    return audio_path
+                                else:
+                                    logger.error(f"Audio file not created or empty: {audio_path}")
+                                    return None
                             else:
                                 logger.error(f"FFmpeg conversion failed: {stderr.decode()}")
                                 return None
@@ -487,22 +492,40 @@ Choose your preferred voice and start chatting!"""
             audio_path = self.generate_audio(clean_response, voice_type)
             
             if audio_path and os.path.exists(audio_path):
+                logger.info(f"Audio file generated at: {audio_path}, size: {os.path.getsize(audio_path)} bytes")
+                
                 # Send ONLY audio file via WhatsApp (no text)
-                success = whatsapp_service.send_audio_message(user_id, audio_path)
-                
-                if success:
-                    # Send buttons after audio response
-                    self.send_audio_response_buttons(user_id)
-                else:
-                    # If audio sending fails, send error message
-                    whatsapp_service.send_message(user_id, "❌ Failed to send audio. Please try again or type 'end audio' to exit.")
-                
-                # Clean up temporary file
                 try:
-                    os.remove(audio_path)
-                except:
-                    pass
+                    success = whatsapp_service.send_audio_message(user_id, audio_path)
+                    
+                    if success:
+                        logger.info(f"Audio successfully sent to {user_id}")
+                        # Send buttons after audio response
+                        self.send_audio_response_buttons(user_id)
+                    else:
+                        logger.error(f"WhatsApp audio sending failed for {user_id}")
+                        # If audio sending fails, send error message
+                        whatsapp_service.send_message(user_id, "❌ Failed to send audio. Please try again or type 'end audio' to exit.")
+                        
+                except Exception as e:
+                    logger.error(f"Exception during audio sending for {user_id}: {e}")
+                    whatsapp_service.send_message(user_id, "❌ Error sending audio. Please try again or type 'end audio' to exit.")
+                
+                # Clean up temporary file after a delay to ensure upload completes
+                import threading
+                def cleanup_file():
+                    import time
+                    time.sleep(10)  # Wait 10 seconds before cleanup
+                    try:
+                        if os.path.exists(audio_path):
+                            os.remove(audio_path)
+                            logger.info(f"Cleaned up audio file: {audio_path}")
+                    except Exception as e:
+                        logger.error(f"Error cleaning up audio file: {e}")
+                
+                threading.Thread(target=cleanup_file, daemon=True).start()
             else:
+                logger.error(f"Audio generation failed or file not found: {audio_path}")
                 # If audio generation fails, send error message
                 whatsapp_service.send_message(user_id, "❌ Failed to generate audio. Please try again or type 'end audio' to exit.")
             
