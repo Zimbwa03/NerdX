@@ -1244,35 +1244,47 @@ Type your essay below:"""
             from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
             from reportlab.lib.colors import red, black
             
-            # Use Gemini AI to mark the essay
+            # Use Gemini AI to mark the essay professionally
             marking_prompt = f"""
-You are a ZIMSEC O Level English teacher marking a composition. Please evaluate this essay and provide:
+You are an experienced ZIMSEC O Level English Language teacher with 15+ years of marking compositions. Analyze this student's essay thoroughly and professionally.
 
-1. A mark out of 30 (following ZIMSEC marking criteria)
-2. Brief supportive feedback (2-3 sentences, encouraging tone)
-3. Top 5 specific corrections needed with explanations
-4. An improved version of the essay (first 200 words)
-5. A grade (A, B, C, D, E based on the mark)
+MARKING CRITERIA (Total: 30 marks):
+- Content & Ideas (10 marks): Relevance, development, originality
+- Language & Expression (10 marks): Vocabulary, sentence structure, style
+- Accuracy (10 marks): Grammar, spelling, punctuation
 
-Essay to mark:
+Your task:
+1. Identify ALL grammar, spelling, punctuation, and tense errors
+2. Calculate a fair mark based on ZIMSEC standards
+3. Provide professional teacher feedback
+4. Give specific corrections for each error found
+
+Essay to evaluate:
 {essay_text}
 
-Please respond in this JSON format:
+Respond in this JSON format:
 {{
-    "score": 17,
+    "score": 18,
     "grade": "C",
-    "summary_feedback": "Well attempted essay with good ideas. Your structure is clear but work on vocabulary variety. Keep practicing to improve further!",
-    "corrections": [
-        "Fix spelling: 'recieve' should be 'receive'",
-        "Grammar: 'I was went' should be 'I went'",
-        "Vocabulary: Use 'magnificent' instead of 'very good'",
-        "Punctuation: Add comma after 'However'",
-        "Structure: Start new paragraph for new idea"
+    "summary_feedback": "This composition shows good understanding of the topic with clear ideas. Your narrative structure is logical and engaging. However, there are several grammatical errors, particularly with verb tenses and subject-verb agreement that need attention. With more careful proofreading and practice with tense consistency, your writing will improve significantly. Keep up the good effort!",
+    "specific_errors": [
+        {{"wrong": "have had", "correct": "had", "type": "verb tense"}},
+        {{"wrong": "was were", "correct": "were", "type": "subject-verb agreement"}},
+        {{"wrong": "moment", "correct": "moments", "type": "singular/plural"}},
+        {{"wrong": "enjoy", "correct": "enjoyed", "type": "past tense"}},
+        {{"wrong": "make", "correct": "made", "type": "past tense"}}
     ],
-    "improved_version": "The corrected opening of your essay..."
+    "corrections_explanation": [
+        "Tense consistency: Use past tense throughout when narrating past events",
+        "Subject-verb agreement: Ensure verbs match their subjects in number",
+        "Spelling accuracy: Check for common spelling mistakes",
+        "Paragraph structure: Use clear topic sentences",
+        "Vocabulary: Vary word choice to avoid repetition"
+    ],
+    "improved_version": "Last year in December, our family had one of the most exciting moments ever. It was the wedding of my cousin sister..."
 }}
 
-Remember: Be encouraging and supportive - these are O Level students learning.
+IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is an O Level student learning English.
 """
 
             # Get marking from Gemini
@@ -1425,10 +1437,23 @@ Remember: Be encouraging and supportive - these are O Level students learning.
                 raise pdf_error
             
             # Format corrections for chat display
-            corrections = marking_data.get('corrections', [])
+            corrections = marking_data.get('corrections_explanation', [])
+            specific_errors = marking_data.get('specific_errors', [])
+            
             corrections_text = ""
-            if corrections:
-                corrections_text = "\n".join([f"• {correction}" for correction in corrections[:3]])  # Show first 3 in chat
+            if specific_errors:
+                # Show specific errors found
+                error_list = []
+                for error in specific_errors[:3]:  # Show first 3 errors
+                    wrong = error.get('wrong', '')
+                    correct = error.get('correct', '')
+                    error_type = error.get('type', '')
+                    if wrong and correct:
+                        error_list.append(f"• {wrong} → {correct} ({error_type})")
+                corrections_text = "\n".join(error_list)
+            elif corrections:
+                # Fallback to general corrections
+                corrections_text = "\n".join([f"• {correction}" for correction in corrections[:3]])
             
             # Create download URL
             pdf_url = f"https://{os.environ.get('REPL_SLUG')}.{os.environ.get('REPL_OWNER')}.repl.co/download/pdf/{pdf_filename}"
@@ -1460,72 +1485,72 @@ Remember: Be encouraging and supportive - these are O Level students learning.
             return "Keep practicing"
     
     def _create_corrected_essay_text(self, essay_text, marking_data):
-        """Create essay text with inline corrections like the user's example"""
+        """Create essay text with inline corrections exactly like the user's example"""
         import re
         
-        # Common grammar corrections based on typical ZIMSEC errors
-        corrections = [
-            # Common verb errors
+        corrected_text = essay_text
+        
+        # Get specific errors from Gemini AI response
+        specific_errors = marking_data.get('specific_errors', [])
+        
+        # Sort errors by length (longer first) to avoid partial replacements
+        specific_errors = sorted(specific_errors, key=lambda x: len(x.get('wrong', '')), reverse=True)
+        
+        # Apply corrections from AI analysis
+        for error in specific_errors:
+            wrong_text = error.get('wrong', '')
+            correct_text = error.get('correct', '')
+            
+            if wrong_text and correct_text:
+                # Create exact format from user's example: strikethrough wrong + red correct
+                # Find all instances of the wrong text (case insensitive)
+                pattern = re.escape(wrong_text)
+                matches = list(re.finditer(pattern, corrected_text, re.IGNORECASE))
+                
+                # Apply corrections from right to left to maintain positions
+                for match in reversed(matches):
+                    start, end = match.span()
+                    original = match.group(0)
+                    
+                    # Format: <strike>wrong</strike> <font color="red">correct</font>
+                    correction_html = f'<font color="red"><strike>{original}</strike> {correct_text}</font>'
+                    corrected_text = corrected_text[:start] + correction_html + corrected_text[end:]
+        
+        # Additional common ZIMSEC errors if AI didn't catch them
+        common_fixes = [
             (r'\bhave had\b', 'had'),
             (r'\bwas were\b', 'were'),
             (r'\bwere was\b', 'was'),
-            (r'\bwas\s+([a-z]+ing)\b', r'was \1'),
             (r'\bmoment\b(?=\s+ever)', 'moments'),
-            (r'\bwere\s+to\s+be\s+held\b', 'was to be held'),
-            (r'\bwe\s+enjoy\b', 'we enjoyed'),
-            (r'\bmoment\b(?=\s*\.|\s+When)', 'moments'),
-            (r'\bwere\s+already\s+preparing\s+were\s+already\s+preparing\b', 'were already preparing'),
-            (r'\buncles\s+are\s+setting\b', 'uncles were setting'),
-            (r'\bI\s+and\s+my\s+siblings\s+help\b', 'My siblings and I helped'),
-            (r'\bwere\s+look\s+looked\b', 'looked'),
-            (r'\bwere\s+many\b', 'were many'),
-            (r'\bWe\s+eat\s+ate\b', 'We ate'),
-            (r'\btaking\s+took\b', 'took'),
-            (r'\bmake\s+made\b', 'made'),
-            (r'\bmake\s+mades\b', 'made'),
-            (r'\bwere\s+very\s+old,\s+she\s+cried\s+cried\b', 'was very old, cried'),
-            (r'\bwere\s+a\s+moment\s+moments\b', 'was a moment'),
-            (r'\bsome\s+few\s+more\s+days\s+a\s+few\s+more\s+days\b', 'a few more days'),
-            (r'\btell\s+told\b', 'told'),
-            (r'\bspend\b(?=\s+time)', 'spent'),
-            (r'\bwere\s+a\s+moment\s+moments\b', 'was a moment'),
-            (r'\bbring\s+brought\b', 'brought'),
-            (r'\bclose\s+than\s+closer\s+than\b', 'closer than'),
+            (r'\benjoy\b(?=\s+every)', 'enjoyed'),
+            (r'\bmake\b(?=\s+everyone)', 'made'),
+            (r'\btaking\b(?=\s+many)', 'took'),
+            (r'\btell\b(?=\s+stories)', 'told'),
+            (r'\bbring\b(?=\s+all)', 'brought'),
         ]
         
-        # Apply corrections to show strikethrough and corrections
-        corrected_text = essay_text
+        for pattern, replacement in common_fixes:
+            matches = list(re.finditer(pattern, corrected_text, re.IGNORECASE))
+            for match in reversed(matches):
+                # Only apply if not already corrected
+                if '<font color="red">' not in corrected_text[max(0, match.start()-20):match.end()+20]:
+                    start, end = match.span()
+                    original = match.group(0)
+                    correction_html = f'<font color="red"><strike>{original}</strike> {replacement}</font>'
+                    corrected_text = corrected_text[:start] + correction_html + corrected_text[end:]
         
-        for pattern, replacement in corrections:
-            matches = re.finditer(pattern, corrected_text, re.IGNORECASE)
-            for match in reversed(list(matches)):  # Reverse to maintain positions
-                original = match.group(0)
-                start, end = match.span()
-                
-                # Create correction format: strikethrough original + corrected
-                correction = f'<strike>{original}</strike> {replacement}'
-                corrected_text = corrected_text[:start] + correction + corrected_text[end:]
-        
-        # Add title formatting
+        # Format title if present
         title_pattern = r'^([^\n]+)(?=\s+Last)'
         title_match = re.search(title_pattern, corrected_text)
         if title_match:
             title = title_match.group(1)
-            corrected_text = corrected_text.replace(title, f'<i>{title}</i>', 1)
+            # Make title italic if not already formatted
+            if '<font color=' not in title:
+                corrected_text = corrected_text.replace(title, f'<i>{title}</i>', 1)
         
-        # Escape remaining HTML characters
-        corrected_text = corrected_text.replace('&', '&amp;').replace('<strike>', '<font color="red"><strike>').replace('</strike>', '</strike></font>')
+        # Escape remaining special characters safely
+        corrected_text = corrected_text.replace('&', '&amp;')
         
-        return corrected_text
-
-    def _apply_corrections_to_text(self, text, corrections):
-        """Apply corrections to text with red underlines"""
-        corrected_text = text
-        for correction in corrections:
-            error = correction.get('error', '')
-            fix = correction.get('correction', '')
-            if error and fix:
-                corrected_text = corrected_text.replace(error, f"<u><font color='red'>{error}</font></u> <font color='red'>[{fix}]</font>")
         return corrected_text
 
     def handle_grammar_usage(self, user_id: str):
