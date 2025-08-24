@@ -32,7 +32,7 @@ def serve_pdf_file(filename):
 def index():
     """Redirect to dashboard"""
     from flask import redirect, url_for
-    return redirect('/api/dashboard')
+    return redirect('/dashboard')
 
 @app.route('/health')
 def health_check():

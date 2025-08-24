@@ -209,17 +209,17 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-3 mb-2">
-                            <a href="/api/dashboard/analytics" class="btn btn-outline-primary btn-block">
+                            <a href="/analytics" class="btn btn-outline-primary btn-block">
                                 <i class="fas fa-users"></i> View User Analytics
                             </a>
                         </div>
                         <div class="col-md-3 mb-2">
-                            <a href="/api/dashboard/revenue" class="btn btn-outline-success btn-block">
+                            <a href="/revenue" class="btn btn-outline-success btn-block">
                                 <i class="fas fa-chart-line"></i> Revenue Dashboard
                             </a>
                         </div>
                         <div class="col-md-3 mb-2">
-                            <a href="/api/dashboard/payments" class="btn btn-outline-warning btn-block">
+                            <a href="/payments" class="btn btn-outline-warning btn-block">
                                 <i class="fas fa-credit-card"></i> Review Payments
                             </a>
                         </div>
@@ -246,8 +246,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function loadOverviewData() {
     try {
-        const response = await fetch('/api/dashboard/api/stats');
+        console.log('Loading dashboard data...');
+        const response = await fetch('/api/stats');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
+        console.log('Dashboard data loaded successfully:', data);
         
         // Update metrics
         document.getElementById('totalUsers').textContent = data.total_users || 0;
@@ -269,14 +276,27 @@ async function loadOverviewData() {
             dbStatus.textContent = 'Disconnected';
         }
         
+        // Hide loading state
+        console.log('Loading state hidden');
+        
     } catch (error) {
-        console.error('Error loading overview data:', error);
+        console.error('Error loading dashboard data:', error);
+        // Show error in UI
+        document.getElementById('totalUsers').textContent = 'Error';
+        document.getElementById('activeToday').textContent = 'Error';
+        document.getElementById('questionsAnswered').textContent = 'Error';
+        document.getElementById('totalRevenue').textContent = 'Error';
     }
 }
 
 async function createDailyActivityChart() {
     try {
-        const response = await fetch('/api/dashboard/api/activity');
+        const response = await fetch('/api/activity');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         
         const ctx = document.getElementById('dailyActivityChart').getContext('2d');
@@ -319,12 +339,19 @@ async function createDailyActivityChart() {
         
     } catch (error) {
         console.error('Error creating activity chart:', error);
+        // Show error message in chart area
+        document.getElementById('dailyActivityChart').parentElement.innerHTML = '<p class="text-center text-danger">Error loading chart data</p>';
     }
 }
 
 async function loadRecentUsers() {
     try {
-        const response = await fetch('/api/dashboard/api/users?limit=5');
+        const response = await fetch('/api/users?limit=5');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         
         const container = document.getElementById('recentUsers');
@@ -341,12 +368,12 @@ async function loadRecentUsers() {
                 userDiv.innerHTML = `
                     <div class="d-flex justify-content-between">
                         <div>
-                            <div class="font-weight-bold">${user.name} ${user.surname}</div>
-                            <small class="text-muted">ID: ${user.nerdx_id}</small>
+                            <div class="font-weight-bold">${user.name || 'Unknown'} ${user.surname || ''}</div>
+                            <small class="text-muted">ID: ${user.nerdx_id || user.chat_id}</small>
                         </div>
                         <div class="text-right">
                             <small class="text-muted">${registrationDate}</small>
-                            <div class="badge bg-info">${user.credits} credits</div>
+                            <div class="badge bg-info">${user.credits || 0} credits</div>
                         </div>
                     </div>
                 `;
