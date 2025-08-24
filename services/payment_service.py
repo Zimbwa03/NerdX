@@ -138,6 +138,7 @@ class PaymentService:
         message = f"💳 **PAYMENT INSTRUCTIONS**\n\n"
         message += f"📱 **PAY VIA ECOCASH:**\n"
         message += f"📞 **Number**: {self.ecocash_number}\n"
+        message += f"👤 **Name**: Ngonidzashe Zimbwa\n"
         message += f"💰 **Amount**: ${package['price']:.2f} USD\n"
         message += f"📋 **Reference**: {reference_code}\n\n"
         message += f"⚠️ **IMPORTANT STEPS:**\n"
