@@ -715,23 +715,27 @@ Great job on completing your comprehension practice! 📚✨"""
             # Generate 4 ZIMSEC-style prompts
             prompts = self._generate_zimsec_essay_prompts()
             
-            message = f"""📝 **SECTION A (30 marks)**
+            message = f"""📝 **ZIMSEC English Language Paper 1**
 
-Write a composition (300–600 words) on ONE of the following topics. Choose ONLY ONE.
+**Section A (30 Marks)**
 
-**(A)** {prompts['A']}
+This section requires candidates to write a composition between 350 and 450 words on one of the following topics:
 
-**(B)** {prompts['B']} 
+**1.** {prompts['A']}
 
-**(C)** {prompts['C']}
+**2.** {prompts['B']} 
 
-**(D)** {prompts['D']}"""
+**3.** {prompts['C']}
+
+**4.** {prompts['D']}
+
+**Choose ONE topic only and write 350-450 words.**"""
 
             buttons = [
-                {"text": "A", "callback_data": "essay_choice_A"},
-                {"text": "B", "callback_data": "essay_choice_B"},
-                {"text": "C", "callback_data": "essay_choice_C"},
-                {"text": "D", "callback_data": "essay_choice_D"},
+                {"text": "1", "callback_data": "essay_choice_A"},
+                {"text": "2", "callback_data": "essay_choice_B"},
+                {"text": "3", "callback_data": "essay_choice_C"},
+                {"text": "4", "callback_data": "essay_choice_D"},
                 {"text": "🔙 Back", "callback_data": "english_essay_writing"}
             ]
             
@@ -936,47 +940,60 @@ Type your essay below:"""
             self.whatsapp_service.send_message(user_id, "❌ Error loading hints. Please try again.")
 
     def _generate_zimsec_essay_prompts(self):
-        """Generate 4 ZIMSEC-style essay prompts (A, B, C, D)"""
+        """Generate 4 authentic ZIMSEC Section A essay prompts"""
         import random
         
-        # ZIMSEC-style prompts covering different essay types
-        narrative_prompts = [
-            "Write a story that begins with: 'The day I thought would never end finally came to a close...'",
-            "Describe an experience where you had to make a difficult choice that changed your life.",
-            "Write about a time when you discovered something unexpected about yourself or someone close to you.",
-            "Tell the story of a journey that taught you an important lesson about life."
+        # Authentic ZIMSEC Section A question types
+        zimsec_section_a_questions = [
+            # Type 1: Descriptive
+            "Describe your favourite sport.",
+            "Describe a place in Zimbabwe that you will never forget.",
+            "Describe a traditional ceremony in your community.",
+            "Describe the effects of social media on young people.",
+            
+            # Type 2: Narrative with given statements  
+            'Write a story that includes one of the following statements:\n"The whole community was at peace again."\n"The mother wept bitterly when she was shown her daughter\'s video that was circulating on social media."',
+            'Write a story that includes one of the following statements:\n"It was the best decision I ever made."\n"The teacher could not believe what she was seeing."',
+            'Write a story that includes one of the following statements:\n"Justice was finally served."\n"The villagers gathered to witness the historic moment."',
+            'Write a story that includes one of the following statements:\n"The secret was finally revealed."\n"Nobody expected such a dramatic turn of events."',
+            
+            # Type 3: Argumentative/Discussion
+            '"Teachers play a bigger role than parents in building up a child." Discuss.',
+            '"Education is the key to success." Discuss.',
+            '"Social media has done more harm than good to society." Discuss.',
+            '"Money is the root of all evil." What are your views?',
+            
+            # Type 4: Problem-solving
+            "What can be done to reduce food shortage in your local area?",
+            "What can be done to reduce unemployment among the youth in Zimbabwe?",
+            "How can drug abuse be reduced in schools?",
+            "What measures can be taken to improve road safety in Zimbabwe?",
+            
+            # Type 5: Opinion/Views
+            '"Academic and professional qualifications are the only guarantee for survival in today\'s world." What are your views?',
+            '"Hard work is more important than talent." What are your views?',
+            '"Technology has made life easier." What are your views?',
+            '"Honesty is always the best policy." What are your views?',
+            
+            # Type 6: Newspaper headline stories
+            'Write a story based on the newspaper headline: "STOLEN CHILD FOUND ALIVE."',
+            'Write a story based on the newspaper headline: "STUDENT BECOMES MILLIONAIRE."',
+            'Write a story based on the newspaper headline: "VILLAGE WINS LOTTERY."',
+            'Write a story based on the newspaper headline: "TEACHER SAVES DROWNING CHILD."',
+            
+            # Type 7: Single word topics
+            "Teamwork.",
+            "Friendship.",
+            "Courage.",
+            "Honesty.",
+            "Success.",
+            "Leadership.",
+            "Determination.",
+            "Forgiveness."
         ]
         
-        descriptive_prompts = [
-            "Describe a place in Zimbabwe that holds special significance to you and explain why it is important.",
-            "Write a detailed account of a traditional ceremony or celebration in your community.",
-            "Describe the effects of technology on modern Zimbabwean society.",
-            "Write about the challenges facing young people in Zimbabwe today and suggest possible solutions."
-        ]
-        
-        letter_prompts = [
-            "Write a letter to your local councillor suggesting ways to improve facilities in your area.",
-            "Write a letter to a friend who lives abroad, describing recent changes in Zimbabwe.",
-            "Write a letter to the editor of a newspaper expressing your views on environmental conservation.",
-            "Write a letter to your former primary school teacher, telling them about your experiences in secondary school."
-        ]
-        
-        article_prompts = [
-            "Write an article for your school magazine about the importance of preserving Zimbabwean culture.",
-            "Write an article discussing the benefits and challenges of online learning.",
-            "Write an article about a successful young entrepreneur in Zimbabwe who inspires you.",
-            "Write an article on the role of sports in promoting national unity in Zimbabwe."
-        ]
-        
-        speech_prompts = [
-            "Write a speech to be delivered at your school's speech day on the topic: 'Education is the key to success'.",
-            "Prepare a speech for your community on the importance of caring for the elderly.",
-            "Write a speech to motivate your fellow students to work hard despite challenges.",
-            "Prepare a speech on environmental conservation to be delivered at a youth conference."
-        ]
-        
-        all_prompts = narrative_prompts + descriptive_prompts + letter_prompts + article_prompts + speech_prompts
-        selected_prompts = random.sample(all_prompts, 4)
+        # Select 4 random questions ensuring variety
+        selected_prompts = random.sample(zimsec_section_a_questions, 4)
         
         return {
             'A': selected_prompts[0],
@@ -1361,7 +1378,15 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
                     textColor=lightgrey,
                     alignment=2)  # Right align
                 
-                # Header with NerdX branding
+                # NerdX watermark at top header
+                nerdx_header = Paragraph(
+                    '<font color="#888888" size="12"><i>Generated by NerdX Educational Platform</i></font>',
+                    watermark_style
+                )
+                story.append(nerdx_header)
+                story.append(Spacer(1, 15))
+                
+                # Header with ZIMSEC branding
                 story.append(Paragraph("ZIMSEC ENGLISH ESSAY MARKING REPORT", title_style))
                 story.append(Spacer(1, 10))
                 
@@ -1420,14 +1445,6 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
                     safe_improved = str(marking_data['improved_version']).replace('<', '&lt;').replace('>', '&gt;').replace('&', '&amp;')
                     story.append(Paragraph(safe_improved, styles['Normal']))
                     story.append(Spacer(1, 30))
-                
-                # Add NerdX watermark at bottom
-                story.append(Spacer(1, 50))  # Push watermark to bottom
-                nerdx_watermark = Paragraph(
-                    '<font color="#CCCCCC" size="10"><i>Generated by NerdX Educational Platform</i></font>',
-                    watermark_style
-                )
-                story.append(nerdx_watermark)
                 
                 doc.build(story)
                 logger.info(f"PDF created successfully: {pdf_path}")
