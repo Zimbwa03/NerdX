@@ -119,23 +119,24 @@ class PaymentService:
         
         reference_code = self.generate_payment_reference(user_id, package_id)
         
-        # Save payment intent to database
+        # Save payment intent to pending_payments table
         payment_data = {
             'user_id': user_id,
-            'package_id': package_id,
-            'reference_code': reference_code,
-            'amount': package['price'],
-            'credits': package['credits'],
+            'transaction_reference': reference_code,
+            'amount_expected': package['price'],
+            'credits_to_add': package['credits'],
             'status': 'pending',
+            'package_type': package_id,
             'created_at': datetime.now().isoformat()
         }
         
         try:
-            # Try to save to payment_transactions table
-            make_supabase_request("POST", "payment_transactions", payment_data)
+            # Save to pending_payments table (exists in Supabase)
+            make_supabase_request("POST", "pending_payments", payment_data)
+            logger.info(f"Payment intent saved to pending_payments: {reference_code}")
         except Exception as e:
-            logger.error(f"Error saving payment intent: {e}")
-            # Save to session database as fallback if Supabase table doesn't exist
+            logger.error(f"Error saving payment intent to pending_payments: {e}")
+            # Save to session database as fallback
             try:
                 from database.session_db import save_user_session
                 save_user_session(f"payment_{user_id}", {
@@ -181,15 +182,15 @@ class PaymentService:
         try:
             result = make_supabase_request(
                 "GET", 
-                "payment_transactions", 
-                filters={"reference_code": f"eq.{reference_code}"}
+                "pending_payments", 
+                filters={"transaction_reference": f"eq.{reference_code}"}
             )
             
             if result and len(result) > 0:
                 payment = result[0]
-                package = self.get_package_by_id(payment['package_id'])
+                package = self.get_package_by_id(payment.get('package_type', 'unknown'))
                 package_name = package['name'] if package else 'Unknown Package'
-                amount = payment['amount']
+                amount = payment.get('amount_expected', 0)
             else:
                 package_name = 'Unknown Package'
                 amount = '0.00'
@@ -238,12 +239,13 @@ class PaymentService:
             try:
                 success = make_supabase_request(
                     "PATCH", 
-                    "payment_transactions", 
+                    "pending_payments", 
                     update_data,
-                    filters={"reference_code": f"eq.{reference_code}"}
+                    filters={"transaction_reference": f"eq.{reference_code}"}
                 )
+                logger.info(f"Payment proof updated in pending_payments: {reference_code}")
             except Exception as e:
-                logger.error(f"Error updating Supabase table: {e}")
+                logger.error(f"Error updating pending_payments table: {e}")
                 # Fallback to session database
                 from database.session_db import save_user_session
                 save_user_session(f"payment_proof_{user_id}", {
@@ -279,15 +281,15 @@ class PaymentService:
         try:
             result = make_supabase_request(
                 "GET", 
-                "payment_transactions", 
-                filters={"reference_code": f"eq.{reference_code}"}
+                "pending_payments", 
+                filters={"transaction_reference": f"eq.{reference_code}"}
             )
             
             if result and len(result) > 0:
                 payment = result[0]
-                package = self.get_package_by_id(payment['package_id'])
+                package = self.get_package_by_id(payment.get('package_type', 'unknown'))
                 package_name = package['name'] if package else 'Unknown Package'
-                amount = payment['amount']
+                amount = payment.get('amount_expected', 0)
                 timestamp = datetime.now().strftime("%H:%M on %d/%m/%Y")
             else:
                 package_name = 'Unknown Package'
@@ -323,8 +325,8 @@ class PaymentService:
             # Get payment details
             result = make_supabase_request(
                 "GET", 
-                "payment_transactions", 
-                filters={"reference_code": f"eq.{reference_code}"}
+                "pending_payments", 
+                filters={"transaction_reference": f"eq.{reference_code}"}
             )
             
             if not result or len(result) == 0:
@@ -332,8 +334,8 @@ class PaymentService:
             
             payment = result[0]
             user_id = payment['user_id']
-            credits = payment['credits']
-            package = self.get_package_by_id(payment['package_id'])
+            credits = payment['credits_to_add']
+            package = self.get_package_by_id(payment.get('package_type', 'unknown'))
             
             # Add credits to user account
             add_success = add_credits(
@@ -351,12 +353,25 @@ class PaymentService:
                     'credits_added': credits
                 }
                 
+                # Update status in pending_payments and add to completed payments
                 make_supabase_request(
                     "PATCH", 
-                    "payment_transactions", 
+                    "pending_payments", 
                     update_data,
-                    filters={"reference_code": f"eq.{reference_code}"}
+                    filters={"transaction_reference": f"eq.{reference_code}"}
                 )
+                
+                # Also add to payments table for dashboard analytics
+                completed_payment = {
+                    'user_id': user_id,
+                    'amount_paid': payment.get('amount_expected', 0),
+                    'credits_added': credits,
+                    'transaction_reference': reference_code,
+                    'status': 'completed',
+                    'created_at': payment.get('created_at'),
+                    'completed_at': datetime.now().isoformat()
+                }
+                make_supabase_request("POST", "payments", completed_payment)
                 
                 return {
                     'success': True,
@@ -377,15 +392,15 @@ class PaymentService:
         try:
             result = make_supabase_request(
                 "GET", 
-                "payment_transactions", 
-                filters={"reference_code": f"eq.{reference_code}"}
+                "pending_payments", 
+                filters={"transaction_reference": f"eq.{reference_code}"}
             )
             
             if result and len(result) > 0:
                 payment = result[0]
-                package = self.get_package_by_id(payment['package_id'])
+                package = self.get_package_by_id(payment.get('package_type', 'unknown'))
                 package_name = package['name'] if package else 'Unknown Package'
-                credits = payment['credits']
+                credits = payment.get('credits_to_add', 0)
                 timestamp = datetime.now().strftime("%H:%M on %d/%m/%Y")
             else:
                 package_name = 'Unknown Package'
