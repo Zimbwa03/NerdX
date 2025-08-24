@@ -1191,7 +1191,14 @@ Type your essay below:"""
             marking_result = self._generate_essay_marking_with_pdf(essay_text, user_name, user_id)
             
             if marking_result:
-                # Send the PDF document directly to WhatsApp
+                # Send status update
+                self.whatsapp_service.send_message(user_id, "📄 Sending your detailed marking report...")
+                
+                # Add small delay to ensure proper sequencing
+                import time
+                time.sleep(2)
+                
+                # Send the PDF document first
                 pdf_sent = self.whatsapp_service.send_document(
                     user_id, 
                     marking_result['pdf_path'], 
@@ -1199,8 +1206,11 @@ Type your essay below:"""
                     f"ZIMSEC_Essay_Report_{user_name}.pdf"
                 )
                 
+                # Wait for PDF to be processed
+                time.sleep(3)
+                
                 if pdf_sent:
-                    # Send comprehensive feedback summary
+                    # Send comprehensive feedback summary after PDF
                     feedback_message = f"""✅ **Essay Marked Successfully!**
 
 📊 **Your Score:** {marking_result['score']}/30
@@ -1213,9 +1223,9 @@ Type your essay below:"""
 **🔍 Key Corrections:**
 {marking_result.get('corrections_text', 'No major corrections needed.')}
 
-📄 **Your detailed PDF report has been sent above** - you can download it directly from WhatsApp!
+📄 **Your detailed PDF report with red corrections has been sent above** ⬆️
 
-🎯 Keep practicing to improve your writing skills!"""
+🎯 The PDF shows your original essay with all errors marked in red with corrections!"""
                 else:
                     # Fallback if PDF sending fails
                     feedback_message = f"""✅ **Essay Marked Successfully!**
@@ -1427,17 +1437,43 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
                 
                 # Original Essay with Corrections section
                 story.append(Paragraph("ORIGINAL ESSAY WITH CORRECTIONS", section_style))
+                story.append(Spacer(1, 10))
                 
                 # Create corrected essay text with inline corrections
                 corrected_essay = self._create_corrected_essay_text(essay_text, marking_data)
-                story.append(Paragraph(corrected_essay, styles['Normal']))
+                
+                # Split into paragraphs for better formatting
+                essay_paragraphs = corrected_essay.split('\n')
+                for paragraph in essay_paragraphs:
+                    if paragraph.strip():
+                        # Create paragraph with proper line spacing
+                        essay_para_style = ParagraphStyle(
+                            'EssayStyle',
+                            parent=styles['Normal'],
+                            fontSize=11,
+                            leading=16,
+                            spaceAfter=8,
+                            leftIndent=20,
+                            rightIndent=20
+                        )
+                        story.append(Paragraph(paragraph.strip(), essay_para_style))
+                
                 story.append(Spacer(1, 20))
                 
-                # Teacher Feedback section
-                story.append(Paragraph("TEACHER FEEDBACK", section_style))
+                # Detailed Teacher Feedback section
+                story.append(Paragraph("DETAILED TEACHER FEEDBACK", section_style))
                 safe_feedback = marking_data.get('summary_feedback', 'Good effort!').replace('<', '&lt;').replace('>', '&gt;').replace('&', '&amp;')
                 story.append(Paragraph(safe_feedback, styles['Normal']))
-                story.append(Spacer(1, 20))
+                story.append(Spacer(1, 15))
+                
+                # Corrections Explanation section
+                corrections_explanation = marking_data.get('corrections_explanation', [])
+                if corrections_explanation:
+                    story.append(Paragraph("AREAS FOR IMPROVEMENT", section_style))
+                    for i, explanation in enumerate(corrections_explanation, 1):
+                        safe_explanation = str(explanation).replace('<', '&lt;').replace('>', '&gt;').replace('&', '&amp;')
+                        story.append(Paragraph(f"<font color='red'>{i}. {safe_explanation}</font>", styles['Normal']))
+                    story.append(Spacer(1, 20))
                 
                 # Improved Version section
                 if marking_data.get('improved_version'):
@@ -1502,10 +1538,11 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
             return "Keep practicing"
     
     def _create_corrected_essay_text(self, essay_text, marking_data):
-        """Create essay text with inline corrections exactly like the user's example"""
+        """Create essay text with proper red underlines and corrections like the user's example"""
         import re
         
-        corrected_text = essay_text
+        # Ensure we have the full essay text
+        corrected_text = str(essay_text)
         
         # Get specific errors from Gemini AI response
         specific_errors = marking_data.get('specific_errors', [])
@@ -1515,12 +1552,11 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
         
         # Apply corrections from AI analysis
         for error in specific_errors:
-            wrong_text = error.get('wrong', '')
-            correct_text = error.get('correct', '')
+            wrong_text = error.get('wrong', '').strip()
+            correct_text = error.get('correct', '').strip()
             
-            if wrong_text and correct_text:
-                # Create exact format from user's example: strikethrough wrong + red correct
-                # Find all instances of the wrong text (case insensitive)
+            if wrong_text and correct_text and wrong_text != correct_text:
+                # Create exact format: red strikethrough + red correct text
                 pattern = re.escape(wrong_text)
                 matches = list(re.finditer(pattern, corrected_text, re.IGNORECASE))
                 
@@ -1529,14 +1565,16 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
                     start, end = match.span()
                     original = match.group(0)
                     
-                    # Format: <strike>wrong</strike> <font color="red">correct</font>
-                    correction_html = f'<font color="red"><strike>{original}</strike> {correct_text}</font>'
+                    # Format exactly like user example: red strikethrough + red correct
+                    correction_html = f'<font color="red"><u><strike>{original}</strike></u> <b>{correct_text}</b></font>'
                     corrected_text = corrected_text[:start] + correction_html + corrected_text[end:]
         
-        # Additional common ZIMSEC errors if AI didn't catch them
+        # Additional common ZIMSEC errors targeting specific patterns
         common_fixes = [
+            # Spacing issues
+            (r'(\w+)\.([A-Z])', r'\1. \2'),  # Missing space after period
             (r'\bhave had\b', 'had'),
-            (r'\bwas were\b', 'were'),
+            (r'\bwas were\b', 'were'), 
             (r'\bwere was\b', 'was'),
             (r'\bmoment\b(?=\s+ever)', 'moments'),
             (r'\benjoy\b(?=\s+every)', 'enjoyed'),
@@ -1544,28 +1582,32 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
             (r'\btaking\b(?=\s+many)', 'took'),
             (r'\btell\b(?=\s+stories)', 'told'),
             (r'\bbring\b(?=\s+all)', 'brought'),
+            (r'\binspire\b(?=\s+me)', 'inspired'),
+            (r'\bneed\b(?=\s+to\s+help)', 'needs'),
+            (r'\bteache\b', 'teacher'),
         ]
         
         for pattern, replacement in common_fixes:
             matches = list(re.finditer(pattern, corrected_text, re.IGNORECASE))
             for match in reversed(matches):
                 # Only apply if not already corrected
-                if '<font color="red">' not in corrected_text[max(0, match.start()-20):match.end()+20]:
+                context = corrected_text[max(0, match.start()-30):match.end()+30]
+                if '<font color="red">' not in context:
                     start, end = match.span()
                     original = match.group(0)
-                    correction_html = f'<font color="red"><strike>{original}</strike> {replacement}</font>'
+                    correction_html = f'<font color="red"><u><strike>{original}</strike></u> <b>{replacement}</b></font>'
                     corrected_text = corrected_text[:start] + correction_html + corrected_text[end:]
         
         # Format title if present
-        title_pattern = r'^([^\n]+)(?=\s+Last)'
-        title_match = re.search(title_pattern, corrected_text)
-        if title_match:
-            title = title_match.group(1)
-            # Make title italic if not already formatted
-            if '<font color=' not in title:
-                corrected_text = corrected_text.replace(title, f'<i>{title}</i>', 1)
+        if corrected_text.strip():
+            lines = corrected_text.split('\n')
+            if lines[0] and not lines[0].startswith('<'):
+                # Make title bold and italic
+                lines[0] = f'<b><i>{lines[0]}</i></b>'
+                corrected_text = '\n'.join(lines)
         
-        # Escape remaining special characters safely
+        # Clean up any double encoding
+        corrected_text = corrected_text.replace('&amp;', '&')
         corrected_text = corrected_text.replace('&', '&amp;')
         
         return corrected_text
