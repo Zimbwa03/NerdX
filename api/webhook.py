@@ -2448,14 +2448,14 @@ def handle_package_selection(user_id: str, package_id: str):
     """Handle package selection for payment"""
     try:
         from services.payment_service import payment_service
-        from database.session_db import set_user_session
+        from database.session_db import save_user_session
         
         # Get package details and payment instructions
         result = payment_service.get_payment_instructions_message(user_id, package_id)
         
         if result['success']:
             # Store payment context in session
-            set_user_session(user_id, {
+            save_user_session(user_id, {
                 'session_type': 'payment_flow',
                 'package_id': package_id,
                 'reference_code': result['reference_code'],
@@ -2478,7 +2478,7 @@ def handle_package_selection(user_id: str, package_id: str):
 def handle_payment_proof_request(user_id: str):
     """Handle payment proof submission request"""
     try:
-        from database.session_db import get_user_session, set_user_session
+        from database.session_db import get_user_session, save_user_session
         from services.payment_service import payment_service
         
         # Get payment session
@@ -2496,7 +2496,7 @@ def handle_payment_proof_request(user_id: str):
             return
         
         # Update session to expect payment proof
-        set_user_session(user_id, {
+        save_user_session(user_id, {
             **session,
             'step': 'awaiting_proof'
         })
