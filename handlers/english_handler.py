@@ -1191,20 +1191,8 @@ Type your essay below:"""
             marking_result = self._generate_essay_marking_with_pdf(essay_text, user_name, user_id)
             
             if marking_result:
-                # Send status update
-                self.whatsapp_service.send_message(user_id, "📄 Sending your detailed marking report...")
-                
-                # Send the PDF document first
-                pdf_sent = self.whatsapp_service.send_document(
-                    user_id, 
-                    marking_result['pdf_path'], 
-                    "📄 Your ZIMSEC Essay Marking Report", 
-                    f"ZIMSEC_Essay_Report_{user_name}.pdf"
-                )
-                
-                if pdf_sent:
-                    # Send comprehensive feedback summary after PDF
-                    feedback_message = f"""✅ **Essay Marked Successfully!**
+                # Send immediate feedback first to avoid timeout
+                feedback_message = f"""✅ **Essay Marked Successfully!**
 
 📊 **Your Score:** {marking_result['score']}/30
 📝 **Word Count:** {word_count} words  
@@ -1216,33 +1204,9 @@ Type your essay below:"""
 **🔍 Key Corrections:**
 {marking_result.get('corrections_text', 'No major corrections needed.')}
 
-📄 **Your detailed PDF report with red corrections has been sent above** ⬆️
+📄 **Generating detailed PDF report with red corrections...** ⏳
 
-🎯 The PDF shows your original essay with all errors marked in red with corrections!"""
-                else:
-                    # Enhanced fallback with direct text feedback
-                    corrections_list = marking_result.get('specific_errors', [])
-                    corrections_display = ""
-                    if corrections_list:
-                        corrections_display = "\n".join([f"• {error.get('wrong', '')} → {error.get('correct', '')} ({error.get('type', 'error')})" for error in corrections_list[:5]])
-                    else:
-                        corrections_display = "No major corrections needed."
-                    
-                    feedback_message = f"""✅ **Essay Marked Successfully!**
-
-📊 **Your Score:** {marking_result['score']}/30
-📝 **Word Count:** {word_count} words  
-📈 **Grade:** {marking_result['grade']}
-
-**📝 Teacher Feedback:**
-{marking_result['summary_feedback']}
-
-**🔍 Key Corrections Found:**
-{corrections_display}
-
-⚠️ **PDF Upload Issue** - We're having trouble sending your detailed report right now. Your essay has been marked and scored above.
-
-🎯 Keep practicing to improve your writing skills!"""
+🎯 Your PDF report will be sent in a moment!"""
 
                 buttons = [
                     {"text": "✍️ Write Another Essay", "callback_data": "english_essay_writing"},
@@ -1250,6 +1214,23 @@ Type your essay below:"""
                 ]
                 
                 self.whatsapp_service.send_interactive_message(user_id, feedback_message, buttons)
+                
+                # Try to send PDF with shorter timeout to avoid worker timeout
+                try:
+                    pdf_sent = self.whatsapp_service.send_document_quick(
+                        user_id, 
+                        marking_result['pdf_path'], 
+                        "📄 Your ZIMSEC Essay Marking Report", 
+                        f"ZIMSEC_Essay_Report_{user_name}.pdf"
+                    )
+                    
+                    if pdf_sent:
+                        self.whatsapp_service.send_message(user_id, "📄 **PDF Report Sent!** ⬆️\n\nYour detailed report with red corrections is ready above. Download it to see all error markings!")
+                    else:
+                        self.whatsapp_service.send_message(user_id, "⚠️ **PDF Upload Issue** - Having trouble sending the detailed report. Your essay has been marked and scored above!")
+                except Exception as e:
+                    logger.error(f"PDF upload failed: {e}")
+                    self.whatsapp_service.send_message(user_id, "⚠️ **PDF Upload Issue** - Having trouble sending the detailed report. Your essay has been marked and scored above!")
             else:
                 self.whatsapp_service.send_message(user_id, "❌ Error processing essay. Please try again later.")
             
