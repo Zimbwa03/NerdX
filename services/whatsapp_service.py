@@ -70,9 +70,23 @@ class WhatsAppService:
                 'Authorization': f'Bearer {self.access_token}'
             }
             
+            # Determine file format based on extension
+            file_extension = audio_file_path.lower().split('.')[-1]
+            
+            if file_extension == 'wav':
+                content_type = 'audio/wav'
+                filename = 'audio.wav'
+            elif file_extension == 'mp3':
+                content_type = 'audio/mpeg'
+                filename = 'audio.mp3'
+            else:
+                # Default to WAV for unknown extensions
+                content_type = 'audio/wav'
+                filename = 'audio.wav'
+            
             with open(audio_file_path, 'rb') as audio_file:
                 files = {
-                    'file': ('audio.mp3', audio_file, 'audio/mpeg'),
+                    'file': (filename, audio_file, content_type),
                     'type': (None, 'audio'),
                     'messaging_product': (None, 'whatsapp')
                 }
