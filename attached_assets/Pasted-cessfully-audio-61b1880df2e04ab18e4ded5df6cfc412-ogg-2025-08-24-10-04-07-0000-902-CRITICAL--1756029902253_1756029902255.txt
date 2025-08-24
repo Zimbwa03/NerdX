@@ -1,0 +1,202 @@
+cessfully: audio_61b1880df2e04ab18e4ded5df6cfc412.ogg
+[2025-08-24 10:04:07 +0000] [902] [CRITICAL] WORKER TIMEOUT (pid:913)
+[2025-08-24 10:04:07 +0000] [913] [ERROR] Error handling request /webhook/whatsapp
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 134, in handle
+    self.handle_request(listener, req, client, addr)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 177, in handle_request
+    respiter = self.wsgi(environ, resp.start_response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/werkzeug/middleware/proxy_fix.py", line 183, in __call__
+    return self.app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/api/webhook.py", line 141, in handle_webhook
+    handle_text_message(user_id, message_text)
+  File "/home/runner/workspace/api/webhook.py", line 190, in handle_text_message
+    handle_session_message(user_id, message_text)
+  File "/home/runner/workspace/api/webhook.py", line 311, in handle_session_message
+    handle_audio_chat_message(user_id, message_text)
+  File "/home/runner/workspace/api/webhook.py", line 1577, in handle_audio_chat_message
+    audio_chat_service.handle_audio_input(user_id, message_text=message_text)
+  File "/home/runner/workspace/services/audio_chat_service.py", line 491, in handle_audio_input
+    success = whatsapp_service.send_audio_message(user_id, audio_path)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/services/whatsapp_service.py", line 97, in send_audio_message
+    upload_response = requests.post(upload_url, headers=headers, files=files, timeout=120)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/requests/api.py", line 115, in post
+    return request("post", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/requests/api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/requests/adapters.py", line 644, in send
+    resp = conn.urlopen(
+           ^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+               ^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/urllib3/connectionpool.py", line 534, in _make_request
+    response = conn.getresponse()
+               ^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/urllib3/connection.py", line 565, in getresponse
+    httplib_response = super().getresponse()
+                       ^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python3.11/http/client.py", line 1395, in getresponse
+    response.begin()
+  File "/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python3.11/http/client.py", line 325, in begin
+    version, status, reason = self._read_status()
+                              ^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python3.11/http/client.py", line 286, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python3.11/socket.py", line 718, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python3.11/ssl.py", line 1314, in recv_into
+    return self.read(nbytes, buffer)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python3.11/ssl.py", line 1166, in read
+    return self._sslobj.read(len, buffer)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/base.py", line 204, in handle_abort
+    sys.exit(1)
+SystemExit: 1
+[2025-08-24 10:04:07 +0000] [913] [INFO] Worker exiting (pid: 913)
+[2025-08-24 10:04:08 +0000] [1300] [INFO] Booting worker with pid: 1300
+2025-08-24 10:04:09,187 - root - INFO - Database tables created successfully
+2025-08-24 10:04:09,231 - database.session_db - INFO - Session database initialized successfully
+Supabase URL: https://hvlvwvzliqrlmqjbfgoa.supabase.co
+Supabase Key: eyJhbGciOiJIUzI1NiIs...
+2025-08-24 10:04:10,914 - services.payment_service - WARNING - EcoCash API key not configured - payment features will be limited
+2025-08-24 10:04:10,915 - services.graph_service - INFO - Enhanced Graph Service initialized for ZIMSEC educational graphs
+2025-08-24 10:04:10,963 - services.english_service - INFO - Enhanced ZIMSEC English Service initialized with Gemini AI
+2025-08-24 10:04:10,985 - services.audio_chat_service - INFO - Gemini AI client initialized for audio generation
+2025-08-24 10:04:10,986 - handlers.graph_practice_handler - INFO - Graph Practice Handler initialized for ZIMSEC O-Level
+2025-08-24 10:04:10,987 - handlers.english_handler - INFO - ZIMSEC English Handler initialized with comprehensive modules
+2025-08-24 10:04:11,093 - app - INFO - NerdX Quiz Bot startup
+Making GET request to https://hvlvwvzliqrlmqjbfgoa.supabase.co/rest/v1/users_registration
+Headers: {'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Content-Type': 'application/json'}
+Params: {'select': '*', 'chat_id': 'eq.263785494594'}
+Data: None
+Response status: 200
+Response text: [{"id":1,"chat_id":"263785494594","name":"Ngonidzashe","surname":"Zimbwa","date_of_birth":"03/10/2003","nerdx_id":"NEYHAI","referred_by_nerdx_id":null,"created_at":"2025-07-18T09:00:39.968177","updated_at":"2025-07-18T09:00:40.589828"}]
+2025-08-24 10:04:12,515 - services.whatsapp_service - INFO - Message sent successfully to 263785494594
+2025-08-24 10:04:20,398 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-08-24 10:04:38,922 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent "HTTP/1.1 200 OK"
+2025-08-24 10:04:39,011 - google_genai.models - INFO - AFC remote call 1 is done.
+2025-08-24 10:04:39,547 - services.audio_chat_service - INFO - Audio converted to OGG successfully: audio_7396745e92ea471d872509735446a2b5.ogg
+2025-08-24 10:04:41,267 - services.whatsapp_service - INFO - Audio message sent successfully to 263785494594
+[2025-08-24 10:04:41 +0000] [902] [CRITICAL] WORKER TIMEOUT (pid:1300)
+[2025-08-24 10:04:41 +0000] [1300] [ERROR] Error handling request /webhook/whatsapp
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 134, in handle
+    self.handle_request(listener, req, client, addr)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 177, in handle_request
+    respiter = self.wsgi(environ, resp.start_response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/werkzeug/middleware/proxy_fix.py", line 183, in __call__
+    return self.app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/api/webhook.py", line 141, in handle_webhook
+    handle_text_message(user_id, message_text)
+  File "/home/runner/workspace/api/webhook.py", line 190, in handle_text_message
+    handle_session_message(user_id, message_text)
+  File "/home/runner/workspace/api/webhook.py", line 311, in handle_session_message
+    handle_audio_chat_message(user_id, message_text)
+  File "/home/runner/workspace/api/webhook.py", line 1577, in handle_audio_chat_message
+    audio_chat_service.handle_audio_input(user_id, message_text=message_text)
+  File "/home/runner/workspace/services/audio_chat_service.py", line 495, in handle_audio_input
+    self.send_audio_response_buttons(user_id)
+  File "/home/runner/workspace/services/audio_chat_service.py", line 557, in send_audio_response_buttons
+    whatsapp_service.send_interactive_message(user_id, message, buttons)
+  File "/home/runner/workspace/services/whatsapp_service.py", line 187, in send_interactive_message
+    response = requests.post(url, headers=headers, json=data, timeout=10)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/requests/api.py", line 115, in post
+    return request("post", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/requests/api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/requests/adapters.py", line 644, in send
+    resp = conn.urlopen(
+           ^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+               ^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/urllib3/connectionpool.py", line 464, in _make_request
+    self._validate_conn(conn)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/urllib3/connectionpool.py", line 1093, in _validate_conn
+    conn.connect()
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/urllib3/connection.py", line 790, in connect
+    sock_and_verified = _ssl_wrap_socket_and_match_hostname(
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/urllib3/connection.py", line 922, in _ssl_wrap_socket_and_match_hostname
+    context = create_urllib3_context(
+              ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/urllib3/util/ssl_.py", line 298, in create_urllib3_context
+    context = SSLContext(PROTOCOL_TLS_CLIENT)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python3.11/ssl.py", line 500, in __new__
+    self = _SSLContext.__new__(cls, protocol)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/base.py", line 204, in handle_abort
+    sys.exit(1)
+SystemExit: 1
+[2025-08-24 10:04:41 +0000] [1300] [INFO] Worker exiting (pid: 1300)
+[2025-08-24 10:04:41 +0000] [1404] [INFO] Booting worker with pid: 1404
+2025-08-24 10:04:42,909 - root - INFO - Database tables created successfully
+2025-08-24 10:04:42,955 - database.session_db - INFO - Session database initialized successfully
+Supabase URL: https://hvlvwvzliqrlmqjbfgoa.supabase.co
+Supabase Key: eyJhbGciOiJIUzI1NiIs...
+2025-08-24 10:04:44,783 - services.payment_service - WARNING - EcoCash API key not configured - payment features will be limited
+2025-08-24 10:04:44,783 - services.graph_service - INFO - Enhanced Graph Service initialized for ZIMSEC educational graphs
+2025-08-24 10:04:44,826 - services.english_service - INFO - Enhanced ZIMSEC English Service initialized with Gemini AI
+2025-08-24 10:04:44,851 - services.audio_chat_service - INFO - Gemini AI client initialized for audio generation
+2025-08-24 10:04:44,852 - handlers.graph_practice_handler - INFO - Graph Practice Handler initialized for ZIMSEC O-Level
+2025-08-24 10:04:44,853 - handlers.english_handler - INFO - ZIMSEC English Handler initialized with comprehensive modules
+2025-08-24 10:04:44,970 - app - INFO - NerdX Quiz Bot startup
+Making GET request to https://hvlvwvzliqrlmqjbfgoa.supabase.co/rest/v1/users_registration
+Headers: {'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Content-Type': 'application/json'}
+Params: {'select': '*', 'chat_id': 'eq.263785494594'}
+Data: None
+Response status: 200
+Response text: [{"id":1,"chat_id":"263785494594","name":"Ngonidzashe","surname":"Zimbwa","date_of_birth":"03/10/2003","nerdx_id":"NEYHAI","referred_by_nerdx_id":null,"created_at":"2025-07-18T09:00:39.968177","updated_at":"2025-07-18T09:00:40.589828"}]
+2025-08-24 10:04:46,312 - services.whatsapp_service - INFO - Message sent successfully to 263785494594

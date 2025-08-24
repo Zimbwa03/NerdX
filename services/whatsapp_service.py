@@ -39,7 +39,7 @@ class WhatsAppService:
                 'text': {'body': message}
             }
             
-            response = requests.post(url, headers=headers, json=data, timeout=10)  # Further reduced timeout
+            response = requests.post(url, headers=headers, json=data, timeout=15)  # Further reduced timeout
             
             if response.status_code == 200:
                 logger.info(f"Message sent successfully to {to}")
@@ -94,7 +94,7 @@ class WhatsAppService:
                     'messaging_product': (None, 'whatsapp')
                 }
                 
-                upload_response = requests.post(upload_url, headers=headers, files=files, timeout=120)
+                upload_response = requests.post(upload_url, headers=headers, files=files, timeout=30)
                 
                 if upload_response.status_code != 200:
                     logger.error(f"Failed to upload audio: {upload_response.status_code} - {upload_response.text}")
@@ -184,7 +184,7 @@ class WhatsAppService:
                 }
             }
             
-            response = requests.post(url, headers=headers, json=data, timeout=10)
+            response = requests.post(url, headers=headers, json=data, timeout=15)
             
             if response.status_code == 200:
                 logger.info(f"Interactive message sent successfully to {to}")
@@ -274,7 +274,7 @@ class WhatsAppService:
                 }
             }
             
-            response = requests.post(url, headers=headers, json=data, timeout=10)
+            response = requests.post(url, headers=headers, json=data, timeout=15)
             
             if response.status_code == 200:
                 return True
@@ -324,7 +324,7 @@ class WhatsAppService:
                 }
             }
             
-            response = requests.post(url, headers=headers, json=data, timeout=10)
+            response = requests.post(url, headers=headers, json=data, timeout=15)
             
             if response.status_code == 200:
                 logger.info(f"MCQ list message sent successfully to {to}")
@@ -361,7 +361,7 @@ class WhatsAppService:
                 }
             }
             
-            response = requests.post(url, headers=headers, json=data, timeout=10)
+            response = requests.post(url, headers=headers, json=data, timeout=15)
             
             if response.status_code == 200:
                 logger.info(f"List message sent successfully to {to}")
@@ -577,7 +577,7 @@ class WhatsAppService:
                         }
                         
                         logger.info(f"Uploading document (attempt {retry_count + 1}/{max_retries})...")
-                        upload_response = requests.post(upload_url, headers=headers, files=files, timeout=120)
+                        upload_response = requests.post(upload_url, headers=headers, files=files, timeout=30)
                         
                         if upload_response.status_code == 200:
                             media_id = upload_response.json().get('id')

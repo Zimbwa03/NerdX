@@ -262,7 +262,7 @@ class AudioChatService:
                             ], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                             
                             # Send PCM data to ffmpeg
-                            stdout, stderr = process.communicate(input=part.inline_data.data, timeout=30)
+                            stdout, stderr = process.communicate(input=part.inline_data.data, timeout=15)
                             
                             if process.returncode == 0:
                                 logger.info(f"Audio converted to OGG successfully: {audio_filename}")
