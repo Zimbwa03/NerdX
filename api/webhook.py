@@ -1419,68 +1419,88 @@ def handle_level_menu(user_id: str, level: str):
     whatsapp_service.send_interactive_message(user_id, text, buttons)
 
 def handle_share_to_friend(user_id: str):
-    """Handle share to friend button - matches backup exactly"""
+    """Handle share to friend button with enhanced referral system"""
     try:
+        from services.referral_service import ReferralService
         from database.external_db import get_user_registration
 
+        # Get user registration data
         registration = get_user_registration(user_id)
         if not registration:
             whatsapp_service.send_message(user_id, "❌ Registration not found. Please try again.")
             return
 
-        nerdx_id = registration.get('nerdx_id', 'N00000')
         name = registration.get('name', 'Student')
-
-        share_message = f"📤 *Share NerdX with Friends!*\n\n"
-        share_message += f"Hey {name}! 👋\n\n"
-        share_message += f"💎 Earn *50 FREE CREDITS* for every friend who registers using your ID!\n\n"
-        share_message += f"🎯 *Your Referral ID:* `{nerdx_id}`\n\n"
-        share_message += f"📲 *Share this message:*\n\n"
-        share_message += f"---\n"
-        share_message += f"🎓 Join NerdX - The #1 ZIMSEC Quiz Bot!\n\n"
-        share_message += f"🧬 Study Biology, Chemistry & Physics\n"
-        share_message += f"🤖 AI-powered questions\n"
-        share_message += f"📊 Track your progress\n\n"
-        share_message += f"💎 Register with ID: {nerdx_id} and get bonus credits!\n\n"
-        share_message += f"Start here: https://wa.me/+263784257773?text=Hello%20NerdX%20ID:%20{nerdx_id}\n"
-        share_message += f"---"
-
+        
+        # Use enhanced referral service
+        referral_service = ReferralService()
+        referral_data = referral_service.get_referral_share_message(user_id, name)
+        
+        if not referral_data['success']:
+            whatsapp_service.send_message(user_id, f"❌ {referral_data['message']}")
+            return
+        
+        # Send the enhanced referral message
         buttons = [
             {"text": "👥 View Referrals", "callback_data": "referrals_menu"},
+            {"text": "📤 Share Again", "callback_data": "share_to_friend"},
             {"text": "🏠 Main Menu", "callback_data": "main_menu"}
         ]
 
-        whatsapp_service.send_interactive_message(user_id, share_message, buttons)
+        whatsapp_service.send_interactive_message(user_id, referral_data['share_message'], buttons)
 
     except Exception as e:
         logger.error(f"Error in handle_share_to_friend for {user_id}: {e}", exc_info=True)
         whatsapp_service.send_message(user_id, "❌ Error sharing referral link.")
 
 def show_referral_info(user_id: str):
-    """Show referral information and stats - matches backup exactly"""
+    """Show referral information and stats with enhanced referral system"""
     try:
-        from database.external_db import get_user_registration, get_referral_stats
+        from services.referral_service import ReferralService
+        from database.external_db import get_user_registration
 
+        # Get user registration data
         registration = get_user_registration(user_id)
         if not registration:
             whatsapp_service.send_message(user_id, "❌ Registration not found.")
             return
 
-        nerdx_id = registration.get('nerdx_id', 'N00000')
         name = registration.get('name', 'Student')
-
-        # Get referral stats using nerdx_id (not chat_id)
-        referral_stats = get_referral_stats(nerdx_id)
+        
+        # Use enhanced referral service
+        referral_service = ReferralService()
+        referral_stats = referral_service.get_referral_stats(user_id)
+        
+        if not referral_stats:
+            whatsapp_service.send_message(user_id, "❌ Error loading referral information.")
+            return
+        
+        referral_code = referral_stats.get('referral_code', 'Not Generated')
         total_referrals = referral_stats.get('total_referrals', 0)
-        total_earned = referral_stats.get('total_credits_earned', 0)
+        successful_referrals = referral_stats.get('successful_referrals', 0)
+        total_bonus_earned = referral_stats.get('total_bonus_earned', 0)
+        referrer_bonus = referral_stats.get('referrer_bonus', 5)
+        referee_bonus = referral_stats.get('referee_bonus', 5)
 
-        referral_message = f"👥 *{name}'s Referral Center* 👥\n\n"
-        referral_message += f"🎯 *Your Referral ID:* `{nerdx_id}`\n\n"
-        referral_message += f"📊 *Referral Stats:*\n"
-        referral_message += f"• Friends Referred: {total_referrals}\n"
-        referral_message += f"• Credits Earned: {total_earned}\n\n"
-        referral_message += f"💎 *Earn 50 credits* for each friend who registers!\n\n"
-        referral_message += f"📲 Share your ID with friends so they can get bonus credits too!"
+        referral_message = f"""👥 *{name}'s Referral Center* 👥
+
+🎯 *Your Referral Code:* `{referral_code}`
+
+📊 *Referral Stats:*
+• Friends Referred: {successful_referrals}
+• Total Referrals: {total_referrals}
+• Credits Earned: {total_bonus_earned}
+
+💎 *Earn {referrer_bonus} credits* for each friend who registers!
+🎁 *Your friends also get {referee_bonus} bonus credits!*
+
+✨ *How it works:*
+1️⃣ Share your referral code with friends
+2️⃣ They register using your code
+3️⃣ You both get +{referrer_bonus} credits!
+4️⃣ They also get +{referee_bonus} bonus credits!
+
+📲 Share your code with friends so they can get bonus credits too!"""
 
         buttons = [
             {"text": "📤 Share to Friend", "callback_data": "share_to_friend"},
@@ -2686,7 +2706,10 @@ def handle_payment_help(user_id: str):
 def handle_payment_proof_submission(user_id: str, package_id: str, reference_code: str):
     """Handle payment proof submission from user"""
     try:
+        from services.payment_service import PaymentService
         from database.session_db import get_payment_session, update_payment_session
+        
+        payment_service = PaymentService()
         
         # Get payment session data
         payment_data = get_payment_session(user_id)
@@ -2694,19 +2717,29 @@ def handle_payment_proof_submission(user_id: str, package_id: str, reference_cod
             whatsapp_service.send_message(user_id, "❌ Payment session not found or expired. Please try again.")
             return
         
-        # Update payment status to pending
-        payment_data['status'] = 'pending'
-        payment_data['proof_submitted'] = True
-        payment_data['proof_timestamp'] = datetime.now().isoformat()
-        update_payment_session(user_id, payment_data)
+        # Get package details
+        package = payment_service.get_package_by_id(package_id)
+        if not package:
+            whatsapp_service.send_message(user_id, "❌ Package not found. Please try again.")
+            return
         
-        message = f"""⏳ **PAYMENT UNDER REVIEW**
+        # Submit payment proof to payment service for admin review
+        result = payment_service.submit_payment_proof(user_id, package_id, reference_code, "Payment proof submitted")
+        
+        if result['success']:
+            # Update payment session status
+            payment_data['status'] = 'submitted_for_review'
+            payment_data['proof_submitted'] = True
+            payment_data['proof_timestamp'] = datetime.now().isoformat()
+            update_payment_session(user_id, payment_data)
+            
+            message = f"""⏳ **PAYMENT UNDER REVIEW**
 
 ✅ **Submission Successful!**
 
 📋 **Details:**
-💰 Package: {payment_data.get('package_name', 'Unknown')}
-💳 Amount: ${payment_data.get('amount', 0):.2f}
+💰 Package: {package['name']}
+💳 Amount: ${package['price']:.2f}
 🔢 Reference: {reference_code}
 ⏰ Submitted: {datetime.now().strftime('%Y-%m-%d %H:%M')}
 
@@ -2722,16 +2755,19 @@ def handle_payment_proof_submission(user_id: str, package_id: str, reference_cod
 
 🏠 **CONTINUE USING APP**
 ❓ **SUPPORT**"""
-        
-        buttons = [
-            {"text": "🏠 CONTINUE USING APP", "callback_data": "back_to_menu"},
-            {"text": "❓ SUPPORT", "callback_data": "payment_support"}
-        ]
-        
-        whatsapp_service.send_interactive_message(user_id, message, buttons)
-        
-        # Send notification to admin (in production, this would be a proper admin notification)
-        logger.info(f"Payment proof submitted by {user_id} for package {package_id}, reference {reference_code}")
+            
+            buttons = [
+                {"text": "🏠 CONTINUE USING APP", "callback_data": "back_to_menu"},
+                {"text": "❓ SUPPORT", "callback_data": "payment_support"}
+            ]
+            
+            whatsapp_service.send_interactive_message(user_id, message, buttons)
+            
+            # Send notification to admin (in production, this would be a proper admin notification)
+            logger.info(f"Payment proof submitted by {user_id} for package {package_id}, reference {reference_code}")
+            
+        else:
+            whatsapp_service.send_message(user_id, f"❌ Error submitting payment proof: {result['message']}")
         
     except Exception as e:
         logger.error(f"Error handling payment proof submission for {user_id}: {e}")

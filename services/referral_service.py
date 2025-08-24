@@ -263,3 +263,89 @@ class ReferralService:
             return []
         finally:
             session.close()
+    
+    def generate_whatsapp_referral_link(self, referral_code: str) -> str:
+        """Generate WhatsApp referral link that automatically opens chat"""
+        try:
+            # Use the correct bot number: +263779779967
+            bot_number = "263779779967"
+            
+            # Create WhatsApp link that automatically opens chat with referral message
+            # The text parameter will pre-fill the message
+            referral_message = f"Hello! I want to join NerdX using referral code: {referral_code}"
+            
+            # URL encode the message
+            import urllib.parse
+            encoded_message = urllib.parse.quote(referral_message)
+            
+            # Create WhatsApp link
+            whatsapp_link = f"https://wa.me/{bot_number}?text={encoded_message}"
+            
+            return whatsapp_link
+            
+        except Exception as e:
+            logger.error(f"Error generating WhatsApp referral link: {e}")
+            # Fallback link
+            return f"https://wa.me/263779779967?text=Hello!%20I%20want%20to%20join%20NerdX%20using%20referral%20code:%20{referral_code}"
+    
+    def get_referral_share_message(self, user_id: str, user_name: str = None) -> Dict:
+        """Get complete referral share message with link"""
+        try:
+            # Generate or get existing referral code
+            referral_code = self.generate_referral_code(user_id)
+            if not referral_code:
+                return {
+                    'success': False,
+                    'message': 'Could not generate referral code'
+                }
+            
+            # Generate WhatsApp link
+            whatsapp_link = self.generate_whatsapp_referral_link(referral_code)
+            
+            # Create share message
+            if not user_name:
+                user_name = "Student"
+            
+            share_message = f"""📤 *Share NerdX with Friends!*
+
+Hey {user_name}! 👋
+
+💎 Earn *{self.referral_bonus['referrer']} FREE CREDITS* for every friend who registers using your referral code!
+
+🎯 *Your Referral Code:* `{referral_code}`
+
+📲 *Share this message:*
+
+---
+🎓 Join NerdX - The #1 ZIMSEC Quiz Bot!
+
+🧬 Study Biology, Chemistry & Physics
+🤖 AI-powered questions  
+📊 Track your progress
+
+💎 Register with referral code: *{referral_code}* and get bonus credits!
+
+🚀 Start here: {whatsapp_link}
+---
+
+✨ *How it works:*
+1️⃣ Share your referral code with friends
+2️⃣ They register using your code
+3️⃣ You both get +{self.referral_bonus['referrer']} credits!
+4️⃣ They also get +{self.referral_bonus['referee']} bonus credits!"""
+
+            return {
+                'success': True,
+                'referral_code': referral_code,
+                'whatsapp_link': whatsapp_link,
+                'share_message': share_message,
+                'referrer_bonus': self.referral_bonus['referrer'],
+                'referee_bonus': self.referral_bonus['referee']
+            }
+            
+        except Exception as e:
+            logger.error(f"Error getting referral share message: {e}")
+            return {
+                'success': False,
+                'message': 'Error generating referral information'
+            }

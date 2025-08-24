@@ -417,5 +417,16 @@ Hey there! 👋
             logger.error(f"Error formatting credit store: {e}")
             return "❌ Error loading credit store", [{"text": "⬅️ Back", "callback_data": "back_to_menu"}]
 
+    def add_credits_for_purchase(self, user_id: str, amount: int, reason: str) -> bool:
+        """Add credits for a purchase transaction"""
+        try:
+            if add_credits(user_id, amount, reason):
+                logger.info(f"Added {amount} credits to user {user_id} for {reason}")
+                return True
+            return False
+        except Exception as e:
+            logger.error(f"Error adding credits for purchase: {e}")
+            return False
+
 # Global advanced credit service instance
 advanced_credit_service = AdvancedCreditService()

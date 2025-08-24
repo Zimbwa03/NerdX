@@ -13,6 +13,7 @@ from database.session_db import (
     complete_registration_session, clear_registration_session
 )
 from services.advanced_credit_service import advanced_credit_service
+from config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -215,17 +216,20 @@ class UserService:
                 # Complete registration without referral
                 return self._complete_registration(whatsapp_id, session, None)
             
-            # Validate referral code format (assuming NERDX#### format)
-            if not referral_code.startswith('NERDX') or len(referral_code) != 9:
+            # Validate referral code format (8-character alphanumeric)
+            if len(referral_code) != 8 or not referral_code.isalnum():
                 return {
                     'success': False,
                     'step': 'referral_code',
-                    'message': 'Invalid referral code format. It should be like NERDX1234. Enter it again or type "SKIP":'
+                    'message': 'Invalid referral code format. It should be 8 characters (letters and numbers). Enter it again or type "SKIP":'
                 }
             
-            # Check if referral code exists
-            referrer = get_user_by_nerdx_id(referral_code)
-            if not referrer:
+            # Check if referral code exists using referral service
+            from services.referral_service import ReferralService
+            referral_service = ReferralService()
+            referrer_id = referral_service.validate_referral_code(referral_code)
+            
+            if not referrer_id:
                 return {
                     'success': False,
                     'step': 'referral_code',
@@ -294,7 +298,7 @@ class UserService:
                 if referral_code:
                     message += f"🎁 **Referral Bonus Applied!**\n"
                     message += f"Thanks for using referral code: {referral_code}\n"
-                    message += f"Your referrer also received +5 bonus credits!\n"
+                    message += f"Your referrer also received +{Config.REFERRAL_BONUS} bonus credits!\n"
                 
                 message += f"\n🚀 **Ready to start learning!**\n"
                 message += f"Type 'menu' to begin your educational journey!"

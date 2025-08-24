@@ -449,18 +449,24 @@ def approve_payment():
         if not transaction_ref:
             return jsonify({'error': 'Transaction reference is required'}), 400
         
-        # Complete the payment using existing function
-        success = complete_payment(transaction_ref, data.get('amount_paid', 0))
+        # Use the enhanced payment service to approve payment
+        from services.payment_service import PaymentService
+        payment_service = PaymentService()
         
-        if success:
+        result = payment_service.approve_payment(transaction_ref)
+        
+        if result['success']:
             return jsonify({
                 'success': True,
-                'message': 'Payment approved and credits added successfully'
+                'message': 'Payment approved and credits added successfully',
+                'user_id': result.get('user_id'),
+                'credits_added': result.get('credits'),
+                'package': result.get('package', {}).get('name', 'Unknown')
             })
         else:
             return jsonify({
                 'success': False,
-                'message': 'Failed to approve payment'
+                'message': result.get('message', 'Failed to approve payment')
             }), 400
             
     except Exception as e:
@@ -478,28 +484,23 @@ def reject_payment():
         if not transaction_ref:
             return jsonify({'error': 'Transaction reference is required'}), 400
         
-        # Update payment status to rejected
-        update_data = {
-            'status': 'rejected',
-            'rejection_reason': reason,
-            'updated_at': datetime.now().isoformat()
-        }
+        # Use the enhanced payment service to reject payment
+        from services.payment_service import PaymentService
+        payment_service = PaymentService()
         
-        success = make_supabase_request(
-            "PATCH", "pending_payments", 
-            update_data, 
-            filters={"transaction_reference": f"eq.{transaction_ref}"}
-        )
+        result = payment_service.reject_payment(transaction_ref, reason)
         
-        if success:
+        if result['success']:
             return jsonify({
                 'success': True,
-                'message': 'Payment rejected successfully'
+                'message': 'Payment rejected successfully',
+                'user_id': result.get('user_id'),
+                'reason': reason
             })
         else:
             return jsonify({
                 'success': False,
-                'message': 'Failed to reject payment'
+                'message': result.get('message', 'Failed to reject payment')
             }), 400
             
     except Exception as e:

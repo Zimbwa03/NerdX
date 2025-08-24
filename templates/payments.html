@@ -138,17 +138,29 @@
     </div>
 
     <!-- Pending Payments List -->
-    <div class="card shadow">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">
-                <i class="fas fa-list"></i> Pending Payment Reviews
-            </h6>
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">Pending Payment Review</h6>
+            <div class="dropdown no-arrow">
+                <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
+                    <div class="dropdown-header">Payment Actions:</div>
+                    <a class="dropdown-item" href="#" onclick="refreshPayments()">
+                        <i class="fas fa-sync-alt fa-sm fa-fw mr-2 text-gray-400"></i>Refresh
+                    </a>
+                    <a class="dropdown-item" href="#" onclick="exportPayments()">
+                        <i class="fas fa-download fa-sm fa-fw mr-2 text-gray-400"></i>Export
+                    </a>
+                </div>
+            </div>
         </div>
         <div class="card-body">
-            <div id="pendingPaymentsList">
+            <div id="pendingPaymentsContainer">
                 <div class="text-center py-4">
-                    <i class="fas fa-spinner fa-spin fa-2x text-muted"></i>
-                    <p class="mt-2 text-muted">Loading pending payments...</p>
+                    <i class="fas fa-spinner fa-spin fa-2x text-gray-400"></i>
+                    <p class="mt-2 text-gray-500">Loading pending payments...</p>
                 </div>
             </div>
         </div>
@@ -281,18 +293,19 @@ function renderPendingPayments() {
         paymentCard.className = 'payment-card';
         
         const transactionDate = new Date(payment.time_of_transaction).toLocaleString();
+        const statusBadge = getStatusBadge(payment.status);
         
         paymentCard.innerHTML = `
             <div class="payment-header">
                 <div class="row">
                     <div class="col-md-8">
                         <h6 class="mb-1">
-                            <i class="fas fa-user"></i> ${payment.student_name}
+                            <i class="fas fa-user-graduate text-primary"></i> ${payment.student_name}
                         </h6>
-                        <small class="text-muted">Transaction: ${payment.transaction_reference}</small>
+                        <small class="text-muted">Transaction: <code>${payment.transaction_reference}</code></small>
                     </div>
                     <div class="col-md-4 text-md-right">
-                        <span class="badge badge-warning">Pending Review</span>
+                        ${statusBadge}
                     </div>
                 </div>
             </div>
@@ -320,16 +333,24 @@ function renderPendingPayments() {
                         </table>
                     </div>
                     <div class="col-md-6">
-                        <label class="font-weight-bold">EcoCash Confirmation Message:</label>
+                        <label class="font-weight-bold">Payment Proof:</label>
                         <div class="confirmation-message">
-                            ${payment.ecocash_confirmation_message}
+                            <i class="fas fa-mobile-alt text-info mr-2"></i>
+                            Payment confirmation submitted via WhatsApp
                         </div>
+                        <small class="text-muted mt-2 d-block">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Student submitted EcoCash confirmation SMS
+                        </small>
                     </div>
                 </div>
             </div>
             
             <div class="payment-actions">
                 <div class="d-flex justify-content-end">
+                    <button class="btn btn-info btn-sm mr-2" onclick="viewPaymentDetails('${payment.transaction_reference}', ${index})">
+                        <i class="fas fa-eye"></i> Details
+                    </button>
                     <button class="btn btn-approve mr-2" onclick="approvePayment('${payment.transaction_reference}', ${index})">
                         <i class="fas fa-check"></i> Approve
                     </button>
@@ -342,6 +363,69 @@ function renderPendingPayments() {
         
         container.appendChild(paymentCard);
     });
+}
+
+function getStatusBadge(status) {
+    const statusConfig = {
+        'pending': { class: 'badge-warning', text: 'Pending Review', icon: 'clock' },
+        'approved': { class: 'badge-success', text: 'Approved', icon: 'check' },
+        'rejected': { class: 'badge-danger', text: 'Rejected', icon: 'times' },
+        'completed': { class: 'badge-info', text: 'Completed', icon: 'check-circle' }
+    };
+    
+    const config = statusConfig[status] || statusConfig['pending'];
+    return `<span class="badge ${config.class} badge-pill">
+        <i class="fas fa-${config.icon} mr-1"></i>${config.text}
+    </span>`;
+}
+
+function viewPaymentDetails(transactionRef, index) {
+    const payment = pendingPayments[index];
+    const timestamp = new Date(payment.time_of_transaction).toLocaleString();
+    
+    document.getElementById('modalTitle').textContent = 'Payment Details';
+    document.getElementById('modalBody').innerHTML = `
+        <div class="payment-details">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="font-weight-bold">Student Information</h6>
+                    <p><strong>Name:</strong> ${payment.student_name}</p>
+                    <p><strong>User ID:</strong> <code>${payment.user_id}</code></p>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="font-weight-bold">Payment Information</h6>
+                    <p><strong>Amount:</strong> $${payment.money_paid}</p>
+                    <p><strong>Credits:</strong> ${payment.credits_purchased}</p>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="font-weight-bold">Transaction Details</h6>
+                    <p><strong>Reference:</strong> <code>${payment.transaction_reference}</code></p>
+                    <p><strong>Status:</strong> ${getStatusBadge(payment.status).outerHTML}</p>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="font-weight-bold">Timeline</h6>
+                    <p><strong>Submitted:</strong> ${timestamp}</p>
+                    <p><strong>Method:</strong> EcoCash</p>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-12">
+                    <h6 class="font-weight-bold">Payment Proof</h6>
+                    <div class="alert alert-info">
+                        <i class="fas fa-mobile-alt mr-2"></i>
+                        Payment confirmation submitted via WhatsApp
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('confirmButton').style.display = 'none';
+    $('#confirmationModal').modal('show');
 }
 
 function approvePayment(transactionRef, index) {
@@ -493,6 +577,38 @@ function showAlert(message, type) {
     setTimeout(() => {
         alertDiv.remove();
     }, 5000);
+}
+
+function refreshPayments() {
+    loadPendingPayments();
+    showAlert('Refreshing payments...', 'info');
+}
+
+function exportPayments() {
+    if (!pendingPayments || pendingPayments.length === 0) {
+        showAlert('No payments to export', 'warning');
+        return;
+    }
+    
+    // Create CSV content
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "Student Name,Amount,Credits,Reference,Status,Submitted\n";
+    
+    pendingPayments.forEach(payment => {
+        const timestamp = new Date(payment.time_of_transaction).toLocaleString();
+        csvContent += `"${payment.student_name}",${payment.money_paid},${payment.credits_purchased},"${payment.transaction_reference}","${payment.status}","${timestamp}"\n`;
+    });
+    
+    // Download CSV file
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `pending_payments_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showAlert('Payments exported successfully', 'success');
 }
 </script>
 {% endblock %}

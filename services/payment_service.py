@@ -226,55 +226,229 @@ class PaymentService:
         """Get credit packages - compatibility method"""
         return self.calculate_credit_packages()
     
-    def submit_payment_proof(self, user_id: str, reference_code: str, proof_text: str) -> Dict:
-        """Submit payment proof for verification"""
+    def submit_payment_proof(self, user_id: str, package_id: str, reference_code: str, proof_text: str) -> Dict:
+        """Submit payment proof for manual verification"""
         try:
-            # Update payment transaction with proof
-            update_data = {
-                'payment_proof': proof_text,
-                'proof_submitted_at': datetime.now().isoformat(),
-                'status': 'proof_submitted'
+            package = self.get_package_by_id(package_id)
+            if not package:
+                return {'success': False, 'message': 'Package not found'}
+            
+            # Create pending payment record for admin review
+            payment_data = {
+                'user_id': user_id,
+                'package_type': package_id,
+                'amount_expected': package['price'],
+                'credits_to_add': package['credits'],
+                'transaction_reference': reference_code,
+                'proof_text': proof_text,
+                'status': 'pending',
+                'created_at': datetime.now().isoformat(),
+                'updated_at': datetime.now().isoformat()
             }
             
-            try:
-                success = make_supabase_request(
+            # Store in pending_payments table for admin review
+            result = make_supabase_request("POST", "pending_payments", payment_data)
+            
+            if result:
+                logger.info(f"Payment proof submitted for user {user_id}, ref: {reference_code}")
+                return {
+                    'success': True,
+                    'message': 'Payment proof submitted successfully. Awaiting admin verification.',
+                    'reference_code': reference_code,
+                    'package': package
+                }
+            else:
+                return {'success': False, 'message': 'Failed to submit payment proof'}
+                
+        except Exception as e:
+            logger.error(f"Error submitting payment proof: {e}")
+            return {'success': False, 'message': 'Error submitting payment proof'}
+    
+    def approve_payment(self, reference_code: str) -> Dict:
+        """Approve a pending payment and add credits to user"""
+        try:
+            # Get pending payment details
+            result = make_supabase_request(
+                "GET", 
+                "pending_payments", 
+                filters={"transaction_reference": f"eq.{reference_code}"}
+            )
+            
+            if not result or len(result) == 0:
+                return {'success': False, 'message': 'Payment not found'}
+            
+            payment = result[0]
+            user_id = payment['user_id']
+            credits = payment['credits_to_add']
+            package = self.get_package_by_id(payment.get('package_type', 'unknown'))
+            
+            # Add credits to user account using advanced credit system
+            from services.advanced_credit_service import advanced_credit_service
+            add_success = advanced_credit_service.add_credits_for_purchase(user_id, credits, f"Credit purchase: {package['name'] if package else 'Package'}")
+            
+            if add_success:
+                # Update payment status to approved
+                update_data = {
+                    'status': 'approved',
+                    'approved_at': datetime.now().isoformat(),
+                    'credits_added': credits,
+                    'updated_at': datetime.now().isoformat()
+                }
+                
+                # Update status in pending_payments
+                make_supabase_request(
                     "PATCH", 
                     "pending_payments", 
                     update_data,
                     filters={"transaction_reference": f"eq.{reference_code}"}
                 )
-                logger.info(f"Payment proof updated in pending_payments: {reference_code}")
-            except Exception as e:
-                logger.error(f"Error updating pending_payments table: {e}")
-                # Fallback to session database
-                from database.session_db import save_user_session
-                save_user_session(f"payment_proof_{user_id}", {
-                    'session_type': 'payment_proof',
-                    'reference_code': reference_code,
-                    'proof_text': proof_text,
-                    'submitted_at': datetime.now().isoformat(),
-                    'status': 'proof_submitted'
-                })
-                logger.info(f"Payment proof saved to session database as fallback")
-                success = True  # Treat as success since we saved to fallback
-            
-            if success:
+                
+                # Add to completed payments table for dashboard analytics
+                completed_payment = {
+                    'user_id': user_id,
+                    'amount_paid': payment.get('amount_expected', 0),
+                    'credits_added': credits,
+                    'transaction_reference': reference_code,
+                    'status': 'completed',
+                    'payment_method': 'ecocash',
+                    'created_at': payment.get('created_at'),
+                    'completed_at': datetime.now().isoformat()
+                }
+                make_supabase_request("POST", "payments", completed_payment)
+                
+                # Send approval notification to user
+                self.send_payment_approval_notification(user_id, reference_code, package, credits)
+                
                 return {
                     'success': True,
-                    'message': self.get_payment_under_review_message(reference_code)
+                    'user_id': user_id,
+                    'credits': credits,
+                    'package': package,
+                    'message': self.get_payment_approved_message(reference_code)
                 }
             else:
-                return {
-                    'success': False,
-                    'message': 'Error submitting payment proof. Please try again.'
-                }
+                return {'success': False, 'message': 'Error adding credits'}
                 
         except Exception as e:
-            logger.error(f"Error submitting payment proof: {e}")
-            return {
-                'success': False,
-                'message': 'Error submitting payment proof. Please try again.'
+            logger.error(f"Error approving payment: {e}")
+            return {'success': False, 'message': 'Error processing approval'}
+    
+    def reject_payment(self, reference_code: str, reason: str) -> Dict:
+        """Reject a pending payment"""
+        try:
+            # Get pending payment details
+            result = make_supabase_request(
+                "GET", 
+                "pending_payments", 
+                filters={"transaction_reference": f"eq.{reference_code}"}
+            )
+            
+            if not result or len(result) == 0:
+                return {'success': False, 'message': 'Payment not found'}
+            
+            payment = result[0]
+            user_id = payment['user_id']
+            
+            # Update payment status to rejected
+            update_data = {
+                'status': 'rejected',
+                'rejection_reason': reason,
+                'rejected_at': datetime.now().isoformat(),
+                'updated_at': datetime.now().isoformat()
             }
+            
+            success = make_supabase_request(
+                "PATCH", 
+                "pending_payments", 
+                update_data,
+                filters={"transaction_reference": f"eq.{reference_code}"}
+            )
+            
+            if success:
+                # Send rejection notification to user
+                self.send_payment_rejection_notification(user_id, reference_code, reason)
+                
+                return {
+                    'success': True,
+                    'message': 'Payment rejected successfully',
+                    'user_id': user_id,
+                    'reason': reason
+                }
+            else:
+                return {'success': False, 'message': 'Failed to reject payment'}
+                
+        except Exception as e:
+            logger.error(f"Error rejecting payment: {e}")
+            return {'success': False, 'message': 'Error processing rejection'}
+    
+    def send_payment_approval_notification(self, user_id: str, reference_code: str, package: Dict, credits: int) -> None:
+        """Send payment approval notification to user"""
+        try:
+            from services.whatsapp_service import WhatsAppService
+            whatsapp_service = WhatsAppService()
+            
+            message = f"""🎉 **PAYMENT APPROVED!**
+
+✅ **Transaction Successful**
+
+💰 **Package**: {package['name']}
+💳 **Credits Added**: +{credits} credits
+🔢 **Transaction ID**: {reference_code}
+📅 **Date**: {datetime.now().strftime('%Y-%m-%d %H:%M')}
+
+🚀 **Your credits are ready to use!**
+🎯 **Start learning now and make the most of your purchase!**
+
+📚 **CONTINUE LEARNING**
+🏠 **MAIN MENU**
+💰 **BUY MORE CREDITS**"""
+            
+            buttons = [
+                {"text": "📚 CONTINUE LEARNING", "callback_data": "start_quiz"},
+                {"text": "🏠 MAIN MENU", "callback_data": "back_to_menu"},
+                {"text": "💰 BUY MORE CREDITS", "callback_data": "credit_store"}
+            ]
+            
+            whatsapp_service.send_interactive_message(user_id, message, buttons)
+            
+        except Exception as e:
+            logger.error(f"Error sending payment approval notification: {e}")
+    
+    def send_payment_rejection_notification(self, user_id: str, reference_code: str, reason: str) -> None:
+        """Send payment rejection notification to user"""
+        try:
+            from services.whatsapp_service import WhatsAppService
+            whatsapp_service = WhatsAppService()
+            
+            message = f"""⚠️ **PAYMENT REQUIRES CLARIFICATION**
+
+❗ **Issue Identified:**
+{reason}
+
+📋 **Next Steps:**
+1️⃣ Check your EcoCash SMS again
+2️⃣ Ensure you sent the exact amount
+3️⃣ Resubmit complete confirmation message
+
+💡 **Common Issues:**
+• Incomplete SMS text copied
+• Wrong amount sent
+• Payment to wrong number
+
+🔄 **RESUBMIT PAYMENT PROOF**
+💬 **CONTACT SUPPORT**
+🏠 **BACK TO MAIN MENU**"""
+            
+            buttons = [
+                {"text": "🔄 RESUBMIT PAYMENT PROOF", "callback_data": "credit_store"},
+                {"text": "💬 CONTACT SUPPORT", "callback_data": "contact_support"},
+                {"text": "🏠 BACK TO MAIN MENU", "callback_data": "back_to_menu"}
+            ]
+            
+            whatsapp_service.send_interactive_message(user_id, message, buttons)
+            
+        except Exception as e:
+            logger.error(f"Error sending payment rejection notification: {e}")
     
     def get_payment_under_review_message(self, reference_code: str) -> str:
         """Get payment under review message"""
@@ -318,74 +492,6 @@ class PaymentService:
         message += f"🔔 **You'll be notified when approved!**"
         
         return message
-    
-    def approve_payment(self, reference_code: str) -> Dict:
-        """Approve payment and add credits (admin function)"""
-        try:
-            # Get payment details
-            result = make_supabase_request(
-                "GET", 
-                "pending_payments", 
-                filters={"transaction_reference": f"eq.{reference_code}"}
-            )
-            
-            if not result or len(result) == 0:
-                return {'success': False, 'message': 'Payment not found'}
-            
-            payment = result[0]
-            user_id = payment['user_id']
-            credits = payment['credits_to_add']
-            package = self.get_package_by_id(payment.get('package_type', 'unknown'))
-            
-            # Add credits to user account
-            add_success = add_credits(
-                user_id, 
-                credits, 
-                'credit_purchase', 
-                f"Credit purchase: {package['name'] if package else 'Package'}"
-            )
-            
-            if add_success:
-                # Update payment status
-                update_data = {
-                    'status': 'approved',
-                    'approved_at': datetime.now().isoformat(),
-                    'credits_added': credits
-                }
-                
-                # Update status in pending_payments and add to completed payments
-                make_supabase_request(
-                    "PATCH", 
-                    "pending_payments", 
-                    update_data,
-                    filters={"transaction_reference": f"eq.{reference_code}"}
-                )
-                
-                # Also add to payments table for dashboard analytics
-                completed_payment = {
-                    'user_id': user_id,
-                    'amount_paid': payment.get('amount_expected', 0),
-                    'credits_added': credits,
-                    'transaction_reference': reference_code,
-                    'status': 'completed',
-                    'created_at': payment.get('created_at'),
-                    'completed_at': datetime.now().isoformat()
-                }
-                make_supabase_request("POST", "payments", completed_payment)
-                
-                return {
-                    'success': True,
-                    'user_id': user_id,
-                    'credits': credits,
-                    'package': package,
-                    'message': self.get_payment_approved_message(reference_code)
-                }
-            else:
-                return {'success': False, 'message': 'Error adding credits'}
-                
-        except Exception as e:
-            logger.error(f"Error approving payment: {e}")
-            return {'success': False, 'message': 'Error processing approval'}
     
     def get_payment_approved_message(self, reference_code: str) -> str:
         """Get payment approved message"""
