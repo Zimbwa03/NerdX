@@ -79,10 +79,13 @@ class WhatsAppService:
             elif file_extension == 'mp3':
                 content_type = 'audio/mpeg'
                 filename = 'audio.mp3'
+            elif file_extension == 'ogg':
+                content_type = 'audio/ogg'
+                filename = 'audio.ogg'
             else:
-                # Default to WAV for unknown extensions
-                content_type = 'audio/wav'
-                filename = 'audio.wav'
+                # Default to OGG for unknown extensions (WhatsApp compatible)
+                content_type = 'audio/ogg'
+                filename = 'audio.ogg'
             
             with open(audio_file_path, 'rb') as audio_file:
                 files = {

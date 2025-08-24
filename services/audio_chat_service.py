@@ -240,43 +240,40 @@ class AudioChatService:
             if response.candidates and response.candidates[0].content.parts:
                 for part in response.candidates[0].content.parts:
                     if part.inline_data and part.inline_data.data:
-                        # Save audio to temporary file as MP3 for WhatsApp compatibility
-                        audio_filename = f"audio_{uuid.uuid4().hex}.mp3"
+                        # Save audio as OGG for WhatsApp compatibility (Gemini outputs raw PCM)
+                        audio_filename = f"audio_{uuid.uuid4().hex}.ogg"
                         audio_path = os.path.join(self.audio_dir, audio_filename)
 
-                        # Convert Gemini's PCM audio to MP3 format using ffmpeg
-                        temp_wav_path = audio_path.replace('.mp3', '_temp.wav')
-                        
-                        # First save as WAV
-                        with open(temp_wav_path, 'wb') as f:
-                            f.write(part.inline_data.data)
-                        
-                        # Convert WAV to MP3 for WhatsApp compatibility
+                        # Convert Gemini's raw PCM audio (24kHz, 16-bit) directly to OGG using ffmpeg
                         try:
                             import subprocess
-                            result = subprocess.run([
-                                'ffmpeg', '-y', '-i', temp_wav_path, 
-                                '-acodec', 'mp3', '-ab', '128k', 
-                                audio_path
-                            ], capture_output=True, text=True, timeout=30)
                             
-                            if result.returncode == 0:
-                                # Clean up temporary WAV file
-                                os.remove(temp_wav_path)
-                                logger.info(f"Audio converted to MP3 successfully: {audio_filename}")
+                            # Use ffmpeg to convert raw PCM data to OGG format
+                            # Gemini outputs: 24kHz, 16-bit, mono PCM
+                            process = subprocess.Popen([
+                                'ffmpeg', '-y',
+                                '-f', 's16le',           # 16-bit signed little-endian PCM
+                                '-ar', '24000',          # 24kHz sample rate
+                                '-ac', '1',              # 1 channel (mono)
+                                '-i', 'pipe:0',          # Read from stdin
+                                '-c:a', 'libvorbis',     # Use Vorbis codec for OGG
+                                '-q:a', '4',             # Quality level 4 (good quality, small size)
+                                audio_path
+                            ], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                            
+                            # Send PCM data to ffmpeg
+                            stdout, stderr = process.communicate(input=part.inline_data.data, timeout=30)
+                            
+                            if process.returncode == 0:
+                                logger.info(f"Audio converted to OGG successfully: {audio_filename}")
                                 return audio_path
                             else:
-                                logger.error(f"FFmpeg conversion failed: {result.stderr}")
-                                # Fallback: rename WAV to MP3 (may not work but worth trying)
-                                os.rename(temp_wav_path, audio_path)
-                                logger.warning("Using WAV renamed as MP3 - may cause delivery issues")
-                                return audio_path
+                                logger.error(f"FFmpeg conversion failed: {stderr.decode()}")
+                                return None
                                 
-                        except (subprocess.TimeoutExpired, FileNotFoundError):
-                            logger.warning("FFmpeg not available - using WAV renamed as MP3")
-                            # Fallback: just rename the file
-                            os.rename(temp_wav_path, audio_path)
-                            return audio_path
+                        except Exception as e:
+                            logger.error(f"Error converting audio with FFmpeg: {e}")
+                            return None
             
             logger.error("No audio data received from Gemini AI")
             return None
