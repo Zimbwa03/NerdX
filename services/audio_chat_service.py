@@ -52,12 +52,12 @@ audio_tasks = {}
 
 class AudioChatService:
     """Audio Chat service for WhatsApp bot with multi-modal support"""
-    
+
     def __init__(self):
         # Initialize threading lock for single audio generation
         self.audio_generation_lock = threading.Lock()
         self.is_generating_audio = False
-        
+
         # Initialize Gemini AI client for audio generation
         self.gemini_client = None
         if GEMINI_API_KEY and genai:
@@ -66,13 +66,13 @@ class AudioChatService:
                 logger.info("Gemini AI client initialized for audio generation")
             except Exception as e:
                 logger.error(f"Failed to initialize Gemini AI client: {e}")
-        
+
         # Gemini TTS voice configurations (using valid voice names)
         self.gemini_voices = {
             'female': 'kore',      # Female voice (confirmed available)
             'male': 'fenrir'       # Male voice (confirmed available)
         }
-        
+
         # Create temp directory for audio files
         self.audio_dir = "temp_audio"
         try:
@@ -81,7 +81,7 @@ class AudioChatService:
             logger.error(f"Error creating audio directory {self.audio_dir}: {e}")
             # Fall back to current directory if temp_audio creation fails
             self.audio_dir = "."
-    
+
     def create_task(self, task_type: str, data: Dict) -> str:
         """Create a new processing task"""
         task_id = str(uuid.uuid4())
@@ -109,41 +109,41 @@ class AudioChatService:
     def clean_text_for_audio(self, text: str, max_duration_seconds: int = 45) -> str:
         """Clean text by removing markdown formatting and limit length for maximum 45 seconds of audio"""
         import re
-        
+
         # Remove markdown bold/italic formatting
         text = re.sub(r'\*\*(.*?)\*\*', r'\1', text)  # **bold** -> bold
         text = re.sub(r'\*(.*?)\*', r'\1', text)      # *italic* -> italic
-        
+
         # Remove markdown headers
         text = re.sub(r'#{1,6}\s*', '', text)         # ### Header -> Header
-        
+
         # Remove code blocks
         text = re.sub(r'```[\s\S]*?```', 'code block', text)  # ```code``` -> code block
         text = re.sub(r'`(.*?)`', r'\1', text)        # `code` -> code
-        
+
         # Remove bullet points and list formatting
         text = re.sub(r'^\s*[-*+]\s+', '', text, flags=re.MULTILINE)  # - item -> item
         text = re.sub(r'^\s*\d+\.\s+', '', text, flags=re.MULTILINE)  # 1. item -> item
-        
+
         # Remove excessive whitespace and newlines
         text = re.sub(r'\n{3,}', '\n\n', text)        # Multiple newlines -> double newline
         text = re.sub(r'\s{2,}', ' ', text)           # Multiple spaces -> single space
-        
+
         # Remove special characters that might confuse TTS but keep essential punctuation
         text = re.sub(r'[#@$%^&*()_+=\[\]{}|\\";\'<>`~]', ' ', text)
-        
+
         # Ensure proper sentence endings for natural speech
         text = re.sub(r'([.!?])\s*([A-Z])', r'\1 \2', text)
-        
+
         # Clean up and normalize
         text = text.strip()
         text = ' '.join(text.split())  # Normalize whitespace
-        
+
         # Limit text length for maximum audio duration (approximately 150 words per minute)
         # For 45 seconds max: 45/60 * 150 = ~112 words maximum
         words = text.split()
         max_words = int(max_duration_seconds / 60 * 150)  # Dynamic calculation
-        
+
         if len(words) > max_words:
             text = ' '.join(words[:max_words])
             # Ensure we end on a complete sentence
@@ -158,7 +158,7 @@ class AudioChatService:
                     text = text[:last_sentence_end + 1]
                 else:
                     text += '.'  # Add period if no good sentence ending found
-        
+
         return text
 
     def generate_ai_response(self, content: str, content_type: str = "text", user_query: str = "", user_name: str = "") -> str:
@@ -169,7 +169,7 @@ class AudioChatService:
 
             # Add user name personalization if available
             name_intro = f"Hi {user_name}, " if user_name else ""
-            
+
             # Construct prompt based on content type
             if content_type == "image":
                 prompt = f"User uploaded an image. Extracted text: '{content}'. User's question: {user_query}. Please analyze this image content and provide helpful educational insights. Start your response with '{name_intro}' to personalize it."
@@ -231,23 +231,23 @@ class AudioChatService:
                 while self.is_generating_audio and wait_count < 30:  # Wait up to 30 seconds
                     time.sleep(1)
                     wait_count += 1
-                
+
                 if self.is_generating_audio:
                     logger.error("Audio generation timeout - proceeding anyway")
                     self.is_generating_audio = False
-            
+
             self.is_generating_audio = True
-            
+
         try:
             if not self.gemini_client:
                 logger.error("Gemini AI client not configured")
                 return None
 
             logger.info(f"Starting audio generation for text: {text[:50]}...")
-            
+
             # Get voice name for Gemini TTS
             voice_name = self.gemini_voices.get(voice_type, self.gemini_voices['female'])
-            
+
             # Generate audio directly without ThreadPoolExecutor to avoid worker timeout issues
             try:
                 response = self.gemini_client.models.generate_content(
@@ -279,11 +279,11 @@ class AudioChatService:
                         # Convert Gemini's raw PCM audio to MP4/AAC format for better WhatsApp compatibility
                         try:
                             import subprocess
-                            
+
                             # Use MP4 with AAC codec for better WhatsApp compatibility
                             audio_filename = f"audio_{uuid.uuid4().hex}.m4a"
                             audio_path = os.path.join(self.audio_dir, audio_filename)
-                            
+
                             # Use ffmpeg to convert raw PCM data to M4A/AAC format
                             # Gemini outputs: 24kHz, 16-bit, mono PCM
                             process = subprocess.Popen([
@@ -298,10 +298,10 @@ class AudioChatService:
                                 '-ac', '1',              # Ensure mono output
                                 audio_path
                             ], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                            
+
                             # Send PCM data to ffmpeg
                             stdout, stderr = process.communicate(input=part.inline_data.data, timeout=15)
-                            
+
                             if process.returncode == 0:
                                 # Verify the file was created and has content
                                 if os.path.exists(audio_path) and os.path.getsize(audio_path) > 0:
@@ -313,11 +313,11 @@ class AudioChatService:
                             else:
                                 logger.error(f"FFmpeg conversion failed: {stderr.decode()}")
                                 return None
-                                
+
                         except Exception as e:
                             logger.error(f"Error converting audio with FFmpeg: {e}")
                             return None
-            
+
             logger.error("No audio data received from Gemini AI")
             logger.error(f"Response structure: {response}")
             return None
@@ -326,7 +326,7 @@ class AudioChatService:
             logger.error(f"Error generating audio with Gemini AI: {e}")
             logger.error(f"Text being converted: {text[:100]}...")
             return None
-        
+
         finally:
             # Always release the lock
             with self.audio_generation_lock:
@@ -400,19 +400,19 @@ class AudioChatService:
         try:
             # Generate AI response
             ai_response = self.generate_ai_response(text, 'text')
-            
+
             # Clean the response for audio
             clean_response = self.clean_text_for_audio(ai_response)
-            
+
             # Generate audio
             audio_path = self.generate_audio(clean_response, voice_type)
-            
+
             if audio_path:
                 return audio_path
             else:
                 # Fallback to text response
                 return str(ai_response)
-                
+
         except Exception as e:
             logger.error(f"Error processing text chat: {e}")
             return "I'm sorry, I encountered an error processing your request."
@@ -422,9 +422,9 @@ class AudioChatService:
         try:
             from services.whatsapp_service import WhatsAppService
             from database.external_db import get_user_registration, get_user_credits, get_user_stats
-            
+
             whatsapp_service = WhatsAppService()
-            
+
             # Get user info and stats for gamified display
             registration = get_user_registration(user_id)
             user_name = registration['name'] if registration else "Student"
@@ -438,7 +438,7 @@ class AudioChatService:
             xp_for_next_level = (current_level * 100) - current_xp
             if xp_for_next_level <= 0:
                 xp_for_next_level = 100  # Base XP for next level
-            
+
             welcome_message = f"""🎧 *Hey {user_name}! Welcome to AudioMentor* 🎧
 
 🎵 *{user_name}, I'm your personal AI Audio Assistant!*
@@ -469,13 +469,13 @@ I'm here to help you learn, {user_name}, with:
                 {'id': 'audio_male_voice', 'title': '👨 Male Voice'},
                 {'id': 'end_audio_chat', 'title': '❌ End Audio Chat'}
             ]
-            
+
             whatsapp_service.send_interactive_message(user_id, welcome_message, buttons)
-            
+
             # Set session state
             from utils.session_manager import session_manager
             session_manager.save_audio_chat_session(user_id, 'audio_chat', 'female')
-            
+
         except Exception as e:
             logger.error(f"Error handling audio chat command: {e}")
             return "Error starting audio chat mode. Please try again."
@@ -486,12 +486,12 @@ I'm here to help you learn, {user_name}, with:
             from services.whatsapp_service import WhatsAppService
             from utils.session_manager import session_manager
             from database.external_db import get_user_registration, get_user_credits, get_user_stats
-            
+
             whatsapp_service = WhatsAppService()
-            
+
             # Update session with voice preference
             session_manager.save_audio_chat_session(user_id, 'audio_chat', voice_type)
-            
+
             # Get user info for personalized message
             registration = get_user_registration(user_id)
             user_name = registration['name'] if registration else "Student"
@@ -500,7 +500,7 @@ I'm here to help you learn, {user_name}, with:
             current_level = user_stats.get('level', 1)
             current_xp = user_stats.get('xp_points', 0)
             current_streak = user_stats.get('streak', 0)
-            
+
             voice_name = "Female" if voice_type == 'female' else "Male"
             response_message = f"""✅ **{voice_name} voice selected, {user_name}!** ✅
 
@@ -522,14 +522,14 @@ I'm here to help you learn, {user_name}, with:
 🎯 **Earn XP** and level up with each interaction!
 
 Type 'end audio' to exit audio chat mode."""
-            
+
             # Add end audio chat button
             buttons = [
                 {'id': 'end_audio_chat', 'title': '❌ End Audio Chat'}
             ]
-            
+
             whatsapp_service.send_interactive_message(user_id, response_message, buttons)
-            
+
         except Exception as e:
             logger.error(f"Error handling voice selection: {e}")
 
@@ -540,18 +540,18 @@ Type 'end audio' to exit audio chat mode."""
             from utils.session_manager import session_manager
             from database.external_db import get_user_registration, get_user_stats, add_xp, update_streak, update_user_stats
             from services.advanced_credit_service import advanced_credit_service
-            
+
             whatsapp_service = WhatsAppService()
-            
+
             # Get user's voice preference
             session_data = session_manager.get_audio_chat_session(user_id)
             voice_type = session_data.get('voice_type', 'female') if session_data else 'female'
-            
+
             # Check for end audio chat command
             if message_text and message_text.lower().strip() in ['end audio', 'end audio chat', 'exit audio', 'stop audio']:
                 self.end_audio_chat(user_id)
                 return
-            
+
             # Get user's name for personalization
             user_name = ""
             try:
@@ -560,26 +560,26 @@ Type 'end audio' to exit audio chat mode."""
                     user_name = user_data.get('name', '')
             except:
                 pass
-            
+
             # Check if audio generation is already in progress - block concurrent requests
             if self.is_generating_audio:
                 whatsapp_service.send_message(user_id, "⏳ Audio generation in progress, please wait...")
                 return
-            
+
             # Check and deduct credits using advanced credit service
             credit_result = advanced_credit_service.check_and_deduct_credits(
                 user_id, 
                 'audio_feature',  # 10 credits as per config
                 None
             )
-            
+
             if not credit_result['success']:
                 if credit_result.get('insufficient'):
                     # Show insufficient credits message
                     current_credits = credit_result['current_credits']
                     required_credits = credit_result['required_credits']
                     shortage = credit_result['shortage']
-                    
+
                     insufficient_msg = f"""💰 **Need More Credits for Audio!** 💰
 
 🎧 **Audio Chat Feature**
@@ -590,26 +590,26 @@ Type 'end audio' to exit audio chat mode."""
 • Need: {shortage} more credits
 
 💎 **Get More Credits:**"""
-                    
+
                     buttons = [
                         {"text": "💰 Buy Credits", "callback_data": "credit_store"},
                         {"text": "👥 Invite Friends (+5 each)", "callback_data": "share_to_friend"},
                         {"text": "🔙 Back to Menu", "callback_data": "main_menu"}
                     ]
-                    
+
                     whatsapp_service.send_interactive_message(user_id, insufficient_msg, buttons)
                     return
                 else:
                     error_message = credit_result.get('message', '❌ Credit processing error. Please try again.')
                     whatsapp_service.send_message(user_id, error_message)
                     return
-            
+
             # Show processing message
             whatsapp_service.send_message(user_id, "🎵 Generating your personalized audio response... Please wait, this may take up to 30 seconds for best quality! 🎧")
-            
+
             content = ""
             ai_response = ""
-            
+
             # Determine XP points based on file type
             if file_type == 'image' and file_path:
                 content = self.process_image(file_path)
@@ -626,102 +626,40 @@ Type 'end audio' to exit audio chat mode."""
             else:
                 ai_response = self.generate_ai_response(message_text or "", 'text', "", user_name)
                 xp_points = 15  # Text to speech XP
-            
+
             # Generate audio response with 45-second limit and fallback to text
             clean_response = self.clean_text_for_audio(ai_response, max_duration_seconds=45)
             audio_path = None
-            
-            # Generate audio asynchronously to prevent worker timeout
+
+            # Generate audio with simple timeout
             try:
-                logger.info("Starting asynchronous audio generation...")
-                # Start audio generation in background thread to prevent worker timeout
-                import threading
-                import time
-                
-                audio_result = {'path': None, 'completed': False, 'error': None}
-                
-                def generate_audio_async():
-                    try:
-                        logger.info("Background audio generation starting...")
-                        result = self.generate_audio(clean_response, voice_type)
-                        audio_result['path'] = result
-                        audio_result['completed'] = True
-                        logger.info(f"Background audio generation completed: {result}")
-                    except Exception as e:
-                        logger.error(f"Background audio generation error: {e}")
-                        audio_result['error'] = str(e)
-                        audio_result['completed'] = True
-                
-                # Start background thread
-                audio_thread = threading.Thread(target=generate_audio_async, daemon=True)
-                audio_thread.start()
-                
-                # Wait up to 20 seconds for audio generation to complete
-                wait_time = 0
-                max_wait = 20
-                while wait_time < max_wait and not audio_result['completed']:
-                    time.sleep(0.5)
-                    wait_time += 0.5
-                
-                if audio_result['completed'] and audio_result['path']:
-                    audio_path = audio_result['path']
-                    logger.info(f"Audio generation completed within timeout: {audio_path}")
-                elif audio_result['completed'] and audio_result['error']:
-                    logger.error(f"Audio generation failed: {audio_result['error']}")
-                    audio_path = None
+                logger.info("Starting audio generation...")
+                # Generate audio with shorter timeout to prevent worker issues
+                audio_path = self.generate_audio(clean_response, voice_type)
+                if audio_path:
+                    logger.info(f"Audio generation completed: {audio_path}")
                 else:
-                    logger.warning("Audio generation still in progress - will continue in background")
-                    # Audio generation continues in background, send message now
-                    whatsapp_service.send_message(user_id, "🎵 Audio is being generated in the background and will be delivered shortly!")
-                    
-                    # Start a background task to send audio when ready
-                    def send_audio_when_ready():
-                        remaining_wait = 40  # Additional 40 seconds max
-                        while remaining_wait > 0 and not audio_result['completed']:
-                            time.sleep(1)
-                            remaining_wait -= 1
-                        
-                        if audio_result['completed'] and audio_result['path']:
-                            try:
-                                success = whatsapp_service.send_audio_message(user_id, audio_result['path'])
-                                if success:
-                                    logger.info(f"🎵 Background audio delivered to {user_id}")
-                                    # Send completion buttons
-                                    self.send_gamified_audio_response_buttons(user_id, xp_points, new_level > current_level, current_level, new_level)
-                                else:
-                                    whatsapp_service.send_message(user_id, "🎵 Audio generation completed but delivery failed. Please try your question again.")
-                            except Exception as send_error:
-                                logger.error(f"Background audio delivery error: {send_error}")
-                                whatsapp_service.send_message(user_id, "🎵 Audio was generated but delivery encountered an issue. Please try again.")
-                        else:
-                            logger.error("Background audio generation failed or timed out")
-                            whatsapp_service.send_message(user_id, "🎵 Audio generation took too long. Please try a shorter question.")
-                    
-                    # Start background delivery thread
-                    threading.Thread(target=send_audio_when_ready, daemon=True).start()
-                    
-                    # Return early to prevent worker timeout
-                    return
-                    
+                    logger.warning("Audio generation failed - no audio file created")
+
             except Exception as e:
                 logger.error(f"Audio generation error: {e}")
                 audio_path = None
-            
+
             # Award XP and update stats regardless of audio success
             current_stats = get_user_stats(user_id) or {}
             current_xp = current_stats.get('xp_points', 0)
             current_level = current_stats.get('level', 1)
             current_streak = current_stats.get('streak', 0)
-            
+
             # Award XP and update streak
             add_xp(user_id, xp_points, 'audio_feature')
             update_streak(user_id, True)
-            
+
             # Check for level up
             new_xp = current_xp + xp_points
             new_level = max(1, (new_xp // 100) + 1)
             new_streak = current_streak + 1
-            
+
             # Update total attempts and audio completions
             update_user_stats(user_id, {
                 'total_attempts': current_stats.get('total_attempts', 0) + 1,
@@ -730,14 +668,14 @@ Type 'end audio' to exit audio chat mode."""
                 'level': new_level,
                 'streak': new_streak
             })
-            
+
             if audio_path and os.path.exists(audio_path):
                 logger.info(f"✅ AUDIO READY: {audio_path}, size: {os.path.getsize(audio_path)} bytes")
-                
+
                 # Send ONLY audio file via WhatsApp (no text)
                 try:
                     success = whatsapp_service.send_audio_message(user_id, audio_path)
-                    
+
                     if success:
                         logger.info(f"🎵 Audio successfully delivered to {user_id}")
                         # Send gamified buttons after audio response
@@ -755,12 +693,12 @@ Type 'end audio' to exit audio chat mode."""
                             # Only as last resort, show error message
                             whatsapp_service.send_message(user_id, "🎵 Audio generated but delivery failed. Please try asking your question again.")
                             self.send_gamified_audio_response_buttons(user_id, xp_points, new_level > current_level, current_level, new_level)
-                        
+
                 except Exception as e:
                     logger.error(f"Exception during audio sending for {user_id}: {e}")
                     whatsapp_service.send_message(user_id, "🎵 Audio processing complete. Please try asking your question again for audio delivery.")
                     self.send_gamified_audio_response_buttons(user_id, xp_points, new_level > current_level, current_level, new_level)
-                
+
                 # Clean up temporary file after a delay to ensure upload completes
                 import threading
                 def cleanup_file():
@@ -772,14 +710,14 @@ Type 'end audio' to exit audio chat mode."""
                             logger.info(f"Cleaned up audio file: {audio_path}")
                     except Exception as e:
                         logger.error(f"Error cleaning up audio file: {e}")
-                
+
                 threading.Thread(target=cleanup_file, daemon=True).start()
             else:
                 logger.error(f"❌ Audio generation completely failed - no file created")
                 # Try one more time with a shorter text
                 short_text = clean_response[:200] + "..." if len(clean_response) > 200 else clean_response
                 logger.info("Attempting emergency audio generation with shorter text...")
-                
+
                 try:
                     emergency_audio = self.generate_audio(short_text, voice_type)
                     if emergency_audio and os.path.exists(emergency_audio):
@@ -791,11 +729,11 @@ Type 'end audio' to exit audio chat mode."""
                             return
                 except Exception as e:
                     logger.error(f"Emergency audio generation failed: {e}")
-                
+
                 # Absolute last resort - inform user
                 whatsapp_service.send_message(user_id, "🎵 Audio system temporarily busy. Your question was processed! Please try again in a moment for audio response.")
                 self.send_gamified_audio_response_buttons(user_id, xp_points, new_level > current_level, current_level, new_level)
-            
+
         except Exception as e:
             logger.error(f"Error handling audio input: {e}")
             from services.whatsapp_service import WhatsAppService
@@ -808,13 +746,13 @@ Type 'end audio' to exit audio chat mode."""
             from services.whatsapp_service import WhatsAppService
             from utils.session_manager import session_manager
             from database.external_db import get_user_registration, get_user_stats, get_user_credits
-            
+
             whatsapp_service = WhatsAppService()
-            
+
             # Get user info for personalized goodbye
             registration = get_user_registration(user_id)
             user_name = registration['name'] if registration else "Student"
-            
+
             # Get final stats
             final_stats = get_user_stats(user_id) or {}
             final_credits = get_user_credits(user_id)
@@ -822,10 +760,10 @@ Type 'end audio' to exit audio chat mode."""
             final_streak = final_stats.get('streak', 0)
             final_level = final_stats.get('level', 1)
             audio_completed = final_stats.get('audio_completed', 0)
-            
+
             # Clear audio chat session
             session_manager.clear_audio_chat_session(user_id)
-            
+
             # Send gamified exit message
             exit_message = f"""✅ **Audio Chat Session Complete!** ✅
 
@@ -843,13 +781,13 @@ Type 'end audio' to exit audio chat mode."""
 • Get instant audio explanations
 
 🚀 Ready to continue your learning journey?"""
-            
+
             whatsapp_service.send_message(user_id, exit_message)
-            
+
             # Show main menu
             from api.webhook import send_main_menu
             send_main_menu(user_id)
-            
+
         except Exception as e:
             logger.error(f"Error ending audio chat: {e}")
             from services.whatsapp_service import WhatsAppService
@@ -860,18 +798,18 @@ Type 'end audio' to exit audio chat mode."""
         """Send buttons after audio response (legacy method)"""
         try:
             from services.whatsapp_service import WhatsAppService
-            
+
             whatsapp_service = WhatsAppService()
-            
+
             # Send buttons for user to choose next action
             buttons = [
                 {'id': 'end_audio_chat', 'title': '❌ End Audio Chat'},
                 {'id': 'continue_audio_chat', 'title': '🔄 Continue'}
             ]
-            
+
             message = "What would you like to do next?"
             whatsapp_service.send_interactive_message(user_id, message, buttons)
-            
+
         except Exception as e:
             logger.error(f"Error sending audio response buttons: {e}")
 
@@ -880,26 +818,26 @@ Type 'end audio' to exit audio chat mode."""
         try:
             from services.whatsapp_service import WhatsAppService
             from database.external_db import get_user_stats, get_user_credits
-            
+
             whatsapp_service = WhatsAppService()
-            
+
             # Get updated user stats
             updated_stats = get_user_stats(user_id) or {}
             final_credits = get_user_credits(user_id)
             final_xp = updated_stats.get('xp_points', 0)
             final_streak = updated_stats.get('streak', 0)
             final_level = updated_stats.get('level', 1)
-            
+
             # Calculate XP for next level
             xp_for_next_level = (final_level * 100) - final_xp
             if xp_for_next_level <= 0:
                 xp_for_next_level = 100
-            
+
             # Build gamified message
             level_up_bonus = ""
             if leveled_up:
                 level_up_bonus = f"\n🎉 **LEVEL UP!** Level {old_level} → Level {new_level}!"
-            
+
             message = f"""🎧 **Audio Response Complete!** 🎧
 
 ✨ **XP Earned:** +{xp_earned} XP
@@ -912,15 +850,15 @@ Type 'end audio' to exit audio chat mode."""
 {level_up_bonus}
 
 🎵 Ready for your next audio learning session?"""
-            
+
             # Send buttons for user to choose next action
             buttons = [
                 {'id': 'continue_audio_chat', 'title': '🎵 Ask Another Question'},
                 {'id': 'end_audio_chat', 'title': '❌ End Audio Chat'}
             ]
-            
+
             whatsapp_service.send_interactive_message(user_id, message, buttons)
-            
+
         except Exception as e:
             logger.error(f"Error sending gamified audio response buttons: {e}")
             # Fallback to regular buttons
