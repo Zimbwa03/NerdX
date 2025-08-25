@@ -631,20 +631,81 @@ Type 'end audio' to exit audio chat mode."""
             clean_response = self.clean_text_for_audio(ai_response, max_duration_seconds=45)
             audio_path = None
             
-            # Generate audio without timeout restrictions - let students wait for quality audio
+            # Generate audio asynchronously to prevent worker timeout
             try:
-                logger.info("Starting audio generation - student will wait for completion...")
-                audio_path = self.generate_audio(clean_response, voice_type)
-                logger.info(f"Audio generation completed: {audio_path}")
+                logger.info("Starting asynchronous audio generation...")
+                # Start audio generation in background thread to prevent worker timeout
+                import threading
+                import time
+                
+                audio_result = {'path': None, 'completed': False, 'error': None}
+                
+                def generate_audio_async():
+                    try:
+                        logger.info("Background audio generation starting...")
+                        result = self.generate_audio(clean_response, voice_type)
+                        audio_result['path'] = result
+                        audio_result['completed'] = True
+                        logger.info(f"Background audio generation completed: {result}")
+                    except Exception as e:
+                        logger.error(f"Background audio generation error: {e}")
+                        audio_result['error'] = str(e)
+                        audio_result['completed'] = True
+                
+                # Start background thread
+                audio_thread = threading.Thread(target=generate_audio_async, daemon=True)
+                audio_thread.start()
+                
+                # Wait up to 20 seconds for audio generation to complete
+                wait_time = 0
+                max_wait = 20
+                while wait_time < max_wait and not audio_result['completed']:
+                    time.sleep(0.5)
+                    wait_time += 0.5
+                
+                if audio_result['completed'] and audio_result['path']:
+                    audio_path = audio_result['path']
+                    logger.info(f"Audio generation completed within timeout: {audio_path}")
+                elif audio_result['completed'] and audio_result['error']:
+                    logger.error(f"Audio generation failed: {audio_result['error']}")
+                    audio_path = None
+                else:
+                    logger.warning("Audio generation still in progress - will continue in background")
+                    # Audio generation continues in background, send message now
+                    whatsapp_service.send_message(user_id, "🎵 Audio is being generated in the background and will be delivered shortly!")
+                    
+                    # Start a background task to send audio when ready
+                    def send_audio_when_ready():
+                        remaining_wait = 40  # Additional 40 seconds max
+                        while remaining_wait > 0 and not audio_result['completed']:
+                            time.sleep(1)
+                            remaining_wait -= 1
+                        
+                        if audio_result['completed'] and audio_result['path']:
+                            try:
+                                success = whatsapp_service.send_audio_message(user_id, audio_result['path'])
+                                if success:
+                                    logger.info(f"🎵 Background audio delivered to {user_id}")
+                                    # Send completion buttons
+                                    self.send_gamified_audio_response_buttons(user_id, xp_points, new_level > current_level, current_level, new_level)
+                                else:
+                                    whatsapp_service.send_message(user_id, "🎵 Audio generation completed but delivery failed. Please try your question again.")
+                            except Exception as send_error:
+                                logger.error(f"Background audio delivery error: {send_error}")
+                                whatsapp_service.send_message(user_id, "🎵 Audio was generated but delivery encountered an issue. Please try again.")
+                        else:
+                            logger.error("Background audio generation failed or timed out")
+                            whatsapp_service.send_message(user_id, "🎵 Audio generation took too long. Please try a shorter question.")
+                    
+                    # Start background delivery thread
+                    threading.Thread(target=send_audio_when_ready, daemon=True).start()
+                    
+                    # Return early to prevent worker timeout
+                    return
+                    
             except Exception as e:
                 logger.error(f"Audio generation error: {e}")
-                # Retry once if failed
-                try:
-                    logger.info("Retrying audio generation...")
-                    audio_path = self.generate_audio(clean_response, voice_type)
-                except Exception as retry_error:
-                    logger.error(f"Audio generation retry failed: {retry_error}")
-                    audio_path = None
+                audio_path = None
             
             # Award XP and update stats regardless of audio success
             current_stats = get_user_stats(user_id) or {}
