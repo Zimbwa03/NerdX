@@ -433,7 +433,7 @@ Hi {user_name}! Answer these 10 questions based on the passage above:
             # Award 20 XP for completing comprehension
             points_earned = 20
             add_xp(user_id, points_earned, 'english_comprehension')
-            update_streak(user_id, True)
+            update_streak(user_id)
             
             # Check for level up
             new_xp = current_xp + points_earned
@@ -1344,7 +1344,7 @@ Type your essay below:"""
                 from database.external_db import add_xp, update_streak
                 points_earned = 30
                 add_xp(user_id, points_earned, 'english_essay_writing')
-                update_streak(user_id, True)
+                update_streak(user_id)
                 
                 # Check for level up
                 new_xp = current_xp + points_earned

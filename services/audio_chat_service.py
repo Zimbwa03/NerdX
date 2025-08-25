@@ -653,7 +653,7 @@ Type 'end audio' to exit audio chat mode."""
 
             # Award XP and update streak
             add_xp(user_id, xp_points, 'audio_feature')
-            update_streak(user_id, True)
+            update_streak(user_id)
 
             # Check for level up
             new_xp = current_xp + xp_points

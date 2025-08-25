@@ -386,7 +386,7 @@ Hey there! 👋
             if correct:
                 xp_gained = 10 + (streak * 2)  # Base 10 XP + streak bonus
                 add_xp(user_id, xp_gained)
-                update_streak(user_id, True)  # Increment streak
+                update_streak(user_id)  # Increment streak
             
             return bonus_credits
             

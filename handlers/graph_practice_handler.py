@@ -449,7 +449,7 @@ We want to give you the best AI-generated questions that match your learning nee
                 # Award XP for graph completion (20 XP for studying the graph answer)
                 xp_gained = 20
                 add_xp(user_id, xp_gained, 'graph_study')
-                update_streak(user_id, True)  # Update streak for completing graph
+                update_streak(user_id)  # Update streak for completing graph
                 
                 # Get current stats and check for level up
                 user_stats = get_user_stats(user_id) or {}

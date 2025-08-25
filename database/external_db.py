@@ -211,19 +211,24 @@ def add_xp(user_id, xp_amount, activity_type, description="XP earned"):
 
         result = update_user_stats(user_id, updates)
 
-        # Log XP transaction
-        xp_transaction = {
-            "user_id": user_id,
-            "activity_type": activity_type,
-            "xp_earned": xp_amount,
-            "xp_before": current_xp,
-            "xp_after": new_xp,
-            "level_before": current_level,
-            "level_after": new_level,
-            "description": description,
-            "created_at": datetime.now().isoformat()
-        }
-        make_supabase_request("POST", "xp_transactions", xp_transaction)
+        # Log XP transaction (non-blocking - continue if table doesn't exist)
+        try:
+            xp_transaction = {
+                "user_id": user_id,
+                "activity_type": activity_type,
+                "xp_earned": xp_amount,
+                "xp_before": current_xp,
+                "xp_after": new_xp,
+                "level_before": current_level,
+                "level_after": new_level,
+                "description": description,
+                "created_at": datetime.now().isoformat()
+            }
+            make_supabase_request("POST", "xp_transactions", xp_transaction)
+            logger.info(f"XP transaction logged for {user_id}: +{xp_amount} XP")
+        except Exception as xp_log_error:
+            logger.warning(f"Could not log XP transaction (non-critical): {xp_log_error}")
+            # Continue execution - XP tracking failure should not block main functionality
 
         return True
     except Exception as e:
