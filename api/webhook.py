@@ -2131,9 +2131,12 @@ def handle_combined_exam_answer(user_id: str, user_answer: str):
             message += f"🎯 **Your answer: {user_answer}** ✗ Incorrect\n"
             message += f"✅ **Correct answer: {correct_answer}**\n\n"
 
-        # Add explanation if available
+        # Add explanation if available (shortened for Combined Science)
         explanation = question_data.get('explanation', question_data.get('solution', ''))
         if explanation:
+            # Shorten explanation to maximum 200 characters for Combined Science
+            if len(explanation) > 200:
+                explanation = explanation[:200] + "... (Answer focus only)"
             message += f"💡 **Explanation:**\n{explanation}\n\n"
 
         # Enhanced user stats display (consistent design)
@@ -2458,7 +2461,11 @@ def handle_science_answer(user_id: str, selected_answer: str, session_key: str):
             message += f"🎯 *Correct Answer: {correct_answer}*\n"
             message += f"📚 *Keep learning!*\n\n"
 
-        message += f"💡 *Explanation:*\n{question_data.get('explanation', 'No explanation available.')}\n\n"
+        # Add shortened explanation for Combined Science topical questions
+        explanation = question_data.get('explanation', 'No explanation available.')
+        if len(explanation) > 200:
+            explanation = explanation[:200] + "... (Answer focus only)"
+        message += f"💡 *Explanation:*\n{explanation}\n\n"
 
         # Show updated stats
         message += f"📊 *Your Stats:*\n"

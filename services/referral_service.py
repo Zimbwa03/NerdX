@@ -9,7 +9,18 @@ import os
 
 # Use direct database connection instead of app context
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///nerdx_quiz.db")
-engine = create_engine(DATABASE_URL)
+
+# Clean the DATABASE_URL to remove pgbouncer and other problematic parameters
+def clean_database_url(url):
+    """Remove problematic parameters from database URL"""
+    if url and "postgresql://" in url:
+        # Remove pgbouncer parameter and other problematic ones
+        cleaned_url = url.split('?')[0]  # Remove all query parameters
+        return cleaned_url
+    return url
+
+cleaned_db_url = clean_database_url(DATABASE_URL)
+engine = create_engine(cleaned_db_url)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 logger = logging.getLogger(__name__)

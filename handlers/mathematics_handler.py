@@ -346,9 +346,13 @@ class MathematicsHandler:
             # Add solution
             message += f"📝 Complete Solution:\n{question_data['solution']}\n\n"
             
-            # Add explanation
+            # Add explanation (shortened for Combined Science)
             if question_data.get('explanation'):
-                message += f"💡 Concept Explanation:\n{question_data['explanation']}\n\n"
+                explanation = question_data['explanation']
+                # Shorten explanation to maximum 200 characters for Combined Science
+                if len(explanation) > 200:
+                    explanation = explanation[:200] + "... (Key concept only)"
+                message += f"💡 Explanation:\n{explanation}\n\n"
             
             # Enhanced gamified stats display
             message += f"🎮 **Your Progress Dashboard** 🎮\n"
@@ -411,7 +415,11 @@ class MathematicsHandler:
             message += f"📋 Step-by-Step Solution:\n{question_data['solution']}\n\n"
             
             if question_data.get('explanation'):
-                message += f"💭 Explanation: {question_data['explanation']}\n\n"
+                explanation = question_data['explanation']
+                # Shorten explanation to maximum 200 characters
+                if len(explanation) > 200:
+                    explanation = explanation[:200] + "... (Key concept only)"
+                message += f"💭 Explanation: {explanation}\n\n"
             
             message += f"Ready for another challenge?"
             
