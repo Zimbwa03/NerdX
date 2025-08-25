@@ -1,0 +1,172 @@
+4
+2025-08-25 13:28:42,868 - services.audio_chat_service - INFO - Starting audio generation for text: Hi Ngonidzashe, blood is a vital fluid in our bodi...
+2025-08-25 13:28:42,868 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+[2025-08-25 13:28:57 +0000] [4055] [CRITICAL] WORKER TIMEOUT (pid:4368)
+2025-08-25 13:28:57,187 - services.audio_chat_service - INFO - Audio generation completed - ready for next request
+[2025-08-25 13:28:57 +0000] [4368] [ERROR] Error handling request /webhook/whatsapp
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 134, in handle
+    self.handle_request(listener, req, client, addr)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 177, in handle_request
+    respiter = self.wsgi(environ, resp.start_response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/werkzeug/middleware/proxy_fix.py", line 183, in __call__
+    return self.app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/api/webhook.py", line 153, in handle_webhook
+    handle_text_message(user_id, message_text)
+  File "/home/runner/workspace/api/webhook.py", line 213, in handle_text_message
+    handle_session_message(user_id, message_text)
+  File "/home/runner/workspace/api/webhook.py", line 396, in handle_session_message
+    handle_audio_chat_message(user_id, message_text)
+  File "/home/runner/workspace/api/webhook.py", line 1863, in handle_audio_chat_message
+    audio_chat_service.handle_audio_input(user_id, message_text=message_text)
+  File "/home/runner/workspace/services/audio_chat_service.py", line 619, in handle_audio_input
+    audio_path = self.generate_audio(clean_response, voice_type)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/services/audio_chat_service.py", line 243, in generate_audio
+    response = self.gemini_client.models.generate_content(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/google/genai/models.py", line 6426, in generate_content
+    response = self._generate_content(
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/google/genai/models.py", line 5164, in _generate_content
+    response = self._api_client.request(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/google/genai/_api_client.py", line 1266, in request
+    response = self._request(http_request, http_options, stream=False)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/google/genai/_api_client.py", line 1086, in _request
+    return self._retry(self._request_once, http_request, stream)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/tenacity/__init__.py", line 477, in __call__
+    do = self.iter(retry_state=retry_state)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/tenacity/__init__.py", line 378, in iter
+    result = action(retry_state)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/tenacity/__init__.py", line 400, in <lambda>
+    self._add_action_func(lambda rs: rs.outcome.result())
+                                     ^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/tenacity/__init__.py", line 480, in __call__
+    result = fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/google/genai/_api_client.py", line 1056, in _request_once
+    response = self._httpx_client.request(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/httpx/_client.py", line 825, in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/httpx/_client.py", line 914, in send
+    response = self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/httpx/_client.py", line 942, in _send_handling_auth
+    response = self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/httpx/_client.py", line 979, in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/httpx/_client.py", line 1014, in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/httpx/_transports/default.py", line 250, in handle_request
+    resp = self._pool.handle_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/httpcore/_sync/connection_pool.py", line 256, in handle_request
+    raise exc from None
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/httpcore/_sync/connection_pool.py", line 236, in handle_request
+    response = connection.handle_request(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/httpcore/_sync/connection.py", line 103, in handle_request
+    return self._connection.handle_request(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/httpcore/_sync/http11.py", line 136, in handle_request
+    raise exc
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/httpcore/_sync/http11.py", line 106, in handle_request
+    ) = self._receive_response_headers(**kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/httpcore/_sync/http11.py", line 177, in _receive_response_headers
+    event = self._receive_event(timeout=timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/httpcore/_sync/http11.py", line 217, in _receive_event
+    data = self._network_stream.read(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/httpcore/_backends/sync.py", line 128, in read
+    return self._sock.recv(max_bytes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python3.11/ssl.py", line 1295, in recv
+    return self.read(buflen)
+           ^^^^^^^^^^^^^^^^^
+  File "/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python3.11/ssl.py", line 1168, in read
+    return self._sslobj.read(len)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/base.py", line 204, in handle_abort
+    sys.exit(1)
+SystemExit: 1
+[2025-08-25 13:28:57 +0000] [4368] [INFO] Worker exiting (pid: 4368)
+[2025-08-25 13:28:57 +0000] [4399] [INFO] Booting worker with pid: 4399
+2025-08-25 13:28:59,180 - root - INFO - Database tables created successfully
+2025-08-25 13:28:59,224 - database.session_db - INFO - Session database initialized successfully
+2025-08-25 13:28:59,224 - database.external_db - INFO - Supabase properly configured and ready
+Supabase URL: https://hvlvwvzliqrlmqjbfgoa.supabase.co
+Supabase Key: eyJhbGciOiJIUzI1NiIs...
+2025-08-25 13:28:59,224 - services.payment_service - WARNING - EcoCash API key not configured - payment features will be limited
+2025-08-25 13:28:59,225 - services.payment_service - WARNING - EcoCash API key not configured - payment features will be limited
+2025-08-25 13:29:01,130 - services.payment_service - WARNING - EcoCash API key not configured - payment features will be limited
+2025-08-25 13:29:01,130 - services.graph_service - INFO - Enhanced Graph Service initialized for ZIMSEC educational graphs
+2025-08-25 13:29:01,168 - services.english_service - INFO - Enhanced ZIMSEC English Service initialized with Gemini AI
+2025-08-25 13:29:01,188 - services.audio_chat_service - INFO - Gemini AI client initialized for audio generation
+2025-08-25 13:29:01,189 - handlers.graph_practice_handler - INFO - Graph Practice Handler initialized for ZIMSEC O-Level
+2025-08-25 13:29:01,190 - handlers.english_handler - INFO - ZIMSEC English Handler initialized with comprehensive modules
+2025-08-25 13:29:01,306 - app - INFO - NerdX Quiz Bot startup
+2025-08-25 13:29:03,136 - services.analytics_tracker - ERROR - Error tracking session start: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+Making GET request to https://hvlvwvzliqrlmqjbfgoa.supabase.co/rest/v1/users_registration
+Headers: {'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Content-Type': 'application/json'}
+Params: {'select': '*', 'chat_id': 'eq.263785494594'}
+Data: None
+Response status: 200
+Response text: [{"id":1,"chat_id":"263785494594","name":"Ngonidzashe","surname":"Zimbwa","date_of_birth":"03/10/2003","nerdx_id":"NEYHAI","referred_by_nerdx_id":null,"created_at":"2025-07-18T09:00:39.968177","updated_at":"2025-07-18T09:00:40.589828"}]
+Making GET request to https://hvlvwvzliqrlmqjbfgoa.supabase.co/rest/v1/user_stats
+Headers: {'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Content-Type': 'application/json'}
+Params: {'select': 'credits', 'user_id': 'eq.263785494594'}
+Data: None
+Response status: 200
+Response text: [{"credits":446}]
+Making GET request to https://hvlvwvzliqrlmqjbfgoa.supabase.co/rest/v1/user_stats
+Headers: {'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Content-Type': 'application/json'}
+Params: {'select': 'credits', 'user_id': 'eq.263785494594'}
+Data: None
+Response status: 200
+Response text: [{"credits":446}]
+Making PATCH request to https://hvlvwvzliqrlmqjbfgoa.supabase.co/rest/v1/user_stats
+Headers: {'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Content-Type': 'application/json', 'Prefer': 'return=representation'}
+Params: {'user_id': 'eq.263785494594'}
+Data: {'credits': 436}
+Response status: 200
+Response text: [{"id":4,"user_id":"263785494594","username":"user_4594","first_name":"User","level":2,"xp_points":273,"streak":3,"max_streak":6,"total_attempts":51,"correct_answers":13,"current_question_id":null,"last_question_time":null,"last_activity":"2025-08-25T00:00:00","created_at":"2025-07-17T23:34:34.037331","updated_at":"2025-07-17T23:34:34.037331","credits":436}]
+Making POST request to https://hvlvwvzliqrlmqjbfgoa.supabase.co/rest/v1/credit_transactions
+Headers: {'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Content-Type': 'application/json', 'Prefer': 'return=representation'}
+Params: {}
+Data: {'user_id': '263785494594', 'transaction_type': 'audio_feature_usage', 'credits_used': 10, 'credits_before': 446, 'credits_after': 436, 'description': 'Used audio_feature feature', 'created_at': '2025-08-25T13:29:05.787566'}
+Response status: 201
+Response text: [{"id":781,"user_id":"263785494594","transaction_type":"audio_feature_usage","credits_used":10,"credits_before":446,"credits_after":436,"description":"Used audio_feature feature","created_at":"2025-08-25T13:29:05.787566","subject":null,"topic":null}]
+2025-08-25 13:29:06,887 - services.whatsapp_service - INFO - Message sent successfully to 263785494594
+2025-08-25 13:29:16,186 - services.audio_chat_ser

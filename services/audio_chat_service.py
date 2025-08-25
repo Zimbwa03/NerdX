@@ -239,21 +239,36 @@ class AudioChatService:
             # Get voice name for Gemini TTS
             voice_name = self.gemini_voices.get(voice_type, self.gemini_voices['female'])
             
-            # Generate audio using Gemini 2.5 Flash TTS
-            response = self.gemini_client.models.generate_content(
-                model="gemini-2.5-flash-preview-tts",
-                contents=text,
-                config=types.GenerateContentConfig(
-                    response_modalities=["AUDIO"],
-                    speech_config=types.SpeechConfig(
-                        voice_config=types.VoiceConfig(
-                            prebuilt_voice_config=types.PrebuiltVoiceConfig(
-                                voice_name=voice_name
+            # Generate audio using Gemini 2.5 Flash TTS with timeout protection
+            import concurrent.futures
+            
+            def generate_audio_with_timeout():
+                return self.gemini_client.models.generate_content(
+                    model="gemini-2.5-flash-preview-tts",
+                    contents=text,
+                    config=types.GenerateContentConfig(
+                        response_modalities=["AUDIO"],
+                        speech_config=types.SpeechConfig(
+                            voice_config=types.VoiceConfig(
+                                prebuilt_voice_config=types.PrebuiltVoiceConfig(
+                                    voice_name=voice_name
+                                )
                             )
                         )
                     )
                 )
-            )
+            
+            # Use ThreadPoolExecutor for timeout control
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(generate_audio_with_timeout)
+                try:
+                    response = future.result(timeout=8.0)  # 8 second timeout
+                except concurrent.futures.TimeoutError:
+                    logger.error("Audio generation timed out - skipping audio response")
+                    return None
+                except Exception as e:
+                    logger.error(f"Audio generation failed: {e}")
+                    return None
 
             # Extract audio data from response
             if response.candidates and response.candidates[0].content.parts:
@@ -614,9 +629,15 @@ Type 'end audio' to exit audio chat mode."""
                 ai_response = self.generate_ai_response(message_text or "", 'text', "", user_name)
                 xp_points = 15  # Text to speech XP
             
-            # Generate audio response with 45-second limit
+            # Generate audio response with 45-second limit and fallback to text
             clean_response = self.clean_text_for_audio(ai_response, max_duration_seconds=45)
-            audio_path = self.generate_audio(clean_response, voice_type)
+            audio_path = None
+            
+            try:
+                audio_path = self.generate_audio(clean_response, voice_type)
+            except Exception as e:
+                logger.error(f"Audio generation failed, falling back to text: {e}")
+                audio_path = None
             
             if audio_path and os.path.exists(audio_path):
                 logger.info(f"Audio file generated at: {audio_path}, size: {os.path.getsize(audio_path)} bytes")
@@ -679,9 +700,19 @@ Type 'end audio' to exit audio chat mode."""
                 
                 threading.Thread(target=cleanup_file, daemon=True).start()
             else:
-                logger.error(f"Audio generation failed or file not found: {audio_path}")
-                # If audio generation fails, send error message
-                whatsapp_service.send_message(user_id, "❌ Failed to generate audio. Please try again or type 'end audio' to exit.")
+                logger.warning(f"Audio generation failed or file not found: {audio_path}")
+                # If audio generation fails, send text response as fallback
+                fallback_message = f"📝 **Text Response** (Audio generation unavailable):\n\n{clean_response}\n\n"
+                fallback_message += "💡 *Showing text version - audio generation timed out*"
+                whatsapp_service.send_message(user_id, fallback_message)
+                
+                # Still award XP for the response (reduced amount)
+                current_stats = get_user_stats(user_id) or {}
+                reduced_xp = max(5, xp_points // 2)  # Half XP for text fallback
+                add_xp(user_id, reduced_xp, 'audio_feature_fallback')
+                
+                # Send buttons for continued interaction
+                self.send_gamified_audio_response_buttons(user_id, reduced_xp, False, current_stats.get('level', 1), current_stats.get('level', 1))
             
         except Exception as e:
             logger.error(f"Error handling audio input: {e}")
