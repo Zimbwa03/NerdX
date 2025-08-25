@@ -2182,7 +2182,7 @@ def handle_combined_exam_answer(user_id: str, user_answer: str):
             # Update with XP and streak functions
             from database.external_db import add_xp, update_streak
             add_xp(user_id, points_earned, 'combined_science_exam')
-            update_streak(user_id, True)
+            update_streak(user_id)
             
             update_user_stats(user_id, {
                 'xp_points': new_xp,
@@ -2196,7 +2196,7 @@ def handle_combined_exam_answer(user_id: str, user_answer: str):
             
             # Update streak function for incorrect answer
             from database.external_db import update_streak
-            update_streak(user_id, False)
+            update_streak(user_id)
 
         # Update total attempts and correct answers
         update_user_stats(user_id, {
@@ -2806,7 +2806,7 @@ def handle_combined_science_answer(user_id: str, subject: str, user_answer: str)
         if is_correct:
             # Award XP and update streak
             add_xp(user_id, points, 'combined_science_topical')
-            update_streak(user_id, True)
+            update_streak(user_id)
             
             # Check for level up
             new_xp = current_xp + points
@@ -2817,7 +2817,7 @@ def handle_combined_science_answer(user_id: str, subject: str, user_answer: str)
                 update_user_stats(user_id, {'level': new_level})
         else:
             # Reset streak on incorrect answer
-            update_streak(user_id, False)
+            update_streak(user_id)
             new_xp = current_xp
             new_level = current_level
             new_streak = 0
