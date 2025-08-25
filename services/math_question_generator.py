@@ -594,23 +594,6 @@ The solution should explain how to plot each inequality and identify the feasibl
         except Exception as e:
             logger.error(f"Error parsing AI response: {e}")
             return self._generate_fallback_question(subject, topic, difficulty)
-                "Limits": "Basic limits, continuity concepts",
-
-                "Differentiation": "Rules of differentiation, applications",
-
-                "Integration": "Basic integration, definite integrals",
-
-                "Applications of Calculus": "Rate of change, optimization",
-
-                "Curve Sketching": "Using derivatives to analyze graphs"
-
-            }
-
-        }
-
-
-
-        return guidelines.get(subject, {}).get(topic, f"Focus on {topic} concepts appropriate for ZIMSEC O-Level standard")
 
 
 
@@ -1165,25 +1148,6 @@ The solution should explain how to plot each inequality and identify the feasibl
             logger.error(f"Error parsing AI response: {e}")
 
             return self._generate_fallback_question(subject, topic, difficulty)
-
-
-                "Limits": "Basic limits, continuity concepts",
-
-                "Differentiation": "Rules of differentiation, applications",
-
-                "Integration": "Basic integration, definite integrals",
-
-                "Applications of Calculus": "Rate of change, optimization",
-
-                "Curve Sketching": "Using derivatives to analyze graphs"
-
-            }
-
-        }
-
-
-
-        return guidelines.get(subject, {}).get(topic, f"Focus on {topic} concepts appropriate for ZIMSEC O-Level standard")
 
 
 
