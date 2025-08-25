@@ -21,9 +21,9 @@ class AdminAuthService:
         self.lockout_duration = timedelta(minutes=30)  # 30 minutes lockout
     
     def _get_connection(self):
-        """Get database connection"""
+        """Get database connection with retry logic"""
         try:
-            return psycopg2.connect(self.conn_string)
+            return psycopg2.connect(self.conn_string, connect_timeout=10)
         except Exception as e:
             logger.error(f"Database connection error: {e}")
             return None
@@ -95,7 +95,8 @@ class AdminAuthService:
         try:
             conn = self._get_connection()
             if not conn:
-                return {'success': False, 'message': 'Database connection error'}
+                logger.warning("Supabase database unavailable - operation temporarily disabled")
+                return {'success': False, 'message': 'Service temporarily unavailable. Please check your network connection and try again.'}
             
             cursor = conn.cursor()
             
@@ -221,7 +222,8 @@ class AdminAuthService:
             
             conn = self._get_connection()
             if not conn:
-                return {'success': False, 'message': 'Database connection error'}
+                logger.warning("Supabase database unavailable - operation temporarily disabled")
+                return {'success': False, 'message': 'Service temporarily unavailable. Please check your network connection and try again.'}
             
             cursor = conn.cursor()
             
@@ -344,7 +346,8 @@ class AdminAuthService:
         try:
             conn = self._get_connection()
             if not conn:
-                return {'success': False, 'message': 'Database connection error'}
+                logger.warning("Supabase database unavailable - operation temporarily disabled")
+                return {'success': False, 'message': 'Service temporarily unavailable. Please check your network connection and try again.'}
             
             cursor = conn.cursor()
             
@@ -416,7 +419,8 @@ class AdminAuthService:
         try:
             conn = self._get_connection()
             if not conn:
-                return {'success': False, 'message': 'Database connection error'}
+                logger.warning("Supabase database unavailable - operation temporarily disabled")
+                return {'success': False, 'message': 'Service temporarily unavailable. Please check your network connection and try again.'}
             
             cursor = conn.cursor()
             
@@ -469,7 +473,8 @@ class AdminAuthService:
         try:
             conn = self._get_connection()
             if not conn:
-                return {'success': False, 'message': 'Database connection error'}
+                logger.warning("Supabase database unavailable - operation temporarily disabled")
+                return {'success': False, 'message': 'Service temporarily unavailable. Please check your network connection and try again.'}
             
             cursor = conn.cursor()
             
