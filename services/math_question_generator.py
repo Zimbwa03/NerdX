@@ -45,12 +45,12 @@ class MathQuestionGenerator:
             # Create comprehensive prompt for DeepSeek AI with variation
             prompt = self._create_question_prompt(subject, topic, difficulty, recent_topics)
 
-            # Enhanced timeout settings specifically for graph generation
+            # Reduced timeout settings to prevent worker crashes
             if 'graph' in topic.lower():
-                timeouts = [30, 45, 60]  # Longer timeouts for complex graph questions
-                max_attempts = 3         # More attempts for graph topics
+                timeouts = [8, 12]       # Shorter timeouts to prevent worker timeout
+                max_attempts = 2         # Reduced attempts for faster fallback
             else:
-                timeouts = [20, 30]      # Standard timeouts for other topics
+                timeouts = [5, 8]        # Shorter timeouts for other topics
                 max_attempts = 2         # Standard attempts
 
             for attempt in range(max_attempts):
@@ -88,13 +88,13 @@ class MathQuestionGenerator:
                         time.sleep(2)  # Wait before next attempt
                     continue
 
-            # All attempts failed, return None for immediate fallback
-            logger.warning("All AI API attempts failed, using fallback")
-            return None
+            # All attempts failed, use local fallback questions
+            logger.warning("All AI API attempts failed, using local fallback questions")
+            return self._generate_fallback_question(subject, topic, difficulty)
 
         except Exception as e:
             logger.error(f"Critical error in generate_question: {e}")
-            return None
+            return self._generate_fallback_question(subject, topic, difficulty)
 
     def generate_question_with_gemini(self, subject: str, topic: str, difficulty: str = 'medium') -> Optional[Dict]:
         """
