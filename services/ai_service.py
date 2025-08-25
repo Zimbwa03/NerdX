@@ -61,20 +61,41 @@ class AIService:
             from utils.fallback_questions import generate_fallback_math_questions
             return generate_fallback_math_questions(topic, difficulty, count)
 
-    def generate_math_question(self, topic: str, difficulty: str) -> Optional[Dict]:
-        """Generate a mathematics question using DeepSeek AI"""
+    def generate_math_question(self, topic: str, difficulty: str, user_id: str = None) -> Optional[Dict]:
+        """Generate a mathematics question using DeepSeek AI with improved timeouts"""
+        try:
+            # Use the dedicated math question generator for better performance
+            from services.math_question_generator import math_question_generator
+            
+            # Call the dedicated generator with proper parameters
+            question_data = math_question_generator.generate_question("Mathematics", topic, difficulty, user_id)
+            
+            if question_data:
+                logger.info(f"✅ Successfully generated math question for {topic}/{difficulty}")
+                return question_data
+            else:
+                logger.warning(f"Math question generator returned no data for {topic}/{difficulty}")
+                return None
+            
+        except Exception as e:
+            logger.error(f"Error in generate_math_question: {e}")
+            return None
+
+    def generate_science_question(self, subject: str, topic: str, difficulty: str) -> Optional[Dict]:
+        """Generate a science question using AI"""
         try:
             difficulty_descriptions = {
                 "easy": "Direct application of basic concepts, straightforward calculations, minimal steps",
-                "medium": "Requires understanding of multiple concepts, moderate calculations, 2-3 steps",
+                "medium": "Requires understanding of multiple concepts, moderate calculations, 2-3 steps", 
                 "difficult": "Complex problem-solving, multi-step reasoning, synthesis of several concepts"
             }
-
+            
             prompt = f"""
-You are MathMentor, an expert O-Level Mathematics tutor for ZIMSEC curriculum.
+You are ScienceMentor, an expert O-Level Science tutor for ZIMSEC curriculum.
 
 CRITICAL INSTRUCTION: Generate EXACTLY ONE single question - never return arrays or multiple questions.
 
+Subject: {subject}
 Topic: {topic}
 Difficulty: {difficulty} - {difficulty_descriptions[difficulty]}
 

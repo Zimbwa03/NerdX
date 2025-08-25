@@ -299,7 +299,8 @@ class GraphPracticeHandler:
                     question_data = self.question_generator.generate_question(
                         'Mathematics',
                         f"Graph - {topic_name}",
-                        'medium'
+                        'medium',
+                        user_id  # Pass user_id for anti-repetition
                     )
 
                     if question_data and 'question' in question_data:

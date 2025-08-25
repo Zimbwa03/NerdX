@@ -145,10 +145,10 @@ class MathematicsHandler:
             }
             save_user_session(user_id, temp_session)
             
-            # Generate question using DeepSeek AI
+            # Generate question using DeepSeek AI with user_id for anti-repetition
             logger.info(f"Generating math question: Mathematics/{formatted_topic}/{difficulty}")
             try:
-                question_data = self.question_generator.generate_question("Mathematics", formatted_topic, difficulty)
+                question_data = self.question_generator.generate_question("Mathematics", formatted_topic, difficulty, user_id)
                 
                 if not question_data:
                     logger.error("Question generator returned None, using fallback")
