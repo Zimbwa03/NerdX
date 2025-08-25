@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class AnalyticsTracker:
     def __init__(self):
-        self.conn_string = 'postgresql://postgres:Ngonidzashe2003.@db.hvlvwvzliqrlmqjbfgoa.supabase.co:5432/postgres'
+        self.conn_string = 'postgresql://postgres.hvlvwvzliqrlmqjbfgoa:Ngonidzashe2003.@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres'
     
     def _get_connection(self):
         """Get database connection"""

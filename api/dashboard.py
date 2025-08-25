@@ -273,7 +273,7 @@ def get_activity():
     """Get comprehensive user activity analytics with real data from analytics tables"""
     try:
         import psycopg2
-        conn_string = 'postgresql://postgres:Ngonidzashe2003.@db.hvlvwvzliqrlmqjbfgoa.supabase.co:5432/postgres'
+        conn_string = 'postgresql://postgres.hvlvwvzliqrlmqjbfgoa:Ngonidzashe2003.@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres'
         conn = psycopg2.connect(conn_string)
         cursor = conn.cursor()
         
@@ -427,7 +427,7 @@ def get_advanced_analytics():
     """Get comprehensive analytics data for the analytics page"""
     try:
         import psycopg2
-        conn_string = 'postgresql://postgres:Ngonidzashe2003.@db.hvlvwvzliqrlmqjbfgoa.supabase.co:5432/postgres'
+        conn_string = 'postgresql://postgres.hvlvwvzliqrlmqjbfgoa:Ngonidzashe2003.@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres'
         conn = psycopg2.connect(conn_string)
         cursor = conn.cursor()
         
@@ -533,7 +533,7 @@ def get_user_engagement():
     """Get detailed user engagement data"""
     try:
         import psycopg2
-        conn_string = 'postgresql://postgres:Ngonidzashe2003.@db.hvlvwvzliqrlmqjbfgoa.supabase.co:5432/postgres'
+        conn_string = 'postgresql://postgres.hvlvwvzliqrlmqjbfgoa:Ngonidzashe2003.@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres'
         conn = psycopg2.connect(conn_string)
         cursor = conn.cursor()
         
