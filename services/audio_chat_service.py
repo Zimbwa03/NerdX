@@ -220,12 +220,21 @@ class AudioChatService:
             return "I encountered an error while processing your request. Please try again."
 
     def generate_audio(self, text: str, voice_type: str = 'female') -> Optional[str]:
-        """Generate audio from text using Gemini AI TTS - SINGLE AUDIO AT A TIME"""
+        """Generate audio from text using Gemini AI TTS - RELIABLE AUDIO GENERATION"""
         # Check if audio generation is already in progress
         with self.audio_generation_lock:
             if self.is_generating_audio:
-                logger.warning("Audio generation already in progress - skipping request")
-                return None
+                logger.info("Audio generation in progress - waiting for completion...")
+                # Wait for current generation to complete instead of skipping
+                import time
+                wait_count = 0
+                while self.is_generating_audio and wait_count < 30:  # Wait up to 30 seconds
+                    time.sleep(1)
+                    wait_count += 1
+                
+                if self.is_generating_audio:
+                    logger.error("Audio generation timeout - proceeding anyway")
+                    self.is_generating_audio = False
             
             self.is_generating_audio = True
             
@@ -596,7 +605,7 @@ Type 'end audio' to exit audio chat mode."""
                     return
             
             # Show processing message
-            whatsapp_service.send_message(user_id, "🎵 Generating your audio response...")
+            whatsapp_service.send_message(user_id, "🎵 Generating your personalized audio response... Please wait, this may take up to 30 seconds for best quality! 🎧")
             
             content = ""
             ai_response = ""
@@ -622,78 +631,80 @@ Type 'end audio' to exit audio chat mode."""
             clean_response = self.clean_text_for_audio(ai_response, max_duration_seconds=45)
             audio_path = None
             
-            # Try audio generation with timeout protection
+            # Generate audio without timeout restrictions - let students wait for quality audio
             try:
-                import signal
-                
-                def timeout_handler(signum, frame):
-                    raise TimeoutError("Audio generation timeout")
-                
-                # Set timeout to prevent worker timeout
-                signal.signal(signal.SIGALRM, timeout_handler)
-                signal.alarm(5)  # 5 second timeout to prevent worker timeout
-                
+                logger.info("Starting audio generation - student will wait for completion...")
+                audio_path = self.generate_audio(clean_response, voice_type)
+                logger.info(f"Audio generation completed: {audio_path}")
+            except Exception as e:
+                logger.error(f"Audio generation error: {e}")
+                # Retry once if failed
                 try:
+                    logger.info("Retrying audio generation...")
                     audio_path = self.generate_audio(clean_response, voice_type)
-                finally:
-                    signal.alarm(0)  # Cancel the alarm
-                    
-            except (TimeoutError, Exception) as e:
-                logger.error(f"Audio generation failed, falling back to text: {e}")
-                audio_path = None
+                except Exception as retry_error:
+                    logger.error(f"Audio generation retry failed: {retry_error}")
+                    audio_path = None
+            
+            # Award XP and update stats regardless of audio success
+            current_stats = get_user_stats(user_id) or {}
+            current_xp = current_stats.get('xp_points', 0)
+            current_level = current_stats.get('level', 1)
+            current_streak = current_stats.get('streak', 0)
+            
+            # Award XP and update streak
+            add_xp(user_id, xp_points, 'audio_feature')
+            update_streak(user_id, True)
+            
+            # Check for level up
+            new_xp = current_xp + xp_points
+            new_level = max(1, (new_xp // 100) + 1)
+            new_streak = current_streak + 1
+            
+            # Update total attempts and audio completions
+            update_user_stats(user_id, {
+                'total_attempts': current_stats.get('total_attempts', 0) + 1,
+                'audio_completed': current_stats.get('audio_completed', 0) + 1,
+                'xp_points': new_xp,
+                'level': new_level,
+                'streak': new_streak
+            })
             
             if audio_path and os.path.exists(audio_path):
-                logger.info(f"Audio file generated at: {audio_path}, size: {os.path.getsize(audio_path)} bytes")
-                
-                # Award XP and update stats for successful audio generation
-                current_stats = get_user_stats(user_id) or {}
-                current_xp = current_stats.get('xp_points', 0)
-                current_level = current_stats.get('level', 1)
-                current_streak = current_stats.get('streak', 0)
-                
-                # Award XP and update streak
-                add_xp(user_id, xp_points, 'audio_feature')
-                update_streak(user_id, True)
-                
-                # Check for level up
-                new_xp = current_xp + xp_points
-                new_level = max(1, (new_xp // 100) + 1)
-                new_streak = current_streak + 1
-                
-                # Update total attempts and audio completions
-                update_user_stats(user_id, {
-                    'total_attempts': current_stats.get('total_attempts', 0) + 1,
-                    'audio_completed': current_stats.get('audio_completed', 0) + 1,
-                    'xp_points': new_xp,
-                    'level': new_level,
-                    'streak': new_streak
-                })
+                logger.info(f"✅ AUDIO READY: {audio_path}, size: {os.path.getsize(audio_path)} bytes")
                 
                 # Send ONLY audio file via WhatsApp (no text)
                 try:
                     success = whatsapp_service.send_audio_message(user_id, audio_path)
                     
                     if success:
-                        logger.info(f"Audio successfully sent to {user_id}")
+                        logger.info(f"🎵 Audio successfully delivered to {user_id}")
                         # Send gamified buttons after audio response
                         self.send_gamified_audio_response_buttons(user_id, xp_points, new_level > current_level, current_level, new_level)
                     else:
-                        logger.error(f"WhatsApp audio sending failed for {user_id}")
-                        # If audio sending fails, send the text response as fallback
-                        fallback_message = f"🎵 **Audio Response** (Text fallback):\n\n{clean_response}\n\n"
-                        fallback_message += "❌ *Audio delivery failed - showing text version*"
-                        whatsapp_service.send_message(user_id, fallback_message)
-                        self.send_gamified_audio_response_buttons(user_id, xp_points, new_level > current_level, current_level, new_level)
+                        logger.error(f"❌ WhatsApp audio delivery failed for {user_id} - retrying...")
+                        # Retry audio sending once
+                        import time
+                        time.sleep(2)
+                        retry_success = whatsapp_service.send_audio_message(user_id, audio_path)
+                        if retry_success:
+                            logger.info(f"🎵 Audio delivered on retry to {user_id}")
+                            self.send_gamified_audio_response_buttons(user_id, xp_points, new_level > current_level, current_level, new_level)
+                        else:
+                            # Only as last resort, show error message
+                            whatsapp_service.send_message(user_id, "🎵 Audio generated but delivery failed. Please try asking your question again.")
+                            self.send_gamified_audio_response_buttons(user_id, xp_points, new_level > current_level, current_level, new_level)
                         
                 except Exception as e:
                     logger.error(f"Exception during audio sending for {user_id}: {e}")
-                    whatsapp_service.send_message(user_id, "❌ Error sending audio. Please try again or type 'end audio' to exit.")
+                    whatsapp_service.send_message(user_id, "🎵 Audio processing complete. Please try asking your question again for audio delivery.")
+                    self.send_gamified_audio_response_buttons(user_id, xp_points, new_level > current_level, current_level, new_level)
                 
                 # Clean up temporary file after a delay to ensure upload completes
                 import threading
                 def cleanup_file():
                     import time
-                    time.sleep(10)  # Wait 10 seconds before cleanup
+                    time.sleep(15)  # Wait 15 seconds before cleanup
                     try:
                         if os.path.exists(audio_path):
                             os.remove(audio_path)
@@ -703,19 +714,26 @@ Type 'end audio' to exit audio chat mode."""
                 
                 threading.Thread(target=cleanup_file, daemon=True).start()
             else:
-                logger.warning(f"Audio generation failed or file not found: {audio_path}")
-                # If audio generation fails, send text response as fallback
-                fallback_message = f"📝 **Text Response** (Audio generation unavailable):\n\n{clean_response}\n\n"
-                fallback_message += "💡 *Showing text version - audio generation timed out*"
-                whatsapp_service.send_message(user_id, fallback_message)
+                logger.error(f"❌ Audio generation completely failed - no file created")
+                # Try one more time with a shorter text
+                short_text = clean_response[:200] + "..." if len(clean_response) > 200 else clean_response
+                logger.info("Attempting emergency audio generation with shorter text...")
                 
-                # Still award XP for the response (reduced amount)
-                current_stats = get_user_stats(user_id) or {}
-                reduced_xp = max(5, xp_points // 2)  # Half XP for text fallback
-                add_xp(user_id, reduced_xp, 'audio_feature_fallback')
+                try:
+                    emergency_audio = self.generate_audio(short_text, voice_type)
+                    if emergency_audio and os.path.exists(emergency_audio):
+                        logger.info("Emergency audio generation successful!")
+                        success = whatsapp_service.send_audio_message(user_id, emergency_audio)
+                        if success:
+                            logger.info(f"🎵 Emergency audio delivered to {user_id}")
+                            self.send_gamified_audio_response_buttons(user_id, xp_points, new_level > current_level, current_level, new_level)
+                            return
+                except Exception as e:
+                    logger.error(f"Emergency audio generation failed: {e}")
                 
-                # Send buttons for continued interaction
-                self.send_gamified_audio_response_buttons(user_id, reduced_xp, False, current_stats.get('level', 1), current_stats.get('level', 1))
+                # Absolute last resort - inform user
+                whatsapp_service.send_message(user_id, "🎵 Audio system temporarily busy. Your question was processed! Please try again in a moment for audio response.")
+                self.send_gamified_audio_response_buttons(user_id, xp_points, new_level > current_level, current_level, new_level)
             
         except Exception as e:
             logger.error(f"Error handling audio input: {e}")
