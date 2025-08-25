@@ -86,10 +86,10 @@ class AIService:
         try:
             difficulty_descriptions = {
                 "easy": "Direct application of basic concepts, straightforward calculations, minimal steps",
-                "medium": "Requires understanding of multiple concepts, moderate calculations, 2-3 steps", 
+                "medium": "Requires understanding of multiple concepts, moderate calculations, 2-3 steps",
                 "difficult": "Complex problem-solving, multi-step reasoning, synthesis of several concepts"
             }
-            
+
             prompt = f"""
 You are ScienceMentor, an expert O-Level Science tutor for ZIMSEC curriculum.
 

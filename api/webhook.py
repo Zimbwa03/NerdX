@@ -1,7 +1,10 @@
 import logging
 import json
 import time
+import threading
+import os
 from typing import Dict, Optional
+from collections import defaultdict
 from flask import Blueprint, request, jsonify
 from services.whatsapp_service import WhatsAppService
 from services.user_service import UserService
@@ -34,6 +37,14 @@ import uuid
 logger = logging.getLogger(__name__)
 
 webhook_bp = Blueprint('webhook', __name__)
+
+# Message deduplication and rate limiting
+processed_messages = {}  # In production, use Redis or database
+user_last_message_time = defaultdict(float)
+message_processing_lock = threading.Lock()
+
+# Maintenance mode check
+MAINTENANCE_MODE = os.getenv('MAINTENANCE_MODE', 'false').lower() == 'true'
 
 # Initialize services
 whatsapp_service = WhatsAppService()
@@ -69,6 +80,86 @@ rate_limiter = RateLimiter()
 question_cache = QuestionCacheService()
 latex_converter = LaTeXConverter()
 pdf_generator = PDFGenerator()
+
+def cleanup_processed_messages():
+    """Clean up old processed messages every hour"""
+    while True:
+        try:
+            with message_processing_lock:
+                current_time = time.time()
+                # Remove messages older than 1 hour
+                old_messages = [mid for mid, timestamp in processed_messages.items() 
+                              if current_time - timestamp > 3600]
+                
+                for mid in old_messages:
+                    del processed_messages[mid]
+                    
+                logger.info(f"Cleaned up {len(old_messages)} old message IDs")
+                
+        except Exception as e:
+            logger.error(f"Cleanup error: {e}")
+        
+        time.sleep(3600)  # Run every hour
+
+def process_message_background(message_data, user_id, message_type):
+    """Process message in background thread to prevent webhook timeouts"""
+    try:
+        logger.info(f"Background processing {message_type} message from {user_id}")
+        
+        if message_type == 'text':
+            # Check rate limiting for text messages
+            if rate_limiter.check_session_rate_limit(user_id, 'text_message'):
+                remaining_time = rate_limiter.get_remaining_cooldown(user_id, 'text_message')
+                if remaining_time > 0:
+                    whatsapp_service.send_message(
+                        user_id,
+                        f"⏳ Please wait {remaining_time} seconds before sending another message. This helps prevent spam and ensures smooth operation."
+                    )
+                else:
+                    whatsapp_service.send_message(
+                        user_id,
+                        "⏳ Please wait a moment before sending another message. This helps prevent spam and ensures smooth operation."
+                    )
+                return
+            handle_text_message(user_id, message_data.get('text', ''))
+            
+        elif message_type == 'image':
+            # Check rate limiting for image processing
+            if rate_limiter.check_session_rate_limit(user_id, 'image_message'):
+                remaining_time = rate_limiter.get_remaining_cooldown(user_id, 'image_message')
+                if remaining_time > 0:
+                    whatsapp_service.send_message(
+                        user_id,
+                        f"⏳ Please wait {remaining_time} seconds before sending another image. Image processing takes time and resources."
+                    )
+                else:
+                    whatsapp_service.send_message(
+                        user_id,
+                        "⏳ Please wait a moment before sending another image. Image processing takes time and resources."
+                    )
+                return
+            handle_image_message(user_id, message_data.get('image', {}))
+            
+        elif message_type == 'interactive':
+            # No rate limiting for menu navigation - handled internally for specific actions
+            handle_interactive_message(user_id, message_data.get('interactive', {}))
+        else:
+            logger.warning(f"Unsupported message type in background: {message_type}")
+            
+    except Exception as e:
+        logger.error(f"Error processing message in background for {user_id}: {e}")
+        # Send error message to user
+        try:
+            whatsapp_service.send_message(
+                user_id, 
+                "❌ **Sorry, I encountered an error processing your message.** Please try again in a moment."
+            )
+        except Exception as send_error:
+            logger.error(f"Failed to send error message to {user_id}: {send_error}")
+
+# Start cleanup thread
+cleanup_thread = threading.Thread(target=cleanup_processed_messages, daemon=True)
+cleanup_thread.start()
 
 # Global session storage for question data
 question_sessions = {}
@@ -112,70 +203,136 @@ def verify_webhook():
 
 @webhook_bp.route('/whatsapp', methods=['POST'])
 def handle_webhook():
-    """Handle incoming WhatsApp messages"""
+    """Handle incoming WhatsApp messages with deduplication and background processing"""
     try:
-        data = request.get_json()
+        # Check maintenance mode first
+        if MAINTENANCE_MODE:
+            logger.info("Webhook in maintenance mode - ignoring messages")
+            return jsonify({'status': 'maintenance'}), 200
 
+        data = request.get_json()
         if not data:
             return jsonify({'status': 'no_data'}), 400
 
-        # Parse message
-        message = whatsapp_service.parse_webhook_message(data)
+        # Extract message info for deduplication
+        entry_data = data.get('entry', [])
+        if not entry_data:
+            return jsonify({'status': 'no_entry'}), 200
 
-        if not message:
-            return jsonify({'status': 'no_message'}), 200
+        for entry in entry_data:
+            changes = entry.get('changes', [])
+            for change in changes:
+                if change.get('field') == 'messages':
+                    value = change.get('value', {})
+                    messages = value.get('messages', [])
+                    
+                    for message_raw in messages:
+                        message_id = message_raw.get('id')
+                        phone_number = message_raw.get('from')
+                        timestamp = message_raw.get('timestamp')
+                        
+                        if not message_id or not phone_number:
+                            continue
+                            
+                        # Message deduplication
+                        with message_processing_lock:
+                            if message_id in processed_messages:
+                                logger.info(f"Message {message_id} already processed, skipping")
+                                continue
+                                
+                            # Rate limiting: prevent rapid messages from same user
+                            current_time = time.time()
+                            if current_time - user_last_message_time[phone_number] < 1:  # 1 second cooldown
+                                logger.info(f"Rate limiting user {phone_number}")
+                                continue
+                            
+                            # Mark as processed immediately
+                            processed_messages[message_id] = current_time
+                            user_last_message_time[phone_number] = current_time
 
-        user_id = message['from']
-        message_text = message['text']
-        message_type = message['type']
+                        # Parse the full message
+                        message = whatsapp_service.parse_webhook_message(data)
+                        if not message:
+                            continue
 
-        # Validate WhatsApp ID
-        if not validators.validate_whatsapp_id(user_id):
-            logger.warning(f"Invalid WhatsApp ID: {user_id}")
-            return jsonify({'status': 'invalid_user_id'}), 400
+                        user_id = message['from']
+                        message_type = message['type']
 
-        # Handle different message types
-        if message_type == 'text':
-            # Check rate limiting for text messages only
-            if rate_limiter.check_session_rate_limit(user_id, 'text_message'):
-                remaining_time = rate_limiter.get_remaining_cooldown(user_id, 'text_message')
-                if remaining_time > 0:
-                    whatsapp_service.send_message(
-                    user_id,
-                        f"⏳ Please wait {remaining_time} seconds before sending another message. This helps prevent spam and ensures smooth operation."
-                    )
-                else:
-                    whatsapp_service.send_message(
-                        user_id,
-                        "⏳ Please wait a moment before sending another message. This helps prevent spam and ensures smooth operation."
-                )
-                return jsonify({'status': 'rate_limited'}), 200
-            handle_text_message(user_id, message_text)
-        elif message_type == 'image':
-            # Check rate limiting for image processing
-            if rate_limiter.check_session_rate_limit(user_id, 'image_message'):
-                remaining_time = rate_limiter.get_remaining_cooldown(user_id, 'image_message')
-                if remaining_time > 0:
-                    whatsapp_service.send_message(
-                        user_id,
-                        f"⏳ Please wait {remaining_time} seconds before sending another image. Image processing takes time and resources."
-                    )
-                else:
-                    whatsapp_service.send_message(
-                        user_id,
-                        "⏳ Please wait a moment before sending another image. Image processing takes time and resources."
-                )
-                return jsonify({'status': 'rate_limited'}), 200
-            handle_image_message(user_id, message['image'])
-        elif message_type == 'interactive':
-            # No rate limiting for menu navigation - handled internally for specific actions
-            handle_interactive_message(user_id, message['interactive'])
+                        # Validate WhatsApp ID
+                        if not validators.validate_whatsapp_id(user_id):
+                            logger.warning(f"Invalid WhatsApp ID: {user_id}")
+                            continue
 
-        return jsonify({'status': 'success'}), 200
+                        # Process message in background thread to avoid timeouts
+                        logger.info(f"Queuing {message_type} message from {user_id} for background processing")
+                        
+                        thread = threading.Thread(
+                            target=process_message_background,
+                            args=(message, user_id, message_type),
+                            daemon=True
+                        )
+                        thread.start()
+
+        # Always return 200 OK immediately to prevent webhook retries
+        return jsonify({'status': 'received'}), 200
 
     except Exception as e:
         logger.error(f"Webhook handling error: {e}", exc_info=True)
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+        # Still return 200 to prevent WhatsApp retries
+        return jsonify({'status': 'error_handled'}), 200
+
+@webhook_bp.route('/maintenance', methods=['POST'])
+def set_maintenance_mode():
+    """Emergency endpoint to enable/disable maintenance mode"""
+    try:
+        data = request.get_json()
+        enabled = data.get('enabled', False)
+        
+        # In production, you'd want authentication here
+        auth_key = data.get('auth_key')
+        expected_key = os.getenv('MAINTENANCE_AUTH_KEY', 'emergency123')
+        
+        if auth_key != expected_key:
+            return jsonify({'error': 'unauthorized'}), 401
+        
+        global MAINTENANCE_MODE
+        MAINTENANCE_MODE = enabled
+        
+        status = "enabled" if enabled else "disabled"
+        logger.info(f"Maintenance mode {status} via API")
+        
+        return jsonify({
+            'status': 'success',
+            'maintenance_mode': enabled,
+            'message': f'Maintenance mode {status}'
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Error setting maintenance mode: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@webhook_bp.route('/health', methods=['GET'])
+def health_check():
+    """Health check endpoint"""
+    try:
+        current_time = time.time()
+        with message_processing_lock:
+            processed_count = len(processed_messages)
+            
+        return jsonify({
+            'status': 'healthy',
+            'maintenance_mode': MAINTENANCE_MODE,
+            'processed_messages_count': processed_count,
+            'uptime': current_time,
+            'message': 'Bot is running normally'
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Health check error: {e}")
+        return jsonify({
+            'status': 'unhealthy',
+            'error': str(e)
+        }), 500
 
 def handle_text_message(user_id: str, message_text: str):
     """Handle text messages from users"""
@@ -3021,7 +3178,7 @@ def handle_purchase_confirmation(user_id: str, package_id: str):
 📱 **𝗘𝗖𝗢𝗖𝗔𝗦𝗛 𝗣𝗔𝗬𝗠𝗘𝗡𝗧:**
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📞 **Number**: +263 785494594
-💰 **Amount**: ${selected_package['price']:.2f} USD  
+💰 **Amount**: ${selected_package['price']:.2f} USD
 📋 **Reference**: `{reference_code}`
 
 🎯 **𝗦𝗜𝗠𝗣𝗟𝗘 𝗦𝗧𝗘𝗣𝗦:**
