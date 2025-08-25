@@ -2,6 +2,7 @@ import os
 import json
 import logging
 import random
+import time
 from typing import Dict, List, Optional
 from database.external_db import get_user_registration, get_user_credits, deduct_credits
 from database.session_db import save_user_session, get_user_session, clear_user_session
@@ -220,6 +221,15 @@ class GraphPracticeHandler:
             if module_id not in self.graph_modules:
                 return
 
+            # Check rate limiting to prevent rapid-fire requests
+            can_generate, remaining_cooldown = self._can_generate_graph(user_id)
+            if not can_generate:
+                self.whatsapp_service.send_message(
+                    user_id, 
+                    f"⏳ **Please wait {remaining_cooldown} seconds** before generating another question. This prevents system overload."
+                )
+                return
+
             module_info = self.graph_modules[module_id]
             registration = get_user_registration(user_id)
             user_name = registration['name'] if registration else "Student"
@@ -288,34 +298,36 @@ class GraphPracticeHandler:
             # Generate question using DeepSeek AI
             topic_name = module_info['title'].replace('📈 ', '').replace('📊 ', '').replace('🌊 ', '').replace('⭐ ', '')
 
-            # Enhanced AI generation with multiple attempts to avoid fallback
-            question_data = None
-            max_retries = 3  # Try AI generation 3 times before giving up
-            
-            for attempt in range(max_retries):
-                logger.info(f"AI generation attempt {attempt + 1}/{max_retries} for {topic_name}")
-                
-                try:
-                    question_data = self.question_generator.generate_question(
-                        'Mathematics',
-                        f"Graph - {topic_name}",
-                        'medium',
-                        user_id  # Pass user_id for anti-repetition
-                    )
+            # Check if user already has an active generation session to prevent concurrent requests
+            session_data = get_user_session(user_id) or {}
+            if session_data.get('generating_graph', False):
+                logger.warning(f"Graph generation already in progress for user {user_id}")
+                self.whatsapp_service.send_message(user_id, "⏳ **Generation in progress** - Please wait for the current request to complete.")
+                return
 
-                    if question_data and 'question' in question_data:
-                        logger.info(f"✅ AI generation successful on attempt {attempt + 1}")
-                        break
-                    else:
-                        logger.warning(f"AI generation returned invalid data on attempt {attempt + 1}")
-                        
-                except Exception as e:
-                    logger.error(f"AI generation error on attempt {attempt + 1}: {e}")
-                
-                # Wait before retry (except on last attempt)
-                if attempt < max_retries - 1:
-                    import time
-                    time.sleep(2)
+            # Mark generation as active to prevent concurrent requests and record timestamp
+            current_time = time.time()
+            session_data['generating_graph'] = True
+            session_data['last_graph_generation'] = current_time
+            save_user_session(user_id, session_data)
+
+            try:
+                # Single AI generation attempt - let the question generator handle its own retries
+                logger.info(f"Starting AI generation for {topic_name} (user: {user_id})")
+                question_data = self.question_generator.generate_question(
+                    'Mathematics',
+                    f"Graph - {topic_name}",
+                    'medium',
+                    user_id  # Pass user_id for anti-repetition
+                )
+            except Exception as e:
+                logger.error(f"AI generation error for {topic_name}: {e}")
+                question_data = None
+            finally:
+                # Always clear the generation lock
+                session_data = get_user_session(user_id) or {}
+                session_data.pop('generating_graph', None)
+                save_user_session(user_id, session_data)
 
             if question_data and 'question' in question_data:
                 # AI successful - format the generated question
@@ -353,35 +365,72 @@ Study the question and when ready, click "Show Graph" to see the correct graph w
                 save_user_session(user_id, session_data)
 
             else:
-                # AI failed after all retries - inform user and suggest retry
-                logger.error(f"AI generation failed after {max_retries} attempts for {topic_name}")
+                # AI failed - inform user with helpful guidance
+                logger.error(f"AI generation failed for {topic_name} (user: {user_id})")
                 
-                message = f"""⚠️ **AI Service Temporarily Busy** ⚠️
+                # Refund the credits since generation failed
+                try:
+                    from services.advanced_credit_service import advanced_credit_service
+                    credit_cost = advanced_credit_service.get_credit_cost_for_action('graph_practice')
+                    advanced_credit_service.refund_credits(user_id, credit_cost, 'AI generation failed')
+                    logger.info(f"Refunded {credit_cost} credits to user {user_id} due to AI generation failure")
+                    credit_refund_msg = f"\n💰 **Refunded:** {credit_cost} credits returned to your account"
+                except Exception as e:
+                    logger.error(f"Failed to refund credits for user {user_id}: {e}")
+                    credit_refund_msg = ""
+                
+                message = f"""⚠️ **AI Service Timeout** ⚠️
 
-👤 Student: {user_name}
-📂 Topic: {topic_name}
+👤 **Student:** {user_name}
+📂 **Topic:** {topic_name}
 
-🤖 DeepSeek AI is currently experiencing high demand. 
+🤖 **The AI service took too long to respond.** This can happen during peak usage times.{credit_refund_msg}
 
-🔄 **What you can do:**
-• Try generating again in a moment
-• The AI service usually recovers quickly
-• Each retry gets a fresh AI-generated question
+🔄 **Try these options:**
+• **Wait 30 seconds** then try generating again
+• **View theory** to learn concepts first  
+• **Try a different topic** if this one keeps timing out
 
-💡 **Why we avoid fallbacks:**
-We want to give you the best AI-generated questions that match your learning needs perfectly!"""
+⏱️ **Please wait at least 30 seconds before retrying** to give the AI service time to recover."""
 
                 buttons = [
-                    {"text": "🔄 Try AI Generation Again", "callback_data": f"graph_generate_{module_id}"},
-                    {"text": "📚 View Theory First", "callback_data": f"graph_practice_{module_id}"},
-                    {"text": "🔙 Back to Graph Menu", "callback_data": "graph_practice_start"}
+                    {"text": "📚 View Theory", "callback_data": f"graph_theory_{module_id}"},
+                    {"text": "📊 Sample Graphs", "callback_data": f"graph_sample_graphs_{module_id}"},
+                    {"text": "🔙 Back to Topics", "callback_data": "graph_practice_start"}
                 ]
 
                 self.whatsapp_service.send_interactive_message(user_id, message, buttons)
 
         except Exception as e:
             logger.error("Error generating graph question for %s: %s", user_id, e)
-            self.whatsapp_service.send_message(user_id, "❌ Error generating question. Please try again.")
+            
+            # Ensure session cleanup on any error
+            try:
+                session_data = get_user_session(user_id) or {}
+                session_data.pop('generating_graph', None)
+                save_user_session(user_id, session_data)
+            except Exception as cleanup_error:
+                logger.error(f"Failed to cleanup session for user {user_id}: {cleanup_error}")
+            
+            self.whatsapp_service.send_message(user_id, "❌ **Error generating question.** Please wait a moment and try again.")
+
+    def _can_generate_graph(self, user_id: str) -> bool:
+        """Check if user can generate a graph (not rate limited)"""
+        try:
+            session_data = get_user_session(user_id) or {}
+            last_generation = session_data.get('last_graph_generation', 0)
+            current_time = time.time()
+            
+            # Require 10 second cooldown between generation attempts
+            cooldown_period = 10
+            if current_time - last_generation < cooldown_period:
+                remaining = int(cooldown_period - (current_time - last_generation))
+                return False, remaining
+            
+            return True, 0
+        except Exception as e:
+            logger.error(f"Error checking generation cooldown for {user_id}: {e}")
+            return True, 0  # Allow on error
 
     def handle_show_generated_graph(self, user_id: str, module_id: str):
         """Show the graph for the AI-generated question using Desmos API"""

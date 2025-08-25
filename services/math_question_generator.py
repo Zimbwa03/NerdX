@@ -45,13 +45,13 @@ class MathQuestionGenerator:
             # Create comprehensive prompt for DeepSeek AI with variation
             prompt = self._create_question_prompt(subject, topic, difficulty, recent_topics)
 
-            # Extended timeout settings for DeepSeek API quality generation
+            # Balanced timeout settings for DeepSeek API - quality vs responsiveness
             if 'graph' in topic.lower():
-                timeouts = [30, 45, 60]       # Much longer timeouts for graph questions (complex)
-                max_attempts = 3              # More attempts for graph questions
+                timeouts = [20, 30, 40]       # Reasonable timeouts for graph questions
+                max_attempts = 3              # 3 attempts for graph questions
             else:
-                timeouts = [25, 35, 50]       # Extended timeouts for topical questions  
-                max_attempts = 3              # More attempts for quality generation
+                timeouts = [15, 25, 35]       # Standard timeouts for topical questions  
+                max_attempts = 3              # 3 attempts for quality generation
 
             for attempt in range(max_attempts):
                 timeout = timeouts[min(attempt, len(timeouts) - 1)]
@@ -76,8 +76,8 @@ class MathQuestionGenerator:
                         time.sleep(self.retry_delay)  # Use configured retry delay
                     continue
 
-                except requests.exceptions.ConnectionError as e:
-                    logger.warning(f"AI API connection error on attempt {attempt + 1}/{max_attempts}: {e}")
+                except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as e:
+                    logger.warning(f"AI API connection error: {e}")
                     if attempt < max_attempts - 1:
                         time.sleep(self.retry_delay)  # Use configured retry delay
                     continue
