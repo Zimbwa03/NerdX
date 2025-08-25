@@ -81,4 +81,52 @@ def serve_graph(filename):
         logger.error(f"Error serving graph file {filename}: {e}")
         return jsonify({'error': 'Graph file not found'}), 404
 
+# Health check endpoint for Render monitoring
+@app.route('/health')
+def health_check():
+    """Health check endpoint for Render monitoring"""
+    try:
+        # Basic health check
+        health_status = {
+            'status': 'healthy',
+            'timestamp': __import__('datetime').datetime.now().isoformat(),
+            'version': '2.0.0',
+            'services': {
+                'database': 'unknown',
+                'whatsapp': 'unknown',
+                'imgbb': 'unknown'
+            }
+        }
+        
+        # Check database connection
+        try:
+            db.session.execute('SELECT 1')
+            health_status['services']['database'] = 'healthy'
+        except Exception as e:
+            health_status['services']['database'] = f'unhealthy: {str(e)}'
+        
+        # Check WhatsApp configuration
+        whatsapp_token = os.environ.get('WHATSAPP_ACCESS_TOKEN')
+        if whatsapp_token:
+            health_status['services']['whatsapp'] = 'configured'
+        else:
+            health_status['services']['whatsapp'] = 'not configured'
+        
+        # Check IMGBB configuration
+        imgbb_key = os.environ.get('IMGBB_API_KEY')
+        if imgbb_key:
+            health_status['services']['imgbb'] = 'configured'
+        else:
+            health_status['services']['imgbb'] = 'not configured'
+        
+        return jsonify(health_status), 200
+        
+    except Exception as e:
+        logger.error(f"Health check error: {e}")
+        return jsonify({
+            'status': 'unhealthy',
+            'error': str(e),
+            'timestamp': __import__('datetime').datetime.now().isoformat()
+        }), 500
+
 # Routes will be imported by main.py to avoid circular imports

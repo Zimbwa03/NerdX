@@ -105,13 +105,78 @@
 
     <!-- Credit Management Tab -->
     <div class="tab-pane fade" id="credits" role="tabpanel">
+        <!-- Credit Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <div class="h4 mb-0" id="totalUsers">-</div>
+                                <div class="small">Total Users</div>
+                            </div>
+                            <div class="fa-2x">
+                                <i class="fas fa-users"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <div class="h4 mb-0" id="totalCredits">-</div>
+                                <div class="small">Total Credits</div>
+                            </div>
+                            <div class="fa-2x">
+                                <i class="fas fa-coins"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <div class="h4 mb-0" id="avgCredits">-</div>
+                                <div class="small">Avg Credits</div>
+                            </div>
+                            <div class="fa-2x">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-danger text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <div class="h4 mb-0" id="lowCreditUsers">-</div>
+                                <div class="small">Low Credit Users</div>
+                            </div>
+                            <div class="fa-2x">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row">
-            <div class="col-md-6">
+            <!-- Individual Credit Management -->
+            <div class="col-lg-4 mb-4">
                 <div class="card">
                     <div class="card-header">
                         <h6 class="card-title mb-0">
-                            <i class="fas fa-plus me-2"></i>
-                            Add/Deduct Credits
+                            <i class="fas fa-user-edit me-2"></i>
+                            Individual Credit Management
                         </h6>
                     </div>
                     <div class="card-body">
@@ -143,18 +208,141 @@
                         </form>
                     </div>
                 </div>
-            </div>
-            
-            <div class="col-md-6">
-                <div class="card">
+
+                <!-- Credit Reset Section -->
+                <div class="card mt-3">
                     <div class="card-header">
                         <h6 class="card-title mb-0">
-                            <i class="fas fa-chart-pie me-2"></i>
-                            Credit Statistics
+                            <i class="fas fa-redo me-2"></i>
+                            Reset User Credits
                         </h6>
                     </div>
                     <div class="card-body">
-                        <canvas id="creditChart" width="400" height="300"></canvas>
+                        <form id="resetCreditForm">
+                            <div class="mb-3">
+                                <label for="resetUserId" class="form-label">User ID</label>
+                                <input type="text" class="form-control" id="resetUserId" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="resetAmount" class="form-label">New Credit Amount</label>
+                                <input type="number" class="form-control" id="resetAmount" value="1000" min="0" max="50000" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="resetReason" class="form-label">Reason</label>
+                                <input type="text" class="form-control" id="resetReason" value="Admin credit reset" required>
+                            </div>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-redo me-1"></i>
+                                Reset Credits
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bulk Credit Operations -->
+            <div class="col-lg-4 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-users-cog me-2"></i>
+                            Bulk Credit Operations
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <form id="bulkCreditForm">
+                            <div class="mb-3">
+                                <label for="bulkTarget" class="form-label">Target Group</label>
+                                <select class="form-select" id="bulkTarget" required>
+                                    <option value="all">All Users</option>
+                                    <option value="low_credits">Low Credit Users (&lt;50)</option>
+                                    <option value="specific_users">Specific Users</option>
+                                </select>
+                            </div>
+                            <div class="mb-3" id="specificUsersDiv" style="display: none;">
+                                <label for="specificUserIds" class="form-label">User IDs (comma-separated)</label>
+                                <textarea class="form-control" id="specificUserIds" rows="3" placeholder="user1, user2, user3..."></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="bulkAmount" class="form-label">Credits to Add</label>
+                                <input type="number" class="form-control" id="bulkAmount" value="500" min="1" max="10000" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="bulkReason" class="form-label">Reason</label>
+                                <input type="text" class="form-control" id="bulkReason" value="Admin bulk credit refresh" required>
+                            </div>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-magic me-1"></i>
+                                Refresh Credits
+                            </button>
+                        </form>
+
+                        <!-- Quick Actions -->
+                        <hr>
+                        <h6>Quick Actions</h6>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-success btn-sm" onclick="quickBulkCredits(500, 'all')">
+                                <i class="fas fa-plus"></i> Give All Users +500 Credits
+                            </button>
+                            <button class="btn btn-outline-warning btn-sm" onclick="quickBulkCredits(1000, 'low_credits')">
+                                <i class="fas fa-battery-quarter"></i> Help Low Credit Users (+1000)
+                            </button>
+                            <button class="btn btn-outline-info btn-sm" onclick="quickBulkCredits(2000, 'all')">
+                                <i class="fas fa-gift"></i> MEGA Credits for Everyone (+2000)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Credit Statistics & Top Users -->
+            <div class="col-lg-4 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-trophy me-2"></i>
+                            Top Users by Credits
+                        </h6>
+                    </div>
+                    <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+                        <div id="topUsersList">
+                            <div class="text-center py-3">
+                                <div class="spinner-border spinner-border-sm" role="status"></div>
+                                <small class="d-block mt-2">Loading...</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-history me-2"></i>
+                            Recent Credit Transactions
+                        </h6>
+                    </div>
+                    <div class="card-body" style="max-height: 250px; overflow-y: auto;">
+                        <div id="recentTransactions">
+                            <div class="text-center py-3">
+                                <div class="spinner-border spinner-border-sm" role="status"></div>
+                                <small class="d-block mt-2">Loading...</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bulk Operation Results Modal -->
+        <div class="modal fade" id="bulkResultModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Bulk Operation Results</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" id="bulkResultContent">
+                        <!-- Results will be populated here -->
                     </div>
                 </div>
             </div>
@@ -411,8 +599,8 @@
                                 <label for="broadcastTarget" class="form-label">Target</label>
                                 <select class="form-select" id="broadcastTarget">
                                     <option value="all">All Users</option>
-                                    <option value="active">Active Users</option>
-                                    <option value="inactive">Inactive Users</option>
+                                    <option value="active">Active Users (Last 7 days)</option>
+                                    <option value="inactive">Inactive Users (7+ days)</option>
                                 </select>
                             </div>
                             <div class="mb-3">
@@ -425,6 +613,24 @@
                                 Send Broadcast
                             </button>
                         </form>
+                    </div>
+                </div>
+
+                <!-- Broadcast History -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-history me-2"></i>
+                            Recent Broadcasts
+                        </h6>
+                    </div>
+                    <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+                        <div id="broadcastHistory">
+                            <div class="text-center py-3">
+                                <div class="spinner-border spinner-border-sm" role="status"></div>
+                                <small class="d-block mt-2">Loading...</small>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -467,15 +673,28 @@ const TOPICS = {
 document.addEventListener('DOMContentLoaded', function() {
     loadPaymentStats();
     loadSystemSettings();
+    loadCreditStatistics();
+    loadBroadcastHistory();
     
     // Setup subject change handler
     document.getElementById('questionSubject').addEventListener('change', updateTopics);
     
+    // Setup bulk target change handler
+    document.getElementById('bulkTarget').addEventListener('change', handleBulkTargetChange);
+    
     // Setup form handlers
     document.getElementById('creditForm').addEventListener('submit', handleCreditForm);
+    document.getElementById('resetCreditForm').addEventListener('submit', handleResetCreditForm);
+    document.getElementById('bulkCreditForm').addEventListener('submit', handleBulkCreditForm);
     document.getElementById('questionForm').addEventListener('submit', handleQuestionForm);
     document.getElementById('settingsForm').addEventListener('submit', handleSettingsForm);
     document.getElementById('broadcastForm').addEventListener('submit', handleBroadcastForm);
+    
+    // Auto-refresh credit statistics every 30 seconds
+    setInterval(loadCreditStatistics, 30000);
+    
+    // Auto-refresh broadcast history every 60 seconds
+    setInterval(loadBroadcastHistory, 60000);
 });
 
 function updateTopics() {
@@ -753,7 +972,13 @@ function handleBroadcastForm(e) {
         return;
     }
     
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
     if (confirm(`Send broadcast to ${target} users?`)) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Sending...';
+        
         fetch('/api/admin/api/broadcast', {
             method: 'POST',
             headers: {
@@ -767,8 +992,9 @@ function handleBroadcastForm(e) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert(data.message);
+                alert(`${data.message}\n\nSent to: ${data.successful_sends} users\nFailed: ${data.failed_sends} users`);
                 document.getElementById('broadcastForm').reset();
+                loadBroadcastHistory(); // Refresh history
             } else {
                 alert('Error: ' + data.error);
             }
@@ -776,8 +1002,57 @@ function handleBroadcastForm(e) {
         .catch(error => {
             console.error('Error sending broadcast:', error);
             alert('Error sending broadcast');
+        })
+        .finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
         });
     }
+}
+
+function loadBroadcastHistory() {
+    fetch('/api/admin/api/broadcast/history')
+        .then(response => response.json())
+        .then(data => {
+            displayBroadcastHistory(data.broadcasts || []);
+        })
+        .catch(error => {
+            console.error('Error loading broadcast history:', error);
+            document.getElementById('broadcastHistory').innerHTML = '<p class="text-danger text-center">Error loading broadcast history</p>';
+        });
+}
+
+function displayBroadcastHistory(broadcasts) {
+    const container = document.getElementById('broadcastHistory');
+    
+    if (broadcasts.length === 0) {
+        container.innerHTML = '<p class="text-muted text-center">No broadcasts sent yet</p>';
+        return;
+    }
+    
+    container.innerHTML = broadcasts.map(broadcast => {
+        const date = new Date(broadcast.created_at).toLocaleString();
+        const successRate = broadcast.success_rate;
+        const statusColor = successRate >= 90 ? 'text-success' : successRate >= 70 ? 'text-warning' : 'text-danger';
+        
+        return `
+            <div class="border-bottom pb-2 mb-2">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="fw-bold">${broadcast.target_group.toUpperCase()}</div>
+                        <div class="text-muted small">${broadcast.message}</div>
+                        <div class="small text-secondary">${date}</div>
+                    </div>
+                    <div class="text-end ms-2">
+                        <div class="${statusColor} fw-bold">${successRate}%</div>
+                        <div class="small text-muted">
+                            ${broadcast.successful_sends}/${broadcast.total_recipients}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 function viewUserDetails(userId) {
@@ -825,6 +1100,330 @@ function exportUsers() {
             console.error('Error exporting users:', error);
             alert('Error starting export');
         });
+}
+
+// ================================
+// CREDIT MANAGEMENT FUNCTIONS
+// ================================
+
+function loadCreditStatistics() {
+    fetch('/api/admin/api/credits/statistics')
+        .then(response => response.json())
+        .then(data => {
+            if (data.overview) {
+                // Update statistics cards
+                document.getElementById('totalUsers').textContent = data.overview.total_users.toLocaleString();
+                document.getElementById('totalCredits').textContent = data.overview.total_credits.toLocaleString();
+                document.getElementById('avgCredits').textContent = data.overview.avg_credits.toLocaleString();
+                document.getElementById('lowCreditUsers').textContent = data.overview.low_credit_users.toLocaleString();
+                
+                // Update top users list
+                displayTopUsers(data.top_users || []);
+                
+                // Update recent transactions
+                displayRecentTransactions(data.recent_transactions || []);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading credit statistics:', error);
+        });
+}
+
+function displayTopUsers(users) {
+    const container = document.getElementById('topUsersList');
+    
+    if (users.length === 0) {
+        container.innerHTML = '<p class="text-muted text-center">No users found</p>';
+        return;
+    }
+    
+    container.innerHTML = users.map((user, index) => `
+        <div class="d-flex justify-content-between align-items-center mb-2 p-2 ${index < 3 ? 'bg-light rounded' : ''}">
+            <div>
+                <div class="fw-bold">
+                    ${index < 3 ? ['🥇', '🥈', '🥉'][index] : `${index + 1}.`}
+                    ${user.username}
+                </div>
+                <small class="text-muted">${user.user_id.slice(-8)}</small>
+            </div>
+            <div class="text-end">
+                <div class="fw-bold text-success">${user.credits.toLocaleString()}</div>
+                <small class="text-muted">credits</small>
+            </div>
+        </div>
+    `).join('');
+}
+
+function displayRecentTransactions(transactions) {
+    const container = document.getElementById('recentTransactions');
+    
+    if (transactions.length === 0) {
+        container.innerHTML = '<p class="text-muted text-center">No recent transactions</p>';
+        return;
+    }
+    
+    container.innerHTML = transactions.map(tx => {
+        const date = new Date(tx.date).toLocaleString();
+        const typeColor = tx.credits_used > 0 ? 'text-danger' : 'text-success';
+        const typeIcon = tx.credits_used > 0 ? 'fa-minus' : 'fa-plus';
+        
+        return `
+            <div class="border-bottom pb-2 mb-2">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="fw-bold">${tx.user_id.slice(-8)}</div>
+                        <small class="text-muted">${tx.type}</small>
+                    </div>
+                    <div class="text-end">
+                        <div class="${typeColor}">
+                            <i class="fas ${typeIcon}"></i> ${Math.abs(tx.credits_used)}
+                        </div>
+                        <small class="text-muted">${date}</small>
+                    </div>
+                </div>
+                <small class="text-muted d-block">${tx.description}</small>
+            </div>
+        `;
+    }).join('');
+}
+
+function handleBulkTargetChange() {
+    const target = document.getElementById('bulkTarget').value;
+    const specificDiv = document.getElementById('specificUsersDiv');
+    
+    if (target === 'specific_users') {
+        specificDiv.style.display = 'block';
+    } else {
+        specificDiv.style.display = 'none';
+    }
+}
+
+function handleResetCreditForm(e) {
+    e.preventDefault();
+    
+    const userId = document.getElementById('resetUserId').value.trim();
+    const amount = parseInt(document.getElementById('resetAmount').value);
+    const reason = document.getElementById('resetReason').value.trim();
+    
+    if (!userId || !amount || !reason) {
+        alert('Please fill all fields');
+        return;
+    }
+    
+    if (!confirm(`Reset user ${userId} credits to ${amount}? This action cannot be undone.`)) {
+        return;
+    }
+    
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Resetting...';
+    
+    fetch('/api/admin/api/credits/reset-user', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            user_id: userId,
+            amount: amount,
+            reason: reason
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            document.getElementById('resetCreditForm').reset();
+            loadCreditStatistics(); // Refresh stats
+        } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error resetting credits:', error);
+        alert('Error resetting user credits');
+    })
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    });
+}
+
+function handleBulkCreditForm(e) {
+    e.preventDefault();
+    
+    const target = document.getElementById('bulkTarget').value;
+    const amount = parseInt(document.getElementById('bulkAmount').value);
+    const reason = document.getElementById('bulkReason').value.trim();
+    let userIds = [];
+    
+    if (target === 'specific_users') {
+        const userIdsText = document.getElementById('specificUserIds').value.trim();
+        if (!userIdsText) {
+            alert('Please enter user IDs for specific users option');
+            return;
+        }
+        userIds = userIdsText.split(',').map(id => id.trim()).filter(id => id);
+        if (userIds.length === 0) {
+            alert('Please enter valid user IDs');
+            return;
+        }
+    }
+    
+    if (!target || !amount || !reason) {
+        alert('Please fill all required fields');
+        return;
+    }
+    
+    const targetText = target === 'all' ? 'all users' : 
+                     target === 'low_credits' ? 'users with low credits' : 
+                     `${userIds.length} specific users`;
+    
+    if (!confirm(`Add ${amount} credits to ${targetText}? This will send ${amount} credits to each user.`)) {
+        return;
+    }
+    
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processing...';
+    
+    fetch('/api/admin/api/credits/bulk-refresh', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            target: target,
+            amount: amount,
+            reason: reason,
+            user_ids: userIds
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showBulkResults(data);
+            document.getElementById('bulkCreditForm').reset();
+            handleBulkTargetChange(); // Reset visibility
+            loadCreditStatistics(); // Refresh stats
+        } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error bulk refreshing credits:', error);
+        alert('Error processing bulk credit operation');
+    })
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    });
+}
+
+function quickBulkCredits(amount, target) {
+    const targetText = target === 'all' ? 'all users' : 'users with low credits';
+    
+    if (!confirm(`Give ${amount} credits to ${targetText}?`)) {
+        return;
+    }
+    
+    fetch('/api/admin/api/credits/bulk-refresh', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            target: target,
+            amount: amount,
+            reason: `Quick admin credit boost - ${amount} credits`,
+            user_ids: []
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showBulkResults(data);
+            loadCreditStatistics(); // Refresh stats
+        } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error in quick bulk credits:', error);
+        alert('Error processing quick credit operation');
+    });
+}
+
+function showBulkResults(data) {
+    const modal = new bootstrap.Modal(document.getElementById('bulkResultModal'));
+    const content = document.getElementById('bulkResultContent');
+    
+    content.innerHTML = `
+        <div class="alert alert-success">
+            <h6><i class="fas fa-check-circle me-2"></i>Bulk Operation Completed</h6>
+            <p class="mb-0">${data.message}</p>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="h4 text-success">${data.successful_updates}</div>
+                    <small class="text-muted">Successful</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="h4 text-danger">${data.failed_updates}</div>
+                    <small class="text-muted">Failed</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="h4 text-primary">${data.total_users}</div>
+                    <small class="text-muted">Total Users</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="h4 text-warning">${data.credits_added}</div>
+                    <small class="text-muted">Credits Added</small>
+                </div>
+            </div>
+        </div>
+        
+        ${data.updated_users && data.updated_users.length > 0 ? `
+            <h6>Sample Updated Users:</h6>
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Before</th>
+                            <th>After</th>
+                            <th>Added</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.updated_users.map(user => `
+                            <tr>
+                                <td>${user.username} <small class="text-muted">(${user.user_id.slice(-8)})</small></td>
+                                <td>${user.credits_before.toLocaleString()}</td>
+                                <td class="text-success fw-bold">${user.credits_after.toLocaleString()}</td>
+                                <td class="text-primary">+${user.credits_added}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+            ${data.updated_users.length < data.successful_updates ? `
+                <small class="text-muted">Showing first ${data.updated_users.length} of ${data.successful_updates} updated users</small>
+            ` : ''}
+        ` : ''}
+    `;
+    
+    modal.show();
 }
 </script>
 {% endblock %}

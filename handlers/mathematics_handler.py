@@ -314,15 +314,27 @@ class MathematicsHandler:
             final_streak = updated_stats.get('streak', 0)
             final_level = updated_stats.get('level', 1)
             
-            # Create result message
+            # Enhanced gamified result message
             if is_correct:
-                message = f"✅ Excellent {user_name}! ✅\n\n"
-                message += f"🎯 Correct Answer: {question_data['answer']}\n"
-                message += f"💎 +{points} XP Points\n\n"
+                message = f"🎉 **OUTSTANDING!** {user_name}! 🎉\n\n"
+                message += f"✅ **Correct Answer:** {question_data['answer']}\n"
+                message += f"🎯 **Difficulty:** {difficulty.title()}\n"
+                message += f"💎 **XP Earned:** +{points}\n"
+                message += f"🔥 **Streak:** {final_streak}\n\n"
+                
+                # Special streak messages
+                if final_streak >= 10:
+                    message += f"🏆 **STREAK MASTER!** You're on fire!\n"
+                elif final_streak >= 5:
+                    message += f"⚡ **HOT STREAK!** Keep it going!\n"
+                elif final_streak >= 3:
+                    message += f"🌟 **BUILDING MOMENTUM!** Great job!\n"
+                message += "\n"
             else:
-                message = f"❌ Not quite right, {user_name} ❌\n\n"
-                message += f"🎯 Correct Answer: {question_data['answer']}\n"
-                message += f"📚 Keep practicing!\n\n"
+                message = f"📚 **Keep Learning,** {user_name}! 📚\n\n"
+                message += f"🎯 **Correct Answer:** {question_data['answer']}\n"
+                message += f"💡 **Don't worry!** Every mistake is a learning opportunity!\n"
+                message += f"🔥 **Streak:** {final_streak} (Try again to build it up!)\n\n"
             
             # Add analysis if available
             if analysis.get('detailed_analysis'):
@@ -338,23 +350,34 @@ class MathematicsHandler:
             if question_data.get('explanation'):
                 message += f"💡 Concept Explanation:\n{question_data['explanation']}\n\n"
             
-            # Show updated stats
-            message += f"📊 Your Stats:\n"
-            message += f"💳 Credits: {final_credits}\n"
-            message += f"⚡ XP: {final_xp} (+{points if is_correct else 0})\n"
-            message += f"🔥 Streak: {final_streak}\n"
-            message += f"🏆 Level: {final_level}\n\n"
+            # Enhanced gamified stats display
+            message += f"🎮 **Your Progress Dashboard** 🎮\n"
+            message += f"━━━━━━━━━━━━━━━━━━━━\n"
+            message += f"💰 **Credits:** {final_credits}\n"
+            message += f"⚡ **Total XP:** {final_xp}\n"
+            message += f"🔥 **Current Streak:** {final_streak}\n"
+            message += f"🏆 **Level:** {final_level}\n"
+            
+            # Add level progress bar
+            xp_for_next_level = (final_level * 100) - final_xp
+            if xp_for_next_level > 0:
+                message += f"📈 **Next Level:** {xp_for_next_level} XP away!\n"
+            else:
+                message += f"🌟 **Level Master!** Keep climbing!\n"
+                
+            message += f"━━━━━━━━━━━━━━━━━━━━\n\n"
             
             # Add encouragement
             if analysis.get('encouragement'):
                 message += f"🌟 {analysis.get('encouragement')}"
             
-            # Create navigation buttons
+            # Create enhanced navigation buttons with gamification
             topic_encoded = (topic or '').lower().replace(' ', '_')
             
             buttons = [
-                {"text": "➡️ Next Question", "callback_data": f"math_question_{topic_encoded}_{difficulty}"},
+                {"text": f"➡️ Next Question (+{points} XP)", "callback_data": f"math_question_{topic_encoded}_{difficulty}"},
                 {"text": "📚 Change Topic", "callback_data": "mathematics_mcq"},
+                {"text": "💰 Buy More Credits", "callback_data": "credit_store"},
                 {"text": "🏠 Main Menu", "callback_data": "main_menu"}
             ]
             

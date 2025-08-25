@@ -224,12 +224,62 @@ class GraphPracticeHandler:
             registration = get_user_registration(user_id)
             user_name = registration['name'] if registration else "Student"
 
-            # Send generating message
+            # Check and deduct credits for graph question generation
+            from services.advanced_credit_service import advanced_credit_service
+            
+            credit_result = advanced_credit_service.check_and_deduct_credits(
+                user_id, 
+                'math_graph_practice',  # 3 credits as per config
+                None
+            )
+            
+            if not credit_result['success']:
+                if credit_result.get('insufficient'):
+                    # Show insufficient credits message with gamified elements
+                    current_credits = credit_result['current_credits']
+                    required_credits = credit_result['required_credits']
+                    shortage = credit_result['shortage']
+                    
+                    insufficient_msg = f"""💰 **Need More Credits!** 💰
+
+👤 Student: {user_name}
+📂 Topic: {module_info['title']}
+🎯 Action: AI Question Generation
+
+💳 **Credit Status:**
+• Current Credits: {current_credits}
+• Required Credits: {required_credits}
+• Need: {shortage} more credits
+
+🎮 **Why Credits Matter:**
+• Support AI generation costs
+• Unlock premium features
+• Track your learning progress
+• Earn XP and achievements!
+
+💎 **Get More Credits:**"""
+                    
+                    buttons = [
+                        {"text": "💰 Buy Credits", "callback_data": "credit_store"},
+                        {"text": "👥 Invite Friends (+5 each)", "callback_data": "share_to_friend"},
+                        {"text": "🏠 Main Menu", "callback_data": "main_menu"}
+                    ]
+                    
+                    self.whatsapp_service.send_interactive_message(user_id, insufficient_msg, buttons)
+                    return
+                else:
+                    self.whatsapp_service.send_message(user_id, credit_result['message'])
+                    return
+
+            # Send generating message with credit deduction confirmation
             generating_msg = f"""🤖 **Generating ZIMSEC Question** 🤖
 
 👤 Student: {user_name}
 📂 Topic: {module_info['title']}
 ⏳ DeepSeek AI is creating an authentic O-Level question...
+
+💳 Credits Deducted: {credit_result['deducted']}
+💰 New Balance: {credit_result['new_balance']}
 
 🧠 Please wait while we generate your personalized graph question!"""
 
@@ -238,14 +288,35 @@ class GraphPracticeHandler:
             # Generate question using DeepSeek AI
             topic_name = module_info['title'].replace('📈 ', '').replace('📊 ', '').replace('🌊 ', '').replace('⭐ ', '')
 
-            # Use DeepSeek AI for ALL graph topics with immediate fallback
+            # Enhanced AI generation with multiple attempts to avoid fallback
+            question_data = None
+            max_retries = 3  # Try AI generation 3 times before giving up
+            
+            for attempt in range(max_retries):
+                logger.info(f"AI generation attempt {attempt + 1}/{max_retries} for {topic_name}")
+                
+                try:
             question_data = self.question_generator.generate_question(
                 'Mathematics',
                 f"Graph - {topic_name}",
                 'medium'
             )
 
-            if question_data:
+                    if question_data and 'question' in question_data:
+                        logger.info(f"✅ AI generation successful on attempt {attempt + 1}")
+                        break
+                    else:
+                        logger.warning(f"AI generation returned invalid data on attempt {attempt + 1}")
+                        
+                except Exception as e:
+                    logger.error(f"AI generation error on attempt {attempt + 1}: {e}")
+                
+                # Wait before retry (except on last attempt)
+                if attempt < max_retries - 1:
+                    import time
+                    time.sleep(2)
+
+            if question_data and 'question' in question_data:
                 # AI successful - format the generated question
                 question_text = question_data.get('question', 'Graph plotting question')
 
@@ -281,40 +352,31 @@ Study the question and when ready, click "Show Graph" to see the correct graph w
                 save_user_session(user_id, session_data)
 
             else:
-                # AI failed - use immediate fallback
-                logger.info(f"Generated fallback question for {topic_name}")
-                fallback_question = self._get_fallback_question(module_id)
+                # AI failed after all retries - inform user and suggest retry
+                logger.error(f"AI generation failed after {max_retries} attempts for {topic_name}")
                 
-                message = f"""📝 **ZIMSEC Practice Question**
+                message = f"""⚠️ **AI Service Temporarily Busy** ⚠️
 
 👤 Student: {user_name}
 📂 Topic: {topic_name}
-🎯 Instructions: Plot the graph for this question
 
-❓ **Question:**
-{fallback_question}
+🤖 DeepSeek AI is currently experiencing high demand. 
 
-📐 **Your Task:**
-Study the question and when ready, click "Show Graph" to see the correct graph with guidelines and your personalized NerdX watermark.
+🔄 **What you can do:**
+• Try generating again in a moment
+• The AI service usually recovers quickly
+• Each retry gets a fresh AI-generated question
 
-💡 *Practice question from our curriculum bank*"""
+💡 **Why we avoid fallbacks:**
+We want to give you the best AI-generated questions that match your learning needs perfectly!"""
 
                 buttons = [
-                    {"text": "📊 Show Graph", "callback_data": f"show_generated_graph_{module_id}"},
-                    {"text": "🔄 Try Generate New", "callback_data": f"graph_generate_{module_id}"},
-                    {"text": "🔙 Back", "callback_data": f"graph_practice_{module_id}"}
+                    {"text": "🔄 Try AI Generation Again", "callback_data": f"graph_generate_{module_id}"},
+                    {"text": "📚 View Theory First", "callback_data": f"graph_practice_{module_id}"},
+                    {"text": "🔙 Back to Graph Menu", "callback_data": "graph_practice_start"}
                 ]
 
                 self.whatsapp_service.send_interactive_message(user_id, message, buttons)
-
-                # Save fallback question in session
-                session_data = get_user_session(user_id) or {}
-                session_data.update({
-                    'generated_question': {'question': fallback_question},
-                    'current_module': module_id,
-                    'question_text': fallback_question
-                })
-                save_user_session(user_id, session_data)
 
         except Exception as e:
             logger.error("Error generating graph question for %s: %s", user_id, e)
@@ -381,7 +443,31 @@ Study the question and when ready, click "Show Graph" to see the correct graph w
                 )
 
             if graph_result and 'image_path' in graph_result:
-                # Send success message with graph
+                # Award XP, update streak, and check level up for graph completion
+                from database.external_db import add_xp, update_streak, get_user_stats, update_user_stats
+                
+                # Award XP for graph completion (20 XP for studying the graph answer)
+                xp_gained = 20
+                add_xp(user_id, xp_gained, 'graph_study')
+                update_streak(user_id, True)  # Update streak for completing graph
+                
+                # Get current stats and check for level up
+                user_stats = get_user_stats(user_id) or {}
+                current_xp = user_stats.get('xp_points', 0)
+                current_level = user_stats.get('level', 1)
+                current_streak = user_stats.get('streak', 0)
+                new_level = max(1, (current_xp // 100) + 1)
+                
+                # Check for level up
+                level_up_bonus = ""
+                if new_level > current_level:
+                    update_user_stats(user_id, {'level': new_level})
+                    level_up_bonus = f"\n🎉 **LEVEL UP!** Level {current_level} → Level {new_level}!"
+                
+                # Get current credits
+                current_credits = get_user_credits(user_id)
+                
+                # Enhanced success message with gamification
                 success_msg = f"""✅ **Your Personalized Graph** ✅
 
 👤 Student: {user_name}
@@ -391,15 +477,21 @@ Study the question and when ready, click "Show Graph" to see the correct graph w
 
 📈 Study this graph carefully and compare with your manual plotting!
 
-💰 Credits Remaining: {get_user_credits(user_id)}"""
+🎮 **Rewards Earned:**
+⚡ XP Gained: +{xp_gained}
+🔥 Current Streak: {current_streak}
+🏆 Level: {new_level}
+💰 Credits: {current_credits}{level_up_bonus}
+
+🌟 Keep practicing to level up faster!"""
 
                 # Send the graph image using the file path directly
                 self.whatsapp_service.send_image_file(user_id, graph_result['image_path'], success_msg)
 
-                # Add navigation buttons
+                # Add navigation buttons with gamified text
                 buttons = [
-                    {"text": "🔄 Generate New Question", "callback_data": f"graph_generate_{module_id}"},
-                    {"text": "📐 Plot Your Own", "callback_data": f"graph_plot_{module_id}"},
+                    {"text": "🔄 Generate New Question (+XP)", "callback_data": f"graph_generate_{module_id}"},
+                    {"text": "📐 Plot Your Own (+XP)", "callback_data": f"graph_plot_{module_id}"},
                     {"text": "🔙 Back", "callback_data": f"graph_practice_{module_id}"}
                 ]
 
@@ -685,7 +777,7 @@ Wait {user_name} NerdX is processing your Graph...
             self.whatsapp_service.send_message(user_id, "❌ Error loading sample graphs. Please try again.")
 
     def _extract_expression_from_question(self, question_text: str, module_id: str) -> str:
-        """Extract mathematical expression from AI-generated question text"""
+        """Extract mathematical expression from AI-generated question text with enhanced pattern matching"""
         try:
             import re
 
@@ -693,22 +785,52 @@ Wait {user_name} NerdX is processing your Graph...
             if module_id == 'linear_programming':
                 return self._extract_linear_programming_constraints(question_text)
 
-            # Common patterns for different types of functions
+            # Enhanced patterns for different types of functions with more flexibility
             patterns = {
-                'linear_functions': r'y\s*=\s*[+-]?\d*[.]?\d*x\s*[+-]?\s*\d+',
-                'quadratic_functions': r'y\s*=\s*[+-]?\d*[.]?\d*x\^?2\s*[+-]?\s*\d*[.]?\d*x?\s*[+-]?\s*\d*',
-                'trigonometric_functions': r'y\s*=\s*\d*[.]?\d*\s*(sin|cos|tan)\s*\([^)]+\)',
+                'linear_functions': [
+                    r'y\s*=\s*[+-]?\d*\.?\d*\s*\*?\s*x\s*[+-]\s*\d+',  # y = 2x + 3, y = -x + 4
+                    r'y\s*=\s*[+-]?\d+\s*\*?\s*x\s*[+-]\s*\d+',       # y = 2*x + 3
+                    r'y\s*=\s*[+-]?\d*\.?\d*x\s*[+-]\s*\d+',          # y = 2x + 3
+                    r'y\s*=\s*[+-]?\d+x\s*[+-]\s*\d+',                # y = 2x + 3
+                    r'y\s*=\s*[+-]?\d*\.?\d*\s*x\s*[+-]\s*\d+',       # y = 0.5 x + 3
+                ],
+                'quadratic_functions': [
+                    r'y\s*=\s*[+-]?\d*\.?\d*\s*\*?\s*x\^?2\s*[+-]?\s*\d*\.?\d*\s*\*?\s*x?\s*[+-]?\s*\d*',  # y = x^2 - 4x + 3
+                    r'y\s*=\s*[+-]?\d*x²\s*[+-]?\s*\d*x?\s*[+-]?\s*\d*',                                   # y = x² - 4x + 3
+                    r'y\s*=\s*[+-]?\d*\s*x\*\*2\s*[+-]?\s*\d*\s*\*?\s*x?\s*[+-]?\s*\d*',                  # y = x**2 - 4x + 3
+                ],
+                'trigonometric_functions': [
+                    r'y\s*=\s*\d*\.?\d*\s*\*?\s*(sin|cos|tan)\s*\([^)]+\)',  # y = sin(x), y = 2*sin(x)
+                    r'y\s*=\s*(sin|cos|tan)\s*\([^)]+\)',                     # y = sin(x)
+                    r'y\s*=\s*\d+\s*(sin|cos|tan)\s*\([^)]+\)',               # y = 2sin(x)
+                ],
             }
 
             if module_id in patterns:
-                matches = re.findall(patterns[module_id], question_text, re.IGNORECASE)
+                for pattern in patterns[module_id]:
+                    matches = re.findall(pattern, question_text, re.IGNORECASE)
                 if matches:
-                    return matches[0].strip()
+                        expression = matches[0]
+                        # Clean up the expression
+                        if isinstance(expression, tuple):
+                            expression = ' '.join(str(x) for x in expression if x)
+                        return expression.strip()
 
-            # Fallback: look for any y = expression
-            fallback_match = re.search(r'y\s*=\s*[^\n]+', question_text, re.IGNORECASE)
+            # Enhanced fallback: look for any y = expression with better cleaning
+            fallback_patterns = [
+                r'y\s*=\s*[^\n.!?]+',   # y = anything until newline or sentence end
+                r'y\s*=\s*[^,\n]+',     # y = anything until comma or newline
+            ]
+            
+            for pattern in fallback_patterns:
+                fallback_match = re.search(pattern, question_text, re.IGNORECASE)
             if fallback_match:
-                return fallback_match.group().strip()
+                    expression = fallback_match.group().strip()
+                    # Clean up common issues
+                    expression = re.sub(r'[.!?].*$', '', expression)  # Remove sentence endings
+                    expression = expression.replace('*', '').replace(' ', '')  # Clean formatting
+                    if len(expression) > 3:  # Must be meaningful length
+                        return expression
 
             return None
 

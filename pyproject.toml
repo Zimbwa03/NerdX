@@ -27,4 +27,5 @@ dependencies = [
     "seaborn>=0.13.2",
     "flask-cors>=6.0.1",
     "reportlab>=4.4.3",
+    "imgbbpy>=1.3.0",
 ]

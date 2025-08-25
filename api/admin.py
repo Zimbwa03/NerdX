@@ -269,10 +269,250 @@ def clear_user_sessions(user_id: str):
         logger.error(f"Error clearing user sessions: {e}")
         return jsonify({'error': str(e)}), 500
 
+@admin_bp.route('/api/credits/bulk-refresh', methods=['POST'])
+def bulk_refresh_credits():
+    """Add credits to all users or specific group"""
+    try:
+        from database.external_db import make_supabase_request
+        from services.advanced_credit_service import advanced_credit_service
+        
+        data = request.get_json()
+        credits_amount = data.get('amount', 500)
+        target_group = data.get('target', 'all')  # 'all', 'low_credits', 'specific_users'
+        user_ids = data.get('user_ids', [])  # For specific users
+        reason = data.get('reason', f'Admin bulk credit refresh - {credits_amount} credits')
+        
+        # Validate amount
+        if not isinstance(credits_amount, int) or credits_amount < 1 or credits_amount > 10000:
+            return jsonify({'error': 'Credit amount must be between 1 and 10000'}), 400
+        
+        # Get target users based on criteria
+        users_query = "SELECT user_id, username, first_name, credits FROM user_stats"
+        filters = []
+        
+        if target_group == 'low_credits':
+            filters.append("credits < 50")
+        elif target_group == 'specific_users' and user_ids:
+            user_list = "', '".join(user_ids)
+            filters.append(f"user_id IN ('{user_list}')")
+        
+        if filters:
+            users_query += " WHERE " + " AND ".join(filters)
+        
+        # Get users from database using raw query
+        import psycopg2
+        conn_string = 'postgresql://postgres:Ngonidzashe2003.@db.hvlvwvzliqrlmqjbfgoa.supabase.co:5432/postgres'
+        conn = psycopg2.connect(conn_string)
+        cursor = conn.cursor()
+        
+        cursor.execute(users_query)
+        users = cursor.fetchall()
+        
+        if not users:
+            cursor.close()
+            conn.close()
+            return jsonify({'error': 'No users found matching criteria'}), 400
+        
+        successful_updates = 0
+        failed_updates = 0
+        updated_users = []
+        
+        for user in users:
+            user_id, username, first_name, current_credits = user
+            
+            # Add credits using advanced credit service
+            success = advanced_credit_service.add_credits_for_purchase(
+                user_id, 
+                credits_amount, 
+                reason
+            )
+            
+            if success:
+                new_credits = current_credits + credits_amount
+                successful_updates += 1
+                updated_users.append({
+                    'user_id': user_id,
+                    'username': username or 'Unknown',
+                    'credits_before': current_credits,
+                    'credits_after': new_credits,
+                    'credits_added': credits_amount
+                })
+            else:
+                failed_updates += 1
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Successfully updated {successful_updates} users',
+            'successful_updates': successful_updates,
+            'failed_updates': failed_updates,
+            'total_users': len(users),
+            'credits_added': credits_amount,
+            'updated_users': updated_users[:10]  # Show first 10 for preview
+        })
+        
+    except Exception as e:
+        logger.error(f"Error bulk refreshing credits: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/api/credits/reset-user', methods=['POST'])
+def reset_user_credits():
+    """Reset specific user's credits to a specific amount"""
+    try:
+        from database.external_db import make_supabase_request
+        
+        data = request.get_json()
+        user_id = data.get('user_id', '').strip()
+        new_credit_amount = data.get('amount', 1000)
+        reason = data.get('reason', f'Admin credit reset to {new_credit_amount}')
+        
+        if not user_id:
+            return jsonify({'error': 'User ID is required'}), 400
+        
+        if not isinstance(new_credit_amount, int) or new_credit_amount < 0:
+            return jsonify({'error': 'Credit amount must be a positive integer'}), 400
+        
+        # Get current user credits
+        user_stats = make_supabase_request(
+            "GET", 
+            "user_stats", 
+            select="credits",
+            filters={"user_id": f"eq.{user_id}"}
+        )
+        
+        if not user_stats:
+            return jsonify({'error': 'User not found'}), 404
+        
+        current_credits = user_stats[0].get('credits', 0)
+        
+        # Update user credits directly
+        update_data = {"credits": new_credit_amount}
+        result = make_supabase_request(
+            "PATCH", 
+            "user_stats", 
+            update_data, 
+            filters={"user_id": f"eq.{user_id}"}
+        )
+        
+        if result:
+            # Log the credit transaction
+            from datetime import datetime
+            transaction = {
+                "user_id": user_id,
+                "transaction_type": "admin_reset",
+                "credits_used": current_credits - new_credit_amount,  # Difference
+                "credits_before": current_credits,
+                "credits_after": new_credit_amount,
+                "description": reason
+            }
+            make_supabase_request("POST", "credit_transactions", transaction)
+            
+            return jsonify({
+                'success': True,
+                'message': f'User {user_id} credits reset from {current_credits} to {new_credit_amount}',
+                'user_id': user_id,
+                'credits_before': current_credits,
+                'credits_after': new_credit_amount
+            })
+        else:
+            return jsonify({'error': 'Failed to reset user credits'}), 500
+            
+    except Exception as e:
+        logger.error(f"Error resetting user credits: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/api/credits/statistics')
+def get_credit_statistics():
+    """Get comprehensive credit statistics for all users"""
+    try:
+        import psycopg2
+        conn_string = 'postgresql://postgres:Ngonidzashe2003.@db.hvlvwvzliqrlmqjbfgoa.supabase.co:5432/postgres'
+        conn = psycopg2.connect(conn_string)
+        cursor = conn.cursor()
+        
+        # Get credit statistics
+        cursor.execute("""
+            SELECT 
+                COUNT(*) as total_users,
+                SUM(credits) as total_credits,
+                AVG(credits) as avg_credits,
+                MIN(credits) as min_credits,
+                MAX(credits) as max_credits,
+                COUNT(CASE WHEN credits < 50 THEN 1 END) as low_credit_users,
+                COUNT(CASE WHEN credits BETWEEN 50 AND 200 THEN 1 END) as medium_credit_users,
+                COUNT(CASE WHEN credits > 200 THEN 1 END) as high_credit_users
+            FROM user_stats;
+        """)
+        
+        stats = cursor.fetchone()
+        
+        # Get top users by credits
+        cursor.execute("""
+            SELECT user_id, username, first_name, credits 
+            FROM user_stats 
+            ORDER BY credits DESC 
+            LIMIT 10;
+        """)
+        
+        top_users = cursor.fetchall()
+        
+        # Get recent credit transactions
+        cursor.execute("""
+            SELECT user_id, transaction_type, credits_used, description, created_at
+            FROM credit_transactions 
+            ORDER BY created_at DESC 
+            LIMIT 10;
+        """)
+        
+        recent_transactions = cursor.fetchall()
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'overview': {
+                'total_users': stats[0] or 0,
+                'total_credits': int(stats[1] or 0),
+                'avg_credits': round(float(stats[2] or 0), 2),
+                'min_credits': int(stats[3] or 0),
+                'max_credits': int(stats[4] or 0),
+                'low_credit_users': stats[5] or 0,
+                'medium_credit_users': stats[6] or 0,
+                'high_credit_users': stats[7] or 0
+            },
+            'top_users': [
+                {
+                    'user_id': user[0],
+                    'username': user[1] or 'Unknown',
+                    'first_name': user[2] or 'User',
+                    'credits': user[3]
+                } for user in top_users
+            ],
+            'recent_transactions': [
+                {
+                    'user_id': tx[0],
+                    'type': tx[1],
+                    'credits_used': tx[2],
+                    'description': tx[3],
+                    'date': str(tx[4])
+                } for tx in recent_transactions
+            ]
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting credit statistics: {e}")
+        return jsonify({'error': str(e)}), 500
+
 @admin_bp.route('/api/broadcast', methods=['POST'])
 def broadcast_message():
     """Broadcast message to all users or specific groups"""
     try:
+        from services.whatsapp_service import WhatsAppService
+        import psycopg2
+        from datetime import datetime
+        
         data = request.get_json()
         message = data.get('message', '').strip()
         target = data.get('target', 'all')  # 'all', 'active', 'inactive'
@@ -283,18 +523,137 @@ def broadcast_message():
         if len(message) > 1000:
             return jsonify({'error': 'Message too long (max 1000 characters)'}), 400
         
-        # In production, implement actual broadcast functionality
-        # This would send WhatsApp messages to selected users
+        # Get target users based on criteria
+        conn_string = 'postgresql://postgres:Ngonidzashe2003.@db.hvlvwvzliqrlmqjbfgoa.supabase.co:5432/postgres'
+        conn = psycopg2.connect(conn_string)
+        cursor = conn.cursor()
+        
+        if target == 'all':
+            cursor.execute("SELECT user_id FROM user_stats")
+        elif target == 'active':
+            # Users active in last 7 days
+            cursor.execute("""
+                SELECT user_id FROM user_stats 
+                WHERE last_activity >= NOW() - INTERVAL '7 days'
+            """)
+        elif target == 'inactive':
+            # Users inactive for more than 7 days
+            cursor.execute("""
+                SELECT user_id FROM user_stats 
+                WHERE last_activity < NOW() - INTERVAL '7 days' 
+                OR last_activity IS NULL
+            """)
+        
+        user_ids = [row[0] for row in cursor.fetchall()]
+        cursor.close()
+        conn.close()
+        
+        if not user_ids:
+            return jsonify({'error': 'No users found for the selected target'}), 400
+        
+        # Initialize WhatsApp service
+        whatsapp_service = WhatsAppService()
+        
+        # Send broadcast message
+        successful_sends = 0
+        failed_sends = 0
+        
+        # Add admin header to message
+        formatted_message = f"""📢 **NERDX ANNOUNCEMENT**
+
+{message}
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+💡 This is an official message from NerdX Team
+📚 Continue learning: /start"""
+        
+        for user_id in user_ids:
+            try:
+                whatsapp_service.send_message(user_id, formatted_message)
+                successful_sends += 1
+            except Exception as e:
+                logger.error(f"Failed to send broadcast to {user_id}: {e}")
+                failed_sends += 1
+        
+        # Log broadcast activity to database
+        try:
+            from database.external_db import make_supabase_request
+            broadcast_log = {
+                'admin_user': 'admin',  # In production, get from session
+                'message': message,
+                'target_group': target,
+                'total_recipients': len(user_ids),
+                'successful_sends': successful_sends,
+                'failed_sends': failed_sends,
+                'additional_data': {
+                    'message_length': len(message),
+                    'formatted_message_length': len(formatted_message)
+                }
+            }
+            make_supabase_request("POST", "broadcast_logs", broadcast_log)
+        except Exception as log_error:
+            logger.error(f"Failed to log broadcast: {log_error}")
+        
+        logger.info(f"Broadcast sent to {successful_sends} users, {failed_sends} failed")
         
         return jsonify({
             'success': True,
-            'message': 'Broadcast queued successfully',
+            'message': f'Broadcast sent to {successful_sends} users successfully',
             'target': target,
-            'recipients': 0  # Would be actual count
+            'total_recipients': len(user_ids),
+            'successful_sends': successful_sends,
+            'failed_sends': failed_sends
         })
         
     except Exception as e:
         logger.error(f"Error broadcasting message: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/api/broadcast/history')
+def get_broadcast_history():
+    """Get broadcast message history"""
+    try:
+        limit = request.args.get('limit', 20, type=int)
+        
+        import psycopg2
+        conn_string = 'postgresql://postgres:Ngonidzashe2003.@db.hvlvwvzliqrlmqjbfgoa.supabase.co:5432/postgres'
+        conn = psycopg2.connect(conn_string)
+        cursor = conn.cursor()
+        
+        # Get broadcast history
+        cursor.execute("""
+            SELECT id, admin_user, message, target_group, total_recipients, 
+                   successful_sends, failed_sends, created_at
+            FROM broadcast_logs 
+            ORDER BY created_at DESC 
+            LIMIT %s;
+        """, (limit,))
+        
+        broadcasts = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        broadcast_history = []
+        for broadcast in broadcasts:
+            broadcast_history.append({
+                'id': broadcast[0],
+                'admin_user': broadcast[1],
+                'message': broadcast[2][:100] + ('...' if len(broadcast[2]) > 100 else ''),
+                'target_group': broadcast[3],
+                'total_recipients': broadcast[4],
+                'successful_sends': broadcast[5],
+                'failed_sends': broadcast[6],
+                'created_at': str(broadcast[7]),
+                'success_rate': round((broadcast[5] / broadcast[4] * 100) if broadcast[4] > 0 else 0, 1)
+            })
+        
+        return jsonify({
+            'broadcasts': broadcast_history,
+            'total': len(broadcast_history)
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting broadcast history: {e}")
         return jsonify({'error': str(e)}), 500
 
 @admin_bp.route('/api/logs')

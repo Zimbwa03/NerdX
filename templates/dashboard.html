@@ -242,6 +242,12 @@ document.addEventListener('DOMContentLoaded', function() {
     loadOverviewData();
     createDailyActivityChart();
     loadRecentUsers();
+    
+    // Auto-refresh dashboard every 2 minutes
+    setInterval(() => {
+        loadOverviewData();
+        loadAdvancedMetrics();
+    }, 2 * 60 * 1000);
 });
 
 async function loadOverviewData() {
@@ -275,6 +281,10 @@ async function loadOverviewData() {
             dbStatus.className = 'badge bg-danger';
             dbStatus.textContent = 'Disconnected';
         }
+        
+        // Load system health and advanced metrics
+        loadSystemHealth();
+        loadAdvancedMetrics();
         
         // Hide loading state
         console.log('Loading state hidden');
@@ -399,9 +409,83 @@ function refreshData() {
     loadRecentUsers();
 }
 
+async function loadSystemHealth() {
+    try {
+        const response = await fetch('/api/system/health');
+        const health = await response.json();
+        
+        // Update system health indicators
+        updateHealthIndicator('Database', health.database);
+        updateHealthIndicator('WhatsApp API', health.whatsapp_api);
+        updateHealthIndicator('AI Services', health.ai_services?.deepseek || health.ai_services?.gemini);
+        updateHealthIndicator('Payment Gateway', health.payment_gateway);
+        
+    } catch (error) {
+        console.error('Error loading system health:', error);
+    }
+}
+
+function updateHealthIndicator(service, status) {
+    // This would update the health indicators in the UI
+    // For now, we'll keep the static indicators
+}
+
+async function loadAdvancedMetrics() {
+    try {
+        const [activityResponse, engagementResponse] = await Promise.all([
+            fetch('/api/activity'),
+            fetch('/api/users/engagement')
+        ]);
+        
+        const activity = await activityResponse.json();
+        const engagement = await engagementResponse.json();
+        
+        // Update activity metrics if we have weekly summary
+        if (activity.weekly_summary) {
+            document.getElementById('activeToday').textContent = activity.weekly_summary.total_active_users || 0;
+            
+            // Add growth indicator
+            const activeElement = document.getElementById('activeToday').parentElement;
+            if (activity.weekly_summary.new_users > 0) {
+                activeElement.innerHTML += `<small class="text-success"><i class="fas fa-arrow-up"></i> +${activity.weekly_summary.new_users} this week</small>`;
+            }
+        }
+        
+        // Update engagement metrics
+        if (engagement.engagement_summary) {
+            const summary = engagement.engagement_summary;
+            console.log('Engagement Summary:', summary);
+            
+            // You could add engagement indicators to the dashboard
+            // For example, update retention metrics
+        }
+        
+    } catch (error) {
+        console.error('Error loading advanced metrics:', error);
+    }
+}
+
 function exportSystemReport() {
-    // Placeholder for export functionality
-    alert('System report export feature coming soon!');
+    // Generate and download system report
+    const reportData = {
+        timestamp: new Date().toISOString(),
+        metrics: {
+            totalUsers: document.getElementById('totalUsers').textContent,
+            activeToday: document.getElementById('activeToday').textContent,
+            questionsAnswered: document.getElementById('questionsAnswered').textContent,
+            totalRevenue: document.getElementById('totalRevenue').textContent,
+            newUsersWeek: document.getElementById('newUsersWeek').textContent,
+            arpu: document.getElementById('arpu').textContent
+        }
+    };
+    
+    const dataStr = JSON.stringify(reportData, null, 2);
+    const dataBlob = new Blob([dataStr], {type: 'application/json'});
+    
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(dataBlob);
+    link.download = `nerdx-system-report-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
 }
 </script>
 {% endblock %}

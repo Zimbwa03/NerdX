@@ -217,30 +217,65 @@ let totalPages = 1;
 
 document.addEventListener('DOMContentLoaded', function() {
     loadUserAnalytics();
-    loadUserDirectory();
     createCharts();
+    loadAdvancedAnalytics();
+    
+    // Load all users and set up search/filter
+    loadAllUsers().then(() => {
+        displayFilteredUsers();
+        setupSearchAndFilter();
+    });
+    
+    // Auto-refresh every 5 minutes
+    setInterval(() => {
+        loadUserAnalytics();
+        loadAdvancedAnalytics();
+        loadAllUsers().then(() => {
+            applyFilters(); // Reapply current filters after refresh
+        });
+    }, 5 * 60 * 1000);
 });
 
 async function loadUserAnalytics() {
     try {
-        const [statsResponse, activityResponse] = await Promise.all([
+        const [statsResponse, activityResponse, engagementResponse] = await Promise.all([
             fetch('/api/stats'),
-            fetch('/api/activity')
+            fetch('/api/activity'),
+            fetch('/api/users/engagement')
         ]);
         
         const stats = await statsResponse.json();
         const activity = await activityResponse.json();
+        const engagement = await engagementResponse.json();
         
-        // Update overview cards
+        // Update overview cards with real data
         document.getElementById('totalStudents').textContent = stats.total_users || 0;
-        document.getElementById('activeWeek').textContent = activity.question_activity?.this_week || 0;
         
-        // Calculate sample metrics (in production, these would come from real analytics)
-        document.getElementById('avgSessionTime').textContent = '15 min';
-        document.getElementById('retentionRate').textContent = '78%';
+        // Use weekly summary from activity data
+        if (activity.weekly_summary) {
+            document.getElementById('activeWeek').textContent = activity.weekly_summary.total_active_users || 0;
+            
+            // Convert session duration from seconds to minutes
+            const avgSessionMinutes = Math.round((activity.weekly_summary.avg_session_duration || 0) / 60);
+            document.getElementById('avgSessionTime').textContent = `${avgSessionMinutes} min`;
+        } else {
+            document.getElementById('activeWeek').textContent = activity.question_activity?.this_week || 0;
+            document.getElementById('avgSessionTime').textContent = '15 min';
+        }
+        
+        // Use real engagement data for retention rate
+        if (engagement.engagement_summary) {
+            const activeUsers = engagement.engagement_summary.very_active + engagement.engagement_summary.active;
+            const totalUsers = engagement.total_users || 1;
+            const retentionRate = Math.round((activeUsers / totalUsers) * 100);
+            document.getElementById('retentionRate').textContent = `${retentionRate}%`;
+        } else {
+            document.getElementById('retentionRate').textContent = '78%';
+        }
         
         // Update charts with real data
         updateUserActivityChart(activity.daily_active_users || []);
+        updateSubjectEngagementChart(activity.subject_engagement || []);
         
     } catch (error) {
         console.error('Error loading user analytics:', error);
@@ -249,38 +284,67 @@ async function loadUserAnalytics() {
 
 async function loadUserDirectory() {
     try {
-        const response = await fetch(`/api/users?page=${currentPage}&limit=10`);
-        const data = await response.json();
+        // Get enhanced user engagement data
+        const engagementResponse = await fetch('/api/users/engagement');
+        const engagementData = await engagementResponse.json();
         
         const tbody = document.getElementById('usersTableBody');
         tbody.innerHTML = '';
         
-        if (data.users && data.users.length > 0) {
-            data.users.forEach(user => {
+        if (engagementData.users && engagementData.users.length > 0) {
+            // Apply pagination
+            const startIndex = (currentPage - 1) * 10;
+            const endIndex = startIndex + 10;
+            const paginatedUsers = engagementData.users.slice(startIndex, endIndex);
+            
+            paginatedUsers.forEach(user => {
                 const row = document.createElement('tr');
                 
-                const registrationDate = new Date(user.registration_date).toLocaleDateString();
+                const registrationDate = user.registration_date ? 
+                    new Date(user.registration_date).toLocaleDateString() : 'Unknown';
                 const lastActivity = user.last_activity ? 
                     new Date(user.last_activity).toLocaleDateString() : 'Never';
                 
-                const accuracy = user.total_attempts > 0 ? 
-                    Math.round((user.correct_answers / user.total_attempts) * 100) : 0;
+                // Status badge colors
+                const statusColors = {
+                    'very_active': 'success',
+                    'active': 'primary', 
+                    'at_risk': 'warning',
+                    'inactive': 'secondary'
+                };
                 
-                const status = user.last_activity && 
-                    new Date(user.last_activity) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) ? 
-                    'Active' : 'Inactive';
+                const statusColor = statusColors[user.activity_status] || 'secondary';
+                const statusText = user.activity_status.replace('_', ' ').toUpperCase();
                 
                 row.innerHTML = `
-                    <td><strong>${user.name} ${user.surname}</strong></td>
-                    <td><code>${user.nerdx_id}</code></td>
-                    <td>${registrationDate}</td>
-                    <td><span class="badge badge-info">${user.credits}</span></td>
-                    <td>${user.total_attempts}</td>
-                    <td>${accuracy}%</td>
-                    <td>${lastActivity}</td>
                     <td>
-                        <span class="badge badge-${status === 'Active' ? 'success' : 'secondary'}">
-                            ${status}
+                        <strong>${user.name || 'Unknown'}</strong>
+                        <br><small class="text-muted">Engagement: ${user.engagement_score}/100</small>
+                    </td>
+                    <td><code>${user.nerdx_id || 'N/A'}</code></td>
+                    <td>${registrationDate}</td>
+                    <td>
+                        <span class="badge badge-info">${user.credits}</span>
+                        <br><small class="text-muted">XP: ${user.xp_points}</small>
+                    </td>
+                    <td>
+                        ${user.total_attempts}
+                        <br><small class="text-muted">Streak: ${user.streak}</small>
+                    </td>
+                    <td>
+                        <strong>${user.accuracy}%</strong>
+                        <div class="progress" style="height: 4px;">
+                            <div class="progress-bar ${user.accuracy >= 70 ? 'bg-success' : user.accuracy >= 50 ? 'bg-warning' : 'bg-danger'}" 
+                                 style="width: ${user.accuracy}%"></div>
+                        </div>
+                    </td>
+                    <td>
+                        ${lastActivity}
+                        <br><small class="text-muted">${user.days_since_registration} days ago</small>
+                    </td>
+                    <td>
+                        <span class="badge badge-${statusColor}">
+                            ${statusText}
                         </span>
                     </td>
                 `;
@@ -288,8 +352,12 @@ async function loadUserDirectory() {
             });
             
             // Update pagination
-            totalPages = data.pages;
-            updatePagination(data);
+            totalPages = Math.ceil(engagementData.users.length / 10);
+            updatePagination({
+                users: paginatedUsers,
+                total: engagementData.users.length,
+                pages: totalPages
+            });
             
         } else {
             tbody.innerHTML = '<tr><td colspan="8" class="text-center">No students found</td></tr>';
@@ -297,6 +365,52 @@ async function loadUserDirectory() {
         
     } catch (error) {
         console.error('Error loading user directory:', error);
+        // Fallback to basic user data
+        try {
+            const response = await fetch(`/api/users?page=${currentPage}&limit=10`);
+            const data = await response.json();
+            
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '';
+            
+            if (data.users && data.users.length > 0) {
+                data.users.forEach(user => {
+                    const row = document.createElement('tr');
+                    
+                    const registrationDate = new Date(user.registration_date).toLocaleDateString();
+                    const lastActivity = user.last_activity ? 
+                        new Date(user.last_activity).toLocaleDateString() : 'Never';
+                    
+                    const accuracy = user.total_attempts > 0 ? 
+                        Math.round((user.correct_answers / user.total_attempts) * 100) : 0;
+                    
+                    const status = user.last_activity && 
+                        new Date(user.last_activity) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) ? 
+                        'Active' : 'Inactive';
+                    
+                    row.innerHTML = `
+                        <td><strong>${user.name} ${user.surname}</strong></td>
+                        <td><code>${user.nerdx_id}</code></td>
+                        <td>${registrationDate}</td>
+                        <td><span class="badge badge-info">${user.credits}</span></td>
+                        <td>${user.total_attempts}</td>
+                        <td>${accuracy}%</td>
+                        <td>${lastActivity}</td>
+                        <td>
+                            <span class="badge badge-${status === 'Active' ? 'success' : 'secondary'}">
+                                ${status}
+                            </span>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                
+                totalPages = data.pages;
+                updatePagination(data);
+            }
+        } catch (fallbackError) {
+            console.error('Error in fallback user loading:', fallbackError);
+        }
     }
 }
 
@@ -363,6 +477,46 @@ function updateUserActivityChart(activityData) {
     }
 }
 
+function updateSubjectEngagementChart(subjectData) {
+    if (subjectEngagementChart && subjectData.length > 0) {
+        const labels = subjectData.map(item => item.subject);
+        const attempts = subjectData.map(item => item.attempts);
+        
+        // Update chart data
+        subjectEngagementChart.data.labels = labels;
+        subjectEngagementChart.data.datasets[0].data = attempts;
+        subjectEngagementChart.update();
+    }
+}
+
+async function loadAdvancedAnalytics() {
+    try {
+        const response = await fetch('/api/analytics/advanced');
+        const analytics = await response.json();
+        
+        if (analytics.user_engagement) {
+            const engagement = analytics.user_engagement;
+            
+            // Update session time if we have real data
+            const sessionMinutes = Math.round(engagement.avg_session_time / 60);
+            document.getElementById('avgSessionTime').textContent = `${sessionMinutes} min`;
+            
+            // Update retention rate
+            document.getElementById('retentionRate').textContent = `${engagement.retention_rate.toFixed(1)}%`;
+        }
+        
+        // Update subject engagement chart with real data
+        if (analytics.subject_performance && analytics.subject_performance.length > 0) {
+            updateSubjectEngagementChart(analytics.subject_performance);
+        }
+        
+        console.log('Advanced analytics loaded:', analytics);
+        
+    } catch (error) {
+        console.error('Error loading advanced analytics:', error);
+    }
+}
+
 function updatePagination(data) {
     const pagination = document.getElementById('usersPagination');
     const controls = document.getElementById('paginationControls');
@@ -395,18 +549,202 @@ function updatePagination(data) {
 function changePage(page) {
     if (page >= 1 && page <= totalPages) {
         currentPage = page;
-        loadUserDirectory();
+        displayFilteredUsers();
     }
 }
 
 function refreshAnalytics() {
     loadUserAnalytics();
-    loadUserDirectory();
+    loadAdvancedAnalytics();
+    loadAllUsers().then(() => {
+        applyFilters();
+    });
+}
+
+// Search and filter functionality
+let allUsers = [];
+let filteredUsers = [];
+
+async function loadAllUsers() {
+    try {
+        const response = await fetch('/api/users/engagement');
+        const data = await response.json();
+        allUsers = data.users || [];
+        filteredUsers = [...allUsers];
+        return allUsers;
+    } catch (error) {
+        console.error('Error loading all users:', error);
+        return [];
+    }
+}
+
+function setupSearchAndFilter() {
+    const searchInput = document.getElementById('searchUsers');
+    const filterSelect = document.getElementById('filterStatus');
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            applyFilters();
+        });
+    }
+    
+    if (filterSelect) {
+        filterSelect.addEventListener('change', (e) => {
+            applyFilters();
+        });
+    }
+}
+
+function applyFilters() {
+    const searchTerm = document.getElementById('searchUsers').value.toLowerCase();
+    const statusFilter = document.getElementById('filterStatus').value;
+    
+    filteredUsers = allUsers.filter(user => {
+        // Search filter
+        const searchMatch = !searchTerm || 
+            user.name.toLowerCase().includes(searchTerm) ||
+            user.nerdx_id.toLowerCase().includes(searchTerm);
+        
+        // Status filter
+        let statusMatch = true;
+        if (statusFilter === 'active') {
+            statusMatch = user.activity_status === 'very_active' || user.activity_status === 'active';
+        } else if (statusFilter === 'inactive') {
+            statusMatch = user.activity_status === 'inactive' || user.activity_status === 'at_risk';
+        }
+        
+        return searchMatch && statusMatch;
+    });
+    
+    // Reset to first page and reload
+    currentPage = 1;
+    displayFilteredUsers();
+}
+
+function displayFilteredUsers() {
+    const tbody = document.getElementById('usersTableBody');
+    tbody.innerHTML = '';
+    
+    // Apply pagination to filtered users
+    const startIndex = (currentPage - 1) * 10;
+    const endIndex = startIndex + 10;
+    const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+    
+    if (paginatedUsers.length > 0) {
+        paginatedUsers.forEach(user => {
+            const row = document.createElement('tr');
+            
+            const registrationDate = user.registration_date ? 
+                new Date(user.registration_date).toLocaleDateString() : 'Unknown';
+            const lastActivity = user.last_activity ? 
+                new Date(user.last_activity).toLocaleDateString() : 'Never';
+            
+            // Status badge colors
+            const statusColors = {
+                'very_active': 'success',
+                'active': 'primary', 
+                'at_risk': 'warning',
+                'inactive': 'secondary'
+            };
+            
+            const statusColor = statusColors[user.activity_status] || 'secondary';
+            const statusText = user.activity_status.replace('_', ' ').toUpperCase();
+            
+            row.innerHTML = `
+                <td>
+                    <strong>${user.name || 'Unknown'}</strong>
+                    <br><small class="text-muted">Engagement: ${user.engagement_score}/100</small>
+                </td>
+                <td><code>${user.nerdx_id || 'N/A'}</code></td>
+                <td>${registrationDate}</td>
+                <td>
+                    <span class="badge badge-info">${user.credits}</span>
+                    <br><small class="text-muted">XP: ${user.xp_points}</small>
+                </td>
+                <td>
+                    ${user.total_attempts}
+                    <br><small class="text-muted">Streak: ${user.streak}</small>
+                </td>
+                <td>
+                    <strong>${user.accuracy}%</strong>
+                    <div class="progress" style="height: 4px;">
+                        <div class="progress-bar ${user.accuracy >= 70 ? 'bg-success' : user.accuracy >= 50 ? 'bg-warning' : 'bg-danger'}" 
+                             style="width: ${user.accuracy}%"></div>
+                    </div>
+                </td>
+                <td>
+                    ${lastActivity}
+                    <br><small class="text-muted">${user.days_since_registration} days ago</small>
+                </td>
+                <td>
+                    <span class="badge badge-${statusColor}">
+                        ${statusText}
+                    </span>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    } else {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center">No students found matching your criteria</td></tr>';
+    }
+    
+    // Update pagination for filtered results
+    totalPages = Math.ceil(filteredUsers.length / 10);
+    updatePagination({
+        users: paginatedUsers,
+        total: filteredUsers.length,
+        pages: totalPages
+    });
 }
 
 function exportUserData() {
-    // Placeholder for export functionality
-    alert('User data export feature coming soon!');
+    // Get current filtered data
+    const dataToExport = filteredUsers.length > 0 ? filteredUsers : allUsers;
+    
+    if (dataToExport.length === 0) {
+        alert('No data to export!');
+        return;
+    }
+    
+    // Prepare CSV data
+    const headers = [
+        'Name', 'NerdX ID', 'Registration Date', 'Credits', 'XP Points', 
+        'Total Attempts', 'Correct Answers', 'Accuracy %', 'Streak', 
+        'Engagement Score', 'Activity Status', 'Last Activity', 'Days Since Registration'
+    ];
+    
+    const csvContent = [
+        headers.join(','),
+        ...dataToExport.map(user => [
+            `"${user.name || 'Unknown'}"`,
+            `"${user.nerdx_id || 'N/A'}"`,
+            `"${user.registration_date ? new Date(user.registration_date).toLocaleDateString() : 'Unknown'}"`,
+            user.credits || 0,
+            user.xp_points || 0,
+            user.total_attempts || 0,
+            user.correct_answers || 0,
+            user.accuracy || 0,
+            user.streak || 0,
+            user.engagement_score || 0,
+            `"${user.activity_status || 'unknown'}"`,
+            `"${user.last_activity ? new Date(user.last_activity).toLocaleDateString() : 'Never'}"`,
+            user.days_since_registration || 0
+        ].join(','))
+    ].join('\n');
+    
+    // Create and download file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    
+    if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `nerdx-user-analytics-${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
 }
 </script>
 {% endblock %}

@@ -2,7 +2,9 @@ import os
 import json
 import logging
 import requests
+import time
 from typing import Dict, List, Optional
+from services.message_throttle import message_throttle
 
 logger = logging.getLogger(__name__)
 
@@ -19,34 +21,56 @@ class WhatsAppService:
             raise ValueError("Missing required WhatsApp configuration")
     
     def send_message(self, to: str, message: str) -> bool:
-        """Send a text message to a WhatsApp user with enhanced error handling"""
+        """Send a text message to a WhatsApp user with enhanced error handling and throttling"""
         try:
-            # Check message length and truncate if needed
-            if len(message) > 4096:
-                logger.warning(f"Message too long ({len(message)} chars), truncating")
-                message = message[:4090] + "..."
+            # CRITICAL: Check throttle to prevent message chains
+            if not message_throttle.can_send_message(to):
+                delay = message_throttle.throttle_delay(to)
+                if delay > 0:
+                    logger.info(f"Throttling message to {to}, waiting {delay:.2f}s")
+                    time.sleep(delay)
+                    # Recheck after delay
+                    if not message_throttle.can_send_message(to):
+                        logger.warning(f"Message to {to} blocked by throttle - too many messages")
+                        return False
             
-            url = f"{self.base_url}/{self.phone_number_id}/messages"
-            headers = {
-                'Authorization': f'Bearer {self.access_token}',
-                'Content-Type': 'application/json'
-            }
-            
-            data = {
-                'messaging_product': 'whatsapp',
-                'to': to,
-                'type': 'text',
-                'text': {'body': message}
-            }
-            
-            response = requests.post(url, headers=headers, json=data, timeout=15)  # Further reduced timeout
-            
-            if response.status_code == 200:
-                logger.info(f"Message sent successfully to {to}")
-                return True
-            else:
-                logger.error(f"Failed to send message: {response.status_code} - {response.text}")
+            # Acquire lock to prevent concurrent sends
+            if not message_throttle.acquire_lock(to):
+                logger.warning(f"Message to {to} blocked - concurrent send in progress")
                 return False
+            
+            try:
+                # Check message length and truncate if needed
+                if len(message) > 4096:
+                    logger.warning(f"Message too long ({len(message)} chars), truncating")
+                    message = message[:4090] + "..."
+                
+                url = f"{self.base_url}/{self.phone_number_id}/messages"
+                headers = {
+                    'Authorization': f'Bearer {self.access_token}',
+                    'Content-Type': 'application/json'
+                }
+                
+                data = {
+                    'messaging_product': 'whatsapp',
+                    'to': to,
+                    'type': 'text',
+                    'text': {'body': message}
+                }
+                
+                response = requests.post(url, headers=headers, json=data, timeout=15)  # Further reduced timeout
+                
+                if response.status_code == 200:
+                    logger.info(f"Message sent successfully to {to}")
+                    # Record successful send
+                    message_throttle.record_message_sent(to)
+                    return True
+                else:
+                    logger.error(f"Failed to send message: {response.status_code} - {response.text}")
+                    return False
+            finally:
+                # Always release lock
+                message_throttle.release_lock(to)
                 
         except requests.exceptions.Timeout:
             logger.error(f"WhatsApp API timeout for {to}")
@@ -176,59 +200,85 @@ class WhatsAppService:
     def send_interactive_message(self, to: str, message: str, buttons: List[Dict]) -> bool:
         """Send buttons in groups of 3, with additional messages for remaining buttons"""
         try:
-            # Validate and truncate message length (WhatsApp limit: 1-1024 characters)
-            if not message or len(message.strip()) == 0:
-                logger.error("Message body cannot be empty for interactive message")
+            # CRITICAL: Apply same throttling to prevent message chains
+            if not message_throttle.can_send_message(to):
+                delay = message_throttle.throttle_delay(to)
+                if delay > 0:
+                    logger.info(f"Throttling interactive message to {to}, waiting {delay:.2f}s")
+                    time.sleep(delay)
+                    # Recheck after delay
+                    if not message_throttle.can_send_message(to):
+                        logger.warning(f"Interactive message to {to} blocked by throttle")
+                        return False
+            
+            # Acquire lock to prevent concurrent sends
+            if not message_throttle.acquire_lock(to):
+                logger.warning(f"Interactive message to {to} blocked - concurrent send")
                 return False
             
-            if len(message) > 1024:
-                logger.warning(f"Message too long ({len(message)} chars), truncating to 1024 characters")
-                message = message[:1021] + "..."
-            
-            # If 4 or more buttons, send them in groups of 3
-            if len(buttons) >= 4:
-                return self.send_grouped_buttons(to, message, buttons)
-            
-            # Otherwise use regular interactive buttons (max 3)
-            url = f"{self.base_url}/{self.phone_number_id}/messages"
-            headers = {
-                'Authorization': f'Bearer {self.access_token}',
-                'Content-Type': 'application/json'
-            }
-            
-            interactive_buttons = []
-            for i, button in enumerate(buttons[:3]):  # WhatsApp supports max 3 buttons
-                # Support both formats: {"text": "...", "callback_data": "..."} and {"id": "...", "title": "..."}
-                button_id = button.get('callback_data') or button.get('id', f"btn_{i}")
-                button_title = button.get('text') or button.get('title', '')
+            try:
+                # Validate and truncate message length (WhatsApp limit: 1-1024 characters)
+                if not message or len(message.strip()) == 0:
+                    logger.error("Message body cannot be empty for interactive message")
+                    return False
                 
-                interactive_buttons.append({
-                    "type": "reply",
-                    "reply": {
-                        "id": button_id,
-                        "title": button_title[:20]  # Max 20 characters
-                    }
-                })
-            
-            data = {
-                'messaging_product': 'whatsapp',
-                'to': to,
-                'type': 'interactive',
-                'interactive': {
-                    'type': 'button',
-                    'body': {'text': message},
-                    'action': {'buttons': interactive_buttons}
+                if len(message) > 1024:
+                    logger.warning(f"Message too long ({len(message)} chars), truncating to 1024 characters")
+                    message = message[:1021] + "..."
+                
+                # If 4 or more buttons, send them in groups of 3
+                if len(buttons) >= 4:
+                    result = self.send_grouped_buttons(to, message, buttons)
+                    # Record message sent if successful
+                    if result:
+                        message_throttle.record_message_sent(to)
+                    return result
+                
+                # Otherwise use regular interactive buttons (max 3)
+                url = f"{self.base_url}/{self.phone_number_id}/messages"
+                headers = {
+                    'Authorization': f'Bearer {self.access_token}',
+                    'Content-Type': 'application/json'
                 }
-            }
-            
-            response = requests.post(url, headers=headers, json=data, timeout=15)
-            
-            if response.status_code == 200:
-                logger.info(f"Interactive message sent successfully to {to}")
-                return True
-            else:
-                logger.error(f"Failed to send interactive message: {response.status_code} - {response.text}")
-                return False
+                
+                interactive_buttons = []
+                for i, button in enumerate(buttons[:3]):  # WhatsApp supports max 3 buttons
+                    # Support both formats: {"text": "...", "callback_data": "..."} and {"id": "...", "title": "..."}
+                    button_id = button.get('callback_data') or button.get('id', f"btn_{i}")
+                    button_title = button.get('text') or button.get('title', '')
+                    
+                    interactive_buttons.append({
+                        "type": "reply",
+                        "reply": {
+                            "id": button_id,
+                            "title": button_title[:20]  # Max 20 characters
+                        }
+                    })
+                
+                data = {
+                    'messaging_product': 'whatsapp',
+                    'to': to,
+                    'type': 'interactive',
+                    'interactive': {
+                        'type': 'button',
+                        'body': {'text': message},
+                        'action': {'buttons': interactive_buttons}
+                    }
+                }
+                
+                response = requests.post(url, headers=headers, json=data, timeout=15)
+                
+                if response.status_code == 200:
+                    logger.info(f"Interactive message sent successfully to {to}")
+                    # Record successful send
+                    message_throttle.record_message_sent(to)
+                    return True
+                else:
+                    logger.error(f"Failed to send interactive message: {response.status_code} - {response.text}")
+                    return False
+            finally:
+                # Always release lock
+                message_throttle.release_lock(to)
                 
         except Exception as e:
             logger.error(f"Error sending WhatsApp interactive message: {e}")

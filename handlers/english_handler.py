@@ -1,8 +1,9 @@
 import os
 import json
 import logging
+import time
 from typing import Dict, List, Optional
-from database.external_db import get_user_registration, get_user_credits, deduct_credits
+from database.external_db import get_user_registration, get_user_credits, get_user_stats, update_user_stats
 from database.session_db import save_user_session, get_user_session, clear_user_session
 from services.whatsapp_service import WhatsAppService
 from services.english_service import EnglishService
@@ -52,30 +53,41 @@ class EnglishHandler:
         logger.info("ZIMSEC English Handler initialized with comprehensive modules")
 
     def handle_english_menu(self, user_id: str):
-        """Display main English learning menu"""
+        """Display main English learning menu with full gamification system"""
         try:
+            from services.advanced_credit_service import advanced_credit_service
+            
             registration = get_user_registration(user_id)
             user_name = registration['name'] if registration else "Student"
-            credits = get_user_credits(user_id)
+            current_credits = get_user_credits(user_id)
+            user_stats = get_user_stats(user_id) or {'level': 1, 'xp_points': 0, 'streak': 0}
+            current_level = user_stats.get('level', 1)
+            current_xp = user_stats.get('xp_points', 0)
+            current_streak = user_stats.get('streak', 0)
 
-            message = f"""📚 ZIMSEC English Language Centre
+            # Calculate XP needed for next level
+            xp_for_next_level = (current_level * 100) - current_xp
+            if xp_for_next_level <= 0:
+                xp_for_next_level = 100  # Base XP for next level
 
-👋 Welcome {user_name}!
+            message = f"""📚 *Hey {user_name}! Welcome to EnglishMentor* 📚
 
-🎯 Master O-Level English with authentic Zimbabwean context:
+✍️ *{user_name}, I'm your personal O-Level English tutor!*
 
-📚 **Topical Questions** (2 credits)
-Practice specific English skills and topics
+📊 **Your English Journey:**
+💳 Credits: **{current_credits}**
+⭐ Level: **{current_level}** (XP: {current_xp})
+🔥 Streak: **{current_streak} days**
+🎯 Next Level: **{xp_for_next_level} XP needed**
 
-📖 **Comprehension Practice** (3 credits) 
-Reading passages with cultural context
+I'm here to help you master English, {user_name}, with:
 
-✍️ **Essay Writing** (4 credits)
-Section A & B with AI-powered marking
+📚 **Topical Questions:** Earn 5-10 XP per question
+📖 **Comprehension Practice:** Earn 15-20 XP per session
+✍️ **Essay Writing:** Earn 25-30 XP per essay
+🔥 **Daily Streaks:** Maintain consistent learning
 
-💰 Your Credits: {credits}
-
-Choose your learning path:"""
+🚀 *{user_name}, choose how you'd like to earn XP and level up:*"""
 
             buttons = []
             for module_id, module_info in self.english_modules.items():
@@ -179,6 +191,7 @@ Ready to boost your reading skills? 🚀"""
         """Start new comprehension session with BULLETPROOF duplicate prevention"""
         try:
             from database.session_db import save_user_session, get_user_session, clear_user_session
+            from services.advanced_credit_service import advanced_credit_service
             from datetime import datetime
             import time
 
@@ -220,10 +233,43 @@ Ready to boost your reading skills? 🚀"""
             user_name = registration['name'] if registration else "Student"
             form_level = registration.get('form_level', 4) if registration else 4
 
-            # Deduct credits
-            if not deduct_credits(user_id, 3, "english_comprehension", "Comprehension Practice"):
-                clear_user_session(user_id)  # Clear generating lock on failure
-                self.whatsapp_service.send_message(user_id, "❌ Insufficient credits. Please buy more credits.")
+            # Check and deduct credits using advanced credit service
+            credit_result = advanced_credit_service.check_and_deduct_credits(
+                user_id, 
+                'english_comprehension',  # 3 credits as per config
+                None
+            )
+            
+            if not credit_result['success']:
+                if credit_result.get('insufficient'):
+                    # Show insufficient credits message
+                    current_credits = credit_result['current_credits']
+                    required_credits = credit_result['required_credits']
+                    shortage = credit_result['shortage']
+                    
+                    insufficient_msg = f"""💰 **Need More Credits!** 💰
+
+📖 **English Comprehension Practice**
+
+💳 **Credit Status:**
+• Current Credits: {current_credits}
+• Required Credits: {required_credits}
+• Need: {shortage} more credits
+
+💎 **Get More Credits:**"""
+                    
+                    buttons = [
+                        {"text": "💰 Buy Credits", "callback_data": "credit_store"},
+                        {"text": "👥 Invite Friends (+5 each)", "callback_data": "share_to_friend"},
+                        {"text": "🔙 Back to English", "callback_data": "english_menu"}
+                    ]
+                    
+                    self.whatsapp_service.send_interactive_message(user_id, insufficient_msg, buttons)
+                    clear_user_session(user_id)  # Clear generating lock on failure
+                    return
+                else:
+                    clear_user_session(user_id)  # Clear generating lock on failure
+                    self.whatsapp_service.send_message(user_id, "❌ Credit processing error. Please try again.")
                 return
 
             # Update session with proper user name
@@ -361,10 +407,10 @@ Hi {user_name}! Answer these 10 questions based on the passage above:
             logger.error(f"Error sending enhanced comprehension passage: {e}")
 
     def handle_comprehension_show_answers(self, user_id: str):
-        """Show all comprehension answers with stats"""
+        """Show all comprehension answers with stats and XP tracking"""
         try:
             from database.session_db import get_user_session, clear_user_session
-            from database.external_db import get_user_stats
+            from database.external_db import get_user_stats, add_xp, update_streak, update_user_stats
 
             session_data = get_user_session(user_id)
             if not session_data or session_data.get('session_type') != 'comprehension_questions':
@@ -377,6 +423,31 @@ Hi {user_name}! Answer these 10 questions based on the passage above:
             questions = json.loads(questions_data_str) if questions_data_str else []
             user_name = session_data.get('user_name', 'Student')
             passage_title = session_data.get('passage_title', 'Comprehension')
+
+            # Award XP for completion and update stats
+            current_stats = get_user_stats(user_id) or {}
+            current_xp = current_stats.get('xp_points', 0)
+            current_level = current_stats.get('level', 1)
+            current_streak = current_stats.get('streak', 0)
+            
+            # Award 20 XP for completing comprehension
+            points_earned = 20
+            add_xp(user_id, points_earned, 'english_comprehension')
+            update_streak(user_id, True)
+            
+            # Check for level up
+            new_xp = current_xp + points_earned
+            new_level = max(1, (new_xp // 100) + 1)
+            new_streak = current_streak + 1
+            
+            # Update total attempts and comprehension completions
+            update_user_stats(user_id, {
+                'total_attempts': current_stats.get('total_attempts', 0) + 1,
+                'comprehension_completed': current_stats.get('comprehension_completed', 0) + 1,
+                'xp_points': new_xp,
+                'level': new_level,
+                'streak': new_streak
+            })
 
             # Format answers message
             answers_message = f"""✅ **COMPREHENSION ANSWERS**
@@ -399,25 +470,34 @@ Hi {user_name}! Answer these 10 questions based on the passage above:
 
             self.whatsapp_service.send_message(user_id, answers_message)
 
-            # Get user stats and send completion message
-            stats = get_user_stats(user_id) or {}
-            credits = stats.get('credits', 0)
-            xp = stats.get('xp_points', 0)
-            streak = stats.get('streak', 0)
-            level = stats.get('level', 1)
+            # Get updated stats and send gamified completion message
+            updated_stats = get_user_stats(user_id) or {}
+            final_credits = updated_stats.get('credits', 0)
+            final_xp = updated_stats.get('xp_points', 0)
+            final_streak = updated_stats.get('streak', 0)
+            final_level = updated_stats.get('level', 1)
 
-            stats_message = f"""🎉 **Comprehension Complete!**
+            level_up_bonus = ""
+            if new_level > current_level:
+                level_up_bonus = f"\n🎉 **LEVEL UP!** Level {current_level} → Level {new_level}!"
 
-👤 **{user_name}'s Progress:**
-💰 Credits: {credits}
-⭐ XP Points: {xp}
-🔥 Streak: {streak} days
-🎯 Level: {level}
+            stats_message = f"""🎉 **Comprehension Complete!** 🎉
 
-Great job on completing your comprehension practice! 📚✨"""
+👤 **{user_name}'s English Progress:**
+💰 Credits: {final_credits}
+✨ XP Earned: +{points_earned} XP
+⭐ Total XP: {final_xp}
+🔥 Streak: {final_streak} days
+🎯 Level: {final_level}
+
+{level_up_bonus}
+
+📚 Great job on completing your comprehension practice! ✨
+🚀 Keep reading to build your English skills!"""
 
             buttons = [
                 {"text": "🚀 Another Comprehension", "callback_data": "comprehension_start"},
+                {"text": "✍️ Try Essay Writing", "callback_data": "english_essay_writing"},
                 {"text": "🔙 Back", "callback_data": "english_menu"}
             ]
 
@@ -470,10 +550,8 @@ Great job on completing your comprehension practice! 📚✨"""
         return chunks
 
     def _send_professional_comprehension_flow(self, user_id: str, user_name: str, passage_data: Dict):
-        """Send comprehension with professional smooth flow - one message at a time"""
+        """Send optimized comprehension flow - text with questions loading button"""
         try:
-            import time
-
             passage = passage_data.get('passage', {})
             questions = passage_data.get('questions', [])
 
@@ -481,34 +559,58 @@ Great job on completing your comprehension practice! 📚✨"""
                 logger.error("Invalid passage data structure")
                 return
 
-            # Step 1: Send passage with professional formatting
+            # Get passage details
             passage_text = passage.get('text', 'Passage content not available')
             passage_title = passage.get('title', 'Comprehension Passage')
             word_count = len(passage_text.split())
             reading_time = max(2, word_count // 200)
 
-            # Send title first
-            title_message = f"📖 **{passage_title}**\n\n📊 Words: {word_count} | ⏱️ Time: ~{reading_time} min\n\n*Please read carefully:*"
-            self.whatsapp_service.send_message(user_id, title_message)
+            # Create comprehensive message with passage and continue button
+            # Format passage for optimal display
+            complete_message = f"""📖 **{passage_title}**
 
-            # Send passage in manageable chunks
-            if len(passage_text) > 3500:
-                chunks = self._split_text(passage_text, 3200)
-                for i, chunk in enumerate(chunks):
-                    chunk_message = f"**Part {i+1}:**\n\n{chunk}"
-                    self.whatsapp_service.send_message(user_id, chunk_message)
+📊 Words: {word_count} | ⏱️ Reading time: ~{reading_time} min
+
+**Read the passage carefully:**
+
+{passage_text}
+
+---
+
+✅ **Passage Complete!** Now you'll answer 10 comprehension questions based on this passage, {user_name}.
+
+📝 Ready to continue?"""
+
+            # Check message length for WhatsApp limits
+            if len(complete_message) > 4000:
+                # Split into two messages: title + passage, then questions button
+                title_passage_message = f"""📖 **{passage_title}**
+
+📊 Words: {word_count} | ⏱️ Reading time: ~{reading_time} min
+
+**Read the passage carefully:**
+
+{passage_text}"""
+
+                self.whatsapp_service.send_message(user_id, title_passage_message)
+
+                # Send completion message with questions button
+                ready_message = f"✅ **Passage Complete!**\n\nNow you'll answer 10 comprehension questions based on this passage, {user_name}.\n\n📝 Ready to continue?"
+
+                continue_buttons = [
+                    {"text": "📝 Load Questions", "callback_data": "comprehension_load_questions"},
+                    {"text": "🔙 Back to Menu", "callback_data": "english_menu"}
+                ]
+
+                self.whatsapp_service.send_interactive_message(user_id, ready_message, continue_buttons)
             else:
-                self.whatsapp_service.send_message(user_id, passage_text)
+                # Send as single message with button
+                continue_buttons = [
+                    {"text": "📝 Load Questions", "callback_data": "comprehension_load_questions"},
+                    {"text": "🔙 Back to Menu", "callback_data": "english_menu"}
+                ]
 
-            # Step 2: Send completion message with Continue button
-            ready_message = f"✅ **Passage Complete**\n\nNow answer the 10 questions below, {user_name}!"
-
-            continue_buttons = [
-                {"text": "📝 Load Questions", "callback_data": "comprehension_load_questions"},
-                {"text": "🔙 Back to Menu", "callback_data": "english_menu"}
-            ]
-
-            self.whatsapp_service.send_interactive_message(user_id, ready_message, continue_buttons)
+                self.whatsapp_service.send_interactive_message(user_id, complete_message, continue_buttons)
 
             # Save passage data to session for question loading
             from database.session_db import save_user_session
@@ -521,10 +623,10 @@ Great job on completing your comprehension practice! 📚✨"""
             }
             save_user_session(user_id, session_data)
 
-            logger.info(f"Passage ready for {user_id}, waiting for user to load questions")
+            logger.info(f"Optimized passage ready for {user_id}, waiting for user to load questions")
 
         except Exception as e:
-            logger.error(f"Error in professional comprehension flow: {e}")
+            logger.error(f"Error in optimized comprehension flow: {e}")
             self.whatsapp_service.send_message(user_id, "❌ Error displaying comprehension. Please try again.")
 
     def handle_comprehension_load_questions(self, user_id: str):
@@ -566,56 +668,51 @@ Great job on completing your comprehension practice! 📚✨"""
             questions_part1 = questions[:5]
             questions_part2 = questions[5:10]
 
-            # Send first 5 questions with error handling
+            # CRITICAL FIX: Send questions in ONE consolidated message to prevent message chains
             try:
-                questions_message_1 = f"📝 **QUESTIONS 1-5**\n\n"
-                for i, q in enumerate(questions_part1, 1):
+                # Try to fit all questions in one message first
+                all_questions_message = f"📝 **COMPREHENSION QUESTIONS**\n\n"
+                
+                for i, q in enumerate(questions[:10], 1):
                     marks = q.get('marks', 1)
                     question_text = q.get('question', f'Question {i} not available')
-                    questions_message_1 += f"**{i}.** {question_text} [{marks} mark{'s' if marks != 1 else ''}]\n\n"
-
-                if len(questions_message_1) > 4000:
-                    # Split if too long
-                    self.whatsapp_service.send_message(user_id, "📝 **QUESTIONS 1-5**")
+                    all_questions_message += f"**{i}.** {question_text} [{marks} mark{'s' if marks != 1 else ''}]\n\n"
+                
+                all_questions_message += "✅ *Answer all questions based on the passage above*"
+                
+                # Check message length
+                if len(all_questions_message) > 3500:  # Leave room for WhatsApp formatting
+                    # If too long, send in TWO messages maximum with delay
+                    questions_message_1 = f"📝 **QUESTIONS 1-5**\n\n"
                     for i, q in enumerate(questions_part1, 1):
                         marks = q.get('marks', 1)
                         question_text = q.get('question', f'Question {i} not available')
-                        single_question = f"**{i}.** {question_text} [{marks} mark{'s' if marks != 1 else ''}]"
-                        self.whatsapp_service.send_message(user_id, single_question)
-                else:
-                    success = self.whatsapp_service.send_message(user_id, questions_message_1)
-                    if not success:
-                        logger.error(f"Failed to send questions 1-5 to {user_id}")
-
-            except Exception as e:
-                logger.error(f"Error sending questions 1-5 to {user_id}: {e}")
-
-            # Send last 5 questions with error handling
-            try:
-                questions_message_2 = f"📝 **QUESTIONS 6-10**\n\n"
-                for i, q in enumerate(questions_part2, 6):
-                    marks = q.get('marks', 1)
-                    question_text = q.get('question', f'Question {i} not available')
-                    questions_message_2 += f"**{i}.** {question_text} [{marks} mark{'s' if marks != 1 else ''}]\n\n"
-
-                questions_message_2 += "✅ *Answer all questions based on the passage above*"
-
-                if len(questions_message_2) > 4000:
-                    # Split if too long
-                    self.whatsapp_service.send_message(user_id, "📝 **QUESTIONS 6-10**")
+                        questions_message_1 += f"**{i}.** {question_text} [{marks} mark{'s' if marks != 1 else ''}]\n\n"
+                    
+                    # Send first part
+                    self.whatsapp_service.send_message(user_id, questions_message_1)
+                    
+                    # Add delay to prevent rapid message sending
+                    time.sleep(1)
+                    
+                    # Send second part
+                    questions_message_2 = f"📝 **QUESTIONS 6-10**\n\n"
                     for i, q in enumerate(questions_part2, 6):
                         marks = q.get('marks', 1)
                         question_text = q.get('question', f'Question {i} not available')
-                        single_question = f"**{i}.** {question_text} [{marks} mark{'s' if marks != 1 else ''}]"
-                        self.whatsapp_service.send_message(user_id, single_question)
-                    self.whatsapp_service.send_message(user_id, "✅ *Answer all questions based on the passage above*")
+                        questions_message_2 += f"**{i}.** {question_text} [{marks} mark{'s' if marks != 1 else ''}]\n\n"
+
+                    questions_message_2 += "✅ *Answer all questions based on the passage above*"
+                    self.whatsapp_service.send_message(user_id, questions_message_2)
                 else:
-                    success = self.whatsapp_service.send_message(user_id, questions_message_2)
-                    if not success:
-                        logger.error(f"Failed to send questions 6-10 to {user_id}")
+                    # Send all questions in one message
+                    self.whatsapp_service.send_message(user_id, all_questions_message)
+                
+                logger.info(f"Questions sent successfully to {user_id}")
 
             except Exception as e:
-                logger.error(f"Error sending questions 6-10 to {user_id}: {e}")
+                logger.error(f"Error sending questions to {user_id}: {e}")
+                self.whatsapp_service.send_message(user_id, "❌ Error displaying questions. Please try again.")
 
             # Step 4: Save session and send answer button
             session_data = {
@@ -642,7 +739,7 @@ Great job on completing your comprehension practice! 📚✨"""
             self.whatsapp_service.send_message(user_id, "❌ Error loading questions. Please try again.")
 
     def handle_comprehension_reset(self, user_id: str):
-        """Reset active comprehension session and start fresh with strong duplicate prevention"""
+        """Reset active comprehension session - user must manually start new session"""
         try:
             from database.session_db import clear_user_session
             import time
@@ -650,13 +747,20 @@ Great job on completing your comprehension practice! 📚✨"""
             # Force clear any existing session
             clear_user_session(user_id)
 
-            # Small delay to ensure session is cleared before starting new one
+            # Small delay to ensure session is cleared
             time.sleep(0.5)
 
-            # Start a new comprehension session
-            self.handle_comprehension_start(user_id)
+            # DON'T automatically start new session - let user control this
+            # Send confirmation and option to start new session
+            buttons = [
+                {"text": "📚 Start New Comprehension", "callback_data": "comprehension_start"},
+                {"text": "🔙 Back to English Menu", "callback_data": "english_menu"}
+            ]
+            
+            message = "✅ Your comprehension session has been reset.\n\nWould you like to start a new comprehension practice?"
+            self.whatsapp_service.send_interactive_message(user_id, message, buttons)
 
-            logger.info(f"Comprehension session reset for {user_id}")
+            logger.info(f"Comprehension session reset for {user_id} - awaiting user action")
 
         except Exception as e:
             logger.error(f"Error resetting comprehension for {user_id}: {e}")
@@ -1166,9 +1270,42 @@ Type your essay below:"""
                 self.whatsapp_service.send_message(user_id, f"❌ Essay too short! You wrote {word_count} words. Please write at least 50 words for proper evaluation.")
                 return
 
-            # Deduct credits before processing
-            if not deduct_credits(user_id, 3, "english_essay", "Essay writing and marking"):
-                self.whatsapp_service.send_message(user_id, "❌ Error processing credits. Please try again.")
+            # Check and deduct credits using advanced credit service
+            from services.advanced_credit_service import advanced_credit_service
+            
+            credit_result = advanced_credit_service.check_and_deduct_credits(
+                user_id, 
+                'english_essay_writing',  # 3 credits as per config
+                None
+            )
+            
+            if not credit_result['success']:
+                if credit_result.get('insufficient'):
+                    current_credits = credit_result['current_credits']
+                    required_credits = credit_result['required_credits']
+                    shortage = credit_result['shortage']
+                    
+                    insufficient_msg = f"""💰 **Need More Credits for Essay!** 💰
+
+✍️ **English Essay Writing & Marking**
+
+💳 **Credit Status:**
+• Current Credits: {current_credits}
+• Required Credits: {required_credits}
+• Need: {shortage} more credits
+
+💎 **Get More Credits:**"""
+                    
+                    buttons = [
+                        {"text": "💰 Buy Credits", "callback_data": "credit_store"},
+                        {"text": "👥 Invite Friends (+5 each)", "callback_data": "share_to_friend"},
+                        {"text": "🔙 Back to English", "callback_data": "english_menu"}
+                    ]
+                    
+                    self.whatsapp_service.send_interactive_message(user_id, insufficient_msg, buttons)
+                    return
+                else:
+                    self.whatsapp_service.send_message(user_id, "❌ Credit processing error. Please try again.")
                 return
 
             # Send processing message
@@ -1204,13 +1341,60 @@ Type your essay below:"""
                     except Exception as e2:
                         logger.error(f"Backup PDF upload also failed: {e2}")
 
-                # Now send feedback message after PDF
-                if pdf_sent:
-                    feedback_message = f"""✅ **Essay Marked Successfully!**
+                # Add XP tracking for essay completion and update stats
+                current_stats = get_user_stats(user_id) or {}
+                current_xp = current_stats.get('xp_points', 0)
+                current_level = current_stats.get('level', 1)
+                current_streak = current_stats.get('streak', 0)
+                
+                # Award 30 XP for completing essay
+                from database.external_db import add_xp, update_streak
+                points_earned = 30
+                add_xp(user_id, points_earned, 'english_essay_writing')
+                update_streak(user_id, True)
+                
+                # Check for level up
+                new_xp = current_xp + points_earned
+                new_level = max(1, (new_xp // 100) + 1)
+                new_streak = current_streak + 1
+                
+                # Update total attempts and essay completions
+                update_user_stats(user_id, {
+                    'total_attempts': current_stats.get('total_attempts', 0) + 1,
+                    'essays_completed': current_stats.get('essays_completed', 0) + 1,
+                    'xp_points': new_xp,
+                    'level': new_level,
+                    'streak': new_streak
+                })
 
-📊 **Your Score:** {marking_result['score']}/30
-📝 **Word Count:** {word_count} words  
-📈 **Grade:** {marking_result['grade']}
+                # Get updated stats for final display
+                updated_stats = get_user_stats(user_id) or {}
+                final_credits = updated_stats.get('credits', 0)
+                final_xp = updated_stats.get('xp_points', 0)
+                final_streak = updated_stats.get('streak', 0)
+                final_level = updated_stats.get('level', 1)
+
+                level_up_bonus = ""
+                if new_level > current_level:
+                    level_up_bonus = f"\n🎉 **LEVEL UP!** Level {current_level} → Level {new_level}!"
+
+                # Send feedback message AFTER PDF is sent
+                if pdf_sent:
+                    feedback_message = f"""✅ **Essay Marked Successfully!** ✅
+
+📊 **Your Results:**
+• Score: {marking_result['score']}/30
+• Word Count: {word_count} words  
+• Grade: {marking_result['grade']}
+
+📚 **Your English Progress:**
+• Credits: {final_credits}
+• XP Earned: +{points_earned} XP
+• Total XP: {final_xp}
+• Streak: {final_streak} days
+• Level: {final_level}
+
+{level_up_bonus}
 
 **📝 Teacher Feedback:**
 {marking_result['summary_feedback']}
@@ -1222,7 +1406,7 @@ Type your essay below:"""
 
 🎯 The PDF shows your original essay with all errors marked in red with corrections!"""
                 else:
-                    # Enhanced fallback with direct text feedback
+                    # Enhanced fallback with direct text feedback and XP tracking
                     corrections_list = marking_result.get('specific_errors', [])
                     corrections_display = ""
                     if corrections_list:
@@ -1230,11 +1414,21 @@ Type your essay below:"""
                     else:
                         corrections_display = "No major corrections needed."
 
-                    feedback_message = f"""✅ **Essay Marked Successfully!**
+                    feedback_message = f"""✅ **Essay Marked Successfully!** ✅
 
-📊 **Your Score:** {marking_result['score']}/30
-📝 **Word Count:** {word_count} words  
-📈 **Grade:** {marking_result['grade']}
+📊 **Your Results:**
+• Score: {marking_result['score']}/30
+• Word Count: {word_count} words  
+• Grade: {marking_result['grade']}
+
+📚 **Your English Progress:**
+• Credits: {final_credits}
+• XP Earned: +{points_earned} XP
+• Total XP: {final_xp}
+• Streak: {final_streak} days
+• Level: {final_level}
+
+{level_up_bonus}
 
 **📝 Teacher Feedback:**
 {marking_result['summary_feedback']}

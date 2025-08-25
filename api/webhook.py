@@ -26,6 +26,7 @@ from utils.validators import validators
 from constants import TOPICS, MESSAGE_TEMPLATES, DIFFICULTY_LEVELS
 from database.external_db import get_user_registration, get_user_stats, get_user_credits, deduct_credits
 from services.advanced_credit_service import advanced_credit_service
+from services.analytics_tracker import analytics_tracker
 from config import Config
 from datetime import datetime
 import uuid
@@ -147,7 +148,7 @@ def handle_webhook():
                     whatsapp_service.send_message(
                         user_id,
                         "⏳ Please wait a moment before sending another message. This helps prevent spam and ensures smooth operation."
-                    )
+                )
                 return jsonify({'status': 'rate_limited'}), 200
             handle_text_message(user_id, message_text)
         elif message_type == 'image':
@@ -163,7 +164,7 @@ def handle_webhook():
                     whatsapp_service.send_message(
                         user_id,
                         "⏳ Please wait a moment before sending another image. Image processing takes time and resources."
-                    )
+                )
                 return jsonify({'status': 'rate_limited'}), 200
             handle_image_message(user_id, message['image'])
         elif message_type == 'interactive':
@@ -179,6 +180,10 @@ def handle_webhook():
 def handle_text_message(user_id: str, message_text: str):
     """Handle text messages from users"""
     try:
+        # Track user interaction
+        session_id = f"{user_id}_{int(time.time())}"
+        analytics_tracker.track_user_session_start(user_id, session_id, {"platform": "whatsapp"})
+        
         # Sanitize input
         message_text = validators.sanitize_text_input(message_text)
 
@@ -330,8 +335,8 @@ def handle_session_message(user_id: str, message_text: str):
         # Check for payment proof submission
         from database.session_db import get_user_session
         payment_session = get_user_session(user_id)
-        if payment_session and payment_session.get('session_type') == 'payment_flow' and payment_session.get('step') == 'awaiting_proof':
-            # Extract package_id and reference_code from session custom_data
+        if payment_session and payment_session.get('session_type') == 'payment_flow':
+            # Check if we're awaiting proof text
             custom_data = payment_session.get('custom_data', {})
             if isinstance(custom_data, str):
                 try:
@@ -339,18 +344,24 @@ def handle_session_message(user_id: str, message_text: str):
                 except:
                     custom_data = {}
             
-            package_id = custom_data.get('package_id')
-            reference_code = custom_data.get('reference_code')
-            
-            if package_id and reference_code:
-                handle_payment_proof_submission(user_id, package_id, reference_code)
-            else:
-                # Session data incomplete, send error message
-                whatsapp_service.send_message(user_id, "❌ Payment session data incomplete. Please try the payment process again.")
-                # Clear the session
-                from database.session_db import clear_user_session
-                clear_user_session(user_id)
-            return
+            # If awaiting proof, handle the text as payment proof
+            if custom_data.get('awaiting_proof'):
+                if handle_payment_proof_text(user_id, message_text):
+                    return
+            elif payment_session.get('step') == 'awaiting_proof':
+                # Old flow compatibility
+                package_id = custom_data.get('package_id')
+                reference_code = custom_data.get('reference_code')
+                
+                if package_id and reference_code:
+                    handle_payment_proof_submission(user_id, package_id, reference_code)
+                else:
+                    # Session data incomplete, send error message
+                    whatsapp_service.send_message(user_id, "❌ Payment session data incomplete. Please try the payment process again.")
+                    # Clear the session
+                    from database.session_db import clear_user_session
+                    clear_user_session(user_id)
+                return
 
         if session_type == 'question':
             handle_question_answer(user_id, message_text)
@@ -361,8 +372,10 @@ def handle_session_message(user_id: str, message_text: str):
         elif session_type == 'audio_chat':
             handle_audio_chat_message(user_id, message_text)
         else:
-            # No active session, show main menu
-            send_main_menu(user_id)
+            # CRITICAL FIX: Don't automatically send main menu - it causes message chains
+            # Only send menu if user explicitly requests it
+            logger.info(f"No active session for {user_id}, but not auto-sending menu to prevent message chains")
+            whatsapp_service.send_message(user_id, "I didn't understand that. Please use the menu buttons to navigate.")
 
     except Exception as e:
         logger.error(f"Error handling session message for {user_id}: {e}", exc_info=True)
@@ -384,6 +397,18 @@ def handle_question_answer(user_id: str, answer: str):
 
         # Validate answer
         result = question_service.validate_answer(question_data, answer)
+        
+        # Track question attempt analytics
+        if result['is_correct'] is not None:
+            analytics_tracker.track_question_attempt(
+                user_id=user_id,
+                subject=subject,
+                topic=topic,
+                difficulty=question_data.get('difficulty', 'medium'),
+                is_correct=result['is_correct'],
+                time_taken=60,  # Default time, could be tracked more precisely
+                credits_used=1
+            )
 
         if result['is_correct'] is None:
             # Essay question - cannot auto-grade
@@ -535,74 +560,89 @@ def send_main_menu(user_id: str, user_name: str = None):
         credit_status = advanced_credit_service.get_user_credit_status(user_id)
         current_credits = credit_status['credits']
 
-        # Personalized greeting section
+        # Enhanced welcome message with professional WhatsApp UI design
         welcome_text = ""
+        
+        # Header section with elegant design
         if user_name:
-            welcome_text += f"🎓 *Welcome back, {user_name}!* 🎓\n"
-            welcome_text += f"═══════════════════\n\n"
-            welcome_text += f"*Hi {user_name}, I'm NerdX - Your Personal ZIMSEC Tutor*\n\n"
+            welcome_text += f"╭─────────────────────╮\n"
+            welcome_text += f"│   🎓 *NerdX ZIMSEC* 🎓   │\n"
+            welcome_text += f"╰─────────────────────╯\n\n"
+            welcome_text += f"👋 *Welcome back, {user_name}!*\n\n"
+            welcome_text += f"🤖 *I'm your AI Study Companion*\n"
 
             # Add personalized motivational message based on stats
             total_attempts = user_stats.get('total_attempts', 0)
             if total_attempts == 0:
-                welcome_text += f"🌟 *Ready to start your learning journey? Let's make it amazing!*\n\n"
+                welcome_text += f"🌟 Ready to start your learning journey? Let's make it amazing!\n\n"
             elif total_attempts < 10:
-                welcome_text += f"🚀 *Great to see you building excellent study habits!*\n\n"
+                welcome_text += f"🚀 Great to see you building excellent study habits!\n\n"
             elif total_attempts < 50:
-                welcome_text += f"⭐ *Impressive progress! You're becoming a ZIMSEC champion!*\n\n"
+                welcome_text += f"⭐ Impressive progress! You're becoming a ZIMSEC champion!\n\n"
             else:
-                welcome_text += f"🏆 *Amazing dedication! Your commitment to excellence shows!*\n\n"
+                welcome_text += f"🏆 Amazing dedication! Your commitment to excellence shows!\n\n"
         else:
-            welcome_text += "🎓 *NerdX ZIMSEC Learning Bot* 🎓\n"
-            welcome_text += "═══════════════════\n\n"
-            welcome_text += "🌟 *Your Personalized ZIMSEC Study Companion*\n\n"
+            welcome_text += f"╭─────────────────────╮\n"
+            welcome_text += f"│   🎓 *NerdX ZIMSEC* 🎓   │\n"
+            welcome_text += f"╰─────────────────────╯\n\n"
+            welcome_text += f"🌟 *Your Personalized Study Companion*\n\n"
 
-        # Credit display section using advanced credit system
+        # Credit display section
+        welcome_text += f"┌─────────────────────┐\n"
+        welcome_text += f"│  💳 *YOUR CREDITS*  │\n"
+        welcome_text += f"└─────────────────────┘\n"
         welcome_text += f"{advanced_credit_service.format_credit_display(user_id)}\n\n"
 
-        # Features section with clear structure
-        welcome_text += "✨ *AVAILABLE SUBJECTS*\n"
-        welcome_text += "━━━━━━━━━━━━━━━━━\n"
-        welcome_text += "🧬 *Biology*     ⚗️ *Chemistry*\n"
-        welcome_text += "⚡ *Physics*     📰 *Mathematics*\n"
-        welcome_text += "📝 *English*     🎤 *Audio Chat*\n\n"
-
-        welcome_text += "🤖 *SMART FEATURES*\n"
-        welcome_text += "━━━━━━━━━━━━━━━━━\n"
-        welcome_text += "• AI-Generated Questions\n"
-        welcome_text += "• Progress Tracking\n"
-        welcome_text += "• Step-by-Step Solutions\n"
-        welcome_text += "• Achievement System\n\n"
-
-        # User stats section with clear formatting
+        # User stats section with elegant formatting
         level = user_stats.get('level', 1)
         xp_points = user_stats.get('xp_points', 0)
         correct_answers = user_stats.get('correct_answers', 0)
         total_attempts = user_stats.get('total_attempts', 0)
         success_rate = (correct_answers/max(total_attempts,1)*100) if total_attempts > 0 else 0
 
+        welcome_text += f"┌─────────────────────┐\n"
         if user_name:
-            welcome_text += f"📊 *{user_name}'s ACADEMIC PROFILE*\n"
+            welcome_text += f"│ 📊 *{user_name[:10]}'s PROGRESS* │\n"
         else:
-            welcome_text += "📊 *YOUR ACADEMIC PROFILE*\n"
-        welcome_text += "━━━━━━━━━━━━━━━━━━━━━\n"
-        welcome_text += f"🎯 *Level:* {level}          ⭐ *XP:* {xp_points}\n"
-        welcome_text += f"📚 *Questions:* {total_attempts}       ✅ *Success Rate:* {success_rate:.1f}%\n\n"
+            welcome_text += f"│  📊 *YOUR PROGRESS*  │\n"
+        welcome_text += f"└─────────────────────┘\n"
+        welcome_text += f"🎯 *Level {level}* • ⭐ *{xp_points} XP*\n"
+        welcome_text += f"📚 *{total_attempts} Questions* • ✅ *{success_rate:.1f}% Success*\n\n"
 
-        # Call to action section
-        welcome_text += "🎁 *BONUS OPPORTUNITY*\n"
-        welcome_text += "━━━━━━━━━━━━━━━━━\n"
-        welcome_text += "*Share NerdX with friends*\n"
-        welcome_text += f"*Get {Config.REFERRAL_BONUS} FREE CREDITS each!*\n\n"
+        # Subjects section with clean layout
+        welcome_text += f"┌─────────────────────┐\n"
+        welcome_text += f"│  📚 *STUDY SUBJECTS*  │\n"
+        welcome_text += f"└─────────────────────┘\n"
+        welcome_text += f"🧬 Biology        ⚗️ Chemistry\n"
+        welcome_text += f"⚡ Physics        📐 Mathematics\n"
+        welcome_text += f"📝 English        🎤 Audio Chat\n\n"
 
-        welcome_text += "👇 *Choose an option below to get started:*"
+        # Smart features section
+        welcome_text += f"┌─────────────────────┐\n"
+        welcome_text += f"│  🤖 *SMART FEATURES*  │\n"
+        welcome_text += f"└─────────────────────┘\n"
+        welcome_text += f"✨ AI-Generated Questions\n"
+        welcome_text += f"📈 Real-time Progress Tracking\n"
+        welcome_text += f"💡 Step-by-Step Solutions\n"
+        welcome_text += f"🏆 Achievement System\n\n"
+
+        # Bonus section
+        welcome_text += f"┌─────────────────────┐\n"
+        welcome_text += f"│  🎁 *EARN REWARDS*   │\n"
+        welcome_text += f"└─────────────────────┘\n"
+        welcome_text += f"🔗 Share NerdX with friends\n"
+        welcome_text += f"💰 Get *{Config.REFERRAL_BONUS} FREE CREDITS* each!\n\n"
+
+        welcome_text += f"─────────────────────\n"
+        welcome_text += f"👇 *Choose an option to get started:*"
 
         # Create main buttons with advanced credit system integration
         main_buttons = [
             {"text": "🎯 Start Quiz", "callback_data": "start_quiz"},
             {"text": "🎤 Audio Chat", "callback_data": "audio_chat_menu"},
             {"text": "📊 My Stats", "callback_data": "user_stats"},
-            {"text": "👥 Referrals", "callback_data": "referrals_menu"}
+            {"text": "👥 Referrals", "callback_data": "referrals_menu"},
+            {"text": "💰 Buy Credits", "callback_data": "credit_store"}
         ]
         
         # Add low credit button if applicable using advanced credit system
@@ -612,9 +652,7 @@ def send_main_menu(user_id: str, user_name: str = None):
 
         # Send additional buttons separately
         additional_buttons = [
-            {"text": "📤 Share to Friend", "callback_data": "share_to_friend"},
-            {"text": "💎 Credit Store", "callback_data": "credit_store"},
-            {"text": "❓ Help", "callback_data": "help_menu"}
+            {"text": "📤 Share to Friend", "callback_data": "share_to_friend"}
         ]
 
         whatsapp_service.send_interactive_message(user_id, "💎 *More Options:*", additional_buttons)
@@ -715,8 +753,24 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             else:
                 whatsapp_service.send_message(user_id, "❌ Invalid difficulty selection format.")
         elif selection_id == 'start_quiz':
+            # Track quiz feature usage
+            analytics_tracker.track_feature_usage(
+                feature_name="Quiz System",
+                user_id=user_id,
+                success=True,
+                time_spent=0,
+                credits_consumed=0
+            )
             handle_quiz_menu(user_id)
         elif selection_id == 'audio_chat_menu':
+            # Track audio chat feature usage
+            analytics_tracker.track_feature_usage(
+                feature_name="Audio Chat",
+                user_id=user_id,
+                success=True,
+                time_spent=0,  # Will be tracked when session ends
+                credits_consumed=0  # Credits are deducted per interaction
+            )
             audio_chat_service.handle_audio_chat_command(user_id)
         elif selection_id == 'audio_female_voice':
             audio_chat_service.handle_voice_selection(user_id, 'female')
@@ -1450,7 +1504,7 @@ def handle_share_to_friend(user_id: str):
             return
 
         name = registration.get('name', 'Student')
-        
+
         # Use enhanced referral service
         referral_service = ReferralService()
         referral_data = referral_service.get_referral_share_message(user_id, name)
@@ -1485,7 +1539,7 @@ def show_referral_info(user_id: str):
             return
 
         name = registration.get('name', 'Student')
-        
+
         # Use enhanced referral service
         referral_service = ReferralService()
         referral_stats = referral_service.get_referral_stats(user_id)
@@ -1533,15 +1587,41 @@ def show_referral_info(user_id: str):
         whatsapp_service.send_message(user_id, "❌ Error loading referral information.")
 
 def handle_combined_science_menu(user_id: str):
-    """Show Combined Science subject menu - matches backup exactly"""
+    """Show Combined Science subject menu with full gamification system"""
     try:
-        from database.external_db import get_user_registration, get_user_credits
+        from database.external_db import get_user_registration, get_user_credits, get_user_stats
 
         registration = get_user_registration(user_id)
         user_name = registration['name'] if registration else "Student"
-        credits = get_user_credits(user_id)
+        current_credits = get_user_credits(user_id)
+        user_stats = get_user_stats(user_id) or {'level': 1, 'xp_points': 0, 'streak': 0}
+        current_level = user_stats.get('level', 1)
+        current_xp = user_stats.get('xp_points', 0)
+        current_streak = user_stats.get('streak', 0)
 
-        text = "🧬 *Combined Science Subjects:*\nSelect a science subject:"
+        # Calculate XP needed for next level
+        xp_for_next_level = (current_level * 100) - current_xp
+        if xp_for_next_level <= 0:
+            xp_for_next_level = 100  # Base XP for next level
+
+        text = f"🧬 *Hey {user_name}! Welcome to ScienceMentor* 🧬\n\n"
+        text += f"🔬 *{user_name}, I'm your personal O-Level Combined Science tutor!*\n\n"
+
+        # Enhanced user stats display like mathematics
+        text += f"📊 **Your Science Journey:**\n"
+        text += f"💳 Credits: **{current_credits}**\n"
+        text += f"⭐ Level: **{current_level}** (XP: {current_xp})\n"
+        text += f"🔥 Streak: **{current_streak} days**\n"
+        text += f"🎯 Next Level: **{xp_for_next_level} XP needed**\n\n"
+
+        text += f"I'm here to help you master science, {user_name}, with:\n\n"
+        text += f"🧬 **Biology Questions:** Earn 5-10 XP per question\n"
+        text += f"⚗️ **Chemistry Questions:** Earn 5-10 XP per question\n"
+        text += f"⚡ **Physics Questions:** Earn 5-10 XP per question\n"
+        text += f"📚 **Combined Exams:** Earn 8-15 XP per question\n"
+        text += f"🔥 **Daily Streaks:** Maintain consistent learning\n\n"
+
+        text += f"🚀 *{user_name}, choose how you'd like to earn XP and level up:*"
 
         buttons = [
             {"text": "🧬 Biology", "callback_data": "science_Biology"},
@@ -1766,34 +1846,64 @@ def handle_notes_menu(user_id: str, subject: str):
 def handle_combined_exam(user_id: str):
     """Handle combined exam mode with mixed questions from all subjects"""
     try:
-        from database.external_db import get_user_credits
-        from utils.credit_system import credit_system
+        from database.external_db import get_user_registration
+        from services.advanced_credit_service import advanced_credit_service
+        
+        # Get user info
+        registration = get_user_registration(user_id)
+        user_name = registration['name'] if registration else "Student"
 
-        # Check credits
-        credits_cost = credit_system.get_credit_cost('combined_exam')
-        current_credits = get_user_credits(user_id)
+        # Check credits using advanced credit service
+        user_credit_status = advanced_credit_service.get_user_credit_status(user_id)
+        current_credits = user_credit_status['credits']
+        required_credits = advanced_credit_service.get_credit_cost('combined_science_exam')  # 2 credits per config
 
-        if current_credits < credits_cost:
-            message = f"❌ *Insufficient Credits*\n\n"
-            message += f"Combined Exam Mode requires {credits_cost} credits.\n"
-            message += f"You have {current_credits} credits remaining.\n\n"
-            message += "💳 *Purchase more credits to continue your learning journey!*"
+        if current_credits < required_credits:
+            # Enhanced gamified insufficient credits message
+            insufficient_msg = f"""💰 **Need More Credits for Exam!** 💰
+
+🧪 **Combined Science Exam Mode**
+👤 Student: {user_name}
+
+💳 **Credit Status:**
+• Current Credits: {current_credits}
+• Required Credits: {required_credits}
+• Need: {required_credits - current_credits} more credits
+
+🎮 **Exam Mode Benefits:**
+• Biology, Chemistry & Physics questions
+• Past paper questions with images
+• XP and level progression
+• Streak building opportunities
+• Real ZIMSEC exam simulation
+
+💎 **Get More Credits:**"""
 
             buttons = [
-                {"text": "💰 Buy Credits", "callback_data": "buy_credits"},
+                {"text": "💰 Buy Credits", "callback_data": "credit_store"},
+                {"text": "👥 Invite Friends (+5 each)", "callback_data": "share_to_friend"},
                 {"text": "🔙 Back to Subjects", "callback_data": "subject_ordinary_combined_science"}
             ]
 
-            whatsapp_service.send_interactive_message(user_id, message, buttons)
+            whatsapp_service.send_interactive_message(user_id, insufficient_msg, buttons)
             return
 
-        text = "🎯 *Combined Science Exam Mode*\n\n"
-        text += "*Features:*\n"
-        text += "• Random questions from all subjects\n"
-        text += "• Exam-style difficulty progression\n"
-        text += "• Mixed topic coverage\n"
-        text += "• Real exam simulation\n\n"
-        text += "Ready to start your Combined Science practice exam?"
+        # Enhanced gamified exam introduction
+        text = f"""🧪 **Combined Science Exam Mode** 🧪
+
+👤 Welcome {user_name}!
+💰 Credits Available: {current_credits}
+💳 Cost Per Question: {required_credits} credits
+
+🎯 **Exam Features:**
+• 🧬 Biology, Chemistry & Physics
+• 📚 Past paper questions with images
+• ⚡ XP rewards (15+ XP per question)
+• 🔥 Streak building opportunities
+• 🏆 Level progression tracking
+• 📊 Real ZIMSEC exam simulation
+
+🎮 Ready to start your science adventure?"""
 
         buttons = [
             {"text": "🚀 Start Combined Exam", "callback_data": "start_combined_exam"},
@@ -1830,6 +1940,44 @@ def load_next_combined_question(user_id: str):
     try:
         import json
         from database.external_db import get_user_registration, get_random_exam_question
+        from services.advanced_credit_service import advanced_credit_service
+
+        # Check and deduct credits for combined exam question
+        credit_result = advanced_credit_service.check_and_deduct_credits(
+            user_id, 
+            'combined_science_exam',  # 2 credits as per config
+            None
+        )
+        
+        if not credit_result['success']:
+            if credit_result.get('insufficient'):
+                # Show insufficient credits message
+                current_credits = credit_result['current_credits']
+                required_credits = credit_result['required_credits']
+                shortage = credit_result['shortage']
+                
+                insufficient_msg = f"""💰 **Need More Credits!** 💰
+
+🧪 **Combined Science Exam Question**
+
+💳 **Credit Status:**
+• Current Credits: {current_credits}
+• Required Credits: {required_credits}
+• Need: {shortage} more credits
+
+💎 **Get More Credits:**"""
+                
+                buttons = [
+                    {"text": "💰 Buy Credits", "callback_data": "credit_store"},
+                    {"text": "👥 Invite Friends (+5 each)", "callback_data": "share_to_friend"},
+                    {"text": "🔙 Back to Subjects", "callback_data": "subject_ordinary_combined_science"}
+                ]
+                
+                whatsapp_service.send_interactive_message(user_id, insufficient_msg, buttons)
+                return
+            else:
+                whatsapp_service.send_message(user_id, credit_result['message'])
+                return
 
         # Get user info
         registration = get_user_registration(user_id)
@@ -1936,12 +2084,17 @@ def handle_combined_exam_answer(user_id: str, user_answer: str):
         is_correct = user_answer == correct_answer
         points_earned = 15 if is_correct else 0  # Combined Exam points
 
-        # Update stats if correct
+        # Enhanced stats update with proper streak handling
         if is_correct:
             new_xp = current_xp + points_earned
             new_level = max(1, (new_xp // 100) + 1)  # Level up every 100 XP
             new_streak = current_streak + 1
 
+            # Update with XP and streak functions
+            from database.external_db import add_xp, update_streak
+            add_xp(user_id, points_earned, 'combined_science_exam')
+            update_streak(user_id, True)
+            
             update_user_stats(user_id, {
                 'xp_points': new_xp,
                 'level': new_level,
@@ -1950,7 +2103,11 @@ def handle_combined_exam_answer(user_id: str, user_answer: str):
         else:
             new_xp = current_xp
             new_level = current_level
-            new_streak = current_streak
+            new_streak = 0  # Reset streak on incorrect answer
+            
+            # Update streak function for incorrect answer
+            from database.external_db import update_streak
+            update_streak(user_id, False)
 
         # Update total attempts and correct answers
         update_user_stats(user_id, {
@@ -2377,6 +2534,53 @@ def handle_combined_science_topic_selection(user_id: str, subject: str, topic: s
 def handle_combined_science_question(user_id: str, subject: str):
     """Handle Combined Science question generation and display"""
     try:
+        # Check and deduct credits for combined science topical question
+        from services.advanced_credit_service import advanced_credit_service
+        
+        credit_result = advanced_credit_service.check_and_deduct_credits(
+            user_id, 
+            'combined_science_topical',  # 1 credit as per config
+            None
+        )
+        
+        if not credit_result['success']:
+            if credit_result.get('insufficient'):
+                # Show gamified insufficient credits message
+                current_credits = credit_result['current_credits']
+                required_credits = credit_result['required_credits']
+                shortage = credit_result['shortage']
+                
+                insufficient_msg = f"""💰 **Need More Credits!** 💰
+
+🧪 **Combined Science - {subject}**
+🎯 Action: Topical Question
+
+💳 **Credit Status:**
+• Current Credits: {current_credits}
+• Required Credits: {required_credits}
+• Need: {shortage} more credits
+
+🎮 **Combined Science Benefits:**
+• Biology, Chemistry & Physics topics
+• ZIMSEC exam-style questions
+• XP and level progression
+• Streak building opportunities
+• AI-powered explanations
+
+💎 **Get More Credits:**"""
+                
+                buttons = [
+                    {"text": "💰 Buy Credits", "callback_data": "credit_store"},
+                    {"text": "👥 Invite Friends (+5 each)", "callback_data": "share_to_friend"},
+                    {"text": "🏠 Main Menu", "callback_data": "main_menu"}
+                ]
+                
+                whatsapp_service.send_interactive_message(user_id, insufficient_msg, buttons)
+                return
+            else:
+                whatsapp_service.send_message(user_id, credit_result['message'])
+                return
+        
         from services.question_service import QuestionService
         from database.external_db import get_user_registration, get_user_stats
 
@@ -2412,16 +2616,18 @@ def handle_combined_science_question(user_id: str, subject: str):
             'session_type': 'combined_science'
         })
 
-        # Display question with proper formatting
+        # Display question with proper formatting including credit deduction info
         user_stats = get_user_stats(user_id)
-        current_credits = user_stats.get('credits', 0)
         current_level = user_stats.get('level', 1)
+        
+        # Enhanced gamified question display
+        message = f"🧪 **{subject} Topical Question** 🧪\n\n"
+        message += f"👤 **Student:** {user_name} (Level {current_level})\n"
+        message += f"📚 **Topic:** {topic}\n"
+        message += f"💳 **Credits Deducted:** {credit_result['deducted']}\n"
+        message += f"💰 **New Balance:** {credit_result['new_balance']}\n\n"
 
-        message = f"🧪 *{subject} - {topic}*\n\n"
-        message += f"👤 Welcome {user_name}! (Level {current_level})\n"
-        message += f"💳 Credits: {current_credits}\n\n"
-
-        message += f"❓ *Question:*\n{question_data['question']}\n\n"
+        message += f"❓ **Question:**\n{question_data['question']}\n\n"
 
         # Format options properly - ensure all 4 options (A, B, C, D) are shown
         if 'options' in question_data and question_data['options']:
@@ -2452,89 +2658,151 @@ def handle_combined_science_question(user_id: str, subject: str):
         logger.error(f"Error in combined science question for {user_id}: {e}", exc_info=True)
         whatsapp_service.send_message(user_id, f"❌ Error generating {subject} question. Please try again.")
 
-# Placeholder for handle_combined_science_answer
 def handle_combined_science_answer(user_id: str, subject: str, user_answer: str):
-    """Handle Combined Science answer processing"""
+    """Handle Combined Science answer processing with enhanced gamification"""
     try:
-        from database.external_db import get_user_stats, add_xp, update_streak, update_user_stats
-        from database.session_db import get_user_session
+        from database.external_db import get_user_registration, get_user_stats, add_xp, update_streak, update_user_stats
+        from database.session_db import get_user_session, clear_user_session
         import json
+
+        # Get user info
+        registration = get_user_registration(user_id)
+        user_name = registration['name'] if registration else "Student"
 
         session_data = get_user_session(user_id)
 
-        if not session_data or session_data.get('session_type') != 'question':
+        if not session_data or session_data.get('session_type') != 'combined_science':
             whatsapp_service.send_message(user_id, "❌ Session expired or invalid. Please start a new question.")
             return
 
-        # Parse question data from JSON
-        question_data = json.loads(session_data.get('question_data', '{}'))
+        # Parse question data from session
+        question_data = session_data.get('question_data', {})
+        if isinstance(question_data, str):
+            question_data = json.loads(question_data)
 
-        topic = session_data['topic']
-        # Extract difficulty from user's previous selection, default to 'easy'
-        difficulty = 'easy'  # Default fallback
+        topic = session_data.get('topic', 'Unknown Topic')
+        difficulty = session_data.get('difficulty', 'medium')
 
-        correct_answer = question_data.get('correct_answer')
+        correct_answer = question_data.get('correct_answer', question_data.get('answer', ''))
         points = question_data.get('points', 10)
         explanation = question_data.get('explanation', 'No explanation available.')
 
         is_correct = user_answer.upper() == correct_answer.upper()
+        
+        # Track analytics for combined science question attempt
+        analytics_tracker.track_question_attempt(
+            user_id=user_id,
+            subject=f"Combined Science - {subject}",
+            topic=topic,
+            difficulty=difficulty,
+            is_correct=is_correct,
+            time_taken=90,  # Average time for combined science questions
+            credits_used=5  # Combined science uses 5 credits per question
+        )
 
-        # Update user stats
-        current_stats = get_user_stats(user_id)
-        new_xp = current_stats.get('xp_points', 0)
-        new_streak = current_stats.get('streak', 0)
-        new_level = current_stats.get('level', 1)
+        # Get current stats for calculations
+        current_stats = get_user_stats(user_id) or {}
+        current_xp = current_stats.get('xp_points', 0)
+        current_streak = current_stats.get('streak', 0)
+        current_level = current_stats.get('level', 1)
 
+        # Update stats based on answer
         if is_correct:
-            add_xp(user_id, points, 'combined_exam')
-            update_streak(user_id)
-            new_xp += points
-            new_streak += 1
-            if new_xp // 100 > new_level:
-                new_level = new_xp // 100 + 1
+            # Award XP and update streak
+            add_xp(user_id, points, 'combined_science_topical')
+            update_streak(user_id, True)
+            
+            # Check for level up
+            new_xp = current_xp + points
+            new_level = max(1, (new_xp // 100) + 1)
+            new_streak = current_streak + 1
+            
+            if new_level > current_level:
                 update_user_stats(user_id, {'level': new_level})
         else:
-            update_streak(user_id)
+            # Reset streak on incorrect answer
+            update_streak(user_id, False)
+            new_xp = current_xp
+            new_level = current_level
             new_streak = 0
 
+        # Update total attempts and correct answers
         update_user_stats(user_id, {
             'total_attempts': current_stats.get('total_attempts', 0) + 1,
             'correct_answers': current_stats.get('correct_answers', 0) + (1 if is_correct else 0)
         })
 
-        updated_stats = get_user_stats(user_id)
+        # Get updated stats for display
+        updated_stats = get_user_stats(user_id) or {}
         final_credits = updated_stats.get('credits', 0)
         final_xp = updated_stats.get('xp_points', 0)
         final_streak = updated_stats.get('streak', 0)
         final_level = updated_stats.get('level', 1)
 
+        # Enhanced gamified result message
         if is_correct:
-            message = f"✅ *Excellent {user_name}!*\n\n"
-            message += f"🎯 *Correct Answer: {correct_answer}*\n"
-            message += f"💎 *+{points} XP Points*\n\n"
+            message = f"🎉 **OUTSTANDING!** {user_name}! 🎉\n\n"
+            message += f"✅ **Correct Answer:** {correct_answer}\n"
+            message += f"🧪 **Subject:** {subject}\n"
+            message += f"📚 **Topic:** {topic}\n"
+            message += f"💎 **XP Earned:** +{points}\n"
+            message += f"🔥 **Streak:** {final_streak}\n\n"
+            
+            # Special streak messages for Combined Science
+            if final_streak >= 10:
+                message += f"🏆 **SCIENCE MASTER!** You're dominating Combined Science!\n"
+            elif final_streak >= 5:
+                message += f"⚡ **SCIENCE STREAK!** Keep those experiments going!\n"
+            elif final_streak >= 3:
+                message += f"🧬 **BUILDING KNOWLEDGE!** Science skills growing!\n"
+            message += "\n"
         else:
-            message = f"❌ *Not quite right, {user_name}*\n\n"
-            message += f"🎯 *Correct Answer: {correct_answer}*\n"
-            message += f"📚 *Keep learning!*\n\n"
+            message = f"📚 **Keep Experimenting,** {user_name}! 📚\n\n"
+            message += f"🎯 **Correct Answer:** {correct_answer}\n"
+            message += f"🧪 **Subject:** {subject}\n"
+            message += f"📚 **Topic:** {topic}\n"
+            message += f"💡 **Science Tip:** Every scientist learns from trials!\n"
+            message += f"🔥 **Streak:** {final_streak} (Keep trying to build it up!)\n\n"
 
-        message += f"💡 *Explanation:*\n{explanation}\n\n"
-        message += f"📊 *Your Stats:*\n"
-        message += f"💳 Credits: {final_credits}\n"
-        message += f"⚡ XP: {final_xp} (+{final_xp - session_data.get('xp_before', 0)})\n"
-        message += f"🔥 Streak: {final_streak}\n"
-        message += f"🏆 Level: {final_level}\n\n"
+        # Add explanation
+        message += f"🔬 **Scientific Explanation:**\n{explanation}\n\n"
 
-        # Buttons for next question or menu
+        # Check for level up
+        level_up_bonus = ""
+        if is_correct and new_level > current_level:
+            level_up_bonus = f"🎉 **LEVEL UP!** Level {current_level} → Level {new_level}!"
+
+        # Enhanced gamified stats display
+        message += f"🎮 **Your Science Progress** 🎮\n"
+        message += f"━━━━━━━━━━━━━━━━━━━━\n"
+        message += f"💰 **Credits:** {final_credits}\n"
+        message += f"⚡ **Total XP:** {final_xp}\n"
+        message += f"🔥 **Current Streak:** {final_streak}\n"
+        message += f"🏆 **Level:** {final_level}\n"
+        
+        # Add level progress
+        xp_for_next_level = (final_level * 100) - final_xp
+        if xp_for_next_level > 0:
+            message += f"📈 **Next Level:** {xp_for_next_level} XP away!\n"
+        else:
+            message += f"🌟 **Science Expert!** Keep exploring!\n"
+            
+        message += f"━━━━━━━━━━━━━━━━━━━━\n"
+        
+        if level_up_bonus:
+            message += f"\n{level_up_bonus}\n"
+
+        # Enhanced navigation buttons with gamification
         buttons = [
-            {"text": "➡️ Next Question", "callback_data": f"combined_answer_{subject}_next"}, # Placeholder for next question logic
-            {"text": "📚 Change Topic", "callback_data": f"subject_combined_{subject.lower()}"},
+            {"text": f"➡️ Next {subject} (+{points} XP)", "callback_data": f"combined_science_{subject.lower()}"},
+            {"text": "📚 Change Subject", "callback_data": "subject_ordinary_combined_science"},
+            {"text": "💰 Buy More Credits", "callback_data": "credit_store"},
             {"text": "🏠 Main Menu", "callback_data": "main_menu"}
         ]
 
         whatsapp_service.send_interactive_message(user_id, message, buttons)
 
         # Clear session
-        from database.session_db import clear_user_session
         clear_user_session(user_id)
 
     except Exception as e:
@@ -2627,7 +2895,7 @@ Secure verification ensures your payment is protected and credits are accurately
         # Store payment session in user session
         from database.session_db import save_user_session
         payment_session_data = {
-            'session_type': 'payment_flow',
+                'session_type': 'payment_flow',
             'step': 'awaiting_proof',
             'custom_data': json.dumps({
                 'package_id': package_id,
@@ -2655,7 +2923,7 @@ def handle_credit_store(user_id: str):
         
         # Send credit store
         whatsapp_service.send_interactive_message(user_id, message, buttons)
-        
+            
     except Exception as e:
         logger.error(f"Error handling credit store for {user_id}: {e}")
         whatsapp_service.send_message(user_id, "❌ Error loading credit store. Please try again.")
@@ -2735,10 +3003,11 @@ def handle_payment_help(user_id: str):
         whatsapp_service.send_message(user_id, "❌ Error loading payment help. Please try again.")
 
 def handle_payment_proof_submission(user_id: str, package_id: str, reference_code: str):
-    """Handle payment proof submission from user"""
+    """Handle payment proof submission from user - prompts for SMS text"""
     try:
         from services.payment_service import PaymentService
         from database.session_db import get_user_session, save_user_session
+        from database.external_db import get_user_registration
         
         payment_service = PaymentService()
         
@@ -2767,54 +3036,164 @@ def handle_payment_proof_submission(user_id: str, package_id: str, reference_cod
             whatsapp_service.send_message(user_id, "❌ Package not found. Please try again.")
             return
         
-        # Submit payment proof to payment service for admin review
-        result = payment_service.submit_payment_proof(user_id, package_id, reference_code, "Payment proof submitted")
+        # Get user registration for name
+        registration = get_user_registration(user_id)
+        user_name = registration['name'] if registration else "Student"
+        
+        # Update user session to awaiting proof
+        custom_data['awaiting_proof'] = True
+        user_session['step'] = 'awaiting_proof'
+        user_session['custom_data'] = json.dumps(custom_data)
+        save_user_session(user_id, user_session)
+        
+        # Send waiting message
+        waiting_message = f"""📝 **AWAITING YOUR PAYMENT PROOF**
+
+Hi {user_name}, I'm ready to receive your EcoCash confirmation SMS.
+
+📋 **Expected Format:**
+"Confirmed. You have sent ${package['price']:.2f} to +263785494594..."
+
+💡 **Tips:**
+• Copy the ENTIRE SMS from EcoCash
+• Include the transaction ID
+• Make sure the amount matches ${package['price']:.2f}
+
+📲 **Please paste your EcoCash confirmation SMS below:**"""
+        
+        whatsapp_service.send_message(user_id, waiting_message)
+        
+        # Log for monitoring
+        logger.info(f"Payment proof request sent to {user_id} for package {package_id}, reference {reference_code}")
+            
+    except Exception as e:
+        logger.error(f"Error handling payment proof submission for {user_id}: {e}")
+        whatsapp_service.send_message(user_id, "❌ Error processing payment proof. Please try again.")
+
+def handle_payment_proof_text(user_id: str, proof_text: str):
+    """Handle the actual payment proof text submission"""
+    try:
+        from services.payment_service import PaymentService
+        from database.session_db import get_user_session, clear_user_session
+        from database.external_db import get_user_registration
+        
+        payment_service = PaymentService()
+        
+        # Get user session
+        user_session = get_user_session(user_id)
+        if not user_session or user_session.get('session_type') != 'payment_flow':
+            return False
+        
+        # Get custom data
+        custom_data = user_session.get('custom_data', {})
+        if isinstance(custom_data, str):
+            try:
+                custom_data = json.loads(custom_data)
+            except:
+                custom_data = {}
+        
+        if not custom_data.get('awaiting_proof'):
+            return False
+        
+        package_id = custom_data.get('package_id')
+        reference_code = custom_data.get('reference_code')
+        
+        if not package_id or not reference_code:
+            whatsapp_service.send_message(user_id, "❌ Session data incomplete. Please start the payment process again.")
+            clear_user_session(user_id)
+            return True
+        
+        # Get package details
+        package = payment_service.get_package_by_id(package_id)
+        if not package:
+            whatsapp_service.send_message(user_id, "❌ Package not found. Please try again.")
+            clear_user_session(user_id)
+            return True
+        
+        # Get user name
+        registration = get_user_registration(user_id)
+        user_name = registration['name'] if registration else "Student"
+        
+        # Submit payment proof
+        result = payment_service.submit_payment_proof(user_id, package_id, reference_code, proof_text)
         
         if result['success']:
-            # Update user session status
-            custom_data['status'] = 'submitted_for_review'
-            custom_data['proof_submitted'] = True
-            custom_data['proof_timestamp'] = datetime.now().isoformat()
-            user_session['custom_data'] = json.dumps(custom_data)
-            user_session['step'] = 'proof_submitted'
-            save_user_session(user_id, user_session)
+            # Clear the session
+            clear_user_session(user_id)
             
+            # Send success message with tracking
             message = f"""⏳ **PAYMENT UNDER REVIEW**
 
 ✅ **Submission Successful!**
 
-📋 **Details:**
-💰 Package: {package['name']}
+Hi {user_name}, we've received your payment proof and it's now being verified.
+
+📋 **Your Payment Details:**
+💰 Package: {package['name']} ({package['credits']} credits)
 💳 Amount: ${package['price']:.2f}
 🔢 Reference: {reference_code}
-⏰ Submitted: {datetime.now().strftime('%Y-%m-%d %H:%M')}
+⏰ Submitted: {datetime.now().strftime('%H:%M on %d/%m/%Y')}
 
-🕐 **Processing Time**: Usually 5-30 minutes
-📧 **Status**: Payment verification in progress...
+🕐 **What's Next?**
+• ⏱️ Verification: 5-30 minutes
+• 📱 Notification: You'll get a WhatsApp message
+• 💳 Credits: Added instantly upon approval
+• 🎯 Start Learning: Use credits immediately
 
-💡 **What happens next?**
-• Our team verifies your EcoCash transaction
-• Once confirmed, credits are instantly added
-• You'll receive a confirmation message
+📊 **Track Your Payment:**
+Your payment is #{reference_code[-4:]} in our queue.
 
-🔔 **You'll be notified when approved!**
+💡 **Pro Tip:** You can continue using your existing credits while we verify your payment.
 
-🏠 **CONTINUE USING APP**
-❓ **SUPPORT**"""
+🏠 **MAIN MENU**
+📚 **CONTINUE STUDYING**
+💬 **CONTACT SUPPORT**"""
             
             buttons = [
-                {"text": "🏠 CONTINUE USING APP", "callback_data": "back_to_menu"},
-                {"text": "❓ SUPPORT", "callback_data": "payment_support"}
+                {"text": "🏠 MAIN MENU", "callback_data": "back_to_menu"},
+                {"text": "📚 CONTINUE STUDYING", "callback_data": "start_quiz"},
+                {"text": "💬 CONTACT SUPPORT", "callback_data": "contact_support"}
             ]
             
             whatsapp_service.send_interactive_message(user_id, message, buttons)
             
-            # Send notification to admin (in production, this would be a proper admin notification)
-            logger.info(f"Payment proof submitted by {user_id} for package {package_id}, reference {reference_code}")
+            # Log successful submission
+            logger.info(f"Payment proof successfully submitted by {user_id} ({user_name}) for {package['name']} - ${package['price']}")
+            
+            # Notify admin dashboard (webhook for real-time updates)
+            notify_admin_new_payment(user_id, package_id, reference_code, package['price'])
+            
+            return True
             
         else:
-            whatsapp_service.send_message(user_id, f"❌ Error submitting payment proof: {result['message']}")
+            whatsapp_service.send_message(user_id, f"❌ Error submitting payment proof: {result['message']}\n\nPlease try again or contact support.")
+            return True
+            
+    except Exception as e:
+        logger.error(f"Error handling payment proof text for {user_id}: {e}")
+        whatsapp_service.send_message(user_id, "❌ Error processing payment proof. Please contact support.")
+        return True
+
+def notify_admin_new_payment(user_id: str, package_id: str, reference_code: str, amount: float):
+    """Send notification to admin dashboard about new payment"""
+    try:
+        # In production, this would send a webhook or real-time notification
+        # For now, we'll log it prominently
+        logger.info(f"""
+=== NEW PAYMENT SUBMISSION ===
+User ID: {user_id}
+Package: {package_id}
+Amount: ${amount}
+Reference: {reference_code}
+Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+Status: Awaiting Admin Review
+==============================
+        """)
+        
+        # You could also send a notification to admin WhatsApp numbers
+        # admin_numbers = ["admin_whatsapp_id_1", "admin_whatsapp_id_2"]
+        # for admin_id in admin_numbers:
+        #     whatsapp_service.send_message(admin_id, f"💰 New payment submission: {reference_code} - ${amount}")
         
     except Exception as e:
-        logger.error(f"Error handling payment proof submission for {user_id}: {e}")
-        whatsapp_service.send_message(user_id, "❌ Error processing payment proof. Please try again.")
+        logger.error(f"Error notifying admin about new payment: {e}")

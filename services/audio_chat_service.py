@@ -405,26 +405,50 @@ class AudioChatService:
             return "I'm sorry, I encountered an error processing your request."
 
     def handle_audio_chat_command(self, user_id: str):
-        """Handle audio chat command from WhatsApp"""
+        """Handle audio chat command from WhatsApp with gamification"""
         try:
             from services.whatsapp_service import WhatsAppService
+            from database.external_db import get_user_registration, get_user_credits, get_user_stats
+            
             whatsapp_service = WhatsAppService()
             
-            welcome_message = """🎧 **Audio Chat Mode Activated** 
+            # Get user info and stats for gamified display
+            registration = get_user_registration(user_id)
+            user_name = registration['name'] if registration else "Student"
+            current_credits = get_user_credits(user_id)
+            user_stats = get_user_stats(user_id) or {'level': 1, 'xp_points': 0, 'streak': 0}
+            current_level = user_stats.get('level', 1)
+            current_xp = user_stats.get('xp_points', 0)
+            current_streak = user_stats.get('streak', 0)
 
-Welcome to NerdX Audio Chat! I can help you with:
+            # Calculate XP needed for next level
+            xp_for_next_level = (current_level * 100) - current_xp
+            if xp_for_next_level <= 0:
+                xp_for_next_level = 100  # Base XP for next level
+            
+            welcome_message = f"""🎧 *Hey {user_name}! Welcome to AudioMentor* 🎧
 
-🗣️ **Text to Speech**: Send me any question and get an audio response
-📸 **Image Analysis**: Send images of problems or notes for audio explanations  
-📄 **PDF Reading**: Upload PDFs for audio summaries
-🎵 **Voice Messages**: Send voice messages for conversational learning
+🎵 *{user_name}, I'm your personal AI Audio Assistant!*
 
-Just send me your question or content and I'll respond with helpful audio!
+📊 **Your Audio Learning Journey:**
+💳 Credits: **{current_credits}**
+⭐ Level: **{current_level}** (XP: {current_xp})
+🔥 Streak: **{current_streak} days**
+🎯 Next Level: **{xp_for_next_level} XP needed**
 
-⏱️ *Audio responses are limited to 45 seconds maximum*
-💡 *Send shorter questions for better audio quality*
+I'm here to help you learn, {user_name}, with:
 
-Choose your preferred voice and start chatting!"""
+🗣️ **Text to Speech:** Get audio explanations (15 XP)
+📸 **Image Analysis:** Audio explanations of problems (20 XP)
+📄 **PDF Reading:** Audio summaries of documents (25 XP)
+🎵 **Voice Messages:** Conversational audio learning (15 XP)
+🔥 **Daily Streaks:** Maintain consistent learning
+
+💰 **Cost:** 10 credits per audio response
+⏱️ **Audio Duration:** Limited to 45 seconds maximum
+💡 **Tip:** Send shorter questions for better audio quality
+
+🚀 *{user_name}, choose your voice and start earning XP:*"""
 
             # Send voice preference buttons
             buttons = [
@@ -444,26 +468,47 @@ Choose your preferred voice and start chatting!"""
             return "Error starting audio chat mode. Please try again."
 
     def handle_voice_selection(self, user_id: str, voice_type: str):
-        """Handle voice type selection"""
+        """Handle voice type selection with gamified response"""
         try:
             from services.whatsapp_service import WhatsAppService
             from utils.session_manager import session_manager
+            from database.external_db import get_user_registration, get_user_credits, get_user_stats
             
             whatsapp_service = WhatsAppService()
             
             # Update session with voice preference
             session_manager.save_audio_chat_session(user_id, 'audio_chat', voice_type)
             
+            # Get user info for personalized message
+            registration = get_user_registration(user_id)
+            user_name = registration['name'] if registration else "Student"
+            current_credits = get_user_credits(user_id)
+            user_stats = get_user_stats(user_id) or {'level': 1, 'xp_points': 0, 'streak': 0}
+            current_level = user_stats.get('level', 1)
+            current_xp = user_stats.get('xp_points', 0)
+            current_streak = user_stats.get('streak', 0)
+            
             voice_name = "Female" if voice_type == 'female' else "Male"
-            response_message = f"✅ **{voice_name} voice selected!**\n\n"
-            response_message += "Now send me:\n"
-            response_message += "• Any question for audio explanation\n"
-            response_message += "• Images of problems or notes\n"
-            response_message += "• PDF documents to summarize\n"
-            response_message += "• Voice messages to chat\n\n"
-            response_message += "🎵 I'll respond with helpful audio explanations!\n"
-            response_message += "⏱️ Audio responses limited to 45 seconds\n\n"
-            response_message += "Type 'end audio' to exit audio chat mode."
+            response_message = f"""✅ **{voice_name} voice selected, {user_name}!** ✅
+
+🎧 **Ready for Audio Learning!**
+
+📊 **Current Progress:**
+💳 Credits: {current_credits}
+⭐ Level: {current_level} (XP: {current_xp})
+🔥 Streak: {current_streak} days
+
+🎵 **Send me any of these for audio responses:**
+• Any question for audio explanation (15 XP)
+• Images of problems or notes (20 XP) 
+• PDF documents to summarize (25 XP)
+• Voice messages to chat (15 XP)
+
+💰 **Cost:** 10 credits per audio response
+⏱️ **Duration:** Up to 45 seconds of audio
+🎯 **Earn XP** and level up with each interaction!
+
+Type 'end audio' to exit audio chat mode."""
             
             # Add end audio chat button
             buttons = [
@@ -476,11 +521,12 @@ Choose your preferred voice and start chatting!"""
             logger.error(f"Error handling voice selection: {e}")
 
     def handle_audio_input(self, user_id: str, message_text: str = None, file_path: str = None, file_type: str = 'text'):
-        """Handle various types of input in audio chat mode"""
+        """Handle various types of input in audio chat mode with credit system and gamification"""
         try:
             from services.whatsapp_service import WhatsAppService
             from utils.session_manager import session_manager
-            from database.external_db import get_user_registration
+            from database.external_db import get_user_registration, get_user_stats, add_xp, update_streak, update_user_stats
+            from services.advanced_credit_service import advanced_credit_service
             
             whatsapp_service = WhatsAppService()
             
@@ -507,23 +553,65 @@ Choose your preferred voice and start chatting!"""
                 whatsapp_service.send_message(user_id, "⏳ Another audio is being generated, please wait a moment...")
                 return
             
+            # Check and deduct credits using advanced credit service
+            credit_result = advanced_credit_service.check_and_deduct_credits(
+                user_id, 
+                'audio_feature',  # 10 credits as per config
+                None
+            )
+            
+            if not credit_result['success']:
+                if credit_result.get('insufficient'):
+                    # Show insufficient credits message
+                    current_credits = credit_result['current_credits']
+                    required_credits = credit_result['required_credits']
+                    shortage = credit_result['shortage']
+                    
+                    insufficient_msg = f"""💰 **Need More Credits for Audio!** 💰
+
+🎧 **Audio Chat Feature**
+
+💳 **Credit Status:**
+• Current Credits: {current_credits}
+• Required Credits: {required_credits}
+• Need: {shortage} more credits
+
+💎 **Get More Credits:**"""
+                    
+                    buttons = [
+                        {"text": "💰 Buy Credits", "callback_data": "credit_store"},
+                        {"text": "👥 Invite Friends (+5 each)", "callback_data": "share_to_friend"},
+                        {"text": "🔙 Back to Menu", "callback_data": "main_menu"}
+                    ]
+                    
+                    whatsapp_service.send_interactive_message(user_id, insufficient_msg, buttons)
+                    return
+                else:
+                    whatsapp_service.send_message(user_id, "❌ Credit processing error. Please try again.")
+                return
+            
             # Show processing message
             whatsapp_service.send_message(user_id, "🎵 Generating your audio response...")
             
             content = ""
             ai_response = ""
             
+            # Determine XP points based on file type
             if file_type == 'image' and file_path:
                 content = self.process_image(file_path)
                 ai_response = self.generate_ai_response(content, 'image', message_text or "", user_name)
+                xp_points = 20  # Image analysis XP
             elif file_type == 'pdf' and file_path:
                 content = self.process_pdf(file_path)
                 ai_response = self.generate_ai_response(content, 'pdf', message_text or "", user_name)
+                xp_points = 25  # PDF reading XP
             elif file_type == 'audio' and file_path:
                 content = self.process_audio(file_path)
                 ai_response = self.generate_ai_response(content, 'audio', "", user_name)
+                xp_points = 15  # Voice message XP
             else:
                 ai_response = self.generate_ai_response(message_text or "", 'text', "", user_name)
+                xp_points = 15  # Text to speech XP
             
             # Generate audio response with 45-second limit
             clean_response = self.clean_text_for_audio(ai_response, max_duration_seconds=45)
@@ -532,21 +620,45 @@ Choose your preferred voice and start chatting!"""
             if audio_path and os.path.exists(audio_path):
                 logger.info(f"Audio file generated at: {audio_path}, size: {os.path.getsize(audio_path)} bytes")
                 
+                # Award XP and update stats for successful audio generation
+                current_stats = get_user_stats(user_id) or {}
+                current_xp = current_stats.get('xp_points', 0)
+                current_level = current_stats.get('level', 1)
+                current_streak = current_stats.get('streak', 0)
+                
+                # Award XP and update streak
+                add_xp(user_id, xp_points, 'audio_feature')
+                update_streak(user_id, True)
+                
+                # Check for level up
+                new_xp = current_xp + xp_points
+                new_level = max(1, (new_xp // 100) + 1)
+                new_streak = current_streak + 1
+                
+                # Update total attempts and audio completions
+                update_user_stats(user_id, {
+                    'total_attempts': current_stats.get('total_attempts', 0) + 1,
+                    'audio_completed': current_stats.get('audio_completed', 0) + 1,
+                    'xp_points': new_xp,
+                    'level': new_level,
+                    'streak': new_streak
+                })
+                
                 # Send ONLY audio file via WhatsApp (no text)
                 try:
                     success = whatsapp_service.send_audio_message(user_id, audio_path)
                     
                     if success:
                         logger.info(f"Audio successfully sent to {user_id}")
-                        # Send buttons after audio response
-                        self.send_audio_response_buttons(user_id)
+                        # Send gamified buttons after audio response
+                        self.send_gamified_audio_response_buttons(user_id, xp_points, new_level > current_level, current_level, new_level)
                     else:
                         logger.error(f"WhatsApp audio sending failed for {user_id}")
                         # If audio sending fails, send the text response as fallback
                         fallback_message = f"🎵 **Audio Response** (Text fallback):\n\n{clean_response}\n\n"
                         fallback_message += "❌ *Audio delivery failed - showing text version*"
                         whatsapp_service.send_message(user_id, fallback_message)
-                        self.send_audio_response_buttons(user_id)
+                        self.send_gamified_audio_response_buttons(user_id, xp_points, new_level > current_level, current_level, new_level)
                         
                 except Exception as e:
                     logger.error(f"Exception during audio sending for {user_id}: {e}")
@@ -577,20 +689,46 @@ Choose your preferred voice and start chatting!"""
             whatsapp_service.send_message(user_id, "❌ Error processing your audio request. Please try again or type 'end audio' to exit audio chat.")
 
     def end_audio_chat(self, user_id: str):
-        """End audio chat session and return to main menu"""
+        """End audio chat session and return to main menu with gamified summary"""
         try:
             from services.whatsapp_service import WhatsAppService
             from utils.session_manager import session_manager
+            from database.external_db import get_user_registration, get_user_stats, get_user_credits
             
             whatsapp_service = WhatsAppService()
+            
+            # Get user info for personalized goodbye
+            registration = get_user_registration(user_id)
+            user_name = registration['name'] if registration else "Student"
+            
+            # Get final stats
+            final_stats = get_user_stats(user_id) or {}
+            final_credits = get_user_credits(user_id)
+            final_xp = final_stats.get('xp_points', 0)
+            final_streak = final_stats.get('streak', 0)
+            final_level = final_stats.get('level', 1)
+            audio_completed = final_stats.get('audio_completed', 0)
             
             # Clear audio chat session
             session_manager.clear_audio_chat_session(user_id)
             
-            # Send confirmation message
-            exit_message = "✅ **Audio Chat Ended**\n\n"
-            exit_message += "Thanks for using NerdX Audio Chat!\n"
-            exit_message += "You've returned to the main menu."
+            # Send gamified exit message
+            exit_message = f"""✅ **Audio Chat Session Complete!** ✅
+
+👋 Thanks for learning with AudioMentor, {user_name}!
+
+📊 **Your Final Audio Stats:**
+💳 Credits: {final_credits}
+⭐ Level: {final_level} (XP: {final_xp})
+🔥 Streak: {final_streak} days
+🎧 Audio Sessions Completed: {audio_completed}
+
+🎯 **Keep Learning:** Use audio chat again to:
+• Earn more XP and level up
+• Maintain your learning streak
+• Get instant audio explanations
+
+🚀 Ready to continue your learning journey?"""
             
             whatsapp_service.send_message(user_id, exit_message)
             
@@ -605,7 +743,7 @@ Choose your preferred voice and start chatting!"""
             whatsapp_service.send_message(user_id, "Audio chat ended. Type 'menu' to return to main menu.")
 
     def send_audio_response_buttons(self, user_id: str):
-        """Send buttons after audio response"""
+        """Send buttons after audio response (legacy method)"""
         try:
             from services.whatsapp_service import WhatsAppService
             
@@ -622,3 +760,54 @@ Choose your preferred voice and start chatting!"""
             
         except Exception as e:
             logger.error(f"Error sending audio response buttons: {e}")
+
+    def send_gamified_audio_response_buttons(self, user_id: str, xp_earned: int, leveled_up: bool, old_level: int, new_level: int):
+        """Send gamified buttons after audio response with XP tracking"""
+        try:
+            from services.whatsapp_service import WhatsAppService
+            from database.external_db import get_user_stats, get_user_credits
+            
+            whatsapp_service = WhatsAppService()
+            
+            # Get updated user stats
+            updated_stats = get_user_stats(user_id) or {}
+            final_credits = get_user_credits(user_id)
+            final_xp = updated_stats.get('xp_points', 0)
+            final_streak = updated_stats.get('streak', 0)
+            final_level = updated_stats.get('level', 1)
+            
+            # Calculate XP for next level
+            xp_for_next_level = (final_level * 100) - final_xp
+            if xp_for_next_level <= 0:
+                xp_for_next_level = 100
+            
+            # Build gamified message
+            level_up_bonus = ""
+            if leveled_up:
+                level_up_bonus = f"\n🎉 **LEVEL UP!** Level {old_level} → Level {new_level}!"
+            
+            message = f"""🎧 **Audio Response Complete!** 🎧
+
+✨ **XP Earned:** +{xp_earned} XP
+📊 **Your Progress:**
+💳 Credits: {final_credits}
+⭐ Level: {final_level} (XP: {final_xp})
+🔥 Streak: {final_streak} days
+🎯 Next Level: {xp_for_next_level} XP needed
+
+{level_up_bonus}
+
+🎵 Ready for your next audio learning session?"""
+            
+            # Send buttons for user to choose next action
+            buttons = [
+                {'id': 'continue_audio_chat', 'title': '🎵 Ask Another Question'},
+                {'id': 'end_audio_chat', 'title': '❌ End Audio Chat'}
+            ]
+            
+            whatsapp_service.send_interactive_message(user_id, message, buttons)
+            
+        except Exception as e:
+            logger.error(f"Error sending gamified audio response buttons: {e}")
+            # Fallback to regular buttons
+            self.send_audio_response_buttons(user_id)

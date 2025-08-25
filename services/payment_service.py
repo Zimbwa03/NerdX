@@ -446,7 +446,7 @@ class PaymentService:
             ]
             
             whatsapp_service.send_interactive_message(user_id, message, buttons)
-            
+                
         except Exception as e:
             logger.error(f"Error sending payment rejection notification: {e}")
     

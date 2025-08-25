@@ -74,6 +74,51 @@ class ExamMathematicsHandler:
     def handle_next_question(self, user_id: str):
         """Load the next question based on 2:1 ratio (2 database : 1 AI)"""
         try:
+            # Check and deduct credits for exam question
+            from services.advanced_credit_service import advanced_credit_service
+            
+            credit_result = advanced_credit_service.check_and_deduct_credits(
+                user_id, 
+                'math_exam',  # 2 credits as per config
+                None
+            )
+            
+            if not credit_result['success']:
+                if credit_result.get('insufficient'):
+                    # Show insufficient credits message with gamified elements
+                    current_credits = credit_result['current_credits']
+                    required_credits = credit_result['required_credits']
+                    shortage = credit_result['shortage']
+                    
+                    insufficient_msg = f"""💰 **Need More Credits for Exam!** 💰
+
+🎯 **Math Exam Practice**
+💳 **Credit Status:**
+• Current Credits: {current_credits}
+• Required Credits: {required_credits}
+• Need: {shortage} more credits
+
+🎮 **Exam Mode Benefits:**
+• Past paper questions with solutions
+• AI-generated practice questions  
+• XP and level progression
+• Streak building opportunities
+
+💎 **Get More Credits:**"""
+                    
+                    buttons = [
+                        {"text": "💰 Buy Credits", "callback_data": "credit_store"},
+                        {"text": "👥 Invite Friends (+5 each)", "callback_data": "share_to_friend"},
+                        {"text": "📚 Free Topics", "callback_data": "mathematics_mcq"},
+                        {"text": "🏠 Main Menu", "callback_data": "main_menu"}
+                    ]
+                    
+                    self.whatsapp_service.send_interactive_message(user_id, insufficient_msg, buttons)
+                    return
+                else:
+                    self.whatsapp_service.send_message(user_id, credit_result['message'])
+                    return
+            
             # Get user info
             registration = get_user_registration(user_id)
             user_name = registration['name'] if registration else "Student"
@@ -94,8 +139,9 @@ class ExamMathematicsHandler:
             should_generate_ai = (question_count % 3 == 0)
             question_type = 'ai' if should_generate_ai else 'database'
             
-            logger.info(f"Question {question_count} for {user_id}: type={question_type} {'(DIVISIBLE BY 3)' if should_generate_ai else '(DATABASE)'}")
-            logger.info(f"Session stats - DB questions: {db_questions}, AI questions: {ai_questions}")
+            logger.info(f"🎯 Question {question_count} for {user_id}: type={question_type} {'(DIVISIBLE BY 3 - AI GENERATION)' if should_generate_ai else '(DATABASE)'}")
+            logger.info(f"📊 Session stats - DB questions: {db_questions}, AI questions: {ai_questions}")
+            logger.info(f"🔄 Question count modulo 3: {question_count % 3} (AI trigger when = 0)")
             
             # Update session with question count first
             session_data['question_count'] = question_count
@@ -218,19 +264,31 @@ class ExamMathematicsHandler:
                     self.whatsapp_service.send_message(user_id, "❌ AI service not available. Please try again.")
                     return
             
-            # Generate question using AI with longer timeout
+            # Generate question using AI with enhanced error handling
             logger.info(f"🤖 Attempting AI generation for {user_id}: {topic}/{difficulty}")
-            question_data = self.question_generator.generate_question('Mathematics', topic, difficulty)
             
-            if not question_data:
-                logger.error(f"AI generation failed for {user_id}: {topic}/{difficulty} - Using fallback")
+            try:
+                question_data = self.question_generator.generate_question('Mathematics', topic, difficulty)
+                
+                if not question_data:
+                    logger.error(f"AI generation returned None for {user_id}: {topic}/{difficulty}")
+                    if fallback_to_db:
+                        self.whatsapp_service.send_message(user_id, "⚠️ AI generation failed. Loading database question instead...")
+                        # Don't increment AI counter on failure, try database instead
+                        self._load_database_question(user_id, user_name, question_count)
+                        return
+                    else:
+                        self.whatsapp_service.send_message(user_id, "❌ Error generating AI question. Please try again.")
+                        return
+            
+            except Exception as ai_error:
+                logger.error(f"Exception during AI generation for {user_id}: {ai_error}")
                 if fallback_to_db:
-                    self.whatsapp_service.send_message(user_id, "⚠️ AI generation failed. Loading database question instead...")
-                    # Don't increment AI counter on failure, try database instead
+                    self.whatsapp_service.send_message(user_id, "⚠️ AI service temporarily unavailable. Loading database question instead...")
                     self._load_database_question(user_id, user_name, question_count)
                     return
                 else:
-                    self.whatsapp_service.send_message(user_id, "❌ Error generating AI question. Please try again.")
+                    self.whatsapp_service.send_message(user_id, "❌ AI question generation failed. Please try again.")
                     return
             
             logger.info(f"✅ Successfully generated AI question for {user_id}: {topic}/{difficulty}")

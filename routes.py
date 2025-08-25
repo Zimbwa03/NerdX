@@ -4,6 +4,7 @@ from app import app
 from api.webhook import webhook_bp
 from api.dashboard import dashboard_bp
 from api.admin import admin_bp
+from api.auth import auth_bp
 
 logger = logging.getLogger(__name__)
 
@@ -11,6 +12,7 @@ logger = logging.getLogger(__name__)
 app.register_blueprint(webhook_bp, url_prefix='/webhook')
 app.register_blueprint(dashboard_bp, url_prefix='')
 app.register_blueprint(admin_bp, url_prefix='/api/admin')
+app.register_blueprint(auth_bp, url_prefix='')
 
 # Add route to serve graph images for WhatsApp access
 @app.route('/static/graphs/<filename>')
@@ -30,9 +32,16 @@ def serve_pdf_file(filename):
 
 @app.route('/')
 def index():
-    """Redirect to dashboard"""
+    """Redirect to login or dashboard based on authentication"""
     from flask import redirect, url_for
-    return redirect('/dashboard')
+    from services.admin_auth_service import admin_auth_service
+    
+    # Check if user is authenticated
+    admin_user = admin_auth_service.verify_session()
+    if admin_user:
+        return redirect('/dashboard')
+    else:
+        return redirect('/login')
 
 @app.route('/health')
 def health_check():
