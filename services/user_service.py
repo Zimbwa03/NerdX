@@ -208,7 +208,7 @@ class UserService:
             }
     
     def _process_referral_step(self, whatsapp_id: str, referral_input: str, session: Dict) -> Dict:
-        """Process referral code input step"""
+        """Process referral code input step using existing nerdx_id format"""
         try:
             referral_code = referral_input.strip().upper()
             
@@ -216,24 +216,31 @@ class UserService:
                 # Complete registration without referral
                 return self._complete_registration(whatsapp_id, session, None)
             
-            # Validate referral code format (8-character alphanumeric)
-            if len(referral_code) != 8 or not referral_code.isalnum():
+            # Validate referral code format (existing nerdx_id format: N + 5 characters)
+            if len(referral_code) != 6 or not referral_code.startswith('N') or not referral_code[1:].isalnum():
                 return {
                     'success': False,
                     'step': 'referral_code',
-                    'message': 'Invalid referral code format. It should be 8 characters (letters and numbers). Enter it again or type "SKIP":'
+                    'message': 'Invalid referral code format. It should be 6 characters starting with "N" (e.g., NABC12). Enter it again or type "SKIP":'
                 }
             
-            # Check if referral code exists using referral service
-            from services.referral_service import ReferralService
-            referral_service = ReferralService()
-            referrer_id = referral_service.validate_referral_code(referral_code)
+            # Check if referral code exists using existing system
+            from database.external_db import get_user_by_nerdx_id
+            referrer_user = get_user_by_nerdx_id(referral_code)
             
-            if not referrer_id:
+            if not referrer_user:
                 return {
                     'success': False,
                     'step': 'referral_code',
                     'message': 'Referral code not found. Please check and try again, or type "SKIP":'
+                }
+            
+            # Prevent self-referral (shouldn't happen but safety check)
+            if referrer_user.get('chat_id') == whatsapp_id:
+                return {
+                    'success': False,
+                    'step': 'referral_code',
+                    'message': 'You cannot refer yourself. Please enter a different code or type "SKIP":'
                 }
             
             # Complete registration with referral
@@ -250,39 +257,32 @@ class UserService:
     def _complete_registration(self, whatsapp_id: str, session: Dict, referral_code: Optional[str]) -> Dict:
         """Complete the user registration"""
         try:
-            # Generate unique NerdX ID
-            nerdx_id = self._generate_nerdx_id()
+            # Use existing create_user_registration function which already generates nerdx_id
+            registration_result = create_user_registration(
+                chat_id=whatsapp_id,
+                name=session['name'],
+                surname=session['surname'],
+                date_of_birth=session['date_of_birth'],
+                referred_by_nerdx_id=referral_code  # Use existing parameter name
+            )
             
-            # Create user registration
-            user_data = {
-                'whatsapp_id': whatsapp_id,
-                'nerdx_id': nerdx_id,
-                'name': session['name'],
-                'surname': session['surname'],
-                'date_of_birth': session['date_of_birth'],
-                'referred_by': referral_code
-            }
-            
-            success = create_user_registration(user_data)
+            success = registration_result is not None
+            nerdx_id = registration_result.get('nerdx_id') if registration_result else None
             
             if success:
                 # Award registration bonus credits using advanced credit service
                 advanced_credit_service.award_registration_credits(whatsapp_id)
                 
-                # Handle referral if applicable
+                # Handle referral if applicable using existing system
                 if referral_code:
-                    # Find the referrer by referral code
-                    from services.referral_service import ReferralService
-                    referral_service = ReferralService()
-                    referrer_id = referral_service.validate_referral_code(referral_code)
+                    # Use existing add_referral_credits function
+                    from database.external_db import add_referral_credits
+                    success = add_referral_credits(referral_code, whatsapp_id)
                     
-                    if referrer_id:
-                        # Award referral credits to referrer
-                        new_user_name = f"{session['name']} {session['surname']}"
-                        advanced_credit_service.award_referral_credits(referrer_id, new_user_name)
-                        
-                        # Award referral bonus to new user
-                        add_credits(whatsapp_id, 5, 'referral_bonus')
+                    if success:
+                        # Award referral bonus to new user too
+                        add_credits(whatsapp_id, Config.REFERRAL_BONUS, f'Referral signup bonus via {referral_code}')
+                        logger.info(f"Successfully processed referral: {referral_code} -> {whatsapp_id}")
                 
                 # Clear registration session
                 clear_registration_session(whatsapp_id)
@@ -324,18 +324,7 @@ class UserService:
                 'message': 'Error completing registration'
             }
     
-    def _generate_nerdx_id(self) -> str:
-        """Generate a unique NerdX ID"""
-        while True:
-            # Generate 4 random digits
-            import random
-            digits = ''.join([str(random.randint(0, 9)) for _ in range(4)])
-            nerdx_id = f"NERDX{digits}"
-            
-            # Check if it already exists
-            existing_user = get_user_by_nerdx_id(nerdx_id)
-            if not existing_user:
-                return nerdx_id
+    # Note: NerdX ID generation is now handled by external_db.create_user_registration()
     
     def get_user_stats_summary(self, whatsapp_id: str) -> Dict:
         """Get comprehensive user statistics"""

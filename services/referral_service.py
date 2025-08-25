@@ -37,68 +37,30 @@ class ReferralService:
         }
     
     def generate_referral_code(self, user_id: str) -> Optional[str]:
-        """Generate a unique referral code for user with enhanced fallback"""
+        """Get user's existing nerdx_id from registration table as referral code"""
         try:
-            # First attempt: Try database approach
-            session = SessionLocal()
-            try:
-                from models import ReferralCode
-                
-                # Check if user already has a referral code
-                existing_code = session.query(ReferralCode).filter_by(user_id=user_id).first()
-                if existing_code:
-                    logger.info(f"Retrieved existing referral code {existing_code.referral_code} for user {user_id}")
-                    return existing_code.referral_code
-                
-                # Generate new unique code
-                for attempt in range(10):  # Try 10 times to generate unique code
-                    code = self._generate_code(user_id)
-                    
-                    # Check if code is unique
-                    if not session.query(ReferralCode).filter_by(referral_code=code).first():
-                        # Code is unique, save it
-                        new_code = ReferralCode(user_id=user_id, referral_code=code)
-                        session.add(new_code)
-                        session.commit()
-                        
-                        logger.info(f"Generated and saved referral code {code} for user {user_id}")
-                        return code
-                    else:
-                        logger.debug(f"Code {code} already exists, retrying (attempt {attempt + 1})")
-                
-                logger.warning("Could not generate unique referral code after 10 attempts, using fallback")
-                # If we can't generate unique code, use fallback
+            # Use the existing nerdx_id from user_registration table
+            from database.external_db import get_user_registration
+            
+            # Get user registration data
+            registration = get_user_registration(user_id)
+            if registration and registration.get('nerdx_id'):
+                nerdx_id = registration['nerdx_id']
+                logger.info(f"Retrieved existing nerdx_id {nerdx_id} as referral code for user {user_id}")
+                return nerdx_id
+            else:
+                logger.warning(f"No nerdx_id found for user {user_id} in registration table")
+                # Fallback: generate temporary code if no registration found
                 fallback_code = self._generate_fallback_code(user_id)
+                logger.info(f"Generated fallback referral code {fallback_code} for unregistered user {user_id}")
+                return fallback_code
                 
-                # Try to save fallback code
-                try:
-                    new_code = ReferralCode(user_id=user_id, referral_code=fallback_code)
-                    session.add(new_code)
-                    session.commit()
-                    logger.info(f"Saved fallback referral code {fallback_code} for user {user_id}")
-                    return fallback_code
-                except Exception as save_error:
-                    logger.error(f"Could not save fallback code: {save_error}")
-                    session.rollback()
-                    return fallback_code  # Return it anyway, even if not saved
-                
-            except Exception as db_error:
-                logger.error(f"Database error generating referral code: {db_error}")
-                session.rollback()
-                # Fall through to database-free approach
-                
-            finally:
-                session.close()
-                
-        except Exception as session_error:
-            logger.error(f"Session error generating referral code: {session_error}")
-            # Continue to database-free approach
-        
-        # Fallback approach: Generate code without database
-        logger.warning(f"Using database-free fallback for user {user_id}")
-        fallback_code = self._generate_fallback_code(user_id)
-        logger.info(f"Generated database-free referral code {fallback_code} for user {user_id}")
-        return fallback_code
+        except Exception as e:
+            logger.error(f"Error getting nerdx_id for user {user_id}: {e}")
+            # Fallback approach: Generate code without database
+            fallback_code = self._generate_fallback_code(user_id)
+            logger.info(f"Generated fallback referral code {fallback_code} due to error")
+            return fallback_code
     
     def _generate_code(self, user_id: str = None) -> str:
         """Generate a random 8-character referral code"""
@@ -143,71 +105,73 @@ class ReferralService:
                 return "NERDX123"
     
     def validate_referral_code(self, referral_code: str) -> Optional[str]:
-        """Validate referral code and return referrer user_id"""
-        session = SessionLocal()
+        """Validate referral code (nerdx_id) and return referrer user_id"""
         try:
-            from models import ReferralCode
-            referral_record = session.query(ReferralCode).filter_by(referral_code=referral_code.upper()).first()
-            return referral_record.user_id if referral_record else None
+            # Use existing nerdx_id validation from external_db
+            from database.external_db import get_user_by_nerdx_id
+            
+            # Look up user by nerdx_id (which is the referral code)
+            user = get_user_by_nerdx_id(referral_code.upper())
+            if user and user.get('chat_id'):
+                logger.info(f"Valid referral code {referral_code} found for user {user['chat_id']}")
+                return user['chat_id']  # Return the chat_id as user_id
+            else:
+                logger.warning(f"Invalid referral code: {referral_code}")
+                return None
                 
         except Exception as e:
-            logger.error(f"Error validating referral code: {e}")
+            logger.error(f"Error validating referral code {referral_code}: {e}")
             return None
-        finally:
-            session.close()
     
     def process_referral(self, referrer_id: str, referee_id: str, referral_code: str) -> bool:
-        """Process a referral and award bonuses"""
-        session = SessionLocal()
+        """Process a referral using existing nerdx_id system"""
         try:
-            from models import Referral, ReferralStats
-            
             # Prevent self-referral
             if referrer_id == referee_id:
                 logger.warning(f"Self-referral attempt blocked: {referee_id}")
                 return False
             
-            # Check if referee was already referred
-            existing_referral = session.query(Referral).filter_by(referee_id=referee_id).first()
-            if existing_referral:
-                logger.warning(f"User {referee_id} already has been referred")
+            # Use existing referral credit system
+            from database.external_db import add_referral_credits, add_credits, get_user_registration
+            
+            # Get referrer's nerdx_id to use existing system
+            referrer_registration = get_user_registration(referrer_id)
+            if not referrer_registration:
+                logger.error(f"Referrer {referrer_id} not found in registration")
+                return False
+                
+            referrer_nerdx_id = referrer_registration.get('nerdx_id')
+            if not referrer_nerdx_id:
+                logger.error(f"No nerdx_id found for referrer {referrer_id}")
                 return False
             
-            # Record the referral
-            new_referral = Referral(
-                referrer_id=referrer_id,
-                referee_id=referee_id,
-                referral_code=referral_code
-            )
-            session.add(new_referral)
+            # Check if the referral_code matches the referrer's nerdx_id
+            if referral_code.upper() != referrer_nerdx_id.upper():
+                logger.error(f"Referral code {referral_code} doesn't match referrer's nerdx_id {referrer_nerdx_id}")
+                return False
             
-            # Update or create referral stats
-            stats = session.query(ReferralStats).filter_by(user_id=referrer_id).first()
-            if stats:
-                stats.total_referrals += 1
-                stats.successful_referrals += 1
-                stats.total_bonus_earned += self.referral_bonus['referrer']
-                stats.last_referral_date = datetime.utcnow()
+            # Check if referee was already referred (check if they have referred_by_nerdx_id)
+            referee_registration = get_user_registration(referee_id)
+            if referee_registration and referee_registration.get('referred_by_nerdx_id'):
+                logger.warning(f"User {referee_id} was already referred by {referee_registration.get('referred_by_nerdx_id')}")
+                return False
+            
+            # Use existing add_referral_credits function
+            # This function already handles credit awarding to referrer
+            success = add_referral_credits(referrer_nerdx_id, referee_id)
+            
+            if success:
+                # Also award bonus credits to the new user (referee)
+                add_credits(referee_id, self.referral_bonus['referee'], f"Referral signup bonus via {referrer_nerdx_id}")
+                logger.info(f"Successfully processed referral: {referrer_nerdx_id} -> {referee_id}")
+                return True
             else:
-                stats = ReferralStats(
-                    user_id=referrer_id,
-                    total_referrals=1,
-                    successful_referrals=1,
-                    total_bonus_earned=self.referral_bonus['referrer'],
-                    last_referral_date=datetime.utcnow()
-                )
-                session.add(stats)
-            
-            session.commit()
-            logger.info(f"Referral processed: {referrer_id} referred {referee_id}")
-            return True
+                logger.warning(f"Failed to process referral credits for {referrer_nerdx_id} -> {referee_id}")
+                return False
             
         except Exception as e:
             logger.error(f"Error processing referral: {e}")
-            session.rollback()
             return False
-        finally:
-            session.close()
     
     def award_referral_bonuses(self, referrer_id: str, referee_id: str, referral_id: int) -> Dict:
         """Award bonus credits to referrer and referee"""
@@ -253,60 +217,75 @@ class ReferralService:
             session.close()
     
     def get_referral_stats(self, user_id: str) -> Dict:
-        """Get referral statistics for a user"""
-        session = SessionLocal()
+        """Get referral statistics using existing nerdx_id system"""
         try:
-            from models import ReferralCode, ReferralStats, Referral
+            # Get user's nerdx_id as referral code
+            from database.external_db import get_user_registration, get_referral_stats as get_existing_referral_stats
             
-            # Get referral code from database first
-            code_record = session.query(ReferralCode).filter_by(user_id=user_id).first()
-            referral_code = code_record.referral_code if code_record else None
+            # Get user's nerdx_id
+            registration = get_user_registration(user_id)
+            if not registration:
+                logger.warning(f"No registration found for user {user_id}")
+                return {
+                    'referral_code': None,
+                    'total_referrals': 0,
+                    'successful_referrals': 0,
+                    'total_bonus_earned': 0,
+                    'recent_referrals': [],
+                    'referrer_bonus': self.referral_bonus['referrer'],
+                    'referee_bonus': self.referral_bonus['referee']
+                }
             
-            # If no code in database, generate one (this handles the fallback case)
-            if not referral_code:
-                logger.info(f"No referral code in database for {user_id}, generating one")
-                referral_code = self.generate_referral_code(user_id)
+            nerdx_id = registration.get('nerdx_id')
+            if not nerdx_id:
+                logger.warning(f"No nerdx_id found for user {user_id}")
+                return {
+                    'referral_code': None,
+                    'total_referrals': 0,
+                    'successful_referrals': 0,
+                    'total_bonus_earned': 0,
+                    'recent_referrals': [],
+                    'referrer_bonus': self.referral_bonus['referrer'],
+                    'referee_bonus': self.referral_bonus['referee']
+                }
             
-            # Get stats
-            stats = session.query(ReferralStats).filter_by(user_id=user_id).first()
+            # Use existing referral stats function
+            existing_stats = get_existing_referral_stats(nerdx_id)
             
-            if stats:
-                total_referrals = stats.total_referrals
-                successful_referrals = stats.successful_referrals
-                total_bonus_earned = stats.total_bonus_earned
+            if existing_stats:
+                return {
+                    'referral_code': nerdx_id,
+                    'total_referrals': existing_stats.get('total_referrals', 0),
+                    'successful_referrals': existing_stats.get('total_referrals', 0),  # Same as total in existing system
+                    'total_bonus_earned': existing_stats.get('total_credits_earned', 0),
+                    'recent_referrals': existing_stats.get('recent_referrals', []),
+                    'referrer_bonus': self.referral_bonus['referrer'],
+                    'referee_bonus': self.referral_bonus['referee']
+                }
             else:
-                total_referrals = successful_referrals = total_bonus_earned = 0
-            
-            # Get recent referrals
-            recent_referrals = session.query(Referral).filter_by(
-                referrer_id=user_id, 
-                bonus_awarded=True
-            ).order_by(Referral.created_at.desc()).limit(5).all()
-            
-            recent_referrals_data = [(ref.referee_id, ref.created_at) for ref in recent_referrals]
-            
-            return {
-                'referral_code': referral_code,
-                'total_referrals': total_referrals,
-                'successful_referrals': successful_referrals,
-                'total_bonus_earned': total_bonus_earned,
-                'recent_referrals': recent_referrals_data,
-                'referrer_bonus': self.referral_bonus['referrer'],
-                'referee_bonus': self.referral_bonus['referee']
-            }
+                # Return default stats with nerdx_id as referral code
+                return {
+                    'referral_code': nerdx_id,
+                    'total_referrals': 0,
+                    'successful_referrals': 0,
+                    'total_bonus_earned': 0,
+                    'recent_referrals': [],
+                    'referrer_bonus': self.referral_bonus['referrer'],
+                    'referee_bonus': self.referral_bonus['referee']
+                }
             
         except Exception as e:
-            logger.error(f"Error getting referral stats: {e}")
-            # Even on database error, try to generate a fallback referral code
-            fallback_referral_code = None
+            logger.error(f"Error getting referral stats for {user_id}: {e}")
+            # Try to get nerdx_id as fallback
             try:
-                fallback_referral_code = self._generate_fallback_code(user_id)
-                logger.info(f"Generated fallback referral code {fallback_referral_code} for {user_id} due to database error")
-            except Exception as fallback_error:
-                logger.error(f"Could not generate fallback referral code: {fallback_error}")
+                from database.external_db import get_user_registration
+                registration = get_user_registration(user_id)
+                fallback_code = registration.get('nerdx_id') if registration else None
+            except:
+                fallback_code = None
             
             return {
-                'referral_code': fallback_referral_code,
+                'referral_code': fallback_code,
                 'total_referrals': 0,
                 'successful_referrals': 0,
                 'total_bonus_earned': 0,
@@ -314,8 +293,6 @@ class ReferralService:
                 'referrer_bonus': self.referral_bonus['referrer'],
                 'referee_bonus': self.referral_bonus['referee']
             }
-        finally:
-            session.close()
     
     def get_top_referrers(self, limit: int = 10) -> List[Dict]:
         """Get top users by referral count"""
