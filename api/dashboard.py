@@ -844,7 +844,7 @@ def get_credit_transactions():
 
 @dashboard_bp.route('/api/advanced-analytics')
 @login_required
-def get_advanced_analytics():
+def get_advanced_analytics_service():
     """Get comprehensive analytics with profit calculations"""
     try:
         from services.analytics_service import advanced_analytics_service
