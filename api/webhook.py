@@ -334,6 +334,36 @@ def health_check():
             'error': str(e)
         }), 500
 
+@webhook_bp.route('/diagnose', methods=['GET'])
+def database_diagnostics():
+    """Database diagnostics endpoint"""
+    try:
+        from database.external_db import diagnose_supabase_issues, test_connection
+        
+        # Run comprehensive diagnostics
+        diag_result = diagnose_supabase_issues()
+        connection_test = test_connection()
+        
+        return jsonify({
+            'diagnostics_passed': diag_result,
+            'connection_test_passed': connection_test,
+            'supabase_url_configured': bool(os.getenv("SUPABASE_URL")),
+            'supabase_key_configured': bool(os.getenv("SUPABASE_KEY")),
+            'recommendations': [
+                'Check logs for detailed error messages',
+                'Verify SUPABASE_URL and SUPABASE_KEY environment variables',
+                'Run database/create_tables.sql in Supabase SQL Editor if tables are missing',
+                'Check Row Level Security policies in Supabase dashboard'
+            ]
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Diagnostics error: {e}")
+        return jsonify({
+            'error': str(e),
+            'message': 'Diagnostics failed - check server logs'
+        }), 500
+
 def handle_text_message(user_id: str, message_text: str):
     """Handle text messages from users"""
     try:
