@@ -32,7 +32,11 @@ app.config.update(
 )
 
 # Configure the database with better connection handling
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///nerdx_quiz.db")
+database_url = os.environ.get("DATABASE_URL", "sqlite:///nerdx_quiz.db")
+# Remove pgbouncer parameter if present (incompatible with psycopg2)
+if database_url and "pgbouncer=true" in database_url:
+    database_url = database_url.replace("?pgbouncer=true", "").replace("&pgbouncer=true", "")
+app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
