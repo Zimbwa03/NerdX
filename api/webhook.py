@@ -141,7 +141,7 @@ def handle_webhook():
                 remaining_time = rate_limiter.get_remaining_cooldown(user_id, 'text_message')
                 if remaining_time > 0:
                     whatsapp_service.send_message(
-                        user_id,
+                    user_id,
                         f"⏳ Please wait {remaining_time} seconds before sending another message. This helps prevent spam and ensures smooth operation."
                     )
                 else:
@@ -156,8 +156,8 @@ def handle_webhook():
             if rate_limiter.check_session_rate_limit(user_id, 'image_message'):
                 remaining_time = rate_limiter.get_remaining_cooldown(user_id, 'image_message')
                 if remaining_time > 0:
-                    whatsapp_service.send_message(
-                        user_id,
+                whatsapp_service.send_message(
+                    user_id,
                         f"⏳ Please wait {remaining_time} seconds before sending another image. Image processing takes time and resources."
                     )
                 else:
@@ -320,7 +320,7 @@ def handle_session_message(user_id: str, message_text: str):
             if command in ['start', 'menu', 'hi', 'hello']:
                 send_main_menu(user_id)
             else:
-                whatsapp_service.send_message(user_id, "✅ Session cancelled. You can now start a new question.")
+            whatsapp_service.send_message(user_id, "✅ Session cancelled. You can now start a new question.")
             return
 
         # Also check for mathematics question sessions from session_db
@@ -354,15 +354,15 @@ def handle_session_message(user_id: str, message_text: str):
                     return
             elif payment_session.get('step') == 'awaiting_proof':
                 # Old flow compatibility
-                package_id = custom_data.get('package_id')
-                reference_code = custom_data.get('reference_code')
-                
-                if package_id and reference_code:
-                    handle_payment_proof_submission(user_id, package_id, reference_code)
-                else:
+            package_id = custom_data.get('package_id')
+            reference_code = custom_data.get('reference_code')
+            
+            if package_id and reference_code:
+                handle_payment_proof_submission(user_id, package_id, reference_code)
+            else:
                     # Session data incomplete, clear session and provide helpful guidance
-                    from database.session_db import clear_user_session
-                    clear_user_session(user_id)
+                from database.session_db import clear_user_session
+                clear_user_session(user_id)
                     
                     message = """❌ **Payment Session Reset**
 
@@ -660,7 +660,7 @@ def send_main_menu(user_id: str, user_name: str = None):
         welcome_text += f"👇 *Choose an option to get started:*"
 
         # Create main buttons with advanced credit system integration
-            main_buttons = [
+        main_buttons = [
                 {"text": "🎯 Start Quiz", "callback_data": "start_quiz"},
                 {"text": "🎤 Audio Chat", "callback_data": "audio_chat_menu"},
             {"text": "📊 My Stats", "callback_data": "user_stats"},
@@ -2366,7 +2366,7 @@ def send_question_to_user(chat_id: str, question_data: Dict, subject: str, topic
                             "callback_data": f"answer_{option}_{subject.lower()}_{topic.replace(' ', '_')}_{difficulty}"
                         })
             elif 'options' in question_data and isinstance(question_data['options'], list) and len(question_data['options']) >= 4:
-                 for i, option_text in enumerate(['A', 'B', 'C', 'D']):
+                for i, option_text in enumerate(['A', 'B', 'C', 'D']):
                     buttons.append({
                         "text": option_text,
                         "callback_data": f"answer_{option_text}_{subject.lower()}_{topic.replace(' ', '_')}_{difficulty}"
@@ -3029,8 +3029,8 @@ def handle_credit_store(user_id: str):
         message, buttons = advanced_credit_service.format_credit_store_message(user_id)
         
         # Send credit store
-            whatsapp_service.send_interactive_message(user_id, message, buttons)
-            
+        whatsapp_service.send_interactive_message(user_id, message, buttons)
+        
     except Exception as e:
         logger.error(f"Error handling credit store for {user_id}: {e}")
         whatsapp_service.send_message(user_id, "❌ Error loading credit store. Please try again.")

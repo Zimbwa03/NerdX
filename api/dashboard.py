@@ -344,8 +344,8 @@ def get_activity():
         
         # Fallback to real user data if analytics table is empty
         if not daily_active_users:
-            all_user_stats = make_supabase_request("GET", "user_stats", select="user_id,last_activity")
-            
+        all_user_stats = make_supabase_request("GET", "user_stats", select="user_id,last_activity")
+        
             for i in range(30):
                 date = datetime.now() - timedelta(days=i)
                 date_str = date.strftime('%Y-%m-%d')
@@ -353,15 +353,15 @@ def get_activity():
                 # Count users active on this date
                 active_count = 0
                 if all_user_stats:
-                    for user in all_user_stats:
-                        last_activity = user.get('last_activity')
-                        if last_activity:
-                            try:
-                                activity_date = datetime.fromisoformat(last_activity.replace('Z', '+00:00'))
-                                if activity_date.date() == date.date():
-                                    active_count += 1
-                            except:
-                                continue
+                for user in all_user_stats:
+                    last_activity = user.get('last_activity')
+                    if last_activity:
+                        try:
+                            activity_date = datetime.fromisoformat(last_activity.replace('Z', '+00:00'))
+                            if activity_date.date() == date.date():
+                                active_count += 1
+                        except:
+                            continue
                 
                 daily_active_users.append({
                     'date': date_str,
@@ -378,10 +378,10 @@ def get_activity():
         all_credit_transactions = make_supabase_request("GET", "credit_transactions", select="created_at")
         
         # Calculate activity periods
-        today = datetime.now().date()
-        week_ago = today - timedelta(days=7)
-        month_ago = today - timedelta(days=30)
-        
+            today = datetime.now().date()
+            week_ago = today - timedelta(days=7)
+            month_ago = today - timedelta(days=30)
+            
         today_activity = 0
         week_activity = 0
         month_activity = 0
