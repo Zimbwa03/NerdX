@@ -1095,11 +1095,30 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
                 logger.warning(f"Invalid callback_data for prev_science_: {selection_id}")
                 whatsapp_service.send_message(user_id, "❌ Error navigating questions.")
 
+        # Handle Combined Science topical next question buttons
+        elif selection_id.startswith('combined_science_'):
+            subject = selection_id.replace('combined_science_', '').title()
+            if subject in ['Biology', 'Chemistry', 'Physics']:
+                logger.info(f"Generating new {subject} question via next button for user {user_id}")
+                handle_combined_science_question(user_id, subject)
+            else:
+                logger.warning(f"Invalid combined science subject: {subject}")
+                whatsapp_service.send_message(user_id, "❌ Invalid subject selection.")
+            return jsonify({'status': 'success'})
+
         # Handle Combined Science answers
         elif selection_id.startswith('combined_answer_'):
             parts = selection_id.split('_')
-            if len(parts) >= 3:
+            if len(parts) >= 4:
+                # Format: combined_answer_{subject}_{answer} (e.g., combined_answer_Biology_A)
+                subject = parts[2]
+                user_answer = parts[3]  # A, B, C, or D
+                logger.info(f"Processing {subject} topical answer: {user_answer} for user {user_id}")
+                handle_combined_science_answer(user_id, subject, user_answer)
+            elif len(parts) >= 3:
+                # Format: combined_answer_{answer} (e.g., combined_answer_A) - for exam mode
                 user_answer = parts[2]  # A, B, C, or D
+                logger.info(f"Processing combined exam answer: {user_answer} for user {user_id}")
                 handle_combined_exam_answer(user_id, user_answer)
             return jsonify({'status': 'success'})
 
@@ -1390,8 +1409,10 @@ def show_user_stats(user_id: str):
 def show_credit_packages(user_id: str):
     """Show available credit packages with enhanced display"""
     try:
-        from services.payment_service import payment_service
+        from services.payment_service import PaymentService
         from utils.credit_display import credit_display_manager
+        
+        payment_service = PaymentService()
         
         # Get current credits for context
         current_credits = get_user_credits(user_id)
@@ -2932,13 +2953,13 @@ def handle_package_selection(user_id: str, package_id: str):
             return
         
         # Create package details message
-        message = f"""[{selected_package['icon']}] **[{selected_package['name'].upper()}] - ${selected_package['price']:.2f}**
+        message = f"""{selected_package['icon']} **{selected_package['name'].upper()} - ${selected_package['price']:.2f}**
 
 📊 **PACKAGE DETAILS:**
 💳 Credits: {selected_package['credits']} credits
-⏰ Duration: {selected_package['duration']} days typical usage
 💰 Cost per credit: ${selected_package['price'] / selected_package['credits']:.3f}
 🎯 Perfect for: {selected_package['description']}
+💡 Best for: {selected_package['best_for']}
 
 ✅ **PURCHASE THIS PACKAGE**
 🔍 View Other Packages

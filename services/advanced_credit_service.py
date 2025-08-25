@@ -417,8 +417,14 @@ Hey there! 👋
             
             buttons = []
             for package in packages:
-                button_text = f"{package['icon']} {package['name']} - ${package['price']:.2f}"
-                callback_data = f"select_package_{package['id']}"
+                # Fallback for missing icon field
+                icon = package.get('icon', '💎')
+                name = package.get('name', 'Package')
+                price = package.get('price', 0)
+                package_id = package.get('id', 'unknown')
+                
+                button_text = f"{icon} {name} - ${price:.2f}"
+                callback_data = f"select_package_{package_id}"
                 buttons.append({"text": button_text, "callback_data": callback_data})
             
             # Add back button

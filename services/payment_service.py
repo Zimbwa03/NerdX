@@ -215,10 +215,15 @@ class PaymentService:
         """Get available credit packages - updated for compatibility"""
         return [
             {
+                'id': pkg['id'],
+                'name': pkg['name'],
+                'price': pkg['price'],
                 'credits': pkg['credits'],
                 'amount': pkg['price'],
                 'currency': 'USD',
-                'description': pkg['description']
+                'description': pkg['description'],
+                'best_for': pkg['best_for'],
+                'icon': pkg['icon']
             } for pkg in self.packages
         ]
     
