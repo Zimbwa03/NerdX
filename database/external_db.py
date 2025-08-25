@@ -14,13 +14,15 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Supabase configuration - make it optional for development
-SUPABASE_URL = os.getenv("SUPABASE_URL", "https://your-project.supabase.co")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY", "your-anon-key")
-_is_configured = not (SUPABASE_URL == "https://your-project.supabase.co" or SUPABASE_KEY == "your-anon-key")
+# Supabase configuration - use environment variables
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+_is_configured = SUPABASE_URL and SUPABASE_KEY
 
 # Validate environment variables
-if not _is_configured:
+if _is_configured:
+    logger.info("Supabase properly configured and ready")
+else:
     logger.warning("Supabase not configured - external database features will be disabled")
 
 print(f"Supabase URL: {SUPABASE_URL}")

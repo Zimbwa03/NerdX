@@ -15,7 +15,9 @@ logger = logging.getLogger(__name__)
 
 class AdminAuthService:
     def __init__(self):
-        self.conn_string = 'postgresql://postgres:Ngonidzashe2003.@db.hvlvwvzliqrlmqjbfgoa.supabase.co:5432/postgres'
+        import os
+        # Use environment variables for Supabase connection
+        self.conn_string = os.environ.get('DATABASE_URL')
         self.session_duration = timedelta(hours=8)  # 8 hours session
         self.max_failed_attempts = 5
         self.lockout_duration = timedelta(minutes=30)  # 30 minutes lockout
