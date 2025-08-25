@@ -360,29 +360,20 @@ class MathematicsHandler:
                 explanation = question_data['explanation']
                 answer_message += f"💡 Explanation:\n{explanation}\n\n"
             
-            # Send the first message with answer and explanation
-            self.whatsapp_service.send_message(user_id, answer_message)
+            # Add user progress dashboard to main message (consistent with combined exam format)
+            answer_message += f"📊 **{user_name}'s Progress Dashboard:**\n"
+            answer_message += f"💳 **Credits:** {final_credits}\n"
+            answer_message += f"⭐ **Level:** {final_level} (XP: {final_xp})\n"
+            answer_message += f"🔥 **Streak:** {final_streak} days\n"
             
-            # SECOND MESSAGE: User stats and progress (separate message)
-            stats_message = f"🎮 **Your Progress Dashboard** 🎮\n"
-            stats_message += f"━━━━━━━━━━━━━━━━━━━━\n"
-            stats_message += f"💰 **Credits:** {final_credits}\n"
-            stats_message += f"⚡ **Total XP:** {final_xp}\n"
-            stats_message += f"🔥 **Current Streak:** {final_streak}\n"
-            stats_message += f"🏆 **Level:** {final_level}\n"
+            if is_correct:
+                answer_message += f"✨ **Points Earned:** +{points} XP\n"
+                # Check for level up
+                current_level = analysis.get('previous_level', final_level)
+                if final_level > current_level:
+                    answer_message += f"🎊 **LEVEL UP!** Welcome to Level {final_level}!\n"
             
-            # Add level progress bar to stats message
-            xp_for_next_level = (final_level * 100) - final_xp
-            if xp_for_next_level > 0:
-                stats_message += f"📈 **Next Level:** {xp_for_next_level} XP away!\n"
-            else:
-                stats_message += f"🌟 **Level Master!** Keep climbing!\n"
-                
-            stats_message += f"━━━━━━━━━━━━━━━━━━━━\n\n"
-            
-            # Add encouragement to stats message
-            if analysis.get('encouragement'):
-                stats_message += f"🌟 {analysis.get('encouragement')}\n\n"
+            answer_message += f"\n🚀 **Ready for your next challenge?**"
             
             # Create enhanced navigation buttons with gamification
             topic_encoded = (topic or '').lower().replace(' ', '_')
@@ -394,8 +385,8 @@ class MathematicsHandler:
                 {"text": "🏠 Main Menu", "callback_data": "main_menu"}
             ]
             
-            # Send stats message with navigation buttons
-            self.whatsapp_service.send_interactive_message(user_id, stats_message, buttons)
+            # Send the complete message with answer, explanation, stats and navigation buttons
+            self.whatsapp_service.send_interactive_message(user_id, answer_message, buttons)
             
         except Exception as e:
             logger.error(f"Error sending result message to {user_id}: {e}")
