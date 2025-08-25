@@ -14,10 +14,13 @@ class EnglishService:
     
     def __init__(self):
         self.gemini_api_key = os.environ.get("GEMINI_API_KEY")
-        if not self.gemini_api_key:
-            raise ValueError("GEMINI_API_KEY is required for English service")
+        self._is_configured = bool(self.gemini_api_key)
         
-        self.client = genai.Client(api_key=self.gemini_api_key)
+        if self._is_configured:
+            self.client = genai.Client(api_key=self.gemini_api_key)
+        else:
+            self.client = None
+            logger.warning("GEMINI_API_KEY not configured - English service features will be limited")
         self.model = "gemini-2.5-flash"
         
         # ZIMSEC character names for authentic context
@@ -43,6 +46,10 @@ class EnglishService:
 
     def generate_grammar_question(self) -> Optional[Dict]:
         """Generate diverse grammar questions covering comprehensive areas"""
+        if not self._is_configured:
+            logger.warning("English service not configured - cannot generate grammar questions")
+            return None
+            
         try:
             prompt = f"""Generate ONE ZIMSEC O-Level Grammar and Usage exercise covering diverse grammar topics.
 

@@ -17,11 +17,17 @@ class WhatsAppService:
         self.verify_token = os.getenv('WHATSAPP_VERIFY_TOKEN')
         self.base_url = "https://graph.facebook.com/v17.0"
         
-        if not all([self.access_token, self.phone_number_id, self.verify_token]):
-            raise ValueError("Missing required WhatsApp configuration")
+        # Make WhatsApp configuration optional for development/migration
+        self._is_configured = all([self.access_token, self.phone_number_id, self.verify_token])
+        if not self._is_configured:
+            logger.warning("WhatsApp configuration not complete - WhatsApp features will be disabled")
     
     def send_message(self, to: str, message: str) -> bool:
         """Send a text message to a WhatsApp user with enhanced error handling and throttling"""
+        if not self._is_configured:
+            logger.warning("WhatsApp not configured - message not sent")
+            return False
+            
         try:
             # CRITICAL: Check throttle to prevent message chains
             if not message_throttle.can_send_message(to):
@@ -84,6 +90,10 @@ class WhatsAppService:
 
     def send_audio_message(self, to: str, audio_file_path: str) -> bool:
         """Send audio message via WhatsApp"""
+        if not self._is_configured:
+            logger.warning("WhatsApp not configured - audio message not sent")
+            return False
+            
         try:
             import requests
             import os

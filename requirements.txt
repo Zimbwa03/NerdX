@@ -43,3 +43,33 @@ requests>=2.32.5
 
 # Additional Utilities
 python-dotenv>=1.0.0
+email_validator
+flask
+flask-sqlalchemy
+gunicorn
+psycopg2-binary
+email-validator
+flask
+flask-cors
+flask-dance
+flask-login
+flask-sqlalchemy
+google-genai
+gunicorn
+imgbbpy
+matplotlib
+numpy
+oauthlib
+pillow
+psycopg2-binary
+pyjwt
+pypdf2
+pytesseract
+python-dotenv
+reportlab
+requests
+seaborn
+speechrecognition
+sqlalchemy
+sympy
+werkzeug
