@@ -265,12 +265,12 @@ Ready to boost your reading skills? 🚀"""
                     ]
                     
                     self.whatsapp_service.send_interactive_message(user_id, insufficient_msg, buttons)
-                clear_user_session(user_id)  # Clear generating lock on failure
+                    clear_user_session(user_id)  # Clear generating lock on failure
                     return
                 else:
                     clear_user_session(user_id)  # Clear generating lock on failure
                     self.whatsapp_service.send_message(user_id, "❌ Credit processing error. Please try again.")
-                return
+                    return
 
             # Update session with proper user name
             session_data = {
@@ -597,12 +597,12 @@ Hi {user_name}! Answer these 10 questions based on the passage above:
                 # Send completion message with questions button
                 ready_message = f"✅ **Passage Complete!**\n\nNow you'll answer 10 comprehension questions based on this passage, {user_name}.\n\n📝 Ready to continue?"
 
-            continue_buttons = [
-                {"text": "📝 Load Questions", "callback_data": "comprehension_load_questions"},
-                {"text": "🔙 Back to Menu", "callback_data": "english_menu"}
-            ]
+                continue_buttons = [
+                    {"text": "📝 Load Questions", "callback_data": "comprehension_load_questions"},
+                    {"text": "🔙 Back to Menu", "callback_data": "english_menu"}
+                ]
 
-            self.whatsapp_service.send_interactive_message(user_id, ready_message, continue_buttons)
+                self.whatsapp_service.send_interactive_message(user_id, ready_message, continue_buttons)
             else:
                 # Send as single message with button
                 continue_buttons = [
@@ -703,7 +703,7 @@ Hi {user_name}! Answer these 10 questions based on the passage above:
                     questions_message_2 += f"**{i}.** {question_text} [{marks} mark{'s' if marks != 1 else ''}]\n\n"
 
                 questions_message_2 += "✅ *Answer all questions based on the passage above*"
-                    self.whatsapp_service.send_message(user_id, questions_message_2)
+                self.whatsapp_service.send_message(user_id, questions_message_2)
                 else:
                     # Send all questions in one message
                     self.whatsapp_service.send_message(user_id, all_questions_message)
