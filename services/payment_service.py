@@ -240,27 +240,28 @@ class PaymentService:
         return self.calculate_credit_packages()
     
     def submit_payment_proof(self, user_id: str, package_id: str, reference_code: str, proof_text: str) -> Dict:
-        """Submit payment proof for manual verification"""
+        """Submit payment proof for manual verification using the correct database schema"""
         try:
             package = self.get_package_by_id(package_id)
             if not package:
                 return {'success': False, 'message': 'Package not found'}
             
-            # Create pending payment record for admin review
+            # Create payment transaction record with correct schema for admin review
             payment_data = {
                 'user_id': user_id,
-                'package_type': package_id,
-                'amount_expected': package['price'],
-                'credits_to_add': package['credits'],
-                'transaction_reference': reference_code,
-                'proof_text': proof_text,
+                'package_id': package_id,  # Correct field name
+                'reference_code': reference_code,  # Correct field name  
+                'amount': float(package['price']),  # Correct field name and type
+                'credits': int(package['credits']),  # Correct field name and type
+                'payment_proof': proof_text,  # Correct field name
                 'status': 'pending',
                 'created_at': datetime.now().isoformat(),
-                'updated_at': datetime.now().isoformat()
+                'proof_submitted_at': datetime.now().isoformat(),  # Track submission time
+                'credits_added': 0  # Will be updated when approved
             }
             
-            # Store in pending_payments table for admin review
-            result = make_supabase_request("POST", "pending_payments", payment_data)
+            # Store in payment_transactions table for admin review
+            result = make_supabase_request("POST", "payment_transactions", payment_data)
             
             if result:
                 logger.info(f"Payment proof submitted for user {user_id}, ref: {reference_code}")
@@ -271,20 +272,21 @@ class PaymentService:
                     'package': package
                 }
             else:
+                logger.error(f"Failed to submit payment proof - Supabase returned no result")
                 return {'success': False, 'message': 'Failed to submit payment proof'}
                 
         except Exception as e:
             logger.error(f"Error submitting payment proof: {e}")
-            return {'success': False, 'message': 'Error submitting payment proof'}
+            return {'success': False, 'message': f'Error submitting payment proof: {str(e)}'}
     
     def approve_payment(self, reference_code: str) -> Dict:
         """Approve a pending payment and add credits to user"""
         try:
-            # Get pending payment details
+            # Get pending payment details from payment_transactions table
             result = make_supabase_request(
                 "GET", 
-                "pending_payments", 
-                filters={"transaction_reference": f"eq.{reference_code}"}
+                "payment_transactions", 
+                filters={"reference_code": f"eq.{reference_code}"}
             )
             
             if not result or len(result) == 0:
@@ -292,8 +294,8 @@ class PaymentService:
             
             payment = result[0]
             user_id = payment['user_id']
-            credits = payment['credits_to_add']
-            package = self.get_package_by_id(payment.get('package_type', 'unknown'))
+            credits = payment['credits']  # Updated field name
+            package = self.get_package_by_id(payment.get('package_id', 'unknown'))  # Updated field name
             
             # Add credits to user account using advanced credit system
             from services.advanced_credit_service import advanced_credit_service
@@ -304,22 +306,21 @@ class PaymentService:
                 update_data = {
                     'status': 'approved',
                     'approved_at': datetime.now().isoformat(),
-                    'credits_added': credits,
-                    'updated_at': datetime.now().isoformat()
+                    'credits_added': credits
                 }
                 
-                # Update status in pending_payments
+                # Update status in payment_transactions table
                 make_supabase_request(
                     "PATCH", 
-                    "pending_payments", 
+                    "payment_transactions", 
                     update_data,
-                    filters={"transaction_reference": f"eq.{reference_code}"}
+                    filters={"reference_code": f"eq.{reference_code}"}
                 )
                 
                 # Add to completed payments table for dashboard analytics
                 completed_payment = {
                     'user_id': user_id,
-                    'amount_paid': payment.get('amount_expected', 0),
+                    'amount_paid': payment.get('amount', 0),  # Updated field name
                     'credits_added': credits,
                     'transaction_reference': reference_code,
                     'status': 'completed',
@@ -349,11 +350,11 @@ class PaymentService:
     def reject_payment(self, reference_code: str, reason: str) -> Dict:
         """Reject a pending payment"""
         try:
-            # Get pending payment details
+            # Get pending payment details from payment_transactions table
             result = make_supabase_request(
                 "GET", 
-                "pending_payments", 
-                filters={"transaction_reference": f"eq.{reference_code}"}
+                "payment_transactions", 
+                filters={"reference_code": f"eq.{reference_code}"}
             )
             
             if not result or len(result) == 0:
@@ -366,15 +367,14 @@ class PaymentService:
             update_data = {
                 'status': 'rejected',
                 'rejection_reason': reason,
-                'rejected_at': datetime.now().isoformat(),
-                'updated_at': datetime.now().isoformat()
+                'rejected_at': datetime.now().isoformat()
             }
             
             success = make_supabase_request(
                 "PATCH", 
-                "pending_payments", 
+                "payment_transactions", 
                 update_data,
-                filters={"transaction_reference": f"eq.{reference_code}"}
+                filters={"reference_code": f"eq.{reference_code}"}
             )
             
             if success:
@@ -511,15 +511,15 @@ class PaymentService:
         try:
             result = make_supabase_request(
                 "GET", 
-                "pending_payments", 
-                filters={"transaction_reference": f"eq.{reference_code}"}
+                "payment_transactions", 
+                filters={"reference_code": f"eq.{reference_code}"}
             )
             
             if result and len(result) > 0:
                 payment = result[0]
-                package = self.get_package_by_id(payment.get('package_type', 'unknown'))
+                package = self.get_package_by_id(payment.get('package_id', 'unknown'))  # Updated field name
                 package_name = package['name'] if package else 'Unknown Package'
-                credits = payment.get('credits_to_add', 0)
+                credits = payment.get('credits', 0)  # Updated field name
                 timestamp = datetime.now().strftime("%H:%M on %d/%m/%Y")
             else:
                 package_name = 'Unknown Package'

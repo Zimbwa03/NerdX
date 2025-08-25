@@ -237,8 +237,8 @@ def get_payments():
         # Get completed payments (all payments in payments table are completed by default)
         completed_payments = make_supabase_request("GET", "payments", select="*")
         
-        # Get pending payments from your pending_payments table
-        pending_payments = make_supabase_request("GET", "pending_payments", select="*")
+        # Get pending payments from payment_transactions table
+        pending_payments = make_supabase_request("GET", "payment_transactions", select="*")
         
         # Filter for pending status
         if pending_payments:
@@ -680,8 +680,8 @@ def export_analytics():
 def get_pending_payments():
     """Get pending payments for admin review"""
     try:
-        # Get all pending payments first
-        pending_payments = make_supabase_request("GET", "pending_payments", select="*")
+        # Get all pending payments from payment_transactions table
+        pending_payments = make_supabase_request("GET", "payment_transactions", select="*")
         
         # Filter for pending status
         if pending_payments:
@@ -710,16 +710,17 @@ def get_pending_payments():
             
             enhanced_payment = {
                 'payment_id': payment.get('id'),
-                'transaction_reference': payment.get('transaction_reference'),
+                'transaction_reference': payment.get('reference_code'),  # Updated field name
                 'user_id': user_id,
                 'student_name': f"{user_name} {user_surname}".strip(),
                 'time_of_transaction': payment.get('created_at'),
-                'money_paid': payment.get('amount_expected'),
-                'credits_purchased': payment.get('credits_to_add'),
+                'money_paid': payment.get('amount'),  # Updated field name
+                'credits_purchased': payment.get('credits'),  # Updated field name
                 'status': payment.get('status'),
                 'admin_notes': payment.get('admin_notes', ''),
                 'rejection_reason': payment.get('rejection_reason', ''),
-                'ecocash_confirmation_message': f"Payment of ${payment.get('amount_expected')} from user {user_id} - Ref: {payment.get('transaction_reference')}"
+                'payment_proof': payment.get('payment_proof', ''),  # Add payment proof field
+                'ecocash_confirmation_message': f"Payment of ${payment.get('amount')} from user {user_id} - Ref: {payment.get('reference_code')}"  # Updated field names
             }
             enhanced_payments.append(enhanced_payment)
         

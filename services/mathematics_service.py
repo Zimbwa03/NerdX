@@ -100,9 +100,42 @@ class MathematicsService:
         ]
 
 
-    def format_main_menu_message(self, user_name: str) -> str:
-        """Format mathematics main menu message"""
-        return f"""🧮 ZIMSEC Mathematics Hub
+    def format_main_menu_message(self, user_name: str, user_id: str = None) -> str:
+        """Format mathematics main menu message with consistent stats display"""
+        try:
+            stats_text = ""
+            if user_id:
+                from database.external_db import get_user_stats, get_user_credits
+                stats = get_user_stats(user_id) or {}
+                credits = get_user_credits(user_id)
+                
+                stats_text = f"""
+📊 **Your Current Stats:**
+💳 **Credits:** {credits}
+⭐ **Level:** {stats.get('level', 1)} (XP: {stats.get('xp_points', 0)})
+🔥 **Streak:** {stats.get('streak', 0)} days
+
+"""
+            
+            return f"""🧮 **ZIMSEC Mathematics Hub**
+
+👋 Welcome **{user_name}**! Master O-Level Mathematics with AI-powered questions.
+{stats_text}📚 **Available Topics ({len(self.mathematics_topics)}):**
+Real Numbers • Sets • Financial Mathematics 
+Algebra • Geometry • Statistics • Trigonometry 
+Probability • Graphs • Variation • Vectors • Matrices
+
+🎯 **Difficulty Levels:**
+🟢 Easy - Basic concepts
+🟡 Medium - Applied problems  
+🔴 Difficult - Complex reasoning
+
+💡 **Authentic ZIMSEC-style problems with step-by-step solutions!**
+
+Choose your topic to begin:"""
+        except Exception as e:
+            logger.error(f"Error formatting math menu with stats: {e}")
+            return f"""🧮 ZIMSEC Mathematics Hub
 
 Welcome {user_name}! Master O-Level Mathematics with AI-powered questions.
 
@@ -120,34 +153,45 @@ Probability • Graphs • Variation • Vectors • Matrices
 
 Choose your topic to begin:"""
 
-    def format_topic_difficulty_message(self, topic: str, user_name: str, credits: int) -> str:
-        """Format topic difficulty selection message"""
-        topic_emojis = {
-            "Real Numbers": "🔢",
-            "Sets": "🎯", 
-            "Financial Mathematics": "💰",
-            "Measures and Mensuration": "📏",
-            "Graphs": "📊",
-            "Variation": "📈",
-            "Algebra": "📐",
-            "Geometry": "📐", 
-            "Statistics": "📊",
-            "Trigonometry": "📐",
-            "Vectors": "➡️",
-            "Matrices": "🔲",
-            "Transformation": "🔄",
-            "Probability": "🎲"
-        }
+    def format_topic_difficulty_message(self, topic: str, user_name: str, credits: int, user_id: str = None) -> str:
+        """Format topic difficulty selection message with consistent stats"""
+        try:
+            stats_text = ""
+            if user_id:
+                from database.external_db import get_user_stats
+                stats = get_user_stats(user_id) or {}
+                
+                stats_text = f"""
+📊 **Your Current Stats:**
+💳 **Credits:** {credits}
+⭐ **Level:** {stats.get('level', 1)} (XP: {stats.get('xp_points', 0)})
+🔥 **Streak:** {stats.get('streak', 0)} days
 
-        emoji = topic_emojis.get(topic, "📚")
+"""
+            
+            topic_emojis = {
+                "Real Numbers": "🔢",
+                "Sets": "🎯", 
+                "Financial Mathematics": "💰",
+                "Measures and Mensuration": "📏",
+                "Graphs": "📊",
+                "Variation": "📈",
+                "Algebra": "📐",
+                "Geometry": "📐", 
+                "Statistics": "📊",
+                "Trigonometry": "📐",
+                "Vectors": "➡️",
+                "Matrices": "🔲",
+                "Transformation": "🔄",
+                "Probability": "🎲"
+            }
 
-        return f"""{emoji} {topic} {emoji}
+            emoji = topic_emojis.get(topic, "📚")
 
-Ready for {topic}, {user_name}? Choose your challenge level:
+            return f"""{emoji} **{topic}** {emoji}
 
-💳 Your Credits: {credits}
-
-🎯 Choose Your Challenge Level:
+👋 Ready for **{topic}**, **{user_name}**!
+{stats_text}🎯 **Choose Your Challenge Level:**
 
 🟢 Easy - {self.difficulty_descriptions['easy']}
    • Foundation concepts
@@ -164,7 +208,21 @@ Ready for {topic}, {user_name}? Choose your challenge level:
 💡 Authentic ZIMSEC-style problems with step-by-step solutions!
 
 Select your difficulty:"""
+        except Exception as e:
+            logger.error(f"Error formatting topic difficulty message: {e}")
+            return f"""{topic}
 
+Ready for {topic}, {user_name}?
+
+💳 Your Credits: {credits}
+
+🎯 Choose Your Challenge Level:
+
+🟢 Easy - Basic concepts (10 XP)
+🟡 Medium - Problem-solving (15 XP)
+🔴 Difficult - Critical thinking (20 XP)
+
+Select your difficulty:"""
 
     def check_sufficient_credits(self, user_credits: int, difficulty: str) -> Tuple[bool, str]:
         """Check if user has sufficient credits for difficulty level"""

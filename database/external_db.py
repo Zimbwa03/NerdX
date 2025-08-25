@@ -849,6 +849,13 @@ def init_database():
         except:
             logger.info("users_registration table might not exist, but continuing...")
 
+        # Create payment_transactions table if it doesn't exist
+        try:
+            logger.info("Creating payment_transactions table...")
+            create_payment_transactions_table()
+        except Exception as e:
+            logger.warning(f"Could not create payment_transactions table: {e}")
+
         logger.info("Database connection successful")
         return True
     except Exception as e:

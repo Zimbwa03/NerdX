@@ -29,8 +29,8 @@ class MathematicsHandler:
             registration = get_user_registration(user_id)
             user_name = registration['name'] if registration else "Student"
             
-            # Get menu message and buttons
-            message = self.mathematics_service.format_main_menu_message(user_name)
+            # Get menu message and buttons with user stats
+            message = self.mathematics_service.format_main_menu_message(user_name, user_id)
             buttons = self.mathematics_service.get_main_menu_buttons()
             
             # Send interactive message
@@ -59,9 +59,9 @@ class MathematicsHandler:
             user_name = registration['name'] if registration else "Student"
             credits = get_user_credits(user_id)
             
-            # Get difficulty menu
+            # Get difficulty menu with user stats
             message = self.mathematics_service.format_topic_difficulty_message(
-                formatted_topic, user_name, credits
+                formatted_topic, user_name, credits, user_id
             )
             buttons = self.mathematics_service.get_difficulty_menu_buttons(formatted_topic)
             
@@ -148,6 +148,10 @@ class MathematicsHandler:
             # Generate question using DeepSeek AI with user_id for anti-repetition
             logger.info(f"Generating math question: Mathematics/{formatted_topic}/{difficulty}")
             try:
+                # Small delay to prevent message throttling conflicts with previous messages
+                import time
+                time.sleep(0.5)
+                
                 question_data = self.question_generator.generate_question("Mathematics", formatted_topic, difficulty, user_id)
                 
                 if not question_data:
@@ -273,24 +277,38 @@ class MathematicsHandler:
             self.whatsapp_service.send_message(user_id, "❌ Error processing your answer. Please try again.")
 
     def _send_question_to_user(self, user_id: str, question_data: Dict, subject: str, topic: str, difficulty: str):
-        """Send formatted question to user"""
+        """Send formatted question to user with consistent stats display"""
         try:
-            # Format question message
+            from database.external_db import get_user_stats, get_user_credits, get_user_registration
+            
+            # Get user info and stats for consistent display
+            registration = get_user_registration(user_id)
+            user_name = registration['name'] if registration else "Student"
+            stats = get_user_stats(user_id) or {}
+            credits = get_user_credits(user_id)
+            
+            # Format question message with consistent stats
             difficulty_emoji = {"easy": "🟢", "medium": "🟡", "difficult": "🔴"}
             emoji = difficulty_emoji.get(difficulty, "📝")
             
-            message = f"""🧮 Mathematics Question
+            message = f"""🧮 **Mathematics Question**
 
-📝 Topic: {topic}
-{emoji} Difficulty: {difficulty.title()}
-💎 Points: {question_data.get('points', 10)}
+👤 **Student:** {user_name}
+📝 **Topic:** {topic}
+{emoji} **Difficulty:** {difficulty.title()}
+💎 **Points:** {question_data.get('points', 10)} XP
 
-❓ Question:
+📊 **Your Current Stats:**
+💳 **Credits:** {credits}
+⭐ **Level:** {stats.get('level', 1)} (XP: {stats.get('xp_points', 0)})
+🔥 **Streak:** {stats.get('streak', 0)} days
+
+❓ **Question:**
 {question_data['question']}
 
-💭 Type your answer below (numbers, expressions, or equations)
+💭 **Type your answer below (numbers, expressions, or equations)**
 
-🎯 Authentic ZIMSEC-style problem with step-by-step solution!"""
+🎯 **Authentic ZIMSEC-style problem with step-by-step solution!**"""
 
             # Create answer buttons for common responses
             buttons = [
@@ -309,21 +327,22 @@ class MathematicsHandler:
 
     def _send_result_message(self, user_id: str, user_name: str, analysis: Dict, question_data: Dict, 
                            topic: str, difficulty: str):
-        """Send detailed result message with AI analysis - split into answer and stats messages"""
+        """Send result in two separate messages: answer first, then stats with buttons"""
         try:
-            from database.external_db import get_user_stats
+            from database.external_db import get_user_stats, get_user_credits
+            import time
             
             is_correct = analysis.get('is_correct', False)
             points = question_data.get('points', 10)
             
-            # Get updated stats
+            # Get updated stats with proper credit retrieval
             updated_stats = get_user_stats(user_id) or {}
-            final_credits = updated_stats.get('credits', 0)
+            final_credits = get_user_credits(user_id)  # Use dedicated credit function
             final_xp = updated_stats.get('xp_points', 0)
             final_streak = updated_stats.get('streak', 0)
             final_level = updated_stats.get('level', 1)
             
-            # FIRST MESSAGE: Answer and explanation (no stats)
+            # FIRST MESSAGE: Answer and explanation ONLY (no stats)
             if is_correct:
                 answer_message = f"🎉 **OUTSTANDING!** {user_name}! 🎉\n\n"
                 answer_message += f"✅ **Correct Answer:** {question_data['answer']}\n"
@@ -347,33 +366,39 @@ class MathematicsHandler:
             
             # Add analysis if available to answer message
             if analysis.get('detailed_analysis'):
-                answer_message += f"🔍 Analysis:\n{analysis.get('feedback', '')}\n\n"
+                answer_message += f"🔍 **Analysis:**\n{analysis.get('feedback', '')}\n\n"
                 
                 if analysis.get('improvement_tips'):
-                    answer_message += f"💡 Tips: {analysis.get('improvement_tips')}\n\n"
+                    answer_message += f"💡 **Tips:** {analysis.get('improvement_tips')}\n\n"
             
             # Add complete solution to answer message
-            answer_message += f"📝 Complete Solution:\n{question_data['solution']}\n\n"
+            answer_message += f"📝 **Complete Solution:**\n{question_data['solution']}\n\n"
             
             # Add explanation to answer message
             if question_data.get('explanation'):
                 explanation = question_data['explanation']
-                answer_message += f"💡 Explanation:\n{explanation}\n\n"
+                answer_message += f"💡 **Explanation:**\n{explanation}"
             
-            # Add user progress dashboard to main message (consistent with combined exam format)
-            answer_message += f"📊 **{user_name}'s Progress Dashboard:**\n"
-            answer_message += f"💳 **Credits:** {final_credits}\n"
-            answer_message += f"⭐ **Level:** {final_level} (XP: {final_xp})\n"
-            answer_message += f"🔥 **Streak:** {final_streak} days\n"
+            # Send FIRST message (answer and solution only)
+            self.whatsapp_service.send_message(user_id, answer_message)
+            
+            # Wait to ensure answer message loads first and avoid throttling
+            time.sleep(2)
+            
+            # SECOND MESSAGE: User stats and navigation buttons
+            stats_message = f"📊 **{user_name}'s Progress Dashboard:**\n"
+            stats_message += f"💳 **Credits:** {final_credits}\n"
+            stats_message += f"⭐ **Level:** {final_level} (XP: {final_xp})\n"
+            stats_message += f"🔥 **Streak:** {final_streak} days\n"
             
             if is_correct:
-                answer_message += f"✨ **Points Earned:** +{points} XP\n"
+                stats_message += f"✨ **Points Earned:** +{points} XP\n"
                 # Check for level up
                 current_level = analysis.get('previous_level', final_level)
                 if final_level > current_level:
-                    answer_message += f"🎊 **LEVEL UP!** Welcome to Level {final_level}!\n"
+                    stats_message += f"🎊 **LEVEL UP!** Welcome to Level {final_level}!\n"
             
-            answer_message += f"\n🚀 **Ready for your next challenge?**"
+            stats_message += f"\n🚀 **Ready for your next challenge?**"
             
             # Create enhanced navigation buttons with gamification
             topic_encoded = (topic or '').lower().replace(' ', '_')
@@ -385,8 +410,8 @@ class MathematicsHandler:
                 {"text": "🏠 Main Menu", "callback_data": "main_menu"}
             ]
             
-            # Send the complete message with answer, explanation, stats and navigation buttons
-            self.whatsapp_service.send_interactive_message(user_id, answer_message, buttons)
+            # Send SECOND message with stats and buttons
+            self.whatsapp_service.send_interactive_message(user_id, stats_message, buttons)
             
         except Exception as e:
             logger.error(f"Error sending result message to {user_id}: {e}")

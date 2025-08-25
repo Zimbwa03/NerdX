@@ -16,7 +16,7 @@ class MessageThrottle:
         self.last_message_time: Dict[str, float] = defaultdict(float)
         
         # Minimum delay between messages (in seconds)
-        self.min_delay_between_messages = 0.5  # 500ms minimum
+        self.min_delay_between_messages = 0.3  # 300ms minimum - reduced for better UX
         
         # Maximum messages per minute
         self.max_messages_per_minute = 20
