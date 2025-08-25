@@ -1,0 +1,112 @@
+ice - INFO - Starting audio generation for text: Hi Ngonidzashe, global warming is the gradual incr...
+2025-08-25 13:34:19,244 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-08-25 13:34:27,246 - services.audio_chat_service - ERROR - Audio generation timed out - skipping audio response
+[2025-08-25 13:34:33 +0000] [4785] [CRITICAL] WORKER TIMEOUT (pid:4796)
+2025-08-25 13:34:33,086 - services.audio_chat_service - INFO - Audio generation completed - ready for next request
+[2025-08-25 13:34:33 +0000] [4796] [ERROR] Error handling request /webhook/whatsapp
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 134, in handle
+    self.handle_request(listener, req, client, addr)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 177, in handle_request
+    respiter = self.wsgi(environ, resp.start_response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/werkzeug/middleware/proxy_fix.py", line 183, in __call__
+    return self.app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/api/webhook.py", line 153, in handle_webhook
+    handle_text_message(user_id, message_text)
+  File "/home/runner/workspace/api/webhook.py", line 213, in handle_text_message
+    handle_session_message(user_id, message_text)
+  File "/home/runner/workspace/api/webhook.py", line 396, in handle_session_message
+    handle_audio_chat_message(user_id, message_text)
+  File "/home/runner/workspace/api/webhook.py", line 1863, in handle_audio_chat_message
+    audio_chat_service.handle_audio_input(user_id, message_text=message_text)
+  File "/home/runner/workspace/services/audio_chat_service.py", line 637, in handle_audio_input
+    audio_path = self.generate_audio(clean_response, voice_type)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/services/audio_chat_service.py", line 262, in generate_audio
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+  File "/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python3.11/concurrent/futures/_base.py", line 647, in __exit__
+    self.shutdown(wait=True)
+  File "/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python3.11/concurrent/futures/thread.py", line 235, in shutdown
+    t.join()
+  File "/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python3.11/threading.py", line 1119, in join
+    self._wait_for_tstate_lock()
+  File "/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python3.11/threading.py", line 1139, in _wait_for_tstate_lock
+    if lock.acquire(block, timeout):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/base.py", line 204, in handle_abort
+    sys.exit(1)
+SystemExit: 1
+[2025-08-25 13:34:33 +0000] [4796] [INFO] Worker exiting (pid: 4796)
+[2025-08-25 13:34:33 +0000] [5076] [INFO] Booting worker with pid: 5076
+2025-08-25 13:34:35,036 - root - INFO - Database tables created successfully
+2025-08-25 13:34:35,080 - database.session_db - INFO - Session database initialized successfully
+2025-08-25 13:34:35,080 - database.external_db - INFO - Supabase properly configured and ready
+Supabase URL: https://hvlvwvzliqrlmqjbfgoa.supabase.co
+Supabase Key: eyJhbGciOiJIUzI1NiIs...
+2025-08-25 13:34:35,080 - services.payment_service - WARNING - EcoCash API key not configured - payment features will be limited
+2025-08-25 13:34:35,081 - services.payment_service - WARNING - EcoCash API key not configured - payment features will be limited
+2025-08-25 13:34:37,059 - services.payment_service - WARNING - EcoCash API key not configured - payment features will be limited
+2025-08-25 13:34:37,059 - services.graph_service - INFO - Enhanced Graph Service initialized for ZIMSEC educational graphs
+2025-08-25 13:34:37,109 - services.english_service - INFO - Enhanced ZIMSEC English Service initialized with Gemini AI
+2025-08-25 13:34:37,138 - services.audio_chat_service - INFO - Gemini AI client initialized for audio generation
+2025-08-25 13:34:37,139 - handlers.graph_practice_handler - INFO - Graph Practice Handler initialized for ZIMSEC O-Level
+2025-08-25 13:34:37,140 - handlers.english_handler - INFO - ZIMSEC English Handler initialized with comprehensive modules
+2025-08-25 13:34:37,284 - app - INFO - NerdX Quiz Bot startup
+Making GET request to https://hvlvwvzliqrlmqjbfgoa.supabase.co/rest/v1/credit_transactions
+Headers: {'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Content-Type': 'application/json'}
+Params: {'select': 'created_at'}
+Data: None
+Response status: 200
+Response text: [{"created_at":"2025-07-13T20:57:19.009703"}, 
+ {"created_at":"2025-07-13T21:07:18.360847"}, 
+ {"created_at":"2025-07-13T21:21:17.468367"}, 
+ {"created_at":"2025-07-13T21:23:18.304914"}, 
+ {"created_at":"2025-07-13T21:40:26.446226"}, 
+ {"created_at":"2025-07-13T21:41:14.606012"}, 
+ {"created_at":"2025-07-13T21:41:48.385813"}, 
+ {"created_at":"2025-07-13T21:42:34.727324"}, 
+ {"created_at":"2025-07-13T22:04:44.5666"}, 
+ {"created_at":"2025-07-13T22:06:49.988364"}, 
+ {"created_at":"2025-07-17T22:45:18.609567"}, 
+ {"created_at":"2025-07-17T23:22:03.15597"}, 
+ {"created_at":"2025-07-17T23:23:56.964519"}, 
+ {"created_at":"2025-07-17T23:27:50.662038"}, 
+ {"created_at":"2025-07-17T23:35:25.127238"}, 
+ {"created_at":"2025-07-17T23:45:25.867307"}, 
+ {"created_at":"2025-07-18T09:08:22.360902"}, 
+ {"created_at":"2025-07-18T09:11:00.912465"}, 
+ {"created_at":"2025-07-18T09:13:04.230293"}, 
+ {"created_at":"2025-07-18T11:48:26.144698"}, 
+ {"created_at":"2025-07-18T11:49:31.885532"}, 
+ {"created_at":"2025-07-18T12:14:12.031148"}, 
+ {"created_at":"2025-07-18T12:41:48.158463"}, 
+ {"created_at":"2025-07-18T13:11:21.052813"}, 
+ {"created_at":"2025-07-18T14:09:19.183458"}, 
+ {"created_at":"2025-07-19T00:52:24.664594"}, 
+ {"created_at":"2025-07-19T04:33:41.359617"}, 
+ {"created_at":"2025-07-19T04:48:17.217003"}, 
+ {"created_at":"2025-07-19T04:48:42.796666"}, 
+ {"created_at":"2025-07-19T04:52:32.82149"}, 
+ {"created_at":"2025-07-19T13:17:39.278967"}, 
+ {"created_at":"2025-07-19T13:17:53.80224"}, 
+ {"created_at":"2025-07-19T13:20:53.878423"}, 
+ {"created_at":"2025-07-19T13:22:36.12385"}, 
+ {"created_at":"2025-07-19T13:28:05.95079"}, 
+ {"created_at":"2025-07-19T13:33:50.918907"}, 
+ {"created_at":"2025-07-19T18:10:43.073634"}, 
+ {"created_at":"2025-07-19T18:11:07.947033"}, 
+ {"created_at":"2025-0
