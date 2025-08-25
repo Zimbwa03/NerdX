@@ -259,7 +259,7 @@ async function loadUserAnalytics() {
             const avgSessionMinutes = Math.round((activity.weekly_summary.avg_session_duration || 0) / 60);
             document.getElementById('avgSessionTime').textContent = `${avgSessionMinutes} min`;
         } else {
-            document.getElementById('activeWeek').textContent = activity.question_activity?.this_week || 0;
+        document.getElementById('activeWeek').textContent = activity.question_activity?.this_week || 0;
             document.getElementById('avgSessionTime').textContent = '15 min';
         }
         
@@ -270,7 +270,7 @@ async function loadUserAnalytics() {
             const retentionRate = Math.round((activeUsers / totalUsers) * 100);
             document.getElementById('retentionRate').textContent = `${retentionRate}%`;
         } else {
-            document.getElementById('retentionRate').textContent = '78%';
+        document.getElementById('retentionRate').textContent = '78%';
         }
         
         // Update charts with real data
@@ -366,47 +366,47 @@ async function loadUserDirectory() {
     } catch (error) {
         console.error('Error loading user directory:', error);
         // Fallback to basic user data
-        try {
-            const response = await fetch(`/api/users?page=${currentPage}&limit=10`);
-            const data = await response.json();
-            
-            const tbody = document.getElementById('usersTableBody');
-            tbody.innerHTML = '';
-            
-            if (data.users && data.users.length > 0) {
-                data.users.forEach(user => {
-                    const row = document.createElement('tr');
-                    
-                    const registrationDate = new Date(user.registration_date).toLocaleDateString();
-                    const lastActivity = user.last_activity ? 
-                        new Date(user.last_activity).toLocaleDateString() : 'Never';
-                    
-                    const accuracy = user.total_attempts > 0 ? 
-                        Math.round((user.correct_answers / user.total_attempts) * 100) : 0;
-                    
-                    const status = user.last_activity && 
-                        new Date(user.last_activity) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) ? 
-                        'Active' : 'Inactive';
-                    
-                    row.innerHTML = `
-                        <td><strong>${user.name} ${user.surname}</strong></td>
-                        <td><code>${user.nerdx_id}</code></td>
-                        <td>${registrationDate}</td>
-                        <td><span class="badge badge-info">${user.credits}</span></td>
-                        <td>${user.total_attempts}</td>
-                        <td>${accuracy}%</td>
-                        <td>${lastActivity}</td>
-                        <td>
-                            <span class="badge badge-${status === 'Active' ? 'success' : 'secondary'}">
-                                ${status}
-                            </span>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                });
+    try {
+        const response = await fetch(`/api/users?page=${currentPage}&limit=10`);
+        const data = await response.json();
+        
+        const tbody = document.getElementById('usersTableBody');
+        tbody.innerHTML = '';
+        
+        if (data.users && data.users.length > 0) {
+            data.users.forEach(user => {
+                const row = document.createElement('tr');
                 
-                totalPages = data.pages;
-                updatePagination(data);
+                const registrationDate = new Date(user.registration_date).toLocaleDateString();
+                const lastActivity = user.last_activity ? 
+                    new Date(user.last_activity).toLocaleDateString() : 'Never';
+                
+                const accuracy = user.total_attempts > 0 ? 
+                    Math.round((user.correct_answers / user.total_attempts) * 100) : 0;
+                
+                const status = user.last_activity && 
+                    new Date(user.last_activity) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) ? 
+                    'Active' : 'Inactive';
+                
+                row.innerHTML = `
+                    <td><strong>${user.name} ${user.surname}</strong></td>
+                    <td><code>${user.nerdx_id}</code></td>
+                    <td>${registrationDate}</td>
+                    <td><span class="badge badge-info">${user.credits}</span></td>
+                    <td>${user.total_attempts}</td>
+                    <td>${accuracy}%</td>
+                    <td>${lastActivity}</td>
+                    <td>
+                        <span class="badge badge-${status === 'Active' ? 'success' : 'secondary'}">
+                            ${status}
+                        </span>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            totalPages = data.pages;
+            updatePagination(data);
             }
         } catch (fallbackError) {
             console.error('Error in fallback user loading:', fallbackError);

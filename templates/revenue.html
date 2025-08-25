@@ -235,7 +235,7 @@
             <div class="card shadow">
                 <div class="card-header py-3">
                     <h6 class="m-0 font-weight-bold text-primary">💸 Operational Cost Breakdown by Feature</h6>
-                </div>
+                    </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-hover">
@@ -485,19 +485,19 @@ function createRevenueChart(trends) {
         type: 'line',
         data: {
             labels: labels,
-            datasets: [{
+        datasets: [{
                 label: 'Revenue',
                 data: revenues,
-                borderColor: 'rgb(75, 192, 192)',
+            borderColor: 'rgb(75, 192, 192)',
                 backgroundColor: 'rgba(75, 192, 192, 0.1)',
-                tension: 0.1
-            }, {
+            tension: 0.1
+        }, {
                 label: 'Profit',
                 data: profits,
                 borderColor: 'rgb(40, 167, 69)',
                 backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                tension: 0.1
-            }]
+            tension: 0.1
+        }]
         },
         options: {
             responsive: true,

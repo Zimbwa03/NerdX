@@ -296,11 +296,11 @@ class GraphPracticeHandler:
                 logger.info(f"AI generation attempt {attempt + 1}/{max_retries} for {topic_name}")
                 
                 try:
-            question_data = self.question_generator.generate_question(
-                'Mathematics',
-                f"Graph - {topic_name}",
-                'medium'
-            )
+                    question_data = self.question_generator.generate_question(
+                        'Mathematics',
+                        f"Graph - {topic_name}",
+                        'medium'
+                    )
 
                     if question_data and 'question' in question_data:
                         logger.info(f"✅ AI generation successful on attempt {attempt + 1}")
@@ -809,7 +809,7 @@ Wait {user_name} NerdX is processing your Graph...
             if module_id in patterns:
                 for pattern in patterns[module_id]:
                     matches = re.findall(pattern, question_text, re.IGNORECASE)
-                if matches:
+                    if matches:
                         expression = matches[0]
                         # Clean up the expression
                         if isinstance(expression, tuple):
@@ -824,7 +824,7 @@ Wait {user_name} NerdX is processing your Graph...
             
             for pattern in fallback_patterns:
                 fallback_match = re.search(pattern, question_text, re.IGNORECASE)
-            if fallback_match:
+                if fallback_match:
                     expression = fallback_match.group().strip()
                     # Clean up common issues
                     expression = re.sub(r'[.!?].*$', '', expression)  # Remove sentence endings
