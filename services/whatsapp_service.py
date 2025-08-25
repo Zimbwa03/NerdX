@@ -329,6 +329,100 @@ class WhatsAppService:
             logger.error(f"Error sending grouped buttons: {e}")
             return False
 
+    def send_main_menu_with_custom_grouping(self, to: str, message: str, buttons: List[Dict]) -> bool:
+        """Send main menu buttons with custom grouping - keep last 3 buttons together"""
+        try:
+            # Check throttle to prevent message chains
+            if not message_throttle.can_send_message(to):
+                delay = message_throttle.throttle_delay(to)
+                if delay > 0:
+                    logger.info(f"Throttling main menu to {to}, waiting {delay:.2f}s")
+                    time.sleep(delay)
+                    if not message_throttle.can_send_message(to):
+                        logger.warning(f"Main menu to {to} blocked by throttle")
+                        return False
+
+            # Acquire lock to prevent concurrent sends
+            if not message_throttle.acquire_lock(to):
+                logger.warning(f"Main menu to {to} blocked - concurrent send")
+                return False
+
+            try:
+                # Validate message length
+                if not message or len(message.strip()) == 0:
+                    logger.error("Message body cannot be empty for main menu")
+                    return False
+                
+                if len(message) > 1024:
+                    logger.warning(f"Message too long ({len(message)} chars), truncating to 1024 characters")
+                    message = message[:1021] + "..."
+                
+                total_buttons = len(buttons)
+                
+                if total_buttons <= 3:
+                    # Send all buttons in one message
+                    result = self.send_single_button_group(to, message, buttons)
+                    if result:
+                        message_throttle.record_message_sent(to)
+                    return result
+                elif total_buttons <= 6:
+                    # Send first 3, then remaining buttons (up to 3)
+                    first_group = buttons[:3]
+                    if not self.send_single_button_group(to, message, first_group):
+                        return False
+                    
+                    remaining_group = buttons[3:]
+                    continuation_message = "📋 *More Options:*"
+                    result = self.send_single_button_group(to, continuation_message, remaining_group)
+                    if result:
+                        message_throttle.record_message_sent(to)
+                    return result
+                else:
+                    # For more than 6 buttons, use custom grouping to keep last 3 together
+                    # Calculate how many buttons to send in intermediate groups
+                    remaining_after_first = total_buttons - 3  # Buttons after first group
+                    
+                    # Ensure we have exactly 3 buttons left for the final group
+                    intermediate_buttons_count = remaining_after_first - 3
+                    
+                    # Send first group (3 buttons)
+                    first_group = buttons[:3]
+                    if not self.send_single_button_group(to, message, first_group):
+                        return False
+                    
+                    # Send intermediate groups (in groups of 3, but ensure last 3 stay together)
+                    current_index = 3
+                    while current_index < total_buttons - 3:
+                        # Take up to 3 buttons, but ensure we don't break the last group
+                        buttons_to_take = min(3, (total_buttons - 3) - current_index)
+                        current_group = buttons[current_index:current_index + buttons_to_take]
+                        
+                        continuation_message = "📋 *More Options:*"
+                        if not self.send_single_button_group(to, continuation_message, current_group):
+                            return False
+                        
+                        current_index += buttons_to_take
+                    
+                    # Send final group (last 3 buttons)
+                    if current_index < total_buttons:
+                        final_group = buttons[current_index:]
+                        continuation_message = "📋 *Final Options:*"
+                        result = self.send_single_button_group(to, continuation_message, final_group)
+                        if result:
+                            message_throttle.record_message_sent(to)
+                        return result
+                
+                logger.info(f"Main menu with custom grouping sent successfully to {to}")
+                return True
+                
+            finally:
+                # Always release lock
+                message_throttle.release_lock(to)
+                
+        except Exception as e:
+            logger.error(f"Error sending main menu with custom grouping: {e}")
+            return False
+
     def send_single_button_group(self, to: str, message: str, buttons: List[Dict]) -> bool:
         """Send a single group of up to 3 buttons"""
         try:
