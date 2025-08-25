@@ -37,41 +37,70 @@ class ReferralService:
         }
     
     def generate_referral_code(self, user_id: str) -> Optional[str]:
-        """Generate a unique referral code for user"""
-        session = SessionLocal()
+        """Generate a unique referral code for user with enhanced fallback"""
         try:
-            from models import ReferralCode
-            
-            # Check if user already has a referral code
-            existing_code = session.query(ReferralCode).filter_by(user_id=user_id).first()
-            if existing_code:
-                return existing_code.referral_code
-            
-            # Generate new unique code
-            for _ in range(10):  # Try 10 times to generate unique code
-                code = self._generate_code()
+            # First attempt: Try database approach
+            session = SessionLocal()
+            try:
+                from models import ReferralCode
                 
-                # Check if code is unique
-                if not session.query(ReferralCode).filter_by(referral_code=code).first():
-                    # Code is unique, save it
-                    new_code = ReferralCode(user_id=user_id, referral_code=code)
+                # Check if user already has a referral code
+                existing_code = session.query(ReferralCode).filter_by(user_id=user_id).first()
+                if existing_code:
+                    logger.info(f"Retrieved existing referral code {existing_code.referral_code} for user {user_id}")
+                    return existing_code.referral_code
+                
+                # Generate new unique code
+                for attempt in range(10):  # Try 10 times to generate unique code
+                    code = self._generate_code(user_id)
+                    
+                    # Check if code is unique
+                    if not session.query(ReferralCode).filter_by(referral_code=code).first():
+                        # Code is unique, save it
+                        new_code = ReferralCode(user_id=user_id, referral_code=code)
+                        session.add(new_code)
+                        session.commit()
+                        
+                        logger.info(f"Generated and saved referral code {code} for user {user_id}")
+                        return code
+                    else:
+                        logger.debug(f"Code {code} already exists, retrying (attempt {attempt + 1})")
+                
+                logger.warning("Could not generate unique referral code after 10 attempts, using fallback")
+                # If we can't generate unique code, use fallback
+                fallback_code = self._generate_fallback_code(user_id)
+                
+                # Try to save fallback code
+                try:
+                    new_code = ReferralCode(user_id=user_id, referral_code=fallback_code)
                     session.add(new_code)
                     session.commit()
-                    
-                    logger.info(f"Generated referral code {code} for user {user_id}")
-                    return code
-            
-            logger.error("Could not generate unique referral code")
-            return None
-            
-        except Exception as e:
-            logger.error(f"Error generating referral code: {e}")
-            session.rollback()
-            return None
-        finally:
-            session.close()
+                    logger.info(f"Saved fallback referral code {fallback_code} for user {user_id}")
+                    return fallback_code
+                except Exception as save_error:
+                    logger.error(f"Could not save fallback code: {save_error}")
+                    session.rollback()
+                    return fallback_code  # Return it anyway, even if not saved
+                
+            except Exception as db_error:
+                logger.error(f"Database error generating referral code: {db_error}")
+                session.rollback()
+                # Fall through to database-free approach
+                
+            finally:
+                session.close()
+                
+        except Exception as session_error:
+            logger.error(f"Session error generating referral code: {session_error}")
+            # Continue to database-free approach
+        
+        # Fallback approach: Generate code without database
+        logger.warning(f"Using database-free fallback for user {user_id}")
+        fallback_code = self._generate_fallback_code(user_id)
+        logger.info(f"Generated database-free referral code {fallback_code} for user {user_id}")
+        return fallback_code
     
-    def _generate_code(self) -> str:
+    def _generate_code(self, user_id: str = None) -> str:
         """Generate a random 8-character referral code"""
         try:
             # Use mix of uppercase letters and digits
@@ -83,7 +112,35 @@ class ReferralService:
             
         except Exception as e:
             logger.error(f"Error generating code: {e}")
-            return "NERDX123"  # Fallback code
+            # Create a unique fallback code using user_id if available
+            if user_id:
+                return self._generate_fallback_code(user_id)
+            return "NERDX123"  # Last resort fallback
+    
+    def _generate_fallback_code(self, user_id: str) -> str:
+        """Generate a fallback referral code based on user ID"""
+        try:
+            import hashlib
+            
+            # Create a hash of the user ID to ensure uniqueness
+            hash_object = hashlib.md5(f"NERDX_{user_id}".encode())
+            hash_hex = hash_object.hexdigest().upper()
+            
+            # Take first 6 characters and add "NX" prefix
+            unique_part = hash_hex[:6]
+            fallback_code = f"NX{unique_part}"
+            
+            logger.info(f"Generated fallback referral code {fallback_code} for user {user_id}")
+            return fallback_code
+            
+        except Exception as e:
+            logger.error(f"Error generating fallback code: {e}")
+            # Last resort: use last 6 digits of user_id with prefix
+            try:
+                safe_id = ''.join(filter(str.isdigit, user_id))[-6:].zfill(6)
+                return f"NX{safe_id}"
+            except:
+                return "NERDX123"
     
     def validate_referral_code(self, referral_code: str) -> Optional[str]:
         """Validate referral code and return referrer user_id"""
@@ -201,9 +258,14 @@ class ReferralService:
         try:
             from models import ReferralCode, ReferralStats, Referral
             
-            # Get referral code
+            # Get referral code from database first
             code_record = session.query(ReferralCode).filter_by(user_id=user_id).first()
             referral_code = code_record.referral_code if code_record else None
+            
+            # If no code in database, generate one (this handles the fallback case)
+            if not referral_code:
+                logger.info(f"No referral code in database for {user_id}, generating one")
+                referral_code = self.generate_referral_code(user_id)
             
             # Get stats
             stats = session.query(ReferralStats).filter_by(user_id=user_id).first()
@@ -235,8 +297,16 @@ class ReferralService:
             
         except Exception as e:
             logger.error(f"Error getting referral stats: {e}")
+            # Even on database error, try to generate a fallback referral code
+            fallback_referral_code = None
+            try:
+                fallback_referral_code = self._generate_fallback_code(user_id)
+                logger.info(f"Generated fallback referral code {fallback_referral_code} for {user_id} due to database error")
+            except Exception as fallback_error:
+                logger.error(f"Could not generate fallback referral code: {fallback_error}")
+            
             return {
-                'referral_code': None,
+                'referral_code': fallback_referral_code,
                 'total_referrals': 0,
                 'successful_referrals': 0,
                 'total_bonus_earned': 0,

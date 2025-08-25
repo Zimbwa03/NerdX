@@ -1036,6 +1036,8 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             whatsapp_service.send_message(user_id, "📷 Please send an image of your math problem to solve it!")
         elif selection_id == 'stats':
             show_user_stats(user_id)
+        elif selection_id == 'user_stats':
+            show_user_stats(user_id)
         elif selection_id.startswith('package_'):
             handle_credit_package_selection(user_id, selection_id)
 
@@ -1297,29 +1299,93 @@ def show_credit_balance(user_id: str):
         logger.error(f"Error showing credit balance for {user_id}: {e}", exc_info=True)
 
 def show_user_stats(user_id: str):
-    """Show user statistics"""
+    """Show comprehensive user statistics with gamification elements"""
     try:
-        stats = user_service.get_user_stats_summary(user_id)
-
-        if stats['success']:
-            data = stats['stats']
-            message = f"📊 **Your Statistics**\n\n"
-            message += f"💳 Credits: {data['credits']}\n"
-            message += f"🏆 Total Points: {data['total_points']}\n"
-            message += f"🔥 Current Streak: {data['streak_count']} days\n"
-            message += f"📝 Questions Answered: {data['questions_answered']}\n"
-            message += f"✅ Accuracy: {data['accuracy']}%\n"
-            message += f"🎯 Level: {data['level']['name']}\n"
-
-            if data['level']['next_threshold']:
-                progress = data['level']['progress_percent']
-                message += f"📈 Progress: {progress}%"
-
-            whatsapp_service.send_message(user_id, message)
+        # Get user data using the same functions that work in main menu
+        from database.external_db import get_user_registration, get_user_stats, get_user_credits
+        from services.advanced_credit_service import advanced_credit_service
+        
+        # Get user information
+        registration = get_user_registration(user_id)
+        user_name = registration['name'] if registration else "Student"
+        
+        # Get comprehensive user stats
+        user_stats = get_user_stats(user_id) or {
+            'level': 1, 'xp_points': 0, 'streak': 0, 
+            'correct_answers': 0, 'total_attempts': 0
+        }
+        
+        # Get credit information using advanced credit service
+        credit_status = advanced_credit_service.get_user_credit_status(user_id)
+        current_credits = credit_status['credits']
+        
+        # Calculate statistics
+        level = user_stats.get('level', 1)
+        xp_points = user_stats.get('xp_points', 0)
+        streak = user_stats.get('streak', 0)
+        correct_answers = user_stats.get('correct_answers', 0)
+        total_attempts = user_stats.get('total_attempts', 0)
+        
+        # Calculate accuracy
+        accuracy = (correct_answers / max(total_attempts, 1) * 100) if total_attempts > 0 else 0
+        
+        # Calculate XP needed for next level
+        xp_for_next_level = (level * 100) - xp_points
+        if xp_for_next_level <= 0:
+            xp_for_next_level = 100  # Base XP for next level
+        
+        # Create comprehensive stats message
+        message = f"📊 **{user_name}'s Learning Statistics** 📊\n\n"
+        
+        # Credit Status
+        message += f"💰 **Credit Balance**\n"
+        message += f"💳 Current Credits: {current_credits}\n"
+        message += f"🔥 Active Packages: {len(credit_status.get('active_packages', []))}\n\n"
+        
+        # Learning Progress  
+        message += f"🎮 **Learning Progress**\n"
+        message += f"🏆 Level: {level}\n"
+        message += f"⭐ XP Points: {xp_points:,}\n"
+        message += f"📈 Next Level: {xp_for_next_level} XP needed\n"
+        message += f"🔥 Current Streak: {streak} days\n\n"
+        
+        # Performance Stats
+        message += f"📝 **Performance Stats**\n"
+        message += f"✅ Correct Answers: {correct_answers}\n"
+        message += f"📊 Total Attempts: {total_attempts}\n"
+        message += f"🎯 Accuracy Rate: {accuracy:.1f}%\n\n"
+        
+        # Motivational message based on performance
+        if accuracy >= 80:
+            message += f"🌟 **Excellent work!** You're mastering the material!\n"
+        elif accuracy >= 60:
+            message += f"💪 **Good progress!** Keep practicing to improve!\n"
+        elif total_attempts > 0:
+            message += f"🚀 **Getting started!** Every expert was once a beginner!\n"
         else:
-            whatsapp_service.send_message(user_id, "Unable to retrieve statistics.")
+            message += f"🎯 **Ready to begin?** Start your learning journey now!\n"
+        
+        # Progress bar for next level
+        progress_percentage = (xp_points % 100) / 100 * 100 if level > 1 else xp_points / 100 * 100
+        progress_bar = "▓" * int(progress_percentage / 10) + "░" * (10 - int(progress_percentage / 10))
+        message += f"📊 Level Progress: [{progress_bar}] {progress_percentage:.0f}%\n\n"
+        
+        # Action buttons
+        buttons = [
+            {"text": "🎯 Start Learning", "callback_data": "start_quiz"},
+            {"text": "💰 Buy Credits", "callback_data": "credit_store"},
+            {"text": "👥 Referrals", "callback_data": "referrals_menu"},
+            {"text": "🏠 Main Menu", "callback_data": "main_menu"}
+        ]
+        
+        whatsapp_service.send_interactive_message(user_id, message, buttons)
+        
+        logger.info(f"Successfully displayed stats for {user_id}: Level {level}, {xp_points} XP, {accuracy:.1f}% accuracy")
+        
     except Exception as e:
         logger.error(f"Error showing user stats for {user_id}: {e}", exc_info=True)
+        # Fallback message
+        whatsapp_service.send_message(user_id, "❌ Unable to retrieve your statistics right now. Please try again later or contact support if the issue persists.")
 
 def show_credit_packages(user_id: str):
     """Show available credit packages with enhanced display"""
