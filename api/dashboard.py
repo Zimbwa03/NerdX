@@ -381,7 +381,6 @@ def get_activity():
         today = datetime.now().date()
         week_ago = today - timedelta(days=7)
         month_ago = today - timedelta(days=30)
-            
         today_activity = 0
         week_activity = 0
         month_activity = 0
