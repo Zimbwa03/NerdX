@@ -538,6 +538,10 @@ class WhatsAppService:
             
             if not public_url:
                 logger.error(f"Failed to get public URL for {file_path}")
+                # Send text-only caption as fallback if image hosting fails
+                if caption:
+                    fallback_msg = f"📊 Graph Generation Complete!\n\n{caption}\n\n❌ Image hosting temporarily unavailable. Please check back later or contact support."
+                    return self.send_message(to, fallback_msg)
                 return False
             
             logger.info(f"Got public URL for {file_path}: {public_url}")

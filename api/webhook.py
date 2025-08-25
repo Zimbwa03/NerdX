@@ -202,10 +202,12 @@ def handle_text_message(user_id: str, message_text: str):
             english_handler.handle_essay_submission(user_id, message_text)
             return
         
-        # Check for graph practice custom input session
-        if session_data and session_data.get('awaiting_custom_graph'):
-            graph_practice_handler.handle_graph_practice_start(user_id)
-            return
+        # Check for graph practice custom expression input session  
+        if session_data and session_data.get('awaiting_expression'):
+            # Process the custom expression input
+            if graph_practice_handler.process_expression_input(user_id, message_text):
+                return  # Successfully processed
+            # If processing failed, continue to normal flow
 
         # Check if user is in a general session
         session_type = session_manager.get_session_type(user_id)

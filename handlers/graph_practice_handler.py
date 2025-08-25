@@ -468,23 +468,28 @@ We want to give you the best AI-generated questions that match your learning nee
                 # Get current credits
                 current_credits = get_user_credits(user_id)
                 
-                # Enhanced success message with gamification
+                # Enhanced success message with gamification and credit deduction info
+                from services.advanced_credit_service import advanced_credit_service
+                
+                # Get credit cost for graph generation
+                credit_cost = advanced_credit_service.get_credit_cost_for_action('graph_study')
+                
                 success_msg = f"""✅ **Your Personalized Graph** ✅
 
-👤 Student: {user_name}
-📊 Expression: {expression}
-📂 Topic: {module_info['title']}
-🎨 Created with NerdX watermark
+👤 **Student:** {user_name}
+📊 **Expression:** {expression}
+📂 **Topic:** {module_info['title']}
+🎨 **Created with NerdX watermark**
 
-📈 Study this graph carefully and compare with your manual plotting!
+📈 **Study this graph carefully and compare with your manual plotting!**
 
-🎮 **Rewards Earned:**
-⚡ XP Gained: +{xp_gained}
-🔥 Current Streak: {current_streak}
-🏆 Level: {new_level}
-💰 Credits: {current_credits}{level_up_bonus}
+📊 **Your Updated Stats:**
+💳 **Credits:** {current_credits} (Used: {credit_cost})
+⚡ **XP Gained:** +{xp_gained}
+🔥 **Current Streak:** {current_streak} days
+🏆 **Level:** {new_level}{level_up_bonus}
 
-🌟 Keep practicing to level up faster!"""
+🌟 **Keep practicing to level up faster!**"""
 
                 # Send the graph image using the file path directly
                 self.whatsapp_service.send_image_file(user_id, graph_result['image_path'], success_msg)

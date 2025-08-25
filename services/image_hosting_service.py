@@ -48,23 +48,34 @@ class ImageHostingService:
             return None
     
     def upload_image_with_fallback(self, file_path: str) -> Optional[str]:
-        """Upload image with fallback to local URL conversion"""
+        """Upload image with ImgBB as primary, fallback only if configured properly"""
         try:
-            # First try ImgBB
-            public_url = self.upload_image(file_path)
+            # Always try ImgBB first if available
+            if self.api_key:
+                logger.info("Attempting ImgBB upload...")
+                public_url = self.upload_image(file_path)
+                
+                if public_url and self.verify_image_url(public_url):
+                    logger.info("ImgBB upload successful and verified")
+                    return public_url
+                else:
+                    logger.warning("ImgBB upload failed or verification failed")
+            else:
+                logger.warning("ImgBB API key not configured")
             
-            if public_url and self.verify_image_url(public_url):
-                return public_url
-            
-            # Fallback to local URL conversion
-            logger.warning("ImgBB upload failed or verification failed, falling back to local URL conversion")
+            # Only try local URL conversion if Render base URL is properly configured
             from utils.url_utils import convert_local_path_to_public_url
             fallback_url = convert_local_path_to_public_url(file_path)
             
             if fallback_url and self.verify_image_url(fallback_url):
+                logger.info("Local URL fallback successful")
                 return fallback_url
+            elif fallback_url:
+                logger.warning("Local URL created but failed verification")
+            else:
+                logger.warning("Local URL conversion returned None - proper base URL not configured")
             
-            logger.error("Both ImgBB and fallback URL failed verification")
+            logger.error("Both ImgBB and fallback URL failed - image hosting not available")
             return None
             
         except Exception as e:

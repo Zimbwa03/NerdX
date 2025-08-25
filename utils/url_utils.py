@@ -6,36 +6,34 @@ from config import Config
 logger = logging.getLogger(__name__)
 
 def convert_local_path_to_public_url(local_path: str) -> str:
-    """Convert a local file path to a public URL accessible by WhatsApp"""
+    """Convert a local file path to a public URL accessible by WhatsApp for Render deployment"""
     try:
         # Ensure the path is relative to the project root
         if local_path.startswith('./'):
             local_path = local_path[2:]
-        elif local_path.startswith('/home/runner/workspace/'):
-            # Convert absolute Replit path to relative
-            local_path = local_path.replace('/home/runner/workspace/', '')
+        elif local_path.startswith('/app/'):
+            # Convert absolute Render path to relative
+            local_path = local_path.replace('/app/', '')
         elif local_path.startswith('/'):
             # Remove leading slash for relative path
             local_path = local_path[1:]
 
-        # Get the base URL from config or use Replit's public URL
+        # Get the base URL from config or environment for Render
         base_url = getattr(Config, 'BASE_URL', None)
         if not base_url:
-            # Try to get the Replit URL from environment variables
-            repl_slug = os.environ.get('REPL_SLUG')
-            repl_owner = os.environ.get('REPL_OWNER')
-            
-            if repl_slug and repl_owner:
-                # Use the standard Replit domain format
-                base_url = f"https://{repl_slug}-{repl_owner}.replit.app"
+            # Try to get the Render URL from environment variables
+            render_url = os.environ.get('RENDER_EXTERNAL_URL')
+            if render_url:
+                base_url = render_url.rstrip('/')
             else:
-                # Fallback: try to construct from REPLIT_URL
-                replit_url = os.environ.get('REPLIT_URL')
-                if replit_url:
-                    base_url = replit_url.rstrip('/')
+                # Try alternative environment variables
+                app_url = os.environ.get('APP_URL') or os.environ.get('WEB_URL')
+                if app_url:
+                    base_url = app_url.rstrip('/')
                 else:
-                    # Last resort: use the workspace URL pattern
-                    base_url = "https://workspace.privilegemutsam.repl.co"
+                    # Fallback: assume standard naming convention
+                    app_name = os.environ.get('RENDER_SERVICE_NAME', 'nerdx')
+                    base_url = f"https://{app_name}.onrender.com"
 
         # Construct the full public URL
         public_url = f"{base_url}/{local_path}"
@@ -45,8 +43,8 @@ def convert_local_path_to_public_url(local_path: str) -> str:
 
     except Exception as e:
         logger.error(f"Error converting local path to public URL: {e}")
-        # Return a fallback URL using the workspace pattern
-        return f"https://workspace.privilegemutsam.repl.co/{local_path}"
+        # Return None to force ImgBB upload instead of invalid fallback
+        return None
 
 def get_static_file_url(filename: str, subfolder: str = '') -> str:
     """Get a public URL for a static file"""
