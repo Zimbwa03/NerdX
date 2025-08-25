@@ -292,8 +292,17 @@ class AdminAuthService:
             
             user_id, expires_at, first_name, last_name, email, role, is_active = session_data
             
-            # Check if session expired
-            if expires_at < datetime.now():
+            # Check if session expired (handle timezone awareness)
+            from datetime import timezone
+            current_time = datetime.now()
+            if expires_at.tzinfo is not None:
+                # expires_at is timezone-aware, make current_time timezone-aware too
+                current_time = datetime.now(timezone.utc)
+            elif current_time.tzinfo is not None:
+                # current_time is timezone-aware, make it naive
+                current_time = current_time.replace(tzinfo=None)
+            
+            if expires_at < current_time:
                 cursor.execute("""
                     UPDATE admin_sessions 
                     SET is_active = false
@@ -316,12 +325,17 @@ class AdminAuthService:
                 conn.close()
                 return None
             
-            # Update last activity
+            # Update last activity (handle timezone consistency)
+            last_activity_time = datetime.now()
+            if expires_at.tzinfo is not None:
+                # If database stores timezone-aware datetimes, make this timezone-aware too
+                last_activity_time = datetime.now(timezone.utc)
+            
             cursor.execute("""
                 UPDATE admin_sessions 
                 SET last_activity = %s
                 WHERE session_token = %s
-            """, (datetime.now(), session_token))
+            """, (last_activity_time, session_token))
             
             conn.commit()
             cursor.close()
