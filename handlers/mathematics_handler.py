@@ -110,20 +110,29 @@ class MathematicsHandler:
                 self.whatsapp_service.send_message(user_id, credit_error)
                 return
             
-            # Deduct credits
-            credit_cost = self.mathematics_service.get_credit_cost(difficulty)
-            success = deduct_credits(user_id, credit_cost, f"{difficulty}_math_question", 
-                                   f"{difficulty} Mathematics question on {formatted_topic}")
+            # Deduct credits using advanced credit service
+            from services.advanced_credit_service import advanced_credit_service
             
-            if not success:
-                self.whatsapp_service.send_message(user_id, "❌ Error deducting credits. Please try again.")
+            credit_result = advanced_credit_service.check_and_deduct_credits(
+                user_id, 
+                'math_topical',  # Use standardized action name
+                difficulty
+            )
+            
+            if not credit_result['success']:
+                # Send credit error message with helpful info
+                if credit_result.get('insufficient'):
+                    message = f"❌ Insufficient credits. You need {credit_result['required_credits']} but have {credit_result['current_credits']}.\n\n💰 *Get More Credits:*\n• Daily bonus: 5 credits\n• Referral bonus: 10 credits\n• Share NerdX with friends!"
+                else:
+                    message = credit_result.get('message', '❌ Error processing credits. Please try again.')
+                self.whatsapp_service.send_message(user_id, message)
                 return
             
-            # Send generating message
+            # Send generating message with correct credit amount
             self.whatsapp_service.send_message(
                 user_id, 
                 f"🧮 Generating {difficulty} Mathematics question on {formatted_topic}...\n\n"
-                f"💳 Credits deducted: {credit_cost}"
+                f"💳 Credits deducted: {credit_result['deducted']}"
             )
             
             # Create a temporary session to prevent duplicate generation
@@ -300,7 +309,7 @@ class MathematicsHandler:
 
     def _send_result_message(self, user_id: str, user_name: str, analysis: Dict, question_data: Dict, 
                            topic: str, difficulty: str):
-        """Send detailed result message with AI analysis"""
+        """Send detailed result message with AI analysis - split into answer and stats messages"""
         try:
             from database.external_db import get_user_stats
             
@@ -314,79 +323,79 @@ class MathematicsHandler:
             final_streak = updated_stats.get('streak', 0)
             final_level = updated_stats.get('level', 1)
             
-            # Enhanced gamified result message
+            # FIRST MESSAGE: Answer and explanation (no stats)
             if is_correct:
-                message = f"🎉 **OUTSTANDING!** {user_name}! 🎉\n\n"
-                message += f"✅ **Correct Answer:** {question_data['answer']}\n"
-                message += f"🎯 **Difficulty:** {difficulty.title()}\n"
-                message += f"💎 **XP Earned:** +{points}\n"
-                message += f"🔥 **Streak:** {final_streak}\n\n"
+                answer_message = f"🎉 **OUTSTANDING!** {user_name}! 🎉\n\n"
+                answer_message += f"✅ **Correct Answer:** {question_data['answer']}\n"
+                answer_message += f"🎯 **Difficulty:** {difficulty.title()}\n"
+                answer_message += f"📚 **Topic:** {topic}\n\n"
                 
-                # Special streak messages
+                # Special achievement messages
                 if final_streak >= 10:
-                    message += f"🏆 **STREAK MASTER!** You're on fire!\n"
+                    answer_message += f"🏆 **STREAK MASTER!** You're on fire!\n"
                 elif final_streak >= 5:
-                    message += f"⚡ **HOT STREAK!** Keep it going!\n"
+                    answer_message += f"⚡ **HOT STREAK!** Keep it going!\n"
                 elif final_streak >= 3:
-                    message += f"🌟 **BUILDING MOMENTUM!** Great job!\n"
-                message += "\n"
+                    answer_message += f"🌟 **BUILDING MOMENTUM!** Great job!\n"
+                answer_message += "\n"
             else:
-                message = f"📚 **Keep Learning,** {user_name}! 📚\n\n"
-                message += f"🎯 **Correct Answer:** {question_data['answer']}\n"
-                message += f"💡 **Don't worry!** Every mistake is a learning opportunity!\n"
-                message += f"🔥 **Streak:** {final_streak} (Try again to build it up!)\n\n"
+                answer_message = f"📚 **Keep Learning,** {user_name}! 📚\n\n"
+                answer_message += f"🎯 **Correct Answer:** {question_data['answer']}\n"
+                answer_message += f"🎯 **Difficulty:** {difficulty.title()}\n"
+                answer_message += f"📚 **Topic:** {topic}\n\n"
+                answer_message += f"💡 **Don't worry!** Every mistake is a learning opportunity!\n\n"
             
-            # Add analysis if available
+            # Add analysis if available to answer message
             if analysis.get('detailed_analysis'):
-                message += f"🔍 Analysis:\n{analysis.get('feedback', '')}\n\n"
+                answer_message += f"🔍 Analysis:\n{analysis.get('feedback', '')}\n\n"
                 
                 if analysis.get('improvement_tips'):
-                    message += f"💡 Tips: {analysis.get('improvement_tips')}\n\n"
+                    answer_message += f"💡 Tips: {analysis.get('improvement_tips')}\n\n"
             
-            # Add solution
-            message += f"📝 Complete Solution:\n{question_data['solution']}\n\n"
+            # Add complete solution to answer message
+            answer_message += f"📝 Complete Solution:\n{question_data['solution']}\n\n"
             
-            # Add explanation (shortened for Combined Science)
+            # Add explanation to answer message
             if question_data.get('explanation'):
                 explanation = question_data['explanation']
-                # Shorten explanation to maximum 200 characters for Combined Science
-                if len(explanation) > 200:
-                    explanation = explanation[:200] + "... (Key concept only)"
-                message += f"💡 Explanation:\n{explanation}\n\n"
+                answer_message += f"💡 Explanation:\n{explanation}\n\n"
             
-            # Enhanced gamified stats display
-            message += f"🎮 **Your Progress Dashboard** 🎮\n"
-            message += f"━━━━━━━━━━━━━━━━━━━━\n"
-            message += f"💰 **Credits:** {final_credits}\n"
-            message += f"⚡ **Total XP:** {final_xp}\n"
-            message += f"🔥 **Current Streak:** {final_streak}\n"
-            message += f"🏆 **Level:** {final_level}\n"
+            # Send the first message with answer and explanation
+            self.whatsapp_service.send_message(user_id, answer_message)
             
-            # Add level progress bar
+            # SECOND MESSAGE: User stats and progress (separate message)
+            stats_message = f"🎮 **Your Progress Dashboard** 🎮\n"
+            stats_message += f"━━━━━━━━━━━━━━━━━━━━\n"
+            stats_message += f"💰 **Credits:** {final_credits}\n"
+            stats_message += f"⚡ **Total XP:** {final_xp}\n"
+            stats_message += f"🔥 **Current Streak:** {final_streak}\n"
+            stats_message += f"🏆 **Level:** {final_level}\n"
+            
+            # Add level progress bar to stats message
             xp_for_next_level = (final_level * 100) - final_xp
             if xp_for_next_level > 0:
-                message += f"📈 **Next Level:** {xp_for_next_level} XP away!\n"
+                stats_message += f"📈 **Next Level:** {xp_for_next_level} XP away!\n"
             else:
-                message += f"🌟 **Level Master!** Keep climbing!\n"
+                stats_message += f"🌟 **Level Master!** Keep climbing!\n"
                 
-            message += f"━━━━━━━━━━━━━━━━━━━━\n\n"
+            stats_message += f"━━━━━━━━━━━━━━━━━━━━\n\n"
             
-            # Add encouragement
+            # Add encouragement to stats message
             if analysis.get('encouragement'):
-                message += f"🌟 {analysis.get('encouragement')}"
+                stats_message += f"🌟 {analysis.get('encouragement')}\n\n"
             
             # Create enhanced navigation buttons with gamification
             topic_encoded = (topic or '').lower().replace(' ', '_')
             
             buttons = [
                 {"text": f"➡️ Next Question (+{points} XP)", "callback_data": f"math_question_{topic_encoded}_{difficulty}"},
+                {"text": "📊 My Stats", "callback_data": "user_stats"},
                 {"text": "📚 Change Topic", "callback_data": "mathematics_mcq"},
-                {"text": "💰 Buy More Credits", "callback_data": "credit_store"},
                 {"text": "🏠 Main Menu", "callback_data": "main_menu"}
             ]
             
-            # Send result message
-            self.whatsapp_service.send_interactive_message(user_id, message, buttons)
+            # Send stats message with navigation buttons
+            self.whatsapp_service.send_interactive_message(user_id, stats_message, buttons)
             
         except Exception as e:
             logger.error(f"Error sending result message to {user_id}: {e}")

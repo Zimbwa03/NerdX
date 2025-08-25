@@ -1043,9 +1043,21 @@ Wait {user_name} NerdX is processing your Graph...
                 self.whatsapp_service.send_interactive_message(user_id, message, buttons)
                 return
 
-            # Deduct credits
-            if not deduct_credits(user_id, 2, "graph_creation", f"Graph creation for {module_info['title']}"):
-                self.whatsapp_service.send_message(user_id, "❌ Error processing credits. Please try again.")
+            # Check and deduct credits using advanced credit service
+            from services.advanced_credit_service import advanced_credit_service
+            
+            credit_result = advanced_credit_service.check_and_deduct_credits(
+                user_id, 
+                'math_graph_practice',  # 3 credits as per config
+                None
+            )
+            
+            if not credit_result['success']:
+                if credit_result.get('insufficient'):
+                    message = f"❌ Insufficient credits. You need {credit_result['required_credits']} but have {credit_result['current_credits']}."
+                else:
+                    message = credit_result.get('message', '❌ Error processing credits. Please try again.')
+                self.whatsapp_service.send_message(user_id, message)
                 return
 
             # Generate appropriate graph based on module

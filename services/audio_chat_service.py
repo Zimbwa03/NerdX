@@ -587,8 +587,9 @@ Type 'end audio' to exit audio chat mode."""
                     whatsapp_service.send_interactive_message(user_id, insufficient_msg, buttons)
                     return
                 else:
-                    whatsapp_service.send_message(user_id, "❌ Credit processing error. Please try again.")
-                return
+                    error_message = credit_result.get('message', '❌ Credit processing error. Please try again.')
+                    whatsapp_service.send_message(user_id, error_message)
+                    return
             
             # Show processing message
             whatsapp_service.send_message(user_id, "🎵 Generating your audio response...")

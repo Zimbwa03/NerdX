@@ -1824,9 +1824,21 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
                 self.whatsapp_service.send_message(user_id, f"❌ Insufficient credits! You need 2 credits but have {credits}. Purchase more credits to continue.")
                 return
 
-            # Deduct credits
-            if not deduct_credits(user_id, 2, "english_grammar", "Grammar and Usage question"):
-                self.whatsapp_service.send_message(user_id, "❌ Error processing credits. Please try again.")
+            # Check and deduct credits using advanced credit service
+            from services.advanced_credit_service import advanced_credit_service
+            
+            credit_result = advanced_credit_service.check_and_deduct_credits(
+                user_id, 
+                'english_grammar',  # 2 credits as per config
+                None
+            )
+            
+            if not credit_result['success']:
+                if credit_result.get('insufficient'):
+                    message = f"❌ Insufficient credits. You need {credit_result['required_credits']} but have {credit_result['current_credits']}."
+                else:
+                    message = credit_result.get('message', '❌ Error processing credits. Please try again.')
+                self.whatsapp_service.send_message(user_id, message)
                 return
 
             # Send loading message
@@ -1876,9 +1888,21 @@ Type your answer below:"""
                 self.whatsapp_service.send_message(user_id, f"❌ Insufficient credits! You need 2 credits but have {credits}. Purchase more credits to continue.")
                 return
 
-            # Deduct credits
-            if not deduct_credits(user_id, 2, "english_vocabulary", "Vocabulary Building question"):
-                self.whatsapp_service.send_message(user_id, "❌ Error processing credits. Please try again.")
+            # Check and deduct credits using advanced credit service
+            from services.advanced_credit_service import advanced_credit_service
+            
+            credit_result = advanced_credit_service.check_and_deduct_credits(
+                user_id, 
+                'english_vocabulary',  # 2 credits as per config
+                None
+            )
+            
+            if not credit_result['success']:
+                if credit_result.get('insufficient'):
+                    message = f"❌ Insufficient credits. You need {credit_result['required_credits']} but have {credit_result['current_credits']}."
+                else:
+                    message = credit_result.get('message', '❌ Error processing credits. Please try again.')
+                self.whatsapp_service.send_message(user_id, message)
                 return
 
             # Send loading message
@@ -2047,9 +2071,21 @@ Type your answer below:"""
             user_name = registration['name'] if registration else "Student"
             form_level = registration.get('form_level', 3) if registration else 3
 
-            # Deduct credits
-            if not deduct_credits(user_id, 3, "english_comprehension", f"Comprehension: {theme}"):
-                self.whatsapp_service.send_message(user_id, "❌ Error processing credits. Please try again.")
+            # Check and deduct credits using advanced credit service
+            from services.advanced_credit_service import advanced_credit_service
+            
+            credit_result = advanced_credit_service.check_and_deduct_credits(
+                user_id, 
+                'english_comprehension',  # 3 credits as per config
+                None
+            )
+            
+            if not credit_result['success']:
+                if credit_result.get('insufficient'):
+                    message = f"❌ Insufficient credits. You need {credit_result['required_credits']} but have {credit_result['current_credits']}."
+                else:
+                    message = credit_result.get('message', '❌ Error processing credits. Please try again.')
+                self.whatsapp_service.send_message(user_id, message)
                 return
 
             # Send loading message
@@ -2081,9 +2117,21 @@ Type your answer below:"""
             user_name = registration['name'] if registration else "Student"
             form_level = registration.get('form_level', 3) if registration else 3
 
-            # Deduct credits
-            if not deduct_credits(user_id, 4, "english_essay", f"Essay prompt: {section} {essay_type}"):
-                self.whatsapp_service.send_message(user_id, "❌ Error processing credits. Please try again.")
+            # Check and deduct credits using advanced credit service
+            from services.advanced_credit_service import advanced_credit_service
+            
+            credit_result = advanced_credit_service.check_and_deduct_credits(
+                user_id, 
+                'english_essay_writing',  # 3 credits as per config
+                None
+            )
+            
+            if not credit_result['success']:
+                if credit_result.get('insufficient'):
+                    message = f"❌ Insufficient credits. You need {credit_result['required_credits']} but have {credit_result['current_credits']}."
+                else:
+                    message = credit_result.get('message', '❌ Error processing credits. Please try again.')
+                self.whatsapp_service.send_message(user_id, message)
                 return
 
             # Send loading message

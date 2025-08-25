@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error - NerdX Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="fas fa-graduation-cap me-2"></i>
+                NerdX Admin
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/dashboard">
+                    <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                </a>
+                <a class="nav-link" href="/logout">
+                    <i class="fas fa-sign-out-alt me-1"></i> Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card border-danger shadow">
+                    <div class="card-header bg-danger text-white">
+                        <h4 class="mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            System Error
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-4">
+                            <i class="fas fa-exclamation-circle text-danger" style="font-size: 4rem;"></i>
+                        </div>
+                        
+                        <h5 class="text-center mb-3">Oops! Something went wrong</h5>
+                        
+                        {% if error %}
+                        <div class="alert alert-danger" role="alert">
+                            <strong>Error Details:</strong> {{ error }}
+                        </div>
+                        {% endif %}
+                        
+                        <p class="text-muted text-center">
+                            We apologize for the inconvenience. Our technical team has been notified and is working to resolve this issue.
+                        </p>
+                        
+                        <div class="text-center mt-4">
+                            <a href="/dashboard" class="btn btn-primary me-2">
+                                <i class="fas fa-home me-1"></i>
+                                Back to Dashboard
+                            </a>
+                            <button class="btn btn-outline-secondary" onclick="history.back()">
+                                <i class="fas fa-arrow-left me-1"></i>
+                                Go Back
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-footer text-muted text-center">
+                        <small>
+                            <i class="fas fa-clock me-1"></i>
+                            If this problem persists, please contact support.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+

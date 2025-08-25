@@ -384,7 +384,7 @@ Don't worry - no charges were made to your account."""
                     ]
                     
                     whatsapp_service.send_interactive_message(user_id, message, buttons)
-                return
+            return
 
         if session_type == 'question':
             handle_question_answer(user_id, message_text)
@@ -660,9 +660,9 @@ def send_main_menu(user_id: str, user_name: str = None):
         welcome_text += f"👇 *Choose an option to get started:*"
 
         # Create main buttons with advanced credit system integration
-        main_buttons = [
-            {"text": "🎯 Start Quiz", "callback_data": "start_quiz"},
-            {"text": "🎤 Audio Chat", "callback_data": "audio_chat_menu"},
+            main_buttons = [
+                {"text": "🎯 Start Quiz", "callback_data": "start_quiz"},
+                {"text": "🎤 Audio Chat", "callback_data": "audio_chat_menu"},
             {"text": "📊 My Stats", "callback_data": "user_stats"},
             {"text": "👥 Referrals", "callback_data": "referrals_menu"},
             {"text": "💰 Buy Credits", "callback_data": "credit_store"}
@@ -2860,8 +2860,19 @@ def handle_combined_science_answer(user_id: str, subject: str, user_answer: str)
             message += f"💡 **Science Tip:** Every scientist learns from trials!\n"
             message += f"🔥 **Streak:** {final_streak} (Keep trying to build it up!)\n\n"
 
-        # Add explanation
-        message += f"🔬 **Scientific Explanation:**\n{explanation}\n\n"
+        # Add short, summarized explanation (no truncation - generate appropriate length)
+        if explanation and len(explanation) > 150:
+            # Use first 2 sentences as summary instead of truncating
+            import re
+            sentences = re.split(r'[.!?]+', explanation)
+            if len(sentences) >= 2:
+                summary_explanation = '. '.join(sentences[:2]) + '.'
+            else:
+                summary_explanation = explanation[:150] + '.'
+        else:
+            summary_explanation = explanation
+        
+        message += f"🔬 **Scientific Explanation:**\n{summary_explanation}\n\n"
 
         # Check for level up
         level_up_bonus = ""
@@ -3018,7 +3029,7 @@ def handle_credit_store(user_id: str):
         message, buttons = advanced_credit_service.format_credit_store_message(user_id)
         
         # Send credit store
-        whatsapp_service.send_interactive_message(user_id, message, buttons)
+            whatsapp_service.send_interactive_message(user_id, message, buttons)
             
     except Exception as e:
         logger.error(f"Error handling credit store for {user_id}: {e}")
@@ -3139,9 +3150,9 @@ def handle_payment_proof_submission(user_id: str, package_id: str, reference_cod
         # Update user session to awaiting proof
         custom_data['awaiting_proof'] = True
         user_session['step'] = 'awaiting_proof'
-        user_session['custom_data'] = json.dumps(custom_data)
-        save_user_session(user_id, user_session)
-        
+            user_session['custom_data'] = json.dumps(custom_data)
+            save_user_session(user_id, user_session)
+            
         # Send waiting message
         waiting_message = f"""📝 **AWAITING YOUR PAYMENT PROOF**
 

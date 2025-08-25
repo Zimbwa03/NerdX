@@ -5,23 +5,13 @@ Dashboard interface for managing dynamic credit costs
 
 import logging
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for
-from functools import wraps
 from database.credit_costs_db import credit_cost_service, create_credit_costs_table
-from services.admin_auth_service import admin_auth_service
+from api.auth import login_required  # Import existing authentication decorator
 
 logger = logging.getLogger(__name__)
 
 # Create blueprint
 credit_management_bp = Blueprint('credit_management', __name__)
-
-def login_required(f):
-    """Decorator to require admin login"""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not admin_auth_service.is_authenticated(request):
-            return redirect(url_for('auth.login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 @credit_management_bp.route('/admin/credit-costs')
 @login_required
@@ -33,12 +23,12 @@ def credit_costs_dashboard():
         
         return render_template('admin/credit_costs.html', 
                              costs_by_category=costs_by_category,
-                             admin_user=request.admin_user)
+                             admin_user=getattr(request, 'admin_user', None))
     except Exception as e:
         logger.error(f"Error loading credit costs dashboard: {e}")
         return render_template('admin/error.html', 
                              error="Failed to load credit costs dashboard",
-                             admin_user=request.admin_user), 500
+                             admin_user=getattr(request, 'admin_user', None)), 500
 
 @credit_management_bp.route('/api/credit-costs')
 @login_required  
@@ -75,7 +65,8 @@ def update_credit_cost(action_key):
         success = credit_cost_service.update_credit_cost(action_key, new_cost)
         
         if success:
-            logger.info(f"Admin {request.admin_user.get('email')} updated credit cost for '{action_key}' to {new_cost}")
+            admin_email = getattr(request, 'admin_user', {}).get('email', 'Unknown')
+            logger.info(f"Admin {admin_email} updated credit cost for '{action_key}' to {new_cost}")
             return jsonify({
                 'success': True,
                 'message': f'Successfully updated credit cost for {action_key} to {new_cost}'
@@ -121,7 +112,8 @@ def batch_update_credit_costs():
             success = credit_cost_service.update_credit_cost(action_key, new_cost)
             if success:
                 results.append(f"Updated {action_key} to {new_cost}")
-                logger.info(f"Admin {request.admin_user.get('email')} updated {action_key} to {new_cost}")
+                admin_email = getattr(request, 'admin_user', {}).get('email', 'Unknown')
+                logger.info(f"Admin {admin_email} updated {action_key} to {new_cost}")
             else:
                 errors.append(f"Failed to update {action_key}")
         
@@ -147,7 +139,8 @@ def initialize_credit_costs_table():
         success = create_credit_costs_table()
         
         if success:
-            logger.info(f"Admin {request.admin_user.get('email')} initialized credit costs table")
+            admin_email = getattr(request, 'admin_user', {}).get('email', 'Unknown')
+            logger.info(f"Admin {admin_email} initialized credit costs table")
             return jsonify({
                 'success': True,
                 'message': 'Credit costs table initialized successfully'

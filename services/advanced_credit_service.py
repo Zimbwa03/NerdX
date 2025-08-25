@@ -66,8 +66,10 @@ class AdvancedCreditService:
             required_credits = self.get_credit_cost(action, difficulty)
             
             if current_credits >= required_credits:
-                # Deduct credits
-                if deduct_credits(user_id, required_credits):
+                # Deduct credits with proper transaction details
+                transaction_type = f"{action}_usage"
+                description = f"Used {action} feature"
+                if deduct_credits(user_id, required_credits, transaction_type, description):
                     new_balance = current_credits - required_credits
                     return {
                         'success': True,
