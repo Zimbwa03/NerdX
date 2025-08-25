@@ -43,14 +43,7 @@ def index():
     else:
         return redirect('/login')
 
-@app.route('/health')
-def health_check():
-    """Health check endpoint"""
-    return jsonify({
-        'status': 'healthy',
-        'service': 'nerdx-quiz-bot',
-        'version': '1.0.0'
-    })
+# Health check endpoint is defined in app.py
 
 @app.errorhandler(404)
 def not_found(error):
