@@ -15,7 +15,8 @@ class ImageService:
         self.deepseek_api_key = Config.DEEPSEEK_API_KEY
         
         if not self.deepseek_api_key:
-            raise ValueError("DEEPSEEK_API_KEY is required for image processing")
+            logger.warning("DEEPSEEK_API_KEY not configured - image processing features will be limited")
+            self.client = None
     
     def solve_math_image(self, image_url: str) -> Optional[Dict]:
         """Solve mathematical problems from images using DeepSeek Vision API"""

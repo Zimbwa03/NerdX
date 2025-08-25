@@ -16,7 +16,8 @@ class AIService:
         self.gemini_api_key = Config.GEMINI_API_KEY
 
         if not self.deepseek_api_key:
-            raise ValueError("DEEPSEEK_API_KEY is required")
+            logger.warning("DEEPSEEK_API_KEY not configured - AI features will be limited")
+            self.client = None
 
     def generate_math_questions(self, topic: str, difficulty: str, count: int = 1, chat_id: Optional[str] = None):
         """Generate mathematics questions using DeepSeek AI with fallback and caching"""

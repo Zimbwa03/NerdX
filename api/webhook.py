@@ -156,8 +156,8 @@ def handle_webhook():
             if rate_limiter.check_session_rate_limit(user_id, 'image_message'):
                 remaining_time = rate_limiter.get_remaining_cooldown(user_id, 'image_message')
                 if remaining_time > 0:
-                whatsapp_service.send_message(
-                    user_id,
+                    whatsapp_service.send_message(
+                        user_id,
                         f"⏳ Please wait {remaining_time} seconds before sending another image. Image processing takes time and resources."
                     )
                 else:
@@ -320,7 +320,7 @@ def handle_session_message(user_id: str, message_text: str):
             if command in ['start', 'menu', 'hi', 'hello']:
                 send_main_menu(user_id)
             else:
-            whatsapp_service.send_message(user_id, "✅ Session cancelled. You can now start a new question.")
+                whatsapp_service.send_message(user_id, "✅ Session cancelled. You can now start a new question.")
             return
 
         # Also check for mathematics question sessions from session_db
@@ -354,15 +354,15 @@ def handle_session_message(user_id: str, message_text: str):
                     return
             elif payment_session.get('step') == 'awaiting_proof':
                 # Old flow compatibility
-            package_id = custom_data.get('package_id')
-            reference_code = custom_data.get('reference_code')
-            
-            if package_id and reference_code:
-                handle_payment_proof_submission(user_id, package_id, reference_code)
-            else:
+                package_id = custom_data.get('package_id')
+                reference_code = custom_data.get('reference_code')
+                
+                if package_id and reference_code:
+                    handle_payment_proof_submission(user_id, package_id, reference_code)
+                else:
                     # Session data incomplete, clear session and provide helpful guidance
-                from database.session_db import clear_user_session
-                clear_user_session(user_id)
+                    from database.session_db import clear_user_session
+                    clear_user_session(user_id)
                     
                     message = """❌ **Payment Session Reset**
 
@@ -3150,8 +3150,8 @@ def handle_payment_proof_submission(user_id: str, package_id: str, reference_cod
         # Update user session to awaiting proof
         custom_data['awaiting_proof'] = True
         user_session['step'] = 'awaiting_proof'
-            user_session['custom_data'] = json.dumps(custom_data)
-            save_user_session(user_id, user_session)
+        user_session['custom_data'] = json.dumps(custom_data)
+        save_user_session(user_id, user_session)
             
         # Send waiting message
         waiting_message = f"""📝 **AWAITING YOUR PAYMENT PROOF**

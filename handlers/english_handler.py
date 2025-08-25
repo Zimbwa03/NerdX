@@ -687,24 +687,25 @@ Hi {user_name}! Answer these 10 questions based on the passage above:
                     # Add delay to prevent rapid message sending
                     time.sleep(1)
                     
-                    # Send second part
-                questions_message_2 = f"📝 **QUESTIONS 6-10**\n\n"
-                for i, q in enumerate(questions_part2, 6):
-                    marks = q.get('marks', 1)
-                    question_text = q.get('question', f'Question {i} not available')
-                    questions_message_2 += f"**{i}.** {question_text} [{marks} mark{'s' if marks != 1 else ''}]\n\n"
+                        # Send second part
+                    questions_message_2 = f"📝 **QUESTIONS 6-10**\n\n"
+                    for i, q in enumerate(questions_part2, 6):
+                        marks = q.get('marks', 1)
+                        question_text = q.get('question', f'Question {i} not available')
+                        questions_message_2 += f"**{i}.** {question_text} [{marks} mark{'s' if marks != 1 else ''}]\n\n"
 
-                questions_message_2 += "✅ *Answer all questions based on the passage above*"
-                self.whatsapp_service.send_message(user_id, questions_message_2)
-            else:
-                # Send all questions in one message
-                self.whatsapp_service.send_message(user_id, all_questions_message)
+                    questions_message_2 += "✅ *Answer all questions based on the passage above*"
+                    self.whatsapp_service.send_message(user_id, questions_message_2)
+                else:
+                    # Send all questions in one message
+                    self.whatsapp_service.send_message(user_id, all_questions_message)
                 
                 logger.info(f"Questions sent successfully to {user_id}")
 
             except Exception as e:
                 logger.error(f"Error sending questions to {user_id}: {e}")
                 self.whatsapp_service.send_message(user_id, "❌ Error displaying questions. Please try again.")
+                return
 
             # Step 4: Save session and send answer button
             session_data = {

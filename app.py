@@ -104,7 +104,8 @@ def health_check():
         
         # Check database connection
         try:
-            db.session.execute('SELECT 1')
+            from sqlalchemy import text
+            db.session.execute(text('SELECT 1'))
             health_status['services']['database'] = 'healthy'
         except Exception as e:
             health_status['services']['database'] = f'unhealthy: {str(e)}'
