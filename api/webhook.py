@@ -2793,7 +2793,7 @@ def handle_combined_science_answer(user_id: str, subject: str, user_answer: str)
             difficulty=difficulty,
             is_correct=is_correct,
             time_taken=90,  # Average time for combined science questions
-            credits_used=5  # Combined science uses 5 credits per question
+            credits_used=1  # Combined science topical questions use 1 credit per config
         )
 
         # Get current stats for calculations

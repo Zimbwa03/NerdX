@@ -306,7 +306,7 @@ class UserService:
                 return {
                     'success': True,
                     'completed': True,
-                    'user_data': user_data,
+                    'user_data': registration_result,
                     'message': message,
                     'credits_awarded': final_credits
                 }

@@ -378,7 +378,10 @@ def get_user_registration(chat_id):
 def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_nerdx_id=None):
     """Create new user registration - matches backup function signature exactly"""
     try:
+        logger.info(f"Creating user registration for {chat_id} with referral: {referred_by_nerdx_id}")
+        
         nerdx_id = generate_nerdx_id()
+        logger.info(f"Generated NerdX ID: {nerdx_id}")
 
         registration_data = {
             'chat_id': chat_id,
@@ -389,16 +392,21 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
             'referred_by_nerdx_id': referred_by_nerdx_id,
             'created_at': datetime.utcnow().isoformat()
         }
+        
+        logger.info(f"Registration data prepared: {registration_data}")
 
         result = make_supabase_request("POST", "users_registration", registration_data)
+        logger.info(f"Supabase request result: {result}")
 
         if result and len(result) > 0:
-            logger.info(f"User registration created for {chat_id} with NerdX ID: {nerdx_id}")
+            logger.info(f"✅ User registration created successfully for {chat_id} with NerdX ID: {nerdx_id}")
             return result[0]
+        else:
+            logger.error(f"❌ Supabase request returned empty result for {chat_id}")
+            return None
 
-        return None
     except Exception as e:
-        logger.error(f"Error creating user registration: {e}")
+        logger.error(f"❌ Error creating user registration for {chat_id}: {e}", exc_info=True)
         return None
 
 def is_user_registered(chat_id):

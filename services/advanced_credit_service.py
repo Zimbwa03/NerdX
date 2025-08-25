@@ -100,9 +100,12 @@ class AdvancedCreditService:
             }
     
     def get_credit_cost(self, action: str, difficulty: Optional[str] = None) -> int:
-        """Get credit cost for a specific action"""
+        """Get credit cost for a specific action from database"""
         try:
-            # Map actions to credit costs
+            # Import here to avoid circular imports
+            from database.credit_costs_db import credit_cost_service
+            
+            # Map actions to standardized keys
             action_mapping = {
                 # Combined Science
                 'combined_science_topical': 'combined_science_topical',
@@ -123,7 +126,7 @@ class AdvancedCreditService:
                 'audio_feature': 'audio_feature',
                 'voice_chat': 'voice_chat',
                 
-                # Legacy mappings
+                # Legacy mappings - map to new standardized keys
                 'math': 'math_topical',
                 'science': 'combined_science_topical',
                 'english': 'english_topical',
@@ -131,23 +134,31 @@ class AdvancedCreditService:
                 'graph_generation': 'math_graph_practice'
             }
             
+            # Get the mapped action key
             mapped_action = action_mapping.get(action, action)
-            cost = self.credit_costs.get(mapped_action, 5)  # Default 5 credits
+            
+            # Get cost from database service (falls back to config if database unavailable)
+            cost = credit_cost_service.get_credit_cost(mapped_action)
             
             # Apply difficulty multiplier if specified
             if difficulty:
                 difficulty_multipliers = {
-                    'easy': 1,
+                    'easy': 1.0,
                     'medium': 1.5,
-                    'difficult': 2
+                    'difficult': 2.0
                 }
-                cost = int(cost * difficulty_multipliers.get(difficulty.lower(), 1))
+                multiplier = difficulty_multipliers.get(difficulty.lower(), 1.0)
+                cost = int(cost * multiplier)
             
+            logger.debug(f"Credit cost for '{action}' (mapped to '{mapped_action}') with difficulty '{difficulty}': {cost}")
             return cost
             
         except Exception as e:
-            logger.error(f"Error getting credit cost: {e}")
-            return 5
+            logger.error(f"Error getting credit cost for '{action}': {e}")
+            # Fallback to config values if database service fails
+            fallback_cost = self.credit_costs.get(action, 5)
+            logger.warning(f"Using fallback cost for '{action}': {fallback_cost}")
+            return fallback_cost
     
     def award_registration_credits(self, user_id: str) -> bool:
         """Award registration bonus credits to new user"""
