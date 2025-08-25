@@ -403,17 +403,21 @@ Hey there! 👋
             return []
     
     def format_credit_store_message(self, user_id: str) -> Tuple[str, List[Dict]]:
-        """Format credit store message with packages"""
+        """Format credit store message with artistic design and optimized button text"""
         try:
             status = self.get_user_credit_status(user_id)
             current_credits = status['credits']
             packages = self.get_credit_packages()
             
-            message = f"""💰 **CREDIT STORE**
+            # Artistic header with gradients and visual appeal
+            message = f"""✨ 𝗖𝗥𝗘𝗗𝗜𝗧 𝗦𝗧𝗢𝗥𝗘 ✨
+╔═══════════════════╗
+║ 💎 PREMIUM PLANS 💎 ║
+╚═══════════════════╝
 
-💳 **Your Balance**: {current_credits} credits
+💳 𝗬𝗼𝘂𝗿 𝗕𝗮𝗹𝗮𝗻𝗰𝗲: **{current_credits} credits**
 
-🛒 **SELECT YOUR PACKAGE:**"""
+🎯 𝗖𝗵𝗼𝗼𝘀𝗲 𝗬𝗼𝘂𝗿 𝗣𝗼𝘄𝗲𝗿:"""
             
             buttons = []
             for package in packages:
@@ -421,14 +425,16 @@ Hey there! 👋
                 icon = package.get('icon', '💎')
                 name = package.get('name', 'Package')
                 price = package.get('price', 0)
+                credits = package.get('credits', 0)
                 package_id = package.get('id', 'unknown')
                 
-                button_text = f"{icon} {name} - ${price:.2f}"
+                # Compact button text to prevent truncation
+                button_text = f"{icon} {credits}cr • ${price:.2f}"
                 callback_data = f"select_package_{package_id}"
                 buttons.append({"text": button_text, "callback_data": callback_data})
             
-            # Add back button
-            buttons.append({"text": "⬅️ Back to Menu", "callback_data": "back_to_menu"})
+            # Add artistic back button
+            buttons.append({"text": "⬅️ 𝗕𝗮𝗰𝗸 𝘁𝗼 𝗠𝗲𝗻𝘂", "callback_data": "back_to_menu"})
             
             return message, buttons
             

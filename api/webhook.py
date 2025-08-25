@@ -1146,12 +1146,23 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             package_id = selection_id.replace('purchase_package_', '')
             handle_purchase_confirmation(user_id, package_id)
         elif selection_id.startswith('submit_proof_'):
-            # Handle payment proof submission
-            parts = selection_id.split('_', 2)
-            if len(parts) >= 3:
-                package_id = parts[1]
-                reference_code = parts[2]
-                handle_payment_proof_submission(user_id, package_id, reference_code)
+            # Handle payment proof submission - format: submit_proof_{package_id}_{reference_code}
+            try:
+                # Remove the 'submit_proof_' prefix first
+                remaining = selection_id.replace('submit_proof_', '', 1)
+                # Split into package_id and reference_code
+                parts = remaining.split('_', 1)
+                if len(parts) >= 2:
+                    package_id = parts[0]
+                    reference_code = parts[1]
+                    logger.info(f"Processing payment proof submission: package={package_id}, ref={reference_code}")
+                    handle_payment_proof_submission(user_id, package_id, reference_code)
+                else:
+                    logger.warning(f"Invalid submit_proof format: {selection_id}")
+                    whatsapp_service.send_message(user_id, "❌ Invalid payment submission format. Please try again.")
+            except Exception as e:
+                logger.error(f"Error parsing submit_proof callback: {e}")
+                whatsapp_service.send_message(user_id, "❌ Error processing payment submission. Please try again.")
         elif selection_id == 'back_to_menu':
             send_main_menu(user_id)
         elif selection_id == 'continue_current':
@@ -2952,18 +2963,24 @@ def handle_package_selection(user_id: str, package_id: str):
             whatsapp_service.send_message(user_id, "❌ Package not found. Please try again.")
             return
         
-        # Create package details message
-        message = f"""{selected_package['icon']} **{selected_package['name'].upper()} - ${selected_package['price']:.2f}**
+        # Create artistic package details message
+        cost_per_credit = selected_package['price'] / selected_package['credits']
+        savings_percent = round((1 - cost_per_credit / 0.10) * 100) if cost_per_credit < 0.10 else 0
+        
+        message = f"""✨ 𝗣𝗔𝗖𝗞𝗔𝗚𝗘 𝗗𝗘𝗧𝗔𝗜𝗟𝗦 ✨
+╔══════════════════════════╗
+║ {selected_package['icon']} **{selected_package['name'].upper()}** {selected_package['icon']} ║
+╚══════════════════════════╝
 
-📊 **PACKAGE DETAILS:**
-💳 Credits: {selected_package['credits']} credits
-💰 Cost per credit: ${selected_package['price'] / selected_package['credits']:.3f}
-🎯 Perfect for: {selected_package['description']}
-💡 Best for: {selected_package['best_for']}
+💰 **Price**: ${selected_package['price']:.2f} USD
+💎 **Credits**: {selected_package['credits']} credits
+🏷️ **Per Credit**: ${cost_per_credit:.3f}{"" if savings_percent <= 0 else f" ({savings_percent}% savings!)"}
 
-✅ **PURCHASE THIS PACKAGE**
-🔍 View Other Packages
-❌ Cancel Purchase"""
+🎯 **Perfect For**: {selected_package['description']}
+💡 **Best For**: {selected_package['best_for']}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚀 Ready to power up your learning?"""
         
         buttons = [
             {"text": "✅ PURCHASE THIS PACKAGE", "callback_data": f"purchase_package_{package_id}"},
@@ -2994,28 +3011,31 @@ def handle_purchase_confirmation(user_id: str, package_id: str):
         import uuid
         reference_code = str(uuid.uuid4())[:8].upper()
         
-        message = f"""💳 **PAYMENT INSTRUCTIONS**
+        message = f"""💳 ✨ 𝗣𝗔𝗬𝗠𝗘𝗡𝗧 𝗜𝗡𝗦𝗧𝗥𝗨𝗖𝗧𝗜𝗢𝗡𝗦 ✨ 💳
+╔═══════════════════════════════╗
+║       🚀 SECURE CHECKOUT 🚀     ║
+╚═══════════════════════════════╝
 
-📱 **PAY VIA ECOCASH:**
+📱 **𝗘𝗖𝗢𝗖𝗔𝗦𝗛 𝗣𝗔𝗬𝗠𝗘𝗡𝗧:**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📞 **Number**: +263 785494594
-💰 **Amount**: ${selected_package['price']:.2f} USD
-📋 **Reference**: {reference_code}
+💰 **Amount**: ${selected_package['price']:.2f} USD  
+📋 **Reference**: `{reference_code}`
 
-⚠️ **IMPORTANT STEPS:**
+🎯 **𝗦𝗜𝗠𝗣𝗟𝗘 𝗦𝗧𝗘𝗣𝗦:**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 1️⃣ Send ${selected_package['price']:.2f} to +263 785494594
 2️⃣ Copy your EcoCash confirmation SMS
-3️⃣ Paste it in the next message
-4️⃣ Wait for approval (usually within 30 minutes)
+3️⃣ Click "I SENT MONEY" below
+4️⃣ Paste SMS → Get credits in 5-30 mins!
 
-💡 **Why this process?**
-Secure verification ensures your payment is protected and credits are accurately added.
+🛡️ **𝗪𝗵𝘆 𝗦𝗠𝗦 𝗩𝗲𝗿𝗶𝗳𝗶𝗰𝗮𝘁𝗶𝗼𝗻?**
+100% secure • Instant verification • Protected payments
 
-✅ **I'VE SENT THE MONEY - SUBMIT PROOF**
-❓ **NEED HELP?**
-⬅️ **BACK**"""
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
         
         buttons = [
-            {"text": "✅ I'VE SENT THE MONEY - SUBMIT PROOF", "callback_data": f"submit_proof_{package_id}_{reference_code}"},
+            {"text": "✅ I SENT MONEY - SUBMIT PROOF", "callback_data": f"submit_proof_{package_id}_{reference_code}"},
             {"text": "❓ NEED HELP?", "callback_data": "payment_help"},
             {"text": "⬅️ BACK", "callback_data": f"select_package_{package_id}"}
         ]
@@ -3174,18 +3194,23 @@ def handle_payment_proof_submission(user_id: str, package_id: str, reference_cod
         user_session['custom_data'] = json.dumps(custom_data)
         save_user_session(user_id, user_session)
             
-        # Send waiting message
-        waiting_message = f"""📝 **AWAITING YOUR PAYMENT PROOF**
+        # Send artistic waiting message
+        waiting_message = f"""📱 ✨ 𝗔𝗪𝗔𝗜𝗧𝗜𝗡𝗚 𝗦𝗠𝗦 ✨ 📱
+╔═══════════════════════════════╗
+║     📋 PASTE YOUR SMS PROOF     📋  ║
+╚═══════════════════════════════╝
 
-Hi {user_name}, I'm ready to receive your EcoCash confirmation SMS.
+👋 Hi **{user_name}**! Ready to receive your EcoCash confirmation SMS.
 
-📋 **Expected Format:**
+📄 **Expected Format:**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 "Confirmed. You have sent ${package['price']:.2f} to +263785494594..."
 
-💡 **Tips:**
-• Copy the ENTIRE SMS from EcoCash
-• Include the transaction ID
-• Make sure the amount matches ${package['price']:.2f}
+💡 **Quick Tips:**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ Copy the ENTIRE SMS from EcoCash
+✅ Include the transaction ID
+✅ Verify amount matches ${package['price']:.2f}
 
 📲 **Please paste your EcoCash confirmation SMS below:**"""
         
@@ -3266,33 +3291,34 @@ Your payment session has expired or was incomplete.
             # Clear the session
             clear_user_session(user_id)
             
-            # Send success message with tracking
-            message = f"""⏳ **PAYMENT UNDER REVIEW**
+            # Send artistic success message with tracking
+            message = f"""✨ 𝗣𝗔𝗬𝗠𝗘𝗡𝗧 𝗦𝗨𝗕𝗠𝗜𝗧𝗧𝗘𝗗! ✨
+╔═══════════════════════════════╗
+║    🎉 VERIFICATION IN PROGRESS 🎉   ║
+╚═══════════════════════════════╝
 
-✅ **Submission Successful!**
+👋 Hi **{user_name}**! Your payment proof has been received and is being processed.
 
-Hi {user_name}, we've received your payment proof and it's now being verified.
-
-📋 **Your Payment Details:**
-💰 Package: {package['name']} ({package['credits']} credits)
-💳 Amount: ${package['price']:.2f}
-🔢 Reference: {reference_code}
+💎 **𝗬𝗼𝘂𝗿 𝗢𝗿𝗱𝗲𝗿:**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📦 Package: **{package['name']}**
+💰 Credits: **{package['credits']} credits**
+💳 Amount: **${package['price']:.2f}**
+🔢 Reference: `{reference_code}`
 ⏰ Submitted: {datetime.now().strftime('%H:%M on %d/%m/%Y')}
 
-🕐 **What's Next?**
-• ⏱️ Verification: 5-30 minutes
-• 📱 Notification: You'll get a WhatsApp message
-• 💳 Credits: Added instantly upon approval
-• 🎯 Start Learning: Use credits immediately
+🚀 **𝗪𝗵𝗮𝘁'𝘀 𝗡𝗲𝘅𝘁?**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⏱️ Verification: 5-30 minutes
+📱 Notification: WhatsApp alert
+💎 Credits: Instant activation
+🎯 Learning: Start immediately!
 
-📊 **Track Your Payment:**
-Your payment is #{reference_code[-4:]} in our queue.
+📊 **Track ID**: #{reference_code[-4:]}
 
-💡 **Pro Tip:** You can continue using your existing credits while we verify your payment.
+💡 **Pro Tip**: Continue using existing credits while we verify your payment!
 
-🏠 **MAIN MENU**
-📚 **CONTINUE STUDYING**
-💬 **CONTACT SUPPORT**"""
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
             
             buttons = [
                 {"text": "🏠 MAIN MENU", "callback_data": "back_to_menu"},

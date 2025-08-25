@@ -55,12 +55,19 @@ class PaymentService:
         ]
     
     def get_credit_packages_display(self) -> str:
-        """Get formatted credit packages display"""
-        message = f"💰 **CREDIT STORE**\n\n"
+        """Get artistic formatted credit packages display"""
+        message = f"""✨ 𝗖𝗥𝗘𝗗𝗜𝗧 𝗦𝗧𝗢𝗥𝗘 ✨
+╔═══════════════════╗
+║ 💎 PREMIUM PLANS 💎 ║
+╚═══════════════════╝
+
+"""
         
         for package in self.packages:
+            cost_per_credit = package['price'] / package['credits']
             message += f"{package['icon']} **{package['name']}** - ${package['price']:.2f}\n"
-            message += f"   {package['credits']} Credits | {package['description']}\n"
+            message += f"   💎 {package['credits']} Credits • ${cost_per_credit:.3f}/credit\n"
+            message += f"   🎯 {package['description']}\n"
             message += f"   💡 Best for: {package['best_for']}\n\n"
         
         return message
@@ -73,16 +80,17 @@ class PaymentService:
         return None
     
     def get_package_selection_buttons(self) -> List[Dict]:
-        """Get buttons for package selection"""
+        """Get compact buttons for package selection to prevent truncation"""
         buttons = []
         for package in self.packages:
+            # Compact format: icon + credits + price only
             buttons.append({
-                'text': f"{package['icon']} {package['credits']} Credits - ${package['price']:.2f}",
+                'text': f"{package['icon']} {package['credits']}cr • ${package['price']:.2f}",
                 'callback_data': f"select_package_{package['id']}"
             })
         
         buttons.append({
-            'text': '⬅️ Back to Menu',
+            'text': '⬅️ 𝗕𝗮𝗰𝗸 𝘁𝗼 𝗠𝗲𝗻𝘂',
             'callback_data': 'main_menu'
         })
         
