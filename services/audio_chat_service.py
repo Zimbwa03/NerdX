@@ -239,11 +239,9 @@ class AudioChatService:
             # Get voice name for Gemini TTS
             voice_name = self.gemini_voices.get(voice_type, self.gemini_voices['female'])
             
-            # Generate audio using Gemini 2.5 Flash TTS with timeout protection
-            import concurrent.futures
-            
-            def generate_audio_with_timeout():
-                return self.gemini_client.models.generate_content(
+            # Generate audio directly without ThreadPoolExecutor to avoid worker timeout issues
+            try:
+                response = self.gemini_client.models.generate_content(
                     model="gemini-2.5-flash-preview-tts",
                     contents=text,
                     config=types.GenerateContentConfig(
@@ -257,18 +255,9 @@ class AudioChatService:
                         )
                     )
                 )
-            
-            # Use ThreadPoolExecutor for timeout control
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                future = executor.submit(generate_audio_with_timeout)
-                try:
-                    response = future.result(timeout=8.0)  # 8 second timeout
-                except concurrent.futures.TimeoutError:
-                    logger.error("Audio generation timed out - skipping audio response")
-                    return None
-                except Exception as e:
-                    logger.error(f"Audio generation failed: {e}")
-                    return None
+            except Exception as e:
+                logger.error(f"Audio generation failed: {e}")
+                return None
 
             # Extract audio data from response
             if response.candidates and response.candidates[0].content.parts:
@@ -563,9 +552,9 @@ Type 'end audio' to exit audio chat mode."""
             except:
                 pass
             
-            # Check if audio generation is already in progress
+            # Check if audio generation is already in progress - block concurrent requests
             if self.is_generating_audio:
-                whatsapp_service.send_message(user_id, "⏳ Another audio is being generated, please wait a moment...")
+                whatsapp_service.send_message(user_id, "⏳ Audio generation in progress, please wait...")
                 return
             
             # Check and deduct credits using advanced credit service
@@ -633,9 +622,23 @@ Type 'end audio' to exit audio chat mode."""
             clean_response = self.clean_text_for_audio(ai_response, max_duration_seconds=45)
             audio_path = None
             
+            # Try audio generation with timeout protection
             try:
-                audio_path = self.generate_audio(clean_response, voice_type)
-            except Exception as e:
+                import signal
+                
+                def timeout_handler(signum, frame):
+                    raise TimeoutError("Audio generation timeout")
+                
+                # Set timeout to prevent worker timeout
+                signal.signal(signal.SIGALRM, timeout_handler)
+                signal.alarm(5)  # 5 second timeout to prevent worker timeout
+                
+                try:
+                    audio_path = self.generate_audio(clean_response, voice_type)
+                finally:
+                    signal.alarm(0)  # Cancel the alarm
+                    
+            except (TimeoutError, Exception) as e:
                 logger.error(f"Audio generation failed, falling back to text: {e}")
                 audio_path = None
             
