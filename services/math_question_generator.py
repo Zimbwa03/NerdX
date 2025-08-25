@@ -27,13 +27,23 @@ class MathQuestionGenerator:
         self.base_timeout = 10  # Slightly increased timeout for better success
         self.retry_delay = 1   # Short delay between retries
 
-    def generate_question(self, subject: str, topic: str, difficulty: str = 'medium') -> Optional[Dict]:
+    def generate_question(self, subject: str, topic: str, difficulty: str = 'medium', user_id: str = None) -> Optional[Dict]:
         """
-        Generate a question using DeepSeek AI with improved error handling and timeout management
+        Generate a question using DeepSeek AI with anti-repetition logic and improved error handling
         """
         try:
-            # Create comprehensive prompt for DeepSeek AI
-            prompt = self._create_question_prompt(subject, topic, difficulty)
+            # Import question history service for AI anti-repetition
+            from services.question_history_service import question_history_service
+            
+            # Get recent AI topics for this user to avoid repetition
+            recent_topics = set()
+            if user_id:
+                ai_subject_key = f"{subject}_AI"
+                recent_questions = question_history_service.get_recent_questions(user_id, ai_subject_key)
+                recent_topics = {q.split('_')[0] for q in recent_questions if '_' in q}  # Extract topic from stored format
+            
+            # Create comprehensive prompt for DeepSeek AI with variation
+            prompt = self._create_question_prompt(subject, topic, difficulty, recent_topics)
 
             # Enhanced timeout settings specifically for graph generation
             if 'graph' in topic.lower():
@@ -104,8 +114,8 @@ class MathQuestionGenerator:
             return self._generate_fallback_question(subject, topic, difficulty)
 
 
-    def _create_question_prompt(self, subject: str, topic: str, difficulty: str) -> str:
-        """Create optimized prompt for DeepSeek AI with enhanced ZIMSEC graph support"""
+    def _create_question_prompt(self, subject: str, topic: str, difficulty: str, recent_topics: set = None) -> str:
+        """Create optimized prompt for DeepSeek AI with enhanced ZIMSEC graph support and anti-repetition"""
 
         # Enhanced prompts for different subjects and topics
         if 'graph' in topic.lower() or 'linear programming' in topic.lower():
@@ -225,8 +235,8 @@ Return your response in this EXACT JSON format:
     "explanation": "Testing understanding of linear programming and constraint visualization"
 }}"""
 
-        # Enhanced standard academic question prompt for non-graph topics
-        return f"""Generate a high-quality {difficulty} level {subject} question about {topic} for ZIMSEC O-Level students.
+        # Enhanced standard academic question prompt for non-graph topics with anti-repetition
+        base_prompt = f"""Generate a high-quality {difficulty} level {subject} question about {topic} for ZIMSEC O-Level students.
 
 Requirements:
 - Create a clear, specific question following ZIMSEC exam format
@@ -236,7 +246,34 @@ Requirements:
 - Focus specifically on {topic}
 - Question should test understanding, not just recall
 - Provide a complete step-by-step solution
-- Give the final answer clearly
+- Give the final answer clearly"""
+
+        # Add anti-repetition instructions if recent topics available
+        if recent_topics:
+            variation_prompt = f"""
+
+CRITICAL ANTI-REPETITION REQUIREMENTS:
+- This user has recently practiced: {', '.join(recent_topics)}
+- Create a DIFFERENT approach, angle, or sub-topic variation
+- Use different numerical values and scenarios
+- Vary the question structure and focus area
+- Ensure this question feels fresh and unique"""
+            base_prompt += variation_prompt
+
+        # Add randomization instructions
+        import random
+        variation_styles = [
+            "Focus on real-world applications and practical scenarios",
+            "Emphasize step-by-step calculations and working out",
+            "Include multiple parts with increasing difficulty",
+            "Test both calculation skills and conceptual understanding",
+            "Create a problem-solving scenario with context"
+        ]
+        
+        selected_style = random.choice(variation_styles)
+        base_prompt += f"\n- {selected_style}"
+
+        base_prompt += f"""
 
 Return your response in this EXACT JSON format:
 {{
@@ -248,6 +285,8 @@ Return your response in this EXACT JSON format:
 }}
 
 Generate the question now:"""
+
+        return base_prompt
 
     def _get_topic_guidelines(self, subject: str, topic: str) -> str:
         """Get specific guidelines for each topic"""
@@ -408,6 +447,13 @@ The solution should explain how to plot each inequality and identify the feasibl
             if len(formatted_question['solution']) < 20:
                 logger.error("Solution too short")
                 return self._generate_fallback_question(subject, topic, difficulty)
+
+            # Add to history service if user provided and question was successfully generated
+            if user_id and formatted_question and formatted_question.get('question'):
+                ai_subject_key = f"{subject}_AI"
+                question_identifier = f"{topic}_{difficulty}_{hash(formatted_question['question'][:50]) % 10000}"
+                question_history_service.add_question_to_history(user_id, ai_subject_key, question_identifier)
+                logger.info(f"Added AI question to history: {question_identifier}")
 
             logger.info(f"Successfully validated AI question: {formatted_question['question'][:50]}...")
             return formatted_question

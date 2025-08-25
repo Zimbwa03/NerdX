@@ -312,11 +312,15 @@ def handle_session_message(user_id: str, message_text: str):
     try:
         session_type = session_manager.get_session_type(user_id)
 
-        # Handle cancel command
-        if message_text.lower() in ['cancel', 'reset', 'stop']:
+        # Handle reset commands and main menu requests - these should always work
+        command = message_text.lower().strip()
+        if command in ['cancel', 'reset', 'stop', 'start', 'menu', 'hi', 'hello']:
             from database.session_db import clear_user_session
             clear_user_session(user_id)
-            whatsapp_service.send_message(user_id, "✅ Session cancelled. You can now start a new question.")
+            if command in ['start', 'menu', 'hi', 'hello']:
+                send_main_menu(user_id)
+            else:
+                whatsapp_service.send_message(user_id, "✅ Session cancelled. You can now start a new question.")
             return
 
         # Also check for mathematics question sessions from session_db
@@ -356,11 +360,30 @@ def handle_session_message(user_id: str, message_text: str):
                 if package_id and reference_code:
                     handle_payment_proof_submission(user_id, package_id, reference_code)
                 else:
-                    # Session data incomplete, send error message
-                    whatsapp_service.send_message(user_id, "❌ Payment session data incomplete. Please try the payment process again.")
-                    # Clear the session
+                    # Session data incomplete, clear session and provide helpful guidance
                     from database.session_db import clear_user_session
                     clear_user_session(user_id)
+                    
+                    message = """❌ **Payment Session Reset**
+
+Your payment session data was incomplete. This can happen if:
+• The session expired
+• There was a network interruption
+• The payment process was not started properly
+
+🔄 **What to do now:**
+1. Click "💰 Buy Credits" below to start fresh
+2. Select your package again
+3. Complete the payment process
+
+Don't worry - no charges were made to your account."""
+                    
+                    buttons = [
+                        {"text": "💰 Buy Credits", "callback_data": "credit_store"},
+                        {"text": "🏠 Main Menu", "callback_data": "main_menu"}
+                    ]
+                    
+                    whatsapp_service.send_interactive_message(user_id, message, buttons)
                 return
 
         if session_type == 'question':
@@ -1983,8 +2006,8 @@ def load_next_combined_question(user_id: str):
         registration = get_user_registration(user_id)
         user_name = registration['name'] if registration else "Student"
 
-        # Get random Combined Science question from database
-        question_data = get_random_exam_question("Combined Science")
+        # Get random Combined Science question from database with anti-repetition
+        question_data = get_random_exam_question("Combined Science", user_id=user_id, avoid_recent=True)
 
         if not question_data:
             whatsapp_service.send_message(user_id, "❌ No Combined Science questions available in database. Please try again later.")
@@ -3106,8 +3129,25 @@ def handle_payment_proof_text(user_id: str, proof_text: str):
         reference_code = custom_data.get('reference_code')
         
         if not package_id or not reference_code:
-            whatsapp_service.send_message(user_id, "❌ Session data incomplete. Please start the payment process again.")
             clear_user_session(user_id)
+            
+            message = """❌ **Payment Session Expired**
+
+Your payment session has expired or was incomplete. 
+
+🔄 **To purchase credits:**
+1. Click "💰 Buy Credits" below 
+2. Select your desired package
+3. Follow the payment instructions
+
+💡 **Tip:** Complete the payment process within 10 minutes to avoid session timeout."""
+            
+            buttons = [
+                {"text": "💰 Buy Credits", "callback_data": "credit_store"},
+                {"text": "🏠 Main Menu", "callback_data": "main_menu"}
+            ]
+            
+            whatsapp_service.send_interactive_message(user_id, message, buttons)
             return True
         
         # Get package details

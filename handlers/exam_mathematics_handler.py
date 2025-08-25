@@ -268,7 +268,7 @@ class ExamMathematicsHandler:
             logger.info(f"🤖 Attempting AI generation for {user_id}: {topic}/{difficulty}")
             
             try:
-                question_data = self.question_generator.generate_question('Mathematics', topic, difficulty)
+                question_data = self.question_generator.generate_question('Mathematics', topic, difficulty, user_id)
                 
                 if not question_data:
                     logger.error(f"AI generation returned None for {user_id}: {topic}/{difficulty}")

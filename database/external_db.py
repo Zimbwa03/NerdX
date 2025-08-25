@@ -76,8 +76,8 @@ def create_payment_transactions_table():
         logger.error(f"Error creating payment_transactions table: {e}")
         return False
 
-def make_supabase_request(method, table, data=None, select="*", filters=None, limit=None):
-    """Make a request to Supabase REST API"""
+def make_supabase_request(method, table, data=None, select="*", filters=None, limit=None, offset=None):
+    """Make a request to Supabase REST API with enhanced randomization support"""
     headers = {
         "apikey": SUPABASE_KEY,
         "Authorization": f"Bearer {SUPABASE_KEY}",
@@ -97,6 +97,8 @@ def make_supabase_request(method, table, data=None, select="*", filters=None, li
         params.update(filters)
     if limit:
         params["limit"] = str(limit)
+    if offset:
+        params["offset"] = str(offset)
 
     try:
         print(f"Making {method} request to {url}")
@@ -498,60 +500,126 @@ def get_random_mcq_question(category=None):
 
     return None
 
-def get_random_exam_question(subject=None):
-    """Get a random exam question with priority for image questions"""
+def get_random_exam_question(subject=None, user_id=None, avoid_recent=True):
+    """Get a random exam question with enhanced anti-repetition logic"""
     try:
+        # Import question history service for repetition prevention
+        from services.question_history_service import question_history_service
+        
         filters = {}
-        if subject:
-            # For Combined Science, get questions from Biology, Chemistry, Physics categories
-            if subject == "Combined Science":
-                # Get questions from all science subjects
-                science_subjects = ["Biology", "Chemistry", "Physics"]
-                all_questions = []
-                
-                for science_subject in science_subjects:
-                    subject_filters = {"category": f"eq.{science_subject}"}
-                    questions = make_supabase_request("GET", "questions", filters=subject_filters, limit=20)
-                    if questions:
-                        all_questions.extend(questions)
-                
-                if all_questions:
-                    question = random.choice(all_questions)
-                    # Ensure consistency in field names
-                    if 'answer' in question:
-                        question['correct_answer'] = question['answer']
-                    logger.info(f"Retrieved combined science question ID: {question.get('id')} from category: {question.get('category')}")
-                    return question
-            else:
-                filters["subject"] = f"eq.{subject}"
+        max_attempts = 3  # Try multiple times to avoid repeats
+        
+        for attempt in range(max_attempts):
+            all_questions = []
+            
+            if subject:
+                # For Combined Science, get questions from Biology, Chemistry, Physics categories
+                if subject == "Combined Science":
+                    # Get questions from all science subjects with better randomization
+                    science_subjects = ["Biology", "Chemistry", "Physics"]
+                    
+                    for science_subject in science_subjects:
+                        subject_filters = {"category": f"eq.{science_subject}"}
+                        
+                        # Use random offset for better distribution (attempt-based)
+                        offset = random.randint(0, 20) + (attempt * 30)
+                        questions = make_supabase_request("GET", "questions", filters=subject_filters, limit=50, offset=offset)
+                        if questions:
+                            all_questions.extend(questions)
+                    
+                    # Apply question history filtering if user provided
+                    if user_id and avoid_recent and all_questions:
+                        filtered_questions = question_history_service.filter_questions_by_history(
+                            user_id, "Combined Science", all_questions, min_new_questions=5
+                        )
+                        if filtered_questions:
+                            all_questions = filtered_questions
+                    
+                    if all_questions:
+                        # Enhanced random selection with multiple shuffle
+                        random.shuffle(all_questions)
+                        question = random.choice(all_questions)
+                        
+                        # Ensure consistency in field names
+                        if 'answer' in question:
+                            question['correct_answer'] = question['answer']
+                            
+                        # Add to history if user provided
+                        if user_id and question.get('id'):
+                            question_history_service.add_question_to_history(user_id, "Combined Science", str(question['id']))
+                            
+                        logger.info(f"Retrieved combined science question ID: {question.get('id')} from category: {question.get('category')} (attempt {attempt + 1})")
+                        return question
+                        
+                else:
+                    filters["subject"] = f"eq.{subject}"
 
-        # First try to get questions with images (40% preference)
-        if not subject or subject != "Combined Science":
-            if random.random() < 0.4:  # 40% chance to prioritize image questions
-                image_filters = filters.copy()
-                image_filters["image_url"] = "not.is.null"
-                result = make_supabase_request("GET", "questions", filters=image_filters, limit=20)
+            # For non-Combined Science subjects
+            if not subject or subject != "Combined Science":
+                # Enhanced image question logic with better randomization
+                if random.random() < 0.4:  # 40% chance to prioritize image questions
+                    image_filters = filters.copy()
+                    image_filters["image_url"] = "not.is.null"
+                    
+                    # Random offset for image questions
+                    offset = random.randint(0, 10) + (attempt * 20)
+                    result = make_supabase_request("GET", "questions", filters=image_filters, limit=40, offset=offset)
+
+                    if result and len(result) > 0:
+                        # Apply history filtering
+                        if user_id and avoid_recent:
+                            subject_key = subject or "General"
+                            filtered_result = question_history_service.filter_questions_by_history(
+                                user_id, subject_key, result, min_new_questions=3
+                            )
+                            if filtered_result:
+                                result = filtered_result
+                        
+                        random.shuffle(result)
+                        question = random.choice(result)
+                        
+                        # Ensure consistency in field names
+                        if 'answer' in question:
+                            question['correct_answer'] = question['answer']
+                            
+                        # Add to history
+                        if user_id and question.get('id'):
+                            subject_key = subject or "General"
+                            question_history_service.add_question_to_history(user_id, subject_key, str(question['id']))
+                            
+                        logger.info(f"Retrieved image question ID: {question.get('id')} (attempt {attempt + 1})")
+                        return question
+
+                # Fallback to any question from the subject with enhanced randomization
+                offset = random.randint(0, 50) + (attempt * 75)
+                result = make_supabase_request("GET", "questions", filters=filters, limit=100, offset=offset)
 
                 if result and len(result) > 0:
+                    # Apply history filtering
+                    if user_id and avoid_recent:
+                        subject_key = subject or "General"
+                        filtered_result = question_history_service.filter_questions_by_history(
+                            user_id, subject_key, result, min_new_questions=5
+                        )
+                        if filtered_result:
+                            result = filtered_result
+                    
+                    random.shuffle(result)
                     question = random.choice(result)
+                    
                     # Ensure consistency in field names
                     if 'answer' in question:
                         question['correct_answer'] = question['answer']
-                    logger.info(f"Retrieved image question ID: {question.get('id')}")
+                        
+                    # Add to history
+                    if user_id and question.get('id'):
+                        subject_key = subject or "General"
+                        question_history_service.add_question_to_history(user_id, subject_key, str(question['id']))
+                        
+                    logger.info(f"Retrieved exam question ID: {question.get('id')} (attempt {attempt + 1})")
                     return question
 
-            # Fallback to any question from the subject
-            result = make_supabase_request("GET", "questions", filters=filters, limit=50)
-
-            if result and len(result) > 0:
-                question = random.choice(result)
-                # Ensure consistency in field names
-                if 'answer' in question:
-                    question['correct_answer'] = question['answer']
-                logger.info(f"Retrieved exam question ID: {question.get('id')}")
-                return question
-
-        logger.warning(f"No exam questions found for subject: {subject}")
+        logger.warning(f"No exam questions found for subject: {subject} after {max_attempts} attempts")
         return None
 
     except Exception as e:
