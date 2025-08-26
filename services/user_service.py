@@ -311,9 +311,10 @@ class UserService:
                     'credits_awarded': final_credits
                 }
             else:
+                logger.error(f"❌ REGISTRATION FAILED for {whatsapp_id} - Supabase database error")
                 return {
                     'success': False,
-                    'message': 'Registration failed. Please try again later.'
+                    'message': '❌ **Registration Failed**\n\nWe\'re experiencing database connectivity issues. Please try again in a few minutes.\n\nIf this problem persists, please contact our support team.'
                 }
                 
         except Exception as e:

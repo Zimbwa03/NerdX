@@ -61,6 +61,18 @@ with app.app_context():
         logging.error(f"Database initialization error: {e}")
         # Continue startup even if database fails - will retry on first request
         pass
+    
+    # Initialize Supabase database tables
+    try:
+        from database.external_db import init_database
+        supabase_init_result = init_database()
+        if supabase_init_result:
+            logging.info("✅ Supabase database initialized successfully")
+        else:
+            logging.error("❌ Supabase database initialization failed")
+    except Exception as e:
+        logging.error(f"Supabase initialization error: {e}")
+        # Continue startup - Supabase errors will be handled in endpoints
 
 # Configure CORS
 CORS(app, origins=['*'])
@@ -123,6 +135,14 @@ def health_check():
             health_status['services']['imgbb'] = 'configured'
         else:
             health_status['services']['imgbb'] = 'not configured'
+        
+        # Check Supabase configuration
+        supabase_url = os.environ.get('SUPABASE_URL')
+        supabase_key = os.environ.get('SUPABASE_SERVICE_ROLE_KEY')
+        if supabase_url and supabase_key:
+            health_status['services']['supabase'] = 'configured'
+        else:
+            health_status['services']['supabase'] = 'not configured'
         
         return jsonify(health_status), 200
         

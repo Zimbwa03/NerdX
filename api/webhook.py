@@ -3557,3 +3557,79 @@ Status: Awaiting Admin Review
         
     except Exception as e:
         logger.error(f"Error notifying admin about new payment: {e}")
+
+@webhook_bp.route('/test-registration', methods=['POST'])
+def test_registration_endpoint():
+    """Test endpoint to verify registration works with Supabase"""
+    try:
+        from database.external_db import create_user_registration, get_user_registration
+        import uuid
+        
+        # Generate test data
+        test_chat_id = f"test_{uuid.uuid4().hex[:8]}"
+        test_name = "Test"
+        test_surname = "Student"  
+        test_dob = "01/01/2000"
+        
+        logger.info(f"🧪 Testing registration for {test_chat_id}")
+        
+        # Attempt registration
+        result = create_user_registration(
+            chat_id=test_chat_id,
+            name=test_name,
+            surname=test_surname,
+            date_of_birth=test_dob
+        )
+        
+        if result:
+            # Verify the registration was saved
+            retrieved = get_user_registration(test_chat_id)
+            
+            return jsonify({
+                'status': 'registration_test_success',
+                'message': '✅ Registration test PASSED - Supabase is working correctly!',
+                'test_chat_id': test_chat_id,
+                'registered_data': result,
+                'retrieved_data': retrieved,
+                'nerdx_id': result.get('nerdx_id'),
+                'timestamp': datetime.now().isoformat()
+            }), 200
+        else:
+            return jsonify({
+                'status': 'registration_test_failed',
+                'message': '❌ Registration test FAILED - Supabase connection issues',
+                'test_chat_id': test_chat_id,
+                'timestamp': datetime.now().isoformat()
+            }), 500
+            
+    except Exception as e:
+        logger.error(f"Registration test error: {e}")
+        return jsonify({
+            'status': 'registration_test_error',
+            'error': str(e),
+            'message': '💥 Registration test crashed - check logs',
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@webhook_bp.route('/diagnose', methods=['GET'])
+def diagnose_supabase():
+    """Diagnose Supabase issues and provide detailed information"""
+    try:
+        from database.external_db import diagnose_supabase_issues
+        
+        # Run comprehensive diagnosis
+        diagnosis = diagnose_supabase_issues()
+        
+        return jsonify({
+            'status': 'diagnosis_complete',
+            'timestamp': datetime.now().isoformat(),
+            'diagnosis': diagnosis
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Diagnosis endpoint error: {e}")
+        return jsonify({
+            'status': 'diagnosis_failed',
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500

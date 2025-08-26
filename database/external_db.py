@@ -15,9 +15,14 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Supabase configuration - use environment variables
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-_is_configured = SUPABASE_URL and SUPABASE_KEY
+SUPABASE_URL = os.getenv("SUPABASE_URL", "https://hvlvwvzliqrlmqjbfgoa.supabase.co")
+SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU")
+SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjM4MjEyOSwiZXhwIjoyMDY3OTU4MTI5fQ.p4qtbG42XUiN8sXH3phmUMwwQPo1v-StjUkwUZOR4Bg")
+
+# Use service role key as default for backward compatibility  
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", SUPABASE_ANON_KEY)
+
+_is_configured = SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY and SUPABASE_ANON_KEY
 
 # Validate environment variables
 if _is_configured:
@@ -26,7 +31,8 @@ else:
     logger.warning("Supabase not configured - external database features will be disabled")
 
 print(f"Supabase URL: {SUPABASE_URL}")
-print(f"Supabase Key: {SUPABASE_KEY[:20]}..." if SUPABASE_KEY else "No key found")
+print(f"Service Role Key: {SUPABASE_SERVICE_ROLE_KEY[:20]}..." if SUPABASE_SERVICE_ROLE_KEY else "No service key found")
+print(f"Anon Key: {SUPABASE_ANON_KEY[:20]}..." if SUPABASE_ANON_KEY else "No anon key found")
 
 def create_users_registration_table():
     """Create users_registration table via SQL execution"""
@@ -59,8 +65,8 @@ def create_users_registration_table():
         """
         
         headers = {
-            "apikey": SUPABASE_KEY,
-            "Authorization": f"Bearer {SUPABASE_KEY}",
+            "apikey": SUPABASE_SERVICE_ROLE_KEY,
+            "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
             "Content-Type": "application/json"
         }
         
@@ -150,8 +156,8 @@ def create_payment_transactions_table():
         
         # Try to execute via RPC
         headers = {
-            "apikey": SUPABASE_KEY,
-            "Authorization": f"Bearer {SUPABASE_KEY}",
+            "apikey": SUPABASE_SERVICE_ROLE_KEY,
+            "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
             "Content-Type": "application/json"
         }
         
@@ -172,11 +178,20 @@ def create_payment_transactions_table():
         logger.error(f"Error creating payment_transactions table: {e}")
         return False
 
-def make_supabase_request(method, table, data=None, select="*", filters=None, limit=None, offset=None):
-    """Make a request to Supabase REST API with enhanced randomization support"""
+def make_supabase_request(method, table, data=None, select="*", filters=None, limit=None, offset=None, use_service_role=False):
+    """Make a request to Supabase REST API with proper authentication"""
+    
+    # Use SERVICE_ROLE_KEY for write operations and admin tasks, ANON_KEY for reads
+    if method in ["POST", "PATCH", "DELETE"] or use_service_role:
+        api_key = SUPABASE_SERVICE_ROLE_KEY
+        logger.info(f"Using SERVICE_ROLE_KEY for {method} operation on {table}")
+    else:
+        api_key = SUPABASE_ANON_KEY
+        logger.info(f"Using ANON_KEY for {method} operation on {table}")
+    
     headers = {
-        "apikey": SUPABASE_KEY,
-        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "apikey": api_key,
+        "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
     }
 
@@ -476,20 +491,22 @@ def get_user_registration(chat_id):
         return None
 
 def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_nerdx_id=None):
-    """Create new user registration with enhanced error handling and fallback"""
+    """Create new user registration - MUST succeed in Supabase or fail completely"""
     try:
-        logger.info(f"Creating user registration for {chat_id} with referral: {referred_by_nerdx_id}")
+        logger.info(f"🔄 Creating user registration for {chat_id} with referral: {referred_by_nerdx_id}")
         
-        # First, try to create the users_registration table if it doesn't exist
-        try:
-            logger.info("Ensuring users_registration table exists...")
-            create_users_registration_table()
-        except Exception as table_error:
-            logger.warning(f"Could not create/verify users_registration table: {table_error}")
+        # Ensure the users_registration table exists
+        logger.info("📋 Ensuring users_registration table exists...")
+        table_created = create_users_registration_table()
+        if not table_created:
+            logger.error(f"❌ Failed to create/verify users_registration table")
+            raise Exception("Database table creation failed")
         
+        # Generate unique NerdX ID
         nerdx_id = generate_nerdx_id()
-        logger.info(f"Generated NerdX ID: {nerdx_id}")
+        logger.info(f"🆔 Generated NerdX ID: {nerdx_id}")
 
+        # Prepare registration data
         registration_data = {
             'chat_id': chat_id,
             'name': name,
@@ -500,56 +517,34 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
             'created_at': datetime.utcnow().isoformat()
         }
         
-        logger.info(f"Registration data prepared: {registration_data}")
+        logger.info(f"📝 Registration data prepared: {registration_data}")
 
-        # Try the Supabase request
-        result = make_supabase_request("POST", "users_registration", registration_data)
-        logger.info(f"Supabase request result: {result}")
-
-        if result and len(result) > 0:
-            logger.info(f"✅ User registration created successfully for {chat_id} with NerdX ID: {nerdx_id}")
-            return result[0]
-        else:
-            logger.error(f"❌ Supabase request returned empty result for {chat_id}")
-            
-            # Create a fallback local registration object
-            fallback_registration = {
-                'id': hash(chat_id) % 100000,  # Simple ID generation
-                'chat_id': chat_id,
-                'name': name,
-                'surname': surname,
-                'date_of_birth': date_of_birth,
-                'nerdx_id': nerdx_id,
-                'referred_by_nerdx_id': referred_by_nerdx_id,
-                'created_at': datetime.utcnow().isoformat()
-            }
-            
-            logger.warning(f"🔄 Using fallback registration for {chat_id} - please check Supabase configuration")
-            return fallback_registration
+        # Execute Supabase registration - using SERVICE_ROLE_KEY for write operation
+        logger.info("🔄 Attempting Supabase user registration...")
+        result = make_supabase_request("POST", "users_registration", registration_data, use_service_role=True)
+        
+        # Validate result
+        if not result:
+            logger.error(f"❌ Supabase registration failed - no response")
+            raise Exception("Supabase registration returned no response")
+        
+        if not isinstance(result, list) or len(result) == 0:
+            logger.error(f"❌ Supabase registration failed - invalid response format: {result}")
+            raise Exception("Supabase registration returned invalid response")
+        
+        # Success!
+        registered_user = result[0]
+        logger.info(f"✅ User registration SUCCESSFUL for {chat_id}")
+        logger.info(f"🎉 User ID: {registered_user.get('id')}, NerdX ID: {registered_user.get('nerdx_id')}")
+        
+        return registered_user
 
     except Exception as e:
-        logger.error(f"❌ Error creating user registration for {chat_id}: {e}", exc_info=True)
+        logger.error(f"💥 CRITICAL: User registration FAILED for {chat_id}: {e}", exc_info=True)
+        logger.error(f"🚫 Registration cannot proceed without Supabase success")
         
-        # Last resort: create a temporary registration that will work for this session
-        try:
-            nerdx_id = generate_nerdx_id()
-            emergency_registration = {
-                'id': 99999,
-                'chat_id': chat_id,
-                'name': name,
-                'surname': surname,
-                'date_of_birth': date_of_birth,
-                'nerdx_id': nerdx_id,
-                'referred_by_nerdx_id': referred_by_nerdx_id,
-                'created_at': datetime.utcnow().isoformat()
-            }
-            
-            logger.warning(f"🆘 Emergency registration created for {chat_id} - database issues detected")
-            return emergency_registration
-            
-        except Exception as emergency_error:
-            logger.error(f"💥 Complete registration failure for {chat_id}: {emergency_error}")
-            return None
+        # NO FALLBACKS - must fail if Supabase fails
+        return None
 
 def is_user_registered(chat_id):
     """Check if user is already registered - matches backup function exactly"""
@@ -978,7 +973,8 @@ def diagnose_supabase_issues():
             
         logger.info(f"✅ Environment variables configured")
         logger.info(f"📍 Supabase URL: {SUPABASE_URL}")
-        logger.info(f"🔑 API Key (first 20 chars): {SUPABASE_KEY[:20]}...")
+        logger.info(f"🔑 Service Role Key: {SUPABASE_SERVICE_ROLE_KEY[:20]}...")
+        logger.info(f"🔑 Anon Key: {SUPABASE_ANON_KEY[:20]}...")
         
         # Test different endpoints
         endpoints_to_test = ['user_stats', 'users_registration', 'payment_transactions']
