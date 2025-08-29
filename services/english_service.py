@@ -3,8 +3,15 @@ import json
 import logging
 import time
 from typing import Dict, List, Optional
-import google.generativeai as genai
-from google.generativeai import types
+
+# Try to import Google Generative AI with fallback
+try:
+    import google.generativeai as genai
+    GOOGLE_AI_AVAILABLE = True
+except ImportError:
+    GOOGLE_AI_AVAILABLE = False
+    genai = None
+
 from config import Config
 
 logger = logging.getLogger(__name__)
@@ -14,14 +21,23 @@ class EnglishService:
     
     def __init__(self):
         self.gemini_api_key = os.environ.get("GEMINI_API_KEY")
-        self._is_configured = bool(self.gemini_api_key)
+        self._is_configured = bool(self.gemini_api_key) and GOOGLE_AI_AVAILABLE
         
         if self._is_configured:
-            self.client = genai.Client(api_key=self.gemini_api_key)
+            try:
+                genai.configure(api_key=self.gemini_api_key)
+                self.model = genai.GenerativeModel('gemini-2.0-flash-exp')
+                logger.info("Enhanced ZIMSEC English Service initialized with Gemini AI")
+            except Exception as e:
+                logger.error(f"Failed to initialize Gemini AI: {e}")
+                self._is_configured = False
+                self.model = None
         else:
-            self.client = None
-            logger.warning("GEMINI_API_KEY not configured - English service features will be limited")
-        self.model = "gemini-2.5-flash"
+            self.model = None
+            if not GOOGLE_AI_AVAILABLE:
+                logger.warning("Google Generative AI library not available - English service features will be limited")
+            elif not self.gemini_api_key:
+                logger.warning("GEMINI_API_KEY not configured - English service features will be limited")
         
         # ZIMSEC character names for authentic context
         self.african_names = [
@@ -80,10 +96,9 @@ Return ONLY a JSON object:
 
             logger.info("Generating grammar question using Gemini AI")
             
-            response = self.client.models.generate_content(
-                model="gemini-2.5-flash",
+            response = self.model.generate_content(
                 contents=prompt,
-                config=types.GenerateContentConfig(
+                generation_config=genai.types.GenerateContentConfig(
                     response_mime_type="application/json",
                     temperature=0.7,
                     max_output_tokens=1500
@@ -154,10 +169,9 @@ Note: correct_answer should be the index (0-3) of the correct option."""
 
             logger.info("Generating vocabulary MCQ using Gemini AI")
             
-            response = self.client.models.generate_content(
-                model="gemini-2.5-flash",
+            response = self.model.generate_content(
                 contents=prompt,
-                config=types.GenerateContentConfig(
+                generation_config=genai.types.GenerateContentConfig(
                     response_mime_type="application/json",
                     temperature=0.7,
                     max_output_tokens=1500
@@ -245,12 +259,9 @@ Note: correct_answer should be the index (0-3) of the correct option."""
         """
         
         try:
-            response = self.client.models.generate_content(
-                model=self.model,
-                contents=[
-                    types.Content(role="user", parts=[types.Part(text=prompt)])
-                ],
-                config=types.GenerateContentConfig(
+            response = self.model.generate_content(
+                contents=prompt,
+                generation_config=genai.types.GenerateContentConfig(
                     system_instruction="You are an expert Zimbabwean English teacher creating authentic Zimsec O-Level questions.",
                     response_mime_type="application/json",
                     temperature=0.7,
@@ -330,12 +341,9 @@ Note: correct_answer should be the index (0-3) of the correct option."""
         """
         
         try:
-            response = self.client.models.generate_content(
-                model=self.model,
-                contents=[
-                    types.Content(role="user", parts=[types.Part(text=prompt)])
-                ],
-                config=types.GenerateContentConfig(
+            response = self.model.generate_content(
+                contents=prompt,
+                generation_config=genai.types.GenerateContentConfig(
                     system_instruction="You are an expert Zimbabwean educator creating authentic comprehension materials for Zimsec O-Level.",
                     response_mime_type="application/json",
                     temperature=0.7,
@@ -403,12 +411,9 @@ Return ONLY a JSON object:
             logger.info(f"Generating long comprehension passage: {theme}")
             
             # Add timeout handling for API requests
-            response = self.client.models.generate_content(
-                model=self.model,
-                contents=[
-                    types.Content(role="user", parts=[types.Part(text=prompt)])
-                ],
-                config=types.GenerateContentConfig(
+            response = self.model.generate_content(
+                contents=prompt,
+                generation_config=genai.types.GenerateContentConfig(
                     system_instruction="You are a ZIMSEC examination expert creating authentic O-Level comprehension materials with Zimbabwean cultural context.",
                     response_mime_type="application/json",
                     temperature=0.7,
@@ -675,12 +680,11 @@ Her story demonstrates that young Zimbabweans can successfully blend tradition w
         """
         
         try:
-            response = self.client.models.generate_content(
-                model=self.model,
+            response = self.model.generate_content(
                 contents=[
-                    types.Content(role="user", parts=[types.Part(text=marking_prompt)])
+                    genai.types.Content(role="user", parts=[genai.types.Part(text=marking_prompt)])
                 ],
-                config=types.GenerateContentConfig(
+                generation_config=genai.types.GenerateContentConfig(
                     system_instruction="You are a senior Zimsec examiner with 20+ years experience marking O-Level essays. Be fair but thorough.",
                     response_mime_type="application/json",
                     temperature=0.3,
@@ -704,12 +708,9 @@ Her story demonstrates that young Zimbabweans can successfully blend tradition w
         try:
             logger.info("Sending essay marking request to Gemini...")
             
-            response = self.client.models.generate_content(
-                model=self.model,
-                contents=[
-                    types.Content(role="user", parts=[types.Part(text=marking_prompt)])
-                ],
-                config=types.GenerateContentConfig(
+            response = self.model.generate_content(
+                contents=marking_prompt,
+                generation_config=genai.types.GenerateContentConfig(
                     system_instruction="You are a senior ZIMSEC examiner with 20+ years experience marking O-Level essays. Be fair but encouraging.",
                     response_mime_type="application/json",
                     temperature=0.3,
@@ -890,12 +891,9 @@ Her story demonstrates that young Zimbabweans can successfully blend tradition w
             """
         
         try:
-            response = self.client.models.generate_content(
-                model=self.model,
-                contents=[
-                    types.Content(role="user", parts=[types.Part(text=prompt_instruction)])
-                ],
-                config=types.GenerateContentConfig(
+            response = self.model.generate_content(
+                contents=prompt_instruction,
+                generation_config=genai.types.GenerateContentConfig(
                     system_instruction="You are an experienced Zimsec English teacher creating authentic essay prompts.",
                     response_mime_type="application/json",
                     temperature=0.8,
@@ -955,12 +953,9 @@ Her story demonstrates that young Zimbabweans can successfully blend tradition w
         """
         
         try:
-            response = self.client.models.generate_content(
-                model=self.model,
-                contents=[
-                    types.Content(role="user", parts=[types.Part(text=exercise_prompt)])
-                ],
-                config=types.GenerateContentConfig(
+            response = self.model.generate_content(
+                contents=exercise_prompt,
+                generation_config=genai.types.GenerateContentConfig(
                     system_instruction="You are a Zimsec English teacher creating engaging language exercises.",
                     response_mime_type="application/json",
                     temperature=0.6,
