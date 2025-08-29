@@ -17,35 +17,8 @@ logger = logging.getLogger(__name__)
 class AdminAuthService:
     def __init__(self):
         # Use Supabase connection string (without pgbouncer parameter for psycopg2 compatibility)
-        raw_conn_string = os.getenv('DATABASE_URL') or os.getenv('SUPABASE_DATABASE_URL')
-        self.conn_string = self._clean_connection_string(raw_conn_string)
+        self.conn_string = os.getenv('DATABASE_URL') or os.getenv('SUPABASE_DATABASE_URL')
         self.session_duration = timedelta(hours=8)  # 8 hours session
-        self.max_failed_attempts = 5
-        self.lockout_duration = timedelta(minutes=30)  # 30 minutes lockout
-    
-    def _clean_connection_string(self, conn_string: str) -> str:
-        """Clean connection string by removing pgbouncer parameters"""
-        if not conn_string:
-            return conn_string
-            
-        if "postgresql" in conn_string:
-            # Handle various pgbouncer parameter formats
-            if "pgbouncer=true" in conn_string:
-                conn_string = conn_string.replace("?pgbouncer=true", "").replace("&pgbouncer=true", "")
-            if "pgbouncer=1" in conn_string:
-                conn_string = conn_string.replace("?pgbouncer=1", "").replace("&pgbouncer=1", "")
-            if "pgbouncer" in conn_string:
-                # Remove any remaining pgbouncer parameters
-                import re
-                conn_string = re.sub(r'[?&]pgbouncer=[^&]*', '', conn_string)
-                # Clean up double ? or & characters
-                conn_string = re.sub(r'\?+', '?', conn_string)
-                conn_string = re.sub(r'&+', '&', conn_string)
-                conn_string = conn_string.rstrip('?&')
-            
-            logger.info(f"Cleaned connection string: {conn_string[:50]}...")
-        
-        return conn_string
     
     def _get_connection(self):
         """Get database connection with retry logic"""
@@ -77,16 +50,22 @@ class AdminAuthService:
         return secrets.token_urlsafe(64)
     
     def _get_client_ip(self) -> str:
-        """Get client IP address"""
-        if request.environ.get('HTTP_X_FORWARDED_FOR') is None:
-            return request.environ['REMOTE_ADDR']
-        else:
-            return request.environ['HTTP_X_FORWARDED_FOR']
-    
+        """Get client IP address - handle proxy forwarding properly"""
+        # Check for X-Forwarded-For header (proxy)
+        forwarded_for = request.environ.get('HTTP_X_FORWARDED_FOR')
+        if forwarded_for:
+            # Take the first IP address (original client IP)
+            # Split by comma and take the first one, then strip whitespace
+            first_ip = forwarded_for.split(',')[0].strip()
+            return first_ip
+        
+        # Fallback to direct connection
+        return request.environ.get('REMOTE_ADDR', '127.0.0.1')
+
     def _get_user_agent(self) -> str:
         """Get client user agent"""
         return request.headers.get('User-Agent', 'Unknown')
-    
+
     def _log_activity(self, admin_user_id: Optional[int], action: str, 
                      details: Dict = None, success: bool = True):
         """Log admin activity"""
@@ -97,6 +76,9 @@ class AdminAuthService:
             
             cursor = conn.cursor()
             
+            # Get clean IP address
+            client_ip = self._get_client_ip()
+            
             cursor.execute("""
                 INSERT INTO admin_activity_logs 
                 (admin_user_id, action, details, ip_address, user_agent, success)
@@ -105,7 +87,7 @@ class AdminAuthService:
                 admin_user_id,
                 action,
                 json.dumps(details) if details else None,
-                self._get_client_ip(),
+                client_ip,
                 self._get_user_agent(),
                 success
             ))
@@ -116,7 +98,7 @@ class AdminAuthService:
             
         except Exception as e:
             logger.error(f"Error logging activity: {e}")
-    
+
     def login(self, email: str, password: str) -> Dict:
         """Authenticate admin user and create session"""
         try:
@@ -130,7 +112,7 @@ class AdminAuthService:
             # Get admin user details
             cursor.execute("""
                 SELECT id, email, password_hash, password_salt, first_name, last_name,
-                       role, is_active, failed_login_attempts, account_locked_until
+                       role, is_active
                 FROM admin_users 
                 WHERE email = %s
             """, (email.lower(),))
@@ -141,12 +123,7 @@ class AdminAuthService:
                 self._log_activity(None, 'LOGIN_FAILED', {'email': email, 'reason': 'User not found'}, False)
                 return {'success': False, 'message': 'Invalid email or password'}
             
-            user_id, user_email, password_hash, salt, first_name, last_name, role, is_active, failed_attempts, locked_until = user_data
-            
-            # Check if account is locked
-            if locked_until and locked_until > datetime.now():
-                self._log_activity(user_id, 'LOGIN_FAILED', {'reason': 'Account locked'}, False)
-                return {'success': False, 'message': f'Account locked until {locked_until.strftime("%Y-%m-%d %H:%M:%S")}'}
+            user_id, user_email, password_hash, salt, first_name, last_name, role, is_active = user_data
             
             # Check if account is active
             if not is_active:
@@ -155,40 +132,16 @@ class AdminAuthService:
             
             # Verify password
             if not self._verify_password(password, password_hash, salt):
-                # Increment failed attempts
-                new_failed_attempts = failed_attempts + 1
-                
-                # Lock account if too many failed attempts
-                if new_failed_attempts >= self.max_failed_attempts:
-                    lockout_until = datetime.now() + self.lockout_duration
-                    cursor.execute("""
-                        UPDATE admin_users 
-                        SET failed_login_attempts = %s, account_locked_until = %s
-                        WHERE id = %s
-                    """, (new_failed_attempts, lockout_until, user_id))
-                    
-                    self._log_activity(user_id, 'ACCOUNT_LOCKED', {'failed_attempts': new_failed_attempts}, False)
-                    conn.commit()
-                    cursor.close()
-                    conn.close()
-                    return {'success': False, 'message': f'Too many failed attempts. Account locked until {lockout_until.strftime("%Y-%m-%d %H:%M:%S")}'}
-                else:
-                    cursor.execute("""
-                        UPDATE admin_users 
-                        SET failed_login_attempts = %s
-                        WHERE id = %s
-                    """, (new_failed_attempts, user_id))
-                
-                self._log_activity(user_id, 'LOGIN_FAILED', {'reason': 'Invalid password', 'failed_attempts': new_failed_attempts}, False)
+                self._log_activity(user_id, 'LOGIN_FAILED', {'reason': 'Invalid password'}, False)
                 conn.commit()
                 cursor.close()
                 conn.close()
                 return {'success': False, 'message': 'Invalid email or password'}
             
-            # Successful login - reset failed attempts
+            # Successful login - update last login info
             cursor.execute("""
                 UPDATE admin_users 
-                SET failed_login_attempts = 0, account_locked_until = NULL, last_login = %s, last_login_ip = %s
+                SET last_login = %s, last_login_ip = %s
                 WHERE id = %s
             """, (datetime.now(), self._get_client_ip(), user_id))
             

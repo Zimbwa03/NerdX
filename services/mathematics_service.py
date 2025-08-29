@@ -135,7 +135,7 @@ Probability • Graphs • Variation • Vectors • Matrices
 Choose your topic to begin:"""
         except Exception as e:
             logger.error(f"Error formatting math menu with stats: {e}")
-            return f"""🧮 ZIMSEC Mathematics Hub
+        return f"""🧮 ZIMSEC Mathematics Hub
 
 Welcome {user_name}! Master O-Level Mathematics with AI-powered questions.
 
@@ -169,24 +169,24 @@ Choose your topic to begin:"""
 
 """
             
-            topic_emojis = {
-                "Real Numbers": "🔢",
-                "Sets": "🎯", 
-                "Financial Mathematics": "💰",
-                "Measures and Mensuration": "📏",
-                "Graphs": "📊",
-                "Variation": "📈",
-                "Algebra": "📐",
-                "Geometry": "📐", 
-                "Statistics": "📊",
-                "Trigonometry": "📐",
-                "Vectors": "➡️",
-                "Matrices": "🔲",
-                "Transformation": "🔄",
-                "Probability": "🎲"
-            }
+        topic_emojis = {
+            "Real Numbers": "🔢",
+            "Sets": "🎯", 
+            "Financial Mathematics": "💰",
+            "Measures and Mensuration": "📏",
+            "Graphs": "📊",
+            "Variation": "📈",
+            "Algebra": "📐",
+            "Geometry": "📐", 
+            "Statistics": "📊",
+            "Trigonometry": "📐",
+            "Vectors": "➡️",
+            "Matrices": "🔲",
+            "Transformation": "🔄",
+            "Probability": "🎲"
+        }
 
-            emoji = topic_emojis.get(topic, "📚")
+        emoji = topic_emojis.get(topic, "📚")
 
             return f"""{emoji} **{topic}** {emoji}
 

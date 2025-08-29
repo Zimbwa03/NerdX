@@ -769,3 +769,4 @@ def user_stats_api():
     except Exception as e:
         logger.error(f"Error getting user stats: {e}")
         return jsonify({'error': 'Failed to get user statistics'}), 500
+

@@ -281,15 +281,15 @@ def handle_webhook():
 
                         # Parse the full message
                         message = whatsapp_service.parse_webhook_message(data)
-                        if not message:
+        if not message:
                             continue
 
-                        user_id = message['from']
-                        message_type = message['type']
+        user_id = message['from']
+        message_type = message['type']
 
-                        # Validate WhatsApp ID
-                        if not validators.validate_whatsapp_id(user_id):
-                            logger.warning(f"Invalid WhatsApp ID: {user_id}")
+        # Validate WhatsApp ID
+        if not validators.validate_whatsapp_id(user_id):
+            logger.warning(f"Invalid WhatsApp ID: {user_id}")
                             continue
 
                         # Process message in background thread to avoid timeouts
@@ -551,7 +551,7 @@ def handle_new_user(user_id: str, message_text: str):
             logger.info(f"✅ Registration flow initiated with referral code {referral_code} for {user_id}")
         else:
             # Start normal registration
-            user_service.start_registration(user_id)
+        user_service.start_registration(user_id)
             logger.info(f"✅ Registration flow initiated for {user_id}")
 
     except Exception as e:
@@ -571,8 +571,8 @@ def handle_registration_flow(user_id: str, user_input: str):
                 if result.get('buttons'):
                     whatsapp_service.send_interactive_message(user_id, result['message'], result['buttons'])
                 else:
-                    whatsapp_service.send_message(user_id, result['message'])
-                    send_main_menu(user_id)
+                whatsapp_service.send_message(user_id, result['message'])
+                send_main_menu(user_id)
             else:
                 # Continue to next step
                 whatsapp_service.send_message(user_id, result['message'])
@@ -1477,7 +1477,7 @@ Click the link above to join our official WhatsApp channel!"""
                     package_id = parts[0]
                     reference_code = parts[1]
                     logger.info(f"Processing payment proof submission: package={package_id}, ref={reference_code}")
-                    handle_payment_proof_submission(user_id, package_id, reference_code)
+                handle_payment_proof_submission(user_id, package_id, reference_code)
                 else:
                     logger.warning(f"Invalid submit_proof format: {selection_id}")
                     whatsapp_service.send_message(user_id, "❌ Invalid payment submission format. Please try again.")
