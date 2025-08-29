@@ -1,7 +1,7 @@
 # NerdX Bot Deployment Guide for Render
 
 ## Prerequisites
-- Python 3.11.9
+- Python 3.13.0 (Render default)
 - All dependencies listed in `requirements.txt`
 - Environment variables configured
 
@@ -16,7 +16,7 @@
 ### 2. Configuration
 - **Name**: `nerdx-bot` (or your preferred name)
 - **Environment**: `Python 3`
-- **Build Command**: `pip install -r requirements.txt`
+- **Build Command**: `pip install --upgrade pip setuptools wheel && pip install -r requirements.txt`
 - **Start Command**: `gunicorn main:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120`
 
 ### 3. Environment Variables
@@ -76,9 +76,10 @@ ECOCASH_API_KEY=your-ecocash-key
 ### Common Issues:
 
 #### 1. Build Failures
-- Check that all dependencies in `requirements.txt` are compatible with Python 3.11
+- Check that all dependencies in `requirements.txt` are compatible with Python 3.13
 - Ensure no syntax errors in Python files
 - Verify all import paths are correct
+- The build command now upgrades pip, setuptools, and wheel before installing packages
 
 #### 2. Runtime Errors
 - Check the application logs in Render dashboard
@@ -121,3 +122,10 @@ If you encounter issues:
 2. Run `python test_deployment.py` locally
 3. Verify environment variables
 4. Check the `/webhook/diagnose` endpoint
+
+## Python 3.13 Compatibility Notes
+
+- Updated to use `>=` version specifiers for better compatibility
+- Added `setuptools>=68.0.0` and `wheel>=0.41.0` for build requirements
+- Updated numpy, matplotlib, and other packages to Python 3.13 compatible versions
+- Build command now upgrades essential build tools before package installation
