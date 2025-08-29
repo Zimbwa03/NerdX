@@ -7,6 +7,7 @@ import psycopg2
 import hashlib
 import secrets
 import logging
+import re
 from datetime import datetime, timedelta
 from typing import Dict, Optional, Tuple
 from flask import session, request
@@ -17,8 +18,25 @@ logger = logging.getLogger(__name__)
 class AdminAuthService:
     def __init__(self):
         # Use Supabase connection string (without pgbouncer parameter for psycopg2 compatibility)
-        self.conn_string = os.getenv('DATABASE_URL') or os.getenv('SUPABASE_DATABASE_URL')
+        raw_conn_string = os.getenv('DATABASE_URL') or os.getenv('SUPABASE_DATABASE_URL')
+        self.conn_string = self._clean_connection_string(raw_conn_string)
         self.session_duration = timedelta(hours=8)  # 8 hours session
+    
+    def _clean_connection_string(self, database_url: str) -> str:
+        """Clean database URL by removing pgbouncer and other problematic parameters"""
+        if not database_url:
+            return database_url
+        
+        # Remove pgbouncer parameter if present (incompatible with psycopg2)
+        if "pgbouncer=true" in database_url:
+            database_url = database_url.replace("?pgbouncer=true", "").replace("&pgbouncer=true", "")
+        if "pgbouncer=1" in database_url:
+            database_url = database_url.replace("?pgbouncer=1", "").replace("&pgbouncer=1", "")
+        if "pgbouncer" in database_url:
+            # Remove any remaining pgbouncer parameters
+            database_url = re.sub(r'[?&]pgbouncer=[^&]*', '', database_url)
+        
+        return database_url
     
     def _get_connection(self):
         """Get database connection with retry logic"""
