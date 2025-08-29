@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Payment Admin Dashboard for NerdX Bot
-Handles payment approvals, rejections, and management
+Handles payment approvals, rejections, and management with optimized batch queries
 """
 
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 payment_admin_bp = Blueprint('payment_admin', __name__, url_prefix='/admin/payments')
 
 class PaymentAdminDashboard:
-    """Admin dashboard for managing payments"""
+    """Admin dashboard for managing payments with optimized performance"""
     
     def __init__(self):
         self.payment_service = PaymentService()
@@ -66,9 +66,17 @@ class PaymentAdminDashboard:
                     'user_name': user_info.get('name', 'Unknown'),
                     'user_surname': user_info.get('surname', ''),
                     'package_name': package_info.get('name', 'Unknown Package'),
+                    'reference_code': payment.get('reference_code', ''),
+                    'amount': payment.get('amount', 0),
+                    'credits': payment.get('credits', 0),
                     'formatted_amount': f"${payment.get('amount', 0):.2f}",
                     'formatted_created_at': self._format_datetime(payment.get('created_at')),
-                    'time_ago': self._get_time_ago(payment.get('created_at'))
+                    'time_ago': self._get_time_ago(payment.get('created_at')),
+                    'user_id': payment.get('user_id', ''),
+                    'package_id': payment.get('package_id', ''),
+                    'payment_method': payment.get('payment_method', 'Unknown'),
+                    'phone_number': payment.get('phone_number', ''),
+                    'email': payment.get('email', '')
                 }
                 enriched_payments.append(enriched_payment)
             
@@ -80,7 +88,7 @@ class PaymentAdminDashboard:
             return []
     
     def get_approved_payments(self, days: int = 30) -> List[Dict]:
-        """Get approved payments from the last N days"""
+        """Get approved payments from the last N days with optimized batch queries"""
         try:
             # Calculate date range
             end_date = datetime.now()
@@ -96,33 +104,58 @@ class PaymentAdminDashboard:
                 order_by="approved_at.desc"
             )
             
-            if result:
-                enriched_payments = []
-                for payment in result:
-                    user_info = self._get_user_info(payment.get('user_id'))
-                    package_info = self.payment_service.get_package_by_id(payment.get('package_id', ''))
-                    
-                    enriched_payment = {
-                        **payment,
-                        'user_name': user_info.get('name', 'Unknown') if user_info else 'Unknown',
-                        'user_surname': user_info.get('surname', '') if user_info else '',
-                        'package_name': package_info.get('name', 'Unknown Package') if package_info else 'Unknown Package',
-                        'formatted_amount': f"${payment.get('amount', 0):.2f}",
-                        'formatted_approved_at': self._format_datetime(payment.get('approved_at')),
-                        'time_ago': self._get_time_ago(payment.get('approved_at'))
-                    }
-                    enriched_payments.append(enriched_payment)
-                
-                return enriched_payments
-            else:
+            if not result:
                 return []
+            
+            # Extract unique user IDs and package IDs for batch queries
+            user_ids = list(set([payment.get('user_id') for payment in result if payment.get('user_id')]))
+            package_ids = list(set([payment.get('package_id') for payment in result if payment.get('package_id')]))
+            
+            # Batch query for user information
+            user_info_map = self._get_batch_user_info(user_ids)
+            
+            # Batch query for package information
+            package_info_map = self._get_batch_package_info(package_ids)
+            
+            # Enrich payment data using the batch results
+            enriched_payments = []
+            for payment in result:
+                user_id = payment.get('user_id')
+                package_id = payment.get('package_id')
+                
+                user_info = user_info_map.get(user_id, {})
+                package_info = package_info_map.get(package_id, {})
+                
+                enriched_payment = {
+                    **payment,
+                    'user_name': user_info.get('name', 'Unknown'),
+                    'user_surname': user_info.get('surname', ''),
+                    'package_name': package_info.get('name', 'Unknown Package'),
+                    'reference_code': payment.get('reference_code', ''),
+                    'amount': payment.get('amount', 0),
+                    'credits': payment.get('credits', 0),
+                    'formatted_amount': f"${payment.get('amount', 0):.2f}",
+                    'formatted_approved_at': self._format_datetime(payment.get('approved_at')),
+                    'time_ago': self._get_time_ago(payment.get('approved_at')),
+                    'user_id': payment.get('user_id', ''),
+                    'package_id': payment.get('package_id', ''),
+                    'payment_method': payment.get('payment_method', 'Unknown'),
+                    'phone_number': payment.get('phone_number', ''),
+                    'email': payment.get('email', ''),
+                    'admin_notes': payment.get('admin_notes', ''),
+                    'credits_added': payment.get('credits_added', 0)
+                }
+                enriched_payments.append(enriched_payment)
+            
+            logger.info(f"✅ Loaded {len(enriched_payments)} approved payments with batch queries")
+            return enriched_payments
                 
         except Exception as e:
             logger.error(f"Error getting approved payments: {e}")
             return []
     
     def get_rejected_payments(self, days: int = 30) -> List[Dict]:
-        """Get rejected payments from the last N days"""
+        """Get rejected payments from the last N days with optimized batch queries"""
         try:
             end_date = datetime.now()
             start_date = end_date - timedelta(days=days)
@@ -137,26 +170,45 @@ class PaymentAdminDashboard:
                 order_by="rejected_at.desc"
             )
             
-            if result:
-                enriched_payments = []
-                for payment in result:
-                    user_info = self._get_user_info(payment.get('user_id'))
-                    package_info = self.payment_service.get_package_by_id(payment.get('package_id', ''))
-                    
-                    enriched_payment = {
-                        **payment,
-                        'user_name': user_info.get('name', 'Unknown') if user_info else 'Unknown',
-                        'user_surname': user_info.get('surname', '') if user_info else '',
-                        'package_name': package_info.get('name', 'Unknown Package') if package_info else 'Unknown Package',
-                        'formatted_amount': f"${payment.get('amount', 0):.2f}",
-                        'formatted_rejected_at': self._format_datetime(payment.get('rejected_at')),
-                        'time_ago': self._get_time_ago(payment.get('rejected_at'))
-                    }
-                    enriched_payments.append(enriched_payment)
-                
-                return enriched_payments
-            else:
+            if not result:
                 return []
+            
+            # Extract unique user IDs and package IDs for batch queries
+            user_ids = list(set([payment.get('user_id') for payment in result if payment.get('user_id')]))
+            package_ids = list(set([payment.get('package_id') for payment in result if payment.get('package_id')]))
+            
+            # Batch query for user information
+            user_info_map = self._get_batch_user_info(user_ids)
+            
+            # Batch query for package information
+            package_info_map = self._get_batch_package_info(package_ids)
+            
+            # Enrich payment data using the batch results
+            enriched_payments = []
+            for payment in result:
+                user_id = payment.get('user_id')
+                package_id = payment.get('package_id')
+                
+                user_info = user_info_map.get(user_id, {})
+                package_info = package_info_map.get(package_id, {})
+                
+                enriched_payment = {
+                    **payment,
+                    'user_name': user_info.get('name', 'Unknown'),
+                    'user_surname': user_info.get('surname', ''),
+                    'package_name': package_info.get('name', 'Unknown Package'),
+                    'reference_code': payment.get('reference_code', ''),
+                    'amount': payment.get('amount', 0),
+                    'credits': payment.get('credits', 0),
+                    'formatted_amount': f"${payment.get('amount', 0):.2f}",
+                    'formatted_rejected_at': self._format_datetime(payment.get('rejected_at')),
+                    'time_ago': self._get_time_ago(payment.get('rejected_at')),
+                    'admin_notes': payment.get('admin_notes', '')
+                }
+                enriched_payments.append(enriched_payment)
+            
+            logger.info(f"✅ Loaded {len(enriched_payments)} rejected payments with batch queries")
+            return enriched_payments
                 
         except Exception as e:
             logger.error(f"Error getting rejected payments: {e}")
@@ -408,6 +460,83 @@ class PaymentAdminDashboard:
             logger.error(f"Error batch fetching package info: {e}")
             return {}
     
+    def get_all_users(self) -> List[Dict]:
+        """Get all registered users for admin dashboard"""
+        try:
+            result = make_supabase_request(
+                "GET", 
+                "users_registration", 
+                order_by="created_at.desc"
+            )
+            
+            if not result:
+                return []
+            
+            # Enrich user data with additional information
+            enriched_users = []
+            for user in result:
+                enriched_user = {
+                    **user,
+                    'full_name': f"{user.get('name', '')} {user.get('surname', '')}".strip(),
+                    'formatted_created_at': self._format_datetime(user.get('created_at')),
+                    'time_ago': self._get_time_ago(user.get('created_at')),
+                    'status': 'Active' if user.get('is_active', True) else 'Inactive',
+                    'credits': user.get('credits', 0),
+                    'xp': user.get('xp', 0),
+                    'level': user.get('level', 1),
+                    'streak': user.get('streak', 0)
+                }
+                enriched_users.append(enriched_user)
+            
+            logger.info(f"✅ Loaded {len(enriched_users)} users for admin dashboard")
+            return enriched_users
+                
+        except Exception as e:
+            logger.error(f"Error getting all users: {e}")
+            return []
+    
+    def get_user_statistics(self) -> Dict:
+        """Get user statistics for admin dashboard"""
+        try:
+            all_users = make_supabase_request(
+                "GET", 
+                "users_registration", 
+                filters={}
+            )
+            
+            if not all_users:
+                return {
+                    'total_users': 0,
+                    'active_users': 0,
+                    'total_credits': 0,
+                    'total_xp': 0,
+                    'average_level': 0
+                }
+            
+            total_users = len(all_users)
+            active_users = sum(1 for user in all_users if user.get('is_active', True))
+            total_credits = sum(int(user.get('credits', 0)) for user in all_users)
+            total_xp = sum(int(user.get('xp', 0)) for user in all_users)
+            average_level = sum(int(user.get('level', 1)) for user in all_users) / total_users if total_users > 0 else 0
+            
+            return {
+                'total_users': total_users,
+                'active_users': active_users,
+                'total_credits': total_credits,
+                'total_xp': total_xp,
+                'average_level': round(average_level, 1)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error getting user statistics: {e}")
+            return {
+                'total_users': 0,
+                'active_users': 0,
+                'total_credits': 0,
+                'total_xp': 0,
+                'average_level': 0
+            }
+    
     def _format_datetime(self, datetime_str: str) -> str:
         """Format datetime string for display"""
         try:
@@ -519,6 +648,21 @@ def rejected_payments():
         flash('Error loading rejected payments', 'error')
         return redirect(url_for('payment_admin.payment_dashboard_view'))
 
+@payment_admin_bp.route('/users')
+@login_required
+def all_users_view():
+    """View all users"""
+    try:
+        users = payment_dashboard.get_all_users()
+        user_stats = payment_dashboard.get_user_statistics()
+        return render_template('admin/all_users.html', 
+                             users=users,
+                             stats=user_stats)
+    except Exception as e:
+        logger.error(f"Error loading all users: {e}")
+        flash('Error loading users', 'error')
+        return redirect(url_for('payment_admin.payment_dashboard_view'))
+
 @payment_admin_bp.route('/approve/<reference_code>', methods=['POST'])
 @login_required
 def approve_payment_route(reference_code: str):
@@ -559,6 +703,7 @@ def reject_payment_route(reference_code: str):
         flash('Error rejecting payment', 'error')
         return redirect(url_for('payment_admin.pending_payments'))
 
+# API endpoints
 @payment_admin_bp.route('/api/stats')
 @login_required
 def payment_stats_api():
@@ -602,3 +747,25 @@ def rejected_payments_api():
     except Exception as e:
         logger.error(f"Error getting rejected payments: {e}")
         return jsonify({'error': 'Failed to get rejected payments'}), 500
+
+@payment_admin_bp.route('/api/users')
+@login_required
+def all_users_api():
+    """API endpoint for all users"""
+    try:
+        users = payment_dashboard.get_all_users()
+        return jsonify(users)
+    except Exception as e:
+        logger.error(f"Error getting all users: {e}")
+        return jsonify({'error': 'Failed to get users'}), 500
+
+@payment_admin_bp.route('/api/user-stats')
+@login_required
+def user_stats_api():
+    """API endpoint for user statistics"""
+    try:
+        stats = payment_dashboard.get_user_statistics()
+        return jsonify(stats)
+    except Exception as e:
+        logger.error(f"Error getting user stats: {e}")
+        return jsonify({'error': 'Failed to get user statistics'}), 500
