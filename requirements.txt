@@ -1,7 +1,7 @@
 # NerdX Bot Dependencies for Render Deployment
 # Core Flask and Web Framework
 flask>=3.1.2
-flask-sqlalchemy>=3.1.1
+fla>=3sk-sqlalchemy.1.1
 flask-login>=0.6.3
 flask-cors>=6.0.1
 flask-dance>=7.1.0
@@ -18,7 +18,7 @@ pyjwt>=2.10.1
 email-validator>=2.2.0
 
 # AI and Machine Learning
-google-generativeai>=1.31.0
+google-generativeai==0.8.5
 openai>=1.0.0
 sympy>=1.14.0
 
@@ -49,32 +49,3 @@ python-dateutil>=2.8.2
 # Development and Testing (optional for production)
 pytest>=7.4.0
 pytest-cov>=4.1.0
-email_validator
-flask
-flask-sqlalchemy
-gunicorn
-psycopg2-binary
-flask
-flask-cors
-flask-sqlalchemy
-gunicorn
-pillow
-psycopg2-binary
-python-dotenv
-requests
-flask-dance
-flask-login
-google-generativeai==0.8.5
-imgbbpy
-matplotlib
-numpy
-oauthlib
-openai
-pyjwt
-pypdf2
-pytesseract
-reportlab
-seaborn
-speechrecognition
-python-dateutil
-sympy
