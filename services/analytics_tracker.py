@@ -2,6 +2,7 @@
 Real-time Analytics Tracker for NerdX
 Tracks user interactions and updates analytics tables
 """
+import os
 import psycopg2
 from datetime import datetime, date
 import logging
@@ -12,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 class AnalyticsTracker:
     def __init__(self):
-        self.conn_string = 'postgresql://postgres.hvlvwvzliqrlmqjbfgoa:Ngonidzashe2003.@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres'
+        self.conn_string = os.getenv('DATABASE_URL') or os.getenv('SUPABASE_DATABASE_URL')
     
     def _get_connection(self):
         """Get database connection"""

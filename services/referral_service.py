@@ -330,7 +330,7 @@ class ReferralService:
             
             # Create WhatsApp link that automatically opens chat with referral message
             # The text parameter will pre-fill the message
-            referral_message = f"Hello! I want to join NerdX using referral code: {referral_code}"
+            referral_message = f"Hello! I want to Join NerdX my friend referred me to you with this code {referral_code}"
             
             # URL encode the message
             import urllib.parse

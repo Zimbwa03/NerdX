@@ -15,9 +15,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Supabase configuration - use environment variables
-SUPABASE_URL = os.getenv("SUPABASE_URL", "https://hvlvwvzliqrlmqjbfgoa.supabase.co")
-SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU")
-SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjM4MjEyOSwiZXhwIjoyMDY3OTU4MTI5fQ.p4qtbG42XUiN8sXH3phmUMwwQPo1v-StjUkwUZOR4Bg")
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY") 
+SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 
 # Use service role key as default for backward compatibility  
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", SUPABASE_ANON_KEY)
@@ -72,57 +72,44 @@ def create_users_registration_table():
         
         # Try multiple methods to create the table
         
-        # Method 1: Try SQL RPC endpoint
+        # Check if table already exists by trying to query it
         try:
-            url = f"{SUPABASE_URL}/rest/v1/rpc/exec_sql"
-            data = {"sql": sql_query}
-            
-            response = requests.post(url, headers=headers, json=data, timeout=30)
-            
-            if response.status_code == 200:
-                logger.info("Users registration table created successfully via RPC")
-                return True
-            else:
-                logger.warning(f"RPC method failed: {response.status_code} - {response.text}")
-        except Exception as rpc_error:
-            logger.warning(f"RPC method error: {rpc_error}")
-        
-        # Method 2: Try direct table creation (simplified schema)
-        try:
-            logger.info("Attempting direct table creation...")
-            
-            # Try to create a simple table first by posting to a hypothetical table endpoint
-            # This is a fallback approach - might not work but worth trying
-            test_data = {
-                'chat_id': 'test',
-                'name': 'test',
-                'surname': 'test',
-                'date_of_birth': '01/01/2000',
-                'nerdx_id': 'TEST123',
-                'created_at': datetime.utcnow().isoformat()
-            }
-            
-            # This will fail if table doesn't exist, which is what we want to detect
-            test_url = f"{SUPABASE_URL}/rest/v1/users_registration"
-            test_response = requests.post(test_url, headers=headers, json=test_data, timeout=10)
-            
-            if test_response.status_code in [200, 201]:
+            logger.info("Checking if users_registration table exists...")
+            test_result = make_supabase_request("GET", "users_registration", limit=1, use_service_role=True)
+            if test_result is not None:
                 logger.info("Users registration table already exists and is accessible")
-                # Clean up test record
-                try:
-                    delete_url = f"{test_url}?chat_id=eq.test"
-                    requests.delete(delete_url, headers=headers, timeout=10)
-                except:
-                    pass
                 return True
-            else:
-                logger.warning(f"Table test failed: {test_response.status_code} - {test_response.text}")
-                
-        except Exception as direct_error:
-            logger.warning(f"Direct table access failed: {direct_error}")
+        except Exception as check_error:
+            logger.warning(f"Table check failed: {check_error}")
         
-        # If we get here, table creation failed
-        logger.error("All table creation methods failed - table may need to be created manually in Supabase dashboard")
+        # If table doesn't exist, provide clear instructions
+        logger.warning("Users registration table does not exist. Please create it manually in Supabase SQL Editor:")
+        logger.warning("""
+        CREATE TABLE IF NOT EXISTS users_registration (
+            id SERIAL PRIMARY KEY,
+            chat_id VARCHAR(255) UNIQUE NOT NULL,
+            name VARCHAR(255) NOT NULL,
+            surname VARCHAR(255) NOT NULL,
+            date_of_birth VARCHAR(10) NOT NULL,
+            nerdx_id VARCHAR(10) UNIQUE NOT NULL,
+            referred_by_nerdx_id VARCHAR(10),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        
+        CREATE INDEX IF NOT EXISTS idx_users_registration_chat_id ON users_registration(chat_id);
+        CREATE INDEX IF NOT EXISTS idx_users_registration_nerdx_id ON users_registration(nerdx_id);
+        CREATE INDEX IF NOT EXISTS idx_users_registration_referred_by ON users_registration(referred_by_nerdx_id);
+        
+        -- Enable Row Level Security
+        ALTER TABLE users_registration ENABLE ROW LEVEL SECURITY;
+        
+        -- Create policy to allow all operations (adjust as needed for production)
+        DROP POLICY IF EXISTS "Allow all operations on users_registration" ON users_registration;
+        CREATE POLICY "Allow all operations on users_registration" ON users_registration
+            FOR ALL USING (true) WITH CHECK (true);
+        """)
+        
         return False
             
     except Exception as e:
@@ -154,26 +141,37 @@ def create_payment_transactions_table():
         CREATE INDEX IF NOT EXISTS idx_payment_transactions_created_at ON payment_transactions(created_at);
         """
         
-        # Try to execute via RPC
-        headers = {
-            "apikey": SUPABASE_SERVICE_ROLE_KEY,
-            "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
-            "Content-Type": "application/json"
-        }
-        
-        # Use SQL RPC endpoint
-        url = f"{SUPABASE_URL}/rest/v1/rpc/exec_sql"
-        data = {"sql": sql_query}
-        
-        response = requests.post(url, headers=headers, json=data, timeout=30)
-        
-        if response.status_code == 200:
-            logger.info("Payment transactions table created successfully")
+        # Check if table already exists by trying to query it
+        test_result = make_supabase_request("GET", "payment_transactions", limit=1, use_service_role=True)
+        if test_result is not None:
+            logger.info("Payment transactions table already exists and is accessible")
             return True
-        else:
-            logger.error(f"Failed to create table: {response.status_code} - {response.text}")
-            return False
-            
+        
+        # If table doesn't exist, we'll need to create it manually in Supabase
+        logger.warning("Payment transactions table does not exist. Please create it manually in Supabase SQL Editor:")
+        logger.warning("""
+        CREATE TABLE IF NOT EXISTS payment_transactions (
+            id SERIAL PRIMARY KEY,
+            user_id VARCHAR(255) NOT NULL,
+            package_id VARCHAR(50) NOT NULL,
+            reference_code VARCHAR(100) UNIQUE NOT NULL,
+            amount DECIMAL(10,2) NOT NULL,
+            credits INTEGER NOT NULL,
+            status VARCHAR(50) DEFAULT 'pending',
+            payment_proof TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            proof_submitted_at TIMESTAMP,
+            approved_at TIMESTAMP,
+            credits_added INTEGER DEFAULT 0
+        );
+        
+        CREATE INDEX IF NOT EXISTS idx_payment_transactions_user_id ON payment_transactions(user_id);
+        CREATE INDEX IF NOT EXISTS idx_payment_transactions_status ON payment_transactions(status);
+        CREATE INDEX IF NOT EXISTS idx_payment_transactions_created_at ON payment_transactions(created_at);
+        """)
+        
+        return True
+        
     except Exception as e:
         logger.error(f"Error creating payment_transactions table: {e}")
         return False
@@ -563,7 +561,7 @@ def get_user_by_nerdx_id(nerdx_id):
         return None
 
 def add_referral_credits(referred_by_nerdx_id, new_user_chat_id):
-    """Add 50 credits to referrer when someone they referred registers"""
+    """Add 5 credits to referrer when someone they referred registers and send WhatsApp notification"""
     try:
         # Get the referrer's information
         referrer = get_user_by_nerdx_id(referred_by_nerdx_id)
@@ -577,14 +575,43 @@ def add_referral_credits(referred_by_nerdx_id, new_user_chat_id):
         # Get the new user's information for the description
         new_user = get_user_registration(new_user_chat_id)
         new_user_name = new_user.get('name', 'Unknown') if new_user else 'Unknown'
+        new_user_surname = new_user.get('surname', '') if new_user else ''
+        full_new_user_name = f"{new_user_name} {new_user_surname}".strip()
 
-        # Add referral bonus credits (updated to 5 credits)
+        # Add referral bonus credits (5 credits as requested)
         referral_bonus = 5
-        description = f'Referral bonus: {new_user_name} joined using your code'
+        description = f'Referral bonus: {full_new_user_name} joined using your code'
         success = add_credits(referrer_chat_id, referral_bonus, 'referral_bonus', description)
 
         if success:
-            logger.info(f"Added {referral_bonus} referral credits to {referrer_name} ({referrer_chat_id}) for referring {new_user_name} ({new_user_chat_id})")
+            logger.info(f"Added {referral_bonus} referral credits to {referrer_name} ({referrer_chat_id}) for referring {full_new_user_name} ({new_user_chat_id})")
+            
+            # 🎉 SEND WHATSAPP NOTIFICATION TO REFERRER
+            try:
+                from services.whatsapp_service import WhatsAppService
+                whatsapp_service = WhatsAppService()
+                
+                # Get referrer's current credit balance
+                current_credits = get_user_credits(referrer_chat_id)
+                
+                notification_message = f"""🎉 **Congratulations {referrer_name}!**
+
+🔗 **{full_new_user_name}** just registered using your referral link!
+
+💰 **You received +{referral_bonus} credits**
+📊 **Your balance**: {current_credits} credits
+
+🚀 Keep sharing your NerdX ID **{referred_by_nerdx_id}** to earn more referral bonuses!
+
+Type 'menu' to continue learning."""
+
+                whatsapp_service.send_message(referrer_chat_id, notification_message)
+                logger.info(f"✅ Referral notification sent to {referrer_name} ({referrer_chat_id})")
+                
+            except Exception as notification_error:
+                logger.error(f"❌ Failed to send referral notification to {referrer_chat_id}: {notification_error}")
+                # Don't fail the whole process if notification fails
+            
             return True
         else:
             logger.error(f"Failed to add referral credits to {referrer_chat_id}")

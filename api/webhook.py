@@ -33,10 +33,39 @@ from services.analytics_tracker import analytics_tracker
 from config import Config
 from datetime import datetime
 import uuid
+import re
 
 logger = logging.getLogger(__name__)
 
 webhook_bp = Blueprint('webhook', __name__)
+
+def require_registration(func):
+    """Security decorator: Ensure user is registered before accessing any bot feature"""
+    def wrapper(user_id: str, *args, **kwargs):
+        try:
+            from database.external_db import get_user_registration
+            user_registration = get_user_registration(user_id)
+            
+            if not user_registration:
+                logger.warning(f"🚨 SECURITY BLOCK: Unregistered user {user_id} tried to access {func.__name__}")
+                whatsapp_service.send_message(user_id, 
+                    "🔒 **Access Denied - Registration Required**\n\n"
+                    "You must complete registration before using NerdX Bot.\n\n"
+                    "Please provide your first name:")
+                user_service.start_registration(user_id)
+                return None
+            
+            # User is registered, proceed with function
+            return func(user_id, *args, **kwargs)
+            
+        except Exception as e:
+            logger.error(f"Error in registration check for {func.__name__}: {e}")
+            whatsapp_service.send_message(user_id, 
+                "🔒 **System Security Error**\n\n"
+                "Unable to verify registration status. Please try again.")
+            return None
+    
+    return wrapper
 
 # Message deduplication and rate limiting
 processed_messages = {}  # In production, use Redis or database
@@ -402,16 +431,30 @@ def handle_text_message(user_id: str, message_text: str):
             handle_session_message(user_id, message_text)
             return
 
-        # Check if user is registered
+        # 🔒 STRICT REGISTRATION ENFORCEMENT - NO ACCESS WITHOUT REGISTRATION
         registration_status = user_service.check_user_registration(user_id)
 
         if not registration_status['is_registered']:
+            logger.info(f"🚫 UNREGISTERED USER BLOCKED: {user_id}")
+            
             if registration_status.get('registration_in_progress'):
                 # Continue registration process
                 handle_registration_flow(user_id, message_text)
             else:
-                # Start registration
+                # Force registration - NO EXCEPTIONS
                 handle_new_user(user_id, message_text)
+            return
+
+        # 🔐 DOUBLE-CHECK: Verify user actually exists in database
+        from database.external_db import get_user_registration
+        user_registration = get_user_registration(user_id)
+        if not user_registration:
+            logger.warning(f"🚨 SECURITY BREACH: User {user_id} passed registration check but not in database!")
+            whatsapp_service.send_message(user_id, 
+                "🔒 **Security Notice**\n\n"
+                "Your registration status is inconsistent. For security, please register again.\n\n"
+                "Please provide your first name:")
+            user_service.start_registration(user_id)
             return
 
         # Handle registered user commands
@@ -461,19 +504,61 @@ def handle_text_message(user_id: str, message_text: str):
         whatsapp_service.send_message(user_id, "Sorry, an error occurred. Please try again.")
 
 def handle_new_user(user_id: str, message_text: str):
-    """Handle new user registration"""
+    """Handle new user registration - STRICT SECURITY ENFORCEMENT"""
     try:
-        # Send welcome message and start registration
-        welcome_msg = MESSAGE_TEMPLATES['welcome']
-        welcome_msg += "\n\nLet's get you registered!\n\nPlease enter your first name:"
+        logger.info(f"🆕 NEW USER: {user_id} - Starting mandatory registration")
+        
+        # Check if message contains referral code
+        referral_code = None
+        if "referred me to you with this code" in message_text.lower() or "code" in message_text.lower():
+            # Extract referral code from message
+            import re
+            
+            # Look for any 6-character sequence starting with N (most reliable approach)
+            n_codes = re.findall(r'N[A-Z0-9]{5}', message_text.upper())
+            if n_codes:
+                referral_code = n_codes[0]
+                logger.info(f"🔗 Referral code detected: {referral_code} for user {user_id}")
+        
+        # Send enhanced welcome message with security notice
+        welcome_msg = "🚨 **SECURITY NOTICE** 🚨\n\n"
+        welcome_msg += "Welcome to **NerdX Quiz Bot**!\n\n"
+        welcome_msg += "🔒 **Registration is MANDATORY**\n"
+        welcome_msg += "📋 **No access without registration**\n"
+        welcome_msg += "🆔 **Secure your NerdX account**\n\n"
+        welcome_msg += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        
+        if referral_code:
+            welcome_msg += f"🔗 **Referral Code Detected**: {referral_code}\n\n"
+        
+        welcome_msg += "Let's get you registered securely!\n\n"
+        welcome_msg += "Please enter your **first name**:"
 
         whatsapp_service.send_message(user_id, welcome_msg)
 
-        # Start registration process
-        user_service.start_registration(user_id)
+        # Start registration process with referral code if detected
+        if referral_code:
+            # Pre-fill the referral code in the session
+            from database.session_db import update_registration_session
+            session_data = {
+                'step': 'name',
+                'name': None,
+                'surname': None,
+                'date_of_birth': None,
+                'referred_by_nerdx_id': referral_code
+            }
+            update_registration_session(user_id, session_data)
+            logger.info(f"✅ Registration flow initiated with referral code {referral_code} for {user_id}")
+        else:
+            # Start normal registration
+            user_service.start_registration(user_id)
+            logger.info(f"✅ Registration flow initiated for {user_id}")
 
     except Exception as e:
         logger.error(f"Error handling new user {user_id}: {e}", exc_info=True)
+        whatsapp_service.send_message(user_id, 
+            "🔒 **System Error**\n\n"
+            "Registration system temporarily unavailable. Please try again in a moment.")
 
 def handle_registration_flow(user_id: str, user_input: str):
     """Handle user registration steps"""
@@ -482,9 +567,12 @@ def handle_registration_flow(user_id: str, user_input: str):
 
         if result['success']:
             if result.get('completed'):
-                # Registration complete
-                whatsapp_service.send_message(user_id, result['message'])
-                send_main_menu(user_id)
+                # Registration complete - send message with buttons
+                if result.get('buttons'):
+                    whatsapp_service.send_interactive_message(user_id, result['message'], result['buttons'])
+                else:
+                    whatsapp_service.send_message(user_id, result['message'])
+                    send_main_menu(user_id)
             else:
                 # Continue to next step
                 whatsapp_service.send_message(user_id, result['message'])
@@ -678,6 +766,18 @@ def handle_question_answer(user_id: str, answer: str):
 def handle_image_message(user_id: str, image_data: dict):
     """Handle image messages for math problem solving"""
     try:
+        # 🔒 STRICT SECURITY: Check registration before image processing
+        from database.external_db import get_user_registration
+        user_registration = get_user_registration(user_id)
+        if not user_registration:
+            logger.warning(f"🚨 UNREGISTERED USER tried to send image: {user_id}")
+            whatsapp_service.send_message(user_id, 
+                "🔒 **Access Denied**\n\n"
+                "You must register before sending images to NerdX Bot.\n\n"
+                "Please provide your first name:")
+            user_service.start_registration(user_id)
+            return
+
         # Check if user is in audio chat mode
         session_data = session_manager.get_session_data(user_id)
         if session_data and session_data.get('mode') == 'audio_chat':
@@ -884,9 +984,18 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         if not selection_id:
             return
 
-        # Fetch user details for context in handlers
+        # 🔒 STRICT SECURITY: Check registration before ANY interactive action
         registration = get_user_registration(user_id)
-        user_name = registration['name'] if registration else "Student"
+        if not registration:
+            logger.warning(f"🚨 UNREGISTERED USER tried interactive action: {user_id}")
+            whatsapp_service.send_message(user_id, 
+                "🔒 **Access Denied**\n\n"
+                "You must register before using NerdX Bot.\n\n"
+                "Please provide your first name:")
+            user_service.start_registration(user_id)
+            return
+        
+        user_name = registration['name']
 
         # Define actions that need rate limiting (content generation/expensive operations)
         rate_limited_actions = [
@@ -1112,6 +1221,29 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         elif selection_id == 'level_advanced':
             handle_level_menu(user_id, 'advanced')
         elif selection_id == 'main_menu' or selection_id == 'back_to_menu':
+            send_main_menu(user_id)
+        # Registration completion button handlers
+        elif selection_id == 'join_channel':
+            # Send WhatsApp channel link
+            channel_message = """📢 **Join NerdX Official Channel!**
+
+Stay updated with:
+• Latest features and updates
+• Study tips and strategies
+• Important announcements
+• Community discussions
+
+🔗 **Channel Link**: https://whatsapp.com/channel/0029VbAoqVdDTkK3jbcrDf1B
+
+Click the link above to join our official WhatsApp channel!"""
+            
+            buttons = [
+                {"text": "🚀 Continue to Bot", "callback_data": "continue_after_registration"}
+            ]
+            whatsapp_service.send_interactive_message(user_id, channel_message, buttons)
+            
+        elif selection_id == 'continue_after_registration':
+            # Send main menu after registration
             send_main_menu(user_id)
         # Add handlers for the Combined Science buttons
         elif selection_id.startswith('science_'):

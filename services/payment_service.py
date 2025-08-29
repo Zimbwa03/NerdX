@@ -261,6 +261,7 @@ class PaymentService:
             }
             
             # Store in payment_transactions table for admin review
+            logger.info(f"Attempting to submit payment proof to payment_transactions table...")
             result = make_supabase_request("POST", "payment_transactions", payment_data)
             
             if result:
@@ -273,7 +274,31 @@ class PaymentService:
                 }
             else:
                 logger.error(f"Failed to submit payment proof - Supabase returned no result")
-                return {'success': False, 'message': 'Failed to submit payment proof'}
+                # Try to get more detailed error information
+                try:
+                    # Check if table exists
+                    table_check = make_supabase_request("GET", "payment_transactions", limit=1, use_service_role=True)
+                    if table_check is None:
+                        return {
+                            'success': False, 
+                            'message': '❌ **Payment System Error**\n\n'
+                                      'The payment system is currently unavailable due to database configuration issues.\n\n'
+                                      '🔧 **What to do:**\n'
+                                      '1. Please try again in a few minutes\n'
+                                      '2. If the problem persists, contact support\n'
+                                      '3. We are working to resolve this issue\n\n'
+                                      '📞 **Support**: Contact the admin team'
+                        }
+                except Exception as check_error:
+                    logger.error(f"Error checking table existence: {check_error}")
+                
+                return {
+                    'success': False, 
+                    'message': '❌ **Payment Proof Submission Failed**\n\n'
+                              'We encountered an error while processing your payment proof.\n\n'
+                              '🔄 **Please try again** or contact support if the problem persists.\n\n'
+                              '📞 **Support**: Contact the admin team'
+                }
                 
         except Exception as e:
             logger.error(f"Error submitting payment proof: {e}")

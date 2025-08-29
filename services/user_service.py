@@ -191,14 +191,21 @@ class UserService:
                 }
             
             session['date_of_birth'] = dob.strip()
-            session['step'] = 'referral_code'
-            update_registration_session(whatsapp_id, session)
             
-            return {
-                'success': True,
-                'step': 'referral_code',
-                'message': 'Do you have a referral code? Enter it now, or type "SKIP" to continue without one:'
-            }
+            # Check if referral code was already detected during initial message
+            if session.get('referred_by_nerdx_id'):
+                # Skip referral step and complete registration
+                return self._complete_registration(whatsapp_id, session, session['referred_by_nerdx_id'])
+            else:
+                # Continue to referral step
+                session['step'] = 'referral_code'
+                update_registration_session(whatsapp_id, session)
+                
+                return {
+                    'success': True,
+                    'step': 'referral_code',
+                    'message': 'Do you have a referral code? Enter it now, or type "SKIP" to continue without one:'
+                }
             
         except ValueError:
             return {
@@ -290,24 +297,42 @@ class UserService:
                 # Get final credit balance
                 final_credits = get_user_credits(whatsapp_id)
                 
-                message = f"🎉 **Registration Complete!**\n\n"
-                message += f"Welcome **{session['name']} {session['surname']}**!\n"
-                message += f"🆔 **Your NerdX ID**: {nerdx_id}\n\n"
-                message += f"✨ **You've received {final_credits} welcome credits!**\n"
+                # Create stylish registration completion message
+                message = "🎉 **🎓 REGISTRATION COMPLETE! 🎓**\n\n"
+                message += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                message += f"✨ **Welcome to NerdX, {session['name']} {session['surname']}!**\n\n"
+                message += f"🆔 **Your NerdX ID**: `{nerdx_id}`\n"
+                message += f"📅 **Date of Birth**: {session['date_of_birth']}\n"
+                message += f"📱 **WhatsApp**: {whatsapp_id}\n\n"
+                message += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                message += "💎 **Welcome Bonus**: +75 Credits\n"
+                message += f"💳 **Total Credits**: {final_credits} credits\n\n"
                 
                 if referral_code:
                     message += f"🎁 **Referral Bonus Applied!**\n"
-                    message += f"Thanks for using referral code: {referral_code}\n"
-                    message += f"Your referrer also received +{Config.REFERRAL_BONUS} bonus credits!\n"
+                    message += f"🔗 **Referral Code**: {referral_code}\n\n"
                 
-                message += f"\n🚀 **Ready to start learning!**\n"
-                message += f"Type 'menu' to begin your educational journey!"
+                message += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                message += "🚀 **Ready to start your learning journey!**"
+
+                # Create buttons for the completion message
+                buttons = [
+                    {
+                        "text": "📢 Join Channel",
+                        "callback_data": "join_channel"
+                    },
+                    {
+                        "text": "🚀 Continue",
+                        "callback_data": "continue_after_registration"
+                    }
+                ]
                 
                 return {
                     'success': True,
                     'completed': True,
                     'user_data': registration_result,
                     'message': message,
+                    'buttons': buttons,
                     'credits_awarded': final_credits
                 }
             else:

@@ -426,75 +426,145 @@
     <div class="tab-pane fade" id="payments" role="tabpanel">
         <div class="row mb-3">
             <div class="col">
-                <h5>Payment Overview</h5>
+                <h5><i class="fas fa-credit-card me-2"></i>Payment Management Dashboard</h5>
+                <p class="text-muted">Manage payment approvals, view statistics, and monitor transactions</p>
             </div>
         </div>
         
+        <!-- Payment Statistics Cards -->
         <div class="row mb-4">
             <div class="col-md-3">
-                <div class="card">
+                <div class="card border-primary">
+                    <div class="card-body text-center">
+                        <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                        <h4 class="mb-0" id="pendingPayments">0</h4>
+                        <small class="text-muted">Pending Approvals</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-success">
                     <div class="card-body text-center">
                         <i class="fas fa-dollar-sign fa-2x text-success mb-2"></i>
-                        <h4 class="mb-0" id="totalRevenue">$0</h4>
-                        <small class="text-muted">Total Revenue</small>
+                        <h4 class="mb-0" id="totalRevenue">$0.00</h4>
+                        <small class="text-muted">Total Revenue (30d)</small>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card">
-                    <div class="card-body text-center">
-                        <i class="fas fa-credit-card fa-2x text-primary mb-2"></i>
-                        <h4 class="mb-0" id="totalTransactions">0</h4>
-                        <small class="text-muted">Total Transactions</small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card">
+                <div class="card border-info">
                     <div class="card-body text-center">
                         <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
-                        <h4 class="mb-0" id="successfulPayments">0</h4>
-                        <small class="text-muted">Successful</small>
+                        <h4 class="mb-0" id="approvedPayments">0</h4>
+                        <small class="text-muted">Approved (30d)</small>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card">
+                <div class="card border-danger">
                     <div class="card-body text-center">
                         <i class="fas fa-times-circle fa-2x text-danger mb-2"></i>
-                        <h4 class="mb-0" id="failedPayments">0</h4>
-                        <small class="text-muted">Failed</small>
+                        <h4 class="mb-0" id="rejectedPayments">0</h4>
+                        <small class="text-muted">Rejected (30d)</small>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-header">
-                <h6 class="card-title mb-0">Recent Transactions</h6>
+        <!-- Payment Management Tabs -->
+        <ul class="nav nav-tabs mb-3" id="paymentTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab">
+                    <i class="fas fa-clock me-1"></i>
+                    Pending Approvals
+                    <span class="badge bg-warning ms-1" id="pendingBadge">0</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="approved-tab" data-bs-toggle="tab" data-bs-target="#approved" type="button" role="tab">
+                    <i class="fas fa-check me-1"></i>
+                    Approved Payments
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="rejected-tab" data-bs-toggle="tab" data-bs-toggle="tab" data-bs-target="#rejected" type="button" role="tab">
+                    <i class="fas fa-times me-1"></i>
+                    Rejected Payments
+                </button>
+            </li>
+        </ul>
+
+        <!-- Payment Tab Content -->
+        <div class="tab-content" id="paymentTabContent">
+            <!-- Pending Payments Tab -->
+            <div class="tab-pane fade show active" id="pending" role="tabpanel">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-clock me-2"></i>
+                            Pending Payment Approvals
+                        </h6>
+                        <button class="btn btn-sm btn-outline-primary" onclick="refreshPendingPayments()">
+                            <i class="fas fa-sync-alt me-1"></i>
+                            Refresh
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="pendingPaymentsContent">
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+                                <p>Loading pending payments...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>Reference</th>
-                                <th>User</th>
-                                <th>Amount</th>
-                                <th>Credits</th>
-                                <th>Status</th>
-                                <th>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody id="paymentsTable">
-                            <tr>
-                                <td colspan="6" class="text-center text-muted">
-                                    <i class="fas fa-spinner fa-spin me-2"></i>
-                                    Loading transactions...
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+
+            <!-- Approved Payments Tab -->
+            <div class="tab-pane fade" id="approved" role="tabpanel">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-check me-2"></i>
+                            Approved Payments (Last 30 Days)
+                        </h6>
+                        <button class="btn btn-sm btn-outline-success" onclick="refreshApprovedPayments()">
+                            <i class="fas fa-sync-alt me-1"></i>
+                            Refresh
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="approvedPaymentsContent">
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+                                <p>Loading approved payments...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rejected Payments Tab -->
+            <div class="tab-pane fade" id="rejected" role="tabpanel">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-times me-2"></i>
+                            Rejected Payments (Last 30 Days)
+                        </h6>
+                        <button class="btn btn-sm btn-outline-danger" onclick="refreshRejectedPayments()">
+                            <i class="fas fa-sync-alt me-1"></i>
+                            Refresh
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="rejectedPaymentsContent">
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+                                <p>Loading rejected payments...</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1425,5 +1495,413 @@ function showBulkResults(data) {
     
     modal.show();
 }
+
+// ========================================
+// PAYMENT MANAGEMENT FUNCTIONS
+// ========================================
+
+// Load payment statistics
+function loadPaymentStats() {
+    fetch('/api/admin/payments/api/stats')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('pendingPayments').textContent = data.pending_count || 0;
+            document.getElementById('totalRevenue').textContent = data.total_revenue || '$0.00';
+            document.getElementById('approvedPayments').textContent = data.approved_count || 0;
+            document.getElementById('rejectedPayments').textContent = data.rejected_count || 0;
+            
+            // Update pending badge
+            const pendingBadge = document.getElementById('pendingBadge');
+            if (pendingBadge) {
+                pendingBadge.textContent = data.pending_count || 0;
+                if (data.pending_count > 0) {
+                    pendingBadge.className = 'badge bg-warning ms-1';
+                } else {
+                    pendingBadge.className = 'badge bg-secondary ms-1';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading payment stats:', error);
+        });
+}
+
+// Load pending payments
+function loadPendingPayments() {
+    fetch('/api/admin/payments/api/pending')
+        .then(response => response.json())
+        .then(data => {
+            displayPendingPayments(data);
+        })
+        .catch(error => {
+            console.error('Error loading pending payments:', error);
+            document.getElementById('pendingPaymentsContent').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Error loading pending payments. Please try again.
+                </div>
+            `;
+        });
+}
+
+// Display pending payments
+function displayPendingPayments(payments) {
+    const container = document.getElementById('pendingPaymentsContent');
+    
+    if (!payments || payments.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-muted py-4">
+                <i class="fas fa-check-circle fa-2x mb-2 text-success"></i>
+                <p>No pending payments to approve</p>
+                <small>All payments have been processed</small>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = payments.map(payment => `
+        <div class="card mb-3 border-warning">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h6 class="card-title mb-1">
+                                    <i class="fas fa-user me-2"></i>
+                                    ${payment.user_name} ${payment.user_surname}
+                                </h6>
+                                <small class="text-muted">
+                                    <i class="fas fa-phone me-1"></i>
+                                    ${payment.user_id}
+                                </small>
+                            </div>
+                            <span class="badge bg-warning">Pending Approval</span>
+                        </div>
+                        
+                        <div class="row mb-2">
+                            <div class="col-md-4">
+                                <strong>Package:</strong> ${payment.package_name}
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Amount:</strong> ${payment.formatted_amount}
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Credits:</strong> ${payment.credits}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-2">
+                            <div class="col-md-6">
+                                <strong>Reference:</strong> <code>${payment.reference_code}</code>
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Submitted:</strong> ${payment.time_ago}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-2">
+                            <strong>Payment Proof:</strong>
+                            <div class="bg-light p-2 rounded mt-1">
+                                <small>${payment.payment_proof}</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-success btn-sm" onclick="approvePayment('${payment.reference_code}')">
+                                <i class="fas fa-check me-1"></i>
+                                Approve Payment
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="rejectPayment('${payment.reference_code}')">
+                                <i class="fas fa-times me-1"></i>
+                                Reject Payment
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Approve payment
+function approvePayment(referenceCode) {
+    const adminNotes = prompt('Enter admin notes (optional):');
+    
+    if (adminNotes === null) return; // User cancelled
+    
+    const approveBtn = event.target;
+    const originalText = approveBtn.innerHTML;
+    approveBtn.disabled = true;
+    approveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Approving...';
+    
+    fetch(`/api/admin/payments/approve/${referenceCode}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `admin_notes=${encodeURIComponent(adminNotes)}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('success', `Payment ${referenceCode} approved successfully! ${data.credits} credits added to user account.`);
+            loadPaymentStats(); // Refresh stats
+            loadPendingPayments(); // Refresh pending payments
+        } else {
+            showAlert('danger', `Failed to approve payment: ${data.message}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error approving payment:', error);
+        showAlert('danger', 'Error approving payment. Please try again.');
+    })
+    .finally(() => {
+        approveBtn.disabled = false;
+        approveBtn.innerHTML = originalText;
+    });
+}
+
+// Reject payment
+function rejectPayment(referenceCode) {
+    const adminNotes = prompt('Enter rejection reason (required):');
+    
+    if (!adminNotes || adminNotes.trim() === '') {
+        alert('Please provide a rejection reason');
+        return;
+    }
+    
+    const rejectBtn = event.target;
+    const originalText = rejectBtn.innerHTML;
+    rejectBtn.disabled = true;
+    rejectBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Rejecting...';
+    
+    fetch(`/api/admin/payments/reject/${referenceCode}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `admin_notes=${encodeURIComponent(adminNotes)}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('success', `Payment ${referenceCode} rejected successfully. User will be notified.`);
+            loadPaymentStats(); // Refresh stats
+            loadPendingPayments(); // Refresh pending payments
+        } else {
+            showAlert('danger', `Failed to reject payment: ${data.message}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error rejecting payment:', error);
+        showAlert('danger', 'Error rejecting payment. Please try again.');
+    })
+    .finally(() => {
+        rejectBtn.disabled = false;
+        rejectBtn.innerHTML = originalText;
+    });
+}
+
+// Load approved payments
+function loadApprovedPayments() {
+    fetch('/api/admin/payments/api/approved')
+        .then(response => response.json())
+        .then(data => {
+            displayApprovedPayments(data);
+        })
+        .catch(error => {
+            console.error('Error loading approved payments:', error);
+            document.getElementById('approvedPaymentsContent').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Error loading approved payments. Please try again.
+                </div>
+            `;
+        });
+}
+
+// Display approved payments
+function displayApprovedPayments(payments) {
+    const container = document.getElementById('approvedPaymentsContent');
+    
+    if (!payments || payments.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-muted py-4">
+                <i class="fas fa-info-circle fa-2x mb-2 text-info"></i>
+                <p>No approved payments in the last 30 days</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = `
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Package</th>
+                        <th>Amount</th>
+                        <th>Credits</th>
+                        <th>Reference</th>
+                        <th>Approved</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${payments.map(payment => `
+                        <tr>
+                            <td>
+                                <div>
+                                    <strong>${payment.user_name} ${payment.user_surname}</strong>
+                                    <br><small class="text-muted">${payment.user_id}</small>
+                                </div>
+                            </td>
+                            <td>${payment.package_name}</td>
+                            <td>${payment.formatted_amount}</td>
+                            <td><span class="badge bg-success">${payment.credits}</span></td>
+                            <td><code>${payment.reference_code}</code></td>
+                            <td>
+                                <small>${payment.time_ago}</small>
+                                <br><small class="text-muted">${payment.formatted_approved_at}</small>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+// Load rejected payments
+function loadRejectedPayments() {
+    fetch('/api/admin/payments/api/rejected')
+        .then(response => response.json())
+        .then(data => {
+            displayRejectedPayments(data);
+        })
+        .catch(error => {
+            console.error('Error loading rejected payments:', error);
+            document.getElementById('rejectedPaymentsContent').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Error loading rejected payments. Please try again.
+                </div>
+            `;
+            });
+}
+
+// Display rejected payments
+function displayRejectedPayments(payments) {
+    const container = document.getElementById('rejectedPaymentsContent');
+    
+    if (!payments || payments.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-muted py-4">
+                <i class="fas fa-info-circle fa-2x mb-2 text-info"></i>
+                <p>No rejected payments in the last 30 days</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = `
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Package</th>
+                        <th>Amount</th>
+                        <th>Credits</th>
+                        <th>Reference</th>
+                        <th>Rejected</th>
+                        <th>Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${payments.map(payment => `
+                        <tr>
+                            <td>
+                                <div>
+                                    <strong>${payment.user_name} ${payment.user_surname}</strong>
+                                    <br><small class="text-muted">${payment.user_id}</small>
+                                </div>
+                            </td>
+                            <td>${payment.package_name}</td>
+                            <td>${payment.formatted_amount}</td>
+                            <td><span class="badge bg-secondary">${payment.credits}</span></td>
+                            <td><code>${payment.reference_code}</code></td>
+                            <td>
+                                <small>${payment.time_ago}</small>
+                                <br><small class="text-muted">${payment.formatted_rejected_at}</small>
+                            </td>
+                            <td>
+                                <small class="text-muted">${payment.admin_notes || 'No reason provided'}</small>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+// Refresh functions
+function refreshPendingPayments() {
+    loadPendingPayments();
+}
+
+function refreshApprovedPayments() {
+    loadApprovedPayments();
+}
+
+function refreshRejectedPayments() {
+    loadRejectedPayments();
+}
+
+// Show alert function
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // Insert at the top of the payments tab
+    const paymentsTab = document.getElementById('payments');
+    paymentsTab.insertBefore(alertDiv, paymentsTab.firstChild);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+
+// Initialize payment dashboard when tab is shown
+document.addEventListener('DOMContentLoaded', function() {
+    // Load payment stats when payments tab is clicked
+    const paymentsTab = document.getElementById('payments-tab');
+    paymentsTab.addEventListener('click', function() {
+        loadPaymentStats();
+        loadPendingPayments();
+    });
+    
+    // Load approved payments when approved tab is clicked
+    const approvedTab = document.getElementById('approved-tab');
+    approvedTab.addEventListener('click', function() {
+        loadApprovedPayments();
+    });
+    
+    // Load rejected payments when rejected tab is clicked
+    const rejectedTab = document.getElementById('rejected-tab');
+    rejectedTab.addEventListener('click', function() {
+        loadRejectedPayments();
+    });
+});
 </script>
 {% endblock %}

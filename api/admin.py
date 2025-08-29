@@ -1,3 +1,4 @@
+import os
 import logging
 from flask import Blueprint, render_template, request, jsonify
 from database.external_db import add_credits, deduct_credits, get_user_registration
@@ -301,7 +302,7 @@ def bulk_refresh_credits():
         
         # Get users from database using raw query
         import psycopg2
-        conn_string = 'postgresql://postgres.hvlvwvzliqrlmqjbfgoa:Ngonidzashe2003.@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres'
+        conn_string = os.getenv('DATABASE_URL') or os.getenv('SUPABASE_DATABASE_URL')
         conn = psycopg2.connect(conn_string)
         cursor = conn.cursor()
         
@@ -428,7 +429,7 @@ def get_credit_statistics():
     """Get comprehensive credit statistics for all users"""
     try:
         import psycopg2
-        conn_string = 'postgresql://postgres.hvlvwvzliqrlmqjbfgoa:Ngonidzashe2003.@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres'
+        conn_string = os.getenv('DATABASE_URL') or os.getenv('SUPABASE_DATABASE_URL')
         conn = psycopg2.connect(conn_string)
         cursor = conn.cursor()
         
@@ -524,7 +525,7 @@ def broadcast_message():
             return jsonify({'error': 'Message too long (max 1000 characters)'}), 400
         
         # Get target users based on criteria
-        conn_string = 'postgresql://postgres.hvlvwvzliqrlmqjbfgoa:Ngonidzashe2003.@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres'
+        conn_string = os.getenv('DATABASE_URL') or os.getenv('SUPABASE_DATABASE_URL')
         conn = psycopg2.connect(conn_string)
         cursor = conn.cursor()
         
@@ -616,7 +617,7 @@ def get_broadcast_history():
         limit = request.args.get('limit', 20, type=int)
         
         import psycopg2
-        conn_string = 'postgresql://postgres.hvlvwvzliqrlmqjbfgoa:Ngonidzashe2003.@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres'
+        conn_string = os.getenv('DATABASE_URL') or os.getenv('SUPABASE_DATABASE_URL')
         conn = psycopg2.connect(conn_string)
         cursor = conn.cursor()
         

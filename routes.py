@@ -6,6 +6,7 @@ from api.dashboard import dashboard_bp
 from api.admin import admin_bp
 from api.auth import auth_bp
 from api.credit_management import credit_management_bp
+from api.payment_admin import payment_admin_bp
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +16,7 @@ app.register_blueprint(dashboard_bp, url_prefix='')
 app.register_blueprint(admin_bp, url_prefix='/api/admin')
 app.register_blueprint(auth_bp, url_prefix='')
 app.register_blueprint(credit_management_bp, url_prefix='')
+app.register_blueprint(payment_admin_bp, url_prefix='/api/admin/payments')
 
 # Add route to serve graph images for WhatsApp access
 @app.route('/static/graphs/<filename>')
