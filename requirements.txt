@@ -18,7 +18,8 @@ pyjwt>=2.10.1
 email-validator>=2.2.0
 
 # AI and Machine Learning
-google-genai>=1.31.0
+google-generativeai>=1.31.0
+openai>=1.0.0
 sympy>=1.14.0
 
 # Data Processing and Visualization
@@ -43,3 +44,8 @@ requests>=2.32.5
 
 # Additional Utilities
 python-dotenv>=1.0.0
+python-dateutil>=2.8.2
+
+# Development and Testing (optional for production)
+pytest>=7.4.0
+pytest-cov>=4.1.0
