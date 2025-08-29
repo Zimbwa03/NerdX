@@ -28,8 +28,9 @@ class PaymentAdminDashboard:
         self.auth_service = AdminAuthService()
     
     def get_pending_payments(self) -> List[Dict]:
-        """Get all pending payment transactions"""
+        """Get all pending payment transactions with optimized batch queries"""
         try:
+            # Get all pending payments in one query
             result = make_supabase_request(
                 "GET", 
                 "payment_transactions", 
@@ -37,30 +38,42 @@ class PaymentAdminDashboard:
                 order_by="created_at.desc"
             )
             
-            if result:
-                # Enrich payment data with user and package information
-                enriched_payments = []
-                for payment in result:
-                    # Get user details
-                    user_info = self._get_user_info(payment.get('user_id'))
-                    # Get package details
-                    package_info = self.payment_service.get_package_by_id(payment.get('package_id', ''))
-                    
-                    enriched_payment = {
-                        **payment,
-                        'user_name': user_info.get('name', 'Unknown') if user_info else 'Unknown',
-                        'user_surname': user_info.get('surname', '') if user_info else '',
-                        'package_name': package_info.get('name', 'Unknown Package') if package_info else 'Unknown Package',
-                        'formatted_amount': f"${payment.get('amount', 0):.2f}",
-                        'formatted_created_at': self._format_datetime(payment.get('created_at')),
-                        'time_ago': self._get_time_ago(payment.get('created_at'))
-                    }
-                    enriched_payments.append(enriched_payment)
-                
-                return enriched_payments
-            else:
+            if not result:
                 logger.warning("No pending payments found or error occurred")
                 return []
+            
+            # Extract unique user IDs and package IDs for batch queries
+            user_ids = list(set([payment.get('user_id') for payment in result if payment.get('user_id')]))
+            package_ids = list(set([payment.get('package_id') for payment in result if payment.get('package_id')]))
+            
+            # Batch query for user information
+            user_info_map = self._get_batch_user_info(user_ids)
+            
+            # Batch query for package information
+            package_info_map = self._get_batch_package_info(package_ids)
+            
+            # Enrich payment data using the batch results
+            enriched_payments = []
+            for payment in result:
+                user_id = payment.get('user_id')
+                package_id = payment.get('package_id')
+                
+                user_info = user_info_map.get(user_id, {})
+                package_info = package_info_map.get(package_id, {})
+                
+                enriched_payment = {
+                    **payment,
+                    'user_name': user_info.get('name', 'Unknown'),
+                    'user_surname': user_info.get('surname', ''),
+                    'package_name': package_info.get('name', 'Unknown Package'),
+                    'formatted_amount': f"${payment.get('amount', 0):.2f}",
+                    'formatted_created_at': self._format_datetime(payment.get('created_at')),
+                    'time_ago': self._get_time_ago(payment.get('created_at'))
+                }
+                enriched_payments.append(enriched_payment)
+            
+            logger.info(f"✅ Loaded {len(enriched_payments)} pending payments with batch queries")
+            return enriched_payments
                 
         except Exception as e:
             logger.error(f"Error getting pending payments: {e}")
@@ -150,43 +163,58 @@ class PaymentAdminDashboard:
             return []
     
     def get_payment_statistics(self) -> Dict:
-        """Get payment statistics for dashboard"""
+        """Get payment statistics for dashboard with optimized single query"""
         try:
-            # Get total pending payments
-            pending_result = make_supabase_request(
+            # Get all payment data in one query with status filter
+            all_payments = make_supabase_request(
                 "GET", 
                 "payment_transactions", 
-                filters={"status": "eq.pending"}
+                filters={},  # Get all payments
+                order_by="created_at.desc"
             )
-            pending_count = len(pending_result) if pending_result else 0
             
-            # Get total approved payments (last 30 days)
-            approved_result = make_supabase_request(
-                "GET", 
-                "payment_transactions", 
-                filters={"status": "eq.approved"}
-            )
-            approved_count = len(approved_result) if approved_result else 0
+            if not all_payments:
+                return {
+                    'pending_count': 0,
+                    'approved_count': 0,
+                    'total_revenue': "$0.00",
+                    'total_credits_sold': 0,
+                    'average_order_value': "$0.00"
+                }
             
-            # Calculate total revenue (last 30 days)
+            # Calculate date range for revenue (last 30 days)
             end_date = datetime.now()
             start_date = end_date - timedelta(days=30)
             
-            revenue_result = make_supabase_request(
-                "GET", 
-                "payment_transactions", 
-                filters={
-                    "status": "eq.approved",
-                    "approved_at": f"gte.{start_date.isoformat()}"
-                }
-            )
-            
+            # Process all payments in memory for better performance
+            pending_count = 0
+            approved_count = 0
             total_revenue = 0
             total_credits_sold = 0
-            if revenue_result:
-                for payment in revenue_result:
-                    total_revenue += float(payment.get('amount', 0))
-                    total_credits_sold += int(payment.get('credits', 0))
+            
+            for payment in all_payments:
+                status = payment.get('status')
+                amount = float(payment.get('amount', 0))
+                credits = int(payment.get('credits', 0))
+                created_at = payment.get('created_at')
+                
+                if status == 'pending':
+                    pending_count += 1
+                elif status == 'approved':
+                    approved_count += 1
+                    # Check if within last 30 days for revenue calculation
+                    try:
+                        if created_at:
+                            payment_date = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                            if payment_date >= start_date:
+                                total_revenue += amount
+                                total_credits_sold += credits
+                    except:
+                        # If date parsing fails, include in revenue
+                        total_revenue += amount
+                        total_credits_sold += credits
+            
+            logger.info(f"✅ Calculated statistics: {pending_count} pending, {approved_count} approved, ${total_revenue:.2f} revenue")
             
             return {
                 'pending_count': pending_count,
@@ -327,6 +355,58 @@ class PaymentAdminDashboard:
         except Exception as e:
             logger.error(f"Error getting user info for {user_id}: {e}")
             return None
+    
+    def _get_batch_user_info(self, user_ids: List[str]) -> Dict[str, Dict]:
+        """Batch query for user information from users_registration table"""
+        if not user_ids:
+            return {}
+        try:
+            # Use 'in' filter for batch query
+            user_ids_str = ','.join([f'"{uid}"' for uid in user_ids])
+            result = make_supabase_request(
+                "GET", 
+                "users_registration", 
+                filters={"chat_id": f"in.({user_ids_str})"}
+            )
+            
+            # Create a map for quick lookup
+            user_map = {}
+            if result:
+                for user in result:
+                    user_map[user.get('chat_id')] = user
+            
+            logger.info(f"✅ Batch fetched user info for {len(user_ids)} users")
+            return user_map
+            
+        except Exception as e:
+            logger.error(f"Error batch fetching user info: {e}")
+            return {}
+    
+    def _get_batch_package_info(self, package_ids: List[str]) -> Dict[str, Dict]:
+        """Batch query for package information from packages table"""
+        if not package_ids:
+            return {}
+        try:
+            # Use 'in' filter for batch query
+            package_ids_str = ','.join([f'"{pid}"' for pid in package_ids])
+            result = make_supabase_request(
+                "GET", 
+                "packages", 
+                filters={"id": f"in.({package_ids_str})"}
+            )
+            
+            # Create a map for quick lookup
+            package_map = {}
+            if result:
+                for package in result:
+                    package_map[package.get('id')] = package
+            
+            logger.info(f"✅ Batch fetched package info for {len(package_ids)} packages")
+            return package_map
+            
+        except Exception as e:
+            logger.error(f"Error batch fetching package info: {e}")
+            return {}
     
     def _format_datetime(self, datetime_str: str) -> str:
         """Format datetime string for display"""
