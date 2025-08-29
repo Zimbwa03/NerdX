@@ -17,10 +17,35 @@ logger = logging.getLogger(__name__)
 class AdminAuthService:
     def __init__(self):
         # Use Supabase connection string (without pgbouncer parameter for psycopg2 compatibility)
-        self.conn_string = os.getenv('DATABASE_URL') or os.getenv('SUPABASE_DATABASE_URL')
+        raw_conn_string = os.getenv('DATABASE_URL') or os.getenv('SUPABASE_DATABASE_URL')
+        self.conn_string = self._clean_connection_string(raw_conn_string)
         self.session_duration = timedelta(hours=8)  # 8 hours session
         self.max_failed_attempts = 5
         self.lockout_duration = timedelta(minutes=30)  # 30 minutes lockout
+    
+    def _clean_connection_string(self, conn_string: str) -> str:
+        """Clean connection string by removing pgbouncer parameters"""
+        if not conn_string:
+            return conn_string
+            
+        if "postgresql" in conn_string:
+            # Handle various pgbouncer parameter formats
+            if "pgbouncer=true" in conn_string:
+                conn_string = conn_string.replace("?pgbouncer=true", "").replace("&pgbouncer=true", "")
+            if "pgbouncer=1" in conn_string:
+                conn_string = conn_string.replace("?pgbouncer=1", "").replace("&pgbouncer=1", "")
+            if "pgbouncer" in conn_string:
+                # Remove any remaining pgbouncer parameters
+                import re
+                conn_string = re.sub(r'[?&]pgbouncer=[^&]*', '', conn_string)
+                # Clean up double ? or & characters
+                conn_string = re.sub(r'\?+', '?', conn_string)
+                conn_string = re.sub(r'&+', '&', conn_string)
+                conn_string = conn_string.rstrip('?&')
+            
+            logger.info(f"Cleaned connection string: {conn_string[:50]}...")
+        
+        return conn_string
     
     def _get_connection(self):
         """Get database connection with retry logic"""

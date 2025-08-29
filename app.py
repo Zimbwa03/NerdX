@@ -33,9 +33,25 @@ app.config.update(
 
 # Configure the database with better connection handling
 database_url = os.environ.get("DATABASE_URL", "sqlite:///nerdx_quiz.db")
+
 # Remove pgbouncer parameter if present (incompatible with psycopg2)
-if database_url and "pgbouncer=true" in database_url:
-    database_url = database_url.replace("?pgbouncer=true", "").replace("&pgbouncer=true", "")
+if database_url and "postgresql" in database_url:
+    # Handle various pgbouncer parameter formats
+    if "pgbouncer=true" in database_url:
+        database_url = database_url.replace("?pgbouncer=true", "").replace("&pgbouncer=true", "")
+    if "pgbouncer=1" in database_url:
+        database_url = database_url.replace("?pgbouncer=1", "").replace("&pgbouncer=1", "")
+    if "pgbouncer" in database_url:
+        # Remove any remaining pgbouncer parameters
+        import re
+        database_url = re.sub(r'[?&]pgbouncer=[^&]*', '', database_url)
+        # Clean up double ? or & characters
+        database_url = re.sub(r'\?+', '?', database_url)
+        database_url = re.sub(r'&+', '&', database_url)
+        database_url = database_url.rstrip('?&')
+    
+    logging.info(f"Database URL configured: {database_url[:50]}...")
+
 app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
