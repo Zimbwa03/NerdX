@@ -741,6 +741,26 @@ const TOPICS = {
 
 // Initialize admin panel
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Admin panel DOM loaded, initializing...');
+    
+    // Check if required elements exist
+    const requiredElements = [
+        'pendingPaymentsContent',
+        'approvedPaymentsContent', 
+        'rejectedPaymentsContent',
+        'pendingPayments',
+        'totalRevenue',
+        'approvedPayments',
+        'rejectedPayments'
+    ];
+    
+    const missingElements = requiredElements.filter(id => !document.getElementById(id));
+    if (missingElements.length > 0) {
+        console.error('Missing required elements:', missingElements);
+    } else {
+        console.log('All required elements found');
+    }
+    
     loadPaymentStats();
     loadSystemSettings();
     loadCreditStatistics();
@@ -1502,13 +1522,23 @@ function showBulkResults(data) {
 
 // Load payment statistics
 function loadPaymentStats() {
-    fetch('/api/admin/payments/api/stats')
-        .then(response => response.json())
+    fetch('/admin/payments/api/stats')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
-            document.getElementById('pendingPayments').textContent = data.pending_count || 0;
-            document.getElementById('totalRevenue').textContent = data.total_revenue || '$0.00';
-            document.getElementById('approvedPayments').textContent = data.approved_count || 0;
-            document.getElementById('rejectedPayments').textContent = data.rejected_count || 0;
+            const pendingElement = document.getElementById('pendingPayments');
+            const revenueElement = document.getElementById('totalRevenue');
+            const approvedElement = document.getElementById('approvedPayments');
+            const rejectedElement = document.getElementById('rejectedPayments');
+            
+            if (pendingElement) pendingElement.textContent = data.pending_count || 0;
+            if (revenueElement) revenueElement.textContent = data.total_revenue || '$0.00';
+            if (approvedElement) approvedElement.textContent = data.approved_count || 0;
+            if (rejectedElement) rejectedElement.textContent = data.rejected_count || 0;
             
             // Update pending badge
             const pendingBadge = document.getElementById('pendingBadge');
@@ -1528,25 +1558,52 @@ function loadPaymentStats() {
 
 // Load pending payments
 function loadPendingPayments() {
-    fetch('/api/admin/payments/api/pending')
-        .then(response => response.json())
+    const container = document.getElementById('pendingPaymentsContent');
+    if (!container) {
+        console.error('Element with id "pendingPaymentsContent" not found');
+        return;
+    }
+    
+    // Show loading state
+    container.innerHTML = `
+        <div class="text-center text-muted py-4">
+            <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+            <p>Loading pending payments...</p>
+        </div>
+    `;
+    
+    fetch('/admin/payments/api/pending')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             displayPendingPayments(data);
         })
         .catch(error => {
             console.error('Error loading pending payments:', error);
-            document.getElementById('pendingPaymentsContent').innerHTML = `
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    Error loading pending payments. Please try again.
-                </div>
-            `;
+            if (container) {
+                container.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Error loading pending payments: ${error.message}
+                        <br><small>Please check the console for more details.</small>
+                    </div>
+                `;
+            }
         });
 }
 
 // Display pending payments
 function displayPendingPayments(payments) {
     const container = document.getElementById('pendingPaymentsContent');
+    
+    if (!container) {
+        console.error('Element with id "pendingPaymentsContent" not found');
+        return;
+    }
     
     if (!payments || payments.length === 0) {
         container.innerHTML = `
@@ -1706,25 +1763,52 @@ function rejectPayment(referenceCode) {
 
 // Load approved payments
 function loadApprovedPayments() {
-    fetch('/api/admin/payments/api/approved')
-        .then(response => response.json())
+    const container = document.getElementById('approvedPaymentsContent');
+    if (!container) {
+        console.error('Element with id "approvedPaymentsContent" not found');
+        return;
+    }
+    
+    // Show loading state
+    container.innerHTML = `
+        <div class="text-center text-muted py-4">
+            <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+            <p>Loading approved payments...</p>
+        </div>
+    `;
+    
+    fetch('/admin/payments/api/approved')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             displayApprovedPayments(data);
         })
         .catch(error => {
             console.error('Error loading approved payments:', error);
-            document.getElementById('approvedPaymentsContent').innerHTML = `
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    Error loading approved payments. Please try again.
-                </div>
-            `;
+            if (container) {
+                container.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Error loading approved payments: ${error.message}
+                        <br><small>Please check the console for more details.</small>
+                    </div>
+                `;
+            }
         });
 }
 
 // Display approved payments
 function displayApprovedPayments(payments) {
     const container = document.getElementById('approvedPaymentsContent');
+    
+    if (!container) {
+        console.error('Element with id "approvedPaymentsContent" not found');
+        return;
+    }
     
     if (!payments || payments.length === 0) {
         container.innerHTML = `
@@ -1776,25 +1860,52 @@ function displayApprovedPayments(payments) {
 
 // Load rejected payments
 function loadRejectedPayments() {
-    fetch('/api/admin/payments/api/rejected')
-        .then(response => response.json())
+    const container = document.getElementById('rejectedPaymentsContent');
+    if (!container) {
+        console.error('Element with id "rejectedPaymentsContent" not found');
+        return;
+    }
+    
+    // Show loading state
+    container.innerHTML = `
+        <div class="text-center text-muted py-4">
+            <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+            <p>Loading rejected payments...</p>
+        </div>
+    `;
+    
+    fetch('/admin/payments/api/rejected')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             displayRejectedPayments(data);
         })
         .catch(error => {
             console.error('Error loading rejected payments:', error);
-            document.getElementById('rejectedPaymentsContent').innerHTML = `
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    Error loading rejected payments. Please try again.
-                </div>
-            `;
-            });
+            if (container) {
+                container.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Error loading rejected payments: ${error.message}
+                        <br><small>Please check the console for more details.</small>
+                    </div>
+                `;
+            }
+        });
 }
 
 // Display rejected payments
 function displayRejectedPayments(payments) {
     const container = document.getElementById('rejectedPaymentsContent');
+    
+    if (!container) {
+        console.error('Element with id "rejectedPaymentsContent" not found');
+        return;
+    }
     
     if (!payments || payments.length === 0) {
         container.innerHTML = `
