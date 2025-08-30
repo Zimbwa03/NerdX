@@ -209,7 +209,9 @@ class UserService:
                     'message': 'Date cannot be in the future. Please enter a valid date (DD/MM/YYYY):'
                 }
             
-            session['date_of_birth'] = dob.strip()
+            # Convert date from DD/MM/YYYY to YYYY-MM-DD for database
+            database_date = date_obj.strftime('%Y-%m-%d')
+            session['date_of_birth'] = database_date
             
             # Check if referral code was already detected during initial message
             if session.get('referred_by_nerdx_id'):

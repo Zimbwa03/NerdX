@@ -400,7 +400,7 @@ def calculate_level_from_xp(xp):
 
 def get_user_credits(user_id):
     """Get user's current credit balance"""
-    result = make_supabase_request("GET", "user_stats", select="credits", filters={"user_id": f"eq.{user_id}"})
+    result = make_supabase_request("GET", "users_registration", select="credits", filters={"chat_id": f"eq.{user_id}"})
     if result and len(result) > 0:
         return result[0].get("credits", 0)
     return 0
@@ -414,8 +414,8 @@ def deduct_credits(user_id, amount, transaction_type, description):
 
     new_credits = current_credits - amount
 
-    # Update user credits
-    success = make_supabase_request("PATCH", "user_stats", {"credits": new_credits}, filters={"user_id": f"eq.{user_id}"})
+    # Update user credits in the correct table (users_registration)
+    success = make_supabase_request("PATCH", "users_registration", {"credits": new_credits}, filters={"chat_id": f"eq.{user_id}"})
 
     if success:
         # Log credit transaction
@@ -438,8 +438,8 @@ def add_credits(user_id, amount, transaction_type="purchase", description="Credi
     current_credits = get_user_credits(user_id)
     new_credits = current_credits + amount
 
-    # Update user credits
-    success = make_supabase_request("PATCH", "user_stats", {"credits": new_credits}, filters={"user_id": f"eq.{user_id}"})
+    # Update user credits in the correct table (users_registration)
+    success = make_supabase_request("PATCH", "users_registration", {"credits": new_credits}, filters={"chat_id": f"eq.{user_id}"})
 
     if success:
         # Log credit transaction

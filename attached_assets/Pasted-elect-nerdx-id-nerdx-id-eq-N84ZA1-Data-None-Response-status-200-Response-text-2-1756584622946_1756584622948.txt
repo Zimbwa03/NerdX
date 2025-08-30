@@ -1,0 +1,52 @@
+elect': 'nerdx_id', 'nerdx_id': 'eq.N84ZA1'}
+Data: None
+Response status: 200
+Response text: []
+2025-08-30 20:07:35,452 - database.external_db - INFO - 🆔 Generated NerdX ID: N84ZA1
+2025-08-30 20:07:35,453 - database.external_db - INFO - 📝 Registration data prepared: {'chat_id': '263774823169', 'name': '/Start', 'surname': 'Hi', 'date_of_birth': '25/08/2002', 'nerdx_id': 'N84ZA1', 'referred_by_nerdx_id': None, 'registration_date': '2025-08-30T20:07:35.453596'}
+2025-08-30 20:07:35,453 - database.external_db - INFO - 🔄 Attempting Supabase user registration...
+2025-08-30 20:07:35,453 - database.external_db - INFO - Using SERVICE_ROLE_KEY for POST operation on users_registration
+Making POST request to https://hvlvwvzliqrlmqjbfgoa.supabase.co/rest/v1/users_registration
+Headers: {'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjM4MjEyOSwiZXhwIjoyMDY3OTU4MTI5fQ.p4qtbG42XUiN8sXH3phmUMwwQPo1v-StjUkwUZOR4Bg', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjM4MjEyOSwiZXhwIjoyMDY3OTU4MTI5fQ.p4qtbG42XUiN8sXH3phmUMwwQPo1v-StjUkwUZOR4Bg', 'Content-Type': 'application/json', 'Prefer': 'return=representation'}
+Params: {}
+Data: {'chat_id': '263774823169', 'name': '/Start', 'surname': 'Hi', 'date_of_birth': '25/08/2002', 'nerdx_id': 'N84ZA1', 'referred_by_nerdx_id': None, 'registration_date': '2025-08-30T20:07:35.453596'}
+Response status: 400
+Response text: {"code":"22008","details":null,"hint":"Perhaps you need a different \"datestyle\" setting.","message":"date/time field value out of range: \"25/08/2002\""}
+2025-08-30 20:07:35,730 - database.external_db - ERROR - HTTP Error: 400 Client Error: Bad Request for url: https://hvlvwvzliqrlmqjbfgoa.supabase.co/rest/v1/users_registration
+2025-08-30 20:07:35,730 - database.external_db - ERROR - ❌ Supabase registration failed - no response
+2025-08-30 20:07:35,730 - database.external_db - ERROR - 💥 CRITICAL: User registration FAILED for 263774823169: Supabase registration returned no response
+Traceback (most recent call last):
+  File "/home/runner/workspace/database/external_db.py", line 527, in create_user_registration
+    raise Exception("Supabase registration returned no response")
+Exception: Supabase registration returned no response
+2025-08-30 20:07:35,731 - database.external_db - ERROR - 🚫 Registration cannot proceed without Supabase success
+2025-08-30 20:07:35,731 - services.user_service - ERROR - ❌ REGISTRATION FAILED for 263774823169 - Supabase database error
+2025-08-30 20:07:35,731 - api.webhook - INFO - 📝 Registration step result: {'success': False, 'message': "❌ **Registration Failed**\n\nWe're experiencing database connectivity issues. Please try again in a few minutes.\n\nIf this problem persists, please contact our support team."}
+2025-08-30 20:07:35,731 - api.webhook - WARNING - ❌ Registration step failed for 263774823169: ❌ **Registration Failed**
+
+We're experiencing database connectivity issues. Please try again in a few minutes.
+
+If this problem persists, please contact our support team.
+2025-08-30 20:07:36,339 - services.whatsapp_service - INFO - Message sent successfully to 263774823169
+2025-08-30 20:07:53,910 - database.external_db - INFO - 🔍 Starting Supabase diagnostics...
+2025-08-30 20:07:53,910 - database.external_db - INFO - ✅ Environment variables configured
+2025-08-30 20:07:53,910 - database.external_db - INFO - 📍 Supabase URL: https://hvlvwvzliqrlmqjbfgoa.supabase.co
+2025-08-30 20:07:53,910 - database.external_db - INFO - 🔑 Service Role Key: eyJhbGciOiJIUzI1NiIs...
+2025-08-30 20:07:53,910 - database.external_db - INFO - 🔑 Anon Key: eyJhbGciOiJIUzI1NiIs...
+2025-08-30 20:07:53,910 - database.external_db - INFO - 🧪 Testing user_stats table...
+2025-08-30 20:07:53,910 - database.external_db - INFO - Using ANON_KEY for GET operation on user_stats
+Making GET request to https://hvlvwvzliqrlmqjbfgoa.supabase.co/rest/v1/user_stats
+Headers: {'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Content-Type': 'application/json'}
+Params: {'select': '*', 'limit': '1'}
+Data: None
+Response status: 200
+Response text: []
+2025-08-30 20:07:54,202 - database.external_db - INFO - ✅ user_stats table accessible
+2025-08-30 20:07:54,204 - database.external_db - INFO - 🧪 Testing users_registration table...
+2025-08-30 20:07:54,204 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+Making GET request to https://hvlvwvzliqrlmqjbfgoa.supabase.co/rest/v1/users_registration
+Headers: {'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Content-Type': 'application/json'}
+Params: {'select': '*', 'limit': '1'}
+Data: None
+Response status: 200
+Response text: [{"id":5,"chat_id":"test_chat_1756507157
