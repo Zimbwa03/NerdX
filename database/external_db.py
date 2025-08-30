@@ -422,9 +422,9 @@ def deduct_credits(user_id, amount, transaction_type, description):
         transaction = {
             "user_id": user_id,
             "transaction_type": transaction_type,
-            "credits_used": amount,
-            "credits_before": current_credits,
-            "credits_after": new_credits,
+            "credits_change": amount,
+            "balance_before": current_credits,
+            "balance_after": new_credits,
             "description": description,
             "transaction_date": datetime.now().isoformat()
         }
@@ -446,9 +446,9 @@ def add_credits(user_id, amount, transaction_type="purchase", description="Credi
         transaction = {
             "user_id": user_id,
             "transaction_type": transaction_type,
-            "credits_used": -amount,  # Negative because it's an addition
-            "credits_before": current_credits,
-            "credits_after": new_credits,
+            "credits_change": -amount,  # Negative because it's an addition
+            "balance_before": current_credits,
+            "balance_after": new_credits,
             "description": description,
             "transaction_date": datetime.now().isoformat()
         }
