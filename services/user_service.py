@@ -63,8 +63,11 @@ class UserService:
     def start_registration(self, whatsapp_id: str) -> Dict:
         """Start the user registration process"""
         try:
+            logger.info(f"🚀 Starting registration for user {whatsapp_id}")
+            
             # Check if already registered
             if is_user_registered(whatsapp_id):
+                logger.info(f"❌ User {whatsapp_id} is already registered")
                 return {
                     'success': False,
                     'message': 'User already registered'
@@ -79,7 +82,14 @@ class UserService:
                 'referred_by_nerdx_id': None
             }
             
-            update_registration_session(whatsapp_id, session_data)
+            logger.info(f"📝 Creating registration session for {whatsapp_id}: {session_data}")
+            update_result = update_registration_session(whatsapp_id, session_data)
+            logger.info(f"📝 Registration session update result: {update_result}")
+            
+            # Verify session was created
+            from database.session_db import get_registration_session
+            created_session = get_registration_session(whatsapp_id)
+            logger.info(f"📝 Created session verification: {created_session}")
             
             return {
                 'success': True,
@@ -131,16 +141,25 @@ class UserService:
     
     def _process_name_step(self, whatsapp_id: str, name: str, session: Dict) -> Dict:
         """Process name input step"""
+        logger.info(f"🔍 Processing name step for {whatsapp_id} with input: '{name}'")
+        logger.info(f"🔍 Current session: {session}")
+        
         if not name or len(name.strip()) < 2:
+            logger.warning(f"❌ Name validation failed for {whatsapp_id}: '{name}' (length: {len(name.strip()) if name else 0})")
             return {
                 'success': False,
                 'step': 'name',
                 'message': 'Please enter a valid first name (at least 2 characters):'
             }
         
+        logger.info(f"✅ Name validation passed for {whatsapp_id}: '{name}'")
+        
         session['name'] = name.strip().title()
         session['step'] = 'surname'
-        update_registration_session(whatsapp_id, session)
+        logger.info(f"📝 Updating session for {whatsapp_id}: {session}")
+        
+        update_result = update_registration_session(whatsapp_id, session)
+        logger.info(f"📝 Session update result: {update_result}")
         
         return {
             'success': True,

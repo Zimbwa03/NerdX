@@ -408,6 +408,16 @@ def handle_text_message(user_id: str, message_text: str):
             # If processing failed, continue to normal flow
 
         # 🔒 STRICT REGISTRATION ENFORCEMENT - NO ACCESS WITHOUT REGISTRATION
+        # First, check if user is already in a registration session (highest priority)
+        from database.session_db import get_registration_session
+        reg_session = get_registration_session(user_id)
+        if reg_session:
+            logger.info(f"📝 User {user_id} is in registration step: {reg_session.get('step')}")
+            # User is in registration, handle it
+            handle_registration_flow(user_id, message_text)
+            return
+
+        # Check registration status
         registration_status = user_service.check_user_registration(user_id)
 
         if not registration_status['is_registered']:
@@ -422,13 +432,6 @@ def handle_text_message(user_id: str, message_text: str):
             return
 
         # Check if user is in a general session (only after registration is confirmed)
-        # But first, double-check that registration is not in progress
-        from database.session_db import get_registration_session
-        reg_session = get_registration_session(user_id)
-        if reg_session:
-            # User is in registration, handle it
-            handle_registration_flow(user_id, message_text)
-            return
             
         # Check for other session types
         session_type = session_manager.get_session_type(user_id)
@@ -554,11 +557,20 @@ def handle_new_user(user_id: str, message_text: str):
 def handle_registration_flow(user_id: str, user_input: str):
     """Handle user registration steps"""
     try:
+        logger.info(f"🔄 Processing registration step for {user_id} with input: '{user_input}'")
+        
+        # Get current registration session for debugging
+        from database.session_db import get_registration_session
+        current_session = get_registration_session(user_id)
+        logger.info(f"📋 Current registration session: {current_session}")
+        
         result = user_service.process_registration_step(user_id, user_input)
+        logger.info(f"📝 Registration step result: {result}")
 
         if result['success']:
             if result.get('completed'):
                 # Registration complete - send message with buttons
+                logger.info(f"✅ Registration completed for {user_id}")
                 if result.get('buttons'):
                     whatsapp_service.send_interactive_message(user_id, result['message'], result['buttons'])
                 else:
@@ -566,9 +578,11 @@ def handle_registration_flow(user_id: str, user_input: str):
                     send_main_menu(user_id)
             else:
                 # Continue to next step
+                logger.info(f"➡️ Moving to next registration step for {user_id}: {result.get('step')}")
                 whatsapp_service.send_message(user_id, result['message'])
         else:
             # Error in registration step
+            logger.warning(f"❌ Registration step failed for {user_id}: {result.get('message')}")
             whatsapp_service.send_message(user_id, result['message'])
 
     except Exception as e:
