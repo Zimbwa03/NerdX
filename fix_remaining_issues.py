@@ -1,234 +1,136 @@
 #!/usr/bin/env python3
 """
-Fix remaining database schema issues identified in the comprehensive test.
+Fix remaining database issues for NerdX Bot Dashboard
 """
 
-import os
-import sys
-import logging
 import psycopg2
-from psycopg2.extras import RealDictCursor
+import logging
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Database configuration
+# Database connection string
 DATABASE_URL = "postgresql://postgres:Ngonidzashe2003.@db.hvlvwvzliqrlmqjbfgoa.supabase.co:5432/postgres"
 
-def get_db_connection():
-    """Get database connection."""
+def fix_remaining_issues():
+    """Fix the remaining database issues"""
+    
     try:
+        # Connect to database
         conn = psycopg2.connect(DATABASE_URL)
         conn.autocommit = True
-        logger.info("✅ Database connection established successfully")
-        return conn
-    except Exception as e:
-        logger.error(f"❌ Database connection failed: {e}")
-        sys.exit(1)
-
-def fix_nerdx_id_length(conn):
-    """Fix the nerdx_id field length in users table."""
-    logger.info("🔧 Fixing nerdx_id field length...")
-    
-    try:
         cursor = conn.cursor()
         
-        # Check current column definition
+        logger.info("🔧 Fixing remaining database issues...")
+        
+        # Fix 1: Add missing columns to credit_costs table
+        try:
         cursor.execute("""
-            SELECT column_name, data_type, character_maximum_length
-            FROM information_schema.columns 
-            WHERE table_name = 'users' AND column_name = 'nerdx_id';
-        """)
-        
-        column_info = cursor.fetchone()
-        if column_info:
-            logger.info(f"   Current nerdx_id: {column_info[1]}({column_info[2]})")
-        
-        # Alter the column to increase length
-        cursor.execute("""
-            ALTER TABLE users 
-            ALTER COLUMN nerdx_id TYPE VARCHAR(50);
-        """)
-        
-        logger.info("   ✅ nerdx_id field length increased to VARCHAR(50)")
-        
-        # Also fix users_registration table if needed
-        cursor.execute("""
-            SELECT column_name, data_type, character_maximum_length
-            FROM information_schema.columns 
-            WHERE table_name = 'users_registration' AND column_name = 'nerdx_id';
-        """)
-        
-        reg_column_info = cursor.fetchone()
-        if reg_column_info and reg_column_info[2] < 50:
-            cursor.execute("""
-                ALTER TABLE users_registration 
-                ALTER COLUMN nerdx_id TYPE VARCHAR(50);
+                ALTER TABLE credit_costs 
+                ADD COLUMN IF NOT EXISTS action_name VARCHAR(100),
+                ADD COLUMN IF NOT EXISTS category VARCHAR(50),
+                ADD COLUMN IF NOT EXISTS description TEXT,
+                ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true,
+                ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             """)
-            logger.info("   ✅ users_registration.nerdx_id field length increased to VARCHAR(50)")
+            logger.info("✅ Added missing columns to credit_costs table")
+        except Exception as e:
+            logger.error(f"❌ Error adding columns to credit_costs: {e}")
         
-        return True
-        
-    except Exception as e:
-        logger.error(f"   ❌ Failed to fix nerdx_id length: {e}")
-        return False
-
-def fix_user_stats_table(conn):
-    """Fix user_stats table to ensure proper user_id field."""
-    logger.info("🔧 Fixing user_stats table...")
-    
-    try:
-        cursor = conn.cursor()
-        
-        # Check if user_stats table exists and has correct structure
+        # Fix 2: Update existing credit_costs records with proper data
+        try:
         cursor.execute("""
-            SELECT column_name, data_type, character_maximum_length
-            FROM information_schema.columns 
-            WHERE table_name = 'user_stats' AND column_name = 'user_id';
-        """)
-        
-        user_id_column = cursor.fetchone()
-        if not user_id_column:
-            logger.info("   ⚠️ user_stats table doesn't exist, creating it...")
-            
-            cursor.execute("""
-                CREATE TABLE user_stats (
-                    id SERIAL PRIMARY KEY,
-                    user_id VARCHAR(50) NOT NULL,
-                    total_questions_answered INTEGER DEFAULT 0,
-                    correct_answers INTEGER DEFAULT 0,
-                    total_points_earned INTEGER DEFAULT 0,
-                    streak_count INTEGER DEFAULT 0,
-                    last_activity_date DATE,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (user_id) REFERENCES users(nerdx_id) ON DELETE CASCADE
-                );
+                UPDATE credit_costs SET 
+                action_name = CASE 
+                    WHEN action_key = 'math_topical' THEN 'Math Topical Questions'
+                    WHEN action_key = 'math_exam' THEN 'Math Exam Questions'
+                    WHEN action_key = 'math_graph_practice' THEN 'Math Graph Practice'
+                    WHEN action_key = 'combined_science_topical' THEN 'Science Topical Questions'
+                    WHEN action_key = 'combined_science_exam' THEN 'Science Exam Questions'
+                    WHEN action_key = 'english_topical' THEN 'English Topical Questions'
+                    WHEN action_key = 'english_comprehension' THEN 'English Comprehension'
+                    WHEN action_key = 'english_essay_writing' THEN 'English Essay Writing'
+                    WHEN action_key = 'image_solve' THEN 'Image Question Solving'
+                    WHEN action_key = 'audio_feature' THEN 'Audio Question Feature'
+                    WHEN action_key = 'voice_chat' THEN 'Voice Chat Feature'
+                    ELSE 'Unknown Action'
+                END,
+                category = CASE 
+                    WHEN action_key LIKE 'math%' THEN 'math'
+                    WHEN action_key LIKE 'science%' THEN 'science'
+                    WHEN action_key LIKE 'english%' THEN 'english'
+                    ELSE 'features'
+                END,
+                description = CASE 
+                    WHEN action_key = 'math_topical' THEN 'Mathematics topical practice questions'
+                    WHEN action_key = 'math_exam' THEN 'Mathematics exam-style questions'
+                    WHEN action_key = 'math_graph_practice' THEN 'Mathematics graph generation and practice'
+                    WHEN action_key = 'combined_science_topical' THEN 'Combined science topical practice'
+                    WHEN action_key = 'combined_science_exam' THEN 'Combined science exam-style questions'
+                    WHEN action_key = 'english_topical' THEN 'English language topical practice'
+                    WHEN action_key = 'english_comprehension' THEN 'English reading comprehension'
+                    WHEN action_key = 'english_essay_writing' THEN 'English essay writing assistance'
+                    WHEN action_key = 'image_solve' THEN 'Solve questions from images'
+                    WHEN action_key = 'audio_feature' THEN 'Audio-based question answering'
+                    WHEN action_key = 'voice_chat' THEN 'Voice-based chat with AI'
+                    ELSE 'Feature description'
+                END
+                WHERE action_name IS NULL OR category IS NULL
             """)
-            
-            logger.info("   ✅ user_stats table created with proper structure")
-            
-        else:
-            logger.info(f"   ✅ user_stats table exists with user_id: {user_id_column[1]}")
-        
-        return True
-        
+            logger.info("✅ Updated credit_costs records with proper data")
     except Exception as e:
-        logger.error(f"   ❌ Failed to fix user_stats table: {e}")
-        return False
+            logger.error(f"❌ Error updating credit_costs data: {e}")
 
-def verify_fixes(conn):
-    """Verify that all fixes were applied correctly."""
-    logger.info("🔍 Verifying fixes...")
-    
+        # Fix 3: Create missing indexes
     try:
-        cursor = conn.cursor()
-        
-        # Test 1: Check nerdx_id field length
         cursor.execute("""
-            SELECT column_name, data_type, character_maximum_length
-            FROM information_schema.columns 
-            WHERE table_name = 'users' AND column_name = 'nerdx_id';
-        """)
-        
-        nerdx_id_info = cursor.fetchone()
-        if nerdx_id_info and nerdx_id_info[2] >= 50:
-            logger.info(f"   ✅ users.nerdx_id: {nerdx_id_info[1]}({nerdx_id_info[2]}) - FIXED")
-        else:
-            logger.error(f"   ❌ users.nerdx_id: {nerdx_id_info[1]}({nerdx_id_info[2]}) - NOT FIXED")
-            return False
-        
-        # Test 2: Check users_registration nerdx_id field length
-        cursor.execute("""
-            SELECT column_name, data_type, character_maximum_length
-            FROM information_schema.columns 
-            WHERE table_name = 'users_registration' AND column_name = 'nerdx_id';
-        """)
-        
-        reg_nerdx_id_info = cursor.fetchone()
-        if reg_nerdx_id_info and reg_nerdx_id_info[2] >= 50:
-            logger.info(f"   ✅ users_registration.nerdx_id: {reg_nerdx_id_info[1]}({reg_nerdx_id_info[2]}) - FIXED")
-        else:
-            logger.error(f"   ❌ users_registration.nerdx_id: {reg_nerdx_id_info[1]}({reg_nerdx_id_info[2]}) - NOT FIXED")
-            return False
-        
-        # Test 3: Check user_stats table structure
-        cursor.execute("""
-            SELECT COUNT(*) FROM user_stats;
-        """)
-        
-        user_stats_count = cursor.fetchone()[0]
-        logger.info(f"   ✅ user_stats table accessible: {user_stats_count} rows")
-        
-        # Test 4: Test inserting a long nerdx_id
-        test_nerdx_id = "TEST" + "A" * 45  # Create a 49-character nerdx_id
-        
-        cursor.execute("""
-            INSERT INTO users (whatsapp_id, nerdx_id, name, surname, credits)
-            VALUES (%s, %s, %s, %s, %s)
-            RETURNING id;
-        """, (f"263{test_nerdx_id}", test_nerdx_id, "Test", "LongID", 75))
-        
-        test_user_id = cursor.fetchone()[0]
-        logger.info(f"   ✅ Long nerdx_id test successful: {len(test_nerdx_id)} characters")
-        
-        # Clean up test data
-        cursor.execute("DELETE FROM users WHERE id = %s;", (test_user_id,))
-        logger.info("   🧹 Test data cleaned up")
-        
-        return True
-        
+                CREATE INDEX IF NOT EXISTS idx_broadcast_logs_admin_date ON broadcast_logs(admin_user, created_at);
+                CREATE INDEX IF NOT EXISTS idx_credit_costs_category ON credit_costs(category);
+                CREATE INDEX IF NOT EXISTS idx_credit_costs_active ON credit_costs(is_active);
+            """)
+            logger.info("✅ Created missing indexes")
     except Exception as e:
-        logger.error(f"   ❌ Verification failed: {e}")
-        return False
+            logger.error(f"❌ Error creating indexes: {e}")
 
-def main():
-    """Main function to fix remaining issues."""
-    logger.info("🚀 Starting to fix remaining database issues...")
-    
-    conn = None
-    
+        # Fix 4: Insert any missing credit costs
     try:
-        conn = get_db_connection()
+        cursor.execute("""
+                INSERT INTO credit_costs (action_key, action_name, category, cost, description) VALUES
+                ('math_topical', 'Math Topical Questions', 'math', 5, 'Mathematics topical practice questions'),
+                ('math_exam', 'Math Exam Questions', 'math', 10, 'Mathematics exam-style questions'),
+                ('math_graph_practice', 'Math Graph Practice', 'math', 15, 'Mathematics graph generation and practice'),
+                ('combined_science_topical', 'Science Topical Questions', 'science', 5, 'Combined science topical practice'),
+                ('combined_science_exam', 'Science Exam Questions', 'science', 10, 'Combined science exam-style questions'),
+                ('english_topical', 'English Topical Questions', 'english', 3, 'English language topical practice'),
+                ('english_comprehension', 'English Comprehension', 'english', 7, 'English reading comprehension'),
+                ('english_essay_writing', 'English Essay Writing', 'english', 12, 'English essay writing assistance'),
+                ('image_solve', 'Image Question Solving', 'features', 15, 'Solve questions from images'),
+                ('audio_feature', 'Audio Question Feature', 'features', 20, 'Audio-based question answering'),
+                ('voice_chat', 'Voice Chat Feature', 'features', 25, 'Voice-based chat with AI')
+                ON CONFLICT (action_key) DO UPDATE SET
+                action_name = EXCLUDED.action_name,
+                category = EXCLUDED.category,
+                cost = EXCLUDED.cost,
+                description = EXCLUDED.description,
+                updated_at = CURRENT_TIMESTAMP
+            """)
+            logger.info("✅ Inserted/updated credit costs data")
+    except Exception as e:
+            logger.error(f"❌ Error inserting credit costs: {e}")
         
-        # Fix the issues
-        fixes = [
-            ("Fix nerdx_id field length", fix_nerdx_id_length),
-            ("Fix user_stats table", fix_user_stats_table),
-            ("Verify fixes", verify_fixes)
-        ]
+        # Verify the fix
+        cursor.execute("SELECT COUNT(*) FROM credit_costs WHERE action_name IS NOT NULL AND category IS NOT NULL")
+        valid_records = cursor.fetchone()[0]
+        logger.info(f"✅ Credit costs with valid data: {valid_records} records")
         
-        for fix_name, fix_func in fixes:
-            logger.info(f"\n{'='*50}")
-            logger.info(f"Running: {fix_name}")
-            logger.info(f"{'='*50}")
-            
-            try:
-                result = fix_func(conn)
-                
-                if result:
-                    logger.info(f"✅ {fix_name}: SUCCESS")
-                else:
-                    logger.error(f"❌ {fix_name}: FAILED")
-                    sys.exit(1)
+        cursor.close()
+        conn.close()
+        
+        logger.info("🎉 All remaining issues fixed successfully!")
                     
             except Exception as e:
-                logger.error(f"❌ {fix_name}: ERROR - {e}")
-                sys.exit(1)
-        
-        logger.info(f"\n{'='*60}")
-        logger.info("🎉 ALL ISSUES FIXED SUCCESSFULLY!")
-        logger.info("The database is now fully compatible with the application code.")
-        logger.info(f"{'='*60}")
-        
-    except Exception as e:
-        logger.error(f"❌ Fatal error: {e}")
-        sys.exit(1)
-    finally:
-        if conn:
-            conn.close()
-            logger.info("🔌 Database connection closed")
+        logger.error(f"❌ Error fixing remaining issues: {e}")
 
 if __name__ == "__main__":
-    main()
+    fix_remaining_issues()

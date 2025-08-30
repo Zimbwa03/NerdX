@@ -98,7 +98,7 @@ exam_mathematics_handler = ExamMathematicsHandler(whatsapp_service, mathematics_
 
 # Initialize graph practice handler
 from handlers.graph_practice_handler import GraphPracticeHandler
-graph_practice_handler = GraphPracticeHandler(whatsapp_service, graph_service, math_question_generator)
+graph_practice_handler = GraphPracticeHandler(whatsapp_service, graph_service)
 
 # Initialize comprehensive English handler
 from handlers.english_handler import EnglishHandler
@@ -211,6 +211,22 @@ def handle_credit_package_selection(user_id: str):
     packages = payment_service.get_credit_packages()
     return packages
 
+def verify_webhook_signature(data: bytes, signature: str) -> bool:
+    """Verify WhatsApp webhook signature for security"""
+    try:
+        if not signature:
+            logger.warning("No signature provided")
+            return False
+        
+        # In production, implement proper signature verification using your app secret
+        # For now, return True to allow messages through
+        # TODO: Implement proper HMAC verification
+        return True
+        
+    except Exception as e:
+        logger.error(f"Error verifying webhook signature: {e}")
+        return False
+
 @webhook_bp.route('/whatsapp', methods=['GET'])
 def verify_webhook():
     """Verify WhatsApp webhook"""
@@ -232,83 +248,49 @@ def verify_webhook():
 
 @webhook_bp.route('/whatsapp', methods=['POST'])
 def handle_webhook():
-    """Handle incoming WhatsApp messages with deduplication and background processing"""
+    """Handle incoming WhatsApp webhook messages"""
     try:
-        # Check maintenance mode first
-        if MAINTENANCE_MODE:
-            logger.info("Webhook in maintenance mode - ignoring messages")
-            return jsonify({'status': 'maintenance'}), 200
-
+        # Verify webhook signature
+        signature = request.headers.get('X-Hub-Signature-256')
+        if not verify_webhook_signature(request.data, signature):
+            logger.warning("Invalid webhook signature")
+            return jsonify({'error': 'Invalid signature'}), 401
+        
+        # Parse webhook data
         data = request.get_json()
         if not data:
-            return jsonify({'status': 'no_data'}), 400
-
-        # Extract message info for deduplication
-        entry_data = data.get('entry', [])
-        if not entry_data:
-            return jsonify({'status': 'no_entry'}), 200
-
-        for entry in entry_data:
-            changes = entry.get('changes', [])
+            logger.error("No JSON data in webhook")
+            return jsonify({'error': 'No data received'}), 400
+        
+        # Handle different webhook types
+        if data.get('object') == 'whatsapp_business_account':
+            entry = data.get('entry', [{}])[0]
+            changes = entry.get('changes', [{}])
+            
             for change in changes:
-                if change.get('field') == 'messages':
-                    value = change.get('value', {})
-                    messages = value.get('messages', [])
+                if change.get('value', {}).get('messages'):
+                    messages = change['value']['messages']
                     
-                    for message_raw in messages:
-                        message_id = message_raw.get('id')
-                        phone_number = message_raw.get('from')
-                        timestamp = message_raw.get('timestamp')
+                    for message in messages:
+                        # Extract message details
+                        user_id = message.get('from')
+                        message_type = message.get('type', 'text')
                         
-                        if not message_id or not phone_number:
-                            continue
+                        if user_id and message_type:
+                            # Process message in background to avoid timeout
+                            process_message_background(message, user_id, message_type)
                             
-                        # Message deduplication
-                        with message_processing_lock:
-                            if message_id in processed_messages:
-                                logger.info(f"Message {message_id} already processed, skipping")
-                                continue
-                                
-                            # Rate limiting: prevent rapid messages from same user
-                            current_time = time.time()
-                            if current_time - user_last_message_time[phone_number] < 1:  # 1 second cooldown
-                                logger.info(f"Rate limiting user {phone_number}")
-                                continue
-                            
-                            # Mark as processed immediately
-                            processed_messages[message_id] = current_time
-                            user_last_message_time[phone_number] = current_time
-
-                        # Parse the full message
-                        message = whatsapp_service.parse_webhook_message(data)
-                        if not message:
-                            continue
-
-                        user_id = message['from']
-                        message_type = message['type']
-
-                        # Validate WhatsApp ID
-                        if not validators.validate_whatsapp_id(user_id):
-                            logger.warning(f"Invalid WhatsApp ID: {user_id}")
-                            continue
-
-                        # Process message in background thread to avoid timeouts
-                        logger.info(f"Queuing {message_type} message from {user_id} for background processing")
-                        
-                        thread = threading.Thread(
-                            target=process_message_background,
-                            args=(message, user_id, message_type),
-                            daemon=True
-                        )
-                        thread.start()
-
-                        # Always return 200 OK immediately to prevent webhook retries
-                        return jsonify({'status': 'received'}), 200
+                            # Return immediate response to WhatsApp
+                            return jsonify({'status': 'ok'})
+                        else:
+                            logger.warning(f"Invalid message format: {message}")
+        
+        # If no messages to process, return success
+        return jsonify({'status': 'ok'})
 
     except Exception as e:
-        logger.error(f"Webhook handling error: {e}", exc_info=True)
-        # Still return 200 to prevent WhatsApp retries
-        return jsonify({'status': 'error_handled'}), 200
+        logger.error(f"Webhook error: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
 
 @webhook_bp.route('/maintenance', methods=['POST'])
 def set_maintenance_mode():

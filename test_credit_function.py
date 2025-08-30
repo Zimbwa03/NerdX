@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Simple Test - Test the function with minimal code
+Test Credit Function - Debug the credit awarding function
 """
 
 import psycopg2
@@ -24,73 +24,79 @@ def connect_to_database():
         logger.error(f"❌ Database connection failed: {e}")
         return None
 
-def simple_test(conn):
-    """Simple test of the function"""
+def test_credit_function(conn):
+    """Test the credit awarding function step by step"""
     try:
         cursor = conn.cursor()
         
         # Test data
-        test_chat_id = "simple_test_123"
+        test_chat_id = "test_user_789"
+        test_name = "Test"
+        test_surname = "User"
+        test_dob = "2000-03-15"
         
-        # 1. Create a simple test user
+        # 1. Generate NerdX ID
+        cursor.execute("SELECT generate_nerdx_id()")
+        nerdx_id = cursor.fetchone()[0]
+        logger.info(f"Generated NerdX ID: {nerdx_id}")
+        
+        # 2. Insert test user
         cursor.execute("""
             INSERT INTO users_registration (chat_id, name, surname, date_of_birth, nerdx_id, credits)
-            VALUES (%s, 'Test', 'User', '2000-01-01', 'NTEST123', 0)
-        """, (test_chat_id,))
+            VALUES (%s, %s, %s, %s, %s, 0)
+            RETURNING id, chat_id, nerdx_id, credits
+        """, (test_chat_id, test_name, test_surname, test_dob, nerdx_id))
         
-        # 2. Check current credits
-        cursor.execute("SELECT credits FROM users_registration WHERE chat_id = %s", (test_chat_id,))
         result = cursor.fetchone()
-        if result:
-            current_credits = result[0]
-            logger.info(f"Current credits: {current_credits}")
-        else:
-            logger.error("User not found")
-            return False
+        user_id, chat_id, nerdx_id, credits = result
+        logger.info(f"User created: ID={user_id}, Chat={chat_id}, NerdX={nerdx_id}, Credits={credits}")
         
-        # 3. Test the function
-        logger.info("Testing function...")
+        # 3. Check current state
+        cursor.execute("SELECT credits FROM users_registration WHERE chat_id = %s", (test_chat_id,))
+        current_credits = cursor.fetchone()[0]
+        logger.info(f"Current credits: {current_credits}")
+        
+        # 4. Test the function directly
+        logger.info("Testing award_registration_credits function...")
         cursor.execute("SELECT award_registration_credits(%s)", (test_chat_id,))
         function_result = cursor.fetchone()[0]
-        logger.info(f"Function returned: {function_result}")
+        logger.info(f"Function result: {function_result}")
         
-        # 4. Check final credits
+        # 5. Check final state
         cursor.execute("SELECT credits FROM users_registration WHERE chat_id = %s", (test_chat_id,))
         final_credits = cursor.fetchone()[0]
         logger.info(f"Final credits: {final_credits}")
         
-        # 5. Check if there are any errors
-        cursor.execute("SELECT * FROM information_schema.routines WHERE routine_name = 'award_registration_credits'")
-        routine_info = cursor.fetchone()
-        if routine_info:
-            logger.info("Function exists in database")
-        else:
-            logger.error("Function not found in database")
+        # 6. Check transactions
+        cursor.execute("SELECT COUNT(*) FROM credit_transactions WHERE user_id = %s", (test_chat_id,))
+        transaction_count = cursor.fetchone()[0]
+        logger.info(f"Transactions created: {transaction_count}")
         
         # Clean up
         cursor.execute("DELETE FROM credit_transactions WHERE user_id = %s", (test_chat_id,))
         cursor.execute("DELETE FROM users_registration WHERE chat_id = %s", (test_chat_id,))
+        logger.info("Test data cleaned up")
         
         return True
         
     except Exception as e:
-        logger.error(f"❌ Error in simple test: {e}")
+        logger.error(f"❌ Error testing credit function: {e}")
         return False
 
 def main():
     """Main function"""
-    logger.info("🧪 Simple Function Test...")
+    logger.info("🔍 Testing Credit Function...")
     
     conn = connect_to_database()
     if not conn:
         return False
     
     try:
-        success = simple_test(conn)
+        success = test_credit_function(conn)
         if success:
-            logger.info("✅ Simple test completed")
+            logger.info("✅ Credit function test completed")
         else:
-            logger.error("❌ Simple test failed")
+            logger.error("❌ Credit function test failed")
         return success
         
     finally:

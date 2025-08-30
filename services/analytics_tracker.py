@@ -4,6 +4,7 @@ Tracks user interactions and updates analytics tables
 """
 import os
 import psycopg2
+import re
 from datetime import datetime, date
 import logging
 import json
@@ -13,7 +14,24 @@ logger = logging.getLogger(__name__)
 
 class AnalyticsTracker:
     def __init__(self):
-        self.conn_string = os.getenv('DATABASE_URL') or os.getenv('SUPABASE_DATABASE_URL')
+        raw_conn_string = os.getenv('DATABASE_URL') or os.getenv('SUPABASE_DATABASE_URL')
+        self.conn_string = self._clean_connection_string(raw_conn_string)
+    
+    def _clean_connection_string(self, database_url: str) -> str:
+        """Clean database URL by removing pgbouncer and other problematic parameters"""
+        if not database_url:
+            return database_url
+        
+        # Remove pgbouncer parameter if present (incompatible with psycopg2)
+        if "pgbouncer=true" in database_url:
+            database_url = database_url.replace("?pgbouncer=true", "").replace("&pgbouncer=true", "")
+        if "pgbouncer=1" in database_url:
+            database_url = database_url.replace("?pgbouncer=1", "").replace("&pgbouncer=1", "")
+        if "pgbouncer" in database_url:
+            # Remove any remaining pgbouncer parameters
+            database_url = re.sub(r'[?&]pgbouncer=[^&]*', '', database_url)
+        
+        return database_url
     
     def _get_connection(self):
         """Get database connection"""
