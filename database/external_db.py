@@ -330,7 +330,7 @@ def add_xp(user_id, xp_amount, activity_type, description="XP earned"):
                 "level_before": current_level,
                 "level_after": new_level,
                 "description": description,
-                "created_at": datetime.now().isoformat()
+                "transaction_date": datetime.now().isoformat()
             }
             make_supabase_request("POST", "xp_transactions", xp_transaction)
             logger.info(f"XP transaction logged for {user_id}: +{xp_amount} XP")
@@ -426,7 +426,7 @@ def deduct_credits(user_id, amount, transaction_type, description):
             "credits_before": current_credits,
             "credits_after": new_credits,
             "description": description,
-            "created_at": datetime.now().isoformat()
+            "transaction_date": datetime.now().isoformat()
         }
         make_supabase_request("POST", "credit_transactions", transaction)
         return True
@@ -450,7 +450,7 @@ def add_credits(user_id, amount, transaction_type="purchase", description="Credi
             "credits_before": current_credits,
             "credits_after": new_credits,
             "description": description,
-            "created_at": datetime.now().isoformat()
+            "transaction_date": datetime.now().isoformat()
         }
         make_supabase_request("POST", "credit_transactions", transaction)
         return True
@@ -917,7 +917,7 @@ def complete_payment(transaction_ref, amount_paid):
             "credits_added": credits_to_add,
             "payment_method": "ecocash",
             "status": "completed",
-            "created_at": datetime.now().isoformat()
+            "transaction_date": datetime.now().isoformat()
         }
         make_supabase_request("POST", "payments", payment_record)
 

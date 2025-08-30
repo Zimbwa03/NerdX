@@ -373,7 +373,7 @@ def get_activity():
                 })
         
         # Get credit transactions for real-time activity metrics
-        all_credit_transactions = make_supabase_request("GET", "credit_transactions", select="created_at")
+        all_credit_transactions = make_supabase_request("GET", "credit_transactions", select="transaction_date")
         
         # Calculate activity periods
         today = datetime.now().date()
@@ -385,10 +385,10 @@ def get_activity():
         
         if all_credit_transactions:
             for transaction in all_credit_transactions:
-                created_at = transaction.get('created_at')
-                if created_at:
+                transaction_date = transaction.get('transaction_date')
+                if transaction_date:
                     try:
-                        tx_date = datetime.fromisoformat(created_at.replace('Z', '+00:00')).date()
+                        tx_date = datetime.fromisoformat(transaction_date.replace('Z', '+00:00')).date()
                         if tx_date == today:
                             today_activity += 1
                         if tx_date >= week_ago:
@@ -802,7 +802,7 @@ def get_credit_transactions():
             })
         
         # Sort by creation date (newest first)
-        credit_transactions.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        credit_transactions.sort(key=lambda x: x.get('transaction_date', ''), reverse=True)
         
         # Pagination
         total = len(credit_transactions)
