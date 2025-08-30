@@ -75,10 +75,11 @@ class MathematicsHandler:
 
 
     def handle_question_generation(self, user_id: str, topic: str, difficulty: str):
-        """Handle mathematics question generation"""
+        """Handle mathematics question generation with ULTRA-SECURE credit system"""
         try:
-            from database.external_db import get_user_registration, get_user_credits, deduct_credits
+            from database.external_db import get_user_registration
             from database.session_db import save_user_session, get_user_session
+            from services.secure_credit_system import secure_credit_system
             
             # Check if user already has an active math question session
             existing_session = get_user_session(user_id)
@@ -102,37 +103,26 @@ class MathematicsHandler:
                 self.whatsapp_service.send_message(user_id, "❌ Invalid difficulty selected.")
                 return
             
-            # Check credits
-            user_credits = get_user_credits(user_id)
-            has_credits, credit_error = self.mathematics_service.check_sufficient_credits(user_credits, difficulty)
+            # 🔒 ULTRA-SECURE CREDIT VALIDATION (STEP 1: NO DEDUCTION YET!)
+            # This BLOCKS zero-credit users completely
+            validation = secure_credit_system.ultra_secure_pre_validation(user_id, 'math_topical')
             
-            if not has_credits:
-                self.whatsapp_service.send_message(user_id, credit_error)
+            if not validation['success']:
+                logger.warning(f"🚨 SECURE BLOCK: User {user_id} denied access to math topical - {validation.get('message')}")
+                
+                # Send security-formatted error message
+                message, buttons = secure_credit_system.format_insufficient_credits_message(user_id, 'math_topical')
+                self.whatsapp_service.send_interactive_message(user_id, message, buttons)
                 return
             
-            # Deduct credits using advanced credit service
-            from services.advanced_credit_service import advanced_credit_service
+            # User has sufficient credits - proceed with generation (NO DEDUCTION YET!)
+            logger.info(f"✅ SECURE: User {user_id} passed validation for math topical, generating question...")
             
-            credit_result = advanced_credit_service.check_and_deduct_credits(
-                user_id, 
-                'math_topical',  # Use standardized action name
-                difficulty
-            )
-            
-            if not credit_result['success']:
-                # Send credit error message with helpful info
-                if credit_result.get('insufficient'):
-                    message = f"❌ Insufficient credits. You need {credit_result['required_credits']} but have {credit_result['current_credits']}.\n\n💰 *Get More Credits:*\n• Daily bonus: 5 credits\n• Referral bonus: 10 credits\n• Share NerdX with friends!"
-                else:
-                    message = credit_result.get('message', '❌ Error processing credits. Please try again.')
-                self.whatsapp_service.send_message(user_id, message)
-                return
-            
-            # Send generating message with correct credit amount
+            # Send generating message (but NO credit deduction until delivery succeeds)
             self.whatsapp_service.send_message(
                 user_id, 
                 f"🧮 Generating {difficulty} Mathematics question on {formatted_topic}...\n\n"
-                f"💳 Credits deducted: {credit_result['deducted']}"
+                f"💳 Cost: {validation['required_credits']} credits (will be deducted after successful delivery)"
             )
             
             # Create a temporary session to prevent duplicate generation
@@ -160,14 +150,15 @@ class MathematicsHandler:
                     from database.session_db import clear_user_session
                     clear_user_session(user_id)
                     
-                    # Send error message and return early to prevent loops
+                    # 🔒 SECURE: NO CREDITS DEDUCTED FOR FAILED DELIVERY
+                    deduction_result = secure_credit_system.secure_post_delivery_deduction(user_id, 'math_topical', False)
+                    logger.info(f"🔒 SECURE: No credits deducted for failed delivery - {deduction_result['message']}")
+                    
+                    # Send error message
                     self.whatsapp_service.send_message(
                         user_id, 
-                        "❌ Unable to generate question at this time. Our AI service is experiencing delays. Please try again in a few minutes.\n\n💳 Your credits have been refunded."
+                        "❌ Unable to generate question at this time. Our AI service is experiencing delays. Please try again in a few minutes.\n\n💳 No credits were deducted (secure system)."
                     )
-                    # Refund credits
-                    from database.external_db import add_credits
-                    add_credits(user_id, credit_cost, 'refund', f'Refund for failed {difficulty} Mathematics question')
                     return
                     
             except Exception as e:
@@ -176,17 +167,26 @@ class MathematicsHandler:
                 from database.session_db import clear_user_session
                 clear_user_session(user_id)
                 
+                # 🔒 SECURE: NO CREDITS DEDUCTED FOR FAILED DELIVERY
+                deduction_result = secure_credit_system.secure_post_delivery_deduction(user_id, 'math_topical', False)
+                logger.info(f"🔒 SECURE: No credits deducted for failed delivery - {deduction_result['message']}")
+                
                 self.whatsapp_service.send_message(
                     user_id, 
-                    "❌ Service temporarily unavailable. Please try again in a few minutes.\n\n💳 Your credits have been refunded."
+                    "❌ Service temporarily unavailable. Please try again in a few minutes.\n\n💳 No credits were deducted (secure system)."
                 )
-                # Refund credits
-                from database.external_db import add_credits
-                add_credits(user_id, credit_cost, 'refund', f'Refund for failed {difficulty} Mathematics question')
                 return
             
             # Send question to user
             self._send_question_to_user(user_id, question_data, "Mathematics", formatted_topic, difficulty)
+            
+            # 🔒 SECURE: ONLY NOW DEDUCT CREDITS AFTER SUCCESSFUL DELIVERY
+            deduction_result = secure_credit_system.secure_post_delivery_deduction(user_id, 'math_topical', True)
+            
+            if deduction_result['success'] and deduction_result['deducted']:
+                logger.info(f"✅ SECURE: Credits successfully deducted after delivery - {deduction_result['message']}")
+            else:
+                logger.error(f"💥 SECURE: Credit deduction failed after delivery - {deduction_result.get('message')}")
             
             # Store final session with question data
             session_data = {
@@ -197,11 +197,13 @@ class MathematicsHandler:
                 'question_data': json.dumps(question_data),
                 'generated_at': question_data.get('generated_at'),
                 'source': question_data.get('source', 'deepseek_ai'),
-                'awaiting_answer': True
+                'awaiting_answer': True,
+                'credits_deducted': deduction_result.get('credits_deducted', 0),
+                'transaction_status': 'completed' if deduction_result['success'] else 'failed'
             }
             
             save_user_session(user_id, session_data)
-            logger.info(f"Generated and sent math question to {user_id}")
+            logger.info(f"Generated and sent math question to {user_id} with secure credit deduction")
             
         except Exception as e:
             logger.error(f"Error generating math question for {user_id}: {e}")

@@ -22,7 +22,7 @@ class EnglishHandler:
             "topical_questions": {
                 "title": "📚 Topical Questions",
                 "description": "Practice questions by English topics and skills",
-                "credit_cost": 2,
+                "credit_cost": 1,
                 "topics": [
                     "Formal Letter Writing", "Informal Letter Writing", "Report Writing",
                     "Article Writing", "Speech Writing", "Summary Writing",
@@ -44,7 +44,7 @@ class EnglishHandler:
             "essay_writing": {
                 "title": "✍️ Essay Writing",
                 "description": "Section A (Free Choice) and Section B (Guided Composition)",
-                "credit_cost": 4,
+                "credit_cost": 3,
                 "section_a_types": ["narrative", "descriptive", "argumentative", "discursive"],
                 "section_b_types": ["letter", "report", "article", "speech", "memo"]
             },
@@ -123,8 +123,14 @@ I'm here to help you master English, {user_name}, with:
 
             module_info = self.english_modules["topical_questions"]
 
-            if credits < module_info["credit_cost"]:
-                self._send_insufficient_credits_message(user_id, user_name, credits, module_info["credit_cost"])
+            # 🔒 ULTRA-SECURE CREDIT VALIDATION (NO DEDUCTION YET!)
+            from services.secure_credit_system import secure_credit_system
+            validation = secure_credit_system.ultra_secure_pre_validation(user_id, 'english_topical')
+            
+            if not validation['success']:
+                logger.warning(f"🚨 SECURE BLOCK: User {user_id} denied access to English topical - {validation.get('message')}")
+                message, buttons = secure_credit_system.format_insufficient_credits_message(user_id, 'english_topical')
+                self.whatsapp_service.send_interactive_message(user_id, message, buttons)
                 return
 
             message = f"""📚 ZIMSEC Topical Questions
@@ -156,8 +162,14 @@ I'm here to help you master English, {user_name}, with:
 
             module_info = self.english_modules["comprehension"]
 
-            if credits < module_info["credit_cost"]:
-                self._send_insufficient_credits_message(user_id, user_name, credits, module_info["credit_cost"])
+            # 🔒 ULTRA-SECURE CREDIT VALIDATION (NO DEDUCTION YET!)
+            from services.secure_credit_system import secure_credit_system
+            validation = secure_credit_system.ultra_secure_pre_validation(user_id, 'english_comprehension')
+            
+            if not validation['success']:
+                logger.warning(f"🚨 SECURE BLOCK: User {user_id} denied access to English comprehension - {validation.get('message')}")
+                message, buttons = secure_credit_system.format_insufficient_credits_message(user_id, 'english_comprehension')
+                self.whatsapp_service.send_interactive_message(user_id, message, buttons)
                 return
 
             message = f"""📖 **ZIMSEC Comprehension Practice**
