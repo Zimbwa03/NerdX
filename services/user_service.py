@@ -26,19 +26,24 @@ class UserService:
     def check_user_registration(self, whatsapp_id: str) -> Dict:
         """Check if user is registered and return status"""
         try:
+            logger.info(f"🔍 DEBUGGING: Checking registration for user {whatsapp_id}")
             is_registered = is_user_registered(whatsapp_id)
+            logger.info(f"🔍 DEBUGGING: is_user_registered returned: {is_registered}")
             
             if is_registered:
                 user_data = get_user_registration(whatsapp_id)
+                logger.info(f"🔍 DEBUGGING: get_user_registration returned: {user_data is not None}")
                 return {
                     'is_registered': True,
                     'user': user_data,
                     'message': 'User is registered'
                 }
             else:
+                logger.info(f"🔍 DEBUGGING: User {whatsapp_id} not registered, checking registration session")
                 # Check if registration is in progress
                 session = get_registration_session(whatsapp_id)
                 if session:
+                    logger.info(f"🔍 DEBUGGING: Registration in progress for {whatsapp_id}")
                     return {
                         'is_registered': False,
                         'registration_in_progress': True,
@@ -46,6 +51,7 @@ class UserService:
                         'message': 'Registration in progress'
                     }
                 else:
+                    logger.info(f"🔍 DEBUGGING: No registration session for {whatsapp_id}")
                     return {
                         'is_registered': False,
                         'registration_in_progress': False,
@@ -53,7 +59,7 @@ class UserService:
                     }
                     
         except Exception as e:
-            logger.error(f"Error checking user registration: {e}")
+            logger.error(f"Error checking user registration for {whatsapp_id}: {e}")
             return {
                 'is_registered': False,
                 'error': str(e),

@@ -469,13 +469,23 @@ def handle_text_message(user_id: str, message_text: str):
         if not registration_status['is_registered']:
             logger.info(f"🚫 UNREGISTERED USER BLOCKED: {user_id}")
             
-            if registration_status.get('registration_in_progress'):
-                # Continue registration process
-                handle_registration_flow(user_id, message_text)
+            # 🛡️ SAFETY CHECK: Double-verify with direct database call
+            # This catches cases where service check fails but user is actually registered
+            from database.external_db import get_user_registration
+            direct_db_check = get_user_registration(user_id)
+            if direct_db_check:
+                logger.warning(f"🔧 REGISTRATION BUG FIX: Service said not registered but DB shows user {user_id} IS registered!")
+                logger.info(f"✅ Allowing user {user_id} to proceed based on direct DB verification")
+                # User is registered, let them proceed - skip the registration blocking
             else:
-                # Force registration - NO EXCEPTIONS
-                handle_new_user(user_id, message_text)
-            return
+                # User truly not registered
+                if registration_status.get('registration_in_progress'):
+                    # Continue registration process
+                    handle_registration_flow(user_id, message_text)
+                else:
+                    # Force registration - NO EXCEPTIONS
+                    handle_new_user(user_id, message_text)
+                return
 
         # Check if user is in a general session (only after registration is confirmed)
             
