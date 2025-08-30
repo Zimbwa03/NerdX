@@ -98,7 +98,7 @@ exam_mathematics_handler = ExamMathematicsHandler(whatsapp_service, mathematics_
 
 # Initialize graph practice handler
 from handlers.graph_practice_handler import GraphPracticeHandler
-graph_practice_handler = GraphPracticeHandler(whatsapp_service, graph_service)
+graph_practice_handler = GraphPracticeHandler(whatsapp_service, graph_service, math_question_generator)
 
 # Initialize comprehensive English handler
 from handlers.english_handler import EnglishHandler
