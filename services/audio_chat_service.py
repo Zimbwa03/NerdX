@@ -46,6 +46,7 @@ except ImportError:
 # Environment variables
 DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY')
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')
 
 # Task storage (in production, use Redis or database)
 audio_tasks = {}
@@ -219,8 +220,86 @@ class AudioChatService:
             logger.error(f"Error generating AI response: {e}")
             return "I encountered an error while processing your request. Please try again."
 
+    def generate_audio_with_elevenlabs(self, text: str, voice_type: str = 'female') -> Optional[str]:
+        """Generate audio using ElevenLabs as fallback"""
+        try:
+            if not ELEVENLABS_API_KEY:
+                logger.error("ElevenLabs API key not configured")
+                return None
+
+            # ElevenLabs voice IDs
+            elevenlabs_voices = {
+                'female': 'pNInz6obpgDQGcFmaJgB',  # Adam (female-like voice)
+                'male': 'ErXwobaYiN019PkySvjV'     # Antoni (male voice)
+            }
+
+            voice_id = elevenlabs_voices.get(voice_type, elevenlabs_voices['female'])
+            
+            headers = {
+                'Accept': 'audio/mpeg',
+                'Content-Type': 'application/json',
+                'xi-api-key': ELEVENLABS_API_KEY
+            }
+
+            data = {
+                'text': text,
+                'model_id': 'eleven_monolingual_v1',
+                'voice_settings': {
+                    'stability': 0.5,
+                    'similarity_boost': 0.5
+                }
+            }
+
+            url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+            
+            response = requests.post(url, json=data, headers=headers, timeout=30)
+            
+            if response.status_code == 200:
+                # Save the audio file
+                audio_filename = f"audio_elevenlabs_{uuid.uuid4().hex}.mp3"
+                audio_path = os.path.join(self.audio_dir, audio_filename)
+                
+                with open(audio_path, 'wb') as f:
+                    f.write(response.content)
+                
+                # Convert to M4A for better WhatsApp compatibility
+                try:
+                    import subprocess
+                    
+                    m4a_filename = f"audio_elevenlabs_{uuid.uuid4().hex}.m4a"
+                    m4a_path = os.path.join(self.audio_dir, m4a_filename)
+                    
+                    process = subprocess.run([
+                        'ffmpeg', '-y',
+                        '-i', audio_path,
+                        '-c:a', 'aac',
+                        '-b:a', '64k',
+                        '-ar', '16000',
+                        m4a_path
+                    ], capture_output=True, timeout=15)
+                    
+                    if process.returncode == 0 and os.path.exists(m4a_path):
+                        # Remove the original MP3 file
+                        os.remove(audio_path)
+                        logger.info(f"ElevenLabs audio generated successfully: {m4a_filename}")
+                        return m4a_path
+                    else:
+                        logger.warning("FFmpeg conversion failed, using original MP3")
+                        return audio_path
+                        
+                except Exception as e:
+                    logger.warning(f"Audio conversion failed, using original: {e}")
+                    return audio_path
+            else:
+                logger.error(f"ElevenLabs API error: {response.status_code} - {response.text}")
+                return None
+
+        except Exception as e:
+            logger.error(f"Error generating audio with ElevenLabs: {e}")
+            return None
+
     def generate_audio(self, text: str, voice_type: str = 'female') -> Optional[str]:
-        """Generate audio from text using Gemini AI TTS - RELIABLE AUDIO GENERATION"""
+        """Generate audio from text using Gemini AI TTS with ElevenLabs fallback"""
         # Check if audio generation is already in progress
         with self.audio_generation_lock:
             if self.is_generating_audio:
@@ -239,88 +318,91 @@ class AudioChatService:
             self.is_generating_audio = True
 
         try:
-            if not self.gemini_client:
-                logger.error("Gemini AI client not configured")
-                return None
+            # Try Gemini AI first
+            if self.gemini_client:
+                logger.info(f"Trying Gemini AI for audio generation: {text[:50]}...")
 
-            logger.info(f"Starting audio generation for text: {text[:50]}...")
+                # Get voice name for Gemini TTS
+                voice_name = self.gemini_voices.get(voice_type, self.gemini_voices['female'])
 
-            # Get voice name for Gemini TTS
-            voice_name = self.gemini_voices.get(voice_type, self.gemini_voices['female'])
-
-            # Generate audio directly without ThreadPoolExecutor to avoid worker timeout issues
-            try:
-                response = self.gemini_client.models.generate_content(
-                    model="gemini-2.5-flash-preview-tts",
-                    contents=text,
-                    config=types.GenerateContentConfig(
-                        response_modalities=["AUDIO"],
-                        speech_config=types.SpeechConfig(
-                            voice_config=types.VoiceConfig(
-                                prebuilt_voice_config=types.PrebuiltVoiceConfig(
-                                    voice_name=voice_name
+                # Generate audio directly without ThreadPoolExecutor to avoid worker timeout issues
+                try:
+                    response = self.gemini_client.models.generate_content(
+                        model="gemini-2.5-flash-preview-tts",
+                        contents=text,
+                        config=types.GenerateContentConfig(
+                            response_modalities=["AUDIO"],
+                            speech_config=types.SpeechConfig(
+                                voice_config=types.VoiceConfig(
+                                    prebuilt_voice_config=types.PrebuiltVoiceConfig(
+                                        voice_name=voice_name
+                                    )
                                 )
                             )
                         )
                     )
-                )
-            except Exception as e:
-                logger.error(f"Audio generation failed: {e}")
+
+                    # Extract audio data from response
+                    if response.candidates and response.candidates[0].content.parts:
+                        for part in response.candidates[0].content.parts:
+                            if part.inline_data and part.inline_data.data:
+                                # Convert Gemini's raw PCM audio to M4A/AAC format for better WhatsApp compatibility
+                                try:
+                                    import subprocess
+
+                                    # Use MP4 with AAC codec for better WhatsApp compatibility
+                                    audio_filename = f"audio_gemini_{uuid.uuid4().hex}.m4a"
+                                    audio_path = os.path.join(self.audio_dir, audio_filename)
+
+                                    # Use ffmpeg to convert raw PCM data to M4A/AAC format
+                                    # Gemini outputs: 24kHz, 16-bit, mono PCM
+                                    process = subprocess.Popen([
+                                        'ffmpeg', '-y',
+                                        '-f', 's16le',           # 16-bit signed little-endian PCM
+                                        '-ar', '24000',          # 24kHz sample rate
+                                        '-ac', '1',              # 1 channel (mono)
+                                        '-i', 'pipe:0',          # Read from stdin
+                                        '-c:a', 'aac',           # Use AAC codec for M4A
+                                        '-b:a', '64k',           # 64kbps bitrate (good for voice)
+                                        '-ar', '16000',          # Downsample to 16kHz for WhatsApp
+                                        '-ac', '1',              # Ensure mono output
+                                        audio_path
+                                    ], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+                                    # Send PCM data to ffmpeg
+                                    stdout, stderr = process.communicate(input=part.inline_data.data, timeout=15)
+
+                                    if process.returncode == 0:
+                                        # Verify the file was created and has content
+                                        if os.path.exists(audio_path) and os.path.getsize(audio_path) > 0:
+                                            logger.info(f"✅ Gemini audio generated successfully: {audio_filename} (size: {os.path.getsize(audio_path)} bytes)")
+                                            return audio_path
+                                        else:
+                                            logger.error(f"Gemini audio file not created or empty: {audio_path}")
+                                    else:
+                                        logger.error(f"FFmpeg conversion failed: {stderr.decode()}")
+
+                                except Exception as e:
+                                    logger.error(f"Error converting Gemini audio with FFmpeg: {e}")
+
+                    logger.warning("No audio data received from Gemini AI - trying ElevenLabs fallback")
+
+                except Exception as e:
+                    logger.warning(f"Gemini audio generation failed: {e} - trying ElevenLabs fallback")
+            else:
+                logger.warning("Gemini AI client not configured - trying ElevenLabs fallback")
+
+            # Fallback to ElevenLabs
+            logger.info("🔄 Falling back to ElevenLabs for audio generation...")
+            elevenlabs_result = self.generate_audio_with_elevenlabs(text, voice_type)
+            
+            if elevenlabs_result:
+                logger.info("✅ ElevenLabs fallback succeeded")
+                return elevenlabs_result
+            else:
+                logger.error("❌ Both Gemini and ElevenLabs failed to generate audio")
                 return None
 
-            # Extract audio data from response
-            if response.candidates and response.candidates[0].content.parts:
-                for part in response.candidates[0].content.parts:
-                    if part.inline_data and part.inline_data.data:
-                        # Save audio as OGG for WhatsApp compatibility (Gemini outputs raw PCM)
-                        audio_filename = f"audio_{uuid.uuid4().hex}.ogg"
-                        audio_path = os.path.join(self.audio_dir, audio_filename)
-
-                        # Convert Gemini's raw PCM audio to MP4/AAC format for better WhatsApp compatibility
-                        try:
-                            import subprocess
-
-                            # Use MP4 with AAC codec for better WhatsApp compatibility
-                            audio_filename = f"audio_{uuid.uuid4().hex}.m4a"
-                            audio_path = os.path.join(self.audio_dir, audio_filename)
-
-                            # Use ffmpeg to convert raw PCM data to M4A/AAC format
-                            # Gemini outputs: 24kHz, 16-bit, mono PCM
-                            process = subprocess.Popen([
-                                'ffmpeg', '-y',
-                                '-f', 's16le',           # 16-bit signed little-endian PCM
-                                '-ar', '24000',          # 24kHz sample rate
-                                '-ac', '1',              # 1 channel (mono)
-                                '-i', 'pipe:0',          # Read from stdin
-                                '-c:a', 'aac',           # Use AAC codec for M4A
-                                '-b:a', '64k',           # 64kbps bitrate (good for voice)
-                                '-ar', '16000',          # Downsample to 16kHz for WhatsApp
-                                '-ac', '1',              # Ensure mono output
-                                audio_path
-                            ], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-                            # Send PCM data to ffmpeg
-                            stdout, stderr = process.communicate(input=part.inline_data.data, timeout=15)
-
-                            if process.returncode == 0:
-                                # Verify the file was created and has content
-                                if os.path.exists(audio_path) and os.path.getsize(audio_path) > 0:
-                                    logger.info(f"Audio converted to OGG successfully: {audio_filename} (size: {os.path.getsize(audio_path)} bytes)")
-                                    return audio_path
-                                else:
-                                    logger.error(f"Audio file not created or empty: {audio_path}")
-                                    return None
-                            else:
-                                logger.error(f"FFmpeg conversion failed: {stderr.decode()}")
-                                return None
-
-                        except Exception as e:
-                            logger.error(f"Error converting audio with FFmpeg: {e}")
-                            return None
-
-            logger.error("No audio data received from Gemini AI")
-            logger.error(f"Response structure: {response}")
-            return None
 
         except Exception as e:
             logger.error(f"Error generating audio with Gemini AI: {e}")
@@ -660,10 +742,9 @@ Type 'end audio' to exit audio chat mode."""
             new_level = max(1, (new_xp // 100) + 1)
             new_streak = current_streak + 1
 
-            # Update total attempts and audio completions
+            # Update total attempts and user stats (removed audio_completed - column doesn't exist)
             update_user_stats(user_id, {
                 'total_attempts': current_stats.get('total_attempts', 0) + 1,
-                'audio_completed': current_stats.get('audio_completed', 0) + 1,
                 'xp_points': new_xp,
                 'level': new_level,
                 'streak': new_streak

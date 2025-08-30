@@ -880,7 +880,7 @@ def create_pending_payment(user_id, amount_usd, credits_to_add):
         "amount_expected": amount_usd,
         "credits_to_add": credits_to_add,
         "status": "pending",
-        "created_at": datetime.now().isoformat()
+        "transaction_date": datetime.now().isoformat()
     }
 
     result = make_supabase_request("POST", "pending_payments", payment_data)
