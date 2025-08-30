@@ -150,7 +150,49 @@ def process_message_background(message_data, user_id, message_type):
                         "⏳ Please wait a moment before sending another message. This helps prevent spam and ensures smooth operation."
                     )
                 return
-            handle_text_message(user_id, message_data.get('text', ''))
+            
+            # Extract text content with better debugging and multiple fallbacks
+            text_content = message_data.get('text', {})
+            actual_text = ''
+            
+            if isinstance(text_content, dict):
+                # WhatsApp v2 API structure - try multiple possible field names
+                actual_text = (text_content.get('body') or 
+                             text_content.get('text') or 
+                             text_content.get('content') or 
+                             str(text_content))
+            else:
+                # Fallback to direct text
+                actual_text = str(text_content) if text_content else ''
+            
+            # Additional fallback: check if text is directly in message_data
+            if not actual_text.strip():
+                actual_text = (message_data.get('body') or 
+                             message_data.get('content') or 
+                             str(message_data.get('text', '')))
+            
+            logger.info(f"📝 Extracted text for {user_id}: '{actual_text}' (length: {len(actual_text)})")
+            logger.info(f"📝 Full message_data: {message_data}")
+            
+            if not actual_text.strip():
+                logger.warning(f"⚠️ Empty text content for {user_id}, sending error message")
+                whatsapp_service.send_message(
+                    user_id,
+                    "❌ **Message Error**\n\nI received your message but couldn't read the text content. Please try typing your name again."
+                )
+                return
+            
+            # Final validation: ensure we have actual text content
+            if len(actual_text.strip()) < 1:
+                logger.error(f"❌ Text extraction failed for {user_id}, actual_text: '{actual_text}'")
+                whatsapp_service.send_message(
+                    user_id,
+                    "❌ **Technical Issue**\n\nI'm having trouble reading your message. Please try again or contact support if the problem persists."
+                )
+                return
+            
+            logger.info(f"✅ Text extraction successful for {user_id}: '{actual_text}'")
+            handle_text_message(user_id, actual_text)
             
         elif message_type == 'image':
             # Check rate limiting for image processing
@@ -275,6 +317,10 @@ def handle_webhook():
                         # Extract message details
                         user_id = message.get('from')
                         message_type = message.get('type', 'text')
+                        
+                        # Debug: Log the full message structure
+                        logger.info(f"🔍 Received WhatsApp message: {message}")
+                        logger.info(f"🔍 User ID: {user_id}, Type: {message_type}")
                         
                         if user_id and message_type:
                             # Process message in background to avoid timeout
