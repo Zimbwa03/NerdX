@@ -512,7 +512,7 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
             'date_of_birth': date_of_birth,
             'nerdx_id': nerdx_id,
             'referred_by_nerdx_id': referred_by_nerdx_id,
-            'created_at': datetime.utcnow().isoformat()
+            'registration_date': datetime.utcnow().isoformat()
         }
         
         logger.info(f"📝 Registration data prepared: {registration_data}")
