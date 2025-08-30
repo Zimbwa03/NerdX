@@ -407,12 +407,6 @@ def handle_text_message(user_id: str, message_text: str):
                 return  # Successfully processed
             # If processing failed, continue to normal flow
 
-        # Check if user is in a general session
-        session_type = session_manager.get_session_type(user_id)
-        if session_type:
-            handle_session_message(user_id, message_text)
-            return
-
         # 🔒 STRICT REGISTRATION ENFORCEMENT - NO ACCESS WITHOUT REGISTRATION
         registration_status = user_service.check_user_registration(user_id)
 
@@ -425,6 +419,21 @@ def handle_text_message(user_id: str, message_text: str):
             else:
                 # Force registration - NO EXCEPTIONS
                 handle_new_user(user_id, message_text)
+            return
+
+        # Check if user is in a general session (only after registration is confirmed)
+        # But first, double-check that registration is not in progress
+        from database.session_db import get_registration_session
+        reg_session = get_registration_session(user_id)
+        if reg_session:
+            # User is in registration, handle it
+            handle_registration_flow(user_id, message_text)
+            return
+            
+        # Check for other session types
+        session_type = session_manager.get_session_type(user_id)
+        if session_type:
+            handle_session_message(user_id, message_text)
             return
 
         # 🔐 DOUBLE-CHECK: Verify user actually exists in database
