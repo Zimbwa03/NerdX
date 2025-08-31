@@ -730,6 +730,8 @@ Don't worry - no charges were made to your account."""
             handle_topic_selection(user_id, message_text)
         elif session_type == 'payment':
             handle_payment_confirmation(user_id, message_text)
+        elif session_type == 'paynow_phone_collection':
+            handle_paynow_phone_collection(user_id, message_text)
         elif session_type == 'audio_chat':
             handle_audio_chat_message(user_id, message_text)
         else:
@@ -1545,6 +1547,14 @@ Click the link above to join our official WhatsApp channel!"""
             except Exception as e:
                 logger.error(f"Error parsing submit_proof callback: {e}")
                 whatsapp_service.send_message(user_id, "❌ Error processing payment submission. Please try again.")
+        elif selection_id.startswith('paynow_payment_'):
+            # Handle Paynow USD EcoCash payment
+            package_id = selection_id.replace('paynow_payment_', '')
+            handle_paynow_payment(user_id, package_id)
+        elif selection_id.startswith('manual_payment_'):
+            # Handle manual EcoCash SMS verification payment
+            package_id = selection_id.replace('manual_payment_', '')
+            handle_manual_payment(user_id, package_id)
         elif selection_id == 'back_to_menu':
             send_main_menu(user_id)
         elif selection_id == 'continue_current':
@@ -3377,9 +3387,10 @@ def handle_package_selection(user_id: str, package_id: str):
         whatsapp_service.send_message(user_id, "❌ Error loading package details. Please try again.")
 
 def handle_purchase_confirmation(user_id: str, package_id: str):
-    """Handle purchase confirmation and show payment instructions"""
+    """Handle purchase confirmation and show payment method selection"""
     try:
         from services.advanced_credit_service import advanced_credit_service
+        from services.paynow_service import paynow_service
         
         # Get package details
         packages = advanced_credit_service.get_credit_packages()
@@ -3389,53 +3400,36 @@ def handle_purchase_confirmation(user_id: str, package_id: str):
             whatsapp_service.send_message(user_id, "❌ Package not found. Please try again.")
             return
         
-        # Generate unique reference code
-        import uuid
-        reference_code = str(uuid.uuid4())[:8].upper()
-        
-        message = f"""💳 ✨ 𝗣𝗔𝗬𝗠𝗘𝗡𝗧 𝗜𝗡𝗦𝗧𝗥𝗨𝗖𝗧𝗜𝗢𝗡𝗦 ✨ 💳
+        message = f"""💳 ✨ 𝗖𝗛𝗢𝗢𝗦𝗘 𝗣𝗔𝗬𝗠𝗘𝗡𝗧 𝗠𝗘𝗧𝗛𝗢𝗗 ✨ 💳
 ╔═══════════════════════════════╗
-║       🚀 SECURE CHECKOUT 🚀     ║
+║    {selected_package['icon']} {selected_package['name'].upper()} {selected_package['icon']}    ║
 ╚═══════════════════════════════╝
 
-📱 **𝗘𝗖𝗢𝗖𝗔𝗦𝗛 𝗣𝗔𝗬𝗠𝗘𝗡𝗧:**
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📞 **Number**: +263 785494594
 💰 **Amount**: ${selected_package['price']:.2f} USD
-📋 **Reference**: `{reference_code}`
+💎 **Credits**: {selected_package['credits']} credits
 
-🎯 **𝗦𝗜𝗠𝗣𝗟𝗘 𝗦𝗧𝗘𝗣𝗦:**
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-1️⃣ Send ${selected_package['price']:.2f} to +263 785494594
-2️⃣ Copy your EcoCash confirmation SMS
-3️⃣ Click "I SENT MONEY" below
-4️⃣ Paste SMS → Get credits in 5-30 mins!
-
-🛡️ **𝗪𝗵𝘆 𝗦𝗠𝗦 𝗩𝗲𝗿𝗶𝗳𝗶𝗰𝗮𝘁𝗶𝗼𝗻?**
-100% secure • Instant verification • Protected payments
-
+🚀 **CHOOSE YOUR PAYMENT METHOD:**
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
         
-        buttons = [
-            {"text": "✅ I SENT MONEY - SUBMIT PROOF", "callback_data": f"submit_proof_{package_id}_{reference_code}"},
-            {"text": "❓ NEED HELP?", "callback_data": "payment_help"},
-            {"text": "⬅️ BACK", "callback_data": f"select_package_{package_id}"}
-        ]
+        # Prepare payment method buttons
+        buttons = []
         
-        # Store payment session in user session
-        from database.session_db import save_user_session
-        payment_session_data = {
-                'session_type': 'payment_flow',
-            'step': 'awaiting_proof',
-            'custom_data': json.dumps({
-                'package_id': package_id,
-                'reference_code': reference_code,
-                'amount': selected_package['price'],
-                'credits': selected_package['credits'],
-                'timestamp': datetime.now().isoformat()
+        # Check if Paynow is available and add instant payment option
+        if paynow_service.is_available():
+            buttons.append({
+                "text": "⚡ Paynow USD EcoCash (INSTANT)", 
+                "callback_data": f"paynow_payment_{package_id}"
             })
-        }
-        save_user_session(user_id, payment_session_data)
+            message += "\n⚡ **Paynow USD EcoCash** - Instant payment & automatic credits"
+        
+        # Always add manual payment option as fallback
+        buttons.extend([
+            {"text": "📱 Manual EcoCash SMS Verification", "callback_data": f"manual_payment_{package_id}"},
+            {"text": "⬅️ BACK", "callback_data": f"select_package_{package_id}"}
+        ])
+        
+        message += "\n📱 **Manual EcoCash** - Traditional SMS verification (5-30 mins)"
+        message += "\n\n🔒 **Both methods are 100% secure and verified**"
         
         whatsapp_service.send_interactive_message(user_id, message, buttons)
         
@@ -3826,3 +3820,280 @@ def diagnose_supabase():
             'error': str(e),
             'timestamp': datetime.now().isoformat()
         }), 500
+
+def handle_paynow_payment(user_id: str, package_id: str):
+    """Handle Paynow USD EcoCash instant payment"""
+    try:
+        from services.advanced_credit_service import advanced_credit_service
+        from services.paynow_service import paynow_service
+        from database.external_db import get_user_registration
+        
+        # Get package details
+        packages = advanced_credit_service.get_credit_packages()
+        selected_package = next((p for p in packages if p['id'] == package_id), None)
+        
+        if not selected_package:
+            whatsapp_service.send_message(user_id, "❌ Package not found. Please try again.")
+            return
+        
+        # Check if Paynow is available
+        if not paynow_service.is_available():
+            whatsapp_service.send_message(user_id, 
+                "❌ **Paynow Service Unavailable**\n\n"
+                "The instant payment system is temporarily unavailable. "
+                "Please use manual payment method.")
+            handle_manual_payment(user_id, package_id)
+            return
+        
+        # Get user registration for contact details
+        registration = get_user_registration(user_id)
+        if not registration:
+            whatsapp_service.send_message(user_id, "❌ Registration not found. Please try again.")
+            return
+        
+        # Collect user phone number
+        message = f"""📱 **PAYNOW USD ECOCASH PAYMENT** ⚡
+
+🎯 **Package**: {selected_package['name']}
+💰 **Amount**: ${selected_package['price']:.2f} USD
+💎 **Credits**: {selected_package['credits']} credits
+
+⚡ **INSTANT PAYMENT SETUP**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📞 **Please provide your EcoCash number** for instant payment:
+
+Format: 077XXXXXXX or 0773XXXXXX or +263XXXXXXXXX
+
+💡 **Benefits of Paynow:**
+✅ Instant credit delivery (5-30 seconds)
+✅ Automatic payment processing
+✅ Secure & encrypted transactions
+✅ No manual verification needed
+
+Just reply with your EcoCash number and we'll handle the rest!"""
+        
+        # Store package info in session for phone number collection
+        from database.session_db import save_user_session
+        payment_session_data = {
+            'session_type': 'paynow_phone_collection',
+            'step': 'collecting_phone',
+            'custom_data': json.dumps({
+                'package_id': package_id,
+                'amount': selected_package['price'],
+                'credits': selected_package['credits'],
+                'timestamp': datetime.now().isoformat()
+            })
+        }
+        save_user_session(user_id, payment_session_data)
+        
+        whatsapp_service.send_message(user_id, message)
+        
+    except Exception as e:
+        logger.error(f"Error handling Paynow payment for {user_id}: {e}")
+        whatsapp_service.send_message(user_id, "❌ Error processing Paynow payment. Please try again.")
+
+def handle_manual_payment(user_id: str, package_id: str):
+    """Handle manual EcoCash SMS verification payment"""
+    try:
+        from services.advanced_credit_service import advanced_credit_service
+        
+        # Get package details
+        packages = advanced_credit_service.get_credit_packages()
+        selected_package = next((p for p in packages if p['id'] == package_id), None)
+        
+        if not selected_package:
+            whatsapp_service.send_message(user_id, "❌ Package not found. Please try again.")
+            return
+        
+        # Generate unique reference code
+        import uuid
+        reference_code = str(uuid.uuid4())[:8].upper()
+        
+        message = f"""💳 ✨ 𝗠𝗔𝗡𝗨𝗔𝗟 𝗘𝗖𝗢𝗖𝗔𝗦𝗛 𝗣𝗔𝗬𝗠𝗘𝗡𝗧 ✨ 💳
+╔═══════════════════════════════╗
+║       🚀 SECURE CHECKOUT 🚀     ║
+╚═══════════════════════════════╝
+
+📱 **𝗘𝗖𝗢𝗖𝗔𝗦𝗛 𝗣𝗔𝗬𝗠𝗘𝗡𝗧:**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📞 **Number**: +263 785494594
+💰 **Amount**: ${selected_package['price']:.2f} USD
+📋 **Reference**: `{reference_code}`
+
+🎯 **𝗦𝗜𝗠𝗣𝗟𝗘 𝗦𝗧𝗘𝗣𝗦:**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1️⃣ Send ${selected_package['price']:.2f} to +263 785494594
+2️⃣ Copy your EcoCash confirmation SMS
+3️⃣ Click "I SENT MONEY" below
+4️⃣ Paste SMS → Get credits in 5-30 mins!
+
+🛡️ **𝗪𝗵𝘆 𝗦𝗠𝗦 𝗩𝗲𝗿𝗶𝗳𝗶𝗰𝗮𝘁𝗶𝗼𝗻?**
+100% secure • Instant verification • Protected payments
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
+        
+        buttons = [
+            {"text": "✅ I SENT MONEY - SUBMIT PROOF", "callback_data": f"submit_proof_{package_id}_{reference_code}"},
+            {"text": "❓ NEED HELP?", "callback_data": "payment_help"},
+            {"text": "⬅️ BACK", "callback_data": f"select_package_{package_id}"}
+        ]
+        
+        # Store payment session in user session
+        from database.session_db import save_user_session
+        payment_session_data = {
+            'session_type': 'payment_flow',
+            'step': 'awaiting_proof',
+            'custom_data': json.dumps({
+                'package_id': package_id,
+                'reference_code': reference_code,
+                'amount': selected_package['price'],
+                'credits': selected_package['credits'],
+                'timestamp': datetime.now().isoformat()
+            })
+        }
+        save_user_session(user_id, payment_session_data)
+        
+        whatsapp_service.send_interactive_message(user_id, message, buttons)
+        
+    except Exception as e:
+        logger.error(f"Error handling manual payment for {user_id}: {e}")
+        whatsapp_service.send_message(user_id, "❌ Error processing manual payment. Please try again.")
+
+def handle_paynow_phone_collection(user_id: str, phone_number: str):
+    """Handle phone number collection for Paynow payment"""
+    try:
+        from services.paynow_service import paynow_service
+        from services.advanced_credit_service import advanced_credit_service
+        from database.session_db import get_user_session, save_user_session, clear_user_session
+        import re
+        
+        # Get user session
+        session = get_user_session(user_id)
+        if not session or session.get('session_type') != 'paynow_phone_collection':
+            whatsapp_service.send_message(user_id, "❌ No active Paynow session found. Please try again.")
+            return
+        
+        # Get custom data
+        custom_data = session.get('custom_data', {})
+        if isinstance(custom_data, str):
+            try:
+                custom_data = json.loads(custom_data)
+            except:
+                custom_data = {}
+        
+        package_id = custom_data.get('package_id')
+        amount = custom_data.get('amount')
+        credits = custom_data.get('credits')
+        
+        if not all([package_id, amount, credits]):
+            whatsapp_service.send_message(user_id, "❌ Session data incomplete. Please try again.")
+            clear_user_session(user_id)
+            return
+        
+        # Validate and normalize phone number
+        phone_cleaned = re.sub(r'[^\d+]', '', phone_number.strip())
+        
+        # Convert to international format
+        if phone_cleaned.startswith('077') or phone_cleaned.startswith('078'):
+            phone_cleaned = '+263' + phone_cleaned[1:]
+        elif phone_cleaned.startswith('263'):
+            phone_cleaned = '+' + phone_cleaned
+        elif not phone_cleaned.startswith('+263'):
+            whatsapp_service.send_message(user_id, 
+                "❌ **Invalid Phone Number Format**\n\n"
+                "Please provide a valid Zimbabwe EcoCash number:\n"
+                "• Format: 077XXXXXXX or 078XXXXXXX\n"
+                "• Example: 0771234567\n\n"
+                "Please send your EcoCash number again:")
+            return
+        
+        # Validate phone number length
+        if len(phone_cleaned) != 13:  # +263 + 9 digits
+            whatsapp_service.send_message(user_id, 
+                "❌ **Invalid Phone Number Length**\n\n"
+                "EcoCash numbers should have 10 digits after the country code.\n"
+                "Please send your EcoCash number again:")
+            return
+        
+        # Clear session to prevent duplicate submissions
+        clear_user_session(user_id)
+        
+        # Send processing message
+        whatsapp_service.send_message(user_id, 
+            f"⚡ **PROCESSING PAYNOW PAYMENT...**\n\n"
+            f"📱 Phone: {phone_cleaned}\n"
+            f"💰 Amount: ${amount:.2f} USD\n"
+            f"💎 Credits: {credits}\n\n"
+            f"🔄 Creating payment link... Please wait...")
+        
+        # Initiate Paynow payment
+        try:
+            payment_response = paynow_service.initiate_payment(
+                user_id=user_id,
+                amount=amount,
+                phone_number=phone_cleaned,
+                reference=f"CREDITS_{package_id}_{user_id}",
+                description=f"NerdX Quiz Credits - {credits} credits"
+            )
+            
+            if payment_response.get('success'):
+                poll_url = payment_response.get('poll_url')
+                redirect_url = payment_response.get('redirect_url')
+                
+                if redirect_url:
+                    # Success - send payment link
+                    message = f"""✅ **PAYNOW PAYMENT READY!** ⚡
+
+📱 **Payment Details:**
+• Phone: {phone_cleaned}
+• Amount: ${amount:.2f} USD
+• Credits: {credits}
+
+🚀 **Next Step:**
+Click the link below to complete your EcoCash payment:
+
+{redirect_url}
+
+⏱️ **What happens next:**
+1️⃣ Click the payment link
+2️⃣ Authorize the payment on your phone
+3️⃣ Credits will be added automatically (5-30 seconds)
+
+💡 **Payment expires in 5 minutes**"""
+                    
+                    whatsapp_service.send_message(user_id, message)
+                    
+                    # Store poll URL for payment status checking
+                    if poll_url:
+                        logger.info(f"Paynow payment initiated for {user_id}: poll_url={poll_url}")
+                
+                else:
+                    # Fallback to manual payment
+                    whatsapp_service.send_message(user_id, 
+                        "❌ **Payment Link Generation Failed**\n\n"
+                        "The instant payment system encountered an issue. "
+                        "Let's use manual payment instead.")
+                    handle_manual_payment(user_id, package_id)
+            
+            else:
+                error_msg = payment_response.get('error', 'Unknown error')
+                logger.error(f"Paynow payment failed for {user_id}: {error_msg}")
+                
+                whatsapp_service.send_message(user_id, 
+                    f"❌ **Payment Processing Failed**\n\n"
+                    f"Error: {error_msg}\n\n"
+                    f"Let's use manual payment instead.")
+                handle_manual_payment(user_id, package_id)
+        
+        except Exception as payment_error:
+            logger.error(f"Paynow payment exception for {user_id}: {payment_error}")
+            whatsapp_service.send_message(user_id, 
+                "❌ **Payment System Error**\n\n"
+                "The instant payment system is temporarily unavailable. "
+                "Let's use manual payment instead.")
+            handle_manual_payment(user_id, package_id)
+        
+    except Exception as e:
+        logger.error(f"Error handling Paynow phone collection for {user_id}: {e}")
+        whatsapp_service.send_message(user_id, "❌ Error processing phone number. Please try again.")
