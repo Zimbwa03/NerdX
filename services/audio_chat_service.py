@@ -107,8 +107,8 @@ class AudioChatService:
         """Get task by ID"""
         return audio_tasks.get(task_id)
 
-    def clean_text_for_audio(self, text: str, max_duration_seconds: int = 45) -> str:
-        """Clean text by removing markdown formatting and limit length for maximum 45 seconds of audio"""
+    def clean_text_for_audio(self, text: str, max_duration_seconds: int = 30) -> str:
+        """Clean text by removing markdown formatting and limit length for maximum 30 seconds of audio"""
         import re
 
         # Remove markdown bold/italic formatting
@@ -141,7 +141,7 @@ class AudioChatService:
         text = ' '.join(text.split())  # Normalize whitespace
 
         # Limit text length for maximum audio duration (approximately 150 words per minute)
-        # For 45 seconds max: 45/60 * 150 = ~112 words maximum
+        # For 30 seconds max: 30/60 * 150 = ~75 words maximum (reduced for faster generation)
         words = text.split()
         max_words = int(max_duration_seconds / 60 * 150)  # Dynamic calculation
 
@@ -325,22 +325,34 @@ class AudioChatService:
                 # Get voice name for Gemini TTS
                 voice_name = self.gemini_voices.get(voice_type, self.gemini_voices['female'])
 
-                # Generate audio directly without ThreadPoolExecutor to avoid worker timeout issues
+                # Generate audio with timeout protection
                 try:
-                    response = self.gemini_client.models.generate_content(
-                        model="gemini-2.5-flash-preview-tts",
-                        contents=text,
-                        config=types.GenerateContentConfig(
-                            response_modalities=["AUDIO"],
-                            speech_config=types.SpeechConfig(
-                                voice_config=types.VoiceConfig(
-                                    prebuilt_voice_config=types.PrebuiltVoiceConfig(
-                                        voice_name=voice_name
+                    import signal
+                    
+                    def timeout_handler(signum, frame):
+                        raise TimeoutError("Gemini AI audio generation timed out")
+                    
+                    # Set timeout to prevent worker timeout
+                    signal.signal(signal.SIGALRM, timeout_handler)
+                    signal.alarm(20)  # 20 second timeout
+                    
+                    try:
+                        response = self.gemini_client.models.generate_content(
+                            model="gemini-2.5-flash-preview-tts",
+                            contents=text,
+                            config=types.GenerateContentConfig(
+                                response_modalities=["AUDIO"],
+                                speech_config=types.SpeechConfig(
+                                    voice_config=types.VoiceConfig(
+                                        prebuilt_voice_config=types.PrebuiltVoiceConfig(
+                                            voice_name=voice_name
+                                        )
                                     )
                                 )
                             )
                         )
-                    )
+                    finally:
+                        signal.alarm(0)  # Cancel the alarm
 
                     # Extract audio data from response
                     if response.candidates and response.candidates[0].content.parts:
@@ -387,8 +399,14 @@ class AudioChatService:
 
                     logger.warning("No audio data received from Gemini AI - trying ElevenLabs fallback")
 
-                except Exception as e:
+                except (TimeoutError, Exception) as e:
                     logger.warning(f"Gemini audio generation failed: {e} - trying ElevenLabs fallback")
+                    # Immediately try ElevenLabs instead of continuing Gemini processing
+                    logger.info("🔄 Switching to ElevenLabs due to Gemini timeout/error")
+                    elevenlabs_result = self.generate_audio_with_elevenlabs(text, voice_type)
+                    if elevenlabs_result:
+                        logger.info("✅ ElevenLabs emergency fallback succeeded")
+                        return elevenlabs_result
             else:
                 logger.warning("Gemini AI client not configured - trying ElevenLabs fallback")
 
@@ -540,7 +558,7 @@ I'm here to help you learn, {user_name}, with:
 🔥 **Daily Streaks:** Maintain consistent learning
 
 💰 **Cost:** 10 credits per audio response
-⏱️ **Audio Duration:** Limited to 45 seconds maximum
+⏱️ **Audio Duration:** Limited to 30 seconds maximum
 💡 **Tip:** Send shorter questions for better audio quality
 
 🚀 *{user_name}, choose your voice and start earning XP:*"""
@@ -600,7 +618,7 @@ I'm here to help you learn, {user_name}, with:
 • Voice messages to chat (15 XP)
 
 💰 **Cost:** 10 credits per audio response
-⏱️ **Duration:** Up to 45 seconds of audio
+⏱️ **Duration:** Up to 30 seconds of audio
 🎯 **Earn XP** and level up with each interaction!
 
 Type 'end audio' to exit audio chat mode."""

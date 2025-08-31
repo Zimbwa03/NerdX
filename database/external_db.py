@@ -16,10 +16,10 @@ logger = logging.getLogger(__name__)
 
 # Supabase configuration - use environment variables
 SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY") 
+SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 
-# Use service role key as default for backward compatibility  
+# Use service role key as default for backward compatibility
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", SUPABASE_ANON_KEY)
 
 _is_configured = SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY and SUPABASE_ANON_KEY
@@ -50,28 +50,28 @@ def create_users_registration_table():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-        
+
         CREATE INDEX IF NOT EXISTS idx_users_registration_chat_id ON users_registration(chat_id);
         CREATE INDEX IF NOT EXISTS idx_users_registration_nerdx_id ON users_registration(nerdx_id);
         CREATE INDEX IF NOT EXISTS idx_users_registration_referred_by ON users_registration(referred_by_nerdx_id);
-        
+
         -- Enable Row Level Security
         ALTER TABLE users_registration ENABLE ROW LEVEL SECURITY;
-        
+
         -- Create policy to allow all operations (adjust as needed for production)
         DROP POLICY IF EXISTS "Allow all operations on users_registration" ON users_registration;
         CREATE POLICY "Allow all operations on users_registration" ON users_registration
             FOR ALL USING (true) WITH CHECK (true);
         """
-        
+
         headers = {
             "apikey": SUPABASE_SERVICE_ROLE_KEY,
             "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
             "Content-Type": "application/json"
         }
-        
+
         # Try multiple methods to create the table
-        
+
         # Check if table already exists by trying to query it
         try:
             logger.info("Checking if users_registration table exists...")
@@ -81,7 +81,7 @@ def create_users_registration_table():
                 return True
         except Exception as check_error:
             logger.warning(f"Table check failed: {check_error}")
-        
+
         # If table doesn't exist, provide clear instructions
         logger.warning("Users registration table does not exist. Please create it manually in Supabase SQL Editor:")
         logger.warning("""
@@ -96,22 +96,22 @@ def create_users_registration_table():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-        
+
         CREATE INDEX IF NOT EXISTS idx_users_registration_chat_id ON users_registration(chat_id);
         CREATE INDEX IF NOT EXISTS idx_users_registration_nerdx_id ON users_registration(nerdx_id);
         CREATE INDEX IF NOT EXISTS idx_users_registration_referred_by ON users_registration(referred_by_nerdx_id);
-        
+
         -- Enable Row Level Security
         ALTER TABLE users_registration ENABLE ROW LEVEL SECURITY;
-        
+
         -- Create policy to allow all operations (adjust as needed for production)
         DROP POLICY IF EXISTS "Allow all operations on users_registration" ON users_registration;
         CREATE POLICY "Allow all operations on users_registration" ON users_registration
             FOR ALL USING (true) WITH CHECK (true);
         """)
-        
+
         return False
-            
+
     except Exception as e:
         logger.error(f"Error creating users_registration table: {e}")
         return False
@@ -135,18 +135,18 @@ def create_payment_transactions_table():
             approved_at TIMESTAMP,
             credits_added INTEGER DEFAULT 0
         );
-        
+
         CREATE INDEX IF NOT EXISTS idx_payment_transactions_user_id ON payment_transactions(user_id);
         CREATE INDEX IF NOT EXISTS idx_payment_transactions_status ON payment_transactions(status);
         CREATE INDEX IF NOT EXISTS idx_payment_transactions_created_at ON payment_transactions(created_at);
         """
-        
+
         # Check if table already exists by trying to query it
         test_result = make_supabase_request("GET", "payment_transactions", limit=1, use_service_role=True)
         if test_result is not None:
             logger.info("Payment transactions table already exists and is accessible")
             return True
-        
+
         # If table doesn't exist, we'll need to create it manually in Supabase
         logger.warning("Payment transactions table does not exist. Please create it manually in Supabase SQL Editor:")
         logger.warning("""
@@ -164,21 +164,21 @@ def create_payment_transactions_table():
             approved_at TIMESTAMP,
             credits_added INTEGER DEFAULT 0
         );
-        
+
         CREATE INDEX IF NOT EXISTS idx_payment_transactions_user_id ON payment_transactions(user_id);
         CREATE INDEX IF NOT EXISTS idx_payment_transactions_status ON payment_transactions(status);
         CREATE INDEX IF NOT EXISTS idx_payment_transactions_created_at ON payment_transactions(created_at);
         """)
-        
+
         return True
-        
+
     except Exception as e:
         logger.error(f"Error creating payment_transactions table: {e}")
         return False
 
 def make_supabase_request(method, table, data=None, select="*", filters=None, limit=None, offset=None, use_service_role=False):
     """Make a request to Supabase REST API with proper authentication"""
-    
+
     # Use SERVICE_ROLE_KEY for write operations and admin tasks, ANON_KEY for reads
     if method in ["POST", "PATCH", "DELETE"] or use_service_role:
         api_key = SUPABASE_SERVICE_ROLE_KEY
@@ -186,7 +186,7 @@ def make_supabase_request(method, table, data=None, select="*", filters=None, li
     else:
         api_key = SUPABASE_ANON_KEY
         logger.info(f"Using ANON_KEY for {method} operation on {table}")
-    
+
     headers = {
         "apikey": api_key,
         "Authorization": f"Bearer {api_key}",
@@ -222,7 +222,7 @@ def make_supabase_request(method, table, data=None, select="*", filters=None, li
             response = requests.post(url, headers=headers, json=data, params=params, timeout=30)
         elif method == "PATCH":
             response = requests.patch(url, headers=headers, json=data, params=params, timeout=30)
-        
+
         if response is None:
             logger.error(f"Unsupported HTTP method: {method}")
             return None
@@ -445,6 +445,7 @@ def add_credits(user_id, amount, transaction_type="purchase", description="Credi
         # Log credit transaction
         transaction = {
             "user_id": user_id,
+            "action": transaction_type,  # Required field for credit_transactions table
             "transaction_type": transaction_type,
             "credits_change": -amount,  # Negative because it's an addition
             "balance_before": current_credits,
@@ -492,14 +493,14 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
     """Create new user registration - MUST succeed in Supabase or fail completely"""
     try:
         logger.info(f"🔄 Creating user registration for {chat_id} with referral: {referred_by_nerdx_id}")
-        
+
         # Ensure the users_registration table exists
         logger.info("📋 Ensuring users_registration table exists...")
         table_created = create_users_registration_table()
         if not table_created:
             logger.error(f"❌ Failed to create/verify users_registration table")
             raise Exception("Database table creation failed")
-        
+
         # Generate unique NerdX ID
         nerdx_id = generate_nerdx_id()
         logger.info(f"🆔 Generated NerdX ID: {nerdx_id}")
@@ -515,11 +516,11 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
             else:
                 # Assume it's already in YYYY-MM-DD format
                 formatted_date = date_of_birth
-                
+
             # Validate the converted date
             from datetime import datetime
             datetime.strptime(formatted_date, '%Y-%m-%d')
-            
+
         except (ValueError, IndexError) as e:
             logger.error(f"Invalid date format: {date_of_birth}, error: {e}")
             # Try to parse as YYYY-MM-DD in case it's already formatted
@@ -529,7 +530,7 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
             except ValueError:
                 logger.error(f"Could not parse date in any format: {date_of_birth}")
                 raise Exception(f"Invalid date format: {date_of_birth}")
-        
+
         # Prepare registration data
         registration_data = {
             'chat_id': chat_id,
@@ -540,27 +541,27 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
             'referred_by_nerdx_id': referred_by_nerdx_id,
             'registration_date': datetime.utcnow().isoformat()
         }
-        
+
         logger.info(f"📝 Registration data prepared: {registration_data}")
 
         # Execute Supabase registration - using SERVICE_ROLE_KEY for write operation
         logger.info("🔄 Attempting Supabase user registration...")
         result = make_supabase_request("POST", "users_registration", registration_data, use_service_role=True)
-        
+
         # Validate result
         if not result:
             logger.error(f"❌ Supabase registration failed - no response")
             raise Exception("Supabase registration returned no response")
-        
+
         if not isinstance(result, list) or len(result) == 0:
             logger.error(f"❌ Supabase registration failed - invalid response format: {result}")
             raise Exception("Supabase registration returned invalid response")
-        
+
         # Success!
         registered_user = result[0]
         logger.info(f"✅ User registration SUCCESSFUL for {chat_id}")
         logger.info(f"🎉 User ID: {registered_user.get('id')}, NerdX ID: {registered_user.get('nerdx_id')}")
-        
+
         # Create or update user_stats entry for the new user
         try:
             user_stats_data = {
@@ -576,24 +577,24 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
                 'credits': 75,
                 'last_activity': datetime.utcnow().isoformat()
             }
-            
+
             # Create user stats entry
             stats_result = make_supabase_request("POST", "user_stats", user_stats_data, use_service_role=True)
             if stats_result:
                 logger.info(f"✅ User stats created for {chat_id}")
             else:
                 logger.warning(f"⚠️ Failed to create user stats for {chat_id}")
-                
+
         except Exception as stats_error:
             logger.error(f"❌ Error creating user stats: {stats_error}")
             # Don't fail registration if stats creation fails
-        
+
         return registered_user
 
     except Exception as e:
         logger.error(f"💥 CRITICAL: User registration FAILED for {chat_id}: {e}", exc_info=True)
         logger.error(f"🚫 Registration cannot proceed without Supabase success")
-        
+
         # NO FALLBACKS - must fail if Supabase fails
         return None
 
@@ -638,15 +639,15 @@ def add_referral_credits(referred_by_nerdx_id, new_user_chat_id):
 
         if success:
             logger.info(f"Added {referral_bonus} referral credits to {referrer_name} ({referrer_chat_id}) for referring {full_new_user_name} ({new_user_chat_id})")
-            
+
             # 🎉 SEND WHATSAPP NOTIFICATION TO REFERRER
             try:
                 from services.whatsapp_service import WhatsAppService
                 whatsapp_service = WhatsAppService()
-                
+
                 # Get referrer's current credit balance
                 current_credits = get_user_credits(referrer_chat_id)
-                
+
                 notification_message = f"""🎉 **Congratulations {referrer_name}!**
 
 🔗 **{full_new_user_name}** just registered using your referral link!
@@ -660,11 +661,11 @@ Type 'menu' to continue learning."""
 
                 whatsapp_service.send_message(referrer_chat_id, notification_message)
                 logger.info(f"✅ Referral notification sent to {referrer_name} ({referrer_chat_id})")
-                
+
             except Exception as notification_error:
                 logger.error(f"❌ Failed to send referral notification to {referrer_chat_id}: {notification_error}")
                 # Don't fail the whole process if notification fails
-            
+
             return True
         else:
             logger.error(f"Failed to add referral credits to {referrer_chat_id}")
@@ -731,28 +732,28 @@ def get_random_exam_question(subject=None, user_id=None, avoid_recent=True):
     try:
         # Import question history service for repetition prevention
         from services.question_history_service import question_history_service
-        
+
         filters = {}
         max_attempts = 3  # Try multiple times to avoid repeats
-        
+
         for attempt in range(max_attempts):
             all_questions = []
-            
+
             if subject:
                 # For Combined Science, get questions from Biology, Chemistry, Physics categories
                 if subject == "Combined Science":
                     # Get questions from all science subjects with better randomization
                     science_subjects = ["Biology", "Chemistry", "Physics"]
-                    
+
                     for science_subject in science_subjects:
                         subject_filters = {"category": f"eq.{science_subject}"}
-                        
+
                         # Use random offset for better distribution (attempt-based)
                         offset = random.randint(0, 20) + (attempt * 30)
                         questions = make_supabase_request("GET", "questions", filters=subject_filters, limit=50, offset=offset)
                         if questions:
                             all_questions.extend(questions)
-                    
+
                     # Apply question history filtering if user provided
                     if user_id and avoid_recent and all_questions:
                         filtered_questions = question_history_service.filter_questions_by_history(
@@ -760,23 +761,23 @@ def get_random_exam_question(subject=None, user_id=None, avoid_recent=True):
                         )
                         if filtered_questions:
                             all_questions = filtered_questions
-                    
+
                     if all_questions:
                         # Enhanced random selection with multiple shuffle
                         random.shuffle(all_questions)
                         question = random.choice(all_questions)
-                        
+
                         # Ensure consistency in field names
                         if 'answer' in question:
                             question['correct_answer'] = question['answer']
-                            
+
                         # Add to history if user provided
                         if user_id and question.get('id'):
                             question_history_service.add_question_to_history(user_id, "Combined Science", str(question['id']))
-                            
+
                         logger.info(f"Retrieved combined science question ID: {question.get('id')} from category: {question.get('category')} (attempt {attempt + 1})")
                         return question
-                        
+
                 else:
                     filters["subject"] = f"eq.{subject}"
 
@@ -786,7 +787,7 @@ def get_random_exam_question(subject=None, user_id=None, avoid_recent=True):
                 if random.random() < 0.4:  # 40% chance to prioritize image questions
                     image_filters = filters.copy()
                     image_filters["image_url"] = "not.is.null"
-                    
+
                     # Random offset for image questions
                     offset = random.randint(0, 10) + (attempt * 20)
                     result = make_supabase_request("GET", "questions", filters=image_filters, limit=40, offset=offset)
@@ -800,19 +801,19 @@ def get_random_exam_question(subject=None, user_id=None, avoid_recent=True):
                             )
                             if filtered_result:
                                 result = filtered_result
-                        
+
                         random.shuffle(result)
                         question = random.choice(result)
-                        
+
                         # Ensure consistency in field names
                         if 'answer' in question:
                             question['correct_answer'] = question['answer']
-                            
+
                         # Add to history
                         if user_id and question.get('id'):
                             subject_key = subject or "General"
                             question_history_service.add_question_to_history(user_id, subject_key, str(question['id']))
-                            
+
                         logger.info(f"Retrieved image question ID: {question.get('id')} (attempt {attempt + 1})")
                         return question
 
@@ -829,19 +830,19 @@ def get_random_exam_question(subject=None, user_id=None, avoid_recent=True):
                         )
                         if filtered_result:
                             result = filtered_result
-                    
+
                     random.shuffle(result)
                     question = random.choice(result)
-                    
+
                     # Ensure consistency in field names
                     if 'answer' in question:
                         question['correct_answer'] = question['answer']
-                        
+
                     # Add to history
                     if user_id and question.get('id'):
                         subject_key = subject or "General"
                         question_history_service.add_question_to_history(user_id, subject_key, str(question['id']))
-                        
+
                     logger.info(f"Retrieved exam question ID: {question.get('id')} (attempt {attempt + 1})")
                     return question
 
@@ -1041,40 +1042,40 @@ def diagnose_supabase_issues():
     """Comprehensive Supabase diagnostics"""
     try:
         logger.info("🔍 Starting Supabase diagnostics...")
-        
+
         # Check environment variables
         if not SUPABASE_URL:
             logger.error("❌ SUPABASE_URL environment variable not set")
             return False
-        
+
         if not SUPABASE_KEY:
             logger.error("❌ SUPABASE_KEY environment variable not set")
             return False
-            
+
         logger.info(f"✅ Environment variables configured")
         logger.info(f"📍 Supabase URL: {SUPABASE_URL}")
         logger.info(f"🔑 Service Role Key: {SUPABASE_SERVICE_ROLE_KEY[:20]}...")
         logger.info(f"🔑 Anon Key: {SUPABASE_ANON_KEY[:20]}...")
-        
+
         # Test different endpoints
         endpoints_to_test = ['user_stats', 'users_registration', 'payment_transactions']
-        
+
         for endpoint in endpoints_to_test:
             try:
                 logger.info(f"🧪 Testing {endpoint} table...")
                 result = make_supabase_request("GET", endpoint, limit=1)
-                
+
                 if result is not None:
                     logger.info(f"✅ {endpoint} table accessible")
                 else:
                     logger.warning(f"⚠️ {endpoint} table access failed")
-                    
+
             except Exception as e:
                 logger.error(f"❌ {endpoint} table test error: {e}")
-        
+
         logger.info("🔍 Diagnostics complete")
         return True
-        
+
     except Exception as e:
         logger.error(f"💥 Diagnostics failed: {e}")
         return False
@@ -1084,7 +1085,7 @@ def test_connection():
     try:
         # Run diagnostics first
         diagnose_supabase_issues()
-        
+
         # Simple test query to verify connection
         result = make_supabase_request("GET", "user_stats", limit=1)
         return result is not None
