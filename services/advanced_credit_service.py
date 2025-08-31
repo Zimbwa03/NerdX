@@ -59,6 +59,19 @@ class AdvancedCreditService:
             logger.error(f"Error formatting credit display: {e}")
             return "💳 **Your Credits: Error**"
     
+    def get_credit_cost_for_action(self, action: str, difficulty: Optional[str] = None) -> int:
+        """Get credit cost for a specific action"""
+        return self.get_credit_cost(action, difficulty)
+    
+    def refund_credits(self, user_id: str, amount: int, reason: str = "Refund"):
+        """Refund credits to user account"""
+        try:
+            add_credits(user_id, amount, "refund", reason)
+            return True
+        except Exception as e:
+            logger.error(f"Error refunding credits to {user_id}: {e}")
+            return False
+
     def check_and_deduct_credits(self, user_id: str, action: str, difficulty: Optional[str] = None) -> Dict:
         """Check if user has sufficient credits and deduct them"""
         try:
