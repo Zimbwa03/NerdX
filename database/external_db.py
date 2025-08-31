@@ -509,13 +509,26 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
             if '/' in date_of_birth:
                 # Parse DD/MM/YYYY format
                 day, month, year = date_of_birth.split('/')
+                # Ensure proper formatting with zero padding
                 formatted_date = f"{year}-{month.zfill(2)}-{day.zfill(2)}"
+                logger.info(f"Converted date from {date_of_birth} to {formatted_date}")
             else:
-                # Assume it's already in correct format
+                # Assume it's already in YYYY-MM-DD format
                 formatted_date = date_of_birth
-        except (ValueError, IndexError):
-            logger.error(f"Invalid date format: {date_of_birth}")
-            formatted_date = date_of_birth  # Fallback to original
+                
+            # Validate the converted date
+            from datetime import datetime
+            datetime.strptime(formatted_date, '%Y-%m-%d')
+            
+        except (ValueError, IndexError) as e:
+            logger.error(f"Invalid date format: {date_of_birth}, error: {e}")
+            # Try to parse as YYYY-MM-DD in case it's already formatted
+            try:
+                datetime.strptime(date_of_birth, '%Y-%m-%d')
+                formatted_date = date_of_birth
+            except ValueError:
+                logger.error(f"Could not parse date in any format: {date_of_birth}")
+                raise Exception(f"Invalid date format: {date_of_birth}")
         
         # Prepare registration data
         registration_data = {
@@ -547,6 +560,33 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
         registered_user = result[0]
         logger.info(f"✅ User registration SUCCESSFUL for {chat_id}")
         logger.info(f"🎉 User ID: {registered_user.get('id')}, NerdX ID: {registered_user.get('nerdx_id')}")
+        
+        # Create or update user_stats entry for the new user
+        try:
+            user_stats_data = {
+                'user_id': chat_id,
+                'username': f"{name}_{surname}".lower(),
+                'first_name': name,
+                'total_attempts': 0,
+                'correct_answers': 0,
+                'xp_points': 0,
+                'level': 1,
+                'streak': 0,
+                'max_streak': 0,
+                'credits': 75,
+                'last_activity': datetime.utcnow().isoformat()
+            }
+            
+            # Create user stats entry
+            stats_result = make_supabase_request("POST", "user_stats", user_stats_data, use_service_role=True)
+            if stats_result:
+                logger.info(f"✅ User stats created for {chat_id}")
+            else:
+                logger.warning(f"⚠️ Failed to create user stats for {chat_id}")
+                
+        except Exception as stats_error:
+            logger.error(f"❌ Error creating user stats: {stats_error}")
+            # Don't fail registration if stats creation fails
         
         return registered_user
 
