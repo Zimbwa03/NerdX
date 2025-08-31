@@ -421,6 +421,7 @@ def deduct_credits(user_id, amount, transaction_type, description):
         # Log credit transaction
         transaction = {
             "user_id": user_id,
+            "action": transaction_type,  # Required field for credit_transactions table
             "transaction_type": transaction_type,
             "credits_change": amount,
             "balance_before": current_credits,

@@ -325,34 +325,56 @@ class AudioChatService:
                 # Get voice name for Gemini TTS
                 voice_name = self.gemini_voices.get(voice_type, self.gemini_voices['female'])
 
-                # Generate audio with timeout protection
+                # Generate audio with thread-based timeout protection
                 try:
-                    import signal
+                    import threading
+                    import queue
                     
-                    def timeout_handler(signum, frame):
-                        raise TimeoutError("Gemini AI audio generation timed out")
+                    # Use thread-based timeout instead of signal (safer with gunicorn)
+                    result_queue = queue.Queue()
+                    exception_queue = queue.Queue()
                     
-                    # Set timeout to prevent worker timeout
-                    signal.signal(signal.SIGALRM, timeout_handler)
-                    signal.alarm(20)  # 20 second timeout
-                    
-                    try:
-                        response = self.gemini_client.models.generate_content(
-                            model="gemini-2.5-flash-preview-tts",
-                            contents=text,
-                            config=types.GenerateContentConfig(
-                                response_modalities=["AUDIO"],
-                                speech_config=types.SpeechConfig(
-                                    voice_config=types.VoiceConfig(
-                                        prebuilt_voice_config=types.PrebuiltVoiceConfig(
-                                            voice_name=voice_name
+                    def generate_audio_thread():
+                        try:
+                            response = self.gemini_client.models.generate_content(
+                                model="gemini-2.5-flash-preview-tts",
+                                contents=text,
+                                config=types.GenerateContentConfig(
+                                    response_modalities=["AUDIO"],
+                                    speech_config=types.SpeechConfig(
+                                        voice_config=types.VoiceConfig(
+                                            prebuilt_voice_config=types.PrebuiltVoiceConfig(
+                                                voice_name=voice_name
+                                            )
                                         )
                                     )
                                 )
                             )
-                        )
-                    finally:
-                        signal.alarm(0)  # Cancel the alarm
+                            result_queue.put(response)
+                        except Exception as e:
+                            exception_queue.put(e)
+                    
+                    # Start the generation in a separate thread
+                    thread = threading.Thread(target=generate_audio_thread)
+                    thread.daemon = True
+                    thread.start()
+                    
+                    # Wait for result with timeout
+                    thread.join(timeout=15)  # 15 second timeout
+                    
+                    if thread.is_alive():
+                        logger.warning("Gemini audio generation timed out after 15 seconds")
+                        raise TimeoutError("Gemini AI audio generation timed out")
+                    
+                    # Check for exceptions
+                    if not exception_queue.empty():
+                        raise exception_queue.get()
+                    
+                    # Get the result
+                    if not result_queue.empty():
+                        response = result_queue.get()
+                    else:
+                        raise Exception("No response received from Gemini")
 
                     # Extract audio data from response
                     if response.candidates and response.candidates[0].content.parts:
@@ -381,8 +403,13 @@ class AudioChatService:
                                         audio_path
                                     ], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-                                    # Send PCM data to ffmpeg
-                                    stdout, stderr = process.communicate(input=part.inline_data.data, timeout=15)
+                                    # Send PCM data to ffmpeg with timeout
+                                    try:
+                                        stdout, stderr = process.communicate(input=part.inline_data.data, timeout=10)
+                                    except subprocess.TimeoutExpired:
+                                        process.kill()
+                                        logger.error("FFmpeg conversion timed out")
+                                        continue
 
                                     if process.returncode == 0:
                                         # Verify the file was created and has content
@@ -401,7 +428,7 @@ class AudioChatService:
 
                 except (TimeoutError, Exception) as e:
                     logger.warning(f"Gemini audio generation failed: {e} - trying ElevenLabs fallback")
-                    # Immediately try ElevenLabs instead of continuing Gemini processing
+                    # Continue to try ElevenLabs fallback
                     logger.info("🔄 Switching to ElevenLabs due to Gemini timeout/error")
                     elevenlabs_result = self.generate_audio_with_elevenlabs(text, voice_type)
                     if elevenlabs_result:
@@ -731,18 +758,50 @@ Type 'end audio' to exit audio chat mode."""
             clean_response = self.clean_text_for_audio(ai_response, max_duration_seconds=45)
             audio_path = None
 
-            # Generate audio with simple timeout
+            # Generate audio with timeout protection
             try:
                 logger.info("Starting audio generation...")
-                # Generate audio with shorter timeout to prevent worker issues
-                audio_path = self.generate_audio(clean_response, voice_type)
-                if audio_path:
-                    logger.info(f"Audio generation completed: {audio_path}")
+                # Use threading to prevent worker timeout issues
+                import threading
+                import queue
+                
+                audio_result_queue = queue.Queue()
+                audio_exception_queue = queue.Queue()
+                
+                def audio_generation_thread():
+                    try:
+                        result = self.generate_audio(clean_response, voice_type)
+                        audio_result_queue.put(result)
+                    except Exception as e:
+                        audio_exception_queue.put(e)
+                
+                # Start audio generation in separate thread
+                audio_thread = threading.Thread(target=audio_generation_thread)
+                audio_thread.daemon = True
+                audio_thread.start()
+                
+                # Wait for completion with timeout
+                audio_thread.join(timeout=25)  # 25 second max timeout
+                
+                if audio_thread.is_alive():
+                    logger.warning("Audio generation timed out after 25 seconds - sending text response")
+                    audio_path = None
+                elif not audio_exception_queue.empty():
+                    error = audio_exception_queue.get()
+                    logger.error(f"Audio generation error: {error}")
+                    audio_path = None
+                elif not audio_result_queue.empty():
+                    audio_path = audio_result_queue.get()
+                    if audio_path:
+                        logger.info(f"Audio generation completed: {audio_path}")
+                    else:
+                        logger.warning("Audio generation failed - no audio file created")
                 else:
-                    logger.warning("Audio generation failed - no audio file created")
+                    logger.warning("Audio generation completed but no result")
+                    audio_path = None
 
             except Exception as e:
-                logger.error(f"Audio generation error: {e}")
+                logger.error(f"Audio generation wrapper error: {e}")
                 audio_path = None
 
             # Award XP and update stats regardless of audio success
