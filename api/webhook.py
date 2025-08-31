@@ -853,11 +853,26 @@ def handle_image_message(user_id: str, image_data: dict):
 
         if not credit_check['sufficient']:
             shortage = credit_check['shortage']
-            whatsapp_service.send_message(
-                user_id,
-                f"❌ Insufficient credits. You need {shortage} more credits for image solving."
-            )
-            show_credit_packages(user_id)
+            current_credits = credit_check.get('current_credits', 0)
+            required_credits = credit_check.get('required_credits', 0)
+            
+            insufficient_msg = f"""💰 **Need More Credits!** 💰
+
+📸 **Image Math Solver**
+
+💳 **Credit Status:**
+• Current Credits: {current_credits}
+• Required Credits: {required_credits}
+• Need: {shortage} more credits
+
+💡 Upload photos of math problems and get instant solutions!"""
+            
+            buttons = [
+                {"text": "💳 Buy Credits", "callback_data": "buy_credits"},
+                {"text": "🔙 Back", "callback_data": "main_menu"}
+            ]
+            
+            whatsapp_service.send_interactive_message(user_id, insufficient_msg, buttons)
             return
 
         # Check rate limiting for image processing
@@ -1884,8 +1899,27 @@ def handle_graph_request(user_id: str, function_text: str):
     """Handle graph generation requests"""
     try:
         # Check credits
-        if not credit_system.can_use_feature(user_id, "graph"):
-            whatsapp_service.send_message(user_id, "❌ Insufficient credits for graph generation.")
+        current_credits = get_user_credits(user_id)
+        required_credits = advanced_credit_service.get_credit_cost('math_graph_practice')
+        
+        if current_credits < required_credits:
+            insufficient_msg = f"""💰 **Need More Credits!** 💰
+
+📊 **Math Graph Practice**
+
+💳 **Credit Status:**
+• Current Credits: {current_credits}
+• Required Credits: {required_credits}
+• Need: {required_credits - current_credits} more credits
+
+📈 Visualize mathematical functions with interactive graphs!"""
+            
+            buttons = [
+                {"text": "💳 Buy Credits", "callback_data": "buy_credits"},
+                {"text": "🔙 Back", "callback_data": "main_menu"}
+            ]
+            
+            whatsapp_service.send_interactive_message(user_id, insufficient_msg, buttons)
             return
 
         # Generate graph using graph service
@@ -2725,12 +2759,24 @@ def generate_and_send_question(chat_id: str, subject: str, topic: str, difficult
 
         # Check if user has enough credits
         if credits < credit_cost:
-            whatsapp_service.send_message(
-                chat_id,
-                f"❌ Insufficient credits! You need {credit_cost} credits for a {difficulty} question.\n"
-                f"💰 Current balance: {credits} credits\n\n"
-                "💳 Top up your credits to continue learning!"
-            )
+            insufficient_msg = f"""💰 **Need More Credits!** 💰
+
+🧬 **{subject} {difficulty} Question**
+📚 Topic: {topic}
+
+💳 **Credit Status:**
+• Current Credits: {credits}
+• Required Credits: {credit_cost}
+• Need: {credit_cost - credits} more credits
+
+🎯 Master {subject} with personalized questions!"""
+            
+            buttons = [
+                {"text": "💳 Buy Credits", "callback_data": "buy_credits"},
+                {"text": "🔙 Back", "callback_data": "main_menu"}
+            ]
+            
+            whatsapp_service.send_interactive_message(chat_id, insufficient_msg, buttons)
             return
 
         # Send loading message with more specific text
@@ -2766,14 +2812,17 @@ def generate_and_send_question(chat_id: str, subject: str, topic: str, difficult
         # Deduct credits
         deduct_credits(chat_id, credit_cost, f"{difficulty}_{subject.lower()}_question", f"{difficulty} {subject} question on {topic}")
 
+        # Get updated credits for display
+        new_credits = credits - credit_cost
+        
         # Send the question
-        send_question_to_user(chat_id, question_data, subject, topic, difficulty, user_name)
+        send_question_to_user(chat_id, question_data, subject, topic, difficulty, user_name, credit_cost, new_credits)
 
     except Exception as e:
         logger.error(f"Error generating question for {chat_id}: {e}", exc_info=True)
         whatsapp_service.send_message(chat_id, f"❌ Error generating question: {str(e)}\nPlease try again.")
 
-def send_question_to_user(chat_id: str, question_data: Dict, subject: str, topic: str, difficulty: str, user_name: str):
+def send_question_to_user(chat_id: str, question_data: Dict, subject: str, topic: str, difficulty: str, user_name: str, credits_used: int = 0, new_balance: int = 0):
     """Send formatted question to user"""
     try:
         logger.info(f"Sending question to user {chat_id}: {subject}/{topic}/{difficulty}")
@@ -2782,7 +2831,11 @@ def send_question_to_user(chat_id: str, question_data: Dict, subject: str, topic
         if subject in ["Biology", "Chemistry", "Physics"]:
             # Science MCQ format
             message = f"🧪 *{subject} - {topic}*\n"
-            message += f"👤 {user_name} | 🎯 {difficulty.title()} Level | 💎 {question_data.get('points', 10)} points\n\n"
+            message += f"👤 {user_name} | 🎯 {difficulty.title()} Level | 💎 {question_data.get('points', 10)} points\n"
+            if credits_used > 0:
+                message += f"💳 **Credits Used:** {credits_used} | 💰 **Balance:** {new_balance}\n\n"
+            else:
+                message += "\n"
             message += f"❓ *Question:*\n{question_data['question']}\n\n"
 
             if 'options' in question_data and isinstance(question_data['options'], dict):
