@@ -554,9 +554,17 @@ def get_credit_statistics():
                 'recent_transactions': []
             })
         
-        # Calculate statistics
+        # Calculate statistics - handle null credits properly
         total_users = len(users_data)
-        credits_list = [user.get('credits', 0) for user in users_data]
+        # Convert all credits to integers, replacing None with 0
+        credits_list = []
+        for user in users_data:
+            credits = user.get('credits')
+            if credits is None:
+                credits_list.append(0)
+            else:
+                credits_list.append(int(credits))
+        
         total_credits = sum(credits_list)
         avg_credits = total_credits / total_users if total_users > 0 else 0
         min_credits = min(credits_list) if credits_list else 0
@@ -569,15 +577,15 @@ def get_credit_statistics():
         stats = (total_users, total_credits, avg_credits, min_credits, max_credits, 
                 low_credit_users, medium_credit_users, high_credit_users)
         
-        # Get top users by credits from Supabase
-        top_users_data = sorted(users_data, key=lambda u: u.get('credits', 0), reverse=True)[:10]
+        # Get top users by credits from Supabase - handle null credits properly
+        top_users_data = sorted(users_data, key=lambda u: u.get('credits') or 0, reverse=True)[:10]
         top_users = []
         for user in top_users_data:
             top_users.append((
                 user.get('chat_id', ''),
                 f"{user.get('name', '')} {user.get('surname', '')}".strip(),
                 user.get('name', ''),
-                user.get('credits', 0)
+                user.get('credits') or 0  # Handle null credits
             ))
         
         # Get recent credit transactions from Supabase
@@ -585,10 +593,13 @@ def get_credit_statistics():
             transactions_data = make_supabase_request(
                 "GET", 
                 "credit_transactions",
-                {},
-                order_by="created_at.desc",
-                limit=10
+                {}
             )
+            # Sort by created_at in memory since we can't use order_by parameter
+            if transactions_data:
+                transactions_data = sorted(transactions_data, 
+                                         key=lambda x: x.get('created_at', ''), 
+                                         reverse=True)[:10]
             recent_transactions = []
             if transactions_data:
                 for tx in transactions_data:
