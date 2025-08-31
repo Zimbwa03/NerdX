@@ -2753,9 +2753,9 @@ def generate_and_send_question(chat_id: str, subject: str, topic: str, difficult
 
         credits = user_stats.get('credits', 0)
 
-        # Get credit cost based on difficulty
-        credit_costs = {'easy': 5, 'medium': 10, 'difficult': 15}
-        credit_cost = credit_costs.get(difficulty, 10)
+        # Get credit cost based on difficulty (standardized to 1 credit)
+        credit_costs = {'easy': 1, 'medium': 1, 'difficult': 1}
+        credit_cost = credit_costs.get(difficulty, 1)
 
         # Check if user has enough credits
         if credits < credit_cost:

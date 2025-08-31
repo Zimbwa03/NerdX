@@ -62,17 +62,17 @@ TOPICS = {
 DIFFICULTY_LEVELS = {
     'easy': {
         'name': 'Easy',
-        'credit_cost': 5,
+        'credit_cost': 1,
         'point_value': 10
     },
     'medium': {
         'name': 'Medium',
-        'credit_cost': 10,
+        'credit_cost': 1,
         'point_value': 20
     },
     'difficult': {
         'name': 'Difficult',
-        'credit_cost': 15,
+        'credit_cost': 1,
         'point_value': 30
     }
 }
