@@ -177,8 +177,20 @@ def system_settings():
     """Get or update system settings"""
     try:
         if request.method == 'GET':
-            # Return current system settings
-            settings = {
+            # Get system settings from database
+            import psycopg2
+            import json
+            
+            conn_string = os.getenv('DATABASE_URL') or os.getenv('SUPABASE_DATABASE_URL')
+            conn = psycopg2.connect(conn_string)
+            cursor = conn.cursor()
+            
+            # Get all settings from database
+            cursor.execute("SELECT setting_key, setting_value, setting_type FROM system_settings")
+            db_settings = cursor.fetchall()
+            
+            # Default settings
+            default_settings = {
                 'credit_costs': {
                     'math_easy': 5,
                     'math_medium': 10,
@@ -193,13 +205,13 @@ def system_settings():
                     'graph_generation': 10
                 },
                 'rate_limits': {
-                    'session_cooldown': 5,  # Updated from 30 to 5 seconds
+                    'session_cooldown': 5,
                     'generation_timeout': 120,
-                    'text_message': 3,      # New: 3 seconds between text messages
-                    'image_message': 10,    # New: 10 seconds between image uploads
-                    'quiz_action': 5,       # New: 5 seconds between quiz actions
-                    'ai_generation': 15,    # New: 15 seconds between AI generations
-                    'menu_navigation': 1    # New: 1 second between menu navigation
+                    'text_message': 3,
+                    'image_message': 10,
+                    'quiz_action': 5,
+                    'ai_generation': 15,
+                    'menu_navigation': 1
                 },
                 'welcome_credits': 50,
                 'referral_credits': {
@@ -208,18 +220,103 @@ def system_settings():
                 }
             }
             
-            return jsonify(settings)
+            # Apply database settings over defaults
+            for setting_key, setting_value, setting_type in db_settings:
+                if setting_type == 'json':
+                    try:
+                        value = json.loads(setting_value)
+                    except:
+                        value = setting_value
+                elif setting_type == 'number':
+                    try:
+                        value = float(setting_value)
+                        if value.is_integer():
+                            value = int(value)
+                    except:
+                        value = setting_value
+                elif setting_type == 'boolean':
+                    value = setting_value.lower() in ('true', '1', 'yes')
+                else:
+                    value = setting_value
+                
+                # Set nested settings
+                if '.' in setting_key:
+                    keys = setting_key.split('.')
+                    current = default_settings
+                    for key in keys[:-1]:
+                        if key not in current:
+                            current[key] = {}
+                        current = current[key]
+                    current[keys[-1]] = value
+                else:
+                    default_settings[setting_key] = value
+            
+            cursor.close()
+            conn.close()
+            
+            return jsonify(default_settings)
         
         else:  # POST
             # Update system settings
             data = request.get_json()
             
-            # In production, implement settings update
-            # This would update configuration in database or config files
+            import psycopg2
+            import json
+            from datetime import datetime
+            
+            conn_string = os.getenv('DATABASE_URL') or os.getenv('SUPABASE_DATABASE_URL')
+            conn = psycopg2.connect(conn_string)
+            cursor = conn.cursor()
+            
+            # Get current admin user ID (simplified - in production, get from session)
+            admin_user_id = 1  # Placeholder - should come from authenticated session
+            
+            updated_count = 0
+            
+            # Process and update settings
+            def update_setting(key, value, setting_type='text', category='general'):
+                nonlocal updated_count
+                try:
+                    if setting_type == 'json':
+                        value_str = json.dumps(value)
+                    else:
+                        value_str = str(value)
+                    
+                    cursor.execute("""
+                        INSERT INTO system_settings 
+                        (setting_key, setting_value, setting_type, category, updated_by, updated_at)
+                        VALUES (%s, %s, %s, %s, %s, %s)
+                        ON CONFLICT (setting_key) 
+                        DO UPDATE SET 
+                            setting_value = EXCLUDED.setting_value,
+                            setting_type = EXCLUDED.setting_type,
+                            category = EXCLUDED.category,
+                            updated_by = EXCLUDED.updated_by,
+                            updated_at = EXCLUDED.updated_at
+                    """, (key, value_str, setting_type, category, admin_user_id, datetime.now()))
+                    updated_count += 1
+                except Exception as e:
+                    logger.error(f"Error updating setting {key}: {e}")
+            
+            # Update nested settings
+            for section, section_data in data.items():
+                if isinstance(section_data, dict):
+                    for setting_key, setting_value in section_data.items():
+                        full_key = f"{section}.{setting_key}"
+                        setting_type = 'number' if isinstance(setting_value, (int, float)) else 'text'
+                        update_setting(full_key, setting_value, setting_type, section)
+                else:
+                    setting_type = 'number' if isinstance(section_data, (int, float)) else 'text'
+                    update_setting(section, section_data, setting_type)
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
             
             return jsonify({
                 'success': True,
-                'message': 'System settings updated successfully'
+                'message': f'System settings updated successfully. {updated_count} settings saved.',
+                'updated_count': updated_count
             })
         
     except Exception as e:
@@ -433,41 +530,78 @@ def get_credit_statistics():
         conn = psycopg2.connect(conn_string)
         cursor = conn.cursor()
         
-        # Get credit statistics
-        cursor.execute("""
-            SELECT 
-                COUNT(*) as total_users,
-                SUM(credits) as total_credits,
-                AVG(credits) as avg_credits,
-                MIN(credits) as min_credits,
-                MAX(credits) as max_credits,
-                COUNT(CASE WHEN credits < 50 THEN 1 END) as low_credit_users,
-                COUNT(CASE WHEN credits BETWEEN 50 AND 200 THEN 1 END) as medium_credit_users,
-                COUNT(CASE WHEN credits > 200 THEN 1 END) as high_credit_users
-            FROM user_stats;
-        """)
+        # Get credit statistics from Supabase users_registration table
+        from database.external_db import make_supabase_request
         
-        stats = cursor.fetchone()
+        # Get all users to calculate statistics
+        users_data = make_supabase_request("GET", "users_registration", {})
         
-        # Get top users by credits
-        cursor.execute("""
-            SELECT user_id, username, first_name, credits 
-            FROM user_stats 
-            ORDER BY credits DESC 
-            LIMIT 10;
-        """)
+        if not users_data:
+            cursor.close()
+            conn.close()
+            return jsonify({
+                'overview': {
+                    'total_users': 0,
+                    'total_credits': 0,
+                    'avg_credits': 0,
+                    'min_credits': 0,
+                    'max_credits': 0,
+                    'low_credit_users': 0,
+                    'medium_credit_users': 0,
+                    'high_credit_users': 0
+                },
+                'top_users': [],
+                'recent_transactions': []
+            })
         
-        top_users = cursor.fetchall()
+        # Calculate statistics
+        total_users = len(users_data)
+        credits_list = [user.get('credits', 0) for user in users_data]
+        total_credits = sum(credits_list)
+        avg_credits = total_credits / total_users if total_users > 0 else 0
+        min_credits = min(credits_list) if credits_list else 0
+        max_credits = max(credits_list) if credits_list else 0
+        low_credit_users = sum(1 for c in credits_list if c < 50)
+        medium_credit_users = sum(1 for c in credits_list if 50 <= c <= 200)
+        high_credit_users = sum(1 for c in credits_list if c > 200)
         
-        # Get recent credit transactions
-        cursor.execute("""
-            SELECT user_id, transaction_type, credits_used, description, created_at
-            FROM credit_transactions 
-            ORDER BY created_at DESC 
-            LIMIT 10;
-        """)
+        # Create stats tuple to match original format
+        stats = (total_users, total_credits, avg_credits, min_credits, max_credits, 
+                low_credit_users, medium_credit_users, high_credit_users)
         
-        recent_transactions = cursor.fetchall()
+        # Get top users by credits from Supabase
+        top_users_data = sorted(users_data, key=lambda u: u.get('credits', 0), reverse=True)[:10]
+        top_users = []
+        for user in top_users_data:
+            top_users.append((
+                user.get('chat_id', ''),
+                f"{user.get('name', '')} {user.get('surname', '')}".strip(),
+                user.get('name', ''),
+                user.get('credits', 0)
+            ))
+        
+        # Get recent credit transactions from Supabase
+        try:
+            transactions_data = make_supabase_request(
+                "GET", 
+                "credit_transactions",
+                {},
+                order_by="created_at.desc",
+                limit=10
+            )
+            recent_transactions = []
+            if transactions_data:
+                for tx in transactions_data:
+                    recent_transactions.append((
+                        tx.get('user_id', ''),
+                        tx.get('transaction_type', ''),
+                        tx.get('credits_used', 0),
+                        tx.get('description', ''),
+                        tx.get('created_at', '')
+                    ))
+        except Exception as tx_error:
+            logger.warning(f"Could not fetch credit transactions: {tx_error}")
+            recent_transactions = []
         
         cursor.close()
         conn.close()
@@ -623,7 +757,7 @@ def get_broadcast_history():
         
         # Get broadcast history
         cursor.execute("""
-            SELECT id, admin_user, message, target_group, total_recipients, 
+            SELECT id, admin_user_id, message_content, target_audience, total_recipients, 
                    successful_sends, failed_sends, created_at
             FROM broadcast_logs 
             ORDER BY created_at DESC 
