@@ -778,14 +778,10 @@ Hi {user_name}! Answer these 10 questions based on the passage above:
             user_name = registration['name'] if registration else "Student"
             credits = get_user_credits(user_id)
 
-            if credits < 3:  # Standard essay writing cost
-                self.whatsapp_service.send_message(user_id, f"❌ Insufficient credits! You need 3 credits but have {credits}. Purchase more credits to continue.")
-                return
-
             message = f"""✍️ **ZIMSEC O Level English Essay Writing**
 
 👤 Student: {user_name}
-💰 Cost: 3 credits per essay
+💰 Cost: 3 credits per essay (charged after submission)
 📄 Format: Official ZIMSEC Paper 1 Section A
 
 **Choose your writing mode:**"""
