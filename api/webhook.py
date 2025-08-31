@@ -1437,7 +1437,13 @@ Click the link above to join our official WhatsApp channel!"""
                 subject = parts[2].title()
                 topic = parts[3].replace('_', ' ').title()
                 difficulty = parts[4]
-                generate_and_send_question(user_id, subject, topic, difficulty, user_name)
+                
+                # Route Combined Science questions to the correct handler
+                if subject.lower() in ['biology', 'chemistry', 'physics']:
+                    logger.info(f"Routing Combined Science {subject} question to proper handler")
+                    handle_combined_science_question(user_id, subject)
+                else:
+                    generate_and_send_question(user_id, subject, topic, difficulty, user_name)
             else:
                 logger.warning(f"Invalid callback_data for science_question_: {selection_id}")
                 whatsapp_service.send_message(user_id, "❌ Invalid question request.")
@@ -1455,7 +1461,13 @@ Click the link above to join our official WhatsApp channel!"""
                 difficulty = parts[-1]  # Last part is always difficulty
 
                 logger.info(f"Next question request: subject={subject}, topic={topic}, difficulty={difficulty}")
-                generate_and_send_question(user_id, subject, topic, difficulty, user_name)
+                
+                # Route Combined Science next questions to the correct handler
+                if subject.lower() in ['biology', 'chemistry', 'physics']:
+                    logger.info(f"Routing Combined Science {subject} next question to proper handler")
+                    handle_combined_science_question(user_id, subject)
+                else:
+                    generate_and_send_question(user_id, subject, topic, difficulty, user_name)
             else:
                 logger.warning(f"Invalid callback_data for next_science_: {selection_id}")
                 whatsapp_service.send_message(user_id, "❌ Error navigating questions.")
