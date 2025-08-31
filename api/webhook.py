@@ -3025,15 +3025,15 @@ def handle_combined_science_topic_selection(user_id: str, subject: str, topic: s
 
         message += "🎯 *Choose Your Challenge Level:*\n\n"
         message += "🟢 *Easy* - Basic recall & understanding\n"
-        message += "   • 5 credits • 10 XP points\n"
+        message += "   • 1 credit • 10 XP points\n"
         message += "   • Foundation concepts\n\n"
 
         message += "🟡 *Medium* - Applied knowledge\n"
-        message += "   • 10 credits • 20 XP points\n"
+        message += "   • 1 credit • 20 XP points\n"
         message += "   • Problem-solving skills\n\n"
 
         message += "🔴 *Difficult* - Advanced analysis\n"
-        message += "   • 15 credits • 50 XP points\n"
+        message += "   • 1 credit • 50 XP points\n"
         message += "   • Critical thinking\n\n"
 
         message += "Select your preferred difficulty:"
