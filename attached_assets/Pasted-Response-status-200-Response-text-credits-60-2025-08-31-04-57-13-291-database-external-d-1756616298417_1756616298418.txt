@@ -1,0 +1,78 @@
+Response status: 200
+Response text: [{"credits":60}]
+2025-08-31 04:57:13,291 - database.external_db - INFO - Using SERVICE_ROLE_KEY for PATCH operation on users_registration
+Making PATCH request to https://hvlvwvzliqrlmqjbfgoa.supabase.co/rest/v1/users_registration
+Headers: {'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjM4MjEyOSwiZXhwIjoyMDY3OTU4MTI5fQ.p4qtbG42XUiN8sXH3phmUMwwQPo1v-StjUkwUZOR4Bg', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjM4MjEyOSwiZXhwIjoyMDY3OTU4MTI5fQ.p4qtbG42XUiN8sXH3phmUMwwQPo1v-StjUkwUZOR4Bg', 'Content-Type': 'application/json', 'Prefer': 'return=representation'}
+Params: {'chat_id': 'eq.263774823169'}
+Data: {'credits': 50}
+Response status: 200
+Response text: [{"id":23,"chat_id":"263774823169","name":"/Start","surname":"Hi","date_of_birth":"2002-08-25","nerdx_id":"N3MSX9","credits":50,"registration_date":"2025-08-31T04:28:03.033206","referred_by_nerdx_id":null}]
+2025-08-31 04:57:13,563 - database.external_db - INFO - Using SERVICE_ROLE_KEY for POST operation on credit_transactions
+Making POST request to https://hvlvwvzliqrlmqjbfgoa.supabase.co/rest/v1/credit_transactions
+Headers: {'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjM4MjEyOSwiZXhwIjoyMDY3OTU4MTI5fQ.p4qtbG42XUiN8sXH3phmUMwwQPo1v-StjUkwUZOR4Bg', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjM4MjEyOSwiZXhwIjoyMDY3OTU4MTI5fQ.p4qtbG42XUiN8sXH3phmUMwwQPo1v-StjUkwUZOR4Bg', 'Content-Type': 'application/json', 'Prefer': 'return=representation'}
+Params: {}
+Data: {'user_id': '263774823169', 'action': 'audio_feature_usage', 'transaction_type': 'audio_feature_usage', 'credits_change': 10, 'balance_before': 60, 'balance_after': 50, 'description': 'Used audio_feature feature', 'transaction_date': '2025-08-31T04:57:13.563224'}
+Response status: 201
+Response text: [{"id":22,"user_id":"263774823169","action":"audio_feature_usage","credits_change":10,"balance_before":60,"balance_after":50,"description":"Used audio_feature feature","transaction_date":"2025-08-31T04:57:13.563224","transaction_type":"audio_feature_usage"}]
+2025-08-31 04:57:13,827 - database.external_db - INFO - ✅ Transaction recorded for 263774823169
+2025-08-31 04:57:14,816 - services.whatsapp_service - INFO - Message sent successfully to 263774823169
+2025-08-31 04:57:24,426 - services.audio_chat_service - INFO - Starting audio generation...
+2025-08-31 04:57:24,427 - services.audio_chat_service - INFO - Trying Gemini AI for audio generation: Hi /Start, the generator effect is an important co...
+2025-08-31 04:57:24,427 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-08-31 04:57:39,427 - services.audio_chat_service - WARNING - Gemini audio generation timed out after 15 seconds
+2025-08-31 04:57:39,427 - services.audio_chat_service - WARNING - Gemini audio generation failed: Gemini AI audio generation timed out - trying ElevenLabs fallback
+2025-08-31 04:57:39,427 - services.audio_chat_service - INFO - 🔄 Switching to ElevenLabs due to Gemini timeout/error
+[2025-08-31 04:57:40 +0000] [8220] [CRITICAL] WORKER TIMEOUT (pid:8231)
+[2025-08-31 04:57:40 +0000] [8231] [ERROR] Error handling request /webhook/whatsapp
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 134, in handle
+    self.handle_request(listener, req, client, addr)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 177, in handle_request
+    respiter = self.wsgi(environ, resp.start_response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/werkzeug/middleware/proxy_fix.py", line 183, in __call__
+    return self.app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/api/webhook.py", line 327, in handle_webhook
+    process_message_background(message, user_id, message_type)
+  File "/home/runner/workspace/api/webhook.py", line 195, in process_message_background
+    handle_text_message(user_id, actual_text)
+  File "/home/runner/workspace/api/webhook.py", line 495, in handle_text_message
+    handle_session_message(user_id, message_text)
+  File "/home/runner/workspace/api/webhook.py", line 736, in handle_session_message
+    handle_audio_chat_message(user_id, message_text)
+  File "/home/runner/workspace/api/webhook.py", line 2287, in handle_audio_chat_message
+    audio_chat_service.handle_audio_input(user_id, message_text=message_text)
+  File "/home/runner/workspace/services/audio_chat_service.py", line 784, in handle_audio_input
+    audio_thread.join(timeout=25)  # 25 second max timeout
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python3.11/threading.py", line 1123, in join
+    self._wait_for_tstate_lock(timeout=max(timeout, 0))
+  File "/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python3.11/threading.py", line 1139, in _wait_for_tstate_lock
+    if lock.acquire(block, timeout):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/base.py", line 204, in handle_abort
+    sys.exit(1)
+SystemExit: 1
+[2025-08-31 04:57:40 +0000] [8231] [INFO] Worker exiting (pid: 8231)
+[2025-08-31 04:57:40 +0000] [8871] [INFO] Booting worker with pid: 8871
+2025-08-31 04:57:41,200 - root - INFO - Database URL configured: postgresql://neondb_owner:npg_SmwhJvT1zuf7@ep-bill...
+2025-08-31 04:57:43,098 - root - INFO - Database tables created successfully
+2025-08-31 04:57:43,100 - database.session_db - INFO - Session database initialized successfully
+2025-08-31 04:57:43,140 - database.external_db - INFO - Supabase properly configured and ready
+Supabase URL: https://hvlvwvzliqrlmqjbfgoa.supabase.co
+Service Role Key: eyJhbGciOiJIUzI1NiIs...
+Anon Key: eyJhbGciOiJIUzI1NiIs...
+2025-08-31 04:57:43,140 - database.external_db - INFO - Using ANON_KEY for GET operation on user_stats
