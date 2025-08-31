@@ -30,9 +30,9 @@ class PaynowService:
         self.integration_id = os.environ.get('PAYNOW_INTEGRATION_ID')
         self.integration_key = os.environ.get('PAYNOW_INTEGRATION_KEY')
         
-        # URLs for webhook and return handling
-        self.result_url = os.environ.get('PAYNOW_RESULT_URL', 'https://your-domain.com/webhook/paynow/result')
-        self.return_url = os.environ.get('PAYNOW_RETURN_URL', 'https://your-domain.com/payment/return')
+        # URLs for webhook and return handling - using the provided callback URL
+        self.result_url = 'https://61194f60-7b5c-4284-9b2c-b59dc4ff853d-00-ba6ee6tc1d8y.kirk.replit.dev/webhook/paynow/result'
+        self.return_url = 'https://61194f60-7b5c-4284-9b2c-b59dc4ff853d-00-ba6ee6tc1d8y.kirk.replit.dev/payment/return'
         
         # Test mode configuration
         self.test_mode = os.environ.get('PAYNOW_TEST_MODE', 'true').lower() == 'true'
@@ -89,17 +89,19 @@ class PaynowService:
                     'message': 'Please provide a valid EcoCash number (e.g., 0771234567)'
                 }
             
-            # Create payment object
+            # Create payment object according to documentation
             payment = self.paynow_client.create_payment(reference, email)
             payment.add(description, amount)
             
             logger.info(f"💰 Creating Paynow payment: {reference} - ${amount:.2f} to {phone_number}")
             
-            # Send mobile payment request
+            # Send mobile payment request (documentation: send_mobile(payment, phone, method))
             response = self.paynow_client.send_mobile(payment, phone_number, 'ecocash')
             
             # Debug response details
             logger.info(f"🔍 Paynow response debug: success={response.success}")
+            logger.info(f"🔍 Response object type: {type(response)}")
+            logger.info(f"🔍 Response attributes: {dir(response)}")
             
             if hasattr(response, 'error'):
                 logger.info(f"🔍 Response error: {response.error} (type: {type(response.error)})")
@@ -109,23 +111,29 @@ class PaynowService:
                 logger.info(f"🔍 Response poll_url: {response.poll_url}")
             if hasattr(response, 'redirect_url'):
                 logger.info(f"🔍 Response redirect_url: {response.redirect_url}")
+            if hasattr(response, 'instructions'):
+                logger.info(f"🔍 Response instructions: {response.instructions}")
             
             if response.success:
                 logger.info(f"✅ Paynow payment initiated successfully: {response.poll_url}")
                 
+                # For mobile payments, use instructions instead of redirect_url
+                instructions = getattr(response, 'instructions', 'Complete payment on your mobile device')
+                poll_url = getattr(response, 'poll_url', '')
+                
                 return {
                     'success': True,
-                    'poll_url': response.poll_url,
-                    'redirect_url': response.redirect_url,
-                    'hash': response.hash,
+                    'poll_url': poll_url,
+                    'redirect_url': poll_url,  # Use poll_url as redirect for mobile
+                    'hash': getattr(response, 'hash', ''),
                     'reference': reference,
                     'amount': amount,
                     'phone_number': phone_number,
                     'status': 'INITIATED',
-                    'instructions': self._get_payment_instructions(phone_number, amount, self.test_mode)
+                    'instructions': instructions
                 }
             else:
-                error_detail = str(response.error) if hasattr(response, 'error') else 'Unknown error'
+                error_detail = str(getattr(response, 'error', 'Unknown error'))
                 logger.error(f"❌ Paynow payment failed: {error_detail}")
                 return {
                     'success': False,
