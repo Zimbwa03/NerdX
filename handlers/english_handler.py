@@ -1850,11 +1850,25 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
             self.whatsapp_service.send_message(user_id, "🧠 Generating Grammar question...\n⏳ Please wait...")
 
             # Generate one grammar question
-            question_data = self.english_service.generate_grammar_question()
+            response = self.english_service.generate_grammar_question()
 
-            if not question_data:
-                self.whatsapp_service.send_message(user_id, "❌ Error generating question. Please try again.")
+            if not response or not response.get('success'):
+                error_msg = response.get('error', 'Unknown error') if response else 'Service unavailable'
+                self.whatsapp_service.send_message(user_id, f"❌ Error generating question: {error_msg}. Please try again.")
+                
+                # Try to use fallback question if available
+                if response and response.get('fallback_question'):
+                    fallback = response['fallback_question']
+                    message = f"📚 *ZIMSEC English Grammar* (Fallback)\n\n"
+                    message += f"**Question:** {fallback['question']}\n\n"
+                    message += f"**Instructions:** {fallback['instructions']}\n\n"
+                    message += f"**Answer:** {fallback['answer']}\n\n"
+                    message += f"**Explanation:** {fallback['explanation']}\n\n"
+                    message += f"**Topic:** {fallback['topic_area']}"
+                    self.whatsapp_service.send_message(user_id, message)
                 return
+            
+            question_data = response['question_data']
 
             # Save question in session
             from database.session_db import save_user_session

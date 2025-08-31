@@ -65,7 +65,11 @@ class EnglishService:
         """Generate diverse grammar questions covering comprehensive areas"""
         if not self._is_configured or not self.client or not types:
             logger.warning("English service not configured - cannot generate grammar questions")
-            return None
+            return {
+                'success': False,
+                'error': 'English service not configured',
+                'fallback_question': self._get_fallback_grammar_question()
+            }
             
         try:
             prompt = f"""Generate ONE ZIMSEC O-Level Grammar and Usage exercise covering diverse grammar topics.
@@ -133,18 +137,33 @@ Return ONLY a JSON object:
                         return None
                     
                     logger.info("✅ Generated grammar question successfully")
-                    return question_data
+                    return {
+                        'success': True,
+                        'question_data': question_data
+                    }
                 except json.JSONDecodeError as json_err:
                     logger.error(f"JSON parsing error for grammar question: {json_err}")
                     logger.error(f"Raw response that failed to parse: {response.text}")
-                    return None
+                    return {
+                        'success': False,
+                        'error': 'Failed to parse AI response',
+                        'fallback_question': self._get_fallback_grammar_question()
+                    }
             else:
                 logger.error("Empty response from Gemini for grammar question")
-                return None
+                return {
+                    'success': False,
+                    'error': 'Empty response from AI service',
+                    'fallback_question': self._get_fallback_grammar_question()
+                }
             
         except Exception as e:
             logger.error(f"Error generating grammar question: {e}")
-            return None
+            return {
+                'success': False,
+                'error': f'Grammar question generation failed: {str(e)}',
+                'fallback_question': self._get_fallback_grammar_question()
+            }
 
     def generate_vocabulary_mcq(self) -> Optional[Dict]:
         """Generate a single vocabulary MCQ"""
