@@ -60,6 +60,16 @@ class EnglishService:
         ]
         
         logger.info("Enhanced ZIMSEC English Service initialized with Gemini AI")
+    
+    def _get_fallback_grammar_question(self) -> Dict:
+        """Provide a fallback grammar question when AI service fails"""
+        return {
+            "question": "Complete the sentence with the correct tense: Yesterday, I ______ (go) to the market in Mbare.",
+            "instructions": "Fill in the blank with the correct past tense form of the verb 'go'.",
+            "answer": "went",
+            "explanation": "Past tense of 'go' is 'went'. We use past tense for actions completed in the past.",
+            "topic_area": "Verb Tenses"
+        }
 
     def generate_grammar_question(self) -> Optional[Dict]:
         """Generate diverse grammar questions covering comprehensive areas"""
