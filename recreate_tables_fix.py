@@ -126,7 +126,7 @@ def recreate_tables_with_correct_schema(conn):
                 credits INTEGER DEFAULT 75,
                 registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 referred_by_nerdx_id TEXT,
-                FOREIGN KEY (referred_by_nerdx_id) REFERENCES users(nerdx_id) ON DELETE SET NULL
+                FOREIGN KEY (referred_by_nerdx_id) REFERENCES users_registration(nerdx_id) ON DELETE SET NULL
             );
         """)
         logger.info("   ✅ Created users_registration table with correct schema")
@@ -143,7 +143,7 @@ def recreate_tables_with_correct_schema(conn):
                 last_activity_date DATE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (user_id) REFERENCES users(nerdx_id) ON DELETE CASCADE
+                FOREIGN KEY (user_id) REFERENCES users_registration(chat_id) ON DELETE CASCADE
             );
         """)
         logger.info("   ✅ Created user_stats table with correct schema")
@@ -159,7 +159,7 @@ def recreate_tables_with_correct_schema(conn):
                 balance_after INTEGER NOT NULL,
                 description TEXT,
                 transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (user_id) REFERENCES users(nerdx_id) ON DELETE CASCADE
+                FOREIGN KEY (user_id) REFERENCES users_registration(chat_id) ON DELETE CASCADE
             );
         """)
         logger.info("   ✅ Created credit_transactions table with correct schema")
@@ -174,7 +174,7 @@ def recreate_tables_with_correct_schema(conn):
                 payment_method VARCHAR(50),
                 reference_code VARCHAR(100) UNIQUE,
                 payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (user_id) REFERENCES users(nerdx_id) ON DELETE CASCADE
+                FOREIGN KEY (user_id) REFERENCES users_registration(chat_id) ON DELETE CASCADE
             );
         """)
         logger.info("   ✅ Created payments table with correct schema")
