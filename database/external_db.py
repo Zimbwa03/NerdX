@@ -399,8 +399,8 @@ def calculate_level_from_xp(xp):
     return max(level, 1)  # Minimum level is 1
 
 def get_user_credits(user_id):
-    """Get user's current credit balance"""
-    result = make_supabase_request("GET", "users_registration", select="credits", filters={"chat_id": f"eq.{user_id}"})
+    """Get user's current credit balance from user_stats table"""
+    result = make_supabase_request("GET", "user_stats", select="credits", filters={"user_id": f"eq.{user_id}"})
     if result and len(result) > 0:
         return result[0].get("credits", 0)
     return 0
@@ -575,6 +575,11 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
 
         # Create or update user_stats entry for the new user
         try:
+            # Base credits: 75 for all new users
+            base_credits = 75
+            # If referred, add 5 bonus credits (total 80)
+            total_credits = base_credits + (5 if referred_by_nerdx_id else 0)
+            
             user_stats_data = {
                 'user_id': chat_id,
                 'username': f"{name}_{surname}".lower(),
@@ -585,14 +590,33 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
                 'level': 1,
                 'streak': 0,
                 'max_streak': 0,
-                'credits': 75,
+                'credits': total_credits,
                 'last_activity': datetime.utcnow().isoformat()
             }
 
             # Create user stats entry
             stats_result = make_supabase_request("POST", "user_stats", user_stats_data, use_service_role=True)
             if stats_result:
-                logger.info(f"✅ User stats created for {chat_id}")
+                logger.info(f"✅ User stats created for {chat_id} with {total_credits} credits")
+                
+                # Record the registration credit transaction
+                if total_credits > 0:
+                    credit_transaction = {
+                        'user_id': chat_id,
+                        'action': 'new_user_registration',
+                        'credits_change': total_credits,
+                        'balance_before': 0,
+                        'balance_after': total_credits,
+                        'description': f'Welcome bonus: {base_credits} credits' + (' + 5 referral bonus' if referred_by_nerdx_id else ''),
+                        'transaction_type': 'new_user_registration'
+                    }
+                    
+                    try:
+                        make_supabase_request("POST", "credit_transactions", credit_transaction, use_service_role=True)
+                        logger.info(f"✅ Registration credit transaction recorded for {chat_id}")
+                    except Exception as e:
+                        logger.error(f"Failed to record registration transaction: {e}")
+                        
             else:
                 logger.warning(f"⚠️ Failed to create user stats for {chat_id}")
 
@@ -600,6 +624,40 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
             logger.error(f"❌ Error creating user stats: {stats_error}")
             # Don't fail registration if stats creation fails
 
+        # Handle referral bonus for the referrer (if applicable)
+        if referred_by_nerdx_id:
+            try:
+                referrer_registration = get_user_by_nerdx_id(referred_by_nerdx_id)
+                if referrer_registration:
+                    referrer_chat_id = referrer_registration['chat_id']
+                    
+                    # Add 5 credits to referrer
+                    current_referrer_credits = get_user_credits(referrer_chat_id)
+                    new_referrer_credits = current_referrer_credits + 5
+                    
+                    # Update referrer's credits
+                    update_user_stats(referrer_chat_id, {'credits': new_referrer_credits})
+                    
+                    # Record referrer credit transaction
+                    referrer_transaction = {
+                        'user_id': referrer_chat_id,
+                        'action': 'referral_bonus',
+                        'credits_change': 5,
+                        'balance_before': current_referrer_credits,
+                        'balance_after': new_referrer_credits,
+                        'description': f'Referral bonus for {name} {surname}',
+                        'transaction_type': 'referral_bonus'
+                    }
+                    
+                    make_supabase_request("POST", "credit_transactions", referrer_transaction, use_service_role=True)
+                    logger.info(f"✅ Awarded 5 referral credits to {referrer_chat_id} for referring {chat_id}")
+                    
+                else:
+                    logger.warning(f"Referrer with NerdX ID {referred_by_nerdx_id} not found")
+                    
+            except Exception as e:
+                logger.error(f"Error processing referral bonus: {e}")
+        
         return registered_user
 
     except Exception as e:
