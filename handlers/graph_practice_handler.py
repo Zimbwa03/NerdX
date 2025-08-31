@@ -541,16 +541,26 @@ Study the question and when ready, click "Show Graph" to see the correct graph w
 🌟 **Keep practicing to level up faster!**"""
 
                 # Send the graph image using the file path directly
-                self.whatsapp_service.send_image_file(user_id, graph_result['image_path'], success_msg)
+                image_sent = self.whatsapp_service.send_image_file(user_id, graph_result['image_path'], success_msg)
+                
+                if image_sent:
+                    # Wait for image to fully load before sending follow-up message
+                    logger.info(f"Graph image sent successfully to {user_id}, waiting for image to load...")
+                    time.sleep(8)  # Wait 8 seconds for image to fully load on user's device
+                    
+                    # Add navigation buttons with gamified text
+                    buttons = [
+                        {"text": "🔄 Generate New Question (+XP)", "callback_data": f"graph_generate_{module_id}"},
+                        {"text": "📐 Plot Your Own (+XP)", "callback_data": f"graph_plot_{module_id}"},
+                        {"text": "🔙 Back", "callback_data": f"graph_practice_{module_id}"}
+                    ]
 
-                # Add navigation buttons with gamified text
-                buttons = [
-                    {"text": "🔄 Generate New Question (+XP)", "callback_data": f"graph_generate_{module_id}"},
-                    {"text": "📐 Plot Your Own (+XP)", "callback_data": f"graph_plot_{module_id}"},
-                    {"text": "🔙 Back", "callback_data": f"graph_practice_{module_id}"}
-                ]
-
-                self.whatsapp_service.send_interactive_message(user_id, "🚀 What would you like to do next?", buttons)
+                    self.whatsapp_service.send_interactive_message(user_id, "🚀 What would you like to do next?", buttons)
+                    logger.info(f"Follow-up message sent to {user_id} after image load delay")
+                else:
+                    # Image failed to send - inform user
+                    logger.warning(f"Failed to send graph image to {user_id}")
+                    self.whatsapp_service.send_message(user_id, "❌ Graph created but failed to display. Please try again.")
 
             else:
                 self.whatsapp_service.send_message(user_id, "❌ Failed to generate graph. Please try again.")
@@ -674,17 +684,22 @@ Wait {user_name} NerdX is processing your Graph...
 
                 # Send the graph image using send_image_file method
                 success = self.whatsapp_service.send_image_file(user_id, graph_result['image_path'], success_msg)
-                if not success:
+                if success:
+                    # Wait for image to fully load before sending follow-up message
+                    logger.info(f"Custom graph image sent successfully to {user_id}, waiting for image to load...")
+                    time.sleep(8)  # Wait 8 seconds for image to fully load on user's device
+                    
+                    # Add navigation buttons
+                    buttons = [
+                        {"text": "📐 Type Another Graph", "callback_data": f"graph_plot_{module_id}"},
+                        {"text": "🔙 Back", "callback_data": f"graph_practice_{module_id}"}
+                    ]
+
+                    self.whatsapp_service.send_interactive_message(user_id, "🚀 What would you like to do next?", buttons)
+                    logger.info(f"Follow-up message sent to {user_id} after image load delay")
+                else:
                     logger.error("Failed to send custom graph to WhatsApp for user %s", user_id)
                     self.whatsapp_service.send_message(user_id, "❌ Graph created but failed to send. Please try again.")
-
-                # Add navigation buttons
-                buttons = [
-                    {"text": "📐 Type Another Graph", "callback_data": f"graph_plot_{module_id}"},
-                    {"text": "🔙 Back", "callback_data": f"graph_practice_{module_id}"}
-                ]
-
-                self.whatsapp_service.send_interactive_message(user_id, "🚀 What would you like to do next?", buttons)
 
             else:
                 self.whatsapp_service.send_message(user_id, "❌ Failed to create graph. Please check your expression format and try again.")
@@ -1142,10 +1157,20 @@ Ready for more learning?"""
                 ]
 
                 # Send graph image
-                self.whatsapp_service.send_image(user_id, graph_path, "Professional ZIMSEC Graph")
+                image_sent = self.whatsapp_service.send_image(user_id, graph_path, "Professional ZIMSEC Graph")
+                
+                if image_sent:
+                    # Wait for image to fully load before sending follow-up message
+                    logger.info(f"Graph creation image sent successfully to {user_id}, waiting for image to load...")
+                    time.sleep(8)  # Wait 8 seconds for image to fully load on user's device
 
-                # Then send interactive message
-                self.whatsapp_service.send_interactive_message(user_id, message, buttons)
+                    # Then send interactive message
+                    self.whatsapp_service.send_interactive_message(user_id, message, buttons)
+                    logger.info(f"Follow-up message sent to {user_id} after image load delay")
+                else:
+                    # Image failed to send - send text fallback
+                    logger.warning(f"Failed to send graph creation image to {user_id}")
+                    self.whatsapp_service.send_message(user_id, "❌ Graph created but failed to display. Please try again.")
 
                 logger.info("Graph created for module %s for user %s", module_id, user_id)
             else:
