@@ -1,0 +1,39 @@
+'}
+Params: {}
+Data: {'chat_id': '263774823169', 'name': '/Start', 'surname': 'Hi', 'date_of_birth': '25/08/2002', 'nerdx_id': 'NEZRLY', 'referred_by_nerdx_id': None, 'registration_date': '2025-08-31T04:17:32.820071'}
+Response status: 400
+Response text: {"code":"22008","details":null,"hint":"Perhaps you need a different \"datestyle\" setting.","message":"date/time field value out of range: \"25/08/2002\""}
+2025-08-31 04:17:33,087 - database.external_db - ERROR - HTTP Error: 400 Client Error: Bad Request for url: https://hvlvwvzliqrlmqjbfgoa.supabase.co/rest/v1/users_registration
+2025-08-31 04:17:33,087 - database.external_db - ERROR - ❌ Supabase registration failed - no response
+2025-08-31 04:17:33,087 - database.external_db - ERROR - 💥 CRITICAL: User registration FAILED for 263774823169: Supabase registration returned no response
+Traceback (most recent call last):
+  File "/home/runner/workspace/database/external_db.py", line 527, in create_user_registration
+    raise Exception("Supabase registration returned no response")
+Exception: Supabase registration returned no response
+2025-08-31 04:17:33,088 - database.external_db - ERROR - 🚫 Registration cannot proceed without Supabase success
+2025-08-31 04:17:33,088 - services.user_service - ERROR - ❌ REGISTRATION FAILED for 263774823169 - Supabase database error
+2025-08-31 04:17:33,088 - api.webhook - INFO - 📝 Registration step result: {'success': False, 'message': "❌ **Registration Failed**\n\nWe're experiencing database connectivity issues. Please try again in a few minutes.\n\nIf this problem persists, please contact our support team."}
+2025-08-31 04:17:33,088 - api.webhook - WARNING - ❌ Registration step failed for 263774823169: ❌ **Registration Failed**
+
+We're experiencing database connectivity issues. Please try again in a few minutes.
+
+If this problem persists, please contact our support team.
+2025-08-31 04:17:33,991 - services.whatsapp_service - INFO - Message sent successfully to 263774823169
+2025-08-31 04:17:34,382 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+Making GET request to https://hvlvwvzliqrlmqjbfgoa.supabase.co/rest/v1/users_registration
+Headers: {'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Content-Type': 'application/json'}
+Params: {'select': '*'}
+Data: {}
+Response status: 200
+Response text: [{"id":5,"chat_id":"test_chat_1756507157","name":"Test","surname":"User","date_of_birth":"1990-01-01","nerdx_id":"N07157","credits":75,"registration_date":"2025-08-29T22:39:19.288114","referred_by_nerdx_id":null}, 
+ {"id":6,"chat_id":"test_chat_1756508268","name":"Test","surname":"User","date_of_birth":"1990-01-01","nerdx_id":"N08268","credits":75,"registration_date":"2025-08-29T22:57:52.115174","referred_by_nerdx_id":null}, 
+ {"id":7,"chat_id":"test_chat_123","name":"Test","surname":"User","date_of_birth":"1990-01-01","nerdx_id":"N12345","credits":null,"registration_date":null,"referred_by_nerdx_id":null}, 
+ {"id":8,"chat_id":"test_chat_123","name":"Test","surname":"User","date_of_birth":"1990-01-01","nerdx_id":"N12345","credits":100,"registration_date":"2025-08-30T00:00:00","referred_by_nerdx_id":null}, 
+ {"id":9,"chat_id":"test_user_54321","name":"Jane","surname":"Smith","date_of_birth":"1995-06-15","nerdx_id":"NMU7E0","credits":100,"registration_date":"2025-08-30T05:28:16.260754","referred_by_nerdx_id":null}, 
+ {"id":10,"chat_id":"test_user_67890","name":"Alice","surname":"Johnson","date_of_birth":"1998-03-20","nerdx_id":"NJC33Y","credits":100,"registration_date":"2025-08-30T05:28:20.598353","referred_by_nerdx_id":null}, 
+ {"id":11,"chat_id":"test_user_75credits","name":"Bob","surname":"Wilson","date_of_birth":"1999-12-25","nerdx_id":"NCD9U5","credits":75,"registration_date":"2025-08-30T05:32:47.14844","referred_by_nerdx_id":null}, 
+ {"id":13,"chat_id":"test_payment_user_1756508277","name":"Bob","surname":"Payment","date_of_birth":"1996-02-02","nerdx_id":"BPY002","credits":25,"registration_date":"2025-08-30T06:00:00","referred_by_nerdx_id":null}, 
+ {"id":12,"chat_id":"test_payment_user_1756507162","name":"Alice","surname":"Payment","date_of_birth":"1995-01-01","nerdx_id":"APY001","credits":150,"registration_date":"2025-08-30T06:00:00","referred_by_nerdx_id":null}, 
+ {"id":14,"chat_id":"test_user_456","name":"Test","surname":"User","date_of_birth":"2000-03-15","nerdx_id":"NET475","credits":0,"registration_date":"2025-08-30T13:38:19.355508","referred_by_nerdx_id":null}, 
+ {"id":17,"chat_id":"debug_user_123","name":"Debug","surname":"User","date_of_birth":"2000-03-15","nerdx_id":"NDD384","credits":75,"registration_date":"2025-08-30T13:42:06.215304","referred_by_nerdx_id":null}, 
+ {"id":22,"chat_id":"263785494594","name":"Ngonidzashe","surname":"Zimbwa","date_of_birth":"2003-03-10","nerdx_id":"NYTQHO","credits":3,"registration_date":"2025-08-30T20:06:06.643279","referred_by_nerdx_id":null}]
