@@ -366,6 +366,11 @@ async function loadRecentUsers() {
         });
         
         if (!response.ok) {
+            if (response.status === 302 || response.status === 401) {
+                // Authentication issue - redirect to login
+                window.location.href = '/login';
+                return;
+            }
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         

@@ -184,6 +184,8 @@ def get_users():
         
     except Exception as e:
         logger.error(f"Error getting users: {e}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         return jsonify({'error': str(e)}), 500
 
 @dashboard_bp.route('/api/user/<user_id>')
