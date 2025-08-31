@@ -3994,12 +3994,16 @@ def handle_paynow_phone_collection(user_id: str, phone_number: str):
         # Validate and normalize phone number
         phone_cleaned = re.sub(r'[^\d+]', '', phone_number.strip())
         
-        # Convert to international format
-        if phone_cleaned.startswith('077') or phone_cleaned.startswith('078'):
-            phone_cleaned = '+263' + phone_cleaned[1:]
+        # Normalize to local format first for validation
+        local_phone = phone_cleaned
+        if phone_cleaned.startswith('+263'):
+            local_phone = '0' + phone_cleaned[4:]  # +263771111111 -> 0771111111
         elif phone_cleaned.startswith('263'):
-            phone_cleaned = '+' + phone_cleaned
-        elif not phone_cleaned.startswith('+263'):
+            local_phone = '0' + phone_cleaned[3:]  # 263771111111 -> 0771111111
+        
+        # Validate local format
+        if not (len(local_phone) == 10 and local_phone.startswith('07') and 
+                local_phone[:3] in ['077', '078']):
             whatsapp_service.send_message(user_id, 
                 "❌ **Invalid Phone Number Format**\n\n"
                 "Please provide a valid Zimbabwe EcoCash number:\n"
@@ -4008,13 +4012,8 @@ def handle_paynow_phone_collection(user_id: str, phone_number: str):
                 "Please send your EcoCash number again:")
             return
         
-        # Validate phone number length
-        if len(phone_cleaned) != 13:  # +263 + 9 digits
-            whatsapp_service.send_message(user_id, 
-                "❌ **Invalid Phone Number Length**\n\n"
-                "EcoCash numbers should have 10 digits after the country code.\n"
-                "Please send your EcoCash number again:")
-            return
+        # Convert to international format for Paynow
+        international_phone = '+263' + local_phone[1:]  # 0771111111 -> +2637711111111
         
         # Clear session to prevent duplicate submissions
         clear_user_session(user_id)
@@ -4022,16 +4021,16 @@ def handle_paynow_phone_collection(user_id: str, phone_number: str):
         # Send processing message
         whatsapp_service.send_message(user_id, 
             f"⚡ **PROCESSING PAYNOW PAYMENT...**\n\n"
-            f"📱 Phone: {phone_cleaned}\n"
+            f"📱 Phone: {local_phone}\n"
             f"💰 Amount: ${amount:.2f} USD\n"
             f"💎 Credits: {credits}\n\n"
             f"🔄 Creating payment link... Please wait...")
         
-        # Initiate Paynow payment
+        # Initiate Paynow payment using local format (Paynow expects 0771111111 format)
         try:
             payment_response = paynow_service.create_usd_ecocash_payment(
                 amount=amount,
-                phone_number=phone_cleaned,
+                phone_number=local_phone,  # Use local format 0771111111
                 email=f"{user_id}@nerdx.co.zw",  # Use user ID as email since it's required
                 reference=f"CREDITS_{package_id}_{user_id}",
                 description=f"NerdX Quiz Credits - {credits} credits"
@@ -4046,7 +4045,7 @@ def handle_paynow_phone_collection(user_id: str, phone_number: str):
                     message = f"""✅ **PAYNOW PAYMENT READY!** ⚡
 
 📱 **Payment Details:**
-• Phone: {phone_cleaned}
+• Phone: {local_phone}
 • Amount: ${amount:.2f} USD
 • Credits: {credits}
 
