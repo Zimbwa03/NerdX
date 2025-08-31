@@ -149,7 +149,33 @@ class WhatsAppService:
                     'messaging_product': (None, 'whatsapp')
                 }
                 
-                upload_response = requests.post(upload_url, headers=headers, files=files, timeout=45)
+                # Try upload with retry logic and shorter timeouts to prevent worker timeouts
+                max_retries = 3
+                upload_response = None
+                for attempt in range(max_retries):
+                    try:
+                        # Use shorter timeout to prevent worker timeouts
+                        timeout = 20 if attempt == 0 else 15  # Shorter on retries
+                        logger.info(f"Upload attempt {attempt + 1}/{max_retries} with {timeout}s timeout")
+                        upload_response = requests.post(upload_url, headers=headers, files=files, timeout=timeout)
+                        break  # Success, exit retry loop
+                    except requests.exceptions.Timeout as e:
+                        logger.warning(f"Upload attempt {attempt + 1} timed out after {timeout}s: {e}")
+                        if attempt == max_retries - 1:  # Last attempt
+                            logger.error(f"All {max_retries} upload attempts failed due to timeout")
+                            return False
+                        # Wait briefly before retry
+                        import time
+                        time.sleep(1)
+                    except requests.exceptions.RequestException as e:
+                        logger.error(f"Upload attempt {attempt + 1} failed with request error: {e}")
+                        if attempt == max_retries - 1:  # Last attempt
+                            return False
+                        time.sleep(1)
+                
+                if upload_response is None:
+                    logger.error("Upload failed - no response received")
+                    return False
                 
                 logger.info(f"Upload response status: {upload_response.status_code}")
                 
@@ -187,7 +213,28 @@ class WhatsAppService:
             
             logger.info(f"Sending audio message with data: {data}")
             
-            response = requests.post(send_url, headers=headers, json=data, timeout=30)
+            # Send message with retry logic for better reliability
+            max_retries = 2
+            response = None
+            for attempt in range(max_retries):
+                try:
+                    response = requests.post(send_url, headers=headers, json=data, timeout=15)
+                    break  # Success, exit retry loop
+                except requests.exceptions.Timeout as e:
+                    logger.warning(f"Send attempt {attempt + 1} timed out: {e}")
+                    if attempt == max_retries - 1:  # Last attempt
+                        logger.error(f"All {max_retries} send attempts failed due to timeout")
+                        return False
+                    time.sleep(0.5)
+                except requests.exceptions.RequestException as e:
+                    logger.error(f"Send attempt {attempt + 1} failed: {e}")
+                    if attempt == max_retries - 1:  # Last attempt
+                        return False
+                    time.sleep(0.5)
+            
+            if response is None:
+                logger.error("Send failed - no response received")
+                return False
             
             logger.info(f"Send response status: {response.status_code}")
             logger.info(f"Send response: {response.text}")
