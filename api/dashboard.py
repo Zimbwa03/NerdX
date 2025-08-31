@@ -164,8 +164,8 @@ def get_users():
                 }
                 users_combined.append(combined_user)
         
-        # Sort by registration date (newest first)
-        users_combined.sort(key=lambda x: x.get('registration_date', ''), reverse=True)
+        # Sort by registration date (newest first) - handle None values properly
+        users_combined.sort(key=lambda x: x.get('registration_date') or '1900-01-01', reverse=True)
         
         # Pagination
         total = len(users_combined)
