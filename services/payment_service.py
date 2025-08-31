@@ -4,6 +4,7 @@ import os
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 from database.external_db import make_supabase_request, add_credits
+from services.paynow_service import paynow_service
 
 logger = logging.getLogger(__name__)
 
@@ -567,6 +568,342 @@ class PaymentService:
         message += f"🎯 **Start learning now and make the most of your purchase!**"
         
         return message
+    
+    # PAYNOW USD ECOCASH INTEGRATION
+    # ===============================
+    
+    def create_paynow_payment(self, user_id: str, package_id: str, phone_number: str, email: str) -> Dict:
+        """
+        Create a USD EcoCash payment using Paynow integration
+        
+        Args:
+            user_id: User's unique identifier
+            package_id: Selected package ID
+            phone_number: EcoCash phone number (format: 0771234567)
+            email: User's email address (required by Paynow)
+            
+        Returns:
+            Dict with payment creation results
+        """
+        try:
+            package = self.get_package_by_id(package_id)
+            if not package:
+                return {'success': False, 'message': 'Package not found'}
+            
+            # Check if Paynow service is available
+            if not paynow_service.is_available():
+                logger.warning("Paynow service not available, falling back to manual payment")
+                return self.get_payment_instructions_message(user_id, package_id)
+            
+            # Generate unique reference code
+            reference_code = self.generate_payment_reference(user_id, package_id)
+            
+            # Create Paynow payment
+            logger.info(f"Creating Paynow payment: {reference_code} - ${package['price']:.2f} for {phone_number}")
+            
+            payment_result = paynow_service.create_usd_ecocash_payment(
+                amount=package['price'],
+                phone_number=phone_number,
+                email=email,
+                reference=reference_code,
+                description=f"NerdX {package['name']} - {package['credits']} credits"
+            )
+            
+            if payment_result['success']:
+                # Store payment transaction in database
+                payment_data = {
+                    'user_id': user_id,
+                    'package_id': package_id,
+                    'reference_code': reference_code,
+                    'amount': float(package['price']),
+                    'credits': int(package['credits']),
+                    'status': 'initiated',  # Paynow-specific status
+                    'payment_method': 'paynow_ecocash',
+                    'phone_number': phone_number,
+                    'email': email,
+                    'created_at': datetime.now().isoformat(),
+                    'paynow_poll_url': payment_result.get('poll_url'),
+                    'credits_added': 0
+                }
+                
+                # Save to payment_transactions table
+                result = make_supabase_request("POST", "payment_transactions", payment_data)
+                
+                if result:
+                    logger.info(f"Paynow payment initiated: {reference_code}")
+                    
+                    return {
+                        'success': True,
+                        'payment_type': 'paynow',
+                        'reference_code': reference_code,
+                        'instructions': payment_result['instructions'],
+                        'poll_url': payment_result['poll_url'],
+                        'status': 'initiated',
+                        'message': f"💳 **PAYNOW USD ECOCASH PAYMENT**\n\n"
+                                  f"📱 **Payment initiated to {phone_number}**\n"
+                                  f"💰 **Amount**: ${package['price']:.2f} USD\n"
+                                  f"📞 **EcoCash Number**: {phone_number}\n"
+                                  f"🔢 **Reference**: {reference_code}\n\n"
+                                  f"{payment_result['instructions']}\n\n"
+                                  f"⏰ **Status will be updated automatically once payment is confirmed.**",
+                        'package': package
+                    }
+                else:
+                    return {'success': False, 'message': 'Failed to save payment transaction'}
+            else:
+                logger.error(f"Paynow payment failed: {payment_result.get('error')}")
+                # Fall back to manual payment process
+                logger.info("Falling back to manual payment process")
+                return self.get_payment_instructions_message(user_id, package_id)
+                
+        except Exception as e:
+            logger.error(f"Error creating Paynow payment: {e}")
+            # Fall back to manual payment process
+            return self.get_payment_instructions_message(user_id, package_id)
+    
+    def check_paynow_payment_status(self, reference_code: str) -> Dict:
+        """
+        Check status of Paynow payment and update database if needed
+        
+        Args:
+            reference_code: Payment reference code
+            
+        Returns:
+            Dict with payment status
+        """
+        try:
+            # Get payment from database first
+            result = make_supabase_request(
+                "GET", 
+                "payment_transactions", 
+                filters={"reference_code": f"eq.{reference_code}"}
+            )
+            
+            if not result or len(result) == 0:
+                return {'success': False, 'message': 'Payment not found'}
+            
+            payment = result[0]
+            current_status = payment.get('status', 'unknown')
+            poll_url = payment.get('paynow_poll_url')
+            
+            # If already completed, return current status
+            if current_status in ['approved', 'paid', 'completed']:
+                return {
+                    'success': True,
+                    'status': current_status,
+                    'paid': True,
+                    'amount': payment.get('amount', 0),
+                    'credits': payment.get('credits', 0)
+                }
+            
+            # Check with Paynow if poll_url exists
+            if poll_url and paynow_service.is_available():
+                paynow_status = paynow_service.check_payment_status(poll_url)
+                
+                if paynow_status['success']:
+                    # Update database if status changed
+                    if paynow_status['paid'] and current_status != 'approved':
+                        # Payment confirmed - approve automatically
+                        approval_result = self.approve_paynow_payment(reference_code)
+                        if approval_result['success']:
+                            return {
+                                'success': True,
+                                'status': 'approved',
+                                'paid': True,
+                                'amount': payment.get('amount', 0),
+                                'credits': payment.get('credits', 0),
+                                'message': 'Payment confirmed and credits added!'
+                            }
+                    
+                    # Update status in database
+                    update_data = {
+                        'status': 'paid' if paynow_status['paid'] else 'pending',
+                        'paynow_reference': paynow_status.get('paynow_reference')
+                    }
+                    
+                    make_supabase_request(
+                        "PATCH", 
+                        "payment_transactions", 
+                        update_data,
+                        filters={"reference_code": f"eq.{reference_code}"}
+                    )
+                    
+                    return paynow_status
+            
+            # Return current status from database
+            return {
+                'success': True,
+                'status': current_status,
+                'paid': current_status == 'approved',
+                'amount': payment.get('amount', 0),
+                'credits': payment.get('credits', 0)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error checking Paynow payment status: {e}")
+            return {'success': False, 'message': 'Error checking payment status'}
+    
+    def approve_paynow_payment(self, reference_code: str) -> Dict:
+        """
+        Approve a Paynow payment and add credits (called automatically when payment confirmed)
+        
+        Args:
+            reference_code: Payment reference code
+            
+        Returns:
+            Dict with approval results
+        """
+        try:
+            # Get payment details
+            result = make_supabase_request(
+                "GET", 
+                "payment_transactions", 
+                filters={"reference_code": f"eq.{reference_code}"}
+            )
+            
+            if not result or len(result) == 0:
+                return {'success': False, 'message': 'Payment not found'}
+            
+            payment = result[0]
+            user_id = payment['user_id']
+            credits = payment['credits']
+            package_id = payment.get('package_id', 'unknown')
+            
+            # Add credits to user account
+            credit_result = add_credits(user_id, credits)
+            
+            if credit_result:
+                # Update payment status to approved
+                update_data = {
+                    'status': 'approved',
+                    'approved_at': datetime.now().isoformat(),
+                    'credits_added': credits
+                }
+                
+                make_supabase_request(
+                    "PATCH", 
+                    "payment_transactions", 
+                    update_data,
+                    filters={"reference_code": f"eq.{reference_code}"}
+                )
+                
+                logger.info(f"Paynow payment approved: {reference_code} - {credits} credits added to {user_id}")
+                
+                package = self.get_package_by_id(package_id)
+                package_name = package['name'] if package else 'Package'
+                
+                return {
+                    'success': True,
+                    'message': f'Payment approved! {credits} credits added to your account.',
+                    'credits_added': credits,
+                    'package_name': package_name,
+                    'user_id': user_id
+                }
+            else:
+                return {'success': False, 'message': 'Failed to add credits'}
+                
+        except Exception as e:
+            logger.error(f"Error approving Paynow payment: {e}")
+            return {'success': False, 'message': 'Error approving payment'}
+    
+    def process_paynow_webhook(self, webhook_data: Dict) -> Dict:
+        """
+        Process Paynow webhook notification
+        
+        Args:
+            webhook_data: Webhook payload from Paynow
+            
+        Returns:
+            Dict with processing results
+        """
+        try:
+            if not paynow_service.is_available():
+                return {'success': False, 'message': 'Paynow service not available'}
+            
+            # Process webhook through Paynow service
+            webhook_result = paynow_service.process_webhook(webhook_data)
+            
+            if webhook_result['success'] and webhook_result['valid']:
+                reference_code = webhook_result['reference']
+                
+                if webhook_result['paid']:
+                    # Payment confirmed - approve automatically
+                    approval_result = self.approve_paynow_payment(reference_code)
+                    
+                    if approval_result['success']:
+                        logger.info(f"Webhook processed: {reference_code} - payment approved")
+                        return {
+                            'success': True,
+                            'message': 'Payment confirmed via webhook',
+                            'reference_code': reference_code,
+                            'approved': True
+                        }
+                else:
+                    # Update payment status but don't approve yet
+                    update_data = {
+                        'status': webhook_result['status'].lower(),
+                        'paynow_reference': webhook_result.get('paynow_reference')
+                    }
+                    
+                    make_supabase_request(
+                        "PATCH", 
+                        "payment_transactions", 
+                        update_data,
+                        filters={"reference_code": f"eq.{reference_code}"}
+                    )
+                    
+                    return {
+                        'success': True,
+                        'message': 'Payment status updated',
+                        'reference_code': reference_code,
+                        'status': webhook_result['status']
+                    }
+            
+            return {'success': False, 'message': 'Invalid webhook data'}
+            
+        except Exception as e:
+            logger.error(f"Error processing Paynow webhook: {e}")
+            return {'success': False, 'message': 'Webhook processing error'}
+    
+    def get_payment_method_selection_message(self) -> str:
+        """Get message for payment method selection"""
+        return """💳 **CHOOSE PAYMENT METHOD**
+
+🚀 **PAYNOW USD ECOCASH** (Recommended)
+✅ Instant confirmation
+✅ Automated processing  
+✅ Real-time credit top-up
+✅ Secure Paynow gateway
+
+📱 **MANUAL ECOCASH**
+⏱️ Manual verification required
+⏱️ Up to 30 minutes processing
+💬 Submit SMS proof
+
+Select your preferred payment method below:"""
+    
+    def get_payment_method_buttons(self) -> List[Dict]:
+        """Get buttons for payment method selection"""
+        buttons = []
+        
+        if paynow_service.is_available():
+            buttons.append({
+                'text': '🚀 PAYNOW USD ECOCASH (Instant)',
+                'callback_data': 'payment_method_paynow'
+            })
+        
+        buttons.extend([
+            {
+                'text': '📱 Manual EcoCash Payment',
+                'callback_data': 'payment_method_manual'
+            },
+            {
+                'text': '⬅️ Back to Packages',
+                'callback_data': 'buy_credits'
+            }
+        ])
+        
+        return buttons
 
 # Global instance
 payment_service = PaymentService()

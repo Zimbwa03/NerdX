@@ -61,3 +61,4 @@ gunicorn
 psycopg2-binary
 google-genai
 PyPDF2
+paynow
