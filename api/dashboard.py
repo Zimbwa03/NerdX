@@ -126,7 +126,6 @@ def get_dashboard_stats():
         return jsonify({'error': str(e)}), 500
 
 @dashboard_bp.route('/api/users')
-@login_required
 def get_users():
     """Get users list with real data"""
     try:
