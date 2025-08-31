@@ -7,7 +7,7 @@ from api.admin import admin_bp
 from api.auth import auth_bp
 from api.credit_management import credit_management_bp
 from api.payment_admin import payment_admin_bp
-from api.admin_payment_dashboard import admin_payment_dashboard_bp
+# from api.admin_payment_dashboard import admin_payment_dashboard_bp  # Disabled per user request
 from api.paynow_webhook import paynow_webhook_bp
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ app.register_blueprint(admin_bp, url_prefix='/api/admin')
 app.register_blueprint(auth_bp, url_prefix='')
 app.register_blueprint(credit_management_bp, url_prefix='')
 # app.register_blueprint(payment_admin_bp, url_prefix='/api/admin/payments')  # Temporarily disabled due to conflict
-app.register_blueprint(admin_payment_dashboard_bp, url_prefix='')
+# app.register_blueprint(admin_payment_dashboard_bp, url_prefix='')  # Disabled per user request
 app.register_blueprint(paynow_webhook_bp, url_prefix='')
 
 # Add route to serve graph images for WhatsApp access
