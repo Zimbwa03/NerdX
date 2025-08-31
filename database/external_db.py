@@ -504,12 +504,25 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
         nerdx_id = generate_nerdx_id()
         logger.info(f"🆔 Generated NerdX ID: {nerdx_id}")
 
+        # Convert date_of_birth from DD/MM/YYYY to YYYY-MM-DD format for database
+        try:
+            if '/' in date_of_birth:
+                # Parse DD/MM/YYYY format
+                day, month, year = date_of_birth.split('/')
+                formatted_date = f"{year}-{month.zfill(2)}-{day.zfill(2)}"
+            else:
+                # Assume it's already in correct format
+                formatted_date = date_of_birth
+        except (ValueError, IndexError):
+            logger.error(f"Invalid date format: {date_of_birth}")
+            formatted_date = date_of_birth  # Fallback to original
+        
         # Prepare registration data
         registration_data = {
             'chat_id': chat_id,
             'name': name,
             'surname': surname,
-            'date_of_birth': date_of_birth,
+            'date_of_birth': formatted_date,
             'nerdx_id': nerdx_id,
             'referred_by_nerdx_id': referred_by_nerdx_id,
             'registration_date': datetime.utcnow().isoformat()

@@ -105,8 +105,13 @@ def handle_name_step(from_number: str, name: str):
             send_whatsapp_message(from_number, "Please enter a valid first name (at least 2 characters):")
             return
         
-        # Validate name (letters, spaces, hyphens only)
-        if not re.match(r'^[a-zA-Z\s\-]+$', name.strip()):
+        # Validate name (letters, spaces, hyphens only) and prevent commands
+        clean_name = name.strip()
+        if clean_name.startswith('/') or clean_name.lower() in ['start', 'hi', 'hello', 'menu']:
+            send_whatsapp_message(from_number, "Please enter your actual first name (not a command or greeting):")
+            return
+        
+        if not re.match(r'^[a-zA-Z\s\-]+$', clean_name):
             send_whatsapp_message(from_number, "Please enter a valid name using only letters, spaces, and hyphens:")
             return
         
@@ -132,8 +137,13 @@ def handle_surname_step(from_number: str, surname: str):
             send_whatsapp_message(from_number, "Please enter a valid surname (at least 2 characters):")
             return
         
-        # Validate surname
-        if not re.match(r'^[a-zA-Z\s\-]+$', surname.strip()):
+        # Validate surname and prevent commands
+        clean_surname = surname.strip()
+        if clean_surname.startswith('/') or clean_surname.lower() in ['start', 'hi', 'hello', 'menu']:
+            send_whatsapp_message(from_number, "Please enter your actual surname (not a command or greeting):")
+            return
+        
+        if not re.match(r'^[a-zA-Z\s\-]+$', clean_surname):
             send_whatsapp_message(from_number, "Please enter a valid surname using only letters, spaces, and hyphens:")
             return
         
@@ -198,11 +208,11 @@ Examples:
             send_whatsapp_message(from_number, message)
             return
         
-        # Format date consistently
-        formatted_date = f"{day.zfill(2)}/{month.zfill(2)}/{year}"
+        # Format date consistently for display (keep DD/MM/YYYY for user)
+        display_date = f"{day.zfill(2)}/{month.zfill(2)}/{year}"
         
         # Update session and move to referral step
-        update_registration_session(from_number, "referral", date_of_birth=formatted_date)
+        update_registration_session(from_number, "referral", date_of_birth=display_date)
         
         message = f"""✅ Date of birth recorded: {formatted_date}
 
