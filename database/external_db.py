@@ -415,21 +415,26 @@ def deduct_credits(user_id, amount, transaction_type, description):
     new_credits = current_credits - amount
 
     # Update user credits in the correct table (users_registration)
-    success = make_supabase_request("PATCH", "users_registration", {"credits": new_credits}, filters={"chat_id": f"eq.{user_id}"})
+    success = make_supabase_request("PATCH", "users_registration", {"credits": new_credits}, filters={"chat_id": f"eq.{user_id}"}, use_service_role=True)
 
     if success:
-        # Log credit transaction
-        transaction = {
-            "user_id": user_id,
-            "action": transaction_type,  # Required field for credit_transactions table
-            "transaction_type": transaction_type,
-            "credits_change": amount,
-            "balance_before": current_credits,
-            "balance_after": new_credits,
-            "description": description,
-            "transaction_date": datetime.now().isoformat()
-        }
-        make_supabase_request("POST", "credit_transactions", transaction)
+        # Log credit transaction (try-catch to not fail credit deduction if transaction logging fails)
+        try:
+            transaction = {
+                "user_id": user_id,
+                "action": transaction_type,  # Required field for credit_transactions table
+                "transaction_type": transaction_type,
+                "credits_change": amount,
+                "balance_before": current_credits,
+                "balance_after": new_credits,
+                "description": description,
+                "transaction_date": datetime.now().isoformat()
+            }
+            make_supabase_request("POST", "credit_transactions", transaction, use_service_role=True)
+            logger.info(f"✅ Transaction recorded for {user_id}")
+        except Exception as tx_error:
+            logger.warning(f"⚠️ Credit deduction successful but transaction logging failed: {tx_error}")
+            # Don't return False here - credit deduction was successful
         return True
 
     return False
@@ -440,21 +445,26 @@ def add_credits(user_id, amount, transaction_type="purchase", description="Credi
     new_credits = current_credits + amount
 
     # Update user credits in the correct table (users_registration)
-    success = make_supabase_request("PATCH", "users_registration", {"credits": new_credits}, filters={"chat_id": f"eq.{user_id}"})
+    success = make_supabase_request("PATCH", "users_registration", {"credits": new_credits}, filters={"chat_id": f"eq.{user_id}"}, use_service_role=True)
 
     if success:
-        # Log credit transaction
-        transaction = {
-            "user_id": user_id,
-            "action": transaction_type,  # Required field for credit_transactions table
-            "transaction_type": transaction_type,
-            "credits_change": -amount,  # Negative because it's an addition
-            "balance_before": current_credits,
-            "balance_after": new_credits,
-            "description": description,
-            "transaction_date": datetime.now().isoformat()
-        }
-        make_supabase_request("POST", "credit_transactions", transaction)
+        # Log credit transaction (try-catch to not fail credit addition if transaction logging fails)
+        try:
+            transaction = {
+                "user_id": user_id,
+                "action": transaction_type,  # Required field for credit_transactions table
+                "transaction_type": transaction_type,
+                "credits_change": -amount,  # Negative because it's an addition
+                "balance_before": current_credits,
+                "balance_after": new_credits,
+                "description": description,
+                "transaction_date": datetime.now().isoformat()
+            }
+            make_supabase_request("POST", "credit_transactions", transaction, use_service_role=True)
+            logger.info(f"✅ Transaction recorded for {user_id}")
+        except Exception as tx_error:
+            logger.warning(f"⚠️ Credit addition successful but transaction logging failed: {tx_error}")
+            # Don't return False here - credit addition was successful
         return True
 
     return False
