@@ -382,20 +382,28 @@ The solution should explain how to plot each inequality and identify the feasibl
 
             if response.status_code == 200:
                 result = response.json()
+                if 'choices' not in result or len(result['choices']) == 0:
+                    logger.error(f"Invalid API response format: {result}")
+                    return None
+                    
                 content = result['choices'][0]['message']['content']
+                logger.info(f"Raw DeepSeek response: {content[:200]}...")
 
-                # Extract JSON from response
+                # Extract JSON from response with better error handling
                 json_start = content.find('{')
                 json_end = content.rfind('}') + 1
 
                 if json_start >= 0 and json_end > json_start:
                     json_str = content[json_start:json_end]
-                    question_data = json.loads(json_str)
-
-                    logger.info(f"✅ Successfully generated question")
-                    return question_data
+                    try:
+                        question_data = json.loads(json_str)
+                        logger.info(f"✅ Successfully generated question: {question_data.get('question', '')[:100]}...")
+                        return question_data
+                    except json.JSONDecodeError as e:
+                        logger.error(f"JSON parsing failed: {e}. Raw JSON: {json_str[:200]}...")
+                        return None
                 else:
-                    logger.error("No valid JSON found in AI response")
+                    logger.error(f"No valid JSON found in AI response. Content: {content[:500]}...")
                     return None
             else:
                 logger.error(f"AI API error: {response.status_code} - {response.text}")

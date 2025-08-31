@@ -366,7 +366,16 @@ class ExamMathematicsHandler:
             registration = get_user_registration(user_id)
             user_name = registration['name'] if registration else "Student"
             
-            # Create solution message
+            # Get user stats for display
+            from database.external_db import get_user_credits, get_user_stats
+            
+            current_credits = get_user_credits(user_id)
+            user_stats = get_user_stats(user_id) or {}
+            current_xp = user_stats.get('xp_points', 0)
+            current_level = user_stats.get('level', 1)
+            current_streak = user_stats.get('streak', 0)
+            
+            # Create solution message with stats
             topic_display = question_data.get('topic') or 'General Mathematics'
             year_display = question_data.get('year') or 'Practice'
             
@@ -377,6 +386,12 @@ class ExamMathematicsHandler:
 📅 **Year:** {year_display}
 
 ✅ **Answer images sent above** ⬆️
+
+📊 **Your Current Stats:**
+💰 **Credits:** {current_credits}
+⭐ **XP Points:** {current_xp}
+🏆 **Level:** {current_level}
+🔥 **Streak:** {current_streak} days
 
 📚 **Study the solution carefully - Ready for the next challenge?**"""
 
@@ -440,7 +455,16 @@ class ExamMathematicsHandler:
             registration = get_user_registration(user_id)
             user_name = registration['name'] if registration else "Student"
             
-            # Create AI solution message
+            # Get user stats for display
+            from database.external_db import get_user_credits, get_user_stats
+            
+            current_credits = get_user_credits(user_id)
+            user_stats = get_user_stats(user_id) or {}
+            current_xp = user_stats.get('xp_points', 0)
+            current_level = user_stats.get('level', 1)
+            current_streak = user_stats.get('streak', 0)
+            
+            # Create AI solution message with stats
             message = f"""🤖 **AI Solution** 🤖
 
 👤 **Student:** {user_name}
@@ -457,6 +481,12 @@ class ExamMathematicsHandler:
 
 💡 **Explanation:**
 {question_data.get('explanation', 'Work through each step carefully.')}
+
+📊 **Your Current Stats:**
+💰 **Credits:** {current_credits}
+⭐ **XP Points:** {current_xp}
+🏆 **Level:** {current_level}
+🔥 **Streak:** {current_streak} days
 
 🎯 **Keep practicing to master this topic!**"""
 
