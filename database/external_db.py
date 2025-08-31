@@ -399,8 +399,8 @@ def calculate_level_from_xp(xp):
     return max(level, 1)  # Minimum level is 1
 
 def get_user_credits(user_id):
-    """Get user's current credit balance from user_stats table"""
-    result = make_supabase_request("GET", "user_stats", select="credits", filters={"user_id": f"eq.{user_id}"})
+    """Get user's current credit balance from users_registration table"""
+    result = make_supabase_request("GET", "users_registration", select="credits", filters={"chat_id": f"eq.{user_id}"})
     if result and len(result) > 0:
         return result[0].get("credits", 0)
     return 0

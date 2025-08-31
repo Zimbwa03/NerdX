@@ -356,7 +356,7 @@ class PaymentService:
                 }
                 make_supabase_request("POST", "payments", completed_payment)
                 
-                # Send approval notification to user
+                # Send WhatsApp notification to user
                 self.send_payment_approval_notification(user_id, reference_code, package, credits)
                 
                 return {
