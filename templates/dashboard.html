@@ -356,6 +356,7 @@ async function createDailyActivityChart() {
 
 async function loadRecentUsers() {
     try {
+        console.log('Loading recent users...');
         const response = await fetch('/api/users?limit=5', {
             method: 'GET',
             headers: {
@@ -375,8 +376,14 @@ async function loadRecentUsers() {
         }
         
         const data = await response.json();
+        console.log('Recent users data:', data);
         
         const container = document.getElementById('recentUsers');
+        
+        if (!container) {
+            console.error('recentUsers container not found');
+            return;
+        }
         
         if (data.users && data.users.length > 0) {
             container.innerHTML = '';
@@ -385,13 +392,21 @@ async function loadRecentUsers() {
                 const userDiv = document.createElement('div');
                 userDiv.className = 'mb-3 pb-2 border-bottom';
                 
-                const registrationDate = new Date(user.registration_date).toLocaleDateString();
+                let registrationDate = 'Unknown';
+                if (user.registration_date) {
+                    try {
+                        registrationDate = new Date(user.registration_date).toLocaleDateString();
+                    } catch (dateError) {
+                        console.warn('Date parsing error:', dateError);
+                        registrationDate = 'Invalid Date';
+                    }
+                }
                 
                 userDiv.innerHTML = `
                     <div class="d-flex justify-content-between">
                         <div>
                             <div class="font-weight-bold">${user.name || 'Unknown'} ${user.surname || ''}</div>
-                            <small class="text-muted">ID: ${user.nerdx_id || user.chat_id}</small>
+                            <small class="text-muted">ID: ${user.nerdx_id || user.chat_id || 'N/A'}</small>
                         </div>
                         <div class="text-right">
                             <small class="text-muted">${registrationDate}</small>
@@ -402,13 +417,21 @@ async function loadRecentUsers() {
                 
                 container.appendChild(userDiv);
             });
+            
+            console.log('Recent users loaded successfully');
         } else {
             container.innerHTML = '<div class="text-muted text-center">No recent users</div>';
+            console.log('No recent users found');
         }
         
     } catch (error) {
         console.error('Error loading recent users:', error);
-        document.getElementById('recentUsers').innerHTML = '<div class="text-danger text-center">Error loading users</div>';
+        console.error('Error details:', error.message, error.stack);
+        
+        const container = document.getElementById('recentUsers');
+        if (container) {
+            container.innerHTML = '<div class="text-danger text-center">Error loading users</div>';
+        }
     }
 }
 
