@@ -6,11 +6,13 @@ from typing import Dict, List, Optional
 
 # Try to import Google Generative AI with fallback
 try:
-    import google.generativeai as genai
+    from google import genai
+    from google.genai import types
     GOOGLE_AI_AVAILABLE = True
 except ImportError:
     GOOGLE_AI_AVAILABLE = False
     genai = None
+    types = None
 
 from config import Config
 
@@ -25,15 +27,14 @@ class EnglishService:
         
         if self._is_configured:
             try:
-                genai.configure(api_key=self.gemini_api_key)
-                self.model = genai.GenerativeModel('gemini-2.0-flash-exp')
+                self.client = genai.Client(api_key=self.gemini_api_key)
                 logger.info("Enhanced ZIMSEC English Service initialized with Gemini AI")
             except Exception as e:
                 logger.error(f"Failed to initialize Gemini AI: {e}")
                 self._is_configured = False
-                self.model = None
+                self.client = None
         else:
-            self.model = None
+            self.client = None
             if not GOOGLE_AI_AVAILABLE:
                 logger.warning("Google Generative AI library not available - English service features will be limited")
             elif not self.gemini_api_key:
@@ -62,7 +63,7 @@ class EnglishService:
 
     def generate_grammar_question(self) -> Optional[Dict]:
         """Generate diverse grammar questions covering comprehensive areas"""
-        if not self._is_configured:
+        if not self._is_configured or not self.client or not types:
             logger.warning("English service not configured - cannot generate grammar questions")
             return None
             
@@ -96,9 +97,10 @@ Return ONLY a JSON object:
 
             logger.info("Generating grammar question using Gemini AI")
             
-            response = self.model.generate_content(
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash",
                 contents=prompt,
-                generation_config=genai.types.GenerateContentConfig(
+                config=types.GenerateContentConfig(
                     response_mime_type="application/json",
                     temperature=0.7,
                     max_output_tokens=1500
@@ -169,9 +171,10 @@ Note: correct_answer should be the index (0-3) of the correct option."""
 
             logger.info("Generating vocabulary MCQ using Gemini AI")
             
-            response = self.model.generate_content(
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash",
                 contents=prompt,
-                generation_config=genai.types.GenerateContentConfig(
+                config=types.GenerateContentConfig(
                     response_mime_type="application/json",
                     temperature=0.7,
                     max_output_tokens=1500
@@ -259,9 +262,10 @@ Note: correct_answer should be the index (0-3) of the correct option."""
         """
         
         try:
-            response = self.model.generate_content(
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash",
                 contents=prompt,
-                generation_config=genai.types.GenerateContentConfig(
+                config=types.GenerateContentConfig(
                     system_instruction="You are an expert Zimbabwean English teacher creating authentic Zimsec O-Level questions.",
                     response_mime_type="application/json",
                     temperature=0.7,
@@ -341,9 +345,10 @@ Note: correct_answer should be the index (0-3) of the correct option."""
         """
         
         try:
-            response = self.model.generate_content(
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash",
                 contents=prompt,
-                generation_config=genai.types.GenerateContentConfig(
+                config=types.GenerateContentConfig(
                     system_instruction="You are an expert Zimbabwean educator creating authentic comprehension materials for Zimsec O-Level.",
                     response_mime_type="application/json",
                     temperature=0.7,
@@ -411,9 +416,10 @@ Return ONLY a JSON object:
             logger.info(f"Generating long comprehension passage: {theme}")
             
             # Add timeout handling for API requests
-            response = self.model.generate_content(
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash",
                 contents=prompt,
-                generation_config=genai.types.GenerateContentConfig(
+                config=types.GenerateContentConfig(
                     system_instruction="You are a ZIMSEC examination expert creating authentic O-Level comprehension materials with Zimbabwean cultural context.",
                     response_mime_type="application/json",
                     temperature=0.7,
@@ -680,11 +686,12 @@ Her story demonstrates that young Zimbabweans can successfully blend tradition w
         """
         
         try:
-            response = self.model.generate_content(
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash",
                 contents=[
-                    genai.types.Content(role="user", parts=[genai.types.Part(text=marking_prompt)])
+                    types.Content(role="user", parts=[types.Part(text=marking_prompt)])
                 ],
-                generation_config=genai.types.GenerateContentConfig(
+                config=types.GenerateContentConfig(
                     system_instruction="You are a senior Zimsec examiner with 20+ years experience marking O-Level essays. Be fair but thorough.",
                     response_mime_type="application/json",
                     temperature=0.3,
@@ -708,9 +715,10 @@ Her story demonstrates that young Zimbabweans can successfully blend tradition w
         try:
             logger.info("Sending essay marking request to Gemini...")
             
-            response = self.model.generate_content(
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash",
                 contents=marking_prompt,
-                generation_config=genai.types.GenerateContentConfig(
+                config=types.GenerateContentConfig(
                     system_instruction="You are a senior ZIMSEC examiner with 20+ years experience marking O-Level essays. Be fair but encouraging.",
                     response_mime_type="application/json",
                     temperature=0.3,
@@ -891,9 +899,10 @@ Her story demonstrates that young Zimbabweans can successfully blend tradition w
             """
         
         try:
-            response = self.model.generate_content(
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash",
                 contents=prompt_instruction,
-                generation_config=genai.types.GenerateContentConfig(
+                config=types.GenerateContentConfig(
                     system_instruction="You are an experienced Zimsec English teacher creating authentic essay prompts.",
                     response_mime_type="application/json",
                     temperature=0.8,
@@ -953,9 +962,10 @@ Her story demonstrates that young Zimbabweans can successfully blend tradition w
         """
         
         try:
-            response = self.model.generate_content(
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash",
                 contents=exercise_prompt,
-                generation_config=genai.types.GenerateContentConfig(
+                config=types.GenerateContentConfig(
                     system_instruction="You are a Zimsec English teacher creating engaging language exercises.",
                     response_mime_type="application/json",
                     temperature=0.6,
