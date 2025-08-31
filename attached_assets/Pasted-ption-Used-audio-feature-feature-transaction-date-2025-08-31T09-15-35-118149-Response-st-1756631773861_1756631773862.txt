@@ -1,0 +1,96 @@
+ption': 'Used audio_feature feature', 'transaction_date': '2025-08-31T09:15:35.118149'}
+Response status: 201
+Response text: [{"id":45,"user_id":"263785494594","action":"audio_feature_usage","credits_change":10,"balance_before":43,"balance_after":33,"description":"Used audio_feature feature","transaction_date":"2025-08-31T09:15:35.118149","transaction_type":"audio_feature_usage"}]
+2025-08-31 09:15:35,412 - database.external_db - INFO - ✅ Transaction recorded for 263785494594
+2025-08-31 09:15:36,127 - services.whatsapp_service - INFO - Message sent successfully to 263785494594
+2025-08-31 09:15:45,028 - services.audio_chat_service - INFO - Starting audio generation...
+2025-08-31 09:15:45,028 - services.audio_chat_service - INFO - Trying Gemini AI for audio generation: Hi Ngonidzashe, an engine works by converting fuel...
+2025-08-31 09:15:45,028 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2025-08-31 09:16:00,028 - services.audio_chat_service - WARNING - Gemini audio generation timed out after 15 seconds
+2025-08-31 09:16:00,029 - services.audio_chat_service - WARNING - Gemini audio generation failed: Gemini AI audio generation timed out - trying ElevenLabs fallback
+2025-08-31 09:16:00,029 - services.audio_chat_service - INFO - 🔄 Switching to ElevenLabs due to Gemini timeout/error
+[2025-08-31 09:16:02 +0000] [6908] [CRITICAL] WORKER TIMEOUT (pid:8243)
+[2025-08-31 09:16:02 +0000] [8243] [ERROR] Error handling request /webhook/whatsapp
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 134, in handle
+    self.handle_request(listener, req, client, addr)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 177, in handle_request
+    respiter = self.wsgi(environ, resp.start_response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/werkzeug/middleware/proxy_fix.py", line 183, in __call__
+    return self.app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/api/webhook.py", line 327, in handle_webhook
+    process_message_background(message, user_id, message_type)
+  File "/home/runner/workspace/api/webhook.py", line 195, in process_message_background
+    handle_text_message(user_id, actual_text)
+  File "/home/runner/workspace/api/webhook.py", line 495, in handle_text_message
+    handle_session_message(user_id, message_text)
+  File "/home/runner/workspace/api/webhook.py", line 736, in handle_session_message
+    handle_audio_chat_message(user_id, message_text)
+  File "/home/runner/workspace/api/webhook.py", line 2333, in handle_audio_chat_message
+    audio_chat_service.handle_audio_input(user_id, message_text=message_text)
+  File "/home/runner/workspace/services/audio_chat_service.py", line 784, in handle_audio_input
+    audio_thread.join(timeout=25)  # 25 second max timeout
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python3.11/threading.py", line 1123, in join
+    self._wait_for_tstate_lock(timeout=max(timeout, 0))
+  File "/nix/store/7d088dip86hlzri9sk0h78b63yfmx0a0-python3-3.11.13/lib/python3.11/threading.py", line 1139, in _wait_for_tstate_lock
+    if lock.acquire(block, timeout):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/base.py", line 204, in handle_abort
+    sys.exit(1)
+SystemExit: 1
+[2025-08-31 09:16:02 +0000] [8243] [INFO] Worker exiting (pid: 8243)
+[2025-08-31 09:16:02 +0000] [8273] [INFO] Booting worker with pid: 8273
+2025-08-31 09:16:03,224 - root - INFO - Database URL configured: postgresql://neondb_owner:npg_SmwhJvT1zuf7@ep-bill...
+2025-08-31 09:16:05,179 - root - INFO - Database tables created successfully
+2025-08-31 09:16:05,184 - database.session_db - INFO - Session database initialized successfully
+2025-08-31 09:16:05,251 - database.external_db - INFO - Supabase properly configured and ready
+Supabase URL: https://hvlvwvzliqrlmqjbfgoa.supabase.co
+Service Role Key: eyJhbGciOiJIUzI1NiIs...
+Anon Key: eyJhbGciOiJIUzI1NiIs...
+2025-08-31 09:16:05,251 - database.external_db - INFO - Using ANON_KEY for GET operation on user_stats
+Making GET request to https://hvlvwvzliqrlmqjbfgoa.supabase.co/rest/v1/user_stats
+Headers: {'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Content-Type': 'application/json'}
+Params: {'select': '*', 'limit': '1'}
+Data: None
+Response status: 200
+Response text: [{"id":22,"user_id":"test_chat_1756507157","total_questions_answered":0,"correct_answers":0,"total_points_earned":0,"streak_count":0,"last_activity_date":null,"created_at":"2025-08-31T05:01:55.791583","updated_at":"2025-08-31T05:01:55.791583","credits":75,"xp_points":0,"level":1,"streak":0,"max_streak":0,"username":"test_user","first_name":"Test","last_activity":"2025-08-31T05:01:55.613725","total_attempts":0,"total_time_spent":0}]
+2025-08-31 09:16:05,532 - database.external_db - INFO - Creating users_registration table...
+2025-08-31 09:16:05,532 - database.external_db - INFO - Checking if users_registration table exists...
+2025-08-31 09:16:05,532 - database.external_db - INFO - Using SERVICE_ROLE_KEY for GET operation on users_registration
+Making GET request to https://hvlvwvzliqrlmqjbfgoa.supabase.co/rest/v1/users_registration
+Headers: {'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjM4MjEyOSwiZXhwIjoyMDY3OTU4MTI5fQ.p4qtbG42XUiN8sXH3phmUMwwQPo1v-StjUkwUZOR4Bg', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjM4MjEyOSwiZXhwIjoyMDY3OTU4MTI5fQ.p4qtbG42XUiN8sXH3phmUMwwQPo1v-StjUkwUZOR4Bg', 'Content-Type': 'application/json'}
+Params: {'select': '*', 'limit': '1'}
+Data: None
+Response status: 200
+Response text: [{"id":28,"chat_id":"263771681635","name":"Tinashe","surname":"Mutsambiwa","date_of_birth":"2003-10-03","nerdx_id":"NK7Z4I","credits":70,"registration_date":"2025-08-31T06:24:49.153974","referred_by_nerdx_id":null}]
+2025-08-31 09:16:05,815 - database.external_db - INFO - Users registration table already exists and is accessible
+2025-08-31 09:16:05,815 - database.external_db - INFO - Creating payment_transactions table...
+2025-08-31 09:16:05,815 - database.external_db - INFO - Using SERVICE_ROLE_KEY for GET operation on payment_transactions
+Making GET request to https://hvlvwvzliqrlmqjbfgoa.supabase.co/rest/v1/payment_transactions
+Headers: {'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjM4MjEyOSwiZXhwIjoyMDY3OTU4MTI5fQ.p4qtbG42XUiN8sXH3phmUMwwQPo1v-StjUkwUZOR4Bg', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjM4MjEyOSwiZXhwIjoyMDY3OTU4MTI5fQ.p4qtbG42XUiN8sXH3phmUMwwQPo1v-StjUkwUZOR4Bg', 'Content-Type': 'application/json'}
+Params: {'select': '*', 'limit': '1'}
+Data: None
+Response status: 200
+Response text: [{"id":1,"user_id":"test_payment_user_1756507162","package_id":"test_package","reference_code":"PAY07162","amount":10.00,"credits":100,"status":"approved","payment_proof":null,"payment_method":null,"created_at":"2025-08-29T22:39:24.470713","proof_submitted_at":null,"approved_at":"2025-08-30T06:02:30.811485","rejected_at":null,"admin_notes":null,"credits_added":100,"phone_number":null,"email":null,"rejection_reason":null}]
+2025-08-31 09:16:06,082 - database.external_db - INFO - Payment transactions table already exists and is accessible
+2025-08-31 09:16:06,083 - database.external_db - INFO - Database connection successful
+2025-08-31 09:16:06,083 - root - INFO - ✅ Supabase database initialized successfully
+2025-08-31 09:16:06,091 - services.paynow_service - INFO - ✅ Paynow service initialized successfully
+2025-08-31 09:16:06,092 - services.payment_service - WARNING - EcoCash API key not configured - payment features will be limited
+2025-08-31 09:16:06,095 - services.payment_service - WARNING - EcoCash API key not configured - payment features will be limited
+2025-08-31 09:16:08,575 - services.payment_service - WARNING - EcoCash API key not config

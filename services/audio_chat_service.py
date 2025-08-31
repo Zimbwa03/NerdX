@@ -360,10 +360,10 @@ class AudioChatService:
                     thread.start()
                     
                     # Wait for result with timeout
-                    thread.join(timeout=15)  # 15 second timeout
+                    thread.join(timeout=25)  # 25 second timeout
                     
                     if thread.is_alive():
-                        logger.warning("Gemini audio generation timed out after 15 seconds")
+                        logger.warning("Gemini audio generation timed out after 25 seconds")
                         raise TimeoutError("Gemini AI audio generation timed out")
                     
                     # Check for exceptions
@@ -432,6 +432,8 @@ class AudioChatService:
                     logger.info("🔄 Switching to ElevenLabs due to Gemini timeout/error")
                     elevenlabs_result = self.generate_audio_with_elevenlabs(text, voice_type)
                     if elevenlabs_result:
+                        logger.info(f"✅ ElevenLabs fallback successful: {elevenlabs_result}")
+                        return elevenlabs_result
                         logger.info("✅ ElevenLabs emergency fallback succeeded")
                         return elevenlabs_result
             else:
@@ -775,30 +777,73 @@ Type 'end audio' to exit audio chat mode."""
                     except Exception as e:
                         audio_exception_queue.put(e)
                 
-                # Start audio generation in separate thread
+                # Start audio generation in separate thread - NO BLOCKING
                 audio_thread = threading.Thread(target=audio_generation_thread)
                 audio_thread.daemon = True
                 audio_thread.start()
                 
-                # Wait for completion with timeout
-                audio_thread.join(timeout=25)  # 25 second max timeout
+                # QUICK non-blocking check for immediate results
+                import time
+                time.sleep(0.5)  # Quick 500ms check for fast responses
                 
-                if audio_thread.is_alive():
-                    logger.warning("Audio generation timed out after 25 seconds - sending text response")
-                    audio_path = None
+                # Check if we got a quick result
+                if not audio_result_queue.empty():
+                    audio_path = audio_result_queue.get()
+                    logger.info(f"Fast audio generation completed: {audio_path}")
                 elif not audio_exception_queue.empty():
                     error = audio_exception_queue.get()
-                    logger.error(f"Audio generation error: {error}")
+                    logger.error(f"Fast audio generation error: {error}")
                     audio_path = None
-                elif not audio_result_queue.empty():
-                    audio_path = audio_result_queue.get()
-                    if audio_path:
-                        logger.info(f"Audio generation completed: {audio_path}")
-                    else:
-                        logger.warning("Audio generation failed - no audio file created")
                 else:
-                    logger.warning("Audio generation completed but no result")
-                    audio_path = None
+                    # No immediate result - send processing message and continue in background
+                    logger.info("Audio generation taking longer - will send when ready")
+                    
+                    # Send immediate response to avoid user waiting
+                    whatsapp_service.send_message(
+                        user_id, 
+                        "⏳ Processing your request... Your audio response will arrive shortly!"
+                    )
+                    
+                    # Start background processing
+                    def background_audio_handler():
+                        try:
+                            # Wait for background generation to complete
+                            audio_thread.join(timeout=30)
+                            
+                            final_audio_path = None
+                            if not audio_exception_queue.empty():
+                                error = audio_exception_queue.get()
+                                logger.error(f"Background audio generation error: {error}")
+                            elif not audio_result_queue.empty():
+                                final_audio_path = audio_result_queue.get()
+                                
+                            if final_audio_path and os.path.exists(final_audio_path):
+                                # Send the audio file
+                                success = whatsapp_service.send_audio_message(user_id, final_audio_path)
+                                if success:
+                                    logger.info(f"🎵 Background audio delivered to {user_id}")
+                                    # Send gamified buttons after audio
+                                    self.send_gamified_audio_response_buttons(user_id, xp_points, new_level > current_level, current_level, new_level)
+                                else:
+                                    # Audio failed - send text fallback
+                                    whatsapp_service.send_message(user_id, f"💬 {ai_response}")
+                            else:
+                                # No audio - send text fallback
+                                logger.warning("Background audio generation failed - sending text response")
+                                whatsapp_service.send_message(user_id, f"💬 {ai_response}")
+                                
+                        except Exception as e:
+                            logger.error(f"Background audio handler error: {e}")
+                            # Fallback to text response
+                            whatsapp_service.send_message(user_id, f"💬 {ai_response}")
+                    
+                    # Start background handler in separate thread
+                    bg_thread = threading.Thread(target=background_audio_handler)
+                    bg_thread.daemon = True
+                    bg_thread.start()
+                    
+                    # Skip the normal audio processing and return early
+                    return  # Exit early - background thread will handle completion
 
             except Exception as e:
                 logger.error(f"Audio generation wrapper error: {e}")
@@ -819,13 +864,15 @@ Type 'end audio' to exit audio chat mode."""
             new_level = max(1, (new_xp // 100) + 1)
             new_streak = current_streak + 1
 
-            # Update total attempts and user stats (removed audio_completed - column doesn't exist)
-            update_user_stats(user_id, {
-                'total_attempts': current_stats.get('total_attempts', 0) + 1,
-                'xp_points': new_xp,
-                'level': new_level,
-                'streak': new_streak
-            })
+            # Update total attempts and user stats - moved here to avoid duplication
+            if not hasattr(self, '_stats_updated'):
+                update_user_stats(user_id, {
+                    'total_attempts': current_stats.get('total_attempts', 0) + 1,
+                    'xp_points': new_xp,
+                    'level': new_level,
+                    'streak': new_streak
+                })
+                self._stats_updated = True
 
             if audio_path and os.path.exists(audio_path):
                 logger.info(f"✅ AUDIO READY: {audio_path}, size: {os.path.getsize(audio_path)} bytes")
