@@ -1,0 +1,42 @@
+Loading dashboard data...
+Dashboard data loaded successfully: 
+Object {active_users_today: 14, arpu: 2.71, database_status: "connected", new_registrations_week: 13, total_questions_answered: 10, …}
+Loading state hidden
+Error loading recent users: 
+Error {}
+message: "HTTP error! status: 500"
+stack: "Error: HTTP error! status: 500↵ at loadRecentUsers (https://61194f60-7b5c-4284-9b2c-b59dc4ff853d-00-ba6ee6tc1d8y.kirk.replit.dev/:486:19)"
+get stack: ƒ ()
+set stack: ƒ ()
+[[Prototype]]: Object
+
+at t.value (https://61194f60-7b5c-4284-9b2c-b59dc4ff853d-00-ba6ee6tc1d8y.kirk.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://61194f60-7b5c-4284-9b2c-b59dc4ff853d-00-ba6ee6tc1d8y.kirk.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://61194f60-7b5c-4284-9b2c-b59dc4ff853d-00-ba6ee6tc1d8y.kirk.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://61194f60-7b5c-4284-9b2c-b59dc4ff853d-00-ba6ee6tc1d8y.kirk.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Engagement Summary: 
+Object {active: 0, at_risk: 0, avg_engagement_score: 4.6, inactive: 0, very_active: 14}
+Loading dashboard data...
+Dashboard data loaded successfully: 
+Object {active_users_today: 14, arpu: 2.71, database_status: "connected", new_registrations_week: 13, total_questions_answered: 10, …}
+Loading state hidden
+Engagement Summary: 
+Object {active: 0, at_risk: 0, avg_engagement_score: 4.6, inactive: 0, very_active: 14}
+Engagement Summary: 
+Object {active: 0, at_risk: 0, avg_engagement_score: 4.6, inactive: 0, very_active: 14}
+Loading dashboard data...
+Dashboard data loaded successfully: 
+Object {active_users_today: 14, arpu: 2.71, database_status: "connected", new_registrations_week: 13, total_questions_answered: 10, …}
+Loading state hidden
+Engagement Summary: 
+Object {active: 0, at_risk: 0, avg_engagement_score: 4.6, inactive: 0, very_active: 14}
+Engagement Summary: 
+Object {active: 0, at_risk: 0, avg_engagement_score: 4.6, inactive: 0, very_active: 14}
+Loading dashboard data...
+Dashboard data loaded successfully: 
+Object {active_users_today: 14, arpu: 2.71, database_status: "connected", new_registrations_week: 13, total_questions_answered: 10, …}
+Loading state hidden
+Engagement Summary: 
+Object {active: 0, at_risk: 0, avg_engagement_score: 4.6, inactive: 0, very_active: 14}
+Engagement Summary: 
+Object {active: 0, at_risk: 0, avg_engagement_score: 4.6, inactive: 0, very_active: 14}
