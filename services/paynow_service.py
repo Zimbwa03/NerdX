@@ -98,6 +98,18 @@ class PaynowService:
             # Send mobile payment request
             response = self.paynow_client.send_mobile(payment, phone_number, 'ecocash')
             
+            # Debug response details
+            logger.info(f"🔍 Paynow response debug: success={response.success}")
+            
+            if hasattr(response, 'error'):
+                logger.info(f"🔍 Response error: {response.error} (type: {type(response.error)})")
+            if hasattr(response, 'data'):
+                logger.info(f"🔍 Response data: {response.data}")
+            if hasattr(response, 'poll_url'):
+                logger.info(f"🔍 Response poll_url: {response.poll_url}")
+            if hasattr(response, 'redirect_url'):
+                logger.info(f"🔍 Response redirect_url: {response.redirect_url}")
+            
             if response.success:
                 logger.info(f"✅ Paynow payment initiated successfully: {response.poll_url}")
                 
@@ -113,11 +125,12 @@ class PaynowService:
                     'instructions': self._get_payment_instructions(phone_number, amount, self.test_mode)
                 }
             else:
-                logger.error(f"❌ Paynow payment failed: {response.error}")
+                error_detail = str(response.error) if hasattr(response, 'error') else 'Unknown error'
+                logger.error(f"❌ Paynow payment failed: {error_detail}")
                 return {
                     'success': False,
-                    'error': response.error,
-                    'message': 'Failed to initiate payment. Please try again.'
+                    'error': error_detail,
+                    'message': f'Failed to initiate payment: {error_detail}'
                 }
                 
         except Exception as e:
