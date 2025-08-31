@@ -381,6 +381,7 @@ async function loadRevenuePredictions() {
         confidenceBadge.className = `badge badge-${confidence === 'HIGH' ? 'success' : confidence === 'MEDIUM' ? 'warning' : 'danger'}`;
         
         // Create prediction chart
+        console.log('Revenue predictions data:', data.revenue_predictions);
         createPredictionChart(data.revenue_predictions);
         
     } catch (error) {
@@ -586,6 +587,7 @@ function createPackageChart(packageData) {
 }
 
 function createPredictionChart(predictions) {
+    console.log('Creating prediction chart with data:', predictions);
     const ctx = document.getElementById('predictionChart').getContext('2d');
     
     if (predictionChart) {
@@ -593,12 +595,21 @@ function createPredictionChart(predictions) {
     }
     
     if (!predictions || predictions.length === 0) {
+        console.log('No predictions data available for chart');
+        // Show a message or placeholder instead of empty chart
+        const canvas = document.getElementById('predictionChart');
+        const container = canvas.parentElement;
+        container.innerHTML = '<div class="text-center text-muted py-4">No prediction data available</div>';
         return;
     }
     
     const labels = predictions.map(p => `Day ${p.day}`);
     const revenueData = predictions.map(p => p.predicted_revenue);
     const profitData = predictions.map(p => p.predicted_profit);
+    
+    console.log('Chart labels:', labels);
+    console.log('Revenue data:', revenueData);
+    console.log('Profit data:', profitData);
     
     predictionChart = new Chart(ctx, {
         type: 'line',
