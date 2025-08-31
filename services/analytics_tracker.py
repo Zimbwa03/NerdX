@@ -16,12 +16,12 @@ class AnalyticsTracker:
     def __init__(self):
         raw_conn_string = os.getenv('DATABASE_URL') or os.getenv('SUPABASE_DATABASE_URL')
         self.conn_string = self._clean_connection_string(raw_conn_string)
-
+    
     def _clean_connection_string(self, database_url: str) -> str:
         """Clean database URL by removing pgbouncer and other problematic parameters"""
         if not database_url:
             return database_url
-
+        
         # Remove pgbouncer parameter if present (incompatible with psycopg2)
         if "pgbouncer=true" in database_url:
             database_url = database_url.replace("?pgbouncer=true", "").replace("&pgbouncer=true", "")
@@ -30,9 +30,9 @@ class AnalyticsTracker:
         if "pgbouncer" in database_url:
             # Remove any remaining pgbouncer parameters
             database_url = re.sub(r'[?&]pgbouncer=[^&]*', '', database_url)
-
+        
         return database_url
-
+    
     def _get_connection(self):
         """Get database connection"""
         try:
@@ -40,32 +40,32 @@ class AnalyticsTracker:
         except Exception as e:
             logger.error(f"Database connection error: {e}")
             return None
-
+    
     def track_user_session_start(self, user_id: str, session_id: str, device_info: Dict = None):
         """Track when a user starts a session"""
         try:
             conn = self._get_connection()
             if not conn:
                 return False
-
+            
             cursor = conn.cursor()
-
+            
             cursor.execute("""
                 INSERT INTO user_sessions_analytics 
                 (user_id, session_id, start_time, device_info)
                 VALUES (%s, %s, %s, %s)
                 ON CONFLICT (session_id) DO NOTHING
             """, (user_id, session_id, datetime.now(), json.dumps(device_info) if device_info else None))
-
+            
             conn.commit()
             cursor.close()
             conn.close()
             return True
-
+            
         except Exception as e:
             logger.error(f"Error tracking session start: {e}")
             return False
-
+    
     def track_user_session_end(self, session_id: str, questions_attempted: int = 0, 
                               questions_correct: int = 0, credits_used: int = 0, 
                               subjects_touched: List[str] = None):
@@ -74,9 +74,9 @@ class AnalyticsTracker:
             conn = self._get_connection()
             if not conn:
                 return False
-
+            
             cursor = conn.cursor()
-
+            
             # Calculate session duration
             cursor.execute("""
                 UPDATE user_sessions_analytics 
@@ -89,16 +89,16 @@ class AnalyticsTracker:
                 WHERE session_id = %s
             """, (datetime.now(), datetime.now(), questions_attempted, questions_correct,
                   credits_used, subjects_touched or [], session_id))
-
+            
             conn.commit()
             cursor.close()
             conn.close()
             return True
-
+            
         except Exception as e:
             logger.error(f"Error tracking session end: {e}")
             return False
-
+    
     def track_question_attempt(self, user_id: str, subject: str, topic: str = None, 
                               difficulty: str = None, is_correct: bool = False, 
                               time_taken: int = 0, credits_used: int = 1):
@@ -107,14 +107,11 @@ class AnalyticsTracker:
             conn = self._get_connection()
             if not conn:
                 return False
-
+            
             cursor = conn.cursor()
-
+            
             today = date.today()
-
-            # All Combined Science topical questions use 1 credit regardless of difficulty
-            credits_used = 1
-
+            
             # Update subject usage analytics
             cursor.execute("""
                 INSERT INTO subject_usage_analytics 
@@ -132,16 +129,16 @@ class AnalyticsTracker:
                     credits_consumed = subject_usage_analytics.credits_consumed + %s
             """, (today, subject, topic, difficulty, 1 if is_correct else 0, time_taken, credits_used,
                   1 if is_correct else 0, time_taken, credits_used))
-
+            
             conn.commit()
             cursor.close()
             conn.close()
             return True
-
+            
         except Exception as e:
             logger.error(f"Error tracking question attempt: {e}")
             return False
-
+    
     def track_feature_usage(self, feature_name: str, user_id: str, success: bool = True, 
                            time_spent: int = 0, credits_consumed: int = 0):
         """Track feature usage"""
@@ -149,11 +146,11 @@ class AnalyticsTracker:
             conn = self._get_connection()
             if not conn:
                 return False
-
+            
             cursor = conn.cursor()
-
+            
             today = date.today()
-
+            
             cursor.execute("""
                 INSERT INTO feature_usage_analytics 
                 (date, feature_name, usage_count, unique_users, total_time_spent, 
@@ -171,16 +168,16 @@ class AnalyticsTracker:
                     updated_at = NOW()
             """, (today, feature_name, time_spent, credits_consumed, 100 if success else 0,
                   time_spent, credits_consumed, 100 if success else 0))
-
+            
             conn.commit()
             cursor.close()
             conn.close()
             return True
-
+            
         except Exception as e:
             logger.error(f"Error tracking feature usage: {e}")
             return False
-
+    
     def update_daily_user_activity(self, user_id: str, is_new_user: bool = False, 
                                   session_duration: int = 0, questions_attempted: int = 0, 
                                   credits_used: int = 0):
@@ -189,11 +186,11 @@ class AnalyticsTracker:
             conn = self._get_connection()
             if not conn:
                 return False
-
+            
             cursor = conn.cursor()
-
+            
             today = date.today()
-
+            
             cursor.execute("""
                 INSERT INTO daily_user_activity 
                 (date, total_active_users, new_users, returning_users, total_sessions,
@@ -215,16 +212,16 @@ class AnalyticsTracker:
             """, (today, 1 if is_new_user else 0, 0 if is_new_user else 1, session_duration, 
                   questions_attempted, credits_used, 1 if is_new_user else 0, 
                   0 if is_new_user else 1, session_duration, questions_attempted, credits_used))
-
+            
             conn.commit()
             cursor.close()
             conn.close()
             return True
-
+            
         except Exception as e:
             logger.error(f"Error updating daily user activity: {e}")
             return False
-
+    
     def update_user_engagement(self, user_id: str, session_time: int = 0, 
                               questions_attempted: int = 0, questions_correct: int = 0, 
                               credits_used: int = 0, subjects_engaged: List[str] = None):
@@ -233,22 +230,22 @@ class AnalyticsTracker:
             conn = self._get_connection()
             if not conn:
                 return False
-
+            
             cursor = conn.cursor()
-
+            
             today = date.today()
-
+            
             # Calculate engagement score
             accuracy = (questions_correct / questions_attempted * 100) if questions_attempted > 0 else 0
             engagement_score = min(100, (questions_attempted * 0.5) + (accuracy * 0.3) + (session_time / 60 * 0.2))
-
+            
             # Determine retention status
             retention_status = 'active'
             if questions_attempted == 0:
                 retention_status = 'at_risk'
             elif session_time < 300:  # Less than 5 minutes
                 retention_status = 'at_risk'
-
+            
             cursor.execute("""
                 INSERT INTO user_engagement_metrics 
                 (user_id, date, session_count, total_time_spent, questions_attempted,
@@ -269,16 +266,16 @@ class AnalyticsTracker:
                   credits_used, subjects_engaged or [], engagement_score, retention_status,
                   session_time, questions_attempted, questions_correct, credits_used, 
                   subjects_engaged or [], engagement_score, retention_status))
-
+            
             conn.commit()
             cursor.close()
             conn.close()
             return True
-
+            
         except Exception as e:
             logger.error(f"Error updating user engagement: {e}")
             return False
-
+    
     def log_system_performance_metric(self, metric_name: str, metric_value: float, 
                                      metric_unit: str = None, additional_data: Dict = None):
         """Log system performance metrics"""
@@ -286,21 +283,21 @@ class AnalyticsTracker:
             conn = self._get_connection()
             if not conn:
                 return False
-
+            
             cursor = conn.cursor()
-
+            
             cursor.execute("""
                 INSERT INTO system_performance_metrics 
                 (metric_name, metric_value, metric_unit, additional_data)
                 VALUES (%s, %s, %s, %s)
             """, (metric_name, metric_value, metric_unit, 
                   json.dumps(additional_data) if additional_data else None))
-
+            
             conn.commit()
             cursor.close()
             conn.close()
             return True
-
+            
         except Exception as e:
             logger.error(f"Error logging performance metric: {e}")
             return False
