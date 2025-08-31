@@ -4029,10 +4029,10 @@ def handle_paynow_phone_collection(user_id: str, phone_number: str):
         
         # Initiate Paynow payment
         try:
-            payment_response = paynow_service.initiate_payment(
-                user_id=user_id,
+            payment_response = paynow_service.create_usd_ecocash_payment(
                 amount=amount,
                 phone_number=phone_cleaned,
+                email=f"{user_id}@nerdx.co.zw",  # Use user ID as email since it's required
                 reference=f"CREDITS_{package_id}_{user_id}",
                 description=f"NerdX Quiz Credits - {credits} credits"
             )

@@ -1,0 +1,44 @@
+sponse status: 200
+Response text: [{"id":22,"chat_id":"263785494594","name":"Ngonidzashe","surname":"Zimbwa","date_of_birth":"2003-03-10","nerdx_id":"NYTQHO","credits":3,"registration_date":"2025-08-30T20:06:06.643279","referred_by_nerdx_id":null}]
+2025-08-31 02:45:04,234 - services.whatsapp_service - INFO - Interactive message sent successfully to 263785494594
+2025-08-31 02:46:54,529 - api.webhook - INFO - 🔍 Received WhatsApp message: {'from': '263785494594', 'id': 'wamid.HBgMMjYzNzg1NDk0NTk0FQIAEhgUM0EzQTcxMTFEOEM2OENCNjUwMzEA', 'timestamp': '1756608413', 'text': {'body': '0771111111'}, 'type': 'text'}
+2025-08-31 02:46:54,529 - api.webhook - INFO - 🔍 User ID: 263785494594, Type: text
+2025-08-31 02:46:54,529 - api.webhook - INFO - Background processing text message from 263785494594
+2025-08-31 02:46:54,530 - api.webhook - INFO - 📝 Extracted text for 263785494594: '0771111111' (length: 10)
+2025-08-31 02:46:54,530 - api.webhook - INFO - 📝 Full message_data: {'from': '263785494594', 'id': 'wamid.HBgMMjYzNzg1NDk0NTk0FQIAEhgUM0EzQTcxMTFEOEM2OENCNjUwMzEA', 'timestamp': '1756608413', 'text': {'body': '0771111111'}, 'type': 'text'}
+2025-08-31 02:46:54,530 - api.webhook - INFO - ✅ Text extraction successful for 263785494594: '0771111111'
+2025-08-31 02:46:55,367 - services.analytics_tracker - ERROR - Error tracking session start: relation "user_sessions_analytics" does not exist
+LINE 2:                 INSERT INTO user_sessions_analytics 
+                                    ^
+
+2025-08-31 02:46:55,368 - services.user_service - INFO - 🔍 DEBUGGING: Checking registration for user 263785494594
+2025-08-31 02:46:55,368 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+Making GET request to https://hvlvwvzliqrlmqjbfgoa.supabase.co/rest/v1/users_registration
+Headers: {'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Content-Type': 'application/json'}
+Params: {'select': '*', 'chat_id': 'eq.263785494594'}
+Data: None
+Response status: 200
+Response text: [{"id":22,"chat_id":"263785494594","name":"Ngonidzashe","surname":"Zimbwa","date_of_birth":"2003-03-10","nerdx_id":"NYTQHO","credits":3,"registration_date":"2025-08-30T20:06:06.643279","referred_by_nerdx_id":null}]
+2025-08-31 02:46:55,747 - services.user_service - INFO - 🔍 DEBUGGING: is_user_registered returned: True
+2025-08-31 02:46:55,748 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+Making GET request to https://hvlvwvzliqrlmqjbfgoa.supabase.co/rest/v1/users_registration
+Headers: {'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2bHZ3dnpsaXFybG1xamJmZ29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzODIxMjksImV4cCI6MjA2Nzk1ODEyOX0.jHxdXm5ilonxeBBrjYEMEmL3-bd3XOvGKj7XVuLBaWU', 'Content-Type': 'application/json'}
+Params: {'select': '*', 'chat_id': 'eq.263785494594'}
+Data: None
+Response status: 200
+Response text: [{"id":22,"chat_id":"263785494594","name":"Ngonidzashe","surname":"Zimbwa","date_of_birth":"2003-03-10","nerdx_id":"NYTQHO","credits":3,"registration_date":"2025-08-30T20:06:06.643279","referred_by_nerdx_id":null}]
+2025-08-31 02:46:56,417 - services.user_service - INFO - 🔍 DEBUGGING: get_user_registration returned: True
+2025-08-31 02:46:57,540 - services.whatsapp_service - INFO - Message sent successfully to 263785494594
+2025-08-31 02:46:57,541 - api.webhook - ERROR - Paynow payment exception for 263785494594: 'PaynowService' object has no attribute 'initiate_payment'
+2025-08-31 02:46:57,541 - services.message_throttle - WARNING - Message blocked for 263785494594 - too rapid (only 0.00s since last)
+2025-08-31 02:46:57,541 - services.whatsapp_service - INFO - Throttling message to 263785494594, waiting 0.30s
+2025-08-31 02:46:58,856 - services.whatsapp_service - INFO - Message sent successfully to 263785494594
+2025-08-31 02:46:58,869 - services.message_throttle - WARNING - Message blocked for 263785494594 - too rapid (only 0.01s since last)
+2025-08-31 02:46:58,870 - services.whatsapp_service - INFO - Throttling interactive message to 263785494594, waiting 0.29s
+2025-08-31 02:46:59,732 - services.whatsapp_service - INFO - Interactive message sent successfully to 263785494594
+[2025-08-31 02:47:16 +0000] [3832] [INFO] Handling signal: winch
+2025-08-31 02:47:17,182 - services.admin_auth_service - ERROR - Session verification error: relation "admin_sessions" does not exist
+LINE 4:                 FROM admin_sessions s
+                             ^
+
+[2025-08-31 02:47:20 +0000] [3832] [INFO] Handling signal: winch
