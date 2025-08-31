@@ -304,8 +304,9 @@ class UserService:
             nerdx_id = registration_result.get('nerdx_id') if registration_result else None
 
             if success:
-                # Award registration bonus credits using advanced credit service
-                advanced_credit_service.award_registration_credits(whatsapp_id)
+                # Credits are already allocated in create_user_registration function
+                # No need for additional credit allocation here
+                logger.info(f"✅ Registration completed for {whatsapp_id} with NerdX ID: {nerdx_id}")
 
                 # Handle referral if applicable using existing system
                 if referral_code:
@@ -314,8 +315,7 @@ class UserService:
                     success = add_referral_credits(referral_code, whatsapp_id)
 
                     if success:
-                        # Award referral bonus to new user too
-                        add_credits(whatsapp_id, Config.REFERRAL_BONUS, f'Referral signup bonus via {referral_code}')
+                        logger.info(f"✅ Referral credits awarded to referrer for code {referral_code}")
                         logger.info(f"Successfully processed referral: {referral_code} -> {whatsapp_id}")
 
                 # Clear registration session
