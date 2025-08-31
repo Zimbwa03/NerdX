@@ -40,8 +40,9 @@ class AdvancedAnalyticsService:
             # Get all completed payments (using your actual payments table)
             payments = make_supabase_request(
                 "GET", 
-                "payments",
-                select="*"
+                "payment_transactions",
+                select="*",
+                filters={"status": "eq.approved"}
             )
             
             # Get all credit transactions (using your actual table structure)
@@ -66,14 +67,14 @@ class AdvancedAnalyticsService:
             )
             
             # Calculate revenue metrics
-            total_revenue = sum(p.get('amount_paid', 0) for p in (payments or []))
-            total_credits_sold = sum(p.get('credits_added', 0) for p in (payments or []))
+            total_revenue = sum(p.get('amount', 0) for p in (payments or []))
+            total_credits_sold = sum(p.get('credits', 0) for p in (payments or []))
             
-            # Calculate operational costs (your credit_transactions uses credits_used field)
+            # Calculate operational costs (using credit_transactions table)
             total_credits_used = sum(
-                t.get('credits_used', 0) 
+                t.get('credits_change', 0) 
                 for t in (transactions or []) 
-                if t.get('credits_used', 0) > 0  # Positive values are usage
+                if t.get('credits_change', 0) > 0  # Positive values are usage
             )
             total_operational_cost = total_credits_used * self.OPERATIONAL_COST_PER_CREDIT
             
@@ -355,7 +356,7 @@ class AdvancedAnalyticsService:
         for transaction in transactions:
             # Use transaction_type from your actual schema
             feature = transaction.get('transaction_type', 'unknown')
-            if transaction.get('credits_used', 0) > 0:  # Positive values are usage
+            if transaction.get('credits_change', 0) > 0:  # Positive values are usage
                 feature_counts[feature] = feature_counts.get(feature, 0) + 1
                 total_transactions += 1
         
@@ -378,8 +379,8 @@ class AdvancedAnalyticsService:
             return {}
         
         for payment in payments:
-            # Extract package type from transaction_reference or use credits_added as proxy
-            credits = payment.get('credits_added', 0)
+            # Extract package type from transaction_reference or use credits as proxy
+            credits = payment.get('credits', 0)
             # Map credits to package types based on your pricing structure
             if credits == 50:
                 package = 'pocket'
@@ -392,7 +393,7 @@ class AdvancedAnalyticsService:
             else:
                 package = f'custom_{credits}'
                 
-            amount = payment.get('amount_paid', 0)
+            amount = payment.get('amount', 0)
             
             package_counts[package] = package_counts.get(package, 0) + 1
             package_revenue[package] = package_revenue.get(package, 0) + amount
@@ -433,7 +434,7 @@ class AdvancedAnalyticsService:
                 else:
                     continue
                 
-                amount = payment.get('amount_paid', 0)
+                amount = payment.get('amount', 0)
                 revenue_by_period[period_key] = revenue_by_period.get(period_key, 0) + amount
         
         # Convert to list and sort
@@ -534,7 +535,7 @@ class AdvancedAnalyticsService:
             return {}
         
         for transaction in transactions:
-            if transaction.get('credits_used', 0) > 0:  # Positive values are usage
+            if transaction.get('credits_change', 0) > 0:  # Positive values are usage
                 feature = transaction.get('transaction_type', 'unknown')
                 credits_used = transaction.get('credits_used', 0)
                 cost = credits_used * self.OPERATIONAL_COST_PER_CREDIT
