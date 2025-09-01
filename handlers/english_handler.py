@@ -1821,8 +1821,8 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
             user_name = registration['name'] if registration else "Student"
             credits = get_user_credits(user_id)
 
-            if credits < 2:
-                self.whatsapp_service.send_message(user_id, f"❌ Insufficient credits! You need 2 credits but have {credits}. Purchase more credits to continue.")
+            if credits < 1:
+                self.whatsapp_service.send_message(user_id, f"❌ Insufficient credits! You need 1 credit but have {credits}. Purchase more credits to continue.")
                 return
 
             # Check and deduct credits using advanced credit service
@@ -1830,7 +1830,7 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
             
             credit_result = advanced_credit_service.check_and_deduct_credits(
                 user_id, 
-                'english_grammar',  # 2 credits as per config
+                'english_topical',  # 1 credit - use correct action key
                 None
             )
             
@@ -1889,8 +1889,8 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
             user_name = registration['name'] if registration else "Student"
             credits = get_user_credits(user_id)
 
-            if credits < 2:
-                self.whatsapp_service.send_message(user_id, f"❌ Insufficient credits! You need 2 credits but have {credits}. Purchase more credits to continue.")
+            if credits < 1:
+                self.whatsapp_service.send_message(user_id, f"❌ Insufficient credits! You need 1 credit but have {credits}. Purchase more credits to continue.")
                 return
 
             # Check and deduct credits using advanced credit service
@@ -1898,7 +1898,7 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
             
             credit_result = advanced_credit_service.check_and_deduct_credits(
                 user_id, 
-                'english_vocabulary',  # 2 credits as per config
+                'english_topical',  # 1 credit - use correct action key
                 None
             )
             
@@ -1958,7 +1958,7 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
         """Handle grammar answer submission"""
         try:
             from database.session_db import get_user_session, clear_user_session
-            from database.external_db import get_user_stats, get_user_credits
+            from database.external_db import get_user_stats, get_user_credits, add_xp, update_streak
 
             session_data = get_user_session(user_id)
             if not session_data or session_data.get('session_type') != 'english_grammar':
@@ -1971,36 +1971,68 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
             question_data = json.loads(question_data_str) if question_data_str else {}
             user_name = session_data.get('user_name', 'Student')
 
-            # Get user stats
+            # Get user stats before awarding XP
             stats = get_user_stats(user_id) or {}
-            credits = get_user_credits(user_id)
+            current_credits = get_user_credits(user_id)
+            current_xp = stats.get('xp_points', 0)
+            current_level = stats.get('level', 1)
+            current_streak = stats.get('streak', 0)
 
-            # Format the response for WhatsApp with proper text formatting
+            # Award XP and update streak
+            points_earned = 5
+            add_xp(user_id, points_earned, 'english_grammar')
+            update_streak(user_id)
+
+            # Calculate new stats
+            new_xp = current_xp + points_earned
+            new_level = max(1, (new_xp // 100) + 1)
+            new_streak = current_streak + 1
+
+            # Format the answer response
             question_text = question_data.get('question', 'Question not available')
             instructions = question_data.get('instructions', '')
             answer_text = question_data.get('answer', 'Answer not available')
             explanation_text = question_data.get('explanation', 'Explanation not available')
+            topic_area = question_data.get('topic_area', 'Grammar')
 
-            # Build formatted response with proper line breaks
-            topic = session_data.get('topic') or 'Grammar'
-            formatted_response = f"📚 *{topic.title()} Question*\n\n"
-            formatted_response += f"{question_text}\n\n"
-
+            # FIRST MESSAGE: Answer and explanation only
+            answer_message = f"🎉 EXCELLENT! {user_name}! 🎉\n\n"
+            answer_message += f"📚 **{topic_area} Question**\n\n"
+            answer_message += f"**Question:** {question_text}\n\n"
+            
             if instructions:
-                formatted_response += f"📋 *Instructions:*\n{instructions}\n\n"
+                answer_message += f"**Instructions:** {instructions}\n\n"
+            
+            answer_message += f"✅ **Correct Answer:** {answer_text}\n\n"
+            answer_message += f"📖 **Explanation:** {explanation_text}"
 
-            formatted_response += f"💡 *Answer:*\n{answer_text}\n\n"
-            formatted_response += f"📖 *Explanation:*\n{explanation_text}\n\n"
-            formatted_response += f"✨ Great work! You've earned 5 XP points!\n"
-            formatted_response += f"💳 Credits used: 1 | Remaining: {credits}"
+            self.whatsapp_service.send_message(user_id, answer_message)
 
+            # SECOND MESSAGE: Gamified stats and progress
+            level_up_bonus = ""
+            if new_level > current_level:
+                level_up_bonus = f"\n🎉 **LEVEL UP!** Level {current_level} → Level {new_level}!"
+
+            stats_message = f"""🎮 **Your English Progress Dashboard** 🎮
+
+👤 **{user_name}'s English Journey:**
+💰 Credits: **{current_credits}** (Used: 1 credit)
+✨ XP Earned: **+{points_earned} XP**
+⭐ Total XP: **{new_xp}**
+🔥 Streak: **{new_streak} days**
+🎯 Level: **{new_level}**
+
+{level_up_bonus}
+
+📚 Keep practicing to master English grammar! 🚀"""
 
             buttons = [
-                {"text": "➡️ Next Question", "callback_data": "english_grammar_usage"},
+                {"text": "➡️ Next Grammar Question", "callback_data": "english_grammar_usage"},
+                {"text": "📚 Try Vocabulary", "callback_data": "english_vocabulary_building"},
                 {"text": "🔙 Back to Topics", "callback_data": "english_topical_questions"}
             ]
 
-            self.whatsapp_service.send_interactive_message(user_id, formatted_response, buttons)
+            self.whatsapp_service.send_interactive_message(user_id, stats_message, buttons)
 
             # Clear session
             clear_user_session(user_id)
@@ -2013,7 +2045,7 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
         """Handle vocabulary MCQ answer"""
         try:
             from database.session_db import get_user_session, clear_user_session
-            from database.external_db import get_user_stats, get_user_credits
+            from database.external_db import get_user_stats, get_user_credits, add_xp, update_streak
 
             session_data = get_user_session(user_id)
             if not session_data or session_data.get('session_type') != 'english_vocabulary':
@@ -2032,38 +2064,64 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
             # Check if answer is correct
             is_correct = selected_option == correct_answer
 
-            # Get user stats  
+            # Get user stats before awarding XP
             stats = get_user_stats(user_id) or {}
-            credits = get_user_credits(user_id)
+            current_credits = get_user_credits(user_id)
+            current_xp = stats.get('xp_points', 0)
+            current_level = stats.get('level', 1)
+            current_streak = stats.get('streak', 0)
+
+            # Award XP and update streak
+            points_earned = 5 if is_correct else 2  # More XP for correct answers
+            add_xp(user_id, points_earned, 'english_vocabulary')
+            update_streak(user_id)
+
+            # Calculate new stats
+            new_xp = current_xp + points_earned
+            new_level = max(1, (new_xp // 100) + 1)
+            new_streak = current_streak + 1
 
             # Show result
             if is_correct:
                 result_emoji = "✅"
-                result_text = "Correct!"
+                result_text = "OUTSTANDING!"
             else:
-                result_emoji = "❌"
-                result_text = "Incorrect"
+                result_emoji = "📚"
+                result_text = "Good Try!"
 
-            message = f"""{result_emoji} **{result_text}**
+            # FIRST MESSAGE: Answer and explanation
+            answer_message = f"{result_emoji} **{result_text}** {user_name}!\n\n"
+            answer_message += f"📚 **Question:** {question_data.get('question', '')}\n\n"
+            answer_message += f"🎯 **Correct Answer:** {options[correct_answer] if correct_answer < len(options) else 'N/A'}\n\n"
+            answer_message += f"💡 **Explanation:** {question_data.get('explanation', 'Keep learning!')}"
 
-📚 **Question:** {question_data.get('question', '')}
+            self.whatsapp_service.send_message(user_id, answer_message)
 
-🎯 **Correct Answer:** {options[correct_answer] if correct_answer < len(options) else 'N/A'}
+            # SECOND MESSAGE: Gamified stats and progress
+            level_up_bonus = ""
+            if new_level > current_level:
+                level_up_bonus = f"\n🎉 **LEVEL UP!** Level {current_level} → Level {new_level}!"
 
-💡 **Explanation:** {question_data.get('explanation', 'Keep learning!')}
+            stats_message = f"""🎮 **Your English Progress Dashboard** 🎮
 
-📊 **Your Stats:**
-💳 Credits: {credits}
-⚡ XP: {stats.get('xp_points', 0)}
-🔥 Streak: {stats.get('streak', 0)}
-🏆 Level: {stats.get('level', 1)}"""
+👤 **{user_name}'s Vocabulary Journey:**
+💰 Credits: **{current_credits}** (Used: 1 credit)
+✨ XP Earned: **+{points_earned} XP**
+⭐ Total XP: **{new_xp}**
+🔥 Streak: **{new_streak} days**
+🎯 Level: **{new_level}**
+
+{level_up_bonus}
+
+📚 Keep expanding your vocabulary! 🚀"""
 
             buttons = [
-                {"text": "➡️ Next Question", "callback_data": "english_vocabulary_building"},
+                {"text": "➡️ Next Vocabulary Question", "callback_data": "english_vocabulary_building"},
+                {"text": "📝 Try Grammar", "callback_data": "english_grammar_usage"},
                 {"text": "🔙 Back to Topics", "callback_data": "english_topical_questions"}
             ]
 
-            self.whatsapp_service.send_interactive_message(user_id, message, buttons)
+            self.whatsapp_service.send_interactive_message(user_id, stats_message, buttons)
 
             # Clear session
             clear_user_session(user_id)
