@@ -10,6 +10,7 @@ import random
 import json
 import string
 from datetime import datetime, timedelta
+from typing import Optional, Dict, List
 import logging
 
 logger = logging.getLogger(__name__)
@@ -1201,6 +1202,86 @@ def get_connection():
 def check_user_exists(chat_id: str) -> bool:
     """Check if user exists - wrapper for is_user_registered"""
     return is_user_registered(chat_id)
+
+def get_random_grammar_question() -> Optional[Dict]:
+    """Retrieve a random grammar question from the database"""
+    try:
+        if not _is_configured:
+            logger.warning("Database not configured")
+            return None
+            
+        # Get a random question from the english_grammar_questions table
+        response = requests.get(
+            f"{SUPABASE_URL}/rest/v1/english_grammar_questions",
+            headers={
+                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': f'Bearer {SUPABASE_ANON_KEY}',
+                'Content-Type': 'application/json'
+            },
+            params={
+                'select': '*'
+            }
+        )
+        
+        if response.status_code == 200:
+            questions = response.json()
+            if questions:
+                # Return a random question from the available ones
+                selected_question = random.choice(questions)
+                return {
+                    'question': selected_question['question'],
+                    'instructions': selected_question['instructions'], 
+                    'answer': selected_question['answer'],
+                    'explanation': selected_question['explanation'],
+                    'topic_area': selected_question['topic_area']
+                }
+            else:
+                logger.warning("No grammar questions found in database")
+                return None
+        else:
+            logger.error(f"Error retrieving grammar questions: {response.status_code} - {response.text}")
+            return None
+            
+    except Exception as e:
+        logger.error(f"Error getting random grammar question: {e}")
+        return None
+
+def get_grammar_questions_by_topic(topic_area: str) -> List[Dict]:
+    """Retrieve grammar questions by topic area"""
+    try:
+        if not _is_configured:
+            logger.warning("Database not configured")
+            return []
+            
+        response = requests.get(
+            f"{SUPABASE_URL}/rest/v1/english_grammar_questions",
+            headers={
+                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': f'Bearer {SUPABASE_ANON_KEY}',
+                'Content-Type': 'application/json'
+            },
+            params={
+                'select': '*',
+                'topic_area': f'eq.{topic_area}'
+            }
+        )
+        
+        if response.status_code == 200:
+            questions = response.json()
+            return [{
+                'question': q['question'],
+                'instructions': q['instructions'], 
+                'answer': q['answer'],
+                'explanation': q['explanation'],
+                'topic_area': q['topic_area']
+            } for q in questions]
+        else:
+            logger.error(f"Error retrieving grammar questions by topic: {response.status_code} - {response.text}")
+            return []
+            
+    except Exception as e:
+        logger.error(f"Error getting grammar questions by topic: {e}")
+        return []
 
 if __name__ == "__main__":
     # Test the connection

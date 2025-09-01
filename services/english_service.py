@@ -146,7 +146,24 @@ class EnglishService:
         return random.choice(fallback_vocab_questions)
 
     def generate_grammar_question(self) -> Optional[Dict]:
-        """Generate diverse grammar questions covering comprehensive areas with robust fallback"""
+        """Retrieve grammar questions from Supabase database with AI fallback"""
+        # First try to get question from database
+        try:
+            from database.external_db import get_random_grammar_question
+            
+            question_data = get_random_grammar_question()
+            if question_data:
+                logger.info("Retrieved grammar question from database")
+                return {
+                    'success': True,
+                    'question_data': question_data
+                }
+            else:
+                logger.warning("No questions found in database - falling back to AI generation")
+        except Exception as e:
+            logger.error(f"Error retrieving question from database: {e} - falling back to AI")
+        
+        # Fallback to AI generation if database fails
         if not self._is_configured or not self.client or not types:
             logger.warning("English service not configured - using fallback grammar question")
             return {
