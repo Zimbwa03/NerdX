@@ -31,7 +31,7 @@ class EnglishHandler:
                 ]
             },
             "comprehension": {
-                "title": "📖 Comprehension Practice", 
+                "title": "📖 Comprehension Practice",
                 "description": "Reading comprehension with Zimbabwean cultural context",
                 "credit_cost": 3,
                 "themes": [
@@ -56,7 +56,7 @@ class EnglishHandler:
         """Display main English learning menu with full gamification system"""
         try:
             from services.advanced_credit_service import advanced_credit_service
-            
+
             registration = get_user_registration(user_id)
             user_name = registration['name'] if registration else "Student"
             current_credits = get_user_credits(user_id)
@@ -126,7 +126,7 @@ I'm here to help you master English, {user_name}, with:
             # 🔒 ULTRA-SECURE CREDIT VALIDATION (NO DEDUCTION YET!)
             from services.secure_credit_system import secure_credit_system
             validation = secure_credit_system.ultra_secure_pre_validation(user_id, 'english_topical')
-            
+
             if not validation['success']:
                 logger.warning(f"🚨 SECURE BLOCK: User {user_id} denied access to English topical - {validation.get('message')}")
                 message, buttons = secure_credit_system.format_insufficient_credits_message(user_id, 'english_topical')
@@ -165,7 +165,7 @@ I'm here to help you master English, {user_name}, with:
             # 🔒 ULTRA-SECURE CREDIT VALIDATION (NO DEDUCTION YET!)
             from services.secure_credit_system import secure_credit_system
             validation = secure_credit_system.ultra_secure_pre_validation(user_id, 'english_comprehension')
-            
+
             if not validation['success']:
                 logger.warning(f"🚨 SECURE BLOCK: User {user_id} denied access to English comprehension - {validation.get('message')}")
                 message, buttons = secure_credit_system.format_insufficient_credits_message(user_id, 'english_comprehension')
@@ -247,18 +247,18 @@ Ready to boost your reading skills? 🚀"""
 
             # Check and deduct credits using advanced credit service
             credit_result = advanced_credit_service.check_and_deduct_credits(
-                user_id, 
+                user_id,
                 'english_comprehension',  # 3 credits as per config
                 None
             )
-            
+
             if not credit_result['success']:
                 if credit_result.get('insufficient'):
                     # Show insufficient credits message
                     current_credits = credit_result['current_credits']
                     required_credits = credit_result['required_credits']
                     shortage = credit_result['shortage']
-                    
+
                     insufficient_msg = f"""💰 **Need More Credits!** 💰
 
 📖 **English Comprehension Practice**
@@ -269,13 +269,13 @@ Ready to boost your reading skills? 🚀"""
 • Need: {shortage} more credits
 
 💎 **Get More Credits:**"""
-                    
+
                     buttons = [
                         {"text": "💰 Buy Credits", "callback_data": "credit_store"},
                         {"text": "👥 Invite Friends (+5 each)", "callback_data": "share_to_friend"},
                         {"text": "🔙 Back to English", "callback_data": "english_menu"}
                     ]
-                    
+
                     self.whatsapp_service.send_interactive_message(user_id, insufficient_msg, buttons)
                     clear_user_session(user_id)  # Clear generating lock on failure
                     return
@@ -441,17 +441,17 @@ Hi {user_name}! Answer these 10 questions based on the passage above:
             current_xp = current_stats.get('xp_points', 0)
             current_level = current_stats.get('level', 1)
             current_streak = current_stats.get('streak', 0)
-            
+
             # Award 20 XP for completing comprehension
             points_earned = 20
             add_xp(user_id, points_earned, 'english_comprehension')
             update_streak(user_id)
-            
+
             # Check for level up
             new_xp = current_xp + points_earned
             new_level = max(1, (new_xp // 100) + 1)
             new_streak = current_streak + 1
-            
+
             # Update total attempts and comprehension completions
             update_user_stats(user_id, {
                 'total_attempts': current_stats.get('total_attempts', 0) + 1,
@@ -491,7 +491,7 @@ Hi {user_name}! Answer these 10 questions based on the passage above:
 
             level_up_bonus = ""
             if new_level > current_level:
-                level_up_bonus = f"\n🎉 **LEVEL UP!** Level {current_level} → Level {new_level}!"
+                level_up_bonus = f"\n🎉 *LEVEL UP!* Level {current_level} → Level {new_level}!"
 
             stats_message = f"""🎉 **Comprehension Complete!** 🎉
 
@@ -676,14 +676,14 @@ Hi {user_name}! Answer these 10 questions based on the passage above:
             try:
                 # Try to fit all questions in one message first
                 all_questions_message = f"📝 **COMPREHENSION QUESTIONS**\n\n"
-                
+
                 for i, q in enumerate(questions[:10], 1):
                     marks = q.get('marks', 1)
                     question_text = q.get('question', f'Question {i} not available')
                     all_questions_message += f"**{i}.** {question_text} [{marks} mark{'s' if marks != 1 else ''}]\n\n"
-                
+
                 all_questions_message += "✅ *Answer all questions based on the passage above*"
-                
+
                 # Check message length
                 if len(all_questions_message) > 3500:  # Leave room for WhatsApp formatting
                     # If too long, send in TWO messages maximum with delay
@@ -692,13 +692,13 @@ Hi {user_name}! Answer these 10 questions based on the passage above:
                         marks = q.get('marks', 1)
                         question_text = q.get('question', f'Question {i} not available')
                         questions_message_1 += f"**{i}.** {question_text} [{marks} mark{'s' if marks != 1 else ''}]\n\n"
-                    
+
                     # Send first part
                     self.whatsapp_service.send_message(user_id, questions_message_1)
-                    
+
                     # Add delay to prevent rapid message sending
                     time.sleep(1)
-                    
+
                         # Send second part
                     questions_message_2 = f"📝 **QUESTIONS 6-10**\n\n"
                     for i, q in enumerate(questions_part2, 6):
@@ -711,7 +711,7 @@ Hi {user_name}! Answer these 10 questions based on the passage above:
                 else:
                     # Send all questions in one message
                     self.whatsapp_service.send_message(user_id, all_questions_message)
-                
+
                 logger.info(f"Questions sent successfully to {user_id}")
 
             except Exception as e:
@@ -761,7 +761,7 @@ Hi {user_name}! Answer these 10 questions based on the passage above:
                 {"text": "📚 Start New Comprehension", "callback_data": "comprehension_start"},
                 {"text": "🔙 Back to English Menu", "callback_data": "english_menu"}
             ]
-            
+
             message = "✅ Your comprehension session has been reset.\n\nWould you like to start a new comprehension practice?"
             self.whatsapp_service.send_interactive_message(user_id, message, buttons)
 
@@ -815,7 +815,7 @@ This section requires candidates to write a composition between 350 and 450 word
 
 **1.** {prompts['A']}
 
-**2.** {prompts['B']} 
+**2.** {prompts['B']}
 
 **3.** {prompts['C']}
 
@@ -977,8 +977,8 @@ Type your essay below:"""
             prompt_data = json.loads(session.get('prompt_data', '{}'))
 
             # Get essay type from different possible fields
-            essay_type = (prompt_data.get('format_type') or 
-                         prompt_data.get('type') or 
+            essay_type = (prompt_data.get('format_type') or
+                         prompt_data.get('type') or
                          prompt_data.get('essay_type', 'narrative')).lower()
 
             section = prompt_data.get('section', 'A')
@@ -1004,7 +1004,7 @@ Type your essay below:"""
 ✍️ **Section A - Free Choice Tips:**
 • Express your creativity and personal ideas
 • Use rich descriptive language
-• Word count: 400-600 words  
+• Word count: 400-600 words
 • Time: 45 minutes
 • Marks: 30 (Content: 10, Language: 10, Structure: 10)
 
@@ -1043,7 +1043,7 @@ Type your essay below:"""
             "Describe a traditional ceremony in your community.",
             "Describe the effects of social media on young people.",
 
-            # Type 2: Narrative with given statements  
+            # Type 2: Narrative with given statements
             'Write a story that includes one of the following statements:\n"The whole community was at peace again."\n"The mother wept bitterly when she was shown her daughter\'s video that was circulating on social media."',
             'Write a story that includes one of the following statements:\n"It was the best decision I ever made."\n"The teacher could not believe what she was seeing."',
             'Write a story that includes one of the following statements:\n"Justice was finally served."\n"The villagers gathered to witness the historic moment."',
@@ -1089,7 +1089,7 @@ Type your essay below:"""
 
         return {
             'A': selected_prompts[0],
-            'B': selected_prompts[1], 
+            'B': selected_prompts[1],
             'C': selected_prompts[2],
             'D': selected_prompts[3]
         }
@@ -1169,7 +1169,7 @@ Type your essay below:"""
 • **FROM:** Your name and position
 • **DATE:** When report was written
 • **INTRODUCTION:** Purpose and background
-• **FINDINGS/MAIN BODY:** 
+• **FINDINGS/MAIN BODY:**
   - Use headings and subheadings
   - Present information logically
   - Include specific points requested
@@ -1201,7 +1201,7 @@ Type your essay below:"""
 **STRUCTURE:**
 • **HEADLINE:** Catchy and informative
 • **INTRODUCTION:** Hook the reader, introduce topic
-• **MAIN BODY:** 
+• **MAIN BODY:**
   - Develop points logically
   - Use subheadings if needed
   - Include examples and evidence
@@ -1235,7 +1235,7 @@ Type your essay below:"""
 
 **FORMAT:**
 • **TO:** Recipient's name and title
-• **FROM:** Your name and title  
+• **FROM:** Your name and title
 • **DATE:** Current date
 • **SUBJECT:** Clear, specific topic
 
@@ -1273,19 +1273,19 @@ Type your essay below:"""
 
             # Check and deduct credits using advanced credit service
             from services.advanced_credit_service import advanced_credit_service
-            
+
             credit_result = advanced_credit_service.check_and_deduct_credits(
-                user_id, 
+                user_id,
                 'english_essay_writing',  # 3 credits as per config
                 None
             )
-            
+
             if not credit_result['success']:
                 if credit_result.get('insufficient'):
                     current_credits = credit_result['current_credits']
                     required_credits = credit_result['required_credits']
                     shortage = credit_result['shortage']
-                    
+
                     insufficient_msg = f"""💰 **Need More Credits for Essay!** 💰
 
 ✍️ **English Essay Writing & Marking**
@@ -1296,13 +1296,13 @@ Type your essay below:"""
 • Need: {shortage} more credits
 
 💎 **Get More Credits:**"""
-                    
+
                     buttons = [
                         {"text": "💰 Buy Credits", "callback_data": "credit_store"},
                         {"text": "👥 Invite Friends (+5 each)", "callback_data": "share_to_friend"},
                         {"text": "🔙 Back to English", "callback_data": "english_menu"}
                     ]
-                    
+
                     self.whatsapp_service.send_interactive_message(user_id, insufficient_msg, buttons)
                     return
                 else:
@@ -1324,9 +1324,9 @@ Type your essay below:"""
                 try:
                     # Use the regular method with longer timeout for important PDF delivery
                     pdf_sent = self.whatsapp_service.send_document(
-                        user_id, 
-                        marking_result['pdf_path'], 
-                        "📄 Your ZIMSEC Essay Marking Report with Red Corrections", 
+                        user_id,
+                        marking_result['pdf_path'],
+                        "📄 Your ZIMSEC Essay Marking Report with Red Corrections",
                         f"ZIMSEC_Essay_Report_{user_name}.pdf"
                     )
                 except Exception as e:
@@ -1334,9 +1334,9 @@ Type your essay below:"""
                     # Try one more time with the quick method as backup
                     try:
                         pdf_sent = self.whatsapp_service.send_document_quick(
-                            user_id, 
-                            marking_result['pdf_path'], 
-                            "📄 Your ZIMSEC Essay Marking Report", 
+                            user_id,
+                            marking_result['pdf_path'],
+                            "📄 Your ZIMSEC Essay Marking Report",
                             f"ZIMSEC_Essay_Report_{user_name}.pdf"
                         )
                     except Exception as e2:
@@ -1347,18 +1347,18 @@ Type your essay below:"""
                 current_xp = current_stats.get('xp_points', 0)
                 current_level = current_stats.get('level', 1)
                 current_streak = current_stats.get('streak', 0)
-                
+
                 # Award 30 XP for completing essay
                 from database.external_db import add_xp, update_streak
                 points_earned = 30
                 add_xp(user_id, points_earned, 'english_essay_writing')
                 update_streak(user_id)
-                
+
                 # Check for level up
                 new_xp = current_xp + points_earned
                 new_level = max(1, (new_xp // 100) + 1)
                 new_streak = current_streak + 1
-                
+
                 # Update total attempts and essay completions
                 update_user_stats(user_id, {
                     'total_attempts': current_stats.get('total_attempts', 0) + 1,
@@ -1377,7 +1377,7 @@ Type your essay below:"""
 
                 level_up_bonus = ""
                 if new_level > current_level:
-                    level_up_bonus = f"\n🎉 **LEVEL UP!** Level {current_level} → Level {new_level}!"
+                    level_up_bonus = f"\n🎉 *LEVEL UP!* Level {current_level} → Level {new_level}!"
 
                 # Send feedback message AFTER PDF is sent
                 if pdf_sent:
@@ -1385,7 +1385,7 @@ Type your essay below:"""
 
 📊 **Your Results:**
 • Score: {marking_result['score']}/30
-• Word Count: {word_count} words  
+• Word Count: {word_count} words
 • Grade: {marking_result['grade']}
 
 📚 **Your English Progress:**
@@ -1419,7 +1419,7 @@ Type your essay below:"""
 
 📊 **Your Results:**
 • Score: {marking_result['score']}/30
-• Word Count: {word_count} words  
+• Word Count: {word_count} words
 • Grade: {marking_result['grade']}
 
 📚 **Your English Progress:**
@@ -1538,7 +1538,7 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
             # Create PDF report
             try:
                 timestamp = int(datetime.now().timestamp())
-                
+
                 # Ensure the static/pdfs directory exists
                 try:
                     os.makedirs('static/pdfs', exist_ok=True)
@@ -1561,10 +1561,10 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
                 story = []
 
                 # Enhanced custom styles
-                title_style = ParagraphStyle('CustomTitle', 
-                    parent=styles['Heading1'], 
-                    textColor=red, 
-                    spaceAfter=20, 
+                title_style = ParagraphStyle('CustomTitle',
+                    parent=styles['Heading1'],
+                    textColor=red,
+                    spaceAfter=20,
                     alignment=1,
                     fontSize=18,
                     fontName='Helvetica-Bold')
@@ -1576,9 +1576,9 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
                     fontName='Helvetica-Bold',
                     spaceAfter=8)
 
-                section_style = ParagraphStyle('SectionHeader', 
-                    parent=styles['Heading2'], 
-                    spaceAfter=12, 
+                section_style = ParagraphStyle('SectionHeader',
+                    parent=styles['Heading2'],
+                    spaceAfter=12,
                     spaceBefore=20,
                     textColor=blue,
                     fontSize=14,
@@ -1711,7 +1711,17 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
                 corrections_text = "\n".join([f"• {correction}" for correction in corrections[:3]])
 
             # Create download URL
-            pdf_url = f"https://{os.environ.get('REPL_SLUG')}.{os.environ.get('REPL_OWNER')}.repl.co/download/pdf/{pdf_filename}"
+            # NOTE: This URL assumes a web server setup to serve static files.
+            # It might need adjustment based on your deployment environment.
+            # Using repl.co domain for Replit deployments.
+            repl_slug = os.environ.get('REPL_SLUG')
+            repl_owner = os.environ.get('REPL_OWNER')
+            if repl_slug and repl_owner:
+                pdf_filename = os.path.basename(pdf_path)
+                pdf_url = f"https://{repl_slug}.{repl_owner}.repl.co/download/pdf/{pdf_filename}"
+            else:
+                # Fallback for local development or different deployment scenarios
+                pdf_url = f"file:///{os.path.abspath(pdf_path)}" # Local file path
 
             return {
                 'score': marking_data.get('score', 15),
@@ -1752,7 +1762,7 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
         # Sort errors by length (longer first) to avoid partial replacements
         specific_errors = sorted(specific_errors, key=lambda x: len(x.get('wrong', '')), reverse=True)
 
-        # Apply corrections from AI analysis
+        # Apply corrections from Gemini AI analysis
         for error in specific_errors:
             wrong_text = error.get('wrong', '').strip()
             correct_text = error.get('correct', '').strip()
@@ -1776,7 +1786,7 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
             # Spacing issues
             (r'(\w+)\.([A-Z])', r'\1. \2'),  # Missing space after period
             (r'\bhave had\b', 'had'),
-            (r'\bwas were\b', 'were'), 
+            (r'\bwas were\b', 'were'),
             (r'\bwere was\b', 'was'),
             (r'\bmoment\b(?=\s+ever)', 'moments'),
             (r'\benjoy\b(?=\s+every)', 'enjoyed'),
@@ -1827,13 +1837,13 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
 
             # Check and deduct credits using advanced credit service
             from services.advanced_credit_service import advanced_credit_service
-            
+
             credit_result = advanced_credit_service.check_and_deduct_credits(
-                user_id, 
+                user_id,
                 'english_topical',  # 1 credit - use correct action key
                 None
             )
-            
+
             if not credit_result['success']:
                 if credit_result.get('insufficient'):
                     message = f"❌ Insufficient credits. You need {credit_result['required_credits']} but have {credit_result['current_credits']}."
@@ -1851,7 +1861,7 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
             if not response or not response.get('success'):
                 self.whatsapp_service.send_message(user_id, "❌ Error loading question. Please try again.")
                 return
-            
+
             question_data = response['question_data']
 
             # Save question in session
@@ -1867,7 +1877,7 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
 
             # Send formatted question
             topic_indicator = f"📚 {question_data.get('topic_area', 'Grammar')}" if question_data.get('topic_area') else "📚 Grammar"
-            
+
             message = f"""{topic_indicator} Question
 
 {question_data['question']}
@@ -1895,13 +1905,13 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
 
             # Check and deduct credits using advanced credit service
             from services.advanced_credit_service import advanced_credit_service
-            
+
             credit_result = advanced_credit_service.check_and_deduct_credits(
-                user_id, 
+                user_id,
                 'english_topical',  # 1 credit - use correct action key
                 None
             )
-            
+
             if not credit_result['success']:
                 if credit_result.get('insufficient'):
                     message = f"❌ Insufficient credits. You need {credit_result['required_credits']} but have {credit_result['current_credits']}."
@@ -1999,10 +2009,10 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
             answer_message = f"🎉 EXCELLENT! {user_name}! 🎉\n\n"
             answer_message += f"📚 **{topic_area} Question**\n\n"
             answer_message += f"**Question:** {question_text}\n\n"
-            
+
             if instructions:
                 answer_message += f"**Instructions:** {instructions}\n\n"
-            
+
             answer_message += f"✅ **Correct Answer:** {answer_text}\n\n"
             answer_message += f"📖 **Explanation:** {explanation_text}"
 
@@ -2011,7 +2021,7 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
             # SECOND MESSAGE: Gamified stats and progress
             level_up_bonus = ""
             if new_level > current_level:
-                level_up_bonus = f"\n🎉 **LEVEL UP!** Level {current_level} → Level {new_level}!"
+                level_up_bonus = f"\n🎉 *LEVEL UP!* Level {current_level} → Level {new_level}!"
 
             stats_message = f"""🎮 **Your English Progress Dashboard** 🎮
 
@@ -2100,7 +2110,7 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
             # SECOND MESSAGE: Gamified stats and progress
             level_up_bonus = ""
             if new_level > current_level:
-                level_up_bonus = f"\n🎉 **LEVEL UP!** Level {current_level} → Level {new_level}!"
+                level_up_bonus = f"\n🎉 *LEVEL UP!* Level {current_level} → Level {new_level}!"
 
             stats_message = f"""🎮 **Your English Progress Dashboard** 🎮
 
@@ -2139,13 +2149,13 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
 
             # Check and deduct credits using advanced credit service
             from services.advanced_credit_service import advanced_credit_service
-            
+
             credit_result = advanced_credit_service.check_and_deduct_credits(
-                user_id, 
+                user_id,
                 'english_comprehension',  # 3 credits as per config
                 None
             )
-            
+
             if not credit_result['success']:
                 if credit_result.get('insufficient'):
                     message = f"❌ Insufficient credits. You need {credit_result['required_credits']} but have {credit_result['current_credits']}."
@@ -2185,13 +2195,13 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
 
             # Check and deduct credits using advanced credit service
             from services.advanced_credit_service import advanced_credit_service
-            
+
             credit_result = advanced_credit_service.check_and_deduct_credits(
-                user_id, 
+                user_id,
                 'english_essay_writing',  # 3 credits as per config
                 None
             )
-            
+
             if not credit_result['success']:
                 if credit_result.get('insufficient'):
                     message = f"❌ Insufficient credits. You need {credit_result['required_credits']} but have {credit_result['current_credits']}."
@@ -2367,7 +2377,7 @@ _(Send your complete essay as your next message)_"""
 
 📈 **Breakdown:**
 • Content & Ideas: {marks.get('content', 0)}/10
-• Language & Expression: {marks.get('language', 0)}/10  
+• Language & Expression: {marks.get('language', 0)}/10
 • Structure & Organization: {marks.get('structure', 0)}/10
 
 🌟 **Strengths:**
