@@ -63,22 +63,95 @@ class EnglishService:
     
     def _get_fallback_grammar_question(self) -> Dict:
         """Provide a fallback grammar question when AI service fails"""
-        return {
-            "question": "Complete the sentence with the correct tense: Yesterday, I ______ (go) to the market in Mbare.",
-            "instructions": "Fill in the blank with the correct past tense form of the verb 'go'.",
-            "answer": "went",
-            "explanation": "Past tense of 'go' is 'went'. We use past tense for actions completed in the past.",
-            "topic_area": "Verb Tenses"
-        }
+        import random
+        
+        # Pool of fallback grammar questions
+        fallback_questions = [
+            {
+                "question": "Complete the sentence with the correct tense: Yesterday, Chipo ______ (go) to the market in Mbare.",
+                "instructions": "Fill in the blank with the correct past tense form of the verb 'go'.",
+                "answer": "went",
+                "explanation": "Past tense of 'go' is 'went'. We use past tense for actions completed in the past.",
+                "topic_area": "Verb Tenses"
+            },
+            {
+                "question": "Identify the adverbs in this sentence: Tendai quickly walked to school early this morning.",
+                "instructions": "Find and list all the adverbs in the sentence.",
+                "answer": "quickly, early",
+                "explanation": "Adverbs modify verbs and tell us how, when, or where an action happens.",
+                "topic_area": "Parts of Speech"
+            },
+            {
+                "question": "Combine these two sentences into one complex sentence: Mukoma studied hard. He passed his ZIMSEC exams.",
+                "instructions": "Use a subordinating conjunction to combine the sentences.",
+                "answer": "Because Mukoma studied hard, he passed his ZIMSEC exams.",
+                "explanation": "Complex sentences use subordinating conjunctions like 'because', 'since', 'although'.",
+                "topic_area": "Sentence Structure"
+            },
+            {
+                "question": "Change this sentence to passive voice: The teacher explained the grammar rule clearly.",
+                "instructions": "Rewrite the sentence in passive voice.",
+                "answer": "The grammar rule was explained clearly by the teacher.",
+                "explanation": "Passive voice moves the object to the subject position and uses 'be' + past participle.",
+                "topic_area": "Verb Tenses"
+            },
+            {
+                "question": "Identify the pronouns in this sentence: She told him that they would meet us at the Great Zimbabwe monument.",
+                "instructions": "List all the pronouns in the sentence.",
+                "answer": "She, him, they, us",
+                "explanation": "Pronouns replace nouns to avoid repetition (I, you, he, she, it, we, they, etc.).",
+                "topic_area": "Parts of Speech"
+            }
+        ]
+        
+        return random.choice(fallback_questions)
+
+    def _get_fallback_vocabulary_question(self) -> Dict:
+        """Provide fallback vocabulary MCQ when AI service fails"""
+        import random
+        
+        fallback_vocab_questions = [
+            {
+                "question": "What does the word 'abundant' mean?",
+                "options": ["Very few", "Plentiful", "Expensive", "Difficult"],
+                "correct_answer": 1,
+                "explanation": "Abundant means existing in large quantities; plentiful."
+            },
+            {
+                "question": "Choose the synonym for 'brave':",
+                "options": ["Fearful", "Courageous", "Weak", "Lazy"],
+                "correct_answer": 1,
+                "explanation": "Courageous is a synonym for brave, meaning showing courage."
+            },
+            {
+                "question": "What is the opposite of 'ancient'?",
+                "options": ["Old", "Modern", "Historic", "Traditional"],
+                "correct_answer": 1,
+                "explanation": "Modern is the opposite of ancient, meaning belonging to the present time."
+            },
+            {
+                "question": "What does 'diligent' mean in this sentence: 'Rudo is a diligent student.'?",
+                "options": ["Lazy", "Hardworking", "Smart", "Friendly"],
+                "correct_answer": 1,
+                "explanation": "Diligent means showing careful and persistent effort in work or duties."
+            },
+            {
+                "question": "Choose the correct meaning of 'fierce':",
+                "options": ["Gentle", "Aggressive", "Calm", "Quiet"],
+                "correct_answer": 1,
+                "explanation": "Fierce means showing strong, aggressive intensity."
+            }
+        ]
+        
+        return random.choice(fallback_vocab_questions)
 
     def generate_grammar_question(self) -> Optional[Dict]:
-        """Generate diverse grammar questions covering comprehensive areas"""
+        """Generate diverse grammar questions covering comprehensive areas with robust fallback"""
         if not self._is_configured or not self.client or not types:
-            logger.warning("English service not configured - cannot generate grammar questions")
+            logger.warning("English service not configured - using fallback grammar question")
             return {
-                'success': False,
-                'error': 'English service not configured',
-                'fallback_question': self._get_fallback_grammar_question()
+                'success': True,
+                'question_data': self._get_fallback_grammar_question()
             }
             
         try:
@@ -134,17 +207,22 @@ Return ONLY a JSON object:
                     
                     # Check if JSON is complete (basic validation)
                     if not clean_text.endswith('}'):
-                        logger.error("Incomplete JSON response detected - response was truncated")
-                        logger.error(f"Truncated response: {clean_text}")
-                        return None
+                        logger.error("Incomplete JSON response detected - using fallback")
+                        return {
+                            'success': True,
+                            'question_data': self._get_fallback_grammar_question()
+                        }
                     
                     question_data = json.loads(clean_text)
                     
                     # Validate required fields
                     required_fields = ['question', 'instructions', 'answer', 'explanation', 'topic_area']
                     if not all(field in question_data for field in required_fields):
-                        logger.error(f"Missing required fields in grammar question: {question_data}")
-                        return None
+                        logger.error(f"Missing required fields - using fallback: {question_data}")
+                        return {
+                            'success': True,
+                            'question_data': self._get_fallback_grammar_question()
+                        }
                     
                     logger.info("✅ Generated grammar question successfully")
                     return {
@@ -152,31 +230,41 @@ Return ONLY a JSON object:
                         'question_data': question_data
                     }
                 except json.JSONDecodeError as json_err:
-                    logger.error(f"JSON parsing error for grammar question: {json_err}")
-                    logger.error(f"Raw response that failed to parse: {response.text}")
+                    logger.error(f"JSON parsing error - using fallback: {json_err}")
                     return {
-                        'success': False,
-                        'error': 'Failed to parse AI response',
-                        'fallback_question': self._get_fallback_grammar_question()
+                        'success': True,
+                        'question_data': self._get_fallback_grammar_question()
                     }
             else:
-                logger.error("Empty response from Gemini for grammar question")
+                logger.error("Empty response from Gemini - using fallback")
                 return {
-                    'success': False,
-                    'error': 'Empty response from AI service',
-                    'fallback_question': self._get_fallback_grammar_question()
+                    'success': True,
+                    'question_data': self._get_fallback_grammar_question()
                 }
             
         except Exception as e:
-            logger.error(f"Error generating grammar question: {e}")
+            error_msg = str(e)
+            logger.error(f"Error generating grammar question: {error_msg}")
+            
+            # Check for specific API errors and provide fallback
+            if '503' in error_msg or 'overloaded' in error_msg.lower() or 'unavailable' in error_msg.lower():
+                logger.info("API overloaded - using fallback grammar question")
+            elif 'timeout' in error_msg.lower():
+                logger.info("API timeout - using fallback grammar question")
+            else:
+                logger.info("API error - using fallback grammar question")
+            
             return {
-                'success': False,
-                'error': f'Grammar question generation failed: {str(e)}',
-                'fallback_question': self._get_fallback_grammar_question()
+                'success': True,
+                'question_data': self._get_fallback_grammar_question()
             }
 
     def generate_vocabulary_mcq(self) -> Optional[Dict]:
-        """Generate a single vocabulary MCQ"""
+        """Generate a single vocabulary MCQ with robust fallback"""
+        if not self._is_configured or not self.client or not types:
+            logger.warning("English service not configured - using fallback vocabulary question")
+            return self._get_fallback_vocabulary_question()
+        
         try:
             prompt = f"""Generate ONE ZIMSEC O-Level Vocabulary Building MCQ question.
             
@@ -249,16 +337,15 @@ Note: correct_answer should be the index (0-3) of the correct option."""
                     logger.info("✅ Generated vocabulary MCQ successfully")
                     return question_data
                 except json.JSONDecodeError as json_err:
-                    logger.error(f"JSON parsing error for vocabulary question: {json_err}")
-                    logger.error(f"Raw response that failed to parse: {response.text}")
-                    return None
+                    logger.error(f"JSON parsing error - using fallback vocabulary: {json_err}")
+                    return self._get_fallback_vocabulary_question()
             else:
-                logger.error("Empty response from Gemini for vocabulary question")
-                return None
+                logger.error("Empty response from Gemini - using fallback vocabulary")
+                return self._get_fallback_vocabulary_question()
             
         except Exception as e:
-            logger.error(f"Error generating vocabulary MCQ: {e}")
-            return None
+            logger.error(f"Error generating vocabulary MCQ - using fallback: {e}")
+            return self._get_fallback_vocabulary_question()
 
     def generate_topical_questions(self, topic: str, form_level: int, count: int = 10) -> List[Dict]:
         """Generate topical questions for specific topic and form level"""
