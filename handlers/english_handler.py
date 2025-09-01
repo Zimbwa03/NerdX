@@ -1843,14 +1843,13 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
                 return
 
             # Send loading message
-            self.whatsapp_service.send_message(user_id, "🧠 Generating Grammar question...\n⏳ Please wait...")
+            self.whatsapp_service.send_message(user_id, "📝 Loading Grammar question from database...\n⏳ Please wait...")
 
-            # Generate one grammar question
+            # Get one grammar question from database
             response = self.english_service.generate_grammar_question()
 
             if not response or not response.get('success'):
-                # This should rarely happen now due to improved fallback system
-                self.whatsapp_service.send_message(user_id, "❌ Error generating question. Please try again.")
+                self.whatsapp_service.send_message(user_id, "❌ Error loading question. Please try again.")
                 return
             
             question_data = response['question_data']
@@ -1866,14 +1865,16 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
             }
             save_user_session(user_id, session_data)
 
-            # Send question
-            message = f"""📝 Grammar and Usage Question
+            # Send formatted question
+            topic_indicator = f"📚 {question_data.get('topic_area', 'Grammar')}" if question_data.get('topic_area') else "📚 Grammar"
+            
+            message = f"""{topic_indicator} Question
 
 {question_data['question']}
 
 💡 Instructions: {question_data.get('instructions', 'Please provide your answer.')}
 
-Type your answer below:"""
+✏️ Type your answer below:"""
 
             self.whatsapp_service.send_message(user_id, message)
 
