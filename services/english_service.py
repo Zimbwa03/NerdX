@@ -127,85 +127,25 @@ class EnglishService:
         }
 
     def generate_vocabulary_question(self) -> Optional[Dict]:
-        """Generate vocabulary building questions (MCQ format)"""
-        if not self._is_configured or not self.client:
-            logger.warning("English service not configured - using fallback vocabulary question")
-            return {
-                'success': True,
-                'question_data': self._get_fallback_vocabulary_question()
-            }
-            
+        """Retrieve vocabulary questions from Supabase database with minimal fallback"""
+        # Primary: Get question from database
         try:
-            prompt = f"""Generate ONE ZIMSEC O-Level English vocabulary multiple choice question with FOUR options.
-
-**Focus areas to randomly choose from:**
-- **Synonyms:** Words with similar meanings
-- **Antonyms:** Words with opposite meanings  
-- **Word meanings:** Understanding vocabulary definitions
-- **Context clues:** Understanding words from sentence context
-
-Requirements:
-- Use Zimbabwean names and contexts when possible
-- Form 3-4 student level vocabulary
-- One correct answer, three distractors
-- Brief explanation (max 25 words)
-
-Return ONLY a JSON object:
-{{
-    "question": "The vocabulary question with context",
-    "options": ["Option A", "Option B", "Option C", "Option D"],
-    "correct_answer": 0,
-    "explanation": "Brief explanation of the answer"
-}}"""
-
-            logger.info("Generating vocabulary question using Gemini AI")
+            from database.external_db import get_random_vocabulary_question
             
-            response = self.client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    temperature=0.7,
-                    max_output_tokens=800
-                ),
-            )
-
-            if response.text:
-                logger.info(f"Vocabulary question response: {response.text[:100]}...")
-                try:
-                    # Clean the response text
-                    clean_text = response.text.strip()
-                    if clean_text.startswith('```json'):
-                        clean_text = clean_text[7:]
-                    if clean_text.endswith('```'):
-                        clean_text = clean_text[:-3]
-                    clean_text = clean_text.strip()
-                    
-                    question_data = json.loads(clean_text)
-                    
-                    # Validate required fields
-                    required_fields = ['question', 'options', 'correct_answer', 'explanation']
-                    if all(field in question_data for field in required_fields):
-                        logger.info("Valid vocabulary question generated")
-                        return {
-                            'success': True,
-                            'question_data': question_data
-                        }
-                    else:
-                        logger.error("Missing required fields in vocabulary response")
-                        
-                except json.JSONDecodeError as e:
-                    logger.error(f"JSON decode error in vocabulary question: {e}")
-                except Exception as e:
-                    logger.error(f"Error processing vocabulary response: {e}")
+            question_data = get_random_vocabulary_question()
+            if question_data:
+                logger.info(f"Retrieved vocabulary question from database - Question: {question_data.get('question', 'Unknown')[:50]}...")
+                return {
+                    'success': True,
+                    'question_data': question_data
+                }
             else:
-                logger.warning("Empty response from Gemini for vocabulary - using fallback")
-
+                logger.warning("No vocabulary questions found in database")
         except Exception as e:
-            logger.error(f"Error generating vocabulary question: {e}")
-
-        # Fallback
-        logger.info("Using fallback vocabulary question")
+            logger.error(f"Error retrieving vocabulary question from database: {e}")
+        
+        # Minimal fallback only if database completely fails
+        logger.warning("Database unavailable - using minimal fallback")
         return {
             'success': True,
             'question_data': self._get_fallback_vocabulary_question()

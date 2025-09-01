@@ -1246,6 +1246,53 @@ def get_random_grammar_question() -> Optional[Dict]:
         logger.error(f"Error getting random grammar question: {e}")
         return None
 
+def get_random_vocabulary_question() -> Optional[Dict]:
+    """Retrieve a random vocabulary question from the database"""
+    try:
+        if not _is_configured:
+            logger.warning("Database not configured")
+            return None
+            
+        # Get a random question from the english_vocabulary_questions table
+        response = requests.get(
+            f"{SUPABASE_URL}/rest/v1/english_vocabulary_questions",
+            headers={
+                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': f'Bearer {SUPABASE_ANON_KEY}',
+                'Content-Type': 'application/json'
+            },
+            params={
+                'select': '*'
+            }
+        )
+        
+        if response.status_code == 200:
+            questions = response.json()
+            if questions:
+                # Return a random question from the available ones
+                selected_question = random.choice(questions)
+                return {
+                    'question': selected_question['question'],
+                    'options': [
+                        selected_question['option_a'],
+                        selected_question['option_b'], 
+                        selected_question['option_c'],
+                        selected_question['option_d']
+                    ],
+                    'correct_answer': selected_question['correct_answer'],
+                    'explanation': selected_question['explanation']
+                }
+            else:
+                logger.warning("No vocabulary questions found in database")
+                return None
+        else:
+            logger.error(f"Error retrieving vocabulary questions: {response.status_code} - {response.text}")
+            return None
+            
+    except Exception as e:
+        logger.error(f"Error getting random vocabulary question: {e}")
+        return None
+
 def get_grammar_questions_by_topic(topic_area: str) -> List[Dict]:
     """Retrieve grammar questions by topic area"""
     try:
