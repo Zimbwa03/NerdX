@@ -1911,14 +1911,16 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
                 return
 
             # Send loading message
-            self.whatsapp_service.send_message(user_id, "🧠 Generating Vocabulary question...\n⏳ Please wait...")
+            self.whatsapp_service.send_message(user_id, "📚 Loading Vocabulary question from database...\n⏳ Please wait...")
 
             # Generate one vocabulary MCQ
-            question_data = self.english_service.generate_vocabulary_mcq()
+            result = self.english_service.generate_vocabulary_question()
 
-            if not question_data:
+            if not result or not result.get('success'):
                 self.whatsapp_service.send_message(user_id, "❌ Error generating question. Please try again.")
                 return
+
+            question_data = result['question_data']
 
             # Save question in session
             from database.session_db import save_user_session
