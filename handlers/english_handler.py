@@ -391,7 +391,7 @@ Hi {user_name}! Answer these 10 questions based on the passage above:
 """
 
             for i, q in enumerate(questions[:10], 1):  # Ensure only 10 questions
-                question_type = q.get('question_type', '').title()
+                question_type = (q.get('question_type') or '').title()
                 marks = q.get('marks', 1)
                 questions_message += f"**{i}.** {q.get('question', f'Question {i} not available')} [{marks} mark{'s' if marks != 1 else ''}]\n\n"
 
@@ -862,7 +862,7 @@ Write a composition (300–600 words) on the following topic:
 
 **{prompt_data['prompt']}**
 
-*Essay Type: {prompt_data['type'].title()}*"""
+*Essay Type: {(prompt_data.get('type') or 'Essay').title()}*"""
 
             buttons = [
                 {"text": "📝 Start Writing", "callback_data": "essay_start_writing"},
@@ -1010,7 +1010,7 @@ Type your essay below:"""
 
 """
 
-            message = f"""💡 **Writing Guide for {essay_type.title()}:**
+            message = f"""💡 **Writing Guide for {(essay_type or 'Essay').title()}:**
 
 {section_guidance}{hints}
 
@@ -1980,7 +1980,8 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
             explanation_text = question_data.get('explanation', 'Explanation not available')
 
             # Build formatted response with proper line breaks
-            formatted_response = f"📚 *{session_data.get('topic', 'Grammar').title()} Question*\n\n"
+            topic = session_data.get('topic') or 'Grammar'
+            formatted_response = f"📚 *{topic.title()} Question*\n\n"
             formatted_response += f"{question_text}\n\n"
 
             if instructions:
@@ -2177,7 +2178,7 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
                 marks = question.get('marks', 1)
                 difficulty = question.get('difficulty', 'medium')
 
-                message += f"**Question {i}** ({marks} mark{'s' if marks > 1 else ''}) - {difficulty.title()}\n"
+                message += f"**Question {i}** ({marks} mark{'s' if marks > 1 else ''}) - {(difficulty or 'medium').title()}\n"
                 message += f"{question.get('question_text', '')}\n\n"
                 message += f"**Answer:** {question.get('correct_answer', '')}\n\n"
                 message += "---\n\n"
