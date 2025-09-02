@@ -792,6 +792,9 @@ class PaymentService:
                 package = self.get_package_by_id(package_id)
                 package_name = package['name'] if package else 'Package'
                 
+                # 🚨 CRITICAL: Send WhatsApp confirmation message
+                self.send_paynow_confirmation_message(user_id, credits, reference_code, package_name)
+                
                 return {
                     'success': True,
                     'message': f'Payment approved! {credits} credits added to your account.',
@@ -904,6 +907,63 @@ Select your preferred payment method below:"""
         ])
         
         return buttons
+    
+    def send_paynow_confirmation_message(self, user_id: str, credits: int, reference_code: str, package_name: str):
+        """
+        Send WhatsApp confirmation message for successful Paynow payment
+        
+        Args:
+            user_id: User's chat ID
+            credits: Number of credits added
+            reference_code: Payment reference
+            package_name: Name of purchased package
+        """
+        try:
+            from services.whatsapp_service import WhatsAppService
+            whatsapp_service = WhatsAppService()
+            
+            message = f"""🎉 **PAYMENT CONFIRMED!** 🎉
+
+✅ **Your Paynow USD EcoCash payment has been successfully processed!**
+
+📦 **Package:** {package_name}
+💰 **Credits Added:** {credits} credits
+🔗 **Reference:** {reference_code}
+⚡ **Status:** Instant confirmation
+
+🚀 **You can now continue your studies with NerdX!**
+
+Click below to get started:"""
+
+            # Send confirmation message
+            success = whatsapp_service.send_message(user_id, message)
+            
+            if success:
+                logger.info(f"✅ Paynow confirmation sent to {user_id} for payment {reference_code}")
+                
+                # Send follow-up buttons for quick access
+                try:
+                    buttons = [
+                        {"text": "📚 Start Studying", "callback_data": "main_menu"},
+                        {"text": "📊 View My Stats", "callback_data": "stats"},
+                        {"text": "💳 Buy More Credits", "callback_data": "buy_credits"}
+                    ]
+                    
+                    whatsapp_service.send_interactive_message(
+                        user_id, 
+                        "🎯 **What would you like to do next?**", 
+                        buttons
+                    )
+                    
+                except Exception as e:
+                    logger.warning(f"Failed to send follow-up buttons: {e}")
+                    
+            else:
+                logger.error(f"❌ Failed to send Paynow confirmation to {user_id}")
+                
+        except Exception as e:
+            logger.error(f"🚨 Error sending Paynow confirmation: {e}")
+            # Don't fail the payment approval if message sending fails
 
 # Global instance
 payment_service = PaymentService()
