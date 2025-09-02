@@ -47,10 +47,10 @@ class MathQuestionGenerator:
 
             # Reduced timeout settings for faster fallback to local questions
             if 'graph' in topic.lower():
-                timeouts = [20, 30]           # Shorter timeouts for graph questions
+                timeouts = [8, 12]            # Much shorter timeouts for graph questions
                 max_attempts = 2              # 2 attempts for graph questions
             else:
-                timeouts = [15, 25]           # Shorter timeouts for topical questions  
+                timeouts = [5, 8]             # Much shorter timeouts for topical questions  
                 max_attempts = 2              # 2 attempts for quality generation
 
             for attempt in range(max_attempts):
