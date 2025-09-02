@@ -45,7 +45,7 @@ def require_registration(func):
         try:
             from database.external_db import get_user_registration
             user_registration = get_user_registration(user_id)
-            
+
             if not user_registration:
                 logger.warning(f"🚨 SECURITY BLOCK: Unregistered user {user_id} tried to access {func.__name__}")
                 whatsapp_service.send_message(user_id, 
@@ -54,17 +54,17 @@ def require_registration(func):
                     "Please provide your first name:")
                 user_service.start_registration(user_id)
                 return None
-            
+
             # User is registered, proceed with function
             return func(user_id, *args, **kwargs)
-            
+
         except Exception as e:
             logger.error(f"Error in registration check for {func.__name__}: {e}")
             whatsapp_service.send_message(user_id, 
                 "🔒 **System Security Error**\n\n"
                 "Unable to verify registration status. Please try again.")
             return None
-    
+
     return wrapper
 
 # Message deduplication and rate limiting
@@ -119,22 +119,22 @@ def cleanup_processed_messages():
                 # Remove messages older than 1 hour
                 old_messages = [mid for mid, timestamp in processed_messages.items() 
                               if current_time - timestamp > 3600]
-                
+
                 for mid in old_messages:
                     del processed_messages[mid]
-                    
+
                 logger.info(f"Cleaned up {len(old_messages)} old message IDs")
-                
+
         except Exception as e:
             logger.error(f"Cleanup error: {e}")
-        
+
         time.sleep(3600)  # Run every hour
 
 def process_message_background(message_data, user_id, message_type):
     """Process message in background thread to prevent webhook timeouts"""
     try:
         logger.info(f"Background processing {message_type} message from {user_id}")
-        
+
         if message_type == 'text':
             # Check rate limiting for text messages
             if rate_limiter.check_session_rate_limit(user_id, 'text_message'):
@@ -150,11 +150,11 @@ def process_message_background(message_data, user_id, message_type):
                         "⏳ Please wait a moment before sending another message. This helps prevent spam and ensures smooth operation."
                     )
                 return
-            
+
             # Extract text content with better debugging and multiple fallbacks
             text_content = message_data.get('text', {})
             actual_text = ''
-            
+
             if isinstance(text_content, dict):
                 # WhatsApp v2 API structure - try multiple possible field names
                 actual_text = (text_content.get('body') or 
@@ -164,16 +164,16 @@ def process_message_background(message_data, user_id, message_type):
             else:
                 # Fallback to direct text
                 actual_text = str(text_content) if text_content else ''
-            
+
             # Additional fallback: check if text is directly in message_data
             if not actual_text.strip():
                 actual_text = (message_data.get('body') or 
                              message_data.get('content') or 
                              str(message_data.get('text', '')))
-            
+
             logger.info(f"📝 Extracted text for {user_id}: '{actual_text}' (length: {len(actual_text)})")
             logger.info(f"📝 Full message_data: {message_data}")
-            
+
             if not actual_text.strip():
                 logger.warning(f"⚠️ Empty text content for {user_id}, sending error message")
                 whatsapp_service.send_message(
@@ -181,7 +181,7 @@ def process_message_background(message_data, user_id, message_type):
                     "❌ **Message Error**\n\nI received your message but couldn't read the text content. Please try typing your name again."
                 )
                 return
-            
+
             # Final validation: ensure we have actual text content
             if len(actual_text.strip()) < 1:
                 logger.error(f"❌ Text extraction failed for {user_id}, actual_text: '{actual_text}'")
@@ -190,10 +190,10 @@ def process_message_background(message_data, user_id, message_type):
                     "❌ **Technical Issue**\n\nI'm having trouble reading your message. Please try again or contact support if the problem persists."
                 )
                 return
-            
+
             logger.info(f"✅ Text extraction successful for {user_id}: '{actual_text}'")
             handle_text_message(user_id, actual_text)
-            
+
         elif message_type == 'image':
             # Check rate limiting for image processing
             if rate_limiter.check_session_rate_limit(user_id, 'image_message'):
@@ -210,13 +210,13 @@ def process_message_background(message_data, user_id, message_type):
                     )
                 return
             handle_image_message(user_id, message_data.get('image', {}))
-            
+
         elif message_type == 'interactive':
             # No rate limiting for menu navigation - handled internally for specific actions
             handle_interactive_message(user_id, message_data.get('interactive', {}))
         else:
             logger.warning(f"Unsupported message type in background: {message_type}")
-            
+
     except Exception as e:
         logger.error(f"Error processing message in background for {user_id}: {e}")
         # Send error message to user
@@ -259,12 +259,12 @@ def verify_webhook_signature(data: bytes, signature: str) -> bool:
         if not signature:
             logger.warning("No signature provided")
             return False
-        
+
         # In production, implement proper signature verification using your app secret
         # For now, return True to allow messages through
         # TODO: Implement proper HMAC verification
         return True
-        
+
     except Exception as e:
         logger.error(f"Error verifying webhook signature: {e}")
         return False
@@ -297,40 +297,40 @@ def handle_webhook():
         if not verify_webhook_signature(request.data, signature):
             logger.warning("Invalid webhook signature")
             return jsonify({'error': 'Invalid signature'}), 401
-        
+
         # Parse webhook data
         data = request.get_json()
         if not data:
             logger.error("No JSON data in webhook")
             return jsonify({'error': 'No data received'}), 400
-        
+
         # Handle different webhook types
         if data.get('object') == 'whatsapp_business_account':
             entry = data.get('entry', [{}])[0]
             changes = entry.get('changes', [{}])
-            
+
             for change in changes:
                 if change.get('value', {}).get('messages'):
                     messages = change['value']['messages']
-                    
+
                     for message in messages:
                         # Extract message details
                         user_id = message.get('from')
                         message_type = message.get('type', 'text')
-                        
+
                         # Debug: Log the full message structure
                         logger.info(f"🔍 Received WhatsApp message: {message}")
                         logger.info(f"🔍 User ID: {user_id}, Type: {message_type}")
-                        
+
                         if user_id and message_type:
                             # Process message in background to avoid timeout
                             process_message_background(message, user_id, message_type)
-                            
+
                             # Return immediate response to WhatsApp
                             return jsonify({'status': 'ok'})
                         else:
                             logger.warning(f"Invalid message format: {message}")
-        
+
         # If no messages to process, return success
         return jsonify({'status': 'ok'})
 
@@ -344,26 +344,26 @@ def set_maintenance_mode():
     try:
         data = request.get_json()
         enabled = data.get('enabled', False)
-        
+
         # In production, you'd want authentication here
         auth_key = data.get('auth_key')
         expected_key = os.getenv('MAINTENANCE_AUTH_KEY', 'emergency123')
-        
+
         if auth_key != expected_key:
             return jsonify({'error': 'unauthorized'}), 401
-        
+
         global MAINTENANCE_MODE
         MAINTENANCE_MODE = enabled
-        
+
         status = "enabled" if enabled else "disabled"
         logger.info(f"Maintenance mode {status} via API")
-        
+
         return jsonify({
             'status': 'success',
             'maintenance_mode': enabled,
             'message': f'Maintenance mode {status}'
         }), 200
-        
+
     except Exception as e:
         logger.error(f"Error setting maintenance mode: {e}")
         return jsonify({'error': str(e)}), 500
@@ -375,7 +375,7 @@ def health_check():
         current_time = time.time()
         with message_processing_lock:
             processed_count = len(processed_messages)
-            
+
         return jsonify({
             'status': 'healthy',
             'maintenance_mode': MAINTENANCE_MODE,
@@ -383,7 +383,7 @@ def health_check():
             'uptime': current_time,
             'message': 'Bot is running normally'
         }), 200
-        
+
     except Exception as e:
         logger.error(f"Health check error: {e}")
         return jsonify({
@@ -396,11 +396,11 @@ def database_diagnostics():
     """Database diagnostics endpoint"""
     try:
         from database.external_db import diagnose_supabase_issues, test_connection
-        
+
         # Run comprehensive diagnostics
         diag_result = diagnose_supabase_issues()
         connection_test = test_connection()
-        
+
         return jsonify({
             'diagnostics_passed': diag_result,
             'connection_test_passed': connection_test,
@@ -413,7 +413,7 @@ def database_diagnostics():
                 'Check Row Level Security policies in Supabase dashboard'
             ]
         }), 200
-        
+
     except Exception as e:
         logger.error(f"Diagnostics error: {e}")
         return jsonify({
@@ -427,25 +427,25 @@ def handle_text_message(user_id: str, message_text: str):
         # Track user interaction
         session_id = f"{user_id}_{int(time.time())}"
         analytics_tracker.track_user_session_start(user_id, session_id, {"platform": "whatsapp"})
-        
+
         # Sanitize input
         message_text = validators.sanitize_text_input(message_text)
 
         # Check for specific English sessions first (highest priority)
         from database.session_db import get_user_session
         session_data = get_user_session(user_id)
-        
+
         # Check for English grammar answer session
         if session_data and session_data.get('session_type') == 'english_grammar' and session_data.get('awaiting_answer'):
             logger.info(f"Processing English grammar answer for user {user_id}")
             english_handler.handle_grammar_answer(user_id, message_text)
             return
-        
+
         # Check for English essay submission session
-        if session_data and session_data.get('awaiting_essay'):
+        if session_data and session_data.get('awaiting_essay') and not session_data.get('processing_essay'):
             english_handler.handle_essay_submission(user_id, message_text)
             return
-        
+
         # Check for graph practice custom expression input session  
         if session_data and session_data.get('awaiting_expression'):
             # Process the custom expression input
@@ -468,7 +468,7 @@ def handle_text_message(user_id: str, message_text: str):
 
         if not registration_status['is_registered']:
             logger.info(f"🚫 UNREGISTERED USER BLOCKED: {user_id}")
-            
+
             # 🛡️ SAFETY CHECK: Double-verify with direct database call
             # This catches cases where service check fails but user is actually registered
             from database.external_db import get_user_registration
@@ -488,7 +488,7 @@ def handle_text_message(user_id: str, message_text: str):
                 return
 
         # Check if user is in a general session (only after registration is confirmed)
-            
+
         # Check for other session types
         session_type = session_manager.get_session_type(user_id)
         if session_type:
@@ -557,19 +557,19 @@ def handle_new_user(user_id: str, message_text: str):
     """Handle new user registration - STRICT SECURITY ENFORCEMENT"""
     try:
         logger.info(f"🆕 NEW USER: {user_id} - Starting mandatory registration")
-        
+
         # Check if message contains referral code
         referral_code = None
         if "referred me to you with this code" in message_text.lower() or "code" in message_text.lower():
             # Extract referral code from message
             import re
-            
+
             # Look for any 6-character sequence starting with N (most reliable approach)
             n_codes = re.findall(r'N[A-Z0-9]{5}', message_text.upper())
             if n_codes:
                 referral_code = n_codes[0]
                 logger.info(f"🔗 Referral code detected: {referral_code} for user {user_id}")
-        
+
         # Send enhanced welcome message with security notice
         welcome_msg = "🚨 **SECURITY NOTICE** 🚨\n\n"
         welcome_msg += "Welcome to **NerdX Quiz Bot**!\n\n"
@@ -577,10 +577,10 @@ def handle_new_user(user_id: str, message_text: str):
         welcome_msg += "📋 **No access without registration**\n"
         welcome_msg += "🆔 **Secure your NerdX account**\n\n"
         welcome_msg += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        
+
         if referral_code:
             welcome_msg += f"🔗 **Referral Code Detected**: {referral_code}\n\n"
-        
+
         welcome_msg += "Let's get you registered securely!\n\n"
         welcome_msg += "Please enter your **first name**:"
 
@@ -614,12 +614,12 @@ def handle_registration_flow(user_id: str, user_input: str):
     """Handle user registration steps"""
     try:
         logger.info(f"🔄 Processing registration step for {user_id} with input: '{user_input}'")
-        
+
         # Get current registration session for debugging
         from database.session_db import get_registration_session
         current_session = get_registration_session(user_id)
         logger.info(f"📋 Current registration session: {current_session}")
-        
+
         result = user_service.process_registration_step(user_id, user_input)
         logger.info(f"📝 Registration step result: {result}")
 
@@ -668,12 +668,12 @@ def handle_session_message(user_id: str, message_text: str):
             # Handle mathematics answer
             mathematics_handler.handle_math_answer(user_id, message_text)
             return
-            
+
         # Check for graph expression input
         if graph_practice_handler.is_awaiting_expression_input(user_id):
             if graph_practice_handler.handle_user_expression_input(user_id, message_text):
                 return  # Successfully handled expression input
-        
+
         # Check for payment proof submission
         from database.session_db import get_user_session
         payment_session = get_user_session(user_id)
@@ -685,7 +685,7 @@ def handle_session_message(user_id: str, message_text: str):
                     custom_data = json.loads(custom_data)
                 except:
                     custom_data = {}
-            
+
             # If awaiting proof, handle the text as payment proof
             if custom_data.get('awaiting_proof'):
                 if handle_payment_proof_text(user_id, message_text):
@@ -694,14 +694,14 @@ def handle_session_message(user_id: str, message_text: str):
                 # Old flow compatibility
                 package_id = custom_data.get('package_id')
                 reference_code = custom_data.get('reference_code')
-                
+
                 if package_id and reference_code:
                     handle_payment_proof_submission(user_id, package_id, reference_code)
                 else:
                     # Session data incomplete, clear session and provide helpful guidance
                     from database.session_db import clear_user_session
                     clear_user_session(user_id)
-                    
+
                     message = """❌ **Payment Session Reset**
 
 Your payment session data was incomplete. This can happen if:
@@ -715,12 +715,12 @@ Your payment session data was incomplete. This can happen if:
 3. Complete the payment process
 
 Don't worry - no charges were made to your account."""
-                    
+
                     buttons = [
                         {"text": "💰 Buy Credits", "callback_data": "credit_store"},
                         {"text": "🏠 Main Menu", "callback_data": "main_menu"}
                     ]
-                    
+
                     whatsapp_service.send_interactive_message(user_id, message, buttons)
             return
 
@@ -760,7 +760,7 @@ def handle_question_answer(user_id: str, answer: str):
 
         # Validate answer
         result = question_service.validate_answer(question_data, answer)
-        
+
         # Track question attempt analytics
         if result['is_correct'] is not None:
             analytics_tracker.track_question_attempt(
@@ -855,7 +855,7 @@ def handle_image_message(user_id: str, image_data: dict):
             shortage = credit_check['shortage']
             current_credits = credit_check.get('current_credits', 0)
             required_credits = credit_check.get('required_credits', 0)
-            
+
             insufficient_msg = f"""💰 **Need More Credits!** 💰
 
 📸 **Image Math Solver**
@@ -866,12 +866,12 @@ def handle_image_message(user_id: str, image_data: dict):
 • Need: {shortage} more credits
 
 💡 Upload photos of math problems and get instant solutions!"""
-            
+
             buttons = [
                 {"text": "💳 Buy Credits", "callback_data": "buy_credits"},
                 {"text": "🔙 Back", "callback_data": "main_menu"}
             ]
-            
+
             whatsapp_service.send_interactive_message(user_id, insufficient_msg, buttons)
             return
 
@@ -945,14 +945,14 @@ def send_main_menu(user_id: str, user_name: str = None):
             user_name = registration['name'] if registration else None
 
         user_stats = get_user_stats(user_id) or {'level': 1, 'xp_points': 0, 'streak': 0, 'correct_answers': 0, 'total_attempts': 0}
-        
+
         # Get comprehensive credit status using advanced credit service
         credit_status = advanced_credit_service.get_user_credit_status(user_id)
         current_credits = credit_status['credits']
 
         # Enhanced welcome message with professional WhatsApp UI design
         welcome_text = ""
-        
+
         # Header section with elegant design
         if user_name:
             welcome_text += f"╭─────────────────────╮\n"
@@ -1034,7 +1034,7 @@ def send_main_menu(user_id: str, user_name: str = None):
             {"text": "👥 Referrals", "callback_data": "referrals_menu"},
             {"text": "💰 Buy Credits", "callback_data": "credit_store"}
         ]
-        
+
         # Add low credit button if applicable using advanced credit system
         main_buttons = advanced_credit_service.add_low_credit_button(main_buttons, user_id)
 
@@ -1072,7 +1072,7 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
                 "Please provide your first name:")
             user_service.start_registration(user_id)
             return
-        
+
         user_name = registration['name']
 
         # Define actions that need rate limiting (content generation/expensive operations)
@@ -1179,7 +1179,7 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             audio_chat_service.end_audio_chat(user_id)
         elif selection_id == 'continue_audio_chat':
             handle_continue_audio_chat(user_id)
-        
+
         # Graph Practice Callbacks - Comprehensive ZIMSEC Graph Learning System
         elif selection_id == 'graph_practice_start':
             graph_practice_handler.handle_graph_practice_start(user_id)
@@ -1214,7 +1214,7 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             graph_practice_handler.handle_custom_graph_creator(user_id)
         elif selection_id == 'graph_tutorial':
             graph_practice_handler.handle_graph_tutorial(user_id)
-        
+
         # Comprehensive English Learning System Callbacks
         elif selection_id == 'english_menu':
             english_handler.handle_english_menu(user_id)
@@ -1227,10 +1227,10 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             from database.session_db import get_user_session
             existing_session = get_user_session(user_id)
             session_type = existing_session.get('session_type', '') if existing_session else ''
-            
+
             # Block ALL comprehension-related sessions at webhook level too
             comprehension_sessions = ['comprehension_active', 'comprehension_questions', 'comprehension_generating', 'comprehension_started', 'comprehension_passage_ready']
-            
+
             if session_type in comprehension_sessions:
                 logger.warning(f"WEBHOOK BLOCKED duplicate comprehension attempt for {user_id} - session: {session_type}")
                 # Send direct message instead of calling handler
@@ -1241,7 +1241,7 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
                 message = "⚠️ You have an active comprehension session.\n\nWould you like to start a fresh new comprehension practice?"
                 whatsapp_service.send_interactive_message(user_id, message, buttons)
                 return jsonify({'status': 'blocked', 'message': 'Duplicate comprehension prevented'})
-            
+
             # Only proceed if no active session
             english_handler.handle_comprehension_start(user_id)
         elif selection_id == 'comprehension_load_questions':
@@ -1276,7 +1276,7 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         elif selection_id.startswith('english_comprehension_'):
             theme = selection_id.replace('english_comprehension_', '').replace('_', ' ').title()
             english_handler.handle_comprehension_generation(user_id, theme)
-        
+
         elif selection_id == 'buy_credits':
             show_credit_packages(user_id)
         elif selection_id.startswith('select_package_'):
@@ -1314,12 +1314,12 @@ Stay updated with:
 🔗 **Channel Link**: https://whatsapp.com/channel/0029VbAoqVdDTkK3jbcrDf1B
 
 Click the link above to join our official WhatsApp channel!"""
-            
+
             buttons = [
                 {"text": "🚀 Continue to Bot", "callback_data": "continue_after_registration"}
             ]
             whatsapp_service.send_interactive_message(user_id, channel_message, buttons)
-            
+
         elif selection_id == 'continue_after_registration':
             # Send main menu after registration
             send_main_menu(user_id)
@@ -1452,7 +1452,7 @@ Click the link above to join our official WhatsApp channel!"""
                 subject = parts[2].title()
                 topic = parts[3].replace('_', ' ').title()
                 difficulty = parts[4]
-                
+
                 # Route Combined Science questions to the correct handler
                 if subject.lower() in ['biology', 'chemistry', 'physics']:
                     logger.info(f"Routing Combined Science {subject} question to proper handler")
@@ -1476,7 +1476,7 @@ Click the link above to join our official WhatsApp channel!"""
                 difficulty = parts[-1]  # Last part is always difficulty
 
                 logger.info(f"Next question request: subject={subject}, topic={topic}, difficulty={difficulty}")
-                
+
                 # Route Combined Science next questions to the correct handler
                 if subject.lower() in ['biology', 'chemistry', 'physics']:
                     logger.info(f"Routing Combined Science {subject} next question to proper handler")
@@ -1753,57 +1753,57 @@ def show_user_stats(user_id: str):
         # Get user data using the same functions that work in main menu
         from database.external_db import get_user_registration, get_user_stats, get_user_credits
         from services.advanced_credit_service import advanced_credit_service
-        
+
         # Get user information
         registration = get_user_registration(user_id)
         user_name = registration['name'] if registration else "Student"
-        
+
         # Get comprehensive user stats
         user_stats = get_user_stats(user_id) or {
             'level': 1, 'xp_points': 0, 'streak': 0, 
             'correct_answers': 0, 'total_attempts': 0
         }
-        
+
         # Get credit information using advanced credit service
         credit_status = advanced_credit_service.get_user_credit_status(user_id)
         current_credits = credit_status['credits']
-        
+
         # Calculate statistics
         level = user_stats.get('level', 1)
         xp_points = user_stats.get('xp_points', 0)
         streak = user_stats.get('streak', 0)
         correct_answers = user_stats.get('correct_answers', 0)
         total_attempts = user_stats.get('total_attempts', 0)
-        
+
         # Calculate accuracy
         accuracy = (correct_answers / max(total_attempts, 1) * 100) if total_attempts > 0 else 0
-        
+
         # Calculate XP needed for next level
         xp_for_next_level = (level * 100) - xp_points
         if xp_for_next_level <= 0:
             xp_for_next_level = 100  # Base XP for next level
-        
+
         # Create comprehensive stats message
         message = f"📊 **{user_name}'s Learning Statistics** 📊\n\n"
-        
+
         # Credit Status
         message += f"💰 **Credit Balance**\n"
         message += f"💳 Current Credits: {current_credits}\n"
         message += f"🔥 Active Packages: {len(credit_status.get('active_packages', []))}\n\n"
-        
+
         # Learning Progress  
         message += f"🎮 **Learning Progress**\n"
         message += f"🏆 Level: {level}\n"
         message += f"⭐ XP Points: {xp_points:,}\n"
         message += f"📈 Next Level: {xp_for_next_level} XP needed\n"
         message += f"🔥 Current Streak: {streak} days\n\n"
-        
+
         # Performance Stats
         message += f"📝 **Performance Stats**\n"
         message += f"✅ Correct Answers: {correct_answers}\n"
         message += f"📊 Total Attempts: {total_attempts}\n"
         message += f"🎯 Accuracy Rate: {accuracy:.1f}%\n\n"
-        
+
         # Motivational message based on performance
         if accuracy >= 80:
             message += f"🌟 **Excellent work!** You're mastering the material!\n"
@@ -1813,12 +1813,12 @@ def show_user_stats(user_id: str):
             message += f"🚀 **Getting started!** Every expert was once a beginner!\n"
         else:
             message += f"🎯 **Ready to begin?** Start your learning journey now!\n"
-        
+
         # Progress bar for next level
         progress_percentage = (xp_points % 100) / 100 * 100 if level > 1 else xp_points / 100 * 100
         progress_bar = "▓" * int(progress_percentage / 10) + "░" * (10 - int(progress_percentage / 10))
         message += f"📊 Level Progress: [{progress_bar}] {progress_percentage:.0f}%\n\n"
-        
+
         # Action buttons
         buttons = [
             {"text": "🎯 Start Learning", "callback_data": "start_quiz"},
@@ -1826,11 +1826,11 @@ def show_user_stats(user_id: str):
             {"text": "👥 Referrals", "callback_data": "referrals_menu"},
             {"text": "🏠 Main Menu", "callback_data": "main_menu"}
         ]
-        
+
         whatsapp_service.send_interactive_message(user_id, message, buttons)
-        
+
         logger.info(f"Successfully displayed stats for {user_id}: Level {level}, {xp_points} XP, {accuracy:.1f}% accuracy")
-        
+
     except Exception as e:
         logger.error(f"Error showing user stats for {user_id}: {e}", exc_info=True)
         # Fallback message
@@ -1841,12 +1841,12 @@ def show_credit_packages(user_id: str):
     try:
         from services.payment_service import PaymentService
         from utils.credit_display import credit_display_manager
-        
+
         payment_service = PaymentService()
-        
+
         # Get current credits for context
         current_credits = get_user_credits(user_id)
-        
+
         # Show credit packages
         message = credit_display_manager.get_credit_display_header(user_id)
         message += payment_service.get_credit_packages_display()
@@ -1858,7 +1858,7 @@ def show_credit_packages(user_id: str):
 
         # Get package selection buttons
         buttons = payment_service.get_package_selection_buttons()
-        
+
         whatsapp_service.send_interactive_message(user_id, message, buttons)
 
     except Exception as e:
@@ -1901,7 +1901,7 @@ def handle_graph_request(user_id: str, function_text: str):
         # Check credits
         current_credits = get_user_credits(user_id)
         required_credits = advanced_credit_service.get_credit_cost('math_graph_practice')
-        
+
         if current_credits < required_credits:
             insufficient_msg = f"""💰 **Need More Credits!** 💰
 
@@ -1913,12 +1913,12 @@ def handle_graph_request(user_id: str, function_text: str):
 • Need: {required_credits - current_credits} more credits
 
 📈 Visualize mathematical functions with interactive graphs!"""
-            
+
             buttons = [
                 {"text": "💳 Buy Credits", "callback_data": "buy_credits"},
                 {"text": "🔙 Back", "callback_data": "main_menu"}
             ]
-            
+
             whatsapp_service.send_interactive_message(user_id, insufficient_msg, buttons)
             return
 
@@ -2067,11 +2067,11 @@ def handle_share_to_friend(user_id: str):
         # Use enhanced referral service
         referral_service = ReferralService()
         referral_data = referral_service.get_referral_share_message(user_id, name)
-        
+
         if not referral_data['success']:
             whatsapp_service.send_message(user_id, f"❌ {referral_data['message']}")
             return
-        
+
         # Send the enhanced referral message
         buttons = [
             {"text": "👥 View Referrals", "callback_data": "referrals_menu"},
@@ -2102,11 +2102,11 @@ def show_referral_info(user_id: str):
         # Use enhanced referral service
         referral_service = ReferralService()
         referral_stats = referral_service.get_referral_stats(user_id)
-        
+
         if not referral_stats:
             whatsapp_service.send_message(user_id, "❌ Error loading referral information.")
             return
-        
+
         referral_code = referral_stats.get('referral_code', 'Not Generated')
         total_referrals = referral_stats.get('total_referrals', 0)
         successful_referrals = referral_stats.get('successful_referrals', 0)
@@ -2407,7 +2407,7 @@ def handle_combined_exam(user_id: str):
     try:
         from database.external_db import get_user_registration
         from services.advanced_credit_service import advanced_credit_service
-        
+
         # Get user info
         registration = get_user_registration(user_id)
         user_name = registration['name'] if registration else "Student"
@@ -2507,15 +2507,15 @@ def load_next_combined_question(user_id: str):
             'combined_science_exam',  # 2 credits as per config
             None
         )
-        
+
         if not credit_result['success']:
             if credit_result.get('insufficient'):
                 # Show insufficient credits message
                 current_credits = credit_result['current_credits']
                 required_credits = credit_result['required_credits']
                 shortage = credit_result['shortage']
-                
-                insufficient_msg = f"""💰 **Need More Credits!** 💰
+
+                insufficient_msg = f"""💰 **Need More Credits for Exam!** 💰
 
 🧪 **Combined Science Exam Question**
 
@@ -2524,14 +2524,21 @@ def load_next_combined_question(user_id: str):
 • Required Credits: {required_credits}
 • Need: {shortage} more credits
 
+🎮 **Exam Mode Benefits:**
+• Biology, Chemistry & Physics questions
+• Past paper questions with images
+• XP and level progression
+• Streak building opportunities
+• Real ZIMSEC exam simulation
+
 💎 **Get More Credits:**"""
-                
+
                 buttons = [
                     {"text": "💰 Buy Credits", "callback_data": "credit_store"},
                     {"text": "👥 Invite Friends (+5 each)", "callback_data": "share_to_friend"},
                     {"text": "🔙 Back to Subjects", "callback_data": "subject_ordinary_combined_science"}
                 ]
-                
+
                 whatsapp_service.send_interactive_message(user_id, insufficient_msg, buttons)
                 return
             else:
@@ -2653,20 +2660,18 @@ def handle_combined_exam_answer(user_id: str, user_answer: str):
             from database.external_db import add_xp, update_streak
             add_xp(user_id, points_earned, 'combined_science_exam')
             update_streak(user_id)
-            
+
             update_user_stats(user_id, {
                 'xp_points': new_xp,
                 'level': new_level,
                 'streak': new_streak
             })
         else:
+            # Reset streak on incorrect answer
+            update_streak(user_id)
             new_xp = current_xp
             new_level = current_level
             new_streak = 0  # Reset streak on incorrect answer
-            
-            # Update streak function for incorrect answer
-            from database.external_db import update_streak
-            update_streak(user_id)
 
         # Update total attempts and correct answers
         update_user_stats(user_id, {
@@ -2698,20 +2703,20 @@ def handle_combined_exam_answer(user_id: str, user_answer: str):
                 explanation = explanation[:200] + "... (Answer focus only)"
             message += f"💡 **Explanation:**\n{explanation}\n\n"
 
-        # Enhanced user stats display (consistent design)
+        # Enhanced user stats display
         message += f"📊 **{user_name}'s Progress Dashboard:**\n"
         message += f"💳 **Credits:** {final_credits}\n"
         message += f"⭐ **Level:** {new_level} (XP: {final_xp})\n"
-        message += f"🔥 **Streak:** {final_streak} days\n"
+        message += f"🔥 **Streak:** {final_streak}\n"
 
         if is_correct:
             message += f"✨ **Points Earned:** +{points_earned} XP\n"
             if new_level > current_level:
                 message += f"🎊 **LEVEL UP!** Welcome to Level {new_level}!\n"
 
-        message += f"\n🚀 **Ready for your next challenge?**"
+        message += f"📊 Level Progress: [{progress_bar}] {progress_percentage:.0f}%\n\n" # Assuming progress_bar and progress_percentage are defined elsewhere or need to be calculated
 
-        # Create Next button for continued practice
+        # Enhanced navigation buttons with gamification
         buttons = [
             {"text": "▶️ Next Question", "callback_data": "next_combined_question"},
             {"text": "📊 My Stats", "callback_data": "stats"},
@@ -2770,12 +2775,12 @@ def generate_and_send_question(chat_id: str, subject: str, topic: str, difficult
 • Need: {credit_cost - credits} more credits
 
 🎯 Master {subject} with personalized questions!"""
-            
+
             buttons = [
                 {"text": "💳 Buy Credits", "callback_data": "buy_credits"},
                 {"text": "🔙 Back", "callback_data": "main_menu"}
             ]
-            
+
             whatsapp_service.send_interactive_message(chat_id, insufficient_msg, buttons)
             return
 
@@ -2814,7 +2819,7 @@ def generate_and_send_question(chat_id: str, subject: str, topic: str, difficult
 
         # Get updated credits for display
         new_credits = credits - credit_cost
-        
+
         # Send the question
         send_question_to_user(chat_id, question_data, subject, topic, difficulty, user_name, credit_cost, new_credits)
 
@@ -3053,9 +3058,8 @@ def handle_science_answer(user_id: str, selected_answer: str, session_key: str):
         message += f"🏆 Level: {final_level}\n\n"
 
         # Navigation buttons
-        topic_encoded = topic.replace(' ', '_').lower()
         buttons = [
-            {"text": "➡️ Next Question", "callback_data": f"next_science_{subject.lower()}_{topic_encoded}_{difficulty}"},
+            {"text": "➡️ Next Question", "callback_data": f"next_science_{subject.lower()}_{topic.replace(' ', '_')}_{difficulty}"},
             {"text": "📚 Change Topic", "callback_data": f"science_{subject}"},
             {"text": "🏠 Main Menu", "callback_data": "main_menu"}
         ]
@@ -3121,20 +3125,20 @@ def handle_combined_science_question(user_id: str, subject: str):
     try:
         # Check and deduct credits for combined science topical question
         from services.advanced_credit_service import advanced_credit_service
-        
+
         credit_result = advanced_credit_service.check_and_deduct_credits(
             user_id, 
             'combined_science_topical',  # 1 credit as per config
             None
         )
-        
+
         if not credit_result['success']:
             if credit_result.get('insufficient'):
                 # Show gamified insufficient credits message
                 current_credits = credit_result['current_credits']
                 required_credits = credit_result['required_credits']
                 shortage = credit_result['shortage']
-                
+
                 insufficient_msg = f"""💰 **Need More Credits!** 💰
 
 🧪 **Combined Science - {subject}**
@@ -3153,19 +3157,19 @@ def handle_combined_science_question(user_id: str, subject: str):
 • AI-powered explanations
 
 💎 **Get More Credits:**"""
-                
+
                 buttons = [
                     {"text": "💰 Buy Credits", "callback_data": "credit_store"},
                     {"text": "👥 Invite Friends (+5 each)", "callback_data": "share_to_friend"},
                     {"text": "🏠 Main Menu", "callback_data": "main_menu"}
                 ]
-                
+
                 whatsapp_service.send_interactive_message(user_id, insufficient_msg, buttons)
                 return
             else:
                 whatsapp_service.send_message(user_id, credit_result['message'])
                 return
-        
+
         from services.question_service import QuestionService
         from database.external_db import get_user_registration, get_user_stats
 
@@ -3204,7 +3208,7 @@ def handle_combined_science_question(user_id: str, subject: str):
         # Display question with proper formatting including credit deduction info
         user_stats = get_user_stats(user_id)
         current_level = user_stats.get('level', 1)
-        
+
         # Enhanced gamified question display
         message = f"🧪 **{subject} Topical Question** 🧪\n\n"
         message += f"👤 **Student:** {user_name} (Level {current_level})\n"
@@ -3273,7 +3277,7 @@ def handle_combined_science_answer(user_id: str, subject: str, user_answer: str)
         explanation = question_data.get('explanation', 'No explanation available.')
 
         is_correct = user_answer.upper() == correct_answer.upper()
-        
+
         # Track analytics for combined science question attempt
         analytics_tracker.track_question_attempt(
             user_id=user_id,
@@ -3296,12 +3300,12 @@ def handle_combined_science_answer(user_id: str, subject: str, user_answer: str)
             # Award XP and update streak
             add_xp(user_id, points, 'combined_science_topical')
             update_streak(user_id)
-            
+
             # Check for level up
             new_xp = current_xp + points
             new_level = max(1, (new_xp // 100) + 1)
             new_streak = current_streak + 1
-            
+
             if new_level > current_level:
                 update_user_stats(user_id, {'level': new_level})
         else:
@@ -3332,7 +3336,7 @@ def handle_combined_science_answer(user_id: str, subject: str, user_answer: str)
             message += f"📚 **Topic:** {topic}\n"
             message += f"💎 **XP Earned:** +{points}\n"
             message += f"🔥 **Streak:** {final_streak}\n\n"
-            
+
             # Special streak messages for Combined Science
             if final_streak >= 10:
                 message += f"🏆 **SCIENCE MASTER!** You're dominating Combined Science!\n"
@@ -3360,13 +3364,13 @@ def handle_combined_science_answer(user_id: str, subject: str, user_answer: str)
                 summary_explanation = explanation[:150] + '.'
         else:
             summary_explanation = explanation
-        
+
         message += f"🔬 **Scientific Explanation:**\n{summary_explanation}\n\n"
 
         # Check for level up
         level_up_bonus = ""
         if is_correct and new_level > current_level:
-            level_up_bonus = f"🎉 **LEVEL UP!** Level {current_level} → Level {new_level}!"
+            level_up_bonus = f"🎉 **LEVEL UP!** Welcome to Level {new_level}!"
 
         # Enhanced gamified stats display
         message += f"🎮 **Your Science Progress** 🎮\n"
@@ -3375,16 +3379,16 @@ def handle_combined_science_answer(user_id: str, subject: str, user_answer: str)
         message += f"⚡ **Total XP:** {final_xp}\n"
         message += f"🔥 **Current Streak:** {final_streak}\n"
         message += f"🏆 **Level:** {final_level}\n"
-        
+
         # Add level progress
         xp_for_next_level = (final_level * 100) - final_xp
         if xp_for_next_level > 0:
             message += f"📈 **Next Level:** {xp_for_next_level} XP away!\n"
         else:
             message += f"🌟 **Science Expert!** Keep exploring!\n"
-            
+
         message += f"━━━━━━━━━━━━━━━━━━━━\n"
-        
+
         if level_up_bonus:
             message += f"\n{level_up_bonus}\n"
 
@@ -3411,19 +3415,19 @@ def handle_package_selection(user_id: str, package_id: str):
     """Handle credit package selection"""
     try:
         from services.advanced_credit_service import advanced_credit_service
-        
+
         # Get package details
         packages = advanced_credit_service.get_credit_packages()
         selected_package = next((p for p in packages if p['id'] == package_id), None)
-        
+
         if not selected_package:
             whatsapp_service.send_message(user_id, "❌ Package not found. Please try again.")
             return
-        
+
         # Create artistic package details message
         cost_per_credit = selected_package['price'] / selected_package['credits']
         savings_percent = round((1 - cost_per_credit / 0.10) * 100) if cost_per_credit < 0.10 else 0
-        
+
         message = f"""✨ 𝗣𝗔𝗖𝗞𝗔𝗚𝗘 𝗗𝗘𝗧𝗔𝗜𝗟𝗦 ✨
 ╔══════════════════════════╗
 ║ {selected_package['icon']} **{selected_package['name'].upper()}** {selected_package['icon']} ║
@@ -3438,15 +3442,15 @@ def handle_package_selection(user_id: str, package_id: str):
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🚀 Ready to power up your learning?"""
-        
+
         buttons = [
             {"text": "✅ PURCHASE THIS PACKAGE", "callback_data": f"purchase_package_{package_id}"},
             {"text": "🔍 View Other Packages", "callback_data": "credit_store"},
             {"text": "❌ Cancel Purchase", "callback_data": "back_to_menu"}
         ]
-        
+
         whatsapp_service.send_interactive_message(user_id, message, buttons)
-        
+
     except Exception as e:
         logger.error(f"Error handling package selection for {user_id}: {e}")
         whatsapp_service.send_message(user_id, "❌ Error loading package details. Please try again.")
@@ -3456,15 +3460,15 @@ def handle_purchase_confirmation(user_id: str, package_id: str):
     try:
         from services.advanced_credit_service import advanced_credit_service
         from services.paynow_service import paynow_service
-        
+
         # Get package details
         packages = advanced_credit_service.get_credit_packages()
         selected_package = next((p for p in packages if p['id'] == package_id), None)
-        
+
         if not selected_package:
             whatsapp_service.send_message(user_id, "❌ Package not found. Please try again.")
             return
-        
+
         message = f"""💳 ✨ 𝗖𝗛𝗢𝗢𝗦𝗘 𝗣𝗔𝗬𝗠𝗘𝗡𝗧 𝗠𝗘𝗧𝗛𝗢𝗗 ✨ 💳
 ╔═══════════════════════════════╗
 ║    {selected_package['icon']} {selected_package['name'].upper()} {selected_package['icon']}    ║
@@ -3475,10 +3479,10 @@ def handle_purchase_confirmation(user_id: str, package_id: str):
 
 🚀 **CHOOSE YOUR PAYMENT METHOD:**
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
-        
+
         # Prepare payment method buttons
         buttons = []
-        
+
         # Check if Paynow is available and add instant payment option
         if paynow_service.is_available():
             buttons.append({
@@ -3486,18 +3490,18 @@ def handle_purchase_confirmation(user_id: str, package_id: str):
                 "callback_data": f"paynow_payment_{package_id}"
             })
             message += "\n⚡ **Paynow USD EcoCash** - Instant payment & automatic credits"
-        
+
         # Always add manual payment option as fallback
         buttons.extend([
             {"text": "📱 Manual EcoCash SMS Verification", "callback_data": f"manual_payment_{package_id}"},
             {"text": "⬅️ BACK", "callback_data": f"select_package_{package_id}"}
         ])
-        
+
         message += "\n📱 **Manual EcoCash** - Traditional SMS verification (5-30 mins)"
         message += "\n\n🔒 **Both methods are 100% secure and verified**"
-        
+
         whatsapp_service.send_interactive_message(user_id, message, buttons)
-        
+
     except Exception as e:
         logger.error(f"Error handling purchase confirmation for {user_id}: {e}")
         whatsapp_service.send_message(user_id, "❌ Error processing purchase. Please try again.")
@@ -3506,13 +3510,13 @@ def handle_credit_store(user_id: str):
     """Handle credit store interactions"""
     try:
         from services.advanced_credit_service import advanced_credit_service
-        
+
         # Get credit store message and buttons
         message, buttons = advanced_credit_service.format_credit_store_message(user_id)
-        
+
         # Send credit store
         whatsapp_service.send_interactive_message(user_id, message, buttons)
-        
+
     except Exception as e:
         logger.error(f"Error handling credit store for {user_id}: {e}")
         whatsapp_service.send_message(user_id, "❌ Error loading credit store. Please try again.")
@@ -3521,16 +3525,16 @@ def handle_payment_proof_request(user_id: str):
     """Handle payment proof submission request"""
     try:
         from database.session_db import get_user_session, save_user_session
-        from services.payment_service import payment_service
-        
+        from services.payment_service import PaymentService
+
         # Get user session
         session = get_user_session(user_id)
-        
+
         if not session or session.get('session_type') != 'payment_flow':
             whatsapp_service.send_message(user_id, "❌ No active payment session found. Please start a new payment.")
             show_credit_packages(user_id)
             return
-        
+
         # Get custom data from session
         custom_data = session.get('custom_data', {})
         if isinstance(custom_data, str):
@@ -3538,24 +3542,24 @@ def handle_payment_proof_request(user_id: str):
                 custom_data = json.loads(custom_data)
             except:
                 custom_data = {}
-        
+
         reference_code = custom_data.get('reference_code')
         if not reference_code:
             whatsapp_service.send_message(user_id, "❌ Payment reference not found. Please start a new payment.")
             show_credit_packages(user_id)
             return
-        
+
         # Update session to expect payment proof
         save_user_session(user_id, {
             **session,
             'step': 'awaiting_proof'
         })
-        
+
         # Show payment proof submission form
         message = payment_service.get_payment_proof_submission_message(reference_code)
-        
+
         whatsapp_service.send_message(user_id, message)
-        
+
     except Exception as e:
         logger.error(f"Error handling payment proof request for {user_id}: {e}", exc_info=True)
         whatsapp_service.send_message(user_id, "❌ Error processing payment proof request. Please try again.")
@@ -3563,8 +3567,8 @@ def handle_payment_proof_request(user_id: str):
 def handle_payment_help(user_id: str):
     """Handle payment help request"""
     try:
-        from services.payment_service import payment_service
-        
+        from services.payment_service import PaymentService
+
         help_message = f"💡 **PAYMENT HELP**\n\n"
         help_message += f"📱 **EcoCash Payment Process:**\n"
         help_message += f"1️⃣ Select a credit package\n"
@@ -3579,14 +3583,14 @@ def handle_payment_help(user_id: str):
         help_message += f"• Contact support if payment fails\n\n"
         help_message += f"📞 **Need More Help?**\n"
         help_message += f"Contact our support team for assistance."
-        
+
         buttons = [
             {'text': "💰 Try Payment Again", 'callback_data': 'buy_credits'},
             {'text': "🏠 Back to Menu", 'callback_data': 'main_menu'}
         ]
-        
+
         whatsapp_service.send_interactive_message(user_id, help_message, buttons)
-        
+
     except Exception as e:
         logger.error(f"Error handling payment help for {user_id}: {e}", exc_info=True)
         whatsapp_service.send_message(user_id, "❌ Error loading payment help. Please try again.")
@@ -3597,15 +3601,15 @@ def handle_payment_proof_submission(user_id: str, package_id: str, reference_cod
         from services.payment_service import PaymentService
         from database.session_db import get_user_session, save_user_session
         from database.external_db import get_user_registration
-        
+
         payment_service = PaymentService()
-        
+
         # Get user session data
         user_session = get_user_session(user_id)
         if not user_session or user_session.get('session_type') != 'payment_flow':
             whatsapp_service.send_message(user_id, "❌ No active payment session found. Please try again.")
             return
-        
+
         # Get custom data from session
         custom_data = user_session.get('custom_data', {})
         if isinstance(custom_data, str):
@@ -3613,28 +3617,28 @@ def handle_payment_proof_submission(user_id: str, package_id: str, reference_cod
                 custom_data = json.loads(custom_data)
             except:
                 custom_data = {}
-        
+
         # Verify reference code
         if custom_data.get('reference_code') != reference_code:
             whatsapp_service.send_message(user_id, "❌ Payment reference code mismatch. Please try again.")
             return
-        
+
         # Get package details
         package = payment_service.get_package_by_id(package_id)
         if not package:
             whatsapp_service.send_message(user_id, "❌ Package not found. Please try again.")
             return
-        
+
         # Get user registration for name
         registration = get_user_registration(user_id)
         user_name = registration['name'] if registration else "Student"
-        
+
         # Update user session to awaiting proof
         custom_data['awaiting_proof'] = True
         user_session['step'] = 'awaiting_proof'
         user_session['custom_data'] = json.dumps(custom_data)
         save_user_session(user_id, user_session)
-            
+
         # Send artistic waiting message
         waiting_message = f"""📱 ✨ 𝗔𝗪𝗔𝗜𝗧𝗜𝗡𝗚 𝗦𝗠𝗦 ✨ 📱
 ╔═══════════════════════════════╗
@@ -3654,12 +3658,12 @@ def handle_payment_proof_submission(user_id: str, package_id: str, reference_cod
 ✅ Verify amount matches ${package['price']:.2f}
 
 📲 **Please paste your EcoCash confirmation SMS below:**"""
-        
+
         whatsapp_service.send_message(user_id, waiting_message)
-        
+
         # Log for monitoring
         logger.info(f"Payment proof request sent to {user_id} for package {package_id}, reference {reference_code}")
-            
+
     except Exception as e:
         logger.error(f"Error handling payment proof submission for {user_id}: {e}")
         whatsapp_service.send_message(user_id, "❌ Error processing payment proof. Please try again.")
@@ -3670,14 +3674,14 @@ def handle_payment_proof_text(user_id: str, proof_text: str):
         from services.payment_service import PaymentService
         from database.session_db import get_user_session, clear_user_session
         from database.external_db import get_user_registration
-        
+
         payment_service = PaymentService()
-        
+
         # Get user session
         user_session = get_user_session(user_id)
         if not user_session or user_session.get('session_type') != 'payment_flow':
             return False
-        
+
         # Get custom data
         custom_data = user_session.get('custom_data', {})
         if isinstance(custom_data, str):
@@ -3685,16 +3689,16 @@ def handle_payment_proof_text(user_id: str, proof_text: str):
                 custom_data = json.loads(custom_data)
             except:
                 custom_data = {}
-        
+
         if not custom_data.get('awaiting_proof'):
             return False
-        
+
         package_id = custom_data.get('package_id')
         reference_code = custom_data.get('reference_code')
-        
+
         if not package_id or not reference_code:
             clear_user_session(user_id)
-            
+
             message = """❌ **Payment Session Expired**
 
 Your payment session has expired or was incomplete. 
@@ -3705,33 +3709,33 @@ Your payment session has expired or was incomplete.
 3. Follow the payment instructions
 
 💡 **Tip:** Complete the payment process within 10 minutes to avoid session timeout."""
-            
+
             buttons = [
                 {"text": "💰 Buy Credits", "callback_data": "credit_store"},
                 {"text": "🏠 Main Menu", "callback_data": "main_menu"}
             ]
-            
+
             whatsapp_service.send_interactive_message(user_id, message, buttons)
             return True
-        
+
         # Get package details
         package = payment_service.get_package_by_id(package_id)
         if not package:
             whatsapp_service.send_message(user_id, "❌ Package not found. Please try again.")
             clear_user_session(user_id)
             return True
-        
+
         # Get user name
         registration = get_user_registration(user_id)
         user_name = registration['name'] if registration else "Student"
-        
+
         # Submit payment proof
         result = payment_service.submit_payment_proof(user_id, package_id, reference_code, proof_text)
-        
+
         if result['success']:
             # Clear the session
             clear_user_session(user_id)
-            
+
             # Send artistic success message with tracking
             message = f"""✨ 𝗣𝗔𝗬𝗠𝗘𝗡𝗧 𝗦𝗨𝗕𝗠𝗜𝗧𝗧𝗘𝗗! ✨
 ╔═══════════════════════════════╗
@@ -3755,32 +3759,30 @@ Your payment session has expired or was incomplete.
 💎 Credits: Instant activation
 🎯 Learning: Start immediately!
 
-📊 **Track ID**: #{reference_code[-4:]}
-
 💡 **Pro Tip**: Continue using existing credits while we verify your payment!
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
-            
+
             buttons = [
                 {"text": "🏠 MAIN MENU", "callback_data": "back_to_menu"},
                 {"text": "📚 CONTINUE STUDYING", "callback_data": "start_quiz"},
                 {"text": "💬 CONTACT SUPPORT", "callback_data": "contact_support"}
             ]
-            
+
             whatsapp_service.send_interactive_message(user_id, message, buttons)
-            
+
             # Log successful submission
             logger.info(f"Payment proof successfully submitted by {user_id} ({user_name}) for {package['name']} - ${package['price']}")
-            
+
             # Notify admin dashboard (webhook for real-time updates)
             notify_admin_new_payment(user_id, package_id, reference_code, package['price'])
-            
+
             return True
-            
+
         else:
             whatsapp_service.send_message(user_id, f"❌ Error submitting payment proof: {result['message']}\n\nPlease try again or contact support.")
             return True
-            
+
     except Exception as e:
         logger.error(f"Error handling payment proof text for {user_id}: {e}")
         whatsapp_service.send_message(user_id, "❌ Error processing payment proof. Please contact support.")
@@ -3801,12 +3803,12 @@ Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 Status: Awaiting Admin Review
 ==============================
         """)
-        
+
         # You could also send a notification to admin WhatsApp numbers
         # admin_numbers = ["admin_whatsapp_id_1", "admin_whatsapp_id_2"]
         # for admin_id in admin_numbers:
         #     whatsapp_service.send_message(admin_id, f"💰 New payment submission: {reference_code} - ${amount}")
-        
+
     except Exception as e:
         logger.error(f"Error notifying admin about new payment: {e}")
 
@@ -3816,15 +3818,15 @@ def test_registration_endpoint():
     try:
         from database.external_db import create_user_registration, get_user_registration
         import uuid
-        
+
         # Generate test data
         test_chat_id = f"test_{uuid.uuid4().hex[:8]}"
         test_name = "Test"
         test_surname = "Student"  
         test_dob = "01/01/2000"
-        
+
         logger.info(f"🧪 Testing registration for {test_chat_id}")
-        
+
         # Attempt registration
         result = create_user_registration(
             chat_id=test_chat_id,
@@ -3832,11 +3834,11 @@ def test_registration_endpoint():
             surname=test_surname,
             date_of_birth=test_dob
         )
-        
+
         if result:
             # Verify the registration was saved
             retrieved = get_user_registration(test_chat_id)
-            
+
             return jsonify({
                 'status': 'registration_test_success',
                 'message': '✅ Registration test PASSED - Supabase is working correctly!',
@@ -3853,7 +3855,7 @@ def test_registration_endpoint():
                 'test_chat_id': test_chat_id,
                 'timestamp': datetime.now().isoformat()
             }), 500
-            
+
     except Exception as e:
         logger.error(f"Registration test error: {e}")
         return jsonify({
@@ -3868,16 +3870,16 @@ def diagnose_supabase():
     """Diagnose Supabase issues and provide detailed information"""
     try:
         from database.external_db import diagnose_supabase_issues
-        
+
         # Run comprehensive diagnosis
         diagnosis = diagnose_supabase_issues()
-        
+
         return jsonify({
             'status': 'diagnosis_complete',
             'timestamp': datetime.now().isoformat(),
             'diagnosis': diagnosis
         }), 200
-        
+
     except Exception as e:
         logger.error(f"Diagnosis endpoint error: {e}")
         return jsonify({
@@ -3892,15 +3894,15 @@ def handle_paynow_payment(user_id: str, package_id: str):
         from services.advanced_credit_service import advanced_credit_service
         from services.paynow_service import paynow_service
         from database.external_db import get_user_registration
-        
+
         # Get package details
         packages = advanced_credit_service.get_credit_packages()
         selected_package = next((p for p in packages if p['id'] == package_id), None)
-        
+
         if not selected_package:
             whatsapp_service.send_message(user_id, "❌ Package not found. Please try again.")
             return
-        
+
         # Check if Paynow is available
         if not paynow_service.is_available():
             whatsapp_service.send_message(user_id, 
@@ -3909,13 +3911,13 @@ def handle_paynow_payment(user_id: str, package_id: str):
                 "Please use manual payment method.")
             handle_manual_payment(user_id, package_id)
             return
-        
+
         # Get user registration for contact details
         registration = get_user_registration(user_id)
         if not registration:
             whatsapp_service.send_message(user_id, "❌ Registration not found. Please try again.")
             return
-        
+
         # Collect user phone number
         message = f"""📱 **PAYNOW USD ECOCASH PAYMENT** ⚡
 
@@ -3928,7 +3930,7 @@ def handle_paynow_payment(user_id: str, package_id: str):
 
 📞 **Please provide your EcoCash number** for instant payment:
 
-Format: 077XXXXXXX or 0773XXXXXX or +263XXXXXXXXX
+Format: 077XXXXXXX or 078XXXXXXX or +263XXXXXXXXX
 
 💡 **Benefits of Paynow:**
 ✅ Instant credit delivery (5-30 seconds)
@@ -3937,7 +3939,7 @@ Format: 077XXXXXXX or 0773XXXXXX or +263XXXXXXXXX
 ✅ No manual verification needed
 
 Just reply with your EcoCash number and we'll handle the rest!"""
-        
+
         # Store package info in session for phone number collection
         from database.session_db import save_user_session
         payment_session_data = {
@@ -3951,9 +3953,9 @@ Just reply with your EcoCash number and we'll handle the rest!"""
             })
         }
         save_user_session(user_id, payment_session_data)
-        
+
         whatsapp_service.send_message(user_id, message)
-        
+
     except Exception as e:
         logger.error(f"Error handling Paynow payment for {user_id}: {e}")
         whatsapp_service.send_message(user_id, "❌ Error processing Paynow payment. Please try again.")
@@ -3962,19 +3964,19 @@ def handle_manual_payment(user_id: str, package_id: str):
     """Handle manual EcoCash SMS verification payment"""
     try:
         from services.advanced_credit_service import advanced_credit_service
-        
+
         # Get package details
         packages = advanced_credit_service.get_credit_packages()
         selected_package = next((p for p in packages if p['id'] == package_id), None)
-        
+
         if not selected_package:
             whatsapp_service.send_message(user_id, "❌ Package not found. Please try again.")
             return
-        
+
         # Generate unique reference code
         import uuid
         reference_code = str(uuid.uuid4())[:8].upper()
-        
+
         message = f"""💳 ✨ 𝗠𝗔𝗡𝗨𝗔𝗟 𝗘𝗖𝗢𝗖𝗔𝗦𝗛 𝗣𝗔𝗬𝗠𝗘𝗡𝗧 ✨ 💳
 ╔═══════════════════════════════╗
 ║       🚀 SECURE CHECKOUT 🚀     ║
@@ -3997,13 +3999,13 @@ def handle_manual_payment(user_id: str, package_id: str):
 100% secure • Instant verification • Protected payments
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
-        
+
         buttons = [
             {"text": "✅ I SENT MONEY - SUBMIT PROOF", "callback_data": f"submit_proof_{package_id}_{reference_code}"},
             {"text": "❓ NEED HELP?", "callback_data": "payment_help"},
             {"text": "⬅️ BACK", "callback_data": f"select_package_{package_id}"}
         ]
-        
+
         # Store payment session in user session
         from database.session_db import save_user_session
         payment_session_data = {
@@ -4018,9 +4020,9 @@ def handle_manual_payment(user_id: str, package_id: str):
             })
         }
         save_user_session(user_id, payment_session_data)
-        
+
         whatsapp_service.send_interactive_message(user_id, message, buttons)
-        
+
     except Exception as e:
         logger.error(f"Error handling manual payment for {user_id}: {e}")
         whatsapp_service.send_message(user_id, "❌ Error processing manual payment. Please try again.")
@@ -4032,13 +4034,13 @@ def handle_paynow_phone_collection(user_id: str, phone_number: str):
         from services.advanced_credit_service import advanced_credit_service
         from database.session_db import get_user_session, save_user_session, clear_user_session
         import re
-        
+
         # Get user session
         session = get_user_session(user_id)
         if not session or session.get('session_type') != 'paynow_phone_collection':
             whatsapp_service.send_message(user_id, "❌ No active Paynow session found. Please try again.")
             return
-        
+
         # Get custom data
         custom_data = session.get('custom_data', {})
         if isinstance(custom_data, str):
@@ -4046,26 +4048,26 @@ def handle_paynow_phone_collection(user_id: str, phone_number: str):
                 custom_data = json.loads(custom_data)
             except:
                 custom_data = {}
-        
+
         package_id = custom_data.get('package_id')
         amount = custom_data.get('amount')
         credits = custom_data.get('credits')
-        
+
         if not all([package_id, amount, credits]):
             whatsapp_service.send_message(user_id, "❌ Session data incomplete. Please try again.")
             clear_user_session(user_id)
             return
-        
+
         # Validate and normalize phone number
         phone_cleaned = re.sub(r'[^\d+]', '', phone_number.strip())
-        
+
         # Normalize to local format first for validation
         local_phone = phone_cleaned
         if phone_cleaned.startswith('+263'):
             local_phone = '0' + phone_cleaned[4:]  # +263771111111 -> 0771111111
         elif phone_cleaned.startswith('263'):
             local_phone = '0' + phone_cleaned[3:]  # 263771111111 -> 0771111111
-        
+
         # Validate local format
         if not (len(local_phone) == 10 and local_phone.startswith('07') and 
                 local_phone[:3] in ['077', '078']):
@@ -4076,13 +4078,13 @@ def handle_paynow_phone_collection(user_id: str, phone_number: str):
                 "• Example: 0771234567\n\n"
                 "Please send your EcoCash number again:")
             return
-        
+
         # Convert to international format for Paynow
         international_phone = '+263' + local_phone[1:]  # 0771111111 -> +2637711111111
-        
+
         # Clear session to prevent duplicate submissions
         clear_user_session(user_id)
-        
+
         # Send processing message
         whatsapp_service.send_message(user_id, 
             f"⚡ **PROCESSING PAYNOW PAYMENT...**\n\n"
@@ -4090,7 +4092,7 @@ def handle_paynow_phone_collection(user_id: str, phone_number: str):
             f"💰 Amount: ${amount:.2f} USD\n"
             f"💎 Credits: {credits}\n\n"
             f"🔄 Creating payment link... Please wait...")
-        
+
         # Initiate Paynow payment using local format (Paynow expects 0771111111 format)
         try:
             payment_response = paynow_service.create_usd_ecocash_payment(
@@ -4100,11 +4102,11 @@ def handle_paynow_phone_collection(user_id: str, phone_number: str):
                 reference=f"CREDITS_{package_id}_{user_id}",
                 description=f"NerdX Quiz Credits - {credits} credits"
             )
-            
+
             if payment_response.get('success'):
                 poll_url = payment_response.get('poll_url')
                 redirect_url = payment_response.get('redirect_url')
-                
+
                 if redirect_url:
                     # Success - send payment link
                     message = f"""✅ **PAYNOW PAYMENT READY!** ⚡
@@ -4125,13 +4127,13 @@ Click the link below to complete your EcoCash payment:
 3️⃣ Credits will be added automatically (5-30 seconds)
 
 💡 **Payment expires in 5 minutes**"""
-                    
+
                     whatsapp_service.send_message(user_id, message)
-                    
+
                     # Store poll URL for payment status checking
                     if poll_url:
                         logger.info(f"Paynow payment initiated for {user_id}: poll_url={poll_url}")
-                
+
                 else:
                     # Fallback to manual payment
                     whatsapp_service.send_message(user_id, 
@@ -4139,17 +4141,17 @@ Click the link below to complete your EcoCash payment:
                         "The instant payment system encountered an issue. "
                         "Let's use manual payment instead.")
                     handle_manual_payment(user_id, package_id)
-            
+
             else:
                 error_msg = payment_response.get('error', 'Unknown error')
                 logger.error(f"Paynow payment failed for {user_id}: {error_msg}")
-                
+
                 whatsapp_service.send_message(user_id, 
                     f"❌ **Payment Processing Failed**\n\n"
                     f"Error: {error_msg}\n\n"
                     f"Let's use manual payment instead.")
                 handle_manual_payment(user_id, package_id)
-        
+
         except Exception as payment_error:
             logger.error(f"Paynow payment exception for {user_id}: {payment_error}")
             whatsapp_service.send_message(user_id, 
@@ -4157,7 +4159,7 @@ Click the link below to complete your EcoCash payment:
                 "The instant payment system is temporarily unavailable. "
                 "Let's use manual payment instead.")
             handle_manual_payment(user_id, package_id)
-        
+
     except Exception as e:
         logger.error(f"Error handling Paynow phone collection for {user_id}: {e}")
         whatsapp_service.send_message(user_id, "❌ Error processing phone number. Please try again.")

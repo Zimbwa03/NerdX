@@ -1254,14 +1254,25 @@ Type your essay below:"""
     def handle_essay_submission(self, user_id: str, essay_text: str):
         """Handle essay submission and generate PDF marking report"""
         try:
-            from database.session_db import get_user_session, clear_user_session
+            from database.session_db import get_user_session, clear_user_session, save_user_session
             from database.external_db import deduct_credits
             import json
+            import time
 
             session = get_user_session(user_id)
             if not session or not session.get('awaiting_essay'):
                 self.whatsapp_service.send_message(user_id, "❌ No active essay session found. Please start a new essay.")
                 return
+
+            # Prevent duplicate submissions by checking if already processing
+            if session.get('processing_essay'):
+                logger.warning(f"Essay already being processed for {user_id}")
+                return
+
+            # Mark as processing to prevent duplicates
+            session['processing_essay'] = True
+            session['awaiting_essay'] = False
+            save_user_session(user_id, session)
 
             user_name = session.get('user_name', 'Student')
 
@@ -1455,6 +1466,8 @@ Type your essay below:"""
 
         except Exception as e:
             logger.error(f"Error handling essay submission for {user_id}: {e}")
+            # Clear session on error too
+            clear_user_session(user_id)
             self.whatsapp_service.send_message(user_id, "❌ Error processing essay. Please try again.")
 
     def _generate_essay_marking_with_pdf(self, essay_text: str, user_name: str, user_id: str):

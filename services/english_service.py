@@ -19,7 +19,7 @@ class EnglishService:
         """Initialize Enhanced ZIMSEC English Service with AI capabilities"""
         self.client = None
         self._is_configured = False
-        
+
         # Initialize Gemini AI
         try:
             api_key = os.getenv('GEMINI_API_KEY')
@@ -31,11 +31,11 @@ class EnglishService:
                 logger.warning("GEMINI_API_KEY not found - using fallback methods")
         except Exception as e:
             logger.error(f"Error initializing English service: {e}")
-            
+
     def _get_fallback_grammar_question(self) -> Dict:
         """Provide fallback grammar question when AI service fails"""
         import random
-        
+
         fallback_grammar_questions = [
             {
                 "question": "Identify the pronouns in this sentence: She told him that they would meet us later.",
@@ -59,13 +59,13 @@ class EnglishService:
                 "topic_area": "Sentence Structure"
             }
         ]
-        
+
         return random.choice(fallback_grammar_questions)
 
     def _get_fallback_vocabulary_question(self) -> Dict:
         """Provide fallback vocabulary MCQ when AI service fails"""
         import random
-        
+
         fallback_vocab_questions = [
             {
                 "question": "What does the word 'abundant' mean?",
@@ -98,7 +98,7 @@ class EnglishService:
                 "explanation": "Fierce means showing strong, aggressive intensity."
             }
         ]
-        
+
         return random.choice(fallback_vocab_questions)
 
     def generate_grammar_question(self) -> Optional[Dict]:
@@ -106,7 +106,7 @@ class EnglishService:
         # Primary: Get question from database
         try:
             from database.external_db import get_random_grammar_question
-            
+
             question_data = get_random_grammar_question()
             if question_data:
                 logger.info(f"Retrieved grammar question from database - Topic: {question_data.get('topic_area', 'Unknown')}")
@@ -118,7 +118,7 @@ class EnglishService:
                 logger.warning("No questions found in database")
         except Exception as e:
             logger.error(f"Error retrieving question from database: {e}")
-        
+
         # Minimal fallback only if database completely fails
         logger.warning("Database unavailable - using minimal fallback")
         return {
@@ -131,7 +131,7 @@ class EnglishService:
         # Primary: Get question from database
         try:
             from database.external_db import get_random_vocabulary_question
-            
+
             question_data = get_random_vocabulary_question()
             if question_data:
                 logger.info(f"Retrieved vocabulary question from database - Question: {question_data.get('question', 'Unknown')[:50]}...")
@@ -143,7 +143,7 @@ class EnglishService:
                 logger.warning("No vocabulary questions found in database")
         except Exception as e:
             logger.error(f"Error retrieving vocabulary question from database: {e}")
-        
+
         # Minimal fallback only if database completely fails
         logger.warning("Database unavailable - using minimal fallback")
         return {
@@ -159,7 +159,7 @@ class EnglishService:
                 'success': True,
                 'prompts': self._get_fallback_essay_prompts()
             }
-            
+
         try:
             prompt = f"""Generate 3 diverse ZIMSEC O-Level English essay prompts suitable for {user_level} students.
 
@@ -203,15 +203,15 @@ Return ONLY a JSON array:
                     if clean_text.endswith('```'):
                         clean_text = clean_text[:-3]
                     clean_text = clean_text.strip()
-                    
+
                     prompts_data = json.loads(clean_text)
-                    
+
                     if isinstance(prompts_data, list) and len(prompts_data) >= 3:
                         return {
                             'success': True,
                             'prompts': prompts_data
                         }
-                        
+
                 except json.JSONDecodeError as e:
                     logger.error(f"JSON decode error in essay prompts: {e}")
                 except Exception as e:
@@ -254,7 +254,7 @@ Return ONLY a JSON array:
         if not self._is_configured or not self.client:
             logger.warning("AI not configured for essay analysis")
             return None
-            
+
         try:
             analysis_prompt = f"""Analyze this ZIMSEC O-Level student essay and provide detailed feedback.
 
@@ -308,11 +308,11 @@ Return ONLY a JSON object:
                     if clean_text.endswith('```'):
                         clean_text = clean_text[:-3]
                     clean_text = clean_text.strip()
-                    
+
                     analysis = json.loads(clean_text)
                     logger.info("Essay analysis completed successfully")
                     return analysis
-                    
+
                 except json.JSONDecodeError as e:
                     logger.error(f"JSON decode error in essay analysis: {e}")
                 except Exception as e:
@@ -320,36 +320,36 @@ Return ONLY a JSON object:
 
         except Exception as e:
             logger.error(f"Error in AI essay analysis: {e}")
-            
+
         return None
 
     def generate_comprehension_question(self) -> Optional[Dict]:
         """Generate comprehension passage with questions from database"""
         from database.external_db import get_supabase_client
-        
+
         try:
             supabase = get_supabase_client()
-            
+
             # Get a random passage with its questions
             passages_response = supabase.table('english_comprehension_passages').select('*').execute()
-            
+
             if not passages_response.data:
                 logger.warning("No comprehension passages found in database")
                 return self._get_fallback_comprehension()
-            
+
             # Select a random passage
             passage = random.choice(passages_response.data)
             passage_id = passage['id']
-            
+
             # Get questions for this passage
             questions_response = supabase.table('english_comprehension_questions').select('*').eq('passage_id', passage_id).order('question_order').execute()
-            
+
             if not questions_response.data:
                 logger.warning(f"No questions found for passage {passage_id}")
                 return self._get_fallback_comprehension()
-            
+
             logger.info(f"Retrieved comprehension passage from database - Topic: {passage['topic_area']}")
-            
+
             return {
                 'success': True,
                 'question_data': {
@@ -363,11 +363,11 @@ Return ONLY a JSON object:
                     'total_questions': len(questions_response.data)
                 }
             }
-            
+
         except Exception as e:
             logger.error(f"Database error in comprehension question generation: {e}")
             return self._get_fallback_comprehension()
-    
+
     def _get_fallback_comprehension(self) -> Dict:
         """Fallback comprehension when database fails"""
         return {
@@ -403,7 +403,7 @@ Return ONLY a JSON object:
                 'success': True,
                 'passage_data': self._get_fallback_comprehension()
             }
-            
+
         try:
             prompt = f"""Generate a ZIMSEC O-Level English reading comprehension exercise on the theme: {theme}
 
@@ -446,16 +446,16 @@ Return ONLY a JSON object:
                     if clean_text.endswith('```'):
                         clean_text = clean_text[:-3]
                     clean_text = clean_text.strip()
-                    
+
                     passage_data = json.loads(clean_text)
-                    
+
                     # Validate structure
                     if 'passage' in passage_data and 'questions' in passage_data:
                         return {
                             'success': True,
                             'passage_data': passage_data
                         }
-                        
+
                 except json.JSONDecodeError as e:
                     logger.error(f"JSON decode error in comprehension: {e}")
 
@@ -470,6 +470,7 @@ Return ONLY a JSON object:
 
     def _get_fallback_comprehension(self) -> Dict:
         """Fallback comprehension passage when AI fails"""
+
         return {
             "title": "The School Garden Project",
             "passage": "Tendai looked at the empty plot of land behind his school with excitement. As the head of the Environmental Club at Mufakose High School, he had been planning this garden project for months. The headmaster had finally given permission to use the space for growing vegetables. 'This will help our school become more sustainable,' Tendai thought as he sketched plans in his notebook. He envisioned rows of tomatoes, cabbages, and beans that could be used in the school kitchen. The project would also teach students about agriculture and environmental conservation. Tendai knew it wouldn't be easy - they would need tools, seeds, and water. But with the support of his club members and some teachers, he was confident they could create something amazing. The garden would not only provide food but also serve as an outdoor classroom where students could learn practical skills.",
@@ -507,7 +508,7 @@ Return ONLY a JSON object:
         if not self._is_configured or not self.client:
             logger.warning("English service not configured for essay marking")
             return self._generate_fallback_essay_marking()
-            
+
         try:
             # Try with Gemini 2.5 Flash first
             response = self.client.models.generate_content(
@@ -525,7 +526,7 @@ Return ONLY a JSON object:
                 return response.text.strip()
             else:
                 logger.warning("Empty or invalid response from Gemini 2.5 Flash, trying alternative model")
-                
+
                 # Try with alternative model
                 response_alt = self.client.models.generate_content(
                     model="gemini-1.5-flash",
@@ -535,24 +536,24 @@ Return ONLY a JSON object:
                         max_output_tokens=2000
                     ),
                 )
-                
+
                 if response_alt and hasattr(response_alt, 'text') and response_alt.text and response_alt.text.strip():
                     logger.info("Essay marking completed successfully with Gemini 1.5 Flash")
                     return response_alt.text.strip()
                 else:
                     logger.error("Both Gemini models returned empty responses")
                     return self._generate_fallback_essay_marking()
-                
+
         except Exception as e:
             logger.error(f"Error in Gemini essay marking: {e}")
             return self._generate_fallback_essay_marking()
-            
+
     def _generate_fallback_essay_marking(self) -> str:
         """Generate fallback essay marking when AI fails"""
         fallback_data = {
             "score": 18,
             "grade": "C+",
-            "summary_feedback": "Your essay demonstrates good understanding of the topic with clear ideas and logical structure. The content is relevant and shows creativity. However, there are some areas that need improvement including grammar consistency, vocabulary usage, and sentence structure. With more practice and attention to detail, your writing skills will continue to develop. Keep up the good effort!",
+            "summary_feedback": "Your essay demonstrates good understanding of the topic with clear ideas and logical structure. The content is relevant and shows creativity. However, there are some areas that need improvement including grammar consistency, vocabulary usage, and sentence structure. With more practice and attention to detail, your skills will continue to develop. Keep up the good effort!",
             "specific_errors": [
                 {"wrong": "have had", "correct": "had", "type": "verb tense"},
                 {"wrong": "was were", "correct": "were", "type": "subject-verb agreement"},
@@ -569,7 +570,7 @@ Return ONLY a JSON object:
             ],
             "improved_version": "Your essay has been reviewed. Focus on the feedback provided to improve your writing skills. Practice makes perfect!"
         }
-        
+
         import json
         return json.dumps(fallback_data)
 
@@ -593,7 +594,7 @@ Return ONLY a JSON object:
         if not self._is_configured or not self.client:
             logger.warning("English service not configured - using fallback long comprehension")
             return self._get_fallback_long_comprehension(theme)
-            
+
         try:
             prompt = f"""Generate a ZIMSEC O-Level English reading comprehension exercise on the theme: {theme}
 
@@ -645,9 +646,9 @@ Make the passage engaging and educational, suitable for O-Level comprehension pr
                     if clean_text.endswith('```'):
                         clean_text = clean_text[:-3]
                     clean_text = clean_text.strip()
-                    
+
                     passage_data = json.loads(clean_text)
-                    
+
                     # Validate structure
                     if 'passage' in passage_data and 'questions' in passage_data:
                         # Ensure we have exactly 10 questions
@@ -662,10 +663,10 @@ Make the passage engaging and educational, suitable for O-Level comprehension pr
                                     "marks": 2,
                                     "explanation": "This question tests overall comprehension and analytical skills."
                                 })
-                        
+
                         logger.info(f"Generated long comprehension passage: {theme} with {len(questions)} questions")
                         return passage_data
-                        
+
                 except json.JSONDecodeError as e:
                     logger.error(f"JSON decode error in long comprehension: {e}")
 
