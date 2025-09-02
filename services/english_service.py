@@ -501,3 +501,213 @@ Return ONLY a JSON object:
                 }
             ]
         }
+
+    def generate_essay_marking(self, marking_prompt: str) -> Optional[str]:
+        """Generate essay marking using Gemini AI"""
+        if not self._is_configured or not self.client:
+            logger.warning("English service not configured for essay marking")
+            return None
+            
+        try:
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=marking_prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.3,
+                    max_output_tokens=2500
+                ),
+            )
+
+            if response.text:
+                logger.info("Essay marking completed successfully")
+                return response.text
+            else:
+                logger.error("Empty response from Gemini AI")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Error in Gemini essay marking: {e}")
+            return None
+
+    def generate_long_comprehension_passage(self, theme: str, form_level: int = 4) -> Optional[Dict]:
+        """Generate long comprehensive passage with 10 questions for comprehension practice"""
+        if not self._is_configured or not self.client:
+            logger.warning("English service not configured - using fallback long comprehension")
+            return self._get_fallback_long_comprehension(theme)
+            
+        try:
+            prompt = f"""Generate a ZIMSEC O-Level English reading comprehension exercise on the theme: {theme}
+
+**Requirements:**
+- Passage: 400-600 words (long passage for proper comprehension practice)
+- Zimbabwean context and characters where appropriate
+- Age-appropriate content for Form {form_level} students (15-17 years)
+- EXACTLY 10 comprehension questions with detailed answers
+- Mix of literal, inferential, and critical thinking questions
+- Varied question types: multiple choice, short answer, analysis
+- Form {form_level} reading level
+
+Return ONLY a JSON object:
+{{
+    "passage": {{
+        "title": "Engaging passage title",
+        "text": "The complete 400-600 word reading passage",
+        "word_count": 500,
+        "theme": "{theme}"
+    }},
+    "questions": [
+        {{
+            "question": "Question text here",
+            "correct_answer": "Expected detailed answer",
+            "question_type": "literal/inferential/critical",
+            "marks": 2,
+            "explanation": "Why this is the correct answer"
+        }}
+    ]
+}}
+
+Make the passage engaging and educational, suitable for O-Level comprehension practice."""
+
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.7,
+                    max_output_tokens=3000
+                ),
+            )
+
+            if response.text:
+                try:
+                    clean_text = response.text.strip()
+                    if clean_text.startswith('```json'):
+                        clean_text = clean_text[7:]
+                    if clean_text.endswith('```'):
+                        clean_text = clean_text[:-3]
+                    clean_text = clean_text.strip()
+                    
+                    passage_data = json.loads(clean_text)
+                    
+                    # Validate structure
+                    if 'passage' in passage_data and 'questions' in passage_data:
+                        # Ensure we have exactly 10 questions
+                        questions = passage_data['questions']
+                        if len(questions) < 10:
+                            # Pad with additional questions if needed
+                            while len(questions) < 10:
+                                questions.append({
+                                    "question": f"Additional comprehension question {len(questions) + 1} - What is your understanding of the main message in this passage?",
+                                    "correct_answer": "Based on careful reading and analysis of the passage content.",
+                                    "question_type": "inferential",
+                                    "marks": 2,
+                                    "explanation": "This question tests overall comprehension and analytical skills."
+                                })
+                        
+                        logger.info(f"Generated long comprehension passage: {theme} with {len(questions)} questions")
+                        return passage_data
+                        
+                except json.JSONDecodeError as e:
+                    logger.error(f"JSON decode error in long comprehension: {e}")
+
+        except Exception as e:
+            logger.error(f"Error generating long comprehension: {e}")
+
+        # Fallback
+        return self._get_fallback_long_comprehension(theme)
+
+    def _get_fallback_long_comprehension(self, theme: str) -> Dict:
+        """Fallback long comprehension passage when AI fails"""
+        return {
+            "passage": {
+                "title": f"Understanding {theme}",
+                "text": f"""Technology has dramatically transformed the way we live, work, and communicate in the 21st century. In Zimbabwe, like many developing countries, the adoption of digital technology has brought both opportunities and challenges that affect every aspect of society.
+
+The rise of mobile technology has been particularly significant. With the widespread availability of smartphones, even in rural areas, people can now access information, banking services, and educational resources that were previously unavailable. Mobile money platforms have revolutionized financial transactions, allowing people to send money, pay bills, and conduct business without traditional banking infrastructure.
+
+In education, technology has opened new doors for learning. Students in remote areas can now access online courses, educational videos, and digital libraries. This has been especially important during times when physical attendance at schools was not possible. However, challenges remain, including unreliable internet connectivity and the digital divide between urban and rural areas.
+
+The agricultural sector, which employs a significant portion of Zimbabwe's population, has also benefited from technological advances. Farmers can now receive weather forecasts, market prices, and agricultural advice through mobile applications. Satellite imagery helps monitor crop conditions, while GPS technology assists in precision farming techniques.
+
+Despite these benefits, technology adoption has created new challenges. Cybersecurity threats have increased, and there are concerns about data privacy and the spread of misinformation through social media platforms. Additionally, the rapid pace of technological change has left some people, particularly older generations, struggling to adapt.
+
+The youth have embraced technology more readily, using social media platforms to express themselves, connect with others, and even start online businesses. This has created new economic opportunities but also raised concerns about screen time and its impact on mental health and social relationships.
+
+As Zimbabwe continues to develop its technological infrastructure, it is crucial to ensure that the benefits of technology are accessible to all citizens while addressing the challenges that come with digital transformation. This requires investment in education, infrastructure, and policies that protect citizens while promoting innovation.""",
+                "word_count": 345,
+                "theme": theme
+            },
+            "questions": [
+                {
+                    "question": "According to the passage, how has mobile technology impacted financial services in Zimbabwe?",
+                    "correct_answer": "Mobile money platforms have revolutionized financial transactions, allowing people to send money, pay bills, and conduct business without traditional banking infrastructure.",
+                    "question_type": "literal",
+                    "marks": 2,
+                    "explanation": "This information is directly stated in the second paragraph."
+                },
+                {
+                    "question": "What challenges does the passage mention regarding technology in education?",
+                    "correct_answer": "Unreliable internet connectivity and the digital divide between urban and rural areas.",
+                    "question_type": "literal",
+                    "marks": 2,
+                    "explanation": "These challenges are explicitly mentioned in the education paragraph."
+                },
+                {
+                    "question": "How has technology benefited farmers according to the passage?",
+                    "correct_answer": "Farmers can receive weather forecasts, market prices, and agricultural advice through mobile applications, use satellite imagery to monitor crops, and GPS technology for precision farming.",
+                    "question_type": "literal",
+                    "marks": 3,
+                    "explanation": "Multiple benefits are listed in the agricultural technology paragraph."
+                },
+                {
+                    "question": "What concerns does the passage raise about technology adoption?",
+                    "correct_answer": "Cybersecurity threats, data privacy concerns, spread of misinformation, and difficulties for older generations to adapt.",
+                    "question_type": "literal",
+                    "marks": 2,
+                    "explanation": "These concerns are mentioned in the challenges paragraph."
+                },
+                {
+                    "question": "Why might older generations struggle more with technology adoption?",
+                    "correct_answer": "The rapid pace of technological change makes it difficult for them to adapt.",
+                    "question_type": "inferential",
+                    "marks": 2,
+                    "explanation": "This requires inference from the statement about rapid technological change."
+                },
+                {
+                    "question": "What does the passage suggest about youth and technology use?",
+                    "correct_answer": "Youth have embraced technology readily, using it for self-expression, connections, and starting online businesses, but this raises concerns about screen time and mental health.",
+                    "question_type": "literal",
+                    "marks": 3,
+                    "explanation": "This information is provided in the youth technology paragraph."
+                },
+                {
+                    "question": "What is meant by 'digital divide' in the context of this passage?",
+                    "correct_answer": "The gap in technology access and usage between urban and rural areas.",
+                    "question_type": "inferential",
+                    "marks": 2,
+                    "explanation": "This requires understanding the context in which the term is used."
+                },
+                {
+                    "question": "According to the passage, what is needed for Zimbabwe's continued technological development?",
+                    "correct_answer": "Investment in education, infrastructure, and policies that protect citizens while promoting innovation.",
+                    "question_type": "literal",
+                    "marks": 2,
+                    "explanation": "This is stated in the concluding paragraph."
+                },
+                {
+                    "question": "How has technology created both opportunities and challenges in Zimbabwe?",
+                    "correct_answer": "Opportunities include improved access to services, education, and economic activities; challenges include cybersecurity, digital divide, and adaptation difficulties.",
+                    "question_type": "critical",
+                    "marks": 3,
+                    "explanation": "This requires synthesizing information from throughout the passage."
+                },
+                {
+                    "question": "What is the main message of this passage?",
+                    "correct_answer": "Technology has brought significant benefits to Zimbabwe but also creates challenges that need to be addressed through proper planning and investment.",
+                    "question_type": "critical",
+                    "marks": 3,
+                    "explanation": "This requires understanding the overall theme and conclusion of the passage."
+                }
+            ]
+        }
