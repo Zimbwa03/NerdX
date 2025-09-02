@@ -3196,8 +3196,8 @@ def handle_combined_science_question(user_id: str, subject: str):
             return
 
         # Store question in session
-        from database.session_db import store_user_session
-        store_user_session(user_id, {
+        from database.session_db import save_user_session
+        save_user_session(user_id, {
             'question_data': question_data,
             'subject': subject,
             'topic': topic,
