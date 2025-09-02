@@ -323,6 +323,78 @@ Return ONLY a JSON object:
             
         return None
 
+    def generate_comprehension_question(self) -> Optional[Dict]:
+        """Generate comprehension passage with questions from database"""
+        from database.external_db import get_supabase_client
+        
+        try:
+            supabase = get_supabase_client()
+            
+            # Get a random passage with its questions
+            passages_response = supabase.table('english_comprehension_passages').select('*').execute()
+            
+            if not passages_response.data:
+                logger.warning("No comprehension passages found in database")
+                return self._get_fallback_comprehension()
+            
+            # Select a random passage
+            passage = random.choice(passages_response.data)
+            passage_id = passage['id']
+            
+            # Get questions for this passage
+            questions_response = supabase.table('english_comprehension_questions').select('*').eq('passage_id', passage_id).order('question_order').execute()
+            
+            if not questions_response.data:
+                logger.warning(f"No questions found for passage {passage_id}")
+                return self._get_fallback_comprehension()
+            
+            logger.info(f"Retrieved comprehension passage from database - Topic: {passage['topic_area']}")
+            
+            return {
+                'success': True,
+                'question_data': {
+                    'passage_id': passage_id,
+                    'title': passage['title'],
+                    'passage': passage['passage'],
+                    'topic_area': passage['topic_area'],
+                    'difficulty_level': passage['difficulty_level'],
+                    'reading_time': passage['reading_time'],
+                    'questions': questions_response.data,
+                    'total_questions': len(questions_response.data)
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"Database error in comprehension question generation: {e}")
+            return self._get_fallback_comprehension()
+    
+    def _get_fallback_comprehension(self) -> Dict:
+        """Fallback comprehension when database fails"""
+        return {
+            'success': True, 
+            'question_data': {
+                'passage_id': 999,
+                'title': 'The Power of Reading',
+                'passage': 'Reading is one of the most important skills a person can develop. It opens doors to knowledge, improves vocabulary, and enhances critical thinking abilities. Students who read regularly perform better in all subjects, not just English. Reading also provides entertainment and helps people understand different cultures and perspectives.',
+                'topic_area': 'Reading Comprehension',
+                'difficulty_level': 'medium',
+                'reading_time': 3,
+                'questions': [
+                    {
+                        'id': 1,
+                        'question': 'According to the passage, what does reading improve?',
+                        'option_a': 'Only English skills',
+                        'option_b': 'Vocabulary and critical thinking',
+                        'option_c': 'Physical fitness',
+                        'option_d': 'Mathematical abilities',
+                        'correct_answer': 1,
+                        'explanation': 'The passage states that reading "improves vocabulary, and enhances critical thinking abilities."'
+                    }
+                ],
+                'total_questions': 1
+            }
+        }
+
     def generate_comprehension_passage(self, theme: str = "General") -> Optional[Dict]:
         """Generate reading comprehension passages with questions"""
         if not self._is_configured or not self.client:
