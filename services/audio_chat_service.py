@@ -514,11 +514,15 @@ class AudioChatService:
 
             try:
                 text = r.recognize_google(audio)
-                return text
+                if text.strip():
+                    return text
+                else:
+                    return "Please speak clearly and try again. I couldn't detect clear speech in your audio."
             except sr.UnknownValueError:
-                return "Could not understand the audio"
+                return "I couldn't understand the audio clearly. Please speak slowly and clearly, or try sending a text message instead."
             except sr.RequestError as e:
-                return f"Speech recognition error: {e}"
+                logger.error(f"Google Speech Recognition service error: {e}")
+                return "Audio processing is temporarily unavailable. Please send a text message instead."
 
         except Exception as e:
             logger.error(f"Error processing audio: {e}")
