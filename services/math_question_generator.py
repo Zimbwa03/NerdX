@@ -45,13 +45,13 @@ class MathQuestionGenerator:
             # Create comprehensive prompt for DeepSeek AI with variation
             prompt = self._create_question_prompt(subject, topic, difficulty, recent_topics)
 
-            # Reduced timeout settings for faster fallback to local questions
+            # Proper timeout settings for DeepSeek API reliability
             if 'graph' in topic.lower():
-                timeouts = [8, 12]            # Much shorter timeouts for graph questions
-                max_attempts = 2              # 2 attempts for graph questions
+                timeouts = [30, 45]           # Adequate timeouts for complex graph questions
+                max_attempts = 3              # 3 attempts for graph questions
             else:
-                timeouts = [5, 8]             # Much shorter timeouts for topical questions  
-                max_attempts = 2              # 2 attempts for quality generation
+                timeouts = [25, 35, 45]       # Progressive timeouts for topical questions  
+                max_attempts = 3              # 3 attempts for quality generation
 
             for attempt in range(max_attempts):
                 timeout = timeouts[min(attempt, len(timeouts) - 1)]
@@ -71,25 +71,25 @@ class MathQuestionGenerator:
                             logger.warning(f"Question validation failed on attempt {attempt + 1}")
 
                 except requests.exceptions.Timeout:
-                    logger.warning(f"AI API timeout on attempt {attempt + 1}/{max_attempts} (waited {timeout}s)")
+                    logger.warning(f"DeepSeek API timeout on attempt {attempt + 1}/{max_attempts} (waited {timeout}s)")
                     if attempt < max_attempts - 1:
-                        time.sleep(2)  # Shorter retry delay
+                        time.sleep(3)  # Reasonable retry delay for DeepSeek
                     continue
 
                 except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as e:
-                    logger.warning(f"AI API connection error: {e}")
+                    logger.warning(f"DeepSeek API connection error: {e}")
                     if attempt < max_attempts - 1:
-                        time.sleep(2)  # Shorter retry delay
+                        time.sleep(3)  # Reasonable retry delay for DeepSeek
                     continue
 
                 except Exception as e:
-                    logger.error(f"AI API error on attempt {attempt + 1}: {e}")
+                    logger.error(f"DeepSeek API error on attempt {attempt + 1}: {e}")
                     if attempt < max_attempts - 1:
-                        time.sleep(2)  # Shorter retry delay
+                        time.sleep(3)  # Reasonable retry delay for DeepSeek
                     continue
 
             # All attempts failed, use local fallback questions
-            logger.warning("All AI API attempts failed, using local fallback questions")
+            logger.warning(f"All DeepSeek API attempts failed for {subject}/{topic}, using local fallback questions")
             return self._generate_fallback_question(subject, topic, difficulty)
 
         except Exception as e:
