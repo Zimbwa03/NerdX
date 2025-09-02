@@ -504,16 +504,38 @@ Return ONLY a JSON object:
         }
 
     def generate_essay_marking(self, marking_prompt: str) -> Optional[str]:
-        """Generate essay marking using Gemini AI with robust error handling"""
+        """Generate essay marking using Gemini AI with robust error handling and improved marking criteria"""
         if not self._is_configured or not self.client:
             logger.warning("English service not configured for essay marking")
             return self._generate_fallback_essay_marking()
 
         try:
+            # Enhanced marking prompt for better scoring
+            enhanced_prompt = f"""
+{marking_prompt}
+
+IMPROVED MARKING GUIDELINES:
+- Be lenient but fair in marking O-Level students
+- Give appropriate marks based on effort and understanding shown
+- Consider that these are 15-17 year old students learning English
+- Focus on encouraging improvement while being honest about weaknesses
+
+SPECIFIC MARKING CRITERIA:
+- Excellent essays (25-30 marks): Very few errors, great ideas, excellent structure
+- Good essays (20-24 marks): Some errors but good understanding and effort
+- Average essays (15-19 marks): Several errors but shows understanding of topic
+- Below average essays (10-14 marks): Many errors but shows some effort and basic understanding
+- Poor essays (5-9 marks): Significant problems but student has attempted the task
+- Very poor essays (1-4 marks): Major issues throughout but still some content present
+
+Count the actual errors in grammar, spelling, and structure. For every 3-4 significant errors, reduce the score by 2-3 marks from the content baseline. Be encouraging in feedback while being realistic about the grade.
+
+Return valid JSON with the exact format requested."""
+
             # Try with Gemini 2.5 Flash first
             response = self.client.models.generate_content(
                 model="gemini-2.5-flash",
-                contents=marking_prompt,
+                contents=enhanced_prompt,
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
                     temperature=0.3,
@@ -530,7 +552,7 @@ Return ONLY a JSON object:
                 # Try with alternative model
                 response_alt = self.client.models.generate_content(
                     model="gemini-1.5-flash",
-                    contents=marking_prompt,
+                    contents=enhanced_prompt,
                     config=types.GenerateContentConfig(
                         temperature=0.4,
                         max_output_tokens=2000

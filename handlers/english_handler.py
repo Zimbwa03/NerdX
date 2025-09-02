@@ -1481,47 +1481,77 @@ Type your essay below:"""
             from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
             from reportlab.lib.colors import red, black
 
-            # Use Gemini AI to mark the essay professionally
+            # Use Gemini AI to mark the essay professionally with improved marking criteria
+            word_count = len(essay_text.split())
+
             marking_prompt = f"""
 You are an experienced ZIMSEC O Level English Language teacher with 15+ years of marking compositions. Analyze this student's essay thoroughly and professionally.
 
-MARKING CRITERIA (Total: 30 marks):
-- Content & Ideas (10 marks): Relevance, development, originality
-- Language & Expression (10 marks): Vocabulary, sentence structure, style
-- Accuracy (10 marks): Grammar, spelling, punctuation
+ESSAY DETAILS:
+- Word Count: {word_count} words
+- Expected Length: 300-600 words
+- Student Level: O Level (15-17 years old)
 
-Your task:
-1. Identify ALL grammar, spelling, punctuation, and tense errors
-2. Calculate a fair mark based on ZIMSEC standards
-3. Provide professional teacher feedback
-4. Give specific corrections for each error found
+ENHANCED MARKING CRITERIA (Total: 30 marks):
+
+**Content & Ideas (10 marks):**
+- 9-10: Excellent ideas, highly relevant, creative and original
+- 7-8: Good ideas, mostly relevant, shows understanding
+- 5-6: Adequate ideas, generally relevant to topic
+- 3-4: Limited ideas, some irrelevance
+- 1-2: Poor ideas, largely irrelevant
+
+**Language & Expression (10 marks):**
+- 9-10: Excellent vocabulary, varied sentence structures, natural flow
+- 7-8: Good vocabulary, some variety in sentences
+- 5-6: Adequate vocabulary, simple but clear sentences
+- 3-4: Limited vocabulary, repetitive sentence patterns
+- 1-2: Poor vocabulary, unclear expression
+
+**Accuracy (10 marks):**
+- 9-10: Very few errors in grammar, spelling, punctuation
+- 7-8: Some errors but don't impede understanding
+- 5-6: Several errors but meaning is generally clear
+- 3-4: Many errors that sometimes affect meaning
+- 1-2: Frequent errors that significantly affect understanding
+
+MARKING INSTRUCTIONS:
+1. Count actual errors (grammar, spelling, punctuation)
+2. Assess content quality and relevance
+3. Evaluate language use and expression
+4. Be lenient but fair - consider this is a learning student
+5. Give constructive feedback that encourages improvement
+6. For every 3-4 significant errors, deduct 2-3 marks from baseline
+7. Award higher marks for good effort and understanding
 
 Essay to evaluate:
 {essay_text}
 
 Respond in this JSON format:
 {{
-    "score": 18,
-    "grade": "C",
-    "summary_feedback": "This composition shows good understanding of the topic with clear ideas. Your narrative structure is logical and engaging. However, there are several grammatical errors, particularly with verb tenses and subject-verb agreement that need attention. With more careful proofreading and practice with tense consistency, your writing will improve significantly. Keep up the good effort!",
+    "score": [Calculate based on actual analysis - be fair and realistic],
+    "grade": "[A/B/C/D/E/U based on score]",
+    "summary_feedback": "Detailed, encouraging feedback that acknowledges strengths and areas for improvement",
     "specific_errors": [
-        {{"wrong": "have had", "correct": "had", "type": "verb tense"}},
-        {{"wrong": "was were", "correct": "were", "type": "subject-verb agreement"}},
-        {{"wrong": "moment", "correct": "moments", "type": "singular/plural"}},
-        {{"wrong": "enjoy", "correct": "enjoyed", "type": "past tense"}},
-        {{"wrong": "make", "correct": "made", "type": "past tense"}}
+        {{"wrong": "error found", "correct": "correction", "type": "error type"}},
+        {{"wrong": "another error", "correct": "correction", "type": "error type"}}
     ],
     "corrections_explanation": [
-        "Tense consistency: Use past tense throughout when narrating past events",
-        "Subject-verb agreement: Ensure verbs match their subjects in number",
-        "Spelling accuracy: Check for common spelling mistakes",
-        "Paragraph structure: Use clear topic sentences",
-        "Vocabulary: Vary word choice to avoid repetition"
+        "Specific advice for improvement",
+        "Grammar rules to remember",
+        "Writing techniques to practice"
     ],
-    "improved_version": "Last year in December, our family had one of the most exciting moments ever. It was the wedding of my cousin sister..."
+    "improved_version": "Brief example of how a section could be improved"
 }}
 
-IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is an O Level student learning English.
+IMPORTANT: 
+- Count actual errors and base marking on real assessment
+- Be encouraging but honest about the grade
+- Consider word count in your assessment
+- Give marks that reflect the actual quality of the work
+- Students with many errors should get lower marks (10-15/30) 
+- Students with few errors and good content should get higher marks (20-25/30)
+- Exceptional work deserves 25-30 marks
 """
 
             # Get marking from Gemini with better error handling
@@ -1532,7 +1562,7 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
                 # Create enhanced fallback marking data
                 word_count = len(essay_text.split())
                 estimated_score = min(25, max(10, (word_count // 20) + 10))  # Rough score based on length
-                
+
                 marking_data = {
                     'score': estimated_score,
                     'grade': self._get_grade_from_score(estimated_score),
@@ -1562,23 +1592,23 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
                     if clean_response.endswith('```'):
                         clean_response = clean_response[:-3]
                     clean_response = clean_response.strip()
-                    
+
                     marking_data = json.loads(clean_response)
                     logger.info(f"Successfully parsed JSON: {list(marking_data.keys())}")
-                    
+
                     # Validate required fields
                     if not marking_data.get('score') or not marking_data.get('summary_feedback'):
                         logger.warning("Missing required fields in marking data, using fallback")
                         raise ValueError("Missing required marking fields")
-                        
+
                 except (json.JSONDecodeError, ValueError) as e:
                     logger.error(f"Failed to parse JSON: {e}")
                     logger.error(f"Raw response: {marking_response[:500]}...")
-                    
+
                     # Create enhanced fallback data
                     word_count = len(essay_text.split())
                     estimated_score = min(25, max(10, (word_count // 20) + 10))
-                    
+
                     marking_data = {
                         'score': estimated_score,
                         'grade': self._get_grade_from_score(estimated_score),
