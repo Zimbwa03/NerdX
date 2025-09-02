@@ -473,6 +473,14 @@ def add_credits(user_id, amount, transaction_type="purchase", description="Credi
     success = make_supabase_request("PATCH", "users_registration", {"credits": new_credits}, filters={"chat_id": f"eq.{user_id}"}, use_service_role=True)
 
     if success:
+        # Also update user_stats table for consistency (CRITICAL FIX)
+        try:
+            make_supabase_request("PATCH", "user_stats", {"credits": new_credits}, 
+                                filters={"user_id": f"eq.{user_id}"}, use_service_role=True)
+            logger.info(f"✅ Credits synced to user_stats for {user_id}")
+        except Exception as stats_error:
+            logger.warning(f"Failed to sync credits to user_stats: {stats_error}")
+            # Continue anyway - users_registration is the primary source
         # Log credit transaction (try-catch to not fail credit addition if transaction logging fails)
         try:
             transaction = {
@@ -493,6 +501,58 @@ def add_credits(user_id, amount, transaction_type="purchase", description="Credi
         return True
 
     return False
+
+def sync_user_credits(user_id: str = None) -> dict:
+    """Sync credits from users_registration to user_stats (users_registration is the primary source)"""
+    try:
+        if user_id:
+            # Sync specific user
+            users_to_sync = make_supabase_request("GET", "users_registration", 
+                                                select="chat_id,credits", 
+                                                filters={"chat_id": f"eq.{user_id}"})
+        else:
+            # Sync all users
+            users_to_sync = make_supabase_request("GET", "users_registration", 
+                                                select="chat_id,credits")
+        
+        if not users_to_sync:
+            return {"success": False, "message": "No users found to sync"}
+        
+        synced_count = 0
+        failed_count = 0
+        
+        for user in users_to_sync:
+            try:
+                user_id_loop = user['chat_id']
+                correct_credits = user['credits']
+                
+                # Update user_stats to match users_registration
+                result = make_supabase_request("PATCH", "user_stats", 
+                                             {"credits": correct_credits}, 
+                                             filters={"user_id": f"eq.{user_id_loop}"}, 
+                                             use_service_role=True)
+                
+                if result:
+                    synced_count += 1
+                    logger.info(f"✅ Synced credits for {user_id_loop}: {correct_credits}")
+                else:
+                    failed_count += 1
+                    logger.warning(f"❌ Failed to sync credits for {user_id_loop}")
+                    
+            except Exception as e:
+                failed_count += 1
+                logger.error(f"Error syncing user {user.get('chat_id', 'unknown')}: {e}")
+        
+        return {
+            "success": True,
+            "synced": synced_count,
+            "failed": failed_count,
+            "message": f"Synced {synced_count} users, {failed_count} failed"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in credit sync: {e}")
+        return {"success": False, "message": f"Sync failed: {str(e)}"}
 
 def generate_nerdx_id():
     """Generate a unique NerdX ID in format NXXXXX"""
