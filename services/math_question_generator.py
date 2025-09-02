@@ -45,13 +45,13 @@ class MathQuestionGenerator:
             # Create comprehensive prompt for DeepSeek AI with variation
             prompt = self._create_question_prompt(subject, topic, difficulty, recent_topics)
 
-            # Increased timeout settings for DeepSeek API reliability
+            # Reduced timeout settings for faster fallback to local questions
             if 'graph' in topic.lower():
-                timeouts = [45, 60, 75]       # Longer timeouts for graph questions
-                max_attempts = 3              # 3 attempts for graph questions
+                timeouts = [20, 30]           # Shorter timeouts for graph questions
+                max_attempts = 2              # 2 attempts for graph questions
             else:
-                timeouts = [30, 45, 60]       # Increased timeouts for topical questions  
-                max_attempts = 3              # 3 attempts for quality generation
+                timeouts = [15, 25]           # Shorter timeouts for topical questions  
+                max_attempts = 2              # 2 attempts for quality generation
 
             for attempt in range(max_attempts):
                 timeout = timeouts[min(attempt, len(timeouts) - 1)]
@@ -73,25 +73,19 @@ class MathQuestionGenerator:
                 except requests.exceptions.Timeout:
                     logger.warning(f"AI API timeout on attempt {attempt + 1}/{max_attempts} (waited {timeout}s)")
                     if attempt < max_attempts - 1:
-                        time.sleep(self.retry_delay)  # Use configured retry delay
-                    else:
-                        logger.error("All API timeout attempts failed, using fallback")
-                        return self._generate_fallback_question(subject, topic, difficulty)
+                        time.sleep(2)  # Shorter retry delay
                     continue
 
                 except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as e:
                     logger.warning(f"AI API connection error: {e}")
                     if attempt < max_attempts - 1:
-                        time.sleep(self.retry_delay)  # Use configured retry delay
-                    else:
-                        logger.error("All API connection attempts failed, using fallback")
-                        return self._generate_fallback_question(subject, topic, difficulty)
+                        time.sleep(2)  # Shorter retry delay
                     continue
 
                 except Exception as e:
                     logger.error(f"AI API error on attempt {attempt + 1}: {e}")
                     if attempt < max_attempts - 1:
-                        time.sleep(self.retry_delay)  # Use configured retry delay
+                        time.sleep(2)  # Shorter retry delay
                     continue
 
             # All attempts failed, use local fallback questions
@@ -502,53 +496,117 @@ The solution should explain how to plot each inequality and identify the feasibl
                 }
             },
             "Algebra": {
-                "Linear Equations": {
-                    "easy": {
-                        "question": "Solve for x: 3x + 7 = 22",
-                        "solution": "Step 1: Subtract 7 from both sides\n3x + 7 - 7 = 22 - 7\n3x = 15\n\nStep 2: Divide both sides by 3\n3x ÷ 3 = 15 ÷ 3\nx = 5\n\nTherefore: x = 5",
-                        "answer": "x = 5",
-                        "points": 10
-                    },
-                    "medium": {
-                        "question": "Solve for x: 2(x - 3) = 4x + 8",
-                        "solution": "Step 1: Expand the left side\n2(x - 3) = 2x - 6\n\nStep 2: Set up the equation\n2x - 6 = 4x + 8\n\nStep 3: Collect like terms\n2x - 4x = 8 + 6\n-2x = 14\n\nStep 4: Divide by -2\nx = -7\n\nTherefore: x = -7",
-                        "answer": "x = -7",
-                        "points": 20
-                    }
+                "easy": {
+                    "question": "Solve for x: 3x + 7 = 22",
+                    "solution": "Step 1: Subtract 7 from both sides\n3x + 7 - 7 = 22 - 7\n3x = 15\n\nStep 2: Divide both sides by 3\n3x ÷ 3 = 15 ÷ 3\nx = 5\n\nTherefore: x = 5",
+                    "answer": "x = 5",
+                    "points": 10
                 },
-                "Trigonometry": {
-                    "easy": {
-                        "question": "If sin θ = 0.6 and θ is an acute angle, find cos θ.",
-                        "solution": "Step 1: Use the Pythagorean identity\nsin²θ + cos²θ = 1\n\nStep 2: Substitute sin θ = 0.6\n(0.6)² + cos²θ = 1\n0.36 + cos²θ = 1\n\nStep 3: Solve for cos²θ\ncos²θ = 1 - 0.36 = 0.64\n\nStep 4: Take the square root\ncos θ = ±√0.64 = ±0.8\n\nStep 5: Since θ is acute, cos θ is positive\nTherefore: cos θ = 0.8",
-                        "answer": "cos θ = 0.8",
-                        "points": 15
-                    },
-                    "medium": {
-                        "question": "A ladder 5m long leans against a wall. If the foot of the ladder is 3m from the wall, find the angle the ladder makes with the ground.",
-                        "solution": "Step 1: Draw a right triangle\n- Hypotenuse = ladder = 5m\n- Adjacent side = distance from wall = 3m\n- We need to find the angle with the ground\n\nStep 2: Use cosine ratio\ncos θ = adjacent/hypotenuse = 3/5 = 0.6\n\nStep 3: Find the angle\nθ = cos⁻¹(0.6)\nθ = 53.13°\n\nTherefore: The ladder makes an angle of 53.13° with the ground",
-                        "answer": "53.13°",
-                        "points": 20
-                    }
+                "medium": {
+                    "question": "Solve for x: 2(x - 3) = 4x + 8",
+                    "solution": "Step 1: Expand the left side\n2(x - 3) = 2x - 6\n\nStep 2: Set up the equation\n2x - 6 = 4x + 8\n\nStep 3: Collect like terms\n2x - 4x = 8 + 6\n-2x = 14\n\nStep 4: Divide by -2\nx = -7\n\nTherefore: x = -7",
+                    "answer": "x = -7",
+                    "points": 20
+                },
+                "difficult": {
+                    "question": "Solve the quadratic equation: x² - 5x + 6 = 0",
+                    "solution": "Step 1: Factor the quadratic\nx² - 5x + 6 = 0\nLook for two numbers that multiply to 6 and add to -5\n-2 and -3 work: (-2) × (-3) = 6 and (-2) + (-3) = -5\n\nStep 2: Write in factored form\n(x - 2)(x - 3) = 0\n\nStep 3: Use zero product property\nx - 2 = 0  or  x - 3 = 0\nx = 2  or  x = 3\n\nTherefore: x = 2 or x = 3",
+                    "answer": "x = 2 or x = 3",
+                    "points": 30
+                }
+            },
+            "Geometry": {
+                "easy": {
+                    "question": "Find the area of a rectangle with length 8 cm and width 5 cm.",
+                    "solution": "Step 1: Use the area formula for a rectangle\nArea = length × width\n\nStep 2: Substitute the values\nArea = 8 × 5\nArea = 40\n\nTherefore: The area is 40 cm²",
+                    "answer": "40 cm²",
+                    "points": 10
+                },
+                "medium": {
+                    "question": "Find the area of a triangle with base 12 cm and height 8 cm.",
+                    "solution": "Step 1: Use the area formula for a triangle\nArea = ½ × base × height\n\nStep 2: Substitute the values\nArea = ½ × 12 × 8\nArea = ½ × 96\nArea = 48\n\nTherefore: The area is 48 cm²",
+                    "answer": "48 cm²",
+                    "points": 20
+                },
+                "difficult": {
+                    "question": "Find the area of a circle with radius 7 cm. (Use π = 22/7)",
+                    "solution": "Step 1: Use the area formula for a circle\nArea = πr²\n\nStep 2: Substitute the values\nArea = (22/7) × 7²\nArea = (22/7) × 49\nArea = 22 × 7\nArea = 154\n\nTherefore: The area is 154 cm²",
+                    "answer": "154 cm²",
+                    "points": 30
+                }
+            },
+            "Trigonometry": {
+                "easy": {
+                    "question": "If sin θ = 0.6 and θ is an acute angle, find cos θ.",
+                    "solution": "Step 1: Use the Pythagorean identity\nsin²θ + cos²θ = 1\n\nStep 2: Substitute sin θ = 0.6\n(0.6)² + cos²θ = 1\n0.36 + cos²θ = 1\n\nStep 3: Solve for cos²θ\ncos²θ = 1 - 0.36 = 0.64\n\nStep 4: Take the square root\ncos θ = ±√0.64 = ±0.8\n\nStep 5: Since θ is acute, cos θ is positive\nTherefore: cos θ = 0.8",
+                    "answer": "cos θ = 0.8",
+                    "points": 15
+                },
+                "medium": {
+                    "question": "A ladder 5m long leans against a wall. If the foot of the ladder is 3m from the wall, find the angle the ladder makes with the ground.",
+                    "solution": "Step 1: Draw a right triangle\n- Hypotenuse = ladder = 5m\n- Adjacent side = distance from wall = 3m\n- We need to find the angle with the ground\n\nStep 2: Use cosine ratio\ncos θ = adjacent/hypotenuse = 3/5 = 0.6\n\nStep 3: Find the angle\nθ = cos⁻¹(0.6)\nθ = 53.13°\n\nTherefore: The ladder makes an angle of 53.13° with the ground",
+                    "answer": "53.13°",
+                    "points": 20
+                },
+                "difficult": {
+                    "question": "Solve for θ in the range 0° ≤ θ ≤ 360°: 2sin θ = 1",
+                    "solution": "Step 1: Solve for sin θ\n2sin θ = 1\nsin θ = ½\n\nStep 2: Find angles where sin θ = ½\nIn the range 0° ≤ θ ≤ 360°:\nθ = 30° (first quadrant)\nθ = 150° (second quadrant)\n\nStep 3: Verify both solutions\nsin 30° = ½ ✓\nsin 150° = ½ ✓\n\nTherefore: θ = 30° or θ = 150°",
+                    "answer": "θ = 30° or θ = 150°",
+                    "points": 30
                 }
             }
         }
 
         # Get fallback question or create a basic one
         try:
-            fallback = fallback_questions.get(subject, {}).get(topic, {}).get(difficulty)
+            # First try to get by exact topic match
+            fallback = fallback_questions.get(topic, {}).get(difficulty)
+            
+            # If not found, try by subject
+            if not fallback:
+                fallback = fallback_questions.get(subject, {}).get(difficulty)
+            
+            # If still not found, try any difficulty level for the topic
+            if not fallback:
+                for diff in ['easy', 'medium', 'difficult']:
+                    fallback = fallback_questions.get(topic, {}).get(diff)
+                    if fallback:
+                        break
+            
+            # If still not found, try any difficulty level for the subject
+            if not fallback:
+                for diff in ['easy', 'medium', 'difficult']:
+                    fallback = fallback_questions.get(subject, {}).get(diff)
+                    if fallback:
+                        break
 
             if not fallback:
-                # Create a very basic fallback
-                fallback = {
-                    "question": f"Basic {topic} question: Find the value of x if x + 5 = 12",
-                    "solution": "Step 1: Subtract 5 from both sides\nx + 5 - 5 = 12 - 5\nx = 7\n\nTherefore: x = 7",
-                    "answer": "x = 7",
-                    "points": 10
-                }
+                # Create a very basic fallback based on difficulty
+                if difficulty == 'easy':
+                    fallback = {
+                        "question": f"Solve for x: x + 3 = 8",
+                        "solution": "Step 1: Subtract 3 from both sides\nx + 3 - 3 = 8 - 3\nx = 5\n\nTherefore: x = 5",
+                        "answer": "x = 5",
+                        "points": 10
+                    }
+                elif difficulty == 'medium':
+                    fallback = {
+                        "question": f"Solve for x: 2x - 4 = 10",
+                        "solution": "Step 1: Add 4 to both sides\n2x - 4 + 4 = 10 + 4\n2x = 14\n\nStep 2: Divide both sides by 2\n2x ÷ 2 = 14 ÷ 2\nx = 7\n\nTherefore: x = 7",
+                        "answer": "x = 7",
+                        "points": 20
+                    }
+                else:  # difficult
+                    fallback = {
+                        "question": f"Solve for x: x² - 3x - 4 = 0",
+                        "solution": "Step 1: Factor the quadratic\nx² - 3x - 4 = 0\nLook for two numbers that multiply to -4 and add to -3\n-4 and 1 work: (-4) × 1 = -4 and (-4) + 1 = -3\n\nStep 2: Write in factored form\n(x - 4)(x + 1) = 0\n\nStep 3: Use zero product property\nx - 4 = 0  or  x + 1 = 0\nx = 4  or  x = -1\n\nTherefore: x = 4 or x = -1",
+                        "answer": "x = 4 or x = -1",
+                        "points": 30
+                    }
 
             # Add metadata
             fallback.update({
-                'explanation': f'This is a {difficulty} level {topic} problem.',
+                'explanation': f'This is a {difficulty} level {topic} problem from our local question bank.',
                 'difficulty': difficulty,
                 'topic': topic,
                 'subject': subject,
@@ -556,7 +614,7 @@ The solution should explain how to plot each inequality and identify the feasibl
                 'source': 'fallback'
             })
 
-            logger.info(f"Generated fallback question for {subject}/{topic}/{difficulty}")
+            logger.info(f"✅ Generated fallback question for {subject}/{topic}/{difficulty}")
             return fallback
 
         except Exception as e:
