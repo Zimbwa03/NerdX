@@ -946,9 +946,8 @@ def send_main_menu(user_id: str, user_name: str = None):
 
         user_stats = get_user_stats(user_id) or {'level': 1, 'xp_points': 0, 'streak': 0, 'correct_answers': 0, 'total_attempts': 0}
 
-        # Get comprehensive credit status using advanced credit service
-        credit_status = advanced_credit_service.get_user_credit_status(user_id)
-        current_credits = credit_status['credits']
+        # Get credits directly from users_registration table (primary source)
+        current_credits = registration.get('credits', 0) if registration else 0
 
         # Enhanced welcome message with professional WhatsApp UI design
         welcome_text = ""
@@ -2152,7 +2151,8 @@ def handle_combined_science_menu(user_id: str):
 
         registration = get_user_registration(user_id)
         user_name = registration['name'] if registration else "Student"
-        current_credits = get_user_credits(user_id)
+        # Get credits from users_registration table (primary source)
+        current_credits = registration.get('credits', 0) if registration else 0
         user_stats = get_user_stats(user_id) or {'level': 1, 'xp_points': 0, 'streak': 0}
         current_level = user_stats.get('level', 1)
         current_xp = user_stats.get('xp_points', 0)
@@ -3098,11 +3098,11 @@ def handle_combined_science_topic_selection(user_id: str, subject: str, topic: s
         message += "   • Foundation concepts\n\n"
 
         message += "🟡 *Medium* - Applied knowledge\n"
-        message += "   • 1 credit • 20 XP points\n"
+        message += "   • 1 credit • 15 XP points\n"
         message += "   • Problem-solving skills\n\n"
 
         message += "🔴 *Difficult* - Advanced analysis\n"
-        message += "   • 1 credit • 50 XP points\n"
+        message += "   • 1 credit • 20 XP points\n"
         message += "   • Critical thinking\n\n"
 
         message += "Select your preferred difficulty:"
@@ -3123,23 +3123,15 @@ def handle_combined_science_topic_selection(user_id: str, subject: str, topic: s
 def handle_combined_science_question(user_id: str, subject: str):
     """Handle Combined Science question generation and display"""
     try:
-        # Check and deduct credits for combined science topical question
-        from services.advanced_credit_service import advanced_credit_service
-
-        credit_result = advanced_credit_service.check_and_deduct_credits(
-            user_id, 
-            'combined_science_topical',  # 1 credit as per config
-            None
-        )
-
-        if not credit_result['success']:
-            if credit_result.get('insufficient'):
-                # Show gamified insufficient credits message
-                current_credits = credit_result['current_credits']
-                required_credits = credit_result['required_credits']
-                shortage = credit_result['shortage']
-
-                insufficient_msg = f"""💰 **Need More Credits!** 💰
+        # Get correct credit amount from users_registration table
+        from database.external_db import get_user_credits, deduct_credits
+        
+        current_credits = get_user_credits(user_id)
+        required_credits = 1  # Topical questions cost 1 credit
+        
+        # Check if user has enough credits
+        if current_credits < required_credits:
+            insufficient_msg = f"""💰 **Need More Credits!** 💰
 
 🧪 **Combined Science - {subject}**
 🎯 Action: Topical Question
@@ -3147,7 +3139,7 @@ def handle_combined_science_question(user_id: str, subject: str):
 💳 **Credit Status:**
 • Current Credits: {current_credits}
 • Required Credits: {required_credits}
-• Need: {shortage} more credits
+• Need: {required_credits - current_credits} more credits
 
 🎮 **Combined Science Benefits:**
 • Biology, Chemistry & Physics topics
@@ -3158,17 +3150,14 @@ def handle_combined_science_question(user_id: str, subject: str):
 
 💎 **Get More Credits:**"""
 
-                buttons = [
-                    {"text": "💰 Buy Credits", "callback_data": "credit_store"},
-                    {"text": "👥 Invite Friends (+5 each)", "callback_data": "share_to_friend"},
-                    {"text": "🏠 Main Menu", "callback_data": "main_menu"}
-                ]
+            buttons = [
+                {"text": "💰 Buy Credits", "callback_data": "credit_store"},
+                {"text": "👥 Invite Friends (+5 each)", "callback_data": "share_to_friend"},
+                {"text": "🏠 Main Menu", "callback_data": "main_menu"}
+            ]
 
-                whatsapp_service.send_interactive_message(user_id, insufficient_msg, buttons)
-                return
-            else:
-                whatsapp_service.send_message(user_id, credit_result['message'])
-                return
+            whatsapp_service.send_interactive_message(user_id, insufficient_msg, buttons)
+            return
 
         from services.question_service import QuestionService
         from database.external_db import get_user_registration, get_user_stats
@@ -3205,16 +3194,26 @@ def handle_combined_science_question(user_id: str, subject: str):
             'session_type': 'combined_science'
         })
 
+        # Deduct credits after successful question generation
+        deduct_success = deduct_credits(user_id, required_credits, 'combined_science_topical', f'{subject} topical question - {topic}')
+        
+        if not deduct_success:
+            whatsapp_service.send_message(user_id, "❌ Error processing credits. Please try again.")
+            return
+            
+        # Get updated credits after deduction
+        new_credits = get_user_credits(user_id)
+        
         # Display question with proper formatting including credit deduction info
         user_stats = get_user_stats(user_id)
-        current_level = user_stats.get('level', 1)
+        current_level = user_stats.get('level', 1) if user_stats else 1
 
         # Enhanced gamified question display
         message = f"🧪 **{subject} Topical Question** 🧪\n\n"
         message += f"👤 **Student:** {user_name} (Level {current_level})\n"
         message += f"📚 **Topic:** {topic}\n"
-        message += f"💳 **Credits Deducted:** {credit_result['deducted']}\n"
-        message += f"💰 **New Balance:** {credit_result['new_balance']}\n\n"
+        message += f"💳 **Credits Deducted:** {required_credits}\n"
+        message += f"💰 **Current Balance:** {new_credits}\n\n"
 
         message += f"❓ **Question:**\n{question_data['question']}\n\n"
 
@@ -3323,7 +3322,9 @@ def handle_combined_science_answer(user_id: str, subject: str, user_answer: str)
 
         # Get updated stats for display
         updated_stats = get_user_stats(user_id) or {}
-        final_credits = updated_stats.get('credits', 0)
+        # Get final credits from users_registration table (primary source)
+        updated_registration = get_user_registration(user_id)
+        final_credits = updated_registration.get('credits', 0) if updated_registration else 0
         final_xp = updated_stats.get('xp_points', 0)
         final_streak = updated_stats.get('streak', 0)
         final_level = updated_stats.get('level', 1)

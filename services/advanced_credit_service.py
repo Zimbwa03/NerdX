@@ -25,8 +25,9 @@ class AdvancedCreditService:
     def get_user_credit_status(self, user_id: str) -> Dict:
         """Get comprehensive credit status for user"""
         try:
-            current_credits = get_user_credits(user_id)
             user_data = get_user_registration(user_id)
+            # Use credits from users_registration table as primary source
+            current_credits = user_data.get('credits', 0) if user_data else 0
             
             return {
                 'credits': current_credits,

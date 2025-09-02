@@ -399,46 +399,70 @@ def calculate_level_from_xp(xp):
     level = int(math.sqrt(xp / 100)) + 1
     return max(level, 1)  # Minimum level is 1
 
-def get_user_credits(user_id):
-    """Get user's current credit balance from users_registration table"""
-    result = make_supabase_request("GET", "users_registration", select="credits", filters={"chat_id": f"eq.{user_id}"})
-    if result and len(result) > 0:
-        return result[0].get("credits", 0)
-    return 0
+def get_user_credits(user_id: str) -> int:
+    """Get user's current credit balance from users_registration table (primary source)"""
+    try:
+        result = make_supabase_request("GET", "users_registration", 
+                                     select="credits", 
+                                     filters={"chat_id": f"eq.{user_id}"})
 
-def deduct_credits(user_id, amount, transaction_type, description):
-    """Deduct credits from user account and log transaction"""
-    current_credits = get_user_credits(user_id)
+        if result and len(result) > 0:
+            credits = result[0].get('credits', 0)
+            return int(credits) if credits is not None else 0
+        else:
+            logger.warning(f"No user registration found for {user_id}")
+            return 0
 
-    if current_credits < amount:
-        return False
+    except Exception as e:
+        logger.error(f"Error getting user credits for {user_id}: {e}")
+        return 0
 
-    new_credits = current_credits - amount
+def deduct_credits(user_id: str, amount: int, transaction_type: str, description: str) -> bool:
+    """Deduct credits from user account with transaction logging (uses users_registration as primary source)"""
+    try:
+        # Get current credits from users_registration table
+        current_credits = get_user_credits(user_id)
 
-    # Update user credits in the correct table (users_registration)
-    success = make_supabase_request("PATCH", "users_registration", {"credits": new_credits}, filters={"chat_id": f"eq.{user_id}"}, use_service_role=True)
+        if current_credits < amount:
+            logger.warning(f"Insufficient credits for {user_id}: has {current_credits}, needs {amount}")
+            return False
 
-    if success:
-        # Log credit transaction (try-catch to not fail credit deduction if transaction logging fails)
-        try:
+        new_credits = current_credits - amount
+
+        # Update user credits in users_registration table (primary source)
+        update_data = {"credits": new_credits}
+        result = make_supabase_request("PATCH", "users_registration", update_data, 
+                                     filters={"chat_id": f"eq.{user_id}"})
+
+        if result:
+            # Also update user_stats table for consistency
+            try:
+                make_supabase_request("PATCH", "user_stats", {"credits": new_credits}, 
+                                    filters={"user_id": f"eq.{user_id}"})
+            except Exception as stats_error:
+                logger.warning(f"Failed to sync credits to user_stats: {stats_error}")
+
+            # Log the transaction
             transaction = {
                 "user_id": user_id,
-                "action": transaction_type,  # Required field for credit_transactions table
                 "transaction_type": transaction_type,
-                "credits_change": amount,
-                "balance_before": current_credits,
-                "balance_after": new_credits,
+                "credits_used": amount,
+                "credits_before": current_credits,
+                "credits_after": new_credits,
                 "description": description,
-                "transaction_date": datetime.now().isoformat()
+                "created_at": "now()"
             }
-            make_supabase_request("POST", "credit_transactions", transaction, use_service_role=True)
-            logger.info(f"✅ Transaction recorded for {user_id}")
-        except Exception as tx_error:
-            logger.warning(f"⚠️ Credit deduction successful but transaction logging failed: {tx_error}")
-            # Don't return False here - credit deduction was successful
-        return True
+            make_supabase_request("POST", "credit_transactions", transaction)
 
-    return False
+            logger.info(f"Deducted {amount} credits from {user_id}. New balance: {new_credits}")
+            return True
+        else:
+            logger.error(f"Failed to update credits for {user_id}")
+            return False
+
+    except Exception as e:
+        logger.error(f"Error deducting credits for {user_id}: {e}")
+        return False
 
 def add_credits(user_id, amount, transaction_type="purchase", description="Credit purchase"):
     """Add credits to user account"""
@@ -580,7 +604,7 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
             base_credits = 75
             # If referred, add 5 bonus credits (total 80)
             total_credits = base_credits + (5 if referred_by_nerdx_id else 0)
-            
+
             user_stats_data = {
                 'user_id': chat_id,
                 'username': f"{name}_{surname}".lower(),
@@ -599,7 +623,7 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
             stats_result = make_supabase_request("POST", "user_stats", user_stats_data, use_service_role=True)
             if stats_result:
                 logger.info(f"✅ User stats created for {chat_id} with {total_credits} credits")
-                
+
                 # Record the registration credit transaction
                 if total_credits > 0:
                     credit_transaction = {
@@ -611,13 +635,13 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
                         'description': f'Welcome bonus: {base_credits} credits' + (' + 5 referral bonus' if referred_by_nerdx_id else ''),
                         'transaction_type': 'new_user_registration'
                     }
-                    
+
                     try:
                         make_supabase_request("POST", "credit_transactions", credit_transaction, use_service_role=True)
                         logger.info(f"✅ Registration credit transaction recorded for {chat_id}")
                     except Exception as e:
                         logger.error(f"Failed to record registration transaction: {e}")
-                        
+
             else:
                 logger.warning(f"⚠️ Failed to create user stats for {chat_id}")
 
@@ -631,14 +655,14 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
                 referrer_registration = get_user_by_nerdx_id(referred_by_nerdx_id)
                 if referrer_registration:
                     referrer_chat_id = referrer_registration['chat_id']
-                    
+
                     # Add 5 credits to referrer
                     current_referrer_credits = get_user_credits(referrer_chat_id)
                     new_referrer_credits = current_referrer_credits + 5
-                    
+
                     # Update referrer's credits
                     update_user_stats(referrer_chat_id, {'credits': new_referrer_credits})
-                    
+
                     # Record referrer credit transaction
                     referrer_transaction = {
                         'user_id': referrer_chat_id,
@@ -649,16 +673,16 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
                         'description': f'Referral bonus for {name} {surname}',
                         'transaction_type': 'referral_bonus'
                     }
-                    
+
                     make_supabase_request("POST", "credit_transactions", referrer_transaction, use_service_role=True)
                     logger.info(f"✅ Awarded 5 referral credits to {referrer_chat_id} for referring {chat_id}")
-                    
+
                 else:
                     logger.warning(f"Referrer with NerdX ID {referred_by_nerdx_id} not found")
-                    
+
             except Exception as e:
                 logger.error(f"Error processing referral bonus: {e}")
-        
+
         return registered_user
 
     except Exception as e:
@@ -1209,7 +1233,7 @@ def get_random_grammar_question() -> Optional[Dict]:
         if not _is_configured:
             logger.warning("Database not configured")
             return None
-            
+
         # Get a random question from the english_grammar_questions table
         response = requests.get(
             f"{SUPABASE_URL}/rest/v1/english_grammar_questions",
@@ -1222,7 +1246,7 @@ def get_random_grammar_question() -> Optional[Dict]:
                 'select': '*'
             }
         )
-        
+
         if response.status_code == 200:
             questions = response.json()
             if questions:
@@ -1241,7 +1265,7 @@ def get_random_grammar_question() -> Optional[Dict]:
         else:
             logger.error(f"Error retrieving grammar questions: {response.status_code} - {response.text}")
             return None
-            
+
     except Exception as e:
         logger.error(f"Error getting random grammar question: {e}")
         return None
@@ -1252,7 +1276,7 @@ def get_random_vocabulary_question() -> Optional[Dict]:
         if not _is_configured:
             logger.warning("Database not configured")
             return None
-            
+
         # Get a random question from the english_vocabulary_questions table
         response = requests.get(
             f"{SUPABASE_URL}/rest/v1/english_vocabulary_questions",
@@ -1265,7 +1289,7 @@ def get_random_vocabulary_question() -> Optional[Dict]:
                 'select': '*'
             }
         )
-        
+
         if response.status_code == 200:
             questions = response.json()
             if questions:
@@ -1288,7 +1312,7 @@ def get_random_vocabulary_question() -> Optional[Dict]:
         else:
             logger.error(f"Error retrieving vocabulary questions: {response.status_code} - {response.text}")
             return None
-            
+
     except Exception as e:
         logger.error(f"Error getting random vocabulary question: {e}")
         return None
@@ -1299,7 +1323,7 @@ def get_grammar_questions_by_topic(topic_area: str) -> List[Dict]:
         if not _is_configured:
             logger.warning("Database not configured")
             return []
-            
+
         response = requests.get(
             f"{SUPABASE_URL}/rest/v1/english_grammar_questions",
             headers={
@@ -1312,7 +1336,7 @@ def get_grammar_questions_by_topic(topic_area: str) -> List[Dict]:
                 'topic_area': f'eq.{topic_area}'
             }
         )
-        
+
         if response.status_code == 200:
             questions = response.json()
             return [{
@@ -1325,7 +1349,7 @@ def get_grammar_questions_by_topic(topic_area: str) -> List[Dict]:
         else:
             logger.error(f"Error retrieving grammar questions by topic: {response.status_code} - {response.text}")
             return []
-            
+
     except Exception as e:
         logger.error(f"Error getting grammar questions by topic: {e}")
         return []
