@@ -24,8 +24,8 @@ class MathQuestionGenerator:
 
         # Extended timeout and retry parameters for DeepSeek API quality generation
         self.max_retries = 3  # More retries for better success rate
-        self.base_timeout = 30  # Much longer timeout for DeepSeek API quality generation
-        self.retry_delay = 3   # Longer delay between retries
+        self.base_timeout = 45  # Much longer timeout for DeepSeek API quality generation
+        self.retry_delay = 5   # Longer delay between retries
 
     def generate_question(self, subject: str, topic: str, difficulty: str = 'medium', user_id: str = None) -> Optional[Dict]:
         """
@@ -45,12 +45,12 @@ class MathQuestionGenerator:
             # Create comprehensive prompt for DeepSeek AI with variation
             prompt = self._create_question_prompt(subject, topic, difficulty, recent_topics)
 
-            # Balanced timeout settings for DeepSeek API - quality vs responsiveness
+            # Increased timeout settings for DeepSeek API reliability
             if 'graph' in topic.lower():
-                timeouts = [20, 30, 40]       # Reasonable timeouts for graph questions
+                timeouts = [45, 60, 75]       # Longer timeouts for graph questions
                 max_attempts = 3              # 3 attempts for graph questions
             else:
-                timeouts = [15, 25, 35]       # Standard timeouts for topical questions  
+                timeouts = [30, 45, 60]       # Increased timeouts for topical questions  
                 max_attempts = 3              # 3 attempts for quality generation
 
             for attempt in range(max_attempts):
@@ -74,12 +74,18 @@ class MathQuestionGenerator:
                     logger.warning(f"AI API timeout on attempt {attempt + 1}/{max_attempts} (waited {timeout}s)")
                     if attempt < max_attempts - 1:
                         time.sleep(self.retry_delay)  # Use configured retry delay
+                    else:
+                        logger.error("All API timeout attempts failed, using fallback")
+                        return self._generate_fallback_question(subject, topic, difficulty)
                     continue
 
                 except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as e:
                     logger.warning(f"AI API connection error: {e}")
                     if attempt < max_attempts - 1:
                         time.sleep(self.retry_delay)  # Use configured retry delay
+                    else:
+                        logger.error("All API connection attempts failed, using fallback")
+                        return self._generate_fallback_question(subject, topic, difficulty)
                     continue
 
                 except Exception as e:
@@ -475,6 +481,26 @@ The solution should explain how to plot each inequality and identify the feasibl
         """Generate fallback questions when DeepSeek API fails"""
 
         fallback_questions = {
+            "Statistics": {
+                "easy": {
+                    "question": "Find the mean of the following data: 5, 8, 12, 15, 20",
+                    "solution": "Step 1: Add all the values\n5 + 8 + 12 + 15 + 20 = 60\n\nStep 2: Count the number of values\nThere are 5 values\n\nStep 3: Calculate the mean\nMean = Sum ÷ Number of values\nMean = 60 ÷ 5 = 12\n\nTherefore: The mean is 12",
+                    "answer": "12",
+                    "points": 10
+                },
+                "medium": {
+                    "question": "The scores of 10 students in a test are: 45, 52, 48, 61, 55, 49, 58, 47, 53, 62. Find the median score.",
+                    "solution": "Step 1: Arrange the scores in ascending order\n45, 47, 48, 49, 52, 53, 55, 58, 61, 62\n\nStep 2: Find the middle value(s)\nSince there are 10 values (even number), the median is the average of the 5th and 6th values\n\nStep 3: Identify the 5th and 6th values\n5th value = 52\n6th value = 53\n\nStep 4: Calculate the median\nMedian = (52 + 53) ÷ 2 = 105 ÷ 2 = 52.5\n\nTherefore: The median score is 52.5",
+                    "answer": "52.5",
+                    "points": 20
+                },
+                "difficult": {
+                    "question": "Calculate the standard deviation of the data set: 10, 12, 14, 16, 18",
+                    "solution": "Step 1: Calculate the mean\nMean = (10 + 12 + 14 + 16 + 18) ÷ 5 = 70 ÷ 5 = 14\n\nStep 2: Calculate deviations from mean\n(10-14)² = 16\n(12-14)² = 4\n(14-14)² = 0\n(16-14)² = 4\n(18-14)² = 16\n\nStep 3: Calculate variance\nVariance = (16 + 4 + 0 + 4 + 16) ÷ 5 = 40 ÷ 5 = 8\n\nStep 4: Calculate standard deviation\nStandard deviation = √8 = 2.83\n\nTherefore: The standard deviation is 2.83",
+                    "answer": "2.83",
+                    "points": 50
+                }
+            },
             "Algebra": {
                 "Linear Equations": {
                     "easy": {
