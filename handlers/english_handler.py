@@ -493,9 +493,9 @@ Hi {user_name}! Answer these 10 questions based on the passage above:
             if new_level > current_level:
                 level_up_bonus = f"\n🎉 *LEVEL UP!* Level {current_level} → Level {new_level}!"
 
-            stats_message = f"""🎉 **Comprehension Complete!** 🎉
+            stats_message = f"""🎉 Comprehension Complete! 🎉
 
-👤 **{user_name}'s English Progress:**
+👤 {user_name}'s English Progress:
 💰 Credits: {final_credits}
 ✨ XP Earned: +{points_earned} XP
 ⭐ Total XP: {final_xp}
@@ -1381,14 +1381,14 @@ Type your essay below:"""
 
                 # Send feedback message AFTER PDF is sent
                 if pdf_sent:
-                    feedback_message = f"""✅ **Essay Marked Successfully!** ✅
+                    feedback_message = f"""✅ Essay Marked Successfully! ✅
 
-📊 **Your Results:**
+📊 Your Results:
 • Score: {marking_result['score']}/30
 • Word Count: {word_count} words
 • Grade: {marking_result['grade']}
 
-📚 **Your English Progress:**
+📚 Your English Progress:
 • Credits: {final_credits}
 • XP Earned: +{points_earned} XP
 • Total XP: {final_xp}
@@ -1397,13 +1397,13 @@ Type your essay below:"""
 
 {level_up_bonus}
 
-**📝 Teacher Feedback:**
+📝 Teacher Feedback:
 {marking_result['summary_feedback']}
 
-**🔍 Key Corrections:**
+🔍 Key Corrections:
 {marking_result.get('corrections_text', 'No major corrections needed.')}
 
-📄 **Your detailed PDF report with red corrections has been sent above** ⬆️
+📄 Your detailed PDF report with red corrections has been sent above ⬆️
 
 🎯 The PDF shows your original essay with all errors marked in red with corrections!"""
                 else:
@@ -1415,14 +1415,14 @@ Type your essay below:"""
                     else:
                         corrections_display = "No major corrections needed."
 
-                    feedback_message = f"""✅ **Essay Marked Successfully!** ✅
+                    feedback_message = f"""✅ Essay Marked Successfully! ✅
 
-📊 **Your Results:**
+📊 Your Results:
 • Score: {marking_result['score']}/30
 • Word Count: {word_count} words
 • Grade: {marking_result['grade']}
 
-📚 **Your English Progress:**
+📚 Your English Progress:
 • Credits: {final_credits}
 • XP Earned: +{points_earned} XP
 • Total XP: {final_xp}
@@ -1431,13 +1431,13 @@ Type your essay below:"""
 
 {level_up_bonus}
 
-**📝 Teacher Feedback:**
+📝 Teacher Feedback:
 {marking_result['summary_feedback']}
 
-**🔍 Key Corrections Found:**
+🔍 Key Corrections Found:
 {corrections_display}
 
-⚠️ **PDF Upload Issue** - We're having trouble sending your detailed report right now. Your essay has been marked and scored above.
+⚠️ PDF Upload Issue - We're having trouble sending your detailed report right now. Your essay has been marked and scored above.
 
 🎯 Keep practicing to improve your writing skills!"""
 
@@ -2007,14 +2007,14 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
 
             # FIRST MESSAGE: Answer and explanation only
             answer_message = f"🎉 EXCELLENT! {user_name}! 🎉\n\n"
-            answer_message += f"📚 **{topic_area} Question**\n\n"
-            answer_message += f"**Question:** {question_text}\n\n"
+            answer_message += f"📚 {topic_area} Question\n\n"
+            answer_message += f"Question: {question_text}\n\n"
 
             if instructions:
-                answer_message += f"**Instructions:** {instructions}\n\n"
+                answer_message += f"Instructions: {instructions}\n\n"
 
-            answer_message += f"✅ **Correct Answer:** {answer_text}\n\n"
-            answer_message += f"📖 **Explanation:** {explanation_text}"
+            answer_message += f"✅ Correct Answer: {answer_text}\n\n"
+            answer_message += f"📖 Explanation: {explanation_text}"
 
             self.whatsapp_service.send_message(user_id, answer_message)
 
@@ -2023,14 +2023,14 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
             if new_level > current_level:
                 level_up_bonus = f"\n🎉 *LEVEL UP!* Level {current_level} → Level {new_level}!"
 
-            stats_message = f"""🎮 **Your English Progress Dashboard** 🎮
+            stats_message = f"""🎮 Your English Progress Dashboard 🎮
 
-👤 **{user_name}'s English Journey:**
-💰 Credits: **{current_credits}** (Used: 1 credit)
-✨ XP Earned: **+{points_earned} XP**
-⭐ Total XP: **{new_xp}**
-🔥 Streak: **{new_streak} days**
-🎯 Level: **{new_level}**
+👤 {user_name}'s English Journey:
+💰 Credits: {current_credits} (Used: 1 credit)
+✨ XP Earned: +{points_earned} XP
+⭐ Total XP: {new_xp}
+🔥 Streak: {new_streak} days
+🎯 Level: {new_level}
 
 {level_up_bonus}
 
@@ -2100,10 +2100,10 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
                 result_text = "Good Try!"
 
             # FIRST MESSAGE: Answer and explanation
-            answer_message = f"{result_emoji} **{result_text}** {user_name}!\n\n"
-            answer_message += f"📚 **Question:** {question_data.get('question', '')}\n\n"
-            answer_message += f"🎯 **Correct Answer:** {options[correct_answer] if correct_answer < len(options) else 'N/A'}\n\n"
-            answer_message += f"💡 **Explanation:** {question_data.get('explanation', 'Keep learning!')}"
+            answer_message = f"{result_emoji} {result_text} {user_name}!\n\n"
+            answer_message += f"📚 Question: {question_data.get('question', '')}\n\n"
+            answer_message += f"🎯 Correct Answer: {options[correct_answer] if correct_answer < len(options) else 'N/A'}\n\n"
+            answer_message += f"💡 Explanation: {question_data.get('explanation', 'Keep learning!')}"
 
             self.whatsapp_service.send_message(user_id, answer_message)
 
@@ -2112,14 +2112,14 @@ IMPORTANT: Be thorough in finding errors and fair in marking. Consider this is a
             if new_level > current_level:
                 level_up_bonus = f"\n🎉 *LEVEL UP!* Level {current_level} → Level {new_level}!"
 
-            stats_message = f"""🎮 **Your English Progress Dashboard** 🎮
+            stats_message = f"""🎮 Your English Progress Dashboard 🎮
 
-👤 **{user_name}'s Vocabulary Journey:**
-💰 Credits: **{current_credits}** (Used: 1 credit)
-✨ XP Earned: **+{points_earned} XP**
-⭐ Total XP: **{new_xp}**
-🔥 Streak: **{new_streak} days**
-🎯 Level: **{new_level}**
+👤 {user_name}'s Vocabulary Journey:
+💰 Credits: {current_credits} (Used: 1 credit)
+✨ XP Earned: +{points_earned} XP
+⭐ Total XP: {new_xp}
+🔥 Streak: {new_streak} days
+🎯 Level: {new_level}
 
 {level_up_bonus}
 
