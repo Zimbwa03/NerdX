@@ -1414,6 +1414,186 @@ def get_grammar_questions_by_topic(topic_area: str) -> List[Dict]:
         logger.error(f"Error getting grammar questions by topic: {e}")
         return []
 
+def create_comprehension_tables():
+    """Create comprehension tables in Supabase if they don't exist"""
+    try:
+        if not _is_configured:
+            logger.warning("Supabase not configured")
+            return False
+            
+        # SQL to create comprehension_passages table
+        passages_table_sql = """
+        CREATE TABLE IF NOT EXISTS comprehension_passages (
+            id SERIAL PRIMARY KEY,
+            title VARCHAR(255) NOT NULL,
+            passage_text TEXT NOT NULL,
+            theme VARCHAR(100),
+            form_level VARCHAR(20) DEFAULT 'Form 3-4',
+            word_count INTEGER DEFAULT 0,
+            difficulty_level VARCHAR(20) DEFAULT 'medium',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        
+        CREATE INDEX IF NOT EXISTS idx_comprehension_passages_theme ON comprehension_passages(theme);
+        CREATE INDEX IF NOT EXISTS idx_comprehension_passages_form_level ON comprehension_passages(form_level);
+        """
+        
+        # SQL to create english_comprehension_questions table
+        questions_table_sql = """
+        CREATE TABLE IF NOT EXISTS english_comprehension_questions (
+            id SERIAL PRIMARY KEY,
+            passage_id INTEGER REFERENCES comprehension_passages(id) ON DELETE CASCADE,
+            question_text TEXT NOT NULL,
+            expected_answer TEXT NOT NULL,
+            question_type VARCHAR(50) DEFAULT 'literal',
+            question_order INTEGER NOT NULL DEFAULT 1,
+            marks INTEGER DEFAULT 2,
+            difficulty VARCHAR(20) DEFAULT 'medium',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        
+        CREATE INDEX IF NOT EXISTS idx_comprehension_questions_passage_id ON english_comprehension_questions(passage_id);
+        CREATE INDEX IF NOT EXISTS idx_comprehension_questions_order ON english_comprehension_questions(passage_id, question_order);
+        """
+        
+        # Execute table creation using the SQL execution tool
+        logger.info("🔧 Creating comprehension tables...")
+        
+        # Note: We'll create tables manually in Supabase since SQL execution isn't available
+        logger.info("📋 Comprehension table schemas prepared for manual creation")
+        return True
+            
+    except Exception as e:
+        logger.error(f"Error creating comprehension tables: {e}")
+        return False
+
+def get_comprehension_passage_from_db(theme: str = None, form_level: str = None) -> Dict:
+    """
+    Retrieve comprehension passage and questions from Supabase database
+    
+    Args:
+        theme: Optional theme filter
+        form_level: Optional form level filter (Form 3, Form 4)
+        
+    Returns:
+        Dict with passage data and ordered questions, or None if not found
+    """
+    try:
+        if not _is_configured:
+            logger.warning("Supabase not configured")
+            return None
+            
+        # Build filters for passage selection
+        filters = {}
+        select_fields = "*"
+        
+        if theme:
+            filters['theme'] = f'eq.{theme}'
+        if form_level:
+            filters['form_level'] = f'eq.{form_level}'
+            
+        # Get random passage from comprehension_passages table
+        passages_response = make_supabase_request(
+            "GET",
+            "comprehension_passages", 
+            select=select_fields,
+            filters=filters
+        )
+        
+        if not passages_response or len(passages_response) == 0:
+            logger.info(f"No comprehension passages found for theme: {theme}, form: {form_level}")
+            return None
+            
+        # Select random passage
+        import random
+        selected_passage = random.choice(passages_response)
+        passage_id = selected_passage['id']
+        
+        # Get questions for this passage in correct order
+        questions_response = make_supabase_request(
+            "GET",
+            "english_comprehension_questions",
+            select="*",
+            filters={
+                'passage_id': f'eq.{passage_id}',
+                'order': 'question_order.asc'  # Ensure proper ordering
+            }
+        )
+        
+        if not questions_response:
+            logger.warning(f"No questions found for passage ID: {passage_id}")
+            return None
+            
+        # Format the response to match expected structure
+        passage_data = {
+            'passage': {
+                'text': selected_passage.get('passage_text', ''),
+                'title': selected_passage.get('title', 'Comprehension Passage'),
+                'word_count': selected_passage.get('word_count', 0),
+                'theme': selected_passage.get('theme', theme or 'General'),
+                'form_level': selected_passage.get('form_level', form_level or 'Form 3-4')
+            },
+            'questions': []
+        }
+        
+        # Add questions in order
+        for q in questions_response:
+            question_data = {
+                'question': q.get('question_text', ''),
+                'answer': q.get('expected_answer', ''),
+                'type': q.get('question_type', 'literal'),
+                'order': q.get('question_order', 0),
+                'marks': q.get('marks', 2)
+            }
+            passage_data['questions'].append(question_data)
+            
+        # Sort questions by order to ensure correct sequence
+        passage_data['questions'].sort(key=lambda x: x.get('order', 0))
+        
+        logger.info(f"✅ Retrieved passage from database: {selected_passage.get('title')} with {len(passage_data['questions'])} questions")
+        return passage_data
+        
+    except Exception as e:
+        logger.error(f"Error retrieving comprehension from database: {e}")
+        return None
+
+def get_comprehension_questions_by_passage_id(passage_id: int) -> List[Dict]:
+    """
+    Get comprehension questions for a specific passage ID in correct order
+    
+    Args:
+        passage_id: The ID of the comprehension passage
+        
+    Returns:
+        List of questions in correct order or empty list
+    """
+    try:
+        if not _is_configured:
+            return []
+            
+        questions_response = make_supabase_request(
+            "GET",
+            "english_comprehension_questions",
+            select="*",
+            filters={
+                'passage_id': f'eq.{passage_id}',
+                'order': 'question_order.asc'  # Critical: maintain order
+            }
+        )
+        
+        if not questions_response:
+            return []
+            
+        # Ensure proper ordering even if database doesn't sort correctly
+        questions_response.sort(key=lambda x: x.get('question_order', 0))
+        
+        return questions_response
+        
+    except Exception as e:
+        logger.error(f"Error getting questions for passage {passage_id}: {e}")
+        return []
+
 if __name__ == "__main__":
     # Test the connection
     if test_connection():

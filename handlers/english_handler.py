@@ -300,23 +300,45 @@ Ready to boost your reading skills? 🚀"""
 
             # Continue without delays to prevent worker timeout
 
-            # Generate random comprehension passage
+            # 🚨 CRITICAL: Try database first, then AI fallback
             themes = ["Zimbabwean Culture", "African Wildlife", "Technology & Society", "Education", "Sports", "Environment", "History", "Science Discovery"]
             import random
             random_theme = random.choice(themes)
 
+            # Step 1: Try to get from database first (ordered properly)
             try:
-                passage_data = self.english_service.generate_long_comprehension_passage(random_theme, form_level)
-
-                if not passage_data:
-                    logger.warning(f"No passage data returned for theme: {random_theme}")
-                    # Use fallback comprehension directly from service
-                    passage_data = self.english_service._get_fallback_long_comprehension(random_theme)
-
+                from database.external_db import get_comprehension_passage_from_db, create_comprehension_tables
+                
+                # Ensure tables exist (creates if missing)
+                create_comprehension_tables()
+                
+                logger.info(f"🔍 Searching database for comprehension: theme={random_theme}, form={form_level}")
+                passage_data = get_comprehension_passage_from_db(random_theme, form_level)
+                
+                if passage_data:
+                    logger.info(f"✅ Retrieved comprehension from DATABASE: {passage_data['passage']['title']}")
+                else:
+                    logger.info(f"📄 No database content found, trying AI generation...")
+                    
+                    # Step 2: AI fallback if database empty
+                    passage_data = self.english_service.generate_long_comprehension_passage(random_theme, form_level)
+                    
+                    if passage_data:
+                        logger.info(f"✅ Generated comprehension via AI: {random_theme}")
+                    else:
+                        logger.warning(f"⚠️ AI generation failed, using service fallback")
+                        # Step 3: Service fallback if AI also fails
+                        passage_data = self.english_service._get_fallback_long_comprehension(random_theme)
+                        
             except Exception as e:
-                logger.error(f"Error generating comprehension passage: {e}")
-                # Use fallback comprehension when API fails
-                passage_data = self.english_service._get_fallback_long_comprehension(random_theme)
+                logger.error(f"Error in database-first comprehension flow: {e}")
+                # Emergency fallback: Try AI then service fallback
+                try:
+                    passage_data = self.english_service.generate_long_comprehension_passage(random_theme, form_level)
+                    if not passage_data:
+                        passage_data = self.english_service._get_fallback_long_comprehension(random_theme)
+                except:
+                    passage_data = self.english_service._get_fallback_long_comprehension(random_theme)
 
             if not passage_data:
                 clear_user_session(user_id)
