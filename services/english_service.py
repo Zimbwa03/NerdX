@@ -573,6 +573,21 @@ Return ONLY a JSON object:
         import json
         return json.dumps(fallback_data)
 
+    def _get_grade_from_score(self, score: int) -> str:
+        """Convert numerical score to ZIMSEC grade"""
+        if score >= 26:
+            return "A"
+        elif score >= 22:
+            return "B"
+        elif score >= 18:
+            return "C"
+        elif score >= 14:
+            return "D"
+        elif score >= 10:
+            return "E"
+        else:
+            return "U"
+
     def generate_long_comprehension_passage(self, theme: str, form_level: int = 4) -> Optional[Dict]:
         """Generate long comprehensive passage with 10 questions for comprehension practice"""
         if not self._is_configured or not self.client:
@@ -662,20 +677,6 @@ Make the passage engaging and educational, suitable for O-Level comprehension pr
 
     def _get_fallback_long_comprehension(self, theme: str) -> Dict:
         """Fallback long comprehension passage when AI fails"""
-        def _get_grade_from_score(self, score: int) -> str:
-        """Convert numerical score to ZIMSEC grade"""
-        if score >= 26:
-            return "A"
-        elif score >= 22:
-            return "B"
-        elif score >= 18:
-            return "C"
-        elif score >= 14:
-            return "D"
-        elif score >= 10:
-            return "E"
-        else:
-            return "U"
 
         return {
             "passage": {
