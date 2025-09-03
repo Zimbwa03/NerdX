@@ -396,77 +396,32 @@ Return ONLY a JSON object:
         }
 
     def generate_comprehension_passage(self, theme: str = "General") -> Optional[Dict]:
-        """Generate reading comprehension passages with questions"""
-        if not self._is_configured or not self.client:
-            logger.warning("English service not configured - using fallback comprehension")
+        """Generate reading comprehension passages with questions using DeepSeek V3.1"""
+        try:
+            # Use DeepSeek V3.1 for comprehension generation
+            from standalone_english_comprehension_generator import standalone_english_comprehension_generator
+            
+            logger.info(f"Generating comprehension passage with DeepSeek V3.1 for theme: {theme}")
+            result = standalone_english_comprehension_generator.generate_comprehension_passage(theme)
+            
+            if result and result.get('success'):
+                logger.info(f"✅ Successfully generated comprehension passage using DeepSeek V3.1")
+                return result
+            else:
+                logger.warning("DeepSeek comprehension generation failed, using fallback")
+                return {
+                    'success': True,
+                    'passage_data': self._get_fallback_comprehension(),
+                    'source': 'fallback'
+                }
+                
+        except Exception as e:
+            logger.error(f"Error in DeepSeek comprehension generation: {e}")
             return {
                 'success': True,
-                'passage_data': self._get_fallback_comprehension()
+                'passage_data': self._get_fallback_comprehension(),
+                'source': 'fallback'
             }
-
-        try:
-            prompt = f"""Generate a ZIMSEC O-Level English reading comprehension exercise on the theme: {theme}
-
-**Requirements:**
-- Passage: 200-300 words
-- Zimbabwean context and characters
-- Age-appropriate content (14-17 years)
-- 5 comprehension questions with answers
-- Mix of literal and inferential questions
-- Form 3-4 reading level
-
-Return ONLY a JSON object:
-{{
-    "passage": "The complete reading passage",
-    "title": "Passage title",
-    "questions": [
-        {{
-            "question": "Question text",
-            "answer": "Expected answer",
-            "type": "literal/inferential"
-        }}
-    ]
-}}"""
-
-            response = self.client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    temperature=0.7,
-                    max_output_tokens=1500
-                ),
-            )
-
-            if response.text:
-                try:
-                    clean_text = response.text.strip()
-                    if clean_text.startswith('```json'):
-                        clean_text = clean_text[7:]
-                    if clean_text.endswith('```'):
-                        clean_text = clean_text[:-3]
-                    clean_text = clean_text.strip()
-
-                    passage_data = json.loads(clean_text)
-
-                    # Validate structure
-                    if 'passage' in passage_data and 'questions' in passage_data:
-                        return {
-                            'success': True,
-                            'passage_data': passage_data
-                        }
-
-                except json.JSONDecodeError as e:
-                    logger.error(f"JSON decode error in comprehension: {e}")
-
-        except Exception as e:
-            logger.error(f"Error generating comprehension: {e}")
-
-        # Fallback
-        return {
-            'success': True,
-            'passage_data': self._get_fallback_comprehension()
-        }
 
     def _get_fallback_comprehension(self) -> Dict:
         """Fallback comprehension passage when AI fails"""
@@ -612,91 +567,24 @@ Return valid JSON with the exact format requested."""
             return "U"
 
     def generate_long_comprehension_passage(self, theme: str, form_level: int = 4) -> Optional[Dict]:
-        """Generate long comprehensive passage with 10 questions for comprehension practice"""
-        if not self._is_configured or not self.client:
-            logger.warning("English service not configured - using fallback long comprehension")
-            return self._get_fallback_long_comprehension(theme)
-
+        """Generate long comprehensive passage with 10 questions for comprehension practice using DeepSeek V3.1"""
         try:
-            prompt = f"""Generate a ZIMSEC O-Level English reading comprehension exercise on the theme: {theme}
-
-**Requirements:**
-- Passage: 400-600 words (long passage for proper comprehension practice)
-- Zimbabwean context and characters where appropriate
-- Age-appropriate content for Form {form_level} students (15-17 years)
-- EXACTLY 10 comprehension questions with detailed answers
-- Mix of literal, inferential, and critical thinking questions
-- Varied question types: multiple choice, short answer, analysis
-- Form {form_level} reading level
-
-Return ONLY a JSON object:
-{{
-    "passage": {{
-        "title": "Engaging passage title",
-        "text": "The complete 400-600 word reading passage",
-        "word_count": 500,
-        "theme": "{theme}"
-    }},
-    "questions": [
-        {{
-            "question": "Question text here",
-            "correct_answer": "Expected detailed answer",
-            "question_type": "literal/inferential/critical",
-            "marks": 2,
-            "explanation": "Why this is the correct answer"
-        }}
-    ]
-}}
-
-Make the passage engaging and educational, suitable for O-Level comprehension practice."""
-
-            response = self.client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    temperature=0.7,
-                    max_output_tokens=3000
-                ),
-            )
-
-            if response.text:
-                try:
-                    clean_text = response.text.strip()
-                    if clean_text.startswith('```json'):
-                        clean_text = clean_text[7:]
-                    if clean_text.endswith('```'):
-                        clean_text = clean_text[:-3]
-                    clean_text = clean_text.strip()
-
-                    passage_data = json.loads(clean_text)
-
-                    # Validate structure
-                    if 'passage' in passage_data and 'questions' in passage_data:
-                        # Ensure we have exactly 10 questions
-                        questions = passage_data['questions']
-                        if len(questions) < 10:
-                            # Pad with additional questions if needed
-                            while len(questions) < 10:
-                                questions.append({
-                                    "question": f"Additional comprehension question {len(questions) + 1} - What is your understanding of the main message in this passage?",
-                                    "correct_answer": "Based on careful reading and analysis of the passage content.",
-                                    "question_type": "inferential",
-                                    "marks": 2,
-                                    "explanation": "This question tests overall comprehension and analytical skills."
-                                })
-
-                        logger.info(f"Generated long comprehension passage: {theme} with {len(questions)} questions")
-                        return passage_data
-
-                except json.JSONDecodeError as e:
-                    logger.error(f"JSON decode error in long comprehension: {e}")
-
+            # Use DeepSeek V3.1 for long comprehension generation
+            from standalone_english_comprehension_generator import standalone_english_comprehension_generator
+            
+            logger.info(f"Generating long comprehension passage with DeepSeek V3.1 for theme: {theme}, form: {form_level}")
+            result = standalone_english_comprehension_generator.generate_long_comprehension_passage(theme, form_level)
+            
+            if result:
+                logger.info(f"✅ Successfully generated long comprehension passage using DeepSeek V3.1")
+                return result
+            else:
+                logger.warning("DeepSeek long comprehension generation failed, using fallback")
+                return self._get_fallback_long_comprehension(theme)
+                
         except Exception as e:
-            logger.error(f"Error generating long comprehension: {e}")
-
-        # Fallback
-        return self._get_fallback_long_comprehension(theme)
+            logger.error(f"Error in DeepSeek long comprehension generation: {e}")
+            return self._get_fallback_long_comprehension(theme)
 
     def _get_fallback_long_comprehension(self, theme: str) -> Dict:
         """Fallback long comprehension passage when AI fails"""

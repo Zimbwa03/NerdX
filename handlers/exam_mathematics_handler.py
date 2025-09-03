@@ -7,6 +7,7 @@ from database.session_db import save_user_session, get_user_session, clear_user_
 from services.whatsapp_service import WhatsAppService
 from services.mathematics_service import MathematicsService
 from services.math_question_generator import MathQuestionGenerator
+from standalone_math_generator import StandaloneMathGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -14,10 +15,11 @@ class ExamMathematicsHandler:
     """Handler for mathematics exam functionality with database questions and AI generation"""
     
     def __init__(self, whatsapp_service: WhatsAppService, mathematics_service: MathematicsService, 
-                 question_generator: MathQuestionGenerator):
+                 question_generator: MathQuestionGenerator = None):
         self.whatsapp_service = whatsapp_service
         self.mathematics_service = mathematics_service
-        self.question_generator = question_generator
+        # Use standalone generator with DeepSeek V3.1 if no generator provided
+        self.question_generator = question_generator or StandaloneMathGenerator()
         self.question_counter_key = "exam_question_count"
         
     def handle_exam_start(self, user_id: str):

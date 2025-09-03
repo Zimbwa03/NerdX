@@ -1,0 +1,10 @@
+[33m8288079[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Refactor WhatsApp Bible Quiz bot with ScriptureCoach updates
+[33m1af6f8d[m Update database schema and insert new science quiz questions
+[33m33ea375[m Add biology questions to the quiz platform database
+[33m32e3ff8[m Update integrations for better compatibility and order
+[33ma326a46[m Improve DeepSeek AI question generation reliability and timeouts
+[33m3b42ee9[m Update integration order for improved application stability
+[33m7ec3cb2[m Prioritize database for comprehension content before using AI
+[33m7f45e76[m Update integrations to include Supabase for database connectivity
+[33m618211b[m Ensure users receive WhatsApp notifications for successful Paynow payments
+[33m52ccc98[m Improve payment processing and monitoring for reliability
