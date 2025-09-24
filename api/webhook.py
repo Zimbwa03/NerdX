@@ -1449,13 +1449,13 @@ Click the link above to join our official WhatsApp channel!"""
             parts = selection_id.split('_')
             if len(parts) >= 4:
                 subject = parts[2].title()
-                topic = parts[3].replace('_', ' ').title()
+                topic = parts[3].replace('_', ' ')
                 difficulty = parts[4]
 
                 # Route Combined Science questions to the correct handler
                 if subject.lower() in ['biology', 'chemistry', 'physics']:
                     logger.info(f"Routing Combined Science {subject} question to proper handler")
-                    handle_combined_science_question(user_id, subject)
+                    handle_combined_science_question(user_id, subject, topic, difficulty)
                 else:
                     generate_and_send_question(user_id, subject, topic, difficulty, user_name)
             else:
@@ -1471,7 +1471,7 @@ Click the link above to join our official WhatsApp channel!"""
                 subject = parts[2].title()
                 # Reconstruct topic properly - it may contain underscores
                 topic_parts = parts[3:-1] if len(parts) > 5 else [parts[3]]
-                topic = ' '.join(topic_parts).replace('_', ' ').title()
+                topic = ' '.join(topic_parts).replace('_', ' ')
                 difficulty = parts[-1]  # Last part is always difficulty
 
                 logger.info(f"Next question request: subject={subject}, topic={topic}, difficulty={difficulty}")
@@ -1479,7 +1479,7 @@ Click the link above to join our official WhatsApp channel!"""
                 # Route Combined Science next questions to the correct handler
                 if subject.lower() in ['biology', 'chemistry', 'physics']:
                     logger.info(f"Routing Combined Science {subject} next question to proper handler")
-                    handle_combined_science_question(user_id, subject)
+                    handle_combined_science_question(user_id, subject, topic, difficulty)
                 else:
                     generate_and_send_question(user_id, subject, topic, difficulty, user_name)
             else:
@@ -2706,15 +2706,29 @@ def handle_combined_exam_answer(user_id: str, user_answer: str):
         # Enhanced user stats display
         message += f"📊 **{user_name}'s Progress Dashboard:**\n"
         message += f"💳 **Credits:** {final_credits}\n"
-        message += f"⭐ **Level:** {new_level} (XP: {final_xp})\n"
+        message += f"⭐ **Level:** {final_level} (XP: {final_xp})\n"
         message += f"🔥 **Streak:** {final_streak}\n"
 
         if is_correct:
             message += f"✨ **Points Earned:** +{points_earned} XP\n"
-            if new_level > current_level:
-                message += f"🎊 **LEVEL UP!** Welcome to Level {new_level}!\n"
+            if final_level > current_level:
+                message += f"🎊 **LEVEL UP!** Welcome to Level {final_level}!\n"
 
-        message += f"📊 Level Progress: [{progress_bar}] {progress_percentage:.0f}%\n\n" # Assuming progress_bar and progress_percentage are defined elsewhere or need to be calculated
+        # Calculate progress toward next level using the XP->level formula
+        try:
+            current_threshold = 100 * ((max(final_level, 1) - 1) ** 2)
+            next_threshold = 100 * (max(final_level, 1) ** 2)
+            total_needed = max(1, next_threshold - current_threshold)
+            progressed = max(0, final_xp - current_threshold)
+            progress_percentage = max(0.0, min(100.0, (progressed / total_needed) * 100.0))
+        except Exception:
+            # Fallback to simple modulo-based progress
+            progress_percentage = (final_xp % 100) / 100 * 100
+
+        filled_blocks = int(progress_percentage / 10)
+        progress_bar = "▓" * filled_blocks + "░" * (10 - filled_blocks)
+
+        message += f"📊 Level Progress: [{progress_bar}] {progress_percentage:.0f}%\n\n"
 
         # Enhanced navigation buttons with gamification
         buttons = [
@@ -3120,8 +3134,8 @@ def handle_combined_science_topic_selection(user_id: str, subject: str, topic: s
         logger.error(f"Error handling combined science topic selection for {user_id}: {e}", exc_info=True)
         whatsapp_service.send_message(user_id, f"❌ Error loading {subject} topic {topic}.")
 
-def handle_combined_science_question(user_id: str, subject: str):
-    """Handle Combined Science question generation and display"""
+def handle_combined_science_question(user_id: str, subject: str, topic: str, difficulty: str):
+    """Handle Combined Science question retrieval from DB by subject/topic with AI fallback"""
     try:
         # Get correct credit amount from users_registration table
         from database.external_db import get_user_credits, deduct_credits
@@ -3166,19 +3180,8 @@ def handle_combined_science_question(user_id: str, subject: str):
         registration = get_user_registration(user_id)
         user_name = registration['name'] if registration else "Student"
 
-        # Get a random topic for the subject
-        from constants import TOPICS
-        topics = TOPICS.get(subject, [])
-        if not topics:
-            whatsapp_service.send_message(user_id, f"❌ No topics available for {subject}")
-            return
-
-        import random
-        topic = random.choice(topics)
-        difficulty = "medium"  # Default difficulty
-
-        # Get question
-        question_data = question_service.get_question(user_id, subject, topic, difficulty, force_ai=True)
+        # Get question: DB-first by exact subject/topic, then AI fallback
+        question_data = question_service.get_question(user_id, subject, topic, difficulty, force_ai=False)
 
         if not question_data:
             whatsapp_service.send_message(user_id, f"❌ Could not generate {subject} question. Please try again.")

@@ -69,8 +69,8 @@ class QuestionService:
                 logger.info(f"No database questions available for {subject}/{topic}")
                 return None
             
-            # Get a random question that user hasn't seen recently
-            questions = get_questions_by_category_and_topic(subject, topic, limit=10)
+            # Get a pool of questions that match subject/topic
+            questions = get_questions_by_category_and_topic(subject, topic, limit=50)
             
             # Filter out recently asked questions
             from database.session_db import get_recent_question_hashes
@@ -81,28 +81,53 @@ class QuestionService:
                 question_hash = self._generate_question_hash(question['question'])
                 if question_hash not in recent_hashes:
                     available_questions.append(question)
-            
+
+            # If all questions are recently seen, allow reuse so user can keep practicing
             if not available_questions:
-                logger.info(f"No new database questions for user {user_id}")
-                return None
+                logger.info(f"All questions recently seen for {subject}/{topic}; allowing reuse for continued practice")
+                available_questions = questions
             
-            # Select question based on difficulty
-            filtered_questions = [q for q in available_questions if q.get('difficulty') == difficulty]
+            # Select question based on difficulty (DB field can be 'difficulty_level' or 'difficulty')
+            def _get_db_difficulty(row: Dict) -> Optional[str]:
+                return row.get('difficulty_level') or row.get('difficulty')
+
+            filtered_questions = [q for q in available_questions if _get_db_difficulty(q) == difficulty]
             if not filtered_questions:
                 # Fallback to any difficulty if specific not available
                 filtered_questions = available_questions
             
             if filtered_questions:
-                question = filtered_questions[0]  # Could randomize this
+                import random
+                question = random.choice(filtered_questions)
                 
-                # Format for consistency
+                # Format for consistency (DB schema uses answer/explanation/options fields)
+                # Build options from stored JSON or discrete columns
+                options_field = question.get('options')
+                if isinstance(options_field, str):
+                    try:
+                        options_parsed = json.loads(options_field)
+                    except Exception:
+                        options_parsed = {}
+                elif isinstance(options_field, dict):
+                    options_parsed = options_field
+                else:
+                    options_parsed = {}
+
+                if not options_parsed:
+                    options_parsed = {
+                        'A': question.get('option_a') or question.get('a') or '',
+                        'B': question.get('option_b') or question.get('b') or '',
+                        'C': question.get('option_c') or question.get('c') or '',
+                        'D': question.get('option_d') or question.get('d') or '',
+                    }
+
                 return {
                     'question': question['question'],
-                    'options': json.loads(question.get('options', '{}')),
-                    'correct_answer': question.get('correct_answer'),
+                    'options': options_parsed,
+                    'correct_answer': question.get('correct_answer') or question.get('answer'),
                     'explanation': question.get('explanation', ''),
                     'solution': question.get('solution', ''),
-                    'points': question.get('points', POINT_VALUES[difficulty]),
+                    'points': question.get('points', POINT_VALUES.get(difficulty, POINT_VALUES['medium'])),
                     'source': 'database',
                     'question_id': question.get('id')
                 }

@@ -2395,7 +2395,7 @@ def handle_share_to_friend(chat_id):
         encoded_referral_message = urllib.parse.quote(referral_message)
 
         # Create the WhatsApp share URL with the bot's number and pre-filled message
-        whatsapp_share_url = f"https://wa.me/263779779967?text={encoded_referral_message}"
+        whatsapp_share_url = f"https://wa.me/263788577388?text={encoded_referral_message}"
 
         # Send the share link
         message = f"📤 *Share NerdX with your friends!* 📤\n\n"
@@ -4807,7 +4807,7 @@ def handle_referrals_menu(chat_id):
         import urllib.parse
         referral_message = f"Hi NerdX! My friend {name} referred me with ID: {nerdx_id}"
         encoded_referral_message = urllib.parse.quote(referral_message)
-        whatsapp_share_url = f"https://wa.me/263779779967?text={encoded_referral_message}"
+        whatsapp_share_url = f"https://wa.me/263788577388?text={encoded_referral_message}"
 
         message += f"🔗 *Share Link:*\n{whatsapp_share_url}"
 
@@ -8963,7 +8963,7 @@ def debug_send_test_message():
     """Debug endpoint to test message sending to specific number"""
     try:
         data = request.get_json()
-        test_number = data.get('phone_number', '263779779967')  # Your number as default
+        test_number = data.get('phone_number', '263788577388')  # Your number as default
         test_message = data.get('message', 'Test message from NerdX bot debug endpoint')
         
         logger.info(f"🔍 DEBUG TEST - Attempting to send message to: {test_number}")
