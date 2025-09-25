@@ -452,9 +452,18 @@ class MathematicsHandler:
             topic = session_data.get('topic')
             difficulty = session_data.get('difficulty')
             
-            # Create solution message
-            message = f"✅ Answer:\n\n"
-            message += f"{question_data.get('answer', '')}\n\n"
+            # Create solution message (removing only the question repetition)
+            message = f"💡 Complete Solution\n\n"
+            message += f"✅ Answer: {question_data.get('answer', '')}\n\n"
+            message += f"📋 Step-by-Step Solution:\n{question_data.get('solution', '')}\n\n"
+            
+            if question_data.get('explanation'):
+                explanation = question_data['explanation']
+                # Shorten explanation to maximum 200 characters
+                if len(explanation) > 200:
+                    explanation = explanation[:200] + "... (Key concept only)"
+                message += f"💭 Explanation: {explanation}\n\n"
+            
             message += f"Ready for another challenge?"
             
             # Create navigation buttons
