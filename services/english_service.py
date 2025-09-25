@@ -163,7 +163,7 @@ class EnglishService:
         try:
             prompt = f"""Generate 3 diverse ZIMSEC O-Level English essay prompts suitable for {user_level} students.
 
-**Essay types to include:**
+*Essay types to include:*
 - Narrative/Personal experience
 - Argumentative/Opinion
 - Descriptive
@@ -258,18 +258,18 @@ Return ONLY a JSON array:
         try:
             analysis_prompt = f"""Analyze this ZIMSEC O-Level student essay and provide detailed feedback.
 
-**Essay Prompt:** {prompt}
+*Essay Prompt:* {prompt}
 
-**Student Essay:**
+*Student Essay:*
 {essay_text}
 
-**Analyze these areas:**
-1. **Content & Ideas** (25%): Relevance, creativity, depth
-2. **Organization** (25%): Structure, flow, transitions
-3. **Language Use** (25%): Grammar, vocabulary, sentence variety
-4. **Mechanics** (25%): Spelling, punctuation, paragraphing
+*Analyze these areas:*
+1. *Content & Ideas* (25%): Relevance, creativity, depth
+2. *Organization* (25%): Structure, flow, transitions
+3. *Language Use* (25%): Grammar, vocabulary, sentence variety
+4. *Mechanics* (25%): Spelling, punctuation, paragraphing
 
-**Requirements:**
+*Requirements:*
 - Give scores out of 25 for each area
 - Provide specific examples from the essay
 - Suggest 2-3 concrete improvements

@@ -310,24 +310,24 @@ class MathematicsHandler:
             difficulty_emoji = {"easy": "🟢", "medium": "🟡", "difficult": "🔴"}
             emoji = difficulty_emoji.get(difficulty, "📝")
             
-            message = f"""🧮 **Mathematics Question**
+            message = f"""🧮 *Mathematics Question*
 
-👤 **Student:** {user_name}
-📝 **Topic:** {topic}
-{emoji} **Difficulty:** {difficulty.title()}
-💎 **Points:** {question_data.get('points', 10)} XP
+👤 *Student:* {user_name}
+📝 *Topic:* {topic}
+{emoji} *Difficulty:* {difficulty.title()}
+💎 *Points:* {question_data.get('points', 10)} XP
 
-📊 **Your Current Stats:**
-💳 **Credits:** {credits}
-⭐ **Level:** {stats.get('level', 1)} (XP: {stats.get('xp_points', 0)})
-🔥 **Streak:** {stats.get('streak', 0)} days
+📊 *Your Current Stats:*
+💳 *Credits:* {credits}
+⭐ *Level:* {stats.get('level', 1)} (XP: {stats.get('xp_points', 0)})
+🔥 *Streak:* {stats.get('streak', 0)} days
 
-❓ **Question:**
+❓ *Question:*
 {question_data['question']}
 
-💭 **Type your answer below (numbers, expressions, or equations)**
+💭 *Type your answer below (numbers, expressions, or equations)*
 
-🎯 **Authentic ZIMSEC-style problem with step-by-step solution!**"""
+🎯 *Authentic ZIMSEC-style problem with step-by-step solution!*"""
 
             # Create answer buttons for common responses
             buttons = [
@@ -363,40 +363,40 @@ class MathematicsHandler:
             
             # FIRST MESSAGE: Answer and explanation ONLY (no stats)
             if is_correct:
-                answer_message = f"🎉 **OUTSTANDING!** {user_name}! 🎉\n\n"
-                answer_message += f"✅ **Correct Answer:** {question_data['answer']}\n"
-                answer_message += f"🎯 **Difficulty:** {difficulty.title()}\n"
-                answer_message += f"📚 **Topic:** {topic}\n\n"
+                answer_message = f"🎉 *OUTSTANDING!* {user_name}! 🎉\n\n"
+                answer_message += f"✅ *Correct Answer:* {question_data['answer']}\n"
+                answer_message += f"🎯 *Difficulty:* {difficulty.title()}\n"
+                answer_message += f"📚 *Topic:* {topic}\n\n"
                 
                 # Special achievement messages
                 if final_streak >= 10:
-                    answer_message += f"🏆 **STREAK MASTER!** You're on fire!\n"
+                    answer_message += f"🏆 *STREAK MASTER!* You're on fire!\n"
                 elif final_streak >= 5:
-                    answer_message += f"⚡ **HOT STREAK!** Keep it going!\n"
+                    answer_message += f"⚡ *HOT STREAK!* Keep it going!\n"
                 elif final_streak >= 3:
-                    answer_message += f"🌟 **BUILDING MOMENTUM!** Great job!\n"
+                    answer_message += f"🌟 *BUILDING MOMENTUM!* Great job!\n"
                 answer_message += "\n"
             else:
-                answer_message = f"📚 **Keep Learning,** {user_name}! 📚\n\n"
-                answer_message += f"🎯 **Correct Answer:** {question_data['answer']}\n"
-                answer_message += f"🎯 **Difficulty:** {difficulty.title()}\n"
-                answer_message += f"📚 **Topic:** {topic}\n\n"
-                answer_message += f"💡 **Don't worry!** Every mistake is a learning opportunity!\n\n"
+                answer_message = f"📚 *Keep Learning,* {user_name}! 📚\n\n"
+                answer_message += f"🎯 *Correct Answer:* {question_data['answer']}\n"
+                answer_message += f"🎯 *Difficulty:* {difficulty.title()}\n"
+                answer_message += f"📚 *Topic:* {topic}\n\n"
+                answer_message += f"💡 *Don't worry!* Every mistake is a learning opportunity!\n\n"
             
             # Add analysis if available to answer message
             if analysis.get('detailed_analysis'):
-                answer_message += f"🔍 **Analysis:**\n{analysis.get('feedback', '')}\n\n"
+                answer_message += f"🔍 *Analysis:*\n{analysis.get('feedback', '')}\n\n"
                 
                 if analysis.get('improvement_tips'):
-                    answer_message += f"💡 **Tips:** {analysis.get('improvement_tips')}\n\n"
+                    answer_message += f"💡 *Tips:* {analysis.get('improvement_tips')}\n\n"
             
             # Add complete solution to answer message
-            answer_message += f"📝 **Complete Solution:**\n{question_data['solution']}\n\n"
+            answer_message += f"📝 *Complete Solution:*\n{question_data['solution']}\n\n"
             
             # Add explanation to answer message
             if question_data.get('explanation'):
                 explanation = question_data['explanation']
-                answer_message += f"💡 **Explanation:**\n{explanation}"
+                answer_message += f"💡 *Explanation:*\n{explanation}"
             
             # Send FIRST message (answer and solution only)
             self.whatsapp_service.send_message(user_id, answer_message)
@@ -405,19 +405,19 @@ class MathematicsHandler:
             time.sleep(2)
             
             # SECOND MESSAGE: User stats and navigation buttons
-            stats_message = f"📊 **{user_name}'s Progress Dashboard:**\n"
-            stats_message += f"💳 **Credits:** {final_credits}\n"
-            stats_message += f"⭐ **Level:** {final_level} (XP: {final_xp})\n"
-            stats_message += f"🔥 **Streak:** {final_streak} days\n"
+            stats_message = f"📊 *{user_name}'s Progress Dashboard:*\n"
+            stats_message += f"💳 *Credits:* {final_credits}\n"
+            stats_message += f"⭐ *Level:* {final_level} (XP: {final_xp})\n"
+            stats_message += f"🔥 *Streak:* {final_streak} days\n"
             
             if is_correct:
-                stats_message += f"✨ **Points Earned:** +{points} XP\n"
+                stats_message += f"✨ *Points Earned:* +{points} XP\n"
                 # Check for level up
                 current_level = analysis.get('previous_level', final_level)
                 if final_level > current_level:
-                    stats_message += f"🎊 **LEVEL UP!** Welcome to Level {final_level}!\n"
+                    stats_message += f"🎊 *LEVEL UP!* Welcome to Level {final_level}!\n"
             
-            stats_message += f"\n🚀 **Ready for your next challenge?**"
+            stats_message += f"\n🚀 *Ready for your next challenge?*"
             
             # Create enhanced navigation buttons with gamification
             topic_encoded = (topic or '').lower().replace(' ', '_')

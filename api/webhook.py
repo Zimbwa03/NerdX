@@ -49,19 +49,19 @@ def require_registration(func):
             if not user_registration:
                 logger.warning(f"🚨 SECURITY BLOCK: Unregistered user {user_id} tried to access {func.__name__}")
                 whatsapp_service.send_message(user_id, 
-                    "🔒 **Access Denied - Registration Required**\n\n"
+                    "🔒 *Access Denied - Registration Required*\n\n"
                     "You must complete registration before using NerdX Bot.\n\n"
                     "Please provide your first name:")
                 user_service.start_registration(user_id)
                 return None
 
             # User is registered, proceed with function
-            return func(user_id, *args, **kwargs)
+            return func(user_id, *args, *kwargs)
 
         except Exception as e:
             logger.error(f"Error in registration check for {func.__name__}: {e}")
             whatsapp_service.send_message(user_id, 
-                "🔒 **System Security Error**\n\n"
+                "🔒 *System Security Error*\n\n"
                 "Unable to verify registration status. Please try again.")
             return None
 
@@ -178,7 +178,7 @@ def process_message_background(message_data, user_id, message_type):
                 logger.warning(f"⚠️ Empty text content for {user_id}, sending error message")
                 whatsapp_service.send_message(
                     user_id,
-                    "❌ **Message Error**\n\nI received your message but couldn't read the text content. Please try typing your name again."
+                    "❌ *Message Error*\n\nI received your message but couldn't read the text content. Please try typing your name again."
                 )
                 return
 
@@ -187,7 +187,7 @@ def process_message_background(message_data, user_id, message_type):
                 logger.error(f"❌ Text extraction failed for {user_id}, actual_text: '{actual_text}'")
                 whatsapp_service.send_message(
                     user_id,
-                    "❌ **Technical Issue**\n\nI'm having trouble reading your message. Please try again or contact support if the problem persists."
+                    "❌ *Technical Issue*\n\nI'm having trouble reading your message. Please try again or contact support if the problem persists."
                 )
                 return
 
@@ -223,7 +223,7 @@ def process_message_background(message_data, user_id, message_type):
         try:
             whatsapp_service.send_message(
                 user_id, 
-                "❌ **Sorry, I encountered an error processing your message.** Please try again in a moment."
+                "❌ *Sorry, I encountered an error processing your message.* Please try again in a moment."
             )
         except Exception as send_error:
             logger.error(f"Failed to send error message to {user_id}: {send_error}")
@@ -501,7 +501,7 @@ def handle_text_message(user_id: str, message_text: str):
         if not user_registration:
             logger.warning(f"🚨 SECURITY BREACH: User {user_id} passed registration check but not in database!")
             whatsapp_service.send_message(user_id, 
-                "🔒 **Security Notice**\n\n"
+                "🔒 *Security Notice*\n\n"
                 "Your registration status is inconsistent. For security, please register again.\n\n"
                 "Please provide your first name:")
             user_service.start_registration(user_id)
@@ -571,18 +571,18 @@ def handle_new_user(user_id: str, message_text: str):
                 logger.info(f"🔗 Referral code detected: {referral_code} for user {user_id}")
 
         # Send enhanced welcome message with security notice
-        welcome_msg = "🚨 **SECURITY NOTICE** 🚨\n\n"
-        welcome_msg += "Welcome to **NerdX Quiz Bot**!\n\n"
-        welcome_msg += "🔒 **Registration is MANDATORY**\n"
-        welcome_msg += "📋 **No access without registration**\n"
-        welcome_msg += "🆔 **Secure your NerdX account**\n\n"
+        welcome_msg = "🚨 *SECURITY NOTICE* 🚨\n\n"
+        welcome_msg += "Welcome to *NerdX Quiz Bot*!\n\n"
+        welcome_msg += "🔒 *Registration is MANDATORY*\n"
+        welcome_msg += "📋 *No access without registration*\n"
+        welcome_msg += "🆔 *Secure your NerdX account*\n\n"
         welcome_msg += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
 
         if referral_code:
-            welcome_msg += f"🔗 **Referral Code Detected**: {referral_code}\n\n"
+            welcome_msg += f"🔗 *Referral Code Detected*: {referral_code}\n\n"
 
         welcome_msg += "Let's get you registered securely!\n\n"
-        welcome_msg += "Please enter your **first name**:"
+        welcome_msg += "Please enter your *first name*:"
 
         whatsapp_service.send_message(user_id, welcome_msg)
 
@@ -607,7 +607,7 @@ def handle_new_user(user_id: str, message_text: str):
     except Exception as e:
         logger.error(f"Error handling new user {user_id}: {e}", exc_info=True)
         whatsapp_service.send_message(user_id, 
-            "🔒 **System Error**\n\n"
+            "🔒 *System Error*\n\n"
             "Registration system temporarily unavailable. Please try again in a moment.")
 
 def handle_registration_flow(user_id: str, user_input: str):
@@ -702,14 +702,14 @@ def handle_session_message(user_id: str, message_text: str):
                     from database.session_db import clear_user_session
                     clear_user_session(user_id)
 
-                    message = """❌ **Payment Session Reset**
+                    message = """❌ *Payment Session Reset*
 
 Your payment session data was incomplete. This can happen if:
 • The session expired
 • There was a network interruption
 • The payment process was not started properly
 
-🔄 **What to do now:**
+🔄 *What to do now:*
 1. Click "💰 Buy Credits" below to start fresh
 2. Select your package again
 3. Complete the payment process
@@ -835,7 +835,7 @@ def handle_image_message(user_id: str, image_data: dict):
         if not user_registration:
             logger.warning(f"🚨 UNREGISTERED USER tried to send image: {user_id}")
             whatsapp_service.send_message(user_id, 
-                "🔒 **Access Denied**\n\n"
+                "🔒 *Access Denied*\n\n"
                 "You must register before sending images to NerdX Bot.\n\n"
                 "Please provide your first name:")
             user_service.start_registration(user_id)
@@ -856,11 +856,11 @@ def handle_image_message(user_id: str, image_data: dict):
             current_credits = credit_check.get('current_credits', 0)
             required_credits = credit_check.get('required_credits', 0)
 
-            insufficient_msg = f"""💰 **Need More Credits!** 💰
+            insufficient_msg = f"""💰 *Need More Credits!* 💰
 
-📸 **Image Math Solver**
+📸 *Image Math Solver*
 
-💳 **Credit Status:**
+💳 *Credit Status:*
 • Current Credits: {current_credits}
 • Required Credits: {required_credits}
 • Need: {shortage} more credits
@@ -893,13 +893,13 @@ def handle_image_message(user_id: str, image_data: dict):
             credit_system.deduct_credits_for_action(user_id, 'image_solve')
 
             solution = result.get('solution', {})
-            response = f"📸 **Image Math Solution**\n\n"
-            response += f"**Problem:** {solution.get('problem_identified', 'Unknown')}\n\n"
-            response += f"**Solution:**\n{solution.get('solution_steps', 'No steps available')}\n\n"
-            response += f"**Answer:** {solution.get('final_answer', 'No answer')}\n\n"
+            response = f"📸 *Image Math Solution*\n\n"
+            response += f"*Problem:* {solution.get('problem_identified', 'Unknown')}\n\n"
+            response += f"*Solution:*\n{solution.get('solution_steps', 'No steps available')}\n\n"
+            response += f"*Answer:* {solution.get('final_answer', 'No answer')}\n\n"
 
             if solution.get('notes'):
-                response += f"**Notes:** {solution['notes']}\n"
+                response += f"*Notes:** {solution['notes']}\n"
 
             response += f"💰 Cost: {credit_system.get_credit_cost('image_solve')} credits"
 
@@ -1066,7 +1066,7 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         if not registration:
             logger.warning(f"🚨 UNREGISTERED USER tried interactive action: {user_id}")
             whatsapp_service.send_message(user_id, 
-                "🔒 **Access Denied**\n\n"
+                "🔒 *Access Denied*\n\n"
                 "You must register before using NerdX Bot.\n\n"
                 "Please provide your first name:")
             user_service.start_registration(user_id)
@@ -1309,7 +1309,7 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         # Registration completion button handlers
         elif selection_id == 'join_channel':
             # Send WhatsApp channel link
-            channel_message = """📢 **Join NerdX Official Channel!**
+            channel_message = """📢 *Join NerdX Official Channel!*
 
 Stay updated with:
 • Latest features and updates
@@ -1317,7 +1317,7 @@ Stay updated with:
 • Important announcements
 • Community discussions
 
-🔗 **Channel Link**: https://whatsapp.com/channel/0029VbAoqVdDTkK3jbcrDf1B
+🔗 *Channel Link*: https://whatsapp.com/channel/0029VbAoqVdDTkK3jbcrDf1B
 
 Click the link above to join our official WhatsApp channel!"""
 
@@ -1663,7 +1663,7 @@ def handle_subject_selection(user_id: str, subject: str):
             return
 
         # Send difficulty selection
-        message = f"📚 You selected **{subject}**\n\nChoose difficulty level:"
+        message = f"📚 You selected *{subject}*\n\nChoose difficulty level:"
 
         buttons = [
             {'id': f'difficulty_easy_{subject.lower()}', 'title': '🟢 Easy'},
@@ -1689,7 +1689,7 @@ def handle_difficulty_selection(user_id: str, difficulty_subject: str):
         subject = '_'.join(parts[1:]).title()
 
         # Send topic selection
-        message = f"📚 **{subject}** - {difficulty.title()}\n\nChoose a topic:"
+        message = f"📚 *{subject}* - {difficulty.title()}\n\nChoose a topic:"
 
         topics = TOPICS.get(subject, [])
         if not topics:
@@ -1789,35 +1789,35 @@ def show_user_stats(user_id: str):
             xp_for_next_level = 100  # Base XP for next level
 
         # Create comprehensive stats message
-        message = f"📊 **{user_name}'s Learning Statistics** 📊\n\n"
+        message = f"📊 *{user_name}'s Learning Statistics* 📊\n\n"
 
         # Credit Status
-        message += f"💰 **Credit Balance**\n"
+        message += f"💰 *Credit Balance*\n"
         message += f"💳 Current Credits: {current_credits}\n"
         message += f"🔥 Active Packages: {len(credit_status.get('active_packages', []))}\n\n"
 
         # Learning Progress  
-        message += f"🎮 **Learning Progress**\n"
+        message += f"🎮 *Learning Progress*\n"
         message += f"🏆 Level: {level}\n"
         message += f"⭐ XP Points: {xp_points:,}\n"
         message += f"📈 Next Level: {xp_for_next_level} XP needed\n"
         message += f"🔥 Current Streak: {streak} days\n\n"
 
         # Performance Stats
-        message += f"📝 **Performance Stats**\n"
+        message += f"📝 *Performance Stats*\n"
         message += f"✅ Correct Answers: {correct_answers}\n"
         message += f"📊 Total Attempts: {total_attempts}\n"
         message += f"🎯 Accuracy Rate: {accuracy:.1f}%\n\n"
 
         # Motivational message based on performance
         if accuracy >= 80:
-            message += f"🌟 **Excellent work!** You're mastering the material!\n"
+            message += f"🌟 *Excellent work!* You're mastering the material!\n"
         elif accuracy >= 60:
-            message += f"💪 **Good progress!** Keep practicing to improve!\n"
+            message += f"💪 *Good progress!* Keep practicing to improve!\n"
         elif total_attempts > 0:
-            message += f"🚀 **Getting started!** Every expert was once a beginner!\n"
+            message += f"🚀 *Getting started!* Every expert was once a beginner!\n"
         else:
-            message += f"🎯 **Ready to begin?** Start your learning journey now!\n"
+            message += f"🎯 *Ready to begin?* Start your learning journey now!\n"
 
         # Progress bar for next level
         progress_percentage = (xp_points % 100) / 100 * 100 if level > 1 else xp_points / 100 * 100
@@ -1855,7 +1855,7 @@ def show_credit_packages(user_id: str):
         # Show credit packages
         message = credit_display_manager.get_credit_display_header(user_id)
         message += payment_service.get_credit_packages_display()
-        message += "💡 **How to Pay:**\n"
+        message += "💡 *How to Pay:*\n"
         message += f"• Send payment to: {payment_service.ecocash_number}\n"
         message += "• Submit confirmation SMS for verification\n"
         message += "• Credits added after approval (5-30 minutes)\n\n"
@@ -1873,9 +1873,9 @@ def show_credit_packages(user_id: str):
 def send_help_message(user_id: str):
     """Send help message"""
     help_text = """
-🎓 **NerdX Quiz Bot Help**
+🎓 *NerdX Quiz Bot Help*
 
-**Commands:**
+*Commands:*
 • `menu` - Show main menu
 • `credits` - Check credit balance
 • `stats` - View your statistics
@@ -1883,14 +1883,14 @@ def send_help_message(user_id: str):
 • `buy credits` - Purchase credits
 • `reset limits` - Reset rate limits if experiencing delays
 
-**Features:**
+*Features:*
 📚 Study ZIMSEC subjects (Biology, Chemistry, Physics, Math, English)
 🤖 AI-generated questions
 📸 Solve math problems from images
 📊 Track your progress
 🎯 Earn points and maintain streaks
 
-**Credit Costs:**
+*Credit Costs:*
 • Easy questions: 5-10 credits
 • Medium questions: 10-20 credits
 • Hard questions: 15-50 credits
@@ -1908,11 +1908,11 @@ def handle_graph_request(user_id: str, function_text: str):
         required_credits = advanced_credit_service.get_credit_cost('math_graph_practice')
 
         if current_credits < required_credits:
-            insufficient_msg = f"""💰 **Need More Credits!** 💰
+            insufficient_msg = f"""💰 *Need More Credits!* 💰
 
-📊 **Math Graph Practice**
+📊 *Math Graph Practice*
 
-💳 **Credit Status:**
+💳 *Credit Status:*
 • Current Credits: {current_credits}
 • Required Credits: {required_credits}
 • Need: {required_credits - current_credits} more credits
@@ -2173,18 +2173,18 @@ def handle_combined_science_menu(user_id: str):
         text += f"🔬 *{user_name}, I'm your personal O-Level Combined Science tutor!*\n\n"
 
         # Enhanced user stats display like mathematics
-        text += f"📊 **Your Science Journey:**\n"
-        text += f"💳 Credits: **{current_credits}**\n"
-        text += f"⭐ Level: **{current_level}** (XP: {current_xp})\n"
-        text += f"🔥 Streak: **{current_streak} days**\n"
-        text += f"🎯 Next Level: **{xp_for_next_level} XP needed**\n\n"
+        text += f"📊 *Your Science Journey:*\n"
+        text += f"💳 Credits: *{current_credits}*\n"
+        text += f"⭐ Level: *{current_level}* (XP: {current_xp})\n"
+        text += f"🔥 Streak: *{current_streak} days*\n"
+        text += f"🎯 Next Level: *{xp_for_next_level} XP needed*\n\n"
 
         text += f"I'm here to help you master science, {user_name}, with:\n\n"
-        text += f"🧬 **Biology Questions:** Earn 5-10 XP per question\n"
-        text += f"⚗️ **Chemistry Questions:** Earn 5-10 XP per question\n"
-        text += f"⚡ **Physics Questions:** Earn 5-10 XP per question\n"
-        text += f"📚 **Combined Exams:** Earn 8-15 XP per question\n"
-        text += f"🔥 **Daily Streaks:** Maintain consistent learning\n\n"
+        text += f"🧬 *Biology Questions:* Earn 5-10 XP per question\n"
+        text += f"⚗️ *Chemistry Questions:* Earn 5-10 XP per question\n"
+        text += f"⚡ *Physics Questions:* Earn 5-10 XP per question\n"
+        text += f"📚 *Combined Exams:* Earn 8-15 XP per question\n"
+        text += f"🔥 *Daily Streaks:* Maintain consistent learning\n\n"
 
         text += f"🚀 *{user_name}, choose how you'd like to earn XP and level up:*"
 
@@ -2224,18 +2224,18 @@ def handle_mathematics_menu(user_id: str):
         text += f"🎓 *{user_name}, I'm your personal O-Level Mathematics tutor!*\n\n"
 
         # Enhanced user stats display
-        text += f"📊 **Your Math Journey:**\n"
-        text += f"💳 Credits: **{current_credits}**\n"
-        text += f"⭐ Level: **{current_level}** (XP: {current_xp})\n"
-        text += f"🔥 Streak: **{current_streak} days**\n"
-        text += f"🎯 Next Level: **{xp_for_next_level} XP needed**\n\n"
+        text += f"📊 *Your Math Journey:*\n"
+        text += f"💳 Credits: *{current_credits}*\n"
+        text += f"⭐ Level: *{current_level}* (XP: {current_xp})\n"
+        text += f"🔥 Streak: *{current_streak} days*\n"
+        text += f"🎯 Next Level: *{xp_for_next_level} XP needed*\n\n"
 
         text += f"I'm here to help you master math, {user_name}, with:\n\n"
-        text += f"📚 **Practice Questions:** Earn 5-10 XP per question\n"
-        text += f"📷 **Image Math Solver:** Earn 30 XP per solution\n"
-        text += f"📈 **Graph Generation:** Earn 25 XP per graph\n"
-        text += f"📊 **Sample Graphs:** Earn 15 XP for learning\n"
-        text += f"🔥 **Daily Streaks:** Maintain consistent learning\n\n"
+        text += f"📚 *Practice Questions:* Earn 5-10 XP per question\n"
+        text += f"📷 *Image Math Solver:* Earn 30 XP per solution\n"
+        text += f"📈 *Graph Generation:* Earn 25 XP per graph\n"
+        text += f"📊 *Sample Graphs:* Earn 15 XP for learning\n"
+        text += f"🔥 *Daily Streaks:* Maintain consistent learning\n\n"
 
         text += f"🚀 *{user_name}, choose how you'd like to earn XP and level up:*"
 
@@ -2274,10 +2274,10 @@ def handle_ordinary_mathematics_menu(user_id: str):
         text = f"🧮 *ZIMSEC Mathematics Hub* 🧮\n\n"
         text += f"👋 *Hello {user_name}!* Welcome to your personal O-Level Mathematics tutor!\n\n"
         text += f"📊 *Your Math Journey:*\n"
-        text += f"💳 Credits: **{current_credits}**\n"
-        text += f"⭐ Level: **{current_level}** (XP: {current_xp})\n"
-        text += f"🔥 Streak: **{current_streak} days**\n"
-        text += f"🎯 Next Level: **{xp_for_next_level} XP needed**\n\n"
+        text += f"💳 Credits: *{current_credits}*\n"
+        text += f"⭐ Level: *{current_level}* (XP: {current_xp})\n"
+        text += f"🔥 Streak: *{current_streak} days*\n"
+        text += f"🎯 Next Level: *{xp_for_next_level} XP needed*\n\n"
         text += f"📚 *Master O-Level Mathematics with:*\n"
         text += f"• Topic-based practice questions\n"
         text += f"• Full exam simulations\n"
@@ -2311,10 +2311,10 @@ def handle_english_menu(user_id: str):
         text += f"👋 *Hello {user_name}!* I'm your personal English Language tutor for ZIMSEC O-Level!\n\n"
         text += f"💳 *Your Credits:* {current_credits}\n\n"
         text += f"🎯 *What I can help you master:*\n"
-        text += f"📚 **Comprehension:** Reading skills & text analysis\n"
-        text += f"✍️ **Essay Writing:** All essay types with AI feedback\n"
-        text += f"📝 **Grammar:** Rules, exercises & practice\n"
-        text += f"🎤 **Audio Lessons:** Listen and learn effectively\n\n"
+        text += f"📚 *Comprehension:* Reading skills & text analysis\n"
+        text += f"✍️ *Essay Writing:* All essay types with AI feedback\n"
+        text += f"📝 *Grammar:* Rules, exercises & practice\n"
+        text += f"🎤 *Audio Lessons:* Listen and learn effectively\n\n"
         text += f"⭐ *Earn XP and level up* with every practice session!\n\n"
         text += f"🚀 *{user_name}, choose your English learning path:*"
 
@@ -2346,7 +2346,7 @@ def handle_continue_audio_chat(user_id: str):
     """Handle continue audio chat option"""
     try:
         # Send a message asking user to type their next question
-        continue_message = "🎵 **Ready for your next question!**\n\n"
+        continue_message = "🎵 *Ready for your next question!*\n\n"
         continue_message += "Type any question, send an image, or upload a document and I'll respond with audio!\n\n"
         continue_message += "Type 'end audio' to exit audio chat mode."
 
@@ -2425,24 +2425,24 @@ def handle_combined_exam(user_id: str):
 
         if current_credits < required_credits:
             # Enhanced gamified insufficient credits message
-            insufficient_msg = f"""💰 **Need More Credits for Exam!** 💰
+            insufficient_msg = f"""💰 *Need More Credits for Exam!* 💰
 
-🧪 **Combined Science Exam Mode**
+🧪 *Combined Science Exam Mode*
 👤 Student: {user_name}
 
-💳 **Credit Status:**
+💳 *Credit Status:*
 • Current Credits: {current_credits}
 • Required Credits: {required_credits}
 • Need: {required_credits - current_credits} more credits
 
-🎮 **Exam Mode Benefits:**
+🎮 *Exam Mode Benefits:*
 • Biology, Chemistry & Physics questions
 • Past paper questions with images
 • XP and level progression
 • Streak building opportunities
 • Real ZIMSEC exam simulation
 
-💎 **Get More Credits:**"""
+💎 *Get More Credits:*"""
 
             buttons = [
                 {"text": "💰 Buy Credits", "callback_data": "credit_store"},
@@ -2454,13 +2454,13 @@ def handle_combined_exam(user_id: str):
             return
 
         # Enhanced gamified exam introduction
-        text = f"""🧪 **Combined Science Exam Mode** 🧪
+        text = f"""🧪 *Combined Science Exam Mode* 🧪
 
 👤 Welcome {user_name}!
 💰 Credits Available: {current_credits}
 💳 Cost Per Question: {required_credits} credits
 
-🎯 **Exam Features:**
+🎯 *Exam Features:*
 • 🧬 Biology, Chemistry & Physics
 • 📚 Past paper questions with images
 • ⚡ XP rewards (15+ XP per question)
@@ -2521,23 +2521,23 @@ def load_next_combined_question(user_id: str):
                 required_credits = credit_result['required_credits']
                 shortage = credit_result['shortage']
 
-                insufficient_msg = f"""💰 **Need More Credits for Exam!** 💰
+                insufficient_msg = f"""💰 *Need More Credits for Exam!* 💰
 
-🧪 **Combined Science Exam Question**
+🧪 *Combined Science Exam Question*
 
-💳 **Credit Status:**
+💳 *Credit Status:*
 • Current Credits: {current_credits}
 • Required Credits: {required_credits}
 • Need: {shortage} more credits
 
-🎮 **Exam Mode Benefits:**
+🎮 *Exam Mode Benefits:*
 • Biology, Chemistry & Physics questions
 • Past paper questions with images
 • XP and level progression
 • Streak building opportunities
 • Real ZIMSEC exam simulation
 
-💎 **Get More Credits:**"""
+💎 *Get More Credits:*"""
 
                 buttons = [
                     {"text": "💰 Buy Credits", "callback_data": "credit_store"},
@@ -2582,7 +2582,7 @@ def load_next_combined_question(user_id: str):
         # Handle questions with images first
         if has_image and image_url:
             # Send image first
-            image_caption = f"🖼️ **Combined Science Exam - Question Image**\n📖 Subject: {question_data.get('category', 'Combined Science')}\n📝 Topic: {question_data.get('topic', 'General')}"
+            image_caption = f"🖼️ *Combined Science Exam - Question Image*\n📖 Subject: {question_data.get('category', 'Combined Science')}\n📝 Topic: {question_data.get('topic', 'General')}"
             whatsapp_service.send_image(user_id, image_url, image_caption)
 
             # Wait to ensure image appears first in chat
@@ -2590,25 +2590,25 @@ def load_next_combined_question(user_id: str):
             time.sleep(2)
 
             # Then send question text with options
-            message = f"📚 **Combined Science Exam** 📚\n\n"
-            message += f"❓ **Question:**\n{question_text_content}\n\n"
+            message = f"📚 *Combined Science Exam* 📚\n\n"
+            message += f"❓ *Question:*\n{question_text_content}\n\n"
             message += f"🅰️ A) {option_a}\n"
             message += f"🅱️ B) {option_b}\n"
             message += f"🅾️ C) {option_c}\n"
             message += f"🆎 D) {option_d}\n\n"
-            message += f"💭 **Choose your answer, {user_name}!**"
+            message += f"💭 *Choose your answer, {user_name}!*"
 
         else:
             # Text-only question - send directly
-            message = f"📚 **Combined Science Exam** 📚\n\n"
-            message += f"📖 **Subject:** {question_data.get('category', 'Combined Science')}\n"
-            message += f"📝 **Topic:** {question_data.get('topic', 'General')}\n\n"
-            message += f"❓ **Question:**\n{question_text_content}\n\n"
+            message = f"📚 *Combined Science Exam* 📚\n\n"
+            message += f"📖 *Subject:* {question_data.get('category', 'Combined Science')}\n"
+            message += f"📝 *Topic:* {question_data.get('topic', 'General')}\n\n"
+            message += f"❓ *Question:*\n{question_text_content}\n\n"
             message += f"🅰️ A) {option_a}\n"
             message += f"🅱️ B) {option_b}\n"
             message += f"🅾️ C) {option_c}\n"
             message += f"🆎 D) {option_d}\n\n"
-            message += f"💭 **Choose your answer, {user_name}!**"
+            message += f"💭 *Choose your answer, {user_name}!*"
 
         # Create answer buttons (A, B, C, D)
         buttons = [
@@ -2692,12 +2692,12 @@ def handle_combined_exam_answer(user_id: str, user_answer: str):
 
         # Build comprehensive response message
         if is_correct:
-            message = f"✅ **Excellent work, {user_name}!** 🎉\n\n"
-            message += f"🎯 **Your answer: {user_answer}** ✓ CORRECT!\n\n"
+            message = f"✅ *Excellent work, {user_name}!* 🎉\n\n"
+            message += f"🎯 *Your answer: {user_answer}* ✓ CORRECT!\n\n"
         else:
-            message = f"❌ **Not quite right, {user_name}** 📚\n\n"
-            message += f"🎯 **Your answer: {user_answer}** ✗ Incorrect\n"
-            message += f"✅ **Correct answer: {correct_answer}**\n\n"
+            message = f"❌ *Not quite right, {user_name}* 📚\n\n"
+            message += f"🎯 *Your answer: {user_answer}* ✗ Incorrect\n"
+            message += f"✅ *Correct answer: {correct_answer}*\n\n"
 
         # Add explanation if available (shortened for Combined Science)
         explanation = question_data.get('explanation', question_data.get('solution', ''))
@@ -2705,18 +2705,18 @@ def handle_combined_exam_answer(user_id: str, user_answer: str):
             # Shorten explanation to maximum 200 characters for Combined Science
             if len(explanation) > 200:
                 explanation = explanation[:200] + "... (Answer focus only)"
-            message += f"💡 **Explanation:**\n{explanation}\n\n"
+            message += f"💡 *Explanation:*\n{explanation}\n\n"
 
         # Enhanced user stats display
-        message += f"📊 **{user_name}'s Progress Dashboard:**\n"
-        message += f"💳 **Credits:** {final_credits}\n"
-        message += f"⭐ **Level:** {final_level} (XP: {final_xp})\n"
-        message += f"🔥 **Streak:** {final_streak}\n"
+        message += f"📊 *{user_name}'s Progress Dashboard:*\n"
+        message += f"💳 *Credits:* {final_credits}\n"
+        message += f"⭐ *Level:* {final_level} (XP: {final_xp})\n"
+        message += f"🔥 *Streak:* {final_streak}\n"
 
         if is_correct:
-            message += f"✨ **Points Earned:** +{points_earned} XP\n"
+            message += f"✨ *Points Earned:* +{points_earned} XP\n"
             if final_level > current_level:
-                message += f"🎊 **LEVEL UP!** Welcome to Level {final_level}!\n"
+                message += f"🎊 *LEVEL UP!* Welcome to Level {final_level}!\n"
 
         # Calculate progress toward next level using the XP->level formula
         try:
@@ -2782,12 +2782,12 @@ def generate_and_send_question(chat_id: str, subject: str, topic: str, difficult
 
         # Check if user has enough credits
         if credits < credit_cost:
-            insufficient_msg = f"""💰 **Need More Credits!** 💰
+            insufficient_msg = f"""💰 *Need More Credits!* 💰
 
-🧬 **{subject} {difficulty} Question**
+🧬 *{subject} {difficulty} Question*
 📚 Topic: {topic}
 
-💳 **Credit Status:**
+💳 *Credit Status:*
 • Current Credits: {credits}
 • Required Credits: {credit_cost}
 • Need: {credit_cost - credits} more credits
@@ -2856,7 +2856,7 @@ def send_question_to_user(chat_id: str, question_data: Dict, subject: str, topic
             message = f"🧪 *{subject} - {topic}*\n"
             message += f"👤 {user_name} | 🎯 {difficulty.title()} Level | 💎 {question_data.get('points', 10)} points\n"
             if credits_used > 0:
-                message += f"💳 **Credits Used:** {credits_used} | 💰 **Balance:** {new_balance}\n\n"
+                message += f"💳 *Credits Used:* {credits_used} | 💰 *Balance:* {new_balance}\n\n"
             else:
                 message += "\n"
             message += f"❓ *Question:*\n{question_data['question']}\n\n"
@@ -3121,10 +3121,10 @@ def handle_combined_science_topic_menu(user_id: str, subject: str):
         # Create header message
         text = f"{icon} *{subject} Topics Menu* {icon}\n\n"
         text += f"👤 Hey {user_name}! Ready to master {subject}?\n\n"
-        text += f"📊 **Your Progress:**\n"
-        text += f"💳 Credits: **{current_credits}**\n"
-        text += f"⭐ Level: **{current_level}**\n\n"
-        text += f"🎯 **{subject} Learning Benefits:**\n"
+        text += f"📊 *Your Progress:*\n"
+        text += f"💳 Credits: *{current_credits}*\n"
+        text += f"⭐ Level: *{current_level}*\n\n"
+        text += f"🎯 *{subject} Learning Benefits:*\n"
         text += f"• Database-first questions from ZIMSEC syllabus\n"
         text += f"• AI fallback for continuous learning\n"
         text += f"• Topic-specific questions (no mixing!)\n"
@@ -3228,24 +3228,24 @@ def handle_combined_science_question(user_id: str, subject: str, topic: str, dif
         
         # Check if user has enough credits
         if current_credits < required_credits:
-            insufficient_msg = f"""💰 **Need More Credits!** 💰
+            insufficient_msg = f"""💰 *Need More Credits!* 💰
 
-🧪 **Combined Science - {subject}**
+🧪 *Combined Science - {subject}*
 🎯 Action: Topical Question
 
-💳 **Credit Status:**
+💳 *Credit Status:*
 • Current Credits: {current_credits}
 • Required Credits: {required_credits}
 • Need: {required_credits - current_credits} more credits
 
-🎮 **Combined Science Benefits:**
+🎮 *Combined Science Benefits:*
 • Biology, Chemistry & Physics topics
 • ZIMSEC exam-style questions
 • XP and level progression
 • Streak building opportunities
 • AI-powered explanations
 
-💎 **Get More Credits:**"""
+💎 *Get More Credits:*"""
 
             buttons = [
                 {"text": "💰 Buy Credits", "callback_data": "credit_store"},
@@ -3300,13 +3300,13 @@ def handle_combined_science_question(user_id: str, subject: str, topic: str, dif
         current_level = user_stats.get('level', 1) if user_stats else 1
 
         # Enhanced gamified question display
-        message = f"🧪 **{subject} Topical Question** 🧪\n\n"
-        message += f"👤 **Student:** {user_name} (Level {current_level})\n"
-        message += f"📚 **Topic:** {topic}\n"
-        message += f"💳 **Credits Deducted:** {required_credits}\n"
-        message += f"💰 **Current Balance:** {new_credits}\n\n"
+        message = f"🧪 *{subject} Topical Question* 🧪\n\n"
+        message += f"👤 *Student:* {user_name} (Level {current_level})\n"
+        message += f"📚 *Topic:* {topic}\n"
+        message += f"💳 *Credits Deducted:* {required_credits}\n"
+        message += f"💰 *Current Balance:* {new_credits}\n\n"
 
-        message += f"❓ **Question:**\n{question_data['question']}\n\n"
+        message += f"❓ *Question:*\n{question_data['question']}\n\n"
 
         # Format options properly - ensure all 4 options (A, B, C, D) are shown
         if 'options' in question_data and question_data['options']:
@@ -3422,28 +3422,28 @@ def handle_combined_science_answer(user_id: str, subject: str, user_answer: str)
 
         # Enhanced gamified result message
         if is_correct:
-            message = f"🎉 **OUTSTANDING!** {user_name}! 🎉\n\n"
-            message += f"✅ **Correct Answer:** {correct_answer}\n"
-            message += f"🧪 **Subject:** {subject}\n"
-            message += f"📚 **Topic:** {topic}\n"
-            message += f"💎 **XP Earned:** +{points}\n"
-            message += f"🔥 **Streak:** {final_streak}\n\n"
+            message = f"🎉 *OUTSTANDING!* {user_name}! 🎉\n\n"
+            message += f"✅ *Correct Answer:* {correct_answer}\n"
+            message += f"🧪 *Subject:* {subject}\n"
+            message += f"📚 *Topic:* {topic}\n"
+            message += f"💎 *XP Earned:* +{points}\n"
+            message += f"🔥 *Streak:* {final_streak}\n\n"
 
             # Special streak messages for Combined Science
             if final_streak >= 10:
-                message += f"🏆 **SCIENCE MASTER!** You're dominating Combined Science!\n"
+                message += f"🏆 *SCIENCE MASTER!* You're dominating Combined Science!\n"
             elif final_streak >= 5:
-                message += f"⚡ **SCIENCE STREAK!** Keep those experiments going!\n"
+                message += f"⚡ *SCIENCE STREAK!* Keep those experiments going!\n"
             elif final_streak >= 3:
-                message += f"🧬 **BUILDING KNOWLEDGE!** Science skills growing!\n"
+                message += f"🧬 *BUILDING KNOWLEDGE!* Science skills growing!\n"
             message += "\n"
         else:
-            message = f"📚 **Keep Experimenting,** {user_name}! 📚\n\n"
-            message += f"🎯 **Correct Answer:** {correct_answer}\n"
-            message += f"🧪 **Subject:** {subject}\n"
-            message += f"📚 **Topic:** {topic}\n"
-            message += f"💡 **Science Tip:** Every scientist learns from trials!\n"
-            message += f"🔥 **Streak:** {final_streak} (Keep trying to build it up!)\n\n"
+            message = f"📚 *Keep Experimenting,* {user_name}! 📚\n\n"
+            message += f"🎯 *Correct Answer:* {correct_answer}\n"
+            message += f"🧪 *Subject:* {subject}\n"
+            message += f"📚 *Topic:* {topic}\n"
+            message += f"💡 *Science Tip:* Every scientist learns from trials!\n"
+            message += f"🔥 *Streak:* {final_streak} (Keep trying to build it up!)\n\n"
 
         # Add short, summarized explanation (no truncation - generate appropriate length)
         if explanation and len(explanation) > 150:
@@ -3457,27 +3457,27 @@ def handle_combined_science_answer(user_id: str, subject: str, user_answer: str)
         else:
             summary_explanation = explanation
 
-        message += f"🔬 **Scientific Explanation:**\n{summary_explanation}\n\n"
+        message += f"🔬 *Scientific Explanation:*\n{summary_explanation}\n\n"
 
         # Check for level up
         level_up_bonus = ""
         if is_correct and new_level > current_level:
-            level_up_bonus = f"🎉 **LEVEL UP!** Welcome to Level {new_level}!"
+            level_up_bonus = f"🎉 *LEVEL UP!* Welcome to Level {new_level}!"
 
         # Enhanced gamified stats display
-        message += f"🎮 **Your Science Progress** 🎮\n"
+        message += f"🎮 *Your Science Progress* 🎮\n"
         message += f"━━━━━━━━━━━━━━━━━━━━\n"
-        message += f"💰 **Credits:** {final_credits}\n"
-        message += f"⚡ **Total XP:** {final_xp}\n"
-        message += f"🔥 **Current Streak:** {final_streak}\n"
-        message += f"🏆 **Level:** {final_level}\n"
+        message += f"💰 *Credits:* {final_credits}\n"
+        message += f"⚡ *Total XP:* {final_xp}\n"
+        message += f"🔥 *Current Streak:* {final_streak}\n"
+        message += f"🏆 *Level:* {final_level}\n"
 
         # Add level progress
         xp_for_next_level = (final_level * 100) - final_xp
         if xp_for_next_level > 0:
-            message += f"📈 **Next Level:** {xp_for_next_level} XP away!\n"
+            message += f"📈 *Next Level:* {xp_for_next_level} XP away!\n"
         else:
-            message += f"🌟 **Science Expert!** Keep exploring!\n"
+            message += f"🌟 *Science Expert!* Keep exploring!\n"
 
         message += f"━━━━━━━━━━━━━━━━━━━━\n"
 
@@ -3523,15 +3523,15 @@ def handle_package_selection(user_id: str, package_id: str):
 
         message = f"""✨ 𝗣𝗔𝗖𝗞𝗔𝗚𝗘 𝗗𝗘𝗧𝗔𝗜𝗟𝗦 ✨
 ╔══════════════════════════╗
-║ {selected_package['icon']} **{selected_package['name'].upper()}** {selected_package['icon']} ║
+║ {selected_package['icon']} *{selected_package['name'].upper()}* {selected_package['icon']} ║
 ╚══════════════════════════╝
 
-💰 **Price**: ${selected_package['price']:.2f} USD
-💎 **Credits**: {selected_package['credits']} credits
-🏷️ **Per Credit**: ${cost_per_credit:.3f}{"" if savings_percent <= 0 else f" ({savings_percent}% savings!)"}
+💰 *Price*: ${selected_package['price']:.2f} USD
+💎 *Credits*: {selected_package['credits']} credits
+🏷️ *Per Credit*: ${cost_per_credit:.3f}{"" if savings_percent <= 0 else f" ({savings_percent}% savings!)"}
 
-🎯 **Perfect For**: {selected_package['description']}
-💡 **Best For**: {selected_package['best_for']}
+🎯 *Perfect For*: {selected_package['description']}
+💡 *Best For*: {selected_package['best_for']}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🚀 Ready to power up your learning?"""
@@ -3567,10 +3567,10 @@ def handle_purchase_confirmation(user_id: str, package_id: str):
 ║    {selected_package['icon']} {selected_package['name'].upper()} {selected_package['icon']}    ║
 ╚═══════════════════════════════╝
 
-💰 **Amount**: ${selected_package['price']:.2f} USD
-💎 **Credits**: {selected_package['credits']} credits
+💰 *Amount*: ${selected_package['price']:.2f} USD
+💎 *Credits*: {selected_package['credits']} credits
 
-🚀 **CHOOSE YOUR PAYMENT METHOD:**
+🚀 *CHOOSE YOUR PAYMENT METHOD:*
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
 
         # Prepare payment method buttons
@@ -3582,7 +3582,7 @@ def handle_purchase_confirmation(user_id: str, package_id: str):
                 "text": "⚡ Paynow USD EcoCash (INSTANT)", 
                 "callback_data": f"paynow_payment_{package_id}"
             })
-            message += "\n⚡ **Paynow USD EcoCash** - Instant payment & automatic credits"
+            message += "\n⚡ *Paynow USD EcoCash* - Instant payment & automatic credits"
 
         # Always add manual payment option as fallback
         buttons.extend([
@@ -3590,8 +3590,8 @@ def handle_purchase_confirmation(user_id: str, package_id: str):
             {"text": "⬅️ BACK", "callback_data": f"select_package_{package_id}"}
         ])
 
-        message += "\n📱 **Manual EcoCash** - Traditional SMS verification (5-30 mins)"
-        message += "\n\n🔒 **Both methods are 100% secure and verified**"
+        message += "\n📱 *Manual EcoCash* - Traditional SMS verification (5-30 mins)"
+        message += "\n\n🔒 *Both methods are 100% secure and verified*"
 
         whatsapp_service.send_interactive_message(user_id, message, buttons)
 
@@ -3644,7 +3644,7 @@ def handle_payment_proof_request(user_id: str):
 
         # Update session to expect payment proof
         save_user_session(user_id, {
-            **session,
+            *session,
             'step': 'awaiting_proof'
         })
 
@@ -3662,19 +3662,19 @@ def handle_payment_help(user_id: str):
     try:
         from services.payment_service import PaymentService
 
-        help_message = f"💡 **PAYMENT HELP**\n\n"
-        help_message += f"📱 **EcoCash Payment Process:**\n"
+        help_message = f"💡 *PAYMENT HELP*\n\n"
+        help_message += f"📱 *EcoCash Payment Process:*\n"
         help_message += f"1️⃣ Select a credit package\n"
         help_message += f"2️⃣ Send money to: {payment_service.ecocash_number}\n"
         help_message += f"3️⃣ Copy your confirmation SMS\n"
         help_message += f"4️⃣ Submit SMS for verification\n"
         help_message += f"5️⃣ Wait for approval (5-30 minutes)\n\n"
-        help_message += f"❓ **Common Issues:**\n"
+        help_message += f"❓ *Common Issues:*\n"
         help_message += f"• Make sure to send exact amount\n"
         help_message += f"• Include reference code if prompted\n"
         help_message += f"• Submit complete SMS confirmation\n"
         help_message += f"• Contact support if payment fails\n\n"
-        help_message += f"📞 **Need More Help?**\n"
+        help_message += f"📞 *Need More Help?*\n"
         help_message += f"Contact our support team for assistance."
 
         buttons = [
@@ -3738,19 +3738,19 @@ def handle_payment_proof_submission(user_id: str, package_id: str, reference_cod
 ║     📋 PASTE YOUR SMS PROOF     📋  ║
 ╚═══════════════════════════════╝
 
-👋 Hi **{user_name}**! Ready to receive your EcoCash confirmation SMS.
+👋 Hi *{user_name}*! Ready to receive your EcoCash confirmation SMS.
 
-📄 **Expected Format:**
+📄 *Expected Format:*
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 "Confirmed. You have sent ${package['price']:.2f} to +263785494594..."
 
-💡 **Quick Tips:**
+💡 *Quick Tips:*
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✅ Copy the ENTIRE SMS from EcoCash
 ✅ Include the transaction ID
 ✅ Verify amount matches ${package['price']:.2f}
 
-📲 **Please paste your EcoCash confirmation SMS below:**"""
+📲 *Please paste your EcoCash confirmation SMS below:*"""
 
         whatsapp_service.send_message(user_id, waiting_message)
 
@@ -3792,16 +3792,16 @@ def handle_payment_proof_text(user_id: str, proof_text: str):
         if not package_id or not reference_code:
             clear_user_session(user_id)
 
-            message = """❌ **Payment Session Expired**
+            message = """❌ *Payment Session Expired*
 
 Your payment session has expired or was incomplete. 
 
-🔄 **To purchase credits:**
+🔄 *To purchase credits:*
 1. Click "💰 Buy Credits" below 
 2. Select your desired package
 3. Follow the payment instructions
 
-💡 **Tip:** Complete the payment process within 10 minutes to avoid session timeout."""
+💡 *Tip:* Complete the payment process within 10 minutes to avoid session timeout."""
 
             buttons = [
                 {"text": "💰 Buy Credits", "callback_data": "credit_store"},
@@ -3835,24 +3835,24 @@ Your payment session has expired or was incomplete.
 ║    🎉 VERIFICATION IN PROGRESS 🎉   ║
 ╚═══════════════════════════════╝
 
-👋 Hi **{user_name}**! Your payment proof has been received and is being processed.
+👋 Hi *{user_name}*! Your payment proof has been received and is being processed.
 
-💎 **𝗬𝗼𝘂𝗿 𝗢𝗿𝗱𝗲𝗿:**
+💎 *𝗬𝗼𝘂𝗿 𝗢𝗿𝗱𝗲𝗿:*
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📦 Package: **{package['name']}**
-💰 Credits: **{package['credits']} credits**
-💳 Amount: **${package['price']:.2f}**
+📦 Package: *{package['name']}*
+💰 Credits: *{package['credits']} credits*
+💳 Amount: *${package['price']:.2f}*
 🔢 Reference: `{reference_code}`
 ⏰ Submitted: {datetime.now().strftime('%H:%M on %d/%m/%Y')}
 
-🚀 **𝗪𝗵𝗮𝘁'𝘀 𝗡𝗲𝘅𝘁?**
+🚀 *𝗪𝗵𝗮𝘁'𝘀 𝗡𝗲𝘅𝘁?*
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ⏱️ Verification: 5-30 minutes
 📱 Notification: WhatsApp alert
 💎 Credits: Instant activation
 🎯 Learning: Start immediately!
 
-💡 **Pro Tip**: Continue using existing credits while we verify your payment!
+💡 *Pro Tip*: Continue using existing credits while we verify your payment!
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
 
@@ -3999,7 +3999,7 @@ def handle_paynow_payment(user_id: str, package_id: str):
         # Check if Paynow is available
         if not paynow_service.is_available():
             whatsapp_service.send_message(user_id, 
-                "❌ **Paynow Service Unavailable**\n\n"
+                "❌ *Paynow Service Unavailable*\n\n"
                 "The instant payment system is temporarily unavailable. "
                 "Please use manual payment method.")
             handle_manual_payment(user_id, package_id)
@@ -4012,20 +4012,20 @@ def handle_paynow_payment(user_id: str, package_id: str):
             return
 
         # Collect user phone number
-        message = f"""📱 **PAYNOW USD ECOCASH PAYMENT** ⚡
+        message = f"""📱 *PAYNOW USD ECOCASH PAYMENT* ⚡
 
-🎯 **Package**: {selected_package['name']}
-💰 **Amount**: ${selected_package['price']:.2f} USD
-💎 **Credits**: {selected_package['credits']} credits
+🎯 *Package*: {selected_package['name']}
+💰 *Amount*: ${selected_package['price']:.2f} USD
+💎 *Credits*: {selected_package['credits']} credits
 
-⚡ **INSTANT PAYMENT SETUP**
+⚡ *INSTANT PAYMENT SETUP*
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📞 **Please provide your EcoCash number** for instant payment:
+📞 *Please provide your EcoCash number* for instant payment:
 
 Format: 077XXXXXXX or 078XXXXXXX or +263XXXXXXXXX
 
-💡 **Benefits of Paynow:**
+💡 *Benefits of Paynow:*
 ✅ Instant credit delivery (5-30 seconds)
 ✅ Automatic payment processing
 ✅ Secure & encrypted transactions
@@ -4075,20 +4075,20 @@ def handle_manual_payment(user_id: str, package_id: str):
 ║       🚀 SECURE CHECKOUT 🚀     ║
 ╚═══════════════════════════════╝
 
-📱 **𝗘𝗖𝗢𝗖𝗔𝗦𝗛 𝗣𝗔𝗬𝗠𝗘𝗡𝗧:**
+📱 *𝗘𝗖𝗢𝗖𝗔𝗦𝗛 𝗣𝗔𝗬𝗠𝗘𝗡𝗧:*
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📞 **Number**: +263 785494594
-💰 **Amount**: ${selected_package['price']:.2f} USD
-📋 **Reference**: `{reference_code}`
+📞 *Number*: +263 785494594
+💰 *Amount*: ${selected_package['price']:.2f} USD
+📋 *Reference*: `{reference_code}`
 
-🎯 **𝗦𝗜𝗠𝗣𝗟𝗘 𝗦𝗧𝗘𝗣𝗦:**
+🎯 *𝗦𝗜𝗠𝗣𝗟𝗘 𝗦𝗧𝗘𝗣𝗦:*
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 1️⃣ Send ${selected_package['price']:.2f} to +263 785494594
 2️⃣ Copy your EcoCash confirmation SMS
 3️⃣ Click "I SENT MONEY" below
 4️⃣ Paste SMS → Get credits in 5-30 mins!
 
-🛡️ **𝗪𝗵𝘆 𝗦𝗠𝗦 𝗩𝗲𝗿𝗶𝗳𝗶𝗰𝗮𝘁𝗶𝗼𝗻?**
+🛡️ *𝗪𝗵𝘆 𝗦𝗠𝗦 𝗩𝗲𝗿𝗶𝗳𝗶𝗰𝗮𝘁𝗶𝗼𝗻?*
 100% secure • Instant verification • Protected payments
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
@@ -4165,7 +4165,7 @@ def handle_paynow_phone_collection(user_id: str, phone_number: str):
         if not (len(local_phone) == 10 and local_phone.startswith('07') and 
                 local_phone[:3] in ['077', '078']):
             whatsapp_service.send_message(user_id, 
-                "❌ **Invalid Phone Number Format**\n\n"
+                "❌ *Invalid Phone Number Format*\n\n"
                 "Please provide a valid Zimbabwe EcoCash number:\n"
                 "• Format: 077XXXXXXX or 078XXXXXXX\n"
                 "• Example: 0771234567\n\n"
@@ -4180,7 +4180,7 @@ def handle_paynow_phone_collection(user_id: str, phone_number: str):
 
         # Send processing message
         whatsapp_service.send_message(user_id, 
-            f"⚡ **PROCESSING PAYNOW PAYMENT...**\n\n"
+            f"⚡ *PROCESSING PAYNOW PAYMENT...*\n\n"
             f"📱 Phone: {local_phone}\n"
             f"💰 Amount: ${amount:.2f} USD\n"
             f"💎 Credits: {credits}\n\n"
@@ -4202,24 +4202,24 @@ def handle_paynow_phone_collection(user_id: str, phone_number: str):
 
                 if redirect_url:
                     # Success - send payment link
-                    message = f"""✅ **PAYNOW PAYMENT READY!** ⚡
+                    message = f"""✅ *PAYNOW PAYMENT READY!* ⚡
 
-📱 **Payment Details:**
+📱 *Payment Details:*
 • Phone: {local_phone}
 • Amount: ${amount:.2f} USD
 • Credits: {credits}
 
-🚀 **Next Step:**
+🚀 *Next Step:*
 Click the link below to complete your EcoCash payment:
 
 {redirect_url}
 
-⏱️ **What happens next:**
+⏱️ *What happens next:*
 1️⃣ Click the payment link
 2️⃣ Authorize the payment on your phone
 3️⃣ Credits will be added automatically (5-30 seconds)
 
-💡 **Payment expires in 5 minutes**"""
+💡 *Payment expires in 5 minutes*"""
 
                     whatsapp_service.send_message(user_id, message)
 
@@ -4230,7 +4230,7 @@ Click the link below to complete your EcoCash payment:
                 else:
                     # Fallback to manual payment
                     whatsapp_service.send_message(user_id, 
-                        "❌ **Payment Link Generation Failed**\n\n"
+                        "❌ *Payment Link Generation Failed*\n\n"
                         "The instant payment system encountered an issue. "
                         "Let's use manual payment instead.")
                     handle_manual_payment(user_id, package_id)
@@ -4240,7 +4240,7 @@ Click the link below to complete your EcoCash payment:
                 logger.error(f"Paynow payment failed for {user_id}: {error_msg}")
 
                 whatsapp_service.send_message(user_id, 
-                    f"❌ **Payment Processing Failed**\n\n"
+                    f"❌ *Payment Processing Failed*\n\n"
                     f"Error: {error_msg}\n\n"
                     f"Let's use manual payment instead.")
                 handle_manual_payment(user_id, package_id)
@@ -4248,7 +4248,7 @@ Click the link below to complete your EcoCash payment:
         except Exception as payment_error:
             logger.error(f"Paynow payment exception for {user_id}: {payment_error}")
             whatsapp_service.send_message(user_id, 
-                "❌ **Payment System Error**\n\n"
+                "❌ *Payment System Error**\n\n"
                 "The instant payment system is temporarily unavailable. "
                 "Let's use manual payment instead.")
             handle_manual_payment(user_id, package_id)
