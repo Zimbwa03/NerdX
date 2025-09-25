@@ -3644,7 +3644,7 @@ def handle_payment_proof_request(user_id: str):
 
         # Update session to expect payment proof
         save_user_session(user_id, {
-            *session,
+            **session,
             'step': 'awaiting_proof'
         })
 
