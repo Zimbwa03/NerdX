@@ -221,12 +221,22 @@ class GraphPracticeHandler:
             if module_id not in self.graph_modules:
                 return
 
+            # Check if user has any active graph operations to prevent loops
+            session_data = get_user_session(user_id) or {}
+            if session_data.get('generating_graph', False) or session_data.get('generating_samples', False):
+                logger.warning(f"User {user_id} attempted graph generation while another operation is active")
+                self.whatsapp_service.send_message(
+                    user_id, 
+                    "⏳ *Another graph operation is in progress* - Please wait for it to complete before generating a new question."
+                )
+                return
+
             # Check rate limiting to prevent rapid-fire requests
             can_generate, remaining_cooldown = self._can_generate_graph(user_id)
             if not can_generate:
                 self.whatsapp_service.send_message(
                     user_id, 
-                    f"⏳ **Please wait {remaining_cooldown} seconds** before generating another question. This prevents system overload."
+                    f"⏳ *Please wait {remaining_cooldown} seconds* before generating another question. This prevents system overload."
                 )
                 return
 
@@ -540,13 +550,12 @@ Study the question and when ready, click "Show Graph" to see the correct graph w
 
 🌟 **Keep practicing to level up faster!**"""
 
-                # Send the graph image using the file path directly
+                # Send the graph image first, then navigation buttons with minimal delay
                 image_sent = self.whatsapp_service.send_image_file(user_id, graph_result['image_path'], success_msg)
                 
                 if image_sent:
-                    # Wait for image to fully load before sending follow-up message
-                    logger.info(f"Graph image sent successfully to {user_id}, waiting for image to load...")
-                    time.sleep(8)  # Wait 8 seconds for image to fully load on user's device
+                    # Very short delay to ensure proper message ordering (prevents chaining)
+                    time.sleep(1)  # Reduced from 8 seconds to 1 second
                     
                     # Add navigation buttons with gamified text
                     buttons = [
@@ -556,7 +565,7 @@ Study the question and when ready, click "Show Graph" to see the correct graph w
                     ]
 
                     self.whatsapp_service.send_interactive_message(user_id, "🚀 What would you like to do next?", buttons)
-                    logger.info(f"Follow-up message sent to {user_id} after image load delay")
+                    logger.info(f"Graph image and navigation sent to {user_id} with minimal delay")
                 else:
                     # Image failed to send - inform user
                     logger.warning(f"Failed to send graph image to {user_id}")
@@ -682,12 +691,12 @@ Wait {user_name} NerdX is processing your Graph...
 
 💰 Credits Remaining: {get_user_credits(user_id)}"""
 
-                # Send the graph image using send_image_file method
+                # Send custom graph image with minimal delay for navigation
                 success = self.whatsapp_service.send_image_file(user_id, graph_result['image_path'], success_msg)
+                
                 if success:
-                    # Wait for image to fully load before sending follow-up message
-                    logger.info(f"Custom graph image sent successfully to {user_id}, waiting for image to load...")
-                    time.sleep(8)  # Wait 8 seconds for image to fully load on user's device
+                    # Very short delay to ensure proper message ordering
+                    time.sleep(1)  # Reduced from 8 seconds to 1 second
                     
                     # Add navigation buttons
                     buttons = [
@@ -696,7 +705,7 @@ Wait {user_name} NerdX is processing your Graph...
                     ]
 
                     self.whatsapp_service.send_interactive_message(user_id, "🚀 What would you like to do next?", buttons)
-                    logger.info(f"Follow-up message sent to {user_id} after image load delay")
+                    logger.info(f"Custom graph image and navigation sent to {user_id} with minimal delay")
                 else:
                     logger.error("Failed to send custom graph to WhatsApp for user %s", user_id)
                     self.whatsapp_service.send_message(user_id, "❌ Graph created but failed to send. Please try again.")
@@ -721,12 +730,24 @@ Wait {user_name} NerdX is processing your Graph...
             if module_id not in self.graph_modules:
                 return
 
+            # Check if already generating graphs to prevent loops
+            session_data = get_user_session(user_id) or {}
+            if session_data.get('generating_samples', False):
+                logger.warning(f"Sample graphs already generating for user {user_id}")
+                self.whatsapp_service.send_message(user_id, "⏳ *Sample graphs are being generated* - Please wait for completion.")
+                return
+
             module_info = self.graph_modules[module_id]
             registration = get_user_registration(user_id)
             user_name = registration['name'] if registration else "Student"
 
+            # Mark as generating samples to prevent concurrent requests
+            session_data['generating_samples'] = True
+            session_data['session_type'] = 'graph_samples'
+            save_user_session(user_id, session_data)
+
             # Send initial message
-            message = f"""📊 **Sample Graphs** - {module_info['title']}
+            message = f"""📊 *Sample Graphs* - {module_info['title']}
 
 👤 Student: {user_name}
 📚 Topic: {module_info['description']}
@@ -761,6 +782,8 @@ Wait {user_name} NerdX is processing your Graph...
                     }
                 ]
 
+                # Send Linear Programming examples with controlled spacing to prevent chaining
+                successful_lp_graphs = 0
                 for i, lp_problem in enumerate(linear_programs, 1):
                     try:
                         # Create linear programming graph
@@ -773,7 +796,7 @@ Wait {user_name} NerdX is processing your Graph...
 
                         if graph_result and 'image_path' in graph_result:
                             # Send the sample linear programming graph
-                            caption = f"""📊 **ZIMSEC Linear Programming Example {i}/3**
+                            caption = f"""📊 *ZIMSEC Linear Programming Example {i}/3*
 
 🏭 Problem Type: {lp_problem['title']}
 📐 Constraints: {', '.join(lp_problem['constraints'])}
@@ -784,17 +807,22 @@ Wait {user_name} NerdX is processing your Graph...
 
 💡 This matches ZIMSEC exam format exactly!"""
 
-                            # Use send_image_file method which handles file paths properly
+                            # Use send_image_file method with proper error handling
                             success = self.whatsapp_service.send_image_file(user_id, graph_result['image_path'], caption)
-                            if not success:
+                            if success:
+                                successful_lp_graphs += 1
+                                logger.info(f"LP sample graph {i}/3 sent successfully to {user_id}")
+                                # Small delay between multiple images to prevent WhatsApp rate limiting
+                                if i < 3:  # Don't delay after the last image
+                                    time.sleep(2)  # 2-second spacing between images
+                            else:
                                 logger.error("Failed to send LP graph %i to WhatsApp for user %s", i, user_id)
-                                self.whatsapp_service.send_message(user_id, f"⚠️ Linear programming example {i} failed to send.")
 
                     except Exception as graph_error:
                         logger.error("Error generating LP sample graph %i for %s: %s", i, user_id, graph_error)
-                        self.whatsapp_service.send_message(user_id, f"⚠️ Linear programming example {i} failed to generate.")
             else:
-                # Standard handling for other modules
+                # Standard handling for other modules - send images with controlled spacing
+                successful_graphs = 0
                 for i, expression in enumerate(sample_expressions[:3], 1):
                     try:
                         # Create graph using the graph service
@@ -807,7 +835,7 @@ Wait {user_name} NerdX is processing your Graph...
 
                         if graph_result and 'image_path' in graph_result:
                             # Send the sample graph
-                            caption = f"""📊 **Sample Graph {i}/3**
+                            caption = f"""📊 *Sample Graph {i}/3*
 
 📈 Expression: {expression}
 📂 Topic: {module_info['title']}
@@ -815,15 +843,19 @@ Wait {user_name} NerdX is processing your Graph...
 
 💡 Study this graph pattern and characteristics!"""
 
-                            # Use send_image_file method which handles file paths properly
+                            # Use send_image_file method with proper error handling
                             success = self.whatsapp_service.send_image_file(user_id, graph_result['image_path'], caption)
-                            if not success:
+                            if success:
+                                successful_graphs += 1
+                                logger.info(f"Sample graph {i}/3 sent successfully to {user_id}")
+                                # Small delay between multiple images to prevent WhatsApp rate limiting
+                                if i < 3:  # Don't delay after the last image
+                                    time.sleep(2)  # Reduced from 8 seconds to 2 seconds
+                            else:
                                 logger.error("Failed to send sample graph %i to WhatsApp for user %s", i, user_id)
-                                self.whatsapp_service.send_message(user_id, f"⚠️ Sample graph {i} failed to send.")
 
                     except Exception as graph_error:
                         logger.error("Error generating sample graph %i for %s: %s", i, user_id, graph_error)
-                        self.whatsapp_service.send_message(user_id, f"⚠️ Sample graph {i} failed to generate.")
 
             # Send completion message with navigation buttons
             completion_msg = f"""✅ **Sample Graphs Complete!**
@@ -841,9 +873,26 @@ Wait {user_name} NerdX is processing your Graph...
             ]
 
             self.whatsapp_service.send_interactive_message(user_id, completion_msg, buttons)
+            
+            # Clear generating flag after completion
+            try:
+                session_data = get_user_session(user_id) or {}
+                session_data.pop('generating_samples', None)
+                save_user_session(user_id, session_data)
+                logger.info(f"Cleared generating_samples flag for {user_id}")
+            except Exception as cleanup_error:
+                logger.error(f"Failed to cleanup generating_samples flag for {user_id}: {cleanup_error}")
 
         except Exception as e:
             logger.error("Error showing sample graphs for %s: %s", user_id, e)
+            # Clear generating flag on error to prevent stuck state
+            try:
+                session_data = get_user_session(user_id) or {}
+                session_data.pop('generating_samples', None)
+                save_user_session(user_id, session_data)
+            except Exception as cleanup_error:
+                logger.error(f"Failed to cleanup generating_samples flag after error for {user_id}: {cleanup_error}")
+            
             self.whatsapp_service.send_message(user_id, "❌ Error loading sample graphs. Please try again.")
 
     def _extract_expression_from_question(self, question_text: str, module_id: str) -> str:
@@ -1156,17 +1205,16 @@ Ready for more learning?"""
                     {"text": "🔙 Back to Module", "callback_data": f"graph_module_{module_id}"}
                 ]
 
-                # Send graph image
+                # Send graph image with minimal delay for navigation
                 image_sent = self.whatsapp_service.send_image(user_id, graph_path, "Professional ZIMSEC Graph")
                 
                 if image_sent:
-                    # Wait for image to fully load before sending follow-up message
-                    logger.info(f"Graph creation image sent successfully to {user_id}, waiting for image to load...")
-                    time.sleep(8)  # Wait 8 seconds for image to fully load on user's device
+                    # Very short delay to ensure proper message ordering
+                    time.sleep(1)  # Reduced from 8 seconds to 1 second
 
                     # Then send interactive message
                     self.whatsapp_service.send_interactive_message(user_id, message, buttons)
-                    logger.info(f"Follow-up message sent to {user_id} after image load delay")
+                    logger.info(f"Graph creation image and navigation sent to {user_id} with minimal delay")
                 else:
                     # Image failed to send - send text fallback
                     logger.warning(f"Failed to send graph creation image to {user_id}")
