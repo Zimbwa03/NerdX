@@ -2629,7 +2629,7 @@ def handle_combined_exam_answer(user_id: str, user_answer: str):
     """Handle Combined Exam answer processing with comprehensive stats display"""
     try:
         from database.session_db import get_combined_exam_session, clear_user_session
-        from database.external_db import get_user_registration, get_user_stats, update_user_stats, get_user_credits
+        from database.external_db import get_user_registration, get_user_stats, update_user_stats, get_user_credits, add_xp, update_streak
 
         # Get exam session
         exam_session = get_combined_exam_session(user_id)
@@ -2642,7 +2642,6 @@ def handle_combined_exam_answer(user_id: str, user_answer: str):
         user_answer = user_answer.upper().strip()
 
         # Get user info
-        from database.external_db import get_user_registration
         registration = get_user_registration(user_id)
         user_name = registration['name'] if registration else "Student"
         user_stats = get_user_stats(user_id) or {}
@@ -2663,7 +2662,6 @@ def handle_combined_exam_answer(user_id: str, user_answer: str):
             new_streak = current_streak + 1
 
             # Update with XP and streak functions
-            from database.external_db import add_xp, update_streak
             add_xp(user_id, points_earned, 'combined_science_exam')
             update_streak(user_id)
 

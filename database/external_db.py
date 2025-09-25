@@ -442,17 +442,22 @@ def deduct_credits(user_id: str, amount: int, transaction_type: str, description
             except Exception as stats_error:
                 logger.warning(f"Failed to sync credits to user_stats: {stats_error}")
 
-            # Log the transaction
-            transaction = {
-                "user_id": user_id,
-                "transaction_type": transaction_type,
-                "credits_used": amount,
-                "credits_before": current_credits,
-                "credits_after": new_credits,
-                "description": description,
-                "created_at": "now()"
-            }
-            make_supabase_request("POST", "credit_transactions", transaction)
+            # Log the transaction (use try-catch to not fail credit deduction if logging fails)
+            try:
+                transaction = {
+                    "user_id": user_id,
+                    "transaction_type": transaction_type,
+                    "action": transaction_type,
+                    "credits_change": -amount,  # Negative for deduction
+                    "balance_before": current_credits,
+                    "balance_after": new_credits,
+                    "description": description,
+                    "transaction_date": datetime.now().isoformat()
+                }
+                make_supabase_request("POST", "credit_transactions", transaction, use_service_role=True)
+                logger.info(f"✅ Credit deduction transaction logged for {user_id}")
+            except Exception as tx_error:
+                logger.warning(f"⚠️ Credit deduction successful but transaction logging failed: {tx_error}")
 
             logger.info(f"Deducted {amount} credits from {user_id}. New balance: {new_credits}")
             return True

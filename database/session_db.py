@@ -100,7 +100,7 @@ def save_user_session(user_id: str, session_data: Dict) -> bool:
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             user_id,
-            session_data.get('question_data'),
+            json.dumps(session_data.get('question_data')) if session_data.get('question_data') else None,
             session_data.get('subject'),
             session_data.get('topic'),
             session_data.get('question_id'),
@@ -135,7 +135,7 @@ def get_user_session(user_id: str) -> Optional[Dict]:
         
         if row:
             session_data = {
-                'question_data': row[0],
+                'question_data': json.loads(row[0]) if row[0] else None,
                 'subject': row[1],
                 'topic': row[2],
                 'question_id': row[3],
