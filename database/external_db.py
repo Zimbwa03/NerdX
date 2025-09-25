@@ -1073,9 +1073,20 @@ def get_questions_by_category_and_topic(category, topic, limit=50):
     result = make_supabase_request("GET", "questions", filters=filters, limit=limit)
     return result if result else []
 
+def get_questions_by_subject_and_topic(subject, topic, limit=50):
+    """Get questions from database by subject and topic for Combined Science"""
+    filters = {"subject": f"eq.{subject}", "topic": f"eq.{topic}"}
+    result = make_supabase_request("GET", "questions", filters=filters, limit=limit)
+    return result if result else []
+
 def count_questions_by_category_and_topic(category, topic):
     """Count questions in database by category and topic"""
     questions = get_questions_by_category_and_topic(category, topic)
+    return len(questions) if questions else 0
+
+def count_questions_by_subject_and_topic(subject, topic):
+    """Count questions in database by subject and topic for Combined Science"""
+    questions = get_questions_by_subject_and_topic(subject, topic)
     return len(questions) if questions else 0
 
 def create_pending_payment(user_id, amount_usd, credits_to_add):

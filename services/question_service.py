@@ -6,7 +6,8 @@ from constants import TOPICS, DIFFICULTY_LEVELS, POINT_VALUES
 from services.ai_service import AIService
 from database.external_db import (
     get_random_mcq_question, save_ai_question_to_database,
-    get_questions_by_category_and_topic, count_questions_by_category_and_topic
+    get_questions_by_category_and_topic, count_questions_by_category_and_topic,
+    get_questions_by_subject_and_topic, count_questions_by_subject_and_topic
 )
 
 logger = logging.getLogger(__name__)
@@ -63,18 +64,31 @@ class QuestionService:
     def _get_database_question(self, user_id: str, subject: str, topic: str, difficulty: str) -> Optional[Dict]:
         """Get a question from the database"""
         try:
-            # Check how many questions are available
-            question_count = count_questions_by_category_and_topic(subject, topic)
-            if question_count == 0:
-                logger.info(f"No database questions available for {subject}/{topic}")
-                return None
+            # Use different query functions based on subject type
+            if subject in ['Biology', 'Chemistry', 'Physics']:
+                # For Combined Science subjects, use subject and topic filtering
+                question_count = count_questions_by_subject_and_topic(subject, topic)
+                if question_count == 0:
+                    logger.info(f"No database questions available for {subject}/{topic}")
+                    return None
+                
+                # Get a pool of questions that match subject/topic
+                questions = get_questions_by_subject_and_topic(subject, topic, limit=50)
+                logger.info(f"Retrieved {len(questions)} {subject} questions for topic '{topic}' from database")
+            else:
+                # For other subjects, use category and topic filtering
+                question_count = count_questions_by_category_and_topic(subject, topic)
+                if question_count == 0:
+                    logger.info(f"No database questions available for {subject}/{topic}")
+                    return None
+                
+                # Get a pool of questions that match subject/topic
+                questions = get_questions_by_category_and_topic(subject, topic, limit=50)
             
-            # Get a pool of questions that match subject/topic
-            questions = get_questions_by_category_and_topic(subject, topic, limit=50)
-            
-            # Filter out recently asked questions
+            # Filter out recently asked questions (shorter window for Combined Science to enable more practice)
             from database.session_db import get_recent_question_hashes
-            recent_hashes = get_recent_question_hashes(user_id, days=7)
+            recent_days = 1 if subject in ['Biology', 'Chemistry', 'Physics'] else 7  # Shorter window for Combined Science
+            recent_hashes = get_recent_question_hashes(user_id, days=recent_days)
             
             available_questions = []
             for question in questions:
@@ -87,7 +101,7 @@ class QuestionService:
                 logger.info(f"All questions recently seen for {subject}/{topic}; allowing reuse for continued practice")
                 available_questions = questions
             
-            # Select question based on difficulty (DB field can be 'difficulty_level' or 'difficulty')
+            # Select question based on difficulty (DB field is 'difficulty_level' in Supabase)
             def _get_db_difficulty(row: Dict) -> Optional[str]:
                 return row.get('difficulty_level') or row.get('difficulty')
 
@@ -124,7 +138,7 @@ class QuestionService:
                 return {
                     'question': question['question'],
                     'options': options_parsed,
-                    'correct_answer': question.get('correct_answer') or question.get('answer'),
+                    'correct_answer': question.get('answer') or question.get('correct_answer'),  # Use 'answer' field from Supabase
                     'explanation': question.get('explanation', ''),
                     'solution': question.get('solution', ''),
                     'points': question.get('points', POINT_VALUES.get(difficulty, POINT_VALUES['medium'])),

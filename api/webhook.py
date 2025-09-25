@@ -1106,6 +1106,13 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             handle_ordinary_mathematics_menu(user_id)
         elif selection_id == 'subject_ordinary_english':
             english_handler.handle_english_menu(user_id)
+        # Handle Combined Science subject topic selections
+        elif selection_id == 'science_Biology':
+            handle_combined_science_topic_menu(user_id, 'Biology')
+        elif selection_id == 'science_Chemistry':
+            handle_combined_science_topic_menu(user_id, 'Chemistry')
+        elif selection_id == 'science_Physics':
+            handle_combined_science_topic_menu(user_id, 'Physics')
         elif selection_id.startswith('subject_ordinary_'):
             subject_name = selection_id.replace('subject_ordinary_', '').replace('_', ' ').title()
             if subject_name == 'Combined Science':
@@ -1471,14 +1478,22 @@ Click the link above to join our official WhatsApp channel!"""
                 subject = parts[2].title()
                 # Reconstruct topic properly - it may contain underscores
                 topic_parts = parts[3:-1] if len(parts) > 5 else [parts[3]]
-                topic = ' '.join(topic_parts).replace('_', ' ')
+                topic_raw = ' '.join(topic_parts).replace('_', ' ')
                 difficulty = parts[-1]  # Last part is always difficulty
 
-                logger.info(f"Next question request: subject={subject}, topic={topic}, difficulty={difficulty}")
+                # Find the exact topic match from TOPICS to preserve original capitalization
+                topic = topic_raw
+                if subject in TOPICS:
+                    for original_topic in TOPICS[subject]:
+                        if original_topic.lower() == topic_raw.lower():
+                            topic = original_topic
+                            break
+
+                logger.info(f"Next question request: subject={subject}, topic='{topic}', difficulty={difficulty}")
 
                 # Route Combined Science next questions to the correct handler
                 if subject.lower() in ['biology', 'chemistry', 'physics']:
-                    logger.info(f"Routing Combined Science {subject} next question to proper handler")
+                    logger.info(f"Routing Combined Science {subject} next question for topic '{topic}' to proper handler")
                     handle_combined_science_question(user_id, subject, topic, difficulty)
                 else:
                     generate_and_send_question(user_id, subject, topic, difficulty, user_name)
@@ -1505,16 +1520,7 @@ Click the link above to join our official WhatsApp channel!"""
                 logger.warning(f"Invalid callback_data for prev_science_: {selection_id}")
                 whatsapp_service.send_message(user_id, "❌ Error navigating questions.")
 
-        # Handle Combined Science topical next question buttons
-        elif selection_id.startswith('combined_science_'):
-            subject = selection_id.replace('combined_science_', '').title()
-            if subject in ['Biology', 'Chemistry', 'Physics']:
-                logger.info(f"Generating new {subject} question via next button for user {user_id}")
-                handle_combined_science_question(user_id, subject)
-            else:
-                logger.warning(f"Invalid combined science subject: {subject}")
-                whatsapp_service.send_message(user_id, "❌ Invalid subject selection.")
-            return jsonify({'status': 'success'})
+        # Combined Science topical next questions are now handled by 'next_science_' above
 
         # Handle Combined Science answers
         elif selection_id.startswith('combined_answer_'):
@@ -3088,6 +3094,85 @@ def handle_science_answer(user_id: str, selected_answer: str, session_key: str):
         logger.error(f"Error handling science answer for {user_id}: {e}", exc_info=True)
         whatsapp_service.send_message(user_id, "❌ Error processing your answer. Please try again.")
 
+def handle_combined_science_topic_menu(user_id: str, subject: str):
+    """Show topic selection menu for specific Combined Science subject (Biology, Chemistry, Physics)"""
+    try:
+        from database.external_db import get_user_registration, get_user_stats, get_user_credits
+        
+        # Get user details
+        registration = get_user_registration(user_id)
+        user_name = registration.get('name', 'Student') if registration else 'Student'
+        current_credits = get_user_credits(user_id)
+        user_stats = get_user_stats(user_id) or {'level': 1, 'xp_points': 0, 'streak': 0}
+        current_level = user_stats.get('level', 1)
+        
+        # Get subject icon
+        subject_icons = {
+            'Biology': '🧬',
+            'Chemistry': '⚗️', 
+            'Physics': '⚡'
+        }
+        icon = subject_icons.get(subject, '🔬')
+        
+        # Get topics for the subject
+        topics = TOPICS.get(subject, [])
+        if not topics:
+            whatsapp_service.send_message(user_id, f"❌ No topics available for {subject}.")
+            return
+        
+        # Create header message
+        text = f"{icon} *{subject} Topics Menu* {icon}\n\n"
+        text += f"👤 Hey {user_name}! Ready to master {subject}?\n\n"
+        text += f"📊 **Your Progress:**\n"
+        text += f"💳 Credits: **{current_credits}**\n"
+        text += f"⭐ Level: **{current_level}**\n\n"
+        text += f"🎯 **{subject} Learning Benefits:**\n"
+        text += f"• Database-first questions from ZIMSEC syllabus\n"
+        text += f"• AI fallback for continuous learning\n"
+        text += f"• Topic-specific questions (no mixing!)\n"
+        text += f"• 5-10 XP per correct answer\n\n"
+        text += f"📚 *Select a {subject} topic to practice:*"
+        
+        # Create buttons for topics (max 3 per message for WhatsApp compatibility)
+        buttons = []
+        for topic in topics:
+            callback_data = f"topic_{subject}_{topic.replace(' ', '_')}"
+            buttons.append({
+                "text": f"📖 {topic}",
+                "callback_data": callback_data
+            })
+        
+        # Add back button
+        buttons.append({
+            "text": "🔙 Back to Subjects", 
+            "callback_data": "subject_ordinary_combined_science"
+        })
+        
+        # Send topics in groups of 3
+        if len(buttons) <= 4:  # If 4 or fewer buttons, send as one message
+            whatsapp_service.send_interactive_message(user_id, text, buttons)
+        else:
+            # Send first batch
+            first_batch = buttons[:3]
+            whatsapp_service.send_interactive_message(user_id, text, first_batch)
+            
+            # Send remaining topics
+            remaining_topics = buttons[3:-1]  # Exclude back button
+            for i in range(0, len(remaining_topics), 3):
+                batch = remaining_topics[i:i+3]
+                batch_text = f"{icon} *{subject} Topics (continued):*"
+                whatsapp_service.send_interactive_message(user_id, batch_text, batch)
+            
+            # Send back button separately
+            back_button = [buttons[-1]]
+            whatsapp_service.send_interactive_message(user_id, f"📍 *Navigation:*", back_button)
+        
+        logger.info(f"✅ Displayed {subject} topics menu for user {user_id}")
+        
+    except Exception as e:
+        logger.error(f"Error handling {subject} topics menu for {user_id}: {e}", exc_info=True)
+        whatsapp_service.send_message(user_id, f"❌ Error loading {subject} topics. Please try again.")
+
 def handle_combined_science_topic_selection(user_id: str, subject: str, topic: str):
     """Handle Combined Science topic selection with enhanced difficulty options"""
     try:
@@ -3188,7 +3273,7 @@ def handle_combined_science_question(user_id: str, subject: str, topic: str, dif
             return
 
         # Store question in session
-        from database.session_db import save_user_session
+        from database.session_db import save_user_session, add_question_to_history
         save_user_session(user_id, {
             'question_data': question_data,
             'subject': subject,
@@ -3196,6 +3281,11 @@ def handle_combined_science_question(user_id: str, subject: str, topic: str, dif
             'difficulty': difficulty,
             'session_type': 'combined_science'
         })
+
+        # Track question history to avoid repeats and enable random selection
+        import hashlib
+        question_hash = hashlib.md5(question_data['question'].encode()).hexdigest()
+        add_question_to_history(user_id, question_hash, topic, difficulty)
 
         # Deduct credits after successful question generation
         deduct_success = deduct_credits(user_id, required_credits, 'combined_science_topical', f'{subject} topical question - {topic}')
@@ -3396,9 +3486,10 @@ def handle_combined_science_answer(user_id: str, subject: str, user_answer: str)
         if level_up_bonus:
             message += f"\n{level_up_bonus}\n"
 
-        # Enhanced navigation buttons with gamification
+        # Enhanced navigation buttons with gamification - Include topic and difficulty for next question
+        topic_safe = topic.replace(' ', '_')  # Make topic safe for callback data
         buttons = [
-            {"text": f"➡️ Next {subject} (+{points} XP)", "callback_data": f"combined_science_{subject.lower()}"},
+            {"text": f"➡️ Next {subject} (+{points} XP)", "callback_data": f"next_science_{subject.lower()}_{topic_safe}_{difficulty}"},
             {"text": "📚 Change Subject", "callback_data": "subject_ordinary_combined_science"},
             {"text": "💰 Buy More Credits", "callback_data": "credit_store"},
             {"text": "🏠 Main Menu", "callback_data": "main_menu"}

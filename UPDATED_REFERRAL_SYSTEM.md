@@ -94,7 +94,7 @@ Hello! I want to join NerdX using referral code: ABC12345
 ```python
 def generate_whatsapp_referral_link(self, referral_code: str) -> str:
     """Generate WhatsApp referral link that automatically opens chat"""
-    bot_number = "263779779967"
+    bot_number = "263788577388"
     referral_message = f"Hello! I want to join NerdX using referral code: {referral_code}"
     encoded_message = urllib.parse.quote(referral_message)
     whatsapp_link = f"https://wa.me/{bot_number}?text={encoded_message}"
