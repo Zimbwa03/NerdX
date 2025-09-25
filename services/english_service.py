@@ -9,8 +9,14 @@ import logging
 import random
 import os
 from typing import Optional, Dict, List
-from google import genai
-from google.genai import types
+try:
+    import google.generativeai as genai
+    from google.generativeai import types
+    GENAI_AVAILABLE = True
+except ImportError:
+    genai = None
+    types = None
+    GENAI_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -22,13 +28,16 @@ class EnglishService:
 
         # Initialize Gemini AI
         try:
-            api_key = os.getenv('GEMINI_API_KEY')
-            if api_key:
-                self.client = genai.Client(api_key=api_key)
-                self._is_configured = True
-                logger.info("Enhanced ZIMSEC English Service initialized with Gemini AI")
+            if GENAI_AVAILABLE:
+                api_key = os.getenv('GEMINI_API_KEY')
+                if api_key and genai:
+                    self.client = genai.Client(api_key=api_key)
+                    self._is_configured = True
+                    logger.info("Enhanced ZIMSEC English Service initialized with Gemini AI")
+                else:
+                    logger.warning("GEMINI_API_KEY not found - using fallback methods")
             else:
-                logger.warning("GEMINI_API_KEY not found - using fallback methods")
+                logger.warning("Google Generative AI not available - using fallback methods")
         except Exception as e:
             logger.error(f"Error initializing English service: {e}")
 

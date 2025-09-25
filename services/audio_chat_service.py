@@ -37,11 +37,13 @@ logger = logging.getLogger(__name__)
 
 # Import Google Gemini AI for audio generation
 try:
-    from google import genai
-    from google.genai import types
+    import google.generativeai as genai
+    from google.generativeai import types
+    GENAI_AVAILABLE = True
 except ImportError:
     genai = None
     types = None
+    GENAI_AVAILABLE = False
 
 # Environment variables
 DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY')
