@@ -150,7 +150,8 @@ class ExamMathematicsHandler:
             save_user_session(user_id, session_data)
             
             if question_type == 'ai':
-                self._load_ai_question(user_id, user_name, question_count, fallback_to_db=True)
+                # Generate AI question without database fallback to prevent double questions
+                self._load_ai_question(user_id, user_name, question_count)
             else:
                 self._load_database_question(user_id, user_name, question_count)
                 
@@ -229,10 +230,10 @@ class ExamMathematicsHandler:
             
         except Exception as e:
             logger.error(f"Error loading database question for {user_id}: {e}")
-            # Fallback to AI question without database fallback (to avoid infinite loop)
-            self._load_ai_question(user_id, user_name, question_count, fallback_to_db=False)
+            # Send error message instead of attempting AI fallback to prevent double questions
+            self.whatsapp_service.send_message(user_id, "❌ Error loading database question. Please try again.")
 
-    def _load_ai_question(self, user_id: str, user_name: str, question_count: int, fallback_to_db: bool = False):
+    def _load_ai_question(self, user_id: str, user_name: str, question_count: int):
         """Generate an AI question from any random topic"""
         try:
             # Select random topic and difficulty
@@ -255,43 +256,38 @@ class ExamMathematicsHandler:
 
             self.whatsapp_service.send_message(user_id, generating_message)
             
-            # Check if AI service is available and handle fallback
+            # Check if AI service is available and generate question
+            question_data = None
+            
             if not hasattr(self.question_generator, 'api_key') or not self.question_generator.api_key:
                 logger.error(f"AI API key not configured for {user_id}")
-                if fallback_to_db:
-                    self.whatsapp_service.send_message(user_id, "⚠️ AI service not configured. Loading database question...")
-                    self._load_database_question(user_id, user_name, question_count)
-                    return
-                else:
-                    self.whatsapp_service.send_message(user_id, "❌ AI service not available. Please try again.")
-                    return
-            
-            # Generate question using AI with enhanced error handling
-            logger.info(f"🤖 Attempting AI generation for {user_id}: {topic}/{difficulty}")
-            
-            try:
-                question_data = self.question_generator.generate_question('Mathematics', topic, difficulty, user_id)
+                # Use fallback AI question instead of switching to database
+                question_data = self._create_fallback_ai_question(topic, difficulty)
+                logger.info(f"Using fallback AI question for {user_id} - API not configured")
+            else:
+                # Generate question using AI with enhanced error handling
+                logger.info(f"🤖 Attempting AI generation for {user_id}: {topic}/{difficulty}")
                 
-                if not question_data:
-                    logger.error(f"AI generation returned None for {user_id}: {topic}/{difficulty}")
-                    if fallback_to_db:
-                        self.whatsapp_service.send_message(user_id, "⚠️ AI generation failed. Loading database question instead...")
-                        # Don't increment AI counter on failure, try database instead
-                        self._load_database_question(user_id, user_name, question_count)
-                        return
-                    else:
-                        self.whatsapp_service.send_message(user_id, "❌ Error generating AI question. Please try again.")
-                        return
+                try:
+                    question_data = self.question_generator.generate_question('Mathematics', topic, difficulty, user_id)
+                    
+                    if not question_data:
+                        logger.error(f"AI generation returned None for {user_id}: {topic}/{difficulty}")
+                        # Instead of fallback, provide a simple AI fallback question to maintain exam flow
+                        question_data = self._create_fallback_ai_question(topic, difficulty)
+                        logger.info(f"Using fallback AI question for {user_id}")
+                
+                except Exception as ai_error:
+                    logger.error(f"Exception during AI generation for {user_id}: {ai_error}")
+                    # Provide a simple AI fallback question instead of switching to database
+                    question_data = self._create_fallback_ai_question(topic, difficulty)
+                    logger.info(f"Using emergency fallback AI question for {user_id} due to AI error")
             
-            except Exception as ai_error:
-                logger.error(f"Exception during AI generation for {user_id}: {ai_error}")
-                if fallback_to_db:
-                    self.whatsapp_service.send_message(user_id, "⚠️ AI service temporarily unavailable. Loading database question instead...")
-                    self._load_database_question(user_id, user_name, question_count)
-                    return
-                else:
-                    self.whatsapp_service.send_message(user_id, "❌ AI question generation failed. Please try again.")
-                    return
+            # Ensure we have a question before proceeding
+            if not question_data:
+                logger.error(f"No question data available for {user_id} - this should not happen")
+                self.whatsapp_service.send_message(user_id, "❌ Error generating question. Please try again.")
+                return
             
             logger.info(f"✅ Successfully generated AI question for {user_id}: {topic}/{difficulty}")
             
@@ -343,12 +339,8 @@ class ExamMathematicsHandler:
             
         except Exception as e:
             logger.error(f"Exception in AI question generation for {user_id}: {e}")
-            if fallback_to_db:
-                self.whatsapp_service.send_message(user_id, "❌ AI service temporarily unavailable. Loading database question...")
-                # Fallback to database question without incrementing AI counter
-                self._load_database_question(user_id, user_name, question_count)
-            else:
-                self.whatsapp_service.send_message(user_id, "❌ AI question generation failed. Please try again.")
+            # Always send error message instead of attempting database fallback to prevent double questions
+            self.whatsapp_service.send_message(user_id, "❌ AI question generation failed. Please try again.")
 
     def handle_show_database_solution(self, user_id: str, question_id: str):
         """Show solution for database question with images"""
@@ -506,3 +498,55 @@ class ExamMathematicsHandler:
         except Exception as e:
             logger.error(f"Error showing AI solution for {user_id}: {e}")
             self.whatsapp_service.send_message(user_id, "❌ Error loading solution. Please try again.")
+
+    def _create_fallback_ai_question(self, topic: str, difficulty: str) -> Dict:
+        """Create a simple fallback AI question when generation fails"""
+        import random
+        
+        # Simple fallback questions by topic
+        fallback_questions = {
+            'Algebra': [
+                {
+                    'question': 'Solve for x: 3x + 7 = 22',
+                    'answer': 'x = 5',
+                    'solution': 'Step 1: Subtract 7 from both sides\n3x + 7 - 7 = 22 - 7\n3x = 15\n\nStep 2: Divide both sides by 3\n3x ÷ 3 = 15 ÷ 3\nx = 5',
+                    'points': 10
+                },
+                {
+                    'question': 'Solve for y: 2y - 5 = 13',
+                    'answer': 'y = 9',
+                    'solution': 'Step 1: Add 5 to both sides\n2y - 5 + 5 = 13 + 5\n2y = 18\n\nStep 2: Divide both sides by 2\n2y ÷ 2 = 18 ÷ 2\ny = 9',
+                    'points': 10
+                }
+            ],
+            'Geometry': [
+                {
+                    'question': 'Find the area of a rectangle with length 8cm and width 5cm.',
+                    'answer': '40 cm²',
+                    'solution': 'Area of rectangle = length × width\nArea = 8cm × 5cm = 40 cm²',
+                    'points': 10
+                }
+            ],
+            'Statistics': [
+                {
+                    'question': 'Find the mean of: 4, 6, 8, 10, 12',
+                    'answer': '8',
+                    'solution': 'Mean = Sum of values ÷ Number of values\nSum = 4 + 6 + 8 + 10 + 12 = 40\nMean = 40 ÷ 5 = 8',
+                    'points': 10
+                }
+            ]
+        }
+        
+        # Get questions for the topic, or use Algebra as default
+        topic_questions = fallback_questions.get(topic, fallback_questions['Algebra'])
+        selected_question = random.choice(topic_questions)
+        
+        # Add metadata
+        selected_question.update({
+            'topic': topic,
+            'difficulty': difficulty,
+            'source': 'fallback_ai',
+            'subject': 'Mathematics'
+        })
+        
+        return selected_question
