@@ -1306,6 +1306,13 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             handle_level_menu(user_id, 'advanced')
         elif selection_id == 'main_menu' or selection_id == 'back_to_menu':
             send_main_menu(user_id)
+        elif selection_id == 'clear_session' or selection_id == 'reset_session':
+            # Allow users to manually clear stuck sessions
+            from database.session_db import clear_user_session
+            clear_user_session(user_id)
+            logger.info(f"User {user_id} manually cleared their session")
+            whatsapp_service.send_message(user_id, "✅ Session cleared! You can now start a new question.")
+            send_main_menu(user_id)
         # Registration completion button handlers
         elif selection_id == 'join_channel':
             # Send WhatsApp channel link
@@ -1384,19 +1391,41 @@ Click the link above to join our official WhatsApp channel!"""
                 difficulty = parts[-1]  # Last part is difficulty
                 topic_key = '_'.join(parts[:-1])  # Everything except last part is topic
 
-                # Only check for active generation session (not question session)
-                # This allows "Next Question" to work after completing a question
-                from database.session_db import get_user_session
+                # Check for active generation session with timeout mechanism
+                from database.session_db import get_user_session, clear_user_session
+                from datetime import datetime, timedelta
                 existing_session = get_user_session(user_id)
                 if existing_session:
                     session_type = existing_session.get('session_type')
                     if session_type == 'math_generating':
-                        # Only prevent during active generation, not after completion
-                        whatsapp_service.send_message(
-                            user_id,
-                            "⏳ Question is being generated. Please wait a moment."
-                        )
-                        return jsonify({'status': 'success', 'message': 'Generation in progress'})
+                        # Check if session is older than 2 minutes (stuck session)
+                        session_created = existing_session.get('created_at')
+                        if session_created:
+                            try:
+                                from datetime import datetime
+                                if isinstance(session_created, str):
+                                    created_time = datetime.fromisoformat(session_created.replace('Z', '+00:00'))
+                                else:
+                                    created_time = session_created
+                                
+                                # If session is older than 2 minutes, clear it (stuck session)
+                                if datetime.now() - created_time.replace(tzinfo=None) > timedelta(minutes=2):
+                                    logger.warning(f"Clearing stuck math_generating session for {user_id} (older than 2 minutes)")
+                                    clear_user_session(user_id)
+                                else:
+                                    # Session is recent, still generating
+                                    whatsapp_service.send_message(
+                                        user_id,
+                                        "⏳ Question is being generated. Please wait a moment."
+                                    )
+                                    return jsonify({'status': 'success', 'message': 'Generation in progress'})
+                            except Exception as time_error:
+                                logger.warning(f"Error checking session time, clearing session: {time_error}")
+                                clear_user_session(user_id)
+                        else:
+                            # No timestamp, clear session
+                            logger.warning(f"Clearing math_generating session without timestamp for {user_id}")
+                            clear_user_session(user_id)
 
                 mathematics_handler.handle_question_generation(user_id, topic_key, difficulty)
             else:

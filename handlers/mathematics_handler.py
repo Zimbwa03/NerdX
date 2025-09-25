@@ -131,7 +131,8 @@ class MathematicsHandler:
                 'subject': "Mathematics",
                 'topic': formatted_topic,
                 'difficulty': difficulty,
-                'generating': True
+                'generating': True,
+                'created_at': datetime.now().isoformat()  # Add timestamp for timeout detection
             }
             save_user_session(user_id, temp_session)
             
@@ -139,6 +140,7 @@ class MathematicsHandler:
             logger.info(f"Generating math question: Mathematics/{formatted_topic}/{difficulty}")
             question_data = None
             
+            # Use try-finally to ensure session cleanup even on errors
             try:
                 # Small delay to prevent message throttling conflicts with previous messages
                 import time
@@ -225,6 +227,14 @@ class MathematicsHandler:
         except Exception as e:
             logger.error(f"Error generating math question for {user_id}: {e}")
             self.whatsapp_service.send_message(user_id, "❌ Error generating question. Please try again.")
+            
+            # Clear stuck session on error to prevent blocking future requests
+            try:
+                from database.session_db import clear_user_session
+                clear_user_session(user_id)
+                logger.info(f"Cleared stuck math_generating session for {user_id} after error")
+            except Exception as clear_error:
+                logger.error(f"Error clearing stuck session for {user_id}: {clear_error}")
 
     def handle_math_answer(self, user_id: str, user_answer: str):
         """Handle mathematics answer submission"""
