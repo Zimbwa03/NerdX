@@ -3,7 +3,7 @@ import json
 import logging
 import requests
 import time
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 from services.message_throttle import message_throttle
 from services.whatsapp_template_service import get_template_service
 from services.content_variation_engine import content_variation_engine
