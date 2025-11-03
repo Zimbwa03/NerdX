@@ -279,12 +279,11 @@ def restore_tables():
         except Exception as e:
             logger.info(f"   ℹ️  Admin user already exists: {e}")
         
-        # Insert default packages
+        # Insert default packages (aligned with bot pricing)
         packages = [
-            ('Starter Pack', 'Get started with NerdX', 100, 5.00),
-            ('Student Pack', 'Perfect for students', 250, 10.00),
-            ('Premium Pack', 'Best value for money', 500, 18.00),
-            ('Ultimate Pack', 'Maximum credits', 1000, 30.00)
+            ('POCKET PACKAGE', 'Perfect for quick help', 50, 1.00),
+            ('MINI PACKAGE', 'Extended trial value', 120, 2.00),
+            ('QUICK PACKAGE', 'Most popular choice', 350, 5.00)
         ]
         
         for name, desc, credits, price in packages:

@@ -7,6 +7,9 @@ from typing import Dict, Optional
 from collections import defaultdict
 from flask import Blueprint, request, jsonify
 from services.whatsapp_service import WhatsAppService
+from services.whatsapp_template_service import get_template_service
+from services.content_variation_engine import content_variation_engine
+from services.quality_monitor import quality_monitor
 from services.user_service import UserService
 from services.question_service import QuestionService
 from services.payment_service import PaymentService
@@ -424,9 +427,16 @@ def database_diagnostics():
 def handle_text_message(user_id: str, message_text: str):
     """Handle text messages from users"""
     try:
-        # Track user interaction
+        # Track user interaction for enterprise scale monitoring
         session_id = f"{user_id}_{int(time.time())}"
         analytics_tracker.track_user_session_start(user_id, session_id, {"platform": "whatsapp"})
+        
+        # Track engagement for scale protection
+        try:
+            from services.engagement_monitor import engagement_monitor
+            engagement_monitor.track_message_received(user_id, message_text)
+        except ImportError:
+            pass
 
         # Sanitize input
         message_text = validators.sanitize_text_input(message_text)
@@ -545,6 +555,28 @@ def handle_text_message(user_id: str, message_text: str):
                 "✅ Your rate limits have been reset. You can now use the bot normally."
             )
             return
+        elif command in ['support', 'help me', 'contact']:
+            send_support_info(user_id)
+            return
+        elif command in ['privacy', 'privacy policy', 'data']:
+            send_privacy_policy(user_id)
+            return
+        elif command in ['stop', 'unsubscribe', 'opt out', 'quit']:
+            handle_unsubscribe_request(user_id)
+            return
+        elif command in ['start', 'subscribe', 'resubscribe', 'yes']:
+            try:
+                from database.external_db import set_user_subscription
+                set_user_subscription(user_id, True)
+            except Exception as _:
+                pass
+            # Send confirmation template if available
+            try:
+                whatsapp_service.send_template_message(user_id, 'nerdx_resubscribe_confirmation', {})
+            except Exception:
+                whatsapp_service.send_message(user_id, "You are now subscribed to NerdX study updates. Reply STOP to unsubscribe anytime.")
+            send_main_menu(user_id)
+            return
         else:
             # If no active session and command is not recognized, show main menu
             send_main_menu(user_id)
@@ -554,34 +586,76 @@ def handle_text_message(user_id: str, message_text: str):
         whatsapp_service.send_message(user_id, "Sorry, an error occurred. Please try again.")
 
 def handle_new_user(user_id: str, message_text: str):
-    """Handle new user registration - STRICT SECURITY ENFORCEMENT"""
+    """Handle new user with proper WhatsApp Business Policy consent flow"""
     try:
-        logger.info(f"🆕 NEW USER: {user_id} - Starting mandatory registration")
+        logger.info(f"🆕 NEW USER: {user_id} - Requesting consent first (WhatsApp Policy Compliant)")
 
+        # Check if user is responding to consent request
+        if message_text.lower().strip() in ['yes', 'y', 'agree', 'accept', 'ok', 'consent']:
+            logger.info(f"✅ User {user_id} provided consent, proceeding to registration")
+            start_registration_flow(user_id, message_text)
+            return
+        elif message_text.lower().strip() in ['no', 'n', 'decline', 'refuse', 'stop', 'unsubscribe']:
+            handle_opt_out(user_id)
+            return
+
+        # First-time interaction - Request explicit consent (WhatsApp Policy Requirement)
+        consent_message = """🎓 *Welcome to NerdX Quiz Bot!*
+
+📚 *Your ZIMSEC Study Companion*
+• Biology, Chemistry, Physics & Math questions
+• AI-powered personalized learning
+• Track progress & earn achievements
+
+⚖️ *CONSENT REQUIRED*
+To comply with WhatsApp Business Policy, we need your explicit consent to:
+• Send educational content and quiz questions
+• Process your learning progress data
+• Provide study materials and notifications
+
+🏢 *Business Info:*
+• Company: Neuronet AI Solutions Pvt Ltd
+• Registration: 51491A0272025
+• Phone: +263 5494594
+• Email: info@neuronet.co.zw
+• Website: neuronet.co.zw
+• CEO: Ngonidzashe Zimbwa
+
+✅ *Reply "YES" to consent and start learning*
+❌ *Reply "NO" to decline*
+
+📞 *Need help?* Reply 'SUPPORT'
+🛑 *To stop messages:* Reply 'STOP'"""
+
+        whatsapp_service.send_message(user_id, consent_message)
+        logger.info(f"📋 Consent request sent to {user_id}")
+
+    except Exception as e:
+        logger.error(f"Error handling new user {user_id}: {e}")
+        whatsapp_service.send_message(user_id, "❌ Sorry, there was an error. Please try again or reply 'SUPPORT' for help.")
+
+
+def start_registration_flow(user_id: str, message_text: str):
+    """Start registration flow after consent is obtained"""
+    try:
         # Check if message contains referral code
         referral_code = None
         if "referred me to you with this code" in message_text.lower() or "code" in message_text.lower():
             # Extract referral code from message
             import re
-
             # Look for any 6-character sequence starting with N (most reliable approach)
             n_codes = re.findall(r'N[A-Z0-9]{5}', message_text.upper())
             if n_codes:
                 referral_code = n_codes[0]
                 logger.info(f"🔗 Referral code detected: {referral_code} for user {user_id}")
 
-        # Send enhanced welcome message with security notice
-        welcome_msg = "🚨 *SECURITY NOTICE* 🚨\n\n"
-        welcome_msg += "Welcome to *NerdX Quiz Bot*!\n\n"
-        welcome_msg += "🔒 *Registration is MANDATORY*\n"
-        welcome_msg += "📋 *No access without registration*\n"
-        welcome_msg += "🆔 *Secure your NerdX account*\n\n"
-        welcome_msg += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        # Send registration welcome message
+        welcome_msg = "✅ *Thank you for your consent!*\n\n"
+        welcome_msg += "🎯 Let's create your secure NerdX account\n\n"
 
         if referral_code:
             welcome_msg += f"🔗 *Referral Code Detected*: {referral_code}\n\n"
 
-        welcome_msg += "Let's get you registered securely!\n\n"
         welcome_msg += "Please enter your *first name*:"
 
         whatsapp_service.send_message(user_id, welcome_msg)
@@ -605,10 +679,169 @@ def handle_new_user(user_id: str, message_text: str):
             logger.info(f"✅ Registration flow initiated for {user_id}")
 
     except Exception as e:
-        logger.error(f"Error handling new user {user_id}: {e}", exc_info=True)
-        whatsapp_service.send_message(user_id, 
-            "🔒 *System Error*\n\n"
-            "Registration system temporarily unavailable. Please try again in a moment.")
+        logger.error(f"Error starting registration for {user_id}: {e}")
+
+
+def handle_opt_out(user_id: str):
+    """Handle user opt-out/unsubscribe requests (WhatsApp Policy Compliance)"""
+    try:
+        logger.info(f"❌ User {user_id} declined consent or requested opt-out")
+        
+        opt_out_message = """❌ *We understand and respect your choice*
+
+🛑 *You have successfully opted out*
+
+You will not receive further messages from NerdX Quiz Bot unless you:
+• Send us a new message to restart
+• Explicitly request to rejoin our service
+
+📞 *If you change your mind:*
+Simply send "START" or "HI" anytime to begin again
+
+🏢 *Business Contact:*
+Neuronet AI Solutions Pvt Ltd
+Phone: +263 5494594
+Email: info@neuronet.co.zw
+Website: neuronet.co.zw
+
+Thank you for considering NerdX! 🎓"""
+
+        whatsapp_service.send_message(user_id, opt_out_message)
+        
+        # TODO: Store opt-out status in database for compliance tracking
+        # This ensures we don't message them again unless they explicitly restart
+        
+        logger.info(f"✅ Opt-out handled successfully for {user_id}")
+        
+    except Exception as e:
+        logger.error(f"Error handling opt-out for {user_id}: {e}")
+
+
+def send_support_info(user_id: str):
+    """Send business support information (WhatsApp Policy Compliance)"""
+    try:
+        support_message = """📞 *Neuronet AI Solutions - NerdX Support*
+
+🏢 *Business Information:*
+• Company: Neuronet AI Solutions Pvt Ltd
+• Registration: 51491A0272025  
+• Address: 9 Munino Mufakose, Harare
+• Phone: +263 5494594
+• Email: info@neuronet.co.zw
+• Website: neuronet.co.zw
+• CEO: Ngonidzashe Zimbwa
+• Service: NerdX ZIMSEC Study Companion
+
+💬 *How We Can Help:*
+• Technical issues with the bot
+• Account and registration problems
+• Payment and credit queries
+• Learning content questions
+• General inquiries
+
+📧 *Contact Options:*
+• WhatsApp: Continue chatting here
+• Phone: +263 5494594
+• Email: info@neuronet.co.zw
+• Response Time: Within 24 hours
+• Business Hours: 8 AM - 6 PM CAT
+
+🔧 *Common Solutions:*
+• Reset rate limits: Reply 'reset limits'
+• Restart bot: Reply 'start' or 'menu'
+• Check account: Reply 'stats'
+
+🛡️ *Privacy & Data:*
+• Privacy Policy: Reply 'PRIVACY'
+• Opt-out: Reply 'STOP'
+
+How can we assist you today? 🎓"""
+
+        whatsapp_service.send_message(user_id, support_message)
+        logger.info(f"📞 Support information sent to {user_id}")
+        
+    except Exception as e:
+        logger.error(f"Error sending support info to {user_id}: {e}")
+
+
+def send_privacy_policy(user_id: str):
+    """Send privacy policy information (WhatsApp Policy Compliance)"""
+    try:
+        privacy_message = """🛡️ *Neuronet AI Solutions - Privacy Policy*
+
+🏢 *Data Controller:*
+• Company: Neuronet AI Solutions Pvt Ltd
+• Registration: 51491A0272025
+• Address: 9 Munino Mufakose, Harare
+• Contact: info@neuronet.co.zw
+• Website: neuronet.co.zw
+
+📋 *Data We Collect:*
+• Name and WhatsApp number (for account)
+• Learning progress and quiz results
+• Usage statistics for service improvement
+• Payment information (for credit purchases)
+
+🔒 *How We Protect Your Data:*
+• Secure encrypted storage systems
+• No data sharing with third parties
+• Used only for NerdX educational services
+• Automatic data cleanup after 12 months of inactivity
+• Zimbabwe data protection compliance
+
+📱 *WhatsApp Messaging Consent:*
+• Educational content and quiz questions
+• Progress updates and achievements  
+• Service notifications only
+• No promotional/marketing messages
+• You explicitly consented to receive messages
+
+⚖️ *Your Rights:*
+• Request data deletion: Reply 'DELETE DATA'
+• Opt-out anytime: Reply 'STOP'
+• Data portability available on request
+• Access your data: Contact info@neuronet.co.zw
+
+🏢 *Contact for Privacy Concerns:*
+• Email: info@neuronet.co.zw
+• Phone: +263 5494594
+• All privacy requests processed within 7 days
+
+📜 *Full Policy:* Available at neuronet.co.zw/privacy
+🕐 *Last Updated:* December 2024
+
+Reply 'MENU' to return to main options 📚"""
+
+        whatsapp_service.send_message(user_id, privacy_message)
+        logger.info(f"🛡️ Privacy policy sent to {user_id}")
+        
+    except Exception as e:
+        logger.error(f"Error sending privacy policy to {user_id}: {e}")
+
+
+def handle_unsubscribe_request(user_id: str):
+    """Handle unsubscribe requests from existing users (WhatsApp Policy Compliance)"""
+    try:
+        logger.info(f"🛑 User {user_id} requested to unsubscribe")
+        # Update subscription status (best-effort)
+        try:
+            from database.external_db import set_user_subscription
+            set_user_subscription(user_id, False)
+        except Exception as _:
+            pass
+
+        # Send confirmation template if available
+        try:
+            # Name is optional here; template handles missing variable gracefully if not provided
+            whatsapp_service.send_template_message(user_id, 'nerdx_unsubscribe_confirmation', {})
+        except Exception:
+            whatsapp_service.send_message(user_id, "You have been unsubscribed from NerdX notifications. Reply START to subscribe again.")
+
+        logger.info(f"✅ Unsubscribe processed for {user_id}")
+        
+    except Exception as e:
+        logger.error(f"Error processing unsubscribe for {user_id}: {e}")
+
 
 def handle_registration_flow(user_id: str, user_input: str):
     """Handle user registration steps"""
@@ -1037,26 +1270,33 @@ def send_main_menu(user_id: str, user_name: str = None):
         # Add low credit button if applicable using advanced credit system
         main_buttons = advanced_credit_service.add_low_credit_button(main_buttons, user_id)
 
+        # CRITICAL FIX: Combine all buttons instead of sending separate messages
+        # Add additional buttons to main buttons instead of separate message
+        main_buttons.extend([
+            {"text": "📤 Share to Friend", "callback_data": "share_to_friend"},
+            {"text": "💰 Buy Credits", "callback_data": "buy_credits"},
+            {"text": "🎯 My Stats", "callback_data": "user_stats"}
+        ])
+
         whatsapp_service.send_interactive_message(user_id, welcome_text, main_buttons)
-
-        # Send additional buttons separately
-        additional_buttons = [
-            {"text": "📤 Share to Friend", "callback_data": "share_to_friend"}
-        ]
-
-        whatsapp_service.send_interactive_message(user_id, "💎 *More Options:*", additional_buttons)
 
     except Exception as e:
         logger.error(f"Error sending main menu for {user_id}: {e}", exc_info=True)
         whatsapp_service.send_message(user_id, "Error loading menu. Please try again.")
 
 def handle_interactive_message(user_id: str, interactive_data: dict):
-    """Handle interactive button/list responses"""
+    """Handle interactive button/list responses - supports both button and list interactions"""
     try:
         button_reply = interactive_data.get('button_reply', {})
         list_reply = interactive_data.get('list_reply', {})
 
         selection_id = button_reply.get('id') or list_reply.get('id')
+        
+        # Log interaction type for monitoring
+        if button_reply:
+            logger.info(f"Button interaction from {user_id}: {selection_id}")
+        elif list_reply:
+            logger.info(f"List selection from {user_id}: {selection_id}")
 
         if not selection_id:
             return
@@ -1989,14 +2229,12 @@ def handle_topic_menu(user_id: str, subject: str):
             buttons.append({"text": topic[:20], "callback_data": callback_data}) # Limit button text length
 
         # Send in groups of 3 for better WhatsApp compatibility
-        for i in range(0, len(buttons), 3):
-            button_group = buttons[i:i+3]
-            group_text = text if i == 0 else f"📚 *{subject} Topics (Part {i//3 + 1}):*"
-            whatsapp_service.send_interactive_message(user_id, group_text, button_group)
-
-        # Add a back button to the last message
-        back_buttons = [{"text": "🔙 Back to Subjects", "callback_data": "level_ordinary"}] # Assuming a default back action
-        whatsapp_service.send_interactive_message(user_id, "Choose an option:", back_buttons)
+        # CRITICAL FIX: Use single message instead of multiple message chains  
+        # Add back button to the buttons list
+        buttons.append({"text": "🔙 Back to Subjects", "callback_data": "level_ordinary"})
+        
+        # Send as single message to prevent message chains
+        whatsapp_service.send_interactive_message(user_id, text, buttons)
 
     except Exception as e:
         logger.error(f"Error handling topic menu for {user_id}: {e}", exc_info=True)
@@ -2402,14 +2640,12 @@ def handle_subject_topics(user_id: str, subject: str):
             buttons.append({"text": topic[:20], "callback_data": callback_data}) # Limit button text length
 
         # Send in groups of 3 for better WhatsApp compatibility
-        for i in range(0, len(buttons), 3):
-            button_group = buttons[i:i+3]
-            group_text = text if i == 0 else f"📚 *{subject} Topics (Part {i//3 + 1}):*"
-            whatsapp_service.send_interactive_message(user_id, group_text, button_group)
-
-        # Add a back button to the last message
-        back_buttons = [{"text": "🔙 Back to Combined Science", "callback_data": "subject_ordinary_combined_science"}]
-        whatsapp_service.send_interactive_message(user_id, "Choose an option:", back_buttons)
+        # CRITICAL FIX: Use single message instead of multiple message chains  
+        # Add back button to the buttons list
+        buttons.append({"text": "🔙 Back to Combined Science", "callback_data": "subject_ordinary_combined_science"})
+        
+        # Send as single message to prevent message chains
+        whatsapp_service.send_interactive_message(user_id, text, buttons)
 
     except Exception as e:
         logger.error(f"Error handling subject topics for {user_id}: {e}", exc_info=True)
@@ -3176,23 +3412,9 @@ def handle_combined_science_topic_menu(user_id: str, subject: str):
         })
         
         # Send topics in groups of 3
-        if len(buttons) <= 4:  # If 4 or fewer buttons, send as one message
-            whatsapp_service.send_interactive_message(user_id, text, buttons)
-        else:
-            # Send first batch
-            first_batch = buttons[:3]
-            whatsapp_service.send_interactive_message(user_id, text, first_batch)
-            
-            # Send remaining topics
-            remaining_topics = buttons[3:-1]  # Exclude back button
-            for i in range(0, len(remaining_topics), 3):
-                batch = remaining_topics[i:i+3]
-                batch_text = f"{icon} *{subject} Topics (continued):*"
-                whatsapp_service.send_interactive_message(user_id, batch_text, batch)
-            
-            # Send back button separately
-            back_button = [buttons[-1]]
-            whatsapp_service.send_interactive_message(user_id, f"📍 *Navigation:*", back_button)
+        # CRITICAL FIX: Always use single message - let WhatsApp service handle grouping
+        # This prevents message chains that trigger spam detection
+        whatsapp_service.send_interactive_message(user_id, text, buttons)
         
         logger.info(f"✅ Displayed {subject} topics menu for user {user_id}")
         

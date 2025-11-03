@@ -142,10 +142,9 @@ CREATE INDEX idx_system_settings_is_active ON system_settings(is_active);
 -- STEP 7: INSERT DEFAULT PACKAGES
 -- ========================================
 INSERT INTO packages (name, description, credits, price) VALUES
-('Starter Pack', 'Perfect for new students to get started', 100, 5.00),
-('Student Pack', 'Most popular choice for regular users', 250, 10.00),
-('Premium Pack', 'Best value for serious students', 500, 18.00),
-('Ultimate Pack', 'Maximum credits for power users', 1000, 30.00);
+('POCKET PACKAGE', 'Perfect for quick help', 50, 1.00),
+('MINI PACKAGE', 'Extended trial value', 120, 2.00),
+('QUICK PACKAGE', 'Most popular choice', 350, 5.00);
 
 -- ========================================
 -- STEP 8: INSERT DEFAULT CREDIT COSTS

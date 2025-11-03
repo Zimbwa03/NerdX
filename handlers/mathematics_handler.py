@@ -409,13 +409,9 @@ class MathematicsHandler:
                 explanation = question_data['explanation']
                 answer_message += f"💡 *Explanation:*\n{explanation}"
             
-            # Send FIRST message (answer and solution only)
-            self.whatsapp_service.send_message(user_id, answer_message)
-            
-            # Wait to ensure answer message loads first and avoid throttling
-            time.sleep(2)
-            
-            # SECOND MESSAGE: User stats and navigation buttons
+            # CRITICAL FIX: Combine messages to prevent message chains
+            # Instead of sending 2 separate messages, combine everything into one message
+            combined_message = answer_message + "\n\n" + "═══════════════════════\n\n"
             stats_message = f"📊 *{user_name}'s Progress Dashboard:*\n"
             stats_message += f"💳 *Credits:* {final_credits}\n"
             stats_message += f"⭐ *Level:* {final_level} (XP: {final_xp})\n"
@@ -440,8 +436,9 @@ class MathematicsHandler:
                 {"text": "🏠 Main Menu", "callback_data": "main_menu"}
             ]
             
-            # Send SECOND message with stats and buttons
-            self.whatsapp_service.send_interactive_message(user_id, stats_message, buttons)
+            # CRITICAL FIX: Send single combined message instead of chain
+            combined_message += stats_message
+            self.whatsapp_service.send_interactive_message(user_id, combined_message, buttons)
             
         except Exception as e:
             logger.error(f"Error sending result message to {user_id}: {e}")

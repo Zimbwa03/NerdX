@@ -5,6 +5,9 @@ import requests
 import time
 from typing import Dict, List, Optional
 from services.message_throttle import message_throttle
+from services.whatsapp_template_service import get_template_service
+from services.content_variation_engine import content_variation_engine
+from services.quality_monitor import quality_monitor
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +24,18 @@ class WhatsAppService:
         self._is_configured = all([self.access_token, self.phone_number_id, self.verify_token])
         if not self._is_configured:
             logger.warning("WhatsApp configuration not complete - WhatsApp features will be disabled")
+        
+        # Enterprise scale protection
+        self.daily_message_count = 0
+        self.spam_protection_active = True
+        self.max_daily_messages = 50000  # Conservative limit for scaling
+        self.engagement_tracker = {}
+        
+        # Initialize template service
+        self.template_service = get_template_service(self)
+        
+        # Quality monitoring
+        self.quality_monitor = quality_monitor
     
     def send_message(self, to: str, message: str) -> bool:
         """Send a text message to a WhatsApp user with enhanced error handling and throttling"""
@@ -29,6 +44,11 @@ class WhatsAppService:
             return False
             
         try:
+            # Check quality monitoring before sending
+            if self.quality_monitor.should_throttle_messaging():
+                logger.warning(f"Message to {to} blocked by quality monitor - throttling active")
+                return False
+            
             # CRITICAL: Check throttle to prevent message chains
             if not message_throttle.can_send_message(to):
                 delay = message_throttle.throttle_delay(to)
@@ -70,6 +90,29 @@ class WhatsAppService:
                     logger.info(f"Message sent successfully to {to}")
                     # Record successful send
                     message_throttle.record_message_sent(to)
+                    
+                    # Track with quality monitor
+                    self.quality_monitor.track_message_sent(to)
+                    
+                    # Enterprise scale monitoring
+                    self.daily_message_count += 1
+                    self._track_user_engagement(to, 'message_sent')
+                    
+                    # Track with engagement monitor
+                    try:
+                        from services.engagement_monitor import engagement_monitor
+                        engagement_monitor.track_message_sent(to, message, 'text')
+                    except ImportError:
+                        pass  # Engagement monitor not available
+                    
+                    # Scale protection: warn when approaching limits
+                    if self.daily_message_count % 1000 == 0:
+                        logger.info(f"Daily message count: {self.daily_message_count}/{self.max_daily_messages}")
+                    
+                    if self.daily_message_count >= self.max_daily_messages:
+                        logger.critical(f"SCALE PROTECTION: Daily message limit reached ({self.max_daily_messages})")
+                        self.spam_protection_active = True
+                    
                     return True
                 else:
                     logger.error(f"Failed to send message: {response.status_code} - {response.text}")
@@ -255,7 +298,7 @@ class WhatsAppService:
             return False
     
     def send_interactive_message(self, to: str, message: str, buttons: List[Dict]) -> bool:
-        """Send buttons in groups of 3, with additional messages for remaining buttons"""
+        """Send buttons as interactive message - use List Message for 4+ options for WhatsApp compliance"""
         try:
             # CRITICAL: Apply same throttling to prevent message chains
             if not message_throttle.can_send_message(to):
@@ -283,9 +326,10 @@ class WhatsAppService:
                     logger.warning(f"Message too long ({len(message)} chars), truncating to 1024 characters")
                     message = message[:1021] + "..."
                 
-                # If 4 or more buttons, send them in groups of 3
+                # CRITICAL FIX: Use List Messages for 4+ buttons - WhatsApp Best Practice
                 if len(buttons) >= 4:
-                    result = self.send_grouped_buttons(to, message, buttons)
+                    logger.info(f"Using List Message for {len(buttons)} buttons - WhatsApp compliant")
+                    result = self.send_list_message_from_buttons(to, message, buttons)
                     # Record message sent if successful
                     if result:
                         message_throttle.record_message_sent(to)
@@ -342,7 +386,7 @@ class WhatsAppService:
             return False
 
     def send_grouped_buttons(self, to: str, message: str, buttons: List[Dict]) -> bool:
-        """Send buttons in groups of 3 like existing menu format"""
+        """CRITICAL FIX: Send buttons in groups with proper throttling to prevent spam detection"""
         try:
             # Validate message length
             if not message or len(message.strip()) == 0:
@@ -353,24 +397,52 @@ class WhatsAppService:
                 logger.warning(f"Message too long ({len(message)} chars), truncating to 1024 characters")
                 message = message[:1021] + "..."
             
-            # First send message with first 3 buttons
-            first_group = buttons[:3]
-            if not self.send_single_button_group(to, message, first_group):
+            # CRITICAL FIX: Apply throttling before sending first group
+            if not message_throttle.can_send_message(to):
+                logger.warning(f"Grouped buttons blocked by throttle for {to}")
                 return False
             
-            # Send remaining buttons in groups of 3
-            remaining_buttons = buttons[3:]
-            while remaining_buttons:
-                current_group = remaining_buttons[:3]
-                remaining_buttons = remaining_buttons[3:]
-                
-                # Send continuation message with current group
-                continuation_message = "📋 *More Options:*"
-                if not self.send_single_button_group(to, continuation_message, current_group):
-                    return False
+            # Acquire lock
+            if not message_throttle.acquire_lock(to):
+                logger.warning(f"Grouped buttons blocked - concurrent send for {to}")
+                return False
             
-            logger.info(f"Grouped buttons sent successfully to {to}")
-            return True
+            try:
+                # First send message with first 3 buttons
+                first_group = buttons[:3]
+                if not self.send_single_button_group(to, message, first_group):
+                    return False
+                
+                # Record the message
+                message_throttle.record_message_sent(to)
+                
+                # Send remaining buttons in groups of 3 with PROPER DELAYS
+                remaining_buttons = buttons[3:]
+                while remaining_buttons:
+                    current_group = remaining_buttons[:3]
+                    remaining_buttons = remaining_buttons[3:]
+                    
+                    # CRITICAL: Wait minimum delay between grouped messages
+                    import time
+                    time.sleep(message_throttle.min_delay_between_messages)
+                    
+                    # Check throttle before sending next group
+                    if not message_throttle.can_send_message(to):
+                        logger.warning(f"Stopping grouped buttons - rate limit reached for {to}")
+                        break
+                    
+                    # Send continuation message with current group
+                    continuation_message = "📋 *More Options:*"
+                    if not self.send_single_button_group(to, continuation_message, current_group):
+                        return False
+                    
+                    message_throttle.record_message_sent(to)
+                
+                logger.info(f"Grouped buttons sent successfully to {to}")
+                return True
+            finally:
+                # Always release lock
+                message_throttle.release_lock(to)
                 
         except Exception as e:
             logger.error(f"Error sending grouped buttons: {e}")
@@ -517,6 +589,63 @@ class WhatsAppService:
         except Exception as e:
             logger.error(f"Error sending WhatsApp list message: {e}")
             return False
+    
+    def send_list_message_from_buttons(self, to: str, message: str, buttons: List[Dict]) -> bool:
+        """Convert button list to WhatsApp List Message for better compliance with 4+ options"""
+        try:
+            url = f"{self.base_url}/{self.phone_number_id}/messages"
+            headers = {
+                'Authorization': f'Bearer {self.access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            # Convert buttons to list rows
+            rows = []
+            for i, button in enumerate(buttons[:20]):  # WhatsApp supports max 20 list items
+                button_id = button.get('callback_data') or button.get('id', f'option_{i}')
+                button_title = button.get('text') or button.get('title', f'Option {i+1}')
+                
+                # Clean button title for list display
+                clean_title = button_title.replace('🔙 ', '↩️ ').replace('🏠 ', '🏠 ')
+                
+                rows.append({
+                    "id": button_id,
+                    "title": clean_title[:24],  # Max 24 characters for list items
+                    "description": f"Select {clean_title[:20]}" if len(clean_title) > 12 else ""
+                })
+            
+            data = {
+                'messaging_product': 'whatsapp',
+                'to': to,
+                'type': 'interactive',
+                'interactive': {
+                    'type': 'list',
+                    'body': {'text': message},
+                    'action': {
+                        'button': 'Select Option',
+                        'sections': [{
+                            'title': 'Choose an Option',
+                            'rows': rows
+                        }]
+                    }
+                }
+            }
+            
+            response = requests.post(url, headers=headers, json=data, timeout=15)
+            
+            if response.status_code == 200:
+                logger.info(f"List message sent successfully to {to} with {len(buttons)} options")
+                return True
+            else:
+                logger.error(f"Failed to send list message: {response.status_code} - {response.text}")
+                # Fallback to grouped buttons if list message fails
+                logger.warning(f"Falling back to grouped buttons for {to}")
+                return self.send_grouped_buttons(to, message, buttons)
+                
+        except Exception as e:
+            logger.error(f"Error sending list message from buttons: {e}")
+            # Fallback to grouped buttons
+            return self.send_grouped_buttons(to, message, buttons)
     
     def send_image(self, to: str, image_url: str, caption: str = "") -> bool:
         """Send an image message"""
@@ -787,6 +916,234 @@ class WhatsAppService:
         except Exception as e:
             logger.error(f"Error sending WhatsApp document: {e}")
             return False
+    
+    def send_template_message(self, to: str, template_name: str, variables: Dict[str, Any] = None) -> bool:
+        """Send a WhatsApp Business API approved template message"""
+        try:
+            if not self.template_service:
+                logger.error("Template service not initialized")
+                return False
+            
+            # Check if template is approved
+            if not self.template_service.is_template_approved(template_name):
+                logger.error(f"Template {template_name} is not approved")
+                return False
+            
+            # Validate variables
+            if not self.template_service.validate_template_variables(template_name, variables or {}):
+                logger.error(f"Invalid variables for template {template_name}")
+                return False
+            
+            # Send template message
+            return self.template_service.send_template_message(to, template_name, variables)
+            
+        except Exception as e:
+            logger.error(f"Error sending template message {template_name} to {to}: {e}")
+            return False
+    
+    def send_quiz_question(self, to: str, subject: str, topic: str, question_num: int, 
+                          total_questions: int, question_text: str, options: List[str], 
+                          credit_cost: int) -> bool:
+        """Send a quiz question using approved template with content variation"""
+        try:
+            # Generate varied question intro
+            intro = content_variation_engine.generate_question_intro(to, subject)
+            
+            # Prepare template variables
+            variables = {
+                'subject': subject,
+                'topic': topic,
+                'question_num': question_num,
+                'total_questions': total_questions,
+                'question_text': f"{intro}\n\n{question_text}",
+                'option_a': options[0] if len(options) > 0 else "Option A",
+                'option_b': options[1] if len(options) > 1 else "Option B", 
+                'option_c': options[2] if len(options) > 2 else "Option C",
+                'option_d': options[3] if len(options) > 3 else "Option D",
+                'credit_cost': credit_cost
+            }
+            
+            return self.send_template_message(to, 'nerdx_quiz_mcq', variables)
+            
+        except Exception as e:
+            logger.error(f"Error sending quiz question to {to}: {e}")
+            return False
+    
+    def send_correct_answer_feedback(self, to: str, explanation: str, streak: int, 
+                                   total_score: int, accuracy: float, subject: str = None) -> bool:
+        """Send correct answer feedback with variation"""
+        try:
+            # Generate varied feedback
+            encouragement = content_variation_engine.generate_correct_feedback(to, subject)
+            
+            # Vary explanation to prevent repetition
+            varied_explanation = content_variation_engine.generate_explanation_variation(to, explanation, subject)
+            
+            variables = {
+                'explanation': varied_explanation,
+                'streak': streak,
+                'total_score': total_score,
+                'accuracy': f"{accuracy:.1f}",
+                'encouragement': encouragement
+            }
+            
+            return self.send_template_message(to, 'nerdx_answer_correct', variables)
+            
+        except Exception as e:
+            logger.error(f"Error sending correct answer feedback to {to}: {e}")
+            return False
+    
+    def send_incorrect_answer_feedback(self, to: str, correct_answer: str, explanation: str, 
+                                     score: int, accuracy: float, subject: str = None) -> bool:
+        """Send incorrect answer feedback with variation"""
+        try:
+            # Generate varied encouragement
+            encouragement = content_variation_engine.generate_incorrect_encouragement(to, subject)
+            
+            # Vary explanation
+            varied_explanation = content_variation_engine.generate_explanation_variation(to, explanation, subject)
+            
+            variables = {
+                'correct_answer': correct_answer,
+                'explanation': varied_explanation,
+                'score': score,
+                'accuracy': f"{accuracy:.1f}"
+            }
+            
+            return self.send_template_message(to, 'nerdx_answer_incorrect', variables)
+            
+        except Exception as e:
+            logger.error(f"Error sending incorrect answer feedback to {to}: {e}")
+            return False
+    
+    def send_registration_confirmation(self, to: str, student_name: str, nerdx_id: str, 
+                                     starting_credits: int, form_level: int) -> bool:
+        """Send registration confirmation using template"""
+        try:
+            variables = {
+                'student_name': student_name,
+                'nerdx_id': nerdx_id,
+                'starting_credits': starting_credits,
+                'form_level': form_level
+            }
+            
+            return self.send_template_message(to, 'nerdx_registration_complete', variables)
+            
+        except Exception as e:
+            logger.error(f"Error sending registration confirmation to {to}: {e}")
+            return False
+    
+    def send_achievement_notification(self, to: str, student_name: str, achievement_name: str, 
+                                    subject: str, total_questions: int, accuracy: float, 
+                                    study_streak: int, rank: str, bonus_credits: int) -> bool:
+        """Send achievement notification with variation"""
+        try:
+            # Generate varied achievement message
+            achievement_message = content_variation_engine.generate_achievement_message(to, subject, achievement_name)
+            
+            variables = {
+                'achievement_name': achievement_message,
+                'student_name': student_name,
+                'total_questions': total_questions,
+                'accuracy': f"{accuracy:.1f}",
+                'study_streak': study_streak,
+                'rank': rank,
+                'bonus_credits': bonus_credits
+            }
+            
+            return self.send_template_message(to, 'nerdx_achievement', variables)
+            
+        except Exception as e:
+            logger.error(f"Error sending achievement notification to {to}: {e}")
+            return False
+    
+    def send_session_complete(self, to: str, student_name: str, total_questions: int, 
+                            correct_answers: int, accuracy: float, credits_used: int, 
+                            duration: int, subject_topic: str, mastery_percentage: float, 
+                            subject: str = None) -> bool:
+        """Send session complete notification with variation"""
+        try:
+            # Generate varied session ending
+            feedback = content_variation_engine.generate_session_ending(to, subject)
+            
+            variables = {
+                'student_name': student_name,
+                'total_questions': total_questions,
+                'correct_answers': correct_answers,
+                'accuracy': f"{accuracy:.1f}",
+                'credits_used': credits_used,
+                'duration': duration,
+                'subject_topic': subject_topic,
+                'mastery_percentage': f"{mastery_percentage:.1f}",
+                'feedback': feedback
+            }
+            
+            return self.send_template_message(to, 'nerdx_session_complete', variables)
+            
+        except Exception as e:
+            logger.error(f"Error sending session complete to {to}: {e}")
+            return False
+    
+    def send_support_info(self, to: str) -> bool:
+        """Send support information using template"""
+        try:
+            return self.send_template_message(to, 'nerdx_support', {})
+        except Exception as e:
+            logger.error(f"Error sending support info to {to}: {e}")
+            return False
+    
+    def send_privacy_policy(self, to: str) -> bool:
+        """Send privacy policy using template"""
+        try:
+            return self.send_template_message(to, 'nerdx_privacy_policy', {})
+        except Exception as e:
+            logger.error(f"Error sending privacy policy to {to}: {e}")
+            return False
+    
+    def send_unsubscribe_confirmation(self, to: str, student_name: str) -> bool:
+        """Send unsubscribe confirmation using template"""
+        try:
+            variables = {'student_name': student_name}
+            return self.send_template_message(to, 'nerdx_unsubscribe', variables)
+        except Exception as e:
+            logger.error(f"Error sending unsubscribe confirmation to {to}: {e}")
+            return False
+    
+    def send_error_message(self, to: str, error_code: str) -> bool:
+        """Send error message using template"""
+        try:
+            variables = {
+                'error_code': error_code,
+                'timestamp': time.strftime("%Y-%m-%d %H:%M:%S")
+            }
+            return self.send_template_message(to, 'nerdx_error_retry', variables)
+        except Exception as e:
+            logger.error(f"Error sending error message to {to}: {e}")
+            return False
+    
+    def get_quality_report(self) -> Dict[str, Any]:
+        """Get current quality monitoring report"""
+        try:
+            return self.quality_monitor.get_quality_report()
+        except Exception as e:
+            logger.error(f"Error getting quality report: {e}")
+            return {}
+    
+    def _track_user_engagement(self, user_id: str, action: str):
+        """Track user engagement for enterprise scale monitoring"""
+        try:
+            if user_id not in self.engagement_tracker:
+                self.engagement_tracker[user_id] = {
+                    'messages_sent': 0,
+                    'last_interaction': time.time(),
+                    'engagement_score': 0.5
+                }
+            
+            self.engagement_tracker[user_id]['messages_sent'] += 1
+            self.engagement_tracker[user_id]['last_interaction'] = time.time()
+            
+        except Exception as e:
+            logger.error(f"Error tracking engagement for {user_id}: {e}")
 
     def send_document_quick(self, to: str, file_path: str, caption: str = None, filename: str = None) -> bool:
         """Send document with shorter timeout to avoid worker timeout"""

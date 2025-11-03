@@ -15,11 +15,11 @@ class MessageThrottle:
         # Track last message sent time per user
         self.last_message_time: Dict[str, float] = defaultdict(float)
         
-        # Minimum delay between messages (in seconds)
-        self.min_delay_between_messages = 0.3  # 300ms minimum - reduced for better UX
+        # Minimum delay between messages (in seconds) - More conservative for WhatsApp compliance
+        self.min_delay_between_messages = 2.0  # 2 seconds minimum - WhatsApp compliant
         
-        # Maximum messages per minute
-        self.max_messages_per_minute = 20
+        # Maximum messages per minute - Much more conservative to prevent spam detection
+        self.max_messages_per_minute = 8  # Reduced from 20 to 8 (1 every 7.5 seconds)
         
         # Track message count in sliding window
         self.message_history: Dict[str, list] = defaultdict(list)

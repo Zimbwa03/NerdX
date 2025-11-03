@@ -1208,6 +1208,39 @@ def get_user_credit_transactions(user_id, limit=20):
     result = make_supabase_request("GET", "credit_transactions", filters={"user_id": f"eq.{user_id}"}, limit=limit)
     return result if result else []
 
+def set_user_subscription(chat_id: str, is_active: bool) -> bool:
+    """Update a user's subscription status in users_registration.is_active."""
+    try:
+        update = {"is_active": bool(is_active)}
+        result = make_supabase_request(
+            "PATCH",
+            "users_registration",
+            update,
+            filters={"chat_id": f"eq.{chat_id}"},
+            use_service_role=True,
+        )
+
+        # Best-effort activity log
+        try:
+            make_supabase_request(
+                "POST",
+                "activity_logs",
+                {
+                    "user_id": chat_id,
+                    "activity_type": "subscription_update",
+                    "description": f"Subscription set to {'active' if is_active else 'inactive'}",
+                    "additional_data": {"is_active": bool(is_active)},
+                },
+                use_service_role=True,
+            )
+        except Exception:
+            pass
+
+        return bool(result)
+    except Exception as e:
+        logger.error(f"Error updating subscription for {chat_id}: {e}")
+        return False
+
 def diagnose_supabase_issues():
     """Comprehensive Supabase diagnostics"""
     try:

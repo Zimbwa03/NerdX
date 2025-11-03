@@ -108,9 +108,9 @@ Your personal ZIMSEC study companion for Biology, Chemistry, Physics, Mathematic
 Ready to boost your grades? Let's start learning! 🚀"""
 }
 
-# Rate limiting settings
+# Rate limiting settings - WhatsApp Business Policy Compliant
 RATE_LIMITS = {
-    'messages_per_minute': 20,  # Increased from 10
-    'questions_per_hour': 50,   # Increased from 20
-    'session_cooldown': 5       # Reduced from 30 to 5 seconds
+    'messages_per_minute': 8,   # Reduced from 20 to 8 - WhatsApp compliant
+    'questions_per_hour': 30,   # Reduced from 50 to 30 - prevent excessive usage
+    'session_cooldown': 10      # Increased from 5 to 10 seconds - more conservative
 }
