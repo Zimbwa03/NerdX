@@ -577,6 +577,13 @@ def handle_text_message(user_id: str, message_text: str):
                 whatsapp_service.send_message(user_id, "You are now subscribed to NerdX study updates. Reply STOP to unsubscribe anytime.")
             send_main_menu(user_id)
             return
+        elif command in ['register', 'registration', 'sign up', 'signup']:
+            # Force restart registration for stuck users
+            logger.info(f"🔄 User {user_id} requested registration restart")
+            from database.session_db import clear_registration_session
+            clear_registration_session(user_id)
+            handle_new_user(user_id, message_text)
+            return
         else:
             # If no active session and command is not recognized, show main menu
             send_main_menu(user_id)
@@ -638,16 +645,31 @@ To comply with WhatsApp Business Policy, we need your explicit consent to:
 def start_registration_flow(user_id: str, message_text: str):
     """Start registration flow after consent is obtained"""
     try:
-        # Check if message contains referral code
+        # Check if message contains referral code (enhanced detection)
         referral_code = None
-        if "referred me to you with this code" in message_text.lower() or "code" in message_text.lower():
-            # Extract referral code from message
-            import re
-            # Look for any 6-character sequence starting with N (most reliable approach)
-            n_codes = re.findall(r'N[A-Z0-9]{5}', message_text.upper())
-            if n_codes:
-                referral_code = n_codes[0]
-                logger.info(f"🔗 Referral code detected: {referral_code} for user {user_id}")
+        import re
+        
+        # Multiple patterns to detect referral codes
+        referral_patterns = [
+            "referred me to you with this code",
+            "referral code",
+            "my friend.*code",
+            "code.*friend",
+            "using.*code",
+            "with code"
+        ]
+        
+        has_referral_context = any(pattern in message_text.lower() for pattern in referral_patterns)
+        
+        # Look for NerdX ID pattern (N + 5 alphanumeric characters)
+        n_codes = re.findall(r'N[A-Z0-9]{5}', message_text.upper())
+        
+        if n_codes:
+            referral_code = n_codes[0]
+            logger.info(f"🔗 Referral code detected: {referral_code} for user {user_id}")
+        elif has_referral_context:
+            logger.info(f"🔗 Referral context detected but no valid code found in: {message_text}")
+            # Still proceed with registration but ask for code later
 
         # Send registration welcome message
         welcome_msg = "✅ *Thank you for your consent!*\n\n"
@@ -844,7 +866,7 @@ def handle_unsubscribe_request(user_id: str):
 
 
 def handle_registration_flow(user_id: str, user_input: str):
-    """Handle user registration steps"""
+    """Handle user registration steps with enhanced error handling"""
     try:
         logger.info(f"🔄 Processing registration step for {user_id} with input: '{user_input}'")
 
@@ -853,6 +875,13 @@ def handle_registration_flow(user_id: str, user_input: str):
         current_session = get_registration_session(user_id)
         logger.info(f"📋 Current registration session: {current_session}")
 
+        if not current_session:
+            logger.error(f"❌ No registration session found for {user_id}, restarting registration")
+            # Restart registration if session is lost
+            user_service.start_registration(user_id)
+            whatsapp_service.send_message(user_id, "Registration session expired. Let's start over.\n\nPlease enter your first name:")
+            return
+
         result = user_service.process_registration_step(user_id, user_input)
         logger.info(f"📝 Registration step result: {result}")
 
@@ -860,23 +889,39 @@ def handle_registration_flow(user_id: str, user_input: str):
             if result.get('completed'):
                 # Registration complete - send message with buttons
                 logger.info(f"✅ Registration completed for {user_id}")
+                
+                # Send completion message
                 if result.get('buttons'):
-                    whatsapp_service.send_interactive_message(user_id, result['message'], result['buttons'])
+                    success = whatsapp_service.send_interactive_message(user_id, result['message'], result['buttons'])
+                    if not success:
+                        # Fallback to plain message if interactive fails
+                        whatsapp_service.send_message(user_id, result['message'])
+                        send_main_menu(user_id)
                 else:
                     whatsapp_service.send_message(user_id, result['message'])
                     send_main_menu(user_id)
             else:
                 # Continue to next step
                 logger.info(f"➡️ Moving to next registration step for {user_id}: {result.get('step')}")
-                whatsapp_service.send_message(user_id, result['message'])
+                success = whatsapp_service.send_message(user_id, result['message'])
+                if not success:
+                    logger.error(f"❌ Failed to send registration message to {user_id}")
+                    # Try again with simpler message
+                    whatsapp_service.send_message(user_id, "Please continue with registration.")
         else:
             # Error in registration step
             logger.warning(f"❌ Registration step failed for {user_id}: {result.get('message')}")
-            whatsapp_service.send_message(user_id, result['message'])
+            success = whatsapp_service.send_message(user_id, result['message'])
+            if not success:
+                logger.error(f"❌ Failed to send error message to {user_id}")
 
     except Exception as e:
         logger.error(f"Error in registration flow for {user_id}: {e}", exc_info=True)
-        whatsapp_service.send_message(user_id, "Registration error. Please try again.")
+        # Try to send error message
+        try:
+            whatsapp_service.send_message(user_id, "Registration error. Please type 'REGISTER' to try again.")
+        except:
+            logger.error(f"❌ Could not even send error message to {user_id}")
 
 def handle_session_message(user_id: str, message_text: str):
     """Handle messages when user is in an active session"""

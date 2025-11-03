@@ -44,21 +44,35 @@ class WhatsAppService:
             return False
             
         try:
-            # Check quality monitoring before sending
+            # Check quality monitoring before sending (but allow critical messages)
             if self.quality_monitor.should_throttle_messaging():
-                logger.warning(f"Message to {to} blocked by quality monitor - throttling active")
-                return False
+                # Allow critical messages like consent requests and registration flows
+                critical_keywords = ['consent', 'welcome', 'registration', 'first name', 'surname', 'date of birth', 'referral code']
+                is_critical = any(keyword in message.lower() for keyword in critical_keywords)
+                
+                if not is_critical:
+                    logger.warning(f"Message to {to} blocked by quality monitor - throttling active")
+                    return False
+                else:
+                    logger.info(f"Allowing critical message to {to} despite quality throttling")
             
-            # CRITICAL: Check throttle to prevent message chains
+            # CRITICAL: Check throttle to prevent message chains (but allow critical messages)
             if not message_throttle.can_send_message(to):
-                delay = message_throttle.throttle_delay(to)
-                if delay > 0:
-                    logger.info(f"Throttling message to {to}, waiting {delay:.2f}s")
-                    time.sleep(delay)
-                    # Recheck after delay
-                    if not message_throttle.can_send_message(to):
-                        logger.warning(f"Message to {to} blocked by throttle - too many messages")
-                        return False
+                # Allow critical messages like consent requests and registration flows
+                critical_keywords = ['consent', 'welcome', 'registration', 'first name', 'surname', 'date of birth', 'referral code', 'thank you for your consent']
+                is_critical = any(keyword in message.lower() for keyword in critical_keywords)
+                
+                if not is_critical:
+                    delay = message_throttle.throttle_delay(to)
+                    if delay > 0:
+                        logger.info(f"Throttling message to {to}, waiting {delay:.2f}s")
+                        time.sleep(delay)
+                        # Recheck after delay
+                        if not message_throttle.can_send_message(to):
+                            logger.warning(f"Message to {to} blocked by throttle - too many messages")
+                            return False
+                else:
+                    logger.info(f"Allowing critical registration message to {to} despite throttle")
             
             # Acquire lock to prevent concurrent sends
             if not message_throttle.acquire_lock(to):
