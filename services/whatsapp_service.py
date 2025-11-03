@@ -601,15 +601,26 @@ class WhatsAppService:
             
             # Convert buttons to list rows
             rows = []
+            seen_ids = set()  # Track IDs to ensure uniqueness
             for i, button in enumerate(buttons[:20]):  # WhatsApp supports max 20 list items
                 button_id = button.get('callback_data') or button.get('id', f'option_{i}')
                 button_title = button.get('text') or button.get('title', f'Option {i+1}')
+                
+                # Ensure unique ID by appending index if duplicate detected
+                base_id = button_id
+                unique_id = base_id
+                counter = 0
+                while unique_id in seen_ids:
+                    counter += 1
+                    unique_id = f"{base_id}_{counter}"
+                
+                seen_ids.add(unique_id)
                 
                 # Clean button title for list display
                 clean_title = button_title.replace('🔙 ', '↩️ ').replace('🏠 ', '🏠 ')
                 
                 rows.append({
-                    "id": button_id,
+                    "id": unique_id,  # Use unique ID
                     "title": clean_title[:24],  # Max 24 characters for list items
                     "description": f"Select {clean_title[:20]}" if len(clean_title) > 12 else ""
                 })
