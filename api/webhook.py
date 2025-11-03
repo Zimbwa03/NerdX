@@ -836,7 +836,7 @@ def handle_unsubscribe_request(user_id: str):
             whatsapp_service.send_template_message(user_id, 'nerdx_unsubscribe_confirmation', {})
         except Exception:
             whatsapp_service.send_message(user_id, "You have been unsubscribed from NerdX notifications. Reply START to subscribe again.")
-
+        
         logger.info(f"✅ Unsubscribe processed for {user_id}")
         
     except Exception as e:

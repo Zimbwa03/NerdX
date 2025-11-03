@@ -2,13 +2,13 @@
 
 ## 🎯 **System Overview**
 
-The Referral System has been completely updated to use the correct bot number (+263788577388) and ensure smooth operation with 5-credit referral rewards. The system now generates proper WhatsApp referral links that automatically open chats and provides a seamless referral experience.
+The Referral System has been completely updated to use the correct bot number (+263781206192) and ensure smooth operation with 5-credit referral rewards. The system now generates proper WhatsApp referral links that automatically open chats and provides a seamless referral experience.
 
 ## 🔄 **Key Updates Made**
 
 ### **1. Bot Number Correction**
 - **Old Number**: +263784257773 ❌
-- **New Number**: +263788577388 ✅
+- **New Number**: +263781206192 ✅
 - **Updated**: All referral links now use the correct bot number
 
 ### **2. Referral Reward System**
@@ -48,7 +48,7 @@ User A gets +5 credits → User B gets +5 bonus credits
 
 ### **Link Format**
 ```
-https://wa.me/263788577388?text=Hello!%20I%20want%20to%20join%20NerdX%20using%20referral%20code:%20ABC12345
+https://wa.me/263781206192?text=Hello!%20I%20want%20to%20join%20NerdX%20using%20referral%20code:%20ABC12345
 ```
 
 ### **Link Features**
@@ -94,7 +94,7 @@ Hello! I want to join NerdX using referral code: ABC12345
 ```python
 def generate_whatsapp_referral_link(self, referral_code: str) -> str:
     """Generate WhatsApp referral link that automatically opens chat"""
-    bot_number = "263788577388"
+    bot_number = "263781206192"
     referral_message = f"Hello! I want to join NerdX using referral code: {referral_code}"
     encoded_message = urllib.parse.quote(referral_message)
     whatsapp_link = f"https://wa.me/{bot_number}?text={encoded_message}"
@@ -164,7 +164,7 @@ Hey John! 👋
 
 💎 Register with referral code: ABC12345 and get bonus credits!
 
-🚀 Start here: https://wa.me/263788577388?text=Hello!%20I%20want%20to%20join%20NerdX%20using%20referral%20code:%20ABC12345
+🚀 Start here: https://wa.me/263781206192?text=Hello!%20I%20want%20to%20join%20NerdX%20using%20referral%20code:%20ABC12345
 ---
 
 ✨ How it works:
@@ -288,7 +288,7 @@ Hey John! 👋
 
 The Updated Referral System now provides:
 
-- **Correct Bot Number**: +263788577388 for all referral links
+- **Correct Bot Number**: +263781206192 for all referral links
 - **Seamless Experience**: Automatic WhatsApp chat opening
 - **Accurate Rewards**: 5-credit referral bonuses
 - **Professional Interface**: Clean, user-friendly referral system
@@ -307,4 +307,4 @@ The system is now production-ready and provides a professional referral experien
 4. Gather user feedback
 5. Plan Phase 2 enhancements
 
-**Key Achievement**: Referral system now uses correct bot number (+263788577388) and provides seamless 5-credit referral rewards! 🎉
+**Key Achievement**: Referral system now uses correct bot number (+263781206192) and provides seamless 5-credit referral rewards! 🎉

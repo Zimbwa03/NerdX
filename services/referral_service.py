@@ -325,8 +325,8 @@ class ReferralService:
     def generate_whatsapp_referral_link(self, referral_code: str) -> str:
         """Generate WhatsApp referral link that automatically opens chat"""
         try:
-            # Use the correct bot number: +263788577388
-            bot_number = "263788577388"
+            # Use the correct bot number: +263781206192
+            bot_number = "263781206192"
             
             # Create WhatsApp link that automatically opens chat with referral message
             # The text parameter will pre-fill the message
@@ -344,7 +344,7 @@ class ReferralService:
         except Exception as e:
             logger.error(f"Error generating WhatsApp referral link: {e}")
             # Fallback link
-            return f"https://wa.me/263788577388?text=Hello!%20I%20want%20to%20join%20NerdX%20using%20referral%20code:%20{referral_code}"
+            return f"https://wa.me/263781206192?text=Hello!%20I%20want%20to%20join%20NerdX%20using%20referral%20code:%20{referral_code}"
     
     def get_referral_share_message(self, user_id: str, user_name: str = None) -> Dict:
         """Get complete referral share message with link"""
