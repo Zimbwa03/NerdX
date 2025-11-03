@@ -5,14 +5,16 @@ Complies with WhatsApp Business Policy requirements
 import logging
 import time
 from typing import Dict, List, Optional, Any
-from services.whatsapp_service import WhatsAppService
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from services.whatsapp_service import WhatsAppService
 
 logger = logging.getLogger(__name__)
 
 class WhatsAppTemplateService:
     """Service for sending WhatsApp Business API approved message templates"""
     
-    def __init__(self, whatsapp_service: WhatsAppService):
+    def __init__(self, whatsapp_service: 'WhatsAppService'):
         self.whatsapp_service = whatsapp_service
         self.template_cache = {}
         self.template_usage_stats = {}
@@ -608,7 +610,7 @@ Reg: 51491A0272025 | Zimbabwe""",
 # Global instance
 whatsapp_template_service = None
 
-def get_template_service(whatsapp_service: WhatsAppService = None) -> WhatsAppTemplateService:
+def get_template_service(whatsapp_service: 'WhatsAppService' = None) -> WhatsAppTemplateService:
     """Get or create global template service instance"""
     global whatsapp_template_service
     if whatsapp_template_service is None and whatsapp_service:
