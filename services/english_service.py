@@ -596,27 +596,31 @@ Return valid JSON with the exact format requested."""
             return self._get_fallback_long_comprehension(theme)
 
     def _get_fallback_long_comprehension(self, theme: str) -> Dict:
-        """Fallback long comprehension passage when AI fails"""
+        """Enhanced ZIMSEC-style fallback long comprehension passage when AI fails"""
+        # Use the enhanced fallback from the standalone generator
+        try:
+            from standalone_english_comprehension_generator import standalone_english_comprehension_generator
+            return standalone_english_comprehension_generator._get_fallback_long_comprehension(theme)
+        except Exception as e:
+            logger.error(f"Error accessing enhanced fallback: {e}")
+            # Basic fallback if even the enhanced one fails
+            return {
+                "passage": {
+                    "title": "Education in Zimbabwe",
+                    "text": """Education has always been a cornerstone of Zimbabwean society, with families making significant sacrifices to ensure their children receive quality schooling. In rural areas like Mutoko, students often walk long distances to reach their schools, demonstrating the high value placed on learning.
 
-        return {
-            "passage": {
-                "title": f"Understanding {theme}",
-                "text": f"""Technology has dramatically transformed the way we live, work, and communicate in the 21st century. In Zimbabwe, like many developing countries, the adoption of digital technology has brought both opportunities and challenges that affect every aspect of society.
+The challenges facing rural schools are numerous. Many lack basic resources such as textbooks, laboratory equipment, and reliable electricity. Teachers often work with outdated materials and large class sizes, making it difficult to provide individual attention to students who need extra help.
 
-The rise of mobile technology has been particularly significant. With the widespread availability of smartphones, even in rural areas, people can now access information, banking services, and educational resources that were previously unavailable. Mobile money platforms have revolutionized financial transactions, allowing people to send money, pay bills, and conduct business without traditional banking infrastructure.
+However, the determination of both students and teachers has led to remarkable achievements. Many rural schools have produced students who excel in national examinations and go on to pursue higher education at universities both within Zimbabwe and abroad. These success stories inspire younger students and demonstrate that excellence is possible regardless of circumstances.
 
-In education, technology has opened new doors for learning. Students in remote areas can now access online courses, educational videos, and digital libraries. This has been especially important during times when physical attendance at schools was not possible. However, challenges remain, including unreliable internet connectivity and the digital divide between urban and rural areas.
+Technology is beginning to transform education in Zimbabwe. Solar power systems and internet connectivity are gradually reaching remote areas, opening up new possibilities for learning. Students can now access online resources, participate in virtual classes, and connect with mentors from around the world.
 
-The agricultural sector, which employs a significant portion of Zimbabwe's population, has also benefited from technological advances. Farmers can now receive weather forecasts, market prices, and agricultural advice through mobile applications. Satellite imagery helps monitor crop conditions, while GPS technology assists in precision farming techniques.
+The government and various organizations are working to address educational challenges through infrastructure development, teacher training programs, and the provision of learning materials. Community involvement has also been crucial, with parents and local leaders supporting school development projects.
 
-Despite these benefits, technology adoption has created new challenges. Cybersecurity threats have increased, and there are concerns about data privacy and the spread of misinformation through social media platforms. Additionally, the rapid pace of technological change has left some people, particularly older generations, struggling to adapt.
-
-The youth have embraced technology more readily, using social media platforms to express themselves, connect with others, and even start online businesses. This has created new economic opportunities but also raised concerns about screen time and its impact on mental health and social relationships.
-
-As Zimbabwe continues to develop its technological infrastructure, it is crucial to ensure that the benefits of technology are accessible to all citizens while addressing the challenges that come with digital transformation. This requires investment in education, infrastructure, and policies that protect citizens while promoting innovation.""",
-                "word_count": 345,
-                "theme": theme
-            },
+Despite the challenges, the future of education in Zimbabwe looks promising. Young people are embracing new technologies while maintaining respect for traditional values and knowledge. This balance between innovation and tradition will be key to the country's continued development.""",
+                    "word_count": 245,
+                    "theme": theme
+                },
             "questions": [
                 {
                     "question": "According to the passage, how has mobile technology impacted financial services in Zimbabwe?",

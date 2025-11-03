@@ -68,35 +68,46 @@ Return ONLY a JSON object:
 
         prompt = f"""Generate a ZIMSEC O-Level English reading comprehension exercise on the theme: {theme}
 
-**Requirements:**
-- Passage: 400-600 words (long passage for proper comprehension practice)
-- Zimbabwean context and characters where appropriate
+**ZIMSEC Format Requirements:**
+- Passage: 400-600 words (authentic ZIMSEC length for proper comprehension practice)
+- Zimbabwean context, characters, and cultural references where appropriate
 - Age-appropriate content for Form {form_level} students (15-17 years)
-- EXACTLY 10 comprehension questions with detailed answers
-- Mix of literal, inferential, and critical thinking questions
-- Varied question types: multiple choice, short answer, analysis
-- Form {form_level} reading level
+- EXACTLY 10 comprehension questions following ZIMSEC patterns
+- Question types must include:
+  * 3-4 literal comprehension questions (direct from text)
+  * 3-4 inferential questions (reading between lines)
+  * 2-3 critical analysis questions (evaluation, opinion, comparison)
+- Varied question formats: short answer, explanation, analysis
+- Form {form_level} vocabulary and complexity level
+- Include Zimbabwean names, places, and cultural elements naturally
+
+**ZIMSEC Question Patterns to Follow:**
+1. "According to the passage..." (literal)
+2. "What does the author mean by..." (inferential)  
+3. "Why do you think..." (critical thinking)
+4. "Give evidence from the passage..." (textual support)
+5. "In your own words, explain..." (comprehension + expression)
 
 Return ONLY a JSON object:
 {{
     "passage": {{
-        "title": "Engaging passage title",
-        "text": "The complete 400-600 word reading passage",
+        "title": "Engaging passage title with Zimbabwean context",
+        "text": "The complete 400-600 word reading passage with natural Zimbabwean elements",
         "word_count": 500,
         "theme": "{theme}"
     }},
     "questions": [
         {{
-            "question": "Question text here",
-            "correct_answer": "Expected detailed answer",
+            "question": "Question text following ZIMSEC patterns",
+            "correct_answer": "Expected detailed answer with key points",
             "question_type": "literal/inferential/critical",
             "marks": 2,
-            "explanation": "Why this is the correct answer"
+            "explanation": "Why this is the correct answer with textual evidence"
         }}
     ]
 }}
 
-Make the passage engaging and educational, suitable for O-Level comprehension practice."""
+Make the passage authentic, engaging, and educationally valuable for ZIMSEC O-Level students."""
 
         return self._call_deepseek_api(prompt, "long_comprehension_passage")
 
@@ -263,96 +274,98 @@ Make the passage engaging and educational, suitable for O-Level comprehension pr
         }
 
     def _get_fallback_long_comprehension(self, theme: str) -> Dict:
-        """Fallback long comprehension passage when AI fails"""
+        """Enhanced ZIMSEC-style fallback long comprehension passage when AI fails"""
         return {
             "passage": {
-                "title": f"Understanding {theme}",
-                "text": f"""Technology has dramatically transformed the way we live, work, and communicate in the 21st century. In Zimbabwe, like many developing countries, the adoption of digital technology has brought both opportunities and challenges that affect every aspect of society.
+                "title": "The Digital Revolution in Zimbabwean Education",
+                "text": """Chipo Mukamuri had always dreamed of becoming a doctor, but growing up in rural Mutoko, she faced many challenges in accessing quality education. Her local secondary school had limited resources, outdated textbooks, and no internet connection. However, everything changed when the government's digital education initiative reached her community in 2023.
 
-The rise of mobile technology has been particularly significant. With the widespread availability of smartphones, even in rural areas, people can now access information, banking services, and educational resources that were previously unavailable. Mobile money platforms have revolutionized financial transactions, allowing people to send money, pay bills, and conduct business without traditional banking infrastructure.
+The installation of solar-powered internet hubs and the distribution of tablets to students transformed learning at Mutoko Secondary School. Chipo could now access online medical courses, watch educational videos about human anatomy, and participate in virtual science experiments. Her biology teacher, Mr. Chiweshe, used digital microscopes to show students cellular structures that were previously impossible to observe with their basic equipment.
 
-In education, technology has opened new doors for learning. Students in remote areas can now access online courses, educational videos, and digital libraries. This has been especially important during times when physical attendance at schools was not possible. However, challenges remain, including unreliable internet connectivity and the digital divide between urban and rural areas.
+The change was not immediate or without challenges. Many teachers, including Mrs. Ndoro who had taught mathematics for twenty years using traditional methods, initially struggled to adapt to the new technology. Some parents worried that their children were spending too much time on screens instead of focusing on practical skills like farming and traditional crafts.
 
-The agricultural sector, which employs a significant portion of Zimbabwe's population, has also benefited from technological advances. Farmers can now receive weather forecasts, market prices, and agricultural advice through mobile applications. Satellite imagery helps monitor crop conditions, while GPS technology assists in precision farming techniques.
+However, the results spoke for themselves. Within two years, the school's pass rates in science subjects increased by 40%. Students like Chipo began competing successfully in national science competitions, something that had seemed impossible before. The digital platform also connected rural students with mentors from universities in Harare and Bulawayo, providing guidance and inspiration.
 
-Despite these benefits, technology adoption has created new challenges. Cybersecurity threats have increased, and there are concerns about data privacy and the spread of misinformation through social media platforms. Additionally, the rapid pace of technological change has left some people, particularly older generations, struggling to adapt.
+Chipo's younger brother, Tinashe, who had learning difficulties, particularly benefited from educational apps that adapted to his learning pace. The personalized learning approach helped him understand mathematical concepts that had previously frustrated him. His confidence grew as he progressed through interactive lessons designed specifically for students with different learning needs.
 
-The youth have embraced technology more readily, using social media platforms to express themselves, connect with others, and even start online businesses. This has created new economic opportunities but also raised concerns about screen time and its impact on mental health and social relationships.
+The initiative also had unexpected benefits for the broader community. Parents began attending evening digital literacy classes at the school, learning to use mobile banking and access agricultural information online. Local farmers started using weather apps and market price platforms, improving their crop yields and income.
 
-As Zimbabwe continues to develop its technological infrastructure, it is crucial to ensure that the benefits of technology are accessible to all citizens while addressing the challenges that come with digital transformation. This requires investment in education, infrastructure, and policies that protect citizens while promoting innovation.""",
-                "word_count": 345,
+Despite these successes, challenges remained. Power outages still disrupted learning, and some students from very poor families could not afford the small monthly fee for internet access. The school community worked together to establish a scholarship fund, ensuring that no student was left behind due to financial constraints.
+
+As Chipo prepared for her final examinations, she reflected on how technology had opened doors she never knew existed. She had already received a conditional offer to study medicine at the University of Zimbabwe, supported by her excellent performance in online preparatory courses. Her story became an inspiration for younger students, proving that with determination and the right tools, rural students could compete with their urban counterparts and achieve their dreams.""",
+                "word_count": 456,
                 "theme": theme
             },
             "questions": [
                 {
-                    "question": "According to the passage, how has mobile technology impacted financial services in Zimbabwe?",
-                    "correct_answer": "Mobile money platforms have revolutionized financial transactions, allowing people to send money, pay bills, and conduct business without traditional banking infrastructure.",
+                    "question": "According to the passage, what was Chipo's main challenge in accessing quality education?",
+                    "correct_answer": "Her rural school had limited resources, outdated textbooks, and no internet connection.",
                     "question_type": "literal",
                     "marks": 2,
-                    "explanation": "This information is directly stated in the second paragraph."
+                    "explanation": "This information is directly stated in the first paragraph."
                 },
                 {
-                    "question": "What challenges does the passage mention regarding technology in education?",
-                    "correct_answer": "Unreliable internet connectivity and the digital divide between urban and rural areas.",
-                    "question_type": "literal",
-                    "marks": 2,
-                    "explanation": "These challenges are explicitly mentioned in the education paragraph."
-                },
-                {
-                    "question": "How has technology benefited the agricultural sector in Zimbabwe?",
-                    "correct_answer": "Farmers can receive weather forecasts, market prices, and agricultural advice through mobile applications, while satellite imagery and GPS technology assist in farming.",
-                    "question_type": "literal",
-                    "marks": 3,
-                    "explanation": "The agricultural benefits are detailed in the fourth paragraph."
-                },
-                {
-                    "question": "What concerns are raised about technology adoption in the passage?",
-                    "correct_answer": "Cybersecurity threats, data privacy concerns, spread of misinformation, and the digital divide between generations.",
+                    "question": "What does the author mean by 'digital education initiative' in the context of Mutoko?",
+                    "correct_answer": "The installation of solar-powered internet hubs and distribution of tablets to students.",
                     "question_type": "inferential",
+                    "marks": 2,
+                    "explanation": "This requires understanding the specific components mentioned in the second paragraph."
+                },
+                {
+                    "question": "Give evidence from the passage that shows the success of the digital education program.",
+                    "correct_answer": "The school's pass rates in science subjects increased by 40% within two years, and students began competing successfully in national science competitions.",
+                    "question_type": "literal",
                     "marks": 3,
-                    "explanation": "These concerns are mentioned in the fifth paragraph and require inference from the text."
+                    "explanation": "These specific achievements are mentioned in the fourth paragraph."
                 },
                 {
-                    "question": "How have young people in Zimbabwe embraced technology according to the passage?",
-                    "correct_answer": "They use social media platforms to express themselves, connect with others, and start online businesses.",
-                    "question_type": "literal",
-                    "marks": 2,
-                    "explanation": "This information is directly stated in the sixth paragraph."
-                },
-                {
-                    "question": "What does the passage suggest is needed for Zimbabwe's technological development?",
-                    "correct_answer": "Investment in education, infrastructure, and policies that protect citizens while promoting innovation.",
-                    "question_type": "literal",
-                    "marks": 2,
-                    "explanation": "This requirement is explicitly stated in the final paragraph."
-                },
-                {
-                    "question": "What is the main theme of this passage?",
-                    "correct_answer": "The transformative impact of technology on Zimbabwean society, including both opportunities and challenges.",
+                    "question": "Why do you think some parents were initially worried about the new technology?",
+                    "correct_answer": "They were concerned that children were spending too much time on screens instead of learning practical skills like farming and traditional crafts.",
                     "question_type": "critical",
                     "marks": 3,
-                    "explanation": "This requires analysis of the overall message and purpose of the passage."
+                    "explanation": "This shows understanding of the cultural and practical concerns mentioned in the passage."
                 },
                 {
-                    "question": "How does the passage present the relationship between technology and education?",
-                    "correct_answer": "Technology has opened new learning opportunities but also created challenges like connectivity issues and digital divides.",
-                    "question_type": "inferential",
-                    "marks": 3,
-                    "explanation": "This requires understanding the nuanced relationship described in the education section."
-                },
-                {
-                    "question": "What evidence does the passage provide for technology's impact on rural areas?",
-                    "correct_answer": "Smartphones are available in rural areas, enabling access to information, banking, and education that was previously unavailable.",
+                    "question": "In your own words, explain how the digital platform helped Tinashe with his learning difficulties.",
+                    "correct_answer": "The educational apps adapted to his learning pace and provided personalized lessons, which helped him understand mathematical concepts and build confidence.",
                     "question_type": "inferential",
                     "marks": 2,
-                    "explanation": "This requires connecting information from different parts of the passage."
+                    "explanation": "This requires rephrasing the information about personalized learning from the fifth paragraph."
                 },
                 {
-                    "question": "How does the passage address the future of technology in Zimbabwe?",
-                    "correct_answer": "It emphasizes the need for balanced development that ensures accessibility while addressing challenges through proper investment and policies.",
+                    "question": "What unexpected benefits did the initiative bring to the broader community?",
+                    "correct_answer": "Parents learned digital literacy, mobile banking, and farmers accessed weather apps and market information, improving their yields and income.",
+                    "question_type": "literal",
+                    "marks": 3,
+                    "explanation": "These community benefits are detailed in the sixth paragraph."
+                },
+                {
+                    "question": "What challenges still remained despite the program's success?",
+                    "correct_answer": "Power outages disrupted learning and some students couldn't afford internet access fees.",
+                    "question_type": "literal",
+                    "marks": 2,
+                    "explanation": "These ongoing challenges are mentioned in the seventh paragraph."
+                },
+                {
+                    "question": "How did the school community address the problem of students who couldn't afford internet access?",
+                    "correct_answer": "They established a scholarship fund to ensure no student was left behind due to financial constraints.",
+                    "question_type": "literal",
+                    "marks": 2,
+                    "explanation": "This solution is directly stated in the seventh paragraph."
+                },
+                {
+                    "question": "What does Chipo's story suggest about the potential of rural students?",
+                    "correct_answer": "It shows that with determination and the right tools, rural students can compete with urban counterparts and achieve their dreams.",
+                    "question_type": "inferential",
+                    "marks": 3,
+                    "explanation": "This requires understanding the broader message conveyed through Chipo's success story."
+                },
+                {
+                    "question": "What is the main message the author wants to convey through this passage?",
+                    "correct_answer": "Technology can transform education and create opportunities for disadvantaged students, but requires community support and addressing practical challenges.",
                     "question_type": "critical",
                     "marks": 3,
-                    "explanation": "This requires analysis of the passage's conclusion and forward-looking perspective."
+                    "explanation": "This requires analysis of the overall theme and purpose of the passage."
                 }
             ]
         }
