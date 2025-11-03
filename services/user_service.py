@@ -193,10 +193,34 @@ class UserService:
         }
 
     def _process_dob_step(self, whatsapp_id: str, dob: str, session: Dict) -> Dict:
-        """Process date of birth input step"""
+        """Process date of birth input step with flexible year format"""
         try:
-            # Validate date format
-            date_obj = datetime.strptime(dob.strip(), '%d/%m/%Y')
+            dob_clean = dob.strip()
+            date_obj = None
+            
+            # Try multiple date formats to be user-friendly
+            date_formats = [
+                '%d/%m/%Y',    # 25/08/2002
+                '%d/%m/%y',    # 25/08/02
+                '%d-%m-%Y',    # 25-08-2002
+                '%d-%m-%y',    # 25-08-02
+                '%d.%m.%Y',    # 25.08.2002
+                '%d.%m.%y'     # 25.08.02
+            ]
+            
+            for date_format in date_formats:
+                try:
+                    date_obj = datetime.strptime(dob_clean, date_format)
+                    break
+                except ValueError:
+                    continue
+            
+            if not date_obj:
+                return {
+                    'success': False,
+                    'step': 'date_of_birth',
+                    'message': 'Invalid date format. Please use DD/MM/YYYY or DD/MM/YY (e.g., 25/08/2002 or 25/08/02):'
+                }
 
             # Check if user is at least 10 years old
             min_age = datetime.now() - timedelta(days=365 * 10)
@@ -204,7 +228,7 @@ class UserService:
                 return {
                     'success': False,
                     'step': 'date_of_birth',
-                    'message': 'You must be at least 10 years old to register. Please enter a valid date (DD/MM/YYYY):'
+                    'message': 'You must be at least 10 years old to register. Please enter a valid date:'
                 }
 
             # Check if date is not in the future
@@ -212,12 +236,12 @@ class UserService:
                 return {
                     'success': False,
                     'step': 'date_of_birth',
-                    'message': 'Date cannot be in the future. Please enter a valid date (DD/MM/YYYY):'
+                    'message': 'Date cannot be in the future. Please enter a valid date:'
                 }
 
-            # Keep the original DD/MM/YYYY format for external_db.py to handle conversion
+            # Convert to standard DD/MM/YYYY format for database storage
             # This ensures compatibility with the existing date conversion logic
-            session['date_of_birth'] = dob.strip()
+            session['date_of_birth'] = date_obj.strftime('%d/%m/%Y')
 
             # Check if referral code was already detected during initial message
             if session.get('referred_by_nerdx_id'):
@@ -234,11 +258,12 @@ class UserService:
                     'message': 'Do you have a referral code? Enter it now, or type "SKIP" to continue without one:'
                 }
 
-        except ValueError:
+        except Exception as e:
+            logger.error(f"Error processing date of birth for {whatsapp_id}: {e}")
             return {
                 'success': False,
                 'step': 'date_of_birth',
-                'message': 'Invalid date format. Please use DD/MM/YYYY (e.g., 15/03/2005):'
+                'message': 'Invalid date format. Please use DD/MM/YYYY or DD/MM/YY (e.g., 25/08/2002 or 25/08/02):'
             }
 
     def _process_referral_step(self, whatsapp_id: str, referral_input: str, session: Dict) -> Dict:
