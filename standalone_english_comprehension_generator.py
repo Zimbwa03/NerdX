@@ -22,10 +22,10 @@ class StandaloneEnglishComprehensionGenerator:
         self.api_key = os.environ.get('DEEPSEEK_API_KEY')
         self.api_url = 'https://api.deepseek.com/chat/completions'
 
-        # Optimized settings for DeepSeek API V3.1
-        self.max_retries = 3
-        self.timeouts = [30, 45, 60]  # Progressive timeouts
-        self.retry_delay = 2
+        # Optimized settings for DeepSeek API V3.1 (Render-friendly)
+        self.max_retries = 2  # Reduced to prevent worker timeouts
+        self.timeouts = [20, 35]  # Reduced timeouts for Render deployment
+        self.retry_delay = 1  # Faster retry
 
     def generate_comprehension_passage(self, theme: str = "General") -> Optional[Dict]:
         """Generate reading comprehension passages with questions using DeepSeek V3.1"""
@@ -211,6 +211,10 @@ Make the passage authentic, engaging, and educationally valuable for ZIMSEC O-Le
 
             except requests.exceptions.Timeout:
                 logger.warning(f"DeepSeek V3.1 timeout on attempt {attempt + 1}/{self.max_retries} (waited {timeout}s)")
+                # For Render deployment: fail fast on timeout to prevent worker crashes
+                if timeout >= 30:  # If we've already waited 30+ seconds, give up
+                    logger.error("Timeout exceeded 30s, failing fast to prevent worker crash")
+                    break
                 if attempt < self.max_retries - 1:
                     time.sleep(self.retry_delay)
                     continue

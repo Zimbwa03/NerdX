@@ -307,20 +307,28 @@ Ready to boost your reading skills? 🚀"""
 
             logger.info(f"🤖 Generating comprehension with DeepSeek AI: theme={random_theme}, form={form_level}")
             
-            # Generate using DeepSeek AI directly
+            # Send immediate progress update to user
+            self.whatsapp_service.send_message(
+                user_id, 
+                f"📚 Creating your {random_theme.lower()} comprehension passage...\n\n⏳ This may take 30-60 seconds. Please wait!"
+            )
+            
+            # Generate using DeepSeek AI with timeout protection
             try:
-                passage_data = self.english_service.generate_long_comprehension_passage(random_theme, form_level)
+                # Try DeepSeek with reduced timeout to prevent worker crashes
+                passage_data = self.english_service.generate_long_comprehension_passage_fast(random_theme, form_level)
                 
                 if passage_data:
                     logger.info(f"✅ Generated comprehension via DeepSeek AI: {random_theme}")
                 else:
-                    logger.warning(f"⚠️ DeepSeek AI generation failed, using service fallback")
-                    # Fallback to service fallback if AI fails
+                    logger.warning(f"⚠️ DeepSeek AI generation failed, using enhanced fallback")
+                    # Use enhanced fallback immediately
                     passage_data = self.english_service._get_fallback_long_comprehension(random_theme)
                         
             except Exception as e:
                 logger.error(f"Error in DeepSeek comprehension generation: {e}")
-                # Emergency fallback: Use service fallback
+                # Emergency fallback: Use enhanced service fallback immediately
+                logger.info("🔄 Using enhanced fallback due to timeout/error")
                 try:
                     passage_data = self.english_service._get_fallback_long_comprehension(random_theme)
                 except Exception as fallback_error:

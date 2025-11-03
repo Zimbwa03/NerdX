@@ -595,6 +595,36 @@ Return valid JSON with the exact format requested."""
             logger.error(f"Error in DeepSeek long comprehension generation: {e}")
             return self._get_fallback_long_comprehension(theme)
 
+    def generate_long_comprehension_passage_fast(self, theme: str, form_level: int = 4) -> Optional[Dict]:
+        """Fast version with reduced timeouts to prevent worker crashes on Render"""
+        try:
+            # Use DeepSeek V3.1 with reduced timeouts for Render deployment
+            from standalone_english_comprehension_generator import standalone_english_comprehension_generator
+            
+            logger.info(f"Fast generation: DeepSeek V3.1 for theme: {theme}, form: {form_level}")
+            
+            # Create a fast generator instance with reduced timeouts
+            fast_generator = standalone_english_comprehension_generator.__class__()
+            fast_generator.api_key = standalone_english_comprehension_generator.api_key
+            fast_generator.api_url = standalone_english_comprehension_generator.api_url
+            fast_generator.max_retries = 2  # Reduced from 3
+            fast_generator.timeouts = [15, 25]  # Reduced from [30, 45, 60]
+            fast_generator.retry_delay = 1  # Reduced from 2
+            
+            result = fast_generator.generate_long_comprehension_passage(theme, form_level)
+            
+            if result:
+                logger.info(f"✅ Fast generation successful using DeepSeek V3.1")
+                return result
+            else:
+                logger.warning("Fast DeepSeek generation failed, using fallback immediately")
+                return self._get_fallback_long_comprehension(theme)
+                
+        except Exception as e:
+            logger.error(f"Error in fast DeepSeek generation: {e}")
+            logger.info("🔄 Falling back to enhanced fallback immediately")
+            return self._get_fallback_long_comprehension(theme)
+
     def _get_fallback_long_comprehension(self, theme: str) -> Dict:
         """Enhanced ZIMSEC-style fallback long comprehension passage when AI fails"""
         # Use the enhanced fallback from the standalone generator
