@@ -333,15 +333,28 @@ class WhatsAppService:
             else:
                 logger.info(f"Allowing menu message to {to} - bypassing throttle")
             
-            # Acquire lock to prevent concurrent sends (menu messages can still acquire lock)
+            # Acquire lock to prevent concurrent sends (menu messages get priority)
             if not message_throttle.acquire_lock(to):
                 if is_menu_message:
-                    # Menu messages are critical - wait briefly and retry
+                    # Menu messages are critical - try multiple times
                     logger.info(f"Menu message lock wait for {to}, retrying...")
-                    time.sleep(0.5)
-                    if not message_throttle.acquire_lock(to):
-                        logger.warning(f"Menu message to {to} blocked - lock still held")
-                        return False
+                    
+                    # Try 2 times with delays for interactive messages (shorter than grouped buttons)
+                    for attempt in range(2):
+                        wait_time = 1.0 + (attempt * 0.5)  # 1.0s, 1.5s
+                        time.sleep(wait_time)
+                        
+                        if message_throttle.acquire_lock(to):
+                            logger.info(f"Menu interactive lock acquired on attempt {attempt + 2} for {to}")
+                            break
+                    else:
+                        # Force release for critical menu messages
+                        logger.warning(f"Menu message forcing lock release for {to}")
+                        message_throttle.force_release_lock(to)
+                        
+                        if not message_throttle.acquire_lock(to):
+                            logger.error(f"Menu message to {to} blocked - could not acquire lock even after force release")
+                            return False
                 else:
                     logger.warning(f"Interactive message to {to} blocked - concurrent send")
                     return False
@@ -441,15 +454,29 @@ class WhatsAppService:
             else:
                 logger.info(f"Allowing menu grouped buttons to {to} despite throttle")
             
-            # Acquire lock (menu messages can retry)
+            # Acquire lock (menu messages can retry and force release if needed)
             if not message_throttle.acquire_lock(to):
                 if is_menu_message:
-                    # Menu messages are critical - wait briefly and retry
+                    # Menu messages are critical - try multiple times with increasing delays
                     logger.info(f"Menu grouped buttons lock wait for {to}, retrying...")
-                    time.sleep(0.5)
-                    if not message_throttle.acquire_lock(to):
-                        logger.warning(f"Menu grouped buttons to {to} blocked - lock still held")
-                        return False
+                    
+                    # Try 3 times with increasing delays
+                    for attempt in range(3):
+                        wait_time = 1.0 + (attempt * 0.5)  # 1.0s, 1.5s, 2.0s
+                        time.sleep(wait_time)
+                        
+                        if message_throttle.acquire_lock(to):
+                            logger.info(f"Menu lock acquired on attempt {attempt + 2} for {to}")
+                            break
+                    else:
+                        # All retries failed - force release the lock for menu messages
+                        logger.warning(f"Menu grouped buttons forcing lock release for {to}")
+                        message_throttle.force_release_lock(to)
+                        
+                        # Try one final time
+                        if not message_throttle.acquire_lock(to):
+                            logger.error(f"Menu grouped buttons to {to} blocked - could not acquire lock even after force release")
+                            return False
                 else:
                     logger.warning(f"Grouped buttons blocked - concurrent send for {to}")
                     return False

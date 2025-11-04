@@ -27,6 +27,12 @@ class MessageThrottle:
         # Lock to prevent concurrent message sends per user
         self.user_locks: Dict[str, bool] = defaultdict(bool)
         
+        # Track when locks were acquired to prevent indefinite holding
+        self.lock_timestamps: Dict[str, float] = defaultdict(float)
+        
+        # Maximum time a lock can be held (in seconds)
+        self.max_lock_duration = 30.0  # 30 seconds max lock time
+        
     def can_send_message(self, user_id: str) -> bool:
         """Check if we can send a message to this user"""
         current_time = time.time()
@@ -68,14 +74,20 @@ class MessageThrottle:
     
     def acquire_lock(self, user_id: str) -> bool:
         """Acquire a lock for sending message to user"""
+        # Clean up stuck locks first
+        self._cleanup_stuck_locks(user_id)
+        
         if self.user_locks[user_id]:
             return False
+        
         self.user_locks[user_id] = True
+        self.lock_timestamps[user_id] = time.time()
         return True
     
     def release_lock(self, user_id: str):
         """Release the lock after message is sent"""
         self.user_locks[user_id] = False
+        self.lock_timestamps[user_id] = 0.0  # Clear timestamp
     
     def throttle_delay(self, user_id: str) -> float:
         """Get recommended delay before sending next message"""
@@ -83,6 +95,26 @@ class MessageThrottle:
         if time_since_last < self.min_delay_between_messages:
             return self.min_delay_between_messages - time_since_last
         return 0
+    
+    def _cleanup_stuck_locks(self, user_id: str):
+        """Clean up locks that have been held too long"""
+        if not self.user_locks[user_id]:
+            return  # No lock to clean up
+        
+        current_time = time.time()
+        lock_age = current_time - self.lock_timestamps[user_id]
+        
+        if lock_age > self.max_lock_duration:
+            logger.warning(f"Cleaning up stuck lock for {user_id} (held for {lock_age:.1f}s)")
+            self.user_locks[user_id] = False
+            self.lock_timestamps[user_id] = 0.0
+    
+    def force_release_lock(self, user_id: str):
+        """Force release a lock (for critical menu messages)"""
+        if self.user_locks[user_id]:
+            logger.info(f"Force releasing lock for {user_id}")
+            self.user_locks[user_id] = False
+            self.lock_timestamps[user_id] = 0.0
 
 # Global instance
 message_throttle = MessageThrottle()
