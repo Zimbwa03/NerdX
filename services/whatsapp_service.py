@@ -63,14 +63,14 @@ class WhatsAppService:
                 is_critical = any(keyword in message.lower() for keyword in critical_keywords)
                 
                 if not is_critical:
-                delay = message_throttle.throttle_delay(to)
-                if delay > 0:
-                    logger.info(f"Throttling message to {to}, waiting {delay:.2f}s")
-                    time.sleep(delay)
-                    # Recheck after delay
-                    if not message_throttle.can_send_message(to):
-                        logger.warning(f"Message to {to} blocked by throttle - too many messages")
-                        return False
+                    delay = message_throttle.throttle_delay(to)
+                    if delay > 0:
+                        logger.info(f"Throttling message to {to}, waiting {delay:.2f}s")
+                        time.sleep(delay)
+                        # Recheck after delay
+                        if not message_throttle.can_send_message(to):
+                            logger.warning(f"Message to {to} blocked by throttle - too many messages")
+                            return False
                 else:
                     logger.info(f"Allowing critical registration message to {to} despite throttle")
             
