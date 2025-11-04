@@ -63,14 +63,14 @@ class WhatsAppService:
                 is_critical = any(keyword in message.lower() for keyword in critical_keywords)
                 
                 if not is_critical:
-                    delay = message_throttle.throttle_delay(to)
-                    if delay > 0:
-                        logger.info(f"Throttling message to {to}, waiting {delay:.2f}s")
-                        time.sleep(delay)
-                        # Recheck after delay
-                        if not message_throttle.can_send_message(to):
-                            logger.warning(f"Message to {to} blocked by throttle - too many messages")
-                            return False
+                delay = message_throttle.throttle_delay(to)
+                if delay > 0:
+                    logger.info(f"Throttling message to {to}, waiting {delay:.2f}s")
+                    time.sleep(delay)
+                    # Recheck after delay
+                    if not message_throttle.can_send_message(to):
+                        logger.warning(f"Message to {to} blocked by throttle - too many messages")
+                        return False
                 else:
                     logger.info(f"Allowing critical registration message to {to} despite throttle")
             
@@ -314,21 +314,38 @@ class WhatsAppService:
     def send_interactive_message(self, to: str, message: str, buttons: List[Dict]) -> bool:
         """Send buttons as interactive message - use List Message for 4+ options for WhatsApp compliance"""
         try:
-            # CRITICAL: Apply same throttling to prevent message chains
-            if not message_throttle.can_send_message(to):
-                delay = message_throttle.throttle_delay(to)
-                if delay > 0:
-                    logger.info(f"Throttling interactive message to {to}, waiting {delay:.2f}s")
-                    time.sleep(delay)
-                    # Recheck after delay
-                    if not message_throttle.can_send_message(to):
-                        logger.warning(f"Interactive message to {to} blocked by throttle")
-                        return False
+            # CRITICAL: Menu/navigation messages are critical - allow them to bypass throttle
+            is_menu_message = any(keyword in message.lower() for keyword in [
+                'topics menu', 'select a topic', 'choose an option', 'menu', 
+                'topics', 'subjects', 'select', 'choose', 'navigation'
+            ])
             
-            # Acquire lock to prevent concurrent sends
+            # Apply throttling to prevent message chains (but allow menu messages)
+            if not is_menu_message:
+                if not message_throttle.can_send_message(to):
+                    delay = message_throttle.throttle_delay(to)
+                    if delay > 0:
+                        logger.info(f"Throttling interactive message to {to}, waiting {delay:.2f}s")
+                        time.sleep(delay)
+                        # Recheck after delay
+                        if not message_throttle.can_send_message(to):
+                            logger.warning(f"Interactive message to {to} blocked by throttle")
+                            return False
+            else:
+                logger.info(f"Allowing menu message to {to} - bypassing throttle")
+            
+            # Acquire lock to prevent concurrent sends (menu messages can still acquire lock)
             if not message_throttle.acquire_lock(to):
-                logger.warning(f"Interactive message to {to} blocked - concurrent send")
-                return False
+                if is_menu_message:
+                    # Menu messages are critical - wait briefly and retry
+                    logger.info(f"Menu message lock wait for {to}, retrying...")
+                    time.sleep(0.5)
+                    if not message_throttle.acquire_lock(to):
+                        logger.warning(f"Menu message to {to} blocked - lock still held")
+                        return False
+                else:
+                    logger.warning(f"Interactive message to {to} blocked - concurrent send")
+                    return False
             
             try:
                 # Validate and truncate message length (WhatsApp limit: 1-1024 characters)
@@ -411,15 +428,32 @@ class WhatsAppService:
                 logger.warning(f"Message too long ({len(message)} chars), truncating to 1024 characters")
                 message = message[:1021] + "..."
             
-            # CRITICAL FIX: Apply throttling before sending first group
-            if not message_throttle.can_send_message(to):
-                logger.warning(f"Grouped buttons blocked by throttle for {to}")
-                return False
+            # CRITICAL: Menu/navigation messages are critical - allow them to bypass throttle
+            is_menu_message = any(keyword in message.lower() for keyword in [
+                'topics menu', 'select a topic', 'choose an option', 'menu', 
+                'topics', 'subjects', 'select', 'choose', 'navigation', 'more options'
+            ])
             
-            # Acquire lock
+            # Apply throttling before sending first group (but allow menu messages)
+            if not is_menu_message:
+                if not message_throttle.can_send_message(to):
+                    logger.warning(f"Grouped buttons blocked by throttle for {to}")
+                    return False
+            else:
+                logger.info(f"Allowing menu grouped buttons to {to} despite throttle")
+            
+            # Acquire lock (menu messages can retry)
             if not message_throttle.acquire_lock(to):
-                logger.warning(f"Grouped buttons blocked - concurrent send for {to}")
-                return False
+                if is_menu_message:
+                    # Menu messages are critical - wait briefly and retry
+                    logger.info(f"Menu grouped buttons lock wait for {to}, retrying...")
+                    time.sleep(0.5)
+                    if not message_throttle.acquire_lock(to):
+                        logger.warning(f"Menu grouped buttons to {to} blocked - lock still held")
+                        return False
+                else:
+                    logger.warning(f"Grouped buttons blocked - concurrent send for {to}")
+                    return False
             
             try:
                 # First send message with first 3 buttons
@@ -605,18 +639,24 @@ class WhatsAppService:
             return False
     
     def send_list_message_from_buttons(self, to: str, message: str, buttons: List[Dict]) -> bool:
-        """Convert button list to WhatsApp List Message for better compliance with 4+ options"""
+        """Convert button list to WhatsApp List Message - CRITICAL: Max 10 rows per WhatsApp limit"""
         try:
+            # CRITICAL FIX: WhatsApp allows max 10 rows per list message
+            # If we have >10 buttons, use grouped buttons instead
+            if len(buttons) > 10:
+                logger.info(f"Too many buttons ({len(buttons)}) for list message (max 10), using grouped buttons")
+                return self.send_grouped_buttons(to, message, buttons)
+            
             url = f"{self.base_url}/{self.phone_number_id}/messages"
             headers = {
                 'Authorization': f'Bearer {self.access_token}',
                 'Content-Type': 'application/json'
             }
             
-            # Convert buttons to list rows
+            # Convert buttons to list rows (max 10)
             rows = []
             seen_ids = set()  # Track IDs to ensure uniqueness
-            for i, button in enumerate(buttons[:20]):  # WhatsApp supports max 20 list items
+            for i, button in enumerate(buttons[:10]):  # WhatsApp max 10 rows per list
                 button_id = button.get('callback_data') or button.get('id', f'option_{i}')
                 button_title = button.get('text') or button.get('title', f'Option {i+1}')
                 
@@ -659,7 +699,7 @@ class WhatsAppService:
             response = requests.post(url, headers=headers, json=data, timeout=15)
             
             if response.status_code == 200:
-                logger.info(f"List message sent successfully to {to} with {len(buttons)} options")
+                logger.info(f"List message sent successfully to {to} with {len(rows)} options")
                 return True
             else:
                 logger.error(f"Failed to send list message: {response.status_code} - {response.text}")
