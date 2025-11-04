@@ -85,9 +85,9 @@ class QuestionService:
                 # Get a pool of questions that match subject/topic
                 questions = get_questions_by_category_and_topic(subject, topic, limit=50)
             
-            # Filter out recently asked questions (shorter window for Combined Science to enable more practice)
+            # Filter out recently asked questions (increased window for better diversity)
             from database.session_db import get_recent_question_hashes
-            recent_days = 1 if subject in ['Biology', 'Chemistry', 'Physics'] else 7  # Shorter window for Combined Science
+            recent_days = 3 if subject in ['Biology', 'Chemistry', 'Physics'] else 7  # Increased from 1 to 3 days for better diversity
             recent_hashes = get_recent_question_hashes(user_id, days=recent_days)
             
             available_questions = []
@@ -96,10 +96,20 @@ class QuestionService:
                 if question_hash not in recent_hashes:
                     available_questions.append(question)
 
-            # If all questions are recently seen, allow reuse so user can keep practicing
+            # Prioritize knowledge-focused questions over experimental ones
+            if available_questions:
+                knowledge_questions = [q for q in available_questions if self._is_knowledge_focused(q)]
+                if knowledge_questions:
+                    logger.info(f"Found {len(knowledge_questions)} knowledge-focused questions for {subject}/{topic}")
+                    available_questions = knowledge_questions
+                else:
+                    logger.info(f"No knowledge-focused questions found, using all {len(available_questions)} available questions")
+
+            # If all questions are recently seen, allow reuse but still prioritize knowledge-focused
             if not available_questions:
                 logger.info(f"All questions recently seen for {subject}/{topic}; allowing reuse for continued practice")
-                available_questions = questions
+                knowledge_questions = [q for q in questions if self._is_knowledge_focused(q)]
+                available_questions = knowledge_questions if knowledge_questions else questions
             
             # Select question based on difficulty (DB field is 'difficulty_level' in Supabase)
             def _get_db_difficulty(row: Dict) -> Optional[str]:
@@ -276,6 +286,53 @@ class QuestionService:
     def _generate_question_hash(self, question_text: str) -> str:
         """Generate hash for question to track duplicates"""
         return hashlib.md5(question_text.encode()).hexdigest()
+    
+    def _is_knowledge_focused(self, question_data: Dict) -> bool:
+        """Check if a question is knowledge-focused rather than experimental"""
+        try:
+            question_text = question_data.get('question', '').lower()
+            
+            # Knowledge-focused indicators (70% priority)
+            knowledge_keywords = [
+                'what is', 'define', 'explain', 'why does', 'how does', 'which of the following',
+                'the main function', 'responsible for', 'characteristic of', 'difference between',
+                'similar to', 'caused by', 'result of', 'purpose of', 'role of', 'function of',
+                'occurs when', 'happens because', 'reason for', 'allows', 'enables', 'prevents',
+                'structure that', 'process of', 'type of', 'example of', 'classified as'
+            ]
+            
+            # Experimental indicators (30% - minimize these)
+            experimental_keywords = [
+                'experiment to', 'laboratory procedure', 'apparatus used', 'equipment needed',
+                'step by step', 'method to measure', 'materials required', 'how to set up',
+                'in the lab you', 'using a beaker', 'procedure for', 'steps to follow',
+                'practical method', 'investigation involves'
+            ]
+            
+            # Application indicators (30% - include some)
+            application_keywords = [
+                'in everyday life', 'real world example', 'practical use', 'application of',
+                'used to treat', 'helps in', 'important for', 'benefit of', 'advantage of',
+                'problem with', 'solution to', 'useful because'
+            ]
+            
+            # Check for different types
+            has_knowledge_focus = any(keyword in question_text for keyword in knowledge_keywords)
+            has_experimental_focus = any(keyword in question_text for keyword in experimental_keywords)
+            has_application_focus = any(keyword in question_text for keyword in application_keywords)
+            
+            # Prioritize knowledge and application over experimental
+            if has_knowledge_focus or has_application_focus:
+                return True
+            elif has_experimental_focus:
+                return False
+            else:
+                # Default to accepting if unclear
+                return True
+            
+        except Exception as e:
+            logger.error(f"Error checking question focus: {e}")
+            return True  # Default to accepting the question
     
     def get_topic_list(self, subject: str) -> List[str]:
         """Get list of topics for a subject"""

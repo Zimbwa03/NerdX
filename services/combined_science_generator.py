@@ -141,12 +141,33 @@ class CombinedScienceGenerator:
 - Use simple, clear language suitable for 15-17 year olds
 - Include Zimbabwean context where natural (names, places, examples)
 
+**CRITICAL: Question Focus (70% Theory, 30% Application):**
+- PRIORITIZE: Theoretical knowledge, concepts, definitions, processes
+- INCLUDE: Real-world applications and problem-solving
+- MINIMIZE: Laboratory experiments and practical procedures
+- FOCUS ON: Understanding WHY things happen, not just HOW to do experiments
+- EMPHASIZE: Conceptual understanding over procedural knowledge
+
+**Question Types to Generate:**
+- Definitions and terminology (What is...?)
+- Process explanations (How does...?)
+- Cause and effect relationships (Why does...?)
+- Comparisons and contrasts (Difference between...?)
+- Applications to real life (When would you...?)
+- Concept connections (How are X and Y related?)
+
+**Avoid These Question Types:**
+- Step-by-step laboratory procedures
+- Equipment identification only
+- Measurement techniques without theory
+- Pure memorization of experimental steps
+
 **Explanation Requirements:**
 - Write like a patient, caring tutor explaining to a teenager
 - Break down complex ideas into simple steps
 - Use everyday examples and analogies
 - Keep explanations 2-3 sentences maximum
-- Focus on helping students understand, not showing off knowledge
+- Focus on helping students understand concepts, not procedures
 - Use encouraging, supportive tone
 
 **Content Guidelines:**
@@ -158,7 +179,7 @@ class CombinedScienceGenerator:
 
 Return ONLY a JSON object:
 {{
-    "question": "Clear, age-appropriate question text",
+    "question": "Clear, knowledge-focused question testing understanding of concepts",
     "options": {{
         "A": "First option",
         "B": "Second option", 
@@ -166,13 +187,14 @@ Return ONLY a JSON object:
         "D": "Fourth option"
     }},
     "correct_answer": "B",
-    "explanation": "Simple, clear explanation that a teenager can easily understand. Use everyday language and examples.",
+    "explanation": "Simple, clear explanation focusing on WHY this is correct and the underlying concept. Use everyday language and examples.",
     "difficulty": "{difficulty}",
-    "learning_objective": "What students should learn from this question",
-    "real_world_application": "How this applies to everyday life or future studies"
+    "learning_objective": "What conceptual knowledge students should gain from this question",
+    "real_world_application": "How this concept applies to everyday life or future studies",
+    "question_type": "knowledge_focused"
 }}
 
-Make this educational and encouraging for O-Level students!"""
+Make this educational, knowledge-focused, and encouraging for O-Level students!"""
 
         return prompt
     

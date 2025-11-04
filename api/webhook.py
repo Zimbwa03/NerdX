@@ -1415,6 +1415,13 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         elif selection_id.startswith('subject_'): # General subject selection (e.g., Advanced Level)
             subject_name = selection_id.replace('subject_', '').title()
             handle_subject_selection(user_id, subject_name)
+        elif selection_id.startswith('topic_page_'):
+            # Handle pagination navigation: topic_page_Biology_2
+            parts = selection_id.split("_")
+            if len(parts) >= 4:
+                subject = parts[2]  # Biology, Chemistry, Physics
+                page = int(parts[3])
+                handle_combined_science_topic_menu(user_id, subject, page)
         elif selection_id.startswith('topic_'):
             # Extract subject and topic from callback data
             parts = selection_id.split("_", 2)
@@ -3408,8 +3415,8 @@ def handle_science_answer(user_id: str, selected_answer: str, session_key: str):
         logger.error(f"Error handling science answer for {user_id}: {e}", exc_info=True)
         whatsapp_service.send_message(user_id, "❌ Error processing your answer. Please try again.")
 
-def handle_combined_science_topic_menu(user_id: str, subject: str):
-    """Show topic selection menu for specific Combined Science subject (Biology, Chemistry, Physics)"""
+def handle_combined_science_topic_menu(user_id: str, subject: str, page: int = 1):
+    """Show paginated topic selection menu for specific Combined Science subject"""
     try:
         from database.external_db import get_user_registration, get_user_stats, get_user_credits
         
@@ -3429,32 +3436,56 @@ def handle_combined_science_topic_menu(user_id: str, subject: str):
         icon = subject_icons.get(subject, '🔬')
         
         # Get topics for the subject
-        topics = TOPICS.get(subject, [])
-        if not topics:
+        all_topics = TOPICS.get(subject, [])
+        if not all_topics:
             whatsapp_service.send_message(user_id, f"❌ No topics available for {subject}.")
             return
         
-        # Create header message
+        # Implement pagination for topics (10 per page to respect WhatsApp limit)
+        page_size = 10
+        total_pages = (len(all_topics) + page_size - 1) // page_size
+        start_idx = (page - 1) * page_size
+        end_idx = min(start_idx + page_size, len(all_topics))
+        page_topics = all_topics[start_idx:end_idx]
+        
+        # Create header message with pagination info
         text = f"{icon} *{subject} Topics Menu* {icon}\n\n"
         text += f"👤 Hey {user_name}! Ready to master {subject}?\n\n"
         text += f"📊 *Your Progress:*\n"
         text += f"💳 Credits: *{current_credits}*\n"
         text += f"⭐ Level: *{current_level}*\n\n"
+        
+        if total_pages > 1:
+            text += f"📄 *Page {page} of {total_pages}* ({len(page_topics)} topics)\n\n"
+        
         text += f"🎯 *{subject} Learning Benefits:*\n"
-        text += f"• Database-first questions from ZIMSEC syllabus\n"
-        text += f"• AI fallback for continuous learning\n"
-        text += f"• Topic-specific questions (no mixing!)\n"
+        text += f"• Knowledge-focused ZIMSEC questions\n"
+        text += f"• Diverse questions per topic (no repeats!)\n"
+        text += f"• Theory + application mix\n"
         text += f"• 5-10 XP per correct answer\n\n"
         text += f"📚 *Select a {subject} topic to practice:*"
         
-        # Create buttons for topics (max 3 per message for WhatsApp compatibility)
+        # Create buttons for current page topics
         buttons = []
-        for topic in topics:
+        for topic in page_topics:
             callback_data = f"topic_{subject}_{topic.replace(' ', '_')}"
             buttons.append({
                 "text": f"📖 {topic}",
                 "callback_data": callback_data
             })
+        
+        # Add pagination buttons if needed
+        if total_pages > 1:
+            if page > 1:
+                buttons.append({
+                    "text": f"⬅️ Previous ({page-1}/{total_pages})",
+                    "callback_data": f"topic_page_{subject}_{page-1}"
+                })
+            if page < total_pages:
+                buttons.append({
+                    "text": f"Next ({page+1}/{total_pages}) ➡️",
+                    "callback_data": f"topic_page_{subject}_{page+1}"
+                })
         
         # Add back button
         buttons.append({
@@ -3462,12 +3493,10 @@ def handle_combined_science_topic_menu(user_id: str, subject: str):
             "callback_data": "subject_ordinary_combined_science"
         })
         
-        # Send topics in groups of 3
-        # CRITICAL FIX: Always use single message - let WhatsApp service handle grouping
-        # This prevents message chains that trigger spam detection
+        # Send as list message (now supports pagination)
         whatsapp_service.send_interactive_message(user_id, text, buttons)
         
-        logger.info(f"✅ Displayed {subject} topics menu for user {user_id}")
+        logger.info(f"✅ Displayed {subject} topics menu page {page}/{total_pages} for user {user_id}")
         
     except Exception as e:
         logger.error(f"Error handling {subject} topics menu for {user_id}: {e}", exc_info=True)

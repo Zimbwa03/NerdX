@@ -664,13 +664,13 @@ class WhatsAppService:
             return False
     
     def send_list_message_from_buttons(self, to: str, message: str, buttons: List[Dict]) -> bool:
-        """Convert button list to WhatsApp List Message - CRITICAL: Max 10 rows per WhatsApp limit"""
+        """Convert button list to WhatsApp List Message - supports pagination for >10 buttons"""
         try:
-            # CRITICAL FIX: WhatsApp allows max 10 rows per list message
-            # If we have >10 buttons, use grouped buttons instead
+            # UPDATED: Allow pagination instead of forcing grouped buttons for >10 items
+            # This will be handled by the caller (topic menu pagination)
             if len(buttons) > 10:
-                logger.info(f"Too many buttons ({len(buttons)}) for list message (max 10), using grouped buttons")
-                return self.send_grouped_buttons(to, message, buttons)
+                logger.info(f"Sending list message with {len(buttons)} buttons (may exceed 10-row limit)")
+                # Continue with list message - pagination should be handled by caller
             
             url = f"{self.base_url}/{self.phone_number_id}/messages"
             headers = {
