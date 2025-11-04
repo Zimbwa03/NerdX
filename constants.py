@@ -3,27 +3,40 @@
 # ZIMSEC Combined Science and English Topics - Restored from backup
 TOPICS = {
     "Biology": [
-        "Laboratory rules and safety",
-        "Cells and levels of organization",
-        "Nutrition",
-        "Respiratory system",
-        "Transport systems",
-        "Reproduction in plants and animals",
-        "Health and diseases"
+        "Cell Structure and Organisation",
+        "Movement In and Out of Cells",
+        "Enzymes",
+        "Plant Nutrition",
+        "Animal Nutrition",
+        "Transport in Plants",
+        "Transport in Humans",
+        "Respiration",
+        "Excretion",
+        "Coordination and Response",
+        "Reproduction",
+        "Organisms and Environment",
+        "Human Influences on Ecosystem",
+        "Classification"
     ],
     "Chemistry": [
-        "Matter",
+        "Experimental Chemistry",
+        "Particulate Nature of Matter",
+        "Formulae and Stoichiometry",
+        "Electrolysis",
+        "Energy from Chemicals",
+        "Chemical Reactions",
         "Acids, Bases and Salts",
-        "Oxidation and Reduction",
-        "Industrial Processes",
+        "Periodic Table",
+        "Metals",
+        "Chemistry of Environment",
         "Organic Chemistry"
     ],
     "Physics": [
-        "Measurements",
-        "Force",
-        "Energy",
-        "Magnetism",
-        "Electricity"
+        "Motion, Forces and Energy",
+        "Thermal Physics",
+        "Waves",
+        "Electricity",
+        "Nuclear Physics"
     ],
     "Mathematics": [
         "Real Numbers",

@@ -3565,11 +3565,20 @@ def handle_combined_science_question(user_id: str, subject: str, topic: str, dif
         registration = get_user_registration(user_id)
         user_name = registration['name'] if registration else "Student"
 
-        # Get question: DB-first by exact subject/topic, then AI fallback
+        # Get professional O-Level question: DB-first, then professional AI generation
+        logger.info(f"🎓 Getting professional O-Level {subject} question for {topic} ({difficulty})")
         question_data = question_service.get_question(user_id, subject, topic, difficulty, force_ai=False)
 
         if not question_data:
-            whatsapp_service.send_message(user_id, f"❌ Could not generate {subject} question. Please try again.")
+            # Send user-friendly error message
+            whatsapp_service.send_message(
+                user_id, 
+                f"❌ Sorry {user_name}, I couldn't generate a {subject} question for {topic} right now.\n\n"
+                f"💡 Try:\n"
+                f"• Another topic from the menu\n"
+                f"• Try again in a moment\n"
+                f"• Contact support if this continues"
+            )
             return
 
         # Store question in session
@@ -3601,14 +3610,15 @@ def handle_combined_science_question(user_id: str, subject: str, topic: str, dif
         user_stats = get_user_stats(user_id)
         current_level = user_stats.get('level', 1) if user_stats else 1
 
-        # Enhanced gamified question display
-        message = f"🧪 *{subject} Topical Question* 🧪\n\n"
-        message += f"👤 *Student:* {user_name} (Level {current_level})\n"
-        message += f"📚 *Topic:* {topic}\n"
-        message += f"💳 *Credits Deducted:* {required_credits}\n"
-        message += f"💰 *Current Balance:* {new_credits}\n\n"
+        # O-Level student-friendly question display
+        subject_icons = {'Biology': '🧬', 'Chemistry': '⚗️', 'Physics': '⚡'}
+        icon = subject_icons.get(subject, '🔬')
+        
+        message = f"{icon} *{subject} - {topic}* {icon}\n\n"
+        message += f"Hi {user_name}! Here's your O-Level question:\n\n"
+        message += f"📚 **{topic}** ({difficulty.title()} Level)\n\n"
 
-        message += f"❓ *Question:*\n{question_data['question']}\n\n"
+        message += f"{question_data['question']}\n\n"
 
         # Format options properly - ensure all 4 options (A, B, C, D) are shown
         if 'options' in question_data and question_data['options']:

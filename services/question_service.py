@@ -153,12 +153,15 @@ class QuestionService:
             return None
     
     def _generate_ai_question(self, subject: str, topic: str, difficulty: str) -> Optional[Dict]:
-        """Generate a new question using AI"""
+        """Generate a new question using AI with O-Level appropriate quality"""
         try:
             if subject == "Mathematics":
                 question_data = self.ai_service.generate_math_question(topic, difficulty)
             elif subject in ["Biology", "Chemistry", "Physics"]:
-                question_data = self.ai_service.generate_science_question(subject, topic, difficulty)
+                # Use professional Combined Science generator for O-Level quality
+                from services.combined_science_generator import combined_science_generator
+                logger.info(f"Generating professional O-Level {subject} question for {topic}")
+                question_data = combined_science_generator.generate_topical_question(subject, topic, difficulty)
             elif subject == "English":
                 question_data = self.ai_service.generate_english_question(topic, difficulty)
             else:
@@ -166,7 +169,7 @@ class QuestionService:
                 return None
             
             if question_data:
-                question_data['source'] = 'ai_generated'
+                question_data['source'] = 'ai_generated_professional'
                 question_data['subject'] = subject
                 question_data['topic'] = topic
                 question_data['difficulty'] = difficulty
@@ -179,7 +182,7 @@ class QuestionService:
             return None
     
     def _save_generated_question(self, question_data: Dict, subject: str, topic: str, difficulty: str):
-        """Save generated question to database"""
+        """Save generated question to database with O-Level metadata"""
         try:
             # Determine question type
             question_type = 'mcq' if 'options' in question_data else 'open'
@@ -188,18 +191,87 @@ class QuestionService:
             elif subject == "English":
                 question_type = 'essay'
             
-            # Format options for storage
-            options_json = None
-            if 'options' in question_data:
-                options_json = json.dumps(question_data['options'])
+            # Enhance question data with O-Level specific metadata
+            enhanced_question = question_data.copy()
+            enhanced_question.update({
+                'question_type': question_type,
+                'difficulty': difficulty,
+                'category': subject,  # For database compatibility
+                'points': DIFFICULTY_LEVELS.get(difficulty, {}).get('point_value', 10),
+                'source': 'ai_generated_professional_olevel'
+            })
             
             # Save to database with correct function signature
-            save_ai_question_to_database(question_data, subject, topic)
+            result = save_ai_question_to_database(enhanced_question, subject, topic)
             
-            logger.info(f"Saved AI-generated question to database: {subject}/{topic}/{difficulty}")
+            if result:
+                logger.info(f"✅ Saved professional O-Level question to database: {subject}/{topic}/{difficulty}")
+            else:
+                logger.error(f"❌ Failed to save question for {subject}/{topic}/{difficulty}")
             
         except Exception as e:
             logger.error(f"Error saving generated question: {e}")
+    
+    def populate_topic_questions(self, subject: str, topic: str, min_questions: int = 15) -> Dict:
+        """Populate a specific topic with minimum number of professional O-Level questions"""
+        try:
+            if subject not in ["Biology", "Chemistry", "Physics"]:
+                return {'success': False, 'message': 'Only Combined Science subjects supported'}
+            
+            from services.combined_science_generator import combined_science_generator
+            
+            # Check current question count
+            current_count = count_questions_by_category_and_topic(subject, topic)
+            logger.info(f"Current question count for {subject}/{topic}: {current_count}")
+            
+            if current_count >= min_questions:
+                return {
+                    'success': True,
+                    'message': f"{subject}/{topic} already has {current_count} questions",
+                    'questions_added': 0
+                }
+            
+            needed = min_questions - current_count
+            logger.info(f"Generating {needed} professional O-Level questions for {subject}/{topic}")
+            
+            # Generate questions across difficulties (O-Level appropriate distribution)
+            questions_added = 0
+            difficulties = ['easy'] * 6 + ['medium'] * 6 + ['difficult'] * 3  # More easy/medium for O-Level
+            
+            for i in range(needed):
+                difficulty = difficulties[i % len(difficulties)]
+                
+                try:
+                    question = combined_science_generator.generate_topical_question(subject, topic, difficulty)
+                    if question:
+                        # Save to database
+                        if combined_science_generator._save_question_to_database(question):
+                            questions_added += 1
+                            logger.info(f"✅ Added question {questions_added}/{needed} for {subject}/{topic}")
+                        
+                        # Small delay to prevent API rate limiting
+                        time.sleep(2)
+                    else:
+                        logger.warning(f"Failed to generate question {i+1} for {subject}/{topic}")
+                        
+                except Exception as e:
+                    logger.error(f"Error generating question {i+1}: {e}")
+                    continue
+            
+            return {
+                'success': True,
+                'message': f"Added {questions_added} professional questions to {subject}/{topic}",
+                'questions_added': questions_added,
+                'total_questions': current_count + questions_added
+            }
+            
+        except Exception as e:
+            logger.error(f"Error populating topic questions: {e}")
+            return {
+                'success': False,
+                'message': f"Error populating {subject}/{topic}: {str(e)}",
+                'questions_added': 0
+            }
     
     def _generate_question_hash(self, question_text: str) -> str:
         """Generate hash for question to track duplicates"""
