@@ -152,7 +152,6 @@ class GraphPracticeHandler:
             # New button structure as requested
             buttons = [
                 {"text": "📝 Practice Questions", "callback_data": f"graph_practice_{module_id}"},
-                {"text": "📊 Sample Graphs", "callback_data": f"graph_sample_graphs_{module_id}"},
                 {"text": "📖 Learn Theory", "callback_data": f"graph_theory_{module_id}"},
                 {"text": "🔙 Back Topics", "callback_data": "graph_practice_start"}
             ]
@@ -405,7 +404,6 @@ Study the question and when ready, click "Show Graph" to see the correct graph w
 
                 buttons = [
                     {"text": "📚 View Theory", "callback_data": f"graph_theory_{module_id}"},
-                    {"text": "📊 Sample Graphs", "callback_data": f"graph_sample_graphs_{module_id}"},
                     {"text": "🔙 Back to Topics", "callback_data": "graph_practice_start"}
                 ]
 

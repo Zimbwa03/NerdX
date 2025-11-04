@@ -429,9 +429,21 @@ class GraphService:
         elif clean.lower().startswith('f(x)='):
             clean = clean[5:].strip()
 
+        # CRITICAL FIX: Convert Unicode superscripts to standard notation
+        # This fixes the "invalid character '²' (U+00B2)" error
+        superscript_map = {
+            '⁰': '^0', '¹': '^1', '²': '^2', '³': '^3', '⁴': '^4',
+            '⁵': '^5', '⁶': '^6', '⁷': '^7', '⁸': '^8', '⁹': '^9'
+        }
+        
+        for unicode_char, standard_notation in superscript_map.items():
+            clean = clean.replace(unicode_char, standard_notation)
+        
+        logger.info(f"After superscript conversion: '{clean}'")
+
         # Replace common mathematical notation for ZIMSEC standards
         replacements = {
-            '^': '**',          # Power notation
+            '^': '**',          # Power notation (convert ^ to ** for Python)
             'ln': 'log',        # Natural log
             'sqrt': 'sqrt',     # Square root
             'abs': 'abs',       # Absolute value
@@ -446,6 +458,7 @@ class GraphService:
         import re
         clean = re.sub(r'(\d+)([a-zA-Z])', r'\1*\2', clean)
 
+        logger.info(f"Final cleaned expression: '{clean}'")
         return clean
 
     def create_linear_programming_graph(self, constraints: List[str], objective: str, 

@@ -1502,9 +1502,6 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         elif selection_id.startswith('graph_plot_'):
             module_id = selection_id.replace('graph_plot_', '')
             graph_practice_handler.handle_graph_plot(user_id, module_id)
-        elif selection_id.startswith('graph_sample_graphs_'):
-            module_id = selection_id.replace('graph_sample_graphs_', '')
-            graph_practice_handler.handle_sample_graphs(user_id, module_id)
         elif selection_id.startswith('graph_theory_'):
             module_id = selection_id.replace('graph_theory_', '')
             graph_practice_handler.handle_graph_theory(user_id, module_id)
@@ -2559,7 +2556,6 @@ def handle_mathematics_menu(user_id: str):
         text += f"📚 *Practice Questions:* Earn 5-10 XP per question\n"
         text += f"📷 *Image Math Solver:* Earn 30 XP per solution\n"
         text += f"📈 *Graph Generation:* Earn 25 XP per graph\n"
-        text += f"📊 *Sample Graphs:* Earn 15 XP for learning\n"
         text += f"🔥 *Daily Streaks:* Maintain consistent learning\n\n"
 
         text += f"🚀 *{user_name}, choose how you'd like to earn XP and level up:*"
