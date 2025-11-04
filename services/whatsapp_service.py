@@ -47,7 +47,7 @@ class WhatsAppService:
             # Check quality monitoring before sending (but allow critical messages)
             if self.quality_monitor.should_throttle_messaging():
                 # Allow critical messages like consent requests and registration flows
-                critical_keywords = ['consent', 'welcome', 'registration', 'first name', 'surname', 'date of birth', 'referral code', 'invalid date format', 'please use', 'enter a valid', 'thank you for your consent']
+                critical_keywords = ['consent', 'welcome', 'registration', 'first name', 'surname', 'date of birth', 'referral code', 'invalid date format', 'please use', 'enter a valid', 'thank you for your consent', 'type your expression', 'plot your own', 'please type', 'type your', 'expression now']
                 is_critical = any(keyword in message.lower() for keyword in critical_keywords)
                 
                 if not is_critical:
@@ -59,7 +59,7 @@ class WhatsAppService:
             # CRITICAL: Check throttle to prevent message chains (but allow critical messages)
             if not message_throttle.can_send_message(to):
                 # Allow critical messages like consent requests and registration flows
-                critical_keywords = ['consent', 'welcome', 'registration', 'first name', 'surname', 'date of birth', 'referral code', 'thank you for your consent', 'invalid date format', 'please use', 'enter a valid']
+                critical_keywords = ['consent', 'welcome', 'registration', 'first name', 'surname', 'date of birth', 'referral code', 'thank you for your consent', 'invalid date format', 'please use', 'enter a valid', 'type your expression', 'plot your own', 'please type', 'type your', 'expression now']
                 is_critical = any(keyword in message.lower() for keyword in critical_keywords)
                 
                 if not is_critical:
