@@ -222,7 +222,6 @@ class WhatsAppService:
                             logger.error(f"All {max_retries} upload attempts failed due to timeout")
                             return False
                         # Wait briefly before retry
-                        import time
                         time.sleep(1)
                     except requests.exceptions.RequestException as e:
                         logger.error(f"Upload attempt {attempt + 1} failed with request error: {e}")
@@ -471,7 +470,6 @@ class WhatsAppService:
                     remaining_buttons = remaining_buttons[3:]
                     
                     # CRITICAL: Wait minimum delay between grouped messages
-                    import time
                     time.sleep(message_throttle.min_delay_between_messages)
                     
                     # Check throttle before sending next group
@@ -765,7 +763,6 @@ class WhatsAppService:
         try:
             import os
             import requests
-            import time
             from services.image_hosting_service import ImageHostingService
             
             # Check if file exists
@@ -939,7 +936,6 @@ class WhatsAppService:
                 retry_count += 1
                 if retry_count < max_retries:
                     logger.info(f"Retrying upload in 2 seconds...")
-                    import time
                     time.sleep(2)
             
             if not media_id:
