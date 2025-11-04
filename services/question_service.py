@@ -31,8 +31,8 @@ class QuestionService:
                 if db_question:
                     return db_question
             
-            # Generate new question using AI
-            ai_question = self._generate_ai_question(subject, topic, difficulty)
+            # Generate new question using AI with diversity tracking
+            ai_question = self._generate_ai_question(subject, topic, difficulty, user_id)
             if ai_question:
                 # Save to database for future use
                 self._save_generated_question(ai_question, subject, topic, difficulty)
@@ -162,16 +162,16 @@ class QuestionService:
             logger.error(f"Error getting database question: {e}")
             return None
     
-    def _generate_ai_question(self, subject: str, topic: str, difficulty: str) -> Optional[Dict]:
+    def _generate_ai_question(self, subject: str, topic: str, difficulty: str, user_id: str = None) -> Optional[Dict]:
         """Generate a new question using AI with O-Level appropriate quality"""
         try:
             if subject == "Mathematics":
                 question_data = self.ai_service.generate_math_question(topic, difficulty)
             elif subject in ["Biology", "Chemistry", "Physics"]:
-                # Use professional Combined Science generator for O-Level quality
+                # Use professional Combined Science generator for O-Level quality with diversity
                 from services.combined_science_generator import combined_science_generator
-                logger.info(f"Generating professional O-Level {subject} question for {topic}")
-                question_data = combined_science_generator.generate_topical_question(subject, topic, difficulty)
+                logger.info(f"Generating diverse professional O-Level {subject} question for {topic}")
+                question_data = combined_science_generator.generate_topical_question(subject, topic, difficulty, user_id)
             elif subject == "English":
                 question_data = self.ai_service.generate_english_question(topic, difficulty)
             else:
