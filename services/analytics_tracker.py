@@ -16,6 +16,7 @@ class AnalyticsTracker:
     def __init__(self):
         raw_conn_string = os.getenv('DATABASE_URL') or os.getenv('SUPABASE_DATABASE_URL')
         self.conn_string = self._clean_connection_string(raw_conn_string)
+        self._subject_usage_table_initialized = False
     
     def _clean_connection_string(self, database_url: str) -> str:
         """Clean database URL by removing pgbouncer and other problematic parameters"""
@@ -40,6 +41,63 @@ class AnalyticsTracker:
         except Exception as e:
             logger.error(f"Database connection error: {e}")
             return None
+
+    def _ensure_subject_usage_table(self, cursor):
+        """Ensure the subject_usage_analytics table exists with expected schema"""
+        if self._subject_usage_table_initialized:
+            return
+
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS subject_usage_analytics (
+                id SERIAL PRIMARY KEY,
+                date DATE NOT NULL,
+                subject VARCHAR(100) NOT NULL,
+                topic VARCHAR(150) NOT NULL DEFAULT '',
+                difficulty VARCHAR(50) NOT NULL DEFAULT '',
+                total_attempts INTEGER NOT NULL DEFAULT 0,
+                correct_attempts INTEGER NOT NULL DEFAULT 0,
+                total_users INTEGER NOT NULL DEFAULT 0,
+                avg_time_per_question DOUBLE PRECISION NOT NULL DEFAULT 0,
+                credits_consumed INTEGER NOT NULL DEFAULT 0,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                UNIQUE(date, subject, topic, difficulty)
+            );
+            """
+        )
+
+        # Ensure all expected columns exist (for legacy tables)
+        column_definitions = {
+            'topic': "ALTER TABLE subject_usage_analytics ADD COLUMN IF NOT EXISTS topic VARCHAR(150) NOT NULL DEFAULT ''",
+            'difficulty': "ALTER TABLE subject_usage_analytics ADD COLUMN IF NOT EXISTS difficulty VARCHAR(50) NOT NULL DEFAULT ''",
+            'total_attempts': "ALTER TABLE subject_usage_analytics ADD COLUMN IF NOT EXISTS total_attempts INTEGER NOT NULL DEFAULT 0",
+            'correct_attempts': "ALTER TABLE subject_usage_analytics ADD COLUMN IF NOT EXISTS correct_attempts INTEGER NOT NULL DEFAULT 0",
+            'total_users': "ALTER TABLE subject_usage_analytics ADD COLUMN IF NOT EXISTS total_users INTEGER NOT NULL DEFAULT 0",
+            'avg_time_per_question': "ALTER TABLE subject_usage_analytics ADD COLUMN IF NOT EXISTS avg_time_per_question DOUBLE PRECISION NOT NULL DEFAULT 0",
+            'credits_consumed': "ALTER TABLE subject_usage_analytics ADD COLUMN IF NOT EXISTS credits_consumed INTEGER NOT NULL DEFAULT 0",
+            'created_at': "ALTER TABLE subject_usage_analytics ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()",
+            'updated_at': "ALTER TABLE subject_usage_analytics ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()"
+        }
+
+        for ddl in column_definitions.values():
+            cursor.execute(ddl)
+
+        cursor.execute(
+            """
+            CREATE UNIQUE INDEX IF NOT EXISTS subject_usage_analytics_unique_idx
+            ON subject_usage_analytics(date, subject, topic, difficulty);
+            """
+        )
+
+        cursor.execute("UPDATE subject_usage_analytics SET topic = '' WHERE topic IS NULL;")
+        cursor.execute("UPDATE subject_usage_analytics SET difficulty = '' WHERE difficulty IS NULL;")
+        cursor.execute("ALTER TABLE subject_usage_analytics ALTER COLUMN topic SET DEFAULT '';")
+        cursor.execute("ALTER TABLE subject_usage_analytics ALTER COLUMN difficulty SET DEFAULT '';")
+        cursor.execute("ALTER TABLE subject_usage_analytics ALTER COLUMN topic SET NOT NULL;")
+        cursor.execute("ALTER TABLE subject_usage_analytics ALTER COLUMN difficulty SET NOT NULL;")
+
+        self._subject_usage_table_initialized = True
     
     def track_user_session_start(self, user_id: str, session_id: str, device_info: Dict = None):
         """Track when a user starts a session"""
@@ -111,6 +169,12 @@ class AnalyticsTracker:
             cursor = conn.cursor()
             
             today = date.today()
+
+            self._ensure_subject_usage_table(cursor)
+
+            normalized_topic = topic or ''
+            normalized_difficulty = difficulty or ''
+            correct_increment = 1 if is_correct else 0
             
             # Update subject usage analytics
             cursor.execute("""
@@ -121,14 +185,23 @@ class AnalyticsTracker:
                 ON CONFLICT (date, subject, topic, difficulty) 
                 DO UPDATE SET
                     total_attempts = subject_usage_analytics.total_attempts + 1,
-                    correct_attempts = subject_usage_analytics.correct_attempts + %s,
+                    correct_attempts = subject_usage_analytics.correct_attempts + EXCLUDED.correct_attempts,
+                    total_users = subject_usage_analytics.total_users + 1,
                     avg_time_per_question = (
-                        (subject_usage_analytics.avg_time_per_question * subject_usage_analytics.total_attempts + %s) / 
+                        (subject_usage_analytics.avg_time_per_question * subject_usage_analytics.total_attempts + EXCLUDED.avg_time_per_question) / 
                         (subject_usage_analytics.total_attempts + 1)
                     ),
-                    credits_consumed = subject_usage_analytics.credits_consumed + %s
-            """, (today, subject, topic, difficulty, 1 if is_correct else 0, time_taken, credits_used,
-                  1 if is_correct else 0, time_taken, credits_used))
+                    credits_consumed = subject_usage_analytics.credits_consumed + EXCLUDED.credits_consumed,
+                    updated_at = NOW()
+            """, (
+                today,
+                subject,
+                normalized_topic,
+                normalized_difficulty,
+                correct_increment,
+                time_taken,
+                credits_used
+            ))
             
             conn.commit()
             cursor.close()
