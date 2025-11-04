@@ -44,11 +44,26 @@ class WhatsAppService:
             return False
             
         try:
+            message_lower = message.lower()
+            normalized_message = message_lower.strip()
+            is_command_message = normalized_message.startswith('_') or normalized_message.startswith('/')
+
             # Check quality monitoring before sending (but allow critical messages)
             if self.quality_monitor.should_throttle_messaging():
-                # Allow critical messages like consent requests and registration flows
-                critical_keywords = ['consent', 'welcome', 'registration', 'first name', 'surname', 'date of birth', 'referral code', 'invalid date format', 'please use', 'enter a valid', 'thank you for your consent', 'type your expression', 'plot your own', 'please type', 'type your', 'expression now']
-                is_critical = any(keyword in message.lower() for keyword in critical_keywords)
+                # Allow critical messages like consent requests, registration flows, and payment transactions
+                critical_keywords = [
+                    'consent', 'welcome', 'registration', 'first name', 'surname', 'date of birth', 
+                    'referral code', 'invalid date format', 'please use', 'enter a valid', 
+                    'thank you for your consent', 'type your expression', 'plot your own', 
+                    'please type', 'type your', 'expression now', 'registration step', 'confirm registration',
+                    'nerdx id', 'provide your first name', 'provide your surname', '_registration', '_consent',
+                    '_start', '/start',
+                    # Payment-related critical keywords
+                    'paynow', 'payment', 'ecocash', 'credits', 'package', 'amount', 
+                    'payment method', 'phone number', 'provide your', 'instant payment',
+                    'payment link', 'complete payment', 'payment ready', 'payment details'
+                ]
+                is_critical = is_command_message or any(keyword in message_lower for keyword in critical_keywords)
                 
                 if not is_critical:
                     logger.warning(f"Message to {to} blocked by quality monitor - throttling active")
@@ -58,9 +73,20 @@ class WhatsAppService:
             
             # CRITICAL: Check throttle to prevent message chains (but allow critical messages)
             if not message_throttle.can_send_message(to):
-                # Allow critical messages like consent requests and registration flows
-                critical_keywords = ['consent', 'welcome', 'registration', 'first name', 'surname', 'date of birth', 'referral code', 'thank you for your consent', 'invalid date format', 'please use', 'enter a valid', 'type your expression', 'plot your own', 'please type', 'type your', 'expression now']
-                is_critical = any(keyword in message.lower() for keyword in critical_keywords)
+                # Allow critical messages like consent requests, registration flows, and payment transactions
+                critical_keywords = [
+                    'consent', 'welcome', 'registration', 'first name', 'surname', 'date of birth', 
+                    'referral code', 'thank you for your consent', 'invalid date format', 'please use', 
+                    'enter a valid', 'type your expression', 'plot your own', 'please type', 'type your', 
+                    'expression now', 'registration step', 'confirm registration', 'nerdx id',
+                    'provide your first name', 'provide your surname', '_registration', '_consent',
+                    '_start', '/start',
+                    # Payment-related critical keywords
+                    'paynow', 'payment', 'ecocash', 'credits', 'package', 'amount', 
+                    'payment method', 'phone number', 'provide your', 'instant payment',
+                    'payment link', 'complete payment', 'payment ready', 'payment details'
+                ]
+                is_critical = is_command_message or any(keyword in message_lower for keyword in critical_keywords)
                 
                 if not is_critical:
                     delay = message_throttle.throttle_delay(to)
@@ -313,14 +339,24 @@ class WhatsAppService:
     def send_interactive_message(self, to: str, message: str, buttons: List[Dict]) -> bool:
         """Send buttons as interactive message - use List Message for 4+ options for WhatsApp compliance"""
         try:
-            # CRITICAL: Menu/navigation messages are critical - allow them to bypass throttle
-            is_menu_message = any(keyword in message.lower() for keyword in [
+            message_lower = message.lower()
+            normalized_message = message_lower.strip()
+            is_command_message = normalized_message.startswith('_') or normalized_message.startswith('/')
+            # CRITICAL: Menu/navigation messages and payment messages are critical - allow them to bypass throttle
+            is_menu_message = is_command_message or any(keyword in message_lower for keyword in [
                 'topics menu', 'select a topic', 'choose an option', 'menu', 
-                'topics', 'subjects', 'select', 'choose', 'navigation'
+                'topics', 'subjects', 'select', 'choose', 'navigation',
+                'registration', 'consent', 'start registration', 'complete registration', '_registration', '_consent'
             ])
             
-            # Apply throttling to prevent message chains (but allow menu messages)
-            if not is_menu_message:
+            # Payment-related messages are also critical
+            is_payment_message = any(keyword in message_lower for keyword in [
+                'paynow', 'payment', 'ecocash', 'credits', 'package', 'amount',
+                'payment method', 'choose payment', 'instant payment', 'manual payment'
+            ])
+            
+            # Apply throttling to prevent message chains (but allow menu and payment messages)
+            if not is_menu_message and not is_payment_message:
                 if not message_throttle.can_send_message(to):
                     delay = message_throttle.throttle_delay(to)
                     if delay > 0:

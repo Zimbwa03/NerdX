@@ -722,6 +722,10 @@ Wait {user_name} NerdX is processing your Graph...
             self.whatsapp_service.send_message(user_id, "❌ Error processing your expression. Please try again.")
             return True  # Handled but with error
 
+    def process_expression_input(self, user_id: str, expression: str):
+        """Backward-compatible alias for expression processing used by webhook."""
+        return self.handle_user_expression_input(user_id, expression)
+
     def handle_sample_graphs(self, user_id: str, module_id: str):
         """Handle Sample Graphs option - show 3 plotted graph images for the topic"""
         try:

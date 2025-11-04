@@ -84,12 +84,12 @@ class CombinedScienceGenerator:
             }
         }
     
-    def generate_topical_question(self, subject: str, topic: str, difficulty: str = 'medium') -> Optional[Dict]:
+    def generate_topical_question(self, subject: str, topic: str, difficulty: str = 'medium', user_id: str = None) -> Optional[Dict]:
         """Generate O-Level appropriate topical question with professional explanation"""
         try:
             if not self.api_key:
                 logger.error("DeepSeek API key not configured")
-                return self._get_fallback_question(subject, topic, difficulty)
+                return self._get_fallback_question(subject, topic, difficulty, user_id)
             
             # Create O-Level appropriate prompt
             prompt = self._create_olevel_prompt(subject, topic, difficulty)
@@ -99,14 +99,14 @@ class CombinedScienceGenerator:
             
             if result:
                 # Validate and enhance the result
-                return self._validate_and_enhance_question(result, subject, topic, difficulty)
+                return self._validate_and_enhance_question(result, subject, topic, difficulty, user_id)
             else:
                 logger.warning(f"DeepSeek generation failed for {subject}/{topic}, using fallback")
-                return self._get_fallback_question(subject, topic, difficulty)
+                return self._get_fallback_question(subject, topic, difficulty, user_id)
                 
         except Exception as e:
             logger.error(f"Error generating {subject} question for {topic}: {e}")
-            return self._get_fallback_question(subject, topic, difficulty)
+            return self._get_fallback_question(subject, topic, difficulty, user_id)
     
     def _create_olevel_prompt(self, subject: str, topic: str, difficulty: str) -> str:
         """Create O-Level appropriate prompt for DeepSeek AI"""
@@ -283,7 +283,7 @@ Make this educational, knowledge-focused, and encouraging for O-Level students!"
         logger.error(f"Failed to generate {generation_type} after {self.max_retries} attempts")
         return None
     
-    def _validate_and_enhance_question(self, question_data: Dict, subject: str, topic: str, difficulty: str) -> Dict:
+    def _validate_and_enhance_question(self, question_data: Dict, subject: str, topic: str, difficulty: str, user_id: str = None) -> Dict:
         """Validate and enhance the generated question for O-Level standards"""
         try:
             # Ensure all required fields are present
@@ -291,12 +291,12 @@ Make this educational, knowledge-focused, and encouraging for O-Level students!"
             for field in required_fields:
                 if field not in question_data:
                     logger.warning(f"Missing field {field} in generated question")
-                    return self._get_fallback_question(subject, topic, difficulty)
+                    return self._get_fallback_question(subject, topic, difficulty, user_id)
             
             # Validate options format
             if not isinstance(question_data['options'], dict):
                 logger.warning("Options not in correct format")
-                return self._get_fallback_question(subject, topic, difficulty)
+                return self._get_fallback_question(subject, topic, difficulty, user_id)
             
             # Ensure explanation is O-Level appropriate (not too long or complex)
             explanation = question_data.get('explanation', '')
@@ -319,9 +319,9 @@ Make this educational, knowledge-focused, and encouraging for O-Level students!"
             
         except Exception as e:
             logger.error(f"Error validating question: {e}")
-            return self._get_fallback_question(subject, topic, difficulty)
+            return self._get_fallback_question(subject, topic, difficulty, user_id)
     
-    def _get_fallback_question(self, subject: str, topic: str, difficulty: str) -> Dict:
+    def _get_fallback_question(self, subject: str, topic: str, difficulty: str, user_id: str = None) -> Dict:
         """Provide O-Level appropriate fallback questions when AI fails"""
         
         fallback_questions = {

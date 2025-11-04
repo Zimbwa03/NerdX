@@ -8,6 +8,7 @@ from typing import Dict, List, Optional, Any
 from collections import defaultdict, deque
 from datetime import datetime, timedelta
 import json
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +28,10 @@ class QualityMonitor:
             'daily_message_count': 0,
             'last_reset_date': datetime.now().date()
         }
+        
+        # Override flag to force-disable quality throttling when needed
+        self.force_disable_throttle = os.environ.get('DISABLE_WHATSAPP_THROTTLE', 'false').lower() == 'true'
+        self.last_override_check = time.time()
         
         # Per-user tracking
         self.user_metrics = defaultdict(lambda: {
@@ -239,6 +244,13 @@ class QualityMonitor:
     def should_throttle_messaging(self) -> bool:
         """Determine if messaging should be throttled based on quality metrics"""
         try:
+            # Refresh override flag periodically so ops can toggle without restart
+            self._refresh_throttle_override()
+
+            if getattr(self, 'force_disable_throttle', False):
+                logger.info("WhatsApp throttle override active - allowing message despite quality metrics")
+                return False
+
             complaint_rate = self.get_complaint_rate()
             response_rate = self.get_response_rate()
             quality_rating = self.get_quality_rating()
@@ -426,6 +438,19 @@ class QualityMonitor:
         except Exception as e:
             logger.error(f"Error resolving alert: {e}")
             return False
+
+    def _refresh_throttle_override(self) -> None:
+        """Refresh the throttle override flag from environment variables."""
+        try:
+            current_time = time.time()
+            # Avoid checking constantly; refresh every 30 seconds
+            if current_time - getattr(self, 'last_override_check', 0) < 30:
+                return
+
+            self.force_disable_throttle = os.environ.get('DISABLE_WHATSAPP_THROTTLE', 'false').lower() == 'true'
+            self.last_override_check = current_time
+        except Exception as e:
+            logger.error(f"Error refreshing throttle override flag: {e}")
 
 # Global instance
 quality_monitor = QualityMonitor()
