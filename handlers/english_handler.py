@@ -1983,6 +1983,21 @@ IMPORTANT:
                     ""
                 ])
  
+            # Generate grammar question
+            generation_response = self.english_service.generate_grammar_question(last_question_type=last_question_type)
+            if not generation_response or not generation_response.get('success'):
+                self.whatsapp_service.send_message(user_id, "❌ Error generating grammar question. Please try again.")
+                return
+            
+            question_data = generation_response['question_data'] or {}
+            
+            # Extract question details
+            question_type = question_data.get('question_type', 'Grammar Practice')
+            topic_area = question_data.get('topic_area', 'Grammar and Usage')
+            instructions = question_data.get('instructions', 'Provide your answer.')
+            difficulty = question_data.get('difficulty', 'standard')
+            source = question_data.get('source', 'ai')
+ 
             message_lines = prefaced_lines + [
                 "🤖 *Grammar Tutor | ZIMSEC Language Structures*",
                 f"🎯 *Question Type:* {question_type}",
