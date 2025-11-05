@@ -65,7 +65,9 @@ class AudioChatService:
         self.gemini_client = None
         if GEMINI_API_KEY and genai:
             try:
-                self.gemini_client = genai.Client(api_key=GEMINI_API_KEY)
+                genai.configure(api_key=GEMINI_API_KEY)
+                # Use the genai module directly, not a Client class
+                self.gemini_client = genai
                 logger.info("Gemini AI client initialized for audio generation")
             except Exception as e:
                 logger.error(f"Failed to initialize Gemini AI client: {e}")

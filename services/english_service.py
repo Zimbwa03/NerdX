@@ -38,7 +38,9 @@ class EnglishService:
             if GENAI_AVAILABLE:
                 api_key = os.getenv('GEMINI_API_KEY')
                 if api_key and genai:
-                    self.client = genai.Client(api_key=api_key)
+                    genai.configure(api_key=api_key)
+                    # Use the genai module directly, not a Client class
+                    self.client = genai
                     self._is_configured = True
                     logger.info("Enhanced ZIMSEC English Service initialized with Gemini AI")
                 else:
@@ -935,7 +937,7 @@ Return valid JSON with the exact format requested."""
                 return response.text.strip()
             else:
                 logger.error("Empty or invalid response from Gemini 2.5 Flash")
-                return self._generate_fallback_essay_marking()
+                    return self._generate_fallback_essay_marking()
 
         except Exception as e:
             logger.error(f"Error in Gemini essay marking: {e}")

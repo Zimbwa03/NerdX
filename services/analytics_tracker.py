@@ -17,6 +17,7 @@ class AnalyticsTracker:
         raw_conn_string = os.getenv('DATABASE_URL') or os.getenv('SUPABASE_DATABASE_URL')
         self.conn_string = self._clean_connection_string(raw_conn_string)
         self._subject_usage_table_initialized = False
+        self._feature_usage_table_initialized = False
     
     def _clean_connection_string(self, database_url: str) -> str:
         """Clean database URL by removing pgbouncer and other problematic parameters"""
@@ -212,6 +213,30 @@ class AnalyticsTracker:
             logger.error(f"Error tracking question attempt: {e}")
             return False
     
+    def _ensure_feature_usage_table(self, cursor):
+        """Ensure the feature_usage_analytics table exists with expected schema"""
+        if self._feature_usage_table_initialized:
+            return
+        
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS feature_usage_analytics (
+                id SERIAL PRIMARY KEY,
+                date DATE NOT NULL,
+                feature_name VARCHAR(100) NOT NULL,
+                usage_count INTEGER NOT NULL DEFAULT 0,
+                unique_users INTEGER NOT NULL DEFAULT 0,
+                total_time_spent INTEGER NOT NULL DEFAULT 0,
+                credits_consumed INTEGER NOT NULL DEFAULT 0,
+                success_rate DOUBLE PRECISION NOT NULL DEFAULT 0,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                UNIQUE(date, feature_name)
+            );
+            """
+        )
+        self._feature_usage_table_initialized = True
+    
     def track_feature_usage(self, feature_name: str, user_id: str, success: bool = True, 
                            time_spent: int = 0, credits_consumed: int = 0):
         """Track feature usage"""
@@ -221,6 +246,9 @@ class AnalyticsTracker:
                 return False
             
             cursor = conn.cursor()
+            
+            # Ensure table exists
+            self._ensure_feature_usage_table(cursor)
             
             today = date.today()
             
