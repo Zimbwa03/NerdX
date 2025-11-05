@@ -611,6 +611,7 @@ class PaymentService:
             
             if payment_result['success']:
                 # Store payment transaction in database
+                # Note: Only include columns that exist in payment_transactions table schema
                 payment_data = {
                     'user_id': user_id,
                     'package_id': package_id,
@@ -619,11 +620,8 @@ class PaymentService:
                     'credits': int(package['credits']),
                     'status': 'initiated',  # Paynow-specific status
                     'payment_method': 'paynow_ecocash',
-                    'phone_number': phone_number,
-                    'email': email,
-                    'created_at': datetime.now().isoformat(),
-                    'paynow_poll_url': payment_result.get('poll_url'),
-                    'credits_added': 0
+                    'credits_added': 0,
+                    'admin_notes': f"Phone: {phone_number} | Email: {email} | Poll URL: {payment_result.get('poll_url')}"
                 }
                 
                 # Save to payment_transactions table
@@ -631,6 +629,11 @@ class PaymentService:
                 
                 if result:
                     logger.info(f"Paynow payment initiated: {reference_code}")
+                    
+                    # Start background payment monitoring
+                    poll_url = payment_result.get('poll_url')
+                    if poll_url:
+                        self._start_payment_monitoring(reference_code, poll_url, user_id)
                     
                     return {
                         'success': True,
@@ -907,6 +910,43 @@ Select your preferred payment method below:"""
         ])
         
         return buttons
+    
+    def _start_payment_monitoring(self, reference_code: str, poll_url: str, user_id: str):
+        """Start background monitoring for payment confirmation"""
+        try:
+            import threading
+            import time
+            
+            def monitor_payment():
+                """Background thread to monitor payment status"""
+                max_checks = 20  # Check for up to 10 minutes (20 * 30s)
+                check_interval = 30  # Check every 30 seconds
+                
+                for attempt in range(max_checks):
+                    try:
+                        time.sleep(check_interval)
+                        
+                        # Check payment status
+                        status_result = self.check_paynow_payment_status(reference_code)
+                        
+                        if status_result.get('paid'):
+                            logger.info(f"✅ Payment confirmed via monitoring: {reference_code}")
+                            break
+                        
+                        logger.info(f"⏳ Payment monitoring attempt {attempt + 1}/{max_checks}: {reference_code} - status: {status_result.get('status')}")
+                        
+                    except Exception as monitor_error:
+                        logger.error(f"Payment monitoring error: {monitor_error}")
+                        
+                logger.info(f"Payment monitoring stopped for {reference_code}")
+            
+            # Start monitoring thread
+            monitor_thread = threading.Thread(target=monitor_payment, daemon=True)
+            monitor_thread.start()
+            logger.info(f"🔍 Started payment monitoring thread for {reference_code}")
+            
+        except Exception as e:
+            logger.error(f"Error starting payment monitoring: {e}")
     
     def send_paynow_confirmation_message(self, user_id: str, credits: int, reference_code: str, package_name: str):
         """
