@@ -1012,6 +1012,37 @@ def get_random_exam_question(subject=None, user_id=None, avoid_recent=True):
         logger.error(f"Error retrieving random exam question: {e}")
         return None
 
+def get_random_olevel_maths_question():
+    """Get a random question from olevel_maths table"""
+    try:
+        # Ensure table exists first
+        from services.analytics_tracker import AnalyticsTracker
+        tracker = AnalyticsTracker()
+        conn = tracker._get_connection()
+        if conn:
+            cursor = conn.cursor()
+            tracker._ensure_olevel_maths_table(cursor)
+            conn.commit()
+            cursor.close()
+            conn.close()
+        
+        # Get random question from olevel_maths table
+        result = make_supabase_request("GET", "olevel_maths", limit=50)
+        
+        if result and len(result) > 0:
+            question = random.choice(result)
+            # Add source identifier to distinguish from olevel_math_questions
+            question['table_source'] = 'olevel_maths'
+            logger.info(f"Retrieved olevel_maths question ID: {question.get('id')}")
+            return question
+        
+        logger.warning("No questions found in olevel_maths table")
+        return None
+        
+    except Exception as e:
+        logger.error(f"Error retrieving random olevel_maths question: {e}")
+        return None
+
 def get_question_by_id(question_id):
     """Get a specific question by ID"""
     result = make_supabase_request("GET", "questions", filters={"id": f"eq.{question_id}"})

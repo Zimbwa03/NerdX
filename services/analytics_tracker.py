@@ -18,6 +18,7 @@ class AnalyticsTracker:
         self.conn_string = self._clean_connection_string(raw_conn_string)
         self._subject_usage_table_initialized = False
         self._feature_usage_table_initialized = False
+        self._olevel_maths_table_initialized = False
     
     def _clean_connection_string(self, database_url: str) -> str:
         """Clean database URL by removing pgbouncer and other problematic parameters"""
@@ -236,6 +237,40 @@ class AnalyticsTracker:
             """
         )
         self._feature_usage_table_initialized = True
+    
+    def _ensure_olevel_maths_table(self, cursor):
+        """Ensure the olevel_maths table exists with expected schema"""
+        if self._olevel_maths_table_initialized:
+            return
+        
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS olevel_maths (
+                id SERIAL PRIMARY KEY,
+                question_image_url TEXT NOT NULL,
+                answer_image_url_1 TEXT,
+                answer_image_url_2 TEXT,
+                answer_image_url_3 TEXT,
+                answer_image_url_4 TEXT,
+                answer_image_url_5 TEXT,
+                topic VARCHAR(100),
+                year VARCHAR(20),
+                difficulty VARCHAR(20),
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+            );
+            """
+        )
+        
+        # Create index for faster queries
+        cursor.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_olevel_maths_topic 
+            ON olevel_maths(topic);
+            """
+        )
+        
+        self._olevel_maths_table_initialized = True
     
     def track_feature_usage(self, feature_name: str, user_id: str, success: bool = True, 
                            time_spent: int = 0, credits_consumed: int = 0):

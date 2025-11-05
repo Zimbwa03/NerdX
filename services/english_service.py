@@ -1361,7 +1361,7 @@ Return valid JSON with the exact format requested."""
                 return response.text.strip()
             else:
                 logger.error("Empty or invalid response from Gemini 2.5 Flash")
-                return self._generate_fallback_essay_marking()
+                    return self._generate_fallback_essay_marking()
 
         except Exception as e:
             logger.error(f"Error in Gemini essay marking: {e}")

@@ -161,23 +161,49 @@ class ExamMathematicsHandler:
             self.whatsapp_service.send_message(user_id, "❌ Error loading question. Please try again.")
 
     def _load_database_question(self, user_id: str, user_name: str, question_count: int):
-        """Load a question from the olevel_math_questions database"""
+        """Load a question from olevel_math_questions or olevel_maths database"""
         try:
-            
-            # Get a random question from database using make_supabase_request
             from database.external_db import make_supabase_request
             
-            # Get random subset of questions for better performance
-            result = make_supabase_request("GET", "olevel_math_questions", limit=50)
+            # Ensure olevel_maths table exists before querying
+            try:
+                from services.analytics_tracker import AnalyticsTracker
+                tracker = AnalyticsTracker()
+                conn = tracker._get_connection()
+                if conn:
+                    cursor = conn.cursor()
+                    tracker._ensure_olevel_maths_table(cursor)
+                    conn.commit()
+                    cursor.close()
+                    conn.close()
+            except Exception as table_error:
+                logger.warning(f"Could not ensure olevel_maths table exists: {table_error}")
             
-            if not result or len(result) == 0:
+            # Get questions from both tables
+            questions_pool = []
+            
+            # Get questions from olevel_math_questions
+            result1 = make_supabase_request("GET", "olevel_math_questions", limit=50)
+            if result1:
+                for q in result1:
+                    q['table_source'] = 'olevel_math_questions'
+                    questions_pool.append(q)
+            
+            # Get questions from olevel_maths (get multiple for better randomization)
+            result2 = make_supabase_request("GET", "olevel_maths", limit=50)
+            if result2:
+                for q in result2:
+                    q['table_source'] = 'olevel_maths'
+                    questions_pool.append(q)
+            
+            if not questions_pool:
                 # Fallback to AI question if no database questions
                 logger.warning("No database questions found, falling back to AI generation")
                 self._load_ai_question(user_id, user_name, question_count)
                 return
             
-            # Select random question from results
-            question_data = random.choice(result)
+            # Select random question from combined pool
+            question_data = random.choice(questions_pool)
             
             # Format exam question message
             topic_display = question_data.get('topic') or 'General Mathematics'
@@ -348,14 +374,21 @@ class ExamMathematicsHandler:
         try:
             from database.external_db import make_supabase_request
             
-            # Get question data
+            # Try olevel_math_questions first
             result = make_supabase_request("GET", "olevel_math_questions", filters={"id": f"eq.{question_id}"})
+            table_source = 'olevel_math_questions'
+            
+            # If not found, try olevel_maths
+            if not result or len(result) == 0:
+                result = make_supabase_request("GET", "olevel_maths", filters={"id": f"eq.{question_id}"})
+                table_source = 'olevel_maths'
             
             if not result or len(result) == 0:
                 self.whatsapp_service.send_message(user_id, "❌ Solution not found.")
                 return
             
             question_data = result[0]
+            question_data['table_source'] = table_source
             
             # Get user name
             registration = get_user_registration(user_id)
@@ -390,27 +423,41 @@ class ExamMathematicsHandler:
 
 📚 **Study the solution carefully - Ready for the next challenge?**"""
 
-            # Send solution images in order
-            if question_data.get('answer_image_url1'):
-                self.whatsapp_service.send_image(
-                    user_id, 
-                    question_data['answer_image_url1'], 
-                    "✅ Complete Solution"
-                )
+            # Send solution images in order - handle both table schemas
+            table_source = question_data.get('table_source', 'olevel_math_questions')
             
-            if question_data.get('answer_image_url2'):
-                self.whatsapp_service.send_image(
-                    user_id, 
-                    question_data['answer_image_url2'], 
-                    "✅ Solution Part 2"
-                )
-                
-            if question_data.get('answer_image_url3'):
-                self.whatsapp_service.send_image(
-                    user_id, 
-                    question_data['answer_image_url3'], 
-                    "✅ Solution Part 3"
-                )
+            if table_source == 'olevel_maths':
+                # olevel_maths uses answer_image_url_1 through answer_image_url_5
+                answer_urls = [
+                    question_data.get('answer_image_url_1'),
+                    question_data.get('answer_image_url_2'),
+                    question_data.get('answer_image_url_3'),
+                    question_data.get('answer_image_url_4'),
+                    question_data.get('answer_image_url_5')
+                ]
+            else:
+                # olevel_math_questions uses answer_image_url1, answer_image_url2, answer_image_url3
+                answer_urls = [
+                    question_data.get('answer_image_url1'),
+                    question_data.get('answer_image_url2'),
+                    question_data.get('answer_image_url3')
+                ]
+            
+            # Send all available answer images (skip None values)
+            image_count = 0
+            for i, url in enumerate(answer_urls, 1):
+                if url and url.strip():
+                    image_count += 1
+                    if image_count == 1:
+                        caption = "✅ Complete Solution"
+                    else:
+                        caption = f"✅ Solution Part {image_count}"
+                    
+                    self.whatsapp_service.send_image(
+                        user_id, 
+                        url.strip(), 
+                        caption
+                    )
             
             # Wait to ensure images load and appear first in chat
             import time
