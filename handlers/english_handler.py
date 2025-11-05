@@ -1974,31 +1974,16 @@ IMPORTANT:
                     last_question_type = existing_session.get('last_question_type')
                     intro_sent = existing_session.get('intro_sent', False)
  
-            # Professional welcome (only once per user)
+            prefaced_lines: List[str] = []
             if not intro_sent:
-                welcome_message = (
-                    "Welcome. I am your professional ZIMSEC O-Level English Tutor. We will be focusing on the Grammar and Usage "
-                    "component of your syllabus. Our goal is to ensure you master the language structures required for excellence in your examinations.\n\n"
-                    "Let's begin with your first question. Remember, you can type 'Hint' at any time for assistance."
-                )
-                self.whatsapp_service.send_message(user_id, welcome_message)
+                prefaced_lines.extend([
+                    "Welcome. I am your professional ZIMSEC O-Level English Tutor. We will be focusing on the Grammar and Usage component of your syllabus. Our goal is to ensure you master the language structures required for excellence in your examinations.",
+                    "",
+                    "Let's begin with your first question. Remember, you can type 'Hint' at any time for assistance.",
+                    ""
+                ])
  
-            # Retrieve AI-powered grammar question (with graceful fallback)
-            generation_response = self.english_service.generate_grammar_question(last_question_type=last_question_type)
-            if not generation_response or not generation_response.get('success'):
-                self.whatsapp_service.send_message(user_id, "❌ Error generating grammar question. Please try again.")
-                return
- 
-            question_data = generation_response['question_data'] or {}
- 
-            question_type = question_data.get('question_type', 'Grammar Practice')
-            topic_area = question_data.get('topic_area', 'Grammar and Usage')
-            instructions = question_data.get('instructions', 'Provide your answer.')
-            difficulty = question_data.get('difficulty', 'standard')
-            source = question_data.get('source', 'ai')
- 
-            # Compose message for learner
-            message_lines = [
+            message_lines = prefaced_lines + [
                 "🤖 *Grammar Tutor | ZIMSEC Language Structures*",
                 f"🎯 *Question Type:* {question_type}",
                 f"📚 *Focus:* {topic_area}",
