@@ -1,5 +1,7 @@
 import os
+import json
 import logging
+import psycopg2
 from flask import Blueprint, render_template, request, jsonify
 from database.external_db import add_credits, deduct_credits, get_user_registration
 from services.user_service import UserService
@@ -10,6 +12,60 @@ from utils.validators import validators
 logger = logging.getLogger(__name__)
 
 admin_bp = Blueprint('admin', __name__)
+
+def _ensure_broadcast_logs_table(cursor):
+    """Ensure the broadcast_logs table exists with expected schema"""
+    try:
+        # Create table if it doesn't exist
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS broadcast_logs (
+                id SERIAL PRIMARY KEY,
+                admin_id INTEGER,
+                admin_user VARCHAR(255),
+                message TEXT NOT NULL,
+                message_content TEXT,
+                target_group VARCHAR(100),
+                target_audience VARCHAR(100),
+                target_users INTEGER DEFAULT 0,
+                total_recipients INTEGER DEFAULT 0,
+                sent_count INTEGER DEFAULT 0,
+                successful_sends INTEGER DEFAULT 0,
+                failed_count INTEGER DEFAULT 0,
+                failed_sends INTEGER DEFAULT 0,
+                status VARCHAR(20) DEFAULT 'completed',
+                additional_data JSONB,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                completed_at TIMESTAMP WITH TIME ZONE
+            );
+        """)
+        
+        # Add columns that might not exist (for backward compatibility)
+        column_additions = [
+            "ALTER TABLE broadcast_logs ADD COLUMN IF NOT EXISTS admin_user VARCHAR(255)",
+            "ALTER TABLE broadcast_logs ADD COLUMN IF NOT EXISTS message_content TEXT",
+            "ALTER TABLE broadcast_logs ADD COLUMN IF NOT EXISTS target_group VARCHAR(100)",
+            "ALTER TABLE broadcast_logs ADD COLUMN IF NOT EXISTS target_audience VARCHAR(100)",
+            "ALTER TABLE broadcast_logs ADD COLUMN IF NOT EXISTS total_recipients INTEGER DEFAULT 0",
+            "ALTER TABLE broadcast_logs ADD COLUMN IF NOT EXISTS successful_sends INTEGER DEFAULT 0",
+            "ALTER TABLE broadcast_logs ADD COLUMN IF NOT EXISTS failed_sends INTEGER DEFAULT 0",
+            "ALTER TABLE broadcast_logs ADD COLUMN IF NOT EXISTS additional_data JSONB"
+        ]
+        
+        for alter_stmt in column_additions:
+            try:
+                cursor.execute(alter_stmt)
+            except Exception as e:
+                logger.debug(f"Column may already exist: {e}")
+        
+        # Create index for faster queries
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_broadcast_logs_created_at 
+            ON broadcast_logs(created_at DESC);
+        """)
+        
+    except Exception as e:
+        logger.error(f"Error ensuring broadcast_logs table: {e}")
+        raise
 
 @admin_bp.route('/')
 def admin_home():
@@ -723,22 +779,64 @@ def broadcast_message():
         
         # Log broadcast activity to database
         try:
-            from database.external_db import make_supabase_request
-            broadcast_log = {
-                'admin_user': 'admin',  # In production, get from session
-                'message': message,
-                'target_group': target,
-                'total_recipients': len(user_ids),
-                'successful_sends': successful_sends,
-                'failed_sends': failed_sends,
-                'additional_data': {
+            # Reopen connection for logging
+            log_conn = psycopg2.connect(conn_string)
+            log_cursor = log_conn.cursor()
+            
+            # Ensure table exists before logging
+            _ensure_broadcast_logs_table(log_cursor)
+            log_conn.commit()
+            
+            # Try direct insert first (more reliable)
+            log_cursor.execute("""
+                INSERT INTO broadcast_logs 
+                (admin_user, message, message_content, target_group, target_audience, 
+                 total_recipients, successful_sends, failed_sends, additional_data)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                'admin',  # In production, get from session
+                message,
+                message,
+                target,
+                target,
+                len(user_ids),
+                successful_sends,
+                failed_sends,
+                json.dumps({
                     'message_length': len(message),
                     'formatted_message_length': len(formatted_message)
-                }
-            }
-            make_supabase_request("POST", "broadcast_logs", broadcast_log)
+                })
+            ))
+            log_conn.commit()
+            log_cursor.close()
+            log_conn.close()
+            logger.info("Broadcast logged successfully")
         except Exception as log_error:
             logger.error(f"Failed to log broadcast: {log_error}")
+            # Ensure connection is closed
+            try:
+                log_cursor.close()
+                log_conn.close()
+            except:
+                pass
+            # Try fallback via Supabase API
+            try:
+                from database.external_db import make_supabase_request
+                broadcast_log = {
+                    'admin_user': 'admin',
+                    'message': message,
+                    'target_group': target,
+                    'total_recipients': len(user_ids),
+                    'successful_sends': successful_sends,
+                    'failed_sends': failed_sends,
+                    'additional_data': {
+                        'message_length': len(message),
+                        'formatted_message_length': len(formatted_message)
+                    }
+                }
+                make_supabase_request("POST", "broadcast_logs", broadcast_log)
+            except Exception as fallback_error:
+                logger.error(f"Fallback broadcast logging also failed: {fallback_error}")
         
         logger.info(f"Broadcast sent to {successful_sends} users, {failed_sends} failed")
         
@@ -761,15 +859,28 @@ def get_broadcast_history():
     try:
         limit = request.args.get('limit', 20, type=int)
         
-        import psycopg2
         conn_string = os.getenv('DATABASE_URL') or os.getenv('SUPABASE_DATABASE_URL')
+        if not conn_string:
+            return jsonify({'error': 'Database connection string not configured'}), 500
+        
         conn = psycopg2.connect(conn_string)
         cursor = conn.cursor()
         
-        # Get broadcast history
+        # Ensure table exists
+        _ensure_broadcast_logs_table(cursor)
+        conn.commit()
+        
+        # Get broadcast history - use COALESCE to handle both old and new column names
         cursor.execute("""
-            SELECT id, admin_user_id, message_content, target_audience, total_recipients, 
-                   successful_sends, failed_sends, created_at
+            SELECT 
+                id, 
+                COALESCE(admin_user, 'admin') as admin_user,
+                COALESCE(message_content, message) as message_content,
+                COALESCE(target_audience, target_group) as target_audience,
+                COALESCE(total_recipients, target_users) as total_recipients,
+                COALESCE(successful_sends, sent_count) as successful_sends,
+                COALESCE(failed_sends, failed_count) as failed_sends,
+                created_at
             FROM broadcast_logs 
             ORDER BY created_at DESC 
             LIMIT %s;
@@ -781,16 +892,20 @@ def get_broadcast_history():
         
         broadcast_history = []
         for broadcast in broadcasts:
+            message_text = broadcast[2] or ''
+            total_recipients = broadcast[4] or 0
+            successful_sends = broadcast[5] or 0
+            
             broadcast_history.append({
                 'id': broadcast[0],
-                'admin_user': broadcast[1],
-                'message': broadcast[2][:100] + ('...' if len(broadcast[2]) > 100 else ''),
-                'target_group': broadcast[3],
-                'total_recipients': broadcast[4],
-                'successful_sends': broadcast[5],
-                'failed_sends': broadcast[6],
-                'created_at': str(broadcast[7]),
-                'success_rate': round((broadcast[5] / broadcast[4] * 100) if broadcast[4] > 0 else 0, 1)
+                'admin_user': broadcast[1] or 'admin',
+                'message': message_text[:100] + ('...' if len(message_text) > 100 else ''),
+                'target_group': broadcast[3] or 'all',
+                'total_recipients': total_recipients,
+                'successful_sends': successful_sends,
+                'failed_sends': broadcast[6] or 0,
+                'created_at': str(broadcast[7]) if broadcast[7] else '',
+                'success_rate': round((successful_sends / total_recipients * 100) if total_recipients > 0 else 0, 1)
             })
         
         return jsonify({
