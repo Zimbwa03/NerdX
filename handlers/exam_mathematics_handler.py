@@ -464,15 +464,22 @@ class ExamMathematicsHandler:
             explanation = self._clean_latex_for_whatsapp(question_data.get('explanation', ''))
             answer = self._clean_latex_for_whatsapp(question_data.get('answer', ''))
             
-            # Combine solution and explanation efficiently
-            # If explanation is redundant or very short, merge into solution
-            combined_solution = solution
+            # Format solution with proper line breaks
+            solution = self._format_solution_text(solution)
+            
+            # Prepare explanation separately (will be shown after solution if it adds value)
+            explanation_text = ""
             if explanation and explanation.strip() and explanation != 'Work through each step carefully.':
                 # Check if explanation adds value (not just a generic message)
                 if len(explanation) > 30 and explanation.lower() not in ['work through each step carefully.', 'solve step by step.']:
-                    # Combine if they're different
+                    # Only include if it's different from solution content
                     if explanation not in solution:
-                        combined_solution = f"{solution}\n\n💡 {explanation}"
+                        explanation_text = explanation.strip()
+            
+            # Combine solution and explanation with proper spacing
+            combined_solution = solution
+            if explanation_text:
+                combined_solution = f"{solution}\n\n💡 *Explanation:*\n{explanation_text}"
             
             # Calculate available space for solution (target ~3000 chars total)
             # Header + stats section is approximately 400 characters
@@ -495,11 +502,22 @@ class ExamMathematicsHandler:
 
 🎯 **Keep practicing to master this topic!**""")
             
-            max_solution_length = 3000 - header_stats_length - 50  # 50 char buffer
+            max_solution_length = 3000 - header_stats_length - 100  # 100 char buffer for formatting
             
-            # Truncate solution if needed
+            # Truncate solution if needed (but preserve explanation if possible)
             if len(combined_solution) > max_solution_length:
-                combined_solution = self._truncate_solution_text(combined_solution, max_solution_length)
+                if explanation_text and len(explanation_text) < 200:
+                    # Try to preserve explanation by truncating solution more
+                    solution_max = max_solution_length - len(f"\n\n💡 *Explanation:*\n{explanation_text}")
+                    if solution_max > 500:  # Only if we have reasonable space for solution
+                        truncated_solution = self._truncate_solution_text(solution, solution_max)
+                        combined_solution = f"{truncated_solution}\n\n💡 *Explanation:*\n{explanation_text}"
+                    else:
+                        # Explanation too long, truncate everything
+                        combined_solution = self._truncate_solution_text(combined_solution, max_solution_length)
+                else:
+                    # No explanation or it's long, truncate everything
+                    combined_solution = self._truncate_solution_text(combined_solution, max_solution_length)
             
             # Create AI solution message with stats (question removed)
             message = f"""🤖 **AI Solution** 🤖
@@ -593,13 +611,101 @@ class ExamMathematicsHandler:
             logger.error(f"Error cleaning LaTeX: {e}")
             return text
     
+    def _format_solution_text(self, text: str) -> str:
+        """Format solution text with proper line breaks and spacing"""
+        if not text:
+            return text
+        
+        try:
+            # Pattern to match "Step 1:", "Step 2:", etc. (case insensitive)
+            step_pattern = r'(Step\s+\d+[:\-])'
+            
+            # Check if text contains step markers
+            if re.search(step_pattern, text, re.IGNORECASE):
+                # Replace step markers with step markers preceded by double newline
+                # This ensures each step starts on a new line with spacing
+                formatted = re.sub(step_pattern, r'\n\n\1', text, flags=re.IGNORECASE)
+                
+                # Clean up: remove any leading newlines, ensure consistent spacing
+                formatted = formatted.strip()
+                # Replace multiple consecutive newlines with double newline
+                formatted = re.sub(r'\n{3,}', '\n\n', formatted)
+                
+                # Add line breaks after periods within each step for better readability
+                # But preserve existing structure
+                lines = formatted.split('\n')
+                formatted_lines = []
+                for line in lines:
+                    line = line.strip()
+                    if line:
+                        # If line is very long (more than 80 chars), try to break it
+                        if len(line) > 80 and 'Step' not in line:
+                            # Try to break at sentence boundaries
+                            sentences = re.split(r'([.!?]\s+)', line)
+                            broken_line = ""
+                            for i in range(0, len(sentences), 2):
+                                sentence = sentences[i] + (sentences[i+1] if i+1 < len(sentences) else '')
+                                sentence = sentence.strip()
+                                if sentence:
+                                    if broken_line and len(broken_line + sentence) > 80:
+                                        formatted_lines.append(broken_line)
+                                        broken_line = sentence
+                                    else:
+                                        broken_line += (" " if broken_line else "") + sentence
+                            if broken_line:
+                                formatted_lines.append(broken_line)
+                        else:
+                            formatted_lines.append(line)
+                
+                formatted = '\n'.join(formatted_lines)
+                # Final cleanup
+                formatted = re.sub(r'\n{3,}', '\n\n', formatted)
+                return formatted.strip()
+            else:
+                # No step markers - add line breaks at sentence boundaries for readability
+                # Split by periods followed by space and capital letter
+                formatted = re.sub(r'\.\s+([A-Z])', r'.\n\n\1', text)
+                # Clean up extra newlines
+                formatted = re.sub(r'\n{3,}', '\n\n', formatted)
+                return formatted.strip()
+                
+        except Exception as e:
+            logger.error(f"Error formatting solution text: {e}")
+            return text
+    
     def _truncate_solution_text(self, text: str, max_length: int) -> str:
         """Safely truncate solution text while preserving readability"""
         if not text or len(text) <= max_length:
             return text
         
         try:
-            # Try to truncate at sentence boundaries first
+            # Try to truncate at step boundaries first
+            step_pattern = r'(Step\s+\d+[:\-])'
+            if re.search(step_pattern, text, re.IGNORECASE):
+                # Split by steps
+                parts = re.split(step_pattern, text, flags=re.IGNORECASE)
+                truncated = ""
+                
+                for i in range(0, len(parts), 2):
+                    if i < len(parts) - 1:
+                        step_marker = parts[i] if i < len(parts) else ""
+                        step_content = parts[i+1] if i+1 < len(parts) else ""
+                        step_text = step_marker + step_content
+                        
+                        if len(truncated + step_text) <= max_length - 20:  # Leave room for "..."
+                            truncated += step_text
+                        else:
+                            break
+                
+                if truncated and len(truncated) < len(text):
+                    truncated = truncated.rstrip() + "\n\n... (Solution continues)"
+                elif not truncated:
+                    # Fall back to sentence boundary truncation
+                    return self._truncate_solution_text(text, max_length)
+                
+                return truncated if truncated else text[:max_length - 20] + "..."
+            
+            # Try to truncate at sentence boundaries
             sentences = re.split(r'([.!?]\s+)', text)
             truncated = ""
             
