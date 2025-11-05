@@ -2,6 +2,7 @@ import os
 import json
 import logging
 import time
+import re
 from typing import Dict, List, Optional
 from database.external_db import get_user_registration, get_user_credits, get_user_stats, update_user_stats
 from database.session_db import save_user_session, get_user_session, clear_user_session
@@ -1938,20 +1939,20 @@ IMPORTANT:
             registration = get_user_registration(user_id)
             user_name = registration['name'] if registration else "Student"
             credits = get_user_credits(user_id)
-
+ 
             if credits < 1:
                 self.whatsapp_service.send_message(user_id, f"❌ Insufficient credits! You need 1 credit but have {credits}. Purchase more credits to continue.")
                 return
-
+ 
             # Check and deduct credits using advanced credit service
             from services.advanced_credit_service import advanced_credit_service
-
+ 
             credit_result = advanced_credit_service.check_and_deduct_credits(
                 user_id,
                 'english_topical',  # 1 credit - use correct action key
                 None
             )
-
+ 
             if not credit_result['success']:
                 if credit_result.get('insufficient'):
                     message = f"❌ Insufficient credits. You need {credit_result['required_credits']} but have {credit_result['current_credits']}."
@@ -1959,46 +1960,225 @@ IMPORTANT:
                     message = credit_result.get('message', '❌ Error processing credits. Please try again.')
                 self.whatsapp_service.send_message(user_id, message)
                 return
-
-            # Send loading message
-            self.whatsapp_service.send_message(user_id, "📝 Loading Grammar question from database...\n⏳ Please wait...")
-
-            # Get one grammar question from database
-            response = self.english_service.generate_grammar_question()
-
-            if not response or not response.get('success'):
-                self.whatsapp_service.send_message(user_id, "❌ Error loading question. Please try again.")
-                return
-
-            question_data = response['question_data']
-
-            # Save question in session
-            from database.session_db import save_user_session
+ 
+            from database.session_db import get_user_session, save_user_session
             import json
-            session_data = {
+ 
+            existing_session = get_user_session(user_id)
+            last_question_type = None
+            intro_sent = False
+ 
+            if existing_session:
+                session_type = existing_session.get('session_type')
+                if session_type == 'english_grammar_meta':
+                    last_question_type = existing_session.get('last_question_type')
+                    intro_sent = existing_session.get('intro_sent', False)
+ 
+            # Professional welcome (only once per user)
+            if not intro_sent:
+                welcome_message = (
+                    "Welcome. I am your professional ZIMSEC O-Level English Tutor. We will be focusing on the Grammar and Usage "
+                    "component of your syllabus. Our goal is to ensure you master the language structures required for excellence in your examinations.\n\n"
+                    "Let's begin with your first question. Remember, you can type 'Hint' at any time for assistance."
+                )
+                self.whatsapp_service.send_message(user_id, welcome_message)
+ 
+            # Retrieve AI-powered grammar question (with graceful fallback)
+            generation_response = self.english_service.generate_grammar_question(last_question_type=last_question_type)
+            if not generation_response or not generation_response.get('success'):
+                self.whatsapp_service.send_message(user_id, "❌ Error generating grammar question. Please try again.")
+                return
+ 
+            question_data = generation_response['question_data'] or {}
+ 
+            question_type = question_data.get('question_type', 'Grammar Practice')
+            topic_area = question_data.get('topic_area', 'Grammar and Usage')
+            instructions = question_data.get('instructions', 'Provide your answer.')
+            difficulty = question_data.get('difficulty', 'standard')
+            source = question_data.get('source', 'ai')
+ 
+            # Compose message for learner
+            message_lines = [
+                "🤖 *Grammar Tutor | ZIMSEC Language Structures*",
+                f"🎯 *Question Type:* {question_type}",
+                f"📚 *Focus:* {topic_area}",
+            ]
+ 
+            if difficulty:
+                message_lines.append(f"⚙️ *Difficulty:* {difficulty.title() if isinstance(difficulty, str) else difficulty}")
+ 
+            if question_data.get('register_context'):
+                message_lines.append(f"🗣️ *Register Context:* {question_data['register_context']}")
+ 
+            if source != 'ai':
+                message_lines.append(f"🔁 *Source:* {source.title() if isinstance(source, str) else source}")
+ 
+            message_lines.extend([
+                "",
+                f"📝 *Instructions:* {instructions}",
+                "",
+                "❓ *Question:*",
+                question_data.get('question', 'Question not available').strip(),
+            ])
+ 
+            options = question_data.get('options') or []
+            if isinstance(options, list) and options:
+                message_lines.append("")
+                message_lines.append("🔢 *Options:*")
+                for idx, option in enumerate(options):
+                    message_lines.append(f"{chr(65 + idx)}. {option}")
+ 
+            message_lines.extend([
+                "",
+                "💡 Type *Hint* for guided help (up to 3 levels).",
+                "✏️ Reply with your answer when ready."
+            ])
+ 
+            self.whatsapp_service.send_message(user_id, "\n".join(message_lines))
+ 
+            # Persist session state for answer checking and hints
+            session_payload = {
                 'session_type': 'english_grammar',
-                'question_data': json.dumps(question_data),  # Convert dict to JSON string
                 'awaiting_answer': True,
-                'user_name': user_name
+                'user_name': user_name,
+                'question_data': json.dumps(question_data),
+                'hint_level': 0,
+                'intro_sent': True,
+                'last_question_type': question_type
             }
-            save_user_session(user_id, session_data)
-
-            # Send formatted question
-            topic_indicator = f"📚 {question_data.get('topic_area', 'Grammar')}" if question_data.get('topic_area') else "📚 Grammar"
-
-            message = f"""{topic_indicator} Question
-
-{question_data['question']}
-
-💡 Instructions: {question_data.get('instructions', 'Please provide your answer.')}
-
-✏️ Type your answer below:"""
-
-            self.whatsapp_service.send_message(user_id, message)
-
+ 
+            save_user_session(user_id, session_payload)
+ 
         except Exception as e:
             logger.error(f"Error in grammar usage for {user_id}: {e}")
             self.whatsapp_service.send_message(user_id, "❌ Error generating grammar question. Please try again.")
+
+    def handle_grammar_hint(self, user_id: str):
+        """Provide tiered grammar hints without consuming the attempt"""
+        try:
+            from database.session_db import get_user_session, save_user_session
+            import json
+
+            session_data = get_user_session(user_id)
+            if not session_data or session_data.get('session_type') != 'english_grammar':
+                self.whatsapp_service.send_message(user_id, "ℹ️ No active grammar question. Select Grammar & Usage to begin.")
+                return
+
+            question_str = session_data.get('question_data', '{}')
+            question_data = json.loads(question_str) if question_str else {}
+            hints = question_data.get('hints') or []
+
+            if not hints:
+                self.whatsapp_service.send_message(user_id, "ℹ️ No hints are available for this question. Try analyzing the key grammar rule involved.")
+                return
+
+            current_level = session_data.get('hint_level', 0)
+            total_hints = len(hints)
+
+            if current_level >= total_hints:
+                self.whatsapp_service.send_message(user_id, "ℹ️ You have already used all available hints for this question. Give your best attempt!")
+                return
+
+            hint_payload = hints[current_level] if current_level < len(hints) else {}
+            hint_text = (hint_payload.get('text') if isinstance(hint_payload, dict) else str(hint_payload)).strip()
+            hint_level = hint_payload.get('level') if isinstance(hint_payload, dict) else current_level + 1
+
+            if not hint_text:
+                hint_text = "Focus on the main grammar concept being tested and revisit the core rule."
+
+            message_lines = [
+                f"💡 Hint {hint_level}/{total_hints}",
+                hint_text
+            ]
+
+            if current_level + 1 >= total_hints:
+                message_lines.append("(No more hints remain after this one.)")
+
+            self.whatsapp_service.send_message(user_id, "\n".join(message_lines))
+
+            # Update session with new hint level
+            session_data['hint_level'] = current_level + 1
+            save_user_session(user_id, session_data)
+
+        except Exception as e:
+            logger.error(f"Error providing grammar hint for {user_id}: {e}")
+            self.whatsapp_service.send_message(user_id, "❌ Unable to fetch hint right now. Please try again shortly.")
+
+    def _normalize_grammar_response(self, text: Optional[str]) -> str:
+        if not text:
+            return ''
+        normalized = text.strip().lower()
+        normalized = normalized.replace('’', "'").replace('"', '"').replace('"', '"')
+        normalized = re.sub(r'[^a-z0-9\s\'",-]', '', normalized)
+        normalized = re.sub(r'\s+', ' ', normalized)
+        return normalized.strip(" .,!?:;\'\"")
+
+    def _evaluate_grammar_response(self, user_answer: str, question_data: Dict) -> Dict:
+        options = question_data.get('options') or []
+        acceptable_answers = question_data.get('acceptable_answers') or []
+        canonical_answer = question_data.get('answer') or ''
+
+        possible_answers = []
+        if isinstance(acceptable_answers, list):
+            possible_answers.extend(acceptable_answers)
+        elif acceptable_answers:
+            possible_answers.append(acceptable_answers)
+
+        if canonical_answer:
+            possible_answers.append(canonical_answer)
+
+        normalized_user = self._normalize_grammar_response(user_answer)
+        normalized_correct_set = {
+            self._normalize_grammar_response(ans)
+            for ans in possible_answers if ans
+        }
+
+        matched_answer = None
+        is_correct = False
+
+        # Direct text match against possible answers
+        for ans in possible_answers:
+            if ans and self._normalize_grammar_response(ans) == normalized_user and normalized_user:
+                matched_answer = ans
+                is_correct = True
+                break
+
+        # Check MCQ options (letters or option text)
+        if not is_correct and options:
+            for idx, option in enumerate(options):
+                normalized_option = self._normalize_grammar_response(option)
+                letter = chr(65 + idx)
+                letter_tokens = {
+                    letter.lower(),
+                    letter,
+                    f"option {letter.lower()}",
+                    f"option {letter}",
+                    f"{letter.lower()}.",
+                    f"{letter}."
+                }
+
+                if normalized_user in letter_tokens:
+                    if normalized_option in normalized_correct_set or not normalized_correct_set:
+                        matched_answer = option
+                        is_correct = True
+                    normalized_user = normalized_option
+                    break
+
+                if normalized_user == normalized_option and (normalized_option in normalized_correct_set or not normalized_correct_set):
+                    matched_answer = option
+                    is_correct = True
+                    break
+
+        if not matched_answer and is_correct:
+            matched_answer = canonical_answer or (possible_answers[0] if possible_answers else '')
+
+        return {
+            'is_correct': is_correct,
+            'matched_answer': matched_answer or canonical_answer,
+            'normalized_user': normalized_user,
+            'acceptable_answers': possible_answers,
+            'options': options
+        }
 
     def handle_vocabulary_building(self, user_id: str):
         """Handle Vocabulary Building - MCQ format"""
@@ -2096,35 +2276,91 @@ IMPORTANT:
             current_level = stats.get('level', 1)
             current_streak = stats.get('streak', 0)
 
-            # Award XP and update streak
-            points_earned = 5
+            evaluation = self._evaluate_grammar_response(user_answer, question_data)
+            is_correct = evaluation['is_correct']
+            matched_answer = evaluation['matched_answer'] or question_data.get('answer', '')
+            normalized_user = evaluation['normalized_user']
+
+            explanation_block = question_data.get('explanation') or {}
+            if not isinstance(explanation_block, dict):
+                explanation_block = {}
+
+            rule_statement = explanation_block.get('rule', '').strip()
+            error_analysis = explanation_block.get('error_analysis', '').strip()
+            zimsec_tip = explanation_block.get('zimsec_importance', '').strip()
+            examples = explanation_block.get('examples') if isinstance(explanation_block.get('examples'), list) else []
+
+            question_text = question_data.get('question', 'Question not available')
+            instructions = question_data.get('instructions', '')
+            topic_area = question_data.get('topic_area', 'Grammar and Usage')
+            question_type = question_data.get('question_type', 'Grammar Practice')
+            hint_level = session_data.get('hint_level', 0)
+            total_hints = len(question_data.get('hints', []))
+
+            # Award XP (higher for correct answers)
+            points_earned = 5 if is_correct else 2
             add_xp(user_id, points_earned, 'english_grammar')
             update_streak(user_id)
 
-            # Calculate new stats
             new_xp = current_xp + points_earned
             new_level = max(1, (new_xp // 100) + 1)
             new_streak = current_streak + 1
 
-            # Format the answer response
-            question_text = question_data.get('question', 'Question not available')
-            instructions = question_data.get('instructions', '')
-            answer_text = question_data.get('answer', 'Answer not available')
-            explanation_text = question_data.get('explanation', 'Explanation not available')
-            topic_area = question_data.get('topic_area', 'Grammar')
+            emoji = "✅" if is_correct else "📘"
+            header = "Outstanding work" if is_correct else "Keep practising"
 
-            # FIRST MESSAGE: Answer and explanation only
-            answer_message = f"🎉 EXCELLENT! {user_name}! 🎉\n\n"
-            answer_message += f"📚 {topic_area} Question\n\n"
-            answer_message += f"Question: {question_text}\n\n"
+            answer_message_lines = [
+                f"{emoji} {header}, {user_name}!",
+                "",
+                f"📚 *Question Type:* {question_type}",
+                f"🧠 *Focus:* {topic_area}"
+            ]
 
             if instructions:
-                answer_message += f"Instructions: {instructions}\n\n"
+                answer_message_lines.append(f"📝 *Instructions:* {instructions}")
 
-            answer_message += f"✅ Correct Answer: {answer_text}\n\n"
-            answer_message += f"📖 Explanation: {explanation_text}"
+            answer_message_lines.extend([
+                "",
+                "❓ *Question:*",
+                question_text.strip()
+            ])
 
-            self.whatsapp_service.send_message(user_id, answer_message)
+            if user_answer:
+                answer_message_lines.extend([
+                    "",
+                    f"✏️ *Your Response:* {user_answer.strip()}"
+                ])
+
+            if matched_answer:
+                answer_message_lines.extend([
+                    "",
+                    f"✅ *Correct Answer:* {matched_answer}"
+                ])
+
+            if rule_statement:
+                answer_message_lines.append(f"📘 *Rule:* {rule_statement}")
+
+            if not is_correct:
+                if error_analysis:
+                    answer_message_lines.append(f"❌ *Why your answer needs revision:* {error_analysis}")
+                else:
+                    answer_message_lines.append("❌ *Why your answer needs revision:* Revisit the rule and ensure your wording aligns with the required structure.")
+
+            if zimsec_tip:
+                answer_message_lines.append(f"🎓 *ZIMSEC Tip:* {zimsec_tip}")
+
+            if examples:
+                answer_message_lines.append("📌 *Examples:*")
+                for example in examples[:2]:
+                    answer_message_lines.append(f"• {example}")
+
+            if total_hints:
+                answer_message_lines.append(f"🔍 *Hints Used:* {min(hint_level, total_hints)}/{total_hints}")
+
+            if question_data.get('question_reference'):
+                answer_message_lines.append(f"🔖 *Reference:* {question_data['question_reference']}")
+
+            self.whatsapp_service.send_message(user_id, "\n".join(answer_message_lines))
 
             # SECOND MESSAGE: Gamified stats and progress
             level_up_bonus = ""
@@ -2142,7 +2378,7 @@ IMPORTANT:
 
 {level_up_bonus}
 
-📚 Keep practicing to master English grammar! 🚀"""
+📚 Keep practising to master English grammar! 🚀"""
 
             buttons = [
                 {"text": "➡️ Next Grammar Question", "callback_data": "english_grammar_usage"},
@@ -2152,8 +2388,15 @@ IMPORTANT:
 
             self.whatsapp_service.send_interactive_message(user_id, stats_message, buttons)
 
-            # Clear session
-            clear_user_session(user_id)
+            # Persist lightweight meta session to support diverse next question selection
+            from database.session_db import save_user_session
+            meta_session = {
+                'session_type': 'english_grammar_meta',
+                'user_name': user_name,
+                'last_question_type': question_type,
+                'intro_sent': True
+            }
+            save_user_session(user_id, meta_session)
 
         except Exception as e:
             logger.error(f"Error handling grammar answer for {user_id}: {e}")

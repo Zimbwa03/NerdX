@@ -445,8 +445,15 @@ def handle_text_message(user_id: str, message_text: str):
         from database.session_db import get_user_session
         session_data = get_user_session(user_id)
 
+        normalized_message = message_text.strip().lower()
+
         # Check for English grammar answer session
         if session_data and session_data.get('session_type') == 'english_grammar' and session_data.get('awaiting_answer'):
+            if normalized_message in {'hint', 'hint please', 'hint?', 'hint!'}:
+                logger.info(f"Providing grammar hint for user {user_id}")
+                english_handler.handle_grammar_hint(user_id)
+                return
+
             logger.info(f"Processing English grammar answer for user {user_id}")
             english_handler.handle_grammar_answer(user_id, message_text)
             return

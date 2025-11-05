@@ -110,29 +110,291 @@ class EnglishService:
 
         return random.choice(fallback_vocab_questions)
 
-    def generate_grammar_question(self) -> Optional[Dict]:
-        """Retrieve grammar questions from Supabase database with minimal fallback"""
-        # Primary: Get question from database
+    def _clean_json_block(self, text: str) -> str:
+        """Remove markdown fences from Gemini responses"""
+        cleaned = text.strip()
+        if cleaned.startswith('```json'):
+            cleaned = cleaned[7:]
+        if cleaned.startswith('```'):
+            cleaned = cleaned[3:]
+        if cleaned.endswith('```'):
+            cleaned = cleaned[:-3]
+        return cleaned.strip()
+
+    def _normalize_ai_grammar_payload(self, payload: Dict) -> Optional[Dict]:
+        """Normalize AI grammar payload into standard structure"""
+        if not payload:
+            return None
+
+        question = payload.get('question') or payload.get('prompt')
+        if not question:
+            return None
+
+        topic_area = payload.get('topic_area') or payload.get('grammar_focus') or 'Grammar and Usage'
+        question_type = payload.get('question_type') or payload.get('type') or 'Grammar Practice'
+        instructions = payload.get('instructions') or payload.get('instruction') or 'Provide your answer.'
+
+        # Acceptable answers handling
+        acceptable_answers = payload.get('acceptable_answers') or payload.get('answers') or payload.get('answer_options')
+        if acceptable_answers is None:
+            acceptable_answers = payload.get('answer') or payload.get('correct_answer')
+
+        if acceptable_answers is None:
+            acceptable_answers_list: List[str] = []
+        elif isinstance(acceptable_answers, list):
+            acceptable_answers_list = [str(ans).strip() for ans in acceptable_answers if str(ans).strip()]
+        else:
+            acceptable_answers_list = [str(acceptable_answers).strip()]
+
+        # Ensure we have at least one canonical answer text
+        canonical_answer = payload.get('correct_answer') or payload.get('answer')
+        if not canonical_answer and acceptable_answers_list:
+            canonical_answer = acceptable_answers_list[0]
+        canonical_answer = str(canonical_answer).strip() if canonical_answer else ''
+
+        # Hints normalization
+        hints_raw = payload.get('hint_sequence') or payload.get('hints') or []
+        normalized_hints = []
+        if isinstance(hints_raw, dict):
+            hints_raw = [hints_raw]
+        if isinstance(hints_raw, list):
+            for idx, item in enumerate(hints_raw):
+                if isinstance(item, dict):
+                    text = item.get('text') or item.get('hint') or ''
+                    level = item.get('level') or item.get('stage') or (idx + 1)
+                else:
+                    text = str(item)
+                    level = idx + 1
+                text = text.strip()
+                if text:
+                    normalized_hints.append({
+                        'level': int(level),
+                        'text': text
+                    })
+
+        # Explanation normalization
+        explanation_block = payload.get('explanation') or {}
+        if isinstance(explanation_block, list) and explanation_block:
+            explanation_block = explanation_block[0]
+        if not isinstance(explanation_block, dict):
+            explanation_block = {}
+
+        explanation = {
+            'correction': explanation_block.get('correction') or canonical_answer,
+            'rule': explanation_block.get('rule') or explanation_block.get('rule_statement') or '',
+            'error_analysis': explanation_block.get('error_analysis') or explanation_block.get('error') or '',
+            'zimsec_importance': explanation_block.get('zimsec_importance') or explanation_block.get('zimsec_relevance') or '',
+            'examples': explanation_block.get('examples') if isinstance(explanation_block.get('examples'), list) else []
+        }
+
+        options = payload.get('options') or payload.get('choices') or []
+        if options and not isinstance(options, list):
+            options = [str(options)]
+
+        return {
+            'question_type': question_type,
+            'topic_area': topic_area,
+            'question': question.strip(),
+            'instructions': instructions.strip() if isinstance(instructions, str) else 'Provide your answer.',
+            'options': options,
+            'acceptable_answers': acceptable_answers_list,
+            'answer': canonical_answer,
+            'hints': normalized_hints,
+            'explanation': explanation,
+            'difficulty': payload.get('difficulty') or payload.get('level') or 'standard',
+            'register_context': payload.get('register_context'),
+            'question_reference': payload.get('question_reference') or payload.get('reference')
+        }
+
+    def _wrap_legacy_grammar_question(self, question_data: Dict) -> Dict:
+        """Transform legacy database grammar question into AI structure"""
+        if not question_data:
+            question_data = {}
+
+        question_text = question_data.get('question', 'Provide your answer to the grammar question.')
+        instructions = question_data.get('instructions') or 'Please provide your answer.'
+        answer_text = question_data.get('answer') or ''
+        explanation_text = question_data.get('explanation') or ''
+        topic_area = question_data.get('topic_area', 'Grammar and Usage')
+
+        hints = [
+            {'level': 1, 'text': f'This question focuses on {topic_area}. Identify the grammatical concept being tested.'},
+            {'level': 2, 'text': 'Recall the rule that applies in this situation. Pay attention to the key words in the sentence.'},
+            {'level': 3, 'text': 'Look closely at how the subject and verb or the reported speech should agree with each other.'}
+        ]
+
+        return {
+            'question_type': question_data.get('question_type') or 'Grammar Practice',
+            'topic_area': topic_area,
+            'question': question_text,
+            'instructions': instructions,
+            'options': question_data.get('options') or [],
+            'acceptable_answers': [answer_text] if answer_text else [],
+            'answer': answer_text,
+            'hints': hints,
+            'explanation': {
+                'correction': answer_text,
+                'rule': question_data.get('rule') or 'Review the relevant grammar rule and apply it carefully.',
+                'error_analysis': explanation_text,
+                'zimsec_importance': 'Grammar accuracy is essential for Paper 1 directed writing and Paper 2 language structure questions in the ZIMSEC syllabus.',
+                'examples': question_data.get('examples') or []
+            },
+            'difficulty': question_data.get('difficulty') or 'standard',
+            'register_context': question_data.get('register_context'),
+            'question_reference': question_data.get('id')
+        }
+
+    def generate_ai_grammar_question(self, last_question_type: Optional[str] = None) -> Optional[Dict]:
+        """Generate grammar question using Gemini AI persona prompt"""
+        if not self._is_configured or not self.client:
+            logger.warning("Gemini AI not configured - skipping AI grammar generation")
+            return None
+
+        try:
+            question_types = [
+                "Sentence Transformation",
+                "Error Correction",
+                "Gap Filling",
+                "Multiple Choice",
+                "Register/Contextual"
+            ]
+
+            available_types = question_types.copy()
+            if last_question_type and last_question_type in available_types and len(available_types) > 1:
+                available_types.remove(last_question_type)
+
+            selected_type = random.choice(available_types)
+
+            grammar_focus_areas = [
+                "Subject-Verb Agreement",
+                "Tense Consistency",
+                "Active and Passive Voice",
+                "Direct and Indirect Speech",
+                "Phrasal Verbs",
+                "Clauses and Sentence Structure",
+                "Register and Formality",
+                "Word Formation",
+                "Prepositions and Conjunctions",
+                "Determiners and Articles"
+            ]
+
+            selected_focus = random.choice(grammar_focus_areas)
+
+            prompt = f"""
+AI Tutor Persona: Professional ZIMSEC O-Level English Tutor
+Goal: Assess and improve the student's mastery of Grammar and Usage within the ZIMSEC English Language syllabus (Forms 1-4).
+
+Interaction Requirements:
+- Adopt an encouraging, patient, precise, and authoritative tone.
+- Emphasize understanding of the rule and context rather than memorization.
+- Connect every concept to ZIMSEC examination demands, including register and communicative purpose.
+
+Current Question Requirements:
+- Question Type: {selected_type}
+- Grammar Focus: {selected_focus}
+- Ensure alignment with ZIMSEC Paper 2 (Language Structures) expectations.
+
+Return ONLY valid JSON (no markdown fences, commentary, or prose) using this exact structure:
+{{
+  "question_type": "{selected_type}",
+  "topic_area": "{selected_focus}",
+  "question": "...",
+  "instructions": "...",
+  "options": ["..."] or [],
+  "acceptable_answers": ["..."] ,
+  "hint_sequence": [
+    {{"level": 1, "text": "Concept identification hint"}},
+    {{"level": 2, "text": "Rule reminder hint"}},
+    {{"level": 3, "text": "Contextual application hint"}}
+  ],
+  "explanation": {{
+    "correction": "Model answer or correction.",
+    "rule": "State the exact grammar rule applied.",
+    "error_analysis": "Explain common mistakes or why wrong answers fail.",
+    "zimsec_importance": "Why this skill matters for ZIMSEC exams.",
+    "examples": ["Example sentence 1", "Example sentence 2"]
+  }},
+  "register_context": "If relevant, describe the formal/informal context or audience. Otherwise null.",
+  "difficulty": "easy/medium/hard",
+  "question_reference": "Unique short reference ID"
+}}
+
+Additional Instructions:
+- For Multiple Choice or Register/Contextual items, include exactly 4 options in the "options" array.
+- Ensure "acceptable_answers" lists all variations that should be marked correct.
+- Keep hints concise and escalating without revealing the answer directly.
+- Use Zimbabwean contexts or names where appropriate.
+- Do not include any explanations outside the JSON payload.
+"""
+
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.6,
+                    max_output_tokens=1500
+                ),
+            )
+
+            if not response or not getattr(response, 'text', None):
+                logger.warning("Empty response from Gemini AI for grammar question")
+                return None
+
+            try:
+                clean_text = self._clean_json_block(response.text)
+                payload = json.loads(clean_text)
+                normalized = self._normalize_ai_grammar_payload(payload)
+                if normalized:
+                    normalized['source'] = 'ai'
+                    logger.info(f"Generated AI grammar question - Type: {normalized.get('question_type')} | Focus: {normalized.get('topic_area')}")
+                    return {
+                        'success': True,
+                        'question_data': normalized
+                    }
+                logger.warning("AI grammar payload missing required fields")
+            except json.JSONDecodeError as e:
+                logger.error(f"Grammar AI JSON decode error: {e}")
+            except Exception as error:
+                logger.error(f"Error normalizing AI grammar payload: {error}")
+
+        except Exception as e:
+            logger.error(f"Error generating AI grammar question: {e}")
+
+        return None
+
+    def generate_grammar_question(self, last_question_type: Optional[str] = None) -> Optional[Dict]:
+        """Retrieve grammar questions prioritising AI generation with resilient fallbacks"""
+        # Primary: Gemini AI generation
+        ai_response = self.generate_ai_grammar_question(last_question_type=last_question_type)
+        if ai_response and ai_response.get('success'):
+            return ai_response
+
+        # Secondary: Database question
         try:
             from database.external_db import get_random_grammar_question
 
             question_data = get_random_grammar_question()
             if question_data:
                 logger.info(f"Retrieved grammar question from database - Topic: {question_data.get('topic_area', 'Unknown')}")
+                normalized = self._wrap_legacy_grammar_question(question_data)
+                normalized['source'] = 'database'
                 return {
                     'success': True,
-                    'question_data': question_data
+                    'question_data': normalized
                 }
             else:
                 logger.warning("No questions found in database")
         except Exception as e:
             logger.error(f"Error retrieving question from database: {e}")
 
-        # Minimal fallback only if database completely fails
-        logger.warning("Database unavailable - using minimal fallback")
+        # Final fallback
+        logger.warning("Using fallback grammar question")
+        fallback = self._wrap_legacy_grammar_question(self._get_fallback_grammar_question())
+        fallback['source'] = 'fallback'
         return {
             'success': True,
-            'question_data': self._get_fallback_grammar_question()
+            'question_data': fallback
         }
 
     def generate_vocabulary_question(self) -> Optional[Dict]:
