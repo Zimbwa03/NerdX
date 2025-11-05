@@ -458,6 +458,17 @@ def handle_text_message(user_id: str, message_text: str):
             english_handler.handle_grammar_answer(user_id, message_text)
             return
 
+        # Check for English vocabulary answer session
+        if session_data and session_data.get('session_type') == 'english_vocabulary' and session_data.get('awaiting_answer'):
+            if normalized_message in {'hint', 'hint please', 'hint?', 'hint!'}:
+                logger.info(f"Providing vocabulary hint for user {user_id}")
+                english_handler.handle_vocabulary_hint(user_id)
+                return
+
+            logger.info(f"Processing English vocabulary answer for user {user_id}")
+            english_handler.handle_vocabulary_answer(user_id, message_text)
+            return
+
         # Check for English essay submission session
         if session_data and session_data.get('awaiting_essay') and not session_data.get('processing_essay'):
             english_handler.handle_essay_submission(user_id, message_text)

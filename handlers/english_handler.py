@@ -2181,7 +2181,7 @@ IMPORTANT:
         }
 
     def handle_vocabulary_building(self, user_id: str):
-        """Handle Vocabulary Building - MCQ format"""
+        """Handle Vocabulary Building with AI-driven pedagogy"""
         try:
             registration = get_user_registration(user_id)
             user_name = registration['name'] if registration else "Student"
@@ -2208,50 +2208,155 @@ IMPORTANT:
                 self.whatsapp_service.send_message(user_id, message)
                 return
 
-            # Send loading message
-            self.whatsapp_service.send_message(user_id, "📚 Loading Vocabulary question from database...\n⏳ Please wait...")
+            from database.session_db import get_user_session, save_user_session
+            import json
 
-            # Generate one vocabulary MCQ
-            result = self.english_service.generate_vocabulary_question()
+            # Check for existing meta session to track last question type
+            existing_session = get_user_session(user_id)
+            last_question_type = None
+            intro_sent = False
 
-            if not result or not result.get('success'):
-                self.whatsapp_service.send_message(user_id, "❌ Error generating question. Please try again.")
+            if existing_session:
+                session_type = existing_session.get('session_type')
+                if session_type == 'english_vocabulary_meta':
+                    last_question_type = existing_session.get('last_question_type')
+                    intro_sent = existing_session.get('intro_sent', False)
+
+            # Prepare welcome message if first time
+            welcome_lines = []
+            if not intro_sent:
+                welcome_lines.extend([
+                    "Welcome to the Vocabulary Building session. I am your professional ZIMSEC O-Level English Tutor.",
+                    "We will be focusing on expanding your dictionary knowledge and ensuring you use words with precision, a key skill for success in Paper 1 and Paper 2.",
+                    "",
+                    "Let's begin with your first question. Remember, you can type 'Hint' at any time for assistance.",
+                    ""
+                ])
+
+            # Generate vocabulary question with AI
+            generation_response = self.english_service.generate_vocabulary_question(last_question_type=last_question_type)
+
+            if not generation_response or not generation_response.get('success'):
+                self.whatsapp_service.send_message(user_id, "❌ Error generating vocabulary question. Please try again.")
                 return
 
-            question_data = result['question_data']
+            question_data = generation_response['question_data'] or {}
 
-            # Save question in session
-            from database.session_db import save_user_session
-            import json
-            session_data = {
-                'session_type': 'english_vocabulary',
-                'question_data': json.dumps(question_data),  # Convert dict to JSON string
-                'user_name': user_name
-            }
-            save_user_session(user_id, session_data)
+            # Extract question details
+            question_type = question_data.get('question_type', 'Vocabulary Practice')
+            vocabulary_category = question_data.get('vocabulary_category', 'Contextual')
+            focus_area = question_data.get('focus_area', 'General Vocabulary')
+            instructions = question_data.get('instructions', 'Answer the question.')
+            difficulty = question_data.get('difficulty', 'medium')
+            source = question_data.get('source', 'ai')
+            # Build message with welcome and question
+            message_lines = welcome_lines + [
+                "📚 *Vocabulary Building | ZIMSEC Dictionary Knowledge*",
+                f"📝 *Question Type:* {question_type}",
+                f"📂 *Category:* {vocabulary_category}",
+                f"🎯 *Focus:* {focus_area}"
+            ]
 
-            # Send MCQ question with option buttons
-            message = f"""📚 Vocabulary Building Question
+            if difficulty:
+                message_lines.append(f"⚙️ *Difficulty:* {difficulty.title()}")
 
-{question_data['question']}"""
+            if source != 'ai':
+                message_lines.append(f"🔁 *Source:* {source.title()}")
 
-            # Create option buttons
-            buttons = []
+            message_lines.extend([
+                "",
+                f"📋 *Instructions:* {instructions}",
+                "",
+                "❓ *Question:*",
+                question_data.get('question', 'Question not available').strip()
+            ])
+
+            # Add options for MCQ type
             options = question_data.get('options', [])
-            for i, option in enumerate(options):
-                buttons.append({
-                    "text": f"{chr(65+i)}. {option}",
-                    "callback_data": f"vocab_answer_{i}"
-                })
+            if question_type == "Multiple Choice" and options:
+                message_lines.append("")
+                message_lines.append("🔢 *Options:*")
+                for idx, option in enumerate(options):
+                    message_lines.append(f"{chr(65 + idx)}. {option}")
 
-            buttons.append({"text": "🔙 Back to Topics", "callback_data": "english_topical_questions"})
+            message_lines.extend([
+                "",
+                "💡 Type *Hint* for guided help (up to 3 levels).",
+                "✍️ Type your answer to submit."
+            ])
 
-            self.whatsapp_service.send_interactive_message(user_id, message, buttons)
+            self.whatsapp_service.send_message(user_id, "\n".join(message_lines))
+
+            # Save session with question data and hint tracking
+            session_payload = {
+                'session_type': 'english_vocabulary',
+                'awaiting_answer': True,
+                'user_name': user_name,
+                'question_data': json.dumps(question_data),
+                'hint_level': 0,
+                'intro_sent': True,
+                'last_question_type': question_type
+            }
+            save_user_session(user_id, session_payload)
 
         except Exception as e:
             logger.error(f"Error in vocabulary building for {user_id}: {e}")
             self.whatsapp_service.send_message(user_id, "❌ Error generating vocabulary question. Please try again.")
 
+    def handle_vocabulary_hint(self, user_id: str):
+        """Provide tiered vocabulary hints"""
+        try:
+            from database.session_db import get_user_session, save_user_session
+            import json
+            
+            session_data = get_user_session(user_id)
+            if not session_data or session_data.get('session_type') != 'english_vocabulary':
+                self.whatsapp_service.send_message(user_id, "❌ No active vocabulary session found.")
+                return
+            
+            # Parse question data
+            question_data_str = session_data.get('question_data', '{}')
+            question_data = json.loads(question_data_str) if question_data_str else {}
+            
+            # Get hint sequence
+            hint_sequence = question_data.get('hint_sequence', [])
+            current_level = session_data.get('hint_level', 0)
+            total_hints = len(hint_sequence)
+            
+            if current_level >= total_hints:
+                self.whatsapp_service.send_message(
+                    user_id,
+                    "💡 You've received all available hints. Try your best with the information provided!"
+                )
+                return
+            
+            # Get appropriate hint
+            hint_payload = hint_sequence[current_level] if current_level < len(hint_sequence) else {}
+            hint_text = (hint_payload.get('text') if isinstance(hint_payload, dict) else str(hint_payload)).strip()
+            hint_level = hint_payload.get('level') if isinstance(hint_payload, dict) else current_level + 1
+            
+            # Send hint message
+            message_lines = [
+                f"💡 **Hint {hint_level}/{total_hints}**",
+                hint_text,
+                ""
+            ]
+            
+            if current_level < total_hints - 1:
+                message_lines.append("Type 'Hint' again for more help, or type your answer.")
+            else:
+                message_lines.append("This is the final hint. Type your answer when ready.")
+            
+            self.whatsapp_service.send_message(user_id, "\n".join(message_lines))
+            
+            # Update hint level
+            session_data['hint_level'] = current_level + 1
+            save_user_session(user_id, session_data)
+            
+        except Exception as e:
+            logger.error(f"Error providing vocabulary hint for {user_id}: {e}")
+            self.whatsapp_service.send_message(user_id, "❌ Error providing hint. Please try again.")
+    
     def handle_grammar_answer(self, user_id: str, user_answer: str):
         """Handle grammar answer submission"""
         try:
@@ -2402,11 +2507,12 @@ IMPORTANT:
             logger.error(f"Error handling grammar answer for {user_id}: {e}")
             self.whatsapp_service.send_message(user_id, "❌ Error processing answer. Please try again.")
 
-    def handle_vocabulary_answer(self, user_id: str, selected_option: int):
-        """Handle vocabulary MCQ answer"""
+    def handle_vocabulary_answer(self, user_id: str, user_answer):
+        """Handle vocabulary answer (text or button selection)"""
         try:
             from database.session_db import get_user_session, clear_user_session
             from database.external_db import get_user_stats, get_user_credits, add_xp, update_streak
+            import json
 
             session_data = get_user_session(user_id)
             if not session_data or session_data.get('session_type') != 'english_vocabulary':
@@ -2414,16 +2520,30 @@ IMPORTANT:
                 return
 
             # Parse question_data from JSON string
-            import json
             question_data_str = session_data.get('question_data', '{}')
             question_data = json.loads(question_data_str) if question_data_str else {}
             user_name = session_data.get('user_name', 'Student')
+            hint_level = session_data.get('hint_level', 0)
 
-            correct_answer = question_data.get('correct_answer', 0)
-            options = question_data.get('options', [])
+            # Handle both text answers and button selections
+            if isinstance(user_answer, int):
+                # Button selection (MCQ)
+                options = question_data.get('options', [])
+                if user_answer < len(options):
+                    user_answer_text = options[user_answer]
+                else:
+                    user_answer_text = str(user_answer)
+            else:
+                user_answer_text = str(user_answer)
 
-            # Check if answer is correct
-            is_correct = selected_option == correct_answer
+            # Evaluate answer using the new method
+            evaluation_result = self.english_service.evaluate_vocabulary_answer(
+                user_answer_text,
+                question_data.get('acceptable_answers', []),
+                question_data.get('options', [])
+            )
+            is_correct = evaluation_result['is_correct']
+            correct_answer_text = evaluation_result['correct_answer_text']
 
             # Get user stats before awarding XP
             stats = get_user_stats(user_id) or {}
@@ -2432,8 +2552,11 @@ IMPORTANT:
             current_level = stats.get('level', 1)
             current_streak = stats.get('streak', 0)
 
-            # Award XP and update streak
-            points_earned = 5 if is_correct else 2  # More XP for correct answers
+            # Award XP based on correctness and hint usage
+            base_points = 10 if is_correct else 3
+            hint_penalty = min(hint_level * 2, 5)  # Reduce points for hints used
+            points_earned = max(2, base_points - hint_penalty)
+            
             add_xp(user_id, points_earned, 'english_vocabulary')
             update_streak(user_id)
 
@@ -2442,21 +2565,14 @@ IMPORTANT:
             new_level = max(1, (new_xp // 100) + 1)
             new_streak = current_streak + 1
 
-            # Show result
-            if is_correct:
-                result_emoji = "✅"
-                result_text = "OUTSTANDING!"
-            else:
-                result_emoji = "📚"
-                result_text = "Good Try!"
-
-            # FIRST MESSAGE: Answer and explanation
-            answer_message = f"{result_emoji} {result_text} {user_name}!\n\n"
-            answer_message += f"📚 Question: {question_data.get('question', '')}\n\n"
-            answer_message += f"🎯 Correct Answer: {options[correct_answer] if correct_answer < len(options) else 'N/A'}\n\n"
-            answer_message += f"💡 Explanation: {question_data.get('explanation', 'Keep learning!')}"
-
-            self.whatsapp_service.send_message(user_id, answer_message)
+            # FIRST MESSAGE: Comprehensive explanation
+            explanation_message = self.english_service.format_vocabulary_explanation(
+                question_data.get('explanation', {}),
+                is_correct,
+                user_answer_text,
+                correct_answer_text
+            )
+            self.whatsapp_service.send_message(user_id, explanation_message)
 
             # SECOND MESSAGE: Gamified stats and progress
             level_up_bonus = ""
@@ -2484,8 +2600,18 @@ IMPORTANT:
 
             self.whatsapp_service.send_interactive_message(user_id, stats_message, buttons)
 
-            # Clear session
+            # Clear session but save meta info for next time
             clear_user_session(user_id)
+            
+            # Save meta session for tracking last question type
+            question_type = question_data.get('question_type', 'Vocabulary Practice')
+            meta_session = {
+                'session_type': 'english_vocabulary_meta',
+                'user_name': user_name,
+                'last_question_type': question_type,
+                'intro_sent': True
+            }
+            save_user_session(user_id, meta_session)
 
         except Exception as e:
             logger.error(f"Error handling vocabulary answer for {user_id}: {e}")

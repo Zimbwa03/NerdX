@@ -560,29 +560,453 @@ Return ONLY valid JSON strictly using this structure (no markdown fences or comm
             'question_data': fallback
         }
 
-    def generate_vocabulary_question(self) -> Optional[Dict]:
-        """Retrieve vocabulary questions from Supabase database with minimal fallback"""
-        # Primary: Get question from database
+    def generate_ai_vocabulary_question(self, last_question_type: Optional[str] = None) -> Optional[Dict]:
+        """Generate vocabulary question using Gemini AI with ZIMSEC O-Level pedagogy"""
+        if not self._is_configured or not self.client:
+            logger.warning("Gemini AI not configured - skipping AI vocabulary generation")
+            return None
+        
+        try:
+            import random
+            
+            # Select question type with variety
+            question_types = [
+                "Multiple Choice", "Contextual Cloze", "Synonym Matching", 
+                "Sentence Construction", "Usage Correction"
+            ]
+            available_types = question_types.copy()
+            if last_question_type and last_question_type in available_types and len(available_types) > 1:
+                available_types.remove(last_question_type)
+            selected_type = random.choice(available_types)
+            
+            # Select vocabulary focus
+            vocabulary_categories = [
+                ("Register", ["Emotions/Feelings", "Attitude/Character", "Manner/Tone/Mood"]),
+                ("Contextual", ["Synonyms/Antonyms", "Phrasal Verbs/Idioms", "Homophones/Confusables"])
+            ]
+            category, focus_areas = random.choice(vocabulary_categories)
+            focus_area = random.choice(focus_areas)
+            
+            # Select difficulty
+            difficulty = random.choice(["easy", "medium", "hard"])
+            
+            prompt = f"""
+AI Tutor Persona: Professional ZIMSEC O-Level English Vocabulary Expert
+Goal: Assess and expand student's dictionary knowledge and contextual word usage.
+
+Current Requirements:
+- Question Type: {selected_type}
+- Vocabulary Category: {category}
+- Focus Area: {focus_area}
+- Difficulty: {difficulty}
+- Align with ZIMSEC O-Level English Language syllabus (Forms 1-4)
+
+Generate ONE vocabulary question following these exact requirements:
+
+For {selected_type}:
+{"- Provide 4 options (A, B, C, D) testing precise meaning/nuance" if selected_type == "Multiple Choice" else ""}
+{"- Create a sentence with a blank requiring contextual understanding" if selected_type == "Contextual Cloze" else ""}
+{"- Provide 5 words to match with their synonyms/antonyms" if selected_type == "Synonym Matching" else ""}
+{"- Give a high-level word for the student to use correctly in a sentence" if selected_type == "Sentence Construction" else ""}
+{"- Present a sentence with incorrect word usage to identify and correct" if selected_type == "Usage Correction" else ""}
+
+Focus on {focus_area} vocabulary:
+{"- Emotions: ecstatic, demoralized, indignant, frustrated" if "Emotions" in focus_area else ""}
+{"- Attitude: cynical, diplomatic, conscientious, haughty" if "Attitude" in focus_area else ""}
+{"- Tone/Mood: sardonic, contemplative, condescending, jovial" if "Tone" in focus_area else ""}
+{"- Test words like ubiquitous, ephemeral, mitigate, profound" if "Synonyms" in focus_area else ""}
+{"- Common expressions: look up to, put up with, beat around the bush" if "Phrasal" in focus_area else ""}
+{"- Commonly confused: affect/effect, compliment/complement" if "Homophones" in focus_area else ""}
+
+Return ONLY valid JSON (no markdown fences or commentary):
+{{
+  "question_type": "{selected_type}",
+  "vocabulary_category": "{category}",
+  "focus_area": "{focus_area}",
+  "question": "The complete question text",
+  "instructions": "Clear instructions for the student",
+  "options": ["option1", "option2", "option3", "option4"] or [],
+  "acceptable_answers": ["answer1", "answer2"],
+  "hint_sequence": [
+    {{"level": 1, "text": "Category identification hint"}},
+    {{"level": 2, "text": "Contextual/grammatical clue"}},
+    {{"level": 3, "text": "Etymology/root word hint"}}
+  ],
+  "explanation": {{
+    "correction": "The correct answer",
+    "definition": "Precise, student-friendly definition",
+    "contextual_nuance": "Connotation and register of the word",
+    "etymology": "Word origin or family",
+    "zimsec_importance": "Why this matters for ZIMSEC exams",
+    "examples": ["Example sentence 1", "Example sentence 2"]
+  }},
+  "difficulty": "{difficulty}",
+  "question_reference": "VOC-{selected_type[:3].upper()}-{random.randint(1000,9999)}"
+}}
+"""
+            
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.7,
+                    max_output_tokens=1800
+                ),
+            )
+            
+            if response and hasattr(response, 'text') and response.text and response.text.strip():
+                try:
+                    # Clean and parse response
+                    cleaned_text = self._clean_json_block(response.text.strip())
+                    question_data = json.loads(cleaned_text)
+                    
+                    # Normalize the payload
+                    normalized = self._normalize_ai_vocabulary_payload(question_data)
+                    normalized['source'] = 'ai'
+                    
+                    logger.info(f"AI vocabulary question generated successfully - Type: {selected_type}")
+                    return {
+                        'success': True,
+                        'question_data': normalized
+                    }
+                except json.JSONDecodeError as e:
+                    logger.error(f"Failed to parse Gemini vocabulary response: {e}")
+                    logger.debug(f"Raw response: {response.text[:500]}")
+                    return None
+            else:
+                logger.error("Empty or invalid response from Gemini for vocabulary")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Error generating AI vocabulary question: {e}")
+            return None
+    
+    def generate_deepseek_vocabulary_question(self, last_question_type: Optional[str] = None) -> Optional[Dict]:
+        """Generate vocabulary question using DeepSeek as fallback"""
+        if not self.deepseek_api_key:
+            logger.warning("DeepSeek API key not configured - skipping DeepSeek vocabulary generation")
+            return None
+        
+        try:
+            import random
+            
+            # Select question type with variety
+            question_types = [
+                "Multiple Choice", "Contextual Cloze", "Synonym Matching", 
+                "Sentence Construction", "Usage Correction"
+            ]
+            available_types = question_types.copy()
+            if last_question_type and last_question_type in available_types and len(available_types) > 1:
+                available_types.remove(last_question_type)
+            selected_type = random.choice(available_types)
+            
+            # Select vocabulary focus
+            vocabulary_categories = [
+                ("Register", ["Emotions/Feelings", "Attitude/Character", "Manner/Tone/Mood"]),
+                ("Contextual", ["Synonyms/Antonyms", "Phrasal Verbs/Idioms", "Homophones/Confusables"])
+            ]
+            category, focus_areas = random.choice(vocabulary_categories)
+            focus_area = random.choice(focus_areas)
+            
+            system_prompt = (
+                "You are a professional ZIMSEC O-Level English Vocabulary Expert. "
+                "Create vocabulary questions that expand students' dictionary knowledge and contextual word usage."
+            )
+            
+            user_prompt = f"""
+Generate a ZIMSEC O-Level vocabulary question.
+
+Question Type: {selected_type}
+Category: {category} - {focus_area}
+Difficulty: {random.choice(["easy", "medium", "hard"])}
+
+Requirements:
+- Test precise vocabulary understanding
+- Focus on register, connotation, and contextual usage
+- Provide graduated hints and comprehensive explanations
+
+Return ONLY valid JSON:
+{{
+  "question_type": "{selected_type}",
+  "vocabulary_category": "{category}",
+  "focus_area": "{focus_area}",
+  "question": "...",
+  "instructions": "...",
+  "options": [...] or [],
+  "acceptable_answers": [...],
+  "hint_sequence": [
+    {{"level": 1, "text": "Category hint"}},
+    {{"level": 2, "text": "Context clue"}},
+    {{"level": 3, "text": "Etymology hint"}}
+  ],
+  "explanation": {{
+    "correction": "...",
+    "definition": "...",
+    "contextual_nuance": "...",
+    "etymology": "...",
+    "zimsec_importance": "...",
+    "examples": [...]
+  }},
+  "difficulty": "easy/medium/hard"
+}}
+"""
+            
+            headers = {
+                'Authorization': f'Bearer {self.deepseek_api_key}',
+                'Content-Type': 'application/json'
+            }
+            
+            payload = {
+                'model': 'deepseek-chat',
+                'messages': [
+                    {'role': 'system', 'content': system_prompt},
+                    {'role': 'user', 'content': user_prompt}
+                ],
+                'temperature': 0.7,
+                'max_tokens': 1500
+            }
+            
+            response = requests.post(self.deepseek_api_url, headers=headers, json=payload, timeout=45)
+            
+            if response.status_code == 200:
+                response_data = response.json()
+                content = response_data.get('choices', [{}])[0].get('message', {}).get('content', '')
+                
+                if content:
+                    try:
+                        cleaned_text = self._clean_json_block(content.strip())
+                        question_data = json.loads(cleaned_text)
+                        normalized = self._normalize_ai_vocabulary_payload(question_data)
+                        normalized['source'] = 'deepseek'
+                        
+                        logger.info(f"DeepSeek vocabulary question generated - Type: {selected_type}")
+                        return {
+                            'success': True,
+                            'question_data': normalized
+                        }
+                    except json.JSONDecodeError as e:
+                        logger.error(f"Failed to parse DeepSeek vocabulary response: {e}")
+                        return None
+            else:
+                logger.error(f"DeepSeek API error: {response.status_code}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Error generating DeepSeek vocabulary question: {e}")
+            return None
+    
+    def _normalize_ai_vocabulary_payload(self, ai_response: Dict) -> Dict:
+        """Normalize AI vocabulary response to standard format"""
+        try:
+            # Extract hint sequence
+            hint_sequence = ai_response.get('hint_sequence', [])
+            if not hint_sequence:
+                hint_sequence = [
+                    {"level": 1, "text": "Think about the category of word needed here."},
+                    {"level": 2, "text": "Consider the context and grammatical requirements."},
+                    {"level": 3, "text": "Think about related words or word roots."}
+                ]
+            
+            # Extract explanation
+            explanation = ai_response.get('explanation', {})
+            if isinstance(explanation, str):
+                explanation = {
+                    "correction": ai_response.get('acceptable_answers', [''])[0],
+                    "definition": explanation,
+                    "contextual_nuance": "",
+                    "etymology": "",
+                    "zimsec_importance": "This vocabulary is essential for ZIMSEC exams.",
+                    "examples": []
+                }
+            
+            normalized = {
+                'question_type': ai_response.get('question_type', 'Vocabulary Practice'),
+                'vocabulary_category': ai_response.get('vocabulary_category', 'Contextual'),
+                'focus_area': ai_response.get('focus_area', 'General Vocabulary'),
+                'question': ai_response.get('question', ''),
+                'instructions': ai_response.get('instructions', 'Answer the question.'),
+                'options': ai_response.get('options', []),
+                'acceptable_answers': ai_response.get('acceptable_answers', []),
+                'hint_sequence': hint_sequence,
+                'explanation': explanation,
+                'difficulty': ai_response.get('difficulty', 'medium'),
+                'question_reference': ai_response.get('question_reference', f'VOC-{random.randint(1000,9999)}')
+            }
+            
+            return normalized
+            
+        except Exception as e:
+            logger.error(f"Error normalizing vocabulary payload: {e}")
+            return ai_response
+    
+    def _wrap_legacy_vocabulary_question(self, legacy_question: Dict) -> Dict:
+        """Wrap database vocabulary question in new AI-driven structure"""
+        try:
+            # For MCQ format from database
+            options = legacy_question.get('options', [])
+            correct_answer = legacy_question.get('correct_answer', 0)
+            
+            # Build acceptable answers
+            acceptable_answers = []
+            if options and correct_answer < len(options):
+                acceptable_answers = [options[correct_answer]]
+            
+            return {
+                'question_type': 'Multiple Choice',
+                'vocabulary_category': 'Contextual',
+                'focus_area': 'General Vocabulary',
+                'question': legacy_question.get('question', ''),
+                'instructions': 'Choose the best answer.',
+                'options': options,
+                'acceptable_answers': acceptable_answers,
+                'hint_sequence': [
+                    {"level": 1, "text": "Think about what type of word fits here."},
+                    {"level": 2, "text": "Consider the context of the sentence."},
+                    {"level": 3, "text": "Eliminate obviously wrong options."}
+                ],
+                'explanation': {
+                    "correction": acceptable_answers[0] if acceptable_answers else '',
+                    "definition": legacy_question.get('explanation', ''),
+                    "contextual_nuance": "",
+                    "etymology": "",
+                    "zimsec_importance": "This vocabulary is important for ZIMSEC exams.",
+                    "examples": []
+                },
+                'difficulty': 'medium',
+                'question_reference': f"VOC-DB-{random.randint(1000,9999)}"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error wrapping legacy vocabulary question: {e}")
+            return legacy_question
+    
+    def evaluate_vocabulary_answer(self, user_answer: str, acceptable_answers: List, options: List = None) -> Dict:
+        """Evaluate vocabulary answer with flexible matching"""
+        try:
+            # Normalize user answer
+            normalized_user = user_answer.strip().lower()
+            
+            # Check direct match with acceptable answers
+            for acceptable in acceptable_answers:
+                if normalized_user == acceptable.strip().lower():
+                    return {
+                        'is_correct': True,
+                        'matched_answer': acceptable,
+                        'correct_answer_text': acceptable
+                    }
+            
+            # Check if user gave option letter (A, B, C, D) for MCQ
+            if options and len(normalized_user) == 1 and normalized_user in 'abcd':
+                option_index = ord(normalized_user) - ord('a')
+                if option_index < len(options):
+                    selected_option = options[option_index]
+                    for acceptable in acceptable_answers:
+                        if selected_option.strip().lower() == acceptable.strip().lower():
+                            return {
+                                'is_correct': True,
+                                'matched_answer': acceptable,
+                                'correct_answer_text': acceptable
+                            }
+            
+            # Not correct
+            return {
+                'is_correct': False,
+                'matched_answer': None,
+                'correct_answer_text': acceptable_answers[0] if acceptable_answers else ''
+            }
+            
+        except Exception as e:
+            logger.error(f"Error evaluating vocabulary answer: {e}")
+            return {
+                'is_correct': False,
+                'matched_answer': None,
+                'correct_answer_text': ''
+            }
+    
+    def format_vocabulary_explanation(self, explanation_data: Dict, is_correct: bool, 
+                                     user_answer: str, correct_answer: str) -> str:
+        """Format comprehensive vocabulary explanation"""
+        try:
+            lines = []
+            
+            # Result header
+            if is_correct:
+                lines.append("✅ **EXCELLENT!** Your answer is correct!")
+            else:
+                lines.append(f"📚 **Good try!** The correct answer is: **{correct_answer}**")
+                if user_answer:
+                    lines.append(f"You answered: {user_answer}")
+            
+            lines.append("")
+            
+            # Definition
+            if explanation_data.get('definition'):
+                lines.append(f"📖 **Definition:** {explanation_data['definition']}")
+                lines.append("")
+            
+            # Contextual nuance
+            if explanation_data.get('contextual_nuance'):
+                lines.append(f"💭 **Context & Register:** {explanation_data['contextual_nuance']}")
+                lines.append("")
+            
+            # Etymology
+            if explanation_data.get('etymology'):
+                lines.append(f"🌱 **Word Origin:** {explanation_data['etymology']}")
+                lines.append("")
+            
+            # ZIMSEC importance
+            if explanation_data.get('zimsec_importance'):
+                lines.append(f"🎯 **ZIMSEC Relevance:** {explanation_data['zimsec_importance']}")
+                lines.append("")
+            
+            # Examples
+            examples = explanation_data.get('examples', [])
+            if examples:
+                lines.append("📝 **Example Usage:**")
+                for i, example in enumerate(examples[:2], 1):
+                    lines.append(f"{i}. {example}")
+            
+            return "\n".join(lines)
+            
+        except Exception as e:
+            logger.error(f"Error formatting vocabulary explanation: {e}")
+            return f"✅ Correct answer: {correct_answer}\n💡 {explanation_data.get('definition', 'Keep expanding your vocabulary!')}"
+    
+    def generate_vocabulary_question(self, last_question_type: Optional[str] = None) -> Optional[Dict]:
+        """Generate vocabulary questions prioritizing AI with resilient fallbacks"""
+        # Primary: AI generation with Gemini
+        ai_response = self.generate_ai_vocabulary_question(last_question_type=last_question_type)
+        if ai_response and ai_response.get('success'):
+            return ai_response
+        
+        # Secondary: DeepSeek fallback
+        deepseek_response = self.generate_deepseek_vocabulary_question(last_question_type=last_question_type)
+        if deepseek_response and deepseek_response.get('success'):
+            return deepseek_response
+        
+        # Tertiary: Database question
         try:
             from database.external_db import get_random_vocabulary_question
-
             question_data = get_random_vocabulary_question()
             if question_data:
-                logger.info(f"Retrieved vocabulary question from database - Question: {question_data.get('question', 'Unknown')[:50]}...")
+                logger.info(f"Retrieved vocabulary question from database")
+                normalized = self._wrap_legacy_vocabulary_question(question_data)
+                normalized['source'] = 'database'
                 return {
                     'success': True,
-                    'question_data': question_data
+                    'question_data': normalized
                 }
-            else:
-                logger.warning("No vocabulary questions found in database")
         except Exception as e:
-            logger.error(f"Error retrieving vocabulary question from database: {e}")
-
-        # Minimal fallback only if database completely fails
-        logger.warning("Database unavailable - using minimal fallback")
+            logger.error(f"Error retrieving vocabulary from database: {e}")
+        
+        # Final fallback
+        logger.warning("Using fallback vocabulary question")
+        fallback = self._wrap_legacy_vocabulary_question(self._get_fallback_vocabulary_question())
+        fallback['source'] = 'fallback'
         return {
             'success': True,
-            'question_data': self._get_fallback_vocabulary_question()
+            'question_data': fallback
         }
 
     def generate_essay_prompts(self, user_level: str = "Form 3") -> Optional[Dict]:
