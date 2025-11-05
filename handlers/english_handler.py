@@ -1939,20 +1939,20 @@ IMPORTANT:
             registration = get_user_registration(user_id)
             user_name = registration['name'] if registration else "Student"
             credits = get_user_credits(user_id)
- 
+
             if credits < 1:
                 self.whatsapp_service.send_message(user_id, f"❌ Insufficient credits! You need 1 credit but have {credits}. Purchase more credits to continue.")
                 return
- 
+
             # Check and deduct credits using advanced credit service
             from services.advanced_credit_service import advanced_credit_service
- 
+
             credit_result = advanced_credit_service.check_and_deduct_credits(
                 user_id,
                 'english_topical',  # 1 credit - use correct action key
                 None
             )
- 
+
             if not credit_result['success']:
                 if credit_result.get('insufficient'):
                     message = f"❌ Insufficient credits. You need {credit_result['required_credits']} but have {credit_result['current_credits']}."
@@ -1960,7 +1960,7 @@ IMPORTANT:
                     message = credit_result.get('message', '❌ Error processing credits. Please try again.')
                 self.whatsapp_service.send_message(user_id, message)
                 return
- 
+
             from database.session_db import get_user_session, save_user_session
             import json
  
