@@ -687,7 +687,16 @@ class PaymentService:
             
             payment = result[0]
             current_status = payment.get('status', 'unknown')
+            
+            # Extract poll_url from admin_notes if not directly available
             poll_url = payment.get('paynow_poll_url')
+            if not poll_url:
+                admin_notes = payment.get('admin_notes', '')
+                if 'Poll URL:' in admin_notes:
+                    import re
+                    match = re.search(r'Poll URL:\s*(https?://[^\s]+)', admin_notes)
+                    if match:
+                        poll_url = match.group(1).strip()
             
             # If already completed, return current status
             if current_status in ['approved', 'paid', 'completed']:
