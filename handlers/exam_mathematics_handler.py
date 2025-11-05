@@ -1,6 +1,7 @@
 import json
 import logging
 import random
+import re
 from typing import Dict, List, Optional
 from database.external_db import get_user_registration, get_user_credits
 from database.session_db import save_user_session, get_user_session, clear_user_session
@@ -458,23 +459,59 @@ class ExamMathematicsHandler:
             current_level = user_stats.get('level', 1)
             current_streak = user_stats.get('streak', 0)
             
-            # Create AI solution message with stats
+            # Clean LaTeX from solution and explanation
+            solution = self._clean_latex_for_whatsapp(question_data.get('solution', ''))
+            explanation = self._clean_latex_for_whatsapp(question_data.get('explanation', ''))
+            answer = self._clean_latex_for_whatsapp(question_data.get('answer', ''))
+            
+            # Combine solution and explanation efficiently
+            # If explanation is redundant or very short, merge into solution
+            combined_solution = solution
+            if explanation and explanation.strip() and explanation != 'Work through each step carefully.':
+                # Check if explanation adds value (not just a generic message)
+                if len(explanation) > 30 and explanation.lower() not in ['work through each step carefully.', 'solve step by step.']:
+                    # Combine if they're different
+                    if explanation not in solution:
+                        combined_solution = f"{solution}\n\n💡 {explanation}"
+            
+            # Calculate available space for solution (target ~3000 chars total)
+            # Header + stats section is approximately 400 characters
+            header_stats_length = len(f"""🤖 **AI Solution** 🤖
+
+👤 **Student:** {user_name}
+📂 **Topic:** {topic}
+🎯 **Difficulty:** {difficulty.title()}
+
+✅ **Answer:** {answer}
+
+📋 **Step-by-Step Solution:**
+
+
+📊 **Your Current Stats:**
+💰 **Credits:** {current_credits}
+⭐ **XP Points:** {current_xp}
+🏆 **Level:** {current_level}
+🔥 **Streak:** {current_streak} days
+
+🎯 **Keep practicing to master this topic!**""")
+            
+            max_solution_length = 3000 - header_stats_length - 50  # 50 char buffer
+            
+            # Truncate solution if needed
+            if len(combined_solution) > max_solution_length:
+                combined_solution = self._truncate_solution_text(combined_solution, max_solution_length)
+            
+            # Create AI solution message with stats (question removed)
             message = f"""🤖 **AI Solution** 🤖
 
 👤 **Student:** {user_name}
 📂 **Topic:** {topic}
 🎯 **Difficulty:** {difficulty.title()}
 
-📝 **Question:**
-{question_data.get('question', '')}
-
-✅ **Answer:** {question_data.get('answer', '')}
+✅ **Answer:** {answer}
 
 📋 **Step-by-Step Solution:**
-{question_data.get('solution', '')}
-
-💡 **Explanation:**
-{question_data.get('explanation', 'Work through each step carefully.')}
+{combined_solution}
 
 📊 **Your Current Stats:**
 💰 **Credits:** {current_credits}
@@ -498,6 +535,101 @@ class ExamMathematicsHandler:
         except Exception as e:
             logger.error(f"Error showing AI solution for {user_id}: {e}")
             self.whatsapp_service.send_message(user_id, "❌ Error loading solution. Please try again.")
+
+    def _clean_latex_for_whatsapp(self, text: str) -> str:
+        """Convert LaTeX math notation to WhatsApp-friendly format"""
+        if not text:
+            return text
+        
+        try:
+            # Convert \binom{a}{b} to (a, b) format
+            text = re.sub(r'\\binom\{([^}]+)\}\{([^}]+)\}', r'(\1, \2)', text)
+            
+            # Remove LaTeX math mode delimiters \( and \)
+            text = re.sub(r'\\\(', '', text)
+            text = re.sub(r'\\\)', '', text)
+            
+            # Remove dollar signs used for LaTeX math mode
+            text = re.sub(r'\$([^$]+)\$', r'\1', text)
+            text = re.sub(r'\$\$([^$]+)\$\$', r'\1', text)
+            
+            # Convert \frac{a}{b} to (a)/(b) format
+            text = re.sub(r'\\frac\{([^}]+)\}\{([^}]+)\}', r'(\1)/(\2)', text)
+            
+            # Convert common LaTeX commands to readable format
+            replacements = {
+                r'\\times': '×',
+                r'\\div': '÷',
+                r'\\pm': '±',
+                r'\\sqrt\{([^}]+)\}': r'√(\1)',
+                r'\\sqrt': '√',
+                r'\\pi': 'π',
+                r'\\alpha': 'α',
+                r'\\beta': 'β',
+                r'\\theta': 'θ',
+                r'\\infty': '∞',
+                r'\\cdot': '·',
+                r'\\leq': '≤',
+                r'\\geq': '≥',
+                r'\\neq': '≠',
+                r'\\approx': '≈'
+            }
+            
+            for pattern, replacement in replacements.items():
+                text = re.sub(pattern, replacement, text)
+            
+            # Clean up any remaining LaTeX braces (only if they look like LaTeX, not regular text)
+            # Match braces that are likely LaTeX (preceded by backslash or are standalone math)
+            text = re.sub(r'\\\{([^}]+)\}', r'\1', text)  # Escaped braces
+            text = re.sub(r'(?<!\w)\{([^}]+)\}(?!\w)', r'\1', text)  # Standalone braces (not part of words)
+            
+            # Remove extra whitespace
+            text = re.sub(r'\s+', ' ', text)
+            text = text.strip()
+            
+            return text
+            
+        except Exception as e:
+            logger.error(f"Error cleaning LaTeX: {e}")
+            return text
+    
+    def _truncate_solution_text(self, text: str, max_length: int) -> str:
+        """Safely truncate solution text while preserving readability"""
+        if not text or len(text) <= max_length:
+            return text
+        
+        try:
+            # Try to truncate at sentence boundaries first
+            sentences = re.split(r'([.!?]\s+)', text)
+            truncated = ""
+            
+            for i in range(0, len(sentences), 2):
+                sentence = sentences[i] + (sentences[i+1] if i+1 < len(sentences) else '')
+                if len(truncated + sentence) <= max_length - 10:  # Leave room for "..."
+                    truncated += sentence
+                else:
+                    break
+            
+            # If we have content, add ellipsis
+            if truncated and len(truncated) < len(text):
+                truncated = truncated.rstrip() + "..."
+            elif not truncated:
+                # If no sentence boundary found, truncate at word boundary
+                words = text.split()
+                truncated = ""
+                for word in words:
+                    if len(truncated + word + " ") <= max_length - 10:
+                        truncated += word + " "
+                    else:
+                        break
+                truncated = truncated.rstrip() + "..."
+            
+            return truncated if truncated else text[:max_length - 3] + "..."
+            
+        except Exception as e:
+            logger.error(f"Error truncating text: {e}")
+            # Fallback: simple truncation
+            return text[:max_length - 3] + "..." if len(text) > max_length else text
 
     def _create_fallback_ai_question(self, topic: str, difficulty: str) -> Dict:
         """Create a simple fallback AI question when generation fails"""
