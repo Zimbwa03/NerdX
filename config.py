@@ -73,7 +73,8 @@ class Config:
     AI_MAX_RETRIES = 3
 
     # Enhanced Learning Features
-    ENGLISH_AI_MODEL = os.getenv('ENGLISH_AI_MODEL', 'gemini-1.5-flash')
+    SCIENCE_AI_MODEL = os.getenv('SCIENCE_AI_MODEL', 'gemini-2.5-flash')
+    ENGLISH_AI_MODEL = os.getenv('ENGLISH_AI_MODEL', 'gemini-2.5-flash')
     MATHEMATICS_AI_MODEL = os.getenv('MATHEMATICS_AI_MODEL', 'deepseek-chat')
 
     # Audio Processing

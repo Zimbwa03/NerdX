@@ -14,10 +14,43 @@ class AIService:
     def __init__(self):
         self.deepseek_api_key = Config.DEEPSEEK_API_KEY
         self.gemini_api_key = Config.GEMINI_API_KEY
+        self.gemini_science_model = self._normalize_gemini_model(
+            getattr(Config, 'SCIENCE_AI_MODEL', 'gemini-2.5-flash')
+        )
+        self.gemini_english_model = self._normalize_gemini_model(
+            getattr(Config, 'ENGLISH_AI_MODEL', 'gemini-2.5-flash')
+        )
 
         if not self.deepseek_api_key:
             logger.warning("DEEPSEEK_API_KEY not configured - AI features will be limited")
             self.client = None
+
+    @staticmethod
+    def _normalize_gemini_model(configured_model: Optional[str]) -> str:
+        """Map legacy Gemini model names to supported defaults"""
+        default_model = 'gemini-2.5-flash'
+
+        if not configured_model:
+            return default_model
+
+        normalized = configured_model.strip()
+        legacy_map = {
+            'gemini-1.5-flash': default_model,
+            'gemini-1.5-flash-latest': default_model,
+            'gemini-pro': default_model,
+            'gemini-pro-vision': default_model
+        }
+
+        mapped = legacy_map.get(normalized.lower())
+        if mapped:
+            logger.warning(
+                "Legacy Gemini model '%s' detected. Switching to supported model '%s'",
+                normalized,
+                mapped
+            )
+            return mapped
+
+        return normalized
 
     def generate_math_questions(self, topic: str, difficulty: str, count: int = 1, chat_id: Optional[str] = None):
         """Generate mathematics questions using DeepSeek AI with fallback and caching"""
@@ -208,7 +241,8 @@ Generate ONE high-quality {subject} MCQ question for {topic} now:
                 }]
             }
 
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={self.gemini_api_key}"
+            model = self.gemini_science_model or 'gemini-2.5-flash'
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={self.gemini_api_key}"
 
             response = requests.post(url, headers=headers, json=data, timeout=30)
 
@@ -231,6 +265,14 @@ Generate ONE high-quality {subject} MCQ question for {topic} now:
                     logger.warning("Invalid science question format from Gemini")
                     return None
             else:
+                if response.status_code == 404 and model != 'gemini-2.5-flash':
+                    logger.warning(
+                        "Gemini model '%s' not found. Retrying with 'gemini-2.5-flash'",
+                        model
+                    )
+                    self.gemini_science_model = 'gemini-2.5-flash'
+                    return self._generate_science_with_gemini(subject, topic, difficulty)
+
                 logger.error(f"Gemini API error: {response.status_code} - {response.text}")
                 return None
 
@@ -384,7 +426,8 @@ MANDATORY JSON format:
                 }]
             }
 
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={self.gemini_api_key}"
+            model = self.gemini_english_model or 'gemini-2.5-flash'
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={self.gemini_api_key}"
 
             response = requests.post(url, headers=headers, json=data, timeout=30)
 
@@ -399,6 +442,14 @@ MANDATORY JSON format:
 
                 return json.loads(json_str)
             else:
+                if response.status_code == 404 and model != 'gemini-2.5-flash':
+                    logger.warning(
+                        "Gemini model '%s' not found. Retrying with 'gemini-2.5-flash'",
+                        model
+                    )
+                    self.gemini_english_model = 'gemini-2.5-flash'
+                    return self._generate_english_with_gemini(topic, difficulty)
+
                 logger.error(f"Gemini API error: {response.status_code}")
                 return self._generate_english_with_deepseek(topic, difficulty)
 

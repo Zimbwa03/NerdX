@@ -511,24 +511,8 @@ Return valid JSON with the exact format requested."""
                 logger.info("Essay marking completed successfully with Gemini 2.5 Flash")
                 return response.text.strip()
             else:
-                logger.warning("Empty or invalid response from Gemini 2.5 Flash, trying alternative model")
-
-                # Try with alternative model
-                response_alt = self.client.models.generate_content(
-                    model="gemini-1.5-flash",
-                    contents=enhanced_prompt,
-                    config=types.GenerateContentConfig(
-                        temperature=0.4,
-                        max_output_tokens=2000
-                    ),
-                )
-
-                if response_alt and hasattr(response_alt, 'text') and response_alt.text and response_alt.text.strip():
-                    logger.info("Essay marking completed successfully with Gemini 1.5 Flash")
-                    return response_alt.text.strip()
-                else:
-                    logger.error("Both Gemini models returned empty responses")
-                    return self._generate_fallback_essay_marking()
+                logger.error("Empty or invalid response from Gemini 2.5 Flash")
+                return self._generate_fallback_essay_marking()
 
         except Exception as e:
             logger.error(f"Error in Gemini essay marking: {e}")
