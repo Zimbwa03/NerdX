@@ -4530,22 +4530,31 @@ def handle_paynow_phone_collection(user_id: str, phone_number: str):
             f"💎 Credits: {credits}\n\n"
             f"🔄 Creating payment link... Please wait...")
 
-        # Initiate Paynow payment using local format (Paynow expects 0771111111 format)
+        # Initiate Paynow payment using PaymentService for consistent reference codes
         try:
-            payment_response = paynow_service.create_usd_ecocash_payment(
-                amount=amount,
-                phone_number=local_phone,  # Use local format 0771111111
-                email="neezykidngoni@gmail.com",  # Paynow account email
-                reference=f"CREDITS_{package_id}_{user_id}",
-                description=f"NerdX Quiz Credits - {credits} credits"
+            from services.payment_service import payment_service
+            
+            # Use PaymentService to create payment (ensures consistent reference codes)
+            payment_creation = payment_service.create_paynow_payment(
+                user_id=user_id,
+                package_id=package_id,
+                phone_number=local_phone,
+                email="neezykidngoni@gmail.com"  # Paynow account email
             )
+            
+            if not payment_creation.get('success'):
+                raise Exception(payment_creation.get('message', 'Payment creation failed'))
+            
+            payment_response = payment_creation
+            redirect_url = payment_creation.get('poll_url')
 
-            if payment_response.get('success'):
-                poll_url = payment_response.get('poll_url')
-                redirect_url = payment_response.get('redirect_url')
-
-                if redirect_url:
-                    # Success - send payment link
+            if redirect_url:
+                # Success - send payment link with message from payment service
+                message_text = payment_creation.get('message', '')
+                if message_text:
+                    whatsapp_service.send_message(user_id, message_text)
+                else:
+                    # Fallback message if payment service didn't return one
                     message = f"""✅ *PAYNOW PAYMENT READY!* ⚡
 
 📱 *Payment Details:*
@@ -4564,29 +4573,15 @@ Click the link below to complete your EcoCash payment:
 3️⃣ Credits will be added automatically (5-30 seconds)
 
 💡 *Payment expires in 5 minutes*"""
-
                     whatsapp_service.send_message(user_id, message)
-
-                    # Store poll URL for payment status checking
-                    if poll_url:
-                        logger.info(f"Paynow payment initiated for {user_id}: poll_url={poll_url}")
-
-                else:
-                    # Fallback to manual payment
-                    whatsapp_service.send_message(user_id, 
-                        "❌ *Payment Link Generation Failed*\n\n"
-                        "The instant payment system encountered an issue. "
-                        "Let's use manual payment instead.")
-                    handle_manual_payment(user_id, package_id)
-
+                
+                logger.info(f"Paynow payment initiated for {user_id}: poll_url={redirect_url}")
             else:
-                error_msg = payment_response.get('error', 'Unknown error')
-                logger.error(f"Paynow payment failed for {user_id}: {error_msg}")
-
+                # Fallback to manual payment
                 whatsapp_service.send_message(user_id, 
-                    f"❌ *Payment Processing Failed*\n\n"
-                    f"Error: {error_msg}\n\n"
-                    f"Let's use manual payment instead.")
+                    "❌ *Payment Link Generation Failed*\n\n"
+                    "The instant payment system encountered an issue. "
+                    "Let's use manual payment instead.")
                 handle_manual_payment(user_id, package_id)
 
         except Exception as payment_error:
