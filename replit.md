@@ -68,6 +68,13 @@ Fixed "Show Answer" functionality in Math Exam mode to retrieve and display solu
 - Always sends text solution alongside images (mandatory requirement)
 - Session clearing moved to end of flow to prevent race conditions
 
+## Comprehension Feature Bug Fixes
+Fixed critical bugs in English Comprehension module (`handlers/english_handler.py`):
+- **Critical Bug**: Fixed NameError crash in `_send_professional_comprehension_flow` where `ready_message` was undefined for short passages (under 4000 chars)
+- **Code Cleanup**: Removed unused duplicate method `_send_enhanced_comprehension_passage` (83 lines of dead code)
+- **Data Standardization**: Standardized answer field naming to use `correct_answer` consistently throughout comprehension feature
+- **Enhanced Fallbacks**: Improved fallback question generation with proper formatting, educational explanations, and ZIMSEC-appropriate structure
+
 ## Security Improvements
 Removed API key printing from console logs in `database/external_db.py` to prevent credential exposure.
 
@@ -75,3 +82,4 @@ Removed API key printing from console logs in `database/external_db.py` to preve
 - Text solutions are always sent, even when image solutions are available
 - LaTeX conversion applied to all question text, answers, solutions, and explanations
 - Session management ensures all messages (images + text) are delivered before clearing state
+- Comprehension passages handle both short (<4000 chars) and long passages correctly

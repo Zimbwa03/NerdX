@@ -352,90 +352,6 @@ Ready to boost your reading skills? 🚀"""
             clear_user_session(user_id)
             self.whatsapp_service.send_message(user_id, "❌ Error generating comprehension. Please try again.")
 
-    def _send_enhanced_comprehension_passage(self, user_id: str, user_name: str, passage_data: Dict):
-        """Send enhanced comprehension passage with interactive question flow"""
-        try:
-            passage = passage_data.get('passage', {})
-            questions = passage_data.get('questions', [])
-
-            if not passage or not questions:
-                logger.error("Invalid passage data structure")
-                return
-
-            # Send the long passage first as separate message with length check
-            passage_text = passage.get('text', 'Passage content not available')
-            passage_title = passage.get('title', 'Comprehension Passage')
-            word_count = passage.get('word_count', len(passage_text.split()))
-            reading_time = max(2, len(passage_text.split()) // 200)
-
-            # Check if message is too long for WhatsApp (4096 char limit)
-            full_message = f"""📖 **{passage_title}**
-
-{passage_text}
-
----
-📊 **Word Count:** {word_count} words
-⏱️ **Reading Time:** ~{reading_time} minutes
-
-*Read the passage carefully and answer ALL questions that follow.*"""
-
-            if len(full_message) > 4000:  # WhatsApp limit with safety margin
-                # Send title and intro first
-                title_message = f"📖 **{passage_title}**\n\n📊 **Word Count:** {word_count} words\n⏱️ **Reading Time:** ~{reading_time} minutes\n\n*Read carefully - passage follows:*"
-                self.whatsapp_service.send_message(user_id, title_message)
-
-                # Split passage text into chunks
-                chunks = self._split_text(passage_text, 3000)  # Leave room for formatting
-                for i, chunk in enumerate(chunks):
-                    chunk_message = f"**Part {i+1}:**\n\n{chunk}"
-                    if i == len(chunks) - 1:  # Last chunk
-                        chunk_message += "\n\n---\n*Now answer ALL questions that follow.*"
-                    self.whatsapp_service.send_message(user_id, chunk_message)
-            else:
-                # Send as single message if within limit
-                try:
-                    self.whatsapp_service.send_message(user_id, full_message)
-                except Exception as e:
-                    logger.error(f"Error sending passage message: {e}")
-                    # Send fallback shorter message
-                    fallback_message = f"📖 **{passage_title}**\n\n{passage_text[:2000]}...\n\n*Passage continues - please read carefully and answer the questions below.*"
-                    self.whatsapp_service.send_message(user_id, fallback_message)
-
-            # Format and send 10 questions with Show Answer button
-            questions_message = f"""📝 **COMPREHENSION QUESTIONS**
-
-Hi {user_name}! Answer these 10 questions based on the passage above:
-
-"""
-
-            for i, q in enumerate(questions[:10], 1):  # Ensure only 10 questions
-                question_type = (q.get('question_type') or '').title()
-                marks = q.get('marks', 1)
-                questions_message += f"**{i}.** {q.get('question', f'Question {i} not available')} [{marks} mark{'s' if marks != 1 else ''}]\n\n"
-
-            questions_message += "✅ *Answer these questions based on your understanding of the passage*"
-
-            # Save questions in session for answer display
-            from database.session_db import save_user_session
-            import json
-            session_data = {
-                'session_type': 'comprehension_questions',
-                'questions_data': json.dumps(questions[:10]),
-                'user_name': user_name,
-                'passage_title': passage.get('title', 'Comprehension')
-            }
-            save_user_session(user_id, session_data)
-
-            buttons = [
-                {"text": "📋 Show Answers", "callback_data": "comprehension_show_answers"},
-                {"text": "🔙 Back", "callback_data": "english_menu"}
-            ]
-
-            self.whatsapp_service.send_interactive_message(user_id, questions_message, buttons)
-
-        except Exception as e:
-            logger.error(f"Error sending enhanced comprehension passage: {e}")
-
     def handle_comprehension_show_answers(self, user_id: str):
         """Show all comprehension answers with stats and XP tracking"""
         try:
@@ -626,6 +542,9 @@ Hi {user_name}! Answer these 10 questions based on the passage above:
 
                 # Send completion message with questions button
                 ready_message = f"✅ **Passage Complete!**\n\nNow you'll answer 10 comprehension questions based on this passage, {user_name}.\n\n📝 Ready to continue?"
+            else:
+                # Message fits in one block, use the complete message
+                ready_message = complete_message
 
             continue_buttons = [
                 {"text": "📝 Load Questions", "callback_data": "comprehension_load_questions"},
@@ -680,10 +599,13 @@ Hi {user_name}! Answer these 10 questions based on the passage above:
 
             # Ensure we have at least 10 questions, pad if needed
             while len(questions) < 10:
+                question_num = len(questions) + 1
                 questions.append({
-                    'question': f'Additional question {len(questions) + 1} - What is your understanding of the main theme in this passage?',
-                    'answer': 'Based on your reading comprehension.',
-                    'marks': 2
+                    'question': f'Question {question_num}: What is the main message or theme of this passage?',
+                    'correct_answer': 'The passage discusses [theme/topic]. Students should identify key points from their reading.',
+                    'explanation': 'Look for the central idea that connects all paragraphs in the passage.',
+                    'marks': 2,
+                    'question_type': 'inferential'
                 })
 
             # Split questions into two messages (5 questions each)
