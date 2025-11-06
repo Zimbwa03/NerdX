@@ -50,7 +50,7 @@ class WhatsAppService:
 
             # Check quality monitoring before sending (but allow critical messages)
             if self.quality_monitor.should_throttle_messaging():
-                # Allow critical messages like consent requests, registration flows, and payment transactions
+                # Allow critical messages like consent requests, registration flows, payment transactions, and hints
                 critical_keywords = [
                     'consent', 'welcome', 'registration', 'first name', 'surname', 'date of birth', 
                     'referral code', 'invalid date format', 'please use', 'enter a valid', 
@@ -61,7 +61,9 @@ class WhatsAppService:
                     # Payment-related critical keywords
                     'paynow', 'payment', 'ecocash', 'credits', 'package', 'amount', 
                     'payment method', 'phone number', 'provide your', 'instant payment',
-                    'payment link', 'complete payment', 'payment ready', 'payment details'
+                    'payment link', 'complete payment', 'payment ready', 'payment details',
+                    # User-requested responses
+                    'hint', '💡'
                 ]
                 is_critical = is_command_message or any(keyword in message_lower for keyword in critical_keywords)
                 
@@ -73,7 +75,7 @@ class WhatsAppService:
             
             # CRITICAL: Check throttle to prevent message chains (but allow critical messages)
             if not message_throttle.can_send_message(to):
-                # Allow critical messages like consent requests, registration flows, and payment transactions
+                # Allow critical messages like consent requests, registration flows, payment transactions, and hints
                 critical_keywords = [
                     'consent', 'welcome', 'registration', 'first name', 'surname', 'date of birth', 
                     'referral code', 'thank you for your consent', 'invalid date format', 'please use', 
@@ -84,7 +86,9 @@ class WhatsAppService:
                     # Payment-related critical keywords
                     'paynow', 'payment', 'ecocash', 'credits', 'package', 'amount', 
                     'payment method', 'phone number', 'provide your', 'instant payment',
-                    'payment link', 'complete payment', 'payment ready', 'payment details'
+                    'payment link', 'complete payment', 'payment ready', 'payment details',
+                    # User-requested responses
+                    'hint', '💡'
                 ]
                 is_critical = is_command_message or any(keyword in message_lower for keyword in critical_keywords)
                 
