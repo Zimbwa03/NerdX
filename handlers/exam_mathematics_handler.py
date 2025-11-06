@@ -533,9 +533,13 @@ class ExamMathematicsHandler:
                         logger.info(f"  answer_image_url{i}: None/empty")
             
             # Send all available answer images (skip None/empty values and validate URLs)
+            # Questions can have 1, 2, 3, 4, or 5 answer images - send whatever is available
             image_count = 0
             failed_images = []
-            
+            total_urls_found = sum(1 for url in answer_urls if url and url.strip())
+
+            logger.info(f"📸 Found {total_urls_found} answer image URLs for question {question_id} from {table_source}")
+
             for i, url in enumerate(answer_urls, 1):
                 if url and url.strip():
                     # Validate URL format
@@ -544,27 +548,29 @@ class ExamMathematicsHandler:
                         logger.warning(f"⚠️ Invalid URL format for answer_image_{i}: {url[:100]} (does not start with http:// or https://)")
                         failed_images.append(i)
                         continue
-                    
+
                     image_count += 1
                     caption = "✅ Complete Solution" if image_count == 1 else f"✅ Solution Part {image_count}"
-                    
+
                     try:
-                        logger.info(f"📤 Sending answer image {image_count} (index {i}) to {user_id}: {url[:100]}...")
+                        logger.info(f"📤 Sending answer image {image_count}/{total_urls_found} (field answer_image_{i}) to {user_id}")
                         success = self.whatsapp_service.send_image(
-                            user_id, 
-                            url, 
+                            user_id,
+                            url,
                             caption
                         )
                         if success:
-                            logger.info(f"✅ Successfully sent answer image {image_count} to {user_id}")
+                            logger.info(f"✅ Successfully sent answer image {image_count}/{total_urls_found} to {user_id}")
                         else:
-                            logger.error(f"❌ Failed to send answer image {image_count} to {user_id}")
+                            logger.error(f"❌ Failed to send answer image {image_count}/{total_urls_found} to {user_id}")
                             failed_images.append(i)
                     except Exception as img_error:
-                        logger.error(f"❌ Exception sending answer image {image_count} to {user_id}: {img_error}")
+                        logger.error(f"❌ Exception sending answer image {image_count}/{total_urls_found} to {user_id}: {img_error}")
                         failed_images.append(i)
                 else:
                     logger.debug(f"⏭️ Skipping answer_image_{i}: empty or None")
+
+            logger.info(f"📊 Answer images summary: Found {total_urls_found}, Sent successfully {image_count - len(failed_images)}, Failed {len(failed_images)}")
             
             if image_count == 0:
                 logger.warning(f"⚠️ No valid answer images found for question {question_id}. Available URLs: {answer_urls}")
