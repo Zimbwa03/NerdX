@@ -371,13 +371,18 @@ class ExamMathematicsHandler:
 
     def handle_show_database_solution(self, user_id: str, question_id: str):
         """Show solution for database question with images"""
+        logger.info(f"🚀 handle_show_database_solution called with user_id={user_id}, question_id={question_id}")
         try:
+            logger.info("📥 Importing make_supabase_request...")
             from database.external_db import make_supabase_request
+            logger.info("✅ Import successful")
 
             logger.info(f"🔍 Looking up solution for question_id={question_id} (type: {type(question_id).__name__}) for user {user_id}")
 
             # Check current session data for debugging
+            logger.info("📋 Checking session data...")
             session_data = get_user_session(user_id)
+            logger.info(f"📋 Session data retrieved: {session_data is not None}")
             if session_data:
                 current_q_id = session_data.get('current_question_id')
                 logger.info(f"📋 Session data: current_question_id={current_q_id}, question_type={session_data.get('current_question_type')}")
