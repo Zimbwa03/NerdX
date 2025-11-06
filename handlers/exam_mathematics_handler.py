@@ -374,21 +374,77 @@ class ExamMathematicsHandler:
         try:
             from database.external_db import make_supabase_request
             
-            # Try olevel_math_questions first
+            logger.info(f"🔍 Looking up solution for question_id={question_id} (type: {type(question_id).__name__}) for user {user_id}")
+            
+            question_data = None
+            table_source = None
+            
+            # Try to query both tables with different ID formats
+            # First try olevel_math_questions with question_id as-is
             result = make_supabase_request("GET", "olevel_math_questions", filters={"id": f"eq.{question_id}"})
-            table_source = 'olevel_math_questions'
+            if result and len(result) > 0:
+                question_data = result[0]
+                table_source = 'olevel_math_questions'
+                logger.info(f"✅ Found question in olevel_math_questions with ID {question_id}")
+            else:
+                # Try as integer if question_id is string
+                try:
+                    int_id = int(question_id)
+                    result = make_supabase_request("GET", "olevel_math_questions", filters={"id": f"eq.{int_id}"})
+                    if result and len(result) > 0:
+                        question_data = result[0]
+                        table_source = 'olevel_math_questions'
+                        logger.info(f"✅ Found question in olevel_math_questions with ID {int_id} (converted from string)")
+                except (ValueError, TypeError):
+                    pass
             
-            # If not found, try olevel_maths
-            if not result or len(result) == 0:
+            # If not found in olevel_math_questions, try olevel_maths
+            if not question_data:
                 result = make_supabase_request("GET", "olevel_maths", filters={"id": f"eq.{question_id}"})
-                table_source = 'olevel_maths'
+                if result and len(result) > 0:
+                    question_data = result[0]
+                    table_source = 'olevel_maths'
+                    logger.info(f"✅ Found question in olevel_maths with ID {question_id}")
+                else:
+                    # Try as integer
+                    try:
+                        int_id = int(question_id)
+                        result = make_supabase_request("GET", "olevel_maths", filters={"id": f"eq.{int_id}"})
+                        if result and len(result) > 0:
+                            question_data = result[0]
+                            table_source = 'olevel_maths'
+                            logger.info(f"✅ Found question in olevel_maths with ID {int_id} (converted from string)")
+                    except (ValueError, TypeError):
+                        pass
             
-            if not result or len(result) == 0:
+            # If still not found, try to get from session data as fallback
+            if not question_data:
+                logger.warning(f"⚠️ Question {question_id} not found in database, trying session data...")
+                session_data = get_user_session(user_id)
+                if session_data and session_data.get('current_question_type') == 'database':
+                    try:
+                        cached_question_data = json.loads(session_data.get('current_question_data', '{}'))
+                        if cached_question_data:
+                            # Compare IDs with type conversion to handle int/string mismatch
+                            cached_id = cached_question_data.get('id')
+                            if cached_id and str(cached_id) == str(question_id):
+                                question_data = cached_question_data
+                                table_source = cached_question_data.get('table_source', 'olevel_math_questions')
+                                logger.info(f"✅ Using cached question data from session for ID {question_id}")
+                    except (json.JSONDecodeError, KeyError) as e:
+                        logger.warning(f"Could not parse cached question data: {e}")
+            
+            if not question_data:
+                logger.error(f"❌ Question {question_id} not found in database or session for user {user_id}")
                 self.whatsapp_service.send_message(user_id, "❌ Solution not found.")
                 return
             
-            question_data = result[0]
+            # Ensure table_source is set
+            if not table_source:
+                table_source = question_data.get('table_source', 'olevel_math_questions')
             question_data['table_source'] = table_source
+            
+            logger.info(f"📋 Using table_source: {table_source}")
             
             # Get user name
             registration = get_user_registration(user_id)
@@ -424,8 +480,6 @@ class ExamMathematicsHandler:
 📚 **Study the solution carefully - Ready for the next challenge?**"""
 
             # Send solution images in order - handle both table schemas
-            table_source = question_data.get('table_source', 'olevel_math_questions')
-            
             if table_source == 'olevel_maths':
                 # olevel_maths uses answer_image_url_1 through answer_image_url_5
                 answer_urls = [
@@ -435,6 +489,12 @@ class ExamMathematicsHandler:
                     question_data.get('answer_image_url_4'),
                     question_data.get('answer_image_url_5')
                 ]
+                logger.info(f"📸 Extracting URLs from olevel_maths table:")
+                for i, url in enumerate(answer_urls, 1):
+                    if url:
+                        logger.info(f"  answer_image_url_{i}: {url[:100]}...")
+                    else:
+                        logger.info(f"  answer_image_url_{i}: None/empty")
             else:
                 # olevel_math_questions uses answer_image_url1, answer_image_url2, answer_image_url3
                 answer_urls = [
@@ -442,26 +502,72 @@ class ExamMathematicsHandler:
                     question_data.get('answer_image_url2'),
                     question_data.get('answer_image_url3')
                 ]
+                logger.info(f"📸 Extracting URLs from olevel_math_questions table:")
+                for i, url in enumerate(answer_urls, 1):
+                    if url:
+                        logger.info(f"  answer_image_url{i}: {url[:100]}...")
+                    else:
+                        logger.info(f"  answer_image_url{i}: None/empty")
             
-            # Send all available answer images (skip None values)
+            # Send all available answer images (skip None/empty values and validate URLs)
             image_count = 0
+            failed_images = []
+            
             for i, url in enumerate(answer_urls, 1):
                 if url and url.strip():
-                    image_count += 1
-                    if image_count == 1:
-                        caption = "✅ Complete Solution"
-                    else:
-                        caption = f"✅ Solution Part {image_count}"
+                    # Validate URL format
+                    url = url.strip()
+                    if not url.startswith(('http://', 'https://')):
+                        logger.warning(f"⚠️ Invalid URL format for answer_image_{i}: {url[:100]} (does not start with http:// or https://)")
+                        failed_images.append(i)
+                        continue
                     
-                    self.whatsapp_service.send_image(
-                        user_id, 
-                        url.strip(), 
-                        caption
-                    )
+                    image_count += 1
+                    caption = "✅ Complete Solution" if image_count == 1 else f"✅ Solution Part {image_count}"
+                    
+                    try:
+                        logger.info(f"📤 Sending answer image {image_count} (index {i}) to {user_id}: {url[:100]}...")
+                        success = self.whatsapp_service.send_image(
+                            user_id, 
+                            url, 
+                            caption
+                        )
+                        if success:
+                            logger.info(f"✅ Successfully sent answer image {image_count} to {user_id}")
+                        else:
+                            logger.error(f"❌ Failed to send answer image {image_count} to {user_id}")
+                            failed_images.append(i)
+                    except Exception as img_error:
+                        logger.error(f"❌ Exception sending answer image {image_count} to {user_id}: {img_error}")
+                        failed_images.append(i)
+                else:
+                    logger.debug(f"⏭️ Skipping answer_image_{i}: empty or None")
+            
+            if image_count == 0:
+                logger.warning(f"⚠️ No valid answer images found for question {question_id}. Available URLs: {answer_urls}")
+                # Still send the message but inform user
+                message = f"""💡 **Complete Solution** 💡
+
+👤 **Student:** {user_name}
+📂 **Topic:** {topic_display}
+📅 **Year:** {year_display}
+
+⚠️ **Note:** Answer images are not available for this question.
+
+📊 **Your Current Stats:**
+💰 **Credits:** {current_credits}
+⭐ **XP Points:** {current_xp}
+🏆 **Level:** {current_level}
+🔥 **Streak:** {current_streak} days
+
+📚 **Ready for the next challenge?**"""
+            elif failed_images:
+                logger.warning(f"⚠️ Some images failed to send. Successfully sent: {image_count - len(failed_images)}, Failed: {failed_images}")
             
             # Wait to ensure images load and appear first in chat
-            import time
-            time.sleep(2)
+            if image_count > 0:
+                import time
+                time.sleep(2)
             
             # Create navigation buttons
             buttons = [
@@ -472,10 +578,10 @@ class ExamMathematicsHandler:
             
             self.whatsapp_service.send_interactive_message(user_id, message, buttons)
             
-            logger.info(f"Showed database solution for question {question_id} to {user_id}")
+            logger.info(f"✅ Completed showing database solution for question {question_id} to {user_id}. Images sent: {image_count}")
             
         except Exception as e:
-            logger.error(f"Error showing database solution for {user_id}: {e}")
+            logger.error(f"❌ Error showing database solution for {user_id}: {e}", exc_info=True)
             self.whatsapp_service.send_message(user_id, "❌ Error loading solution. Please try again.")
 
     def handle_show_ai_solution(self, user_id: str):
