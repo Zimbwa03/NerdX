@@ -373,19 +373,29 @@ class ExamMathematicsHandler:
         """Show solution for database question with images"""
         try:
             from database.external_db import make_supabase_request
-            
+
             logger.info(f"🔍 Looking up solution for question_id={question_id} (type: {type(question_id).__name__}) for user {user_id}")
+
+            # Check current session data for debugging
+            session_data = get_user_session(user_id)
+            if session_data:
+                current_q_id = session_data.get('current_question_id')
+                logger.info(f"📋 Session data: current_question_id={current_q_id}, question_type={session_data.get('current_question_type')}")
+            else:
+                logger.info("📋 No session data found")
             
             question_data = None
             table_source = None
             
             # Try to query both tables with different ID formats
             # First try olevel_math_questions with question_id as-is
+            logger.info(f"🔍 Querying olevel_math_questions with filters: {{'id': 'eq.{question_id}'}}")
             result = make_supabase_request("GET", "olevel_math_questions", filters={"id": f"eq.{question_id}"})
+            logger.info(f"🔍 olevel_math_questions query result: {len(result) if result else 0} records")
             if result and len(result) > 0:
                 question_data = result[0]
                 table_source = 'olevel_math_questions'
-                logger.info(f"✅ Found question in olevel_math_questions with ID {question_id}")
+                logger.info(f"✅ Found question in olevel_math_questions with ID {question_id}: {question_data.get('id')}")
             else:
                 # Try as integer if question_id is string
                 try:
@@ -400,20 +410,24 @@ class ExamMathematicsHandler:
             
             # If not found in olevel_math_questions, try olevel_maths
             if not question_data:
+                logger.info(f"🔍 Querying olevel_maths with filters: {{'id': 'eq.{question_id}'}}")
                 result = make_supabase_request("GET", "olevel_maths", filters={"id": f"eq.{question_id}"})
+                logger.info(f"🔍 olevel_maths query result: {len(result) if result else 0} records")
                 if result and len(result) > 0:
                     question_data = result[0]
                     table_source = 'olevel_maths'
-                    logger.info(f"✅ Found question in olevel_maths with ID {question_id}")
+                    logger.info(f"✅ Found question in olevel_maths with ID {question_id}: {question_data.get('id')}")
                 else:
                     # Try as integer
                     try:
                         int_id = int(question_id)
+                        logger.info(f"🔍 Querying olevel_maths with filters: {{'id': 'eq.{int_id}'}} (converted from string)")
                         result = make_supabase_request("GET", "olevel_maths", filters={"id": f"eq.{int_id}"})
+                        logger.info(f"🔍 olevel_maths query result (int): {len(result) if result else 0} records")
                         if result and len(result) > 0:
                             question_data = result[0]
                             table_source = 'olevel_maths'
-                            logger.info(f"✅ Found question in olevel_maths with ID {int_id} (converted from string)")
+                            logger.info(f"✅ Found question in olevel_maths with ID {int_id} (converted from string): {question_data.get('id')}")
                     except (ValueError, TypeError):
                         pass
             
@@ -438,13 +452,19 @@ class ExamMathematicsHandler:
                 logger.error(f"❌ Question {question_id} not found in database or session for user {user_id}")
                 self.whatsapp_service.send_message(user_id, "❌ Solution not found.")
                 return
-            
+
             # Ensure table_source is set
             if not table_source:
                 table_source = question_data.get('table_source', 'olevel_math_questions')
             question_data['table_source'] = table_source
-            
+
             logger.info(f"📋 Using table_source: {table_source}")
+            logger.info(f"📊 Question data found: ID={question_data.get('id')}, table={table_source}")
+            logger.info(f"🖼️ Answer URLs: 1={question_data.get('answer_image_url_1', 'None')[:50] if question_data.get('answer_image_url_1') else 'None'}...")
+            logger.info(f"🖼️ Answer URLs: 2={question_data.get('answer_image_url_2', 'None')[:50] if question_data.get('answer_image_url_2') else 'None'}...")
+            logger.info(f"🖼️ Answer URLs: 3={question_data.get('answer_image_url_3', 'None')[:50] if question_data.get('answer_image_url_3') else 'None'}...")
+            logger.info(f"🖼️ Answer URLs: 4={question_data.get('answer_image_url_4', 'None')[:50] if question_data.get('answer_image_url_4') else 'None'}...")
+            logger.info(f"🖼️ Answer URLs: 5={question_data.get('answer_image_url_5', 'None')[:50] if question_data.get('answer_image_url_5') else 'None'}...")
             
             # Get user name
             registration = get_user_registration(user_id)
