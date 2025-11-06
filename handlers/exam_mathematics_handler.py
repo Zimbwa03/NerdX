@@ -445,6 +445,9 @@ class ExamMathematicsHandler:
                                 question_data = cached_question_data
                                 table_source = cached_question_data.get('table_source', 'olevel_math_questions')
                                 logger.info(f"✅ Using cached question data from session for ID {question_id}")
+                                logger.info(f"📊 Cached question data: ID={cached_id}, table={table_source}")
+                                logger.info(f"🖼️ Cached answer URLs: 1={cached_question_data.get('answer_image_url_1', 'None')[:50] if cached_question_data.get('answer_image_url_1') else 'None'}...")
+                                logger.info(f"🖼️ Cached answer URLs: 2={cached_question_data.get('answer_image_url_2', 'None')[:50] if cached_question_data.get('answer_image_url_2') else 'None'}...")
                     except (json.JSONDecodeError, KeyError) as e:
                         logger.warning(f"Could not parse cached question data: {e}")
             
@@ -583,6 +586,23 @@ class ExamMathematicsHandler:
 📚 **Ready for the next challenge?**"""
             elif failed_images:
                 logger.warning(f"⚠️ Some images failed to send. Successfully sent: {image_count - len(failed_images)}, Failed: {failed_images}")
+                # If all images failed, inform the user
+                if len(failed_images) == image_count:
+                    message = f"""💡 **Complete Solution** 💡
+
+👤 **Student:** {user_name}
+📂 **Topic:** {topic_display}
+📅 **Year:** {year_display}
+
+⚠️ **Note:** Answer images could not be loaded. Please try again or contact support.
+
+📊 **Your Current Stats:**
+💰 **Credits:** {current_credits}
+⭐ **XP Points:** {current_xp}
+🏆 **Level:** {current_level}
+🔥 **Streak:** {current_streak} days
+
+📚 **Ready for the next challenge?**"""
             
             # Wait to ensure images load and appear first in chat
             if image_count > 0:
