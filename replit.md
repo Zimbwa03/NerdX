@@ -48,3 +48,30 @@ PostgreSQL for production data storage with connection via DATABASE_URL environm
 - Bootstrap 5 with dark theme for responsive web interface
 - Font Awesome for icons and UI elements
 - Custom CSS for branding and enhanced user experience
+
+# Recent Changes (November 2025)
+
+## LaTeX Conversion System
+Added comprehensive LaTeX to readable Unicode converter (`utils/latex_converter.py`) that transforms mathematical expressions into user-friendly text:
+- Converts fractions: `\frac{a}{b}` → `(a)/(b)`
+- Converts square roots: `\sqrt{x}` → `√(x)`
+- Converts superscripts intelligently:
+  - Simple exponents: `x^2` → `x²`
+  - Complex exponents: `x^{y+2}` → `x^(y+2)`
+  - Only uses Unicode superscripts when ALL characters can be mapped
+- Converts Greek letters and mathematical operators to Unicode symbols
+
+## Math Exam Image Solutions
+Fixed "Show Answer" functionality in Math Exam mode to retrieve and display solution images from database:
+- Checks `answer_image_url_1` through `answer_image_url_5` columns in `olevel_math_questions` table
+- Sends all available solution images with appropriate captions
+- Always sends text solution alongside images (mandatory requirement)
+- Session clearing moved to end of flow to prevent race conditions
+
+## Security Improvements
+Removed API key printing from console logs in `database/external_db.py` to prevent credential exposure.
+
+## Architecture Decisions
+- Text solutions are always sent, even when image solutions are available
+- LaTeX conversion applied to all question text, answers, solutions, and explanations
+- Session management ensures all messages (images + text) are delivered before clearing state
