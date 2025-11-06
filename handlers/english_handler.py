@@ -2411,61 +2411,106 @@ IMPORTANT:
             new_level = max(1, (new_xp // 100) + 1)
             new_streak = current_streak + 1
 
-            emoji = "✅" if is_correct else "📘"
-            header = "Outstanding work" if is_correct else "Keep practising"
+            # Professional teacher-style feedback message
+            if is_correct:
+                teacher_header = f"✅ *Excellent work, {user_name}!* ✅\n\n"
+                teacher_header += "Your answer is *correct*! Well done! 🎉\n\n"
+            else:
+                teacher_header = f"📚 *Let's review this together, {user_name}* 📚\n\n"
+                teacher_header += "Your answer needs some adjustment. Let me explain why:\n\n"
 
             answer_message_lines = [
-                f"{emoji} {header}, {user_name}!",
+                teacher_header,
+                "📋 *Question Review:*",
+                f"*Type:* {question_type}",
+                f"*Focus Area:* {topic_area}",
                 "",
-                f"📚 *Question Type:* {question_type}",
-                f"🧠 *Focus:* {topic_area}"
+                "❓ *The Question Was:*",
+                question_text.strip(),
+                ""
             ]
-
-            if instructions:
-                answer_message_lines.append(f"📝 *Instructions:* {instructions}")
-
-            answer_message_lines.extend([
-                "",
-                "❓ *Question:*",
-                question_text.strip()
-            ])
 
             if user_answer:
                 answer_message_lines.extend([
-                    "",
-                    f"✏️ *Your Response:* {user_answer.strip()}"
+                    f"✏️ *Your Answer:* {user_answer.strip()}",
+                    ""
                 ])
 
             if matched_answer:
                 answer_message_lines.extend([
-                    "",
-                    f"✅ *Correct Answer:* {matched_answer}"
+                    f"✅ *Correct Answer:* {matched_answer}",
+                    ""
                 ])
 
-            if rule_statement:
-                answer_message_lines.append(f"📘 *Rule:* {rule_statement}")
-
-            if not is_correct:
-                if error_analysis:
-                    answer_message_lines.append(f"❌ *Why your answer needs revision:* {error_analysis}")
+            # Professional explanation section
+            if is_correct:
+                answer_message_lines.append("💡 *Why This Is Correct:*")
+                if rule_statement:
+                    answer_message_lines.append(f"{rule_statement}")
                 else:
-                    answer_message_lines.append("❌ *Why your answer needs revision:* Revisit the rule and ensure your wording aligns with the required structure.")
+                    answer_message_lines.append("Your answer demonstrates a good understanding of the grammatical concept.")
+            else:
+                answer_message_lines.append("❌ *Why Your Answer Needs Revision:*")
+                if error_analysis:
+                    answer_message_lines.append(f"{error_analysis}")
+                elif rule_statement:
+                    answer_message_lines.append(f"Let's review the rule: {rule_statement}")
+                else:
+                    answer_message_lines.append("Please review the grammatical rule and ensure your answer follows the correct structure.")
+
+            if rule_statement and not is_correct:
+                answer_message_lines.extend([
+                    "",
+                    "📘 *The Rule:*",
+                    rule_statement
+                ])
 
             if zimsec_tip:
-                answer_message_lines.append(f"🎓 *ZIMSEC Tip:* {zimsec_tip}")
+                answer_message_lines.extend([
+                    "",
+                    "🎓 *ZIMSEC Examination Tip:*",
+                    zimsec_tip
+                ])
 
             if examples:
-                answer_message_lines.append("📌 *Examples:*")
-                for example in examples[:2]:
+                answer_message_lines.extend([
+                    "",
+                    "📌 *Examples to Help You Understand:*"
+                ])
+                for example in examples[:3]:
                     answer_message_lines.append(f"• {example}")
 
             if total_hints:
-                answer_message_lines.append(f"🔍 *Hints Used:* {min(hint_level, total_hints)}/{total_hints}")
+                answer_message_lines.extend([
+                    "",
+                    f"💡 *Hints You Used:* {min(hint_level, total_hints)}/{total_hints}"
+                ])
 
             if question_data.get('question_reference'):
-                answer_message_lines.append(f"🔖 *Reference:* {question_data['question_reference']}")
+                answer_message_lines.extend([
+                    "",
+                    f"🔖 *Question Reference:* {question_data['question_reference']}"
+                ])
 
-            self.whatsapp_service.send_message(user_id, "\n".join(answer_message_lines))
+            # Add encouraging closing
+            if is_correct:
+                answer_message_lines.extend([
+                    "",
+                    "🌟 *Keep up the excellent work!* Continue practicing to master English grammar! 🌟"
+                ])
+            else:
+                answer_message_lines.extend([
+                    "",
+                    "💪 *Don't worry!* Every mistake is a learning opportunity. Review the rule and try again! 💪"
+                ])
+
+            # Send the professional explanation FIRST
+            explanation_message = "\n".join(answer_message_lines)
+            self.whatsapp_service.send_message(user_id, explanation_message)
+            
+            # Small delay to ensure explanation message is sent before stats
+            import time
+            time.sleep(1)
 
             # SECOND MESSAGE: Gamified stats and progress
             level_up_bonus = ""
@@ -2573,6 +2618,10 @@ IMPORTANT:
                 correct_answer_text
             )
             self.whatsapp_service.send_message(user_id, explanation_message)
+            
+            # Small delay to ensure explanation message is sent before stats
+            import time
+            time.sleep(1)
 
             # SECOND MESSAGE: Gamified stats and progress
             level_up_bonus = ""

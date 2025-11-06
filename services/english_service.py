@@ -529,13 +529,8 @@ Return ONLY valid JSON strictly using this structure (no markdown fences or comm
         return None
 
     def generate_grammar_question(self, last_question_type: Optional[str] = None) -> Optional[Dict]:
-        """Retrieve grammar questions prioritising AI generation with resilient fallbacks"""
-        # Primary: Gemini AI generation
-        ai_response = self.generate_ai_grammar_question(last_question_type=last_question_type)
-        if ai_response and ai_response.get('success'):
-            return ai_response
-
-        # Secondary: DeepSeek AI generation
+        """Retrieve grammar questions using DeepSeek AI with resilient fallbacks"""
+        # Primary: DeepSeek AI generation (Gemini removed - using DeepSeek only)
         deepseek_response = self.generate_deepseek_grammar_question(last_question_type=last_question_type)
         if deepseek_response and deepseek_response.get('success'):
             return deepseek_response
@@ -942,13 +937,18 @@ Return ONLY valid JSON:
         try:
             lines = []
             
-            # Result header
+            # Professional teacher-style header
             if is_correct:
-                lines.append("✅ **EXCELLENT!** Your answer is correct!")
+                lines.append("✅ **Excellent work!** Your answer is *correct*! 🎉")
+                lines.append("")
+                lines.append("You've demonstrated a good understanding of this vocabulary concept.")
             else:
-                lines.append(f"📚 **Good try!** The correct answer is: **{correct_answer}**")
-                if user_answer:
-                    lines.append(f"You answered: {user_answer}")
+                lines.append("📚 **Let's review this together** 📚")
+                lines.append("")
+                lines.append(f"*Your Answer:* {user_answer if user_answer else 'No answer provided'}")
+                lines.append(f"*Correct Answer:* **{correct_answer}**")
+                lines.append("")
+                lines.append("Let me explain why this is the correct answer:")
             
             lines.append("")
             
@@ -979,6 +979,13 @@ Return ONLY valid JSON:
                 for i, example in enumerate(examples[:2], 1):
                     lines.append(f"{i}. {example}")
             
+            # Encouraging closing
+            lines.append("")
+            if is_correct:
+                lines.append("🌟 *Keep up the excellent work!* Continue expanding your vocabulary! 🌟")
+            else:
+                lines.append("💪 *Don't worry!* Every word you learn brings you closer to mastery. Keep practicing! 💪")
+            
             return "\n".join(lines)
             
         except Exception as e:
@@ -986,13 +993,8 @@ Return ONLY valid JSON:
             return f"✅ Correct answer: {correct_answer}\n💡 {explanation_data.get('definition', 'Keep expanding your vocabulary!')}"
     
     def generate_vocabulary_question(self, last_question_type: Optional[str] = None) -> Optional[Dict]:
-        """Generate vocabulary questions prioritizing AI with resilient fallbacks"""
-        # Primary: AI generation with Gemini
-        ai_response = self.generate_ai_vocabulary_question(last_question_type=last_question_type)
-        if ai_response and ai_response.get('success'):
-            return ai_response
-        
-        # Secondary: DeepSeek fallback
+        """Generate vocabulary questions using DeepSeek AI with resilient fallbacks"""
+        # Primary: DeepSeek AI generation (Gemini removed - using DeepSeek only)
         deepseek_response = self.generate_deepseek_vocabulary_question(last_question_type=last_question_type)
         if deepseek_response and deepseek_response.get('success'):
             return deepseek_response
@@ -1060,11 +1062,11 @@ Return ONLY a JSON array:
                 response = model.generate_content(
                     prompt,
                     generation_config=self.client.types.GenerationConfig(
-                        response_mime_type="application/json",
-                        temperature=0.8,
-                        max_output_tokens=1200
-                    ),
-                )
+                    response_mime_type="application/json",
+                    temperature=0.8,
+                    max_output_tokens=1200
+                ),
+            )
                 logger.info("Gemini API call completed successfully")
             except Exception as api_error:
                 logger.error(f"Gemini API call failed: {api_error}")
@@ -1170,11 +1172,11 @@ Return ONLY a JSON object:
                 response = model.generate_content(
                     analysis_prompt,
                     generation_config=self.client.types.GenerationConfig(
-                        response_mime_type="application/json",
-                        temperature=0.3,
-                        max_output_tokens=2000
-                    ),
-                )
+                    response_mime_type="application/json",
+                    temperature=0.3,
+                    max_output_tokens=2000
+                ),
+            )
                 logger.info("Gemini API call completed successfully")
             except Exception as api_error:
                 logger.error(f"Gemini API call failed: {api_error}")
@@ -1373,11 +1375,11 @@ Return valid JSON with the exact format requested."""
                 response = model.generate_content(
                     enhanced_prompt,
                     generation_config=self.client.types.GenerationConfig(
-                        response_mime_type="application/json",
-                        temperature=0.3,
-                        max_output_tokens=2500
-                    ),
-                )
+                    response_mime_type="application/json",
+                    temperature=0.3,
+                    max_output_tokens=2500
+                ),
+            )
                 logger.info("Gemini API call completed successfully")
             except Exception as api_error:
                 logger.error(f"Gemini API call failed: {api_error}")
@@ -1388,7 +1390,7 @@ Return valid JSON with the exact format requested."""
                 return response.text.strip()
             else:
                 logger.error("Empty or invalid response from Gemini 2.5 Pro")
-                return self._generate_fallback_essay_marking()
+                    return self._generate_fallback_essay_marking()
 
         except Exception as e:
             logger.error(f"Error in Gemini essay marking: {e}")
