@@ -31,10 +31,6 @@ if _is_configured:
 else:
     logger.warning("Supabase not configured - external database features will be disabled")
 
-print(f"Supabase URL: {SUPABASE_URL}")
-print(f"Service Role Key: {SUPABASE_SERVICE_ROLE_KEY[:20]}..." if SUPABASE_SERVICE_ROLE_KEY else "No service key found")
-print(f"Anon Key: {SUPABASE_ANON_KEY[:20]}..." if SUPABASE_ANON_KEY else "No anon key found")
-
 def create_users_registration_table():
     """Create users_registration table via SQL execution"""
     try:
@@ -211,11 +207,8 @@ def make_supabase_request(method, table, data=None, select="*", filters=None, li
         params["offset"] = str(offset)
 
     try:
-        print(f"Making {method} request to {url}")
-        print(f"Headers: {headers}")
-        print(f"Params: {params}")
-        print(f"Data: {data}")
-
+        logger.debug(f"Making {method} request to {table}")
+        
         response = None
         if method == "GET":
             response = requests.get(url, headers=headers, params=params, timeout=30)
@@ -228,9 +221,8 @@ def make_supabase_request(method, table, data=None, select="*", filters=None, li
             logger.error(f"Unsupported HTTP method: {method}")
             return None
 
-        print(f"Response status: {response.status_code}")
-        print(f"Response text: {response.text}")
-
+        logger.debug(f"Response status: {response.status_code}")
+        
         response.raise_for_status()
         return response.json()
     except requests.exceptions.HTTPError as e:
