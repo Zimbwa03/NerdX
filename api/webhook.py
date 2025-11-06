@@ -1688,6 +1688,8 @@ Click the link above to join our official WhatsApp channel!"""
         elif selection_id.startswith('exam_show_solution_'):
             # Handle show database solution
             question_id = selection_id.replace('exam_show_solution_', '')
+            logger.info(f"🔄 Calling handle_show_database_solution with user_id={user_id}, question_id={question_id}")
+            logger.info(f"🔄 exam_mathematics_handler exists: {exam_mathematics_handler is not None}")
             exam_mathematics_handler.handle_show_database_solution(user_id, question_id)
         elif selection_id == 'exam_ai_solution':
             # Handle show AI solution
