@@ -81,6 +81,71 @@ class LaTeXConverter:
             logger.error(f"Error cleaning LaTeX: {e}")
             return latex
     
+    def latex_to_readable_text(self, text: str) -> str:
+        """Convert LaTeX expressions to readable Unicode text for WhatsApp"""
+        try:
+            import re
+            
+            # Remove dollar signs (math mode indicators)
+            text = text.replace('$', '')
+            
+            # Handle fractions: \frac{numerator}{denominator} → (numerator)/(denominator)
+            text = re.sub(r'\\frac\{([^}]+)\}\{([^}]+)\}', r'(\1)/(\2)', text)
+            
+            # Handle square roots: \sqrt{content} → √(content)
+            text = re.sub(r'\\sqrt\{([^}]+)\}', r'√(\1)', text)
+            
+            # Handle nth roots: \sqrt[n]{content} → ⁿ√(content)
+            text = re.sub(r'\\sqrt\[([^]]+)\]\{([^}]+)\}', r'\1√(\2)', text)
+            
+            # Superscripts (powers): x^2 → x², but keep variables like x^n or x^{y+2}
+            superscript_map = {'0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', 
+                             '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹',
+                             '-': '⁻', '+': '⁺', 'n': 'ⁿ'}
+            
+            def convert_superscript(match):
+                exp = match.group(1)
+                # Only use superscript Unicode if ALL characters can be mapped
+                if all(c in superscript_map for c in exp):
+                    # All characters have superscript equivalents
+                    return ''.join(superscript_map[c] for c in exp)
+                else:
+                    # Contains unmapped characters (variables, etc.) - use parentheses notation
+                    return f'^({exp})'
+            
+            # Handle ^{...} patterns for complex exponents
+            text = re.sub(r'\^\{([^}]+)\}', lambda m: convert_superscript(m), text)
+            # Handle simple ^x patterns (single digit or n)
+            text = re.sub(r'\^([0-9n])', lambda m: convert_superscript(m), text)
+            
+            # Greek letters and symbols
+            replacements = {
+                '\\alpha': 'α', '\\beta': 'β', '\\gamma': 'γ', '\\delta': 'δ',
+                '\\theta': 'θ', '\\lambda': 'λ', '\\mu': 'μ', '\\pi': 'π',
+                '\\sigma': 'σ', '\\phi': 'φ', '\\omega': 'ω',
+                '\\cdot': '·', '\\times': '×', '\\div': '÷', '\\pm': '±',
+                '\\le': '≤', '\\ge': '≥', '\\ne': '≠', '\\approx': '≈',
+                '\\infty': '∞', '\\sum': '∑', '\\prod': '∏',
+                '\\int': '∫', '\\partial': '∂',
+                '\\degree': '°', '\\circ': '°'
+            }
+            
+            for latex_cmd, unicode_char in replacements.items():
+                text = text.replace(latex_cmd, unicode_char)
+            
+            # Clean up any remaining backslashes for common patterns
+            text = text.replace('\\left', '').replace('\\right', '')
+            text = text.replace('\\{', '{').replace('\\}', '}')
+            
+            # Clean up extra spaces
+            text = ' '.join(text.split())
+            
+            return text
+            
+        except Exception as e:
+            logger.error(f"Error converting LaTeX to readable text: {e}")
+            return text
+    
     def _render_with_online_service(self, latex: str, filename: str) -> Optional[str]:
         """Use online LaTeX rendering service"""
         try:
