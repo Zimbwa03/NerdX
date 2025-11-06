@@ -1023,14 +1023,11 @@ Return ONLY valid JSON:
             'question_data': fallback
         }
 
-    def generate_essay_prompts(self, user_level: str = "Form 3") -> Optional[Dict]:
-        """Generate essay writing prompts for ZIMSEC students"""
-        if not self._is_configured or not self.client:
-            logger.warning("English service not configured - using fallback essay prompts")
-            return {
-                'success': True,
-                'prompts': self._get_fallback_essay_prompts()
-            }
+    def generate_deepseek_essay_prompts(self, user_level: str = "Form 3") -> Optional[Dict]:
+        """Generate essay prompts using DeepSeek AI"""
+        if not self.deepseek_api_key:
+            logger.warning("DeepSeek API key not configured - skipping DeepSeek essay prompt generation")
+            return None
 
         try:
             prompt = f"""Generate 3 diverse ZIMSEC O-Level English essay prompts suitable for {user_level} students.
@@ -1047,7 +1044,7 @@ Requirements:
 - Clear, engaging prompts
 - Varied difficulty levels
 
-Return ONLY a JSON array:
+Return ONLY a JSON array (no markdown, no code blocks, just pure JSON):
 [
     {{
         "title": "Essay prompt title",
@@ -1057,45 +1054,65 @@ Return ONLY a JSON array:
     }}
 ]"""
 
-            try:
-                model = self.client.GenerativeModel('gemini-2.5-pro-preview-0504')
-                response = model.generate_content(
-                    prompt,
-                    generation_config=self.client.types.GenerationConfig(
-                    response_mime_type="application/json",
-                    temperature=0.8,
-                    max_output_tokens=1200
-                ),
-            )
-                logger.info("Gemini API call completed successfully")
-            except Exception as api_error:
-                logger.error(f"Gemini API call failed: {api_error}")
-                return None
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {self.deepseek_api_key}',
+            }
 
-            if response.text:
-                try:
-                    clean_text = response.text.strip()
-                    if clean_text.startswith('```json'):
-                        clean_text = clean_text[7:]
-                    if clean_text.endswith('```'):
-                        clean_text = clean_text[:-3]
-                    clean_text = clean_text.strip()
+            payload = {
+                'model': 'deepseek-chat',
+                'messages': [{'role': 'user', 'content': prompt}],
+                'max_tokens': 1200,
+                'temperature': 0.8
+            }
 
-                    prompts_data = json.loads(clean_text)
+            response = requests.post(self.deepseek_api_url, headers=headers, json=payload, timeout=45)
 
-                    if isinstance(prompts_data, list) and len(prompts_data) >= 3:
-                        return {
-                            'success': True,
-                            'prompts': prompts_data
-                        }
+            if response.status_code == 200:
+                data = response.json()
+                if 'choices' in data and len(data['choices']) > 0:
+                    content = data['choices'][0].get('message', {}).get('content', '')
+                    if content:
+                        try:
+                            clean_text = content.strip()
+                            if clean_text.startswith('```json'):
+                                clean_text = clean_text[7:]
+                            if clean_text.startswith('```'):
+                                clean_text = clean_text[3:]
+                            if clean_text.endswith('```'):
+                                clean_text = clean_text[:-3]
+                            clean_text = clean_text.strip()
 
-                except json.JSONDecodeError as e:
-                    logger.error(f"JSON decode error in essay prompts: {e}")
-                except Exception as e:
-                    logger.error(f"Error processing essay prompts: {e}")
+                            prompts_data = json.loads(clean_text)
 
+                            if isinstance(prompts_data, list) and len(prompts_data) >= 3:
+                                logger.info(f"Successfully generated {len(prompts_data)} essay prompts using DeepSeek")
+                                return {
+                                    'success': True,
+                                    'prompts': prompts_data
+                                }
+                        except json.JSONDecodeError as e:
+                            logger.error(f"DeepSeek essay prompts JSON decode error: {e}")
+                        except Exception as e:
+                            logger.error(f"Error processing DeepSeek essay prompts: {e}")
+                else:
+                    logger.warning("DeepSeek essay prompts response missing choices")
+            else:
+                logger.error(f"DeepSeek API error for essay prompts: {response.status_code} - {response.text}")
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"DeepSeek essay prompts request error: {e}")
         except Exception as e:
-            logger.error(f"Error generating essay prompts: {e}")
+            logger.error(f"Error generating DeepSeek essay prompts: {e}")
+
+        return None
+
+    def generate_essay_prompts(self, user_level: str = "Form 3") -> Optional[Dict]:
+        """Generate essay writing prompts for ZIMSEC students using DeepSeek AI"""
+        # Primary: DeepSeek AI generation (Gemini removed - using DeepSeek only)
+        deepseek_response = self.generate_deepseek_essay_prompts(user_level=user_level)
+        if deepseek_response and deepseek_response.get('success'):
+            return deepseek_response
 
         # Fallback
         return {
@@ -1127,9 +1144,9 @@ Return ONLY a JSON array:
         ]
 
     def analyze_essay_with_ai(self, essay_text: str, prompt: str) -> Optional[Dict]:
-        """Analyze student essay using AI for comprehensive feedback"""
-        if not self._is_configured or not self.client:
-            logger.warning("AI not configured for essay analysis")
+        """Analyze student essay using DeepSeek AI for comprehensive feedback"""
+        if not self.deepseek_api_key:
+            logger.warning("DeepSeek API key not configured for essay analysis")
             return None
 
         try:
@@ -1153,7 +1170,7 @@ Return ONLY a JSON array:
 - Keep feedback constructive and encouraging
 - Total possible: 100 points
 
-Return ONLY a JSON object:
+Return ONLY a JSON object (no markdown, no code blocks, just pure JSON):
 {{
     "content_score": 0,
     "organization_score": 0,
@@ -1167,41 +1184,52 @@ Return ONLY a JSON object:
     "suggestions": ["suggestion1", "suggestion2", "suggestion3"]
 }}"""
 
-            try:
-                model = self.client.GenerativeModel('gemini-2.5-pro-preview-0504')
-                response = model.generate_content(
-                    analysis_prompt,
-                    generation_config=self.client.types.GenerationConfig(
-                    response_mime_type="application/json",
-                    temperature=0.3,
-                    max_output_tokens=2000
-                ),
-            )
-                logger.info("Gemini API call completed successfully")
-            except Exception as api_error:
-                logger.error(f"Gemini API call failed: {api_error}")
-                return None
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {self.deepseek_api_key}',
+            }
 
-            if response.text:
-                try:
-                    clean_text = response.text.strip()
-                    if clean_text.startswith('```json'):
-                        clean_text = clean_text[7:]
-                    if clean_text.endswith('```'):
-                        clean_text = clean_text[:-3]
-                    clean_text = clean_text.strip()
+            payload = {
+                'model': 'deepseek-chat',
+                'messages': [{'role': 'user', 'content': analysis_prompt}],
+                'max_tokens': 2000,
+                'temperature': 0.3
+            }
 
-                    analysis = json.loads(clean_text)
-                    logger.info("Essay analysis completed successfully")
-                    return analysis
+            response = requests.post(self.deepseek_api_url, headers=headers, json=payload, timeout=60)
 
-                except json.JSONDecodeError as e:
-                    logger.error(f"JSON decode error in essay analysis: {e}")
-                except Exception as e:
-                    logger.error(f"Error processing essay analysis: {e}")
+            if response.status_code == 200:
+                data = response.json()
+                if 'choices' in data and len(data['choices']) > 0:
+                    content = data['choices'][0].get('message', {}).get('content', '')
+                    if content:
+                        try:
+                            clean_text = content.strip()
+                            if clean_text.startswith('```json'):
+                                clean_text = clean_text[7:]
+                            if clean_text.startswith('```'):
+                                clean_text = clean_text[3:]
+                            if clean_text.endswith('```'):
+                                clean_text = clean_text[:-3]
+                            clean_text = clean_text.strip()
 
+                            analysis = json.loads(clean_text)
+                            logger.info("Essay analysis completed successfully using DeepSeek")
+                            return analysis
+
+                        except json.JSONDecodeError as e:
+                            logger.error(f"DeepSeek essay analysis JSON decode error: {e}")
+                        except Exception as e:
+                            logger.error(f"Error processing DeepSeek essay analysis: {e}")
+                else:
+                    logger.warning("DeepSeek essay analysis response missing choices")
+            else:
+                logger.error(f"DeepSeek API error for essay analysis: {response.status_code} - {response.text}")
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"DeepSeek essay analysis request error: {e}")
         except Exception as e:
-            logger.error(f"Error in AI essay analysis: {e}")
+            logger.error(f"Error in DeepSeek essay analysis: {e}")
 
         return None
 
@@ -1341,9 +1369,9 @@ Return ONLY a JSON object:
         }
 
     def generate_essay_marking(self, marking_prompt: str) -> Optional[str]:
-        """Generate essay marking using Gemini AI with robust error handling and improved marking criteria"""
-        if not self._is_configured or not self.client:
-            logger.warning("English service not configured for essay marking")
+        """Generate essay marking using DeepSeek AI with robust error handling and improved marking criteria"""
+        if not self.deepseek_api_key:
+            logger.warning("DeepSeek API key not configured for essay marking")
             return self._generate_fallback_essay_marking()
 
         try:
@@ -1367,34 +1395,54 @@ SPECIFIC MARKING CRITERIA:
 
 Count the actual errors in grammar, spelling, and structure. For every 3-4 significant errors, reduce the score by 2-3 marks from the content baseline. Be encouraging in feedback while being realistic about the grade.
 
-Return valid JSON with the exact format requested."""
+Return valid JSON with the exact format requested (no markdown, no code blocks, just pure JSON)."""
 
-            # Try with Gemini 2.5 Pro first
-            try:
-                model = self.client.GenerativeModel('gemini-2.5-pro-preview-0504')
-                response = model.generate_content(
-                    enhanced_prompt,
-                    generation_config=self.client.types.GenerationConfig(
-                    response_mime_type="application/json",
-                    temperature=0.3,
-                    max_output_tokens=2500
-                ),
-            )
-                logger.info("Gemini API call completed successfully")
-            except Exception as api_error:
-                logger.error(f"Gemini API call failed: {api_error}")
-                return None
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {self.deepseek_api_key}',
+            }
 
-            if response and hasattr(response, 'text') and response.text and response.text.strip():
-                logger.info("Essay marking completed successfully with Gemini 2.5 Pro")
-                return response.text.strip()
+            payload = {
+                'model': 'deepseek-chat',
+                'messages': [{'role': 'user', 'content': enhanced_prompt}],
+                'max_tokens': 2500,
+                'temperature': 0.3
+            }
+
+            response = requests.post(self.deepseek_api_url, headers=headers, json=payload, timeout=60)
+
+            if response.status_code == 200:
+                data = response.json()
+                if 'choices' in data and len(data['choices']) > 0:
+                    content = data['choices'][0].get('message', {}).get('content', '')
+                    if content and content.strip():
+                        try:
+                            clean_text = content.strip()
+                            if clean_text.startswith('```json'):
+                                clean_text = clean_text[7:]
+                            if clean_text.startswith('```'):
+                                clean_text = clean_text[3:]
+                            if clean_text.endswith('```'):
+                                clean_text = clean_text[:-3]
+                            clean_text = clean_text.strip()
+
+                            logger.info("Essay marking completed successfully using DeepSeek")
+                            return clean_text
+                        except Exception as e:
+                            logger.error(f"Error processing DeepSeek essay marking response: {e}")
+                    else:
+                        logger.error("Empty response from DeepSeek essay marking")
+                else:
+                    logger.warning("DeepSeek essay marking response missing choices")
             else:
-                logger.error("Empty or invalid response from Gemini 2.5 Pro")
-                    return self._generate_fallback_essay_marking()
+                logger.error(f"DeepSeek API error for essay marking: {response.status_code} - {response.text}")
 
+        except requests.exceptions.RequestException as e:
+            logger.error(f"DeepSeek essay marking request error: {e}")
         except Exception as e:
-            logger.error(f"Error in Gemini essay marking: {e}")
-            return self._generate_fallback_essay_marking()
+            logger.error(f"Error in DeepSeek essay marking: {e}")
+
+        return self._generate_fallback_essay_marking()
 
     def _generate_fallback_essay_marking(self) -> str:
         """Generate fallback essay marking when AI fails"""
