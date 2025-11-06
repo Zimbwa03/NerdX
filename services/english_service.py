@@ -347,10 +347,10 @@ Additional Instructions:
 - Do not include any explanations outside the JSON payload.
 """
 
-            response = self.client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt,
-                config=types.GenerateContentConfig(
+            model = self.client.GenerativeModel('gemini-2.5-flash')
+            response = model.generate_content(
+                prompt,
+                generation_config=self.client.types.GenerationConfig(
                     response_mime_type="application/json",
                     temperature=0.6,
                     max_output_tokens=1500
@@ -645,10 +645,10 @@ Return ONLY valid JSON (no markdown fences or commentary):
 }}
 """
             
-            response = self.client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt,
-                config=types.GenerateContentConfig(
+            model = self.client.GenerativeModel('gemini-2.5-flash')
+            response = model.generate_content(
+                prompt,
+                generation_config=self.client.types.GenerationConfig(
                     response_mime_type="application/json",
                     temperature=0.7,
                     max_output_tokens=1800
@@ -1043,10 +1043,10 @@ Return ONLY a JSON array:
     }}
 ]"""
 
-            response = self.client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt,
-                config=types.GenerateContentConfig(
+            model = self.client.GenerativeModel('gemini-2.5-flash')
+            response = model.generate_content(
+                prompt,
+                generation_config=self.client.types.GenerationConfig(
                     response_mime_type="application/json",
                     temperature=0.8,
                     max_output_tokens=1200
@@ -1148,10 +1148,10 @@ Return ONLY a JSON object:
     "suggestions": ["suggestion1", "suggestion2", "suggestion3"]
 }}"""
 
-            response = self.client.models.generate_content(
-                model="gemini-2.5-pro",
-                contents=analysis_prompt,
-                config=types.GenerateContentConfig(
+            model = self.client.GenerativeModel('gemini-2.5-pro')
+            response = model.generate_content(
+                analysis_prompt,
+                generation_config=self.client.types.GenerationConfig(
                     response_mime_type="application/json",
                     temperature=0.3,
                     max_output_tokens=2000
@@ -1346,10 +1346,10 @@ Count the actual errors in grammar, spelling, and structure. For every 3-4 signi
 Return valid JSON with the exact format requested."""
 
             # Try with Gemini 2.5 Flash first
-            response = self.client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=enhanced_prompt,
-                config=types.GenerateContentConfig(
+            model = self.client.GenerativeModel('gemini-2.5-flash')
+            response = model.generate_content(
+                enhanced_prompt,
+                generation_config=self.client.types.GenerationConfig(
                     response_mime_type="application/json",
                     temperature=0.3,
                     max_output_tokens=2500
@@ -1361,7 +1361,7 @@ Return valid JSON with the exact format requested."""
                 return response.text.strip()
             else:
                 logger.error("Empty or invalid response from Gemini 2.5 Flash")
-                return self._generate_fallback_essay_marking()
+                    return self._generate_fallback_essay_marking()
 
         except Exception as e:
             logger.error(f"Error in Gemini essay marking: {e}")
