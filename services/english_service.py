@@ -347,22 +347,29 @@ Additional Instructions:
 - Do not include any explanations outside the JSON payload.
 """
 
-            model = self.client.GenerativeModel('gemini-2.5-flash')
-            response = model.generate_content(
-                prompt,
-                generation_config=self.client.types.GenerationConfig(
-                    response_mime_type="application/json",
-                    temperature=0.6,
-                    max_output_tokens=1500
-                ),
-            )
+            try:
+                model = self.client.GenerativeModel('gemini-1.5-pro')
+                response = model.generate_content(
+                    prompt,
+                    generation_config=self.client.types.GenerationConfig(
+                        response_mime_type="application/json",
+                        temperature=0.6,
+                        max_output_tokens=1500
+                    ),
+                )
+                logger.info("Gemini API call completed successfully")
+            except Exception as api_error:
+                logger.error(f"Gemini API call failed: {api_error}")
+                return None
 
             if not response or not getattr(response, 'text', None):
                 logger.warning("Empty response from Gemini AI for grammar question")
                 return None
 
             try:
+                logger.debug(f"Raw Gemini response (first 500 chars): {response.text[:500]}...")
                 clean_text = self._clean_json_block(response.text)
+                logger.debug(f"Cleaned Gemini response (first 500 chars): {clean_text[:500]}...")
                 payload = json.loads(clean_text)
                 normalized = self._normalize_ai_grammar_payload(payload)
                 if normalized:
@@ -645,15 +652,20 @@ Return ONLY valid JSON (no markdown fences or commentary):
 }}
 """
             
-            model = self.client.GenerativeModel('gemini-2.5-flash')
-            response = model.generate_content(
-                prompt,
-                generation_config=self.client.types.GenerationConfig(
-                    response_mime_type="application/json",
-                    temperature=0.7,
-                    max_output_tokens=1800
-                ),
-            )
+            try:
+                model = self.client.GenerativeModel('gemini-1.5-pro')
+                response = model.generate_content(
+                    prompt,
+                    generation_config=self.client.types.GenerationConfig(
+                        response_mime_type="application/json",
+                        temperature=0.7,
+                        max_output_tokens=1800
+                    ),
+                )
+                logger.info("Gemini API call completed successfully")
+            except Exception as api_error:
+                logger.error(f"Gemini API call failed: {api_error}")
+                return None
             
             if response and hasattr(response, 'text') and response.text and response.text.strip():
                 try:
@@ -1043,15 +1055,20 @@ Return ONLY a JSON array:
     }}
 ]"""
 
-            model = self.client.GenerativeModel('gemini-2.5-flash')
-            response = model.generate_content(
-                prompt,
-                generation_config=self.client.types.GenerationConfig(
-                    response_mime_type="application/json",
-                    temperature=0.8,
-                    max_output_tokens=1200
-                ),
-            )
+            try:
+                model = self.client.GenerativeModel('gemini-1.5-pro')
+                response = model.generate_content(
+                    prompt,
+                    generation_config=self.client.types.GenerationConfig(
+                        response_mime_type="application/json",
+                        temperature=0.8,
+                        max_output_tokens=1200
+                    ),
+                )
+                logger.info("Gemini API call completed successfully")
+            except Exception as api_error:
+                logger.error(f"Gemini API call failed: {api_error}")
+                return None
 
             if response.text:
                 try:
@@ -1148,15 +1165,20 @@ Return ONLY a JSON object:
     "suggestions": ["suggestion1", "suggestion2", "suggestion3"]
 }}"""
 
-            model = self.client.GenerativeModel('gemini-2.5-pro')
-            response = model.generate_content(
-                analysis_prompt,
-                generation_config=self.client.types.GenerationConfig(
-                    response_mime_type="application/json",
-                    temperature=0.3,
-                    max_output_tokens=2000
-                ),
-            )
+            try:
+                model = self.client.GenerativeModel('gemini-1.5-pro')
+                response = model.generate_content(
+                    analysis_prompt,
+                    generation_config=self.client.types.GenerationConfig(
+                        response_mime_type="application/json",
+                        temperature=0.3,
+                        max_output_tokens=2000
+                    ),
+                )
+                logger.info("Gemini API call completed successfully")
+            except Exception as api_error:
+                logger.error(f"Gemini API call failed: {api_error}")
+                return None
 
             if response.text:
                 try:
@@ -1345,22 +1367,27 @@ Count the actual errors in grammar, spelling, and structure. For every 3-4 signi
 
 Return valid JSON with the exact format requested."""
 
-            # Try with Gemini 2.5 Flash first
-            model = self.client.GenerativeModel('gemini-2.5-flash')
-            response = model.generate_content(
-                enhanced_prompt,
-                generation_config=self.client.types.GenerationConfig(
-                    response_mime_type="application/json",
-                    temperature=0.3,
-                    max_output_tokens=2500
-                ),
-            )
+            # Try with Gemini 1.5 Pro first
+            try:
+                model = self.client.GenerativeModel('gemini-1.5-pro')
+                response = model.generate_content(
+                    enhanced_prompt,
+                    generation_config=self.client.types.GenerationConfig(
+                        response_mime_type="application/json",
+                        temperature=0.3,
+                        max_output_tokens=2500
+                    ),
+                )
+                logger.info("Gemini API call completed successfully")
+            except Exception as api_error:
+                logger.error(f"Gemini API call failed: {api_error}")
+                return None
 
             if response and hasattr(response, 'text') and response.text and response.text.strip():
-                logger.info("Essay marking completed successfully with Gemini 2.5 Flash")
+                logger.info("Essay marking completed successfully with Gemini 1.5 Pro")
                 return response.text.strip()
             else:
-                logger.error("Empty or invalid response from Gemini 2.5 Flash")
+                logger.error("Empty or invalid response from Gemini 1.5 Pro")
                 return self._generate_fallback_essay_marking()
 
         except Exception as e:
