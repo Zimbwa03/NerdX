@@ -348,7 +348,7 @@ Additional Instructions:
 """
 
             try:
-                model = self.client.GenerativeModel('gemini-1.5-pro')
+                model = self.client.GenerativeModel('gemini-2.5-pro-preview-0504')
                 response = model.generate_content(
                     prompt,
                     generation_config=self.client.types.GenerationConfig(
@@ -653,7 +653,7 @@ Return ONLY valid JSON (no markdown fences or commentary):
 """
             
             try:
-                model = self.client.GenerativeModel('gemini-1.5-pro')
+                model = self.client.GenerativeModel('gemini-2.5-pro-preview-0504')
                 response = model.generate_content(
                     prompt,
                     generation_config=self.client.types.GenerationConfig(
@@ -1056,7 +1056,7 @@ Return ONLY a JSON array:
 ]"""
 
             try:
-                model = self.client.GenerativeModel('gemini-1.5-pro')
+                model = self.client.GenerativeModel('gemini-2.5-pro-preview-0504')
                 response = model.generate_content(
                     prompt,
                     generation_config=self.client.types.GenerationConfig(
@@ -1166,7 +1166,7 @@ Return ONLY a JSON object:
 }}"""
 
             try:
-                model = self.client.GenerativeModel('gemini-1.5-pro')
+                model = self.client.GenerativeModel('gemini-2.5-pro-preview-0504')
                 response = model.generate_content(
                     analysis_prompt,
                     generation_config=self.client.types.GenerationConfig(
@@ -1367,9 +1367,9 @@ Count the actual errors in grammar, spelling, and structure. For every 3-4 signi
 
 Return valid JSON with the exact format requested."""
 
-            # Try with Gemini 1.5 Pro first
+            # Try with Gemini 2.5 Pro first
             try:
-                model = self.client.GenerativeModel('gemini-1.5-pro')
+                model = self.client.GenerativeModel('gemini-2.5-pro-preview-0504')
                 response = model.generate_content(
                     enhanced_prompt,
                     generation_config=self.client.types.GenerationConfig(
@@ -1384,10 +1384,10 @@ Return valid JSON with the exact format requested."""
                 return None
 
             if response and hasattr(response, 'text') and response.text and response.text.strip():
-                logger.info("Essay marking completed successfully with Gemini 1.5 Pro")
+                logger.info("Essay marking completed successfully with Gemini 2.5 Pro")
                 return response.text.strip()
             else:
-                logger.error("Empty or invalid response from Gemini 1.5 Pro")
+                logger.error("Empty or invalid response from Gemini 2.5 Pro")
                 return self._generate_fallback_essay_marking()
 
         except Exception as e:
