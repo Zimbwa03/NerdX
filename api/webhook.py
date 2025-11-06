@@ -107,6 +107,10 @@ graph_practice_handler = GraphPracticeHandler(whatsapp_service, graph_service, m
 from handlers.english_handler import EnglishHandler
 english_handler = EnglishHandler(whatsapp_service, english_service)
 
+# Initialize Project Assistant handler
+from handlers.project_assistant_handler import ProjectAssistantHandler
+project_assistant_handler = ProjectAssistantHandler()
+
 # Initialize utilities
 rate_limiter = RateLimiter()
 question_cache = QuestionCacheService()
@@ -1030,6 +1034,8 @@ Don't worry - no charges were made to your account."""
             handle_paynow_phone_collection(user_id, message_text)
         elif session_type == 'audio_chat':
             handle_audio_chat_message(user_id, message_text)
+        elif session_type == 'project_assistant':
+            project_assistant_handler.handle_project_message(user_id, message_text)
         else:
             # CRITICAL FIX: Don't automatically send main menu - it causes message chains
             # Only send menu if user explicitly requests it
@@ -1300,7 +1306,7 @@ def send_main_menu(user_id: str, user_name: str = None):
         welcome_text += f"└─────────────────────┘\n"
         welcome_text += f"🧬 Biology        ⚗️ Chemistry\n"
         welcome_text += f"⚡ Physics        📐 Mathematics\n"
-        welcome_text += f"📝 English        🎤 Audio Chat\n\n"
+        welcome_text += f"📝 English        🎓 Project Help\n\n"
 
         # Smart features section
         welcome_text += f"┌─────────────────────┐\n"
@@ -1324,7 +1330,8 @@ def send_main_menu(user_id: str, user_name: str = None):
         # Create main buttons with advanced credit system integration
         main_buttons = [
                 {"text": "🎯 Start Quiz", "callback_data": "start_quiz"},
-                {"text": "🎤 Audio Chat", "callback_data": "audio_chat_menu"},
+                # {"text": "🎤 Audio Chat", "callback_data": "audio_chat_menu"},  # Hidden but code preserved
+                {"text": "🎓 Project Assistant", "callback_data": "project_assistant_menu"},
             {"text": "📊 My Stats", "callback_data": "user_stats"},
             {"text": "👥 Referrals", "callback_data": "referrals_menu"},
             {"text": "💰 Buy Credits", "callback_data": "credit_store"}
@@ -1483,6 +1490,32 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
                 credits_consumed=0
             )
             handle_quiz_menu(user_id)
+        elif selection_id == 'project_assistant_menu':
+            # Track project assistant feature usage
+            analytics_tracker.track_feature_usage(
+                feature_name="Project Assistant",
+                user_id=user_id,
+                success=True,
+                time_spent=0,
+                credits_consumed=0
+            )
+            project_assistant_handler.handle_project_menu(user_id)
+        elif selection_id == 'project_new':
+            project_assistant_handler.handle_start_new_project(user_id)
+        elif selection_id == 'project_continue':
+            project_assistant_handler.handle_continue_project(user_id)
+        elif selection_id.startswith('project_stage_'):
+            # Handle stage transitions
+            stage_num = selection_id.replace('project_stage_', '')
+            project_assistant_handler.handle_continue_project(user_id)
+        elif selection_id == 'project_confirm_web_search':
+            project_assistant_handler.handle_confirm_action(user_id, 'project_confirm_web_search')
+        elif selection_id == 'project_confirm_image_gen':
+            project_assistant_handler.handle_confirm_action(user_id, 'project_confirm_image_gen')
+        elif selection_id == 'project_confirm_document':
+            project_assistant_handler.handle_confirm_action(user_id, 'project_confirm_document')
+        elif selection_id == 'project_cancel_action':
+            project_assistant_handler.handle_cancel_action(user_id)
         elif selection_id == 'audio_chat_menu':
             # Track audio chat feature usage
             analytics_tracker.track_feature_usage(

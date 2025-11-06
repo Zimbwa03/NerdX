@@ -75,6 +75,17 @@ Fixed critical bugs in English Comprehension module (`handlers/english_handler.p
 - **Data Standardization**: Standardized answer field naming to use `correct_answer` consistently throughout comprehension feature
 - **Enhanced Fallbacks**: Improved fallback question generation with proper formatting, educational explanations, and ZIMSEC-appropriate structure
 
+## ZIMSEC Project Assistant Feature
+Added comprehensive AI-powered Project Assistant (`handlers/project_assistant_handler.py`, `services/project_assistant_service.py`) to guide students through School-Based Projects:
+- **6-Stage Workflow**: Complete implementation of official ZIMSEC SBP stages (Problem Identification → Investigation → Ideas → Development → Presentation → Evaluation)
+- **Socratic Tutoring**: Uses guided questions to help students learn and discover solutions independently
+- **Research Guidance**: FREE beta feature providing structured guidance for literature review and existing solution research (`utils/web_search_tool.py`)
+- **Image Generation**: Gemini 2.5 Flash Image integration for creating diagrams, posters, and visual aids (2 credits per image, ~$0.04)
+- **Document Creation**: Professional Word (.docx) document generation for final submission using python-docx (100 credits, $2.00)
+- **Session Management**: Full progress tracking and resume capability across all 6 stages
+- **Credit Confirmation**: Mandatory user confirmation before any credit-deducting action
+- **UI Changes**: Replaced Audio Chat button with Project Assistant in main menu (Audio Chat code preserved but hidden)
+
 ## Security Improvements
 Removed API key printing from console logs in `database/external_db.py` to prevent credential exposure.
 
@@ -83,3 +94,5 @@ Removed API key printing from console logs in `database/external_db.py` to preve
 - LaTeX conversion applied to all question text, answers, solutions, and explanations
 - Session management ensures all messages (images + text) are delivered before clearing state
 - Comprehension passages handle both short (<4000 chars) and long passages correctly
+- Project Assistant uses modular service architecture with clear separation of concerns
+- Web research is FREE during beta (0 credits) as it provides guidance only, not actual API search results
