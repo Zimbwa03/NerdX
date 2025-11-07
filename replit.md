@@ -110,3 +110,4 @@ Added simple text commands to exit Teacher Mode instead of requiring button clic
   - Won't accidentally exit on normal conversation like "come back tomorrow" or "stopping power"
 - **User Experience**: Added reminder text to teaching sessions: "📤 Type 'exit' to leave Teacher Mode"
 - **Architect Reviewed**: Confirmed exact phrase matching prevents conversation disruptions while providing convenient exit options
+- **Bug Fix**: Fixed crash when exiting - corrected `session_manager.clear_session()` method signature from 2 parameters to 1 parameter (removed unused `'science_teacher'` argument)
