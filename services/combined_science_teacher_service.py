@@ -628,7 +628,8 @@ Current conversation context will be provided with each message."""
     def exit_teacher_mode(self, user_id: str):
         """Exit teacher mode and return to main menu"""
         try:
-            session_manager.clear_session(user_id, 'science_teacher')
+            # Clear the science teacher session
+            session_manager.clear_session(user_id)
             
             self.whatsapp_service.send_message(
                 user_id,

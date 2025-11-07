@@ -1,0 +1,39 @@
+h: 4)
+2025-11-07 09:46:54,971 - api.webhook - INFO - 📝 Full message_data: {'from': '263774823169', 'id': 'wamid.HBgMMjYzNzc0ODIzMTY5FQIAEhggQUNBRjcwMzExRkU5NEE0MDZFRDQzN0FDMzAyQkFBRTkA', 'timestamp': '1762508814', 'text': {'body': 'exit'}, 'type': 'text'}
+2025-11-07 09:46:54,971 - api.webhook - INFO - ✅ Text extraction successful for 263774823169: 'exit'
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.95.8" requestID="286e52fe-b64f-4786" responseTimeMS=1604 responseBytes=247 userAgent="facebookexternalua"
+2025-11-07 09:46:56,056 - services.user_service - INFO - 🔍 DEBUGGING: Checking registration for user 263774823169
+2025-11-07 09:46:56,056 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+2025-11-07 09:46:56,323 - services.user_service - INFO - 🔍 DEBUGGING: is_user_registered returned: True
+2025-11-07 09:46:56,324 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+2025-11-07 09:46:56,569 - services.user_service - INFO - 🔍 DEBUGGING: get_user_registration returned: True
+2025-11-07 09:46:56,572 - services.combined_science_teacher_service - ERROR - Error exiting teacher mode for 263774823169: SessionManager.clear_session() takes 2 positional arguments but 3 were given
+172.71.151.226 - - [07/Nov/2025:09:46:56 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+2025-11-07 09:47:12,787 - api.webhook - INFO - 🔍 Received WhatsApp message: {'from': '263774823169', 'id': 'wamid.HBgMMjYzNzc0ODIzMTY5FQIAEhggQUNFNjg5NkRERkQxQTFFNzREODIyOUFDNjc1MDg4NUEA', 'timestamp': '1762508832', 'text': {'body': 'Leave'}, 'type': 'text'}
+2025-11-07 09:47:12,788 - api.webhook - INFO - 🔍 User ID: 263774823169, Type: text
+2025-11-07 09:47:12,788 - api.webhook - INFO - Background processing text message from 263774823169
+2025-11-07 09:47:12,788 - api.webhook - INFO - 📝 Extracted text for 263774823169: 'Leave' (length: 5)
+2025-11-07 09:47:12,788 - api.webhook - INFO - 📝 Full message_data: {'from': '263774823169', 'id': 'wamid.HBgMMjYzNzc0ODIzMTY5FQIAEhggQUNFNjg5NkRERkQxQTFFNzREODIyOUFDNjc1MDg4NUEA', 'timestamp': '1762508832', 'text': {'body': 'Leave'}, 'type': 'text'}
+2025-11-07 09:47:12,788 - api.webhook - INFO - ✅ Text extraction successful for 263774823169: 'Leave'
+2025-11-07 09:47:13,860 - services.user_service - INFO - 🔍 DEBUGGING: Checking registration for user 263774823169
+2025-11-07 09:47:13,860 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.79.112" requestID="4cb2c688-4aae-4d8f" responseTimeMS=1892 responseBytes=247 userAgent="facebookexternalua"
+2025-11-07 09:47:14,433 - services.user_service - INFO - 🔍 DEBUGGING: is_user_registered returned: True
+2025-11-07 09:47:14,433 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+2025-11-07 09:47:14,674 - services.user_service - INFO - 🔍 DEBUGGING: get_user_registration returned: True
+2025-11-07 09:47:14,676 - services.combined_science_teacher_service - ERROR - Error exiting teacher mode for 263774823169: SessionManager.clear_session() takes 2 positional arguments but 3 were given
+172.71.150.20 - - [07/Nov/2025:09:47:14 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+2025-11-07 09:47:29,083 - api.webhook - INFO - 🔍 Received WhatsApp message: {'from': '263774823169', 'id': 'wamid.HBgMMjYzNzc0ODIzMTY5FQIAEhggQUM0NTVFRDAzN0YwNzMwNEY4NjVBMjA3ODVEQkRBMjEA', 'timestamp': '1762508848', 'text': {'body': 'Back to menu'}, 'type': 'text'}
+2025-11-07 09:47:29,083 - api.webhook - INFO - 🔍 User ID: 263774823169, Type: text
+2025-11-07 09:47:29,083 - api.webhook - INFO - Background processing text message from 263774823169
+2025-11-07 09:47:29,083 - api.webhook - INFO - 📝 Extracted text for 263774823169: 'Back to menu' (length: 12)
+2025-11-07 09:47:29,083 - api.webhook - INFO - 📝 Full message_data: {'from': '263774823169', 'id': 'wamid.HBgMMjYzNzc0ODIzMTY5FQIAEhggQUM0NTVFRDAzN0YwNzMwNEY4NjVBMjA3ODVEQkRBMjEA', 'timestamp': '1762508848', 'text': {'body': 'Back to menu'}, 'type': 'text'}
+2025-11-07 09:47:29,083 - api.webhook - INFO - ✅ Text extraction successful for 263774823169: 'Back to menu'
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.95.21" requestID="e29d7a02-e0ca-4039" responseTimeMS=1593 responseBytes=247 userAgent="facebookexternalua"
+2025-11-07 09:47:30,172 - services.user_service - INFO - 🔍 DEBUGGING: Checking registration for user 263774823169
+2025-11-07 09:47:30,172 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+2025-11-07 09:47:30,432 - services.user_service - INFO - 🔍 DEBUGGING: is_user_registered returned: True
+2025-11-07 09:47:30,432 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+2025-11-07 09:47:30,671 - services.user_service - INFO - 🔍 DEBUGGING: get_user_registration returned: True
+172.69.65.203 - - [07/Nov/2025:09:47:30 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+2025-11-07 09:47:30,673 - services.combined_science_teacher_service - ERROR - Error exiting teacher mode for 263774823169: SessionManager.clear_session() takes 2 positional arguments but 3 were given
