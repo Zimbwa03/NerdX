@@ -5,6 +5,7 @@ Implements the complete 6-stage ZIMSEC School-Based Project workflow with AI ass
 
 import logging
 import json
+import os
 from datetime import datetime
 from typing import Dict, Optional, List
 from utils.session_manager import session_manager
@@ -15,6 +16,14 @@ from utils.gemini_image_generator import GeminiImageGenerator
 from utils.document_generator import DocumentGenerator
 
 logger = logging.getLogger(__name__)
+
+# Import Google Gemini AI for tutoring
+try:
+    import google.generativeai as genai
+    GENAI_AVAILABLE = True
+except ImportError:
+    genai = None
+    GENAI_AVAILABLE = False
 
 
 class ProjectAssistantService:
@@ -71,6 +80,24 @@ class ProjectAssistantService:
         self.web_search = WebSearchTool()
         self.image_generator = GeminiImageGenerator()
         self.document_generator = DocumentGenerator()
+        
+        # Initialize Gemini AI for tutoring
+        self.gemini_client = None
+        self._is_gemini_configured = False
+        try:
+            if GENAI_AVAILABLE:
+                api_key = os.getenv('GEMINI_API_KEY')
+                if api_key and genai:
+                    genai.configure(api_key=api_key)
+                    self.gemini_client = genai
+                    self._is_gemini_configured = True
+                    logger.info("Project Assistant initialized with Gemini AI for Socratic tutoring")
+                else:
+                    logger.warning("GEMINI_API_KEY not found - using fallback tutoring methods")
+            else:
+                logger.warning("Google Generative AI not available - using fallback tutoring methods")
+        except Exception as e:
+            logger.error(f"Error initializing Gemini for Project Assistant: {e}")
     
     def show_main_menu(self, user_id: str):
         """Display the Project Assistant main menu"""
@@ -196,7 +223,7 @@ class ProjectAssistantService:
         """Handle user messages in project assistant mode"""
         try:
             session_data = session_manager.get_session_data(user_id)
-            project_data = self._get_project_data(user_id)
+            project_data = self._get_project_data(user_id) or {}
             
             if not session_data or session_data.get('mode') != 'project_assistant':
                 return
@@ -252,7 +279,7 @@ class ProjectAssistantService:
     
     def _handle_subject(self, user_id: str, subject: str):
         """Handle subject input"""
-        project_data = self._get_project_data(user_id)
+        project_data = self._get_project_data(user_id) or {}
         project_data['subject'] = subject.strip()
         self._save_project_data(user_id, project_data)
         
@@ -278,7 +305,7 @@ class ProjectAssistantService:
     
     def _handle_project_idea(self, user_id: str, idea: str):
         """Handle initial project idea and start Stage 1"""
-        project_data = self._get_project_data(user_id)
+        project_data = self._get_project_data(user_id) or {}
         project_data['initial_idea'] = idea
         project_data['current_stage'] = 1
         project_data['stage_1_data'] = {'problem_ideas': [idea]}
@@ -421,7 +448,7 @@ class ProjectAssistantService:
     def execute_confirmed_action(self, user_id: str, action_id: str):
         """Execute a confirmed credit-deducting action"""
         try:
-            session_data = session_manager.get_session_data(user_id)
+            session_data = session_manager.get_session_data(user_id) or {}
             pending_action = session_data.get('pending_action')
             
             if action_id == 'project_confirm_web_search' and pending_action == 'web_search':
@@ -454,7 +481,7 @@ class ProjectAssistantService:
             search_results = self.web_search.search(query)
             
             # Format and send guidance
-            project_data = self._get_project_data(user_id)
+            project_data = self._get_project_data(user_id) or {}
             stage_data = project_data.get('stage_2_data', {})
             stage_data['search_results'] = search_results
             stage_data['search_query'] = query
@@ -500,7 +527,7 @@ class ProjectAssistantService:
             
             if image_url:
                 # Save to project data
-                project_data = self._get_project_data(user_id)
+                project_data = self._get_project_data(user_id) or {}
                 stage_data = project_data.get('stage_5_data', {})
                 generated_images = stage_data.get('generated_images', [])
                 generated_images.append({'prompt': prompt, 'url': image_url})
@@ -549,7 +576,7 @@ class ProjectAssistantService:
             
             self.whatsapp_service.send_message(user_id, "📄 Generating your professional document... Please wait.")
             
-            project_data = self._get_project_data(user_id)
+            project_data = self._get_project_data(user_id) or {}
             document_url = self.document_generator.create_project_document(project_data)
             
             if document_url:
@@ -709,15 +736,93 @@ class ProjectAssistantService:
         self.whatsapp_service.send_interactive_message(user_id, message, buttons)
     
     def _handle_general_conversation(self, user_id: str, message_text: str, project_data: dict):
-        """Handle general conversation within a stage (Socratic tutoring)"""
+        """Handle general conversation within a stage (Socratic tutoring with Gemini AI)"""
         current_stage = project_data.get('current_stage', 1)
         
-        # Use Socratic questions to guide the student
+        # Try to use Gemini AI for intelligent Socratic tutoring
+        if self._is_gemini_configured:
+            try:
+                ai_response = self._generate_socratic_response(user_id, message_text, project_data)
+                if ai_response:
+                    self.whatsapp_service.send_message(user_id, ai_response)
+                    return
+            except Exception as e:
+                logger.error(f"Error generating Gemini response for tutoring: {e}")
+                # Fall through to use fallback method
+        
+        # Fallback: Use simple Socratic questions to guide the student
         response = "That's an interesting thought! 💭\n\n"
         response += "Let me ask you: Why do you think that approach would work?\n\n"
         response += f"Consider the goal of Stage {current_stage}: {self.STAGES[current_stage]['goal']}"
         
         self.whatsapp_service.send_message(user_id, response)
+    
+    def _generate_socratic_response(self, user_id: str, student_input: str, project_data: dict) -> Optional[str]:
+        """Generate AI-powered Socratic tutoring response using Gemini"""
+        try:
+            if not self._is_gemini_configured:
+                return None
+            
+            current_stage = project_data.get('current_stage', 1)
+            stage_info = self.STAGES.get(current_stage, {})
+            project_title = project_data.get('project_title', project_data.get('initial_idea', 'Untitled'))
+            subject = project_data.get('subject', 'Not specified')
+            student_name = project_data.get('student_name', 'Student')
+            
+            # Build context for Gemini
+            prompt = f"""
+You are an expert ZIMSEC School-Based Project tutor using the Socratic method to guide students.
+
+**Student Context:**
+- Name: {student_name}
+- Subject: {subject}
+- Project Title/Idea: {project_title}
+- Current Stage: Stage {current_stage}/6 - {stage_info.get('name', 'Unknown')}
+- Stage Goal: {stage_info.get('goal', 'Unknown')}
+
+**Student's Recent Input:**
+"{student_input}"
+
+**Your Role:**
+1. Use the Socratic method - ask thought-provoking questions rather than giving direct answers
+2. Guide the student to discover solutions independently
+3. Be encouraging, supportive, and professional
+4. Keep responses concise (max 100 words)
+5. Use simple language appropriate for O-Level students
+6. Help them think critically about their project work
+7. Reference their specific project context when asking questions
+
+**Response Guidelines:**
+- Start with brief acknowledgment
+- Ask 1-2 guiding questions that make them think deeper
+- Connect to the stage goal
+- Be encouraging and supportive
+- Use WhatsApp-friendly formatting with emojis sparingly
+
+Generate your Socratic tutoring response now:
+"""
+
+            # Call Gemini API
+            model = self.gemini_client.GenerativeModel('gemini-2.0-flash-exp')
+            response = model.generate_content(
+                prompt,
+                generation_config=self.gemini_client.types.GenerationConfig(
+                    temperature=0.7,
+                    max_output_tokens=300
+                ),
+            )
+            
+            if response and response.text:
+                ai_response = response.text.strip()
+                logger.info(f"Generated Gemini Socratic response for {student_name}")
+                return ai_response
+            else:
+                logger.warning("Gemini returned empty response for Socratic tutoring")
+                return None
+            
+        except Exception as e:
+            logger.error(f"Error generating Socratic response with Gemini: {e}")
+            return None
     
     def _get_stage_guidance(self, stage_num: int, project_data: dict) -> str:
         """Get specific guidance for a stage"""
