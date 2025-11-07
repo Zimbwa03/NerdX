@@ -53,6 +53,13 @@ class Config:
         'audio_feature': 10,               # Audio Feature
         'voice_chat': 10,                  # Voice Chat
         
+        # AI Teacher & Assistant - Hybrid Model
+        'teacher_mode_start': 3,           # Combined Science Teacher - Initial session
+        'teacher_mode_followup': 1,        # Combined Science Teacher - Follow-up questions
+        'teacher_mode_pdf': 1,             # Combined Science Teacher - PDF note generation
+        'project_assistant_start': 3,      # Project Assistant - Initial session
+        'project_assistant_followup': 1,   # Project Assistant - Follow-up questions
+        
         # Legacy compatibility (keep lower costs for existing handlers)
         'math': 1,
         'science': 1,

@@ -11,7 +11,8 @@ from datetime import datetime
 from typing import Dict, Optional, List
 from utils.session_manager import session_manager
 from services.whatsapp_service import WhatsAppService
-from database.external_db import make_supabase_request
+from database.external_db import make_supabase_request, get_user_credits, deduct_credits
+from services.advanced_credit_service import advanced_credit_service
 
 logger = logging.getLogger(__name__)
 
@@ -350,8 +351,53 @@ Current conversation context will be provided with each message."""
     def _handle_conversation(self, user_id: str, message_text: str, project_data: dict):
         """Main conversational AI logic - chat with Gemini AI"""
         try:
-            # Add user message to conversation history
+            # Hybrid Model: Determine if this is a new session or continuation
             conversation_history = project_data.get('conversation_history', [])
+            is_new_session = len(conversation_history) == 0
+            
+            # Check and deduct credits
+            if is_new_session:
+                # Starting new project session - costs 3 credits
+                credit_result = advanced_credit_service.check_and_deduct_credits(
+                    user_id, 'project_assistant_start'
+                )
+            else:
+                # Follow-up question - costs 1 credit
+                credit_result = advanced_credit_service.check_and_deduct_credits(
+                    user_id, 'project_assistant_followup'
+                )
+            
+            # Handle insufficient credits
+            if not credit_result.get('success'):
+                project_title = project_data.get('project_title', 'your project')
+                insufficient_msg = f"""💰 *Need More Credits!* 💰
+
+📚 *Project Assistant*
+📝 Project: {project_title}
+
+💳 *Credit Status:*
+{credit_result.get('message', 'Insufficient credits')}
+
+🎯 *Project Assistant Benefits:*
+• Comprehensive research assistance
+• Complete project writing support
+• Generate study notes & content
+• Suggest relevant images & visuals
+• ZIMSEC School-Based Project guidance
+• Interactive AI tutoring
+
+💎 *Get More Credits:*"""
+                
+                buttons = [
+                    {"text": "💰 Buy Credits", "callback_data": "credit_store"},
+                    {"text": "👥 Invite Friends (+5 each)", "callback_data": "share_to_friend"},
+                    {"text": "🏠 Main Menu", "callback_data": "main_menu"}
+                ]
+                
+                self.whatsapp_service.send_interactive_message(user_id, insufficient_msg, buttons)
+                return
+            
+            # Add user message to conversation history
             conversation_history.append({
                 'role': 'user',
                 'content': message_text,
@@ -384,6 +430,11 @@ Current conversation context will be provided with each message."""
             
             # Clean formatting for WhatsApp (convert ** to *)
             clean_response = self._clean_whatsapp_formatting(ai_response)
+            
+            # Get current credits and show credit status
+            current_credits = get_user_credits(user_id)
+            credits_used = 3 if is_new_session else 1
+            clean_response += f"\n\n💳 *Credits:* {current_credits} (Used: {credits_used})"
             
             # Send AI response to user
             self.whatsapp_service.send_message(user_id, clean_response)

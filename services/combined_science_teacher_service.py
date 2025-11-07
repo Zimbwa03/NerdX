@@ -10,7 +10,8 @@ from datetime import datetime
 from typing import Dict, Optional, List
 from utils.session_manager import session_manager
 from services.whatsapp_service import WhatsAppService
-from database.external_db import make_supabase_request
+from database.external_db import make_supabase_request, get_user_credits, deduct_credits
+from services.advanced_credit_service import advanced_credit_service
 
 logger = logging.getLogger(__name__)
 
@@ -342,9 +343,56 @@ Current conversation context will be provided with each message."""
         """Start teaching a specific topic"""
         try:
             session_data = session_manager.get_data(user_id, 'science_teacher') or {}
+            
+            # Hybrid Model: Determine if this is a new session or continuation
+            conversation_history = session_data.get('conversation_history', [])
+            is_new_session = len(conversation_history) == 0
+            
+            # Check and deduct credits
+            if is_new_session:
+                # Starting new session - costs 3 credits
+                credit_result = advanced_credit_service.check_and_deduct_credits(
+                    user_id, 'teacher_mode_start'
+                )
+            else:
+                # Follow-up question - costs 1 credit
+                credit_result = advanced_credit_service.check_and_deduct_credits(
+                    user_id, 'teacher_mode_followup'
+                )
+            
+            # Handle insufficient credits
+            if not credit_result.get('success'):
+                insufficient_msg = f"""💰 *Need More Credits!* 💰
+
+🎓 *Combined Science Teacher Mode*
+📖 Topic: {topic}
+
+💳 *Credit Status:*
+{credit_result.get('message', 'Insufficient credits')}
+
+🎯 *Teacher Mode Benefits:*
+• AI-powered personalized teaching
+• Interactive Q&A sessions
+• Professional PDF notes
+• Biology, Chemistry & Physics topics
+• ZIMSEC exam-focused content
+
+💎 *Get More Credits:*"""
+                
+                buttons = [
+                    {"text": "💰 Buy Credits", "callback_data": "credit_store"},
+                    {"text": "👥 Invite Friends (+5 each)", "callback_data": "share_to_friend"},
+                    {"text": "🏠 Main Menu", "callback_data": "main_menu"}
+                ]
+                
+                self.whatsapp_service.send_interactive_message(user_id, insufficient_msg, buttons)
+                return
+            
+            # Update session data
             session_data['topic'] = topic
             session_data['awaiting'] = 'conversation'
-            session_data['conversation_history'] = []
+            if is_new_session:
+                session_data['conversation_history'] = []
             session_manager.set_data(user_id, 'science_teacher', session_data)
             
             subject = session_data.get('subject', 'Science')
@@ -358,11 +406,16 @@ Current conversation context will be provided with each message."""
                 # Clean formatting for WhatsApp (convert ** to *)
                 response_text = self._clean_whatsapp_formatting(response_text)
                 
-                # Add helpful instructions
+                # Get current credits and show credit status
+                current_credits = get_user_credits(user_id)
+                credits_used = 3 if is_new_session else 1
+                
+                # Add helpful instructions with credit info
                 message = f"📖 *Topic: {topic}*\n\n{response_text}\n\n"
                 message += "─────────────────────\n"
                 message += "💬 Ask me questions or type *'generate notes'* when ready for PDF notes!\n"
-                message += "📤 Type *'exit'* to leave Teacher Mode"
+                message += "📤 Type *'exit'* to leave Teacher Mode\n\n"
+                message += f"💳 *Credits:* {current_credits} (Used: {credits_used})"
                 
                 self.whatsapp_service.send_message(user_id, message)
             else:
@@ -392,6 +445,38 @@ Current conversation context will be provided with each message."""
                 self.generate_notes(user_id)
                 return
             
+            # Hybrid Model: Deduct 1 credit for follow-up question
+            credit_result = advanced_credit_service.check_and_deduct_credits(
+                user_id, 'teacher_mode_followup'
+            )
+            
+            # Handle insufficient credits
+            if not credit_result.get('success'):
+                insufficient_msg = f"""💰 *Need More Credits!* 💰
+
+🎓 *Combined Science Teacher Mode*
+💬 Follow-up Question
+
+💳 *Credit Status:*
+{credit_result.get('message', 'Insufficient credits')}
+
+🎯 *Teacher Mode Benefits:*
+• AI-powered personalized teaching
+• Interactive Q&A sessions
+• Professional PDF notes
+• ZIMSEC exam-focused content
+
+💎 *Get More Credits:*"""
+                
+                buttons = [
+                    {"text": "💰 Buy Credits", "callback_data": "credit_store"},
+                    {"text": "👥 Invite Friends (+5 each)", "callback_data": "share_to_friend"},
+                    {"text": "🏠 Main Menu", "callback_data": "main_menu"}
+                ]
+                
+                self.whatsapp_service.send_interactive_message(user_id, insufficient_msg, buttons)
+                return
+            
             # Add user message to history
             conversation_history = session_data.get('conversation_history', [])
             conversation_history.append({
@@ -415,6 +500,11 @@ Current conversation context will be provided with each message."""
                 
                 # Clean formatting for WhatsApp (convert ** to *)
                 clean_response = self._clean_whatsapp_formatting(response_text)
+                
+                # Get current credits and add to response
+                current_credits = get_user_credits(user_id)
+                clean_response += f"\n\n💳 *Credits:* {current_credits} (Used: 1)"
+                
                 self.whatsapp_service.send_message(user_id, clean_response)
             else:
                 self._send_fallback_response(user_id, message_text, session_data)
@@ -499,6 +589,39 @@ Current conversation context will be provided with each message."""
                 )
                 return
             
+            # Hybrid Model: Deduct 1 credit for PDF generation
+            credit_result = advanced_credit_service.check_and_deduct_credits(
+                user_id, 'teacher_mode_pdf'
+            )
+            
+            # Handle insufficient credits
+            if not credit_result.get('success'):
+                insufficient_msg = f"""💰 *Need More Credits!* 💰
+
+🎓 *Combined Science Teacher Mode*
+📄 PDF Note Generation
+
+💳 *Credit Status:*
+{credit_result.get('message', 'Insufficient credits')}
+
+📚 *PDF Notes Benefits:*
+• Comprehensive study materials
+• Professional formatting
+• ZIMSEC exam-focused
+• Download and study offline
+• Detailed explanations (500-800 words)
+
+💎 *Get More Credits:*"""
+                
+                buttons = [
+                    {"text": "💰 Buy Credits", "callback_data": "credit_store"},
+                    {"text": "👥 Invite Friends (+5 each)", "callback_data": "share_to_friend"},
+                    {"text": "🏠 Main Menu", "callback_data": "main_menu"}
+                ]
+                
+                self.whatsapp_service.send_interactive_message(user_id, insufficient_msg, buttons)
+                return
+            
             self.whatsapp_service.send_message(
                 user_id,
                 "📝 Generating your personalized notes... This will take a moment."
@@ -540,9 +663,12 @@ Current conversation context will be provided with each message."""
                         if os.path.exists(pdf_path):
                             os.remove(pdf_path)
                         
+                        # Get current credits and show credit status
+                        current_credits = get_user_credits(user_id)
+                        
                         self.whatsapp_service.send_message(
                             user_id,
-                            "✅ Your personalized notes have been sent!\n\nWould you like to continue learning or start a new topic?"
+                            f"✅ Your personalized notes have been sent!\n\nWould you like to continue learning or start a new topic?\n\n💳 *Credits:* {current_credits} (Used: 1 for PDF)"
                         )
                     else:
                         raise ValueError("Failed to parse notes data")

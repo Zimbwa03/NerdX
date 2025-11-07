@@ -134,3 +134,36 @@ Comprehensive improvements to make Project Assistant more helpful, interactive, 
   - Focus on ZIMSEC standards and scoring criteria
 - **User Benefits**: Students now get comprehensive research assistance with notes and image suggestions they can include in their projects
 - **Architect Reviewed**: All improvements verified - name retrieval works correctly, formatting cleanup eliminates `**` symbols, enhanced prompt aligns with user goals
+
+## Hybrid Credit Model Implementation (November 7, 2025)
+Implemented balanced credit deduction strategy for AI-powered features (Teacher Mode and Project Assistant):
+- **Credit Costs Added to config.py**:
+  - `teacher_mode_start`: 3 credits (Combined Science Teacher - Initial session)
+  - `teacher_mode_followup`: 1 credit (Combined Science Teacher - Follow-up questions)
+  - `teacher_mode_pdf`: 1 credit (Combined Science Teacher - PDF note generation)
+  - `project_assistant_start`: 3 credits (Project Assistant - Initial session)
+  - `project_assistant_followup`: 1 credit (Project Assistant - Follow-up questions)
+- **Combined Science Teacher Credit Logic**:
+  - Starting new topic costs 3 credits (covers initial AI teaching)
+  - Follow-up questions cost 1 credit each (cheaper for continued learning)
+  - PDF note generation costs 1 credit (premium feature)
+  - Total example: Starting topic (3) + 5 follow-ups (5) + PDF notes (1) = 9 credits
+- **Project Assistant Credit Logic**:
+  - Starting new project session costs 3 credits (covers comprehensive research/writing)
+  - Follow-up questions cost 1 credit each (ongoing assistance)
+  - No separate PDF charge (content delivered via chat)
+  - Total example: New project (3) + 10 questions (10) = 13 credits
+- **Credit Status Display**:
+  - All responses show remaining credits and credits used
+  - Format: "💳 Credits: 42 (Used: 1)"
+  - Insufficient credit messages explain costs and benefits
+- **Business Model Rationale**:
+  - Higher initial cost (3 credits) covers heavy AI usage for comprehensive responses
+  - Lower follow-up cost (1 credit) encourages deeper engagement
+  - PDF generation as premium add-on (1 credit) for study materials
+  - Balances revenue with student affordability
+- **User Experience**:
+  - Students see transparent credit costs before and after each interaction
+  - Insufficient credit messages offer clear upgrade paths
+  - Credit tracking helps students budget their usage
+- **Architect Reviewed**: All credit deduction logic verified - works correctly without errors, properly detects new vs continuing sessions, integrates with existing credit system
