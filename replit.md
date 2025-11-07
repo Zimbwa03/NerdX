@@ -59,3 +59,42 @@ Used for messaging, interactive elements, and media handling (Facebook Graph API
 ## Frontend Dependencies
 - Bootstrap 5: Responsive web interface.
 - Font Awesome: Icons.
+
+# Recent Changes (November 2025)
+
+## Combined Science Teacher Notes Improvements (November 7, 2025)
+Enhanced PDF note generation and WhatsApp message formatting for Teacher Mode:
+- **No JSON Preview to Students**: Removed raw JSON dump from error fallback - now sends friendly message "I've prepared basic notes on this topic, but I'm having trouble sending the PDF..."
+- **NerdX AI Watermark**: Added professional "NerdX AI" watermark to all PDF pages
+  - Displays diagonally (45° rotation) with 30% transparency across all pages
+  - Uses ReportLab's `setFillAlpha()` and `setFillColorRGB()` for proper rendering
+  - Applied via `onFirstPage` and `onLaterPages` callbacks
+- **WhatsApp Bold Formatting Fixed**: Converted Markdown `**bold**` to WhatsApp `*bold*` format
+  - Created `_clean_whatsapp_formatting()` method with regex conversion (`r'\*\*([^\*]+?)\*\*'` → `r'*\1*'`)
+  - Applied to all Gemini AI responses before sending to students
+  - Ensures proper bold text display in WhatsApp messages
+- **More Detailed Notes**: Updated AI system prompt to generate comprehensive study materials
+  - Requires 500-800 words minimum in detailed explanations
+  - Mandates multiple paragraphs: introduction, component breakdown, examples, misconceptions, related topics
+  - Expanded learning objectives (4+), key concepts (5+), real-world applications (4+), comprehensive references
+  - Students receive thorough, study-ready PDF notes covering everything about each topic
+- **Architect Reviewed**: All improvements verified to work without runtime errors or regressions
+
+## Graph Service Trigonometric Function Fix (November 7, 2025)
+Fixed graph generation error when displaying trigonometric functions:
+- **Issue**: Clicking "Show Graph" for trig functions crashed with "Error evaluating expression 'sin': 'property' object is not iterable"
+- **Root Cause**: AI-generated questions returned bare trig function names (e.g., "sin") without variable "(x)", which sympy couldn't evaluate
+- **Fix**: Added smart detection in `_clean_expression` method to automatically convert bare trig functions:
+  - Detects if entire expression is just a trig function name (sin, cos, tan, csc, sec, cot, sinh, cosh, tanh, arcsin, arccos, arctan, asin, acos, atan)
+  - Automatically appends "(x)" to make it evaluable: "sin" → "sin(x)"
+  - Uses exact string matching (not regex) to avoid breaking complex expressions like "sin^2(x)", "2*sin(x)"
+- **Architect Reviewed**: Confirmed targeted fix is safe and won't break valid expressions
+
+## Combined Science Teacher Bug Fixes (November 7, 2025)
+Fixed critical SessionManager error preventing Teacher Mode from working:
+- **Issue**: Clicking "Teacher Mode" button generated POST 499 error
+- **Root Cause**: `session_manager.set_data()` method didn't exist - service called 3-parameter version but only 2-parameter `set_session_data()` existed
+- **Fix**: Added compatibility methods to SessionManager:
+  - `set_data(user_id, session_type, data)` - 3-parameter version
+  - `get_data(user_id, session_type=None)` - Retrieves with optional filtering
+- **Architect Reviewed**: Methods correctly mirror service contract without corrupting session data
