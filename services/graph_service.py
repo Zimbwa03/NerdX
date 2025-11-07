@@ -457,6 +457,17 @@ class GraphService:
         # Handle implicit multiplication (e.g., "3x" -> "3*x")
         import re
         clean = re.sub(r'(\d+)([a-zA-Z])', r'\1*\2', clean)
+        
+        # FIX: Handle bare trigonometric functions without arguments
+        # ONLY if the entire expression is just a bare trig function (e.g., "sin", "cos", "tan")
+        # This fixes AI-generated questions that return just "sin" instead of "sin(x)"
+        trig_functions = ['sin', 'cos', 'tan', 'csc', 'sec', 'cot', 'sinh', 'cosh', 'tanh', 
+                         'arcsin', 'arccos', 'arctan', 'asin', 'acos', 'atan']
+        clean_stripped = clean.strip()
+        if clean_stripped in trig_functions:
+            # The entire expression is just a bare trig function, add (x)
+            clean = clean_stripped + '(x)'
+            logger.info(f"Converted bare trig function '{clean_stripped}' to '{clean}'")
 
         logger.info(f"Final cleaned expression: '{clean}'")
         return clean

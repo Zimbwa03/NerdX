@@ -1,0 +1,35 @@
+2025-11-07 08:17:35,676 - api.webhook - INFO - 🔍 User ID: 263774823169, Type: interactive
+2025-11-07 08:17:35,676 - api.webhook - INFO - Background processing interactive message from 263774823169
+2025-11-07 08:17:35,676 - api.webhook - INFO - Button interaction from 263774823169: show_generated_graph_trigonometric_functions
+2025-11-07 08:17:35,676 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+2025-11-07 08:17:36,277 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+2025-11-07 08:17:36,516 - services.quality_monitor - INFO - WhatsApp throttle override active - allowing message despite quality metrics
+2025-11-07 08:17:37,125 - services.whatsapp_service - INFO - Message sent successfully to 263774823169
+2025-11-07 08:17:37,144 - services.graph_service - INFO - After superscript conversion: 'sin'
+2025-11-07 08:17:37,144 - services.graph_service - INFO - Final cleaned expression: 'sin'
+2025-11-07 08:17:37,148 - services.graph_service - ERROR - Error evaluating expression 'sin': 'property' object is not iterable
+/opt/render/project/src/services/graph_service.py:768: UserWarning: No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
+  ax.legend(fontsize=12, loc='upper right')
+2025-11-07 08:17:37,685 - services.graph_service - INFO - ✅ Matplotlib graph created successfully: static/graphs/graph_263774823169_1762503457.png (size: 196238 bytes)
+2025-11-07 08:17:37,685 - database.external_db - INFO - Using ANON_KEY for GET operation on user_stats
+2025-11-07 08:17:37,946 - database.external_db - INFO - Using SERVICE_ROLE_KEY for PATCH operation on user_stats
+2025-11-07 08:17:38,207 - database.external_db - INFO - Using SERVICE_ROLE_KEY for POST operation on xp_transactions
+2025-11-07 08:17:38,448 - database.external_db - INFO - XP transaction logged for 263774823169: +20 XP
+2025-11-07 08:17:38,449 - database.external_db - INFO - Using ANON_KEY for GET operation on user_stats
+2025-11-07 08:17:38,694 - database.external_db - INFO - Using ANON_KEY for GET operation on user_stats
+2025-11-07 08:17:38,948 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+2025-11-07 08:17:39,452 - database.credit_costs_db - WARNING - Credit cost for 'graph_study' not found in database, using fallback: 5
+2025-11-07 08:17:39,564 - services.whatsapp_service - ERROR - Could not verify URL accessibility: HTTPSConnectionPool(host='i.ibb.co', port=443): Read timed out. (read timeout=15)
+2025-11-07 08:17:39,564 - handlers.graph_practice_handler - WARNING - Failed to send graph image to 263774823169
+2025-11-07 08:17:39,564 - services.quality_monitor - INFO - WhatsApp throttle override active - allowing message despite quality metrics
+2025-11-07 08:17:39,573 - services.image_hosting_service - INFO - Attempting ImgBB upload...
+2025-11-07 08:17:40,125 - services.whatsapp_service - INFO - Message sent successfully to 263774823169
+172.71.190.179 - - [07/Nov/2025:08:17:40 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+172.71.170.137 - - [07/Nov/2025:08:17:40 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+172.70.35.207 - - [07/Nov/2025:08:17:40 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+172.69.65.203 - - [07/Nov/2025:08:17:40 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+2025-11-07 08:17:40,935 - services.image_hosting_service - INFO - Successfully uploaded image to ImgBB: https://i.ibb.co/0VthBCk9/image.png
+2025-11-07 08:17:41,266 - services.image_hosting_service - INFO - Image URL verification successful: https://i.ibb.co/0VthBCk9/image.png
+2025-11-07 08:17:41,267 - services.image_hosting_service - INFO - ImgBB upload successful and verified
+2025-11-07 08:17:41,268 - services.whatsapp_service - INFO - Got public URL for static/graphs/graph_263774823169_1762503457.png: https://i.ibb.co/0VthBCk9/image.png
+172.70.94.164 - - [07/Nov/2025:08:17:41 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
