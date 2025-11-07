@@ -348,7 +348,7 @@ Additional Instructions:
 """
 
             try:
-                model = self.client.GenerativeModel('gemini-2.5-pro-preview-0504')
+                model = self.client.GenerativeModel('gemini-2.0-flash-exp')
                 response = model.generate_content(
                     prompt,
                     generation_config=self.client.types.GenerationConfig(
@@ -357,7 +357,7 @@ Additional Instructions:
                         max_output_tokens=1500
                     ),
                 )
-                logger.info("Gemini API call completed successfully")
+                logger.info("Gemini API (gemini-2.0-flash-exp) call completed successfully for grammar")
             except Exception as api_error:
                 logger.error(f"Gemini API call failed: {api_error}")
                 return None
@@ -653,7 +653,7 @@ Return ONLY valid JSON (no markdown fences or commentary):
 """
             
             try:
-                model = self.client.GenerativeModel('gemini-2.5-pro-preview-0504')
+                model = self.client.GenerativeModel('gemini-2.0-flash-exp')
                 response = model.generate_content(
                     prompt,
                     generation_config=self.client.types.GenerationConfig(
@@ -662,7 +662,7 @@ Return ONLY valid JSON (no markdown fences or commentary):
                         max_output_tokens=1800
                     ),
                 )
-                logger.info("Gemini API call completed successfully")
+                logger.info("Gemini API (gemini-2.0-flash-exp) call completed successfully for vocabulary")
             except Exception as api_error:
                 logger.error(f"Gemini API call failed: {api_error}")
                 return None
