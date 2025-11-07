@@ -98,3 +98,15 @@ Fixed critical SessionManager error preventing Teacher Mode from working:
   - `set_data(user_id, session_type, data)` - 3-parameter version
   - `get_data(user_id, session_type=None)` - Retrieves with optional filtering
 - **Architect Reviewed**: Methods correctly mirror service contract without corrupting session data
+
+## Teacher Mode Exit Convenience (November 7, 2025)
+Added simple text commands to exit Teacher Mode instead of requiring button clicks:
+- **User Request**: Make it easier and more convenient to leave Teacher Mode
+- **Solution**: Students can now type any of these commands to exit:
+  - Simple commands: 'exit', 'leave', 'stop', 'quit', 'back'
+  - Full phrases: 'main menu', 'go back', 'return', 'exit teacher mode', 'leave teacher mode', 'go to main menu', 'back to menu'
+- **Implementation**: Uses exact phrase matching to prevent false positives
+  - Only triggers if entire message (lowercased & trimmed) matches an exit command
+  - Won't accidentally exit on normal conversation like "come back tomorrow" or "stopping power"
+- **User Experience**: Added reminder text to teaching sessions: "📤 Type 'exit' to leave Teacher Mode"
+- **Architect Reviewed**: Confirmed exact phrase matching prevents conversation disruptions while providing convenient exit options
