@@ -62,3 +62,27 @@ class ProjectAssistantHandler:
         except Exception as e:
             logger.error(f"Error canceling action for {user_id}: {e}", exc_info=True)
             whatsapp_service.send_message(user_id, "❌ Error. Please try again.")
+    
+    def handle_advance_stage(self, user_id: str, stage_num: int):
+        """Handle advancing to next stage"""
+        try:
+            project_service.advance_to_stage(user_id, stage_num)
+        except Exception as e:
+            logger.error(f"Error advancing to stage {stage_num} for {user_id}: {e}", exc_info=True)
+            whatsapp_service.send_message(user_id, "❌ Error advancing stage. Please try again.")
+    
+    def handle_review_stage(self, user_id: str, stage_num: int):
+        """Handle reviewing a completed stage"""
+        try:
+            project_service.review_stage(user_id, stage_num)
+        except Exception as e:
+            logger.error(f"Error reviewing stage {stage_num} for {user_id}: {e}", exc_info=True)
+            whatsapp_service.send_message(user_id, "❌ Error reviewing stage. Please try again.")
+    
+    def handle_save_and_exit(self, user_id: str):
+        """Handle saving project and exiting"""
+        try:
+            project_service.save_and_exit(user_id)
+        except Exception as e:
+            logger.error(f"Error saving and exiting for {user_id}: {e}", exc_info=True)
+            whatsapp_service.send_message(user_id, "❌ Error saving project. Please try again.")

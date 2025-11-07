@@ -185,6 +185,11 @@ class ProjectAssistantService:
         try:
             project_data = self._get_project_data(user_id)
             
+            if not project_data:
+                project_data = self._load_project_from_database(user_id)
+                if project_data:
+                    self._save_project_data(user_id, project_data)
+            
             if not project_data or not project_data.get('active'):
                 self.whatsapp_service.send_message(
                     user_id,
@@ -616,6 +621,120 @@ class ProjectAssistantService:
         
         self.whatsapp_service.send_message(user_id, "Action cancelled. How would you like to continue?")
     
+    def advance_to_stage(self, user_id: str, stage_num: int):
+        """Advance to the specified stage"""
+        try:
+            project_data = self._get_project_data(user_id) or {}
+            current_stage = project_data.get('current_stage', 1)
+            
+            if stage_num <= current_stage:
+                self.whatsapp_service.send_message(user_id, f"⚠️ You're already past Stage {stage_num}.")
+                self.continue_project(user_id)
+                return
+            
+            if stage_num > current_stage + 1:
+                self.whatsapp_service.send_message(user_id, f"⚠️ Please complete Stage {current_stage} first.")
+                self.continue_project(user_id)
+                return
+            
+            project_data['current_stage'] = stage_num
+            self._save_project_data(user_id, project_data)
+            
+            session_data = session_manager.get_session_data(user_id) or {}
+            session_data['current_stage'] = stage_num
+            session_manager.set_session_data(user_id, session_data)
+            
+            self._save_project_to_database(user_id, project_data)
+            
+            self.whatsapp_service.send_message(user_id, f"✅ Advanced to Stage {stage_num}")
+            self.continue_project(user_id)
+            
+        except Exception as e:
+            logger.error(f"Error advancing to stage for {user_id}: {e}", exc_info=True)
+            raise
+    
+    def review_stage(self, user_id: str, stage_num: int):
+        """Review a completed stage"""
+        try:
+            project_data = self._get_project_data(user_id) or {}
+            stage_key = f'stage_{stage_num}_data'
+            stage_data = project_data.get(stage_key, {})
+            
+            if not stage_data and stage_num == 1:
+                stage_key = 'stage_1'
+                stage_data = project_data.get(stage_key, {})
+            
+            if not stage_data:
+                self.whatsapp_service.send_message(user_id, f"⚠️ No data found for Stage {stage_num}.")
+                self.continue_project(user_id)
+                return
+            
+            stage_names = {
+                1: "Problem Identification",
+                2: "Investigation & Research",
+                3: "Exploring Ideas",
+                4: "Development",
+                5: "Presentation",
+                6: "Evaluation"
+            }
+            
+            message = f"📋 *Stage {stage_num} Review: {stage_names.get(stage_num, 'Unknown')}*\n\n"
+            
+            for key, value in stage_data.items():
+                if key in ['stage_number', 'timestamp', 'completed']:
+                    continue
+                formatted_key = key.replace('_', ' ').title()
+                if isinstance(value, list):
+                    message += f"*{formatted_key}:*\n"
+                    for i, item in enumerate(value, 1):
+                        message += f"{i}. {item}\n"
+                    message += "\n"
+                else:
+                    message += f"*{formatted_key}:*\n{value}\n\n"
+            
+            self.whatsapp_service.send_message(user_id, message)
+            
+            buttons = [
+                {"text": "🔙 Back", "callback_data": "project_continue"}
+            ]
+            self.whatsapp_service.send_interactive_message(
+                user_id, 
+                "What would you like to do?",
+                buttons
+            )
+            
+        except Exception as e:
+            logger.error(f"Error reviewing stage for {user_id}: {e}", exc_info=True)
+            raise
+    
+    def save_and_exit(self, user_id: str):
+        """Save project progress and exit"""
+        try:
+            project_data = self._get_project_data(user_id) or {}
+            
+            if not project_data:
+                self.whatsapp_service.send_message(user_id, "⚠️ No project found to save.")
+                return
+            
+            self._save_project_to_database(user_id, project_data)
+            
+            current_stage = project_data.get('current_stage', 1)
+            project_title = project_data.get('stage_1', {}).get('problem_title', 'Untitled Project')
+            
+            message = f"💾 *Project Saved Successfully!*\n\n"
+            message += f"📋 *Title:* {project_title}\n"
+            message += f"📊 *Current Stage:* {current_stage}/6\n\n"
+            message += "Your progress has been saved. You can continue anytime by selecting 'Continue Project' from the Project Assistant menu.\n\n"
+            message += "_Tip: Your project data is securely stored and will be available even after server restarts._"
+            
+            self.whatsapp_service.send_message(user_id, message)
+            
+            session_manager.clear_session(user_id)
+            
+        except Exception as e:
+            logger.error(f"Error saving and exiting for {user_id}: {e}", exc_info=True)
+            raise
+    
     def _continue_stage_2_analysis(self, user_id: str, message_text: str, project_data: dict):
         """Continue Stage 2 analysis after web search"""
         # Implementation for continuing stage 2
@@ -876,3 +995,68 @@ Generate your Socratic tutoring response now:
     def _clear_project_data(self, user_id: str):
         """Clear all project data"""
         session_manager.clear_session(user_id)
+    
+    def _save_project_to_database(self, user_id: str, project_data: dict):
+        """Save project data to Supabase database for long-term persistence"""
+        try:
+            from database.external_db import supabase_client
+            import json
+            from datetime import datetime
+            
+            if not supabase_client:
+                logger.warning("Supabase client not available - project data only in session")
+                return False
+            
+            project_record = {
+                'user_id': user_id,
+                'project_title': project_data.get('stage_1', {}).get('problem_title', 'Untitled Project'),
+                'subject': project_data.get('subject', 'Not specified'),
+                'current_stage': project_data.get('current_stage', 1),
+                'project_data': json.dumps(project_data),
+                'updated_at': datetime.now().isoformat(),
+                'completed': project_data.get('completed', False)
+            }
+            
+            if not project_data.get('created_at'):
+                project_record['created_at'] = datetime.now().isoformat()
+            else:
+                project_record['created_at'] = project_data.get('created_at')
+            
+            existing = supabase_client.table('user_projects').select('id').eq('user_id', user_id).eq('completed', False).execute()
+            
+            if existing.data:
+                result = supabase_client.table('user_projects').update(project_record).eq('id', existing.data[0]['id']).execute()
+                logger.info(f"Updated project in database for user {user_id}")
+            else:
+                result = supabase_client.table('user_projects').insert(project_record).execute()
+                logger.info(f"Created new project in database for user {user_id}")
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error saving project to database for {user_id}: {e}", exc_info=True)
+            return False
+    
+    def _load_project_from_database(self, user_id: str) -> Optional[dict]:
+        """Load project data from Supabase database"""
+        try:
+            from database.external_db import supabase_client
+            import json
+            
+            if not supabase_client:
+                logger.warning("Supabase client not available")
+                return None
+            
+            result = supabase_client.table('user_projects').select('*').eq('user_id', user_id).eq('completed', False).order('updated_at', desc=True).limit(1).execute()
+            
+            if result.data:
+                project_record = result.data[0]
+                project_data = json.loads(project_record['project_data'])
+                logger.info(f"Loaded project from database for user {user_id}")
+                return project_data
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error loading project from database for {user_id}: {e}", exc_info=True)
+            return None

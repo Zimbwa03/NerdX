@@ -173,6 +173,44 @@ def create_payment_transactions_table():
         logger.error(f"Error creating payment_transactions table: {e}")
         return False
 
+
+def create_user_projects_table():
+    """Create user_projects table for ZIMSEC Project Assistant"""
+    try:
+        sql_query = """
+        CREATE TABLE IF NOT EXISTS user_projects (
+            id SERIAL PRIMARY KEY,
+            user_id VARCHAR(255) NOT NULL,
+            project_title VARCHAR(500),
+            subject VARCHAR(100),
+            current_stage INTEGER DEFAULT 1,
+            project_data JSONB NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            completed BOOLEAN DEFAULT FALSE
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_user_projects_user_id ON user_projects(user_id);
+        CREATE INDEX IF NOT EXISTS idx_user_projects_completed ON user_projects(completed);
+        CREATE INDEX IF NOT EXISTS idx_user_projects_updated_at ON user_projects(updated_at);
+        CREATE INDEX IF NOT EXISTS idx_user_projects_user_active ON user_projects(user_id, completed);
+        """
+        
+        test_result = make_supabase_request("GET", "user_projects", limit=1, use_service_role=True)
+        if test_result is not None:
+            logger.info("User projects table already exists and is accessible")
+            return True
+        
+        logger.warning("User projects table does not exist. Please create it manually in Supabase SQL Editor:")
+        logger.warning(sql_query)
+        
+        return True
+        
+    except Exception as e:
+        logger.error(f"Error creating user_projects table: {e}")
+        return False
+
+
 def make_supabase_request(method, table, data=None, select="*", filters=None, limit=None, offset=None, use_service_role=False):
     """Make a request to Supabase REST API with proper authentication"""
 
@@ -1341,6 +1379,13 @@ def init_database():
             create_payment_transactions_table()
         except Exception as e:
             logger.warning(f"Could not create payment_transactions table: {e}")
+
+        # Create user_projects table if it doesn't exist
+        try:
+            logger.info("Creating user_projects table...")
+            create_user_projects_table()
+        except Exception as e:
+            logger.warning(f"Could not create user_projects table: {e}")
 
         logger.info("Database connection successful")
         return True

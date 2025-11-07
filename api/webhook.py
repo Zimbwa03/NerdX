@@ -1507,7 +1507,14 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         elif selection_id.startswith('project_stage_'):
             # Handle stage transitions
             stage_num = selection_id.replace('project_stage_', '')
-            project_assistant_handler.handle_continue_project(user_id)
+            project_assistant_handler.handle_advance_stage(user_id, int(stage_num))
+        elif selection_id.startswith('project_review_stage_'):
+            # Handle stage review
+            stage_num = selection_id.replace('project_review_stage_', '')
+            project_assistant_handler.handle_review_stage(user_id, int(stage_num))
+        elif selection_id == 'project_save_exit':
+            # Handle save and exit
+            project_assistant_handler.handle_save_and_exit(user_id)
         elif selection_id == 'project_confirm_web_search':
             project_assistant_handler.handle_confirm_action(user_id, 'project_confirm_web_search')
         elif selection_id == 'project_confirm_image_gen':
