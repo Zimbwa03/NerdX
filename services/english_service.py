@@ -998,8 +998,13 @@ Return ONLY valid JSON:
             return f"✅ Correct answer: {correct_answer}\n💡 {explanation_data.get('definition', 'Keep expanding your vocabulary!')}"
     
     def generate_vocabulary_question(self, last_question_type: Optional[str] = None) -> Optional[Dict]:
-        """Generate vocabulary questions using DeepSeek AI with resilient fallbacks"""
-        # Primary: DeepSeek AI generation (Gemini removed - using DeepSeek only)
+        """Generate vocabulary questions using Gemini AI first with DeepSeek fallback"""
+        # Primary: Gemini AI generation
+        gemini_response = self.generate_ai_vocabulary_question(last_question_type=last_question_type)
+        if gemini_response and gemini_response.get('success'):
+            return gemini_response
+        
+        # Secondary: DeepSeek AI fallback
         deepseek_response = self.generate_deepseek_vocabulary_question(last_question_type=last_question_type)
         if deepseek_response and deepseek_response.get('success'):
             return deepseek_response

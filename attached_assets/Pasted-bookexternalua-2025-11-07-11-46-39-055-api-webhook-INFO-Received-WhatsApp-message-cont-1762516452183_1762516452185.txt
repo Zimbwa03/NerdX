@@ -1,0 +1,28 @@
+bookexternalua"
+2025-11-07 11:46:39,055 - api.webhook - INFO - 🔍 Received WhatsApp message: {'context': {'from': '263781206192', 'id': 'wamid.HBgMMjYzNzg1NDk0NTk0FQIAERgSN0NDNEE1NzUxNzY4RjkwMzE2AA=='}, 'from': '263785494594', 'id': 'wamid.HBgMMjYzNzg1NDk0NTk0FQIAEhgUMkEyOUM4MDhBMTgzQjUxMjIyNDgA', 'timestamp': '1762515997', 'type': 'interactive', 'interactive': {'type': 'list_reply', 'list_reply': {'id': 'english_vocabulary_building', 'title': '📚 Vocabulary Building', 'description': 'Select 📚 Vocabulary Buildin'}}}
+2025-11-07 11:46:39,055 - api.webhook - INFO - 🔍 User ID: 263785494594, Type: interactive
+2025-11-07 11:46:39,055 - api.webhook - INFO - Background processing interactive message from 263785494594
+2025-11-07 11:46:39,055 - api.webhook - INFO - List selection from 263785494594: english_vocabulary_building
+2025-11-07 11:46:39,055 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+2025-11-07 11:46:39,654 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+2025-11-07 11:46:39,908 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+2025-11-07 11:46:40,176 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+2025-11-07 11:46:40,827 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+2025-11-07 11:46:41,119 - database.external_db - INFO - Using SERVICE_ROLE_KEY for PATCH operation on users_registration
+2025-11-07 11:46:41,389 - database.external_db - INFO - Using SERVICE_ROLE_KEY for PATCH operation on user_stats
+2025-11-07 11:46:41,669 - database.external_db - INFO - Using SERVICE_ROLE_KEY for POST operation on credit_transactions
+2025-11-07 11:46:41,917 - database.external_db - INFO - ✅ Credit deduction transaction logged for 263785494594
+2025-11-07 11:46:41,917 - database.external_db - INFO - Deducted 1 credits from 263785494594. New balance: 408
+2025-11-07 11:47:00,631 - services.english_service - INFO - DeepSeek vocabulary question generated - Type: Synonym Matching
+2025-11-07 11:47:00,632 - services.quality_monitor - INFO - WhatsApp throttle override active - allowing message despite quality metrics
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.107.3" requestID="53c209de-dcb8-474c" responseTimeMS=22052 responseBytes=247 userAgent="facebookexternalua"
+2025-11-07 11:47:01,093 - services.whatsapp_service - INFO - Message sent successfully to 263785494594
+172.71.150.198 - - [07/Nov/2025:11:47:01 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.79.6" requestID="153f853c-7940-4865" responseTimeMS=4 responseBytes=247 userAgent="facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.107.8" requestID="92fb9317-b889-4d3f" responseTimeMS=4 responseBytes=247 userAgent="facebookexternalua"
+172.68.26.166 - - [07/Nov/2025:11:47:02 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+172.70.42.154 - - [07/Nov/2025:11:47:02 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.107.7" requestID="a435921e-0b40-4917" responseTimeMS=2 responseBytes=247 userAgent="facebookexternalua"
+172.71.150.147 - - [07/Nov/2025:11:47:03 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.95.116" requestID="b6c6dddc-c212-4e8e" responseTimeMS=2 responseBytes=247 userAgent="facebookexternalua"
+162.158.174.156 - - [07/Nov/2025:11:50:04 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
