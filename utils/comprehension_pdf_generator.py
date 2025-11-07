@@ -121,6 +121,9 @@ class ComprehensionPDFGenerator:
             Path to the generated PDF file
         """
         try:
+            # Clean up old PDFs before generating new ones (keep last 24 hours)
+            self.cleanup_old_pdfs(max_age_hours=24)
+            
             # Extract data
             passage = passage_data.get('passage', {})
             questions = passage_data.get('questions', [])
