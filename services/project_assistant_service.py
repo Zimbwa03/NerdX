@@ -59,10 +59,13 @@ Your role is to:
 1. **Provide complete answers** - When students ask for research, provide thorough, detailed information with facts, statistics, and examples
 2. **Do the research for them** - Provide comprehensive research findings, existing solutions, case studies, and relevant data
 3. **Write content when asked** - Help students by writing project titles, problem statements, literature reviews, and analysis when requested
-4. **Give specific examples** - Provide real-world examples, case studies, and practical applications
-5. **Be comprehensive** - Give detailed, well-structured responses with bullet points, numbered lists, and clear organization
-6. **Provide sources** - Mention relevant sources, studies, or organizations they can reference
-7. **Be encouraging and supportive** - Students need confidence and motivation
+4. **Generate study notes** - When asked, create detailed, well-organized notes they can include in their project documentation
+5. **Suggest relevant images** - When appropriate, describe visual aids, diagrams, charts, or images that would enhance their project
+6. **Give specific examples** - Provide real-world examples, case studies, and practical applications
+7. **Be comprehensive** - Give detailed, well-structured responses with bullet points, numbered lists, and clear organization
+8. **Provide sources** - Mention relevant sources, studies, or organizations they can reference
+9. **Be encouraging and supportive** - Students need confidence and motivation
+10. **Be highly interactive** - Ask clarifying questions, probe deeper, and engage actively with the student
 
 ZIMSEC School-Based Project stages:
 - Stage 1: Problem Identification - Help identify problems, write problem statements and project titles
@@ -73,14 +76,23 @@ ZIMSEC School-Based Project stages:
 - Stage 6: Evaluation and Recommendations - Help evaluate outcomes and write recommendations
 
 How to help students:
-- **When asked to write**: Write it for them! Provide complete, well-written content
-- **When asked for research**: Provide comprehensive research with details, facts, and examples
-- **When asked for ideas**: Generate multiple creative, practical ideas
+- **When asked to write**: Write it for them! Provide complete, well-written content ready to copy into their project
+- **When asked for research**: Provide comprehensive research with details, facts, examples, and data
+- **When asked for ideas**: Generate multiple creative, practical ideas with explanations
 - **When asked for help**: Provide step-by-step guidance with specific examples
+- **When asked for notes**: Create detailed study notes formatted for inclusion in their project
+- **When discussing topics**: Suggest relevant visual aids (charts, diagrams, images) and describe what they should show
 - **Keep responses detailed but readable** - Use formatting, bullet points, and clear structure
 - **Be practical** - Focus on ZIMSEC-appropriate content that will score well
+- **Be conversational** - Chat naturally, ask follow-up questions, show interest
 
-Remember: Your goal is to help students complete excellent projects by providing them with all the information, research, and content they need!
+Commands students can use:
+- "generate notes on [topic]" - Create detailed study notes
+- "suggest images for [topic]" - Recommend visual aids and describe what they should show
+- "write [section]" - Write complete project content
+- "research [topic]" - Provide comprehensive research findings
+
+Remember: Your goal is to help students complete excellent projects by being their active, engaged research partner who provides all the information, research, content, and visual suggestions they need!
 
 Current conversation context will be provided with each message."""
 
@@ -140,13 +152,19 @@ Current conversation context will be provided with each message."""
             # Clear any existing project data
             session_manager.clear_session(user_id)
             
-            # Initialize new project
+            # Get user name from database
+            from database.external_db import get_user_registration
+            user_data = get_user_registration(user_id)
+            student_name = f"{user_data.get('name', 'Student')}" if user_data else "Student"
+            
+            # Initialize new project with user name from database
             project_data = {
                 'active': True,
                 'mode': 'project_assistant',
                 'created_at': datetime.now().isoformat(),
                 'conversation_history': [],
-                'awaiting': 'student_name'
+                'student_name': student_name,  # Save name from database
+                'awaiting': 'subject'  # Skip name collection, go to subject
             }
             self._save_project_data(user_id, project_data)
             
@@ -154,13 +172,13 @@ Current conversation context will be provided with each message."""
             session_manager.set_session_data(user_id, {
                 'mode': 'project_assistant',
                 'active': True,
-                'awaiting': 'student_name'
+                'awaiting': 'subject'
             })
             
-            message = "🎓 *Welcome! I'm your AI Research Assistant*\n\n"
+            message = f"🎓 *Welcome, {student_name}! I'm your AI Research Assistant*\n\n"
             message += "I'll help you complete an excellent ZIMSEC School-Based Project by doing research, writing content, and providing complete guidance.\n\n"
-            message += "Let's start by getting to know you.\n\n"
-            message += "📝 *What is your name?*"
+            message += "📚 *Which subject is this School-Based Project for?*\n\n"
+            message += "Examples: Geography, Home Economics, Design & Technology, Agriculture, Business Studies, etc."
             
             self.whatsapp_service.send_message(user_id, message)
             
@@ -364,8 +382,11 @@ Current conversation context will be provided with each message."""
                 self._save_project_to_database(user_id, project_data)
                 logger.info(f"Auto-saved project to database for {user_id}")
             
+            # Clean formatting for WhatsApp (convert ** to *)
+            clean_response = self._clean_whatsapp_formatting(ai_response)
+            
             # Send AI response to user
-            self.whatsapp_service.send_message(user_id, ai_response)
+            self.whatsapp_service.send_message(user_id, clean_response)
             
         except Exception as e:
             logger.error(f"Error in conversation for {user_id}: {e}", exc_info=True)
@@ -409,11 +430,14 @@ Current conversation context will be provided with each message."""
 
 **Your Response (as the teacher):**
 Remember to:
-1. Guide with questions, don't do the work
-2. Be encouraging and supportive
-3. Keep it concise (2-3 paragraphs max for WhatsApp)
-4. Focus on ZIMSEC standards
-5. Use simple, clear language"""
+1. DO THE WORK for them - provide complete, ready-to-use content
+2. Be comprehensive and detailed - give them everything they need
+3. Be encouraging and supportive - build their confidence
+4. Be interactive - ask follow-up questions to probe deeper
+5. Suggest visual aids when appropriate (diagrams, charts, images)
+6. Keep it readable for WhatsApp - use formatting, bullet points, clear structure
+7. Focus on ZIMSEC standards and scoring criteria
+8. Use simple, clear language"""
             
             # Generate response from Gemini
             response = self.gemini_model.generate_content(full_prompt)
@@ -429,6 +453,14 @@ Remember to:
         except Exception as e:
             logger.error(f"Error getting Gemini response for {user_id}: {e}", exc_info=True)
             return self._get_fallback_response(message_text, project_data)
+    
+    def _clean_whatsapp_formatting(self, text: str) -> str:
+        """Clean formatting for WhatsApp - convert double asterisks to single for bold"""
+        import re
+        # Replace **text** with *text* (WhatsApp bold format)
+        # Use a regex to avoid replacing single asterisks
+        cleaned = re.sub(r'\*\*([^\*]+?)\*\*', r'*\1*', text)
+        return cleaned
     
     def _get_fallback_response(self, message_text: str, project_data: dict) -> str:
         """Comprehensive fallback responses when Gemini AI is unavailable"""
