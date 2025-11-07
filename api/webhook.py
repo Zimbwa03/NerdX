@@ -1422,7 +1422,7 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
 
         # Handle specific subject menu selections first (most specific patterns first)
         if selection_id == 'subject_ordinary_combined_science':
-            handle_combined_science_menu(user_id)
+            combined_science_handler.handle_button_callback(user_id, "combined_science")
         elif selection_id == 'subject_ordinary_mathematics':
             handle_ordinary_mathematics_menu(user_id)
         elif selection_id == 'subject_ordinary_english':
@@ -1437,7 +1437,7 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         elif selection_id.startswith('subject_ordinary_'):
             subject_name = selection_id.replace('subject_ordinary_', '').replace('_', ' ').title()
             if subject_name == 'Combined Science':
-                handle_combined_science_menu(user_id)
+                combined_science_handler.handle_button_callback(user_id, "combined_science")
             elif subject_name == 'Mathematics':
                 handle_ordinary_mathematics_menu(user_id)
             elif subject_name == 'English':
