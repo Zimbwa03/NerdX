@@ -51,6 +51,20 @@ PostgreSQL for production data storage with connection via DATABASE_URL environm
 
 # Recent Changes (November 2025)
 
+## Combined Science Teacher Feature (November 7, 2025)
+Implemented comprehensive Combined Science module with dual routes - Teacher mode and Practice mode:
+- **Teacher Mode**: Professional AI-powered instruction using Gemini (gemini-2.0-flash-exp) for Biology, Chemistry, and Physics
+  - **Personalized Teaching**: Conversational AI that adapts to student's grade level (Form 1-2, O-Level, A-Level)
+  - **Subject Selection**: Choose from Biology (🧬), Chemistry (⚗️), or Physics (⚛️)
+  - **Topic Management**: Students can choose specific topics, request random topics, or get suggestions
+  - **Interactive Lessons**: Real-time conversational teaching with examples, analogies, and real-world applications
+  - **PDF Note Generation**: Automatically generates comprehensive, personalized PDF study notes on demand
+- **Practice Mode**: Connects to existing Combined Science quiz infrastructure for Biology, Chemistry, and Physics practice questions
+- **PDF Note Structure**: Professional ZIMSEC-style notes with title, subject badge (color-coded), grade level, learning objectives, key concepts, detailed explanations, real-world applications, summary, revision schedule, and references
+- **Architecture**: Modular design with `CombinedScienceTeacherService`, `ScienceNotesPDFGenerator`, and `CombinedScienceHandler`
+- **Smart Fallbacks**: Comprehensive fallback responses with detailed frameworks when Gemini AI is unavailable
+- **WhatsApp Integration**: Button navigation, text message routing, PDF document delivery via WhatsApp Business API
+
 ## LaTeX Conversion System
 Added comprehensive LaTeX to readable Unicode converter (`utils/latex_converter.py`) that transforms mathematical expressions into user-friendly text:
 - Converts fractions: `\frac{a}{b}` → `(a)/(b)`

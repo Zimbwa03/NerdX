@@ -111,6 +111,9 @@ english_handler = EnglishHandler(whatsapp_service, english_service)
 from handlers.project_assistant_handler import ProjectAssistantHandler
 project_assistant_handler = ProjectAssistantHandler()
 
+# Initialize Combined Science handler
+from handlers.combined_science_handler import combined_science_handler
+
 # Initialize utilities
 rate_limiter = RateLimiter()
 question_cache = QuestionCacheService()
@@ -1036,6 +1039,9 @@ Don't worry - no charges were made to your account."""
             handle_audio_chat_message(user_id, message_text)
         elif session_type == 'project_assistant':
             project_assistant_handler.handle_project_message(user_id, message_text)
+        elif combined_science_handler.handle_message(user_id, message_text):
+            # Combined Science handler processed the message
+            pass
         else:
             # CRITICAL FIX: Don't automatically send main menu - it causes message chains
             # Only send menu if user explicitly requests it
@@ -1304,9 +1310,8 @@ def send_main_menu(user_id: str, user_name: str = None):
         welcome_text += f"┌─────────────────────┐\n"
         welcome_text += f"│  📚 *STUDY SUBJECTS*  │\n"
         welcome_text += f"└─────────────────────┘\n"
-        welcome_text += f"🧬 Biology        ⚗️ Chemistry\n"
-        welcome_text += f"⚡ Physics        📐 Mathematics\n"
-        welcome_text += f"📝 English        🎓 Project Help\n\n"
+        welcome_text += f"🔬 Combined Science  📐 Mathematics\n"
+        welcome_text += f"📝 English           🎓 Project Help\n\n"
 
         # Smart features section
         welcome_text += f"┌─────────────────────┐\n"
@@ -1506,6 +1511,12 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
             project_assistant_handler.handle_continue_project(user_id)
         elif selection_id == 'project_save_exit':
             project_assistant_handler.handle_save_and_exit(user_id)
+        
+        # Combined Science Callbacks
+        elif combined_science_handler.handle_button_callback(user_id, selection_id):
+            # Handler returns True if it processed the callback
+            pass
+        
         elif selection_id == 'audio_chat_menu':
             # Track audio chat feature usage
             analytics_tracker.track_feature_usage(
