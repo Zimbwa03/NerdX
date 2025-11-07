@@ -89,6 +89,16 @@ Added comprehensive AI-powered Project Assistant (`handlers/project_assistant_ha
 ## Security Improvements
 Removed API key printing from console logs in `database/external_db.py` to prevent credential exposure.
 
+## WhatsApp Throttling & Ban Prevention
+Implemented intelligent throttling system aligned with WhatsApp Business API 2025 rate limits:
+- **Rate Limits**: 3-second minimum delay, 10 messages/minute (matches WhatsApp's 6-second pair rate)
+- **Critical Message Bypass**: ALL legitimate user interactions (quiz answers, menu selections, payments, registration) bypass throttling
+- **Quality Monitoring**: Real-time tracking of complaint rates, response rates, engagement scores
+- **Smart Detection**: Centralized `_is_critical_user_response()` method identifies 100+ message patterns that should never be blocked
+- **Lock Mechanism**: Prevents concurrent message sends with automatic cleanup
+- **Emergency Override**: `DISABLE_WHATSAPP_THROTTLE` environment variable for development testing
+- **Comprehensive Documentation**: See `docs/WHATSAPP_THROTTLING_GUIDE.md` for complete guide
+
 ## Architecture Decisions
 - Text solutions are always sent, even when image solutions are available
 - LaTeX conversion applied to all question text, answers, solutions, and explanations
@@ -96,3 +106,4 @@ Removed API key printing from console logs in `database/external_db.py` to preve
 - Comprehension passages handle both short (<4000 chars) and long passages correctly
 - Project Assistant uses modular service architecture with clear separation of concerns
 - Web research is FREE during beta (0 credits) as it provides guidance only, not actual API search results
+- Throttling aggressively limits non-critical messages but NEVER blocks legitimate user interactions
