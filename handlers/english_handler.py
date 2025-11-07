@@ -1921,7 +1921,7 @@ IMPORTANT:
  
             if existing_session:
                 session_type = existing_session.get('session_type')
-                if session_type == 'english_grammar_meta':
+                if session_type == 'english_grammar':
                     last_question_type = existing_session.get('last_question_type')
                     intro_sent = existing_session.get('intro_sent', False)
  
