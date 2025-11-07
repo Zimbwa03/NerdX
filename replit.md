@@ -78,13 +78,21 @@ Fixed critical bugs in English Comprehension module (`handlers/english_handler.p
 ## ZIMSEC Project Assistant Feature
 Added comprehensive AI-powered Project Assistant (`handlers/project_assistant_handler.py`, `services/project_assistant_service.py`) to guide students through School-Based Projects:
 - **6-Stage Workflow**: Complete implementation of official ZIMSEC SBP stages (Problem Identification → Investigation → Ideas → Development → Presentation → Evaluation)
-- **Socratic Tutoring**: Uses guided questions to help students learn and discover solutions independently
+- **Socratic Tutoring**: Uses Gemini AI (gemini-2.0-flash-exp) to generate intelligent, context-aware tutoring responses with fallback to basic questions
 - **Research Guidance**: FREE beta feature providing structured guidance for literature review and existing solution research (`utils/web_search_tool.py`)
 - **Image Generation**: Gemini 2.5 Flash Image integration for creating diagrams, posters, and visual aids (2 credits per image, ~$0.04)
 - **Document Creation**: Professional Word (.docx) document generation for final submission using python-docx (100 credits, $2.00)
-- **Session Management**: Full progress tracking and resume capability across all 6 stages
+- **Session Management**: Full progress tracking and resume capability across all 6 stages with proper `clear_session()` method
 - **Credit Confirmation**: Mandatory user confirmation before any credit-deducting action
 - **UI Changes**: Replaced Audio Chat button with Project Assistant in main menu (Audio Chat code preserved but hidden)
+
+## Project Assistant Bug Fixes (November 7, 2025)
+Fixed critical SessionManager error and added Gemini AI integration for intelligent tutoring:
+- **Critical Fix**: Added missing `clear_session()` method to SessionManager class (`utils/session_manager.py`) that was causing AttributeError when users tried to start new projects
+- **Type Safety**: Added comprehensive None-checking throughout `project_assistant_service.py` by using `or {}` fallbacks when calling `_get_project_data()` to prevent crashes from missing session state
+- **Gemini AI Integration**: Integrated Gemini AI (gemini-2.0-flash-exp) for Socratic tutoring in `_handle_general_conversation()` method with intelligent, context-aware responses
+- **Fallback System**: Proper error handling ensures basic Socratic questions are used if Gemini API is unavailable or fails
+- **Verified**: Application logs confirm "Project Assistant initialized with Gemini AI for Socratic tutoring"
 
 ## Security Improvements
 Removed API key printing from console logs in `database/external_db.py` to prevent credential exposure.
