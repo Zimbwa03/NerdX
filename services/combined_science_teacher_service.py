@@ -358,10 +358,11 @@ Current conversation context will be provided with each message."""
                 # Clean formatting for WhatsApp (convert ** to *)
                 response_text = self._clean_whatsapp_formatting(response_text)
                 
-                # Add note generation button
+                # Add helpful instructions
                 message = f"📖 *Topic: {topic}*\n\n{response_text}\n\n"
                 message += "─────────────────────\n"
-                message += "💬 Ask me questions or type *'generate notes'* when ready for PDF notes!"
+                message += "💬 Ask me questions or type *'generate notes'* when ready for PDF notes!\n"
+                message += "📤 Type *'exit'* to leave Teacher Mode"
                 
                 self.whatsapp_service.send_message(user_id, message)
             else:
@@ -374,6 +375,17 @@ Current conversation context will be provided with each message."""
         """Handle ongoing teaching conversation"""
         try:
             session_data = session_manager.get_data(user_id, 'science_teacher') or {}
+            
+            # Check if user wants to exit/leave Teacher Mode (exact matches or specific phrases only)
+            message_lower = message_text.lower().strip()
+            exit_commands = [
+                'exit', 'leave', 'stop', 'quit', 'back', 
+                'main menu', 'go back', 'return', 'exit teacher mode',
+                'leave teacher mode', 'go to main menu', 'back to menu'
+            ]
+            if message_lower in exit_commands:
+                self.exit_teacher_mode(user_id)
+                return
             
             # Check if user wants to generate notes
             if any(keyword in message_text.lower() for keyword in ['generate notes', 'save notes', 'create notes', 'make notes', 'notes pdf']):
