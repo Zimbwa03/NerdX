@@ -44,6 +44,8 @@ class WhatsAppService:
         and user-requested content.
         
         Critical messages are responses to user actions and should NEVER be blocked.
+        
+        IMPORTANT: Uses specific phrase matching to avoid false positives from generic words.
         """
         message_lower = message.lower()
         normalized_message = message_lower.strip()
@@ -52,79 +54,99 @@ class WhatsAppService:
         if normalized_message.startswith('_') or normalized_message.startswith('/'):
             return True
         
-        # Comprehensive critical message patterns
-        critical_patterns = [
+        # Check for specific critical phrases (more precise matching)
+        critical_phrases = [
             # === REGISTRATION & ONBOARDING ===
-            'consent', 'welcome', 'registration', 'first name', 'surname', 'date of birth',
-            'referral code', 'invalid date format', 'please use', 'enter a valid',
+            'consent', 'welcome to nerdx', 'registration', 'first name', 'surname', 
+            'date of birth', 'referral code', 'invalid date', 'enter a valid',
             'thank you for your consent', 'registration step', 'confirm registration',
             'nerdx id', 'provide your first name', 'provide your surname',
             
             # === PAYMENT & CREDITS ===
-            'paynow', 'payment', 'ecocash', 'credits', 'package', 'amount',
-            'payment method', 'phone number', 'provide your', 'instant payment',
-            'payment link', 'complete payment', 'payment ready', 'payment details',
-            'buy credits', 'purchase', 'transaction', 'receipt',
+            'paynow', 'payment method', 'ecocash', 'buy credits', 'select a package',
+            'instant payment', 'payment link', 'complete payment', 'payment ready', 
+            'payment details', 'purchase', 'transaction confirmed', 'receipt',
+            '+100 credits', '-2 credits', 'credit balance',
             
             # === QUIZ & QUESTIONS ===
-            'correct', 'incorrect', 'well done', 'great job', 'try again',
+            '✅ correct', '❌ incorrect', 'well done', 'great job', 'try again',
             'the answer is', 'answer:', 'solution:', 'explanation:',
-            'question', 'next question', 'here is your question',
-            'difficulty:', 'score:', 'streak:', 'xp', 'points',
+            'next question', 'here is your question', 'here\'s your question',
+            'question 1', 'question 2', 'question 3', 'question 4', 'question 5',
+            'difficulty:', 'your score:', 'streak:', 'xp points', 'points earned',
             
             # === SUBJECT SELECTION ===
-            'mathematics', 'biology', 'chemistry', 'physics', 'english',
-            'combined science', 'choose subject', 'select subject',
-            'o-level', 'zimsec', 'syllabus',
+            'choose a subject', 'select a subject', 'choose subject', 'select subject',
+            'choose mathematics', 'select mathematics', 'mathematics questions',
+            'biology', 'chemistry', 'physics', 'english',
+            'combined science', 'o-level', 'zimsec', 'syllabus',
             
             # === DIFFICULTY & OPTIONS ===
-            'easy', 'medium', 'hard', 'difficulty', 'level',
-            'select difficulty', 'choose level', 'practice', 'exam mode',
+            'select difficulty', 'choose difficulty', 'difficulty level',
+            'easy questions', 'medium questions', 'hard questions',
+            'practice mode', 'exam mode', 'timed mode',
             
-            # === USER REQUESTS ===
-            'hint', '💡', 'show answer', 'explain', 'solution', 'help',
-            'how to', 'what is', 'why', 'can you', 'please',
+            # === USER REQUESTS (high-value interactions) ===
+            'hint', '💡', 'show answer', 'explain this', 'solution please',
+            'help me', 'how to solve', 'what is the', 'why is',
             
             # === MENU & NAVIGATION ===
-            'main menu', 'back to menu', 'choose', 'select',
-            'option', 'available', 'features', 'dashboard',
+            'main menu', 'back to menu', 'choose an option', 'select an option',
+            'available topics', 'available features', 'dashboard',
             
             # === PROJECT ASSISTANT ===
-            'project', 'school-based', 'research', 'investigation',
-            'socratic', 'guidance', 'stage', 'topic',
-            'image generation', 'document', 'word', 'pdf',
+            'project assistant', 'school-based project', 'research guidance',
+            'investigation stage', 'socratic method', 'guidance for',
+            'image generation', 'generate image', 'create document',
+            'document created', 'word document', 'pdf document',
             
             # === COMPREHENSION ===
-            'comprehension', 'passage', 'reading', 'literature',
-            'extract', 'text', 'paragraph',
+            'comprehension passage', 'read the passage', 'reading comprehension',
+            'literature extract', 'text analysis',
             
             # === GRAPH PRACTICE ===
-            'graph', 'plot', 'function', 'equation', 'expression',
-            'type your expression', 'plot your own', 'coordinate',
+            'type your expression', 'plot your graph', 'plot the graph',
+            'graph generated', 'equation:', 'function:', 'coordinate',
             
             # === EXAM MODE ===
-            'exam', 'test', 'assessment', 'timed', 'timer',
-            'past paper', 'specimen', 'revision',
+            'exam started', 'exam mode', 'timed test', 'timer:',
+            'past paper', 'specimen paper', 'question 1 of',
             
             # === FEEDBACK & RESULTS ===
-            'results', 'performance', 'statistics', 'progress',
-            'leaderboard', 'rank', 'achievements',
+            'your results', 'your performance', 'your statistics', 
+            'your progress', 'leaderboard', 'your rank', 'achievements',
             
             # === ERROR MESSAGES ===
-            'error', 'sorry', 'apologize', 'try again',
-            'something went wrong', 'please retry',
+            'error occurred', 'sorry,', 'apologize', 
+            'something went wrong', 'please retry', 'please try',
             
-            # === INTERACTIVE RESPONSES ===
-            '✅', '❌', '🎯', '📚', '💯', '🔥',
-            'yes', 'no', 'continue', 'skip', 'next',
+            # === INTERACTIVE RESPONSES (emojis are always critical) ===
+            '✅', '❌', '🎯', '📚', '💯', '🔥', '💡', '🎉',
             
-            # === SPECIAL FLOWS ===
-            'ready', 'start', 'begin', 'let\'s', 'okay',
-            'confirm', 'cancel', 'proceed', 'back'
+            # === INTERACTIVE BUTTONS & CONFIRMATIONS ===
+            '✅ yes', '❌ no', 'yes, continue', 'no, skip',
+            'confirm your', 'cancel this', 'proceed to', 'go back'
         ]
         
-        # Check if any critical pattern is in the message
-        return any(pattern in message_lower for pattern in critical_patterns)
+        # Check for any critical phrase match
+        for phrase in critical_phrases:
+            if phrase in message_lower:
+                return True
+        
+        # Check for specific single-word critical indicators (contextual)
+        # These are only critical in specific contexts, not standalone
+        contextual_patterns = [
+            ('answer:', True),  # "answer: X" is always critical
+            ('question:', True),  # "question: X" is always critical
+            ('score:', True),  # "score: X" is always critical
+            ('hint:', True),  # "hint: X" is always critical
+        ]
+        
+        for pattern, is_critical in contextual_patterns:
+            if pattern in message_lower:
+                return is_critical
+        
+        return False
     
     def send_message(self, to: str, message: str) -> bool:
         """Send a text message to a WhatsApp user with enhanced error handling and throttling"""
