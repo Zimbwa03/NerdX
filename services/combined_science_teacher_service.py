@@ -126,7 +126,7 @@ Current conversation context will be provided with each message."""
                 {"text": "🔙 Main Menu", "callback_data": "main_menu"}
             ]
             
-            self.whatsapp_service.send_interactive_buttons(user_id, menu_text, buttons)
+            self.whatsapp_service.send_interactive_message(user_id, menu_text, buttons)
             
         except Exception as e:
             logger.error(f"Error showing Combined Science menu for {user_id}: {e}")
@@ -157,7 +157,7 @@ Current conversation context will be provided with each message."""
                 {"text": "🔙 Back", "callback_data": "combined_science"}
             ]
             
-            self.whatsapp_service.send_interactive_buttons(user_id, message, buttons)
+            self.whatsapp_service.send_interactive_message(user_id, message, buttons)
             
         except Exception as e:
             logger.error(f"Error starting teacher mode for {user_id}: {e}")
@@ -190,7 +190,7 @@ Current conversation context will be provided with each message."""
                 {"text": "🔙 Back", "callback_data": "science_teacher_mode"}
             ]
             
-            self.whatsapp_service.send_interactive_buttons(user_id, message, buttons)
+            self.whatsapp_service.send_interactive_message(user_id, message, buttons)
             
         except Exception as e:
             logger.error(f"Error selecting subject for {user_id}: {e}")
@@ -218,7 +218,7 @@ Current conversation context will be provided with each message."""
                 {"text": "🔙 Back", "callback_data": "science_teacher_mode"}
             ]
             
-            self.whatsapp_service.send_interactive_buttons(user_id, message, buttons)
+            self.whatsapp_service.send_interactive_message(user_id, message, buttons)
             
         except Exception as e:
             logger.error(f"Error selecting grade level for {user_id}: {e}")

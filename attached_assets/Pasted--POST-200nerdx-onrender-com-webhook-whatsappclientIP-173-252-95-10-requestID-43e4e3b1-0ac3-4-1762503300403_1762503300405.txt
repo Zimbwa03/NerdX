@@ -1,0 +1,16 @@
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.95.10" requestID="43e4e3b1-0ac3-4f02" responseTimeMS=2 responseBytes=247 userAgent="facebookexternalua"
+172.71.150.31 - - [07/Nov/2025:08:12:01 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+2025-11-07 08:12:39,395 - api.webhook - INFO - 🔍 Received WhatsApp message: {'context': {'from': '263781206192', 'id': 'wamid.HBgMMjYzNzc0ODIzMTY5FQIAERgSNkRCNEJCQkMwNTI3RTY3REJEAA=='}, 'from': '263774823169', 'id': 'wamid.HBgMMjYzNzc0ODIzMTY5FQIAEhggQUM5RjEyNjM5RkNCNzAxNTcyQUZBQjMxQjgwOUExRjUA', 'timestamp': '1762503158', 'type': 'interactive', 'interactive': {'type': 'list_reply', 'list_reply': {'id': 'subject_ordinary_combined_science', 'title': '🧬 Combined Science', 'description': 'Select 🧬 Combined Science'}}}
+2025-11-07 08:12:39,395 - api.webhook - INFO - 🔍 User ID: 263774823169, Type: interactive
+2025-11-07 08:12:39,395 - api.webhook - INFO - Background processing interactive message from 263774823169
+2025-11-07 08:12:39,395 - api.webhook - INFO - List selection from 263774823169: subject_ordinary_combined_science
+2025-11-07 08:12:39,396 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+2025-11-07 08:12:39,655 - services.combined_science_teacher_service - ERROR - Error showing Combined Science menu for 263774823169: 'WhatsAppService' object has no attribute 'send_interactive_buttons'
+2025-11-07 08:12:39,655 - services.quality_monitor - INFO - WhatsApp throttle override active - allowing message despite quality metrics
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.95.5" requestID="6ff3c508-b1c3-4bf2" responseTimeMS=2 responseBytes=247 userAgent="facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.95.116" requestID="041291f7-31fe-4d08" responseTimeMS=776 responseBytes=247 userAgent="facebookexternalua"
+2025-11-07 08:12:40,166 - services.whatsapp_service - INFO - Message sent successfully to 263774823169
+172.71.150.22 - - [07/Nov/2025:08:12:40 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+172.71.150.27 - - [07/Nov/2025:08:12:40 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.95.10" requestID="4f54c7b6-17d9-4ddb" responseTimeMS=4 responseBytes=247 userAgent="facebookexternalua"
+172.69.65.203 - - [07/Nov/2025:08:12:41 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
