@@ -1,0 +1,44 @@
+ebookexternalua"
+2025-11-07 05:31:28,453 - api.webhook - INFO - 🔍 Received WhatsApp message: {'context': {'from': '263781206192', 'id': 'wamid.HBgMMjYzNzg1NDk0NTk0FQIAERgSQUYxRUY5QTVFMzRFODI2QjYyAA=='}, 'from': '263785494594', 'id': 'wamid.HBgMMjYzNzg1NDk0NTk0FQIAEhgUMkFBRTZFNzMzNDc0NzA2OUUwODgA', 'timestamp': '1762493487', 'type': 'interactive', 'interactive': {'type': 'button_reply', 'button_reply': {'id': 'project_new', 'title': '🚀 Start New Project'}}}
+2025-11-07 05:31:28,453 - api.webhook - INFO - 🔍 User ID: 263785494594, Type: interactive
+2025-11-07 05:31:28,453 - api.webhook - INFO - Background processing interactive message from 263785494594
+2025-11-07 05:31:28,453 - api.webhook - INFO - Button interaction from 263785494594: project_new
+2025-11-07 05:31:28,453 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+2025-11-07 05:31:28,714 - services.project_assistant_service - ERROR - Error starting new project for 263785494594: 'SessionManager' object has no attribute 'clear_session'
+Traceback (most recent call last):
+  File "/opt/render/project/src/services/project_assistant_service.py", line 134, in start_new_project
+    self._clear_project_data(user_id)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/opt/render/project/src/services/project_assistant_service.py", line 773, in _clear_project_data
+    session_manager.clear_session(user_id)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'SessionManager' object has no attribute 'clear_session'
+2025-11-07 05:31:28,717 - handlers.project_assistant_handler - ERROR - Error starting new project for 263785494594: 'SessionManager' object has no attribute 'clear_session'
+Traceback (most recent call last):
+  File "/opt/render/project/src/handlers/project_assistant_handler.py", line 29, in handle_start_new_project
+    project_service.start_new_project(user_id)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/opt/render/project/src/services/project_assistant_service.py", line 134, in start_new_project
+    self._clear_project_data(user_id)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/opt/render/project/src/services/project_assistant_service.py", line 773, in _clear_project_data
+    session_manager.clear_session(user_id)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'SessionManager' object has no attribute 'clear_session'
+2025-11-07 05:31:28,718 - services.quality_monitor - INFO - WhatsApp throttle override active - allowing message despite quality metrics
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.107.6" requestID="b72089cf-e870-4b7d" responseTimeMS=895 responseBytes=247 userAgent="facebookexternalua"
+2025-11-07 05:31:29,341 - services.whatsapp_service - INFO - Message sent successfully to 263785494594
+172.71.151.2 - - [07/Nov/2025:05:31:29 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.107.115" requestID="302fb92b-df9e-4dab" responseTimeMS=5 responseBytes=247 userAgent="facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.79.13" requestID="79a981db-3387-4fc7" responseTimeMS=3 responseBytes=247 userAgent="facebookexternalua"
+172.70.38.200 - - [07/Nov/2025:05:31:30 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+198.41.227.98 - - [07/Nov/2025:05:31:30 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.107.6" requestID="64aca2a4-53bd-417c" responseTimeMS=2 responseBytes=247 userAgent="facebookexternalua"
+172.71.190.179 - - [07/Nov/2025:05:31:31 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.107.2" requestID="de3f4bde-b0f8-495d" responseTimeMS=286 responseBytes=247 userAgent="facebookexternalua"
+2025-11-07 05:31:37,322 - api.webhook - INFO - 🔍 Received WhatsApp message: {'context': {'from': '263781206192', 'id': 'wamid.HBgMMjYzNzg1NDk0NTk0FQIAERgSQUYxRUY5QTVFMzRFODI2QjYyAA=='}, 'from': '263785494594', 'id': 'wamid.HBgMMjYzNzg1NDk0NTk0FQIAEhgUMkEyMTI0NTY2NkExQjlFMjU2QkIA', 'timestamp': '1762493496', 'type': 'interactive', 'interactive': {'type': 'button_reply', 'button_reply': {'id': 'project_how_it_works', 'title': '💡 How It Works'}}}
+2025-11-07 05:31:37,322 - api.webhook - INFO - 🔍 User ID: 263785494594, Type: interactive
+2025-11-07 05:31:37,322 - api.webhook - INFO - Background processing interactive message from 263785494594
+2025-11-07 05:31:37,322 - api.webhook - INFO - Button interaction from 263785494594: project_how_it_works
+2025-11-07 05:31:37,322 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+172.71.151.45 - - [07/Nov/2025:05:31:37 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
