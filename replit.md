@@ -94,6 +94,16 @@ Fixed critical SessionManager error and added Gemini AI integration for intellig
 - **Fallback System**: Proper error handling ensures basic Socratic questions are used if Gemini API is unavailable or fails
 - **Verified**: Application logs confirm "Project Assistant initialized with Gemini AI for Socratic tutoring"
 
+## English Comprehension PDF System (November 7, 2025)
+Converted comprehension passages from WhatsApp text messages to professional PDF documents:
+- **PDF Generator**: Created `ComprehensionPDFGenerator` utility using ReportLab for professional exam-style PDF generation
+- **ZIMSEC Branding**: Professional header, formatted passages, questions with mark allocations
+- **WhatsApp Integration**: Sends PDFs as documents via WhatsApp Business API (already supported)
+- **Answer Bot Intact**: Students still receive answers via WhatsApp messages using "Show Answers" button
+- **Automatic Cleanup**: PDFs cleaned up immediately after sending (2s delay) and old files removed (>24 hours)
+- **Benefits**: Solves WhatsApp message length limits, better reading experience, offline access
+- **Scalability**: Local PDF generation handles high volume efficiently
+
 ## Security Improvements
 Removed API key printing from console logs in `database/external_db.py` to prevent credential exposure.
 
