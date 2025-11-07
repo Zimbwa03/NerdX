@@ -111,3 +111,26 @@ Added simple text commands to exit Teacher Mode instead of requiring button clic
 - **User Experience**: Added reminder text to teaching sessions: "📤 Type 'exit' to leave Teacher Mode"
 - **Architect Reviewed**: Confirmed exact phrase matching prevents conversation disruptions while providing convenient exit options
 - **Bug Fix**: Fixed crash when exiting - corrected `session_manager.clear_session()` method signature from 2 parameters to 1 parameter (removed unused `'science_teacher'` argument)
+
+## Project Assistant Enhancements (November 7, 2025)
+Comprehensive improvements to make Project Assistant more helpful, interactive, and user-friendly:
+- **Automatic Name Retrieval**: No longer asks for student name - retrieves it directly from database using `get_user_registration(user_id)`
+  - Skips manual name collection step entirely
+  - Goes directly to subject selection
+  - Gracefully defaults to "Student" if database lookup fails
+- **WhatsApp Formatting Fix**: Converted Gemini AI's Markdown `**bold**` to WhatsApp `*bold*` format
+  - Added `_clean_whatsapp_formatting()` method (same approach as Combined Science Teacher)
+  - Applied to all AI responses before sending to students
+  - Eliminates formatting issues with double asterisks appearing in messages
+- **Enhanced AI System Prompt**: Made AI much more comprehensive and interactive
+  - AI now DO THE WORK for students: writes complete content, does research, provides ready-to-use materials
+  - Added capabilities: generate study notes, suggest visual aids (diagrams, charts, images)
+  - Emphasizes being conversational, asking follow-up questions, probing deeper
+  - Commands documented: "generate notes on [topic]", "suggest images for [topic]", "write [section]", "research [topic]"
+- **Improved Interactivity**: Updated AI response instructions
+  - Provide complete, detailed, ready-to-use content
+  - Suggest visual aids when appropriate
+  - Be highly interactive with follow-up questions
+  - Focus on ZIMSEC standards and scoring criteria
+- **User Benefits**: Students now get comprehensive research assistance with notes and image suggestions they can include in their projects
+- **Architect Reviewed**: All improvements verified - name retrieval works correctly, formatting cleanup eliminates `**` symbols, enhanced prompt aligns with user goals
