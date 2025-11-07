@@ -71,38 +71,53 @@ Provide clear, personalized teaching sessions — explaining any Combined Scienc
 - Adapt explanations to the student's level — use simpler terms for lower grades and deeper detail for advanced learners.
 
 ### Personalized Notes (PDF)
-Whenever the student requests "Generate notes" or "Save this lesson as notes," create detailed, well-organized notes for the topic in JSON format with this structure:
+Whenever the student requests "Generate notes" or "Save this lesson as notes," create VERY DETAILED, comprehensive notes for the topic in JSON format with this structure:
 
 {
   "title": "Topic title here",
   "subject": "Biology/Chemistry/Physics",
   "grade_level": "Form 2/O-Level/A-Level",
   "learning_objectives": [
-    "Objective 1",
-    "Objective 2",
-    "Objective 3"
+    "Detailed objective 1 with context",
+    "Detailed objective 2 with context",
+    "Detailed objective 3 with context",
+    "Detailed objective 4 with context"
   ],
   "key_concepts": {
-    "concept1": "Definition or explanation",
-    "concept2": "Definition or explanation"
+    "concept1": "Comprehensive definition with detailed explanation and examples",
+    "concept2": "Comprehensive definition with detailed explanation and examples",
+    "concept3": "Comprehensive definition with detailed explanation and examples",
+    "concept4": "Comprehensive definition with detailed explanation and examples",
+    "concept5": "Comprehensive definition with detailed explanation and examples"
   },
-  "detailed_explanation": "Step-by-step comprehensive explanation of the topic with examples",
+  "detailed_explanation": "VERY COMPREHENSIVE, LONG, step-by-step explanation of the topic. Include:
+  - Introduction with background context (2-3 paragraphs)
+  - Detailed breakdown of each component (multiple paragraphs per component)
+  - Step-by-step processes with explanations (be thorough)
+  - Multiple examples with full explanations
+  - Diagrams described in words
+  - Common misconceptions addressed
+  - Connections to related topics
+  - At least 500-800 words of detailed, well-structured content covering everything about the topic",
   "real_world_applications": [
-    "Application 1 with example",
-    "Application 2 with example"
+    "Detailed application 1 with full explanation of how it works in real life",
+    "Detailed application 2 with full explanation of how it works in real life",
+    "Detailed application 3 with full explanation of how it works in real life",
+    "Detailed application 4 with full explanation of how it works in real life"
   ],
-  "summary": "Key takeaways summarized clearly",
+  "summary": "Comprehensive summary of all key takeaways (3-4 paragraphs)",
   "revision_schedule": {
-    "day_3": "Review key concepts and definitions",
-    "day_7": "Practice applying concepts to real-world scenarios"
+    "day_3": "Detailed review plan for day 3 with specific topics to revisit",
+    "day_7": "Detailed practice plan for day 7 with specific exercises and concepts"
   },
   "references": [
-    "Source 1",
-    "Source 2"
+    "ZIMSEC Syllabus - Specific section",
+    "Relevant textbook chapters",
+    "Scientific sources"
   ]
 }
 
-Ensure that the notes are comprehensive enough for self-study but concise (2–4 pages when converted to PDF).
+CRITICAL: Make the notes VERY DETAILED with LONG, WELL-STRUCTURED TEXT. The "detailed_explanation" field should be comprehensive (500-800 words minimum), covering EVERYTHING about the topic in depth. Break down information thoroughly with multiple paragraphs. Students should be able to learn the entire topic from these notes alone.
 
 When a student says "generate notes", "save notes", "create notes", or similar, respond ONLY with valid JSON in the above format, nothing else.
 
@@ -340,6 +355,8 @@ Current conversation context will be provided with each message."""
                 initial_message = f"Start teaching {topic} to a {grade_level} student studying {subject}. Begin with a warm greeting and introduction to the topic."
                 
                 response_text = self._get_gemini_teaching_response(user_id, initial_message, session_data)
+                # Clean formatting for WhatsApp (convert ** to *)
+                response_text = self._clean_whatsapp_formatting(response_text)
                 
                 # Add note generation button
                 message = f"📖 *Topic: {topic}*\n\n{response_text}\n\n"
@@ -384,7 +401,9 @@ Current conversation context will be provided with each message."""
                 session_data['conversation_history'] = conversation_history[-20:]
                 session_manager.set_data(user_id, 'science_teacher', session_data)
                 
-                self.whatsapp_service.send_message(user_id, response_text)
+                # Clean formatting for WhatsApp (convert ** to *)
+                clean_response = self._clean_whatsapp_formatting(response_text)
+                self.whatsapp_service.send_message(user_id, clean_response)
             else:
                 self._send_fallback_response(user_id, message_text, session_data)
         
@@ -394,6 +413,14 @@ Current conversation context will be provided with each message."""
                 user_id,
                 "Sorry, I encountered an error. Please try again."
             )
+    
+    def _clean_whatsapp_formatting(self, text: str) -> str:
+        """Clean formatting for WhatsApp - convert double asterisks to single for bold"""
+        import re
+        # Replace **text** with *text* (WhatsApp bold format)
+        # Use a regex to avoid replacing single asterisks
+        cleaned = re.sub(r'\*\*([^\*]+?)\*\*', r'*\1*', text)
+        return cleaned
     
     def _get_gemini_teaching_response(self, user_id: str, message_text: str, session_data: dict) -> str:
         """Get teaching response from Gemini AI"""
@@ -583,7 +610,7 @@ Current conversation context will be provided with each message."""
             logger.error(f"Error sending fallback notes: {e}")
             self.whatsapp_service.send_message(
                 user_id,
-                f"*Notes Summary - {topic}*\n\n{json.dumps(notes_data, indent=2)}"
+                f"📚 *Study Notes on {topic}*\n\nI've prepared basic notes on this topic, but I'm having trouble sending the PDF. Please try requesting notes again in a few moments."
             )
     
     def exit_teacher_mode(self, user_id: str):
