@@ -75,16 +75,17 @@ Fixed critical bugs in English Comprehension module (`handlers/english_handler.p
 - **Data Standardization**: Standardized answer field naming to use `correct_answer` consistently throughout comprehension feature
 - **Enhanced Fallbacks**: Improved fallback question generation with proper formatting, educational explanations, and ZIMSEC-appropriate structure
 
-## ZIMSEC Project Assistant Feature
-Added comprehensive AI-powered Project Assistant (`handlers/project_assistant_handler.py`, `services/project_assistant_service.py`) to guide students through School-Based Projects:
-- **6-Stage Workflow**: Complete implementation of official ZIMSEC SBP stages (Problem Identification → Investigation → Ideas → Development → Presentation → Evaluation)
-- **Socratic Tutoring**: Uses Gemini AI (gemini-2.0-flash-exp) to generate intelligent, context-aware tutoring responses with fallback to basic questions
-- **Research Guidance**: FREE beta feature providing structured guidance for literature review and existing solution research (`utils/web_search_tool.py`)
-- **Image Generation**: Gemini 2.5 Flash Image integration for creating diagrams, posters, and visual aids (2 credits per image, ~$0.04)
-- **Document Creation**: Professional Word (.docx) document generation for final submission using python-docx (100 credits, $2.00)
-- **Session Management**: Full progress tracking and resume capability across all 6 stages with proper `clear_session()` method
-- **Credit Confirmation**: Mandatory user confirmation before any credit-deducting action
-- **UI Changes**: Replaced Audio Chat button with Project Assistant in main menu (Audio Chat code preserved but hidden)
+## ZIMSEC Project Assistant Feature - Conversational AI (November 7, 2025)
+Completely redesigned Project Assistant as a ChatGPT-style conversational AI chatbot:
+- **Conversational Interface**: Students chat naturally with Gemini AI (gemini-2.0-flash-exp) acting as a professional ZIMSEC teacher
+- **Professional System Prompt**: AI uses Socratic methodology to guide students without doing their work for them
+- **Conversation History**: Maintains context across multiple messages (last 50 messages) for intelligent tutoring
+- **Database Persistence**: Dual storage system (SQLite sessions + Supabase PostgreSQL) with auto-save every 10 messages
+- **Simple Navigation**: Only 4 buttons needed (New Project, Continue Project, Save & Exit, Main Menu)
+- **Error Resilience**: Comprehensive fallback responses when Gemini API is unavailable
+- **Natural UX**: No more rigid button-based workflow - students ask questions freely and get personalized guidance
+- **Project Tracking**: Automatically saves student name, subject, project title, and full conversation history
+- **Session Resume**: Projects can be continued across multiple days with full conversation context restored
 
 ## Project Assistant Bug Fixes (November 7, 2025)
 Fixed critical SessionManager error and added Gemini AI integration for intelligent tutoring:
@@ -104,17 +105,17 @@ Converted comprehension passages from WhatsApp text messages to professional PDF
 - **Benefits**: Solves WhatsApp message length limits, better reading experience, offline access
 - **Scalability**: Local PDF generation handles high volume efficiently
 
-## Project Assistant Button Fix & Database Persistence (November 7, 2025)
-Fixed non-working navigation buttons and implemented database persistence for multi-week projects:
-- **Button Handlers Fixed**: Added missing handlers in webhook.py for stage transitions (`project_stage_X`), stage review (`project_review_stage_X`), and save/exit (`project_save_exit`)
-- **Handler Methods**: Added `handle_advance_stage()`, `handle_review_stage()`, and `handle_save_and_exit()` to ProjectAssistantHandler
-- **Service Methods**: Implemented `advance_to_stage()`, `review_stage()`, and `save_and_exit()` with validation and error handling
-- **Database Persistence**: Created Supabase `user_projects` table with JSONB column to store complete project state
-- **Dual Storage**: Session (SQLite) for active work, Supabase (PostgreSQL) for long-term persistence
-- **Auto-Save**: Projects automatically saved to database on stage transitions and explicit save
-- **Auto-Load**: Projects automatically loaded from database when user continues work
-- **Data Safety**: Projects persist across server restarts and session expiry
-- **Table Structure**: User ID, project title, subject, current stage, JSONB project data, timestamps, completion status
+## Project Assistant Conversational AI Redesign (November 7, 2025)
+Pivoted from button-based structured workflow to natural conversational AI after button routing issues:
+- **Complete Rewrite**: Removed entire 6-stage button-based system (1000+ lines) and replaced with simple conversational flow
+- **Gemini Integration**: Uses gemini-2.0-flash-exp model with professional teacher system prompt for intelligent tutoring
+- **Simplified Handlers**: Reduced handler complexity by 80% - only handles chat messages and simple menu actions
+- **Webhook Cleanup**: Removed 15+ complex button handlers (project_stage_X, project_review_stage_X, etc.)
+- **Database Schema Maintained**: Still uses Supabase `user_projects` table with JSONB for conversation storage
+- **Auto-Save Logic**: Saves to database on project creation and every 10 messages (prevents data loss)
+- **Load/Resume**: Automatically restores full conversation history when continuing projects
+- **Fallback System**: Keyword-based responses when Gemini API unavailable
+- **Production Ready**: Architect-approved implementation with comprehensive error handling
 
 ## Security Improvements
 Removed API key printing from console logs in `database/external_db.py` to prevent credential exposure.
