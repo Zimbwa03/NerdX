@@ -104,6 +104,18 @@ Converted comprehension passages from WhatsApp text messages to professional PDF
 - **Benefits**: Solves WhatsApp message length limits, better reading experience, offline access
 - **Scalability**: Local PDF generation handles high volume efficiently
 
+## Project Assistant Button Fix & Database Persistence (November 7, 2025)
+Fixed non-working navigation buttons and implemented database persistence for multi-week projects:
+- **Button Handlers Fixed**: Added missing handlers in webhook.py for stage transitions (`project_stage_X`), stage review (`project_review_stage_X`), and save/exit (`project_save_exit`)
+- **Handler Methods**: Added `handle_advance_stage()`, `handle_review_stage()`, and `handle_save_and_exit()` to ProjectAssistantHandler
+- **Service Methods**: Implemented `advance_to_stage()`, `review_stage()`, and `save_and_exit()` with validation and error handling
+- **Database Persistence**: Created Supabase `user_projects` table with JSONB column to store complete project state
+- **Dual Storage**: Session (SQLite) for active work, Supabase (PostgreSQL) for long-term persistence
+- **Auto-Save**: Projects automatically saved to database on stage transitions and explicit save
+- **Auto-Load**: Projects automatically loaded from database when user continues work
+- **Data Safety**: Projects persist across server restarts and session expiry
+- **Table Structure**: User ID, project title, subject, current stage, JSONB project data, timestamps, completion status
+
 ## Security Improvements
 Removed API key printing from console logs in `database/external_db.py` to prevent credential exposure.
 
