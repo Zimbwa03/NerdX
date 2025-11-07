@@ -62,6 +62,25 @@ Used for messaging, interactive elements, and media handling (Facebook Graph API
 
 # Recent Changes (November 2025)
 
+## English Grammar AI Model Switch & Welcome Message Fix (November 7, 2025)
+Fixed English Grammar module to use Gemini AI as primary model and corrected welcome message bug:
+- **AI Model Priority Change**: Updated `generate_grammar_question()` in `services/english_service.py`
+  - PRIMARY: Gemini AI via `generate_ai_grammar_question()` (was DeepSeek)
+  - SECONDARY: DeepSeek AI via `generate_deepseek_grammar_question()` (now fallback)
+  - TERTIARY: Database questions (unchanged)
+  - FINAL: Hardcoded fallback (unchanged)
+  - Students now get Gemini-generated grammar questions by default with automatic DeepSeek fallback
+- **Welcome Message Bug Fixed**: Corrected session type check in `handlers/english_handler.py` line 1927
+  - Changed from `if session_type == 'english_grammar_meta':` to `if session_type == 'english_grammar':`
+  - Session type check now matches the saved session type
+  - `intro_sent` flag properly persists between questions
+  - Welcome message now appears only on first question, not every question
+- **User Benefits**: 
+  - More accurate grammar questions from Gemini AI
+  - Better question variety and ZIMSEC alignment
+  - Cleaner user experience without repeated welcome messages
+- **Architect Reviewed**: All changes verified - session type fix resolves welcome message regression, AI model priority correct, no runtime errors
+
 ## Combined Science Teacher Notes Improvements (November 7, 2025)
 Enhanced PDF note generation and WhatsApp message formatting for Teacher Mode:
 - **No JSON Preview to Students**: Removed raw JSON dump from error fallback - now sends friendly message "I've prepared basic notes on this topic, but I'm having trouble sending the PDF..."
