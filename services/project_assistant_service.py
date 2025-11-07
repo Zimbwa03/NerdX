@@ -52,32 +52,35 @@ class ProjectAssistantService:
         except Exception as e:
             logger.error(f"Error initializing Gemini: {e}")
     
-    # System prompt that makes Gemini AI act as a professional ZIMSEC teacher
-    TEACHER_SYSTEM_PROMPT = """You are a professional, experienced ZIMSEC teacher helping a student with their School-Based Project (SBP).
+    # System prompt that makes Gemini AI a comprehensive research assistant
+    TEACHER_SYSTEM_PROMPT = """You are a comprehensive AI research assistant for ZIMSEC School-Based Projects (SBP). You provide COMPLETE, DETAILED assistance including research, writing, and guidance.
 
 Your role is to:
-1. **Guide, don't do the work** - Use the Socratic method (ask questions to help students think critically)
-2. **Be encouraging and supportive** - Students need confidence and motivation
-3. **Keep responses concise** - WhatsApp messages should be 2-3 paragraphs maximum
-4. **Focus on ZIMSEC standards** - These projects are graded by ZIMSEC examiners
-5. **Encourage original thinking** - Don't write the project for them
-6. **Be professional but friendly** - Like a caring teacher, not a cold robot
+1. **Provide complete answers** - When students ask for research, provide thorough, detailed information with facts, statistics, and examples
+2. **Do the research for them** - Provide comprehensive research findings, existing solutions, case studies, and relevant data
+3. **Write content when asked** - Help students by writing project titles, problem statements, literature reviews, and analysis when requested
+4. **Give specific examples** - Provide real-world examples, case studies, and practical applications
+5. **Be comprehensive** - Give detailed, well-structured responses with bullet points, numbered lists, and clear organization
+6. **Provide sources** - Mention relevant sources, studies, or organizations they can reference
+7. **Be encouraging and supportive** - Students need confidence and motivation
 
-ZIMSEC School-Based Project stages (for reference):
-- Stage 1: Problem Identification
-- Stage 2: Investigation of Related Ideas (Research)
-- Stage 3: Generation of New Ideas
-- Stage 4: Development of the Best Idea
-- Stage 5: Presentation of Results
-- Stage 6: Evaluation and Recommendations
+ZIMSEC School-Based Project stages:
+- Stage 1: Problem Identification - Help identify problems, write problem statements and project titles
+- Stage 2: Investigation of Related Ideas - Provide research on existing solutions, data, and literature
+- Stage 3: Generation of New Ideas - Brainstorm creative solutions and innovations
+- Stage 4: Development of the Best Idea - Help develop detailed implementation plans
+- Stage 5: Presentation of Results - Assist with creating presentations and visual aids
+- Stage 6: Evaluation and Recommendations - Help evaluate outcomes and write recommendations
 
-Important guidelines:
-- When a student asks you to write something for them, guide them instead with questions
-- Help them think through their ideas
-- Provide structure and frameworks
-- Suggest where to find information
-- Give feedback on their ideas
-- Keep language simple and clear (remember they're students)
+How to help students:
+- **When asked to write**: Write it for them! Provide complete, well-written content
+- **When asked for research**: Provide comprehensive research with details, facts, and examples
+- **When asked for ideas**: Generate multiple creative, practical ideas
+- **When asked for help**: Provide step-by-step guidance with specific examples
+- **Keep responses detailed but readable** - Use formatting, bullet points, and clear structure
+- **Be practical** - Focus on ZIMSEC-appropriate content that will score well
+
+Remember: Your goal is to help students complete excellent projects by providing them with all the information, research, and content they need!
 
 Current conversation context will be provided with each message."""
 
@@ -110,14 +113,15 @@ Current conversation context will be provided with each message."""
                 ]
             else:
                 # No active project
-                menu_text += "Welcome to your AI Project Teacher! 🤖\n\n"
+                menu_text += "Welcome to your AI Research Assistant! 🤖\n\n"
                 menu_text += "I'm powered by Google Gemini AI and I'll help you create an excellent ZIMSEC School-Based Project.\n\n"
-                menu_text += "💡 *How it works:*\n"
-                menu_text += "• Chat with me naturally (like ChatGPT)\n"
-                menu_text += "• Ask me anything about your project\n"
-                menu_text += "• I'll guide you through all 6 stages\n"
-                menu_text += "• Your progress is saved automatically\n\n"
-                menu_text += "Ready to start?"
+                menu_text += "💡 *I can help you with:*\n"
+                menu_text += "• Research on any topic\n"
+                menu_text += "• Writing project titles, statements & content\n"
+                menu_text += "• Finding existing solutions and case studies\n"
+                menu_text += "• Generating ideas and recommendations\n"
+                menu_text += "• Complete guidance through all 6 stages\n\n"
+                menu_text += "Ready to start? I'll do the research and writing for you!"
                 
                 buttons = [
                     {"text": "🚀 Start New Project", "callback_data": "project_new"},
@@ -153,8 +157,8 @@ Current conversation context will be provided with each message."""
                 'awaiting': 'student_name'
             })
             
-            message = "🎓 *Welcome! I'm your AI Project Teacher*\n\n"
-            message += "I'll help you create an excellent ZIMSEC School-Based Project.\n\n"
+            message = "🎓 *Welcome! I'm your AI Research Assistant*\n\n"
+            message += "I'll help you complete an excellent ZIMSEC School-Based Project by doing research, writing content, and providing complete guidance.\n\n"
             message += "Let's start by getting to know you.\n\n"
             message += "📝 *What is your name?*"
             
@@ -197,8 +201,8 @@ Current conversation context will be provided with each message."""
             message = f"👋 Welcome back, *{student_name}*!\n\n"
             message += f"📋 *Project:* {project_title}\n"
             message += f"📚 *Subject:* {subject}\n\n"
-            message += "I'm ready to help! What would you like to work on today?\n\n"
-            message += "💬 Just chat with me naturally - ask questions, share ideas, or request guidance."
+            message += "I'm ready to help! What would you like me to do today?\n\n"
+            message += "💬 I can: do research, write content, provide ideas, or help with any stage of your project."
             
             # Add menu buttons
             buttons = [
@@ -307,13 +311,15 @@ Current conversation context will be provided with each message."""
         message += f"📋 *Project:* {title}\n"
         message += f"📚 *Subject:* {subject}\n\n"
         message += "─────────────────────\n\n"
-        message += "Your project is now set up! I'm here to help you through all 6 stages of your ZIMSEC project.\n\n"
-        message += "💬 *How to use me:*\n"
-        message += "• Ask me questions about your project\n"
-        message += "• Share your ideas and I'll give feedback\n"
-        message += "• Request guidance on what to do next\n"
-        message += "• Get help with research, planning, or writing\n\n"
-        message += "🚀 *Let's begin!* What would you like to work on first?"
+        message += "Your project is now set up! I'm your comprehensive research assistant.\n\n"
+        message += "💬 *What I can do for you:*\n"
+        message += "• Research any topic and provide detailed findings\n"
+        message += "• Write project titles, problem statements, and content\n"
+        message += "• Find existing solutions and case studies\n"
+        message += "• Generate creative ideas and solutions\n"
+        message += "• Provide complete literature reviews\n"
+        message += "• Help with all 6 ZIMSEC project stages\n\n"
+        message += "🚀 *Let's begin!* What do you need help with? Just ask and I'll provide complete answers!"
         
         # Add helpful buttons
         buttons = [
@@ -425,22 +431,26 @@ Remember to:
             return self._get_fallback_response(message_text, project_data)
     
     def _get_fallback_response(self, message_text: str, project_data: dict) -> str:
-        """Simple fallback responses when Gemini AI is unavailable"""
+        """Comprehensive fallback responses when Gemini AI is unavailable"""
         message_lower = message_text.lower()
         student_name = project_data.get('student_name', 'there')
+        project_title = project_data.get('project_title', 'your project')
         
-        # Simple keyword-based responses
-        if any(word in message_lower for word in ['help', 'what', 'how', 'stuck']):
-            return f"Hi *{student_name}*! 📚\n\nI'm here to help with your ZIMSEC project. Try asking:\n\n• \"What should I do next?\"\n• \"Help me understand Stage 1\"\n• \"How do I research?\"\n• \"Review my idea\"\n\nWhat specific aspect would you like help with?"
+        # Comprehensive keyword-based responses
+        if any(word in message_lower for word in ['title', 'write title']):
+            return f"*Project Title Help* 📝\n\nBased on your project about _{project_title}_, here are some strong title formats:\n\n1. \"Improving [Problem] in [Location]\"\n2. \"Reducing [Issue] at [School/Community]\"\n3. \"Developing [Solution] for [Target Group]\"\n\nExample titles:\n• \"Improving Waste Management at Harare High School\"\n• \"Reducing Water Scarcity in Rural Masvingo\"\n• \"Developing a Recycling System for Urban Communities\"\n\nWhat specific problem are you addressing? I'll help you craft a perfect title!"
+        
+        elif any(word in message_lower for word in ['research', 'literature', 'existing solutions']):
+            return f"*Research & Literature Review* 📚\n\nFor your project on _{project_title}_, you should research:\n\n**Existing Solutions:**\n• Government initiatives in Zimbabwe\n• NGO programs addressing similar issues\n• International case studies from other countries\n• Local community projects\n\n**Where to find information:**\n• Zimbabwe government websites\n• Academic journals (Google Scholar)\n• WHO/UN reports for health/development topics\n• Local newspaper archives\n• Interviews with community leaders\n\n**What to include:**\n1. Summary of 3-5 existing solutions\n2. Their strengths and weaknesses\n3. How they're relevant to your context\n4. Gaps that your project will fill\n\nWould you like me to provide specific resources for your topic?"
         
         elif any(word in message_lower for word in ['stage 1', 'problem', 'identify']):
-            return f"*Stage 1: Problem Identification* 🎯\n\nYou need to:\n1. Identify a real problem\n2. Explain who it affects\n3. Describe the impact\n\nThink about:\n• What problem have you noticed?\n• Who is affected?\n• Why does it matter?\n\nWhat problem interests you?"
+            return f"*Stage 1: Problem Identification* 🎯\n\n**Complete Framework:**\n\n1. **Problem Statement:**\n\"In [Location], [Target Group] experience [Problem] which results in [Impact/Consequences].\"\n\n2. **Who is Affected:**\n• Primary: Students, community members, families\n• Secondary: Teachers, local businesses, government\n\n3. **Evidence:**\n• Statistics or observations\n• Personal experiences or surveys\n• Expert opinions or reports\n\n4. **Why it Matters:**\n• Social impact\n• Economic consequences\n• Health/educational effects\n\n**Example for waste management:**\n\"At Harare High School, students and staff face inadequate waste disposal systems, resulting in environmental pollution, health hazards, and an unpleasant learning environment. This affects 1,200 students daily and contributes to local disease outbreaks.\"\n\nWhat's your problem area? I'll help you write a complete problem statement!"
         
-        elif any(word in message_lower for word in ['research', 'stage 2', 'investigate']):
-            return f"*Stage 2: Investigation* 🔍\n\nFor research, you should:\n1. Find existing solutions\n2. Study what others have done\n3. Collect data about the problem\n\nWhere will you look for information? (Books, internet, surveys, interviews?)"
+        elif any(word in message_lower for word in ['ideas', 'solutions', 'stage 3']):
+            return f"*Generating Ideas & Solutions* 💡\n\n**Brainstorming for {project_title}:**\n\n**Creative Solution Techniques:**\n1. Look at how other countries solve it\n2. Combine existing solutions in new ways\n3. Use technology/apps to improve processes\n4. Create awareness campaigns\n5. Develop training programs\n\n**Innovation Checklist:**\n✓ Is it practical for Zimbabwe context?\n✓ Is it affordable/sustainable?\n✓ Can it be implemented by students/community?\n✓ Does it address the root cause?\n✓ Is it measurable and scalable?\n\n**Example ideas for waste management:**\n• Recycling bins with color-coding system\n• Student-led \"Green Squad\" waste monitors\n• Composting program for organic waste\n• Art from recycled materials project\n• Partnership with local recycling companies\n\nWhat type of solution would you like to develop? I can help you refine it!"
         
         else:
-            return f"That's interesting, *{student_name}*! 💡\n\nCould you tell me more? I'm here to guide you through your project.\n\nTry to be specific - what aspect of your project do you need help with?"
+            return f"Hi *{student_name}*! 👋\n\nI'm here to provide complete research and writing assistance for your project: _{project_title}_.\n\n**I can help you with:**\n\n📝 *Writing:*\n• Project titles and problem statements\n• Literature reviews and research summaries\n• Complete content for all 6 stages\n\n🔍 *Research:*\n• Finding existing solutions and case studies\n• Providing facts, statistics, and examples\n• Identifying relevant sources and references\n\n💡 *Ideas:*\n• Generating creative solutions\n• Brainstorming innovations\n• Developing implementation plans\n\nJust tell me what you need, and I'll provide detailed, complete answers!"
     
     def save_and_exit(self, user_id: str):
         """Save project and exit to main menu"""
