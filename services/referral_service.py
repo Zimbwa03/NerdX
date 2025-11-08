@@ -368,29 +368,25 @@ class ReferralService:
 
 Hey {user_name}! 👋
 
-💎 Earn *{self.referral_bonus['referrer']} FREE CREDITS* for every friend who registers using your referral code!
+💎 Earn *{self.referral_bonus['referrer']} FREE CREDITS* for every friend who registers using your referral link!
 
 🎯 *Your Referral Code:* `{referral_code}`
 
-📲 *Share this message:*
+📲 *Share this link with friends:*
 
----
-🎓 Join NerdX - The #1 ZIMSEC Quiz Bot!
-
-🧬 Study Biology, Chemistry & Physics
-🤖 AI-powered questions  
-📊 Track your progress
-
-💎 Register with referral code: *{referral_code}* and get bonus credits!
-
-🚀 Start here: {whatsapp_link}
----
+{whatsapp_link}
 
 ✨ *How it works:*
-1️⃣ Share your referral code with friends
-2️⃣ They register using your code
-3️⃣ You both get +{self.referral_bonus['referrer']} credits!
-4️⃣ They also get +{self.referral_bonus['referee']} bonus credits!"""
+1️⃣ Friend clicks your referral link
+2️⃣ Code is *automatically captured* (no typing needed!)
+3️⃣ They complete registration
+4️⃣ You both get +{self.referral_bonus['referrer']} credits instantly!
+
+🎁 *Rewards:*
+• You earn: +{self.referral_bonus['referrer']} credits per friend
+• Your friend gets: +{self.referral_bonus['referee']} bonus credits
+
+📱 *Share with friends on WhatsApp, social media, or SMS!*"""
 
             return {
                 'success': True,
