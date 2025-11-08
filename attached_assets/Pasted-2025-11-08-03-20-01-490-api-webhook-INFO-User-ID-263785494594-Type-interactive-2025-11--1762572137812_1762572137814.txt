@@ -1,0 +1,55 @@
+2025-11-08 03:20:01,490 - api.webhook - INFO - 🔍 User ID: 263785494594, Type: interactive
+2025-11-08 03:20:01,490 - api.webhook - INFO - Background processing interactive message from 263785494594
+2025-11-08 03:20:01,490 - api.webhook - INFO - Button interaction from 263785494594: english_menu
+2025-11-08 03:20:01,490 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+2025-11-08 03:20:01,738 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+2025-11-08 03:20:01,984 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+2025-11-08 03:20:02,237 - database.external_db - INFO - Using ANON_KEY for GET operation on user_stats
+2025-11-08 03:20:02,499 - services.whatsapp_service - INFO - Allowing critical interactive message to 263785494594 - bypassing throttle
+2025-11-08 03:20:02,499 - services.whatsapp_service - INFO - Using List Message for 4 buttons - WhatsApp compliant
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.79.10" requestID="68fc54fc-c9c2-47de" responseTimeMS=1587 responseBytes=247 userAgent="facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.79.114" requestID="7c59a84c-4e8d-4a93" responseTimeMS=3 responseBytes=247 userAgent="facebookexternalua"
+2025-11-08 03:20:03,065 - services.whatsapp_service - INFO - List message sent successfully to 263785494594 with 4 options
+2025-11-08 03:20:03,075 - handlers.english_handler - INFO - English menu displayed for user 263785494594
+172.68.26.121 - - [08/Nov/2025:03:20:03 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+198.41.227.99 - - [08/Nov/2025:03:20:03 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.127.5" requestID="bd6b3ac5-9b16-439d" responseTimeMS=3 responseBytes=247 userAgent="facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.79.116" requestID="51829602-4b67-4ae7" responseTimeMS=3 responseBytes=247 userAgent="facebookexternalua"
+172.68.175.77 - - [08/Nov/2025:03:20:04 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+172.71.30.219 - - [08/Nov/2025:03:20:04 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+2025-11-08 03:20:12,799 - standalone_english_comprehension_generator - WARNING - DeepSeek V3.1 connection error: HTTPSConnectionPool(host='api.deepseek.com', port=443): Read timed out.
+2025-11-08 03:20:12,799 - standalone_english_comprehension_generator - ERROR - Failed to generate long_comprehension_passage after 2 attempts
+2025-11-08 03:20:12,799 - services.english_service - INFO - ✅ Fast generation successful using DeepSeek V3.1
+2025-11-08 03:20:12,799 - handlers.english_handler - INFO - ✅ Generated comprehension via DeepSeek AI: History
+2025-11-08 03:20:12,799 - services.quality_monitor - INFO - WhatsApp throttle override active - allowing message despite quality metrics
+2025-11-08 03:20:13,417 - services.whatsapp_service - INFO - Message sent successfully to 263785494594
+2025-11-08 03:20:13,438 - utils.comprehension_pdf_generator - INFO - Generated comprehension PDF: temp_pdfs/comprehension_The_Digital_Revolution_in_Zimb_20251108_032013.pdf
+2025-11-08 03:20:13,439 - handlers.english_handler - INFO - Generated PDF for 263785494594: temp_pdfs/comprehension_The_Digital_Revolution_in_Zimb_20251108_032013.pdf
+2025-11-08 03:20:13,439 - services.whatsapp_service - INFO - Uploading document (attempt 1/3)...
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.95.113" requestID="e1f41f6f-94c1-4281" responseTimeMS=3 responseBytes=247 userAgent="facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.95.8" requestID="a7febde8-632b-45ed" responseTimeMS=3 responseBytes=247 userAgent="facebookexternalua"
+2025-11-08 03:20:14,114 - services.whatsapp_service - INFO - Document uploaded successfully: 1553058842387134
+198.41.227.99 - - [08/Nov/2025:03:20:14 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+104.23.160.130 - - [08/Nov/2025:03:20:14 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+2025-11-08 03:20:14,832 - services.whatsapp_service - INFO - Document sent successfully to 263785494594
+2025-11-08 03:20:14,837 - handlers.english_handler - INFO - Successfully sent comprehension PDF to 263785494594
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.79.2" requestID="52072bc3-5af7-4949" responseTimeMS=3 responseBytes=247 userAgent="facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.95.16" requestID="4f4db5b1-fa8c-4360" responseTimeMS=3 responseBytes=247 userAgent="facebookexternalua"
+172.68.174.90 - - [08/Nov/2025:03:20:16 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+2025-11-08 03:20:16,838 - handlers.english_handler - INFO - Cleaned up PDF: temp_pdfs/comprehension_The_Digital_Revolution_in_Zimb_20251108_032013.pdf
+2025-11-08 03:20:16,838 - services.whatsapp_service - INFO - Allowing critical interactive message to 263785494594 - bypassing throttle
+172.68.174.106 - - [08/Nov/2025:03:20:16 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+2025-11-08 03:20:17,521 - services.whatsapp_service - INFO - Interactive message sent successfully to 263785494594
+2025-11-08 03:20:17,530 - handlers.english_handler - INFO - PDF comprehension sent successfully to 263785494594
+2025-11-08 03:20:17,530 - handlers.english_handler - INFO - Professional comprehension delivered for 263785494594: History
+172.69.70.236 - - [08/Nov/2025:03:20:17 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.79.10" requestID="575cc308-b5d7-4dff" responseTimeMS=2 responseBytes=247 userAgent="facebookexternalua"
+172.68.26.121 - - [08/Nov/2025:03:20:18 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.107.3" requestID="746bf120-7230-4d54" responseTimeMS=3 responseBytes=247 userAgent="facebookexternalua"
+172.71.190.178 - - [08/Nov/2025:03:20:19 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.79.6" requestID="3bcaea12-3a21-46f0" responseTimeMS=3 responseBytes=247 userAgent="facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.107.25" requestID="1cfa21c5-26a2-490f" responseTimeMS=2 responseBytes=247 userAgent="facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.95.16" requestID="53d41194-e702-41cd" responseTimeMS=2 responseBytes=247 userAgent="facebookexternalua"
+172.68.174.120 - - [08/Nov/2025:03:20:21 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+172.71.146.42 - - [08/Nov/2025:03:20:21 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+104.23.160.61 - - [08/Nov/2025:03:20:21 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
