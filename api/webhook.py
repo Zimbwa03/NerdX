@@ -625,11 +625,33 @@ def handle_new_user(user_id: str, message_text: str):
         # Check if user is responding to consent request
         if message_text.lower().strip() in ['yes', 'y', 'agree', 'accept', 'ok', 'consent']:
             logger.info(f"✅ User {user_id} provided consent, proceeding to registration")
-            start_registration_flow(user_id, message_text)
+            
+            # Retrieve stored referral code from temporary session (if any)
+            from database.session_db import get_user_session
+            temp_session = get_user_session(user_id)
+            original_message = temp_session.get('initial_message', message_text) if temp_session else message_text
+            
+            start_registration_flow(user_id, original_message)
             return
         elif message_text.lower().strip() in ['no', 'n', 'decline', 'refuse', 'stop', 'unsubscribe']:
             handle_opt_out(user_id)
             return
+
+        # 🎯 AUTO-EXTRACT REFERRAL CODE from first message
+        import re
+        referral_code = None
+        n_codes = re.findall(r'N[A-Z0-9]{5}', message_text.upper())
+        if n_codes:
+            referral_code = n_codes[0]
+            logger.info(f"🔗 AUTO-DETECTED REFERRAL CODE: {referral_code} from first message of {user_id}")
+
+        # Store initial message temporarily to preserve referral code
+        from database.session_db import save_user_session
+        save_user_session(user_id, {
+            'session_type': 'awaiting_consent',
+            'initial_message': message_text,
+            'detected_referral_code': referral_code
+        })
 
         # First-time interaction - Request explicit consent (WhatsApp Policy Requirement)
         consent_message = """🎓 *Welcome to NerdX Quiz Bot!*
@@ -659,8 +681,11 @@ To comply with WhatsApp Business Policy, we need your explicit consent to:
 📞 *Need help?* Reply 'SUPPORT'
 🛑 *To stop messages:* Reply 'STOP'"""
 
+        if referral_code:
+            consent_message += f"\n\n🎁 *Bonus:* Referral code {referral_code} detected!"
+
         whatsapp_service.send_message(user_id, consent_message)
-        logger.info(f"📋 Consent request sent to {user_id}")
+        logger.info(f"📋 Consent request sent to {user_id}{' with referral code ' + referral_code if referral_code else ''}")
 
     except Exception as e:
         logger.error(f"Error handling new user {user_id}: {e}")
