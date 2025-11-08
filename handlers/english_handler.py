@@ -295,36 +295,27 @@ Ready to boost your reading skills? 🚀"""
             }
             save_user_session(user_id, session_data)
 
-            # Send professional loading message
-            self.whatsapp_service.send_message(
-                user_id,
-                f"⏳ Please wait {user_name}...\n\n📚 NerdX is creating your personalized comprehension practice."
-            )
-
-            # Continue without delays to prevent worker timeout
-
-            # 🚀 DEEPSEEK AI ONLY: Generate comprehension using DeepSeek AI exclusively
+            # Select random theme
             themes = ["Zimbabwean Culture", "African Wildlife", "Technology & Society", "Education", "Sports", "Environment", "History", "Science Discovery"]
             import random
             random_theme = random.choice(themes)
 
-            logger.info(f"🤖 Generating comprehension with DeepSeek AI: theme={random_theme}, form={form_level}")
-            
-            # Send immediate progress update to user
+            # Send single consolidated loading message (removed duplicate messages)
             self.whatsapp_service.send_message(
                 user_id, 
-                f"📚 Creating your {random_theme.lower()} comprehension passage...\n\n⏳ This may take 30-60 seconds. Please wait!"
+                f"📚 Creating your {random_theme.lower()} comprehension passage, {user_name}...\n\n⏳ Please wait while our AI generates your practice questions!"
             )
+
+            logger.info(f"🤖 Generating comprehension with Gemini AI (DeepSeek fallback): theme={random_theme}, form={form_level}")
             
-            # Generate using DeepSeek AI with timeout protection
+            # Generate using Gemini AI first, DeepSeek fallback
             try:
-                # Try DeepSeek with reduced timeout to prevent worker crashes
                 passage_data = self.english_service.generate_long_comprehension_passage_fast(random_theme, form_level)
                 
                 if passage_data:
-                    logger.info(f"✅ Generated comprehension via DeepSeek AI: {random_theme}")
+                    logger.info(f"✅ Generated comprehension: {random_theme}")
                 else:
-                    logger.warning(f"⚠️ DeepSeek AI generation failed, using enhanced fallback")
+                    logger.warning(f"⚠️ AI generation failed, using enhanced fallback")
                     # Use enhanced fallback immediately
                     passage_data = self.english_service._get_fallback_long_comprehension(random_theme)
                         
@@ -512,11 +503,7 @@ Ready to boost your reading skills? 🚀"""
             word_count = len(passage.get('text', '').split())
             reading_time = max(2, word_count // 200)
 
-            # Notify student that PDF is being generated
-            generating_message = f"📄 **Generating your comprehension PDF...**\n\nPlease wait a moment, {user_name}."
-            self.whatsapp_service.send_message(user_id, generating_message)
-
-            # Generate professional PDF
+            # Generate professional PDF (removed extra "generating" message to reduce spam)
             try:
                 pdf_path = self.pdf_generator.generate_comprehension_pdf(
                     passage_data=passage_data,
