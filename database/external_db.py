@@ -695,10 +695,9 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
 
         # Create or update user_stats entry for the new user
         try:
-            # Base credits: 75 for all new users
-            base_credits = 75
-            # If referred, add 5 bonus credits (total 80)
-            total_credits = base_credits + (5 if referred_by_nerdx_id else 0)
+            # All new users get 75 credits (no bonus for being referred)
+            # Only the REFERRER gets +5 credits (handled separately below)
+            total_credits = 75
 
             user_stats_data = {
                 'user_id': chat_id,
@@ -727,7 +726,7 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
                         'credits_change': total_credits,
                         'balance_before': 0,
                         'balance_after': total_credits,
-                        'description': f'Welcome bonus: {base_credits} credits' + (' + 5 referral bonus' if referred_by_nerdx_id else ''),
+                        'description': f'Welcome bonus: {total_credits} credits',
                         'transaction_type': 'new_user_registration'
                     }
 

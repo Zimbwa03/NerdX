@@ -2518,7 +2518,6 @@ def show_referral_info(user_id: str):
         successful_referrals = referral_stats.get('successful_referrals', 0)
         total_bonus_earned = referral_stats.get('total_bonus_earned', 0)
         referrer_bonus = referral_stats.get('referrer_bonus', 5)
-        referee_bonus = referral_stats.get('referee_bonus', 5)
 
         referral_message = f"""👥 *{name}'s Referral Center* 👥
 
@@ -2530,15 +2529,13 @@ def show_referral_info(user_id: str):
 • Credits Earned: {total_bonus_earned}
 
 💎 *Earn {referrer_bonus} credits* for each friend who registers!
-🎁 *Your friends also get {referee_bonus} bonus credits!*
 
 ✨ *How it works:*
-1️⃣ Share your referral code with friends
-2️⃣ They register using your code
-3️⃣ You both get +{referrer_bonus} credits!
-4️⃣ They also get +{referee_bonus} bonus credits!
+1️⃣ Share your referral link with friends
+2️⃣ They click the link and register (get 75 welcome credits)
+3️⃣ You get +{referrer_bonus} credits automatically!
 
-📲 Share your code with friends so they can get bonus credits too!"""
+📲 Share your referral link to earn more credits!"""
 
         buttons = [
             {"text": "📤 Share to Friend", "callback_data": "share_to_friend"},
