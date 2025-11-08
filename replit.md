@@ -18,7 +18,13 @@ A dual-database approach employs PostgreSQL for persistent data (users, question
 Session-based state management is handled by SQLite. The system employs rate limiting and multi-step registration flows, relying on WhatsApp's secure messaging rather than traditional authentication.
 
 ## AI Integration
-DeepSeek API is the primary AI for mathematics question generation and image analysis, with Gemini API as a secondary option, used also for the Combined Science Teacher feature (personalized teaching, topic management, interactive lessons, PDF note generation) and the Project Assistant (research and writing assistance). The system handles structured JSON responses with error fallbacks and retry mechanisms, supporting question difficulty scaling and educational content validation.
+**English Modules**: All English modules (Grammar, Vocabulary, Comprehension) use Gemini 2.0 Flash Exp (`gemini-2.0-flash-exp`) as PRIMARY with DeepSeek as fallback. Comprehension generates 400-600 word ZIMSEC-aligned passages with 10 questions, delivered as professional PDF documents.
+
+**Mathematics**: DeepSeek API is the primary AI for mathematics question generation and image analysis.
+
+**Advanced Features**: Gemini 2.0 Flash Exp powers the Combined Science Teacher (personalized teaching, topic management, interactive lessons, PDF note generation) and the Project Assistant (research and writing assistance).
+
+The system handles structured JSON responses with error fallbacks and retry mechanisms, supporting question difficulty scaling and educational content validation. Error handling returns None on AI failures to prevent false success messages.
 
 ## Credit System
 A usage-based credit system charges differently per subject and difficulty. EcoCash integration facilitates credit purchases, and a referral system awards bonus credits. AI-powered features like Teacher Mode and Project Assistant have a hybrid credit model with initial and follow-up costs, and a charge for PDF note generation.
@@ -35,8 +41,8 @@ All text solutions are sent, even with image solutions available. LaTeX conversi
 Used for messaging, interactive elements, and media handling (Facebook Graph API v17.0).
 
 ## AI Services
-- DeepSeek API: Mathematics question generation and image analysis.
-- Google Gemini API: Backup AI service, Combined Science Teacher, and Project Assistant.
+- Google Gemini API (gemini-2.0-flash-exp): Primary for English modules (Grammar, Vocabulary, Comprehension), Combined Science Teacher, and Project Assistant.
+- DeepSeek API: Primary for mathematics question generation and image analysis; fallback for English modules.
 - Desmos API: Mathematical graph generation.
 
 ## Payment Processing
