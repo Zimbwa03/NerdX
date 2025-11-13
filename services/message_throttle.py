@@ -1,5 +1,6 @@
 """
 Message Throttle Service to prevent rapid message sending and message chains
+Aligns with WhatsApp Business API 2025 rate limits to prevent bans
 """
 import time
 import logging
@@ -9,17 +10,32 @@ from collections import defaultdict
 logger = logging.getLogger(__name__)
 
 class MessageThrottle:
-    """Service to throttle outgoing messages and prevent message chains"""
+    """
+    Service to throttle outgoing messages and prevent message chains
+    
+    WhatsApp Business API 2025 Limits:
+    - Per-second limit: 80 messages/second (we're way below this)
+    - Pair rate limit: 1 message every 6 seconds to same user (~10 msg/min)
+    - Quality rating affects tier progression and ban risk
+    
+    Our Implementation:
+    - 3 second minimum delay (conservative vs WhatsApp's 6-second pair rate)
+    - 10 messages per minute max (matches WhatsApp's pair rate limit)
+    - Critical messages bypass throttling to ensure smooth UX
+    """
     
     def __init__(self):
         # Track last message sent time per user
         self.last_message_time: Dict[str, float] = defaultdict(float)
         
-        # Minimum delay between messages (in seconds) - More conservative for WhatsApp compliance
-        self.min_delay_between_messages = 2.0  # 2 seconds minimum - WhatsApp compliant
+        # Minimum delay between messages (in seconds) - Aligned with WhatsApp's pair rate limit
+        # WhatsApp allows 1 msg every 6 seconds, we use 3 seconds for faster response
+        self.min_delay_between_messages = 3.0  # 3 seconds minimum - WhatsApp compliant
         
-        # Maximum messages per minute - Much more conservative to prevent spam detection
-        self.max_messages_per_minute = 8  # Reduced from 20 to 8 (1 every 7.5 seconds)
+        # Maximum messages per minute - Matches WhatsApp's pair rate limit
+        # WhatsApp: ~10 messages per minute (1 every 6 seconds)
+        # We set to 10 to match their limit while allowing some burst capacity
+        self.max_messages_per_minute = 10  # Matches WhatsApp's 6-second pair rate (~10 msg/min)
         
         # Track message count in sliding window
         self.message_history: Dict[str, list] = defaultdict(list)

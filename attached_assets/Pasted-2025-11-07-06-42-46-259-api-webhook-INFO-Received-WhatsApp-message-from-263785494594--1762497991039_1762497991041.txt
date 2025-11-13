@@ -1,0 +1,73 @@
+2025-11-07 06:42:46,259 - api.webhook - INFO - 🔍 Received WhatsApp message: {'from': '263785494594', 'id': 'wamid.HBgMMjYzNzg1NDk0NTk0FQIAEhgUMkE0MzIyMkRFMzFCNzA3NkQ5RTQA', 'timestamp': '1762497765', 'text': {'body': 'The people in the community'}, 'type': 'text'}
+2025-11-07 06:42:46,259 - api.webhook - INFO - 🔍 User ID: 263785494594, Type: text
+2025-11-07 06:42:46,259 - api.webhook - INFO - Background processing text message from 263785494594
+2025-11-07 06:42:46,259 - api.webhook - INFO - 📝 Extracted text for 263785494594: 'The people in the community' (length: 27)
+2025-11-07 06:42:46,259 - api.webhook - INFO - 📝 Full message_data: {'from': '263785494594', 'id': 'wamid.HBgMMjYzNzg1NDk0NTk0FQIAEhgUMkE0MzIyMkRFMzFCNzA3NkQ5RTQA', 'timestamp': '1762497765', 'text': {'body': 'The people in the community'}, 'type': 'text'}
+2025-11-07 06:42:46,259 - api.webhook - INFO - ✅ Text extraction successful for 263785494594: 'The people in the community'
+2025-11-07 06:42:47,330 - services.user_service - INFO - 🔍 DEBUGGING: Checking registration for user 263785494594
+2025-11-07 06:42:47,331 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+2025-11-07 06:42:47,583 - services.user_service - INFO - 🔍 DEBUGGING: is_user_registered returned: True
+2025-11-07 06:42:47,584 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+2025-11-07 06:42:47,816 - services.user_service - INFO - 🔍 DEBUGGING: get_user_registration returned: True
+2025-11-07 06:42:47,829 - services.quality_monitor - INFO - WhatsApp throttle override active - allowing message despite quality metrics
+2025-11-07 06:42:48,313 - services.whatsapp_service - INFO - Message sent successfully to 263785494594
+172.71.151.180 - - [07/Nov/2025:06:42:48 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+172.70.94.165 - - [07/Nov/2025:06:42:49 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+172.71.150.194 - - [07/Nov/2025:06:42:49 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+172.68.26.167 - - [07/Nov/2025:06:42:50 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.79.38" requestID="6f1f0053-41cf-4973" responseTimeMS=2410 responseBytes=247 userAgent="facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.95.2" requestID="e8efbf6e-840d-4415" responseTimeMS=3 responseBytes=247 userAgent="facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.107.16" requestID="53fdfadf-c2c0-4f00" responseTimeMS=2 responseBytes=247 userAgent="facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.79.10" requestID="759c204c-29c5-4709" responseTimeMS=2 responseBytes=247 userAgent="facebookexternalua"
+2025-11-07 06:43:05,972 - api.webhook - INFO - 🔍 Received WhatsApp message: {'from': '263785494594', 'id': 'wamid.HBgMMjYzNzg1NDk0NTk0FQIAEhgUMkFGMjRDNjkzN0Q4NUYyMDk4MjgA', 'timestamp': '1762497785', 'text': {'body': 'Hunger and starvation'}, 'type': 'text'}
+2025-11-07 06:43:05,972 - api.webhook - INFO - 🔍 User ID: 263785494594, Type: text
+2025-11-07 06:43:05,972 - api.webhook - INFO - Background processing text message from 263785494594
+2025-11-07 06:43:05,972 - api.webhook - INFO - 📝 Extracted text for 263785494594: 'Hunger and starvation' (length: 21)
+2025-11-07 06:43:05,972 - api.webhook - INFO - 📝 Full message_data: {'from': '263785494594', 'id': 'wamid.HBgMMjYzNzg1NDk0NTk0FQIAEhgUMkFGMjRDNjkzN0Q4NUYyMDk4MjgA', 'timestamp': '1762497785', 'text': {'body': 'Hunger and starvation'}, 'type': 'text'}
+2025-11-07 06:43:05,972 - api.webhook - INFO - ✅ Text extraction successful for 263785494594: 'Hunger and starvation'
+2025-11-07 06:43:07,048 - services.user_service - INFO - 🔍 DEBUGGING: Checking registration for user 263785494594
+2025-11-07 06:43:07,048 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+2025-11-07 06:43:07,306 - services.user_service - INFO - 🔍 DEBUGGING: is_user_registered returned: True
+2025-11-07 06:43:07,307 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+2025-11-07 06:43:07,580 - services.user_service - INFO - 🔍 DEBUGGING: get_user_registration returned: True
+2025-11-07 06:43:07,591 - services.quality_monitor - INFO - WhatsApp throttle override active - allowing message despite quality metrics
+2025-11-07 06:43:08,377 - services.whatsapp_service - INFO - Message sent successfully to 263785494594
+162.158.174.156 - - [07/Nov/2025:06:43:08 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+104.23.209.28 - - [07/Nov/2025:06:43:09 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+172.71.151.99 - - [07/Nov/2025:06:43:09 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+172.68.26.167 - - [07/Nov/2025:06:43:10 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.107.5" requestID="9cb3a807-b3a7-43b7" responseTimeMS=2238 responseBytes=247 userAgent="facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.107.8" requestID="38bd4622-9fc9-4de3" responseTimeMS=3 responseBytes=247 userAgent="facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.95.14" requestID="c21fd04a-4ad2-42e5" responseTimeMS=2 responseBytes=247 userAgent="facebookexternalua"
+2025-11-07 06:44:06,417 - api.webhook - INFO - 🔍 Received WhatsApp message: {'from': '263785494594', 'id': 'wamid.HBgMMjYzNzg1NDk0NTk0FQIAEhgUMkFGNkE2OTJCRUI5Q0IwQ0ZBNEQA', 'timestamp': '1762497845', 'text': {'body': 'Can you write the project title for me'}, 'type': 'text'}
+2025-11-07 06:44:06,418 - api.webhook - INFO - 🔍 User ID: 263785494594, Type: text
+2025-11-07 06:44:06,418 - api.webhook - INFO - Background processing text message from 263785494594
+2025-11-07 06:44:06,418 - api.webhook - INFO - 📝 Extracted text for 263785494594: 'Can you write the project title for me' (length: 38)
+2025-11-07 06:44:06,418 - api.webhook - INFO - 📝 Full message_data: {'from': '263785494594', 'id': 'wamid.HBgMMjYzNzg1NDk0NTk0FQIAEhgUMkFGNkE2OTJCRUI5Q0IwQ0ZBNEQA', 'timestamp': '1762497845', 'text': {'body': 'Can you write the project title for me'}, 'type': 'text'}
+2025-11-07 06:44:06,418 - api.webhook - INFO - ✅ Text extraction successful for 263785494594: 'Can you write the project title for me'
+2025-11-07 06:44:07,514 - services.user_service - INFO - 🔍 DEBUGGING: Checking registration for user 263785494594
+2025-11-07 06:44:07,514 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+2025-11-07 06:44:07,794 - services.user_service - INFO - 🔍 DEBUGGING: is_user_registered returned: True
+2025-11-07 06:44:07,796 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+2025-11-07 06:44:08,092 - services.user_service - INFO - 🔍 DEBUGGING: get_user_registration returned: True
+2025-11-07 06:44:08,102 - services.whatsapp_service - INFO - Allowing critical interactive message to 263785494594 - bypassing throttle
+2025-11-07 06:44:08,652 - services.whatsapp_service - INFO - Interactive message sent successfully to 263785494594
+172.71.150.127 - - [07/Nov/2025:06:44:08 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+104.23.211.224 - - [07/Nov/2025:06:44:09 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+172.71.167.127 - - [07/Nov/2025:06:44:10 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+172.71.151.177 - - [07/Nov/2025:06:44:10 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.107.6" requestID="cb348a04-5b12-47ed" responseTimeMS=3 responseBytes=247 userAgent="facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.95.4" requestID="4b078657-bfd3-4c79" responseTimeMS=394 responseBytes=247 userAgent="facebookexternalua"
+2025-11-07 06:44:26,682 - api.webhook - INFO - 🔍 Received WhatsApp message: {'context': {'from': '263781206192', 'id': 'wamid.HBgMMjYzNzg1NDk0NTk0FQIAERgSNDMwMzcwQjU1OTI0OUI2RDA3AA=='}, 'from': '263785494594', 'id': 'wamid.HBgMMjYzNzg1NDk0NTk0FQIAEhgUMkFEMzlEODAxMTY4RkY0NzZENEIA', 'timestamp': '1762497865', 'type': 'interactive', 'interactive': {'type': 'button_reply', 'button_reply': {'id': 'project_stage_2', 'title': '➡️ Move to Stage 2'}}}
+2025-11-07 06:44:26,682 - api.webhook - INFO - 🔍 User ID: 263785494594, Type: interactive
+2025-11-07 06:44:26,682 - api.webhook - INFO - Background processing interactive message from 263785494594
+2025-11-07 06:44:26,682 - api.webhook - INFO - Button interaction from 263785494594: project_stage
+2025-11-07 06:44:26,682 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+172.68.26.167 - - [07/Nov/2025:06:44:27 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.79.33" requestID="58d63dbb-6cdc-4dbe" responseTimeMS=271 responseBytes=247 userAgent="facebookexternalua"
+2025-11-07 06:45:50,323 - api.webhook - INFO - 🔍 Received WhatsApp message: {'context': {'from': '263781206192', 'id': 'wamid.HBgMMjYzNzg1NDk0NTk0FQIAERgSNDMwMzcwQjU1OTI0OUI2RDA3AA=='}, 'from': '263785494594', 'id': 'wamid.HBgMMjYzNzg1NDk0NTk0FQIAEhgUMkFCMjhCRjBFQ0IyQzFCOTc5RjAA', 'timestamp': '1762497949', 'type': 'interactive', 'interactive': {'type': 'button_reply', 'button_reply': {'id': 'project_review_stage_1', 'title': '📄 Review Stage 1'}}}
+2025-11-07 06:45:50,323 - api.webhook - INFO - 🔍 User ID: 263785494594, Type: interactive
+2025-11-07 06:45:50,323 - api.webhook - INFO - Background processing interactive message from 263785494594
+2025-11-07 06:45:50,323 - api.webhook - INFO - Button interaction from 263785494594: project_review_stage
+2025-11-07 06:45:50,323 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+172.71.151.82 - - [07/Nov/2025:06:45:50 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"

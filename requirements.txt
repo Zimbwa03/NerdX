@@ -62,3 +62,9 @@ psycopg2-binary
 google-genai
 PyPDF2
 paynow
+email_validator
+flask
+flask-sqlalchemy
+gunicorn
+psycopg2-binary
+python-docx

@@ -310,12 +310,17 @@ class MathematicsHandler:
         """Send formatted question to user with consistent stats display"""
         try:
             from database.external_db import get_user_stats, get_user_credits, get_user_registration
+            from utils.latex_converter import LaTeXConverter
             
             # Get user info and stats for consistent display
             registration = get_user_registration(user_id)
             user_name = registration['name'] if registration else "Student"
             stats = get_user_stats(user_id) or {}
             credits = get_user_credits(user_id)
+            
+            # Convert LaTeX in question to readable text
+            latex_converter = LaTeXConverter()
+            question_text = latex_converter.latex_to_readable_text(question_data.get('question', ''))
             
             # Format question message with consistent stats
             difficulty_emoji = {"easy": "🟢", "medium": "🟡", "difficult": "🔴"}
@@ -334,7 +339,7 @@ class MathematicsHandler:
 🔥 *Streak:* {stats.get('streak', 0)} days
 
 ❓ *Question:*
-{question_data['question']}
+{question_text}
 
 💭 *Type your answer below (numbers, expressions, or equations)*
 
@@ -360,6 +365,7 @@ class MathematicsHandler:
         """Send result in two separate messages: answer first, then stats with buttons"""
         try:
             from database.external_db import get_user_stats, get_user_credits
+            from utils.latex_converter import LaTeXConverter
             import time
             
             is_correct = analysis.get('is_correct', False)
@@ -372,10 +378,15 @@ class MathematicsHandler:
             final_streak = updated_stats.get('streak', 0)
             final_level = updated_stats.get('level', 1)
             
+            # Convert LaTeX to readable text
+            latex_converter = LaTeXConverter()
+            answer_text = latex_converter.latex_to_readable_text(question_data.get('answer', ''))
+            solution_text = latex_converter.latex_to_readable_text(question_data.get('solution', ''))
+            
             # FIRST MESSAGE: Answer and explanation ONLY (no stats)
             if is_correct:
                 answer_message = f"🎉 *OUTSTANDING!* {user_name}! 🎉\n\n"
-                answer_message += f"✅ *Correct Answer:* {question_data['answer']}\n"
+                answer_message += f"✅ *Correct Answer:* {answer_text}\n"
                 answer_message += f"🎯 *Difficulty:* {difficulty.title()}\n"
                 answer_message += f"📚 *Topic:* {topic}\n\n"
                 
@@ -389,7 +400,7 @@ class MathematicsHandler:
                 answer_message += "\n"
             else:
                 answer_message = f"📚 *Keep Learning,* {user_name}! 📚\n\n"
-                answer_message += f"🎯 *Correct Answer:* {question_data['answer']}\n"
+                answer_message += f"🎯 *Correct Answer:* {answer_text}\n"
                 answer_message += f"🎯 *Difficulty:* {difficulty.title()}\n"
                 answer_message += f"📚 *Topic:* {topic}\n\n"
                 answer_message += f"💡 *Don't worry!* Every mistake is a learning opportunity!\n\n"
@@ -402,11 +413,11 @@ class MathematicsHandler:
                     answer_message += f"💡 *Tips:* {analysis.get('improvement_tips')}\n\n"
             
             # Add complete solution to answer message
-            answer_message += f"📝 *Complete Solution:*\n{question_data['solution']}\n\n"
+            answer_message += f"📝 *Complete Solution:*\n{solution_text}\n\n"
             
             # Add explanation to answer message
             if question_data.get('explanation'):
-                explanation = question_data['explanation']
+                explanation = latex_converter.latex_to_readable_text(question_data['explanation'])
                 answer_message += f"💡 *Explanation:*\n{explanation}"
             
             # CRITICAL FIX: Combine messages to prevent message chains
@@ -448,6 +459,7 @@ class MathematicsHandler:
         """Handle show solution request for current question"""
         try:
             from database.session_db import get_user_session, clear_user_session
+            from utils.latex_converter import LaTeXConverter
             
             # Get current session
             session_data = get_user_session(user_id)
@@ -460,33 +472,83 @@ class MathematicsHandler:
             topic = session_data.get('topic')
             difficulty = session_data.get('difficulty')
             
-            # Create solution message (removing only the question repetition)
-            message = f"💡 Complete Solution\n\n"
-            message += f"✅ Answer: {question_data.get('answer', '')}\n\n"
-            message += f"📋 Step-by-Step Solution:\n{question_data.get('solution', '')}\n\n"
+            # Initialize LaTeX converter
+            latex_converter = LaTeXConverter()
             
-            if question_data.get('explanation'):
-                explanation = question_data['explanation']
-                # Shorten explanation to maximum 200 characters
-                if len(explanation) > 200:
-                    explanation = explanation[:200] + "... (Key concept only)"
-                message += f"💭 Explanation: {explanation}\n\n"
+            # Check if there are answer images (from database questions)
+            answer_images = []
+            for i in range(1, 6):
+                img_key = f'answer_image_url_{i}'
+                if question_data.get(img_key):
+                    answer_images.append(question_data[img_key])
             
-            message += f"Ready for another challenge?"
+            # Convert LaTeX in answer and solution to readable text (do this before sending anything)
+            answer_text = latex_converter.latex_to_readable_text(question_data.get('answer', ''))
+            solution_text = latex_converter.latex_to_readable_text(question_data.get('solution', ''))
             
-            # Create navigation buttons
-            topic_encoded = (topic or '').lower().replace(' ', '_')
-            buttons = [
-                {"text": "➡️ Next Question", "callback_data": f"math_question_{topic_encoded}_{difficulty}"},
-                {"text": "📚 Change Topic", "callback_data": "mathematics_mcq"},
-                {"text": "🏠 Main Menu", "callback_data": "main_menu"}
-            ]
+            # If answer images exist, send them first
+            if answer_images:
+                logger.info(f"Sending {len(answer_images)} answer image(s) for {user_id}")
+                images_sent_successfully = 0
+                
+                for i, image_url in enumerate(answer_images, 1):
+                    try:
+                        # Send image with caption
+                        caption = f"💡 Solution Part {i}/{len(answer_images)}" if len(answer_images) > 1 else "💡 Complete Solution (Image)"
+                        self.whatsapp_service.send_image(user_id, image_url, caption)
+                        images_sent_successfully += 1
+                        logger.info(f"Successfully sent answer image {i}/{len(answer_images)} for {user_id}")
+                    except Exception as img_error:
+                        logger.error(f"Error sending answer image {i}: {img_error}")
+                
+                if images_sent_successfully > 0:
+                    logger.info(f"Successfully sent {images_sent_successfully}/{len(answer_images)} answer images")
             
-            # Send solution message
-            self.whatsapp_service.send_interactive_message(user_id, message, buttons)
+            # ALWAYS send text solution regardless of image outcomes
+            try:
+                # Create solution message
+                message = f"💡 Complete Solution (Text)\n\n"
+                message += f"✅ Answer: {answer_text}\n\n"
+                message += f"📋 Step-by-Step Solution:\n{solution_text}\n\n"
+                
+                if question_data.get('explanation'):
+                    explanation = latex_converter.latex_to_readable_text(question_data['explanation'])
+                    # Shorten explanation to maximum 200 characters
+                    if len(explanation) > 200:
+                        explanation = explanation[:200] + "... (Key concept only)"
+                    message += f"💭 Explanation: {explanation}\n\n"
+                
+                message += f"Ready for another challenge?"
+                
+                # Create navigation buttons
+                topic_encoded = (topic or '').lower().replace(' ', '_')
+                buttons = [
+                    {"text": "➡️ Next Question", "callback_data": f"math_question_{topic_encoded}_{difficulty}"},
+                    {"text": "📚 Change Topic", "callback_data": "mathematics_mcq"},
+                    {"text": "🏠 Main Menu", "callback_data": "main_menu"}
+                ]
+                
+                # Send solution message
+                self.whatsapp_service.send_interactive_message(user_id, message, buttons)
+                logger.info(f"Successfully sent text solution for {user_id}")
+                
+            except Exception as text_error:
+                logger.error(f"Error sending text solution for {user_id}: {text_error}")
+                # Even if text solution fails, try to send navigation buttons
+                try:
+                    topic_encoded = (topic or '').lower().replace(' ', '_')
+                    buttons = [
+                        {"text": "➡️ Next Question", "callback_data": f"math_question_{topic_encoded}_{difficulty}"},
+                        {"text": "📚 Change Topic", "callback_data": "mathematics_mcq"},
+                        {"text": "🏠 Main Menu", "callback_data": "main_menu"}
+                    ]
+                    self.whatsapp_service.send_interactive_message(user_id, "Ready for another challenge?", buttons)
+                except Exception as btn_error:
+                    logger.error(f"Error sending navigation buttons for {user_id}: {btn_error}")
             
-            # Clear session since solution was shown
+            # Clear session ONLY after all messages have been sent
             clear_user_session(user_id)
+            logger.info(f"Session cleared for {user_id} after showing solution")
             
         except Exception as e:
             logger.error(f"Error handling show solution request for {user_id}: {e}")

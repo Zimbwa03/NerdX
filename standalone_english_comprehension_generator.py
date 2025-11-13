@@ -233,15 +233,8 @@ Make the passage authentic, engaging, and educationally valuable for ZIMSEC O-Le
 
         logger.error(f"Failed to generate {generation_type} after {self.max_retries} attempts")
         
-        # Return appropriate fallback
-        if generation_type == "comprehension_passage":
-            return {
-                'success': True,
-                'passage_data': self._get_fallback_comprehension(),
-                'source': 'fallback'
-            }
-        else:
-            return self._get_fallback_long_comprehension("General")
+        # Return None to indicate failure - let the calling service handle fallbacks
+        return None
 
     def _get_fallback_comprehension(self) -> Dict:
         """Fallback comprehension passage when AI fails"""

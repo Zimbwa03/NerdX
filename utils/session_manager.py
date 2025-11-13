@@ -239,6 +239,36 @@ class SessionManager:
             logger.error(f"Error getting session data: {e}")
             return None
     
+    def set_data(self, user_id: str, session_type: str, data: Dict) -> bool:
+        """Set session data for user with explicit session type (alias for compatibility)"""
+        try:
+            session_data = {
+                'session_type': session_type,
+                'session_data': json.dumps(data)
+            }
+            
+            return save_user_session(user_id, session_data)
+            
+        except Exception as e:
+            logger.error(f"Error setting session data: {e}")
+            return False
+    
+    def get_data(self, user_id: str, session_type: str = None) -> Optional[Dict]:
+        """Get session data for user (alias for compatibility)"""
+        try:
+            session = get_user_session(user_id)
+            if session:
+                # If session_type specified, check it matches
+                if session_type and session.get('session_type') != session_type:
+                    return None
+                session_data = json.loads(session.get('session_data', '{}'))
+                return session_data
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error getting session data: {e}")
+            return None
+    
     def save_audio_chat_session(self, user_id: str, mode: str, voice_type: str = 'female') -> bool:
         """Save audio chat session"""
         try:
@@ -280,6 +310,17 @@ class SessionManager:
             
         except Exception as e:
             logger.error(f"Error clearing audio chat session: {e}")
+            return False
+    
+    def clear_session(self, user_id: str) -> bool:
+        """Clear any session for user (generic method)"""
+        try:
+            clear_user_session(user_id)
+            logger.info(f"Cleared session for user {user_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error clearing session: {e}")
             return False
 
 # Global session manager instance

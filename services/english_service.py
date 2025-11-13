@@ -348,7 +348,7 @@ Additional Instructions:
 """
 
             try:
-                model = self.client.GenerativeModel('gemini-2.5-pro-preview-0504')
+                model = self.client.GenerativeModel('gemini-2.0-flash-exp')
                 response = model.generate_content(
                     prompt,
                     generation_config=self.client.types.GenerationConfig(
@@ -357,7 +357,7 @@ Additional Instructions:
                         max_output_tokens=1500
                     ),
                 )
-                logger.info("Gemini API call completed successfully")
+                logger.info("Gemini API (gemini-2.0-flash-exp) call completed successfully for grammar")
             except Exception as api_error:
                 logger.error(f"Gemini API call failed: {api_error}")
                 return None
@@ -529,8 +529,13 @@ Return ONLY valid JSON strictly using this structure (no markdown fences or comm
         return None
 
     def generate_grammar_question(self, last_question_type: Optional[str] = None) -> Optional[Dict]:
-        """Retrieve grammar questions using DeepSeek AI with resilient fallbacks"""
-        # Primary: DeepSeek AI generation (Gemini removed - using DeepSeek only)
+        """Retrieve grammar questions using Gemini AI first with DeepSeek fallback"""
+        # Primary: Gemini AI generation
+        gemini_response = self.generate_ai_grammar_question(last_question_type=last_question_type)
+        if gemini_response and gemini_response.get('success'):
+            return gemini_response
+        
+        # Secondary: DeepSeek AI fallback
         deepseek_response = self.generate_deepseek_grammar_question(last_question_type=last_question_type)
         if deepseek_response and deepseek_response.get('success'):
             return deepseek_response
@@ -648,7 +653,7 @@ Return ONLY valid JSON (no markdown fences or commentary):
 """
             
             try:
-                model = self.client.GenerativeModel('gemini-2.5-pro-preview-0504')
+                model = self.client.GenerativeModel('gemini-2.0-flash-exp')
                 response = model.generate_content(
                     prompt,
                     generation_config=self.client.types.GenerationConfig(
@@ -657,7 +662,7 @@ Return ONLY valid JSON (no markdown fences or commentary):
                         max_output_tokens=1800
                     ),
                 )
-                logger.info("Gemini API call completed successfully")
+                logger.info("Gemini API (gemini-2.0-flash-exp) call completed successfully for vocabulary")
             except Exception as api_error:
                 logger.error(f"Gemini API call failed: {api_error}")
                 return None
@@ -993,8 +998,13 @@ Return ONLY valid JSON:
             return f"✅ Correct answer: {correct_answer}\n💡 {explanation_data.get('definition', 'Keep expanding your vocabulary!')}"
     
     def generate_vocabulary_question(self, last_question_type: Optional[str] = None) -> Optional[Dict]:
-        """Generate vocabulary questions using DeepSeek AI with resilient fallbacks"""
-        # Primary: DeepSeek AI generation (Gemini removed - using DeepSeek only)
+        """Generate vocabulary questions using Gemini AI first with DeepSeek fallback"""
+        # Primary: Gemini AI generation
+        gemini_response = self.generate_ai_vocabulary_question(last_question_type=last_question_type)
+        if gemini_response and gemini_response.get('success'):
+            return gemini_response
+        
+        # Secondary: DeepSeek AI fallback
         deepseek_response = self.generate_deepseek_vocabulary_question(last_question_type=last_question_type)
         if deepseek_response and deepseek_response.get('success'):
             return deepseek_response
@@ -1305,33 +1315,128 @@ Return ONLY a JSON object (no markdown, no code blocks, just pure JSON):
             }
         }
 
-    def generate_comprehension_passage(self, theme: str = "General") -> Optional[Dict]:
-        """Generate reading comprehension passages with questions using DeepSeek V3.1"""
+    def generate_gemini_comprehension_passage(self, theme: str, form_level: int = 4) -> Optional[Dict]:
+        """Generate long comprehension passage using Gemini 2.0 Flash Exp"""
+        if not self._is_configured or not self.client:
+            logger.warning("Gemini AI not configured - skipping Gemini comprehension generation")
+            return None
+
         try:
-            # Use DeepSeek V3.1 for comprehension generation
+            prompt = f"""Generate a ZIMSEC O-Level English reading comprehension exercise on the theme: {theme}
+
+**ZIMSEC Format Requirements:**
+- Passage: 400-600 words (authentic ZIMSEC length for proper comprehension practice)
+- Zimbabwean context, characters, and cultural references where appropriate
+- Age-appropriate content for Form {form_level} students (15-17 years)
+- EXACTLY 10 comprehension questions following ZIMSEC patterns
+- Question types must include:
+  * 3-4 literal comprehension questions (direct from text)
+  * 3-4 inferential questions (reading between lines)
+  * 2-3 critical analysis questions (evaluation, opinion, comparison)
+- Varied question formats: short answer, explanation, analysis
+- Form {form_level} vocabulary and complexity level
+- Include Zimbabwean names, places, and cultural elements naturally
+
+**ZIMSEC Question Patterns to Follow:**
+1. "According to the passage..." (literal)
+2. "What does the author mean by..." (inferential)  
+3. "Why do you think..." (critical thinking)
+4. "Give evidence from the passage..." (textual support)
+5. "In your own words, explain..." (comprehension + expression)
+
+Return ONLY valid JSON (no markdown fences or commentary):
+{{
+    "passage": {{
+        "title": "Engaging passage title with Zimbabwean context",
+        "text": "The complete 400-600 word reading passage with natural Zimbabwean elements",
+        "word_count": 500,
+        "theme": "{theme}"
+    }},
+    "questions": [
+        {{
+            "question": "Question text following ZIMSEC patterns",
+            "correct_answer": "Expected detailed answer with key points",
+            "question_type": "literal/inferential/critical",
+            "marks": 2,
+            "explanation": "Why this is the correct answer with textual evidence"
+        }}
+    ]
+}}
+
+Make the passage authentic, engaging, and educationally valuable for ZIMSEC O-Level students."""
+
+            try:
+                model = self.client.GenerativeModel('gemini-2.0-flash-exp')
+                response = model.generate_content(
+                    prompt,
+                    generation_config=self.client.types.GenerationConfig(
+                        response_mime_type="application/json",
+                        temperature=0.7,
+                        max_output_tokens=3500
+                    ),
+                )
+                logger.info("Gemini API (gemini-2.0-flash-exp) call completed successfully for comprehension")
+            except Exception as api_error:
+                logger.error(f"Gemini API call failed for comprehension: {api_error}")
+                return None
+
+            if not response or not getattr(response, 'text', None):
+                logger.warning("Empty response from Gemini AI for comprehension")
+                return None
+
+            try:
+                clean_text = self._clean_json_block(response.text)
+                passage_data = json.loads(clean_text)
+                
+                # Validate structure
+                if 'passage' in passage_data and 'questions' in passage_data:
+                    logger.info(f"✅ Successfully generated comprehension passage using Gemini 2.0 Flash Exp - Theme: {theme}")
+                    return passage_data
+                else:
+                    logger.warning("Gemini comprehension response missing required fields")
+                    return None
+                    
+            except json.JSONDecodeError as e:
+                logger.error(f"Gemini comprehension JSON decode error: {e}")
+                return None
+            except Exception as error:
+                logger.error(f"Error processing Gemini comprehension response: {error}")
+                return None
+
+        except Exception as e:
+            logger.error(f"Error generating Gemini comprehension passage: {e}")
+            return None
+
+    def generate_comprehension_passage(self, theme: str = "General") -> Optional[Dict]:
+        """Generate reading comprehension passages with Gemini first, DeepSeek fallback"""
+        # Primary: Gemini AI generation
+        gemini_result = self.generate_gemini_comprehension_passage(theme, form_level=4)
+        if gemini_result:
+            return gemini_result
+        
+        # Secondary: DeepSeek AI fallback
+        try:
             from standalone_english_comprehension_generator import standalone_english_comprehension_generator
             
-            logger.info(f"Generating comprehension passage with DeepSeek V3.1 for theme: {theme}")
+            logger.info(f"Gemini failed, trying DeepSeek V3.1 for theme: {theme}")
             result = standalone_english_comprehension_generator.generate_comprehension_passage(theme)
             
             if result and result.get('success'):
                 logger.info(f"✅ Successfully generated comprehension passage using DeepSeek V3.1")
                 return result
             else:
-                logger.warning("DeepSeek comprehension generation failed, using fallback")
-                return {
-                    'success': True,
-                    'passage_data': self._get_fallback_comprehension(),
-                    'source': 'fallback'
-                }
+                logger.warning("DeepSeek comprehension generation also failed, using fallback")
                 
         except Exception as e:
             logger.error(f"Error in DeepSeek comprehension generation: {e}")
-            return {
-                'success': True,
-                'passage_data': self._get_fallback_comprehension(),
-                'source': 'fallback'
-            }
+        
+        # Final fallback
+        logger.warning("Using fallback comprehension passage")
+        return {
+            'success': True,
+            'passage_data': self._get_fallback_comprehension(),
+            'source': 'fallback'
+        }
 
     def _get_fallback_comprehension(self) -> Dict:
         """Fallback comprehension passage when AI fails"""
@@ -1486,32 +1591,45 @@ Return valid JSON with the exact format requested (no markdown, no code blocks, 
             return "U"
 
     def generate_long_comprehension_passage(self, theme: str, form_level: int = 4) -> Optional[Dict]:
-        """Generate long comprehensive passage with 10 questions for comprehension practice using DeepSeek V3.1"""
+        """Generate long comprehensive passage with Gemini first, DeepSeek fallback"""
+        # Primary: Gemini AI generation
+        gemini_result = self.generate_gemini_comprehension_passage(theme, form_level)
+        if gemini_result:
+            return gemini_result
+        
+        # Secondary: DeepSeek AI fallback
         try:
-            # Use DeepSeek V3.1 for long comprehension generation
             from standalone_english_comprehension_generator import standalone_english_comprehension_generator
             
-            logger.info(f"Generating long comprehension passage with DeepSeek V3.1 for theme: {theme}, form: {form_level}")
+            logger.info(f"Gemini failed, trying DeepSeek V3.1 for theme: {theme}, form: {form_level}")
             result = standalone_english_comprehension_generator.generate_long_comprehension_passage(theme, form_level)
             
             if result:
                 logger.info(f"✅ Successfully generated long comprehension passage using DeepSeek V3.1")
                 return result
             else:
-                logger.warning("DeepSeek long comprehension generation failed, using fallback")
-                return self._get_fallback_long_comprehension(theme)
+                logger.warning("DeepSeek long comprehension generation also failed, using fallback")
                 
         except Exception as e:
             logger.error(f"Error in DeepSeek long comprehension generation: {e}")
-            return self._get_fallback_long_comprehension(theme)
+        
+        # Final fallback
+        logger.warning("Using fallback long comprehension passage")
+        return self._get_fallback_long_comprehension(theme)
 
     def generate_long_comprehension_passage_fast(self, theme: str, form_level: int = 4) -> Optional[Dict]:
-        """Fast version with reduced timeouts to prevent worker crashes on Render"""
+        """Fast comprehension generation with Gemini first, DeepSeek fallback with reduced timeouts"""
+        # Primary: Gemini AI generation (faster than DeepSeek)
+        gemini_result = self.generate_gemini_comprehension_passage(theme, form_level)
+        if gemini_result:
+            logger.info(f"✅ Fast generation successful using Gemini 2.0 Flash Exp")
+            return gemini_result
+        
+        # Secondary: DeepSeek AI fallback with reduced timeouts
         try:
-            # Use DeepSeek V3.1 with reduced timeouts for Render deployment
             from standalone_english_comprehension_generator import standalone_english_comprehension_generator
             
-            logger.info(f"Fast generation: DeepSeek V3.1 for theme: {theme}, form: {form_level}")
+            logger.info(f"Gemini failed, trying fast DeepSeek V3.1 for theme: {theme}, form: {form_level}")
             
             # Create a fast generator instance with reduced timeouts
             fast_generator = standalone_english_comprehension_generator.__class__()
@@ -1527,13 +1645,14 @@ Return valid JSON with the exact format requested (no markdown, no code blocks, 
                 logger.info(f"✅ Fast generation successful using DeepSeek V3.1")
                 return result
             else:
-                logger.warning("Fast DeepSeek generation failed, using fallback immediately")
-                return self._get_fallback_long_comprehension(theme)
+                logger.warning("Fast DeepSeek generation also failed, using fallback immediately")
                 
         except Exception as e:
             logger.error(f"Error in fast DeepSeek generation: {e}")
-            logger.info("🔄 Falling back to enhanced fallback immediately")
-            return self._get_fallback_long_comprehension(theme)
+        
+        # Final fallback
+        logger.info("🔄 Using fallback comprehension passage")
+        return self._get_fallback_long_comprehension(theme)
 
     def _get_fallback_long_comprehension(self, theme: str) -> Dict:
         """Enhanced ZIMSEC-style fallback long comprehension passage when AI fails"""

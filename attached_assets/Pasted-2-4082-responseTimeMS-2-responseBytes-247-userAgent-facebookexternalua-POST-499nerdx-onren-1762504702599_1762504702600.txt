@@ -1,0 +1,46 @@
+2-4082" responseTimeMS=2 responseBytes=247 userAgent="facebookexternalua"
+     [POST]499nerdx.onrender.com/webhook/whatsappclientIP="173.252.107.20" requestID="b65835c1-b84a-4de3" responseTimeMS=24943 responseBytes=29 userAgent="facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.107.8" requestID="e7392206-142e-4fef" responseTimeMS=722 responseBytes=247 userAgent="facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.107.5" requestID="f0a38c51-95b8-4861" responseTimeMS=1209 responseBytes=247 userAgent="facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.107.8" requestID="dbc594a7-45d4-41fd" responseTimeMS=3 responseBytes=247 userAgent="facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.107.4" requestID="a78c869d-e9c3-4c61" responseTimeMS=34 responseBytes=247 userAgent="facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.95.6" requestID="3b41e1d8-445e-42d3" responseTimeMS=3 responseBytes=247 userAgent="facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.107.5" requestID="9f6a20e4-e5b4-41eb" responseTimeMS=2 responseBytes=247 userAgent="facebookexternalua"
+     [POST]200nerdx.onrender.com/webhook/whatsappclientIP="173.252.107.1" requestID="4fadce2a-9644-47bc" responseTimeMS=2 responseBytes=247 userAgent="facebookexternalua"
+2025-11-07 08:37:33,178 - api.webhook - INFO - 🔍 Received WhatsApp message: {'context': {'from': '263781206192', 'id': 'wamid.HBgMMjYzNzg1NDk0NTk0FQIAERgSNkVBMTcxOEUxOEQ0QUM3ODE0AA=='}, 'from': '263785494594', 'id': 'wamid.HBgMMjYzNzg1NDk0NTk0FQIAEhgUMkFBMTdCNDA2ODNDNUM3Q0Q2MUMA', 'timestamp': '1762504652', 'type': 'interactive', 'interactive': {'type': 'button_reply', 'button_reply': {'id': 'science_teacher_mode', 'title': '👨\u200d🏫 Teacher Mode'}}}
+2025-11-07 08:37:33,178 - api.webhook - INFO - 🔍 User ID: 263785494594, Type: interactive
+2025-11-07 08:37:33,178 - api.webhook - INFO - Background processing interactive message from 263785494594
+2025-11-07 08:37:33,178 - api.webhook - INFO - Button interaction from 263785494594: science_teacher_mode
+2025-11-07 08:37:33,178 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+2025-11-07 08:37:33,464 - services.combined_science_teacher_service - ERROR - Error starting teacher mode for 263785494594: 'SessionManager' object has no attribute 'set_data'
+2025-11-07 08:37:33,464 - services.quality_monitor - INFO - WhatsApp throttle override active - allowing message despite quality metrics
+2025-11-07 08:37:33,895 - services.whatsapp_service - INFO - Message sent successfully to 263785494594
+104.23.213.100 - - [07/Nov/2025:08:37:33 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+2025-11-07 08:37:33,898 - api.webhook - INFO - 🔍 Received WhatsApp message: {'context': {'from': '263781206192', 'id': 'wamid.HBgMMjYzNzc0ODIzMTY5FQIAERgSNjA3NTNBQTI5OUY1OENBMjhBAA=='}, 'from': '263774823169', 'id': 'wamid.HBgMMjYzNzc0ODIzMTY5FQIAEhggQUMxNjc5RTVFMTA1Mjg1ODU5RjZBRjdENUQxNDUxNzcA', 'timestamp': '1762504627', 'type': 'interactive', 'interactive': {'type': 'button_reply', 'button_reply': {'id': 'graph_generate_linear_programming', 'title': '🤖 Generate Graph'}}}
+2025-11-07 08:37:33,899 - api.webhook - INFO - 🔍 User ID: 263774823169, Type: interactive
+2025-11-07 08:37:33,899 - api.webhook - INFO - Background processing interactive message from 263774823169
+2025-11-07 08:37:33,899 - api.webhook - INFO - Button interaction from 263774823169: graph_generate_linear_programming
+2025-11-07 08:37:33,899 - database.external_db - INFO - Using ANON_KEY for GET operation on users_registration
+2025-11-07 08:37:34,170 - handlers.graph_practice_handler - WARNING - User 263774823169 attempted graph generation while another operation is active
+2025-11-07 08:37:34,170 - services.quality_monitor - INFO - WhatsApp throttle override active - allowing message despite quality metrics
+2025-11-07 08:37:34,586 - services.whatsapp_service - INFO - Message sent successfully to 263774823169
+172.70.42.145 - - [07/Nov/2025:08:37:34 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+172.71.151.202 - - [07/Nov/2025:08:37:35 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+104.23.209.28 - - [07/Nov/2025:08:37:35 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+172.71.150.28 - - [07/Nov/2025:08:37:35 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+172.68.245.208 - - [07/Nov/2025:08:37:35 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+2025-11-07 08:37:39,464 - services.math_question_generator - INFO - Raw DeepSeek response: ```json
+{
+    "question": "Answer the whole of this question on the grid.\n\n(a) Draw the graphs of these inequalities by shading the unwanted region.\n\n(i) 3x + 2y ≤ 18\n(ii) x + 4y ≤ 16\n(iii) x ≥ ...
+2025-11-07 08:37:39,465 - services.math_question_generator - INFO - ✅ Successfully generated question: Answer the whole of this question on the grid.
+(a) Draw the graphs of these inequalities by shading...
+2025-11-07 08:37:39,466 - services.math_question_generator - INFO - Added AI question to history: Graph - Linear Programming_medium_7002
+2025-11-07 08:37:39,466 - services.math_question_generator - INFO - Successfully validated AI question: Answer the whole of this question on the grid.
+(a...
+2025-11-07 08:37:39,466 - services.math_question_generator - INFO - ✅ Successfully generated question for Mathematics/Graph - Linear Programming on attempt 1
+2025-11-07 08:37:39,473 - services.whatsapp_service - INFO - Allowing critical interactive message to 263774823169 - bypassing throttle
+2025-11-07 08:37:39,911 - services.whatsapp_service - INFO - Interactive message sent successfully to 263774823169
+172.71.150.13 - - [07/Nov/2025:08:37:39 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+172.71.151.76 - - [07/Nov/2025:08:37:40 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+172.71.151.200 - - [07/Nov/2025:08:37:44 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"
+104.23.211.225 - - [07/Nov/2025:08:37:44 +0000] "POST /webhook/whatsapp HTTP/1.1" 200 16 "-" "facebookexternalua"

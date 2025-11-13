@@ -107,6 +107,13 @@ graph_practice_handler = GraphPracticeHandler(whatsapp_service, graph_service, m
 from handlers.english_handler import EnglishHandler
 english_handler = EnglishHandler(whatsapp_service, english_service)
 
+# Initialize Project Assistant handler
+from handlers.project_assistant_handler import ProjectAssistantHandler
+project_assistant_handler = ProjectAssistantHandler()
+
+# Initialize Combined Science handler
+from handlers.combined_science_handler import combined_science_handler
+
 # Initialize utilities
 rate_limiter = RateLimiter()
 question_cache = QuestionCacheService()
@@ -618,11 +625,33 @@ def handle_new_user(user_id: str, message_text: str):
         # Check if user is responding to consent request
         if message_text.lower().strip() in ['yes', 'y', 'agree', 'accept', 'ok', 'consent']:
             logger.info(f"✅ User {user_id} provided consent, proceeding to registration")
-            start_registration_flow(user_id, message_text)
+            
+            # Retrieve stored referral code from temporary session (if any)
+            from database.session_db import get_user_session
+            temp_session = get_user_session(user_id)
+            original_message = temp_session.get('initial_message', message_text) if temp_session else message_text
+            
+            start_registration_flow(user_id, original_message)
             return
         elif message_text.lower().strip() in ['no', 'n', 'decline', 'refuse', 'stop', 'unsubscribe']:
             handle_opt_out(user_id)
             return
+
+        # 🎯 AUTO-EXTRACT REFERRAL CODE from first message
+        import re
+        referral_code = None
+        n_codes = re.findall(r'N[A-Z0-9]{5}', message_text.upper())
+        if n_codes:
+            referral_code = n_codes[0]
+            logger.info(f"🔗 AUTO-DETECTED REFERRAL CODE: {referral_code} from first message of {user_id}")
+
+        # Store initial message temporarily to preserve referral code
+        from database.session_db import save_user_session
+        save_user_session(user_id, {
+            'session_type': 'awaiting_consent',
+            'initial_message': message_text,
+            'detected_referral_code': referral_code
+        })
 
         # First-time interaction - Request explicit consent (WhatsApp Policy Requirement)
         consent_message = """🎓 *Welcome to NerdX Quiz Bot!*
@@ -652,8 +681,11 @@ To comply with WhatsApp Business Policy, we need your explicit consent to:
 📞 *Need help?* Reply 'SUPPORT'
 🛑 *To stop messages:* Reply 'STOP'"""
 
+        if referral_code:
+            consent_message += f"\n\n🎁 *Bonus:* Referral code {referral_code} detected!"
+
         whatsapp_service.send_message(user_id, consent_message)
-        logger.info(f"📋 Consent request sent to {user_id}")
+        logger.info(f"📋 Consent request sent to {user_id}{' with referral code ' + referral_code if referral_code else ''}")
 
     except Exception as e:
         logger.error(f"Error handling new user {user_id}: {e}")
@@ -1030,6 +1062,11 @@ Don't worry - no charges were made to your account."""
             handle_paynow_phone_collection(user_id, message_text)
         elif session_type == 'audio_chat':
             handle_audio_chat_message(user_id, message_text)
+        elif session_type == 'project_assistant':
+            project_assistant_handler.handle_project_message(user_id, message_text)
+        elif combined_science_handler.handle_message(user_id, message_text):
+            # Combined Science handler processed the message
+            pass
         else:
             # CRITICAL FIX: Don't automatically send main menu - it causes message chains
             # Only send menu if user explicitly requests it
@@ -1298,9 +1335,8 @@ def send_main_menu(user_id: str, user_name: str = None):
         welcome_text += f"┌─────────────────────┐\n"
         welcome_text += f"│  📚 *STUDY SUBJECTS*  │\n"
         welcome_text += f"└─────────────────────┘\n"
-        welcome_text += f"🧬 Biology        ⚗️ Chemistry\n"
-        welcome_text += f"⚡ Physics        📐 Mathematics\n"
-        welcome_text += f"📝 English        🎤 Audio Chat\n\n"
+        welcome_text += f"🔬 Combined Science  📐 Mathematics\n"
+        welcome_text += f"📝 English           🎓 Project Help\n\n"
 
         # Smart features section
         welcome_text += f"┌─────────────────────┐\n"
@@ -1324,7 +1360,8 @@ def send_main_menu(user_id: str, user_name: str = None):
         # Create main buttons with advanced credit system integration
         main_buttons = [
                 {"text": "🎯 Start Quiz", "callback_data": "start_quiz"},
-                {"text": "🎤 Audio Chat", "callback_data": "audio_chat_menu"},
+                # {"text": "🎤 Audio Chat", "callback_data": "audio_chat_menu"},  # Hidden but code preserved
+                {"text": "🎓 Project Assistant", "callback_data": "project_assistant_menu"},
             {"text": "📊 My Stats", "callback_data": "user_stats"},
             {"text": "👥 Referrals", "callback_data": "referrals_menu"},
             {"text": "💰 Buy Credits", "callback_data": "credit_store"}
@@ -1410,7 +1447,7 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
 
         # Handle specific subject menu selections first (most specific patterns first)
         if selection_id == 'subject_ordinary_combined_science':
-            handle_combined_science_menu(user_id)
+            combined_science_handler.handle_button_callback(user_id, "combined_science")
         elif selection_id == 'subject_ordinary_mathematics':
             handle_ordinary_mathematics_menu(user_id)
         elif selection_id == 'subject_ordinary_english':
@@ -1425,7 +1462,7 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         elif selection_id.startswith('subject_ordinary_'):
             subject_name = selection_id.replace('subject_ordinary_', '').replace('_', ' ').title()
             if subject_name == 'Combined Science':
-                handle_combined_science_menu(user_id)
+                combined_science_handler.handle_button_callback(user_id, "combined_science")
             elif subject_name == 'Mathematics':
                 handle_ordinary_mathematics_menu(user_id)
             elif subject_name == 'English':
@@ -1483,6 +1520,28 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
                 credits_consumed=0
             )
             handle_quiz_menu(user_id)
+        elif selection_id == 'project_assistant_menu':
+            # Track project assistant feature usage
+            analytics_tracker.track_feature_usage(
+                feature_name="Project Assistant",
+                user_id=user_id,
+                success=True,
+                time_spent=0,
+                credits_consumed=0
+            )
+            project_assistant_handler.handle_project_menu(user_id)
+        elif selection_id == 'project_new':
+            project_assistant_handler.handle_start_new_project(user_id)
+        elif selection_id == 'project_continue':
+            project_assistant_handler.handle_continue_project(user_id)
+        elif selection_id == 'project_save_exit':
+            project_assistant_handler.handle_save_and_exit(user_id)
+        
+        # Combined Science Callbacks
+        elif combined_science_handler.handle_button_callback(user_id, selection_id):
+            # Handler returns True if it processed the callback
+            pass
+        
         elif selection_id == 'audio_chat_menu':
             # Track audio chat feature usage
             analytics_tracker.track_feature_usage(
@@ -2459,7 +2518,6 @@ def show_referral_info(user_id: str):
         successful_referrals = referral_stats.get('successful_referrals', 0)
         total_bonus_earned = referral_stats.get('total_bonus_earned', 0)
         referrer_bonus = referral_stats.get('referrer_bonus', 5)
-        referee_bonus = referral_stats.get('referee_bonus', 5)
 
         referral_message = f"""👥 *{name}'s Referral Center* 👥
 
@@ -2471,15 +2529,13 @@ def show_referral_info(user_id: str):
 • Credits Earned: {total_bonus_earned}
 
 💎 *Earn {referrer_bonus} credits* for each friend who registers!
-🎁 *Your friends also get {referee_bonus} bonus credits!*
 
 ✨ *How it works:*
-1️⃣ Share your referral code with friends
-2️⃣ They register using your code
-3️⃣ You both get +{referrer_bonus} credits!
-4️⃣ They also get +{referee_bonus} bonus credits!
+1️⃣ Share your referral link with friends
+2️⃣ They click the link and register (get 75 welcome credits)
+3️⃣ You get +{referrer_bonus} credits automatically!
 
-📲 Share your code with friends so they can get bonus credits too!"""
+📲 Share your referral link to earn more credits!"""
 
         buttons = [
             {"text": "📤 Share to Friend", "callback_data": "share_to_friend"},

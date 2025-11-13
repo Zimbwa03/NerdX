@@ -29,11 +29,11 @@ class ReferralService:
     """Handle user referral system with bonus credits"""
     
     def __init__(self):
-        # Referral rewards - updated to match new credit system
+        # Referral rewards - only referrer gets bonus credits
         from config import Config
         self.referral_bonus = {
             'referrer': Config.REFERRAL_BONUS,  # 5 credits for the person who referred
-            'referee': Config.REFERRAL_BONUS,   # 5 credits for the new user
+            'referee': 0,   # New users get 75 welcome credits via registration, no referral bonus
         }
     
     def generate_referral_code(self, user_id: str) -> Optional[str]:
@@ -157,12 +157,13 @@ class ReferralService:
                 return False
             
             # Use existing add_referral_credits function
-            # This function already handles credit awarding to referrer
+            # This function already handles credit awarding to referrer ONLY
+            # New users get 75 credits via registration, not here
             success = add_referral_credits(referrer_nerdx_id, referee_id)
             
             if success:
-                # Also award bonus credits to the new user (referee)
-                add_credits(referee_id, self.referral_bonus['referee'], f"Referral signup bonus via {referrer_nerdx_id}")
+                # Referrer gets +5 credits (handled by add_referral_credits)
+                # New user gets 75 credits via registration (not here)
                 logger.info(f"Successfully processed referral: {referrer_nerdx_id} -> {referee_id}")
                 return True
             else:
@@ -368,29 +369,24 @@ class ReferralService:
 
 Hey {user_name}! 👋
 
-💎 Earn *{self.referral_bonus['referrer']} FREE CREDITS* for every friend who registers using your referral code!
+💎 Earn *{self.referral_bonus['referrer']} FREE CREDITS* for every friend who registers using your referral link!
 
 🎯 *Your Referral Code:* `{referral_code}`
 
-📲 *Share this message:*
+📲 *Share this link with friends:*
 
----
-🎓 Join NerdX - The #1 ZIMSEC Quiz Bot!
-
-🧬 Study Biology, Chemistry & Physics
-🤖 AI-powered questions  
-📊 Track your progress
-
-💎 Register with referral code: *{referral_code}* and get bonus credits!
-
-🚀 Start here: {whatsapp_link}
----
+{whatsapp_link}
 
 ✨ *How it works:*
-1️⃣ Share your referral code with friends
-2️⃣ They register using your code
-3️⃣ You both get +{self.referral_bonus['referrer']} credits!
-4️⃣ They also get +{self.referral_bonus['referee']} bonus credits!"""
+1️⃣ Friend clicks your referral link
+2️⃣ Code is *automatically captured* (no typing needed!)
+3️⃣ They complete registration (gets 75 welcome credits)
+4️⃣ You get +{self.referral_bonus['referrer']} credits instantly!
+
+🎁 *Your Reward:*
+• You earn: +{self.referral_bonus['referrer']} credits per friend who registers
+
+📱 *Share with friends on WhatsApp, social media, or SMS!*"""
 
             return {
                 'success': True,

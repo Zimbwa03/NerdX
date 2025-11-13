@@ -8,6 +8,7 @@ from database.external_db import get_user_registration, get_user_credits, get_us
 from database.session_db import save_user_session, get_user_session, clear_user_session
 from services.whatsapp_service import WhatsAppService
 from services.english_service import EnglishService
+from utils.comprehension_pdf_generator import ComprehensionPDFGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +18,7 @@ class EnglishHandler:
     def __init__(self, whatsapp_service: WhatsAppService, english_service: EnglishService):
         self.whatsapp_service = whatsapp_service
         self.english_service = english_service
+        self.pdf_generator = ComprehensionPDFGenerator()
 
         # English modules aligned with ZIMSEC curriculum
         self.english_modules = {
@@ -293,36 +295,27 @@ Ready to boost your reading skills? 🚀"""
             }
             save_user_session(user_id, session_data)
 
-            # Send professional loading message
-            self.whatsapp_service.send_message(
-                user_id,
-                f"⏳ Please wait {user_name}...\n\n📚 NerdX is creating your personalized comprehension practice."
-            )
-
-            # Continue without delays to prevent worker timeout
-
-            # 🚀 DEEPSEEK AI ONLY: Generate comprehension using DeepSeek AI exclusively
+            # Select random theme
             themes = ["Zimbabwean Culture", "African Wildlife", "Technology & Society", "Education", "Sports", "Environment", "History", "Science Discovery"]
             import random
             random_theme = random.choice(themes)
 
-            logger.info(f"🤖 Generating comprehension with DeepSeek AI: theme={random_theme}, form={form_level}")
-            
-            # Send immediate progress update to user
+            # Send single consolidated loading message (removed duplicate messages)
             self.whatsapp_service.send_message(
                 user_id, 
-                f"📚 Creating your {random_theme.lower()} comprehension passage...\n\n⏳ This may take 30-60 seconds. Please wait!"
+                f"📚 Creating your {random_theme.lower()} comprehension passage, {user_name}...\n\n⏳ Please wait while our AI generates your practice questions!"
             )
+
+            logger.info(f"🤖 Generating comprehension with Gemini AI (DeepSeek fallback): theme={random_theme}, form={form_level}")
             
-            # Generate using DeepSeek AI with timeout protection
+            # Generate using Gemini AI first, DeepSeek fallback
             try:
-                # Try DeepSeek with reduced timeout to prevent worker crashes
                 passage_data = self.english_service.generate_long_comprehension_passage_fast(random_theme, form_level)
                 
                 if passage_data:
-                    logger.info(f"✅ Generated comprehension via DeepSeek AI: {random_theme}")
+                    logger.info(f"✅ Generated comprehension: {random_theme}")
                 else:
-                    logger.warning(f"⚠️ DeepSeek AI generation failed, using enhanced fallback")
+                    logger.warning(f"⚠️ AI generation failed, using enhanced fallback")
                     # Use enhanced fallback immediately
                     passage_data = self.english_service._get_fallback_long_comprehension(random_theme)
                         
@@ -351,90 +344,6 @@ Ready to boost your reading skills? 🚀"""
             from database.session_db import clear_user_session
             clear_user_session(user_id)
             self.whatsapp_service.send_message(user_id, "❌ Error generating comprehension. Please try again.")
-
-    def _send_enhanced_comprehension_passage(self, user_id: str, user_name: str, passage_data: Dict):
-        """Send enhanced comprehension passage with interactive question flow"""
-        try:
-            passage = passage_data.get('passage', {})
-            questions = passage_data.get('questions', [])
-
-            if not passage or not questions:
-                logger.error("Invalid passage data structure")
-                return
-
-            # Send the long passage first as separate message with length check
-            passage_text = passage.get('text', 'Passage content not available')
-            passage_title = passage.get('title', 'Comprehension Passage')
-            word_count = passage.get('word_count', len(passage_text.split()))
-            reading_time = max(2, len(passage_text.split()) // 200)
-
-            # Check if message is too long for WhatsApp (4096 char limit)
-            full_message = f"""📖 **{passage_title}**
-
-{passage_text}
-
----
-📊 **Word Count:** {word_count} words
-⏱️ **Reading Time:** ~{reading_time} minutes
-
-*Read the passage carefully and answer ALL questions that follow.*"""
-
-            if len(full_message) > 4000:  # WhatsApp limit with safety margin
-                # Send title and intro first
-                title_message = f"📖 **{passage_title}**\n\n📊 **Word Count:** {word_count} words\n⏱️ **Reading Time:** ~{reading_time} minutes\n\n*Read carefully - passage follows:*"
-                self.whatsapp_service.send_message(user_id, title_message)
-
-                # Split passage text into chunks
-                chunks = self._split_text(passage_text, 3000)  # Leave room for formatting
-                for i, chunk in enumerate(chunks):
-                    chunk_message = f"**Part {i+1}:**\n\n{chunk}"
-                    if i == len(chunks) - 1:  # Last chunk
-                        chunk_message += "\n\n---\n*Now answer ALL questions that follow.*"
-                    self.whatsapp_service.send_message(user_id, chunk_message)
-            else:
-                # Send as single message if within limit
-                try:
-                    self.whatsapp_service.send_message(user_id, full_message)
-                except Exception as e:
-                    logger.error(f"Error sending passage message: {e}")
-                    # Send fallback shorter message
-                    fallback_message = f"📖 **{passage_title}**\n\n{passage_text[:2000]}...\n\n*Passage continues - please read carefully and answer the questions below.*"
-                    self.whatsapp_service.send_message(user_id, fallback_message)
-
-            # Format and send 10 questions with Show Answer button
-            questions_message = f"""📝 **COMPREHENSION QUESTIONS**
-
-Hi {user_name}! Answer these 10 questions based on the passage above:
-
-"""
-
-            for i, q in enumerate(questions[:10], 1):  # Ensure only 10 questions
-                question_type = (q.get('question_type') or '').title()
-                marks = q.get('marks', 1)
-                questions_message += f"**{i}.** {q.get('question', f'Question {i} not available')} [{marks} mark{'s' if marks != 1 else ''}]\n\n"
-
-            questions_message += "✅ *Answer these questions based on your understanding of the passage*"
-
-            # Save questions in session for answer display
-            from database.session_db import save_user_session
-            import json
-            session_data = {
-                'session_type': 'comprehension_questions',
-                'questions_data': json.dumps(questions[:10]),
-                'user_name': user_name,
-                'passage_title': passage.get('title', 'Comprehension')
-            }
-            save_user_session(user_id, session_data)
-
-            buttons = [
-                {"text": "📋 Show Answers", "callback_data": "comprehension_show_answers"},
-                {"text": "🔙 Back", "callback_data": "english_menu"}
-            ]
-
-            self.whatsapp_service.send_interactive_message(user_id, questions_message, buttons)
-
-        except Exception as e:
-            logger.error(f"Error sending enhanced comprehension passage: {e}")
 
     def handle_comprehension_show_answers(self, user_id: str):
         """Show all comprehension answers with stats and XP tracking"""
@@ -580,7 +489,7 @@ Hi {user_name}! Answer these 10 questions based on the passage above:
         return chunks
 
     def _send_professional_comprehension_flow(self, user_id: str, user_name: str, passage_data: Dict):
-        """Send optimized comprehension flow - text with questions loading button"""
+        """Send comprehension as professional PDF document with answer bot"""
         try:
             passage = passage_data.get('passage', {})
             questions = passage_data.get('questions', [])
@@ -589,66 +498,92 @@ Hi {user_name}! Answer these 10 questions based on the passage above:
                 logger.error("Invalid passage data structure")
                 return
 
-            # Get passage details
-            passage_text = passage.get('text', 'Passage content not available')
+            # Get passage details for notification
             passage_title = passage.get('title', 'Comprehension Passage')
-            word_count = len(passage_text.split())
+            word_count = len(passage.get('text', '').split())
             reading_time = max(2, word_count // 200)
 
-            # Create comprehensive message with passage and continue button
-            # Format passage for optimal display
-            complete_message = f"""📖 **{passage_title}**
+            # Generate professional PDF (removed extra "generating" message to reduce spam)
+            try:
+                pdf_path = self.pdf_generator.generate_comprehension_pdf(
+                    passage_data=passage_data,
+                    user_name=user_name
+                )
+                logger.info(f"Generated PDF for {user_id}: {pdf_path}")
+            except Exception as pdf_error:
+                logger.error(f"PDF generation failed: {pdf_error}")
+                self.whatsapp_service.send_message(
+                    user_id,
+                    "❌ Error generating PDF. Please try again or contact support."
+                )
+                return
 
-📊 Words: {word_count} | ⏱️ Reading time: ~{reading_time} min
+            # Send PDF as WhatsApp document
+            try:
+                caption = f"📖 {passage_title}\n\n📊 {word_count} words | ⏱️ ~{reading_time} min reading time\n\n✅ Read the passage and answer all questions. Click 'Show Answers' when ready to check!"
+                
+                success = self.whatsapp_service.send_document(
+                    to=user_id,
+                    file_path=pdf_path,
+                    caption=caption,
+                    filename=f"{passage_title.replace(' ', '_')}.pdf"
+                )
+                
+                if not success:
+                    logger.error(f"Failed to send PDF to {user_id}")
+                    self.whatsapp_service.send_message(
+                        user_id,
+                        "❌ Error sending PDF. Please try again."
+                    )
+                    return
+                    
+                logger.info(f"Successfully sent comprehension PDF to {user_id}")
+                
+            except Exception as send_error:
+                logger.error(f"Error sending PDF: {send_error}")
+                self.whatsapp_service.send_message(
+                    user_id,
+                    "❌ Error sending PDF. Please try again."
+                )
+                return
+            
+            # Clean up PDF file after sending (with small delay to ensure delivery)
+            try:
+                import os
+                import time
+                time.sleep(2)  # Wait to ensure WhatsApp has processed the upload
+                if os.path.exists(pdf_path):
+                    os.remove(pdf_path)
+                    logger.info(f"Cleaned up PDF: {pdf_path}")
+            except Exception as cleanup_error:
+                logger.warning(f"Could not clean up PDF file: {cleanup_error}")
 
-**Read the passage carefully:**
-
-{passage_text}
-
----
-
-✅ **Passage Complete!** Now you'll answer 10 comprehension questions based on this passage, {user_name}.
-
-📝 Ready to continue?"""
-
-            # Check message length for WhatsApp limits
-            if len(complete_message) > 4000:
-                # Split into two messages: title + passage, then questions button
-                title_passage_message = f"""📖 **{passage_title}**
-
-📊 Words: {word_count} | ⏱️ Reading time: ~{reading_time} min
-
-**Read the passage carefully:**
-
-{passage_text}"""
-
-                self.whatsapp_service.send_message(user_id, title_passage_message)
-
-                # Send completion message with questions button
-                ready_message = f"✅ **Passage Complete!**\n\nNow you'll answer 10 comprehension questions based on this passage, {user_name}.\n\n📝 Ready to continue?"
-
+            # Send interactive button for answers
             continue_buttons = [
-                {"text": "📝 Load Questions", "callback_data": "comprehension_load_questions"},
+                {"text": "📋 Show Answers", "callback_data": "comprehension_show_answers"},
                 {"text": "🔙 Back to Menu", "callback_data": "english_menu"}
             ]
 
-            self.whatsapp_service.send_interactive_message(user_id, ready_message, continue_buttons)
+            button_message = f"📌 **Ready to check your answers, {user_name}?**\n\nClick 'Show Answers' when you've completed all questions from the PDF."
+            self.whatsapp_service.send_interactive_message(user_id, button_message, continue_buttons)
 
-            # Save passage data to session for question loading
+            # Save passage data to session for answer viewing
             from database.session_db import save_user_session
             import json
             session_data = {
-                'session_type': 'comprehension_passage_ready',
-                'passage_data': json.dumps(passage_data),
+                'session_type': 'comprehension_questions',
+                'questions_data': json.dumps(questions[:10]),
                 'user_name': user_name,
-                'passage_title': passage.get('title', 'Comprehension Passage')
+                'passage_title': passage_title
             }
             save_user_session(user_id, session_data)
 
-            logger.info(f"Optimized passage ready for {user_id}, waiting for user to load questions")
+            logger.info(f"PDF comprehension sent successfully to {user_id}")
 
         except Exception as e:
-            logger.error(f"Error in optimized comprehension flow: {e}")
+            logger.error(f"Error in PDF comprehension flow: {e}")
+            import traceback
+            traceback.print_exc()
             self.whatsapp_service.send_message(user_id, "❌ Error displaying comprehension. Please try again.")
 
     def handle_comprehension_load_questions(self, user_id: str):
@@ -680,10 +615,13 @@ Hi {user_name}! Answer these 10 questions based on the passage above:
 
             # Ensure we have at least 10 questions, pad if needed
             while len(questions) < 10:
+                question_num = len(questions) + 1
                 questions.append({
-                    'question': f'Additional question {len(questions) + 1} - What is your understanding of the main theme in this passage?',
-                    'answer': 'Based on your reading comprehension.',
-                    'marks': 2
+                    'question': f'Question {question_num}: What is the main message or theme of this passage?',
+                    'correct_answer': 'The passage discusses [theme/topic]. Students should identify key points from their reading.',
+                    'explanation': 'Look for the central idea that connects all paragraphs in the passage.',
+                    'marks': 2,
+                    'question_type': 'inferential'
                 })
 
             # Split questions into two messages (5 questions each)
@@ -1970,7 +1908,7 @@ IMPORTANT:
  
             if existing_session:
                 session_type = existing_session.get('session_type')
-                if session_type == 'english_grammar_meta':
+                if session_type == 'english_grammar':
                     last_question_type = existing_session.get('last_question_type')
                     intro_sent = existing_session.get('intro_sent', False)
  

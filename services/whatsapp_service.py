@@ -37,6 +37,117 @@ class WhatsAppService:
         # Quality monitoring
         self.quality_monitor = quality_monitor
     
+    def _is_critical_user_response(self, message: str) -> bool:
+        """
+        Determine if a message is a critical user-initiated response that should bypass throttling.
+        This includes ALL legitimate educational interactions, quiz responses, menu selections,
+        and user-requested content.
+        
+        Critical messages are responses to user actions and should NEVER be blocked.
+        
+        IMPORTANT: Uses specific phrase matching to avoid false positives from generic words.
+        """
+        message_lower = message.lower()
+        normalized_message = message_lower.strip()
+        
+        # Command messages always bypass throttling
+        if normalized_message.startswith('_') or normalized_message.startswith('/'):
+            return True
+        
+        # Check for specific critical phrases (more precise matching)
+        critical_phrases = [
+            # === REGISTRATION & ONBOARDING ===
+            'consent', 'welcome to nerdx', 'registration', 'first name', 'surname', 
+            'date of birth', 'referral code', 'invalid date', 'enter a valid',
+            'thank you for your consent', 'registration step', 'confirm registration',
+            'nerdx id', 'provide your first name', 'provide your surname',
+            
+            # === PAYMENT & CREDITS ===
+            'paynow', 'payment method', 'ecocash', 'buy credits', 'select a package',
+            'instant payment', 'payment link', 'complete payment', 'payment ready', 
+            'payment details', 'purchase', 'transaction confirmed', 'receipt',
+            '+100 credits', '-2 credits', 'credit balance',
+            
+            # === QUIZ & QUESTIONS ===
+            '✅ correct', '❌ incorrect', 'well done', 'great job', 'try again',
+            'the answer is', 'answer:', 'solution:', 'explanation:',
+            'next question', 'here is your question', 'here\'s your question',
+            'question 1', 'question 2', 'question 3', 'question 4', 'question 5',
+            'difficulty:', 'your score:', 'streak:', 'xp points', 'points earned',
+            
+            # === SUBJECT SELECTION ===
+            'choose a subject', 'select a subject', 'choose subject', 'select subject',
+            'choose mathematics', 'select mathematics', 'mathematics questions',
+            'biology', 'chemistry', 'physics', 'english',
+            'combined science', 'o-level', 'zimsec', 'syllabus',
+            
+            # === DIFFICULTY & OPTIONS ===
+            'select difficulty', 'choose difficulty', 'difficulty level',
+            'easy questions', 'medium questions', 'hard questions',
+            'practice mode', 'exam mode', 'timed mode',
+            
+            # === USER REQUESTS (high-value interactions) ===
+            'hint', '💡', 'show answer', 'explain this', 'solution please',
+            'help me', 'how to solve', 'what is the', 'why is',
+            
+            # === MENU & NAVIGATION ===
+            'main menu', 'back to menu', 'choose an option', 'select an option',
+            'available topics', 'available features', 'dashboard',
+            
+            # === PROJECT ASSISTANT ===
+            'project assistant', 'school-based project', 'research guidance',
+            'investigation stage', 'socratic method', 'guidance for',
+            'image generation', 'generate image', 'create document',
+            'document created', 'word document', 'pdf document',
+            
+            # === COMPREHENSION ===
+            'comprehension passage', 'read the passage', 'reading comprehension',
+            'literature extract', 'text analysis',
+            
+            # === GRAPH PRACTICE ===
+            'type your expression', 'plot your graph', 'plot the graph',
+            'graph generated', 'equation:', 'function:', 'coordinate',
+            
+            # === EXAM MODE ===
+            'exam started', 'exam mode', 'timed test', 'timer:',
+            'past paper', 'specimen paper', 'question 1 of',
+            
+            # === FEEDBACK & RESULTS ===
+            'your results', 'your performance', 'your statistics', 
+            'your progress', 'leaderboard', 'your rank', 'achievements',
+            
+            # === ERROR MESSAGES ===
+            'error occurred', 'sorry,', 'apologize', 
+            'something went wrong', 'please retry', 'please try',
+            
+            # === INTERACTIVE RESPONSES (emojis are always critical) ===
+            '✅', '❌', '🎯', '📚', '💯', '🔥', '💡', '🎉',
+            
+            # === INTERACTIVE BUTTONS & CONFIRMATIONS ===
+            '✅ yes', '❌ no', 'yes, continue', 'no, skip',
+            'confirm your', 'cancel this', 'proceed to', 'go back'
+        ]
+        
+        # Check for any critical phrase match
+        for phrase in critical_phrases:
+            if phrase in message_lower:
+                return True
+        
+        # Check for specific single-word critical indicators (contextual)
+        # These are only critical in specific contexts, not standalone
+        contextual_patterns = [
+            ('answer:', True),  # "answer: X" is always critical
+            ('question:', True),  # "question: X" is always critical
+            ('score:', True),  # "score: X" is always critical
+            ('hint:', True),  # "hint: X" is always critical
+        ]
+        
+        for pattern, is_critical in contextual_patterns:
+            if pattern in message_lower:
+                return is_critical
+        
+        return False
+    
     def send_message(self, to: str, message: str) -> bool:
         """Send a text message to a WhatsApp user with enhanced error handling and throttling"""
         if not self._is_configured:
@@ -44,54 +155,19 @@ class WhatsAppService:
             return False
             
         try:
-            message_lower = message.lower()
-            normalized_message = message_lower.strip()
-            is_command_message = normalized_message.startswith('_') or normalized_message.startswith('/')
+            # Check if this is a critical user-initiated response
+            is_critical = self._is_critical_user_response(message)
 
             # Check quality monitoring before sending (but allow critical messages)
             if self.quality_monitor.should_throttle_messaging():
-                # Allow critical messages like consent requests, registration flows, payment transactions, and hints
-                critical_keywords = [
-                    'consent', 'welcome', 'registration', 'first name', 'surname', 'date of birth', 
-                    'referral code', 'invalid date format', 'please use', 'enter a valid', 
-                    'thank you for your consent', 'type your expression', 'plot your own', 
-                    'please type', 'type your', 'expression now', 'registration step', 'confirm registration',
-                    'nerdx id', 'provide your first name', 'provide your surname', '_registration', '_consent',
-                    '_start', '/start',
-                    # Payment-related critical keywords
-                    'paynow', 'payment', 'ecocash', 'credits', 'package', 'amount', 
-                    'payment method', 'phone number', 'provide your', 'instant payment',
-                    'payment link', 'complete payment', 'payment ready', 'payment details',
-                    # User-requested responses
-                    'hint', '💡'
-                ]
-                is_critical = is_command_message or any(keyword in message_lower for keyword in critical_keywords)
-                
                 if not is_critical:
                     logger.warning(f"Message to {to} blocked by quality monitor - throttling active")
                     return False
                 else:
-                    logger.info(f"Allowing critical message to {to} despite quality throttling")
+                    logger.info(f"Allowing critical user response to {to} despite quality throttling")
             
             # CRITICAL: Check throttle to prevent message chains (but allow critical messages)
             if not message_throttle.can_send_message(to):
-                # Allow critical messages like consent requests, registration flows, payment transactions, and hints
-                critical_keywords = [
-                    'consent', 'welcome', 'registration', 'first name', 'surname', 'date of birth', 
-                    'referral code', 'thank you for your consent', 'invalid date format', 'please use', 
-                    'enter a valid', 'type your expression', 'plot your own', 'please type', 'type your', 
-                    'expression now', 'registration step', 'confirm registration', 'nerdx id',
-                    'provide your first name', 'provide your surname', '_registration', '_consent',
-                    '_start', '/start',
-                    # Payment-related critical keywords
-                    'paynow', 'payment', 'ecocash', 'credits', 'package', 'amount', 
-                    'payment method', 'phone number', 'provide your', 'instant payment',
-                    'payment link', 'complete payment', 'payment ready', 'payment details',
-                    # User-requested responses
-                    'hint', '💡'
-                ]
-                is_critical = is_command_message or any(keyword in message_lower for keyword in critical_keywords)
-                
                 if not is_critical:
                     delay = message_throttle.throttle_delay(to)
                     if delay > 0:
@@ -102,7 +178,7 @@ class WhatsAppService:
                             logger.warning(f"Message to {to} blocked by throttle - too many messages")
                             return False
                 else:
-                    logger.info(f"Allowing critical registration message to {to} despite throttle")
+                    logger.info(f"Allowing critical user response to {to} despite throttle")
             
             # Acquire lock to prevent concurrent sends
             if not message_throttle.acquire_lock(to):
@@ -343,24 +419,11 @@ class WhatsAppService:
     def send_interactive_message(self, to: str, message: str, buttons: List[Dict]) -> bool:
         """Send buttons as interactive message - use List Message for 4+ options for WhatsApp compliance"""
         try:
-            message_lower = message.lower()
-            normalized_message = message_lower.strip()
-            is_command_message = normalized_message.startswith('_') or normalized_message.startswith('/')
-            # CRITICAL: Menu/navigation messages and payment messages are critical - allow them to bypass throttle
-            is_menu_message = is_command_message or any(keyword in message_lower for keyword in [
-                'topics menu', 'select a topic', 'choose an option', 'menu', 
-                'topics', 'subjects', 'select', 'choose', 'navigation',
-                'registration', 'consent', 'start registration', 'complete registration', '_registration', '_consent'
-            ])
+            # Check if this is a critical user-initiated response
+            is_critical = self._is_critical_user_response(message)
             
-            # Payment-related messages are also critical
-            is_payment_message = any(keyword in message_lower for keyword in [
-                'paynow', 'payment', 'ecocash', 'credits', 'package', 'amount',
-                'payment method', 'choose payment', 'instant payment', 'manual payment'
-            ])
-            
-            # Apply throttling to prevent message chains (but allow menu and payment messages)
-            if not is_menu_message and not is_payment_message:
+            # Apply throttling to prevent message chains (but allow critical messages)
+            if not is_critical:
                 if not message_throttle.can_send_message(to):
                     delay = message_throttle.throttle_delay(to)
                     if delay > 0:
@@ -371,29 +434,29 @@ class WhatsAppService:
                             logger.warning(f"Interactive message to {to} blocked by throttle")
                             return False
             else:
-                logger.info(f"Allowing menu message to {to} - bypassing throttle")
+                logger.info(f"Allowing critical interactive message to {to} - bypassing throttle")
             
-            # Acquire lock to prevent concurrent sends (menu messages get priority)
+            # Acquire lock to prevent concurrent sends (critical messages get priority)
             if not message_throttle.acquire_lock(to):
-                if is_menu_message:
-                    # Menu messages are critical - try multiple times
-                    logger.info(f"Menu message lock wait for {to}, retrying...")
+                if is_critical:
+                    # Critical messages get retry attempts
+                    logger.info(f"Critical message lock wait for {to}, retrying...")
                     
-                    # Try 2 times with delays for interactive messages (shorter than grouped buttons)
+                    # Try 2 times with delays for interactive messages
                     for attempt in range(2):
                         wait_time = 1.0 + (attempt * 0.5)  # 1.0s, 1.5s
                         time.sleep(wait_time)
                         
                         if message_throttle.acquire_lock(to):
-                            logger.info(f"Menu interactive lock acquired on attempt {attempt + 2} for {to}")
+                            logger.info(f"Critical interactive lock acquired on attempt {attempt + 2} for {to}")
                             break
                     else:
-                        # Force release for critical menu messages
-                        logger.warning(f"Menu message forcing lock release for {to}")
+                        # Force release for critical messages
+                        logger.warning(f"Critical message forcing lock release for {to}")
                         message_throttle.force_release_lock(to)
                         
                         if not message_throttle.acquire_lock(to):
-                            logger.error(f"Menu message to {to} blocked - could not acquire lock even after force release")
+                            logger.error(f"Critical message to {to} blocked - could not acquire lock even after force release")
                             return False
                 else:
                     logger.warning(f"Interactive message to {to} blocked - concurrent send")

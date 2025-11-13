@@ -508,47 +508,47 @@ class ExamMathematicsHandler:
 📚 **Study the solution carefully - Ready for the next challenge?**"""
 
             # Send solution images in order - handle both table schemas
+            answer_urls = []
+            
             if table_source == 'olevel_maths':
                 # olevel_maths uses answer_image_url_1 through answer_image_url_5
-                answer_urls = [
-                    question_data.get('answer_image_url_1'),
-                    question_data.get('answer_image_url_2'),
-                    question_data.get('answer_image_url_3'),
-                    question_data.get('answer_image_url_4'),
-                    question_data.get('answer_image_url_5')
-                ]
                 logger.info(f"📸 Extracting URLs from olevel_maths table:")
-                for i, url in enumerate(answer_urls, 1):
+                for i in range(1, 6):
+                    url_key = f'answer_image_url_{i}'
+                    url = question_data.get(url_key)
+                    answer_urls.append(url)
                     if url:
-                        logger.info(f"  answer_image_url_{i}: {url[:100]}...")
+                        logger.info(f"  {url_key}: {url[:100]}...")
                     else:
-                        logger.info(f"  answer_image_url_{i}: None/empty")
+                        logger.info(f"  {url_key}: None/empty")
             else:
                 # olevel_math_questions uses answer_image_url1, answer_image_url2, answer_image_url3
-                answer_urls = [
-                    question_data.get('answer_image_url1'),
-                    question_data.get('answer_image_url2'),
-                    question_data.get('answer_image_url3')
-                ]
                 logger.info(f"📸 Extracting URLs from olevel_math_questions table:")
-                for i, url in enumerate(answer_urls, 1):
+                for i in range(1, 4):
+                    url_key = f'answer_image_url{i}'
+                    url = question_data.get(url_key)
+                    answer_urls.append(url)
                     if url:
-                        logger.info(f"  answer_image_url{i}: {url[:100]}...")
+                        logger.info(f"  {url_key}: {url[:100]}...")
                     else:
-                        logger.info(f"  answer_image_url{i}: None/empty")
+                        logger.info(f"  {url_key}: None/empty")
             
             # Send all available answer images (skip None/empty values and validate URLs)
             # Questions can have 1, 2, 3, 4, or 5 answer images - send whatever is available
             image_count = 0
             failed_images = []
-            total_urls_found = sum(1 for url in answer_urls if url and url.strip())
+            total_urls_found = sum(1 for url in answer_urls if url and str(url).strip())
 
             logger.info(f"📸 Found {total_urls_found} answer image URLs for question {question_id} from {table_source}")
 
+            if total_urls_found == 0:
+                logger.warning(f"⚠️ No answer image URLs found in question data")
+                logger.info(f"📋 Full question data keys: {list(question_data.keys())}")
+            
             for i, url in enumerate(answer_urls, 1):
-                if url and url.strip():
+                if url and str(url).strip():
                     # Validate URL format
-                    url = url.strip()
+                    url = str(url).strip()
                     if not url.startswith(('http://', 'https://')):
                         logger.warning(f"⚠️ Invalid URL format for answer_image_{i}: {url[:100]} (does not start with http:// or https://)")
                         failed_images.append(i)
@@ -558,7 +558,14 @@ class ExamMathematicsHandler:
                     caption = "✅ Complete Solution" if image_count == 1 else f"✅ Solution Part {image_count}"
 
                     try:
-                        logger.info(f"📤 Sending answer image {image_count}/{total_urls_found} (field answer_image_{i}) to {user_id}")
+                        logger.info(f"📤 Sending answer image {image_count}/{total_urls_found} (position {i}) to {user_id}")
+                        logger.info(f"📎 Image URL: {url}")
+                        
+                        # Add small delay between images to ensure they arrive in order
+                        if image_count > 1:
+                            import time
+                            time.sleep(1)
+                        
                         success = self.whatsapp_service.send_image(
                     user_id, 
                             url,
@@ -573,7 +580,7 @@ class ExamMathematicsHandler:
                         logger.error(f"❌ Exception sending answer image {image_count}/{total_urls_found} to {user_id}: {img_error}")
                         failed_images.append(i)
                 else:
-                    logger.debug(f"⏭️ Skipping answer_image_{i}: empty or None")
+                    logger.debug(f"⏭️ Skipping position {i}: empty or None")
 
             logger.info(f"📊 Answer images summary: Found {total_urls_found}, Sent successfully {image_count - len(failed_images)}, Failed {len(failed_images)}")
             

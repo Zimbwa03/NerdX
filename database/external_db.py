@@ -31,10 +31,6 @@ if _is_configured:
 else:
     logger.warning("Supabase not configured - external database features will be disabled")
 
-print(f"Supabase URL: {SUPABASE_URL}")
-print(f"Service Role Key: {SUPABASE_SERVICE_ROLE_KEY[:20]}..." if SUPABASE_SERVICE_ROLE_KEY else "No service key found")
-print(f"Anon Key: {SUPABASE_ANON_KEY[:20]}..." if SUPABASE_ANON_KEY else "No anon key found")
-
 def create_users_registration_table():
     """Create users_registration table via SQL execution"""
     try:
@@ -177,6 +173,44 @@ def create_payment_transactions_table():
         logger.error(f"Error creating payment_transactions table: {e}")
         return False
 
+
+def create_user_projects_table():
+    """Create user_projects table for ZIMSEC Project Assistant"""
+    try:
+        sql_query = """
+        CREATE TABLE IF NOT EXISTS user_projects (
+            id SERIAL PRIMARY KEY,
+            user_id VARCHAR(255) NOT NULL,
+            project_title VARCHAR(500),
+            subject VARCHAR(100),
+            current_stage INTEGER DEFAULT 1,
+            project_data JSONB NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            completed BOOLEAN DEFAULT FALSE
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_user_projects_user_id ON user_projects(user_id);
+        CREATE INDEX IF NOT EXISTS idx_user_projects_completed ON user_projects(completed);
+        CREATE INDEX IF NOT EXISTS idx_user_projects_updated_at ON user_projects(updated_at);
+        CREATE INDEX IF NOT EXISTS idx_user_projects_user_active ON user_projects(user_id, completed);
+        """
+        
+        test_result = make_supabase_request("GET", "user_projects", limit=1, use_service_role=True)
+        if test_result is not None:
+            logger.info("User projects table already exists and is accessible")
+            return True
+        
+        logger.warning("User projects table does not exist. Please create it manually in Supabase SQL Editor:")
+        logger.warning(sql_query)
+        
+        return True
+        
+    except Exception as e:
+        logger.error(f"Error creating user_projects table: {e}")
+        return False
+
+
 def make_supabase_request(method, table, data=None, select="*", filters=None, limit=None, offset=None, use_service_role=False):
     """Make a request to Supabase REST API with proper authentication"""
 
@@ -211,11 +245,8 @@ def make_supabase_request(method, table, data=None, select="*", filters=None, li
         params["offset"] = str(offset)
 
     try:
-        print(f"Making {method} request to {url}")
-        print(f"Headers: {headers}")
-        print(f"Params: {params}")
-        print(f"Data: {data}")
-
+        logger.debug(f"Making {method} request to {table}")
+        
         response = None
         if method == "GET":
             response = requests.get(url, headers=headers, params=params, timeout=30)
@@ -228,9 +259,8 @@ def make_supabase_request(method, table, data=None, select="*", filters=None, li
             logger.error(f"Unsupported HTTP method: {method}")
             return None
 
-        print(f"Response status: {response.status_code}")
-        print(f"Response text: {response.text}")
-
+        logger.debug(f"Response status: {response.status_code}")
+        
         response.raise_for_status()
         return response.json()
     except requests.exceptions.HTTPError as e:
@@ -665,10 +695,9 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
 
         # Create or update user_stats entry for the new user
         try:
-            # Base credits: 75 for all new users
-            base_credits = 75
-            # If referred, add 5 bonus credits (total 80)
-            total_credits = base_credits + (5 if referred_by_nerdx_id else 0)
+            # All new users get 75 credits (no bonus for being referred)
+            # Only the REFERRER gets +5 credits (handled separately below)
+            total_credits = 75
 
             user_stats_data = {
                 'user_id': chat_id,
@@ -697,7 +726,7 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
                         'credits_change': total_credits,
                         'balance_before': 0,
                         'balance_after': total_credits,
-                        'description': f'Welcome bonus: {base_credits} credits' + (' + 5 referral bonus' if referred_by_nerdx_id else ''),
+                        'description': f'Welcome bonus: {total_credits} credits',
                         'transaction_type': 'new_user_registration'
                     }
 
@@ -1349,6 +1378,13 @@ def init_database():
             create_payment_transactions_table()
         except Exception as e:
             logger.warning(f"Could not create payment_transactions table: {e}")
+
+        # Create user_projects table if it doesn't exist
+        try:
+            logger.info("Creating user_projects table...")
+            create_user_projects_table()
+        except Exception as e:
+            logger.warning(f"Could not create user_projects table: {e}")
 
         logger.info("Database connection successful")
         return True
