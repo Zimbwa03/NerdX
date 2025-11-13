@@ -18,7 +18,11 @@ class QuestionHistoryService:
         # In-memory storage for question history
         # Format: {user_id: {subject: [question_ids...]}}
         self.user_history: Dict[str, Dict[str, List[str]]] = {}
-        
+
+        # In-memory storage for question texts
+        # Format: {user_id: {subject_topic_difficulty: [question_texts...]}}
+        self.question_texts: Dict[str, Dict[str, List[str]]] = {}
+
         # Maximum history size per subject (prevent memory bloat)
         self.max_history_per_subject = 50
         

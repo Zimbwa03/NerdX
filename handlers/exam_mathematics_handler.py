@@ -460,7 +460,7 @@ class ExamMathematicsHandler:
                 logger.error(f"❌ Question {question_id} not found in database or session for user {user_id}")
                 self.whatsapp_service.send_message(user_id, "❌ Solution not found.")
                 return
-
+            
             # Ensure table_source is set
             if not table_source:
                 table_source = question_data.get('table_source', 'olevel_math_questions')
@@ -560,7 +560,7 @@ class ExamMathematicsHandler:
                     try:
                         logger.info(f"📤 Sending answer image {image_count}/{total_urls_found} (field answer_image_{i}) to {user_id}")
                         success = self.whatsapp_service.send_image(
-                            user_id,
+                    user_id, 
                             url,
                             caption
                         )
@@ -617,8 +617,8 @@ class ExamMathematicsHandler:
             
             # Wait to ensure images load and appear first in chat
             if image_count > 0:
-                import time
-                time.sleep(2)
+            import time
+            time.sleep(2)
             
             # Create navigation buttons
             buttons = [

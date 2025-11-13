@@ -241,6 +241,15 @@ Return your response in this EXACT JSON format:
         # Enhanced standard academic question prompt for non-graph topics with anti-repetition
         base_prompt = f"""Generate a high-quality {difficulty} level {subject} question about {topic} for ZIMSEC O-Level students.
 
+CRITICAL DIVERSITY REQUIREMENTS:
+- Use COMPLETELY DIFFERENT numbers than any recent question
+- Use DIFFERENT wording, phrasing, and sentence structure
+- Use DIFFERENT real-world contexts or scenarios
+- Vary the problem structure (word problem vs calculation vs application)
+- Ensure the question feels fresh and unique
+- Use different mathematical operations and relationships
+- Avoid similar problem setups, variables, or solution approaches
+
 Requirements:
 - Create a clear, specific question following ZIMSEC exam format
 - Use proper mathematical notation and terminology
@@ -251,11 +260,20 @@ Requirements:
 - Provide a complete step-by-step solution
 - Give the final answer clearly"""
 
+        # Add recent question texts to avoid repetition
+        if recent_questions and len(recent_questions) > 0:
+            base_prompt += f"""
+
+RECENT QUESTIONS TO AVOID SIMILARITY WITH (DO NOT REPEAT THESE):
+"""
+            for i, recent_q in enumerate(recent_questions[:5], 1):  # Limit to last 5
+                base_prompt += f"{i}. {recent_q[:150]}...\n"
+
         # Add anti-repetition instructions if recent topics available
         if recent_topics:
             variation_prompt = f"""
 
-CRITICAL ANTI-REPETITION REQUIREMENTS:
+ADDITIONAL ANTI-REPETITION REQUIREMENTS:
 - This user has recently practiced: {', '.join(recent_topics)}
 - Create a DIFFERENT approach, angle, or sub-topic variation
 - Use different numerical values and scenarios
@@ -263,18 +281,27 @@ CRITICAL ANTI-REPETITION REQUIREMENTS:
 - Ensure this question feels fresh and unique"""
             base_prompt += variation_prompt
 
-        # Add randomization instructions
+        # Add randomization instructions with more variation
         import random
+        import time
+        variation_seed = str(int(time.time() * 1000) % 10000)  # Add timestamp-based seed
+
         variation_styles = [
             "Focus on real-world applications and practical scenarios",
             "Emphasize step-by-step calculations and working out",
             "Include multiple parts with increasing difficulty",
             "Test both calculation skills and conceptual understanding",
-            "Create a problem-solving scenario with context"
+            "Create a problem-solving scenario with context",
+            "Use geometric interpretations and visual approaches",
+            "Focus on algebraic manipulation and simplification",
+            "Emphasize logical reasoning and mathematical proofs",
+            "Include optimization and maximum/minimum problems",
+            "Use patterns, sequences, and mathematical relationships"
         ]
-        
+
         selected_style = random.choice(variation_styles)
         base_prompt += f"\n- {selected_style}"
+        base_prompt += f"\n- Variation seed: {variation_seed} (use this to ensure uniqueness)"
 
         base_prompt += f"""
 
@@ -372,7 +399,7 @@ The solution should explain how to plot each inequality and identify the feasibl
             'model': 'deepseek-chat',
             'messages': [{'role': 'user', 'content': prompt}],
             'max_tokens': 2500,  # Increased for detailed solutions
-            'temperature': 0.7
+            'temperature': 0.85  # Increased for more creative variation and diversity
         }
 
         try:
@@ -465,8 +492,13 @@ The solution should explain how to plot each inequality and identify the feasibl
                     from services.question_history_service import question_history_service
                     ai_subject_key = f"{subject}_AI"
                     question_identifier = f"{topic}_{difficulty}_{hash(formatted_question['question'][:50]) % 10000}"
+
+                    # Add both ID and text to history
                     question_history_service.add_question_to_history(user_id, ai_subject_key, question_identifier)
-                    logger.info(f"Added AI question to history: {question_identifier}")
+                    question_history_service.add_question_text_to_history(
+                        user_id, subject, topic, difficulty, formatted_question['question']
+                    )
+                    logger.info(f"Added AI question to history: {question_identifier} with text tracking")
                 except ImportError:
                     # If question history service is not available, skip history tracking
                     logger.info("Question history service not available, skipping history tracking")
