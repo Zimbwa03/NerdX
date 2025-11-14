@@ -1,126 +1,98 @@
-import React, {createContext, useContext, useState, useEffect, ReactNode} from 'react';
+// Authentication context provider
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {User, LoginCredentials, RegisterData} from '../types';
-import {authApi} from '../services/api/authApi';
+import { User } from '../types';
 
 interface AuthContextType {
   user: User | null;
-  loading: boolean;
+  isLoading: boolean;
   isAuthenticated: boolean;
-  login: (credentials: LoginCredentials) => Promise<void>;
-  register: (data: RegisterData) => Promise<void>;
+  login: (user: User, token: string) => Promise<void>;
   logout: () => Promise<void>;
-  updateUser: (user: User) => void;
-  refreshUser: () => Promise<void>;
+  updateUser: (user: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({children}: {children: ReactNode}) => {
+const AUTH_TOKEN_KEY = '@auth_token';
+const USER_DATA_KEY = '@user_data';
+
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    checkAuth();
+    loadStoredAuth();
   }, []);
 
-  const checkAuth = async () => {
+  const loadStoredAuth = async () => {
     try {
-      const token = await AsyncStorage.getItem('auth_token');
-      const userData = await AsyncStorage.getItem('user_data');
+      const [token, userData] = await Promise.all([
+        AsyncStorage.getItem(AUTH_TOKEN_KEY),
+        AsyncStorage.getItem(USER_DATA_KEY),
+      ]);
 
       if (token && userData) {
         const parsedUser = JSON.parse(userData);
         setUser(parsedUser);
-        // Optionally refresh user data from API
-        try {
-          const freshUser = await authApi.getProfile();
-          setUser(freshUser);
-          await AsyncStorage.setItem('user_data', JSON.stringify(freshUser));
-        } catch (error) {
-          // If refresh fails, use cached data
-          console.log('Failed to refresh user data:', error);
-        }
       }
     } catch (error) {
-      console.error('Auth check error:', error);
+      console.error('Failed to load auth data:', error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const login = async (credentials: LoginCredentials) => {
+  const login = async (userData: User, token: string) => {
     try {
-      const response = await authApi.login(credentials);
-      if (response.success && response.token && response.user) {
-        await AsyncStorage.setItem('auth_token', response.token);
-        await AsyncStorage.setItem('user_data', JSON.stringify(response.user));
-        setUser(response.user);
-      } else {
-        throw new Error(response.message || 'Login failed');
-      }
-    } catch (error: any) {
-      throw new Error(error.response?.data?.message || error.message || 'Login failed');
-    }
-  };
-
-  const register = async (data: RegisterData) => {
-    try {
-      const response = await authApi.register(data);
-      if (response.success && response.token && response.user) {
-        await AsyncStorage.setItem('auth_token', response.token);
-        await AsyncStorage.setItem('user_data', JSON.stringify(response.user));
-        setUser(response.user);
-      } else {
-        throw new Error(response.message || 'Registration failed');
-      }
-    } catch (error: any) {
-      throw new Error(error.response?.data?.message || error.message || 'Registration failed');
+      await Promise.all([
+        AsyncStorage.setItem(AUTH_TOKEN_KEY, token),
+        AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(userData)),
+      ]);
+      setUser(userData);
+    } catch (error) {
+      console.error('Failed to save auth data:', error);
+      throw error;
     }
   };
 
   const logout = async () => {
     try {
-      await authApi.logout();
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      await AsyncStorage.removeItem('auth_token');
-      await AsyncStorage.removeItem('user_data');
+      await Promise.all([
+        AsyncStorage.removeItem(AUTH_TOKEN_KEY),
+        AsyncStorage.removeItem(USER_DATA_KEY),
+      ]);
       setUser(null);
-    }
-  };
-
-  const updateUser = (updatedUser: User) => {
-    setUser(updatedUser);
-    AsyncStorage.setItem('user_data', JSON.stringify(updatedUser));
-  };
-
-  const refreshUser = async () => {
-    try {
-      const freshUser = await authApi.getProfile();
-      setUser(freshUser);
-      await AsyncStorage.setItem('user_data', JSON.stringify(freshUser));
     } catch (error) {
-      console.error('Failed to refresh user:', error);
+      console.error('Failed to clear auth data:', error);
+      throw error;
     }
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        isAuthenticated: !!user,
-        login,
-        register,
-        logout,
-        updateUser,
-        refreshUser,
-      }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const updateUser = (userData: Partial<User>) => {
+    if (user) {
+      const updatedUser = { ...user, ...userData };
+      setUser(updatedUser);
+      AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(updatedUser)).catch(error => {
+        console.error('Failed to update user data:', error);
+      });
+    }
+  };
+
+  const value: AuthContextType = {
+    user,
+    isLoading,
+    isAuthenticated: !!user,
+    login,
+    logout,
+    updateUser,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
@@ -130,4 +102,3 @@ export const useAuth = () => {
   }
   return context;
 };
-

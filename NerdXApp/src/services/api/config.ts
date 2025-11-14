@@ -1,13 +1,13 @@
+// API configuration for NerdX App
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Update this with your backend API URL
 export const API_BASE_URL = __DEV__
   ? 'http://localhost:5000' // Development (use your local IP for physical device: http://192.168.1.XXX:5000)
   : 'https://nerdx.onrender.com'; // Production
 
-const apiClient = axios.create({
-  baseURL: `${API_BASE_URL}/api/mobile`,
+// Create axios instance with default config
+const api = axios.create({
+  baseURL: API_BASE_URL,
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -15,32 +15,57 @@ const apiClient = axios.create({
 });
 
 // Request interceptor to add auth token
-apiClient.interceptors.request.use(
-  async config => {
-    const token = await AsyncStorage.getItem('auth_token');
+api.interceptors.request.use(
+  (config) => {
+    const token = getAuthToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  error => {
+  (error) => {
     return Promise.reject(error);
-  },
+  }
 );
 
-// Response interceptor for error handling
-apiClient.interceptors.response.use(
-  response => response,
-  async error => {
+// Response interceptor to handle common errors
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid
-      await AsyncStorage.removeItem('auth_token');
-      await AsyncStorage.removeItem('user_data');
-      // Navigate to login - handled by AuthContext
+      // Handle unauthorized access
+      clearAuthToken();
     }
     return Promise.reject(error);
-  },
+  }
 );
 
-export default apiClient;
+// Auth token management
+export const getAuthToken = (): string | null => {
+  try {
+    // In a real app, this would be stored securely
+    return null; // TODO: Implement secure token storage
+  } catch {
+    return null;
+  }
+};
 
+export const setAuthToken = (token: string): void => {
+  try {
+    // TODO: Implement secure token storage
+  } catch (error) {
+    console.error('Failed to store auth token:', error);
+  }
+};
+
+export const clearAuthToken = (): void => {
+  try {
+    // TODO: Clear stored token
+  } catch (error) {
+    console.error('Failed to clear auth token:', error);
+  }
+};
+
+export default api;

@@ -1,49 +1,65 @@
-import apiClient from './config';
-import {LoginCredentials, RegisterData, AuthResponse, User} from '../../types';
+// Authentication API services
+import api from './config';
+
+export interface LoginData {
+  identifier: string; // email or phone
+  password: string;
+}
+
+export interface RegisterData {
+  name: string;
+  surname: string;
+  email?: string;
+  phone_number?: string;
+  password: string;
+  date_of_birth?: string;
+  referred_by?: string;
+}
+
+export interface AuthResponse {
+  success: boolean;
+  token?: string;
+  user?: any;
+  message?: string;
+}
 
 export const authApi = {
-  // Register new user
+  login: async (data: LoginData): Promise<AuthResponse> => {
+    try {
+      const response = await api.post('/api/mobile/auth/login', data);
+      return response.data;
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Login failed',
+      };
+    }
+  },
+
   register: async (data: RegisterData): Promise<AuthResponse> => {
-    const response = await apiClient.post('/auth/register', data);
-    return response.data;
+    try {
+      const response = await api.post('/api/mobile/auth/register', data);
+      return response.data;
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Registration failed',
+      };
+    }
   },
 
-  // Login
-  login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
-    const response = await apiClient.post('/auth/login', credentials);
-    return response.data;
-  },
-
-  // Verify OTP (if using phone-based auth)
-  verifyOTP: async (phone_number: string, otp: string): Promise<AuthResponse> => {
-    const response = await apiClient.post('/auth/verify-otp', {
-      phone_number,
-      otp,
-    });
-    return response.data;
-  },
-
-  // Refresh token
-  refreshToken: async (): Promise<{token: string}> => {
-    const response = await apiClient.post('/auth/refresh-token');
-    return response.data;
-  },
-
-  // Logout
-  logout: async (): Promise<void> => {
-    await apiClient.post('/auth/logout');
-  },
-
-  // Get current user profile
-  getProfile: async (): Promise<User> => {
-    const response = await apiClient.get('/user/profile');
-    return response.data.data;
-  },
-
-  // Update profile
-  updateProfile: async (data: Partial<User>): Promise<User> => {
-    const response = await apiClient.put('/user/profile', data);
-    return response.data.data;
+  verifyOTP: async (phoneNumber: string, otp: string): Promise<AuthResponse> => {
+    try {
+      const response = await api.post('/api/mobile/auth/verify-otp', {
+        phone_number: phoneNumber,
+        otp,
+      });
+      return response.data;
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'OTP verification failed',
+      };
+    }
   },
 };
-

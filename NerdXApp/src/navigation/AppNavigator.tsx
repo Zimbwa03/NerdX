@@ -1,30 +1,61 @@
+// Main App Navigator
 import React from 'react';
-import {createStackNavigator} from '@react-navigation/stack';
-import {useAuth} from '../context/AuthContext';
-import AuthNavigator from './AuthNavigator';
-import MainNavigator from './MainNavigator';
-import {RootStackParamList} from '../types';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { useAuth } from '../context/AuthContext';
 
-const Stack = createStackNavigator<RootStackParamList>();
+// Screens
+import LoginScreen from '../screens/LoginScreen';
+import DashboardScreen from '../screens/DashboardScreen';
 
-const AppNavigator = () => {
-  const {isAuthenticated, loading} = useAuth();
+const Stack = createStackNavigator();
 
-  if (loading) {
-    // You can add a loading screen here
+const AppNavigator: React.FC = () => {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    // You can return a loading screen here
     return null;
   }
 
   return (
-    <Stack.Navigator screenOptions={{headerShown: false}}>
-      {isAuthenticated ? (
-        <Stack.Screen name="Main" component={MainNavigator} />
-      ) : (
-        <Stack.Screen name="Auth" component={AuthNavigator} />
-      )}
-    </Stack.Navigator>
+    <NavigationContainer>
+      <Stack.Navigator
+        screenOptions={{
+          headerStyle: {
+            backgroundColor: '#1976D2',
+          },
+          headerTintColor: '#FFFFFF',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+        }}
+      >
+        {!isAuthenticated ? (
+          // Auth Stack
+          <Stack.Group>
+            <Stack.Screen
+              name="Login"
+              component={LoginScreen}
+              options={{ headerShown: false }}
+            />
+          </Stack.Group>
+        ) : (
+          // Main App Stack
+          <Stack.Group>
+            <Stack.Screen
+              name="Dashboard"
+              component={DashboardScreen}
+              options={{
+                title: 'NerdX Dashboard',
+                headerLeft: null,
+              }}
+            />
+          </Stack.Group>
+        )}
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 };
 
 export default AppNavigator;
-
