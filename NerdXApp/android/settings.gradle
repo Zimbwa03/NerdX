@@ -3,17 +3,6 @@ pluginManagement {
         gradlePluginPortal()
         mavenCentral()
         google()
-        // Add flat directory repository for local plugins
-        flatDir {
-            dirs("${rootDir}/../node_modules/@react-native/gradle-plugin/build/libs")
-        }
-    }
-    resolutionStrategy {
-        eachPlugin {
-            if (requested.id.id == 'com.facebook.react') {
-                useModule("react-native-gradle-plugin:react-native-gradle-plugin:0.73.5")
-            }
-        }
     }
 }
 

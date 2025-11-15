@@ -13,11 +13,14 @@ buildscript {
         maven {
             url("$rootDir/../node_modules/react-native/android")
         }
+        flatDir {
+            dirs("${rootDir}/../node_modules/@react-native/gradle-plugin/build/libs")
+        }
     }
     dependencies {
         classpath("com.android.tools.build:gradle:8.1.1")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
-        classpath(files("../node_modules/@react-native/gradle-plugin/build/libs/react-native-gradle-plugin.jar"))
+        classpath(":react-native-gradle-plugin:")
     }
 }
 
