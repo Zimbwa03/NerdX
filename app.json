@@ -2,11 +2,11 @@
   "expo": {
     "extra": {
       "eas": {
-        "projectId": "87920873-c8ab-4ba3-ad28-f3fd7895cf41"
+        "projectId": "fd61987e-ceab-44df-be42-bfd0caf743ea"
       }
     },
     "android": {
-      "package": "com.ngonidzashezimbwa.nerdx"
+      "package": "com.Ngoni03.nerdxapp"
     }
   }
 }
