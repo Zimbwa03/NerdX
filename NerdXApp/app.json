@@ -4,10 +4,29 @@
     "slug": "nerdxapp",
     "version": "1.0.0",
     "owner": "ngonidzashezimbwa",
-    "extra": {
-      "eas": {
-        "projectId": "bd06c447-5eec-476f-b30d-f4501d1f8ce3"
-      }
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.ngonidzashe2003.nerdxapp"
+    },
+    "web": {},
+    "primaryColor": "#3b82f6",
+    "androidStatusBar": {
+      "barStyle": "light-content",
+      "backgroundColor": "#3b82f6"
+    },
+    "androidNavigationBar": {
+      "barStyle": "light-content",
+      "backgroundColor": "#3b82f6"
     }
   }
 }
