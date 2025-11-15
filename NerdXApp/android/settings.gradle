@@ -3,16 +3,6 @@ pluginManagement {
         gradlePluginPortal()
         mavenCentral()
         google()
-        maven {
-            url("${rootDir}/../node_modules/react-native/android")
-        }
-    }
-    resolutionStrategy {
-        eachPlugin {
-            if (requested.id.id == 'com.facebook.react') {
-                useModule("com.facebook.react:react-native-gradle-plugin:+")
-            }
-        }
     }
 }
 
