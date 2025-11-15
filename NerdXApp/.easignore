@@ -1,0 +1,17 @@
+# EAS Build ignore file
+# Ensure package.json and app.json are included in the build
+
+# Don't ignore package.json or app.json
+!package.json
+!app.json
+!eas.json
+
+# Ignore unnecessary files
+node_modules/
+.git/
+.DS_Store
+*.log
+android/build/
+android/.gradle/
+android/local.properties
+
