@@ -1,7 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
-    id 'com.facebook.react'  // No version needed; uses local plugin
+    id 'com.facebook.react'  // No version; resolved by pluginManagement repositories
 }
 
 /**
@@ -50,7 +50,6 @@ android {
     }
     signingConfigs {
         debug {
-            storeFile file('debug.keystore')
             storeFile file('debug.keystore')
             storePassword 'android'
             keyAlias 'androiddebugkey'
