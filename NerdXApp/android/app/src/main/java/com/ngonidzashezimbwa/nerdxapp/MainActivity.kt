@@ -1,4 +1,4 @@
-package com.ngonidzashe2003.nerdxapp
+package com.ngonidzashezimbwa.nerdxapp
 
 import android.os.Build
 import android.os.Bundle

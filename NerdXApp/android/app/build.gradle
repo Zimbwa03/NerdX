@@ -83,9 +83,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.ngonidzashe2003.nerdxapp'
+    namespace 'com.ngonidzashezimbwa.nerdxapp'
     defaultConfig {
-        applicationId 'com.ngonidzashe2003.nerdxapp'
+        applicationId 'com.ngonidzashezimbwa.nerdxapp'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

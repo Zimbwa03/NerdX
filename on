@@ -1,0 +1,12 @@
+warning: in the working copy of 'NerdXApp/package.json', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/NerdXApp/package.json b/NerdXApp/package.json[m
+[1mindex 834a66a..e1e6750 100644[m
+[1m--- a/NerdXApp/package.json[m
+[1m+++ b/NerdXApp/package.json[m
+[36m@@ -31,4 +31,4 @@[m
+     "typescript": "~5.3.3"[m
+   },[m
+   "private": true[m
+[31m-}[m
+\ No newline at end of file[m
+[32m+[m[32m}[m
