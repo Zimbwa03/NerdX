@@ -1,6 +1,5 @@
 {
   "name": "NerdXApp",
-  "displayName": "NerdX",
   "extra": {
     "eas": {
       "projectId": "27a935e8-1f70-41b7-a5cc-4e11747f811c"
