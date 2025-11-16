@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 
 // Screens
 import LoginScreen from '../screens/LoginScreen';
+import RegisterScreen from '../screens/RegisterScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 
 const Stack = createStackNavigator();
@@ -38,6 +39,15 @@ const AppNavigator: React.FC = () => {
               name="Login"
               component={LoginScreen}
               options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Register"
+              component={RegisterScreen}
+              options={{
+                title: 'Create Account',
+                headerStyle: { backgroundColor: '#1976D2' },
+                headerTintColor: '#FFFFFF',
+              }}
             />
           </Stack.Group>
         ) : (
