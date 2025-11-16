@@ -229,7 +229,6 @@ const getSubjectIcon = (subjectId: string): React.ReactNode => {
   };
   return iconMap[subjectId] || Icons.quiz(32, '#FFFFFF');
 };
-};
 
 const styles = StyleSheet.create({
   container: {
