@@ -51,10 +51,16 @@ export const creditsApi = {
     }
   },
 
-  purchaseCredits: async (packageId: string): Promise<{ reference: string; payment_url?: string; amount: number } | null> => {
+  purchaseCredits: async (
+    packageId: string,
+    phoneNumber?: string,
+    email?: string
+  ): Promise<PurchaseResult | null> => {
     try {
       const response = await api.post('/api/mobile/credits/purchase', {
         package_id: packageId,
+        phone_number: phoneNumber,
+        email: email,
       });
       return response.data.data || null;
     } catch (error: any) {
@@ -62,4 +68,30 @@ export const creditsApi = {
       throw error;
     }
   },
+
+  checkPaymentStatus: async (reference: string): Promise<PaymentStatus | null> => {
+    try {
+      const response = await api.get(`/api/mobile/payment/status/${reference}`);
+      return response.data.data || null;
+    } catch (error: any) {
+      console.error('Check payment status error:', error);
+      return null;
+    }
+  },
 };
+
+export interface PurchaseResult {
+  reference: string;
+  poll_url: string;
+  instructions: string;
+  amount: number;
+  credits: number;
+}
+
+export interface PaymentStatus {
+  reference: string;
+  status: 'pending' | 'completed' | 'failed' | 'cancelled' | 'approved';
+  amount: number;
+  credits: number;
+  paid: boolean;
+}

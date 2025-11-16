@@ -753,24 +753,79 @@ def initiate_credit_purchase():
         if not package:
             return jsonify({'success': False, 'message': 'Invalid package'}), 400
         
+        # Get user data for payment
+        user_data = get_user_registration(g.current_user_id)
+        if not user_data:
+            return jsonify({'success': False, 'message': 'User not found'}), 404
+        
+        phone_number = data.get('phone_number', user_data.get('phone_number', ''))
+        email = data.get('email', user_data.get('email', ''))
+        
+        if not phone_number or not email:
+            return jsonify({
+                'success': False,
+                'message': 'Phone number and email are required for Paynow payment'
+            }), 400
+        
         # Initiate payment via Paynow
         paynow_service = PaynowService()
         reference = f"MOBILE_{uuid.uuid4().hex[:8].upper()}"
         
-        # Create payment
-        payment_result = paynow_service.initiate_payment(
-            user_id=g.current_user_id,
+        # Store payment transaction in database before initiating
+        from database.external_db import make_supabase_request
+        payment_transaction = {
+            'user_id': g.current_user_id,
+            'reference_code': reference,
+            'package_id': package_id,
+            'amount': package['price'],
+            'credits': package['credits'],
+            'payment_method': 'paynow',
+            'status': 'pending',
+            'phone_number': phone_number,
+            'email': email,
+            'created_at': datetime.utcnow().isoformat()
+        }
+        
+        try:
+            make_supabase_request('POST', 'payment_transactions', payment_transaction, use_service_role=True)
+        except Exception as e:
+            logger.warning(f"Failed to store payment transaction: {e}")
+        
+        # Create Paynow payment
+        payment_result = paynow_service.create_usd_ecocash_payment(
             amount=package['price'],
-            credits=package['credits'],
-            reference=reference
+            phone_number=phone_number,
+            email=email,
+            reference=reference,
+            description=f"NerdX {package_id} - {package['credits']} credits"
         )
+        
+        if not payment_result.get('success'):
+            return jsonify({
+                'success': False,
+                'message': payment_result.get('message', 'Failed to initiate payment')
+            }), 400
+        
+        # Update transaction with poll_url
+        try:
+            make_supabase_request(
+                'PATCH',
+                'payment_transactions',
+                {'poll_url': payment_result.get('poll_url', '')},
+                filters={'reference_code': f"eq.{reference}"},
+                use_service_role=True
+            )
+        except Exception as e:
+            logger.warning(f"Failed to update payment transaction: {e}")
         
         return jsonify({
             'success': True,
             'data': {
                 'reference': reference,
-                'payment_url': payment_result.get('payment_url'),
-                'amount': package['price']
+                'poll_url': payment_result.get('poll_url', ''),
+                'instructions': payment_result.get('instructions', 'Check your phone for USSD prompt'),
+                'amount': package['price'],
+                'credits': package['credits']
             }
         }), 200
         
@@ -831,16 +886,44 @@ def initiate_payment():
 def check_payment_status(reference):
     """Check payment status"""
     try:
-        # TODO: Check payment status from database
-        # For now, return pending
+        from database.external_db import make_supabase_request
+        
+        # Get payment transaction from database
+        result = make_supabase_request(
+            'GET',
+            'payment_transactions',
+            None,
+            filters={'reference_code': f"eq.{reference}", 'user_id': f"eq.{g.current_user_id}"},
+            use_service_role=True
+        )
+        
+        if not result or len(result) == 0:
+            return jsonify({'success': False, 'message': 'Payment not found'}), 404
+        
+        transaction = result[0]
+        status = transaction.get('status', 'pending')
+        poll_url = transaction.get('poll_url', '')
+        
+        # If payment is still pending and we have poll_url, check with Paynow
+        if status == 'pending' and poll_url:
+            paynow_service = PaynowService()
+            if paynow_service.is_available():
+                try:
+                    paynow_status = paynow_service.check_payment_status(poll_url)
+                    if paynow_status.get('success') and paynow_status.get('paid'):
+                        # Payment confirmed - webhook should handle this, but update status
+                        status = 'completed'
+                except Exception as e:
+                    logger.warning(f"Failed to check Paynow status: {e}")
         
         return jsonify({
             'success': True,
             'data': {
                 'reference': reference,
-                'status': 'pending',  # 'pending', 'completed', 'failed'
-                'amount': 0,
-                'credits': 0
+                'status': status,  # 'pending', 'completed', 'failed', 'cancelled'
+                'amount': transaction.get('amount', 0),
+                'credits': transaction.get('credits', 0),
+                'paid': status == 'completed' or status == 'approved'
             }
         }), 200
     except Exception as e:
