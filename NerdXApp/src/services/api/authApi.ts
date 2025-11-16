@@ -26,7 +26,12 @@ export interface AuthResponse {
 export const authApi = {
   login: async (data: LoginData): Promise<AuthResponse> => {
     try {
-      const response = await api.post('/api/mobile/auth/login', data);
+      // Map identifier to email for backend compatibility
+      const loginData = {
+        email: data.identifier,
+        password: data.password,
+      };
+      const response = await api.post('/api/mobile/auth/login', loginData);
       return response.data;
     } catch (error: any) {
       return {
