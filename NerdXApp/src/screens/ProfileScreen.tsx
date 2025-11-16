@@ -1,4 +1,4 @@
-// Profile Screen Component
+// Profile Screen Component - Professional UI/UX Design
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -10,9 +10,14 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { userApi, UserProfile } from '../services/api/userApi';
 import { useAuth } from '../context/AuthContext';
+import { Icons, IconCircle } from '../components/Icons';
+import { Card } from '../components/Card';
+import { Button } from '../components/Button';
+import Colors from '../theme/colors';
 
 const ProfileScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -87,85 +92,126 @@ const ProfileScreen: React.FC = () => {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Profile</Text>
-        {!editing && (
-          <TouchableOpacity onPress={() => setEditing(true)}>
-            <Text style={styles.editButton}>Edit</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-
-      <View style={styles.profileContainer}>
-        <View style={styles.avatarContainer}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {profile?.name?.[0]?.toUpperCase() || 'U'}
-            </Text>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      {/* Professional Header */}
+      <LinearGradient
+        colors={[Colors.secondary.main, Colors.secondary.dark]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
+        <View style={styles.headerContent}>
+          <View style={styles.headerLeft}>
+            {Icons.profile(28, '#FFFFFF')}
+            <Text style={styles.title}>Profile</Text>
           </View>
-          <Text style={styles.nerdxId}>ID: {profile?.nerdx_id || user?.nerdx_id}</Text>
+          {!editing && (
+            <TouchableOpacity
+              onPress={() => setEditing(true)}
+              style={styles.editButtonContainer}
+            >
+              <Text style={styles.editButton}>Edit</Text>
+            </TouchableOpacity>
+          )}
         </View>
+      </LinearGradient>
 
-        <View style={styles.form}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>First Name</Text>
-            <TextInput
-              style={[styles.input, !editing && styles.inputDisabled]}
-              value={formData.name}
-              onChangeText={(text) => setFormData({ ...formData, name: text })}
-              editable={editing}
-              placeholder="First Name"
-            />
+      {/* Profile Content */}
+      <View style={styles.profileContainer}>
+        {/* Avatar Card */}
+        <Card variant="elevated" style={styles.avatarCard}>
+          <View style={styles.avatarContainer}>
+            <LinearGradient
+              colors={[Colors.secondary.main, Colors.secondary.dark]}
+              style={styles.avatar}
+            >
+              <Text style={styles.avatarText}>
+                {profile?.name?.[0]?.toUpperCase() || 'U'}
+              </Text>
+            </LinearGradient>
+            <Text style={styles.nerdxId}>ID: {profile?.nerdx_id || user?.nerdx_id}</Text>
           </View>
+        </Card>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Surname</Text>
-            <TextInput
-              style={[styles.input, !editing && styles.inputDisabled]}
-              value={formData.surname}
-              onChangeText={(text) => setFormData({ ...formData, surname: text })}
-              editable={editing}
-              placeholder="Surname"
+        {/* Credits Card */}
+        <Card variant="gradient" gradientColors={[Colors.success.main, Colors.success.dark]} style={styles.creditsCard}>
+          <View style={styles.creditsContent}>
+            <IconCircle
+              icon={Icons.credits(28, '#FFFFFF')}
+              size={56}
+              backgroundColor="rgba(255, 255, 255, 0.2)"
             />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={[styles.input, !editing && styles.inputDisabled]}
-              value={formData.email}
-              onChangeText={(text) => setFormData({ ...formData, email: text })}
-              editable={editing}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              placeholder="Email"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Phone Number</Text>
-            <TextInput
-              style={[styles.input, !editing && styles.inputDisabled]}
-              value={formData.phone_number}
-              onChangeText={(text) => setFormData({ ...formData, phone_number: text })}
-              editable={editing}
-              keyboardType="phone-pad"
-              placeholder="Phone Number"
-            />
-          </View>
-
-          <View style={styles.statsContainer}>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{profile?.credits || user?.credits || 0}</Text>
-              <Text style={styles.statLabel}>Credits</Text>
+            <View style={styles.creditsInfo}>
+              <Text style={styles.creditsLabel}>Available Credits</Text>
+              <Text style={styles.creditsAmount}>{profile?.credits || user?.credits || 0}</Text>
             </View>
           </View>
+        </Card>
 
+        {/* Form Fields */}
+        <View style={styles.formSection}>
+          <Text style={styles.sectionTitle}>Personal Information</Text>
+          
+          <Card variant="elevated" style={styles.formCard}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>First Name</Text>
+              <TextInput
+                style={[styles.input, !editing && styles.inputDisabled]}
+                value={formData.name}
+                onChangeText={(text) => setFormData({ ...formData, name: text })}
+                editable={editing}
+                placeholder="First Name"
+                placeholderTextColor={Colors.text.disabled}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Surname</Text>
+              <TextInput
+                style={[styles.input, !editing && styles.inputDisabled]}
+                value={formData.surname}
+                onChangeText={(text) => setFormData({ ...formData, surname: text })}
+                editable={editing}
+                placeholder="Surname"
+                placeholderTextColor={Colors.text.disabled}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Email</Text>
+              <TextInput
+                style={[styles.input, !editing && styles.inputDisabled]}
+                value={formData.email}
+                onChangeText={(text) => setFormData({ ...formData, email: text })}
+                editable={editing}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                placeholder="Email"
+                placeholderTextColor={Colors.text.disabled}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Phone Number</Text>
+              <TextInput
+                style={[styles.input, !editing && styles.inputDisabled]}
+                value={formData.phone_number}
+                onChangeText={(text) => setFormData({ ...formData, phone_number: text })}
+                editable={editing}
+                keyboardType="phone-pad"
+                placeholder="Phone Number"
+                placeholderTextColor={Colors.text.disabled}
+              />
+            </View>
+          </Card>
+
+          {/* Action Buttons */}
           {editing && (
             <View style={styles.buttonContainer}>
-              <TouchableOpacity
-                style={styles.cancelButton}
+              <Button
+                title="Cancel"
+                variant="outline"
+                fullWidth
                 onPress={() => {
                   setEditing(false);
                   if (profile) {
@@ -177,20 +223,19 @@ const ProfileScreen: React.FC = () => {
                     });
                   }
                 }}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.saveButton}
+                style={styles.cancelButton}
+              />
+              <Button
+                title="Save Changes"
+                variant="primary"
+                fullWidth
                 onPress={handleSave}
                 disabled={saving}
-              >
-                {saving ? (
-                  <ActivityIndicator color="#FFFFFF" />
-                ) : (
-                  <Text style={styles.saveButtonText}>Save</Text>
-                )}
-              </TouchableOpacity>
+                loading={saving}
+                icon="checkmark-circle"
+                iconPosition="left"
+                style={styles.saveButton}
+              />
             </View>
           )}
         </View>
@@ -202,140 +247,148 @@ const ProfileScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.background.paper,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.background.paper,
   },
   loadingText: {
     marginTop: 10,
-    color: '#757575',
+    color: Colors.text.secondary,
+    fontSize: 16,
   },
   header: {
-    backgroundColor: '#1976D2',
-    padding: 20,
-    paddingTop: 40,
+    paddingTop: 50,
+    paddingBottom: 30,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+  },
+  headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: Colors.text.white,
+  },
+  editButtonContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
   editButton: {
     fontSize: 16,
-    color: '#FFFFFF',
-    fontWeight: '500',
+    color: Colors.text.white,
+    fontWeight: '600',
   },
   profileContainer: {
     padding: 20,
+    paddingTop: 10,
+  },
+  avatarCard: {
+    marginBottom: 20,
+    alignItems: 'center',
+    padding: 24,
   },
   avatarContainer: {
     alignItems: 'center',
-    marginBottom: 30,
   },
   avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#1976D2',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 16,
   },
   avatarText: {
-    fontSize: 40,
+    fontSize: 48,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: Colors.text.white,
   },
   nerdxId: {
     fontSize: 16,
-    color: '#757575',
+    color: Colors.text.secondary,
+    fontFamily: 'monospace',
   },
-  form: {
-    width: '100%',
+  creditsCard: {
+    marginBottom: 20,
+  },
+  creditsContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+  },
+  creditsInfo: {
+    marginLeft: 20,
+    flex: 1,
+  },
+  creditsLabel: {
+    fontSize: 14,
+    color: Colors.text.white,
+    opacity: 0.9,
+    marginBottom: 4,
+  },
+  creditsAmount: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: Colors.text.white,
+  },
+  formSection: {
+    marginTop: 10,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: Colors.text.primary,
+    marginBottom: 16,
+    marginLeft: 4,
+  },
+  formCard: {
+    marginBottom: 20,
   },
   inputGroup: {
     marginBottom: 20,
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#212121',
+    fontWeight: '600',
+    color: Colors.text.primary,
     marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    padding: 15,
+    borderColor: Colors.border.light,
+    borderRadius: 12,
+    padding: 16,
     fontSize: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.background.default,
+    color: Colors.text.primary,
   },
   inputDisabled: {
-    backgroundColor: '#F5F5F5',
-    color: '#757575',
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 20,
-    marginBottom: 20,
-  },
-  statItem: {
-    alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    borderRadius: 12,
-    padding: 20,
-    minWidth: 120,
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1976D2',
-    marginBottom: 5,
-  },
-  statLabel: {
-    fontSize: 14,
-    color: '#757575',
+    backgroundColor: Colors.iconBg.default,
+    color: Colors.text.secondary,
   },
   buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 20,
+    gap: 12,
   },
   cancelButton: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    padding: 15,
-    alignItems: 'center',
-    marginRight: 10,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-  },
-  cancelButtonText: {
-    color: '#212121',
-    fontSize: 16,
-    fontWeight: '500',
+    marginBottom: 8,
   },
   saveButton: {
-    flex: 1,
-    backgroundColor: '#1976D2',
-    borderRadius: 8,
-    padding: 15,
-    alignItems: 'center',
-    marginLeft: 10,
-  },
-  saveButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
+    marginBottom: 8,
   },
 });
 

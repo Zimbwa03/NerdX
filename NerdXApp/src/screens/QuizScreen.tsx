@@ -261,148 +261,209 @@ const QuizScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.background.paper,
   },
   header: {
-    backgroundColor: '#1976D2',
-    padding: 20,
+    paddingTop: 50,
+    paddingBottom: 30,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+  },
+  headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  headerText: {
+    flex: 1,
+  },
   title: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: Colors.text.white,
+    marginBottom: 4,
   },
   credits: {
     fontSize: 14,
-    color: '#FFFFFF',
+    color: Colors.text.white,
     opacity: 0.9,
   },
-  questionContainer: {
+  contentContainer: {
     padding: 20,
+    paddingTop: 10,
+  },
+  questionCard: {
+    marginBottom: 20,
+  },
+  questionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 12,
+  },
+  questionLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.text.primary,
   },
   questionText: {
     fontSize: 18,
-    color: '#212121',
-    marginBottom: 20,
-    lineHeight: 26,
+    color: Colors.text.primary,
+    lineHeight: 28,
+    fontWeight: '500',
   },
   optionsContainer: {
     marginBottom: 20,
   },
-  optionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    borderRadius: 8,
-    padding: 15,
-    marginBottom: 10,
+  optionCard: {
+    marginBottom: 12,
+  },
+  optionCardSelected: {
     borderWidth: 2,
-    borderColor: '#E0E0E0',
+    borderColor: Colors.primary.main,
+    backgroundColor: Colors.iconBg.mathematics,
   },
-  optionButtonSelected: {
-    borderColor: '#1976D2',
-    backgroundColor: '#E3F2FD',
-  },
-  optionButtonCorrect: {
-    borderColor: '#4CAF50',
+  optionCardCorrect: {
+    borderWidth: 2,
+    borderColor: Colors.success.main,
     backgroundColor: '#E8F5E9',
   },
-  optionButtonWrong: {
-    borderColor: '#F44336',
+  optionCardWrong: {
+    borderWidth: 2,
+    borderColor: Colors.error.main,
     backgroundColor: '#FFEBEE',
   },
-  optionLabel: {
-    fontSize: 16,
+  optionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 4,
+    gap: 16,
+  },
+  optionLabelCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.iconBg.default,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  optionLabelCircleSelected: {
+    backgroundColor: Colors.primary.main,
+  },
+  optionLabelCircleCorrect: {
+    backgroundColor: Colors.success.main,
+  },
+  optionLabelCircleWrong: {
+    backgroundColor: Colors.error.main,
+  },
+  optionLabelText: {
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#1976D2',
-    marginRight: 10,
+    color: Colors.text.primary,
+  },
+  optionLabelTextSelected: {
+    color: Colors.text.white,
+  },
+  optionLabelTextCorrect: {
+    color: Colors.text.white,
+  },
+  optionLabelTextWrong: {
+    color: Colors.text.white,
   },
   optionText: {
-    fontSize: 16,
-    color: '#212121',
     flex: 1,
+    fontSize: 16,
+    color: Colors.text.primary,
+    lineHeight: 24,
   },
-  resultContainer: {
-    backgroundColor: '#F5F5F5',
-    borderRadius: 8,
-    padding: 15,
+  optionTextSelected: {
+    color: Colors.primary.dark,
+    fontWeight: '500',
+  },
+  optionTextCorrect: {
+    color: Colors.success.dark,
+    fontWeight: '500',
+  },
+  optionTextWrong: {
+    color: Colors.error.dark,
+    fontWeight: '500',
+  },
+  optionIcon: {
+    marginLeft: 'auto',
+  },
+  resultCard: {
     marginBottom: 20,
   },
+  resultCardSuccess: {
+    backgroundColor: '#E8F5E9',
+    borderWidth: 2,
+    borderColor: Colors.success.main,
+  },
+  resultCardError: {
+    backgroundColor: '#FFEBEE',
+    borderWidth: 2,
+    borderColor: Colors.error.main,
+  },
+  resultHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 16,
+  },
+  resultInfo: {
+    flex: 1,
+  },
   resultText: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#F44336',
+    color: Colors.text.primary,
+    marginBottom: 4,
   },
   resultTextCorrect: {
-    color: '#4CAF50',
+    color: Colors.success.dark,
+  },
+  resultTextError: {
+    color: Colors.error.dark,
+  },
+  pointsText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.success.main,
   },
   feedbackText: {
     fontSize: 16,
-    color: '#212121',
-    marginBottom: 10,
+    color: Colors.text.primary,
+    lineHeight: 24,
+    marginBottom: 12,
   },
   solutionContainer: {
-    marginTop: 10,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
+    backgroundColor: Colors.background.default,
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 12,
   },
   solutionTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#212121',
-    marginBottom: 5,
+    fontWeight: '600',
+    color: Colors.text.primary,
+    marginBottom: 8,
   },
   solutionText: {
-    fontSize: 14,
-    color: '#757575',
-  },
-  pointsText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1976D2',
-    marginTop: 10,
+    fontSize: 15,
+    color: Colors.text.secondary,
+    lineHeight: 22,
   },
   buttonContainer: {
-    marginTop: 20,
-  },
-  submitButton: {
-    backgroundColor: '#1976D2',
-    borderRadius: 8,
-    padding: 15,
-    alignItems: 'center',
+    gap: 12,
   },
   nextButton: {
-    backgroundColor: '#4CAF50',
-    borderRadius: 8,
-    padding: 15,
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  backButton: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    padding: 15,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-  },
-  buttonDisabled: {
-    backgroundColor: '#BDBDBD',
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  backButtonText: {
-    color: '#212121',
-    fontSize: 16,
-    fontWeight: '500',
+    marginBottom: 8,
   },
 });
 
