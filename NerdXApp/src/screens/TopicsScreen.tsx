@@ -1,4 +1,4 @@
-// Topics Screen Component
+// Topics Screen Component - Professional UI/UX Design
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -9,9 +9,14 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { quizApi, Topic, Subject } from '../services/api/quizApi';
 import { useAuth } from '../context/AuthContext';
+import { Icons, IconCircle } from '../components/Icons';
+import { Card } from '../components/Card';
+import { Button } from '../components/Button';
+import Colors from '../theme/colors';
 
 const TopicsScreen: React.FC = () => {
   const route = useRoute();
@@ -103,96 +108,246 @@ const TopicsScreen: React.FC = () => {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{subject.name}</Text>
-        <Text style={styles.subtitle}>Choose a topic or start an exam</Text>
-      </View>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      {/* Professional Header */}
+      <LinearGradient
+        colors={[subject.color || Colors.primary.main, Colors.primary.dark]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
+        <View style={styles.headerContent}>
+          <View>
+            <Text style={styles.title}>{subject.name}</Text>
+            <Text style={styles.subtitle}>Choose a topic or start an exam</Text>
+          </View>
+          {getSubjectIcon(subject.id)}
+        </View>
+      </LinearGradient>
 
-      <View style={styles.topicsContainer}>
+      {/* Special Features */}
+      <View style={styles.featuresContainer}>
         {subject.id === 'mathematics' && (
-          <TouchableOpacity
-            style={[styles.examButton, { backgroundColor: '#2196F3' }]}
-            onPress={handleGraphPractice}
-          >
-            <Text style={styles.examButtonText}>📊 Graph Practice</Text>
-            <Text style={styles.examButtonSubtext}>Practice reading and analyzing graphs</Text>
-          </TouchableOpacity>
+          <Card variant="elevated" onPress={handleGraphPractice} style={styles.featureCard}>
+            <View style={styles.featureContent}>
+              <IconCircle
+                icon={Icons.graph(28, Colors.subjects.mathematics)}
+                size={56}
+                backgroundColor={Colors.iconBg.mathematics}
+              />
+              <View style={styles.featureInfo}>
+                <Text style={styles.featureTitle}>Graph Practice</Text>
+                <Text style={styles.featureSubtitle}>Practice reading and analyzing graphs</Text>
+              </View>
+              {Icons.arrowRight(24, Colors.text.secondary)}
+            </View>
+          </Card>
         )}
 
         {subject.id === 'english' && (
           <>
-            <TouchableOpacity
-              style={[styles.examButton, { backgroundColor: '#FF9800' }]}
-              onPress={handleEnglishComprehension}
-            >
-              <Text style={styles.examButtonText}>📖 Comprehension</Text>
-              <Text style={styles.examButtonSubtext}>Reading comprehension practice</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.examButton, { backgroundColor: '#FF9800' }]}
-              onPress={handleEnglishEssay}
-            >
-              <Text style={styles.examButtonText}>✍️ Essay Writing</Text>
-              <Text style={styles.examButtonSubtext}>Write and get your essay marked</Text>
-            </TouchableOpacity>
+            <Card variant="elevated" onPress={handleEnglishComprehension} style={styles.featureCard}>
+              <View style={styles.featureContent}>
+                <IconCircle
+                  icon={Icons.comprehension(28, Colors.subjects.english)}
+                  size={56}
+                  backgroundColor={Colors.iconBg.english}
+                />
+                <View style={styles.featureInfo}>
+                  <Text style={styles.featureTitle}>Comprehension</Text>
+                  <Text style={styles.featureSubtitle}>Reading comprehension practice</Text>
+                </View>
+                {Icons.arrowRight(24, Colors.text.secondary)}
+              </View>
+            </Card>
+            <Card variant="elevated" onPress={handleEnglishEssay} style={styles.featureCard}>
+              <View style={styles.featureContent}>
+                <IconCircle
+                  icon={Icons.essay(28, Colors.subjects.english)}
+                  size={56}
+                  backgroundColor={Colors.iconBg.english}
+                />
+                <View style={styles.featureInfo}>
+                  <Text style={styles.featureTitle}>Essay Writing</Text>
+                  <Text style={styles.featureSubtitle}>Write and get your essay marked</Text>
+                </View>
+                {Icons.arrowRight(24, Colors.text.secondary)}
+              </View>
+            </Card>
           </>
         )}
 
-        <TouchableOpacity
-          style={styles.examButton}
-          onPress={() => handleStartQuiz()}
-        >
-          <Text style={styles.examButtonText}>📝 Start Exam Quiz</Text>
-          <Text style={styles.examButtonSubtext}>Mixed questions from all topics</Text>
-        </TouchableOpacity>
+        {/* Exam Quiz Card */}
+        <Card variant="gradient" gradientColors={[Colors.primary.main, Colors.primary.dark]} onPress={() => handleStartQuiz()} style={styles.examCard}>
+          <View style={styles.examContent}>
+            <IconCircle
+              icon={Icons.quiz(32, '#FFFFFF')}
+              size={64}
+              backgroundColor="rgba(255, 255, 255, 0.2)"
+            />
+            <View style={styles.examInfo}>
+              <Text style={styles.examTitle}>Start Exam Quiz</Text>
+              <Text style={styles.examSubtitle}>Mixed questions from all topics</Text>
+            </View>
+          </View>
+        </Card>
+      </View>
 
+      {/* Topics List */}
+      <View style={styles.topicsContainer}>
+        <Text style={styles.sectionTitle}>Topics</Text>
         {topics.map((topic) => (
-          <TouchableOpacity
+          <Card
             key={topic.id}
-            style={styles.topicCard}
+            variant="elevated"
             onPress={() => handleStartQuiz(topic)}
+            style={styles.topicCard}
           >
-            <Text style={styles.topicName}>{topic.name}</Text>
-            <Text style={styles.topicArrow}>→</Text>
-          </TouchableOpacity>
+            <View style={styles.topicContent}>
+              <IconCircle
+                icon={Icons.quiz(24, Colors.primary.main)}
+                size={40}
+                backgroundColor={Colors.iconBg.default}
+              />
+              <View style={styles.topicInfo}>
+                <Text style={styles.topicName}>{topic.name}</Text>
+              </View>
+              {Icons.arrowRight(24, Colors.text.secondary)}
+            </View>
+          </Card>
         ))}
       </View>
     </ScrollView>
   );
 };
 
+const getSubjectIcon = (subjectId: string): React.ReactNode => {
+  const iconMap: { [key: string]: React.ReactNode } = {
+    mathematics: Icons.mathematics(32, '#FFFFFF'),
+    combined_science: Icons.science(32, '#FFFFFF'),
+    english: Icons.english(32, '#FFFFFF'),
+  };
+  return iconMap[subjectId] || Icons.quiz(32, '#FFFFFF');
+};
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.background.paper,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.background.paper,
   },
   loadingText: {
     marginTop: 10,
-    color: '#757575',
+    color: Colors.text.secondary,
+    fontSize: 16,
   },
   header: {
-    padding: 20,
-    backgroundColor: '#F5F5F5',
+    paddingTop: 50,
+    paddingBottom: 30,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#212121',
-    marginBottom: 5,
+    color: Colors.text.white,
+    marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#757575',
+    color: Colors.text.white,
+    opacity: 0.9,
+  },
+  featuresContainer: {
+    padding: 20,
+    paddingTop: 10,
+  },
+  featureCard: {
+    marginBottom: 12,
+  },
+  featureContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 4,
+    gap: 16,
+  },
+  featureInfo: {
+    flex: 1,
+  },
+  featureTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.text.primary,
+    marginBottom: 4,
+  },
+  featureSubtitle: {
+    fontSize: 14,
+    color: Colors.text.secondary,
+    lineHeight: 20,
+  },
+  examCard: {
+    marginBottom: 20,
+    marginTop: 8,
+  },
+  examContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+  },
+  examInfo: {
+    marginLeft: 20,
+    flex: 1,
+  },
+  examTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: Colors.text.white,
+    marginBottom: 4,
+  },
+  examSubtitle: {
+    fontSize: 14,
+    color: Colors.text.white,
+    opacity: 0.9,
   },
   topicsContainer: {
     padding: 20,
+    paddingTop: 10,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: Colors.text.primary,
+    marginBottom: 16,
+    marginLeft: 4,
+  },
+  topicCard: {
+    marginBottom: 12,
+  },
+  topicContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 4,
+    gap: 16,
+  },
+  topicInfo: {
+    flex: 1,
+  },
+  topicName: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.text.primary,
   },
   examButton: {
     backgroundColor: '#1976D2',

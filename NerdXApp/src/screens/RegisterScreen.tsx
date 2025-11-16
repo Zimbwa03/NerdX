@@ -1,4 +1,4 @@
-// Register Screen Component
+// Register Screen Component - Professional UI/UX Design
 import React, { useState } from 'react';
 import {
   View,
@@ -9,10 +9,17 @@ import {
   Alert,
   ActivityIndicator,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../services/api/authApi';
+import { Icons, IconCircle, Icon } from '../components/Icons';
+import { Card } from '../components/Card';
+import { Button } from '../components/Button';
+import Colors from '../theme/colors';
 
 const RegisterScreen: React.FC = () => {
   const [name, setName] = useState('');
@@ -86,144 +93,248 @@ const RegisterScreen: React.FC = () => {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>Create Account</Text>
-        <Text style={styles.subtitle}>Join NerdX Learning Platform</Text>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <LinearGradient
+        colors={[Colors.secondary.main, Colors.secondary.dark]}
+        style={styles.gradient}
+      >
+        <ScrollView
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {/* Logo/Icon Section */}
+          <View style={styles.logoSection}>
+            <IconCircle
+              icon={Icons.profile(48, '#FFFFFF')}
+              size={100}
+              backgroundColor="rgba(255, 255, 255, 0.2)"
+            />
+            <Text style={styles.title}>Create Account</Text>
+            <Text style={styles.subtitle}>Join NerdX Learning Platform</Text>
+          </View>
 
-        <View style={styles.form}>
-          <TextInput
-            style={styles.input}
-            placeholder="First Name"
-            value={name}
-            onChangeText={setName}
-            autoCapitalize="words"
-          />
+          {/* Registration Form Card */}
+          <Card variant="elevated" style={styles.formCard}>
+            <Text style={styles.formTitle}>Sign Up</Text>
+            <Text style={styles.formSubtitle}>Fill in your details to get started</Text>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Surname"
-            value={surname}
-            onChangeText={setSurname}
-            autoCapitalize="words"
-          />
+            <View style={styles.form}>
+              <View style={styles.inputContainer}>
+                <View style={styles.inputIcon}>
+                  <Icon name="person" size={20} color={Colors.text.secondary} library="ionicons" />
+                </View>
+                <TextInput
+                  style={styles.input}
+                  placeholder="First Name"
+                  placeholderTextColor={Colors.text.disabled}
+                  value={name}
+                  onChangeText={setName}
+                  autoCapitalize="words"
+                />
+              </View>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Email Address"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
+              <View style={styles.inputContainer}>
+                <View style={styles.inputIcon}>
+                  <Icon name="person" size={20} color={Colors.text.secondary} library="ionicons" />
+                </View>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Surname"
+                  placeholderTextColor={Colors.text.disabled}
+                  value={surname}
+                  onChangeText={setSurname}
+                  autoCapitalize="words"
+                />
+              </View>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Phone Number (optional)"
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
-            keyboardType="phone-pad"
-          />
+              <View style={styles.inputContainer}>
+                <View style={styles.inputIcon}>
+                  <Icon name="mail" size={20} color={Colors.text.secondary} library="ionicons" />
+                </View>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Email Address"
+                  placeholderTextColor={Colors.text.disabled}
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Date of Birth (DD/MM/YYYY)"
-            value={dateOfBirth}
-            onChangeText={setDateOfBirth}
-            keyboardType="numeric"
-          />
+              <View style={styles.inputContainer}>
+                <View style={styles.inputIcon}>
+                  <Icon name="call" size={20} color={Colors.text.secondary} library="ionicons" />
+                </View>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Phone Number (optional)"
+                  placeholderTextColor={Colors.text.disabled}
+                  value={phoneNumber}
+                  onChangeText={setPhoneNumber}
+                  keyboardType="phone-pad"
+                />
+              </View>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
+              <View style={styles.inputContainer}>
+                <View style={styles.inputIcon}>
+                  <Icon name="calendar" size={20} color={Colors.text.secondary} library="ionicons" />
+                </View>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Date of Birth (DD/MM/YYYY)"
+                  placeholderTextColor={Colors.text.disabled}
+                  value={dateOfBirth}
+                  onChangeText={setDateOfBirth}
+                  keyboardType="numeric"
+                />
+              </View>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Confirm Password"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry
-          />
+              <View style={styles.inputContainer}>
+                <View style={styles.inputIcon}>
+                  <Icon name="lock-closed" size={20} color={Colors.text.secondary} library="ionicons" />
+                </View>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Password"
+                  placeholderTextColor={Colors.text.disabled}
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                />
+              </View>
 
-          <TouchableOpacity
-            style={[styles.button, isLoading && styles.buttonDisabled]}
-            onPress={handleRegister}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Text style={styles.buttonText}>Create Account</Text>
-            )}
-          </TouchableOpacity>
+              <View style={styles.inputContainer}>
+                <View style={styles.inputIcon}>
+                  <Icon name="lock-closed" size={20} color={Colors.text.secondary} library="ionicons" />
+                </View>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Confirm Password"
+                  placeholderTextColor={Colors.text.disabled}
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry
+                />
+              </View>
 
-          <TouchableOpacity onPress={navigateToLogin}>
-            <Text style={styles.linkText}>Already have an account? Sign In</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </ScrollView>
+              <Button
+                title="Create Account"
+                variant="primary"
+                size="large"
+                fullWidth
+                onPress={handleRegister}
+                disabled={isLoading}
+                loading={isLoading}
+                icon="person-add"
+                iconPosition="left"
+                style={styles.registerButton}
+              />
+
+              <TouchableOpacity onPress={navigateToLogin} style={styles.linkContainer}>
+                <Text style={styles.linkText}>Already have an account? </Text>
+                <Text style={styles.linkTextBold}>Sign In</Text>
+              </TouchableOpacity>
+            </View>
+          </Card>
+        </ScrollView>
+      </LinearGradient>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
-  content: {
+  gradient: {
     flex: 1,
-    justifyContent: 'center',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
     padding: 20,
+    paddingTop: 40,
+    paddingBottom: 40,
+  },
+  logoSection: {
+    alignItems: 'center',
+    marginBottom: 30,
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
     textAlign: 'center',
+    marginTop: 20,
     marginBottom: 8,
-    color: '#1976D2',
+    color: Colors.text.white,
   },
   subtitle: {
     fontSize: 16,
     textAlign: 'center',
-    marginBottom: 40,
-    color: '#757575',
+    color: Colors.text.white,
+    opacity: 0.9,
+  },
+  formCard: {
+    padding: 24,
+  },
+  formTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: Colors.text.primary,
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  formSubtitle: {
+    fontSize: 14,
+    color: Colors.text.secondary,
+    marginBottom: 24,
+    textAlign: 'center',
   },
   form: {
     width: '100%',
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    padding: 15,
-    marginBottom: 15,
-    fontSize: 16,
-    backgroundColor: '#FAFAFA',
-  },
-  button: {
-    backgroundColor: '#1976D2',
-    borderRadius: 8,
-    padding: 15,
+  inputContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+    borderRadius: 12,
+    marginBottom: 16,
+    backgroundColor: Colors.background.default,
+  },
+  inputIcon: {
+    paddingLeft: 16,
+    paddingRight: 8,
+  },
+  input: {
+    flex: 1,
+    padding: 16,
+    fontSize: 16,
+    color: Colors.text.primary,
+  },
+  registerButton: {
+    marginTop: 8,
     marginBottom: 20,
   },
-  buttonDisabled: {
-    backgroundColor: '#BDBDBD',
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
+  linkContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   linkText: {
-    color: '#1976D2',
-    textAlign: 'center',
+    color: Colors.text.secondary,
     fontSize: 16,
+  },
+  linkTextBold: {
+    color: Colors.secondary.main,
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 
