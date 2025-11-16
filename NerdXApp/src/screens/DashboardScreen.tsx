@@ -46,6 +46,10 @@ const DashboardScreen: React.FC = () => {
     navigation.navigate('Profile' as never);
   };
 
+  const navigateToProjectAssistant = () => {
+    navigation.navigate('ProjectAssistantSetup' as never);
+  };
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -84,6 +88,10 @@ const DashboardScreen: React.FC = () => {
 
         <TouchableOpacity style={styles.menuButton} onPress={navigateToProfile}>
           <Text style={styles.menuButtonText}>👤 Profile</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.menuButton} onPress={navigateToProjectAssistant}>
+          <Text style={styles.menuButtonText}>🎓 Project Assistant</Text>
         </TouchableOpacity>
       </View>
 

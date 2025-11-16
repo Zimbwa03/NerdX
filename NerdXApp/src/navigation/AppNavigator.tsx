@@ -16,6 +16,11 @@ import ProgressScreen from '../screens/ProgressScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import TeacherModeSetupScreen from '../screens/TeacherModeSetupScreen';
 import TeacherModeScreen from '../screens/TeacherModeScreen';
+import ProjectAssistantSetupScreen from '../screens/ProjectAssistantSetupScreen';
+import ProjectAssistantScreen from '../screens/ProjectAssistantScreen';
+import GraphPracticeScreen from '../screens/GraphPracticeScreen';
+import EnglishComprehensionScreen from '../screens/EnglishComprehensionScreen';
+import EnglishEssayScreen from '../screens/EnglishEssayScreen';
 
 const Stack = createStackNavigator();
 
@@ -125,6 +130,42 @@ const AppNavigator: React.FC = () => {
               options={{
                 title: 'Teacher Mode',
                 headerBackTitle: 'Back',
+              }}
+            />
+            <Stack.Screen
+              name="ProjectAssistantSetup"
+              component={ProjectAssistantSetupScreen}
+              options={{
+                title: 'Project Assistant Setup',
+              }}
+            />
+            <Stack.Screen
+              name="ProjectAssistant"
+              component={ProjectAssistantScreen}
+              options={{
+                title: 'Project Assistant',
+                headerBackTitle: 'Back',
+              }}
+            />
+            <Stack.Screen
+              name="GraphPractice"
+              component={GraphPracticeScreen}
+              options={{
+                title: 'Graph Practice',
+              }}
+            />
+            <Stack.Screen
+              name="EnglishComprehension"
+              component={EnglishComprehensionScreen}
+              options={{
+                title: 'Comprehension',
+              }}
+            />
+            <Stack.Screen
+              name="EnglishEssay"
+              component={EnglishEssayScreen}
+              options={{
+                title: 'Essay Writing',
               }}
             />
           </Stack.Group>

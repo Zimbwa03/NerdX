@@ -37,6 +37,18 @@ const TopicsScreen: React.FC = () => {
     }
   };
 
+  const handleGraphPractice = () => {
+    navigation.navigate('GraphPractice' as never);
+  };
+
+  const handleEnglishComprehension = () => {
+    navigation.navigate('EnglishComprehension' as never);
+  };
+
+  const handleEnglishEssay = () => {
+    navigation.navigate('EnglishEssay' as never);
+  };
+
   const handleStartQuiz = async (topic?: Topic) => {
     try {
       if (!user || (user.credits || 0) < 1) {
@@ -98,6 +110,35 @@ const TopicsScreen: React.FC = () => {
       </View>
 
       <View style={styles.topicsContainer}>
+        {subject.id === 'mathematics' && (
+          <TouchableOpacity
+            style={[styles.examButton, { backgroundColor: '#2196F3' }]}
+            onPress={handleGraphPractice}
+          >
+            <Text style={styles.examButtonText}>📊 Graph Practice</Text>
+            <Text style={styles.examButtonSubtext}>Practice reading and analyzing graphs</Text>
+          </TouchableOpacity>
+        )}
+
+        {subject.id === 'english' && (
+          <>
+            <TouchableOpacity
+              style={[styles.examButton, { backgroundColor: '#FF9800' }]}
+              onPress={handleEnglishComprehension}
+            >
+              <Text style={styles.examButtonText}>📖 Comprehension</Text>
+              <Text style={styles.examButtonSubtext}>Reading comprehension practice</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.examButton, { backgroundColor: '#FF9800' }]}
+              onPress={handleEnglishEssay}
+            >
+              <Text style={styles.examButtonText}>✍️ Essay Writing</Text>
+              <Text style={styles.examButtonSubtext}>Write and get your essay marked</Text>
+            </TouchableOpacity>
+          </>
+        )}
+
         <TouchableOpacity
           style={styles.examButton}
           onPress={() => handleStartQuiz()}
