@@ -624,8 +624,8 @@ class ExamMathematicsHandler:
             
             # Wait to ensure images load and appear first in chat
             if image_count > 0:
-            import time
-            time.sleep(2)
+                import time
+                time.sleep(2)
             
             # Create navigation buttons
             buttons = [
