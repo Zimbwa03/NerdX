@@ -1,9 +1,12 @@
 // API configuration for NerdX App
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const API_BASE_URL = __DEV__
   ? 'http://localhost:5000' // Development (use your local IP for physical device: http://192.168.1.XXX:5000)
   : 'https://nerdx.onrender.com'; // Production
+
+const AUTH_TOKEN_KEY = '@auth_token';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -16,8 +19,8 @@ const api = axios.create({
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
-  (config) => {
-    const token = getAuthToken();
+  async (config) => {
+    const token = await getAuthToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -33,36 +36,36 @@ api.interceptors.response.use(
   (response) => {
     return response;
   },
-  (error) => {
+  async (error) => {
     if (error.response?.status === 401) {
       // Handle unauthorized access
-      clearAuthToken();
+      await clearAuthToken();
     }
     return Promise.reject(error);
   }
 );
 
 // Auth token management
-export const getAuthToken = (): string | null => {
+export const getAuthToken = async (): Promise<string | null> => {
   try {
-    // In a real app, this would be stored securely
-    return null; // TODO: Implement secure token storage
+    const token = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
+    return token;
   } catch {
     return null;
   }
 };
 
-export const setAuthToken = (token: string): void => {
+export const setAuthToken = async (token: string): Promise<void> => {
   try {
-    // TODO: Implement secure token storage
+    await AsyncStorage.setItem(AUTH_TOKEN_KEY, token);
   } catch (error) {
     console.error('Failed to store auth token:', error);
   }
 };
 
-export const clearAuthToken = (): void => {
+export const clearAuthToken = async (): Promise<void> => {
   try {
-    // TODO: Clear stored token
+    await AsyncStorage.removeItem(AUTH_TOKEN_KEY);
   } catch (error) {
     console.error('Failed to clear auth token:', error);
   }

@@ -1,5 +1,5 @@
 // Dashboard Screen Component
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,10 +9,26 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
+import { creditsApi } from '../services/api/creditsApi';
 
 const DashboardScreen: React.FC = () => {
   const navigation = useNavigation();
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
+
+  useEffect(() => {
+    // Refresh credits when screen loads
+    const refreshCredits = async () => {
+      try {
+        const balance = await creditsApi.getBalance();
+        if (user && balance !== user.credits) {
+          updateUser({ credits: balance });
+        }
+      } catch (error) {
+        console.error('Failed to refresh credits:', error);
+      }
+    };
+    refreshCredits();
+  }, []);
 
   const navigateToSubjects = () => {
     navigation.navigate('Subjects' as never);
@@ -20,6 +36,14 @@ const DashboardScreen: React.FC = () => {
 
   const navigateToCredits = () => {
     navigation.navigate('Credits' as never);
+  };
+
+  const navigateToProgress = () => {
+    navigation.navigate('Progress' as never);
+  };
+
+  const navigateToProfile = () => {
+    navigation.navigate('Profile' as never);
   };
 
   const handleLogout = async () => {
@@ -54,11 +78,11 @@ const DashboardScreen: React.FC = () => {
           <Text style={styles.menuButtonText}>💰 Buy Credits</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuButton}>
+        <TouchableOpacity style={styles.menuButton} onPress={navigateToProgress}>
           <Text style={styles.menuButtonText}>📊 Progress</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuButton}>
+        <TouchableOpacity style={styles.menuButton} onPress={navigateToProfile}>
           <Text style={styles.menuButtonText}>👤 Profile</Text>
         </TouchableOpacity>
       </View>

@@ -49,7 +49,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (userData: User, token: string) => {
     try {
+      const { setAuthToken } = await import('../services/api/config');
       await Promise.all([
+        setAuthToken(token),
         AsyncStorage.setItem(AUTH_TOKEN_KEY, token),
         AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(userData)),
       ]);
@@ -62,7 +64,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async () => {
     try {
+      const { clearAuthToken } = await import('../services/api/config');
       await Promise.all([
+        clearAuthToken(),
         AsyncStorage.removeItem(AUTH_TOKEN_KEY),
         AsyncStorage.removeItem(USER_DATA_KEY),
       ]);
