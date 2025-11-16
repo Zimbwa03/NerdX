@@ -34,7 +34,26 @@ const SubjectsScreen: React.FC = () => {
   };
 
   const handleSubjectPress = (subject: Subject) => {
-    navigation.navigate('Topics' as never, { subject } as never);
+    if (subject.id === 'combined_science') {
+      // Show options: Teacher Mode or Practice Mode
+      Alert.alert(
+        'Combined Science',
+        'Choose your learning mode:',
+        [
+          {
+            text: '👨‍🏫 Teacher Mode',
+            onPress: () => navigation.navigate('TeacherModeSetup' as never, { subject } as never),
+          },
+          {
+            text: '📝 Practice Mode',
+            onPress: () => navigation.navigate('Topics' as never, { subject } as never),
+          },
+          { text: 'Cancel', style: 'cancel' },
+        ]
+      );
+    } else {
+      navigation.navigate('Topics' as never, { subject } as never);
+    }
   };
 
   if (loading) {

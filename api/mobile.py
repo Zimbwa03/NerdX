@@ -1115,3 +1115,417 @@ def upload_image():
         logger.error(f"Upload image error: {e}")
         return jsonify({'success': False, 'message': 'Server error'}), 500
 
+# ============================================================================
+# TEACHER MODE ENDPOINTS (Combined Science Chatbot)
+# ============================================================================
+
+@mobile_bp.route('/teacher/start', methods=['POST'])
+@require_auth
+def start_teacher_mode():
+    """Start Teacher Mode session"""
+    try:
+        data = request.get_json()
+        subject = data.get('subject', '')  # Biology, Chemistry, Physics
+        grade_level = data.get('grade_level', '')  # Form 1-2, O-Level, A-Level
+        topic = data.get('topic', '')  # Optional topic
+        
+        if not subject or not grade_level:
+            return jsonify({'success': False, 'message': 'Subject and grade level are required'}), 400
+        
+        # Check credits for initial session
+        credit_cost = advanced_credit_service.get_credit_cost('teacher_mode_start')
+        user_credits = get_user_credits(g.current_user_id) or 0
+        
+        if user_credits < credit_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {credit_cost}'
+            }), 400
+        
+        # Start teacher mode session
+        from services.combined_science_teacher_service import CombinedScienceTeacherService
+        teacher_service = CombinedScienceTeacherService()
+        
+        # Initialize session
+        session_id = str(uuid.uuid4())
+        from utils.session_manager import session_manager
+        session_manager.set_data(g.current_user_id, 'science_teacher', {
+            'active': True,
+            'session_id': session_id,
+            'subject': subject,
+            'grade_level': grade_level,
+            'topic': topic,
+            'conversation_history': [],
+            'started_at': datetime.utcnow().isoformat()
+        })
+        
+        # Deduct credits
+        deduct_credits(g.current_user_id, credit_cost)
+        
+        # Get initial message from teacher
+        initial_message = f"👨‍🏫 Welcome to Teacher Mode!\n\nI'm your {subject} teacher. How can I help you learn today?"
+        if topic:
+            initial_message += f"\n\nWe'll be focusing on: {topic}"
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'session_id': session_id,
+                'subject': subject,
+                'grade_level': grade_level,
+                'topic': topic,
+                'initial_message': initial_message
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Start teacher mode error: {e}")
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+@mobile_bp.route('/teacher/message', methods=['POST'])
+@require_auth
+def send_teacher_message():
+    """Send message to Teacher Mode chatbot"""
+    try:
+        data = request.get_json()
+        message = data.get('message', '').strip()
+        session_id = data.get('session_id', '')
+        
+        if not message:
+            return jsonify({'success': False, 'message': 'Message is required'}), 400
+        
+        # Check if user wants to exit
+        exit_commands = ['exit', 'quit', 'back', 'main menu', 'leave']
+        if message.lower() in exit_commands:
+            from utils.session_manager import session_manager
+            session_manager.clear_session(g.current_user_id, 'science_teacher')
+            return jsonify({
+                'success': True,
+                'data': {
+                    'response': '👋 Teacher Mode ended. You can start a new session anytime!',
+                    'session_ended': True
+                }
+            }), 200
+        
+        # Check credits for follow-up
+        credit_cost = advanced_credit_service.get_credit_cost('teacher_mode_followup')
+        user_credits = get_user_credits(g.current_user_id) or 0
+        
+        if user_credits < credit_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {credit_cost}'
+            }), 400
+        
+        # Get session data
+        from utils.session_manager import session_manager
+        session_data = session_manager.get_data(g.current_user_id, 'science_teacher')
+        
+        if not session_data or not session_data.get('active'):
+            return jsonify({'success': False, 'message': 'No active teacher session'}), 400
+        
+        # Get AI response using the service's handle_conversation method
+        from services.combined_science_teacher_service import CombinedScienceTeacherService
+        teacher_service = CombinedScienceTeacherService()
+        
+        # Use the service's handle_conversation which handles credits and AI response
+        # We need to get the response directly, so we'll call the internal method
+        session_data = session_manager.get_data(g.current_user_id, 'science_teacher')
+        if not session_data or not session_data.get('active'):
+            return jsonify({'success': False, 'message': 'No active teacher session'}), 400
+        
+        # Get AI response using internal method
+        conversation_history = session_data.get('conversation_history', [])
+        conversation_history.append({'role': 'user', 'content': message})
+        
+        # Get response from Gemini
+        response_text = teacher_service._get_gemini_teaching_response(
+            g.current_user_id, message, session_data
+        )
+        
+        conversation_history.append({'role': 'assistant', 'content': response_text})
+        
+        # Update session
+        session_data['conversation_history'] = conversation_history[-20:]  # Keep last 20
+        session_manager.set_data(g.current_user_id, 'science_teacher', session_data)
+        
+        # Credits already deducted by check_and_deduct_credits in handle_conversation logic
+        # But we need to deduct here since we're bypassing handle_conversation
+        deduct_credits(g.current_user_id, credit_cost)
+        
+        # Clean formatting
+        clean_response = teacher_service._clean_whatsapp_formatting(response_text)
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'response': clean_response,
+                'session_id': session_id
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Send teacher message error: {e}")
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+@mobile_bp.route('/teacher/generate-notes', methods=['POST'])
+@require_auth
+def generate_teacher_notes():
+    """Generate PDF notes from Teacher Mode session"""
+    try:
+        data = request.get_json()
+        session_id = data.get('session_id', '')
+        
+        # Check credits
+        credit_cost = advanced_credit_service.get_credit_cost('teacher_mode_pdf')
+        user_credits = get_user_credits(g.current_user_id) or 0
+        
+        if user_credits < credit_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {credit_cost}'
+            }), 400
+        
+        # Get session data
+        from utils.session_manager import session_manager
+        session_data = session_manager.get_data(g.current_user_id, 'science_teacher')
+        
+        if not session_data:
+            return jsonify({'success': False, 'message': 'No active session'}), 400
+        
+        # Generate notes using the service's generate_notes method
+        from services.combined_science_teacher_service import CombinedScienceTeacherService
+        teacher_service = CombinedScienceTeacherService()
+        
+        # Call the generate_notes method which handles PDF generation
+        # For mobile, we'll get the notes data directly
+        conversation_history = session_data.get('conversation_history', [])
+        subject = session_data.get('subject', '')
+        topic = session_data.get('topic', '')
+        
+        # Generate notes JSON using Gemini
+        notes_prompt = f"Generate comprehensive notes in JSON format for {topic} in {subject}. Use the conversation history as context."
+        notes_response = teacher_service._get_gemini_teaching_response(
+            g.current_user_id, notes_prompt, session_data
+        )
+        
+        # Try to parse JSON from response
+        import json as json_lib
+        try:
+            # Extract JSON from response if it's wrapped in markdown
+            if '```json' in notes_response:
+                json_start = notes_response.find('```json') + 7
+                json_end = notes_response.find('```', json_start)
+                notes_json = notes_response[json_start:json_end].strip()
+                notes_data = json_lib.loads(notes_json)
+            else:
+                notes_data = json_lib.loads(notes_response)
+        except:
+            # If JSON parsing fails, return text response
+            notes_data = {'content': notes_response}
+        
+        # Deduct credits
+        deduct_credits(g.current_user_id, credit_cost)
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'notes': notes_data,
+                'pdf_url': ''  # TODO: Generate actual PDF
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Generate teacher notes error: {e}")
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+# ============================================================================
+# PROJECT ASSISTANT ENDPOINTS
+# ============================================================================
+
+@mobile_bp.route('/project/start', methods=['POST'])
+@require_auth
+def start_project_assistant():
+    """Start Project Assistant session"""
+    try:
+        data = request.get_json()
+        project_title = data.get('project_title', '')
+        subject = data.get('subject', '')
+        
+        # Check credits
+        credit_cost = advanced_credit_service.get_credit_cost('project_assistant_start')
+        user_credits = get_user_credits(g.current_user_id) or 0
+        
+        if user_credits < credit_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {credit_cost}'
+            }), 400
+        
+        # Start project session
+        from services.project_assistant_service import ProjectAssistantService
+        project_service = ProjectAssistantService()
+        
+        session_id = str(uuid.uuid4())
+        from utils.session_manager import session_manager
+        session_manager.set_data(g.current_user_id, 'project_assistant', {
+            'active': True,
+            'session_id': session_id,
+            'project_title': project_title,
+            'subject': subject,
+            'conversation_history': [],
+            'started_at': datetime.utcnow().isoformat()
+        })
+        
+        # Deduct credits
+        deduct_credits(g.current_user_id, credit_cost)
+        
+        initial_message = "🎓 Welcome to Project Assistant!\n\nI'm here to help you with your ZIMSEC School-Based Project. What would you like to work on today?"
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'session_id': session_id,
+                'project_title': project_title,
+                'subject': subject,
+                'initial_message': initial_message
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Start project assistant error: {e}")
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+@mobile_bp.route('/project/message', methods=['POST'])
+@require_auth
+def send_project_message():
+    """Send message to Project Assistant chatbot"""
+    try:
+        data = request.get_json()
+        message = data.get('message', '').strip()
+        session_id = data.get('session_id', '')
+        
+        if not message:
+            return jsonify({'success': False, 'message': 'Message is required'}), 400
+        
+        # Check if user wants to exit
+        exit_commands = ['exit', 'quit', 'back', 'main menu']
+        if message.lower() in exit_commands:
+            from utils.session_manager import session_manager
+            session_manager.clear_session(g.current_user_id, 'project_assistant')
+            return jsonify({
+                'success': True,
+                'data': {
+                    'response': '👋 Project Assistant session ended. Good luck with your project!',
+                    'session_ended': True
+                }
+            }), 200
+        
+        # Check credits
+        credit_cost = advanced_credit_service.get_credit_cost('project_assistant_followup')
+        user_credits = get_user_credits(g.current_user_id) or 0
+        
+        if user_credits < credit_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {credit_cost}'
+            }), 400
+        
+        # Get session data
+        from utils.session_manager import session_manager
+        session_data = session_manager.get_data(g.current_user_id, 'project_assistant')
+        
+        if not session_data or not session_data.get('active'):
+            return jsonify({'success': False, 'message': 'No active project session'}), 400
+        
+        # Get AI response
+        from services.project_assistant_service import ProjectAssistantService
+        project_service = ProjectAssistantService()
+        
+        # Get AI response using project service
+        conversation_history = session_data.get('conversation_history', [])
+        conversation_history.append({'role': 'user', 'content': message})
+        
+        # Use the service's internal method to get AI response
+        # The project service uses _get_ai_response with different signature
+        # Let's call handle_project_message which processes the message
+        project_data = {
+            'project_title': session_data.get('project_title', ''),
+            'subject': session_data.get('subject', ''),
+            'conversation_history': conversation_history
+        }
+        
+        # Get AI response
+        ai_response = project_service._get_ai_response(
+            g.current_user_id,
+            message,
+            project_data
+        )
+        
+        conversation_history.append({'role': 'assistant', 'content': ai_response})
+        
+        # Update session
+        session_data['conversation_history'] = conversation_history
+        session_manager.set_data(g.current_user_id, 'project_assistant', session_data)
+        
+        # Deduct credits
+        deduct_credits(g.current_user_id, credit_cost)
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'response': ai_response,
+                'session_id': session_id
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Send project message error: {e}")
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+# ============================================================================
+# GRAPH PRACTICE ENDPOINTS
+# ============================================================================
+
+@mobile_bp.route('/math/graph/generate', methods=['POST'])
+@require_auth
+def generate_graph():
+    """Generate math graph practice"""
+    try:
+        data = request.get_json()
+        graph_type = data.get('graph_type', '')  # linear, quadratic, etc.
+        equation = data.get('equation', '')
+        
+        # Check credits
+        credit_cost = advanced_credit_service.get_credit_cost('math_graph_practice')
+        user_credits = get_user_credits(g.current_user_id) or 0
+        
+        if user_credits < credit_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {credit_cost}'
+            }), 400
+        
+        # Generate graph
+        from services.graph_service import GraphService
+        graph_service = GraphService()
+        
+        graph_data = graph_service.generate_graph_practice(graph_type, equation)
+        
+        # Deduct credits
+        deduct_credits(g.current_user_id, credit_cost)
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'graph_url': graph_data.get('image_url', ''),
+                'equation': graph_data.get('equation', ''),
+                'question': graph_data.get('question', ''),
+                'solution': graph_data.get('solution', '')
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Generate graph error: {e}")
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+

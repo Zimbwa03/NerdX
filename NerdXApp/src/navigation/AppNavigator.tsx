@@ -14,6 +14,8 @@ import QuizScreen from '../screens/QuizScreen';
 import CreditsScreen from '../screens/CreditsScreen';
 import ProgressScreen from '../screens/ProgressScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import TeacherModeSetupScreen from '../screens/TeacherModeSetupScreen';
+import TeacherModeScreen from '../screens/TeacherModeScreen';
 
 const Stack = createStackNavigator();
 
@@ -108,6 +110,21 @@ const AppNavigator: React.FC = () => {
               component={ProfileScreen}
               options={{
                 title: 'Profile',
+              }}
+            />
+            <Stack.Screen
+              name="TeacherModeSetup"
+              component={TeacherModeSetupScreen}
+              options={{
+                title: 'Teacher Mode Setup',
+              }}
+            />
+            <Stack.Screen
+              name="TeacherMode"
+              component={TeacherModeScreen}
+              options={{
+                title: 'Teacher Mode',
+                headerBackTitle: 'Back',
               }}
             />
           </Stack.Group>
