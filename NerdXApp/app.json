@@ -3,9 +3,37 @@
     "name": "NerdXApp",
     "slug": "nerdxapp",
     "version": "1.0.0",
-    "owner": "ngonidzashezimbwa",
+    "main": "node_modules/expo/AppEntry.js",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.Ngoni03.nerdxapp"
+    },
     "android": {
-      "package": "com.ngonidzashezimbwa.nerdxapp"
-    }
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.Ngoni03.nerdxapp"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "9f2a9d76-e482-41ec-a7c3-48f693cf3693"
+      }
+    },
+    "owner": "ngoni03"
   }
 }
