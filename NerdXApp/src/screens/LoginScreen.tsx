@@ -18,7 +18,7 @@ import { authApi } from '../services/api/authApi';
 import { Icons, IconCircle, Icon } from '../components/Icons';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
-import Colors from '../theme/colors';
+import { Colors } from '../theme/colors';
 
 const LoginScreen: React.FC = () => {
   const [identifier, setIdentifier] = useState('');
