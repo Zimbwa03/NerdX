@@ -1,0 +1,100 @@
+// Professional Card Component
+import React from 'react';
+import { View, StyleSheet, ViewStyle, TouchableOpacity, TouchableOpacityProps } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+
+export interface CardProps extends TouchableOpacityProps {
+  children: React.ReactNode;
+  style?: ViewStyle;
+  variant?: 'default' | 'elevated' | 'outlined' | 'gradient';
+  gradientColors?: string[];
+  onPress?: () => void;
+  disabled?: boolean;
+}
+
+/**
+ * Professional Card Component
+ * Provides consistent card styling with multiple variants
+ */
+export const Card: React.FC<CardProps> = ({
+  children,
+  style,
+  variant = 'default',
+  gradientColors = ['#FFFFFF', '#F5F5F5'],
+  onPress,
+  disabled = false,
+  ...props
+}) => {
+  const cardStyle = [
+    styles.card,
+    variant === 'elevated' && styles.elevated,
+    variant === 'outlined' && styles.outlined,
+    style,
+  ];
+
+  if (variant === 'gradient' && onPress) {
+    return (
+      <TouchableOpacity
+        onPress={onPress}
+        disabled={disabled}
+        activeOpacity={0.8}
+        style={cardStyle}
+        {...props}
+      >
+        <LinearGradient
+          colors={gradientColors}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.gradient}
+        >
+          {children}
+        </LinearGradient>
+      </TouchableOpacity>
+    );
+  }
+
+  if (onPress) {
+    return (
+      <TouchableOpacity
+        onPress={onPress}
+        disabled={disabled}
+        activeOpacity={0.7}
+        style={cardStyle}
+        {...props}
+      >
+        {children}
+      </TouchableOpacity>
+    );
+  }
+
+  return <View style={cardStyle}>{children}</View>;
+};
+
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+  },
+  elevated: {
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  outlined: {
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  gradient: {
+    borderRadius: 16,
+    padding: 16,
+  },
+});
+
+export default Card;
+
