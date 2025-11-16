@@ -1,4 +1,4 @@
-// Credits Screen Component
+// Credits Screen Component - Professional UI/UX Design
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
@@ -11,9 +11,14 @@ import {
   Alert,
   Modal,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { creditsApi, CreditPackage, PaymentStatus } from '../services/api/creditsApi';
 import { useAuth } from '../context/AuthContext';
+import { Icons, IconCircle } from '../components/Icons';
+import { Card } from '../components/Card';
+import { Button } from '../components/Button';
+import Colors from '../theme/colors';
 
 const CreditsScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -168,43 +173,98 @@ const CreditsScreen: React.FC = () => {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Buy Credits</Text>
-        <View style={styles.balanceContainer}>
-          <Text style={styles.balanceLabel}>Current Balance:</Text>
-          <Text style={styles.balanceAmount}>{user?.credits || 0} Credits</Text>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      {/* Professional Header */}
+      <LinearGradient
+        colors={[Colors.success.main, Colors.success.dark]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
+        <View style={styles.headerContent}>
+          <View>
+            <Text style={styles.title}>Buy Credits</Text>
+            <Text style={styles.subtitle}>Top up your account</Text>
+          </View>
+          {Icons.credits(32, '#FFFFFF')}
         </View>
+      </LinearGradient>
+
+      {/* Current Balance Card */}
+      <View style={styles.balanceContainer}>
+        <Card variant="gradient" gradientColors={[Colors.primary.main, Colors.primary.dark]}>
+          <View style={styles.balanceContent}>
+            <IconCircle
+              icon={Icons.wallet(28, '#FFFFFF')}
+              size={56}
+              backgroundColor="rgba(255, 255, 255, 0.2)"
+            />
+            <View style={styles.balanceInfo}>
+              <Text style={styles.balanceLabel}>Current Balance</Text>
+              <Text style={styles.balanceAmount}>{user?.credits || 0} Credits</Text>
+            </View>
+          </View>
+        </Card>
       </View>
 
+      {/* Credit Packages */}
       <View style={styles.packagesContainer}>
+        <Text style={styles.sectionTitle}>Credit Packages</Text>
         {packages.map((packageItem) => (
-          <TouchableOpacity
+          <Card
             key={packageItem.id}
-            style={styles.packageCard}
+            variant="elevated"
             onPress={() => handlePurchase(packageItem)}
             disabled={purchasing === packageItem.id}
+            style={styles.packageCard}
           >
-            <View style={styles.packageHeader}>
-              <Text style={styles.packageName}>{packageItem.name}</Text>
-              <Text style={styles.packagePrice}>${packageItem.price}</Text>
-            </View>
-            <Text style={styles.packageCredits}>{packageItem.credits} Credits</Text>
-            <Text style={styles.packageDescription}>{packageItem.description}</Text>
-            {purchasing === packageItem.id ? (
-              <ActivityIndicator size="small" color="#1976D2" style={styles.purchasingIndicator} />
-            ) : (
-              <View style={styles.purchaseButton}>
-                <Text style={styles.purchaseButtonText}>Purchase</Text>
+            <View style={styles.packageContent}>
+              <View style={styles.packageHeader}>
+                <View style={styles.packageInfo}>
+                  <Text style={styles.packageName}>{packageItem.name}</Text>
+                  <Text style={styles.packageDescription}>{packageItem.description}</Text>
+                </View>
+                <View style={styles.packagePriceContainer}>
+                  <Text style={styles.packagePrice}>${packageItem.price}</Text>
+                  <Text style={styles.packageCurrency}>USD</Text>
+                </View>
               </View>
-            )}
-          </TouchableOpacity>
+              <View style={styles.packageCreditsContainer}>
+                <IconCircle
+                  icon={Icons.credits(24, Colors.success.main)}
+                  size={40}
+                  backgroundColor={Colors.iconBg.default}
+                />
+                <Text style={styles.packageCredits}>{packageItem.credits} Credits</Text>
+              </View>
+              {purchasing === packageItem.id ? (
+                <ActivityIndicator size="small" color={Colors.primary.main} style={styles.purchasingIndicator} />
+              ) : (
+                <Button
+                  title="Purchase"
+                  variant="primary"
+                  fullWidth
+                  icon="card"
+                  iconPosition="left"
+                  style={styles.purchaseButton}
+                />
+              )}
+            </View>
+          </Card>
         ))}
       </View>
 
-      <TouchableOpacity style={styles.refreshButton} onPress={refreshCredits}>
-        <Text style={styles.refreshButtonText}>🔄 Refresh Balance</Text>
-      </TouchableOpacity>
+      {/* Refresh Button */}
+      <View style={styles.refreshContainer}>
+        <Button
+          title="Refresh Balance"
+          variant="outline"
+          icon="refresh"
+          iconPosition="left"
+          onPress={refreshCredits}
+          fullWidth
+        />
+      </View>
 
       {/* Payment Modal */}
       <Modal
@@ -320,116 +380,141 @@ const CreditsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.background.paper,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.background.paper,
   },
   loadingText: {
     marginTop: 10,
-    color: '#757575',
+    color: Colors.text.secondary,
+    fontSize: 16,
   },
   header: {
-    backgroundColor: '#1976D2',
-    padding: 20,
+    paddingTop: 50,
+    paddingBottom: 30,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 15,
-  },
-  balanceContainer: {
+  headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    padding: 15,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: Colors.text.white,
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: Colors.text.white,
+    opacity: 0.9,
+  },
+  balanceContainer: {
+    padding: 20,
+    paddingTop: 0,
+    marginTop: -30,
+  },
+  balanceContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+  },
+  balanceInfo: {
+    marginLeft: 20,
+    flex: 1,
   },
   balanceLabel: {
-    fontSize: 16,
-    color: '#757575',
+    fontSize: 14,
+    color: Colors.text.white,
+    opacity: 0.9,
+    marginBottom: 4,
   },
   balanceAmount: {
-    fontSize: 20,
+    fontSize: 32,
     fontWeight: 'bold',
-    color: '#1976D2',
+    color: Colors.text.white,
   },
   packagesContainer: {
     padding: 20,
+    paddingTop: 10,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: Colors.text.primary,
+    marginBottom: 16,
+    marginLeft: 4,
   },
   packageCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    padding: 20,
-    marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    marginBottom: 16,
+  },
+  packageContent: {
+    padding: 4,
   },
   packageHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
+  packageInfo: {
+    flex: 1,
   },
   packageName: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#212121',
-  },
-  packagePrice: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1976D2',
-  },
-  packageCredits: {
-    fontSize: 18,
-    color: '#4CAF50',
     fontWeight: '600',
-    marginBottom: 5,
+    color: Colors.text.primary,
+    marginBottom: 4,
   },
   packageDescription: {
     fontSize: 14,
-    color: '#757575',
-    marginBottom: 15,
+    color: Colors.text.secondary,
+    lineHeight: 20,
+  },
+  packagePriceContainer: {
+    alignItems: 'flex-end',
+  },
+  packagePrice: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: Colors.primary.main,
+  },
+  packageCurrency: {
+    fontSize: 12,
+    color: Colors.text.secondary,
+    marginTop: 2,
+  },
+  packageCreditsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    backgroundColor: Colors.iconBg.default,
+    borderRadius: 12,
+  },
+  packageCredits: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.success.main,
+    marginLeft: 12,
   },
   purchaseButton: {
-    backgroundColor: '#1976D2',
-    borderRadius: 8,
-    padding: 12,
-    alignItems: 'center',
-  },
-  purchaseButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
+    marginTop: 8,
   },
   purchasingIndicator: {
-    marginTop: 10,
+    marginTop: 16,
   },
-  refreshButton: {
-    backgroundColor: '#F5F5F5',
-    borderRadius: 8,
-    padding: 15,
-    margin: 20,
-    alignItems: 'center',
-  },
-  refreshButtonText: {
-    color: '#1976D2',
-    fontSize: 16,
-    fontWeight: '500',
+  refreshContainer: {
+    padding: 20,
+    paddingTop: 10,
   },
   modalOverlay: {
     flex: 1,
@@ -438,75 +523,85 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 20,
+    backgroundColor: Colors.background.default,
+    borderRadius: 24,
+    padding: 24,
     width: '90%',
     maxWidth: 400,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 16,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#212121',
+    color: Colors.text.primary,
     marginBottom: 20,
     textAlign: 'center',
   },
   packageInfo: {
-    backgroundColor: '#F5F5F5',
-    borderRadius: 8,
-    padding: 15,
+    backgroundColor: Colors.iconBg.default,
+    borderRadius: 12,
+    padding: 16,
     marginBottom: 20,
   },
   packageInfoText: {
     fontSize: 16,
-    color: '#212121',
-    marginBottom: 5,
+    color: Colors.text.primary,
+    marginBottom: 6,
+    fontWeight: '500',
   },
   inputLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#212121',
+    color: Colors.text.primary,
     marginBottom: 8,
-    marginTop: 10,
+    marginTop: 12,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    padding: 12,
+    borderColor: Colors.border.light,
+    borderRadius: 12,
+    padding: 14,
     fontSize: 16,
-    marginBottom: 10,
+    marginBottom: 12,
+    backgroundColor: Colors.background.default,
   },
   modalButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 20,
-    gap: 10,
+    marginTop: 24,
+    gap: 12,
   },
   cancelModalButton: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
-    borderRadius: 8,
-    padding: 15,
+    backgroundColor: Colors.iconBg.default,
+    borderRadius: 12,
+    padding: 16,
     alignItems: 'center',
   },
   cancelModalButtonText: {
-    color: '#212121',
+    color: Colors.text.primary,
     fontSize: 16,
     fontWeight: '600',
   },
   confirmButton: {
     flex: 1,
-    backgroundColor: '#1976D2',
-    borderRadius: 8,
-    padding: 15,
+    backgroundColor: Colors.primary.main,
+    borderRadius: 12,
+    padding: 16,
     alignItems: 'center',
   },
   confirmButtonDisabled: {
-    backgroundColor: '#BDBDBD',
+    backgroundColor: Colors.border.medium,
   },
   confirmButtonText: {
-    color: '#FFFFFF',
+    color: Colors.text.white,
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -516,32 +611,37 @@ const styles = StyleSheet.create({
   },
   checkingText: {
     fontSize: 16,
-    color: '#212121',
-    marginTop: 15,
+    color: Colors.text.primary,
+    marginTop: 16,
     textAlign: 'center',
+    fontWeight: '500',
   },
   referenceText: {
     fontSize: 12,
-    color: '#757575',
-    marginTop: 10,
+    color: Colors.text.secondary,
+    marginTop: 12,
     fontFamily: 'monospace',
+    backgroundColor: Colors.iconBg.default,
+    padding: 8,
+    borderRadius: 8,
   },
   instructionText: {
     fontSize: 14,
-    color: '#757575',
-    marginTop: 15,
+    color: Colors.text.secondary,
+    marginTop: 16,
     textAlign: 'center',
     fontStyle: 'italic',
+    lineHeight: 20,
   },
   cancelButton: {
     marginTop: 20,
-    backgroundColor: '#F5F5F5',
-    borderRadius: 8,
-    padding: 12,
+    backgroundColor: Colors.iconBg.default,
+    borderRadius: 12,
+    padding: 14,
     alignItems: 'center',
   },
   cancelButtonText: {
-    color: '#212121',
+    color: Colors.text.primary,
     fontSize: 16,
     fontWeight: '600',
   },

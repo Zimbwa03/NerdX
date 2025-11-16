@@ -1,4 +1,4 @@
-// Quiz Screen Component
+// Quiz Screen Component - Professional UI/UX Design
 import React, { useState } from 'react';
 import {
   View,
@@ -9,9 +9,14 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { quizApi, Question, AnswerResult } from '../services/api/quizApi';
 import { useAuth } from '../context/AuthContext';
+import { Icons, IconCircle } from '../components/Icons';
+import { Card } from '../components/Card';
+import { Button } from '../components/Button';
+import Colors from '../theme/colors';
 
 const QuizScreen: React.FC = () => {
   const route = useRoute();
@@ -82,15 +87,40 @@ const QuizScreen: React.FC = () => {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Quiz Question</Text>
-        <Text style={styles.credits}>Credits: {user?.credits || 0}</Text>
-      </View>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      {/* Professional Header */}
+      <LinearGradient
+        colors={[Colors.primary.main, Colors.primary.dark]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
+        <View style={styles.headerContent}>
+          <View style={styles.headerLeft}>
+            {Icons.quiz(28, '#FFFFFF')}
+            <View style={styles.headerText}>
+              <Text style={styles.title}>Quiz Question</Text>
+              <Text style={styles.credits}>Credits: {user?.credits || 0}</Text>
+            </View>
+          </View>
+        </View>
+      </LinearGradient>
 
-      <View style={styles.questionContainer}>
-        <Text style={styles.questionText}>{question.question_text}</Text>
+      {/* Question Card */}
+      <View style={styles.contentContainer}>
+        <Card variant="elevated" style={styles.questionCard}>
+          <View style={styles.questionHeader}>
+            <IconCircle
+              icon={Icons.info(24, Colors.primary.main)}
+              size={40}
+              backgroundColor={Colors.iconBg.mathematics}
+            />
+            <Text style={styles.questionLabel}>Question</Text>
+          </View>
+          <Text style={styles.questionText}>{question.question_text}</Text>
+        </Card>
 
+        {/* Options */}
         {question.options && question.options.length > 0 && (
           <View style={styles.optionsContainer}>
             {question.options.map((option, index) => {
@@ -100,30 +130,80 @@ const QuizScreen: React.FC = () => {
               const isWrong = result && !result.correct && isSelected && option !== question.correct_answer;
 
               return (
-                <TouchableOpacity
+                <Card
                   key={index}
-                  style={[
-                    styles.optionButton,
-                    isSelected && styles.optionButtonSelected,
-                    isCorrect && styles.optionButtonCorrect,
-                    isWrong && styles.optionButtonWrong,
-                  ]}
+                  variant={isSelected ? 'outlined' : 'default'}
                   onPress={() => handleAnswerSelect(option)}
                   disabled={!!result}
+                  style={[
+                    styles.optionCard,
+                    isSelected && styles.optionCardSelected,
+                    isCorrect && styles.optionCardCorrect,
+                    isWrong && styles.optionCardWrong,
+                  ]}
                 >
-                  <Text style={styles.optionLabel}>{optionLabel}.</Text>
-                  <Text style={styles.optionText}>{option}</Text>
-                </TouchableOpacity>
+                  <View style={styles.optionContent}>
+                    <View style={[
+                      styles.optionLabelCircle,
+                      isSelected && styles.optionLabelCircleSelected,
+                      isCorrect && styles.optionLabelCircleCorrect,
+                      isWrong && styles.optionLabelCircleWrong,
+                    ]}>
+                      <Text style={[
+                        styles.optionLabelText,
+                        isSelected && styles.optionLabelTextSelected,
+                        isCorrect && styles.optionLabelTextCorrect,
+                        isWrong && styles.optionLabelTextWrong,
+                      ]}>
+                        {optionLabel}
+                      </Text>
+                    </View>
+                    <Text style={[
+                      styles.optionText,
+                      isSelected && styles.optionTextSelected,
+                      isCorrect && styles.optionTextCorrect,
+                      isWrong && styles.optionTextWrong,
+                    ]}>
+                      {option}
+                    </Text>
+                    {(isCorrect || isWrong) && (
+                      <View style={styles.optionIcon}>
+                        {isCorrect ? Icons.check(24, Colors.success.main) : Icons.close(24, Colors.error.main)}
+                      </View>
+                    )}
+                  </View>
+                </Card>
               );
             })}
           </View>
         )}
 
+        {/* Result Card */}
         {result && (
-          <View style={styles.resultContainer}>
-            <Text style={[styles.resultText, result.correct && styles.resultTextCorrect]}>
-              {result.correct ? '✓ Correct!' : '✗ Incorrect'}
-            </Text>
+          <Card
+            variant="elevated"
+            style={[
+              styles.resultCard,
+              result.correct ? styles.resultCardSuccess : styles.resultCardError,
+            ]}
+          >
+            <View style={styles.resultHeader}>
+              <IconCircle
+                icon={result.correct ? Icons.success(28, Colors.success.main) : Icons.error(28, Colors.error.main)}
+                size={48}
+                backgroundColor={result.correct ? '#E8F5E9' : '#FFEBEE'}
+              />
+              <View style={styles.resultInfo}>
+                <Text style={[
+                  styles.resultText,
+                  result.correct && styles.resultTextCorrect,
+                  !result.correct && styles.resultTextError,
+                ]}>
+                  {result.correct ? 'Correct!' : 'Incorrect'}
+                </Text>
+                <Text style={styles.pointsText}>+{result.points_earned} Points</Text>
+              </View>
+            </View>
             <Text style={styles.feedbackText}>{result.feedback}</Text>
             {result.solution && (
               <View style={styles.solutionContainer}>
@@ -131,42 +211,45 @@ const QuizScreen: React.FC = () => {
                 <Text style={styles.solutionText}>{result.solution}</Text>
               </View>
             )}
-            <Text style={styles.pointsText}>Points earned: {result.points_earned}</Text>
-          </View>
+          </Card>
         )}
 
+        {/* Action Buttons */}
         <View style={styles.buttonContainer}>
           {!result ? (
-            <TouchableOpacity
-              style={[styles.submitButton, !selectedAnswer && styles.buttonDisabled]}
+            <Button
+              title="Submit Answer"
+              variant="primary"
+              size="large"
+              fullWidth
               onPress={handleSubmit}
               disabled={!selectedAnswer || loading}
-            >
-              {loading ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text style={styles.buttonText}>Submit Answer</Text>
-              )}
-            </TouchableOpacity>
+              loading={loading}
+              icon="checkmark-circle"
+              iconPosition="left"
+            />
           ) : (
             <>
-              <TouchableOpacity
-                style={styles.nextButton}
+              <Button
+                title="Next Question"
+                variant="primary"
+                size="large"
+                fullWidth
                 onPress={handleNext}
                 disabled={loading}
-              >
-                {loading ? (
-                  <ActivityIndicator color="#FFFFFF" />
-                ) : (
-                  <Text style={styles.buttonText}>Next Question</Text>
-                )}
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.backButton}
+                loading={loading}
+                icon="arrow-forward"
+                iconPosition="right"
+                style={styles.nextButton}
+              />
+              <Button
+                title="Back to Topics"
+                variant="outline"
+                fullWidth
                 onPress={handleBack}
-              >
-                <Text style={styles.backButtonText}>Back to Topics</Text>
-              </TouchableOpacity>
+                icon="arrow-back"
+                iconPosition="left"
+              />
             </>
           )}
         </View>
