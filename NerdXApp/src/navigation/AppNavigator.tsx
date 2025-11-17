@@ -1,5 +1,6 @@
 // Main App Navigator
 import React from 'react';
+import { View, ActivityIndicator, StyleSheet, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useAuth } from '../context/AuthContext';
@@ -24,12 +25,18 @@ import EnglishEssayScreen from '../screens/EnglishEssayScreen';
 
 const Stack = createStackNavigator();
 
+const LoadingScreen: React.FC = () => (
+  <View style={styles.loadingContainer}>
+    <ActivityIndicator size="large" color="#1976D2" />
+    <Text style={styles.loadingText}>Loading NerdX...</Text>
+  </View>
+);
+
 const AppNavigator: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    // You can return a loading screen here
-    return null;
+    return <LoadingScreen />;
   }
 
   return (
@@ -174,5 +181,19 @@ const AppNavigator: React.FC = () => {
     </NavigationContainer>
   );
 };
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#757575',
+  },
+});
 
 export default AppNavigator;
