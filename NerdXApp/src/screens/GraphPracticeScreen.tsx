@@ -357,7 +357,7 @@ const GraphPracticeScreen: React.FC = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Linear Programming</Text>
           <Text style={styles.hintText}>
-            Enter constraints (e.g., "2x + 3y <= 12", "x + y <= 8")
+            Enter constraints (e.g., "2x + 3y ≤ 12", "x + y ≤ 8")
           </Text>
           
           {constraints.map((constraint, index) => (
@@ -370,7 +370,7 @@ const GraphPracticeScreen: React.FC = () => {
                 newConstraints[index] = text;
                 setConstraints(newConstraints);
               }}
-              placeholder={`Constraint ${index + 1} (e.g., 2x + 3y <= 12)`}
+              placeholder={`Constraint ${index + 1} (e.g., 2x + 3y ≤ 12)`}
               autoCapitalize="none"
             />
           ))}
