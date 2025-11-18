@@ -461,34 +461,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     opacity: 0.9,
   },
-  topicCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    padding: 20,
-    marginBottom: 15,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  topicName: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#212121',
-  },
-  topicArrow: {
-    fontSize: 20,
-    color: '#757575',
-  },
 });
 
 export default TopicsScreen;
