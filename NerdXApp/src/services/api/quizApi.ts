@@ -12,6 +12,8 @@ export interface Topic {
   id: string;
   name: string;
   subject: string;
+  parent_subject?: string;
+  is_parent?: boolean;
 }
 
 export interface Question {
@@ -45,9 +47,13 @@ export const quizApi = {
     }
   },
 
-  getTopics: async (subject: string): Promise<Topic[]> => {
+  getTopics: async (subject: string, parentSubject?: string): Promise<Topic[]> => {
     try {
-      const response = await api.get(`/api/mobile/quiz/topics?subject=${subject}`);
+      let url = `/api/mobile/quiz/topics?subject=${subject}`;
+      if (parentSubject) {
+        url += `&parent_subject=${parentSubject}`;
+      }
+      const response = await api.get(url);
       return response.data.data || [];
     } catch (error: any) {
       console.error('Get topics error:', error);
@@ -59,15 +65,20 @@ export const quizApi = {
     subject: string,
     topic?: string,
     difficulty: string = 'medium',
-    type: string = 'topical'
+    type: string = 'topical',
+    parentSubject?: string
   ): Promise<Question | null> => {
     try {
-      const response = await api.post('/api/mobile/quiz/generate', {
+      const payload: any = {
         subject,
         topic,
         difficulty,
         type,
-      });
+      };
+      if (parentSubject) {
+        payload.parent_subject = parentSubject;
+      }
+      const response = await api.post('/api/mobile/quiz/generate', payload);
       return response.data.data || null;
     } catch (error: any) {
       console.error('Generate question error:', error);

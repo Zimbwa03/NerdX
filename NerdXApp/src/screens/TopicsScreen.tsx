@@ -22,23 +22,36 @@ const TopicsScreen: React.FC = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const { user, updateUser } = useAuth();
-  const { subject } = route.params as { subject: Subject };
+  const { subject, parentSubject } = route.params as { subject: Subject; parentSubject?: string };
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentParentSubject, setCurrentParentSubject] = useState<string | undefined>(parentSubject);
 
   useEffect(() => {
     loadTopics();
-  }, []);
+  }, [currentParentSubject]);
 
   const loadTopics = async () => {
     try {
       setLoading(true);
-      const data = await quizApi.getTopics(subject.id);
+      const data = await quizApi.getTopics(subject.id, currentParentSubject);
       setTopics(data);
     } catch (error) {
       Alert.alert('Error', 'Failed to load topics. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleTopicPress = async (topic: Topic) => {
+    // For Combined Science, if topic is a parent (Biology/Chemistry/Physics), show subtopics
+    if (topic.is_parent && subject.id === 'combined_science') {
+      setCurrentParentSubject(topic.name);
+      // Update the navigation params to show we're in a submenu
+      navigation.setParams({ parentSubject: topic.name } as never);
+    } else {
+      // Otherwise, start quiz with this topic
+      handleStartQuiz(topic);
     }
   };
 
@@ -78,7 +91,8 @@ const TopicsScreen: React.FC = () => {
                   subject.id,
                   topic?.id,
                   'medium',
-                  topic ? 'topical' : 'exam'
+                  topic ? 'topical' : 'exam',
+                  topic?.parent_subject || currentParentSubject
                 );
                 if (question) {
                   navigation.navigate('Quiz' as never, { question, subject, topic } as never);
@@ -117,9 +131,30 @@ const TopicsScreen: React.FC = () => {
         style={styles.header}
       >
         <View style={styles.headerContent}>
-          <View>
-            <Text style={styles.title}>{subject.name}</Text>
-            <Text style={styles.subtitle}>Choose a topic or start an exam</Text>
+          <View style={{ flex: 1 }}>
+            <TouchableOpacity 
+              onPress={() => {
+                if (currentParentSubject) {
+                  setCurrentParentSubject(undefined);
+                  navigation.setParams({ parentSubject: undefined } as never);
+                } else {
+                  navigation.goBack();
+                }
+              }}
+              style={{ marginBottom: 8 }}
+            >
+              {currentParentSubject && (
+                <Text style={styles.backButton}>← Back</Text>
+              )}
+            </TouchableOpacity>
+            <Text style={styles.title}>
+              {currentParentSubject ? currentParentSubject : subject.name}
+            </Text>
+            <Text style={styles.subtitle}>
+              {currentParentSubject 
+                ? 'Choose a subtopic to practice' 
+                : 'Choose a topic or start an exam'}
+            </Text>
           </View>
           {getSubjectIcon(subject.id)}
         </View>
@@ -177,40 +212,50 @@ const TopicsScreen: React.FC = () => {
           </>
         )}
 
-        {/* Exam Quiz Card */}
-        <Card variant="gradient" gradientColors={[Colors.primary.main, Colors.primary.dark]} onPress={() => handleStartQuiz()} style={styles.examCard}>
-          <View style={styles.examContent}>
-            <IconCircle
-              icon={Icons.quiz(32, '#FFFFFF')}
-              size={64}
-              backgroundColor="rgba(255, 255, 255, 0.2)"
-            />
-            <View style={styles.examInfo}>
-              <Text style={styles.examTitle}>Start Exam Quiz</Text>
-              <Text style={styles.examSubtitle}>Mixed questions from all topics</Text>
+        {/* Exam Quiz Card - Only show at top level */}
+        {!currentParentSubject && (
+          <Card variant="gradient" gradientColors={[Colors.primary.main, Colors.primary.dark]} onPress={() => handleStartQuiz()} style={styles.examCard}>
+            <View style={styles.examContent}>
+              <IconCircle
+                icon={Icons.quiz(32, '#FFFFFF')}
+                size={64}
+                backgroundColor="rgba(255, 255, 255, 0.2)"
+              />
+              <View style={styles.examInfo}>
+                <Text style={styles.examTitle}>Start Exam Quiz</Text>
+                <Text style={styles.examSubtitle}>Mixed questions from all topics</Text>
+              </View>
             </View>
-          </View>
-        </Card>
+          </Card>
+        )}
       </View>
 
       {/* Topics List */}
       <View style={styles.topicsContainer}>
-        <Text style={styles.sectionTitle}>Topics</Text>
+        <Text style={styles.sectionTitle}>
+          {currentParentSubject ? 'Subtopics' : 'Topics'}
+        </Text>
+        {topics.length === 0 && !loading && (
+          <Text style={styles.noTopicsText}>No topics available</Text>
+        )}
         {topics.map((topic) => (
           <Card
             key={topic.id}
             variant="elevated"
-            onPress={() => handleStartQuiz(topic)}
+            onPress={() => handleTopicPress(topic)}
             style={styles.topicCard}
           >
             <View style={styles.topicContent}>
               <IconCircle
-                icon={Icons.quiz(24, Colors.primary.main)}
+                icon={getTopicIcon(topic, subject.id)}
                 size={40}
-                backgroundColor={Colors.iconBg.default}
+                backgroundColor={getTopicIconBg(topic, subject.id)}
               />
               <View style={styles.topicInfo}>
                 <Text style={styles.topicName}>{topic.name}</Text>
+                {topic.is_parent && (
+                  <Text style={styles.topicSubtitle}>Tap to view subtopics</Text>
+                )}
               </View>
               {Icons.arrowRight(24, Colors.text.secondary)}
             </View>
@@ -228,6 +273,40 @@ const getSubjectIcon = (subjectId: string): React.ReactNode => {
     english: Icons.english(32, '#FFFFFF'),
   };
   return iconMap[subjectId] || Icons.quiz(32, '#FFFFFF');
+};
+
+const getTopicIcon = (topic: Topic, subjectId: string): React.ReactNode => {
+  if (subjectId === 'combined_science' && topic.is_parent) {
+    // Different icons for Biology, Chemistry, Physics
+    if (topic.name === 'Biology') {
+      return Icons.science(24, '#4CAF50');
+    } else if (topic.name === 'Chemistry') {
+      return Icons.science(24, '#2196F3');
+    } else if (topic.name === 'Physics') {
+      return Icons.science(24, '#FF9800');
+    }
+  }
+  if (subjectId === 'english') {
+    if (topic.name.toLowerCase().includes('grammar')) {
+      return Icons.english(24, Colors.primary.main);
+    } else if (topic.name.toLowerCase().includes('vocabulary')) {
+      return Icons.english(24, Colors.primary.main);
+    }
+  }
+  return Icons.quiz(24, Colors.primary.main);
+};
+
+const getTopicIconBg = (topic: Topic, subjectId: string): string => {
+  if (subjectId === 'combined_science' && topic.is_parent) {
+    if (topic.name === 'Biology') {
+      return '#E8F5E9';
+    } else if (topic.name === 'Chemistry') {
+      return '#E3F2FD';
+    } else if (topic.name === 'Physics') {
+      return '#FFF3E0';
+    }
+  }
+  return Colors.iconBg.default;
 };
 
 const styles = StyleSheet.create({
@@ -347,6 +426,22 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: Colors.text.primary,
+  },
+  topicSubtitle: {
+    fontSize: 12,
+    color: Colors.text.secondary,
+    marginTop: 4,
+  },
+  noTopicsText: {
+    fontSize: 14,
+    color: Colors.text.secondary,
+    textAlign: 'center',
+    marginTop: 20,
+  },
+  backButton: {
+    fontSize: 16,
+    color: Colors.text.white,
+    opacity: 0.9,
   },
   examButton: {
     backgroundColor: '#1976D2',

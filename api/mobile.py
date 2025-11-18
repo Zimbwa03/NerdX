@@ -471,12 +471,59 @@ def get_topics():
     """Get topics for a subject"""
     try:
         subject = request.args.get('subject', '')
+        parent_subject = request.args.get('parent_subject', '')  # For Combined Science: Biology/Chemistry/Physics
         
         # Get topics from constants or database
         from constants import TOPICS
         
         topics = []
-        if subject in TOPICS:
+        
+        # Handle Combined Science two-level structure
+        if subject == 'combined_science':
+            if parent_subject:
+                # Return subtopics for Biology/Chemistry/Physics
+                if parent_subject in TOPICS:
+                    for topic in TOPICS[parent_subject]:
+                        topics.append({
+                            'id': topic.lower().replace(' ', '_'),
+                            'name': topic,
+                            'subject': 'combined_science',
+                            'parent_subject': parent_subject
+                        })
+            else:
+                # Return Biology, Chemistry, Physics as top-level topics
+                for science_subject in ['Biology', 'Chemistry', 'Physics']:
+                    topics.append({
+                        'id': science_subject.lower(),
+                        'name': science_subject,
+                        'subject': 'combined_science',
+                        'is_parent': True  # Flag to indicate this is a parent topic
+                    })
+        elif subject == 'english':
+            # Return all English topics including Grammar and Vocabulary
+            if 'English' in TOPICS:
+                for topic in TOPICS['English']:
+                    topics.append({
+                        'id': topic.lower().replace(' ', '_'),
+                        'name': topic,
+                        'subject': 'english'
+                    })
+            # Also add special Grammar Usage and Vocabulary if not already in list
+            topic_names = [t['name'] for t in topics]
+            if 'Grammar and Language' in TOPICS.get('English', []) and 'Grammar Usage and Vocabulary' not in topic_names:
+                # Grammar Usage and Vocabulary is already covered by individual topics
+                pass
+        elif subject == 'mathematics':
+            # Return all Mathematics topics
+            if 'Mathematics' in TOPICS:
+                for topic in TOPICS['Mathematics']:
+                    topics.append({
+                        'id': topic.lower().replace(' ', '_'),
+                        'name': topic,
+                        'subject': 'mathematics'
+                    })
+        elif subject in TOPICS:
+            # Default handling for other subjects
             for topic in TOPICS[subject]:
                 topics.append({
                     'id': topic.lower().replace(' ', '_'),
@@ -489,7 +536,7 @@ def get_topics():
             'data': topics
         }), 200
     except Exception as e:
-        logger.error(f"Get topics error: {e}")
+        logger.error(f"Get topics error: {e}", exc_info=True)
         return jsonify({'success': False, 'message': 'Server error'}), 500
 
 @mobile_bp.route('/quiz/generate', methods=['POST'])
@@ -525,14 +572,29 @@ def generate_question():
             math_generator = MathQuestionGenerator()
             question_data = math_generator.generate_question('Mathematics', topic or 'Algebra', difficulty, g.current_user_id)
         elif subject == 'combined_science':
+            # Combined Science needs parent_subject (Biology/Chemistry/Physics) and topic (subtopic)
+            parent_subject = data.get('parent_subject', 'Biology')  # Default to Biology if not specified
+            
+            # If topic is Biology/Chemistry/Physics itself, use default subtopic
+            if topic and topic.lower() in ['biology', 'chemistry', 'physics']:
+                parent_subject = topic.capitalize()
+                # Use first subtopic as default
+                from constants import TOPICS
+                if parent_subject in TOPICS and len(TOPICS[parent_subject]) > 0:
+                    topic = TOPICS[parent_subject][0]
+            
             science_gen = CombinedScienceGenerator()
-            question_data = science_gen.generate_topical_question('Combined Science', topic or 'Biology', difficulty, g.current_user_id)
+            question_data = science_gen.generate_topical_question(parent_subject, topic or 'Cell Structure and Organisation', difficulty, g.current_user_id)
         elif subject == 'english':
             english_service = EnglishService()
             # English service uses different method - get grammar or vocabulary question
-            if topic and topic.lower() in ['vocabulary', 'vocab']:
+            topic_lower = (topic or '').lower()
+            if 'vocabulary' in topic_lower or topic_lower in ['vocab', 'vocabulary_building']:
                 question_result = english_service.generate_vocabulary_question()
+            elif 'grammar' in topic_lower or topic_lower in ['grammar_and_language', 'grammar_usage_and_vocabulary']:
+                question_result = english_service.generate_grammar_question()
             else:
+                # Default to grammar if topic not specified
                 question_result = english_service.generate_grammar_question()
             
             if question_result and question_result.get('success'):
@@ -546,14 +608,40 @@ def generate_question():
         # Deduct credits
         deduct_credits(g.current_user_id, credit_cost, 'quiz_generation', f'Generated {subject} {question_type} question')
         
+        # Format question for mobile - normalize different question formats
+        # English questions might have different structure
+        if subject == 'english':
+            # Normalize English question format
+            options = question_data.get('options', [])
+            if isinstance(options, dict):
+                # Convert dict {A: "...", B: "..."} to array
+                options = [options.get(k, '') for k in sorted(options.keys()) if options.get(k)]
+            
+            # Get correct answer - could be in different fields
+            correct_answer = question_data.get('answer') or question_data.get('correct_answer') or question_data.get('acceptable_answers', [{}])[0]
+            if isinstance(correct_answer, list) and len(correct_answer) > 0:
+                correct_answer = correct_answer[0]
+            if not correct_answer:
+                correct_answer = ''
+            
+            # Get solution/explanation
+            solution = question_data.get('solution') or question_data.get('explanation') or question_data.get('feedback', '')
+        else:
+            # For other subjects, use standard format
+            options = question_data.get('options', [])
+            if isinstance(options, dict):
+                options = [options.get(k, '') for k in sorted(options.keys()) if options.get(k)]
+            correct_answer = question_data.get('answer', '') or question_data.get('correct_answer', '')
+            solution = question_data.get('solution', '') or question_data.get('explanation', '')
+        
         # Format question for mobile
         question = {
             'id': str(uuid.uuid4()),
-            'question_text': question_data.get('question', ''),
-            'question_type': question_data.get('type', 'short_answer'),
-            'options': question_data.get('options'),
-            'correct_answer': question_data.get('answer', ''),
-            'solution': question_data.get('solution', ''),
+            'question_text': question_data.get('question', '') or question_data.get('question_text', ''),
+            'question_type': question_data.get('question_type', '') or question_data.get('type', 'short_answer'),
+            'options': options if isinstance(options, list) else [],
+            'correct_answer': correct_answer,
+            'solution': solution,
             'points': question_data.get('points', 10),
             'topic': topic or '',
             'difficulty': difficulty
