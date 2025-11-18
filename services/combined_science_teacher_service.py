@@ -527,6 +527,10 @@ Current conversation context will be provided with each message."""
     def _get_gemini_teaching_response(self, user_id: str, message_text: str, session_data: dict) -> str:
         """Get teaching response from Gemini AI"""
         try:
+            if not self._is_gemini_configured or not self.gemini_model:
+                logger.warning(f"Gemini AI not configured for {user_id}, using fallback")
+                return self._get_fallback_teaching_response(message_text, session_data)
+            
             # Build context
             subject = session_data.get('subject', 'Science')
             grade_level = session_data.get('grade_level', 'O-Level')
@@ -546,11 +550,61 @@ Current conversation context will be provided with each message."""
             # Create full prompt
             full_prompt = f"{self.TEACHER_SYSTEM_PROMPT}\n\n{context}\n\nStudent's message: {message_text}\n\nYour response:"
             
-            response = self.gemini_model.generate_content(full_prompt)
-            return response.text.strip()
+            try:
+                response = self.gemini_model.generate_content(full_prompt)
+                if response and response.text:
+                    return response.text.strip()
+                else:
+                    logger.warning(f"Gemini returned empty response for {user_id}")
+                    return self._try_deepseek_teaching_fallback(user_id, message_text, session_data, full_prompt)
+            except Exception as gemini_error:
+                logger.error(f"Gemini API error for {user_id}: {gemini_error}", exc_info=True)
+                return self._try_deepseek_teaching_fallback(user_id, message_text, session_data, full_prompt)
             
         except Exception as e:
-            logger.error(f"Error getting Gemini teaching response: {e}")
+            logger.error(f"Error getting AI teaching response: {e}", exc_info=True)
+            return self._get_fallback_teaching_response(message_text, session_data)
+    
+    def _try_deepseek_teaching_fallback(self, user_id: str, message_text: str, session_data: dict, prompt: str) -> str:
+        """Try DeepSeek AI as fallback when Gemini fails"""
+        try:
+            import os
+            import requests
+            deepseek_key = os.getenv('DEEPSEEK_API_KEY')
+            if not deepseek_key:
+                logger.warning("DeepSeek API key not available for fallback")
+                return self._get_fallback_teaching_response(message_text, session_data)
+            
+            # Call DeepSeek API
+            response = requests.post(
+                'https://api.deepseek.com/chat/completions',
+                headers={
+                    'Content-Type': 'application/json',
+                    'Authorization': f'Bearer {deepseek_key}'
+                },
+                json={
+                    'model': 'deepseek-chat',
+                    'messages': [
+                        {'role': 'system', 'content': self.TEACHER_SYSTEM_PROMPT},
+                        {'role': 'user', 'content': prompt}
+                    ],
+                    'temperature': 0.7,
+                    'max_tokens': 2000
+                },
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if 'choices' in data and len(data['choices']) > 0:
+                    ai_text = data['choices'][0]['message']['content'].strip()
+                    logger.info(f"✅ DeepSeek AI fallback generated teaching response for {user_id}")
+                    return ai_text
+            
+            logger.warning("DeepSeek fallback failed, using basic fallback")
+            return self._get_fallback_teaching_response(message_text, session_data)
+        except Exception as e:
+            logger.error(f"DeepSeek fallback error: {e}")
             return self._get_fallback_teaching_response(message_text, session_data)
     
     def _get_fallback_teaching_response(self, message_text: str, session_data: dict) -> str:

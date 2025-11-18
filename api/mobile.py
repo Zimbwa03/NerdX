@@ -23,6 +23,7 @@ from services.referral_service import ReferralService
 from services.paynow_service import PaynowService
 from services.graph_service import GraphService
 from services.image_service import ImageService
+from utils.url_utils import convert_local_path_to_public_url
 from config import Config
 import os
 import uuid
@@ -520,14 +521,24 @@ def generate_question():
         question_data = None
         
         if subject == 'mathematics':
-            math_service = MathematicsService()
-            question_data = math_service.generate_topical_question(topic or 'Algebra', difficulty)
+            from services.math_question_generator import MathQuestionGenerator
+            math_generator = MathQuestionGenerator()
+            question_data = math_generator.generate_question('Mathematics', topic or 'Algebra', difficulty, g.current_user_id)
         elif subject == 'combined_science':
             science_gen = CombinedScienceGenerator()
-            question_data = science_gen.generate_question(topic, difficulty)
+            question_data = science_gen.generate_topical_question('Combined Science', topic or 'Biology', difficulty, g.current_user_id)
         elif subject == 'english':
             english_service = EnglishService()
-            question_data = english_service.generate_topical_question(topic or 'Grammar', difficulty)
+            # English service uses different method - get grammar or vocabulary question
+            if topic and topic.lower() in ['vocabulary', 'vocab']:
+                question_result = english_service.generate_vocabulary_question()
+            else:
+                question_result = english_service.generate_grammar_question()
+            
+            if question_result and question_result.get('success'):
+                question_data = question_result.get('question_data', {})
+            else:
+                question_data = None
         
         if not question_data:
             return jsonify({'success': False, 'message': 'Failed to generate question'}), 500
@@ -554,8 +565,9 @@ def generate_question():
         }), 200
         
     except Exception as e:
-        logger.error(f"Generate question error: {e}")
-        return jsonify({'success': False, 'message': 'Server error'}), 500
+        logger.error(f"Generate question error: {e}", exc_info=True)
+        error_message = str(e) if str(e) else 'Server error'
+        return jsonify({'success': False, 'message': f'Failed to generate question: {error_message}'}), 500
 
 @mobile_bp.route('/quiz/submit-answer', methods=['POST'])
 @require_auth
@@ -593,8 +605,9 @@ def submit_answer():
         }), 200
         
     except Exception as e:
-        logger.error(f"Submit answer error: {e}")
-        return jsonify({'success': False, 'message': 'Server error'}), 500
+        logger.error(f"Submit answer error: {e}", exc_info=True)
+        error_message = str(e) if str(e) else 'Server error'
+        return jsonify({'success': False, 'message': f'Failed to submit answer: {error_message}'}), 500
 
 @mobile_bp.route('/quiz/start-session', methods=['POST'])
 @require_auth
@@ -1090,8 +1103,9 @@ def generate_comprehension():
         }), 200
         
     except Exception as e:
-        logger.error(f"Generate comprehension error: {e}")
-        return jsonify({'success': False, 'message': 'Server error'}), 500
+        logger.error(f"Generate comprehension error: {e}", exc_info=True)
+        error_message = str(e) if str(e) else 'Server error'
+        return jsonify({'success': False, 'message': f'Failed to generate comprehension: {error_message}'}), 500
 
 @mobile_bp.route('/english/essay', methods=['POST'])
 @require_auth
@@ -1135,8 +1149,9 @@ def submit_essay():
         }), 200
         
     except Exception as e:
-        logger.error(f"Submit essay error: {e}")
-        return jsonify({'success': False, 'message': 'Server error'}), 500
+        logger.error(f"Submit essay error: {e}", exc_info=True)
+        error_message = str(e) if str(e) else 'Server error'
+        return jsonify({'success': False, 'message': f'Failed to mark essay: {error_message}'}), 500
 
 @mobile_bp.route('/english/essay/<essay_id>/report', methods=['GET'])
 @require_auth
@@ -1151,8 +1166,9 @@ def get_essay_report(essay_id):
             }
         }), 200
     except Exception as e:
-        logger.error(f"Get essay report error: {e}")
-        return jsonify({'success': False, 'message': 'Server error'}), 500
+        logger.error(f"Get essay report error: {e}", exc_info=True)
+        error_message = str(e) if str(e) else 'Server error'
+        return jsonify({'success': False, 'message': f'Failed to get essay report: {error_message}'}), 500
 
 # ============================================================================
 # IMAGE ENDPOINTS
@@ -1195,8 +1211,9 @@ def upload_image():
         }), 200
         
     except Exception as e:
-        logger.error(f"Upload image error: {e}")
-        return jsonify({'success': False, 'message': 'Server error'}), 500
+        logger.error(f"Upload image error: {e}", exc_info=True)
+        error_message = str(e) if str(e) else 'Server error'
+        return jsonify({'success': False, 'message': f'Failed to process image: {error_message}'}), 500
 
 # ============================================================================
 # TEACHER MODE ENDPOINTS (Combined Science Chatbot)
@@ -1262,8 +1279,9 @@ def start_teacher_mode():
         }), 200
         
     except Exception as e:
-        logger.error(f"Start teacher mode error: {e}")
-        return jsonify({'success': False, 'message': 'Server error'}), 500
+        logger.error(f"Start teacher mode error: {e}", exc_info=True)
+        error_message = str(e) if str(e) else 'Server error'
+        return jsonify({'success': False, 'message': f'Failed to start teacher mode: {error_message}'}), 500
 
 @mobile_bp.route('/teacher/message', methods=['POST'])
 @require_auth
@@ -1348,8 +1366,9 @@ def send_teacher_message():
         }), 200
         
     except Exception as e:
-        logger.error(f"Send teacher message error: {e}")
-        return jsonify({'success': False, 'message': 'Server error'}), 500
+        logger.error(f"Send teacher message error: {e}", exc_info=True)
+        error_message = str(e) if str(e) else 'Server error'
+        return jsonify({'success': False, 'message': f'AI service error: {error_message}'}), 500
 
 @mobile_bp.route('/teacher/generate-notes', methods=['POST'])
 @require_auth
@@ -1419,8 +1438,9 @@ def generate_teacher_notes():
         }), 200
         
     except Exception as e:
-        logger.error(f"Generate teacher notes error: {e}")
-        return jsonify({'success': False, 'message': 'Server error'}), 500
+        logger.error(f"Generate teacher notes error: {e}", exc_info=True)
+        error_message = str(e) if str(e) else 'Server error'
+        return jsonify({'success': False, 'message': f'Failed to generate notes: {error_message}'}), 500
 
 # ============================================================================
 # PROJECT ASSISTANT ENDPOINTS
@@ -1476,8 +1496,9 @@ def start_project_assistant():
         }), 200
         
     except Exception as e:
-        logger.error(f"Start project assistant error: {e}")
-        return jsonify({'success': False, 'message': 'Server error'}), 500
+        logger.error(f"Start project assistant error: {e}", exc_info=True)
+        error_message = str(e) if str(e) else 'Server error'
+        return jsonify({'success': False, 'message': f'Failed to start project assistant: {error_message}'}), 500
 
 @mobile_bp.route('/project/message', methods=['POST'])
 @require_auth
@@ -1572,8 +1593,9 @@ def send_project_message():
         }), 200
         
     except Exception as e:
-        logger.error(f"Send project message error: {e}")
-        return jsonify({'success': False, 'message': 'Server error'}), 500
+        logger.error(f"Send project message error: {e}", exc_info=True)
+        error_message = str(e) if str(e) else 'Server error'
+        return jsonify({'success': False, 'message': f'AI service error: {error_message}'}), 500
 
 # ============================================================================
 # GRAPH PRACTICE ENDPOINTS
@@ -1582,7 +1604,7 @@ def send_project_message():
 @mobile_bp.route('/math/graph/generate', methods=['POST'])
 @require_auth
 def generate_graph():
-    """Generate math graph practice"""
+    """Generate math graph practice with AI-generated questions"""
     try:
         data = request.get_json()
         graph_type = data.get('graph_type', '')  # linear, quadratic, etc.
@@ -1627,9 +1649,40 @@ def generate_graph():
             user_name
         )
         
-        # Generate a question about the graph
-        question = f"Analyze the graph of {equation}. What are the key features of this graph?"
-        solution = f"The graph of {equation} shows [analysis based on graph type]. Key features include..."
+        if not graph_result or not graph_result.get('image_path'):
+            return jsonify({
+                'success': False,
+                'message': 'Failed to generate graph image'
+            }), 500
+        
+        # Convert image path to public URL
+        image_path = graph_result.get('image_path')
+        graph_url = convert_local_path_to_public_url(image_path)
+        
+        # If URL conversion failed, try to construct it manually
+        if not graph_url:
+            # Extract filename from path
+            import os
+            filename = os.path.basename(image_path)
+            base_url = os.environ.get('RENDER_EXTERNAL_URL', 'https://nerdx.onrender.com')
+            graph_url = f"{base_url.rstrip('/')}/static/graphs/{filename}"
+        
+        # Generate AI question about the graph using DeepSeek
+        try:
+            topic_name = f"Graph - {graph_type.title()}"
+            question_data = question_generator.generate_question(
+                'Mathematics',
+                topic_name,
+                'medium',
+                g.current_user_id
+            )
+            question = question_data.get('question', f"Analyze the graph of {equation}. What are the key features of this graph?")
+            solution = question_data.get('solution', f"The graph of {equation} shows key features including intercepts, slope, and behavior.")
+        except Exception as ai_error:
+            logger.warning(f"AI question generation failed, using fallback: {ai_error}")
+            # Fallback to basic question
+            question = f"Analyze the graph of {equation}. What are the key features of this graph?"
+            solution = f"The graph of {equation} shows [analysis based on graph type]. Key features include intercepts, slope, and behavior."
         
         # Deduct credits
         deduct_credits(g.current_user_id, credit_cost)
@@ -1637,7 +1690,7 @@ def generate_graph():
         return jsonify({
             'success': True,
             'data': {
-                'graph_url': graph_result.get('image_url', ''),
+                'graph_url': graph_url,
                 'equation': equation,
                 'question': question,
                 'solution': solution
@@ -1645,6 +1698,194 @@ def generate_graph():
         }), 200
         
     except Exception as e:
-        logger.error(f"Generate graph error: {e}")
-        return jsonify({'success': False, 'message': 'Server error'}), 500
+        logger.error(f"Generate graph error: {e}", exc_info=True)
+        error_message = str(e) if str(e) else 'Server error'
+        return jsonify({'success': False, 'message': f'Failed to generate graph: {error_message}'}), 500
+
+@mobile_bp.route('/math/graph/custom', methods=['POST'])
+@require_auth
+def generate_custom_graph():
+    """Generate graph from custom equation input"""
+    try:
+        data = request.get_json()
+        equation = data.get('equation', '').strip()
+        
+        if not equation:
+            return jsonify({
+                'success': False,
+                'message': 'Equation is required'
+            }), 400
+        
+        # Check credits
+        credit_cost = advanced_credit_service.get_credit_cost('math_graph_practice')
+        user_credits = get_user_credits(g.current_user_id) or 0
+        
+        if user_credits < credit_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {credit_cost}'
+            }), 400
+        
+        # Create graph using graph service
+        from services.graph_service import GraphService
+        graph_service = GraphService()
+        
+        user_data = get_user_registration(g.current_user_id)
+        user_name = user_data.get('name', 'Student') if user_data else 'Student'
+        
+        graph_result = graph_service.create_graph(
+            g.current_user_id,
+            equation,
+            'Custom Graph',
+            user_name
+        )
+        
+        if not graph_result or not graph_result.get('image_path'):
+            return jsonify({
+                'success': False,
+                'message': 'Failed to generate graph. Please check your equation syntax.'
+            }), 500
+        
+        # Convert image path to public URL
+        image_path = graph_result.get('image_path')
+        graph_url = convert_local_path_to_public_url(image_path)
+        
+        if not graph_url:
+            import os
+            filename = os.path.basename(image_path)
+            base_url = os.environ.get('RENDER_EXTERNAL_URL', 'https://nerdx.onrender.com')
+            graph_url = f"{base_url.rstrip('/')}/static/graphs/{filename}"
+        
+        # Deduct credits
+        deduct_credits(g.current_user_id, credit_cost)
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'graph_url': graph_url,
+                'equation': equation,
+                'question': f"Graph of {equation}",
+                'solution': f"This is the graph of {equation}. Analyze its key features."
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Generate custom graph error: {e}", exc_info=True)
+        error_message = str(e) if str(e) else 'Server error'
+        return jsonify({'success': False, 'message': f'Failed to generate graph: {error_message}'}), 500
+
+@mobile_bp.route('/math/graph/upload', methods=['POST'])
+@require_auth
+def solve_graph_from_image():
+    """Solve graph problem from uploaded image"""
+    try:
+        if 'image' not in request.files:
+            return jsonify({'success': False, 'message': 'No image file provided'}), 400
+        
+        image_file = request.files['image']
+        
+        # Check credits
+        credit_cost = advanced_credit_service.get_credit_cost('image_solve')
+        user_credits = get_user_credits(g.current_user_id) or 0
+        
+        if user_credits < credit_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {credit_cost}'
+            }), 400
+        
+        # Process image using ImageService (which can handle graph problems)
+        image_service = ImageService()
+        result = image_service.process_image(image_file)
+        
+        # Deduct credits
+        deduct_credits(g.current_user_id, credit_cost)
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'processed_text': result.get('text', ''),
+                'solution': result.get('solution', ''),
+                'analysis': result.get('analysis', '')
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Solve graph from image error: {e}", exc_info=True)
+        error_message = str(e) if str(e) else 'Server error'
+        return jsonify({'success': False, 'message': f'Failed to process image: {error_message}'}), 500
+
+@mobile_bp.route('/math/graph/linear-programming', methods=['POST'])
+@require_auth
+def generate_linear_programming_graph():
+    """Generate linear programming graph with constraints"""
+    try:
+        data = request.get_json()
+        constraints = data.get('constraints', [])  # List of constraint strings like ["2x + 3y <= 12", "x + y <= 8"]
+        objective = data.get('objective', '')  # Optional objective function
+        
+        if not constraints or len(constraints) < 2:
+            return jsonify({
+                'success': False,
+                'message': 'At least 2 constraints are required for linear programming'
+            }), 400
+        
+        # Check credits
+        credit_cost = advanced_credit_service.get_credit_cost('math_graph_practice')
+        user_credits = get_user_credits(g.current_user_id) or 0
+        
+        if user_credits < credit_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {credit_cost}'
+            }), 400
+        
+        # Generate linear programming graph
+        from services.graph_service import GraphService
+        graph_service = GraphService()
+        
+        user_data = get_user_registration(g.current_user_id)
+        user_name = user_data.get('name', 'Student') if user_data else 'Student'
+        
+        graph_result = graph_service.generate_linear_programming_graph(
+            constraints,
+            objective,
+            user_name
+        )
+        
+        if not graph_result or not graph_result.get('image_path'):
+            return jsonify({
+                'success': False,
+                'message': 'Failed to generate linear programming graph'
+            }), 500
+        
+        # Convert image path to public URL
+        image_path = graph_result.get('image_path')
+        graph_url = convert_local_path_to_public_url(image_path)
+        
+        if not graph_url:
+            import os
+            filename = os.path.basename(image_path)
+            base_url = os.environ.get('RENDER_EXTERNAL_URL', 'https://nerdx.onrender.com')
+            graph_url = f"{base_url.rstrip('/')}/static/graphs/{filename}"
+        
+        # Deduct credits
+        deduct_credits(g.current_user_id, credit_cost)
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'graph_url': graph_url,
+                'constraints': constraints,
+                'objective': objective,
+                'corner_points': graph_result.get('corner_points', []),
+                'question': f"Analyze the feasible region for the constraints: {', '.join(constraints)}",
+                'solution': f"The feasible region R is shown in green. Corner points: {graph_result.get('corner_points', [])}"
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Generate linear programming graph error: {e}", exc_info=True)
+        error_message = str(e) if str(e) else 'Server error'
+        return jsonify({'success': False, 'message': f'Failed to generate graph: {error_message}'}), 500
 

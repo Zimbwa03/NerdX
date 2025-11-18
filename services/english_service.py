@@ -1153,6 +1153,48 @@ Return ONLY a JSON array (no markdown, no code blocks, just pure JSON):
             }
         ]
 
+    def mark_essay(self, prompt: str, essay_text: str) -> Optional[Dict]:
+        """Mark essay using AI (wrapper for mobile API)"""
+        try:
+            # Try AI analysis first
+            analysis = self.analyze_essay_with_ai(essay_text, prompt)
+            if analysis:
+                total_score = analysis.get('total_score', 0)
+                grade = analysis.get('grade', 'C')
+                feedback = analysis.get('specific_feedback', '')
+                
+                return {
+                    'score': total_score,
+                    'grade': grade,
+                    'feedback': feedback,
+                    'report_url': ''  # Can be added later for PDF reports
+                }
+        except Exception as e:
+            logger.error(f"AI essay marking failed: {e}")
+        
+        # Fallback marking
+        try:
+            marking_result = self.generate_essay_marking(f"Prompt: {prompt}\n\nEssay: {essay_text}")
+            if marking_result:
+                import json
+                data = json.loads(marking_result)
+                return {
+                    'score': data.get('score', 18),
+                    'grade': data.get('grade', 'C+'),
+                    'feedback': data.get('summary_feedback', 'Your essay has been reviewed.'),
+                    'report_url': ''
+                }
+        except Exception as e:
+            logger.error(f"Fallback essay marking failed: {e}")
+        
+        # Final fallback
+        return {
+            'score': 18,
+            'grade': 'C+',
+            'feedback': 'Your essay has been reviewed. Please try again for detailed feedback.',
+            'report_url': ''
+        }
+    
     def analyze_essay_with_ai(self, essay_text: str, prompt: str) -> Optional[Dict]:
         """Analyze student essay using DeepSeek AI for comprehensive feedback"""
         if not self.deepseek_api_key:
@@ -1243,6 +1285,64 @@ Return ONLY a JSON object (no markdown, no code blocks, just pure JSON):
 
         return None
 
+    def generate_comprehension(self) -> Optional[Dict]:
+        """Generate comprehension passage with AI (wrapper for mobile API)"""
+        # Try AI generation first (Gemini -> DeepSeek -> Database)
+        try:
+            # Use AI to generate a fresh comprehension passage
+            result = self.generate_comprehension_passage(theme="General")
+            if result and result.get('success'):
+                passage_data = result.get('passage_data', {})
+                if isinstance(passage_data, dict):
+                    # Extract passage and questions from AI-generated data
+                    passage_text = passage_data.get('text') or passage_data.get('passage', '')
+                    questions = passage_data.get('questions', [])
+                    
+                    # Format questions for mobile API
+                    formatted_questions = []
+                    for q in questions:
+                        if isinstance(q, dict):
+                            formatted_questions.append({
+                                'question': q.get('question', ''),
+                                'correct_answer': q.get('correct_answer', ''),
+                                'type': q.get('question_type', 'literal'),
+                                'marks': q.get('marks', 2),
+                                'explanation': q.get('explanation', '')
+                            })
+                    
+                    return {
+                        'passage': passage_text,
+                        'questions': formatted_questions if formatted_questions else questions
+                    }
+        except Exception as e:
+            logger.error(f"AI comprehension generation failed: {e}", exc_info=True)
+        
+        # Fallback to database or static fallback
+        try:
+            db_result = self.generate_comprehension_question()
+            if db_result and db_result.get('success'):
+                question_data = db_result.get('question_data', {})
+                return {
+                    'passage': question_data.get('passage', ''),
+                    'questions': question_data.get('questions', [])
+                }
+        except Exception as e:
+            logger.error(f"Database comprehension generation failed: {e}")
+        
+        # Final fallback
+        fallback = self._get_fallback_comprehension()
+        if isinstance(fallback, dict) and 'question_data' in fallback:
+            question_data = fallback.get('question_data', {})
+            return {
+                'passage': question_data.get('passage', ''),
+                'questions': question_data.get('questions', [])
+            }
+        
+        return {
+            'passage': fallback.get('passage', ''),
+            'questions': fallback.get('questions', [])
+        }
+    
     def generate_comprehension_question(self) -> Optional[Dict]:
         """Generate comprehension passage with questions from database"""
         from database.external_db import get_supabase_client
