@@ -24,7 +24,8 @@ export const creditsApi = {
   getBalance: async (): Promise<number> => {
     try {
       const response = await api.get('/api/mobile/credits/balance');
-      return response.data.data?.credits || 0;
+      // API returns 'balance' field, not 'credits'
+      return response.data.data?.balance || response.data.data?.credits || 0;
     } catch (error: any) {
       console.error('Get balance error:', error);
       return 0;

@@ -26,30 +26,47 @@ export const Card: React.FC<CardProps> = ({
   ...props
 }) => {
   const cardStyle = [
-    styles.card,
+    variant !== 'gradient' && styles.card, // Don't apply default background for gradient
     variant === 'elevated' && styles.elevated,
     variant === 'outlined' && styles.outlined,
+    variant === 'gradient' && { 
+      borderRadius: 16, 
+      overflow: 'hidden',
+      backgroundColor: 'transparent', // Ensure no white background shows through
+    }, // Ensure gradient fills card
     style,
   ];
 
-  if (variant === 'gradient' && onPress) {
-    return (
-      <TouchableOpacity
-        onPress={onPress}
-        disabled={disabled}
-        activeOpacity={0.8}
-        style={cardStyle}
-        {...props}
+  if (variant === 'gradient') {
+    const GradientContent = (
+      <LinearGradient
+        colors={gradientColors}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradient}
       >
-        <LinearGradient
-          colors={gradientColors}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.gradient}
+        {children}
+      </LinearGradient>
+    );
+
+    if (onPress) {
+      return (
+        <TouchableOpacity
+          onPress={onPress}
+          disabled={disabled}
+          activeOpacity={0.8}
+          style={cardStyle}
+          {...props}
         >
-          {children}
-        </LinearGradient>
-      </TouchableOpacity>
+          {GradientContent}
+        </TouchableOpacity>
+      );
+    }
+
+    return (
+      <View style={cardStyle} {...props}>
+        {GradientContent}
+      </View>
     );
   }
 
@@ -93,6 +110,8 @@ const styles = StyleSheet.create({
   gradient: {
     borderRadius: 16,
     padding: 16,
+    minHeight: '100%',
+    width: '100%',
   },
 });
 
