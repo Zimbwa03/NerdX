@@ -110,7 +110,6 @@ const styles = StyleSheet.create({
   gradient: {
     borderRadius: 16,
     padding: 16,
-    minHeight: '100%',
     width: '100%',
   },
 });
