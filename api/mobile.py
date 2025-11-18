@@ -544,7 +544,7 @@ def generate_question():
             return jsonify({'success': False, 'message': 'Failed to generate question'}), 500
         
         # Deduct credits
-        deduct_credits(g.current_user_id, credit_cost)
+        deduct_credits(g.current_user_id, credit_cost, 'quiz_generation', f'Generated {subject} {question_type} question')
         
         # Format question for mobile
         question = {
@@ -1054,7 +1054,7 @@ def generate_math_graph():
         graph_result = graph_service.generate_graph(function_text)
         
         # Deduct credits
-        deduct_credits(g.current_user_id, credit_cost)
+        deduct_credits(g.current_user_id, credit_cost, 'math_graph_practice', 'Math graph generation')
         
         return jsonify({
             'success': True,
@@ -1092,7 +1092,7 @@ def generate_comprehension():
         comprehension = english_service.generate_comprehension()
         
         # Deduct credits
-        deduct_credits(g.current_user_id, credit_cost)
+        deduct_credits(g.current_user_id, credit_cost, 'english_comprehension', 'English comprehension generation')
         
         return jsonify({
             'success': True,
@@ -1134,7 +1134,7 @@ def submit_essay():
         result = english_service.mark_essay(prompt, essay_text)
         
         # Deduct credits
-        deduct_credits(g.current_user_id, credit_cost)
+        deduct_credits(g.current_user_id, credit_cost, 'english_essay_writing', 'English essay marking')
         
         essay_id = str(uuid.uuid4())
         
@@ -1199,7 +1199,7 @@ def upload_image():
         result = image_service.process_image(image_file)
         
         # Deduct credits
-        deduct_credits(g.current_user_id, credit_cost)
+        deduct_credits(g.current_user_id, credit_cost, 'image_solve', 'Image OCR solving')
         
         return jsonify({
             'success': True,
@@ -1260,7 +1260,7 @@ def start_teacher_mode():
         })
         
         # Deduct credits
-        deduct_credits(g.current_user_id, credit_cost)
+        deduct_credits(g.current_user_id, credit_cost, 'teacher_mode_start', f'Started Teacher Mode: {subject}')
         
         # Get initial message from teacher
         initial_message = f"👨‍🏫 Welcome to Teacher Mode!\n\nI'm your {subject} teacher. How can I help you learn today?"
@@ -1352,7 +1352,7 @@ def send_teacher_message():
         
         # Credits already deducted by check_and_deduct_credits in handle_conversation logic
         # But we need to deduct here since we're bypassing handle_conversation
-        deduct_credits(g.current_user_id, credit_cost)
+        deduct_credits(g.current_user_id, credit_cost, 'teacher_mode_followup', 'Teacher Mode conversation')
         
         # Clean formatting
         clean_response = teacher_service._clean_whatsapp_formatting(response_text)
@@ -1427,7 +1427,7 @@ def generate_teacher_notes():
             notes_data = {'content': notes_response}
         
         # Deduct credits
-        deduct_credits(g.current_user_id, credit_cost)
+        deduct_credits(g.current_user_id, credit_cost, 'teacher_mode_pdf', 'Generated Teacher Mode PDF notes')
         
         return jsonify({
             'success': True,
@@ -1481,7 +1481,7 @@ def start_project_assistant():
         })
         
         # Deduct credits
-        deduct_credits(g.current_user_id, credit_cost)
+        deduct_credits(g.current_user_id, credit_cost, 'project_assistant_start', f'Started Project Assistant: {project_title}')
         
         initial_message = "🎓 Welcome to Project Assistant!\n\nI'm here to help you with your ZIMSEC School-Based Project. What would you like to work on today?"
         
@@ -1582,7 +1582,7 @@ def send_project_message():
         session_manager.set_data(g.current_user_id, 'project_assistant', session_data)
         
         # Deduct credits
-        deduct_credits(g.current_user_id, credit_cost)
+        deduct_credits(g.current_user_id, credit_cost, 'project_assistant_followup', 'Project Assistant conversation')
         
         return jsonify({
             'success': True,
@@ -1685,7 +1685,7 @@ def generate_graph():
             solution = f"The graph of {equation} shows [analysis based on graph type]. Key features include intercepts, slope, and behavior."
         
         # Deduct credits
-        deduct_credits(g.current_user_id, credit_cost)
+        deduct_credits(g.current_user_id, credit_cost, 'math_graph_practice', f'Generated {graph_type} graph')
         
         return jsonify({
             'success': True,
@@ -1757,7 +1757,7 @@ def generate_custom_graph():
             graph_url = f"{base_url.rstrip('/')}/static/graphs/{filename}"
         
         # Deduct credits
-        deduct_credits(g.current_user_id, credit_cost)
+        deduct_credits(g.current_user_id, credit_cost, 'math_graph_practice', f'Generated custom graph: {equation}')
         
         return jsonify({
             'success': True,
@@ -1799,7 +1799,7 @@ def solve_graph_from_image():
         result = image_service.process_image(image_file)
         
         # Deduct credits
-        deduct_credits(g.current_user_id, credit_cost)
+        deduct_credits(g.current_user_id, credit_cost, 'image_solve', 'Graph solving from image')
         
         return jsonify({
             'success': True,
@@ -1870,7 +1870,7 @@ def generate_linear_programming_graph():
             graph_url = f"{base_url.rstrip('/')}/static/graphs/{filename}"
         
         # Deduct credits
-        deduct_credits(g.current_user_id, credit_cost)
+        deduct_credits(g.current_user_id, credit_cost, 'math_graph_practice', 'Generated linear programming graph')
         
         return jsonify({
             'success': True,
