@@ -3,11 +3,11 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // IMPORTANT: For APK builds, update this to your actual backend URL
-// For Replit: use your replit domain (e.g., https://your-repl-name.your-username.repl.co)
-// For production: use your deployed backend URL
+// For development: use localhost (Android emulator uses 10.0.2.2 to access host machine's localhost)
+// For production: use your deployed backend URL on Render
 export const API_BASE_URL = __DEV__
   ? 'http://10.0.2.2:5000' // Android emulator uses 10.0.2.2 to access host machine's localhost
-  : 'https://0d1f1d2d-02c4-45ac-a18c-23729e51f827-00-30ibiqbfa38pk.riker.replit.dev'; // Production - UPDATE THIS BEFORE BUILDING APK
+  : 'https://nerdx.onrender.com'; // Production - Render backend URL
 
 const AUTH_TOKEN_KEY = '@auth_token';
 
