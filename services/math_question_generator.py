@@ -122,15 +122,54 @@ class MathQuestionGenerator:
             }
         }
         
-        # Create prompt for Gemini AI, specifically for graph questions
-        prompt = self._create_question_prompt(subject, topic, difficulty)
-
         # Use Gemini API details here (placeholder, actual implementation needed)
         # For now, we'll just call the DeepSeek fallback as a placeholder
         logger.info(f"Switching to Gemini AI for graph question generation (topic: {topic})")
         
         # Fallback to DeepSeek for now
         return self.generate_question(subject, topic, difficulty)
+
+    def _create_question_prompt(self, subject: str, topic: str, difficulty: str, recent_topics: set = None) -> str:
+        """Create optimized prompt for DeepSeek AI"""
+        
+        if recent_topics is None:
+            recent_topics = set()
+        
+        difficulty_descriptions = {
+            "easy": "Direct application of basic concepts, straightforward calculations, minimal steps",
+            "medium": "Requires understanding of multiple concepts, moderate calculations, 2-3 steps",
+            "difficult": "Complex problem-solving, multi-step reasoning, synthesis of several concepts"
+        }
+        
+        # Build variation instruction if we have recent topics
+        variation_note = ""
+        if recent_topics and topic.lower() in [t.lower() for t in recent_topics]:
+            variation_note = "\nIMPORTANT: Generate a DIFFERENT question from previous ones on this topic. Vary the numbers, scenario, or approach."
+        
+        prompt = f"""Generate a high-quality {difficulty} level {subject} question about {topic} for ZIMSEC O-Level students.
+{variation_note}
+Requirements:
+- Create a clear, specific question following ZIMSEC exam format
+- Use proper mathematical notation and terminology
+- Include specific numbers and realistic scenarios
+- Appropriate for {difficulty} difficulty level: {difficulty_descriptions[difficulty]}
+- Focus specifically on {topic}
+- Question should test understanding, not just recall
+- Provide a complete step-by-step solution
+- Give the final answer clearly
+
+Return your response in this EXACT JSON format:
+{{
+    "question": "Your generated question here",
+    "solution": "Complete step-by-step solution with clear working",
+    "answer": "Final answer only",
+    "points": {10 if difficulty == 'easy' else 20 if difficulty == 'medium' else 50},
+    "explanation": "Brief explanation of the concept being tested"
+}}
+
+Generate the question now:"""
+
+        return prompt
 
     def _send_api_request(self, prompt: str, timeout: int = 30) -> Optional[Dict]:
         """Send request to DeepSeek API with configurable timeout"""
