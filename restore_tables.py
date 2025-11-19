@@ -281,24 +281,7 @@ def restore_tables():
         
         # Insert default packages (aligned with bot pricing)
         packages = [
-            ('POCKET PACKAGE', 'Perfect for quick help', 50, 1.00),
-            ('MINI PACKAGE', 'Extended trial value', 120, 2.00),
-            ('QUICK PACKAGE', 'Most popular choice', 350, 5.00)
-        ]
-        
-        for name, desc, credits, price in packages:
-            try:
-                cursor.execute("""
-                    INSERT INTO packages (name, description, credits, price)
-                    VALUES (%s, %s, %s, %s);
-                """, (name, desc, credits, price))
-                logger.info(f"   ✅ Inserted package: {name}")
-            except Exception as e:
-                logger.info(f"   ℹ️  Package {name} already exists: {e}")
-        
-        # Insert default credit costs
-        credit_costs = [
-            ('math_easy', 5, 'Mathematics', 'Topical Questions', 'Easy math questions'),
+            ('POCKET PACKAGE', 'Perfect for quick 
             ('math_medium', 10, 'Mathematics', 'Topical Questions', 'Medium math questions'),
             ('math_hard', 20, 'Mathematics', 'Topical Questions', 'Hard math questions'),
             ('graph_generation', 15, 'Mathematics', 'Graph Generation', 'Generate mathematical graphs'),

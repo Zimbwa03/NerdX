@@ -743,39 +743,53 @@ def submit_answer():
             
             # Use the enhanced analyze_answer method
             # If we have the question text, we can get a full analysis
-            if question_text:
-                analysis_result = math_solver.analyze_answer(
-                    question_text,
-                    answer if answer else "Image Answer",
-                    correct_answer,
-                    solution
-                )
-                is_correct = analysis_result.get('is_correct', False)
-                feedback = analysis_result.get('feedback', '')
-            else:
-                # Fallback to simple comparison if question text missing
-                if image_url:
-                    # Process image answer using OCR
-                    from services.image_service import ImageService
-                    image_service = ImageService()
-                    # Extract text from image (simplified - would need actual image processing)
-                    extracted_text = answer  # Placeholder - would extract from image
-                    # Use simple comparison for now
-                    user_clean = str(extracted_text).strip().lower()
-                    correct_clean = str(correct_answer).strip().lower()
-                    is_correct = user_clean == correct_clean
-                else:
-                    # Compare text answer using math solver's comparison logic
-                    # We can use the internal helper if we want, or just replicate logic
-                    # But better to use analyze_answer even with dummy question if needed
+            try:
+                if question_text:
                     analysis_result = math_solver.analyze_answer(
-                        "Question not provided",
-                        answer,
+                        question_text,
+                        answer if answer else "Image Answer",
                         correct_answer,
                         solution
                     )
+                    # Ensure analysis_result is a dict
+                    if not isinstance(analysis_result, dict):
+                        analysis_result = {}
                     is_correct = analysis_result.get('is_correct', False)
                     feedback = analysis_result.get('feedback', '')
+                else:
+                    # Fallback to simple comparison if question text missing
+                    if image_url:
+                        # Process image answer using OCR
+                        from services.image_service import ImageService
+                        image_service = ImageService()
+                        # Extract text from image (simplified - would need actual image processing)
+                        extracted_text = answer  # Placeholder - would extract from image
+                        # Use simple comparison for now
+                        user_clean = str(extracted_text).strip().lower()
+                        correct_clean = str(correct_answer).strip().lower()
+                        is_correct = user_clean == correct_clean
+                        analysis_result = {}  # No AI analysis for image answers yet
+                    else:
+                        # Compare text answer using math solver's comparison logic
+                        analysis_result = math_solver.analyze_answer(
+                            "Question not provided",
+                            answer,
+                            correct_answer,
+                            solution
+                        )
+                        # Ensure analysis_result is a dict
+                        if not isinstance(analysis_result, dict):
+                            analysis_result = {}
+                        is_correct = analysis_result.get('is_correct', False)
+                        feedback = analysis_result.get('feedback', '')
+            except Exception as math_error:
+                logger.error(f"Error in math answer analysis: {math_error}", exc_info=True)
+                # Fallback to simple comparison
+                user_clean = str(answer).strip().lower()
+                correct_clean = str(correct_answer).strip().lower()
+                is_correct = user_clean == correct_clean
+                analysis_result = {}
+                feedback = ''
 
             if is_correct:
                 if not feedback:
@@ -796,7 +810,11 @@ def submit_answer():
         
         # Add XP if correct
         if is_correct:
-            add_xp(g.current_user_id, points_earned)
+            try:
+                add_xp(g.current_user_id, points_earned, 'quiz_answer_correct', f'Correct answer in {subject} quiz')
+            except Exception as xp_error:
+                logger.warning(f"Failed to add XP (non-critical): {xp_error}")
+                # Continue execution - XP failure should not block answer submission
         
         return jsonify({
             'success': True,
