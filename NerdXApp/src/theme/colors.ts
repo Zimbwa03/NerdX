@@ -1,69 +1,73 @@
 // Professional Color Theme System
 export const Colors = {
-  // Primary Colors
+  // Primary Colors - Deep Indigo/Violet Theme
   primary: {
-    main: '#1976D2',
-    light: '#42A5F5',
-    dark: '#1565C0',
-    darker: '#0D47A1',
+    main: '#6200EA', // Deep Purple
+    light: '#B388FF', // Lavender
+    dark: '#3700B3', // Darker Purple
+    darker: '#000000', // Almost Black
+    contrastText: '#FFFFFF',
   },
   
-  // Secondary Colors
+  // Secondary Colors - Vibrant Accents
   secondary: {
-    main: '#9C27B0',
-    light: '#BA68C8',
-    dark: '#7B1FA2',
+    main: '#00BFA5', // Teal Accent
+    light: '#64FFDA',
+    dark: '#009688',
+    contrastText: '#000000',
   },
   
   // Success Colors
   success: {
-    main: '#4CAF50',
-    light: '#81C784',
-    dark: '#388E3C',
+    main: '#00C853',
+    light: '#69F0AE',
+    dark: '#009624',
   },
   
   // Warning Colors
   warning: {
-    main: '#FF9800',
-    light: '#FFB74D',
-    dark: '#F57C00',
+    main: '#FFAB00',
+    light: '#FFD740',
+    dark: '#FF6D00',
   },
   
   // Error Colors
   error: {
-    main: '#D32F2F',
-    light: '#EF5350',
-    dark: '#C62828',
+    main: '#D50000',
+    light: '#FF5252',
+    dark: '#9B0000',
   },
   
-  // Subject Colors
+  // Subject Colors - Modern Gradients Base
   subjects: {
-    mathematics: '#2196F3',
-    science: '#4CAF50',
-    english: '#FF9800',
-    combinedScience: '#4CAF50',
+    mathematics: '#2962FF', // Blue
+    science: '#00C853', // Green
+    english: '#FF6D00', // Orange
+    combinedScience: '#00BFA5', // Teal
   },
   
   // Background Colors
   background: {
-    default: '#FFFFFF',
-    paper: '#F5F5F5',
-    dark: '#212121',
+    default: '#F5F7FA', // Very light grey/blue
+    paper: '#FFFFFF',
+    dark: '#121212',
+    subtle: '#E0E0E0',
   },
   
   // Text Colors
   text: {
     primary: '#212121',
     secondary: '#757575',
-    disabled: '#BDBDBD',
+    disabled: '#9E9E9E',
     white: '#FFFFFF',
+    hint: '#BDBDBD',
   },
   
   // Border Colors
   border: {
-    light: '#E0E0E0',
-    medium: '#BDBDBD',
-    dark: '#757575',
+    light: '#EEEEEE',
+    medium: '#E0E0E0',
+    dark: '#BDBDBD',
   },
   
   // Icon Background Colors
@@ -71,8 +75,18 @@ export const Colors = {
     mathematics: '#E3F2FD',
     science: '#E8F5E9',
     english: '#FFF3E0',
-    default: '#F5F5F5',
+    default: '#F3E5F5',
   },
+
+  // Gradients
+  gradients: {
+    primary: ['#6200EA', '#3700B3'],
+    secondary: ['#00BFA5', '#009688'],
+    success: ['#00C853', '#009624'],
+    warning: ['#FFAB00', '#FF6D00'],
+    error: ['#D50000', '#9B0000'],
+    dark: ['#212121', '#000000'],
+  }
 };
 
 export default Colors;

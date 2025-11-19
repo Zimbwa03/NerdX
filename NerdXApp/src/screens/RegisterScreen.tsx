@@ -11,15 +11,18 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  ImageBackground,
+  StatusBar,
+  Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../services/api/authApi';
-import { Icons, IconCircle, Icon } from '../components/Icons';
-import { Card } from '../components/Card';
-import { Button } from '../components/Button';
-import Colors from '../theme/colors';
+import { Colors } from '../theme/colors';
+
+const { width } = Dimensions.get('window');
 
 const RegisterScreen: React.FC = () => {
   const [name, setName] = useState('');
@@ -93,157 +96,157 @@ const RegisterScreen: React.FC = () => {
   };
 
   return (
-    <KeyboardAvoidingView
+    <ImageBackground
+      source={require('../../assets/images/login_background.png')}
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      resizeMode="cover"
     >
       <LinearGradient
-        colors={[Colors.secondary.main, Colors.secondary.dark]}
-        style={styles.gradient}
+        colors={[Colors.gradients.primary[0], 'rgba(255,255,255,0.1)']}
+        style={styles.overlay}
       >
-        <ScrollView
-          style={styles.scrollView}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
+        <StatusBar barStyle="light-content" />
+        <KeyboardAvoidingView
+          style={styles.keyboardView}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-          {/* Logo/Icon Section */}
-          <View style={styles.logoSection}>
-            <IconCircle
-              icon={Icons.profile(48, '#FFFFFF')}
-              size={100}
-              backgroundColor="rgba(255, 255, 255, 0.2)"
-            />
-            <Text style={styles.title}>Create Account</Text>
-            <Text style={styles.subtitle}>Join NerdX Learning Platform</Text>
-          </View>
-
-          {/* Registration Form Card */}
-          <Card variant="elevated" style={styles.formCard}>
-            <Text style={styles.formTitle}>Sign Up</Text>
-            <Text style={styles.formSubtitle}>Fill in your details to get started</Text>
-
-            <View style={styles.form}>
-              <View style={styles.inputContainer}>
-                <View style={styles.inputIcon}>
-                  <Icon name="person" size={20} color={Colors.text.secondary} library="ionicons" />
-                </View>
-                <TextInput
-                  style={styles.input}
-                  placeholder="First Name"
-                  placeholderTextColor={Colors.text.disabled}
-                  value={name}
-                  onChangeText={setName}
-                  autoCapitalize="words"
-                />
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.headerSection}>
+              <View style={styles.iconContainer}>
+                <Ionicons name="person-add-outline" size={40} color="#FFF" />
               </View>
-
-              <View style={styles.inputContainer}>
-                <View style={styles.inputIcon}>
-                  <Icon name="person" size={20} color={Colors.text.secondary} library="ionicons" />
-                </View>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Surname"
-                  placeholderTextColor={Colors.text.disabled}
-                  value={surname}
-                  onChangeText={setSurname}
-                  autoCapitalize="words"
-                />
-              </View>
-
-              <View style={styles.inputContainer}>
-                <View style={styles.inputIcon}>
-                  <Icon name="mail" size={20} color={Colors.text.secondary} library="ionicons" />
-                </View>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Email Address"
-                  placeholderTextColor={Colors.text.disabled}
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
-              </View>
-
-              <View style={styles.inputContainer}>
-                <View style={styles.inputIcon}>
-                  <Icon name="call" size={20} color={Colors.text.secondary} library="ionicons" />
-                </View>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Phone Number (optional)"
-                  placeholderTextColor={Colors.text.disabled}
-                  value={phoneNumber}
-                  onChangeText={setPhoneNumber}
-                  keyboardType="phone-pad"
-                />
-              </View>
-
-              <View style={styles.inputContainer}>
-                <View style={styles.inputIcon}>
-                  <Icon name="calendar" size={20} color={Colors.text.secondary} library="ionicons" />
-                </View>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Date of Birth (DD/MM/YYYY)"
-                  placeholderTextColor={Colors.text.disabled}
-                  value={dateOfBirth}
-                  onChangeText={setDateOfBirth}
-                  keyboardType="numeric"
-                />
-              </View>
-
-              <View style={styles.inputContainer}>
-                <View style={styles.inputIcon}>
-                  <Icon name="lock-closed" size={20} color={Colors.text.secondary} library="ionicons" />
-                </View>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Password"
-                  placeholderTextColor={Colors.text.disabled}
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
-                />
-              </View>
-
-              <View style={styles.inputContainer}>
-                <View style={styles.inputIcon}>
-                  <Icon name="lock-closed" size={20} color={Colors.text.secondary} library="ionicons" />
-                </View>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Confirm Password"
-                  placeholderTextColor={Colors.text.disabled}
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  secureTextEntry
-                />
-              </View>
-
-              <Button
-                title="Create Account"
-                variant="primary"
-                size="large"
-                fullWidth
-                onPress={handleRegister}
-                disabled={isLoading}
-                loading={isLoading}
-                icon="person-add"
-                iconPosition="left"
-                style={styles.registerButton}
-              />
-
-              <TouchableOpacity onPress={navigateToLogin} style={styles.linkContainer}>
-                <Text style={styles.linkText}>Already have an account? </Text>
-                <Text style={styles.linkTextBold}>Sign In</Text>
-              </TouchableOpacity>
+              <Text style={styles.title}>Create Account</Text>
+              <Text style={styles.subtitle}>Join NerdX Learning Platform</Text>
             </View>
-          </Card>
-        </ScrollView>
+
+            <View style={styles.formContainer}>
+              <LinearGradient
+                colors={['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.8)']}
+                style={styles.glassCard}
+              >
+                <Text style={styles.formTitle}>Sign Up</Text>
+                <Text style={styles.formSubtitle}>Fill in your details to get started</Text>
+
+                <View style={styles.inputRow}>
+                  <View style={[styles.inputWrapper, { flex: 1, marginRight: 8 }]}>
+                    <Ionicons name="person-outline" size={20} color={Colors.text.secondary} style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="First Name"
+                      placeholderTextColor={Colors.text.disabled}
+                      value={name}
+                      onChangeText={setName}
+                      autoCapitalize="words"
+                    />
+                  </View>
+                  <View style={[styles.inputWrapper, { flex: 1, marginLeft: 8 }]}>
+                    <Ionicons name="person-outline" size={20} color={Colors.text.secondary} style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Surname"
+                      placeholderTextColor={Colors.text.disabled}
+                      value={surname}
+                      onChangeText={setSurname}
+                      autoCapitalize="words"
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.inputWrapper}>
+                  <Ionicons name="mail-outline" size={20} color={Colors.text.secondary} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Email Address"
+                    placeholderTextColor={Colors.text.disabled}
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                </View>
+
+                <View style={styles.inputWrapper}>
+                  <Ionicons name="call-outline" size={20} color={Colors.text.secondary} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Phone Number (optional)"
+                    placeholderTextColor={Colors.text.disabled}
+                    value={phoneNumber}
+                    onChangeText={setPhoneNumber}
+                    keyboardType="phone-pad"
+                  />
+                </View>
+
+                <View style={styles.inputWrapper}>
+                  <Ionicons name="calendar-outline" size={20} color={Colors.text.secondary} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Date of Birth (DD/MM/YYYY)"
+                    placeholderTextColor={Colors.text.disabled}
+                    value={dateOfBirth}
+                    onChangeText={setDateOfBirth}
+                    keyboardType="numeric"
+                  />
+                </View>
+
+                <View style={styles.inputWrapper}>
+                  <Ionicons name="lock-closed-outline" size={20} color={Colors.text.secondary} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Password"
+                    placeholderTextColor={Colors.text.disabled}
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                  />
+                </View>
+
+                <View style={styles.inputWrapper}>
+                  <Ionicons name="lock-closed-outline" size={20} color={Colors.text.secondary} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Confirm Password"
+                    placeholderTextColor={Colors.text.disabled}
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    secureTextEntry
+                  />
+                </View>
+
+                <TouchableOpacity
+                  style={[styles.registerButton, isLoading && styles.registerButtonDisabled]}
+                  onPress={handleRegister}
+                  disabled={isLoading}
+                >
+                  <LinearGradient
+                    colors={isLoading ? ['#BDBDBD', '#9E9E9E'] : Colors.gradients.primary}
+                    style={styles.gradientButton}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  >
+                    {isLoading ? (
+                      <ActivityIndicator color="#FFFFFF" />
+                    ) : (
+                      <Text style={styles.registerButtonText}>Create Account</Text>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+
+                <View style={styles.loginLinkContainer}>
+                  <Text style={styles.loginLinkText}>Already have an account? </Text>
+                  <TouchableOpacity onPress={navigateToLogin}>
+                    <Text style={styles.loginLinkBold}>Sign In</Text>
+                  </TouchableOpacity>
+                </View>
+              </LinearGradient>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </LinearGradient>
-    </KeyboardAvoidingView>
+    </ImageBackground>
   );
 };
 
@@ -251,90 +254,135 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  gradient: {
+  overlay: {
     flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.2)',
   },
-  scrollView: {
+  keyboardView: {
     flex: 1,
   },
   scrollContent: {
-    padding: 20,
-    paddingTop: 40,
+    flexGrow: 1,
     paddingBottom: 40,
+    justifyContent: 'center',
   },
-  logoSection: {
+  headerSection: {
     alignItems: 'center',
+    marginTop: 60,
     marginBottom: 30,
+  },
+  iconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    textAlign: 'center',
-    marginTop: 20,
-    marginBottom: 8,
-    color: Colors.text.white,
+    color: '#FFFFFF',
+    marginBottom: 5,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   subtitle: {
     fontSize: 16,
-    textAlign: 'center',
-    color: Colors.text.white,
-    opacity: 0.9,
+    color: 'rgba(255,255,255,0.9)',
   },
-  formCard: {
+  formContainer: {
+    paddingHorizontal: 20,
+  },
+  glassCard: {
+    borderRadius: 24,
     padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 10,
   },
   formTitle: {
     fontSize: 24,
     fontWeight: 'bold',
     color: Colors.text.primary,
-    marginBottom: 4,
+    marginBottom: 5,
     textAlign: 'center',
   },
   formSubtitle: {
     fontSize: 14,
     color: Colors.text.secondary,
-    marginBottom: 24,
+    marginBottom: 25,
     textAlign: 'center',
   },
-  form: {
-    width: '100%',
+  inputRow: {
+    flexDirection: 'row',
+    marginBottom: 16,
   },
-  inputContainer: {
+  inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border.light,
+    backgroundColor: '#F5F7FA',
     borderRadius: 12,
     marginBottom: 16,
-    backgroundColor: Colors.background.default,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+    height: 56,
   },
   inputIcon: {
-    paddingLeft: 16,
-    paddingRight: 8,
+    marginLeft: 16,
+    marginRight: 12,
   },
   input: {
     flex: 1,
-    padding: 16,
+    height: '100%',
     fontSize: 16,
     color: Colors.text.primary,
+    paddingRight: 16,
   },
   registerButton: {
-    marginTop: 8,
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginTop: 10,
     marginBottom: 20,
+    elevation: 4,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
-  linkContainer: {
+  registerButtonDisabled: {
+    elevation: 0,
+    shadowOpacity: 0,
+  },
+  gradientButton: {
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  registerButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  loginLinkContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  linkText: {
+  loginLinkText: {
     color: Colors.text.secondary,
-    fontSize: 16,
+    fontSize: 15,
   },
-  linkTextBold: {
-    color: Colors.secondary.main,
-    fontSize: 16,
-    fontWeight: '600',
+  loginLinkBold: {
+    color: Colors.primary,
+    fontSize: 15,
+    fontWeight: 'bold',
   },
 });
 

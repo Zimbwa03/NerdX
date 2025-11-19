@@ -104,223 +104,29 @@ class MathQuestionGenerator:
         """
         Generate a question using Gemini AI for graph-related topics.
         """
-        try:
+        # Define guidelines for Gemini AI graph questions
+        guidelines = {
+            "Algebra": {
+                "Linear Equations": "Focus on solving for unknowns, word problems involving linear relationships",
+                "Quadratic Equations": "Include factoring, completing the square, quadratic formula methods",
+                "Simultaneous Equations": "Use substitution and elimination methods, practical applications",
+                "Inequalities": "Include number line representations, compound inequalities",
+                "Factorization": "Cover common factors, difference of squares, trinomial factoring",
+                "Algebraic Expressions": "Simplification, substitution, expanding brackets",
+                "Graph - Linear Programming": """Generate questions in this EXACT format:\n\nAnswer the whole of this question on the grid on page 26.\n\n(a) Draw the graphs of these inequalities by shading the unwanted region.\n\n(i) [inequality 1, e.g., 2x+y≤40]\n(ii) [inequality 2, e.g., x+2y≤48] \n(iii) [inequality 3, e.g., x≥0]\n(iv) [inequality 4, e.g., y≥5]\n\n(b) Mark R the region defined by the four inequalities in (a).\n\nThe solution should explain how to plot each inequality and identify the feasible region R."""
+            },
+            "Geometry": {
+                "Angles": "Include angle relationships, parallel lines, triangles, polygons",
+                "Triangles": "Properties, congruence, similarity, Pythagorean theorem",
+                "Quadrilaterals": "Properties of rectangles, squares, parallelograms, rhombus"
+            }
+        }
             # Create prompt for Gemini AI, specifically for graph questions
             prompt = self._create_question_prompt(subject, topic, difficulty)
 
             # Use Gemini API details here (placeholder, actual implementation needed)
             # For now, we'll just call the DeepSeek fallback as a placeholder
             logger.info(f"Switching to Gemini AI for graph question generation (topic: {topic})")
-            return self._generate_fallback_question(subject, topic, difficulty) # Placeholder for Gemini API call
-
-        except Exception as e:
-            logger.error(f"Critical error in generate_question_with_gemini: {e}")
-            return self._generate_fallback_question(subject, topic, difficulty)
-
-    def _create_question_prompt(self, subject: str, topic: str, difficulty: str, recent_topics: set = None) -> str:
-        """Create optimized prompt for DeepSeek AI with enhanced ZIMSEC graph support and anti-repetition"""
-
-        # Enhanced prompts for different subjects and topics
-        if 'graph' in topic.lower() or 'linear programming' in topic.lower():
-            # Specific prompts for each remaining graph module
-            if 'linear functions' in topic.lower() or 'straight lines' in topic.lower():
-                return f"""Generate a ZIMSEC O-Level Mathematics question about Linear Functions and Straight Lines.
-
-CRITICAL: You MUST include a specific linear equation in the format y = mx + c in your question.
-
-Requirements:
-- Use specific numerical coefficients (integers or simple fractions)
-- Choose from these formats: y = 2x + 3, y = -x + 4, y = 0.5x - 2, y = 3x - 1, y = -2x + 5
-- Ask students to plot the line and identify key features
-- Include instructions to find intercepts, gradient, or specific points
-- Difficulty level: {difficulty}
-- Use ZIMSEC exam format
-
-MANDATORY: Your question MUST contain a specific equation like "y = 2x + 3" that can be extracted for graph plotting.
-
-Example: "Plot the graph of y = 2x + 3. Mark the y-intercept clearly and find where the line crosses the x-axis."
-
-Return your response in this EXACT JSON format:
-{{
-    "question": "Your generated linear functions question with specific equation",
-    "solution": "Complete step-by-step solution showing how to plot the graph and find intercepts",
-    "answer": "Final answer with coordinates",
-    "points": 15,
-    "explanation": "Testing understanding of linear functions and graphing skills"
-}}"""
-
-            elif 'quadratic' in topic.lower() or 'parabola' in topic.lower():
-                return f"""Generate a ZIMSEC O-Level Mathematics question about Quadratic Functions and Parabolas.
-
-CRITICAL: You MUST include a specific quadratic equation in the format y = ax² + bx + c in your question.
-
-Requirements:
-- Use specific numerical coefficients (integers only)
-- Choose from these formats: y = x² - 4x + 3, y = -x² + 2x + 3, y = 2x² - 6x + 4, y = x² + 2x - 3, y = -x² + 4x - 3
-- Ask students to sketch the parabola and find key features
-- Include instructions to find vertex, roots, y-intercept, or turning point
-- Difficulty level: {difficulty}
-- Use ZIMSEC exam format
-
-MANDATORY: Your question MUST contain a specific equation like "y = x² - 4x + 3" that can be extracted for graph plotting.
-
-Example: "Sketch the graph of y = x² - 4x + 3. Find and mark the vertex, y-intercept, and x-intercepts on your graph."
-
-Return your response in this EXACT JSON format:
-{{
-    "question": "Your generated quadratic functions question with specific equation",
-    "solution": "Complete step-by-step solution showing how to find vertex, intercepts and sketch the parabola",
-    "answer": "Final answer with all key coordinates",
-    "points": 20,
-    "explanation": "Testing understanding of quadratic functions and parabola properties"
-}}"""
-
-            elif 'trigonometric' in topic.lower():
-                return f"""Generate a ZIMSEC O-Level Mathematics question about Trigonometric Functions.
-
-CRITICAL: You MUST include a specific trigonometric equation that can be plotted.
-
-Requirements:
-- Use specific trigonometric functions with clear coefficients
-- Choose from these formats: y = sin(x), y = cos(x), y = 2sin(x), y = 3cos(x), y = sin(2x), y = cos(x/2)
-- Ask students to plot the graph for a specific range (0° to 360° or 0 to 2π)
-- Include instructions to mark key points like maximum, minimum, or period
-- Difficulty level: {difficulty}
-- Use ZIMSEC exam format
-
-MANDATORY: Your question MUST contain a specific equation like "y = sin(x)" or "y = 2cos(x)" that can be extracted for graph plotting.
-
-Example: "Plot y = sin(x) for x from 0° to 360°. Mark the maximum and minimum points clearly and state the period."
-
-Return your response in this EXACT JSON format:
-{{
-    "question": "Your generated trigonometric functions question with specific equation",
-    "solution": "Complete step-by-step solution showing how to plot the trigonometric graph",
-    "answer": "Final answer with key coordinates and points",
-    "points": 15,
-    "explanation": "Testing understanding of trigonometric functions and their graphs"
-}}"""
-
-            elif 'linear programming' in topic.lower():
-                return f"""Generate a ZIMSEC O-Level Mathematics Linear Programming question.
-
-CRITICAL: You MUST include specific constraints that can be extracted and plotted.
-
-Use this exact format:
-"Answer the whole of this question on the grid.
-
-(a) Draw the graphs of these inequalities by shading the unwanted region.
-
-(i) [constraint like: 2x + y ≤ 12]
-(ii) [constraint like: x + 2y ≤ 10] 
-(iii) x ≥ 0
-(iv) y ≥ 1
-
-(b) Mark R the region defined by the four inequalities in (a)."
-
-Requirements:
-- Use realistic integer coefficients (keep numbers small: 1-5 range)
-- Choose from constraint formats: 2x + y ≤ 12, x + 3y ≤ 15, 3x + 2y ≤ 18
-- Always include x ≥ 0 and y ≥ [small number like 1, 2, or 3]
-- Difficulty level: {difficulty}
-- Follow ZIMSEC exam format exactly
-
-MANDATORY: Your constraints must be extractable as separate inequalities for graph plotting.
-
-Example: "2x + y ≤ 12, x + 2y ≤ 10, x ≥ 0, y ≥ 1"
-
-Return your response in this EXACT JSON format:
-{{
-    "question": "Your generated linear programming question with specific constraints",
-    "solution": "Complete step-by-step solution showing how to plot constraints and identify feasible region",
-    "answer": "Final answer identifying the feasible region R with vertices",
-    "points": 25,
-    "explanation": "Testing understanding of linear programming and constraint visualization"
-}}"""
-
-        # Enhanced standard academic question prompt for non-graph topics with anti-repetition
-        base_prompt = f"""Generate a high-quality {difficulty} level {subject} question about {topic} for ZIMSEC O-Level students.
-
-CRITICAL DIVERSITY REQUIREMENTS:
-- Use COMPLETELY DIFFERENT numbers than any recent question
-- Use DIFFERENT wording, phrasing, and sentence structure
-- Use DIFFERENT real-world contexts or scenarios
-- Vary the problem structure (word problem vs calculation vs application)
-- Ensure the question feels fresh and unique
-- Use different mathematical operations and relationships
-- Avoid similar problem setups, variables, or solution approaches
-
-Requirements:
-- Create a clear, specific question following ZIMSEC exam format
-- Use proper mathematical notation and terminology
-- Include specific numbers and realistic scenarios
-- Appropriate for {difficulty} difficulty level
-- Focus specifically on {topic}
-- Question should test understanding, not just recall
-- Provide a complete step-by-step solution
-- Give the final answer clearly"""
-
-        # Add recent question texts to avoid repetition
-        if recent_questions and len(recent_questions) > 0:
-            base_prompt += f"""
-
-RECENT QUESTIONS TO AVOID SIMILARITY WITH (DO NOT REPEAT THESE):
-"""
-            for i, recent_q in enumerate(recent_questions[:5], 1):  # Limit to last 5
-                base_prompt += f"{i}. {recent_q[:150]}...\n"
-
-        # Add anti-repetition instructions if recent topics available
-        if recent_topics:
-            variation_prompt = f"""
-
-ADDITIONAL ANTI-REPETITION REQUIREMENTS:
-- This user has recently practiced: {', '.join(recent_topics)}
-- Create a DIFFERENT approach, angle, or sub-topic variation
-- Use different numerical values and scenarios
-- Vary the question structure and focus area
-- Ensure this question feels fresh and unique"""
-            base_prompt += variation_prompt
-
-        # Add randomization instructions with more variation
-        import random
-        import time
-        variation_seed = str(int(time.time() * 1000) % 10000)  # Add timestamp-based seed
-
-        variation_styles = [
-            "Focus on real-world applications and practical scenarios",
-            "Emphasize step-by-step calculations and working out",
-            "Include multiple parts with increasing difficulty",
-            "Test both calculation skills and conceptual understanding",
-            "Create a problem-solving scenario with context",
-            "Use geometric interpretations and visual approaches",
-            "Focus on algebraic manipulation and simplification",
-            "Emphasize logical reasoning and mathematical proofs",
-            "Include optimization and maximum/minimum problems",
-            "Use patterns, sequences, and mathematical relationships"
-        ]
-
-        selected_style = random.choice(variation_styles)
-        base_prompt += f"\n- {selected_style}"
-        base_prompt += f"\n- Variation seed: {variation_seed} (use this to ensure uniqueness)"
-
-        base_prompt += f"""
-
-Return your response in this EXACT JSON format:
-{{
-    "question": "Your generated question here",
-    "solution": "Complete step-by-step solution with clear working",
-    "answer": "Final answer only",
-    "points": 10,
-    "explanation": "Brief explanation of the concept being tested"
-}}
-
-Generate the question now:"""
-
-        return base_prompt
-
-    def _get_topic_guidelines(self, subject: str, topic: str) -> str:
-        """Get specific guidelines for each topic"""
-
         guidelines = {
             "Algebra": {
                 "Linear Equations": "Focus on solving for unknowns, word problems involving linear relationships",
@@ -458,29 +264,6 @@ The solution should explain how to plot each inequality and identify the feasibl
             # Required fields validation - 'answer' is optional as it's often included in solution
             required_fields = ['question', 'solution']
 
-            for field in required_fields:
-                if field not in question_data or not question_data[field]:
-                    logger.error(f"Missing or empty required field: {field}")
-                    return self._generate_fallback_question(subject, topic, difficulty)
-
-            # Format the question data with safe handling of optional fields
-            formatted_question = {
-                'question': str(question_data['question']).strip(),
-                'solution': str(question_data['solution']).strip(),
-                'answer': str(question_data.get('answer', 'See solution above')).strip(),
-                'points': question_data.get('points', 10),
-                'explanation': question_data.get('explanation', 'No explanation provided'),
-                'difficulty': difficulty,
-                'topic': topic,
-                'subject': subject,
-                'generated_at': datetime.now().isoformat(),
-                'source': 'ai_generated'
-            }
-
-            # Validation checks
-            if len(formatted_question['question']) < 10:
-                logger.error("Question too short")
-                return self._generate_fallback_question(subject, topic, difficulty)
 
             if len(formatted_question['solution']) < 20:
                 logger.error("Solution too short")

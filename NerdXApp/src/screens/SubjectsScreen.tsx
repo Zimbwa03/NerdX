@@ -14,10 +14,13 @@ import { useNavigation } from '@react-navigation/native';
 import { quizApi, Subject } from '../services/api/quizApi';
 import { Icons, IconCircle } from '../components/Icons';
 import { Card } from '../components/Card';
+import { Modal, ModalOptionCard } from '../components/Modal';
 
 const SubjectsScreen: React.FC = () => {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -38,24 +41,25 @@ const SubjectsScreen: React.FC = () => {
 
   const handleSubjectPress = (subject: Subject) => {
     if (subject.id === 'combined_science') {
-      // Show options: Teacher Mode or Practice Mode
-      Alert.alert(
-        'Combined Science',
-        'Choose your learning mode:',
-        [
-          {
-            text: '👨‍🏫 Teacher Mode',
-            onPress: () => navigation.navigate('TeacherModeSetup' as never, { subject } as never),
-          },
-          {
-            text: '📝 Practice Mode',
-            onPress: () => navigation.navigate('Topics' as never, { subject } as never),
-          },
-          { text: 'Cancel', style: 'cancel' },
-        ]
-      );
+      // Show modal for Combined Science
+      setSelectedSubject(subject);
+      setModalVisible(true);
     } else {
       navigation.navigate('Topics' as never, { subject } as never);
+    }
+  };
+
+  const handleTeacherMode = () => {
+    setModalVisible(false);
+    if (selectedSubject) {
+      navigation.navigate('TeacherModeSetup' as never, { subject: selectedSubject } as never);
+    }
+  };
+
+  const handlePracticeMode = () => {
+    setModalVisible(false);
+    if (selectedSubject) {
+      navigation.navigate('Topics' as never, { subject: selectedSubject } as never);
     }
   };
 
@@ -115,6 +119,29 @@ const SubjectsScreen: React.FC = () => {
           );
         })}
       </View>
+
+      {/* Mode Selection Modal */}
+      <Modal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        title="Combined Science"
+      >
+        <Text style={styles.modalDescription}>Choose your learning mode:</Text>
+        <ModalOptionCard
+          icon="👨‍🏫"
+          title="Teacher Mode"
+          description="Interactive AI teaching with personalized explanations and notes"
+          onPress={handleTeacherMode}
+          color="#4CAF50"
+        />
+        <ModalOptionCard
+          icon="📝"
+          title="Practice Mode"
+          description="Practice questions by topic and test your knowledge"
+          onPress={handlePracticeMode}
+          color="#2196F3"
+        />
+      </Modal>
     </ScrollView>
   );
 };
@@ -203,6 +230,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#757575',
     lineHeight: 20,
+  },
+  modalDescription: {
+    fontSize: 15,
+    color: '#757575',
+    marginBottom: 16,
+    lineHeight: 22,
   },
 });
 

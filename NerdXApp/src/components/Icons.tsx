@@ -93,6 +93,12 @@ export const Icons = {
   essay: (size = 24, color = '#FF9800') => (
     <Icon key="essay" name="create" size={size} color={color} library="ionicons" />
   ),
+  grammar: (size = 24, color = '#FF9800') => (
+    <Icon key="grammar" name="text" size={size} color={color} library="ionicons" />
+  ),
+  vocabulary: (size = 24, color = '#FF9800') => (
+    <Icon key="vocabulary" name="library" size={size} color={color} library="ionicons" />
+  ),
 
   // Status & Actions
   check: (size = 24, color = '#4CAF50') => (
