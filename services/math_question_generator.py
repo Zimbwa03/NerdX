@@ -121,77 +121,16 @@ class MathQuestionGenerator:
                 "Quadrilaterals": "Properties of rectangles, squares, parallelograms, rhombus"
             }
         }
-            # Create prompt for Gemini AI, specifically for graph questions
-            prompt = self._create_question_prompt(subject, topic, difficulty)
+        
+        # Create prompt for Gemini AI, specifically for graph questions
+        prompt = self._create_question_prompt(subject, topic, difficulty)
 
-            # Use Gemini API details here (placeholder, actual implementation needed)
-            # For now, we'll just call the DeepSeek fallback as a placeholder
-            logger.info(f"Switching to Gemini AI for graph question generation (topic: {topic})")
-        guidelines = {
-            "Algebra": {
-                "Linear Equations": "Focus on solving for unknowns, word problems involving linear relationships",
-                "Quadratic Equations": "Include factoring, completing the square, quadratic formula methods",
-                "Simultaneous Equations": "Use substitution and elimination methods, practical applications",
-                "Inequalities": "Include number line representations, compound inequalities",
-                "Factorization": "Cover common factors, difference of squares, trinomial factoring",
-                "Algebraic Expressions": "Simplification, substitution, expanding brackets",
-                "Graph - Linear Programming": """Generate questions in this EXACT format:
-
-Answer the whole of this question on the grid on page 26.
-
-(a) Draw the graphs of these inequalities by shading the unwanted region.
-
-(i) [inequality 1, e.g., 2x+y≤40]
-(ii) [inequality 2, e.g., x+2y≤48] 
-(iii) [inequality 3, e.g., x≥0]
-(iv) [inequality 4, e.g., y≥5]
-
-(b) Mark R the region defined by the four inequalities in (a).
-
-The solution should explain how to plot each inequality and identify the feasible region R."""
-            },
-            "Geometry": {
-                "Angles": "Include angle relationships, parallel lines, triangles, polygons",
-                "Triangles": "Properties, congruence, similarity, Pythagorean theorem",
-                "Quadrilaterals": "Properties of rectangles, squares, parallelograms, rhombus",
-                "Circles": "Circumference, area, arc length, sector area, circle theorems",
-                "Area and Perimeter": "Composite shapes, optimization problems",
-                "Volume and Surface Area": "3D shapes - prisms, pyramids, cylinders, spheres"
-            },
-            "Trigonometry": {
-                "Basic Trigonometry": "SOH-CAH-TOA, basic ratios in right triangles",
-                "Trigonometric Ratios": "sin, cos, tan for angles 0° to 360°",
-                "Solving Triangles": "Sine rule, cosine rule, area of triangles",
-                "Trigonometric Identities": "Basic identities, simplification",
-                "Graphs of Trigonometric Functions": "Amplitude, period, phase shifts"
-            },
-            "Statistics": {
-                "Data Collection": "Sampling methods, surveys, bias",
-                "Frequency Tables": "Grouped data, histograms, frequency polygons",
-                "Measures of Central Tendency": "Mean, median, mode for grouped and ungrouped data",
-                "Probability": "Basic probability, compound events, tree diagrams",
-                "Graphs and Charts": "Bar charts, pie charts, scatter plots",
-                "Correlation": "Positive/negative correlation, line of best fit"
-            },
-            "Number Theory": {
-                "Real Numbers": "Classification, operations, properties",
-                "Rational Numbers": "Fractions, decimals, percentage conversions",
-                "Irrational Numbers": "Surds, square roots, simplification",
-                "Number Sequences": "Arithmetic, geometric progressions",
-                "Indices and Logarithms": "Laws of indices, logarithmic equations",
-                "Standard Form": "Scientific notation, calculations"
-            },
-            "Calculus": {
-                "Functions": "Domain, range, composition, inverse functions",
-                "Limits": "Basic limits, continuity concepts",
-                "Differentiation": "Rules of differentiation, applications",
-                "Integration": "Basic integration, definite integrals",
-                "Applications of Calculus": "Rate of change, optimization",
-                "Curve Sketching": "Using derivatives to analyze graphs"
-            }
-        }
-
-        return guidelines.get(subject, {}).get(topic, f"Focus on {topic} concepts appropriate for ZIMSEC O-Level standard")
+        # Use Gemini API details here (placeholder, actual implementation needed)
+        # For now, we'll just call the DeepSeek fallback as a placeholder
+        logger.info(f"Switching to Gemini AI for graph question generation (topic: {topic})")
+        
+        # Fallback to DeepSeek for now
+        return self.generate_question(subject, topic, difficulty)
 
     def _send_api_request(self, prompt: str, timeout: int = 30) -> Optional[Dict]:
         """Send request to DeepSeek API with configurable timeout"""
