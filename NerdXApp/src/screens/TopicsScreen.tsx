@@ -214,7 +214,18 @@ const TopicsScreen: React.FC = () => {
 
         {/* Exam Quiz Card - Only show at top level */}
         {!currentParentSubject && (
-          <Card variant="gradient" gradientColors={[Colors.primary.main, Colors.primary.dark]} onPress={() => handleStartQuiz()} style={styles.examCard}>
+          <Card 
+            variant="gradient" 
+            gradientColors={[Colors.primary.main, Colors.primary.dark]} 
+            onPress={() => {
+              if (subject.id === 'combined_science') {
+                navigation.navigate('CombinedScienceExam' as never, { subject } as never);
+              } else {
+                handleStartQuiz();
+              }
+            }} 
+            style={styles.examCard}
+          >
             <View style={styles.examContent}>
               <IconCircle
                 icon={Icons.quiz(32, '#FFFFFF')}

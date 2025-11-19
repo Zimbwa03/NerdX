@@ -593,8 +593,24 @@ def generate_question():
             # Combined Science needs parent_subject (Biology/Chemistry/Physics) and topic (subtopic)
             parent_subject = data.get('parent_subject', 'Biology')  # Default to Biology if not specified
             
+            # Handle exam mode - randomly select from all topics across Biology, Chemistry, Physics
+            if question_type == 'exam':
+                from constants import TOPICS
+                import random
+                
+                # Randomly select a subject (Biology, Chemistry, or Physics)
+                science_subjects = ['Biology', 'Chemistry', 'Physics']
+                parent_subject = random.choice(science_subjects)
+                
+                # Randomly select a topic from the chosen subject
+                if parent_subject in TOPICS and len(TOPICS[parent_subject]) > 0:
+                    topic = random.choice(TOPICS[parent_subject])
+                else:
+                    topic = 'Cell Structure and Organisation'
+                    parent_subject = 'Biology'
+            
             # If topic is Biology/Chemistry/Physics itself, use default subtopic
-            if topic and topic.lower() in ['biology', 'chemistry', 'physics']:
+            elif topic and topic.lower() in ['biology', 'chemistry', 'physics']:
                 parent_subject = topic.capitalize()
                 # Use first subtopic as default
                 from constants import TOPICS

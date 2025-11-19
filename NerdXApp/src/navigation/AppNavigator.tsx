@@ -22,6 +22,7 @@ import ProjectAssistantScreen from '../screens/ProjectAssistantScreen';
 import GraphPracticeScreen from '../screens/GraphPracticeScreen';
 import EnglishComprehensionScreen from '../screens/EnglishComprehensionScreen';
 import EnglishEssayScreen from '../screens/EnglishEssayScreen';
+import CombinedScienceExamScreen from '../screens/CombinedScienceExamScreen';
 
 const Stack = createStackNavigator();
 
@@ -173,6 +174,14 @@ const AppNavigator: React.FC = () => {
               component={EnglishEssayScreen}
               options={{
                 title: 'Essay Writing',
+              }}
+            />
+            <Stack.Screen
+              name="CombinedScienceExam"
+              component={CombinedScienceExamScreen}
+              options={{
+                title: 'Combined Science Exam',
+                headerBackTitle: 'Back',
               }}
             />
           </Stack.Group>
