@@ -16,24 +16,6 @@ logger = logging.getLogger(__name__)
 
 
 class MathSolver:
-#!/usr/bin/env python3
-"""
-Mathematics Solution Analyzer using DeepSeek AI
-Provides detailed explanations and alternative solution methods
-"""
-
-import logging
-import os
-import json
-import requests
-import time
-from typing import Dict, List, Optional, Tuple
-from datetime import datetime
-
-logger = logging.getLogger(__name__)
-
-
-class MathSolver:
     """DeepSeek AI-powered mathematics solution analyzer"""
     
     def __init__(self):
