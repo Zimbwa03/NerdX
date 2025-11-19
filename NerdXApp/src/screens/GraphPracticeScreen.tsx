@@ -414,6 +414,9 @@ const GraphPracticeScreen: React.FC = () => {
                 source={{ uri: graphData.graph_url }}
                 style={styles.graphImage}
                 resizeMode="contain"
+                onError={(error) => {
+                  console.warn('Failed to load graph image:', error.nativeEvent.error);
+                }}
               />
             </View>
           )}

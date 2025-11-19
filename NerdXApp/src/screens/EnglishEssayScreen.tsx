@@ -91,6 +91,9 @@ const EnglishEssayScreen: React.FC = () => {
       source={require('../../assets/images/english_background.png')}
       style={styles.container}
       resizeMode="cover"
+      onError={(error) => {
+        console.warn('Failed to load background image:', error.nativeEvent.error);
+      }}
     >
       <LinearGradient
         colors={[Colors.gradients.primary[0], 'rgba(255,255,255,0.8)']}

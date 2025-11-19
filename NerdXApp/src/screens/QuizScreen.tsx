@@ -252,7 +252,13 @@ const QuizScreen: React.FC = () => {
             </TouchableOpacity>
             {answerImage && (
               <View style={styles.imagePreview}>
-                <Image source={{ uri: answerImage }} style={styles.uploadedImage} />
+                <Image 
+                  source={{ uri: answerImage }} 
+                  style={styles.uploadedImage}
+                  onError={(error) => {
+                    console.warn('Failed to load answer image:', error.nativeEvent.error);
+                  }}
+                />
                 <TouchableOpacity
                   style={styles.removeImageButton}
                   onPress={() => setAnswerImage(null)}

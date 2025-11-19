@@ -65,6 +65,9 @@ const LoginScreen: React.FC = () => {
       source={require('../../assets/images/login_background.png')}
       style={styles.backgroundImage}
       resizeMode="cover"
+      onError={(error) => {
+        console.warn('Failed to load background image:', error.nativeEvent.error);
+      }}
     >
       <LinearGradient
         colors={['rgba(98, 0, 234, 0.4)', 'rgba(0, 0, 0, 0.8)']}

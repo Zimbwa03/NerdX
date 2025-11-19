@@ -82,7 +82,14 @@ const DashboardScreen: React.FC = () => {
       activeOpacity={0.9}
     >
       <View style={styles.cardImageContainer}>
-        <Image source={imageSource} style={styles.cardImage} resizeMode="cover" />
+        <Image 
+          source={imageSource} 
+          style={styles.cardImage} 
+          resizeMode="cover"
+          onError={(error) => {
+            console.warn('Failed to load card image:', error.nativeEvent.error);
+          }}
+        />
         <LinearGradient
           colors={['transparent', 'rgba(0,0,0,0.7)']}
           style={styles.cardGradient}
