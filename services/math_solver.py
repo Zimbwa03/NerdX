@@ -16,6 +16,24 @@ logger = logging.getLogger(__name__)
 
 
 class MathSolver:
+#!/usr/bin/env python3
+"""
+Mathematics Solution Analyzer using DeepSeek AI
+Provides detailed explanations and alternative solution methods
+"""
+
+import logging
+import os
+import json
+import requests
+import time
+from typing import Dict, List, Optional, Tuple
+from datetime import datetime
+
+logger = logging.getLogger(__name__)
+
+
+class MathSolver:
     """DeepSeek AI-powered mathematics solution analyzer"""
     
     def __init__(self):
@@ -43,6 +61,106 @@ class MathSolver:
             logger.error(f"Error analyzing math answer: {e}")
             return self._generate_basic_feedback(user_answer, correct_answer, solution)
 
+    def get_progressive_hint(self, question: str, difficulty: str, level: int = 1) -> Optional[str]:
+        """Get a progressive hint based on the requested level (1-3)"""
+        try:
+            if not self.api_key:
+                hints = [
+                    "💡 Hint Level 1: Read the question carefully and identify the key values.",
+                    "💡 Hint Level 2: Think about which formula applies to this type of problem.",
+                    "💡 Hint Level 3: Break the problem down into smaller steps."
+                ]
+                return hints[min(level-1, 2)]
+                
+            hint_types = {
+                1: "Gentle Nudge: Give a small clue about where to start without revealing any steps.",
+                2: "Strategic Hint: Suggest a specific method, formula, or strategy to use.",
+                3: "Detailed Guidance: Explain the first step of the solution clearly."
+            }
+            
+            prompt = f"""You are MathMentor, an expert ZIMSEC mathematics tutor.
+            
+TASK: Provide a Level {level} hint for this problem.
+
+QUESTION: {question}
+DIFFICULTY: {difficulty}
+HINT TYPE: {hint_types.get(level, "General Hint")}
+
+REQUIREMENTS:
+1. STRICTLY follow the hint level description above.
+2. Be encouraging and professional.
+3. DO NOT solve the problem or give the final answer.
+4. Keep it short and clear (1-2 sentences).
+
+RESPONSE FORMAT:
+💡 Hint (Level {level}): [Your hint here]
+
+Provide your hint:"""
+
+            response = self._send_analysis_request(prompt)
+            
+            if response and isinstance(response, str):
+                return response
+            elif response and 'hint' in response:
+                return response['hint']
+                
+            return f"💡 Hint Level {level}: Review the topic concepts and try again."
+            
+        except Exception as e:
+            logger.error(f"Error generating progressive hint: {e}")
+            return "💡 Hint: Take your time and work through the problem step by step."
+
+    def get_worked_example(self, topic: str, difficulty: str) -> Optional[Dict]:
+        """Generate a similar worked example problem with solution"""
+        try:
+            if not self.api_key:
+                return None
+                
+            prompt = f"""You are MathMentor, expert ZIMSEC mathematics tutor.
+
+TASK: Create a WORKED EXAMPLE problem similar to {topic} at {difficulty} level.
+
+REQUIREMENTS:
+1. Create a NEW problem similar to typical {topic} exam questions.
+2. Provide a clear, step-by-step solution.
+3. Explain the 'Why' behind key steps.
+4. Make it educational and easy to follow.
+
+RESPONSE FORMAT (JSON):
+{{
+    "problem": "The example problem text",
+    "solution_steps": [
+        "Step 1: Explanation...",
+        "Step 2: Explanation...",
+        "Final Answer: ..."
+    ],
+    "key_concept": "The main concept demonstrated"
+}}
+
+Generate the worked example:"""
+
+            response = self._send_analysis_request(prompt)
+            
+            if response and isinstance(response, dict):
+                return response
+            elif response and isinstance(response, str):
+                # Try to parse if it came back as string
+                try:
+                    import json
+                    # Find JSON in string
+                    start = response.find('{')
+                    end = response.rfind('}') + 1
+                    if start >= 0 and end > start:
+                        return json.loads(response[start:end])
+                except:
+                    pass
+                    
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error generating worked example: {e}")
+            return None
+
     def get_alternative_solution(self, question: str, answer: str) -> Optional[str]:
         """Get alternative solution method using DeepSeek AI"""
         try:
@@ -50,7 +168,7 @@ class MathSolver:
                 return None
                 
             prompt = f"""You are MathMentor, expert ZIMSEC mathematics tutor. 
-
+            
 TASK: Provide an ALTERNATIVE solution method for this mathematics problem.
 
 QUESTION: {question}
@@ -165,6 +283,7 @@ ANALYSIS REQUIREMENTS:
 4. Identify specific errors or misconceptions
 5. Provide clear guidance for improvement
 6. Be encouraging and educational
+7. Suggest a related topic to practice if they got it wrong
 
 RESPONSE FORMAT (JSON):
 {{
@@ -174,7 +293,8 @@ RESPONSE FORMAT (JSON):
     "what_went_right": "What the student did correctly",
     "what_went_wrong": "Specific errors or misconceptions", 
     "improvement_tips": "Clear guidance for next time",
-    "encouragement": "Positive, motivating message"
+    "encouragement": "Positive, motivating message",
+    "related_topic": "Topic to practice next"
 }}
 
 Provide your analysis:"""
@@ -253,6 +373,7 @@ Provide your analysis:"""
             'what_went_wrong': analysis.get('what_went_wrong', ''),
             'improvement_tips': analysis.get('improvement_tips', ''),
             'encouragement': analysis.get('encouragement', 'Great effort!'),
+            'related_topic': analysis.get('related_topic', ''),
             'detailed_analysis': True
         }
 
@@ -315,39 +436,5 @@ Provide your analysis:"""
             return False
 
     def get_hint(self, question: str, difficulty: str) -> Optional[str]:
-        """Get a helpful hint for solving the problem"""
-        try:
-            if not self.api_key:
-                return "💡 Hint: Break the problem into smaller steps and work through each one carefully."
-                
-            prompt = f"""You are MathMentor, expert ZIMSEC mathematics tutor.
-
-TASK: Provide a helpful hint for this mathematics problem WITHOUT giving away the answer.
-
-QUESTION: {question}
-DIFFICULTY: {difficulty}
-
-REQUIREMENTS:
-1. Give a strategic hint, not the solution
-2. Point towards the first step or key insight
-3. Keep it appropriate for the difficulty level
-4. Be encouraging and supportive
-5. Don't reveal the actual answer
-
-RESPONSE FORMAT:
-💡 Hint: [Your strategic hint here]
-
-Provide your hint:"""
-
-            response = self._send_analysis_request(prompt)
-            
-            if response and isinstance(response, str):
-                return response
-            elif response and 'hint' in response:
-                return response['hint']
-                
-            return "💡 Hint: Start by identifying what you know and what you need to find. Then choose the appropriate mathematical method."
-            
-        except Exception as e:
-            logger.error(f"Error generating hint: {e}")
-            return "💡 Hint: Take your time and work through the problem step by step."
+        """Legacy method for backward compatibility - calls progressive hint level 1"""
+        return self.get_progressive_hint(question, difficulty, level=1)

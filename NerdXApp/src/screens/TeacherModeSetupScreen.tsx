@@ -1,4 +1,4 @@
-// Teacher Mode Setup Screen - Select subject, grade level, and topic
+// Teacher Mode Setup Screen - Professional UI Design
 import React, { useState } from 'react';
 import {
   View,
@@ -8,6 +8,7 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 
@@ -48,10 +49,22 @@ const TeacherModeSetupScreen: React.FC = () => {
 
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>👨‍🏫 Teacher Mode Setup</Text>
-        <Text style={styles.subtitle}>Configure your learning session</Text>
-      </View>
+      <LinearGradient
+        colors={['#4CAF50', '#388E3C']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
+        <View style={styles.headerContent}>
+          <View style={styles.avatarContainer}>
+            <Text style={styles.avatarIcon}>👨‍🏫</Text>
+          </View>
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.title}>Teacher Mode Setup</Text>
+            <Text style={styles.subtitle}>Configure your personalized learning session</Text>
+          </View>
+        </View>
+      </LinearGradient>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>1. Select Subject</Text>
@@ -107,9 +120,9 @@ const TeacherModeSetupScreen: React.FC = () => {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>3. Topic (Optional)</Text>
+        <Text style={styles.sectionTitle}>3. Specific Topic (Optional)</Text>
         <Text style={styles.sectionDescription}>
-          Leave empty to let the teacher suggest topics
+          Leave empty to let the AI teacher suggest topics for you
         </Text>
         <TouchableOpacity
           style={styles.topicButton}
@@ -162,110 +175,152 @@ const TeacherModeSetupScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F5F5F5',
   },
   header: {
-    backgroundColor: '#1976D2',
-    padding: 20,
     paddingTop: 50,
+    paddingBottom: 30,
+    paddingHorizontal: 20,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatarContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  avatarIcon: {
+    fontSize: 32,
+  },
+  headerTextContainer: {
+    flex: 1,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    marginBottom: 5,
+    marginBottom: 6,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#FFFFFF',
-    opacity: 0.9,
+    opacity: 0.95,
   },
   section: {
     padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    backgroundColor: '#FFFFFF',
+    marginBottom: 2,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#212121',
-    marginBottom: 15,
+    marginBottom: 12,
   },
   sectionDescription: {
     fontSize: 14,
     color: '#757575',
-    marginBottom: 10,
+    marginBottom: 16,
+    lineHeight: 20,
   },
   optionsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 12,
   },
   optionButton: {
     flex: 1,
     minWidth: '30%',
-    backgroundColor: '#F5F5F5',
-    borderRadius: 8,
-    padding: 15,
+    backgroundColor: '#F9F9F9',
+    borderRadius: 12,
+    padding: 16,
     alignItems: 'center',
     borderWidth: 2,
     borderColor: '#E0E0E0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   optionButtonSelected: {
-    backgroundColor: '#E3F2FD',
-    borderColor: '#1976D2',
+    backgroundColor: '#E8F5E9',
+    borderColor: '#4CAF50',
+    shadowColor: '#4CAF50',
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   optionText: {
-    fontSize: 16,
-    color: '#212121',
+    fontSize: 15,
+    color: '#424242',
     fontWeight: '500',
+    textAlign: 'center',
   },
   optionTextSelected: {
-    color: '#1976D2',
-    fontWeight: '600',
+    color: '#2E7D32',
+    fontWeight: '700',
   },
   topicButton: {
-    backgroundColor: '#F5F5F5',
-    borderRadius: 8,
-    padding: 15,
+    backgroundColor: '#F9F9F9',
+    borderRadius: 12,
+    padding: 16,
     borderWidth: 1,
     borderColor: '#E0E0E0',
   },
   topicButtonText: {
-    fontSize: 16,
-    color: '#212121',
+    fontSize: 15,
+    color: '#424242',
   },
   infoBox: {
-    backgroundColor: '#E3F2FD',
-    borderRadius: 8,
-    padding: 15,
+    backgroundColor: '#E8F5E9',
+    borderRadius: 12,
+    padding: 18,
     margin: 20,
+    marginTop: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#4CAF50',
   },
   infoTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1976D2',
-    marginBottom: 10,
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#2E7D32',
+    marginBottom: 12,
   },
   infoText: {
     fontSize: 14,
-    color: '#212121',
-    lineHeight: 20,
+    color: '#424242',
+    lineHeight: 22,
   },
   startButton: {
-    backgroundColor: '#1976D2',
-    borderRadius: 8,
-    padding: 15,
+    backgroundColor: '#4CAF50',
+    borderRadius: 12,
+    padding: 16,
     margin: 20,
+    marginTop: 12,
     alignItems: 'center',
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 6,
   },
   startButtonDisabled: {
     backgroundColor: '#BDBDBD',
+    shadowOpacity: 0,
+    elevation: 0,
   },
   startButtonText: {
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: 'bold',
+    letterSpacing: 0.5,
   },
 });
 

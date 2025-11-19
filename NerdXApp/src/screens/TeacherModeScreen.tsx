@@ -1,4 +1,4 @@
-// Teacher Mode Screen Component - Chatbot Interface
+// Teacher Mode Screen Component - Enhanced Chatbot Interface
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
@@ -6,15 +6,17 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  ScrollView,
+  FlatList,
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { teacherApi, TeacherSession } from '../services/api/teacherApi';
 import { useAuth } from '../context/AuthContext';
+import { TypingIndicator } from '../components/TypingIndicator';
 
 interface Message {
   id: string;
@@ -39,7 +41,7 @@ const TeacherModeScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [generatingNotes, setGeneratingNotes] = useState(false);
-  const scrollViewRef = useRef<ScrollView>(null);
+  const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
     startSession();
@@ -47,9 +49,11 @@ const TeacherModeScreen: React.FC = () => {
 
   useEffect(() => {
     // Auto-scroll to bottom when new messages arrive
-    setTimeout(() => {
-      scrollViewRef.current?.scrollToEnd({ animated: true });
-    }, 100);
+    if (messages.length > 0) {
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
   }, [messages]);
 
   const startSession = async () => {
@@ -182,43 +186,81 @@ const TeacherModeScreen: React.FC = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={90}
     >
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>👨‍🏫 Teacher Mode</Text>
-        <Text style={styles.headerSubtitle}>
-          {subject} • {gradeLevel}
-        </Text>
-        <Text style={styles.credits}>Credits: {user?.credits || 0}</Text>
-      </View>
-
-      <ScrollView
-        ref={scrollViewRef}
-        style={styles.messagesContainer}
-        contentContainerStyle={styles.messagesContent}
+      <LinearGradient
+        colors={['#1976D2', '#1565C0']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
       >
-        {messages.map((message) => (
-          <View
-            key={message.id}
-            style={[
-              styles.messageBubble,
-              message.role === 'user' ? styles.userMessage : styles.assistantMessage,
-            ]}
-          >
-            <Text
-              style={[
-                styles.messageText,
-                message.role === 'user' ? styles.userMessageText : styles.assistantMessageText,
-              ]}
-            >
-              {message.content}
+        <View style={styles.headerContent}>
+          <View style={styles.teacherAvatar}>
+            <Text style={styles.teacherAvatarText}>👨‍🏫</Text>
+          </View>
+          <View style={styles.headerInfo}>
+            <Text style={styles.headerTitle}>Teacher Mode</Text>
+            <Text style={styles.headerSubtitle}>
+              {subject} • {gradeLevel}
             </Text>
           </View>
-        ))}
-        {sending && (
-          <View style={[styles.messageBubble, styles.assistantMessage]}>
-            <ActivityIndicator size="small" color="#1976D2" />
+          <View style={styles.creditsContainer}>
+            <Text style={styles.credits}>{user?.credits || 0}</Text>
+            <Text style={styles.creditsLabel}>credits</Text>
+          </View>
+        </View>
+      </LinearGradient>
+
+      <FlatList
+        ref={flatListRef}
+        data={messages}
+        keyExtractor={(item) => item.id}
+        style={styles.messagesContainer}
+        contentContainerStyle={styles.messagesContent}
+        renderItem={({ item: message }) => (
+          <View
+            style={[
+              styles.messageRow,
+              message.role === 'user' ? styles.userMessageRow : styles.assistantMessageRow,
+            ]}
+          >
+            {message.role === 'assistant' && (
+              <View style={styles.assistantAvatarSmall}>
+                <Text style={styles.assistantAvatarSmallText}>👨‍🏫</Text>
+              </View>
+            )}
+            <View
+              style={[
+                styles.messageBubble,
+                message.role === 'user' ? styles.userMessage : styles.assistantMessage,
+              ]}
+            >
+              {message.role === 'user' ? (
+                <LinearGradient
+                  colors={['#1976D2', '#1565C0']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.userMessageGradient}
+                >
+                  <Text style={styles.userMessageText}>{message.content}</Text>
+                </LinearGradient>
+              ) : (
+                <Text style={styles.assistantMessageText}>{message.content}</Text>
+              )}
+            </View>
           </View>
         )}
-      </ScrollView>
+        ListFooterComponent={
+          sending ? (
+            <View style={[styles.messageRow, styles.assistantMessageRow]}>
+              <View style={styles.assistantAvatarSmall}>
+                <Text style={styles.assistantAvatarSmallText}>👨‍🏫</Text>
+              </View>
+              <View style={[styles.messageBubble, styles.assistantMessage]}>
+                <TypingIndicator />
+              </View>
+            </View>
+          ) : null
+        }
+      />
 
       <View style={styles.inputContainer}>
         <TouchableOpacity
@@ -263,90 +305,159 @@ const TeacherModeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F5F5F5',
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F5F5F5',
   },
   loadingText: {
     marginTop: 10,
     color: '#757575',
+    fontSize: 16,
   },
   header: {
-    backgroundColor: '#1976D2',
-    padding: 15,
     paddingTop: 50,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  teacherAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  teacherAvatarText: {
+    fontSize: 28,
+  },
+  headerInfo: {
+    flex: 1,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    marginBottom: 5,
+    marginBottom: 4,
   },
   headerSubtitle: {
     fontSize: 14,
     color: '#FFFFFF',
     opacity: 0.9,
-    marginBottom: 5,
+  },
+  creditsContainer: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   credits: {
-    fontSize: 12,
+    fontSize: 18,
+    fontWeight: 'bold',
     color: '#FFFFFF',
-    opacity: 0.8,
+  },
+  creditsLabel: {
+    fontSize: 11,
+    color: '#FFFFFF',
+    opacity: 0.9,
+    marginTop: 2,
   },
   messagesContainer: {
     flex: 1,
     backgroundColor: '#F5F5F5',
   },
   messagesContent: {
-    padding: 15,
+    padding: 16,
+    paddingBottom: 8,
+  },
+  messageRow: {
+    flexDirection: 'row',
+    marginBottom: 12,
+    alignItems: 'flex-end',
+  },
+  userMessageRow: {
+    justifyContent: 'flex-end',
+  },
+  assistantMessageRow: {
+    justifyContent: 'flex-start',
+  },
+  assistantAvatarSmall: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#E3F2FD',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  assistantAvatarSmallText: {
+    fontSize: 18,
   },
   messageBubble: {
-    maxWidth: '80%',
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 10,
+    maxWidth: '75%',
+    borderRadius: 16,
+    overflow: 'hidden',
   },
   userMessage: {
-    alignSelf: 'flex-end',
-    backgroundColor: '#1976D2',
+    borderBottomRightRadius: 4,
   },
   assistantMessage: {
-    alignSelf: 'flex-start',
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderBottomLeftRadius: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  messageText: {
-    fontSize: 16,
-    lineHeight: 22,
+  userMessageGradient: {
+    padding: 12,
+    paddingHorizontal: 16,
   },
   userMessageText: {
+    fontSize: 16,
+    lineHeight: 22,
     color: '#FFFFFF',
   },
   assistantMessageText: {
+    fontSize: 16,
+    lineHeight: 22,
     color: '#212121',
+    padding: 12,
+    paddingHorizontal: 16,
   },
   inputContainer: {
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#E0E0E0',
-    padding: 10,
+    padding: 12,
+    paddingBottom: 16,
   },
   notesButton: {
     backgroundColor: '#4CAF50',
-    borderRadius: 8,
-    padding: 10,
+    borderRadius: 12,
+    padding: 12,
     alignItems: 'center',
     marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
   },
   notesButtonText: {
     color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 15,
+    fontWeight: '600',
   },
   inputRow: {
     flexDirection: 'row',
@@ -356,23 +467,31 @@ const styles = StyleSheet.create({
     flex: 1,
     borderWidth: 1,
     borderColor: '#E0E0E0',
-    borderRadius: 20,
-    paddingHorizontal: 15,
+    borderRadius: 24,
+    paddingHorizontal: 16,
     paddingVertical: 10,
     maxHeight: 100,
     marginRight: 10,
     fontSize: 16,
+    backgroundColor: '#F9F9F9',
   },
   sendButton: {
     backgroundColor: '#1976D2',
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    borderRadius: 24,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
     justifyContent: 'center',
-    minHeight: 40,
+    minHeight: 48,
+    shadowColor: '#1976D2',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
   sendButtonDisabled: {
     backgroundColor: '#BDBDBD',
+    shadowOpacity: 0,
+    elevation: 0,
   },
   sendButtonText: {
     color: '#FFFFFF',
