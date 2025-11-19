@@ -104,7 +104,23 @@ class MathQuestionGenerator:
         """
         Generate a question using Gemini AI for graph-related topics.
         """
-        try:
+        # Define guidelines for Gemini AI graph questions
+        guidelines = {
+            "Algebra": {
+                "Linear Equations": "Focus on solving for unknowns, word problems involving linear relationships",
+                "Quadratic Equations": "Include factoring, completing the square, quadratic formula methods",
+                "Simultaneous Equations": "Use substitution and elimination methods, practical applications",
+                "Inequalities": "Include number line representations, compound inequalities",
+                "Factorization": "Cover common factors, difference of squares, trinomial factoring",
+                "Algebraic Expressions": "Simplification, substitution, expanding brackets",
+                "Graph - Linear Programming": """Generate questions in this EXACT format:\n\nAnswer the whole of this question on the grid on page 26.\n\n(a) Draw the graphs of these inequalities by shading the unwanted region.\n\n(i) [inequality 1, e.g., 2x+y≤40]\n(ii) [inequality 2, e.g., x+2y≤48] \n(iii) [inequality 3, e.g., x≥0]\n(iv) [inequality 4, e.g., y≥5]\n\n(b) Mark R the region defined by the four inequalities in (a).\n\nThe solution should explain how to plot each inequality and identify the feasible region R."""
+            },
+            "Geometry": {
+                "Angles": "Include angle relationships, parallel lines, triangles, polygons",
+                "Triangles": "Properties, congruence, similarity, Pythagorean theorem",
+                "Quadrilaterals": "Properties of rectangles, squares, parallelograms, rhombus"
+            }
+        }
             # Create prompt for Gemini AI, specifically for graph questions
             prompt = self._create_question_prompt(subject, topic, difficulty)
 

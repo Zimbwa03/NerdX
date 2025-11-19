@@ -132,7 +132,7 @@ const TopicsScreen: React.FC = () => {
       >
         <View style={styles.headerContent}>
           <View style={{ flex: 1 }}>
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => {
                 if (currentParentSubject) {
                   setCurrentParentSubject(undefined);
@@ -151,8 +151,8 @@ const TopicsScreen: React.FC = () => {
               {currentParentSubject ? currentParentSubject : subject.name}
             </Text>
             <Text style={styles.subtitle}>
-              {currentParentSubject 
-                ? 'Choose a subtopic to practice' 
+              {currentParentSubject
+                ? 'Choose a subtopic to practice'
                 : 'Choose a topic or start an exam'}
             </Text>
           </View>
@@ -238,29 +238,36 @@ const TopicsScreen: React.FC = () => {
         {topics.length === 0 && !loading && (
           <Text style={styles.noTopicsText}>No topics available</Text>
         )}
-        {topics.map((topic) => (
-          <Card
-            key={topic.id}
-            variant="elevated"
-            onPress={() => handleTopicPress(topic)}
-            style={styles.topicCard}
-          >
-            <View style={styles.topicContent}>
-              <IconCircle
-                icon={getTopicIcon(topic, subject.id)}
-                size={40}
-                backgroundColor={getTopicIconBg(topic, subject.id)}
-              />
-              <View style={styles.topicInfo}>
-                <Text style={styles.topicName}>{topic.name}</Text>
-                {topic.is_parent && (
-                  <Text style={styles.topicSubtitle}>Tap to view subtopics</Text>
-                )}
+        {topics
+          .filter((topic) => {
+            if (subject.id === 'english' && topic.name === 'Comprehension Skills') {
+              return false;
+            }
+            return true;
+          })
+          .map((topic) => (
+            <Card
+              key={topic.id}
+              variant="elevated"
+              onPress={() => handleTopicPress(topic)}
+              style={styles.topicCard}
+            >
+              <View style={styles.topicContent}>
+                <IconCircle
+                  icon={getTopicIcon(topic, subject.id)}
+                  size={40}
+                  backgroundColor={getTopicIconBg(topic, subject.id)}
+                />
+                <View style={styles.topicInfo}>
+                  <Text style={styles.topicName}>{topic.name}</Text>
+                  {topic.is_parent && (
+                    <Text style={styles.topicSubtitle}>Tap to view subtopics</Text>
+                  )}
+                </View>
+                {Icons.arrowRight(24, Colors.text.secondary)}
               </View>
-              {Icons.arrowRight(24, Colors.text.secondary)}
-            </View>
-          </Card>
-        ))}
+            </Card>
+          ))}
       </View>
     </ScrollView>
   );
@@ -288,9 +295,9 @@ const getTopicIcon = (topic: Topic, subjectId: string): React.ReactNode => {
   }
   if (subjectId === 'english') {
     if (topic.name.toLowerCase().includes('grammar')) {
-      return Icons.english(24, Colors.primary.main);
+      return Icons.grammar(24, Colors.primary.main);
     } else if (topic.name.toLowerCase().includes('vocabulary')) {
-      return Icons.english(24, Colors.primary.main);
+      return Icons.vocabulary(24, Colors.primary.main);
     }
   }
   return Icons.quiz(24, Colors.primary.main);

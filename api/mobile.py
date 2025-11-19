@@ -583,12 +583,13 @@ def generate_question():
             
             question_data = math_generator.generate_question('Mathematics', topic or 'Algebra', difficulty, g.current_user_id)
             
-            # Generate hint for math questions
-            if question_data:
+            # Generate hint for math questions if not already present
+            if question_data and not question_data.get('hint_level_1'):
                 math_solver = MathSolver()
                 hint = math_solver.get_hint(question_data.get('question', ''), difficulty)
                 if hint:
-                    question_data['hint'] = hint
+                    question_data['hint_level_1'] = hint
+                    
         elif subject == 'combined_science':
             # Combined Science needs parent_subject (Biology/Chemistry/Physics) and topic (subtopic)
             parent_subject = data.get('parent_subject', 'Biology')  # Default to Biology if not specified
@@ -671,7 +672,16 @@ def generate_question():
             'topic': topic or '',
             'difficulty': difficulty,
             'allows_text_input': subject == 'mathematics' or question_type_mobile == 'short_answer',
-            'allows_image_upload': subject == 'mathematics'  # Math questions support image upload
+            'allows_image_upload': subject == 'mathematics',  # Math questions support image upload
+            
+            # New AI Tutor Fields
+            'concept_explanation': question_data.get('concept_explanation', ''),
+            'worked_example': question_data.get('worked_example', None),
+            'hint_level_1': question_data.get('hint_level_1', ''),
+            'hint_level_2': question_data.get('hint_level_2', ''),
+            'hint_level_3': question_data.get('hint_level_3', ''),
+            'common_mistakes': question_data.get('common_mistakes', []),
+            'learning_objective': question_data.get('learning_objective', '')
         }
         
         return jsonify({
@@ -697,6 +707,7 @@ def submit_answer():
         correct_answer = data.get('correct_answer', '')
         solution = data.get('solution', '')
         hint = data.get('hint', '')
+        question_text = data.get('question_text', '') # Need question text for AI analysis
         
         if not question_id:
             return jsonify({'success': False, 'message': 'Question ID is required'}), 400
@@ -708,51 +719,54 @@ def submit_answer():
         is_correct = False
         feedback = ''
         detailed_solution = solution or 'No solution provided'
+        analysis_result = {}
         
         if subject == 'mathematics':
             from services.math_solver import MathSolver
             math_solver = MathSolver()
             
-            if image_url:
-                # Process image answer using OCR
-                from services.image_service import ImageService
-                image_service = ImageService()
-                # Extract text from image (simplified - would need actual image processing)
-                extracted_text = answer  # Placeholder - would extract from image
-                # Use simple comparison for now
-                user_clean = str(extracted_text).strip().lower()
-                correct_clean = str(correct_answer).strip().lower()
-                is_correct = user_clean == correct_clean
+            # Use the enhanced analyze_answer method
+            # If we have the question text, we can get a full analysis
+            if question_text:
+                analysis_result = math_solver.analyze_answer(
+                    question_text,
+                    answer if answer else "Image Answer",
+                    correct_answer,
+                    solution
+                )
+                is_correct = analysis_result.get('is_correct', False)
+                feedback = analysis_result.get('feedback', '')
             else:
-                # Compare text answer using math solver's comparison logic
-                user_clean = str(answer).strip().lower()
-                correct_clean = str(correct_answer).strip().lower()
-                
-                # Direct comparison
-                if user_clean == correct_clean:
-                    is_correct = True
+                # Fallback to simple comparison if question text missing
+                if image_url:
+                    # Process image answer using OCR
+                    from services.image_service import ImageService
+                    image_service = ImageService()
+                    # Extract text from image (simplified - would need actual image processing)
+                    extracted_text = answer  # Placeholder - would extract from image
+                    # Use simple comparison for now
+                    user_clean = str(extracted_text).strip().lower()
+                    correct_clean = str(correct_answer).strip().lower()
+                    is_correct = user_clean == correct_clean
                 else:
-                    # Try numerical comparison
-                    try:
-                        import re
-                        # Extract numbers from answers
-                        user_num = float(re.sub(r'[^\d.]', '', user_clean))
-                        correct_num = float(re.sub(r'[^\d.]', '', correct_clean))
-                        is_correct = abs(user_num - correct_num) < 0.001
-                    except:
-                        # Try string variations
-                        variations = [
-                            user_clean.replace(' ', ''),
-                            user_clean.replace('x=', ''),
-                            user_clean.replace('=', ''),
-                            user_clean.replace(',', '.'),
-                        ]
-                        is_correct = any(v == correct_clean for v in variations)
-            
+                    # Compare text answer using math solver's comparison logic
+                    # We can use the internal helper if we want, or just replicate logic
+                    # But better to use analyze_answer even with dummy question if needed
+                    analysis_result = math_solver.analyze_answer(
+                        "Question not provided",
+                        answer,
+                        correct_answer,
+                        solution
+                    )
+                    is_correct = analysis_result.get('is_correct', False)
+                    feedback = analysis_result.get('feedback', '')
+
             if is_correct:
-                feedback = '✅ Excellent! Your answer is correct!'
+                if not feedback:
+                    feedback = '✅ Excellent! Your answer is correct!'
             else:
-                feedback = '❌ Not quite right. Review the solution below to understand the correct approach.'
+                if not feedback:
+                    feedback = '❌ Not quite right. Review the solution below to understand the correct approach.'
         else:
             # For other subjects, simple string comparison
             if answer.lower().strip() == str(correct_answer).lower().strip():
@@ -776,7 +790,14 @@ def submit_answer():
                 'solution': detailed_solution,
                 'hint': hint if not is_correct else '',
                 'points_earned': points_earned,
-                'credits_used': 0  # Already deducted
+                'credits_used': 0,  # Already deducted
+                
+                # Enhanced feedback fields
+                'what_went_right': analysis_result.get('what_went_right', ''),
+                'what_went_wrong': analysis_result.get('what_went_wrong', ''),
+                'improvement_tips': analysis_result.get('improvement_tips', ''),
+                'encouragement': analysis_result.get('encouragement', ''),
+                'related_topic': analysis_result.get('related_topic', '')
             }
         }), 200
         

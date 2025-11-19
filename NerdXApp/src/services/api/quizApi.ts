@@ -30,6 +30,19 @@ export interface Question {
   difficulty: string;
   allows_text_input?: boolean;
   allows_image_upload?: boolean;
+
+  // AI Tutor Fields
+  concept_explanation?: string;
+  worked_example?: {
+    problem: string;
+    solution_steps: string[];
+    key_concept: string;
+  };
+  hint_level_1?: string;
+  hint_level_2?: string;
+  hint_level_3?: string;
+  common_mistakes?: string[];
+  learning_objective?: string;
 }
 
 export interface AnswerResult {
@@ -39,6 +52,13 @@ export interface AnswerResult {
   hint?: string;
   points_earned: number;
   credits_used: number;
+
+  // Enhanced Feedback
+  what_went_right?: string;
+  what_went_wrong?: string;
+  improvement_tips?: string;
+  encouragement?: string;
+  related_topic?: string;
 }
 
 export const quizApi = {
