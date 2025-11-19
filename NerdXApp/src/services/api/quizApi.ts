@@ -23,15 +23,20 @@ export interface Question {
   options?: string[];
   correct_answer: string;
   solution: string;
+  hint?: string;
+  explanation?: string;
   points: number;
   topic: string;
   difficulty: string;
+  allows_text_input?: boolean;
+  allows_image_upload?: boolean;
 }
 
 export interface AnswerResult {
   correct: boolean;
   feedback: string;
   solution: string;
+  hint?: string;
   points_earned: number;
   credits_used: number;
 }
@@ -88,13 +93,28 @@ export const quizApi = {
 
   submitAnswer: async (
     questionId: string,
-    answer: string
+    answer: string,
+    imageUrl?: string,
+    subject?: string,
+    correctAnswer?: string,
+    solution?: string,
+    hint?: string
   ): Promise<AnswerResult | null> => {
     try {
-      const response = await api.post('/api/mobile/quiz/submit-answer', {
+      const payload: any = {
         question_id: questionId,
         answer,
-      });
+      };
+      if (imageUrl) {
+        payload.image_url = imageUrl;
+      }
+      if (subject) {
+        payload.subject = subject;
+        payload.correct_answer = correctAnswer;
+        payload.solution = solution;
+        payload.hint = hint;
+      }
+      const response = await api.post('/api/mobile/quiz/submit-answer', payload);
       return response.data.data || null;
     } catch (error: any) {
       console.error('Submit answer error:', error);

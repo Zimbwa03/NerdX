@@ -569,8 +569,26 @@ def generate_question():
         
         if subject == 'mathematics':
             from services.math_question_generator import MathQuestionGenerator
+            from services.math_solver import MathSolver
             math_generator = MathQuestionGenerator()
+            
+            # For exam mode, select random topic if no topic specified
+            if question_type == 'exam' and not topic:
+                from constants import TOPICS
+                import random
+                math_topics = TOPICS.get('Mathematics', [])
+                if math_topics:
+                    topic = random.choice(math_topics)
+                    topic = topic.lower().replace(' ', '_')
+            
             question_data = math_generator.generate_question('Mathematics', topic or 'Algebra', difficulty, g.current_user_id)
+            
+            # Generate hint for math questions
+            if question_data:
+                math_solver = MathSolver()
+                hint = math_solver.get_hint(question_data.get('question', ''), difficulty)
+                if hint:
+                    question_data['hint'] = hint
         elif subject == 'combined_science':
             # Combined Science needs parent_subject (Biology/Chemistry/Physics) and topic (subtopic)
             parent_subject = data.get('parent_subject', 'Biology')  # Default to Biology if not specified
@@ -627,24 +645,33 @@ def generate_question():
             # Get solution/explanation
             solution = question_data.get('solution') or question_data.get('explanation') or question_data.get('feedback', '')
         else:
-            # For other subjects, use standard format
+            # For other subjects (including Mathematics), use standard format
             options = question_data.get('options', [])
             if isinstance(options, dict):
                 options = [options.get(k, '') for k in sorted(options.keys()) if options.get(k)]
             correct_answer = question_data.get('answer', '') or question_data.get('correct_answer', '')
             solution = question_data.get('solution', '') or question_data.get('explanation', '')
         
+        # For Mathematics, ensure it's treated as short_answer type (allows text input)
+        question_type_mobile = question_data.get('question_type', '') or question_data.get('type', 'short_answer')
+        if subject == 'mathematics' and not options:
+            question_type_mobile = 'short_answer'  # Math questions allow text input
+        
         # Format question for mobile
         question = {
             'id': str(uuid.uuid4()),
             'question_text': question_data.get('question', '') or question_data.get('question_text', ''),
-            'question_type': question_data.get('question_type', '') or question_data.get('type', 'short_answer'),
+            'question_type': question_type_mobile,
             'options': options if isinstance(options, list) else [],
             'correct_answer': correct_answer,
             'solution': solution,
+            'hint': question_data.get('hint', '') if subject == 'mathematics' else '',
+            'explanation': question_data.get('explanation', ''),
             'points': question_data.get('points', 10),
             'topic': topic or '',
-            'difficulty': difficulty
+            'difficulty': difficulty,
+            'allows_text_input': subject == 'mathematics' or question_type_mobile == 'short_answer',
+            'allows_image_upload': subject == 'mathematics'  # Math questions support image upload
         }
         
         return jsonify({
@@ -660,20 +687,80 @@ def generate_question():
 @mobile_bp.route('/quiz/submit-answer', methods=['POST'])
 @require_auth
 def submit_answer():
-    """Submit answer and get feedback"""
+    """Submit answer and get feedback with enhanced math support"""
     try:
         data = request.get_json()
         question_id = data.get('question_id')
         answer = data.get('answer', '').strip()
+        image_url = data.get('image_url', '')  # For image-based answers
+        subject = data.get('subject', '')
+        correct_answer = data.get('correct_answer', '')
+        solution = data.get('solution', '')
+        hint = data.get('hint', '')
         
-        if not question_id or not answer:
-            return jsonify({'success': False, 'message': 'Question ID and answer are required'}), 400
+        if not question_id:
+            return jsonify({'success': False, 'message': 'Question ID is required'}), 400
         
-        # TODO: Retrieve question and verify answer
-        # For now, return mock feedback
+        if not answer and not image_url:
+            return jsonify({'success': False, 'message': 'Answer (text or image) is required'}), 400
         
-        # Check if answer is correct (simplified)
-        is_correct = True  # Implement actual checking
+        # For math questions, use MathSolver to evaluate
+        is_correct = False
+        feedback = ''
+        detailed_solution = solution or 'No solution provided'
+        
+        if subject == 'mathematics':
+            from services.math_solver import MathSolver
+            math_solver = MathSolver()
+            
+            if image_url:
+                # Process image answer using OCR
+                from services.image_service import ImageService
+                image_service = ImageService()
+                # Extract text from image (simplified - would need actual image processing)
+                extracted_text = answer  # Placeholder - would extract from image
+                # Use simple comparison for now
+                user_clean = str(extracted_text).strip().lower()
+                correct_clean = str(correct_answer).strip().lower()
+                is_correct = user_clean == correct_clean
+            else:
+                # Compare text answer using math solver's comparison logic
+                user_clean = str(answer).strip().lower()
+                correct_clean = str(correct_answer).strip().lower()
+                
+                # Direct comparison
+                if user_clean == correct_clean:
+                    is_correct = True
+                else:
+                    # Try numerical comparison
+                    try:
+                        import re
+                        # Extract numbers from answers
+                        user_num = float(re.sub(r'[^\d.]', '', user_clean))
+                        correct_num = float(re.sub(r'[^\d.]', '', correct_clean))
+                        is_correct = abs(user_num - correct_num) < 0.001
+                    except:
+                        # Try string variations
+                        variations = [
+                            user_clean.replace(' ', ''),
+                            user_clean.replace('x=', ''),
+                            user_clean.replace('=', ''),
+                            user_clean.replace(',', '.'),
+                        ]
+                        is_correct = any(v == correct_clean for v in variations)
+            
+            if is_correct:
+                feedback = '✅ Excellent! Your answer is correct!'
+            else:
+                feedback = '❌ Not quite right. Review the solution below to understand the correct approach.'
+        else:
+            # For other subjects, simple string comparison
+            if answer.lower().strip() == str(correct_answer).lower().strip():
+                is_correct = True
+                feedback = '✅ Correct!'
+            else:
+                is_correct = False
+                feedback = '❌ Incorrect. The correct answer is shown below.'
         
         points_earned = 10 if is_correct else 0
         
@@ -685,8 +772,9 @@ def submit_answer():
             'success': True,
             'data': {
                 'correct': is_correct,
-                'feedback': 'Correct!' if is_correct else 'Incorrect. Try again!',
-                'solution': 'Solution explanation here',
+                'feedback': feedback,
+                'solution': detailed_solution,
+                'hint': hint if not is_correct else '',
                 'points_earned': points_earned,
                 'credits_used': 0  # Already deducted
             }
