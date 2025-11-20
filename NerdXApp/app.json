@@ -3,7 +3,6 @@
     "name": "NerdXApp",
     "slug": "nerdxapp",
     "version": "1.0.0",
-    "main": "index.js",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -31,9 +30,12 @@
     },
     "extra": {
       "eas": {
-        "projectId": "74c75bf5-e999-4e83-ab71-7a6487b3757a"
+        "projectId": "ed536667-766a-4eb1-bc51-8825d97e6c89"
       }
     },
-    "owner": "neezy"
+    "owner": "nerdx",
+    "plugins": [
+      "expo-font"
+    ]
   }
 }
