@@ -20,9 +20,11 @@ sqlalchemy>=2.0.0
 oauthlib>=3.2.0
 pyjwt>=2.8.0
 email-validator>=2.2.0
+bcrypt
 
 # AI and Machine Learning
 google-generativeai>=0.8.0
+google-genai
 openai>=1.0.0
 sympy>=1.12
 
@@ -38,13 +40,18 @@ imgbbpy>=0.1.0
 
 # Document Processing
 pypdf>=4.0.0
+PyPDF2
 reportlab>=4.0.0
+python-docx
 
 # Audio and Speech
 speechrecognition>=3.10.0
 
 # HTTP and API
 requests>=2.31.0
+
+# Payment Integration
+paynow
 
 # Additional Utilities
 python-dotenv>=1.0.0
@@ -53,28 +60,3 @@ python-dateutil>=2.8.0
 # Development and Testing (optional for production)
 pytest>=7.4.0
 pytest-cov>=4.1.0
-bcrypt
-email_validator
-flask
-flask-sqlalchemy
-gunicorn
-psycopg2-binary
-google-genai
-PyPDF2
-paynow
-email_validator
-flask
-flask-sqlalchemy
-gunicorn
-psycopg2-binary
-python-docx
-email_validator
-flask
-flask-sqlalchemy
-gunicorn
-psycopg2-binary
-email_validator
-flask
-flask-sqlalchemy
-gunicorn
-psycopg2-binary

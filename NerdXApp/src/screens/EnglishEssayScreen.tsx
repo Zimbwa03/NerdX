@@ -16,35 +16,53 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { englishApi, EssayResult } from '../services/api/englishApi';
+import { englishApi, EssayResult, EssayPrompt } from '../services/api/englishApi';
 import { useAuth } from '../context/AuthContext';
 import { Colors } from '../theme/colors';
 
 const EnglishEssayScreen: React.FC = () => {
   const navigation = useNavigation();
   const { user, updateUser } = useAuth();
-  const [prompt, setPrompt] = useState('');
+  const [prompt, setPrompt] = useState<EssayPrompt | null>(null);
   const [essayText, setEssayText] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<EssayResult | null>(null);
+  const [availablePrompts, setAvailablePrompts] = useState<EssayPrompt[]>([]);
 
-  const samplePrompts = [
-    'Write an essay about the importance of education in Zimbabwe',
-    'Describe a memorable event from your childhood',
-    'Discuss the impact of technology on modern society',
-    'Write about the benefits of reading',
-    'Describe your ideal future career',
-  ];
+  const handleGeneratePrompt = async () => {
+    setLoading(true);
+    try {
+      const prompts = await englishApi.generateEssayPrompts();
+      if (prompts && prompts.length > 0) {
+        setAvailablePrompts(prompts);
+        // Pick random one initially
+        const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)];
+        setPrompt(randomPrompt);
+      } else {
+        // Fallback
+        setPrompt({
+          title: 'A Day I Will Never Forget',
+          description: 'Write about a memorable day in your life.',
+          type: 'narrative',
+          suggested_length: '350-400 words'
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'Failed to generate prompts');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const handleGeneratePrompt = () => {
-    const randomPrompt = samplePrompts[Math.floor(Math.random() * samplePrompts.length)];
-    setPrompt(randomPrompt);
+  const handleSelectPrompt = (selected: EssayPrompt) => {
+    setPrompt(selected);
   };
 
   const handleSubmit = async () => {
-    if (!prompt.trim() || !essayText.trim()) {
-      Alert.alert('Error', 'Please enter both prompt and essay text');
+    if (!prompt || !essayText.trim()) {
+      Alert.alert('Error', 'Please select a prompt and write your essay');
       return;
     }
 
@@ -64,7 +82,8 @@ const EnglishEssayScreen: React.FC = () => {
 
     try {
       setSubmitting(true);
-      const essayResult = await englishApi.submitEssay(prompt.trim(), essayText.trim());
+      const promptText = `${prompt.title}\n\n${prompt.description}`;
+      const essayResult = await englishApi.submitEssay(promptText, essayText.trim());
       if (essayResult) {
         setResult(essayResult);
         // Update credits
@@ -81,7 +100,7 @@ const EnglishEssayScreen: React.FC = () => {
   };
 
   const handleNewEssay = () => {
-    setPrompt('');
+    setPrompt(null);
     setEssayText('');
     setResult(null);
   };
@@ -121,27 +140,63 @@ const EnglishEssayScreen: React.FC = () => {
                 >
                   <View style={styles.promptHeader}>
                     <Text style={styles.label}>Essay Prompt</Text>
-                    <TouchableOpacity style={styles.generatePromptButton} onPress={handleGeneratePrompt}>
+                    <TouchableOpacity
+                      style={styles.generatePromptButton}
+                      onPress={handleGeneratePrompt}
+                      disabled={loading}
+                    >
                       <LinearGradient
                         colors={Colors.gradients.secondary}
                         style={styles.smallGradientButton}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
                       >
-                        <Ionicons name="shuffle" size={14} color="#FFF" style={{ marginRight: 4 }} />
-                        <Text style={styles.generatePromptText}>Random</Text>
+                        {loading ? (
+                          <ActivityIndicator size="small" color="#FFF" />
+                        ) : (
+                          <>
+                            <Ionicons name="shuffle" size={14} color="#FFF" style={{ marginRight: 4 }} />
+                            <Text style={styles.generatePromptText}>New Prompts</Text>
+                          </>
+                        )}
                       </LinearGradient>
                     </TouchableOpacity>
                   </View>
-                  <TextInput
-                    style={styles.promptInput}
-                    value={prompt}
-                    onChangeText={setPrompt}
-                    placeholder="Enter essay prompt or use random prompt..."
-                    placeholderTextColor="#9E9E9E"
-                    multiline
-                    maxLength={500}
-                  />
+
+                  {prompt ? (
+                    <View>
+                      <Text style={styles.promptTitle}>{prompt.title}</Text>
+                      <Text style={styles.promptDescription}>{prompt.description}</Text>
+                      <View style={styles.promptMeta}>
+                        <Text style={styles.promptType}>{prompt.type}</Text>
+                        <Text style={styles.promptLength}>{prompt.suggested_length}</Text>
+                      </View>
+                      {prompt.context_notes && (
+                        <View style={styles.contextBox}>
+                          <Text style={styles.contextLabel}>Context Notes:</Text>
+                          <Text style={styles.contextText}>{prompt.context_notes}</Text>
+                        </View>
+                      )}
+                    </View>
+                  ) : (
+                    <Text style={styles.placeholderText}>Tap 'New Prompts' to generate essay topics.</Text>
+                  )}
+
+                  {availablePrompts.length > 0 && (
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.promptList}>
+                      {availablePrompts.map((p, index) => (
+                        <TouchableOpacity
+                          key={index}
+                          style={[styles.promptChip, prompt?.title === p.title && styles.activePromptChip]}
+                          onPress={() => handleSelectPrompt(p)}
+                        >
+                          <Text style={[styles.promptChipText, prompt?.title === p.title && styles.activePromptChipText]}>
+                            {p.type}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  )}
                 </LinearGradient>
               </View>
 
@@ -175,15 +230,15 @@ const EnglishEssayScreen: React.FC = () => {
               <TouchableOpacity
                 style={[
                   styles.submitButton,
-                  (!prompt.trim() || !essayText.trim() || essayText.length < 100 || submitting) &&
+                  (!prompt || !essayText.trim() || essayText.length < 100 || submitting) &&
                   styles.submitButtonDisabled,
                 ]}
                 onPress={handleSubmit}
-                disabled={!prompt.trim() || !essayText.trim() || essayText.length < 100 || submitting}
+                disabled={!prompt || !essayText.trim() || essayText.length < 100 || submitting}
               >
                 <LinearGradient
                   colors={
-                    !prompt.trim() || !essayText.trim() || essayText.length < 100 || submitting
+                    !prompt || !essayText.trim() || essayText.length < 100 || submitting
                       ? ['#BDBDBD', '#9E9E9E']
                       : Colors.gradients.primary
                   }
@@ -463,6 +518,82 @@ const styles = StyleSheet.create({
   newEssayButtonText: {
     color: '#FFF',
     fontSize: 16,
+    fontWeight: 'bold',
+  },
+  promptTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.primary,
+    marginBottom: 8,
+  },
+  promptDescription: {
+    fontSize: 16,
+    color: Colors.text.primary,
+    marginBottom: 10,
+    lineHeight: 22,
+  },
+  promptMeta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  promptType: {
+    fontSize: 12,
+    color: Colors.text.secondary,
+    textTransform: 'uppercase',
+    fontWeight: 'bold',
+  },
+  promptLength: {
+    fontSize: 12,
+    color: Colors.text.secondary,
+    fontStyle: 'italic',
+  },
+  contextBox: {
+    backgroundColor: 'rgba(33, 150, 243, 0.1)',
+    padding: 10,
+    borderRadius: 8,
+    marginTop: 5,
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.primary,
+  },
+  contextLabel: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: Colors.primary,
+    marginBottom: 4,
+  },
+  contextText: {
+    fontSize: 14,
+    color: Colors.text.primary,
+    fontStyle: 'italic',
+  },
+  placeholderText: {
+    fontSize: 14,
+    color: Colors.text.secondary,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    marginVertical: 20,
+  },
+  promptList: {
+    marginTop: 15,
+    flexDirection: 'row',
+  },
+  promptChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+    backgroundColor: '#F0F0F0',
+    marginRight: 8,
+  },
+  activePromptChip: {
+    backgroundColor: Colors.primary,
+  },
+  promptChipText: {
+    fontSize: 12,
+    color: Colors.text.secondary,
+  },
+  activePromptChipText: {
+    color: '#FFF',
     fontWeight: 'bold',
   },
 });

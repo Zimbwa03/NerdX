@@ -17,6 +17,7 @@ from database.external_db import (
 from services.advanced_credit_service import advanced_credit_service
 from services.question_service import QuestionService
 from services.mathematics_service import MathematicsService
+from services.mathematics_teacher_service import mathematics_teacher_service
 from services.combined_science_generator import CombinedScienceGenerator
 from services.english_service import EnglishService
 from services.referral_service import ReferralService
@@ -1338,6 +1339,26 @@ def generate_comprehension():
         error_message = str(e) if str(e) else 'Server error'
         return jsonify({'success': False, 'message': f'Failed to generate comprehension: {error_message}'}), 500
 
+@mobile_bp.route('/english/essay/prompts', methods=['GET'])
+@require_auth
+def get_essay_prompts():
+    """Get essay prompts"""
+    try:
+        # Check credits (optional, maybe free or low cost?)
+        # Let's make it free for now as it encourages usage
+        
+        english_service = EnglishService()
+        result = english_service.generate_essay_prompts()
+        
+        return jsonify({
+            'success': True,
+            'data': result.get('prompts', [])
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get essay prompts error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 @mobile_bp.route('/english/essay', methods=['POST'])
 @require_auth
 def submit_essay():
@@ -1400,6 +1421,80 @@ def get_essay_report(essay_id):
         logger.error(f"Get essay report error: {e}", exc_info=True)
         error_message = str(e) if str(e) else 'Server error'
         return jsonify({'success': False, 'message': f'Failed to get essay report: {error_message}'}), 500
+
+@mobile_bp.route('/english/comprehension/grade', methods=['POST'])
+@require_auth
+def grade_comprehension():
+    """Grade comprehension answers"""
+    try:
+        data = request.get_json()
+        passage = data.get('passage', '')
+        questions = data.get('questions', [])
+        answers = data.get('answers', {})
+        
+        if not passage or not questions or not answers:
+            return jsonify({'success': False, 'message': 'Missing required data'}), 400
+            
+        # Check credits
+        credit_cost = advanced_credit_service.get_credit_cost('english_comprehension_grading')
+        user_credits = get_user_credits(g.current_user_id) or 0
+        
+        if user_credits < credit_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {credit_cost}'
+            }), 400
+            
+        english_service = EnglishService()
+        result = english_service.grade_comprehension_answers(passage, questions, answers)
+        
+        deduct_credits(g.current_user_id, credit_cost, 'english_comprehension_grading', 'English comprehension grading')
+        
+        return jsonify({
+            'success': True,
+            'data': result
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Grade comprehension error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@mobile_bp.route('/english/summary/grade', methods=['POST'])
+@require_auth
+def grade_summary():
+    """Grade summary writing"""
+    try:
+        data = request.get_json()
+        passage = data.get('passage', '')
+        prompt = data.get('prompt', '')
+        summary = data.get('summary', '')
+        
+        if not passage or not prompt or not summary:
+            return jsonify({'success': False, 'message': 'Missing required data'}), 400
+            
+        # Check credits
+        credit_cost = advanced_credit_service.get_credit_cost('english_summary_grading')
+        user_credits = get_user_credits(g.current_user_id) or 0
+        
+        if user_credits < credit_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {credit_cost}'
+            }), 400
+            
+        english_service = EnglishService()
+        result = english_service.grade_summary(passage, prompt, summary)
+        
+        deduct_credits(g.current_user_id, credit_cost, 'english_summary_grading', 'English summary grading')
+        
+        return jsonify({
+            'success': True,
+            'data': result
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Grade summary error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 # ============================================================================
 # IMAGE ENDPOINTS
@@ -1674,87 +1769,129 @@ def generate_teacher_notes():
         return jsonify({'success': False, 'message': f'Failed to generate notes: {error_message}'}), 500
 
 # ============================================================================
-# PROJECT ASSISTANT ENDPOINTS
+# PROJECT ASSISTANT ENDPOINTS (Database-Backed)
 # ============================================================================
 
-@mobile_bp.route('/project/start', methods=['POST'])
+@mobile_bp.route('/project/create', methods=['POST'])
 @require_auth
-def start_project_assistant():
-    """Start Project Assistant session"""
+def create_project():
+    """Create a new project"""
     try:
         data = request.get_json()
-        project_title = data.get('project_title', '')
+        title = data.get('title', '')
         subject = data.get('subject', '')
+        student_name = data.get('student_name', '')
+        student_surname = data.get('student_surname', '')
+        school = data.get('school', '')
+        form_level = data.get('form', '')
         
-        # Check credits
-        credit_cost = advanced_credit_service.get_credit_cost('project_assistant_start')
-        user_credits = get_user_credits(g.current_user_id) or 0
+        if not title or not subject:
+            return jsonify({'success': False, 'message': 'Title and subject are required'}), 400
         
-        if user_credits < credit_cost:
-            return jsonify({
-                'success': False,
-                'message': f'Insufficient credits. Required: {credit_cost}'
-            }), 400
+        from services.project_service import ProjectService
+        project_service = ProjectService()
         
-        # Start project session
-        from services.project_assistant_service import ProjectAssistantService
-        project_service = ProjectAssistantService()
+        # Create project details dictionary
+        project_details = {
+            'student_name': student_name,
+            'student_surname': student_surname,
+            'school': school,
+            'form': form_level,
+            'created_at': datetime.utcnow().isoformat()
+        }
         
-        session_id = str(uuid.uuid4())
-        from utils.session_manager import session_manager
-        session_manager.set_data(g.current_user_id, 'project_assistant', {
-            'active': True,
-            'session_id': session_id,
-            'project_title': project_title,
-            'subject': subject,
-            'conversation_history': [],
-            'started_at': datetime.utcnow().isoformat()
-        })
+        project = project_service.create_project(g.current_user_id, title, subject, project_details)
         
-        # Deduct credits
-        deduct_credits(g.current_user_id, credit_cost, 'project_assistant_start', f'Started Project Assistant: {project_title}')
-        
-        initial_message = "🎓 Welcome to Project Assistant!\n\nI'm here to help you with your ZIMSEC School-Based Project. What would you like to work on today?"
+        if not project:
+            return jsonify({'success': False, 'message': 'Failed to create project'}), 500
         
         return jsonify({
             'success': True,
             'data': {
-                'session_id': session_id,
-                'project_title': project_title,
-                'subject': subject,
-                'initial_message': initial_message
+                'project_id': project.get('id'),
+                'title': project.get('project_title'),
+                'subject': project.get('subject'),
+                'current_stage': project.get('current_stage')
             }
         }), 200
         
     except Exception as e:
-        logger.error(f"Start project assistant error: {e}", exc_info=True)
-        error_message = str(e) if str(e) else 'Server error'
-        return jsonify({'success': False, 'message': f'Failed to start project assistant: {error_message}'}), 500
+        logger.error(f"Create project error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
 
-@mobile_bp.route('/project/message', methods=['POST'])
+@mobile_bp.route('/project/list', methods=['GET'])
 @require_auth
-def send_project_message():
-    """Send message to Project Assistant chatbot"""
+def list_projects():
+    """Get all projects for the current user"""
+    try:
+        from services.project_service import ProjectService
+        project_service = ProjectService()
+        
+        projects = project_service.get_student_projects(g.current_user_id)
+        
+        project_list = [{
+            'id': p.get('id'),
+            'title': p.get('project_title'),
+            'subject': p.get('subject'),
+            'current_stage': p.get('current_stage'),
+            'completed': p.get('completed'),
+            'updated_at': p.get('updated_at')
+        } for p in projects]
+        
+        return jsonify({
+            'success': True,
+            'data': {'projects': project_list}
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"List projects error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@mobile_bp.route('/project/<int:project_id>', methods=['GET'])
+@require_auth
+def get_project(project_id):
+    """Get project details"""
+    try:
+        from services.project_service import ProjectService
+        project_service = ProjectService()
+        
+        project = project_service.get_project(project_id)
+        
+        if not project:
+            return jsonify({'success': False, 'message': 'Project not found'}), 404
+        
+        # Verify ownership
+        if project.get('user_id') != g.current_user_id:
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'id': project.get('id'),
+                'title': project.get('project_title'),
+                'subject': project.get('subject'),
+                'current_stage': project.get('current_stage'),
+                'project_data': project.get('project_data'),
+                'completed': project.get('completed'),
+                'created_at': project.get('created_at'),
+                'updated_at': project.get('updated_at')
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get project error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@mobile_bp.route('/project/<int:project_id>/chat', methods=['POST'])
+@require_auth
+def chat_with_project(project_id):
+    """Chat with the project assistant for a specific project"""
     try:
         data = request.get_json()
         message = data.get('message', '').strip()
-        session_id = data.get('session_id', '')
         
         if not message:
             return jsonify({'success': False, 'message': 'Message is required'}), 400
-        
-        # Check if user wants to exit
-        exit_commands = ['exit', 'quit', 'back', 'main menu']
-        if message.lower() in exit_commands:
-            from utils.session_manager import session_manager
-            session_manager.clear_session(g.current_user_id, 'project_assistant')
-            return jsonify({
-                'success': True,
-                'data': {
-                    'response': '👋 Project Assistant session ended. Good luck with your project!',
-                    'session_ended': True
-                }
-            }), 200
         
         # Check credits
         credit_cost = advanced_credit_service.get_credit_cost('project_assistant_followup')
@@ -1766,67 +1903,188 @@ def send_project_message():
                 'message': f'Insufficient credits. Required: {credit_cost}'
             }), 400
         
-        # Get session data
-        from utils.session_manager import session_manager
-        session_data = session_manager.get_data(g.current_user_id, 'project_assistant')
+        from services.project_service import ProjectService
+        project_service = ProjectService()
         
-        if not session_data or not session_data.get('active'):
-            return jsonify({'success': False, 'message': 'No active project session'}), 400
+        # Verify project exists and belongs to user
+        project = project_service.get_project(project_id)
+        if not project or project.get('user_id') != g.current_user_id:
+            return jsonify({'success': False, 'message': 'Project not found'}), 404
         
-        # Get AI response
-        from services.project_assistant_service import ProjectAssistantService
-        project_service = ProjectAssistantService()
+        # Chat with agent
+        response = project_service.chat_with_agent(project_id, message)
         
-        # Get AI response using project service
-        conversation_history = session_data.get('conversation_history', [])
-        conversation_history.append({'role': 'user', 'content': message})
-        
-        # Use the service's internal method to get AI response
-        # The project service uses _get_ai_response with different signature
-        # Let's call handle_project_message which processes the message
-        project_data = {
-            'project_title': session_data.get('project_title', ''),
-            'subject': session_data.get('subject', ''),
-            'conversation_history': conversation_history
-        }
-        
-        # Get user data for project assistant
-        user_data = get_user_registration(g.current_user_id)
-        
-        # Get AI response - method expects (user_id, message_text, project_data)
-        project_data_dict = {
-            'student_name': user_data.get('name', 'Student') if user_data else 'Student',
-            'project_title': session_data.get('project_title', ''),
-            'subject': session_data.get('subject', ''),
-            'conversation_history': conversation_history
-        }
-        ai_response = project_service._get_ai_response(
-            g.current_user_id,
-            message,
-            project_data_dict
-        )
-        
-        conversation_history.append({'role': 'assistant', 'content': ai_response})
-        
-        # Update session
-        session_data['conversation_history'] = conversation_history
-        session_manager.set_data(g.current_user_id, 'project_assistant', session_data)
+        if 'error' in response:
+            return jsonify({'success': False, 'message': response['error']}), 500
         
         # Deduct credits
-        deduct_credits(g.current_user_id, credit_cost, 'project_assistant_followup', 'Project Assistant conversation')
+        deduct_credits(g.current_user_id, credit_cost, 'project_assistant_followup', 'Project Assistant chat')
         
         return jsonify({
             'success': True,
             'data': {
-                'response': ai_response,
-                'session_id': session_id
+                'response': response.get('response'),
+                'project_id': project_id
             }
         }), 200
         
     except Exception as e:
-        logger.error(f"Send project message error: {e}", exc_info=True)
-        error_message = str(e) if str(e) else 'Server error'
-        return jsonify({'success': False, 'message': f'AI service error: {error_message}'}), 500
+        logger.error(f"Project chat error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@mobile_bp.route('/project/<int:project_id>/history', methods=['GET'])
+@require_auth
+def get_project_history(project_id):
+    """Get chat history for a project"""
+    try:
+        from services.project_service import ProjectService
+        from database.external_db import get_project_chat_history
+        
+        project_service = ProjectService()
+        
+        # Verify project exists and belongs to user
+        project = project_service.get_project(project_id)
+        if not project or project.get('user_id') != g.current_user_id:
+            return jsonify({'success': False, 'message': 'Project not found'}), 404
+        
+        history = get_project_chat_history(project_id)
+        
+        return jsonify({
+            'success': True,
+            'data': {'history': history}
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get project history error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@mobile_bp.route('/project/<int:project_id>/document', methods=['GET'])
+@require_auth
+def generate_project_document(project_id):
+    """Generate the final project document"""
+    try:
+        # Check credits
+        credit_cost = advanced_credit_service.get_credit_cost('project_assistant_start')  # Same as start cost
+        user_credits = get_user_credits(g.current_user_id) or 0
+        
+        if user_credits < credit_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {credit_cost}'
+            }), 400
+        
+        from services.project_service import ProjectService
+        project_service = ProjectService()
+        
+        # Verify project exists and belongs to user
+        project = project_service.get_project(project_id)
+        if not project or project.get('user_id') != g.current_user_id:
+            return jsonify({'success': False, 'message': 'Project not found'}), 404
+        
+        # Generate document
+        document_path = project_service.generate_document(project_id)
+        
+        if not document_path:
+            return jsonify({'success': False, 'message': 'Failed to generate document'}), 500
+        
+        # Deduct credits
+        deduct_credits(g.current_user_id, credit_cost, 'project_document_generation', 'Generated project document')
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'document_url': document_path,
+                'message': 'Document generated successfully'
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Generate document error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@mobile_bp.route('/project/<int:project_id>/document/word', methods=['GET'])
+@require_auth
+def generate_project_word_document(project_id):
+    """Generate editable Word document"""
+    try:
+        # Check credits
+        credit_cost = advanced_credit_service.get_credit_cost('project_assistant_start')
+        user_credits = get_user_credits(g.current_user_id) or 0
+        
+        if user_credits < credit_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {credit_cost}'
+            }), 400
+        
+        from services.project_service import ProjectService
+        project_service = ProjectService()
+        
+        # Verify project exists and belongs to user
+        project = project_service.get_project(project_id)
+        if not project or project.get('user_id') != g.current_user_id:
+            return jsonify({'success': False, 'message': 'Project not found'}), 404
+        
+        # Generate Word document
+        document_path = project_service.generate_word_document(project_id)
+        
+        if not document_path:
+            return jsonify({'success': False, 'message': 'Failed to generate Word document'}), 500
+        
+        # Deduct credits
+        deduct_credits(g.current_user_id, credit_cost, 'project_word_generation', 'Generated Word document')
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'document_url': document_path,
+                'format': 'docx',
+                'message': 'Word document generated successfully'
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Generate Word document error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@mobile_bp.route('/project/templates', methods=['GET'])
+@require_auth
+def get_project_templates():
+    """Get available project templates"""
+    try:
+        from utils.project_templates import list_templates
+        
+        templates = list_templates()
+        
+        return jsonify({
+            'success': True,
+            'data': {'templates': templates}
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get templates error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@mobile_bp.route('/project/template/<template_key>', methods=['GET'])
+@require_auth
+def get_project_template(template_key):
+    """Get specific template details"""
+    try:
+        from utils.project_templates import get_template
+        
+        template = get_template(template_key)
+        
+        if not template:
+            return jsonify({'success': False, 'message': 'Template not found'}), 404
+        
+        return jsonify({
+            'success': True,
+            'data': template
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get template error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 # ============================================================================
 # GRAPH PRACTICE ENDPOINTS

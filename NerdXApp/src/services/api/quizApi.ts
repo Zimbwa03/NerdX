@@ -43,6 +43,10 @@ export interface Question {
   hint_level_3?: string;
   common_mistakes?: string[];
   learning_objective?: string;
+
+  // Exam Mode Fields
+  question_image_url?: string;
+  answer_image_urls?: string[];
 }
 
 export interface AnswerResult {
@@ -138,6 +142,25 @@ export const quizApi = {
       return response.data.data || null;
     } catch (error: any) {
       console.error('Submit answer error:', error);
+      throw error;
+    }
+  },
+
+  getNextExamQuestion: async (
+    questionCount: number,
+    year?: string,
+    paper?: string
+  ): Promise<Question | null> => {
+    try {
+      const payload = {
+        question_count: questionCount,
+        year,
+        paper
+      };
+      const response = await api.post('/api/mobile/quiz/exam/next', payload);
+      return response.data.data || null;
+    } catch (error: any) {
+      console.error('Get exam question error:', error);
       throw error;
     }
   },

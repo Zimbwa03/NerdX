@@ -1037,435 +1037,6 @@ Return ONLY valid JSON:
         """Generate essay prompts using DeepSeek AI"""
         if not self.deepseek_api_key:
             logger.warning("DeepSeek API key not configured - skipping DeepSeek essay prompt generation")
-            return None
-
-        try:
-            prompt = f"""Generate 3 diverse ZIMSEC O-Level English essay prompts suitable for {user_level} students.
-
-*Essay types to include:*
-- Narrative/Personal experience
-- Argumentative/Opinion
-- Descriptive
-
-Requirements:
-- Age-appropriate topics (14-17 years)
-- Zimbabwean context and experiences
-- 350-450 words target length
-- Clear, engaging prompts
-- Varied difficulty levels
-
-Return ONLY a JSON array (no markdown, no code blocks, just pure JSON):
-[
-    {{
-        "title": "Essay prompt title",
-        "description": "Detailed prompt with guidance",
-        "type": "narrative/argumentative/descriptive",
-        "suggested_length": "350-400 words"
-    }}
-]"""
-
-            headers = {
-                'Content-Type': 'application/json',
-                'Authorization': f'Bearer {self.deepseek_api_key}',
-            }
-
-            payload = {
-                'model': 'deepseek-chat',
-                'messages': [{'role': 'user', 'content': prompt}],
-                'max_tokens': 1200,
-                'temperature': 0.8
-            }
-
-            response = requests.post(self.deepseek_api_url, headers=headers, json=payload, timeout=45)
-
-            if response.status_code == 200:
-                data = response.json()
-                if 'choices' in data and len(data['choices']) > 0:
-                    content = data['choices'][0].get('message', {}).get('content', '')
-                    if content:
-                        try:
-                            clean_text = content.strip()
-                            if clean_text.startswith('```json'):
-                                clean_text = clean_text[7:]
-                            if clean_text.startswith('```'):
-                                clean_text = clean_text[3:]
-                            if clean_text.endswith('```'):
-                                clean_text = clean_text[:-3]
-                            clean_text = clean_text.strip()
-
-                            prompts_data = json.loads(clean_text)
-
-                            if isinstance(prompts_data, list) and len(prompts_data) >= 3:
-                                logger.info(f"Successfully generated {len(prompts_data)} essay prompts using DeepSeek")
-                                return {
-                                    'success': True,
-                                    'prompts': prompts_data
-                                }
-                        except json.JSONDecodeError as e:
-                            logger.error(f"DeepSeek essay prompts JSON decode error: {e}")
-                        except Exception as e:
-                            logger.error(f"Error processing DeepSeek essay prompts: {e}")
-                else:
-                    logger.warning("DeepSeek essay prompts response missing choices")
-            else:
-                logger.error(f"DeepSeek API error for essay prompts: {response.status_code} - {response.text}")
-
-        except requests.exceptions.RequestException as e:
-            logger.error(f"DeepSeek essay prompts request error: {e}")
-        except Exception as e:
-            logger.error(f"Error generating DeepSeek essay prompts: {e}")
-
-        return None
-
-    def generate_essay_prompts(self, user_level: str = "Form 3") -> Optional[Dict]:
-        """Generate essay writing prompts for ZIMSEC students using DeepSeek AI"""
-        # Primary: DeepSeek AI generation (Gemini removed - using DeepSeek only)
-        deepseek_response = self.generate_deepseek_essay_prompts(user_level=user_level)
-        if deepseek_response and deepseek_response.get('success'):
-            return deepseek_response
-
-        # Fallback
-        return {
-            'success': True,
-            'prompts': self._get_fallback_essay_prompts()
-        }
-
-    def _get_fallback_essay_prompts(self) -> List[Dict]:
-        """Fallback essay prompts when AI fails"""
-        return [
-            {
-                "title": "A Day I Will Never Forget",
-                "description": "Write about a memorable day in your life. Describe what happened, how you felt, and why this day was so special or significant to you.",
-                "type": "narrative",
-                "suggested_length": "350-400 words"
-            },
-            {
-                "title": "Should Students Wear School Uniforms?",
-                "description": "Give your opinion on whether students should be required to wear school uniforms. Provide at least three reasons to support your view.",
-                "type": "argumentative", 
-                "suggested_length": "400-450 words"
-            },
-            {
-                "title": "My Favorite Place in Zimbabwe",
-                "description": "Describe a place in Zimbabwe that you love visiting. Use vivid details to paint a picture with words so readers can imagine being there.",
-                "type": "descriptive",
-                "suggested_length": "350-400 words"
-            }
-        ]
-
-    def mark_essay(self, prompt: str, essay_text: str) -> Optional[Dict]:
-        """Mark essay using AI (wrapper for mobile API)"""
-        try:
-            # Try AI analysis first
-            analysis = self.analyze_essay_with_ai(essay_text, prompt)
-            if analysis:
-                total_score = analysis.get('total_score', 0)
-                grade = analysis.get('grade', 'C')
-                feedback = analysis.get('specific_feedback', '')
-                
-                return {
-                    'score': total_score,
-                    'grade': grade,
-                    'feedback': feedback,
-                    'report_url': ''  # Can be added later for PDF reports
-                }
-        except Exception as e:
-            logger.error(f"AI essay marking failed: {e}")
-        
-        # Fallback marking
-        try:
-            marking_result = self.generate_essay_marking(f"Prompt: {prompt}\n\nEssay: {essay_text}")
-            if marking_result:
-                import json
-                data = json.loads(marking_result)
-                return {
-                    'score': data.get('score', 18),
-                    'grade': data.get('grade', 'C+'),
-                    'feedback': data.get('summary_feedback', 'Your essay has been reviewed.'),
-                    'report_url': ''
-                }
-        except Exception as e:
-            logger.error(f"Fallback essay marking failed: {e}")
-        
-        # Final fallback
-        return {
-            'score': 18,
-            'grade': 'C+',
-            'feedback': 'Your essay has been reviewed. Please try again for detailed feedback.',
-            'report_url': ''
-        }
-    
-    def analyze_essay_with_ai(self, essay_text: str, prompt: str) -> Optional[Dict]:
-        """Analyze student essay using DeepSeek AI for comprehensive feedback"""
-        if not self.deepseek_api_key:
-            logger.warning("DeepSeek API key not configured for essay analysis")
-            return None
-
-        try:
-            analysis_prompt = f"""Analyze this ZIMSEC O-Level student essay and provide detailed feedback.
-
-*Essay Prompt:* {prompt}
-
-*Student Essay:*
-{essay_text}
-
-*Analyze these areas:*
-1. *Content & Ideas* (25%): Relevance, creativity, depth
-2. *Organization* (25%): Structure, flow, transitions
-3. *Language Use* (25%): Grammar, vocabulary, sentence variety
-4. *Mechanics* (25%): Spelling, punctuation, paragraphing
-
-*Requirements:*
-- Give scores out of 25 for each area
-- Provide specific examples from the essay
-- Suggest 2-3 concrete improvements
-- Keep feedback constructive and encouraging
-- Total possible: 100 points
-
-Return ONLY a JSON object (no markdown, no code blocks, just pure JSON):
-{{
-    "content_score": 0,
-    "organization_score": 0,
-    "language_score": 0,
-    "mechanics_score": 0,
-    "total_score": 0,
-    "grade": "A/B/C/D/E",
-    "strengths": ["strength1", "strength2"],
-    "areas_for_improvement": ["area1", "area2"],
-    "specific_feedback": "Detailed paragraph with examples",
-    "suggestions": ["suggestion1", "suggestion2", "suggestion3"]
-}}"""
-
-            headers = {
-                'Content-Type': 'application/json',
-                'Authorization': f'Bearer {self.deepseek_api_key}',
-            }
-
-            payload = {
-                'model': 'deepseek-chat',
-                'messages': [{'role': 'user', 'content': analysis_prompt}],
-                'max_tokens': 2000,
-                'temperature': 0.3
-            }
-
-            response = requests.post(self.deepseek_api_url, headers=headers, json=payload, timeout=60)
-
-            if response.status_code == 200:
-                data = response.json()
-                if 'choices' in data and len(data['choices']) > 0:
-                    content = data['choices'][0].get('message', {}).get('content', '')
-                    if content:
-                        try:
-                            clean_text = content.strip()
-                            if clean_text.startswith('```json'):
-                                clean_text = clean_text[7:]
-                            if clean_text.startswith('```'):
-                                clean_text = clean_text[3:]
-                            if clean_text.endswith('```'):
-                                clean_text = clean_text[:-3]
-                            clean_text = clean_text.strip()
-
-                            analysis = json.loads(clean_text)
-                            logger.info("Essay analysis completed successfully using DeepSeek")
-                            return analysis
-
-                        except json.JSONDecodeError as e:
-                            logger.error(f"DeepSeek essay analysis JSON decode error: {e}")
-                        except Exception as e:
-                            logger.error(f"Error processing DeepSeek essay analysis: {e}")
-                else:
-                    logger.warning("DeepSeek essay analysis response missing choices")
-            else:
-                logger.error(f"DeepSeek API error for essay analysis: {response.status_code} - {response.text}")
-
-        except requests.exceptions.RequestException as e:
-            logger.error(f"DeepSeek essay analysis request error: {e}")
-        except Exception as e:
-            logger.error(f"Error in DeepSeek essay analysis: {e}")
-
-        return None
-
-    def generate_comprehension(self) -> Optional[Dict]:
-        """Generate comprehension passage with AI (wrapper for mobile API)"""
-        # Try AI generation first (Gemini -> DeepSeek -> Database)
-        try:
-            # Use AI to generate a fresh comprehension passage
-            result = self.generate_comprehension_passage(theme="General")
-            if result and result.get('success'):
-                passage_data = result.get('passage_data', {})
-                if isinstance(passage_data, dict):
-                    # Extract passage and questions from AI-generated data
-                    passage_text = passage_data.get('text') or passage_data.get('passage', '')
-                    questions = passage_data.get('questions', [])
-                    
-                    # Format questions for mobile API
-                    formatted_questions = []
-                    for q in questions:
-                        if isinstance(q, dict):
-                            formatted_questions.append({
-                                'question': q.get('question', ''),
-                                'correct_answer': q.get('correct_answer', ''),
-                                'type': q.get('question_type', 'literal'),
-                                'marks': q.get('marks', 2),
-                                'explanation': q.get('explanation', '')
-                            })
-                    
-                    return {
-                        'passage': passage_text,
-                        'questions': formatted_questions if formatted_questions else questions
-                    }
-        except Exception as e:
-            logger.error(f"AI comprehension generation failed: {e}", exc_info=True)
-        
-        # Fallback to database or static fallback
-        try:
-            db_result = self.generate_comprehension_question()
-            if db_result and db_result.get('success'):
-                question_data = db_result.get('question_data', {})
-                return {
-                    'passage': question_data.get('passage', ''),
-                    'questions': question_data.get('questions', [])
-                }
-        except Exception as e:
-            logger.error(f"Database comprehension generation failed: {e}")
-        
-        # Final fallback
-        fallback = self._get_fallback_comprehension()
-        if isinstance(fallback, dict) and 'question_data' in fallback:
-            question_data = fallback.get('question_data', {})
-            return {
-                'passage': question_data.get('passage', ''),
-                'questions': question_data.get('questions', [])
-            }
-        
-        return {
-            'passage': fallback.get('passage', ''),
-            'questions': fallback.get('questions', [])
-        }
-    
-    def generate_comprehension_question(self) -> Optional[Dict]:
-        """Generate comprehension passage with questions from database"""
-        from database.external_db import get_supabase_client
-
-        try:
-            supabase = get_supabase_client()
-
-            # Get a random passage with its questions
-            passages_response = supabase.table('english_comprehension_passages').select('*').execute()
-
-            if not passages_response.data:
-                logger.warning("No comprehension passages found in database")
-                return self._get_fallback_comprehension()
-
-            # Select a random passage
-            passage = random.choice(passages_response.data)
-            passage_id = passage['id']
-
-            # Get questions for this passage
-            questions_response = supabase.table('english_comprehension_questions').select('*').eq('passage_id', passage_id).order('question_order').execute()
-
-            if not questions_response.data:
-                logger.warning(f"No questions found for passage {passage_id}")
-                return self._get_fallback_comprehension()
-
-            logger.info(f"Retrieved comprehension passage from database - Topic: {passage['topic_area']}")
-
-            return {
-                'success': True,
-                'question_data': {
-                    'passage_id': passage_id,
-                    'title': passage['title'],
-                    'passage': passage['passage'],
-                    'topic_area': passage['topic_area'],
-                    'difficulty_level': passage['difficulty_level'],
-                    'reading_time': passage['reading_time'],
-                    'questions': questions_response.data,
-                    'total_questions': len(questions_response.data)
-                }
-            }
-
-        except Exception as e:
-            logger.error(f"Database error in comprehension question generation: {e}")
-            return self._get_fallback_comprehension()
-
-    def _get_fallback_comprehension(self) -> Dict:
-        """Fallback comprehension when database fails"""
-        return {
-            'success': True, 
-            'question_data': {
-                'passage_id': 999,
-                'title': 'The Power of Reading',
-                'passage': 'Reading is one of the most important skills a person can develop. It opens doors to knowledge, improves vocabulary, and enhances critical thinking abilities. Students who read regularly perform better in all subjects, not just English. Reading also provides entertainment and helps people understand different cultures and perspectives.',
-                'topic_area': 'Reading Comprehension',
-                'difficulty_level': 'medium',
-                'reading_time': 3,
-                'questions': [
-                    {
-                        'id': 1,
-                        'question': 'According to the passage, what does reading improve?',
-                        'option_a': 'Only English skills',
-                        'option_b': 'Vocabulary and critical thinking',
-                        'option_c': 'Physical fitness',
-                        'option_d': 'Mathematical abilities',
-                        'correct_answer': 1,
-                        'explanation': 'The passage states that reading "improves vocabulary, and enhances critical thinking abilities."'
-                    }
-                ],
-                'total_questions': 1
-            }
-        }
-
-    def generate_gemini_comprehension_passage(self, theme: str, form_level: int = 4) -> Optional[Dict]:
-        """Generate long comprehension passage using Gemini 2.0 Flash Exp"""
-        if not self._is_configured or not self.client:
-            logger.warning("Gemini AI not configured - skipping Gemini comprehension generation")
-            return None
-
-        try:
-            prompt = f"""Generate a ZIMSEC O-Level English reading comprehension exercise on the theme: {theme}
-
-**ZIMSEC Format Requirements:**
-- Passage: 400-600 words (authentic ZIMSEC length for proper comprehension practice)
-- Zimbabwean context, characters, and cultural references where appropriate
-- Age-appropriate content for Form {form_level} students (15-17 years)
-- EXACTLY 10 comprehension questions following ZIMSEC patterns
-- Question types must include:
-  * 3-4 literal comprehension questions (direct from text)
-  * 3-4 inferential questions (reading between lines)
-  * 2-3 critical analysis questions (evaluation, opinion, comparison)
-- Varied question formats: short answer, explanation, analysis
-- Form {form_level} vocabulary and complexity level
-- Include Zimbabwean names, places, and cultural elements naturally
-
-**ZIMSEC Question Patterns to Follow:**
-1. "According to the passage..." (literal)
-2. "What does the author mean by..." (inferential)  
-3. "Why do you think..." (critical thinking)
-4. "Give evidence from the passage..." (textual support)
-5. "In your own words, explain..." (comprehension + expression)
-
-Return ONLY valid JSON (no markdown fences or commentary):
-{{
-    "passage": {{
-        "title": "Engaging passage title with Zimbabwean context",
-        "text": "The complete 400-600 word reading passage with natural Zimbabwean elements",
-        "word_count": 500,
-        "theme": "{theme}"
-    }},
-    "questions": [
-        {{
-            "question": "Question text following ZIMSEC patterns",
-            "correct_answer": "Expected detailed answer with key points",
-            "question_type": "literal/inferential/critical",
-            "marks": 2,
-            "explanation": "Why this is the correct answer with textual evidence"
-        }}
-    ]
-}}
-
-Make the passage authentic, engaging, and educationally valuable for ZIMSEC O-Level students."""
-
-            try:
                 model = self.client.GenerativeModel('gemini-2.0-flash-exp')
                 response = model.generate_content(
                     prompt,
@@ -1648,6 +1219,171 @@ Return valid JSON with the exact format requested (no markdown, no code blocks, 
             logger.error(f"Error in DeepSeek essay marking: {e}")
 
         return self._generate_fallback_essay_marking()
+
+    def grade_comprehension_answers(self, passage: str, questions: List[Dict], user_answers: Dict[str, str]) -> Dict:
+        """Grade comprehension answers using DeepSeek AI"""
+        if not self.deepseek_api_key:
+            logger.warning("DeepSeek API key not configured for comprehension grading")
+            return self._fallback_comprehension_grading(questions, user_answers)
+
+        try:
+            prompt = f"""Grade these ZIMSEC O-Level English comprehension answers.
+
+Passage:
+{passage[:1000]}... (truncated for context)
+
+Questions and Student Answers:
+"""
+            for i, q in enumerate(questions):
+                q_text = q.get('question', '')
+                q_mark = q.get('marks', 2)
+                q_correct = q.get('correct_answer', '')
+                u_answer = user_answers.get(str(i), user_answers.get(i, ''))
+                
+                prompt += f"""
+Q{i+1}: {q_text} ({q_mark} marks)
+Correct Answer: {q_correct}
+Student Answer: {u_answer}
+"""
+
+            prompt += """
+Instructions:
+- Compare student answer to correct answer semantically.
+- Award marks (0 to max) based on accuracy and completeness.
+- Provide brief, helpful feedback for each.
+- Be strict but fair, following ZIMSEC standards.
+
+Return ONLY valid JSON:
+{
+    "question_grades": [
+        {
+            "question_index": 0,
+            "marks_awarded": 1,
+            "max_marks": 2,
+            "feedback": "Good attempt, but you missed..."
+        }
+    ],
+    "total_score": 15,
+    "total_possible": 20,
+    "overall_feedback": "General comment..."
+}
+"""
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {self.deepseek_api_key}',
+            }
+
+            payload = {
+                'model': 'deepseek-chat',
+                'messages': [{'role': 'user', 'content': prompt}],
+                'max_tokens': 2000,
+                'temperature': 0.3
+            }
+
+            response = requests.post(self.deepseek_api_url, headers=headers, json=payload, timeout=60)
+            if response.status_code == 200:
+                content = response.json()['choices'][0]['message']['content']
+                clean_text = self._clean_json_block(content)
+                return json.loads(clean_text)
+            
+        except Exception as e:
+            logger.error(f"Error grading comprehension: {e}")
+            
+        return self._fallback_comprehension_grading(questions, user_answers)
+
+    def _fallback_comprehension_grading(self, questions: List[Dict], user_answers: Dict[str, str]) -> Dict:
+        """Simple keyword matching fallback"""
+        grades = []
+        total_score = 0
+        total_possible = 0
+        
+        for i, q in enumerate(questions):
+            max_marks = q.get('marks', 2)
+            correct = q.get('correct_answer', '').lower()
+            student = user_answers.get(str(i), user_answers.get(i, '')).lower()
+            
+            # Simple overlap check
+            correct_words = set(correct.split())
+            student_words = set(student.split())
+            overlap = len(correct_words.intersection(student_words))
+            
+            score = 0
+            if overlap > len(correct_words) * 0.7:
+                score = max_marks
+            elif overlap > len(correct_words) * 0.4:
+                score = max(1, int(max_marks / 2))
+                
+            grades.append({
+                "question_index": i,
+                "marks_awarded": score,
+                "max_marks": max_marks,
+                "feedback": "Automated fallback grading used."
+            })
+            total_score += score
+            total_possible += max_marks
+            
+        return {
+            "question_grades": grades,
+            "total_score": total_score,
+            "total_possible": total_possible,
+            "overall_feedback": "Graded using keyword matching."
+        }
+
+    def grade_summary(self, passage: str, summary_prompt: str, user_summary: str) -> Dict:
+        """Grade summary writing using DeepSeek AI"""
+        if not self.deepseek_api_key:
+            return {"score": 0, "feedback": "AI grading unavailable"}
+
+        try:
+            prompt = f"""Grade this ZIMSEC O-Level Summary.
+
+Passage:
+{passage}
+
+Summary Question: {summary_prompt}
+
+Student Summary:
+{user_summary}
+
+Marking Criteria:
+- Word count limit (usually 160 words). Deduct if exceeded.
+- Inclusion of key points (content points).
+- Language accuracy (grammar, spelling).
+- Use of own words (avoiding direct lifting).
+
+Return ONLY valid JSON:
+{{
+    "content_points": 10,
+    "language_mark": 5,
+    "total_score": 15,
+    "max_score": 20,
+    "word_count": 145,
+    "feedback": "Detailed feedback...",
+    "key_points_missed": ["Point 1", "Point 2"]
+}}
+"""
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {self.deepseek_api_key}',
+            }
+
+            payload = {
+                'model': 'deepseek-chat',
+                'messages': [{'role': 'user', 'content': prompt}],
+                'max_tokens': 1500,
+                'temperature': 0.3
+            }
+
+            response = requests.post(self.deepseek_api_url, headers=headers, json=payload, timeout=60)
+            if response.status_code == 200:
+                content = response.json()['choices'][0]['message']['content']
+                clean_text = self._clean_json_block(content)
+                return json.loads(clean_text)
+
+        except Exception as e:
+            logger.error(f"Error grading summary: {e}")
+
+        return {"score": 0, "feedback": "Error in grading service"}
 
     def _generate_fallback_essay_marking(self) -> str:
         """Generate fallback essay marking when AI fails"""
@@ -1853,3 +1589,4 @@ Despite the challenges, the future of education in Zimbabwe looks promising. You
                 }
             ]
         }
+        

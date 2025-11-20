@@ -23,6 +23,9 @@ import GraphPracticeScreen from '../screens/GraphPracticeScreen';
 import EnglishComprehensionScreen from '../screens/EnglishComprehensionScreen';
 import EnglishEssayScreen from '../screens/EnglishEssayScreen';
 import CombinedScienceExamScreen from '../screens/CombinedScienceExamScreen';
+import VirtualLabScreen from '../screens/VirtualLabScreen';
+import FormulaSheetScreen from '../screens/FormulaSheetScreen';
+import PastPaperScreen from '../screens/PastPaperScreen';
 
 const Stack = createStackNavigator();
 
@@ -79,7 +82,7 @@ const AppNavigator: React.FC = () => {
               component={DashboardScreen}
               options={{
                 title: 'NerdX Dashboard',
-                headerLeft: null,
+                headerLeft: () => null,
               }}
             />
             <Stack.Screen
@@ -182,6 +185,27 @@ const AppNavigator: React.FC = () => {
               options={{
                 title: 'Combined Science Exam',
                 headerBackTitle: 'Back',
+              }}
+            />
+            <Stack.Screen
+              name="VirtualLab"
+              component={VirtualLabScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="FormulaSheet"
+              component={FormulaSheetScreen}
+              options={{
+                title: 'Formula Sheet',
+              }}
+            />
+            <Stack.Screen
+              name="PastPaper"
+              component={PastPaperScreen}
+              options={{
+                title: 'Past Papers',
               }}
             />
           </Stack.Group>

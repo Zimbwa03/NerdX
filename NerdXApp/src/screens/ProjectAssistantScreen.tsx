@@ -1,4 +1,4 @@
-// Project Assistant Screen Component - Chatbot Interface
+// Project Assistant Screen Component - Database-backed Chat Interface
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
@@ -13,7 +13,7 @@ import {
   Platform,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { projectApi, ProjectSession } from '../services/api/projectApi';
+import { projectApi, ProjectDetails, ChatMessage } from '../services/api/projectApi';
 import { useAuth } from '../context/AuthContext';
 
 interface Message {
@@ -27,12 +27,17 @@ const ProjectAssistantScreen: React.FC = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const { user, updateUser } = useAuth();
-  const { projectTitle, subject } = route.params as {
-    projectTitle: string;
-    subject: string;
+  const params = route.params as {
+    projectId?: number;
+    projectTitle?: string;
+    subject?: string;
+    studentName?: string;
+    studentSurname?: string;
+    school?: string;
+    form?: string;
   };
 
-  const [session, setSession] = useState<ProjectSession | null>(null);
+  const [project, setProject] = useState<ProjectDetails | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(true);
@@ -40,7 +45,7 @@ const ProjectAssistantScreen: React.FC = () => {
   const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
-    startSession();
+    initializeProject();
   }, []);
 
   useEffect(() => {
@@ -49,30 +54,22 @@ const ProjectAssistantScreen: React.FC = () => {
     }, 100);
   }, [messages]);
 
-  const startSession = async () => {
+  const initializeProject = async () => {
     try {
       setLoading(true);
-      const sessionData = await projectApi.startSession(projectTitle, subject);
-      if (sessionData) {
-        setSession(sessionData);
-        setMessages([
-          {
-            id: '1',
-            role: 'assistant',
-            content: sessionData.initial_message,
-            timestamp: new Date(),
-          },
-        ]);
-        // Update credits (project assistant start costs 3 credits)
-        if (user) {
-          const newCredits = (user.credits || 0) - 3;
-          updateUser({ credits: newCredits });
-        }
+
+      // Check if we're resuming an existing project or creating a new one
+      if (params.projectId) {
+        // Resume existing project
+        await resumeExistingProject(params.projectId);
+      } else {
+        // Create new project
+        await createNewProject();
       }
     } catch (error: any) {
       Alert.alert(
         'Error',
-        error.response?.data?.message || 'Failed to start Project Assistant session'
+        error.response?.data?.message || 'Failed to initialize project'
       );
       navigation.goBack();
     } finally {
@@ -80,8 +77,74 @@ const ProjectAssistantScreen: React.FC = () => {
     }
   };
 
+  const createNewProject = async () => {
+    // Create the project in the database
+    const newProject = await projectApi.createProject({
+      title: params.projectTitle!,
+      subject: params.subject!,
+      student_name: params.studentName!,
+      student_surname: params.studentSurname!,
+      school: params.school!,
+      form: params.form!,
+    });
+
+    if (!newProject) {
+      throw new Error('Failed to create project');
+    }
+
+    // Get full project details
+    const projectDetails = await projectApi.getProject(newProject.id);
+    if (projectDetails) {
+      setProject(projectDetails);
+
+      // Add initial welcome message
+      setMessages([
+        {
+          id: '1',
+          role: 'assistant',
+          content: `🎓 Welcome to Project Assistant!\n\nI'm here to help you with your ${params.subject} project: "${params.projectTitle}"\n\nI'll guide you through each stage of your ZIMSEC project. What would you like to work on first?`,
+          timestamp: new Date(),
+        },
+      ]);
+    }
+  };
+
+  const resumeExistingProject = async (projectId: number) => {
+    // Get project details
+    const projectDetails = await projectApi.getProject(projectId);
+    if (!projectDetails) {
+      throw new Error('Project not found');
+    }
+
+    setProject(projectDetails);
+
+    // Load chat history
+    const chatHistory = await projectApi.getChatHistory(projectId);
+
+    if (chatHistory && chatHistory.length > 0) {
+      // Convert chat history to messages
+      const loadedMessages: Message[] = chatHistory.map((msg, index) => ({
+        id: msg.id?.toString() || index.toString(),
+        role: msg.role,
+        content: msg.content,
+        timestamp: new Date(msg.timestamp),
+      }));
+      setMessages(loadedMessages);
+    } else {
+      // No chat history, add welcome message
+      setMessages([
+        {
+          id: '1',
+          role: 'assistant',
+          content: `🎓 Welcome back to your project: "${projectDetails.title}"\n\nLet's continue working on your ${projectDetails.subject} project. What would you like to work on?`,
+          timestamp: new Date(),
+        },
+      ]);
+    }
+  };
+
   const handleSend = async () => {
-    if (!inputText.trim() || !session || sending) return;
+    if (!inputText.trim() || !project || sending) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -95,15 +158,8 @@ const ProjectAssistantScreen: React.FC = () => {
     setSending(true);
 
     try {
-      const response = await projectApi.sendMessage(session.session_id, userMessage.content);
+      const response = await projectApi.sendMessage(project.id, userMessage.content);
       if (response) {
-        if (response.session_ended) {
-          Alert.alert('Session Ended', response.response, [
-            { text: 'OK', onPress: () => navigation.goBack() },
-          ]);
-          return;
-        }
-
         const assistantMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
@@ -112,6 +168,7 @@ const ProjectAssistantScreen: React.FC = () => {
         };
 
         setMessages((prev) => [...prev, assistantMessage]);
+
         // Update credits (follow-up costs 1 credit)
         if (user) {
           const newCredits = (user.credits || 0) - 1;
@@ -126,11 +183,48 @@ const ProjectAssistantScreen: React.FC = () => {
     }
   };
 
+  const handleGenerateDocument = async () => {
+    if (!project) return;
+
+    Alert.alert(
+      'Generate Document',
+      'This will generate your final project document (3 credits). Continue?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Generate',
+          onPress: async () => {
+            try {
+              setLoading(true);
+              const documentUrl = await projectApi.generateDocument(project.id);
+              if (documentUrl) {
+                Alert.alert(
+                  'Success',
+                  'Project document generated successfully!',
+                  [{ text: 'OK' }]
+                );
+                // Update credits
+                if (user) {
+                  const newCredits = (user.credits || 0) - 3;
+                  updateUser({ credits: newCredits });
+                }
+              }
+            } catch (error: any) {
+              Alert.alert('Error', error.response?.data?.message || 'Failed to generate document');
+            } finally {
+              setLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#1976D2" />
-        <Text style={styles.loadingText}>Starting Project Assistant...</Text>
+        <ActivityIndicator size="large" color="#9C27B0" />
+        <Text style={styles.loadingText}>Setting up your project...</Text>
       </View>
     );
   }
@@ -144,9 +238,17 @@ const ProjectAssistantScreen: React.FC = () => {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>🎓 Project Assistant</Text>
         <Text style={styles.headerSubtitle}>
-          {projectTitle || 'ZIMSEC Project'}
+          {project?.title || params.projectTitle}
         </Text>
-        <Text style={styles.credits}>Credits: {user?.credits || 0}</Text>
+        <View style={styles.headerRow}>
+          <Text style={styles.credits}>Credits: {user?.credits || 0}</Text>
+          <TouchableOpacity
+            style={styles.documentButton}
+            onPress={handleGenerateDocument}
+          >
+            <Text style={styles.documentButtonText}>📄 Generate Doc</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView
@@ -174,7 +276,7 @@ const ProjectAssistantScreen: React.FC = () => {
         ))}
         {sending && (
           <View style={[styles.messageBubble, styles.assistantMessage]}>
-            <ActivityIndicator size="small" color="#1976D2" />
+            <ActivityIndicator size="small" color="#9C27B0" />
           </View>
         )}
       </ScrollView>
@@ -237,12 +339,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#FFFFFF',
     opacity: 0.9,
-    marginBottom: 5,
+    marginBottom: 10,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   credits: {
     fontSize: 12,
     color: '#FFFFFF',
     opacity: 0.8,
+  },
+  documentButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+  },
+  documentButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
   },
   messagesContainer: {
     flex: 1,

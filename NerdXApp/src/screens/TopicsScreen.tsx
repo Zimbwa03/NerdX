@@ -8,6 +8,8 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  StatusBar,
+  Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -15,29 +17,91 @@ import { quizApi, Topic, Subject } from '../services/api/quizApi';
 import { useAuth } from '../context/AuthContext';
 import { Icons, IconCircle } from '../components/Icons';
 import { Card } from '../components/Card';
-import { Button } from '../components/Button';
-import Colors from '../theme/colors';
+import { Colors } from '../theme/colors';
+
+const { width } = Dimensions.get('window');
 
 const TopicsScreen: React.FC = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const { user, updateUser } = useAuth();
   const { subject, parentSubject } = route.params as { subject: Subject; parentSubject?: string };
+
+  // State for Combined Science Tabs
+  const [activeTab, setActiveTab] = useState<string>(parentSubject || (subject.id === 'combined_science' ? 'Biology' : ''));
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentParentSubject, setCurrentParentSubject] = useState<string | undefined>(parentSubject);
 
   useEffect(() => {
-    loadTopics();
-  }, [currentParentSubject]);
+    if (subject.id === 'combined_science') {
+      // For Combined Science, load topics based on the active tab
+      loadTopics(activeTab);
+    } else {
+      // For other subjects, load normally
+      loadTopics(currentParentSubject);
+    }
+  }, [currentParentSubject, activeTab, subject.id]);
 
-  const loadTopics = async () => {
+  const loadTopics = async (parent?: string) => {
     try {
       setLoading(true);
-      const data = await quizApi.getTopics(subject.id, currentParentSubject);
-      setTopics(data);
+      // If it's Combined Science, we always want to fetch topics for the specific sub-subject (Biology/Chemistry/Physics)
+      const targetParent = subject.id === 'combined_science' ? parent : currentParentSubject;
+
+      const data = await quizApi.getTopics(subject.id, targetParent);
+
+      // Fallback for Mathematics if API returns empty
+      if (subject.id === 'mathematics' && (!data || data.length === 0)) {
+        const mathTopics: Topic[] = [
+          { id: 'num', name: 'Number Theory', subject: 'mathematics' },
+          { id: 'sets', name: 'Sets', subject: 'mathematics' },
+          { id: 'ind', name: 'Indices & Standard Form', subject: 'mathematics' },
+          { id: 'alg', name: 'Algebra', subject: 'mathematics' },
+          { id: 'ineq', name: 'Inequalities', subject: 'mathematics' },
+          { id: 'seq', name: 'Sequences & Series', subject: 'mathematics' },
+          { id: 'mat', name: 'Matrices', subject: 'mathematics' },
+          { id: 'vec', name: 'Vectors', subject: 'mathematics' },
+          { id: 'geo', name: 'Geometry', subject: 'mathematics' },
+          { id: 'mens', name: 'Mensuration', subject: 'mathematics' },
+          { id: 'trig', name: 'Trigonometry', subject: 'mathematics' },
+          { id: 'trans', name: 'Transformation Geometry', subject: 'mathematics' },
+          { id: 'stat', name: 'Statistics', subject: 'mathematics' },
+          { id: 'prob', name: 'Probability', subject: 'mathematics' },
+          { id: 'graph', name: 'Graphs', subject: 'mathematics' },
+          { id: 'var', name: 'Variation', subject: 'mathematics' },
+          { id: 'loci', name: 'Loci & Construction', subject: 'mathematics' },
+        ];
+        setTopics(mathTopics);
+      } else {
+        setTopics(data);
+      }
     } catch (error) {
-      Alert.alert('Error', 'Failed to load topics. Please try again.');
+      // Fallback for Mathematics on error
+      if (subject.id === 'mathematics') {
+        const mathTopics: Topic[] = [
+          { id: 'num', name: 'Number Theory', subject: 'mathematics' },
+          { id: 'sets', name: 'Sets', subject: 'mathematics' },
+          { id: 'ind', name: 'Indices & Standard Form', subject: 'mathematics' },
+          { id: 'alg', name: 'Algebra', subject: 'mathematics' },
+          { id: 'ineq', name: 'Inequalities', subject: 'mathematics' },
+          { id: 'seq', name: 'Sequences & Series', subject: 'mathematics' },
+          { id: 'mat', name: 'Matrices', subject: 'mathematics' },
+          { id: 'vec', name: 'Vectors', subject: 'mathematics' },
+          { id: 'geo', name: 'Geometry', subject: 'mathematics' },
+          { id: 'mens', name: 'Mensuration', subject: 'mathematics' },
+          { id: 'trig', name: 'Trigonometry', subject: 'mathematics' },
+          { id: 'trans', name: 'Transformation Geometry', subject: 'mathematics' },
+          { id: 'stat', name: 'Statistics', subject: 'mathematics' },
+          { id: 'prob', name: 'Probability', subject: 'mathematics' },
+          { id: 'graph', name: 'Graphs', subject: 'mathematics' },
+          { id: 'var', name: 'Variation', subject: 'mathematics' },
+          { id: 'loci', name: 'Loci & Construction', subject: 'mathematics' },
+        ];
+        setTopics(mathTopics);
+      } else {
+        Alert.alert('Error', 'Failed to load topics. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -45,12 +109,16 @@ const TopicsScreen: React.FC = () => {
 
   const handleTopicPress = async (topic: Topic) => {
     // For Combined Science, if topic is a parent (Biology/Chemistry/Physics), show subtopics
-    if (topic.is_parent && subject.id === 'combined_science') {
+    // BUT with tabs, we are already "inside" a parent. 
+    // So we likely just start the quiz or go deeper if there are more levels.
+    // Assuming 2 levels: Subject -> [Bio/Chem/Phys] -> Topics
+
+    if (topic.is_parent && subject.id !== 'combined_science') {
+      // Standard nested behavior for non-combined subjects
       setCurrentParentSubject(topic.name);
-      // Update the navigation params to show we're in a submenu
       navigation.setParams({ parentSubject: topic.name } as never);
     } else {
-      // Otherwise, start quiz with this topic
+      // Start quiz
       handleStartQuiz(topic);
     }
   };
@@ -65,6 +133,10 @@ const TopicsScreen: React.FC = () => {
 
   const handleEnglishEssay = () => {
     navigation.navigate('EnglishEssay' as never);
+  };
+
+  const handleVirtualLab = () => {
+    navigation.navigate('VirtualLab' as never);
   };
 
   const handleStartQuiz = async (topic?: Topic) => {
@@ -92,7 +164,7 @@ const TopicsScreen: React.FC = () => {
                   topic?.id,
                   'medium',
                   topic ? 'topical' : 'exam',
-                  topic?.parent_subject || currentParentSubject
+                  topic?.parent_subject || (subject.id === 'combined_science' ? activeTab : currentParentSubject)
                 );
                 if (question) {
                   navigation.navigate('Quiz' as never, { question, subject, topic } as never);
@@ -112,20 +184,61 @@ const TopicsScreen: React.FC = () => {
     }
   };
 
-  if (loading) {
+  // Determine gradient colors based on subject
+  const getHeaderGradient = () => {
+    if (subject.id === 'mathematics') return [Colors.subjects.mathematics, Colors.primary.dark];
+    if (subject.id === 'combined_science') {
+      if (activeTab === 'Biology') return [Colors.subjects.science, Colors.secondary.dark];
+      if (activeTab === 'Chemistry') return [Colors.subjects.combinedScience, Colors.primary.dark];
+      if (activeTab === 'Physics') return [Colors.subjects.mathematics, Colors.primary.darker];
+      return [Colors.subjects.science, Colors.secondary.dark];
+    }
+    if (subject.id === 'english') return [Colors.subjects.english, Colors.warning.dark];
+    return Colors.gradients.primary;
+  };
+
+  const renderTabs = () => {
+    if (subject.id !== 'combined_science') return null;
+
+    const tabs = ['Biology', 'Chemistry', 'Physics'];
+
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#1976D2" />
-        <Text style={styles.loadingText}>Loading topics...</Text>
+      <View style={styles.tabContainer}>
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab;
+          let activeColor = Colors.subjects.science;
+          if (tab === 'Chemistry') activeColor = Colors.subjects.combinedScience;
+          if (tab === 'Physics') activeColor = Colors.subjects.mathematics;
+
+          return (
+            <TouchableOpacity
+              key={tab}
+              style={[
+                styles.tab,
+                isActive && { backgroundColor: activeColor, borderColor: activeColor }
+              ]}
+              onPress={() => setActiveTab(tab)}
+            >
+              <Text style={[
+                styles.tabText,
+                isActive && styles.activeTabText
+              ]}>
+                {tab}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
     );
-  }
+  };
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.background.default} />
+
       {/* Professional Header */}
       <LinearGradient
-        colors={[subject.color || Colors.primary.main, Colors.primary.dark]}
+        colors={getHeaderGradient()}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.header}
@@ -134,7 +247,7 @@ const TopicsScreen: React.FC = () => {
           <View style={{ flex: 1 }}>
             <TouchableOpacity
               onPress={() => {
-                if (currentParentSubject) {
+                if (currentParentSubject && subject.id !== 'combined_science') {
                   setCurrentParentSubject(undefined);
                   navigation.setParams({ parentSubject: undefined } as never);
                 } else {
@@ -143,144 +256,177 @@ const TopicsScreen: React.FC = () => {
               }}
               style={{ marginBottom: 8 }}
             >
-              {currentParentSubject && (
-                <Text style={styles.backButton}>← Back</Text>
-              )}
+              <Text style={styles.backButton}>← Back</Text>
             </TouchableOpacity>
             <Text style={styles.title}>
-              {currentParentSubject ? currentParentSubject : subject.name}
+              {subject.id === 'combined_science' ? activeTab : (currentParentSubject || subject.name)}
             </Text>
             <Text style={styles.subtitle}>
-              {currentParentSubject
-                ? 'Choose a subtopic to practice'
-                : 'Choose a topic or start an exam'}
+              {subject.id === 'combined_science'
+                ? `Master ${activeTab} concepts`
+                : (currentParentSubject ? 'Choose a subtopic' : 'Choose a topic or start an exam')}
             </Text>
           </View>
           {getSubjectIcon(subject.id)}
         </View>
       </LinearGradient>
 
-      {/* Special Features */}
-      <View style={styles.featuresContainer}>
-        {subject.id === 'mathematics' && (
-          <Card variant="elevated" onPress={handleGraphPractice} style={styles.featureCard}>
-            <View style={styles.featureContent}>
-              <IconCircle
-                icon={Icons.graph(28, Colors.subjects.mathematics)}
-                size={56}
-                backgroundColor={Colors.iconBg.mathematics}
-              />
-              <View style={styles.featureInfo}>
-                <Text style={styles.featureTitle}>Graph Practice</Text>
-                <Text style={styles.featureSubtitle}>Practice reading and analyzing graphs</Text>
-              </View>
-              {Icons.arrowRight(24, Colors.text.secondary)}
-            </View>
-          </Card>
-        )}
+      {/* Tabs for Combined Science */}
+      {renderTabs()}
 
-        {subject.id === 'english' && (
-          <>
-            <Card variant="elevated" onPress={handleEnglishComprehension} style={styles.featureCard}>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+
+        {/* Special Features */}
+        <View style={styles.featuresContainer}>
+          {subject.id === 'mathematics' && (
+            <Card variant="elevated" onPress={handleGraphPractice} style={styles.featureCard}>
               <View style={styles.featureContent}>
                 <IconCircle
-                  icon={Icons.comprehension(28, Colors.subjects.english)}
+                  icon={Icons.graph(28, Colors.subjects.mathematics)}
                   size={56}
-                  backgroundColor={Colors.iconBg.english}
+                  backgroundColor={Colors.iconBg.mathematics}
                 />
                 <View style={styles.featureInfo}>
-                  <Text style={styles.featureTitle}>Comprehension</Text>
-                  <Text style={styles.featureSubtitle}>Reading comprehension practice</Text>
+                  <Text style={styles.featureTitle}>Graph Practice</Text>
+                  <Text style={styles.featureSubtitle}>Practice reading and analyzing graphs</Text>
                 </View>
                 {Icons.arrowRight(24, Colors.text.secondary)}
               </View>
             </Card>
-            <Card variant="elevated" onPress={handleEnglishEssay} style={styles.featureCard}>
+          )}
+
+          {subject.id === 'english' && (
+            <>
+              <Card variant="elevated" onPress={handleEnglishComprehension} style={styles.featureCard}>
+                <View style={styles.featureContent}>
+                  <IconCircle
+                    icon={Icons.comprehension(28, Colors.subjects.english)}
+                    size={56}
+                    backgroundColor={Colors.iconBg.english}
+                  />
+                  <View style={styles.featureInfo}>
+                    <Text style={styles.featureTitle}>Comprehension</Text>
+                    <Text style={styles.featureSubtitle}>Reading comprehension practice</Text>
+                  </View>
+                  {Icons.arrowRight(24, Colors.text.secondary)}
+                </View>
+              </Card>
+              <Card variant="elevated" onPress={handleEnglishEssay} style={styles.featureCard}>
+                <View style={styles.featureContent}>
+                  <IconCircle
+                    icon={Icons.essay(28, Colors.subjects.english)}
+                    size={56}
+                    backgroundColor={Colors.iconBg.english}
+                  />
+                  <View style={styles.featureInfo}>
+                    <Text style={styles.featureTitle}>Essay Writing</Text>
+                    <Text style={styles.featureSubtitle}>Write and get your essay marked</Text>
+                  </View>
+                  {Icons.arrowRight(24, Colors.text.secondary)}
+                </View>
+              </Card>
+            </>
+          )}
+
+          {/* Virtual Lab for Science */}
+          {subject.id === 'combined_science' && (
+            <Card variant="elevated" onPress={handleVirtualLab} style={styles.featureCard}>
               <View style={styles.featureContent}>
                 <IconCircle
-                  icon={Icons.essay(28, Colors.subjects.english)}
+                  icon={Icons.science(28, Colors.subjects.combinedScience)}
                   size={56}
-                  backgroundColor={Colors.iconBg.english}
+                  backgroundColor={Colors.iconBg.science}
                 />
                 <View style={styles.featureInfo}>
-                  <Text style={styles.featureTitle}>Essay Writing</Text>
-                  <Text style={styles.featureSubtitle}>Write and get your essay marked</Text>
+                  <Text style={styles.featureTitle}>Virtual Labs</Text>
+                  <Text style={styles.featureSubtitle}>Interactive experiments for {activeTab}</Text>
                 </View>
                 {Icons.arrowRight(24, Colors.text.secondary)}
               </View>
             </Card>
-          </>
-        )}
+          )}
 
-        {/* Exam Quiz Card - Only show at top level */}
-        {!currentParentSubject && (
-          <Card 
-            variant="gradient" 
-            gradientColors={[Colors.primary.main, Colors.primary.dark]} 
-            onPress={() => {
-              if (subject.id === 'combined_science') {
-                navigation.navigate('CombinedScienceExam' as never, { subject } as never);
-              } else {
-                handleStartQuiz();
-              }
-            }} 
-            style={styles.examCard}
-          >
-            <View style={styles.examContent}>
-              <IconCircle
-                icon={Icons.quiz(32, '#FFFFFF')}
-                size={64}
-                backgroundColor="rgba(255, 255, 255, 0.2)"
-              />
-              <View style={styles.examInfo}>
-                <Text style={styles.examTitle}>Start Exam Quiz</Text>
-                <Text style={styles.examSubtitle}>Mixed questions from all topics</Text>
-              </View>
-            </View>
-          </Card>
-        )}
-      </View>
-
-      {/* Topics List */}
-      <View style={styles.topicsContainer}>
-        <Text style={styles.sectionTitle}>
-          {currentParentSubject ? 'Subtopics' : 'Topics'}
-        </Text>
-        {topics.length === 0 && !loading && (
-          <Text style={styles.noTopicsText}>No topics available</Text>
-        )}
-        {topics
-          .filter((topic) => {
-            if (subject.id === 'english' && topic.name === 'Comprehension Skills') {
-              return false;
-            }
-            return true;
-          })
-          .map((topic) => (
+          {/* Exam Quiz Card - Only show at top level or for Combined Science tabs */}
+          {(!currentParentSubject || subject.id === 'combined_science') && (
             <Card
-              key={topic.id}
-              variant="elevated"
-              onPress={() => handleTopicPress(topic)}
-              style={styles.topicCard}
+              variant="gradient"
+              gradientColors={getHeaderGradient()}
+              onPress={() => {
+                if (subject.id === 'combined_science') {
+                  // For combined science, maybe we want a subject specific exam?
+                  // Or just the general one. Let's keep general for now, or pass the activeTab
+                  handleStartQuiz(); // This will use activeTab as parent_subject
+                } else {
+                  handleStartQuiz();
+                }
+              }}
+              style={styles.examCard}
             >
-              <View style={styles.topicContent}>
+              <View style={styles.examContent}>
                 <IconCircle
-                  icon={getTopicIcon(topic, subject.id)}
-                  size={40}
-                  backgroundColor={getTopicIconBg(topic, subject.id)}
+                  icon={Icons.quiz(32, '#FFFFFF')}
+                  size={64}
+                  backgroundColor="rgba(255, 255, 255, 0.2)"
                 />
-                <View style={styles.topicInfo}>
-                  <Text style={styles.topicName}>{topic.name}</Text>
-                  {topic.is_parent && (
-                    <Text style={styles.topicSubtitle}>Tap to view subtopics</Text>
-                  )}
+                <View style={styles.examInfo}>
+                  <Text style={styles.examTitle}>Start {subject.id === 'combined_science' ? activeTab : ''} Exam</Text>
+                  <Text style={styles.examSubtitle}>Mixed questions from all {subject.id === 'combined_science' ? activeTab : ''} topics</Text>
                 </View>
-                {Icons.arrowRight(24, Colors.text.secondary)}
               </View>
             </Card>
-          ))}
-      </View>
-    </ScrollView>
+          )}
+        </View>
+
+        {/* Topics List */}
+        <View style={styles.topicsContainer}>
+          <Text style={styles.sectionTitle}>
+            {currentParentSubject ? 'Subtopics' : 'Topics'}
+          </Text>
+
+          {loading ? (
+            <View style={styles.centerContainer}>
+              <ActivityIndicator size="large" color={Colors.primary.main} />
+            </View>
+          ) : (
+            <>
+              {topics.length === 0 && (
+                <Text style={styles.noTopicsText}>No topics available for {activeTab}</Text>
+              )}
+              {topics
+                .filter((topic) => {
+                  if (subject.id === 'english' && topic.name === 'Comprehension Skills') {
+                    return false;
+                  }
+                  return true;
+                })
+                .map((topic) => (
+                  <Card
+                    key={topic.id}
+                    variant="elevated"
+                    onPress={() => handleTopicPress(topic)}
+                    style={styles.topicCard}
+                  >
+                    <View style={styles.topicContent}>
+                      <IconCircle
+                        icon={getTopicIcon(topic, subject.id)}
+                        size={40}
+                        backgroundColor={getTopicIconBg(topic, subject.id)}
+                      />
+                      <View style={styles.topicInfo}>
+                        <Text style={styles.topicName}>{topic.name}</Text>
+                        {topic.is_parent && subject.id !== 'combined_science' && (
+                          <Text style={styles.topicSubtitle}>Tap to view subtopics</Text>
+                        )}
+                      </View>
+                      {Icons.arrowRight(24, Colors.text.secondary)}
+                    </View>
+                  </Card>
+                ))}
+            </>
+          )}
+        </View>
+      </ScrollView>
+    </View>
   );
 };
 
@@ -294,35 +440,23 @@ const getSubjectIcon = (subjectId: string): React.ReactNode => {
 };
 
 const getTopicIcon = (topic: Topic, subjectId: string): React.ReactNode => {
-  if (subjectId === 'combined_science' && topic.is_parent) {
-    // Different icons for Biology, Chemistry, Physics
-    if (topic.name === 'Biology') {
-      return Icons.science(24, '#4CAF50');
-    } else if (topic.name === 'Chemistry') {
-      return Icons.science(24, '#2196F3');
-    } else if (topic.name === 'Physics') {
-      return Icons.science(24, '#FF9800');
-    }
+  if (subjectId === 'combined_science') {
+    // We can use generic science icon or specific if available
+    return Icons.science(24, Colors.subjects.science);
   }
   if (subjectId === 'english') {
     if (topic.name.toLowerCase().includes('grammar')) {
-      return Icons.grammar(24, Colors.primary.main);
+      return Icons.grammar(24, Colors.subjects.english);
     } else if (topic.name.toLowerCase().includes('vocabulary')) {
-      return Icons.vocabulary(24, Colors.primary.main);
+      return Icons.vocabulary(24, Colors.subjects.english);
     }
   }
   return Icons.quiz(24, Colors.primary.main);
 };
 
 const getTopicIconBg = (topic: Topic, subjectId: string): string => {
-  if (subjectId === 'combined_science' && topic.is_parent) {
-    if (topic.name === 'Biology') {
-      return '#E8F5E9';
-    } else if (topic.name === 'Chemistry') {
-      return '#E3F2FD';
-    } else if (topic.name === 'Physics') {
-      return '#FFF3E0';
-    }
+  if (subjectId === 'combined_science') {
+    return Colors.iconBg.science;
   }
   return Colors.iconBg.default;
 };
@@ -330,13 +464,15 @@ const getTopicIconBg = (topic: Topic, subjectId: string): string => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background.paper,
+    backgroundColor: Colors.background.default,
+  },
+  scrollView: {
+    flex: 1,
   },
   centerContainer: {
-    flex: 1,
+    padding: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.background.paper,
   },
   loadingText: {
     marginTop: 10,
@@ -349,6 +485,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
+    shadowColor: Colors.primary.dark,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   headerContent: {
     flexDirection: 'row',
@@ -366,12 +507,40 @@ const styles = StyleSheet.create({
     color: Colors.text.white,
     opacity: 0.9,
   },
+  tabContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    gap: 10,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.border.medium,
+    backgroundColor: Colors.background.paper,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.text.secondary,
+  },
+  activeTabText: {
+    color: Colors.text.white,
+    fontWeight: 'bold',
+  },
   featuresContainer: {
     padding: 20,
     paddingTop: 10,
   },
   featureCard: {
     marginBottom: 12,
+    backgroundColor: Colors.background.paper,
+    borderColor: Colors.border.light,
+    borderWidth: 1,
   },
   featureContent: {
     flexDirection: 'row',
@@ -430,6 +599,9 @@ const styles = StyleSheet.create({
   },
   topicCard: {
     marginBottom: 12,
+    backgroundColor: Colors.background.paper,
+    borderColor: Colors.border.light,
+    borderWidth: 1,
   },
   topicContent: {
     flexDirection: 'row',
@@ -459,24 +631,6 @@ const styles = StyleSheet.create({
   backButton: {
     fontSize: 16,
     color: Colors.text.white,
-    opacity: 0.9,
-  },
-  examButton: {
-    backgroundColor: '#1976D2',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 20,
-    alignItems: 'center',
-  },
-  examButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 5,
-  },
-  examButtonSubtext: {
-    fontSize: 14,
-    color: '#FFFFFF',
     opacity: 0.9,
   },
 });

@@ -1,91 +1,99 @@
 // Professional Color Theme System
 export const Colors = {
-  // Primary Colors - Deep Indigo/Violet Theme
+  // Space Theme - Deep Universe & Neon Accents
   primary: {
-    main: '#6200EA', // Deep Purple
-    light: '#B388FF', // Lavender
-    dark: '#3700B3', // Darker Purple
-    darker: '#000000', // Almost Black
+    main: '#7C4DFF', // Electric Violet
+    light: '#B47CFF', // Soft Neon Purple
+    dark: '#3F1DCB', // Deep Cosmos
+    darker: '#12005E', // Black Hole
     contrastText: '#FFFFFF',
   },
-  
-  // Secondary Colors - Vibrant Accents
+
+  // Secondary Colors - Cyberpunk Accents
   secondary: {
-    main: '#00BFA5', // Teal Accent
-    light: '#64FFDA',
-    dark: '#009688',
+    main: '#00E5FF', // Cyan Neon
+    light: '#6EFFFF',
+    dark: '#00B2CC',
     contrastText: '#000000',
   },
-  
+
   // Success Colors
   success: {
-    main: '#00C853',
-    light: '#69F0AE',
-    dark: '#009624',
+    main: '#00E676', // Neon Green
+    light: '#66FFA6',
+    dark: '#00B248',
   },
-  
+
   // Warning Colors
   warning: {
-    main: '#FFAB00',
-    light: '#FFD740',
-    dark: '#FF6D00',
+    main: '#FFC400', // Amber Neon
+    light: '#FFF350',
+    dark: '#C79400',
   },
-  
+
   // Error Colors
   error: {
-    main: '#D50000',
-    light: '#FF5252',
-    dark: '#9B0000',
+    main: '#FF1744', // Red Neon
+    light: '#FF616F',
+    dark: '#C4001D',
   },
-  
-  // Subject Colors - Modern Gradients Base
+
+  // Info Colors
+  info: {
+    main: '#2979FF', // Blue Neon
+    light: '#75A7FF',
+    dark: '#004ECB',
+  },
+
+  // Subject Colors - Neon Variants
   subjects: {
-    mathematics: '#2962FF', // Blue
-    science: '#00C853', // Green
-    english: '#FF6D00', // Orange
-    combinedScience: '#00BFA5', // Teal
+    mathematics: '#2979FF', // Electric Blue
+    science: '#00E676', // Neon Green
+    english: '#FF9100', // Neon Orange
+    combinedScience: '#00E5FF', // Cyan
   },
-  
+
   // Background Colors
   background: {
-    default: '#F5F7FA', // Very light grey/blue
-    paper: '#FFFFFF',
-    dark: '#121212',
-    subtle: '#E0E0E0',
+    default: '#0A0E21', // Deep Space Blue
+    paper: '#1D1E33', // Dark Nebula
+    dark: '#050510', // Void
+    subtle: '#2D2F45', // Starlight Grey
   },
-  
+
   // Text Colors
   text: {
-    primary: '#212121',
-    secondary: '#757575',
-    disabled: '#9E9E9E',
+    primary: '#FFFFFF', // White Star
+    secondary: '#B0BEC5', // Stardust Grey
+    disabled: '#546E7A',
     white: '#FFFFFF',
-    hint: '#BDBDBD',
+    hint: '#78909C',
   },
-  
+
   // Border Colors
   border: {
-    light: '#EEEEEE',
-    medium: '#E0E0E0',
-    dark: '#BDBDBD',
+    light: '#2D2F45',
+    medium: '#455A64',
+    dark: '#102027',
   },
-  
+
   // Icon Background Colors
   iconBg: {
-    mathematics: '#E3F2FD',
-    science: '#E8F5E9',
-    english: '#FFF3E0',
-    default: '#F3E5F5',
+    mathematics: 'rgba(41, 121, 255, 0.15)',
+    science: 'rgba(0, 230, 118, 0.15)',
+    english: 'rgba(255, 145, 0, 0.15)',
+    default: 'rgba(124, 77, 255, 0.15)',
   },
 
   // Gradients
   gradients: {
-    primary: ['#6200EA', '#3700B3'],
-    secondary: ['#00BFA5', '#009688'],
-    success: ['#00C853', '#009624'],
-    warning: ['#FFAB00', '#FF6D00'],
-    error: ['#D50000', '#9B0000'],
-    dark: ['#212121', '#000000'],
+    primary: ['#7C4DFF', '#3F1DCB'], // Violet Nebula
+    secondary: ['#00E5FF', '#00B2CC'], // Cyan Pulse
+    success: ['#00E676', '#00B248'],
+    warning: ['#FFC400', '#C79400'],
+    error: ['#FF1744', '#C4001D'],
+    dark: ['#1D1E33', '#0A0E21'], // Deep Space
+    card: ['#2D2F45', '#1D1E33'],
   }
 };
 

@@ -11,12 +11,17 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRoute, useNavigation } from '@react-navigation/native';
+import Markdown from 'react-native-markdown-display';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 import { teacherApi, TeacherSession } from '../services/api/teacherApi';
 import { useAuth } from '../context/AuthContext';
 import { TypingIndicator } from '../components/TypingIndicator';
+import { Colors } from '../theme/colors';
 
 interface Message {
   id: string;
@@ -147,21 +152,34 @@ const TeacherModeScreen: React.FC = () => {
           onPress: async () => {
             try {
               setGeneratingNotes(true);
-              const notes = await teacherApi.generateNotes(session.session_id);
-              if (notes) {
-                Alert.alert(
-                  'Notes Generated',
-                  'Your notes have been generated successfully!',
-                  [{ text: 'OK' }]
-                );
-                // Update credits
-                if (user) {
-                  const newCredits = (user.credits || 0) - 1;
-                  updateUser({ credits: newCredits });
+              const notesData = await teacherApi.generateNotes(session.session_id);
+
+              if (notesData && notesData.pdf_url) {
+                // Download and Share PDF
+                const fileUri = (FileSystem as any).documentDirectory + `notes_${session.session_id}.pdf`;
+                const downloadRes = await FileSystem.downloadAsync(notesData.pdf_url, fileUri);
+
+                if (downloadRes.status === 200) {
+                  if (await Sharing.isAvailableAsync()) {
+                    await Sharing.shareAsync(downloadRes.uri);
+                  } else {
+                    Alert.alert('Success', 'Notes downloaded to ' + downloadRes.uri);
+                  }
+
+                  // Update credits
+                  if (user) {
+                    const newCredits = (user.credits || 0) - 1;
+                    updateUser({ credits: newCredits });
+                  }
+                } else {
+                  throw new Error('Failed to download PDF');
                 }
+              } else {
+                throw new Error('No PDF URL returned');
               }
             } catch (error: any) {
-              Alert.alert('Error', error.response?.data?.message || 'Failed to generate notes');
+              console.error('Note generation error:', error);
+              Alert.alert('Error', error.message || 'Failed to generate notes');
             } finally {
               setGeneratingNotes(false);
             }
@@ -171,10 +189,28 @@ const TeacherModeScreen: React.FC = () => {
     );
   };
 
+  const quickQuestions: { [key: string]: string[] } = {
+    Biology: ['Explain Photosynthesis', 'What is a Cell?', 'Define Osmosis', 'Functions of the Heart'],
+    Chemistry: ['Periodic Table trends', 'What is a Mole?', 'Acids and Bases', 'Bonding types'],
+    Physics: ['Newton\'s Laws', 'Ohm\'s Law', 'Types of Energy', 'Reflection vs Refraction'],
+    Mathematics: [
+      'Algebra Basics', 'Pythagoras Theorem', 'Calculus Intro', 'Trigonometry Rules',
+      'Matrices', 'Vectors', 'Circle Theorems', 'Probability', 'Statistics',
+      'Sequences & Series', 'Mensuration', 'Transformations'
+    ],
+    'Combined Science': ['Scientific Method', 'Lab Safety', 'Units of Measurement'],
+  };
+
+  const currentSubjectQuestions = quickQuestions[subject] || quickQuestions['Combined Science'];
+
+  const handleQuickAsk = (question: string) => {
+    setInputText(question);
+  };
+
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#1976D2" />
+        <ActivityIndicator size="large" color={Colors.primary.main} />
         <Text style={styles.loadingText}>Starting Teacher Mode...</Text>
       </View>
     );
@@ -187,7 +223,7 @@ const TeacherModeScreen: React.FC = () => {
       keyboardVerticalOffset={90}
     >
       <LinearGradient
-        colors={['#1976D2', '#1565C0']}
+        colors={Colors.gradients.primary}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.header}
@@ -235,7 +271,7 @@ const TeacherModeScreen: React.FC = () => {
             >
               {message.role === 'user' ? (
                 <LinearGradient
-                  colors={['#1976D2', '#1565C0']}
+                  colors={Colors.gradients.primary}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.userMessageGradient}
@@ -243,7 +279,11 @@ const TeacherModeScreen: React.FC = () => {
                   <Text style={styles.userMessageText}>{message.content}</Text>
                 </LinearGradient>
               ) : (
-                <Text style={styles.assistantMessageText}>{message.content}</Text>
+                <View style={styles.markdownContainer}>
+                  <Markdown style={markdownStyles}>
+                    {message.content}
+                  </Markdown>
+                </View>
               )}
             </View>
           </View>
@@ -263,6 +303,19 @@ const TeacherModeScreen: React.FC = () => {
       />
 
       <View style={styles.inputContainer}>
+        {/* Quick Ask Buttons */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.quickAskContainer}>
+          {currentSubjectQuestions.map((q, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.quickAskButton}
+              onPress={() => handleQuickAsk(q)}
+              disabled={sending}
+            >
+              <Text style={styles.quickAskText}>{q}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
         <TouchableOpacity
           style={styles.notesButton}
           onPress={handleGenerateNotes}
@@ -281,6 +334,7 @@ const TeacherModeScreen: React.FC = () => {
             value={inputText}
             onChangeText={setInputText}
             placeholder="Ask a question..."
+            placeholderTextColor={Colors.text.hint}
             multiline
             maxLength={500}
             editable={!sending}
@@ -305,23 +359,25 @@ const TeacherModeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: Colors.background.default,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
+    backgroundColor: Colors.background.default,
   },
   loadingText: {
     marginTop: 10,
-    color: '#757575',
+    color: Colors.text.secondary,
     fontSize: 16,
   },
   header: {
     paddingTop: 50,
     paddingBottom: 20,
     paddingHorizontal: 20,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
   headerContent: {
     flexDirection: 'row',
@@ -335,6 +391,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   teacherAvatarText: {
     fontSize: 28,
@@ -355,10 +413,12 @@ const styles = StyleSheet.create({
   },
   creditsContainer: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   credits: {
     fontSize: 18,
@@ -373,7 +433,7 @@ const styles = StyleSheet.create({
   },
   messagesContainer: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: Colors.background.default,
   },
   messagesContent: {
     padding: 16,
@@ -381,7 +441,7 @@ const styles = StyleSheet.create({
   },
   messageRow: {
     flexDirection: 'row',
-    marginBottom: 12,
+    marginBottom: 16,
     alignItems: 'flex-end',
   },
   userMessageRow: {
@@ -394,7 +454,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#E3F2FD',
+    backgroundColor: Colors.primary.light,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 8,
@@ -403,21 +463,18 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   messageBubble: {
-    maxWidth: '75%',
-    borderRadius: 16,
+    maxWidth: '80%',
+    borderRadius: 20,
     overflow: 'hidden',
   },
   userMessage: {
     borderBottomRightRadius: 4,
   },
   assistantMessage: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.background.paper,
     borderBottomLeftRadius: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
   },
   userMessageGradient: {
     padding: 12,
@@ -428,29 +485,26 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: '#FFFFFF',
   },
-  assistantMessageText: {
-    fontSize: 16,
-    lineHeight: 22,
-    color: '#212121',
+  markdownContainer: {
     padding: 12,
     paddingHorizontal: 16,
   },
   inputContainer: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.background.paper,
     borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
+    borderTopColor: Colors.border.light,
     padding: 12,
-    paddingBottom: 16,
+    paddingBottom: 24,
   },
   notesButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: Colors.success.main,
     borderRadius: 12,
     padding: 12,
     alignItems: 'center',
     marginBottom: 10,
-    shadowColor: '#000',
+    shadowColor: Colors.success.main,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.3,
     shadowRadius: 3,
     elevation: 3,
   },
@@ -466,30 +520,31 @@ const styles = StyleSheet.create({
   textInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: Colors.border.medium,
     borderRadius: 24,
     paddingHorizontal: 16,
     paddingVertical: 10,
     maxHeight: 100,
     marginRight: 10,
     fontSize: 16,
-    backgroundColor: '#F9F9F9',
+    backgroundColor: Colors.background.subtle,
+    color: Colors.text.primary,
   },
   sendButton: {
-    backgroundColor: '#1976D2',
+    backgroundColor: Colors.primary.main,
     borderRadius: 24,
     paddingHorizontal: 24,
     paddingVertical: 12,
     justifyContent: 'center',
     minHeight: 48,
-    shadowColor: '#1976D2',
+    shadowColor: Colors.primary.main,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 4,
   },
   sendButtonDisabled: {
-    backgroundColor: '#BDBDBD',
+    backgroundColor: Colors.text.disabled,
     shadowOpacity: 0,
     elevation: 0,
   },
@@ -497,6 +552,73 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  quickAskContainer: {
+    marginBottom: 12,
+    maxHeight: 40,
+  },
+  quickAskButton: {
+    backgroundColor: Colors.background.subtle,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: Colors.primary.main,
+  },
+  quickAskText: {
+    color: Colors.primary.light,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+});
+
+const markdownStyles = StyleSheet.create({
+  body: {
+    color: Colors.text.primary,
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  heading1: {
+    color: Colors.primary.light,
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginVertical: 10,
+  },
+  heading2: {
+    color: Colors.primary.light,
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginVertical: 8,
+  },
+  strong: {
+    fontWeight: 'bold',
+    color: Colors.secondary.main,
+  },
+  em: {
+    fontStyle: 'italic',
+    color: Colors.text.secondary,
+  },
+  code_inline: {
+    backgroundColor: Colors.background.subtle,
+    color: Colors.secondary.light,
+    borderRadius: 4,
+    paddingHorizontal: 4,
+  },
+  code_block: {
+    backgroundColor: Colors.background.subtle,
+    padding: 10,
+    borderRadius: 8,
+    marginVertical: 8,
+    borderColor: Colors.border.light,
+    borderWidth: 1,
+  },
+  link: {
+    color: Colors.secondary.main,
+    textDecorationLine: 'underline',
+  },
+  list_item: {
+    marginVertical: 4,
   },
 });
 

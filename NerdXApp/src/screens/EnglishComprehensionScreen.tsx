@@ -17,7 +17,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { englishApi, ComprehensionData } from '../services/api/englishApi';
+import { englishApi, ComprehensionData, GradingResult, SummaryGradingResult } from '../services/api/englishApi';
 import { useAuth } from '../context/AuthContext';
 import { Colors } from '../theme/colors';
 
@@ -29,8 +29,11 @@ const EnglishComprehensionScreen: React.FC = () => {
   const [comprehension, setComprehension] = useState<ComprehensionData | null>(null);
   const [loading, setLoading] = useState(false);
   const [answers, setAnswers] = useState<{ [key: number]: string }>({});
+  const [summaryAnswer, setSummaryAnswer] = useState('');
   const [submitted, setSubmitted] = useState(false);
-  const [score, setScore] = useState<number | null>(null);
+  const [gradingResult, setGradingResult] = useState<GradingResult | null>(null);
+  const [summaryResult, setSummaryResult] = useState<SummaryGradingResult | null>(null);
+  const [activeTab, setActiveTab] = useState<'questions' | 'summary'>('questions');
 
   const handleGenerate = async () => {
     if ((user?.credits || 0) < 3) {
@@ -45,8 +48,10 @@ const EnglishComprehensionScreen: React.FC = () => {
     try {
       setLoading(true);
       setSubmitted(false);
-      setScore(null);
+      setGradingResult(null);
+      setSummaryResult(null);
       setAnswers({});
+      setSummaryAnswer('');
       const data = await englishApi.generateComprehension();
       if (data) {
         setComprehension(data);
@@ -63,7 +68,7 @@ const EnglishComprehensionScreen: React.FC = () => {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!comprehension) return;
 
     const answeredCount = Object.keys(answers).length;
@@ -75,16 +80,49 @@ const EnglishComprehensionScreen: React.FC = () => {
       return;
     }
 
-    setSubmitted(true);
-    // Calculate score (simplified - in real app, compare with correct answers)
-    const calculatedScore = Math.floor((answeredCount / comprehension.questions.length) * 100);
-    setScore(calculatedScore);
+    if (comprehension.summary_question && !summaryAnswer.trim()) {
+      Alert.alert('Incomplete', 'Please write your summary before submitting.');
+      return;
+    }
 
-    Alert.alert(
-      'Answers Submitted',
-      `You scored ${calculatedScore}%!\n\nReview your answers below.`,
-      [{ text: 'OK' }]
-    );
+    setLoading(true);
+    try {
+      // Grade questions
+      const gradeResult = await englishApi.gradeComprehension(
+        comprehension.passage,
+        comprehension.questions,
+        answers
+      );
+      setGradingResult(gradeResult);
+
+      // Grade summary if exists
+      if (comprehension.summary_question && summaryAnswer) {
+        const sumResult = await englishApi.gradeSummary(
+          comprehension.passage,
+          comprehension.summary_question.question,
+          summaryAnswer
+        );
+        setSummaryResult(sumResult);
+      }
+
+      setSubmitted(true);
+
+      const totalScore = (gradeResult?.total_score || 0) + (summaryResult?.total_score || 0);
+      const maxScore = (gradeResult?.total_possible || 0) + (summaryResult?.max_score || 0);
+      const percentage = Math.round((totalScore / maxScore) * 100) || 0;
+
+      Alert.alert(
+        'Grading Complete',
+        `You scored ${percentage}%!\n\nCheck the detailed feedback for each question.`,
+        [{ text: 'View Feedback' }]
+      );
+
+    } catch (error: any) {
+      Alert.alert('Error', 'Failed to grade answers. Please try again.');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -165,51 +203,146 @@ const EnglishComprehensionScreen: React.FC = () => {
                 </LinearGradient>
               </View>
 
-              <Text style={styles.sectionTitle}>Questions</Text>
-              {comprehension.questions.map((question, index) => (
-                <View key={index} style={styles.questionCard}>
-                  <LinearGradient
-                    colors={['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.8)']}
-                    style={styles.glassCard}
+              {/* Tabs */}
+              <View style={styles.tabContainer}>
+                <TouchableOpacity
+                  style={[styles.tab, activeTab === 'questions' && styles.activeTab]}
+                  onPress={() => setActiveTab('questions')}
+                >
+                  <Text style={[styles.tabText, activeTab === 'questions' && styles.activeTabText]}>Questions</Text>
+                </TouchableOpacity>
+                {comprehension.summary_question && (
+                  <TouchableOpacity
+                    style={[styles.tab, activeTab === 'summary' && styles.activeTab]}
+                    onPress={() => setActiveTab('summary')}
                   >
-                    <View style={styles.questionHeader}>
-                      <Text style={styles.questionNumber}>Q{index + 1}</Text>
-                      <Text style={styles.questionMarks}>{question.marks} marks</Text>
-                    </View>
-                    <Text style={styles.questionText}>{question.question}</Text>
-                    <TextInput
-                      style={styles.answerInput}
-                      value={answers[index] || ''}
-                      onChangeText={(text) => setAnswers({ ...answers, [index]: text })}
-                      placeholder="Type your answer here..."
-                      placeholderTextColor="#9E9E9E"
-                      multiline
-                      editable={!submitted}
-                    />
-                    {submitted && (
-                      <View style={styles.feedbackContainer}>
-                        <Text style={styles.feedbackLabel}>Expected Answer:</Text>
-                        <Text style={styles.feedbackText}>{question.answer}</Text>
+                    <Text style={[styles.tabText, activeTab === 'summary' && styles.activeTabText]}>Summary</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              {activeTab === 'questions' ? (
+                <>
+                  <Text style={styles.sectionTitle}>Comprehension Questions</Text>
+                  {comprehension.questions.map((question, index) => {
+                    const grade = gradingResult?.question_grades.find(g => g.question_index === index);
+                    return (
+                      <View key={index} style={styles.questionCard}>
+                        <LinearGradient
+                          colors={['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.8)']}
+                          style={styles.glassCard}
+                        >
+                          <View style={styles.questionHeader}>
+                            <Text style={styles.questionNumber}>Q{index + 1}</Text>
+                            <View style={styles.marksContainer}>
+                              <Text style={styles.questionMarks}>{question.marks} marks</Text>
+                              {submitted && grade && (
+                                <Text style={[styles.awardedMarks, { color: grade.marks_awarded === grade.max_marks ? Colors.success : Colors.warning }]}>
+                                  {grade.marks_awarded}/{grade.max_marks}
+                                </Text>
+                              )}
+                            </View>
+                          </View>
+                          <Text style={styles.questionText}>{question.question}</Text>
+                          <TextInput
+                            style={[styles.answerInput, submitted && grade && { borderColor: grade.marks_awarded > 0 ? Colors.success : Colors.error, borderWidth: 2 }]}
+                            value={answers[index] || ''}
+                            onChangeText={(text) => setAnswers({ ...answers, [index]: text })}
+                            placeholder="Type your answer here..."
+                            placeholderTextColor="#9E9E9E"
+                            multiline
+                            editable={!submitted}
+                          />
+                          {submitted && grade && (
+                            <View style={styles.feedbackContainer}>
+                              <Text style={styles.feedbackLabel}>AI Feedback:</Text>
+                              <Text style={styles.feedbackText}>{grade.feedback}</Text>
+                              <Text style={[styles.feedbackLabel, { marginTop: 10 }]}>Correct Answer:</Text>
+                              <Text style={styles.feedbackText}>{question.answer}</Text>
+                            </View>
+                          )}
+                        </LinearGradient>
                       </View>
-                    )}
-                  </LinearGradient>
-                </View>
-              ))}
+                    );
+                  })}
+                </>
+              ) : (
+                <>
+                  <Text style={styles.sectionTitle}>Summary Writing</Text>
+                  {comprehension.summary_question && (
+                    <View style={styles.questionCard}>
+                      <LinearGradient
+                        colors={['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.8)']}
+                        style={styles.glassCard}
+                      >
+                        <View style={styles.questionHeader}>
+                          <Text style={styles.questionNumber}>Summary Question</Text>
+                          <Text style={styles.questionMarks}>{comprehension.summary_question.marks} marks</Text>
+                        </View>
+                        <Text style={styles.questionText}>{comprehension.summary_question.question}</Text>
+                        <Text style={styles.limitText}>Max words: {comprehension.summary_question.max_words}</Text>
+
+                        <TextInput
+                          style={styles.summaryInput}
+                          value={summaryAnswer}
+                          onChangeText={setSummaryAnswer}
+                          placeholder="Write your summary here..."
+                          placeholderTextColor="#9E9E9E"
+                          multiline
+                          editable={!submitted}
+                        />
+                        <Text style={styles.wordCount}>
+                          Word count: {summaryAnswer.trim().split(/\s+/).filter(w => w.length > 0).length}
+                        </Text>
+
+                        {submitted && summaryResult && (
+                          <View style={styles.feedbackContainer}>
+                            <Text style={styles.feedbackLabel}>Summary Feedback:</Text>
+                            <Text style={styles.feedbackText}>{summaryResult.feedback}</Text>
+
+                            <View style={styles.scoreRow}>
+                              <Text style={styles.scoreItem}>Content: {summaryResult.content_points}/10</Text>
+                              <Text style={styles.scoreItem}>Language: {summaryResult.language_mark}/10</Text>
+                            </View>
+
+                            {summaryResult.key_points_missed && summaryResult.key_points_missed.length > 0 && (
+                              <>
+                                <Text style={[styles.feedbackLabel, { marginTop: 10 }]}>Missed Points:</Text>
+                                {summaryResult.key_points_missed.map((point, i) => (
+                                  <Text key={i} style={styles.bulletPoint}>• {point}</Text>
+                                ))}
+                              </>
+                            )}
+                          </View>
+                        )}
+                      </LinearGradient>
+                    </View>
+                  )}
+                </>
+              )}
 
               {!submitted && (
-                <TouchableOpacity style={styles.actionButton} onPress={handleSubmit}>
+                <TouchableOpacity
+                  style={[styles.actionButton, loading && styles.generateButtonDisabled]}
+                  onPress={handleSubmit}
+                  disabled={loading}
+                >
                   <LinearGradient
-                    colors={Colors.gradients.success}
+                    colors={loading ? ['#BDBDBD', '#9E9E9E'] : Colors.gradients.success}
                     style={styles.gradientButton}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                   >
-                    <Text style={styles.actionButtonText}>Submit Answers</Text>
+                    {loading ? (
+                      <ActivityIndicator color="#FFF" />
+                    ) : (
+                      <Text style={styles.actionButtonText}>Submit All Answers</Text>
+                    )}
                   </LinearGradient>
                 </TouchableOpacity>
               )}
 
-              {submitted && score !== null && (
+              {submitted && gradingResult && (
                 <View style={styles.resultCard}>
                   <LinearGradient
                     colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.9)']}
@@ -217,16 +350,24 @@ const EnglishComprehensionScreen: React.FC = () => {
                   >
                     <Text style={styles.resultTitle}>Practice Complete!</Text>
                     <View style={styles.scoreCircle}>
-                      <Text style={styles.scoreValue}>{score}%</Text>
-                      <Text style={styles.scoreLabel}>Score</Text>
+                      <Text style={styles.scoreValue}>
+                        {Math.round(((gradingResult.total_score + (summaryResult?.total_score || 0)) /
+                          (gradingResult.total_possible + (summaryResult?.max_score || 0))) * 100)}%
+                      </Text>
+                      <Text style={styles.scoreLabel}>Total Score</Text>
                     </View>
+                    <Text style={styles.overallFeedback}>{gradingResult.overall_feedback}</Text>
+
                     <TouchableOpacity
                       style={styles.actionButton}
                       onPress={() => {
                         setComprehension(null);
                         setAnswers({});
+                        setSummaryAnswer('');
                         setSubmitted(false);
-                        setScore(null);
+                        setGradingResult(null);
+                        setSummaryResult(null);
+                        setActiveTab('questions');
                       }}
                     >
                       <LinearGradient
@@ -511,6 +652,90 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.text.secondary,
     marginTop: 4,
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    marginBottom: 20,
+    backgroundColor: 'rgba(255,255,255,0.5)',
+    borderRadius: 12,
+    padding: 4,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderRadius: 10,
+  },
+  activeTab: {
+    backgroundColor: Colors.primary,
+  },
+  tabText: {
+    fontSize: 16,
+    color: Colors.text.secondary,
+    fontWeight: '600',
+  },
+  activeTabText: {
+    color: '#FFF',
+  },
+  marksContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  awardedMarks: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  limitText: {
+    fontSize: 12,
+    color: Colors.text.secondary,
+    marginBottom: 10,
+    fontStyle: 'italic',
+  },
+  summaryInput: {
+    backgroundColor: '#F5F7FA',
+    borderRadius: 12,
+    padding: 15,
+    fontSize: 16,
+    color: Colors.text.primary,
+    minHeight: 200,
+    textAlignVertical: 'top',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+  },
+  wordCount: {
+    textAlign: 'right',
+    fontSize: 12,
+    color: Colors.text.secondary,
+    marginTop: 5,
+  },
+  scoreRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginVertical: 10,
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)',
+  },
+  scoreItem: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: Colors.primary,
+  },
+  bulletPoint: {
+    fontSize: 14,
+    color: Colors.text.primary,
+    marginLeft: 10,
+    marginBottom: 4,
+  },
+  overallFeedback: {
+    fontSize: 16,
+    color: Colors.text.primary,
+    textAlign: 'center',
+    marginBottom: 20,
+    paddingHorizontal: 10,
+    lineHeight: 24,
   },
 });
 

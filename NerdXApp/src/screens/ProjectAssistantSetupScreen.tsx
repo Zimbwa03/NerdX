@@ -17,8 +17,14 @@ const ProjectAssistantSetupScreen: React.FC = () => {
   const { user } = useAuth();
   const [projectTitle, setProjectTitle] = useState('');
   const [subject, setSubject] = useState('');
+  const [studentName, setStudentName] = useState('');
+  const [studentSurname, setStudentSurname] = useState('');
+  const [school, setSchool] = useState('');
+  const [formLevel, setFormLevel] = useState('');
 
   const subjects = [
+    'Computer Science',
+    'Agriculture',
     'Mathematics',
     'Combined Science',
     'Physics',
@@ -30,9 +36,11 @@ const ProjectAssistantSetupScreen: React.FC = () => {
     'Other',
   ];
 
+  const formLevels = ['Form 3', 'Form 4', 'Form 5', 'Form 6 Lower', 'Form 6 Upper'];
+
   const handleStart = () => {
-    if (!projectTitle.trim() || !subject) {
-      Alert.alert('Error', 'Please enter project title and select subject');
+    if (!projectTitle.trim() || !subject || !studentName.trim() || !studentSurname.trim() || !school.trim() || !formLevel) {
+      Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
 
@@ -48,6 +56,10 @@ const ProjectAssistantSetupScreen: React.FC = () => {
     navigation.navigate('ProjectAssistant' as never, {
       projectTitle: projectTitle.trim(),
       subject,
+      studentName: studentName.trim(),
+      studentSurname: studentSurname.trim(),
+      school: school.trim(),
+      form: formLevel,
     } as never);
   };
 
@@ -59,7 +71,62 @@ const ProjectAssistantSetupScreen: React.FC = () => {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.label}>Project Title</Text>
+        <Text style={styles.label}>Student Name *</Text>
+        <TextInput
+          style={styles.input}
+          value={studentName}
+          onChangeText={setStudentName}
+          placeholder="First Name"
+          maxLength={50}
+        />
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.label}>Student Surname *</Text>
+        <TextInput
+          style={styles.input}
+          value={studentSurname}
+          onChangeText={setStudentSurname}
+          placeholder="Last Name"
+          maxLength={50}
+        />
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.label}>School *</Text>
+        <TextInput
+          style={styles.input}
+          value={school}
+          onChangeText={setSchool}
+          placeholder="e.g., Harare High School"
+          maxLength={100}
+        />
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.label}>Form Level *</Text>
+        <View style={styles.subjectsContainer}>
+          {formLevels.map((level) => (
+            <TouchableOpacity
+              key={level}
+              style={[styles.subjectButton, formLevel === level && styles.subjectButtonSelected]}
+              onPress={() => setFormLevel(level)}
+            >
+              <Text
+                style={[
+                  styles.subjectText,
+                  formLevel === level && styles.subjectTextSelected,
+                ]}
+              >
+                {level}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.label}>Project Title *</Text>
         <TextInput
           style={styles.input}
           value={projectTitle}
@@ -71,7 +138,7 @@ const ProjectAssistantSetupScreen: React.FC = () => {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.label}>Subject</Text>
+        <Text style={styles.label}>Subject *</Text>
         <View style={styles.subjectsContainer}>
           {subjects.map((subj) => (
             <TouchableOpacity
@@ -99,20 +166,20 @@ const ProjectAssistantSetupScreen: React.FC = () => {
           • Follow-up questions: 1 credit each{'\n'}
           • Get research help{'\n'}
           • Write project sections{'\n'}
-          • Generate study notes{'\n'}
-          • Complete project guidance
+          • Generate final document{'\n'}
+          • Complete ZIMSEC project guidance
         </Text>
       </View>
 
       <TouchableOpacity
         style={[
           styles.startButton,
-          (!projectTitle.trim() || !subject) && styles.startButtonDisabled,
+          (!projectTitle.trim() || !subject || !studentName.trim() || !studentSurname.trim() || !school.trim() || !formLevel) && styles.startButtonDisabled,
         ]}
         onPress={handleStart}
-        disabled={!projectTitle.trim() || !subject}
+        disabled={!projectTitle.trim() || !subject || !studentName.trim() || !studentSurname.trim() || !school.trim() || !formLevel}
       >
-        <Text style={styles.startButtonText}>Start Project Assistant</Text>
+        <Text style={styles.startButtonText}>Create Project</Text>
       </TouchableOpacity>
     </ScrollView>
   );

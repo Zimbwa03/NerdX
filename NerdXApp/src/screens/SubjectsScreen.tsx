@@ -3,11 +3,11 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
   ScrollView,
   ActivityIndicator,
   Alert,
+  StatusBar,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -15,11 +15,12 @@ import { quizApi, Subject } from '../services/api/quizApi';
 import { Icons, IconCircle } from '../components/Icons';
 import { Card } from '../components/Card';
 import { Modal, ModalOptionCard } from '../components/Modal';
+import { Colors } from '../theme/colors';
 
 const SubjectsScreen: React.FC = () => {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [mathModalVisible, setMathModalVisible] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const navigation = useNavigation();
 
@@ -43,21 +44,25 @@ const SubjectsScreen: React.FC = () => {
     if (subject.id === 'combined_science') {
       // Show modal for Combined Science
       setSelectedSubject(subject);
-      setModalVisible(true);
+      setMathModalVisible(true);
+    } else if (subject.id === 'mathematics') {
+      // Show modal for Mathematics
+      setSelectedSubject(subject);
+      setMathModalVisible(true);
     } else {
       navigation.navigate('Topics' as never, { subject } as never);
     }
   };
 
   const handleTeacherMode = () => {
-    setModalVisible(false);
+    setMathModalVisible(false);
     if (selectedSubject) {
       navigation.navigate('TeacherModeSetup' as never, { subject: selectedSubject } as never);
     }
   };
 
   const handlePracticeMode = () => {
-    setModalVisible(false);
+    setMathModalVisible(false);
     if (selectedSubject) {
       navigation.navigate('Topics' as never, { subject: selectedSubject } as never);
     }
@@ -66,118 +71,186 @@ const SubjectsScreen: React.FC = () => {
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#1976D2" />
+        <ActivityIndicator size="large" color={Colors.primary.main} />
         <Text style={styles.loadingText}>Loading subjects...</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Professional Header */}
-      <LinearGradient
-        colors={['#1976D2', '#1565C0']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.header}
-      >
-        <View style={styles.headerContent}>
-          <View>
-            <Text style={styles.title}>Choose a Subject</Text>
-            <Text style={styles.subtitle}>Select a subject to start practicing</Text>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.background.default} />
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* Professional Header */}
+        <LinearGradient
+          colors={Colors.gradients.primary}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.header}
+        >
+          <View style={styles.headerContent}>
+            <View>
+              <Text style={styles.title}>Choose a Subject</Text>
+              <Text style={styles.subtitle}>Select a subject to start practicing</Text>
+            </View>
+            {Icons.quiz(32, '#FFFFFF')}
           </View>
-          {Icons.quiz(32, '#FFFFFF')}
-        </View>
-      </LinearGradient>
+        </LinearGradient>
 
-      {/* Professional Subject Cards */}
-      <View style={styles.subjectsContainer}>
-        {subjects.map((subject) => {
-          const subjectIcon = getSubjectIcon(subject.icon);
-          return (
-            <Card
-              key={subject.id}
-              variant="elevated"
-              onPress={() => handleSubjectPress(subject)}
-              style={[styles.subjectCard, { borderLeftColor: subject.color }]}
-            >
-              <View style={styles.subjectContent}>
-                <IconCircle
-                  icon={subjectIcon}
-                  size={64}
-                  backgroundColor={getSubjectIconBg(subject.id)}
-                />
-                <View style={styles.subjectInfo}>
-                  <Text style={styles.subjectName}>{subject.name}</Text>
-                  <Text style={styles.subjectDescription}>
-                    Practice questions and improve your skills
-                  </Text>
+        {/* Professional Subject Cards */}
+        <View style={styles.subjectsContainer}>
+          {subjects.map((subject) => {
+            const subjectIcon = getSubjectIcon(subject.icon);
+            // Use theme colors if available, otherwise fallback
+            const subjectColor = Colors.subjects[subject.id as keyof typeof Colors.subjects] || subject.color;
+
+            return (
+              <Card
+                key={subject.id}
+                variant="elevated"
+                onPress={() => handleSubjectPress(subject)}
+                style={[styles.subjectCard, { borderLeftColor: subjectColor }]}
+              >
+                <View style={styles.subjectContent}>
+                  <IconCircle
+                    icon={subjectIcon}
+                    size={64}
+                    backgroundColor={getSubjectIconBg(subject.id)}
+                  />
+                  <View style={styles.subjectInfo}>
+                    <Text style={styles.subjectName}>{subject.name}</Text>
+                    <Text style={styles.subjectDescription}>
+                      Practice questions and improve your skills
+                    </Text>
+                  </View>
+                  {Icons.arrowRight(24, Colors.text.secondary)}
                 </View>
-                {Icons.arrowRight(24, '#757575')}
-              </View>
-            </Card>
-          );
-        })}
-      </View>
+              </Card>
+            );
+          })}
+        </View>
 
-      {/* Mode Selection Modal */}
-      <Modal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        title="Combined Science"
-      >
-        <Text style={styles.modalDescription}>Choose your learning mode:</Text>
-        <ModalOptionCard
-          icon="👨‍🏫"
-          title="Teacher Mode"
-          description="Interactive AI teaching with personalized explanations and notes"
-          onPress={handleTeacherMode}
-          color="#4CAF50"
-        />
-        <ModalOptionCard
-          icon="📝"
-          title="Practice Mode"
-          description="Practice questions by topic and test your knowledge"
-          onPress={handlePracticeMode}
-          color="#2196F3"
-        />
-      </Modal>
-    </ScrollView>
+        {/* Mode Selection Modal */}
+        <Modal
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+          title="Combined Science"
+        >
+          <Text style={styles.modalDescription}>Choose your learning mode:</Text>
+          <ModalOptionCard
+            icon="👨‍🏫"
+            title="Teacher Mode"
+            description="Interactive AI teaching with personalized explanations and notes"
+            onPress={handleTeacherMode}
+            color={Colors.subjects.science}
+          />
+          <ModalOptionCard
+            icon="📝"
+            title="Practice Mode"
+            description="Practice questions by topic and test your knowledge"
+            onPress={handlePracticeMode}
+            color={Colors.primary.main}
+          />
+        </Modal>
+
+        {/* Math Hub Modal */}
+        <Modal
+          visible={mathModalVisible}
+          onClose={() => setMathModalVisible(false)}
+          title="Mathematics Hub"
+        >
+          <Text style={styles.modalDescription}>Select a learning tool:</Text>
+          <ModalOptionCard
+            icon="📝"
+            title="Topic Practice"
+            description="Master specific topics with targeted questions"
+            onPress={() => {
+              setMathModalVisible(false);
+              navigation.navigate('Topics' as never, { subject: selectedSubject } as never);
+            }}
+            color={Colors.subjects.mathematics}
+          />
+          <ModalOptionCard
+            icon="👨‍🏫"
+            title="AI Math Tutor"
+            description="Get step-by-step help and explanations"
+            onPress={() => {
+              setMathModalVisible(false);
+              navigation.navigate('TeacherModeSetup' as never, { subject: selectedSubject } as never);
+            }}
+            color={Colors.secondary.main}
+          />
+          <ModalOptionCard
+            icon="📈"
+            title="Graphing Tools"
+            description="Visualize equations and solve graph problems"
+            onPress={() => {
+              setMathModalVisible(false);
+              navigation.navigate('GraphPractice' as never);
+            }}
+            color={Colors.primary.main}
+          />
+          <ModalOptionCard
+            icon="📐"
+            title="Formula Sheet"
+            description="Access essential formulas for quick reference"
+            onPress={() => {
+              setMathModalVisible(false);
+              navigation.navigate('FormulaSheet' as never);
+            }}
+            color={Colors.info.main}
+          />
+          <ModalOptionCard
+            icon="🎓"
+            title="Past Papers"
+            description="Practice with real exam papers under timed conditions"
+            onPress={() => {
+              setMathModalVisible(false);
+              navigation.navigate('PastPaper' as never);
+            }}
+            color={Colors.warning.main}
+          />
+        </Modal>
+      </ScrollView>
+    </View>
   );
 };
 
 const getSubjectIcon = (icon: string): React.ReactNode => {
   const iconMap: { [key: string]: React.ReactNode } = {
-    calculate: Icons.mathematics(32, '#2196F3'),
-    science: Icons.science(32, '#4CAF50'),
-    'menu-book': Icons.english(32, '#FF9800'),
+    calculate: Icons.mathematics(32, Colors.subjects.mathematics),
+    science: Icons.science(32, Colors.subjects.science),
+    'menu-book': Icons.english(32, Colors.subjects.english),
   };
-  return iconMap[icon] || Icons.quiz(32, '#1976D2');
+  return iconMap[icon] || Icons.quiz(32, Colors.primary.main);
 };
 
 const getSubjectIconBg = (subjectId: string): string => {
   const bgMap: { [key: string]: string } = {
-    mathematics: '#E3F2FD',
-    combined_science: '#E8F5E9',
-    english: '#FFF3E0',
+    mathematics: Colors.iconBg.mathematics,
+    combined_science: Colors.iconBg.science,
+    english: Colors.iconBg.english,
   };
-  return bgMap[subjectId] || '#F5F5F5';
+  return bgMap[subjectId] || Colors.iconBg.default;
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: Colors.background.default,
+  },
+  scrollView: {
+    flex: 1,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
+    backgroundColor: Colors.background.default,
   },
   loadingText: {
     marginTop: 10,
-    color: '#757575',
+    color: Colors.text.secondary,
     fontSize: 16,
   },
   header: {
@@ -186,6 +259,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
+    shadowColor: Colors.primary.dark,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   headerContent: {
     flexDirection: 'row',
@@ -210,6 +288,9 @@ const styles = StyleSheet.create({
   subjectCard: {
     marginBottom: 16,
     borderLeftWidth: 4,
+    backgroundColor: Colors.background.paper,
+    borderColor: Colors.border.light,
+    borderWidth: 1,
   },
   subjectContent: {
     flexDirection: 'row',
@@ -223,17 +304,17 @@ const styles = StyleSheet.create({
   subjectName: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#212121',
+    color: Colors.text.primary,
     marginBottom: 6,
   },
   subjectDescription: {
     fontSize: 14,
-    color: '#757575',
+    color: Colors.text.secondary,
     lineHeight: 20,
   },
   modalDescription: {
     fontSize: 15,
-    color: '#757575',
+    color: Colors.text.secondary,
     marginBottom: 16,
     lineHeight: 22,
   },
