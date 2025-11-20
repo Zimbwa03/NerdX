@@ -233,7 +233,7 @@ const QuizScreen: React.FC = () => {
               )}
             </Card>
 
-          {/* Options - for multiple choice questions */}
+            {/* Options - for multiple choice questions */}
           {question.options && question.options.length > 0 && (
             <View style={styles.optionsContainer}>
               {question.options.map((option, index) => {

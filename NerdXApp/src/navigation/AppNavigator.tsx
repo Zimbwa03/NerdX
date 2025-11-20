@@ -19,6 +19,7 @@ import TeacherModeSetupScreen from '../screens/TeacherModeSetupScreen';
 import TeacherModeScreen from '../screens/TeacherModeScreen';
 import ProjectAssistantSetupScreen from '../screens/ProjectAssistantSetupScreen';
 import ProjectAssistantScreen from '../screens/ProjectAssistantScreen';
+import ProjectListScreen from '../screens/ProjectListScreen';
 import GraphPracticeScreen from '../screens/GraphPracticeScreen';
 import EnglishComprehensionScreen from '../screens/EnglishComprehensionScreen';
 import EnglishEssayScreen from '../screens/EnglishEssayScreen';
@@ -156,6 +157,13 @@ const AppNavigator: React.FC = () => {
               options={{
                 title: 'Project Assistant',
                 headerBackTitle: 'Back',
+              }}
+            />
+            <Stack.Screen
+              name="ProjectList"
+              component={ProjectListScreen}
+              options={{
+                title: 'My Projects',
               }}
             />
             <Stack.Screen
