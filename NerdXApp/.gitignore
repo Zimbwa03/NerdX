@@ -22,8 +22,7 @@ ios/.xcode.env.local
 
 # Android/IntelliJ
 build/
-# Don't ignore android/ directory - EAS Build needs it
-# android/
+android/
 .idea
 .gradle
 local.properties
