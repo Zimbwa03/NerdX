@@ -210,31 +210,32 @@ const QuizScreen: React.FC = () => {
           {!question ? (
             <ActivityIndicator size="large" color={Colors.primary.main} style={{ marginTop: 50 }} />
           ) : (
-            <Card variant="elevated" style={styles.questionCard}>
-              <View style={styles.questionHeader}>
-                <IconCircle
-                  icon={Icons.info(24, Colors.primary.main)}
-                  size={40}
-                  backgroundColor={Colors.background.subtle}
-                />
-                <Text style={styles.questionLabel}>Question</Text>
-              </View>
-              <Text style={styles.questionText}>{question.question_text}</Text>
-
-              {/* Question Image */}
-              {question.question_image_url && (
-                <View style={styles.questionImageContainer}>
-                  <Image
-                    source={{ uri: question.question_image_url }}
-                    style={styles.questionImage}
-                    resizeMode="contain"
+            <>
+              <Card variant="elevated" style={styles.questionCard}>
+                <View style={styles.questionHeader}>
+                  <IconCircle
+                    icon={Icons.info(24, Colors.primary.main)}
+                    size={40}
+                    backgroundColor={Colors.background.subtle}
                   />
+                  <Text style={styles.questionLabel}>Question</Text>
                 </View>
-              )}
-            </Card>
+                <Text style={styles.questionText}>{question.question_text}</Text>
 
-            {/* Options - for multiple choice questions */}
-          {question.options && question.options.length > 0 && (
+                {/* Question Image */}
+                {question.question_image_url && (
+                  <View style={styles.questionImageContainer}>
+                    <Image
+                      source={{ uri: question.question_image_url }}
+                      style={styles.questionImage}
+                      resizeMode="contain"
+                    />
+                  </View>
+                )}
+              </Card>
+
+              {/* Options - for multiple choice questions */}
+              {question.options && question.options.length > 0 && (
             <View style={styles.optionsContainer}>
               {question.options.map((option, index) => {
                 const optionLabel = String.fromCharCode(65 + index); // A, B, C, D
@@ -471,6 +472,8 @@ const QuizScreen: React.FC = () => {
               </>
             )}
           </View>
+            </>
+          )}
         </View>
       </ScrollView>
     </View>
