@@ -1,5 +1,16 @@
 rootProject.name = 'NerdXApp'
 
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+        google()
+        maven {
+            url("$rootDir/../node_modules/react-native/android")
+        }
+    }
+}
+
 dependencyResolutionManagement {
   versionCatalogs {
     reactAndroidLibs {
