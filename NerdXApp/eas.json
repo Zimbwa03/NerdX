@@ -3,12 +3,14 @@
     "preview": {
       "android": {
         "buildType": "apk"
-      }
+      },
+      "prebuildCommand": "npx expo prebuild --clean --platform android"
     },
     "production": {
       "android": {
         "buildType": "app-bundle"
-      }
+      },
+      "prebuildCommand": "npx expo prebuild --clean --platform android"
     }
   }
 }
