@@ -1378,6 +1378,20 @@ def init_database():
             create_payment_transactions_table()
         except Exception as e:
             logger.warning(f"Could not create payment_transactions table: {e}")
+            logger.warning(f"Could not create payment_transactions table: {e}")
+        
+        logger.info("Database initialization complete")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Database initialization failed: {e}")
+        return False
+
+def get_random_comprehension_from_db(theme=None, form_level=None):
+    """
+    Get a random comprehension passage with questions from database
+    
+    Args:
         theme: Optional theme filter
         form_level: Optional form level filter (Form 3, Form 4)
         
