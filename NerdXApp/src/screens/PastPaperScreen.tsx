@@ -24,6 +24,14 @@ const PastPaperScreen: React.FC = () => {
     const handleStartExam = () => {
         if (!selectedYear || !selectedPaper) {
             Alert.alert('Selection Required', 'Please select both a year and a paper type.');
+            return;
+        }
+        // TODO: Implement navigation to exam screen
+        console.log('Starting exam:', selectedYear, selectedPaper);
+    };
+
+    return (
+        <View style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor={Colors.subjects.mathematics} />
             <LinearGradient
                 colors={[Colors.subjects.mathematics, '#1565C0']}
