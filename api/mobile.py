@@ -23,7 +23,9 @@ from services.english_service import EnglishService
 from services.referral_service import ReferralService
 from services.paynow_service import PaynowService
 from services.graph_service import GraphService
+from services.graph_service import GraphService
 from services.image_service import ImageService
+from services.pharmacology_service import PharmacologyService
 from utils.url_utils import convert_local_path_to_public_url
 from config import Config
 import os
@@ -455,6 +457,12 @@ def get_subjects():
                 'name': 'English',
                 'icon': 'menu-book',
                 'color': '#FF9800'
+            },
+            {
+                'id': 'pharmacology',
+                'name': 'Pharmacology',
+                'icon': 'healing',
+                'color': '#E91E63'
             }
         ]
         
@@ -522,6 +530,17 @@ def get_topics():
                         'id': topic.lower().replace(' ', '_'),
                         'name': topic,
                         'subject': 'mathematics'
+                    })
+                    'subject': 'mathematics'
+                    })
+        elif subject == 'pharmacology':
+            # Return all Pharmacology topics
+            if 'Pharmacology' in TOPICS:
+                for topic in TOPICS['Pharmacology']:
+                    topics.append({
+                        'id': topic.lower().replace(' ', '_'),
+                        'name': topic,
+                        'subject': 'pharmacology'
                     })
         elif subject in TOPICS:
             # Default handling for other subjects
@@ -632,6 +651,16 @@ def generate_question():
             else:
                 # Default to grammar if topic not specified
                 question_result = english_service.generate_grammar_question()
+            
+            if question_result and question_result.get('success'):
+                question_data = question_result.get('question_data', {})
+            else:
+                question_data = None
+        elif subject == 'pharmacology':
+            pharmacology_service = PharmacologyService()
+            # Determine question type (MCQ or True/False) - passed from frontend or default to MCQ
+            pharma_question_type = data.get('question_type', 'MCQ')
+            question_result = pharmacology_service.generate_question(topic, pharma_question_type, difficulty)
             
             if question_result and question_result.get('success'):
                 question_data = question_result.get('question_data', {})

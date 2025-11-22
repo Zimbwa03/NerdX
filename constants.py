@@ -47,34 +47,6 @@ TOPICS = {
         "Algebra",
         "Geometry",
         "Statistics",
-        "Trigonometry",
-        "Vectors",
-        "Matrices",
-        "Transformation",
-        "Probability"
-    ],
-    "English": [
-        "Formal Letter Writing",
-        "Informal Letter Writing",
-        "Article Writing",
-        "Report Writing",
-        "Speech Writing",
-        "Narrative Essays",
-        "Descriptive Essays",
-        "Argumentative Essays",
-        "Comprehension Skills",
-        "Vocabulary Building",
-        "Grammar and Language",
-        "Literary Devices",
-        "Reading Skills",
-        "Writing Skills"
-    ]
-}
-
-# Difficulty levels
-DIFFICULTY_LEVELS = {
-    'easy': {
-        'name': 'Easy',
         'credit_cost': 1,
         'point_value': 10
     },

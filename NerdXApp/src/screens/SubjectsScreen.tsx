@@ -221,6 +221,7 @@ const getSubjectIcon = (icon: string): React.ReactNode => {
     calculate: Icons.mathematics(32, Colors.subjects.mathematics),
     science: Icons.science(32, Colors.subjects.science),
     'menu-book': Icons.english(32, Colors.subjects.english),
+    healing: Icons.science(32, '#E91E63'), // Using science icon for now, or add a specific one
   };
   return iconMap[icon] || Icons.quiz(32, Colors.primary.main);
 };
@@ -230,6 +231,7 @@ const getSubjectIconBg = (subjectId: string): string => {
     mathematics: Colors.iconBg.mathematics,
     combined_science: Colors.iconBg.science,
     english: Colors.iconBg.english,
+    pharmacology: 'rgba(233, 30, 99, 0.1)',
   };
   return bgMap[subjectId] || Colors.iconBg.default;
 };

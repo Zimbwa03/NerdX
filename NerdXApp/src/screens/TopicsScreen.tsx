@@ -31,7 +31,11 @@ const TopicsScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>(parentSubject || (subject.id === 'combined_science' ? 'Biology' : ''));
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [loading, setLoading] = useState(true);
   const [currentParentSubject, setCurrentParentSubject] = useState<string | undefined>(parentSubject);
+  const [pharmaModalVisible, setPharmaModalVisible] = useState(false);
+  const [selectedPharmaTopic, setSelectedPharmaTopic] = useState<Topic | null>(null);
 
   useEffect(() => {
     if (subject.id === 'combined_science') {
@@ -117,9 +121,20 @@ const TopicsScreen: React.FC = () => {
       // Standard nested behavior for non-combined subjects
       setCurrentParentSubject(topic.name);
       navigation.setParams({ parentSubject: topic.name } as never);
+    } else if (subject.id === 'pharmacology') {
+      // Show Pharmacology Question Type Modal
+      setSelectedPharmaTopic(topic);
+      setPharmaModalVisible(true);
     } else {
       // Start quiz
       handleStartQuiz(topic);
+    }
+  };
+
+  const handlePharmaQuizStart = (type: 'MCQ' | 'True/False') => {
+    setPharmaModalVisible(false);
+    if (selectedPharmaTopic) {
+      handleStartQuiz(selectedPharmaTopic, type);
     }
   };
 
@@ -139,7 +154,7 @@ const TopicsScreen: React.FC = () => {
     navigation.navigate('VirtualLab' as never);
   };
 
-  const handleStartQuiz = async (topic?: Topic) => {
+  const handleStartQuiz = async (topic?: Topic, questionType?: string) => {
     try {
       if (!user || (user.credits || 0) < 1) {
         Alert.alert(
@@ -164,7 +179,10 @@ const TopicsScreen: React.FC = () => {
                   topic?.id,
                   'medium',
                   topic ? 'topical' : 'exam',
-                  topic?.parent_subject || (subject.id === 'combined_science' ? activeTab : currentParentSubject)
+                  'medium',
+                  topic ? 'topical' : 'exam',
+                  topic?.parent_subject || (subject.id === 'combined_science' ? activeTab : currentParentSubject),
+                  questionType // Pass question type (e.g., for Pharmacology)
                 );
                 if (question) {
                   navigation.navigate('Quiz' as never, { question, subject, topic } as never);
@@ -419,24 +437,33 @@ const TopicsScreen: React.FC = () => {
                         )}
                       </View>
                       {Icons.arrowRight(24, Colors.text.secondary)}
-                    </View>
-                  </Card>
-                ))}
-            </>
-          )}
-        </View>
-      </ScrollView>
-    </View>
-  );
+                      <Text style={styles.modalDescription}>Choose how you want to practice {selectedPharmaTopic?.name}:</Text>
+                      <ModalOptionCard
+                        icon="📝"
+                        title="Multiple Choice"
+                        description="Standard 4-option questions"
+                        onPress={() => handlePharmaQuizStart('MCQ')}
+                        color={Colors.primary.main}
+                      />
+                      <ModalOptionCard
+                        icon="✅"
+                        title="True / False"
+                        description="Quick concept verification"
+                        onPress={() => handlePharmaQuizStart('True/False')}
+                        color={Colors.secondary.main}
+                      />
+                    </Modal>
+                  </View >
+                );
 };
 
 const getSubjectIcon = (subjectId: string): React.ReactNode => {
-  const iconMap: { [key: string]: React.ReactNode } = {
-    mathematics: Icons.mathematics(32, '#FFFFFF'),
-    combined_science: Icons.science(32, '#FFFFFF'),
-    english: Icons.english(32, '#FFFFFF'),
+  const iconMap: {[key: string]: React.ReactNode } = {
+                mathematics: Icons.mathematics(32, '#FFFFFF'),
+              combined_science: Icons.science(32, '#FFFFFF'),
+              english: Icons.english(32, '#FFFFFF'),
   };
-  return iconMap[subjectId] || Icons.quiz(32, '#FFFFFF');
+              return iconMap[subjectId] || Icons.quiz(32, '#FFFFFF');
 };
 
 const getTopicIcon = (topic: Topic, subjectId: string): React.ReactNode => {
@@ -444,195 +471,195 @@ const getTopicIcon = (topic: Topic, subjectId: string): React.ReactNode => {
     // We can use generic science icon or specific if available
     return Icons.science(24, Colors.subjects.science);
   }
-  if (subjectId === 'english') {
+              if (subjectId === 'english') {
     if (topic.name.toLowerCase().includes('grammar')) {
       return Icons.grammar(24, Colors.subjects.english);
     } else if (topic.name.toLowerCase().includes('vocabulary')) {
       return Icons.vocabulary(24, Colors.subjects.english);
     }
   }
-  return Icons.quiz(24, Colors.primary.main);
+              return Icons.quiz(24, Colors.primary.main);
 };
 
 const getTopicIconBg = (topic: Topic, subjectId: string): string => {
   if (subjectId === 'combined_science') {
     return Colors.iconBg.science;
   }
-  return Colors.iconBg.default;
+              return Colors.iconBg.default;
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.default,
+              const styles = StyleSheet.create({
+                container: {
+                flex: 1,
+              backgroundColor: Colors.background.default,
   },
-  scrollView: {
-    flex: 1,
+              scrollView: {
+                flex: 1,
   },
-  centerContainer: {
-    padding: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
+              centerContainer: {
+                padding: 20,
+              justifyContent: 'center',
+              alignItems: 'center',
   },
-  loadingText: {
-    marginTop: 10,
-    color: Colors.text.secondary,
-    fontSize: 16,
+              loadingText: {
+                marginTop: 10,
+              color: Colors.text.secondary,
+              fontSize: 16,
   },
-  header: {
-    paddingTop: 50,
-    paddingBottom: 30,
-    paddingHorizontal: 20,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    shadowColor: Colors.primary.dark,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+              header: {
+                paddingTop: 50,
+              paddingBottom: 30,
+              paddingHorizontal: 20,
+              borderBottomLeftRadius: 30,
+              borderBottomRightRadius: 30,
+              shadowColor: Colors.primary.dark,
+              shadowOffset: {width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 8,
   },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+              headerContent: {
+                flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: Colors.text.white,
-    marginBottom: 8,
+              title: {
+                fontSize: 28,
+              fontWeight: 'bold',
+              color: Colors.text.white,
+              marginBottom: 8,
   },
-  subtitle: {
-    fontSize: 16,
-    color: Colors.text.white,
-    opacity: 0.9,
+              subtitle: {
+                fontSize: 16,
+              color: Colors.text.white,
+              opacity: 0.9,
   },
-  tabContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    gap: 10,
+              tabContainer: {
+                flexDirection: 'row',
+              paddingHorizontal: 20,
+              paddingVertical: 15,
+              gap: 10,
   },
-  tab: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.border.medium,
-    backgroundColor: Colors.background.paper,
-    alignItems: 'center',
-    justifyContent: 'center',
+              tab: {
+                flex: 1,
+              paddingVertical: 10,
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: Colors.border.medium,
+              backgroundColor: Colors.background.paper,
+              alignItems: 'center',
+              justifyContent: 'center',
   },
-  tabText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.text.secondary,
+              tabText: {
+                fontSize: 14,
+              fontWeight: '600',
+              color: Colors.text.secondary,
   },
-  activeTabText: {
-    color: Colors.text.white,
-    fontWeight: 'bold',
+              activeTabText: {
+                color: Colors.text.white,
+              fontWeight: 'bold',
   },
-  featuresContainer: {
-    padding: 20,
-    paddingTop: 10,
+              featuresContainer: {
+                padding: 20,
+              paddingTop: 10,
   },
-  featureCard: {
-    marginBottom: 12,
-    backgroundColor: Colors.background.paper,
-    borderColor: Colors.border.light,
-    borderWidth: 1,
+              featureCard: {
+                marginBottom: 12,
+              backgroundColor: Colors.background.paper,
+              borderColor: Colors.border.light,
+              borderWidth: 1,
   },
-  featureContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 4,
-    gap: 16,
+              featureContent: {
+                flexDirection: 'row',
+              alignItems: 'center',
+              padding: 4,
+              gap: 16,
   },
-  featureInfo: {
-    flex: 1,
+              featureInfo: {
+                flex: 1,
   },
-  featureTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: Colors.text.primary,
-    marginBottom: 4,
+              featureTitle: {
+                fontSize: 18,
+              fontWeight: '600',
+              color: Colors.text.primary,
+              marginBottom: 4,
   },
-  featureSubtitle: {
-    fontSize: 14,
-    color: Colors.text.secondary,
-    lineHeight: 20,
+              featureSubtitle: {
+                fontSize: 14,
+              color: Colors.text.secondary,
+              lineHeight: 20,
   },
-  examCard: {
-    marginBottom: 20,
-    marginTop: 8,
+              examCard: {
+                marginBottom: 20,
+              marginTop: 8,
   },
-  examContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 8,
+              examContent: {
+                flexDirection: 'row',
+              alignItems: 'center',
+              padding: 8,
   },
-  examInfo: {
-    marginLeft: 20,
-    flex: 1,
+              examInfo: {
+                marginLeft: 20,
+              flex: 1,
   },
-  examTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: Colors.text.white,
-    marginBottom: 4,
+              examTitle: {
+                fontSize: 20,
+              fontWeight: 'bold',
+              color: Colors.text.white,
+              marginBottom: 4,
   },
-  examSubtitle: {
-    fontSize: 14,
-    color: Colors.text.white,
-    opacity: 0.9,
+              examSubtitle: {
+                fontSize: 14,
+              color: Colors.text.white,
+              opacity: 0.9,
   },
-  topicsContainer: {
-    padding: 20,
-    paddingTop: 10,
+              topicsContainer: {
+                padding: 20,
+              paddingTop: 10,
   },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: Colors.text.primary,
-    marginBottom: 16,
-    marginLeft: 4,
+              sectionTitle: {
+                fontSize: 20,
+              fontWeight: 'bold',
+              color: Colors.text.primary,
+              marginBottom: 16,
+              marginLeft: 4,
   },
-  topicCard: {
-    marginBottom: 12,
-    backgroundColor: Colors.background.paper,
-    borderColor: Colors.border.light,
-    borderWidth: 1,
+              topicCard: {
+                marginBottom: 12,
+              backgroundColor: Colors.background.paper,
+              borderColor: Colors.border.light,
+              borderWidth: 1,
   },
-  topicContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 4,
-    gap: 16,
+              topicContent: {
+                flexDirection: 'row',
+              alignItems: 'center',
+              padding: 4,
+              gap: 16,
   },
-  topicInfo: {
-    flex: 1,
+              topicInfo: {
+                flex: 1,
   },
-  topicName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: Colors.text.primary,
+              topicName: {
+                fontSize: 18,
+              fontWeight: '600',
+              color: Colors.text.primary,
   },
-  topicSubtitle: {
-    fontSize: 12,
-    color: Colors.text.secondary,
-    marginTop: 4,
+              topicSubtitle: {
+                fontSize: 12,
+              color: Colors.text.secondary,
+              marginTop: 4,
   },
-  noTopicsText: {
-    fontSize: 14,
-    color: Colors.text.secondary,
-    textAlign: 'center',
-    marginTop: 20,
+              noTopicsText: {
+                fontSize: 14,
+              color: Colors.text.secondary,
+              textAlign: 'center',
+              marginTop: 20,
   },
-  backButton: {
-    fontSize: 16,
-    color: Colors.text.white,
-    opacity: 0.9,
+              backButton: {
+                fontSize: 16,
+              color: Colors.text.white,
+              opacity: 0.9,
   },
 });
 
-export default TopicsScreen;
+              export default TopicsScreen;
