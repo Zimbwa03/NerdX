@@ -531,8 +531,6 @@ def get_topics():
                         'name': topic,
                         'subject': 'mathematics'
                     })
-                    'subject': 'mathematics'
-                    })
         elif subject == 'pharmacology':
             # Return all Pharmacology topics
             if 'Pharmacology' in TOPICS:
@@ -717,7 +715,11 @@ def generate_question():
             'points': question_data.get('points', 10),
             'topic': topic or '',
             'difficulty': difficulty,
-            'allows_text_input': subject == 'mathematics' or question_type_mobile == 'short_answer',
+            'allows_text_input': (
+                subject == 'mathematics' or 
+                question_type_mobile == 'short_answer' or
+                (subject == 'english' and not options)  # English grammar questions without MCQ options need text input
+            ),
             'allows_image_upload': subject == 'mathematics',  # Math questions support image upload
             
             # New AI Tutor Fields
@@ -1784,11 +1786,40 @@ def generate_teacher_notes():
         # Deduct credits
         deduct_credits(g.current_user_id, credit_cost, 'teacher_mode_pdf', 'Generated Teacher Mode PDF notes')
         
+        # Generate PDF
+        from utils.science_notes_pdf_generator import ScienceNotesPDFGenerator
+        pdf_generator = ScienceNotesPDFGenerator()
+        pdf_path = pdf_generator.generate_notes_pdf(notes_data, g.current_user_id)
+        
+        # Convert to public URL
+        try:
+            # Try to use helper if available
+            from api.mobile import convert_local_path_to_public_url
+            pdf_url = convert_local_path_to_public_url(pdf_path)
+        except ImportError:
+            # Manual fallback
+            import os
+            import shutil
+            
+            filename = os.path.basename(pdf_path)
+            base_url = os.environ.get('RENDER_EXTERNAL_URL', 'https://nerdx.onrender.com')
+            
+            # Move to static/notes
+            static_dir = os.path.join(os.getcwd(), 'static', 'notes')
+            os.makedirs(static_dir, exist_ok=True)
+            new_path = os.path.join(static_dir, filename)
+            
+            if os.path.exists(pdf_path):
+                shutil.move(pdf_path, new_path)
+                pdf_url = f"{base_url.rstrip('/')}/static/notes/{filename}"
+            else:
+                pdf_url = ""
+
         return jsonify({
             'success': True,
             'data': {
                 'notes': notes_data,
-                'pdf_url': ''  # TODO: Generate actual PDF
+                'pdf_url': pdf_url
             }
         }), 200
         
@@ -1837,7 +1868,7 @@ def create_project():
         return jsonify({
             'success': True,
             'data': {
-                'project_id': project.get('id'),
+                'id': project.get('id'),
                 'title': project.get('project_title'),
                 'subject': project.get('subject'),
                 'current_stage': project.get('current_stage')

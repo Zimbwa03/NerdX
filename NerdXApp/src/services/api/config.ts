@@ -2,12 +2,22 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { Platform } from 'react-native';
+
 // IMPORTANT: For APK builds, update this to your actual backend URL
 // For development: use localhost (Android emulator uses 10.0.2.2 to access host machine's localhost)
 // For production: use your deployed backend URL on Render
 export const API_BASE_URL = __DEV__
-  ? 'http://10.0.2.2:5000' // Android emulator uses 10.0.2.2 to access host machine's localhost
+  ? (Platform.OS === 'web'
+    ? 'https://nerdx.onrender.com'  // Use production for web testing
+    : Platform.OS === 'android'
+      ? 'http://10.0.2.2:5000'
+      : 'http://localhost:5000')
   : 'https://nerdx.onrender.com'; // Production - Render backend URL
+
+console.log('🌐 API Base URL:', API_BASE_URL);
+console.log('🔧 Platform:', Platform.OS);
+console.log('🏗️ Dev Mode:', __DEV__);
 
 const AUTH_TOKEN_KEY = '@auth_token';
 

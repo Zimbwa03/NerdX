@@ -1023,64 +1023,6 @@ Return ONLY valid JSON:
                 }
         except Exception as e:
             logger.error(f"Error retrieving vocabulary from database: {e}")
-        
-        # Final fallback
-        logger.warning("Using fallback vocabulary question")
-        fallback = self._wrap_legacy_vocabulary_question(self._get_fallback_vocabulary_question())
-        fallback['source'] = 'fallback'
-        return {
-            'success': True,
-            'question_data': fallback
-        }
-
-    def generate_deepseek_essay_prompts(self, user_level: str = "Form 3") -> Optional[Dict]:
-        """Generate essay prompts using DeepSeek AI"""
-        if not self.deepseek_api_key:
-            logger.warning("DeepSeek API key not configured - skipping DeepSeek essay prompt generation")
-                model = self.client.GenerativeModel('gemini-2.0-flash-exp')
-                response = model.generate_content(
-                    prompt,
-                    generation_config=self.client.types.GenerationConfig(
-                        response_mime_type="application/json",
-                        temperature=0.7,
-                        max_output_tokens=3500
-                    ),
-                )
-                logger.info("Gemini API (gemini-2.0-flash-exp) call completed successfully for comprehension")
-            except Exception as api_error:
-                logger.error(f"Gemini API call failed for comprehension: {api_error}")
-                return None
-
-            if not response or not getattr(response, 'text', None):
-                logger.warning("Empty response from Gemini AI for comprehension")
-                return None
-
-            try:
-                clean_text = self._clean_json_block(response.text)
-                passage_data = json.loads(clean_text)
-                
-                # Validate structure
-                if 'passage' in passage_data and 'questions' in passage_data:
-                    logger.info(f"✅ Successfully generated comprehension passage using Gemini 2.0 Flash Exp - Theme: {theme}")
-                    return passage_data
-                else:
-                    logger.warning("Gemini comprehension response missing required fields")
-                    return None
-                    
-            except json.JSONDecodeError as e:
-                logger.error(f"Gemini comprehension JSON decode error: {e}")
-                return None
-            except Exception as error:
-                logger.error(f"Error processing Gemini comprehension response: {error}")
-                return None
-
-        except Exception as e:
-            logger.error(f"Error generating Gemini comprehension passage: {e}")
-            return None
-
-    def generate_comprehension_passage(self, theme: str = "General") -> Optional[Dict]:
-        """Generate reading comprehension passages with Gemini first, DeepSeek fallback"""
-        # Primary: Gemini AI generation
         gemini_result = self.generate_gemini_comprehension_passage(theme, form_level=4)
         if gemini_result:
             return gemini_result
