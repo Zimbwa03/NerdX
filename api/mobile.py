@@ -1366,52 +1366,6 @@ def get_essay_prompts():
         logger.error(f"Get essay prompts error: {e}", exc_info=True)
         return jsonify({'success': False, 'message': str(e)}), 500
 
-@mobile_bp.route('/english/essay', methods=['POST'])
-@require_auth
-def submit_essay():
-    """Submit essay for marking"""
-    try:
-        data = request.get_json()
-        prompt = data.get('prompt', '')
-        essay_text = data.get('essay_text', '')
-        
-        if not prompt or not essay_text:
-            return jsonify({'success': False, 'message': 'Prompt and essay text are required'}), 400
-        
-        # Check credits
-        credit_cost = advanced_credit_service.get_credit_cost('english_essay_writing')
-        user_credits = get_user_credits(g.current_user_id) or 0
-        
-        if user_credits < credit_cost:
-            return jsonify({
-                'success': False,
-                'message': f'Insufficient credits. Required: {credit_cost}'
-            }), 400
-        
-        # Mark essay
-        english_service = EnglishService()
-        result = english_service.mark_essay(prompt, essay_text)
-        
-        # Deduct credits
-        deduct_credits(g.current_user_id, credit_cost, 'english_essay_writing', 'English essay marking')
-        
-        essay_id = str(uuid.uuid4())
-        
-        return jsonify({
-            'success': True,
-            'data': {
-                'essay_id': essay_id,
-                'score': result.get('score', 0),
-                'feedback': result.get('feedback', ''),
-                'report_url': result.get('report_url', '')
-            }
-        }), 200
-        
-    except Exception as e:
-        logger.error(f"Submit essay error: {e}", exc_info=True)
-        error_message = str(e) if str(e) else 'Server error'
-        return jsonify({'success': False, 'message': f'Failed to mark essay: {error_message}'}), 500
-
 @mobile_bp.route('/english/essay/<essay_id>/report', methods=['GET'])
 @require_auth
 def get_essay_report(essay_id):
