@@ -1023,33 +1023,55 @@ Return ONLY valid JSON:
                 }
         except Exception as e:
             logger.error(f"Error retrieving vocabulary from database: {e}")
-        gemini_result = self.generate_gemini_comprehension_passage(theme, form_level=4)
-        if gemini_result:
-            return gemini_result
-        
-        # Secondary: DeepSeek AI fallback
-        try:
-            from standalone_english_comprehension_generator import standalone_english_comprehension_generator
-            
-            logger.info(f"Gemini failed, trying DeepSeek V3.1 for theme: {theme}")
-            result = standalone_english_comprehension_generator.generate_comprehension_passage(theme)
-            
-            if result and result.get('success'):
-                logger.info(f"✅ Successfully generated comprehension passage using DeepSeek V3.1")
-                return result
-            else:
-                logger.warning("DeepSeek comprehension generation also failed, using fallback")
-                
-        except Exception as e:
-            logger.error(f"Error in DeepSeek comprehension generation: {e}")
-        
         # Final fallback
-        logger.warning("Using fallback comprehension passage")
+        logger.warning("Using fallback vocabulary question")
+        fallback = self._wrap_legacy_vocabulary_question(self._get_fallback_vocabulary_question())
+        fallback['source'] = 'fallback'
         return {
             'success': True,
-            'passage_data': self._get_fallback_comprehension(),
-            'source': 'fallback'
+            'question_data': fallback
         }
+
+    def generate_gemini_comprehension_passage(self, theme: str, form_level: int = 4) -> Optional[Dict]:
+        """Generate comprehension passage using Gemini AI"""
+        if not self._is_configured or not self.client:
+            return None
+            
+        try:
+            prompt = f"""Generate a ZIMSEC O-Level English comprehension passage about {theme}.
+            
+            Requirements:
+            - Length: 400-500 words
+            - Level: Form {form_level} (O-Level)
+            - Include 5 comprehension questions (mix of literal and inferential)
+            - Include answers for grading
+            
+            Return JSON:
+            {{
+                "title": "Title",
+                "passage": "Text...",
+                "questions": [
+                    {{"question": "...", "answer": "...", "type": "literal/inferential", "marks": 2}}
+                ]
+            }}"""
+            
+            model = self.client.GenerativeModel('gemini-2.0-flash-exp')
+            response = model.generate_content(
+                prompt, 
+                generation_config=self.client.types.GenerationConfig(
+                    response_mime_type="application/json",
+                    temperature=0.7
+                )
+            )
+            
+            if response and hasattr(response, 'text') and response.text:
+                clean_text = self._clean_json_block(response.text)
+                return json.loads(clean_text)
+                
+        except Exception as e:
+            logger.error(f"Gemini comprehension generation error: {e}")
+            
+        return None
 
     def _get_fallback_comprehension(self) -> Dict:
         """Fallback comprehension passage when AI fails"""
@@ -1427,330 +1449,30 @@ Return ONLY valid JSON:
                 
         except Exception as e:
             logger.error(f"Error in fast DeepSeek generation: {e}")
-        
-        # Final fallback
-        logger.info("🔄 Using fallback comprehension passage")
+            
         return self._get_fallback_long_comprehension(theme)
 
-    def _get_fallback_long_comprehension(self, theme: str) -> Dict:
-        """Enhanced ZIMSEC-style fallback long comprehension passage when AI fails"""
-        # Use the enhanced fallback from the standalone generator
-        try:
-            from standalone_english_comprehension_generator import standalone_english_comprehension_generator
-            return standalone_english_comprehension_generator._get_fallback_long_comprehension(theme)
-        except Exception as e:
-            logger.error(f"Error accessing enhanced fallback: {e}")
-            # Basic fallback if even the enhanced one fails
-            return {
-                "passage": {
-                    "title": "Education in Zimbabwe",
-                    "text": """Education has always been a cornerstone of Zimbabwean society, with families making significant sacrifices to ensure their children receive quality schooling. In rural areas like Mutoko, students often walk long distances to reach their schools, demonstrating the high value placed on learning.
-
-The challenges facing rural schools are numerous. Many lack basic resources such as textbooks, laboratory equipment, and reliable electricity. Teachers often work with outdated materials and large class sizes, making it difficult to provide individual attention to students who need extra help.
-
-However, the determination of both students and teachers has led to remarkable achievements. Many rural schools have produced students who excel in national examinations and go on to pursue higher education at universities both within Zimbabwe and abroad. These success stories inspire younger students and demonstrate that excellence is possible regardless of circumstances.
-
-Technology is beginning to transform education in Zimbabwe. Solar power systems and internet connectivity are gradually reaching remote areas, opening up new possibilities for learning. Students can now access online resources, participate in virtual classes, and connect with mentors from around the world.
-
-The government and various organizations are working to address educational challenges through infrastructure development, teacher training programs, and the provision of learning materials. Community involvement has also been crucial, with parents and local leaders supporting school development projects.
-
-Despite the challenges, the future of education in Zimbabwe looks promising. Young people are embracing new technologies while maintaining respect for traditional values and knowledge. This balance between innovation and tradition will be key to the country's continued development.""",
-                    "word_count": 245,
-                    "theme": theme
-                },
-            "questions": [
-                {
-                    "question": "According to the passage, how has mobile technology impacted financial services in Zimbabwe?",
-                    "correct_answer": "Mobile money platforms have revolutionized financial transactions, allowing people to send money, pay bills, and conduct business without traditional banking infrastructure.",
-                    "question_type": "literal",
-                    "marks": 2,
-                    "explanation": "This information is directly stated in the second paragraph."
-                },
-                {
-                    "question": "What challenges does the passage mention regarding technology in education?",
-                    "correct_answer": "Unreliable internet connectivity and the digital divide between urban and rural areas.",
-                    "question_type": "literal",
-                    "marks": 2,
-                    "explanation": "These challenges are explicitly mentioned in the education paragraph."
-                },
-                {
-                    "question": "How has technology benefited farmers according to the passage?",
-                    "correct_answer": "Farmers can receive weather forecasts, market prices, and agricultural advice through mobile applications, use satellite imagery to monitor crops, and GPS technology for precision farming.",
-                    "question_type": "literal",
-                    "marks": 3,
-                    "explanation": "Multiple benefits are listed in the agricultural technology paragraph."
-                },
-                {
-                    "question": "What concerns does the passage raise about technology adoption?",
-                    "correct_answer": "Cybersecurity threats, data privacy concerns, spread of misinformation, and difficulties for older generations to adapt.",
-                    "question_type": "literal",
-                    "marks": 2,
-                    "explanation": "These concerns are mentioned in the challenges paragraph."
-                },
-                {
-                    "question": "Why might older generations struggle more with technology adoption?",
-                    "correct_answer": "The rapid pace of technological change makes it difficult for them to adapt.",
-                    "question_type": "inferential",
-                    "marks": 2,
-                    "explanation": "This requires inference from the statement about rapid technological change."
-                },
-                {
-                    "question": "What does the passage suggest about youth and technology use?",
-                    "correct_answer": "Youth have embraced technology readily, using it for self-expression, connections, and starting online businesses, but this raises concerns about screen time and mental health.",
-                    "question_type": "literal",
-                    "marks": 3,
-                    "explanation": "This information is provided in the youth technology paragraph."
-                },
-                {
-                    "question": "What is meant by 'digital divide' in the context of this passage?",
-                    "correct_answer": "The gap in technology access and usage between urban and rural areas.",
-                    "question_type": "inferential",
-                    "marks": 2,
-                    "explanation": "This requires understanding the context in which the term is used."
-                },
-                {
-                    "question": "According to the passage, what is needed for Zimbabwe's continued technological development?",
-            "summary_feedback": "Your essay demonstrates good understanding of the topic with clear ideas and logical structure. The content is relevant and shows creativity. However, there are some areas that need improvement including grammar consistency, vocabulary usage, and sentence structure. With more practice and attention to detail, your skills will continue to develop. Keep up the good effort!",
-            "specific_errors": [
-                {"wrong": "have had", "correct": "had", "type": "verb tense"},
-                {"wrong": "was were", "correct": "were", "type": "subject-verb agreement"},
-                {"wrong": "moment", "correct": "moments", "type": "singular/plural"},
-                {"wrong": "enjoy", "correct": "enjoyed", "type": "past tense"},
-                {"wrong": "make", "correct": "made", "type": "past tense"}
-            ],
-            "corrections_explanation": [
-                "Maintain consistent tense throughout your essay",
-                "Check subject-verb agreement in complex sentences",
-                "Proofread for spelling and punctuation errors",
-                "Use varied vocabulary to enhance your writing",
-                "Ensure clear paragraph transitions"
-            ],
-            "improved_version": "Your essay has been reviewed. Focus on the feedback provided to improve your writing skills. Practice makes perfect!"
-        }
-
-        import json
-        return json.dumps(fallback_data)
-
-    def _get_grade_from_score(self, percentage: int) -> str:
-        """Convert percentage to ZIMSEC grade"""
-        if percentage >= 80:
-            return "A (Distinction)"
-        elif percentage >= 70:
-            return "B (Merit)"
-        elif percentage >= 60:
-            return "C (Credit)"
-        elif percentage >= 50:
-            return "D (Pass)"
-        elif percentage >= 40:
-            return "E (Pass)"
-        else:
-            return "U (Ungraded)"
-
-    def generate_long_comprehension_passage(self, theme: str, form_level: int = 4) -> Optional[Dict]:
-        """Generate long comprehensive passage with Gemini first, DeepSeek fallback"""
-        # Primary: Gemini AI generation
-        gemini_result = self.generate_gemini_comprehension_passage(theme, form_level)
-        if gemini_result:
-            return gemini_result
-        
-        # Secondary: DeepSeek AI fallback
-        try:
-            from standalone_english_comprehension_generator import standalone_english_comprehension_generator
-            
-            logger.info(f"Gemini failed, trying DeepSeek V3.1 for theme: {theme}, form: {form_level}")
-            result = standalone_english_comprehension_generator.generate_long_comprehension_passage(theme, form_level)
-            
-            if result:
-                logger.info(f"✅ Successfully generated long comprehension passage using DeepSeek V3.1")
-                return result
-            else:
-                logger.warning("DeepSeek long comprehension generation also failed, using fallback")
-                
-        except Exception as e:
-            logger.error(f"Error in DeepSeek long comprehension generation: {e}")
-        
-        # Final fallback
-        logger.warning("Using fallback long comprehension passage")
-        return self._get_fallback_long_comprehension(theme)
-
-    def generate_long_comprehension_passage_fast(self, theme: str, form_level: int = 4) -> Optional[Dict]:
-        """Fast comprehension generation with Gemini first, DeepSeek fallback with reduced timeouts"""
-        # Primary: Gemini AI generation (faster than DeepSeek)
-        gemini_result = self.generate_gemini_comprehension_passage(theme, form_level)
-        if gemini_result:
-            logger.info(f"✅ Fast generation successful using Gemini 2.0 Flash Exp")
-            return gemini_result
-        
-        # Secondary: DeepSeek AI fallback with reduced timeouts
-        try:
-            from standalone_english_comprehension_generator import standalone_english_comprehension_generator
-            
-            logger.info(f"Gemini failed, trying fast DeepSeek V3.1 for theme: {theme}, form: {form_level}")
-            
-            # Create a fast generator instance with reduced timeouts
-            fast_generator = standalone_english_comprehension_generator.__class__()
-            fast_generator.api_key = standalone_english_comprehension_generator.api_key
-            fast_generator.api_url = standalone_english_comprehension_generator.api_url
-            fast_generator.max_retries = 2  # Reduced from 3
-            fast_generator.timeouts = [15, 25]  # Reduced from [30, 45, 60]
-            fast_generator.retry_delay = 1  # Reduced from 2
-            
-            result = fast_generator.generate_long_comprehension_passage(theme, form_level)
-            
-            if result:
-                logger.info(f"✅ Fast generation successful using DeepSeek V3.1")
-                return result
-            else:
-                logger.warning("Fast DeepSeek generation also failed, using fallback immediately")
-                
-        except Exception as e:
-            logger.error(f"Error in fast DeepSeek generation: {e}")
-        
-        # Final fallback
-        logger.info("🔄 Using fallback comprehension passage")
-        return self._get_fallback_long_comprehension(theme)
-
-    def _get_fallback_long_comprehension(self, theme: str) -> Dict:
-        """Enhanced ZIMSEC-style fallback long comprehension passage when AI fails"""
-        # Use the enhanced fallback from the standalone generator
-        try:
-            from standalone_english_comprehension_generator import standalone_english_comprehension_generator
-            return standalone_english_comprehension_generator._get_fallback_long_comprehension(theme)
-        except Exception as e:
-            logger.error(f"Error accessing enhanced fallback: {e}")
-            # Basic fallback if even the enhanced one fails
-            return {
-                "passage": {
-                    "title": "Education in Zimbabwe",
-                    "text": """Education has always been a cornerstone of Zimbabwean society, with families making significant sacrifices to ensure their children receive quality schooling. In rural areas like Mutoko, students often walk long distances to reach their schools, demonstrating the high value placed on learning.
-
-The challenges facing rural schools are numerous. Many lack basic resources such as textbooks, laboratory equipment, and reliable electricity. Teachers often work with outdated materials and large class sizes, making it difficult to provide individual attention to students who need extra help.
-
-However, the determination of both students and teachers has led to remarkable achievements. Many rural schools have produced students who excel in national examinations and go on to pursue higher education at universities both within Zimbabwe and abroad. These success stories inspire younger students and demonstrate that excellence is possible regardless of circumstances.
-
-Technology is beginning to transform education in Zimbabwe. Solar power systems and internet connectivity are gradually reaching remote areas, opening up new possibilities for learning. Students can now access online resources, participate in virtual classes, and connect with mentors from around the world.
-
-The government and various organizations are working to address educational challenges through infrastructure development, teacher training programs, and the provision of learning materials. Community involvement has also been crucial, with parents and local leaders supporting school development projects.
-
-Despite the challenges, the future of education in Zimbabwe looks promising. Young people are embracing new technologies while maintaining respect for traditional values and knowledge. This balance between innovation and tradition will be key to the country's continued development.""",
-                    "word_count": 245,
-                    "theme": theme
-                },
-            "questions": [
-                {
-                    "question": "According to the passage, how has mobile technology impacted financial services in Zimbabwe?",
-                    "correct_answer": "Mobile money platforms have revolutionized financial transactions, allowing people to send money, pay bills, and conduct business without traditional banking infrastructure.",
-                    "question_type": "literal",
-                    "marks": 2,
-                    "explanation": "This information is directly stated in the second paragraph."
-                },
-                {
-                    "question": "What challenges does the passage mention regarding technology in education?",
-                    "correct_answer": "Unreliable internet connectivity and the digital divide between urban and rural areas.",
-                    "question_type": "literal",
-                    "marks": 2,
-                    "explanation": "These challenges are explicitly mentioned in the education paragraph."
-                },
-                {
-                    "question": "How has technology benefited farmers according to the passage?",
-                    "correct_answer": "Farmers can receive weather forecasts, market prices, and agricultural advice through mobile applications, use satellite imagery to monitor crops, and GPS technology for precision farming.",
-                    "question_type": "literal",
-                    "marks": 3,
-                    "explanation": "Multiple benefits are listed in the agricultural technology paragraph."
-                },
-                {
-                    "question": "What concerns does the passage raise about technology adoption?",
-                    "correct_answer": "Cybersecurity threats, data privacy concerns, spread of misinformation, and difficulties for older generations to adapt.",
-                    "question_type": "literal",
-                    "marks": 2,
-                    "explanation": "These concerns are mentioned in the challenges paragraph."
-                },
-                {
-                    "question": "Why might older generations struggle more with technology adoption?",
-                    "correct_answer": "The rapid pace of technological change makes it difficult for them to adapt.",
-                    "question_type": "inferential",
-                    "marks": 2,
-                    "explanation": "This requires inference from the statement about rapid technological change."
-                },
-                {
-                    "question": "What does the passage suggest about youth and technology use?",
-                    "correct_answer": "Youth have embraced technology readily, using it for self-expression, connections, and starting online businesses, but this raises concerns about screen time and mental health.",
-                    "question_type": "literal",
-                    "marks": 3,
-                    "explanation": "This information is provided in the youth technology paragraph."
-                },
-                {
-                    "question": "What is meant by 'digital divide' in the context of this passage?",
-                    "correct_answer": "The gap in technology access and usage between urban and rural areas.",
-                    "question_type": "inferential",
-                    "marks": 2,
-                    "explanation": "This requires understanding the context in which the term is used."
-                },
-                {
-                    "question": "According to the passage, what is needed for Zimbabwe's continued technological development?",
-                    "correct_answer": "Investment in education, infrastructure, and policies that protect citizens while promoting innovation.",
-                    "question_type": "literal",
-                    "marks": 2,
-                    "explanation": "This is stated in the concluding paragraph."
-                },
-                {
-                    "question": "How has technology created both opportunities and challenges in Zimbabwe?",
-                    "correct_answer": "Opportunities include improved access to services, education, and economic activities; challenges include cybersecurity, digital divide, and adaptation difficulties.",
-                    "question_type": "critical",
-                    "marks": 3,
-                    "explanation": "This requires synthesizing information from throughout the passage."
-                },
-                {
-                    "question": "What is the main message of this passage?",
-                    "correct_answer": "Technology has brought significant benefits to Zimbabwe but also creates challenges that need to be addressed through proper planning and investment.",
-                    "question_type": "critical",
-                    "marks": 3,
-                    "explanation": "This requires understanding the overall theme and conclusion of the passage."
-                }
-            ]
-        }
-        
-    # ==================== ZIMSEC ESSAY WRITING FUNCTIONS ====================
-    
-    def _get_teacher_comment_by_score(self, score: int, max_score: int, student_name: str) -> str:
-        """Generate score-based teacher comment with student name"""
-        # Calculate percentage for consistent grading across 30 and 20 mark scales
-        percentage = (score / max_score) * 100
-        
-        if percentage >= 87:  # 26-30 for 30 marks, 17-20 for 20 marks
-            return f"Excellent work, {student_name}! Keep it up!"
-        elif percentage >= 73:  # 22-25 for 30 marks, 15-16 for 20 marks
-            return f"Well done, {student_name}! Good effort!"
-        elif percentage >= 60:  # 18-21 for 30 marks, 12-14 for 20 marks
-            return f"Well tried, {student_name}. Keep practicing!"
-        elif percentage >= 47:  # 14-17 for 30 marks, 9-11 for 20 marks
-            return f"You can do better, {student_name}. Review the feedback carefully."
-        elif percentage >= 33:  # 10-13 for 30 marks, 7-8 for 20 marks
-            return f"Improve your writing, {student_name}. Focus on the corrections."
-        else:
-            return f"Keep working hard, {student_name}. Practice makes perfect!"
-    
     def generate_free_response_topics(self) -> Optional[Dict]:
-        """Generate 7 diverse essay topics for ZIMSEC free response using Gemini 2.5 Flash"""
+        """Generate free response essay topics using Gemini 2.5 Flash"""
         if not self._is_configured or not self.client:
-            logger.warning("Gemini AI not configured - cannot generate free response topics")
+            logger.warning("Gemini AI not configured - cannot generate topics")
             return self._get_fallback_free_response_topics()
         
         try:
-            prompt = """You are a ZIMSEC O-Level English examiner creating Paper 1 Section A (Free Response) essay topics.
+            prompt = """You are a ZIMSEC O-Level English examiner creating Paper 1 Section A (Free Response) topics.
 
-Generate exactly 7 diverse essay topics covering different types:
-- 2 Narrative essays (storytelling)
-- 2 Descriptive essays (describing scenes, people, places)
-- 2 Expository essays (explaining, discussing topics)
-- 1 Argumentative essay (presenting an argument)
+Generate 7 diverse essay topics suitable for O-Level students (15-17 years old).
+Include a mix of:
+- Narrative (story telling)
+- Descriptive (describing person, place, event)
+- Expository (factual, explanatory)
+- Argumentative (persuasive)
 
-Each topic should:
-- Be appropriate for 15-17 year old Zimbabwean students
-- Encourage creativity and personal expression
-- Be clear and unambiguous
-- Relate to experiences familiar to Zimbabwean students
-- Require 350-450 words
+For each topic provide:
+1. Title
+2. Brief description/prompt
+3. Type (narrative, descriptive, etc.)
+4. Suggested length (350-450 words)
 
 Return ONLY valid JSON (no markdown fences):
 {
@@ -1788,7 +1510,7 @@ Return ONLY valid JSON (no markdown fences):
             logger.error(f"Error generating free response topics: {e}")
         
         return self._get_fallback_free_response_topics()
-    
+
     def _get_fallback_free_response_topics(self) -> Dict:
         """Fallback free response topics when AI fails"""
         return {
@@ -1838,7 +1560,7 @@ Return ONLY valid JSON (no markdown fences):
                 }
             ]
         }
-    
+
     def generate_guided_composition_prompt(self) -> Optional[Dict]:
         """Generate a guided composition prompt for ZIMSEC using Gemini 2.5 Flash"""
         if not self._is_configured or not self.client:
@@ -1921,7 +1643,7 @@ Return ONLY valid JSON (no markdown fences):
                 "format_requirements": "Use proper formal letter format with addresses, date, salutation, and closing."
             }
         }
-    
+
     def mark_free_response_essay(self, student_name: str, student_surname: str, 
                                  essay_text: str, topic: Dict) -> Optional[Dict]:
         """Mark free response essay out of 30 using Gemini 2.5 Flash with ZIMSEC criteria"""
@@ -1930,19 +1652,10 @@ Return ONLY valid JSON (no markdown fences):
             return None
         
         try:
-            prompt = f"""You are a professional ZIMSEC O-Level English examiner marking Paper 1 Section A (Free Response).
-
-STUDENT INFORMATION:
-Name: {student_name} {student_surname}
-
-ESSAY TOPIC:
-{topic.get('title', '')}
-{topic.get('description', '')}
-
-STUDENT'S ESSAY:
-{essay_text}
-
-ZIMSEC MARKING CRITERIA (Total: 30 marks):
+            # Using concatenation to avoid potential f-string parsing issues with large blocks
+            prompt_intro = f"You are a professional ZIMSEC O-Level English examiner marking Paper 1 Section A (Free Response).\n\nSTUDENT INFORMATION:\nName: {student_name} {student_surname}\n\nESSAY TOPIC:\n{topic.get('title', '')}\n{topic.get('description', '')}\n\nSTUDENT ESSAY:\n{essay_text}\n\n"
+            
+            prompt_criteria = """ZIMSEC MARKING CRITERIA (Total: 30 marks):
 1. CONTENT (15 marks):
    - Relevance to topic
    - Development of ideas
@@ -1969,25 +1682,26 @@ INSTRUCTIONS:
 5. Be fair but thorough - this is for learning
 
 Return ONLY valid JSON (no markdown fences):
-{{
+{
   "score": 24,
   "max_score": 30,
-  "breakdown": {{
+  "breakdown": {
     "content": 12,
     "language": 8,
     "organization": 4
-  }},
+  },
   "corrections": [
-    {{
+    {
       "wrong": "I have went",
       "correct": "I went",
       "type": "grammar",
       "explanation": "Past tense of 'go' is 'went', not 'have went'"
-    }}
+    }
   ],
   "corrected_essay": "Full corrected version of the essay with all errors fixed...",
   "detailed_feedback": "Specific feedback on strengths and areas for improvement..."
-}}"""
+}"""
+            prompt = prompt_intro + prompt_criteria
             
             model = self.client.GenerativeModel('gemini-2.5-flash')
             response = model.generate_content(
@@ -2021,7 +1735,7 @@ Return ONLY valid JSON (no markdown fences):
             logger.error(f"Error marking free response essay: {e}")
         
         return None
-    
+
     def mark_guided_composition(self, student_name: str, student_surname: str,
                                essay_text: str, prompt: Dict) -> Optional[Dict]:
         """Mark guided composition out of 20 using Gemini 2.5 Flash with ZIMSEC criteria"""
@@ -2030,21 +1744,10 @@ Return ONLY valid JSON (no markdown fences):
             return None
         
         try:
-            marking_prompt = f"""You are a professional ZIMSEC O-Level English examiner marking Paper 1 Section B (Guided Composition).
-
-STUDENT INFORMATION:
-Name: {student_name} {student_surname}
-
-COMPOSITION PROMPT:
-{prompt.get('title', '')}
-Context: {prompt.get('context', '')}
-Format: {prompt.get('format', '')}
-Key Points to Cover: {', '.join(prompt.get('key_points', []))}
-
-STUDENT'S COMPOSITION:
-{essay_text}
-
-ZIMSEC MARKING CRITERIA (Total: 20 marks):
+            # Using concatenation to avoid f-string issues
+            prompt_intro = f"You are a professional ZIMSEC O-Level English examiner marking Paper 1 Section B (Guided Composition).\n\nSTUDENT INFORMATION:\nName: {student_name} {student_surname}\n\nCOMPOSITION PROMPT:\n{prompt.get('title', '')}\nContext: {prompt.get('context', '')}\nFormat: {prompt.get('format', '')}\nKey Points to Cover: {', '.join(prompt.get('key_points', []))}\n\nSTUDENT COMPOSITION:\n{essay_text}\n\n"
+            
+            prompt_criteria = """ZIMSEC MARKING CRITERIA (Total: 20 marks):
 1. CONTENT & FORMAT (12 marks):
    - Adherence to specified format ({prompt.get('format', '')})
    - Coverage of all key points
@@ -2065,24 +1768,25 @@ INSTRUCTIONS:
 5. Be strict on format requirements
 
 Return ONLY valid JSON (no markdown fences):
-{{
+{
   "score": 16,
   "max_score": 20,
-  "breakdown": {{
+  "breakdown": {
     "content_and_format": 10,
     "language": 6
-  }},
+  },
   "corrections": [
-    {{
+    {
       "wrong": "Dear friend",
       "correct": "Dear Sir/Madam",
       "type": "format",
       "explanation": "Formal letter requires formal salutation"
-    }}
+    }
   ],
   "corrected_essay": "Full corrected version...",
   "detailed_feedback": "Specific feedback on format adherence and content..."
-}}"""
+}"""
+            marking_prompt = prompt_intro + prompt_criteria
             
             model = self.client.GenerativeModel('gemini-2.5-flash')
             response = model.generate_content(
@@ -2291,7 +1995,7 @@ Return ONLY valid JSON (no markdown fences):
             # Get PDF data as base64
             pdf_data = buffer.getvalue()
             buffer.close()
-            pdf_base64 = base664.b64encode(pdf_data).decode('utf-8')
+            pdf_base64 = base64.b64encode(pdf_data).decode('utf-8')
             
             logger.info(f"✅ Generated PDF report for {student_name} {student_surname}")
             return pdf_base64
@@ -2307,3 +2011,18 @@ Return ONLY valid JSON (no markdown fences):
         """Get current date in readable format"""
         from datetime import datetime
         return datetime.now().strftime("%d %B %Y")
+
+    def _get_teacher_comment_by_score(self, score: int, max_score: int, student_name: str) -> str:
+        """Get encouraging teacher comment based on score"""
+        percentage = (score / max_score) * 100
+        
+        if percentage >= 80:
+            return f"Outstanding work, {student_name}! Your essay is a pleasure to read."
+        elif percentage >= 70:
+            return f"Very good effort, {student_name}. You have a strong command of the language."
+        elif percentage >= 60:
+            return f"Good job, {student_name}. You are on the right track."
+        elif percentage >= 50:
+            return f"Fair effort, {student_name}. Keep practicing to improve your expression."
+        else:
+            return f"Don't give up, {student_name}. Focus on the corrections and try again."
