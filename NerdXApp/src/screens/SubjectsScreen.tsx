@@ -101,7 +101,6 @@ const SubjectsScreen: React.FC = () => {
         <View style={styles.subjectsContainer}>
           {subjects.map((subject) => {
             const subjectIcon = getSubjectIcon(subject.icon);
-            // Use theme colors if available, otherwise fallback
             const subjectColor = Colors.subjects[subject.id as keyof typeof Colors.subjects] || subject.color;
 
             return (
@@ -130,86 +129,97 @@ const SubjectsScreen: React.FC = () => {
           })}
         </View>
 
-        {/* Mode Selection Modal */}
-        <Modal
-          visible={modalVisible}
-          onClose={() => setModalVisible(false)}
-          title="Combined Science"
-        >
-          <Text style={styles.modalDescription}>Choose your learning mode:</Text>
-          <ModalOptionCard
-            icon="👨‍🏫"
-            title="Teacher Mode"
-            description="Interactive AI teaching with personalized explanations and notes"
-            onPress={handleTeacherMode}
-            color={Colors.subjects.science}
-          />
-          <ModalOptionCard
-            icon="📝"
-            title="Practice Mode"
-            description="Practice questions by topic and test your knowledge"
-            onPress={handlePracticeMode}
-            color={Colors.primary.main}
-          />
-        </Modal>
-
-        {/* Math Hub Modal */}
+        {/* Combined Science / Math Modal */}
         <Modal
           visible={mathModalVisible}
           onClose={() => setMathModalVisible(false)}
-          title="Mathematics Hub"
+          title={selectedSubject?.id === 'combined_science' ? 'Combined Science' : 'Mathematics Hub'}
         >
-          <Text style={styles.modalDescription}>Select a learning tool:</Text>
-          <ModalOptionCard
-            icon="📝"
-            title="Topic Practice"
-            description="Master specific topics with targeted questions"
-            onPress={() => {
-              setMathModalVisible(false);
-              navigation.navigate('Topics' as never, { subject: selectedSubject } as never);
-            }}
-            color={Colors.subjects.mathematics}
-          />
-          <ModalOptionCard
-            icon="👨‍🏫"
-            title="AI Math Tutor"
-            description="Get step-by-step help and explanations"
-            onPress={() => {
-              setMathModalVisible(false);
-              navigation.navigate('TeacherModeSetup' as never, { subject: selectedSubject } as never);
-            }}
-            color={Colors.secondary.main}
-          />
-          <ModalOptionCard
-            icon="📈"
-            title="Graphing Tools"
-            description="Visualize equations and solve graph problems"
-            onPress={() => {
-              setMathModalVisible(false);
-              navigation.navigate('GraphPractice' as never);
-            }}
-            color={Colors.primary.main}
-          />
-          <ModalOptionCard
-            icon="📐"
-            title="Formula Sheet"
-            description="Access essential formulas for quick reference"
-            onPress={() => {
-              setMathModalVisible(false);
-              navigation.navigate('FormulaSheet' as never);
-            }}
-            color={Colors.info.main}
-          />
-          <ModalOptionCard
-            icon="🎓"
-            title="Past Papers"
-            description="Practice with real exam papers under timed conditions"
-            onPress={() => {
-              setMathModalVisible(false);
-              navigation.navigate('PastPaper' as never);
-            }}
-            color={Colors.warning.main}
-          />
+          <Text style={styles.modalDescription}>
+            {selectedSubject?.id === 'combined_science' ? 'Choose your learning mode:' : 'Select a learning tool:'}
+          </Text>
+
+          {selectedSubject?.id === 'combined_science' ? (
+            <>
+              <ModalOptionCard
+                icon="👨‍🏫"
+                title="Teacher Mode"
+                description="Interactive AI teaching with personalized explanations"
+                onPress={handleTeacherMode}
+                color={Colors.subjects.science}
+              />
+              <ModalOptionCard
+                icon="📝"
+                title="Practice Mode"
+                description="Practice questions by topic and test your knowledge"
+                onPress={handlePracticeMode}
+                color={Colors.primary.main}
+              />
+              <ModalOptionCard
+                icon="📚"
+                title="Notes"
+                description="Comprehensive study notes for Biology, Chemistry, and Physics"
+                onPress={() => {
+                  setMathModalVisible(false);
+                  navigation.navigate('ScienceNotes' as never);
+                }}
+                color={Colors.success.main}
+              />
+            </>
+          ) : (
+            <>
+              <ModalOptionCard
+                icon="📝"
+                title="Topic Practice"
+                description="Master specific topics with targeted questions"
+                onPress={() => {
+                  setMathModalVisible(false);
+                  navigation.navigate('Topics' as never, { subject: selectedSubject } as never);
+                }}
+                color={Colors.subjects.mathematics}
+              />
+              <ModalOptionCard
+                icon="👨‍🏫"
+                title="AI Math Tutor"
+                description="Get step-by-step help and explanations"
+                onPress={() => {
+                  setMathModalVisible(false);
+                  navigation.navigate('TeacherModeSetup' as never, { subject: selectedSubject } as never);
+                }}
+                color={Colors.secondary.main}
+              />
+              <ModalOptionCard
+                icon="📈"
+                title="Graphing Tools"
+                description="Visualize equations and solve graph problems"
+                onPress={() => {
+                  setMathModalVisible(false);
+                  navigation.navigate('GraphPractice' as never);
+                }}
+                color={Colors.primary.main}
+              />
+              <ModalOptionCard
+                icon="📐"
+                title="Formula Sheet"
+                description="Access essential formulas for quick reference"
+                onPress={() => {
+                  setMathModalVisible(false);
+                  navigation.navigate('FormulaSheet' as never);
+                }}
+                color={Colors.info.main}
+              />
+              <ModalOptionCard
+                icon="🎓"
+                title="Past Papers"
+                description="Practice with real exam papers under timed conditions"
+                onPress={() => {
+                  setMathModalVisible(false);
+                  navigation.navigate('PastPaper' as never);
+                }}
+                color={Colors.warning.main}
+              />
+            </>
+          )}
         </Modal>
       </ScrollView>
     </View>
@@ -221,7 +231,7 @@ const getSubjectIcon = (icon: string): React.ReactNode => {
     calculate: Icons.mathematics(32, Colors.subjects.mathematics),
     science: Icons.science(32, Colors.subjects.science),
     'menu-book': Icons.english(32, Colors.subjects.english),
-    healing: Icons.science(32, '#E91E63'), // Using science icon for now, or add a specific one
+    healing: Icons.science(32, '#E91E63'),
   };
   return iconMap[icon] || Icons.quiz(32, Colors.primary.main);
 };
@@ -231,7 +241,6 @@ const getSubjectIconBg = (subjectId: string): string => {
     mathematics: Colors.iconBg.mathematics,
     combined_science: Colors.iconBg.science,
     english: Colors.iconBg.english,
-    pharmacology: 'rgba(233, 30, 99, 0.1)',
   };
   return bgMap[subjectId] || Colors.iconBg.default;
 };

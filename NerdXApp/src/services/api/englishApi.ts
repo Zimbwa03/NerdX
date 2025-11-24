@@ -40,6 +40,47 @@ export interface SummaryGradingResult {
   key_points_missed: string[];
 }
 
+// ZIMSEC Essay Types
+export interface FreeResponseTopic {
+  title: string;
+  description: string;
+  type: 'narrative' | 'descriptive' | 'expository' | 'argumentative';
+  suggested_length: string;
+}
+
+export interface GuidedCompositionPrompt {
+  title: string;
+  format: 'formal_letter' | 'informal_letter' | 'speech' | 'report' | 'article';
+  context: string;
+  key_points: string[];
+  suggested_length: string;
+  format_requirements?: string;
+}
+
+export interface EssayCorrection {
+  wrong: string;
+  correct: string;
+  type: string; // 'grammar', 'spelling', 'tense', 'punctuation', 'format'
+  explanation: string;
+}
+
+export interface EssayMarkingResult {
+  essay_type: 'free_response' | 'guided';
+  score: number;
+  max_score: number;
+  breakdown: {
+    content?: number;
+    language?: number;
+    organization?: number;
+    content_and_format?: number;
+  };
+  corrections: EssayCorrection[];
+  teacher_comment: string;
+  corrected_essay: string;
+  detailed_feedback: string;
+  pdf_report: string; // Base64-encoded PDF
+}
+
 export interface EssayPrompt {
   title: string;
   description: string;
@@ -66,6 +107,52 @@ export const englishApi = {
     }
   },
 
+  // ZIMSEC Essay Writing APIs
+  getFreeResponseTopics: async (): Promise<FreeResponseTopic[]> => {
+    try {
+      const response = await api.get('/api/mobile/english/essay/free-response-topics');
+      return response.data.data || [];
+    } catch (error: any) {
+      console.error('Get free response topics error:', error);
+      throw error;
+    }
+  },
+
+  getGuidedComposition: async (): Promise<GuidedCompositionPrompt | null> => {
+    try {
+      const response = await api.get('/api/mobile/english/essay/guided-composition');
+      return response.data.data || null;
+    } catch (error: any) {
+      console.error('Get guided composition error:', error);
+      throw error;
+    }
+  },
+
+  submitEssayForMarking: async (
+    essayType: 'free_response' | 'guided',
+    studentName: string,
+    studentSurname: string,
+    essayText: string,
+    topic?: FreeResponseTopic,
+    prompt?: GuidedCompositionPrompt
+  ): Promise<EssayMarkingResult | null> => {
+    try {
+      const response = await api.post('/api/mobile/english/essay/submit', {
+        essay_type: essayType,
+        student_name: studentName,
+        student_surname: studentSurname,
+        essay_text: essayText,
+        topic: topic || undefined,
+        prompt: prompt || undefined,
+      });
+      return response.data.data || null;
+    } catch (error: any) {
+      console.error('Submit essay error:', error);
+      throw error;
+    }
+  },
+
+  // Legacy essay endpoints (keeping for backward compatibility)
   generateEssayPrompts: async (): Promise<EssayPrompt[] | null> => {
     try {
       const response = await api.get('/api/mobile/english/essay/prompts');

@@ -25,7 +25,6 @@ from services.paynow_service import PaynowService
 from services.graph_service import GraphService
 from services.graph_service import GraphService
 from services.image_service import ImageService
-from services.pharmacology_service import PharmacologyService
 from utils.url_utils import convert_local_path_to_public_url
 from config import Config
 import os
@@ -457,12 +456,6 @@ def get_subjects():
                 'name': 'English',
                 'icon': 'menu-book',
                 'color': '#FF9800'
-            },
-            {
-                'id': 'pharmacology',
-                'name': 'Pharmacology',
-                'icon': 'healing',
-                'color': '#E91E63'
             }
         ]
         
@@ -531,15 +524,7 @@ def get_topics():
                         'name': topic,
                         'subject': 'mathematics'
                     })
-        elif subject == 'pharmacology':
-            # Return all Pharmacology topics
-            if 'Pharmacology' in TOPICS:
-                for topic in TOPICS['Pharmacology']:
-                    topics.append({
-                        'id': topic.lower().replace(' ', '_'),
-                        'name': topic,
-                        'subject': 'pharmacology'
-                    })
+
         elif subject in TOPICS:
             # Default handling for other subjects
             for topic in TOPICS[subject]:
@@ -654,16 +639,7 @@ def generate_question():
                 question_data = question_result.get('question_data', {})
             else:
                 question_data = None
-        elif subject == 'pharmacology':
-            pharmacology_service = PharmacologyService()
-            # Determine question type (MCQ or True/False) - passed from frontend or default to MCQ
-            pharma_question_type = data.get('question_type', 'MCQ')
-            question_result = pharmacology_service.generate_question(topic, pharma_question_type, difficulty)
-            
-            if question_result and question_result.get('success'):
-                question_data = question_result.get('question_data', {})
-            else:
-                question_data = None
+
         
         if not question_data:
             return jsonify({'success': False, 'message': 'Failed to generate question'}), 500
@@ -2437,4 +2413,225 @@ def generate_linear_programming_graph():
         logger.error(f"Generate linear programming graph error: {e}", exc_info=True)
         error_message = str(e) if str(e) else 'Server error'
         return jsonify({'success': False, 'message': f'Failed to generate graph: {error_message}'}), 500
+
+# ============================================================================
+# ENGLISH ESSAY WRITING ENDPOINTS (ZIMSEC STANDARD)
+# ============================================================================
+
+@mobile_bp.route('/api/mobile/english/essay/free-response-topics', methods=['GET'])
+@require_auth
+def get_free_response_topics():
+    """Get 7 free response essay topics for ZIMSEC Paper 1 Section A"""
+    try:
+        english_service = EnglishService()
+        result = english_service.generate_free_response_topics()
+        
+        if not result or not result.get('success'):
+            return jsonify({
+                'success': False,
+                'message': 'Failed to generate free response topics'
+            }), 500
+        
+        return jsonify({
+            'success': True,
+            'data': result.get('topics', [])
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get free response topics error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+@mobile_bp.route('/api/mobile/english/essay/guided-composition', methods=['GET'])
+@require_auth
+def get_guided_composition():
+    """Get guided composition prompt for ZIMSEC Paper 1 Section B"""
+    try:
+        english_service = EnglishService()
+        result = english_service.generate_guided_composition_prompt()
+        
+        if not result or not result.get('success'):
+            return jsonify({
+                'success': False,
+                'message': 'Failed to generate guided composition'
+            }), 500
+        
+        return jsonify({
+            'success': True,
+            'data': result.get('prompt', {})
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get guided composition error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+@mobile_bp.route('/api/mobile/english/essay/submit', methods=['POST'])
+@require_auth
+def submit_essay():
+    """Submit essay for ZIMSEC-standard marking"""
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'success': False, 'message': 'No data provided'}), 400
+        
+        essay_type = data.get('essay_type')  # 'free_response' or 'guided'
+        student_name = data.get('student_name', '').strip()
+        student_surname = data.get('student_surname', '').strip()
+        essay_text = data.get('essay_text', '').strip()
+        topic = data.get('topic', {})  # For free response
+        prompt = data.get('prompt', {})  # For guided composition
+        
+        # Validation
+        if not essay_type or essay_type not in ['free_response', 'guided']:
+            return jsonify({'success': False, 'message': 'Invalid essay type'}), 400
+        
+        if not student_name or not student_surname:
+            return jsonify({'success': False, 'message': 'Student name and surname are required'}), 400
+        
+        if not essay_text or len(essay_text) < 100:
+            return jsonify({'success': False, 'message': 'Essay must be at least 100 characters'}), 400
+        
+        # Check credits (3 credits for essay marking)
+        credit_cost = 3
+        user_credits = get_user_credits(g.current_user_id) or 0
+        if user_credits < credit_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {credit_cost}, Available: {user_credits}'
+            }), 400
+        
+        # Mark essay using appropriate method
+        english_service = EnglishService()
+        marking_result = None
+        
+        if essay_type == 'free_response':
+            if not topic or not topic.get('title'):
+                return jsonify({'success': False, 'message': 'Topic is required for free response'}), 400
+            
+            marking_result = english_service.mark_free_response_essay(
+                student_name,
+                student_surname,
+                essay_text,
+                topic
+            )
+        else:  # guided
+            if not prompt or not prompt.get('title'):
+                return jsonify({'success': False, 'message': 'Prompt is required for guided composition'}), 400
+            
+            marking_result = english_service.mark_guided_composition(
+                student_name,
+                student_surname,
+                essay_text,
+                prompt
+            )
+        
+        if not marking_result or not marking_result.get('success'):
+            return jsonify({
+                'success': False,
+                'message': 'Failed to mark essay'
+            }), 500
+        
+        result_data = marking_result.get('result', {})
+        
+        # Generate PDF report
+        pdf_base64 = english_service.generate_essay_pdf_report(
+            student_name,
+            student_surname,
+            essay_type,
+            result_data.get('score', 0),
+            result_data.get('max_score', 30 if essay_type == 'free_response' else 20),
+            result_data.get('corrections', []),
+            result_data.get('teacher_comment', ''),
+            result_data.get('corrected_essay', ''),
+            result_data.get('detailed_feedback', ''),
+            essay_text,
+            topic.get('title', '') if essay_type == 'free_response' else prompt.get('title', '')
+        )
+        
+        # Deduct credits
+        deduct_credits(g.current_user_id, credit_cost, 'english_essay_marking', f'Marked {essay_type} essay')
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'essay_type': essay_type,
+                'score': result_data.get('score', 0),
+                'max_score': result_data.get('max_score', 30 if essay_type == 'free_response' else 20),
+                'breakdown': result_data.get('breakdown', {}),
+                'corrections': result_data.get('corrections', []),
+                'teacher_comment': result_data.get('teacher_comment', ''),
+                'corrected_essay': result_data.get('corrected_essay', ''),
+                'detailed_feedback': result_data.get('detailed_feedback', ''),
+                'pdf_report': pdf_base64  # Base64-encoded PDF
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Submit essay error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+# ============================================================================
+# SCIENCE NOTES ENDPOINTS
+# ============================================================================
+
+@mobile_bp.route('/api/mobile/science/notes/topics', methods=['GET'])
+@require_auth
+def get_science_notes_topics():
+    """Get all available topics for a science subject"""
+    try:
+        subject = request.args.get('subject', '')
+        
+        if not subject or subject not in ['Biology', 'Chemistry', 'Physics']:
+            return jsonify({
+                'success': False,
+                'message': 'Invalid subject. Must be Biology, Chemistry, or Physics'
+            }), 400
+        
+        from services.science_notes_service import ScienceNotesService
+        notes_service = ScienceNotesService()
+        
+        topics = notes_service.get_all_topics(subject)
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'subject': subject,
+                'topics': topics
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get science notes topics error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+@mobile_bp.route('/api/mobile/science/notes/<subject>/<topic>', methods=['GET'])
+@require_auth
+def get_science_topic_notes(subject, topic):
+    """Get detailed notes for a specific topic"""
+    try:
+        if subject not in ['Biology', 'Chemistry', 'Physics']:
+            return jsonify({
+                'success': False,
+                'message': 'Invalid subject'
+            }), 400
+        
+        from services.science_notes_service import ScienceNotesService
+        notes_service = ScienceNotesService()
+        
+        notes = notes_service.get_topic_notes(subject, topic)
+        
+        if not notes:
+            return jsonify({
+                'success': False,
+                'message': f'Notes not yet available for {subject} - {topic}'
+            }), 404
+        
+        return jsonify({
+            'success': True,
+            'data': notes
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get topic notes error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
 

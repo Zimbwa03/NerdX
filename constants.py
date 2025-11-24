@@ -1,6 +1,6 @@
 # Constants for NerdX Quiz Bot
 
-# ZIMSEC Combined Science and English Topics - Restored from backup
+# ZIMSEC Combined Science and English Topics
 TOPICS = {
     "Biology": [
         "Cell Structure and Organisation",
@@ -46,7 +46,17 @@ TOPICS = {
         "Variation",
         "Algebra",
         "Geometry",
-        "Statistics",
+        "Statistics"
+    ],
+    "English": [
+        "Grammar Usage and Vocabulary"
+    ]
+}
+
+# Difficulty levels
+DIFFICULTY_LEVELS = {
+    'easy': {
+        'name': 'Easy',
         'credit_cost': 1,
         'point_value': 10
     },

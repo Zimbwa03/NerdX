@@ -1522,6 +1522,201 @@ Despite the challenges, the future of education in Zimbabwe looks promising. You
                     "marks": 3,
                     "explanation": "This requires synthesizing information from throughout the passage."
                 },
+    def _generate_fallback_essay_marking(self) -> str:
+        """Generate fallback essay marking when AI fails"""
+        fallback_data = {
+            "score": 18,
+            "grade": "C+",
+            "summary_feedback": "Your essay demonstrates good understanding of the topic with clear ideas and logical structure. The content is relevant and shows creativity. However, there are some areas that need improvement including grammar consistency, vocabulary usage, and sentence structure. With more practice and attention to detail, your skills will continue to develop. Keep up the good effort!",
+            "specific_errors": [
+                {"wrong": "have had", "correct": "had", "type": "verb tense"},
+                {"wrong": "was were", "correct": "were", "type": "subject-verb agreement"},
+                {"wrong": "moment", "correct": "moments", "type": "singular/plural"},
+                {"wrong": "enjoy", "correct": "enjoyed", "type": "past tense"},
+                {"wrong": "make", "correct": "made", "type": "past tense"}
+            ],
+            "corrections_explanation": [
+                "Maintain consistent tense throughout your essay",
+                "Check subject-verb agreement in complex sentences",
+                "Proofread for spelling and punctuation errors",
+                "Use varied vocabulary to enhance your writing",
+                "Ensure clear paragraph transitions"
+            ],
+            "improved_version": "Your essay has been reviewed. Focus on the feedback provided to improve your writing skills. Practice makes perfect!"
+        }
+
+        import json
+        return json.dumps(fallback_data)
+
+    def _get_grade_from_score(self, percentage: int) -> str:
+        """Convert percentage to ZIMSEC grade"""
+        if percentage >= 80:
+            return "A (Distinction)"
+        elif percentage >= 70:
+            return "B (Merit)"
+        elif percentage >= 60:
+            return "C (Credit)"
+        elif percentage >= 50:
+            return "D (Pass)"
+        elif percentage >= 40:
+            return "E (Pass)"
+        else:
+            return "U (Ungraded)"
+
+    def generate_long_comprehension_passage(self, theme: str, form_level: int = 4) -> Optional[Dict]:
+        """Generate long comprehensive passage with Gemini first, DeepSeek fallback"""
+        # Primary: Gemini AI generation
+        gemini_result = self.generate_gemini_comprehension_passage(theme, form_level)
+        if gemini_result:
+            return gemini_result
+        
+        # Secondary: DeepSeek AI fallback
+        try:
+            from standalone_english_comprehension_generator import standalone_english_comprehension_generator
+            
+            logger.info(f"Gemini failed, trying DeepSeek V3.1 for theme: {theme}, form: {form_level}")
+            result = standalone_english_comprehension_generator.generate_long_comprehension_passage(theme, form_level)
+            
+            if result:
+                logger.info(f"✅ Successfully generated long comprehension passage using DeepSeek V3.1")
+                return result
+            else:
+                logger.warning("DeepSeek long comprehension generation also failed, using fallback")
+                
+        except Exception as e:
+            logger.error(f"Error in DeepSeek long comprehension generation: {e}")
+        
+        # Final fallback
+        logger.warning("Using fallback long comprehension passage")
+        return self._get_fallback_long_comprehension(theme)
+
+    def generate_long_comprehension_passage_fast(self, theme: str, form_level: int = 4) -> Optional[Dict]:
+        """Fast comprehension generation with Gemini first, DeepSeek fallback with reduced timeouts"""
+        # Primary: Gemini AI generation (faster than DeepSeek)
+        gemini_result = self.generate_gemini_comprehension_passage(theme, form_level)
+        if gemini_result:
+            logger.info(f"✅ Fast generation successful using Gemini 2.0 Flash Exp")
+            return gemini_result
+        
+        # Secondary: DeepSeek AI fallback with reduced timeouts
+        try:
+            from standalone_english_comprehension_generator import standalone_english_comprehension_generator
+            
+            logger.info(f"Gemini failed, trying fast DeepSeek V3.1 for theme: {theme}, form: {form_level}")
+            
+            # Create a fast generator instance with reduced timeouts
+            fast_generator = standalone_english_comprehension_generator.__class__()
+            fast_generator.api_key = standalone_english_comprehension_generator.api_key
+            fast_generator.api_url = standalone_english_comprehension_generator.api_url
+            fast_generator.max_retries = 2  # Reduced from 3
+            fast_generator.timeouts = [15, 25]  # Reduced from [30, 45, 60]
+            fast_generator.retry_delay = 1  # Reduced from 2
+            
+            result = fast_generator.generate_long_comprehension_passage(theme, form_level)
+            
+            if result:
+                logger.info(f"✅ Fast generation successful using DeepSeek V3.1")
+                return result
+            else:
+                logger.warning("Fast DeepSeek generation also failed, using fallback immediately")
+                
+        except Exception as e:
+            logger.error(f"Error in fast DeepSeek generation: {e}")
+        
+        # Final fallback
+        logger.info("🔄 Using fallback comprehension passage")
+        return self._get_fallback_long_comprehension(theme)
+
+    def _get_fallback_long_comprehension(self, theme: str) -> Dict:
+        """Enhanced ZIMSEC-style fallback long comprehension passage when AI fails"""
+        # Use the enhanced fallback from the standalone generator
+        try:
+            from standalone_english_comprehension_generator import standalone_english_comprehension_generator
+            return standalone_english_comprehension_generator._get_fallback_long_comprehension(theme)
+        except Exception as e:
+            logger.error(f"Error accessing enhanced fallback: {e}")
+            # Basic fallback if even the enhanced one fails
+            return {
+                "passage": {
+                    "title": "Education in Zimbabwe",
+                    "text": """Education has always been a cornerstone of Zimbabwean society, with families making significant sacrifices to ensure their children receive quality schooling. In rural areas like Mutoko, students often walk long distances to reach their schools, demonstrating the high value placed on learning.
+
+The challenges facing rural schools are numerous. Many lack basic resources such as textbooks, laboratory equipment, and reliable electricity. Teachers often work with outdated materials and large class sizes, making it difficult to provide individual attention to students who need extra help.
+
+However, the determination of both students and teachers has led to remarkable achievements. Many rural schools have produced students who excel in national examinations and go on to pursue higher education at universities both within Zimbabwe and abroad. These success stories inspire younger students and demonstrate that excellence is possible regardless of circumstances.
+
+Technology is beginning to transform education in Zimbabwe. Solar power systems and internet connectivity are gradually reaching remote areas, opening up new possibilities for learning. Students can now access online resources, participate in virtual classes, and connect with mentors from around the world.
+
+The government and various organizations are working to address educational challenges through infrastructure development, teacher training programs, and the provision of learning materials. Community involvement has also been crucial, with parents and local leaders supporting school development projects.
+
+Despite the challenges, the future of education in Zimbabwe looks promising. Young people are embracing new technologies while maintaining respect for traditional values and knowledge. This balance between innovation and tradition will be key to the country's continued development.""",
+                    "word_count": 245,
+                    "theme": theme
+                },
+            "questions": [
+                {
+                    "question": "According to the passage, how has mobile technology impacted financial services in Zimbabwe?",
+                    "correct_answer": "Mobile money platforms have revolutionized financial transactions, allowing people to send money, pay bills, and conduct business without traditional banking infrastructure.",
+                    "question_type": "literal",
+                    "marks": 2,
+                    "explanation": "This information is directly stated in the second paragraph."
+                },
+                {
+                    "question": "What challenges does the passage mention regarding technology in education?",
+                    "correct_answer": "Unreliable internet connectivity and the digital divide between urban and rural areas.",
+                    "question_type": "literal",
+                    "marks": 2,
+                    "explanation": "These challenges are explicitly mentioned in the education paragraph."
+                },
+                {
+                    "question": "How has technology benefited farmers according to the passage?",
+                    "correct_answer": "Farmers can receive weather forecasts, market prices, and agricultural advice through mobile applications, use satellite imagery to monitor crops, and GPS technology for precision farming.",
+                    "question_type": "literal",
+                    "marks": 3,
+                    "explanation": "Multiple benefits are listed in the agricultural technology paragraph."
+                },
+                {
+                    "question": "What concerns does the passage raise about technology adoption?",
+                    "correct_answer": "Cybersecurity threats, data privacy concerns, spread of misinformation, and difficulties for older generations to adapt.",
+                    "question_type": "literal",
+                    "marks": 2,
+                    "explanation": "These concerns are mentioned in the challenges paragraph."
+                },
+                {
+                    "question": "Why might older generations struggle more with technology adoption?",
+                    "correct_answer": "The rapid pace of technological change makes it difficult for them to adapt.",
+                    "question_type": "inferential",
+                    "marks": 2,
+                    "explanation": "This requires inference from the statement about rapid technological change."
+                },
+                {
+                    "question": "What does the passage suggest about youth and technology use?",
+                    "correct_answer": "Youth have embraced technology readily, using it for self-expression, connections, and starting online businesses, but this raises concerns about screen time and mental health.",
+                    "question_type": "literal",
+                    "marks": 3,
+                    "explanation": "This information is provided in the youth technology paragraph."
+                },
+                {
+                    "question": "What is meant by 'digital divide' in the context of this passage?",
+                    "correct_answer": "The gap in technology access and usage between urban and rural areas.",
+                    "question_type": "inferential",
+                    "marks": 2,
+                    "explanation": "This requires understanding the context in which the term is used."
+                },
+                {
+                    "question": "According to the passage, what is needed for Zimbabwe's continued technological development?",
+                    "correct_answer": "Investment in education, infrastructure, and policies that protect citizens while promoting innovation.",
+                    "question_type": "literal",
+                    "marks": 2,
+                    "explanation": "This is stated in the concluding paragraph."
+                },
+                {
+                    "question": "How has technology created both opportunities and challenges in Zimbabwe?",
+                    "correct_answer": "Opportunities include improved access to services, education, and economic activities; challenges include cybersecurity, digital divide, and adaptation difficulties.",
+                    "question_type": "critical",
+                    "marks": 3,
+                    "explanation": "This requires synthesizing information from throughout the passage."
+                },
                 {
                     "question": "What is the main message of this passage?",
                     "correct_answer": "Technology has brought significant benefits to Zimbabwe but also creates challenges that need to be addressed through proper planning and investment.",
@@ -1532,3 +1727,600 @@ Despite the challenges, the future of education in Zimbabwe looks promising. You
             ]
         }
         
+    # ==================== ZIMSEC ESSAY WRITING FUNCTIONS ====================
+    
+    def _get_teacher_comment_by_score(self, score: int, max_score: int, student_name: str) -> str:
+        """Generate score-based teacher comment with student name"""
+        # Calculate percentage for consistent grading across 30 and 20 mark scales
+        percentage = (score / max_score) * 100
+        
+        if percentage >= 87:  # 26-30 for 30 marks, 17-20 for 20 marks
+            return f"Excellent work, {student_name}! Keep it up!"
+        elif percentage >= 73:  # 22-25 for 30 marks, 15-16 for 20 marks
+            return f"Well done, {student_name}! Good effort!"
+        elif percentage >= 60:  # 18-21 for 30 marks, 12-14 for 20 marks
+            return f"Well tried, {student_name}. Keep practicing!"
+        elif percentage >= 47:  # 14-17 for 30 marks, 9-11 for 20 marks
+            return f"You can do better, {student_name}. Review the feedback carefully."
+        elif percentage >= 33:  # 10-13 for 30 marks, 7-8 for 20 marks
+            return f"Improve your writing, {student_name}. Focus on the corrections."
+        else:
+            return f"Keep working hard, {student_name}. Practice makes perfect!"
+    
+    def generate_free_response_topics(self) -> Optional[Dict]:
+        """Generate 7 diverse essay topics for ZIMSEC free response using Gemini 2.5 Flash"""
+        if not self._is_configured or not self.client:
+            logger.warning("Gemini AI not configured - cannot generate free response topics")
+            return self._get_fallback_free_response_topics()
+        
+        try:
+            prompt = """You are a ZIMSEC O-Level English examiner creating Paper 1 Section A (Free Response) essay topics.
+
+Generate exactly 7 diverse essay topics covering different types:
+- 2 Narrative essays (storytelling)
+- 2 Descriptive essays (describing scenes, people, places)
+- 2 Expository essays (explaining, discussing topics)
+- 1 Argumentative essay (presenting an argument)
+
+Each topic should:
+- Be appropriate for 15-17 year old Zimbabwean students
+- Encourage creativity and personal expression
+- Be clear and unambiguous
+- Relate to experiences familiar to Zimbabwean students
+- Require 350-450 words
+
+Return ONLY valid JSON (no markdown fences):
+{
+  "topics": [
+    {
+      "title": "A Day I Will Never Forget",
+      "description": "Write about a memorable day in your life that left a lasting impression on you.",
+      "type": "narrative",
+      "suggested_length": "350-450 words"
+    },
+    ... (6 more topics)
+  ]
+}"""
+            
+            model = self.client.GenerativeModel('gemini-2.5-flash')
+            response = model.generate_content(
+                prompt,
+                generation_config=self.client.types.GenerationConfig(
+                    response_mime_type="application/json",
+                    temperature=0.8,
+                    max_output_tokens=2000
+                ),
+            )
+            
+            if response and hasattr(response, 'text') and response.text:
+                clean_text = self._clean_json_block(response.text)
+                data = json.loads(clean_text)
+                logger.info("✅ Generated 7 free response topics using Gemini 2.5 Flash")
+                return {
+                    'success': True,
+                    'topics': data.get('topics', [])
+                }
+            
+        except Exception as e:
+            logger.error(f"Error generating free response topics: {e}")
+        
+        return self._get_fallback_free_response_topics()
+    
+    def _get_fallback_free_response_topics(self) -> Dict:
+        """Fallback free response topics when AI fails"""
+        return {
+            'success': True,
+            'topics': [
+                {
+                    "title": "A Day I Will Never Forget",
+                    "description": "Write about a memorable day in your life that left a lasting impression on you.",
+                    "type": "narrative",
+                    "suggested_length": "350-450 words"
+                },
+                {
+                    "title": "My Role Model",
+                    "description": "Describe a person you admire and explain why they inspire you.",
+                    "type": "descriptive",
+                    "suggested_length": "350-450 words"
+                },
+                {
+                    "title": "The Importance of Education",
+                    "description": "Discuss why education is important for young people in Zimbabwe.",
+                    "type": "expository",
+                    "suggested_length": "350-450 words"
+                },
+                {
+                    "title": "A Frightening Experience",
+                    "description": "Narrate a time when you felt scared and how you overcame your fear.",
+                    "type": "narrative",
+                    "suggested_length": "350-450 words"
+                },
+                {
+                    "title": "My Favorite Place",
+                    "description": "Describe a place that is special to you and explain why you love it.",
+                    "type": "descriptive",
+                    "suggested_length": "350-450 words"
+                },
+                {
+                    "title": "The Impact of Technology on Youth",
+                    "description": "Explain how technology has changed the lives of young people in your community.",
+                    "type": "expository",
+                    "suggested_length": "350-450 words"
+                },
+                {
+                    "title": "Should School Uniforms Be Compulsory?",
+                    "description": "Present your argument for or against making school uniforms mandatory.",
+                    "type": "argumentative",
+                    "suggested_length": "350-450 words"
+                }
+            ]
+        }
+    
+    def generate_guided_composition_prompt(self) -> Optional[Dict]:
+        """Generate a guided composition prompt for ZIMSEC using Gemini 2.5 Flash"""
+        if not self._is_configured or not self.client:
+            logger.warning("Gemini AI not configured - cannot generate guided composition")
+            return self._get_fallback_guided_composition()
+        
+        try:
+            prompt = """You are a ZIMSEC O-Level English examiner creating Paper 1 Section B (Guided Composition) prompts.
+
+Generate ONE guided composition prompt. Choose randomly from these formats:
+- Formal letter (to headmaster, council, newspaper editor)
+- Informal letter (to friend, relative)
+- Speech (for school assembly, debate, ceremony)
+- Report (school event, community project)
+- Magazine article (for school magazine, youth publication)
+
+The prompt should:
+- Be appropriate for 15-17 year old Zimbabwean students
+- Include clear context and situation
+- Provide 4-6 key points to guide the composition
+- Specify the format clearly
+- Be relevant to Zimbabwean school/community life
+
+Return ONLY valid JSON (no markdown fences):
+{
+  "title": "Letter to the Headmaster",
+  "format": "formal_letter",
+  "context": "As the head of the Environmental Club, write a letter to your headmaster requesting permission and support to start a school garden project.",
+  "key_points": [
+    "Explain the purpose of the garden project",
+    "Describe the benefits for the school",
+    "List the resources needed",
+    "Suggest a suitable location",
+    "Request permission and support"
+  ],
+  "suggested_length": "250-350 words",
+  "format_requirements": "Use proper formal letter format with addresses, date, salutation, and closing."
+}"""
+            
+            model = self.client.GenerativeModel('gemini-2.5-flash')
+            response = model.generate_content(
+                prompt,
+                generation_config=self.client.types.GenerationConfig(
+                    response_mime_type="application/json",
+                    temperature=0.8,
+                    max_output_tokens=1500
+                ),
+            )
+            
+            if response and hasattr(response, 'text') and response.text:
+                clean_text = self._clean_json_block(response.text)
+                data = json.loads(clean_text)
+                logger.info("✅ Generated guided composition prompt using Gemini 2.5 Flash")
+                return {
+                    'success': True,
+                    'prompt': data
+                }
+            
+        except Exception as e:
+            logger.error(f"Error generating guided composition: {e}")
+        
+        return self._get_fallback_guided_composition()
+    
+    def _get_fallback_guided_composition(self) -> Dict:
+        """Fallback guided composition when AI fails"""
+        return {
+            'success': True,
+            'prompt': {
+                "title": "Letter to the Headmaster",
+                "format": "formal_letter",
+                "context": "As the head of the Environmental Club, write a letter to your headmaster requesting permission and support to start a school garden project.",
+                "key_points": [
+                    "Explain the purpose of the garden project",
+                    "Describe the benefits for the school",
+                    "List the resources needed",
+                    "Suggest a suitable location",
+                    "Request permission and support"
+                ],
+                "suggested_length": "250-350 words",
+                "format_requirements": "Use proper formal letter format with addresses, date, salutation, and closing."
+            }
+        }
+    
+    def mark_free_response_essay(self, student_name: str, student_surname: str, 
+                                 essay_text: str, topic: Dict) -> Optional[Dict]:
+        """Mark free response essay out of 30 using Gemini 2.5 Flash with ZIMSEC criteria"""
+        if not self._is_configured or not self.client:
+            logger.warning("Gemini AI not configured - cannot mark essay")
+            return None
+        
+        try:
+            prompt = f"""You are a professional ZIMSEC O-Level English examiner marking Paper 1 Section A (Free Response).
+
+STUDENT INFORMATION:
+Name: {student_name} {student_surname}
+
+ESSAY TOPIC:
+{topic.get('title', '')}
+{topic.get('description', '')}
+
+STUDENT'S ESSAY:
+{essay_text}
+
+ZIMSEC MARKING CRITERIA (Total: 30 marks):
+1. CONTENT (15 marks):
+   - Relevance to topic
+   - Development of ideas
+   - Creativity and originality
+   - Use of examples and details
+
+2. LANGUAGE (10 marks):
+   - Grammar and sentence structure
+   - Vocabulary and word choice
+   - Spelling and punctuation
+   - Tense consistency
+
+3. ORGANIZATION (5 marks):
+   - Paragraph structure
+   - Logical flow and coherence
+   - Introduction and conclusion
+   - Transitions between ideas
+
+INSTRUCTIONS:
+1. Mark the essay strictly according to ZIMSEC standards
+2. Identify ALL errors (grammar, spelling, tense, punctuation, word choice)
+3. For each error, provide the wrong text and the correct version
+4. Write a corrected version of the entire essay
+5. Be fair but thorough - this is for learning
+
+Return ONLY valid JSON (no markdown fences):
+{{
+  "score": 24,
+  "max_score": 30,
+  "breakdown": {{
+    "content": 12,
+    "language": 8,
+    "organization": 4
+  }},
+  "corrections": [
+    {{
+      "wrong": "I have went",
+      "correct": "I went",
+      "type": "grammar",
+      "explanation": "Past tense of 'go' is 'went', not 'have went'"
+    }}
+  ],
+  "corrected_essay": "Full corrected version of the essay with all errors fixed...",
+  "detailed_feedback": "Specific feedback on strengths and areas for improvement..."
+}}"""
+            
+            model = self.client.GenerativeModel('gemini-2.5-flash')
+            response = model.generate_content(
+                prompt,
+                generation_config=self.client.types.GenerationConfig(
+                    response_mime_type="application/json",
+                    temperature=0.3,
+                    max_output_tokens=4000
+                ),
+            )
+            
+            if response and hasattr(response, 'text') and response.text:
+                clean_text = self._clean_json_block(response.text)
+                data = json.loads(clean_text)
+                
+                # Add teacher comment based on score
+                score = data.get('score', 0)
+                max_score = data.get('max_score', 30)
+                teacher_comment = self._get_teacher_comment_by_score(score, max_score, student_name)
+                
+                data['teacher_comment'] = teacher_comment
+                data['essay_type'] = 'free_response'
+                
+                logger.info(f"✅ Marked free response essay using Gemini 2.5 Flash - Score: {score}/{max_score}")
+                return {
+                    'success': True,
+                    'result': data
+                }
+            
+        except Exception as e:
+            logger.error(f"Error marking free response essay: {e}")
+        
+        return None
+    
+    def mark_guided_composition(self, student_name: str, student_surname: str,
+                               essay_text: str, prompt: Dict) -> Optional[Dict]:
+        """Mark guided composition out of 20 using Gemini 2.5 Flash with ZIMSEC criteria"""
+        if not self._is_configured or not self.client:
+            logger.warning("Gemini AI not configured - cannot mark composition")
+            return None
+        
+        try:
+            marking_prompt = f"""You are a professional ZIMSEC O-Level English examiner marking Paper 1 Section B (Guided Composition).
+
+STUDENT INFORMATION:
+Name: {student_name} {student_surname}
+
+COMPOSITION PROMPT:
+{prompt.get('title', '')}
+Context: {prompt.get('context', '')}
+Format: {prompt.get('format', '')}
+Key Points to Cover: {', '.join(prompt.get('key_points', []))}
+
+STUDENT'S COMPOSITION:
+{essay_text}
+
+ZIMSEC MARKING CRITERIA (Total: 20 marks):
+1. CONTENT & FORMAT (12 marks):
+   - Adherence to specified format ({prompt.get('format', '')})
+   - Coverage of all key points
+   - Relevance and appropriateness
+   - Development of ideas
+
+2. LANGUAGE (8 marks):
+   - Grammar and sentence structure
+   - Vocabulary and register (formal/informal as appropriate)
+   - Spelling and punctuation
+   - Clarity and coherence
+
+INSTRUCTIONS:
+1. Check if the student followed the correct format
+2. Verify all key points were addressed
+3. Identify ALL errors (grammar, spelling, format, register)
+4. Provide corrected version
+5. Be strict on format requirements
+
+Return ONLY valid JSON (no markdown fences):
+{{
+  "score": 16,
+  "max_score": 20,
+  "breakdown": {{
+    "content_and_format": 10,
+    "language": 6
+  }},
+  "corrections": [
+    {{
+      "wrong": "Dear friend",
+      "correct": "Dear Sir/Madam",
+      "type": "format",
+      "explanation": "Formal letter requires formal salutation"
+    }}
+  ],
+  "corrected_essay": "Full corrected version...",
+  "detailed_feedback": "Specific feedback on format adherence and content..."
+}}"""
+            
+            model = self.client.GenerativeModel('gemini-2.5-flash')
+            response = model.generate_content(
+                marking_prompt,
+                generation_config=self.client.types.GenerationConfig(
+                    response_mime_type="application/json",
+                    temperature=0.3,
+                    max_output_tokens=4000
+                ),
+            )
+            
+            if response and hasattr(response, 'text') and response.text:
+                clean_text = self._clean_json_block(response.text)
+                data = json.loads(clean_text)
+                
+                # Add teacher comment based on score
+                score = data.get('score', 0)
+                max_score = data.get('max_score', 20)
+                teacher_comment = self._get_teacher_comment_by_score(score, max_score, student_name)
+                
+                data['teacher_comment'] = teacher_comment
+                data['essay_type'] = 'guided'
+                
+                logger.info(f"✅ Marked guided composition using Gemini 2.5 Flash - Score: {score}/{max_score}")
+                return {
+                    'success': True,
+                    'result': data
+                }
+            
+        except Exception as e:
+            logger.error(f"Error marking guided composition: {e}")
+        
+        return None
+    
+    def generate_essay_pdf_report(self, student_name: str, student_surname: str,
+                                  essay_type: str, score: int, max_score: int,
+                                  corrections: List[Dict], teacher_comment: str,
+                                  corrected_essay: str, detailed_feedback: str,
+                                  original_essay: str, topic_title: str) -> Optional[str]:
+        """Generate PDF report for essay marking using reportlab"""
+        try:
+            from reportlab.lib.pagesizes import letter, A4
+            from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+            from reportlab.lib.units import inch
+            from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+            from reportlab.lib import colors
+            from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
+            import io
+            import base64
+            
+            # Create PDF in memory
+            buffer = io.BytesIO()
+            doc = SimpleDocTemplate(buffer, pagesize=A4,
+                                   rightMargin=72, leftMargin=72,
+                                   topMargin=72, bottomMargin=18)
+            
+            # Container for the 'Flowable' objects
+            elements = []
+            
+            # Define styles
+            styles = getSampleStyleSheet()
+            title_style = ParagraphStyle(
+                'CustomTitle',
+                parent=styles['Heading1'],
+                fontSize=18,
+                textColor=colors.HexColor('#1976D2'),
+                spaceAfter=30,
+                alignment=TA_CENTER,
+                fontName='Helvetica-Bold'
+            )
+            
+            heading_style = ParagraphStyle(
+                'CustomHeading',
+                parent=styles['Heading2'],
+                fontSize=14,
+                textColor=colors.HexColor('#1976D2'),
+                spaceAfter=12,
+                spaceBefore=12,
+                fontName='Helvetica-Bold'
+            )
+            
+            normal_style = styles['Normal']
+            normal_style.fontSize = 11
+            normal_style.leading = 14
+            
+            # Title
+            essay_type_name = "Free Response Composition" if essay_type == "free_response" else "Guided Composition"
+            elements.append(Paragraph(f"ZIMSEC O-Level English - {essay_type_name}", title_style))
+            elements.append(Spacer(1, 12))
+            
+            # Student Information
+            student_info = [
+                ['Student Name:', f'{student_name} {student_surname}'],
+                ['Essay Topic:', topic_title],
+                ['Date:', f'{self._get_current_date()}']
+            ]
+            
+            t = Table(student_info, colWidths=[2*inch, 4*inch])
+            t.setStyle(TableStyle([
+                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 0), (-1, -1), 11),
+                ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#424242')),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ]))
+            elements.append(t)
+            elements.append(Spacer(1, 20))
+            
+            # Score Section
+            elements.append(Paragraph("MARKING RESULTS", heading_style))
+            
+            score_data = [
+                ['Total Score:', f'{score} / {max_score}', f'{int((score/max_score)*100)}%'],
+                ['Grade:', self._get_grade_from_score(int((score/max_score)*100)), '']
+            ]
+            
+            score_table = Table(score_data, colWidths=[2*inch, 1.5*inch, 1.5*inch])
+            score_table.setStyle(TableStyle([
+                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                ('FONTNAME', (1, 0), (-1, -1), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 12),
+                ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#2E7D32')),
+                ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+                ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#E8F5E9')),
+                ('BOX', (0, 0), (-1, -1), 1, colors.HexColor('#2E7D32')),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+                ('TOPPADDING', (0, 0), (-1, -1), 10),
+            ]))
+            elements.append(score_table)
+            elements.append(Spacer(1, 20))
+            
+            # Teacher Comment
+            elements.append(Paragraph("TEACHER'S COMMENT", heading_style))
+            comment_style = ParagraphStyle(
+                'Comment',
+                parent=normal_style,
+                fontSize=12,
+                textColor=colors.HexColor('#D32F2F'),
+                fontName='Helvetica-Bold',
+                spaceAfter=12
+            )
+            elements.append(Paragraph(teacher_comment, comment_style))
+            elements.append(Spacer(1, 20))
+            
+            # Corrections
+            if corrections and len(corrections) > 0:
+                elements.append(Paragraph("CORRECTIONS", heading_style))
+                elements.append(Paragraph(f"Total errors found: {len(corrections)}", normal_style))
+                elements.append(Spacer(1, 12))
+                
+                correction_data = [['Wrong', 'Correct', 'Type', 'Explanation']]
+                for corr in corrections[:20]:  # Limit to first 20 corrections for space
+                    correction_data.append([
+                        corr.get('wrong', '')[:30],
+                        corr.get('correct', '')[:30],
+                        corr.get('type', ''),
+                        corr.get('explanation', '')[:50]
+                    ])
+                
+                corr_table = Table(correction_data, colWidths=[1.3*inch, 1.3*inch, 0.8*inch, 2.1*inch])
+                corr_table.setStyle(TableStyle([
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 10),
+                    ('FONTSIZE', (0, 1), (-1, -1), 9),
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#D32F2F')),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                    ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                    ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#FFEBEE')]),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                    ('TOPPADDING', (0, 0), (-1, -1), 6),
+                ]))
+                elements.append(corr_table)
+                elements.append(Spacer(1, 20))
+            
+            # Detailed Feedback
+            elements.append(Paragraph("DETAILED FEEDBACK", heading_style))
+            elements.append(Paragraph(detailed_feedback, normal_style))
+            elements.append(Spacer(1, 20))
+            
+            # Page break before corrected essay
+            elements.append(PageBreak())
+            
+            # Corrected Essay
+            elements.append(Paragraph("CORRECTED VERSION", heading_style))
+            corrected_para_style = ParagraphStyle(
+                'Corrected',
+                parent=normal_style,
+                alignment=TA_JUSTIFY,
+                spaceAfter=12
+            )
+            
+            # Split corrected essay into paragraphs
+            for para in corrected_essay.split('\n'):
+                if para.strip():
+                    elements.append(Paragraph(para.strip(), corrected_para_style))
+                    elements.append(Spacer(1, 8))
+            
+            # Build PDF
+            doc.build(elements)
+            
+            # Get PDF data as base64
+            pdf_data = buffer.getvalue()
+            buffer.close()
+            pdf_base64 = base664.b64encode(pdf_data).decode('utf-8')
+            
+            logger.info(f"✅ Generated PDF report for {student_name} {student_surname}")
+            return pdf_base64
+            
+        except ImportError:
+            logger.error("reportlab library not installed - cannot generate PDF")
+            return None
+        except Exception as e:
+            logger.error(f"Error generating PDF report: {e}")
+            return None
+    
+    def _get_current_date(self) -> str:
+        """Get current date in readable format"""
+        from datetime import datetime
+        return datetime.now().strftime("%d %B %Y")

@@ -27,6 +27,8 @@ import CombinedScienceExamScreen from '../screens/CombinedScienceExamScreen';
 import VirtualLabScreen from '../screens/VirtualLabScreen';
 import FormulaSheetScreen from '../screens/FormulaSheetScreen';
 import PastPaperScreen from '../screens/PastPaperScreen';
+import ScienceNotesScreen from '../screens/ScienceNotesScreen';
+import TopicNotesDetailScreen from '../screens/TopicNotesDetailScreen';
 
 const Stack = createStackNavigator();
 
@@ -214,6 +216,20 @@ const AppNavigator: React.FC = () => {
               component={PastPaperScreen}
               options={{
                 title: 'Past Papers',
+              }}
+            />
+            <Stack.Screen
+              name="ScienceNotes"
+              component={ScienceNotesScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="TopicNotesDetail"
+              component={TopicNotesDetailScreen}
+              options={{
+                headerShown: false,
               }}
             />
           </Stack.Group>
