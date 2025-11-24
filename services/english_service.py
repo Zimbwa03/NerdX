@@ -1510,23 +1510,6 @@ Despite the challenges, the future of education in Zimbabwe looks promising. You
                 },
                 {
                     "question": "According to the passage, what is needed for Zimbabwe's continued technological development?",
-                    "correct_answer": "Investment in education, infrastructure, and policies that protect citizens while promoting innovation.",
-                    "question_type": "literal",
-                    "marks": 2,
-                    "explanation": "This is stated in the concluding paragraph."
-                },
-                {
-                    "question": "How has technology created both opportunities and challenges in Zimbabwe?",
-                    "correct_answer": "Opportunities include improved access to services, education, and economic activities; challenges include cybersecurity, digital divide, and adaptation difficulties.",
-                    "question_type": "critical",
-                    "marks": 3,
-                    "explanation": "This requires synthesizing information from throughout the passage."
-                },
-    def _generate_fallback_essay_marking(self) -> str:
-        """Generate fallback essay marking when AI fails"""
-        fallback_data = {
-            "score": 18,
-            "grade": "C+",
             "summary_feedback": "Your essay demonstrates good understanding of the topic with clear ideas and logical structure. The content is relevant and shows creativity. However, there are some areas that need improvement including grammar consistency, vocabulary usage, and sentence structure. With more practice and attention to detail, your skills will continue to develop. Keep up the good effort!",
             "specific_errors": [
                 {"wrong": "have had", "correct": "had", "type": "verb tense"},
