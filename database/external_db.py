@@ -177,14 +177,14 @@ def create_payment_transactions_table():
 def create_user_projects_table():
     """Create user_projects table for ZIMSEC Project Assistant"""
     try:
-        sql_query = """
+        sql_query_projects = """
         CREATE TABLE IF NOT EXISTS user_projects (
             id SERIAL PRIMARY KEY,
             user_id VARCHAR(255) NOT NULL,
             project_title VARCHAR(500),
             subject VARCHAR(100),
-            current_stage INTEGER DEFAULT 1,
-            project_data JSONB NOT NULL,
+            current_stage VARCHAR(50) DEFAULT 'Selection',
+            project_data JSONB NOT NULL DEFAULT '{}'::jsonb,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             completed BOOLEAN DEFAULT FALSE
@@ -192,17 +192,33 @@ def create_user_projects_table():
 
         CREATE INDEX IF NOT EXISTS idx_user_projects_user_id ON user_projects(user_id);
         CREATE INDEX IF NOT EXISTS idx_user_projects_completed ON user_projects(completed);
-        CREATE INDEX IF NOT EXISTS idx_user_projects_updated_at ON user_projects(updated_at);
-        CREATE INDEX IF NOT EXISTS idx_user_projects_user_active ON user_projects(user_id, completed);
+        """
+        
+        sql_query_chat = """
+        CREATE TABLE IF NOT EXISTS project_chat_history (
+            id SERIAL PRIMARY KEY,
+            project_id INTEGER REFERENCES user_projects(id) ON DELETE CASCADE,
+            role VARCHAR(50) NOT NULL,
+            content TEXT NOT NULL,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_project_chat_history_project_id ON project_chat_history(project_id);
         """
         
         test_result = make_supabase_request("GET", "user_projects", limit=1, use_service_role=True)
         if test_result is not None:
             logger.info("User projects table already exists and is accessible")
+            # Check chat table too
+            test_chat = make_supabase_request("GET", "project_chat_history", limit=1, use_service_role=True)
+            if test_chat is None:
+                logger.warning("Project chat history table does not exist. Please create it manually:")
+                logger.warning(sql_query_chat)
             return True
         
         logger.warning("User projects table does not exist. Please create it manually in Supabase SQL Editor:")
-        logger.warning(sql_query)
+        logger.warning(sql_query_projects)
+        logger.warning(sql_query_chat)
         
         return True
         
@@ -1536,3 +1552,106 @@ def get_db_connection():
     except Exception as e:
         logger.error(f"Error connecting to database: {e}")
         return None
+
+# --- Project Assistant Functions ---
+
+def create_user_project(user_id, project_title, subject, project_data=None):
+    """Create a new user project"""
+    try:
+        # Ensure table exists (idempotent check inside)
+        create_user_projects_table()
+        
+        data = {
+            "user_id": user_id,
+            "project_title": project_title,
+            "subject": subject,
+            "project_data": project_data or {},
+            "current_stage": "Selection",
+            "completed": False
+        }
+        result = make_supabase_request("POST", "user_projects", data, use_service_role=True)
+        if result and len(result) > 0:
+            return result[0]
+        return None
+    except Exception as e:
+        logger.error(f"Error creating user project: {e}")
+        return None
+
+def get_user_projects(user_id):
+    """Get all projects for a user"""
+    try:
+        result = make_supabase_request("GET", "user_projects", filters={"user_id": f"eq.{user_id}"}, use_service_role=True)
+        return result or []
+    except Exception as e:
+        logger.error(f"Error getting user projects: {e}")
+        return []
+
+def get_project_by_id(project_id):
+    """Get project by ID"""
+    try:
+        result = make_supabase_request("GET", "user_projects", filters={"id": f"eq.{project_id}"}, use_service_role=True)
+        if result and len(result) > 0:
+            return result[0]
+        return None
+    except Exception as e:
+        logger.error(f"Error getting project by ID: {e}")
+        return None
+
+def update_project_stage(project_id, stage, data_update=None):
+    """Update project stage and data"""
+    try:
+        updates = {"current_stage": stage, "updated_at": datetime.utcnow().isoformat()}
+        
+        if data_update:
+            # Fetch current project to merge data
+            current_project = get_project_by_id(project_id)
+            if current_project:
+                current_data = current_project.get('project_data', {})
+                if isinstance(current_data, str):
+                     try:
+                         current_data = json.loads(current_data)
+                     except:
+                         current_data = {}
+                
+                # Merge new data
+                current_data.update(data_update)
+                updates['project_data'] = current_data
+            else:
+                return None
+
+        result = make_supabase_request("PATCH", "user_projects", updates, filters={"id": f"eq.{project_id}"}, use_service_role=True)
+        if result and len(result) > 0:
+            return result[0]
+        return None
+    except Exception as e:
+        logger.error(f"Error updating project stage: {e}")
+        return None
+
+def save_project_chat_message(project_id, role, content):
+    """Save a chat message to history"""
+    try:
+        data = {
+            "project_id": project_id,
+            "role": role,
+            "content": content,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        result = make_supabase_request("POST", "project_chat_history", data, use_service_role=True)
+        return result is not None
+    except Exception as e:
+        logger.error(f"Error saving chat message: {e}")
+        return False
+
+def get_project_chat_history(project_id, limit=50):
+    """Get chat history for a project"""
+    try:
+        # Order by timestamp ascending
+        params = {
+            "project_id": f"eq.{project_id}",
+            "order": "timestamp.asc"
+        }
+        result = make_supabase_request("GET", "project_chat_history", filters=params, limit=limit, use_service_role=True)
+        return result or []
+    except Exception as e:
+        logger.error(f"Error getting chat history: {e}")
+        return []
