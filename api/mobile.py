@@ -2813,7 +2813,7 @@ def sync_pull():
                     'questions': {'created': [], 'updated': [], 'deleted': []},
                     'interactions': {'created': [], 'updated': [], 'deleted': []},
                 },
-                'timestamp': int(datetime.datetime.utcnow().timestamp() * 1000)
+                'timestamp': int(datetime.utcnow().timestamp() * 1000)
             }
         }), 200
         
