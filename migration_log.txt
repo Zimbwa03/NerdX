@@ -1,0 +1,32 @@
+﻿python : INFO:__main__:\U0001f680 Starting Deep Knowledge 
+Tracing migration...
+At line:1 char:1
++ python apply_dkt_migration.py 2>&1 | Out-File -FilePath 
+migration_log ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (INFO:__main_ 
+   _:\...ng migration...:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+INFO:__main__:This will create the following tables:
+INFO:__main__:  - student_interactions
+INFO:__main__:  - student_knowledge_state
+INFO:__main__:  - skills_taxonomy
+INFO:__main__:  - misconceptions
+INFO:__main__:  - student_misconceptions_log
+INFO:__main__:  - dkt_model_metrics
+INFO:__main__:  - daily_review_queue
+INFO:__main__:  - offline_sync_queue
+INFO:__main__:
+INFO:__main__:Migration SQL loaded successfully
+ERROR:__main__:Missing SUPABASE_URL or 
+SUPABASE_SERVICE_ROLE_KEY environment variables
+ERROR:__main__:\u274c Migration failed. Please run SQL 
+manually in Supabase SQL Editor.
+INFO:__main__:
+Manual migration steps:
+INFO:__main__:1. Go to 
+https://app.supabase.com/project/[your-project]/sql
+INFO:__main__:2. Copy the SQL from 
+database/migrations/001_add_interaction_tracking.sql
+INFO:__main__:3. Paste and execute in SQL Editor

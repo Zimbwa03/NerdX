@@ -10,7 +10,7 @@ import os
 API_URL = os.getenv('API_URL', 'https://nerdx.onrender.com/api/mobile')
 
 # You'll need a valid JWT token - get from login
-TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoidGVzdF80ZWZlNzYyN2RlNDEiLCJleHAiOjE3NjQ2NDQyMjcsImlhdCI6MTc2NDAzOTQyN30.TGBk1Z7jQcBueGaafN4nk1jMLv9e66ve8r6UcC72uqk"  # Replace with actual token
+TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoidGVzdF80ZWZlNzYyN2RlNDEiLCJleHAiOjE3NjQ2NTg2OTgsImlhdCI6MTc2NDA1Mzg5OH0.yDt6zJ_GeoYXB_teaqX_icxrSw4gB3fVnsBDKFotMSc"  # Replace with actual token
 
 headers = {
     'Authorization': f'Bearer {TOKEN}',

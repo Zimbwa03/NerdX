@@ -1,0 +1,26 @@
+﻿============================================================
+DKT DIAGNOSTIC TEST
+============================================================
+
+[TEST 1] API Accessibility (No Auth)
+Health endpoint: 404
+
+[TEST 2] JWT Token Generation
+Generated token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkI...
+Local verification: SUCCESS
+User ID: test_4efe7627de41
+Expires: 2025-12-02 08:56:29
+
+[TEST 3] DKT Knowledge Map Endpoint
+Status: 200
+Response: {"data":{"learning_skills":0,"mastered_skills":0,"skills":[],"struggling_skills":0,"total_skills":0,"user_id":"test_4efe7627de41"},"success":true}
+
+
+[TEST 4] Testing with chat_id format
+Status: 200
+Response: {"data":{"learning_skills":0,"mastered_skills":0,"skills":[],"struggling_skills":0,"total_skills":0,"user_id":"test_4efe7627de41"},"success":true}
+
+
+============================================================
+DIAGNOSTIC COMPLETE
+============================================================

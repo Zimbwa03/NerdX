@@ -6,7 +6,8 @@ import json
 import os
 
 API_URL = os.getenv('API_URL', 'https://nerdx.onrender.com/api/mobile')
-TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoidGVzdF80ZWZlNzYyN2RlNDEiLCJleHAiOjE3MzI5NDIxNDQsImlhdCI6MTczMjMzNzM0NH0.2Ow5TqVyRTZNjGdOiKHNTlQJyWqxXcXpMBVVdxrNYhE"
+# Fresh token generated with matching JWT_SECRET from Render
+TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoidGVzdF80ZWZlNzYyN2RlNDEiLCJleHAiOjE3NjQ2NTkzOTUsImlhdCI6MTc2NDA1NDU5NX0.b_9p4oUDuhbZQI-nudpUSLhMBh8x8ODbDfCLJ13NFVk"
 
 headers = {
     'Authorization': f'Bearer {TOKEN}',
@@ -73,7 +74,7 @@ print("\n" + "-"*60 + "\n")
 print("[TEST 3] Getting Skill Mastery...")
 try:
     response = requests.get(
-        f'{API_URL}/dkt/skill-mastery/algebra_basics',
+        f'{API_URL}/dkt/mastery/algebra_basics',
         headers=headers,
         timeout=10
     )
@@ -91,10 +92,10 @@ print("\n" + "-"*60 + "\n")
 # Test 4: Get Recommendations
 print("[TEST 4] Getting Recommendations...")
 try:
-    response = requests.get(
-        f'{API_URL}/dkt/personalized-recommendations',
+    response = requests.post(
+        f'{API_URL}/dkt/recommend-next',
         headers=headers,
-        params={'subject': 'Mathematics', 'limit': 5},
+        json={'subject': 'Mathematics', 'limit': 5},
         timeout=10
     )
     print(f"Status: {response.status_code}")

@@ -18,6 +18,9 @@ import * as ImagePicker from 'expo-image-picker';
 import { quizApi, Question, AnswerResult } from '../services/api/quizApi';
 import { dktService } from '../services/api/dktApi';
 import { useAuth } from '../context/AuthContext';
+import { database } from '../database';
+import Interaction from '../database/models/Interaction';
+import { SyncService } from '../services/SyncService';
 import { Icons, IconCircle } from '../components/Icons';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
@@ -123,7 +126,7 @@ const QuizScreen: React.FC = () => {
   };
 
 
-  // Log interaction to DKT system
+  // Log interaction to DKT system (Offline-First)
   const logInteractionToDKT = async (isCorrect: boolean) => {
     if (!question || !subject) return;
 
@@ -134,21 +137,30 @@ const QuizScreen: React.FC = () => {
         topic?.name || topic?.id || 'general'
       );
 
-      await dktService.logInteraction({
-        subject: subject.id,
-        topic: topic?.name || topic?.id || 'general',
-        skill_id: skill_id,
-        question_id: question.id,
-        correct: isCorrect,
-        confidence: selectedConfidence || undefined,
-        time_spent: timeSpent,
-        hints_used: hintsUsed,
-        session_id: sessionId,
+      // Save to local database
+      await database.write(async () => {
+        await database.get<Interaction>('interactions').create(interaction => {
+          interaction.userId = user?.id || 'anonymous';
+          interaction.questionId = question.id;
+          interaction.skillId = skill_id;
+          interaction.subject = subject.id;
+          interaction.correct = isCorrect;
+          interaction.confidence = selectedConfidence || 'medium';
+          interaction.timeSpent = timeSpent;
+          interaction.hintsUsed = hintsUsed;
+          interaction.sessionId = sessionId;
+          interaction.timestamp = Date.now();
+          interaction.synced = false; // Mark as pending sync
+        });
       });
 
-      console.log(`✅ DKT: Logged interaction for ${skill_id}`);
+      console.log(`✅ Offline DKT: Logged interaction for ${skill_id}`);
+
+      // Trigger background sync if online
+      SyncService.sync();
+
     } catch (error) {
-      console.error('Failed to log to DKT:', error);
+      console.error('Failed to log to local DB:', error);
     }
   };
 
@@ -277,245 +289,245 @@ const QuizScreen: React.FC = () => {
 
               {/* Options - for multiple choice questions */}
               {question.options && question.options.length > 0 && (
-            <View style={styles.optionsContainer}>
-              {question.options.map((option, index) => {
-                const optionLabel = String.fromCharCode(65 + index); // A, B, C, D
-                const isSelected = selectedAnswer === option;
-                const isCorrect = result?.correct && option === question.correct_answer;
-                const isWrong = result && !result.correct && isSelected && option !== question.correct_answer;
+                <View style={styles.optionsContainer}>
+                  {question.options.map((option, index) => {
+                    const optionLabel = String.fromCharCode(65 + index); // A, B, C, D
+                    const isSelected = selectedAnswer === option;
+                    const isCorrect = result?.correct && option === question.correct_answer;
+                    const isWrong = result && !result.correct && isSelected && option !== question.correct_answer;
 
-                return (
-                  <Card
-                    key={index}
-                    variant={isSelected ? 'outlined' : 'default'}
-                    onPress={() => handleAnswerSelect(option)}
-                    disabled={!!result}
-                    style={[
-                      styles.optionCard,
-                      isSelected && styles.optionCardSelected,
-                      isCorrect && styles.optionCardCorrect,
-                      isWrong && styles.optionCardWrong,
-                    ]}
-                  >
-                    <View style={styles.optionContent}>
-                      <View style={[
-                        styles.optionLabelCircle,
-                        isSelected && styles.optionLabelCircleSelected,
-                        isCorrect && styles.optionLabelCircleCorrect,
-                        isWrong && styles.optionLabelCircleWrong,
-                      ]}>
-                        <Text style={[
-                          styles.optionLabelText,
-                          isSelected && styles.optionLabelTextSelected,
-                          isCorrect && styles.optionLabelTextCorrect,
-                          isWrong && styles.optionLabelTextWrong,
-                        ]}>
-                          {optionLabel}
-                        </Text>
-                      </View>
-                      <Text style={[
-                        styles.optionText,
-                        isSelected && styles.optionTextSelected,
-                        isCorrect && styles.optionTextCorrect,
-                        isWrong && styles.optionTextWrong,
-                      ]}>
-                        {option}
-                      </Text>
-                      {(isCorrect || isWrong) && (
-                        <View style={styles.optionIcon}>
-                          {isCorrect ? Icons.check(24, Colors.success.main) : Icons.close(24, Colors.error.main)}
-                        </View>
-                      )}
-                    </View>
-                  </Card>
-                );
-              })}
-            </View>
-          )}
-
-          {/* Text Input - for math and short answer questions */}
-          {question.allows_text_input && !result && (
-            <View style={styles.answerInputContainer}>
-              <Text style={styles.answerInputLabel}>Your Answer:</Text>
-              <TextInput
-                style={styles.answerInput}
-                value={textAnswer}
-                onChangeText={setTextAnswer}
-                placeholder="Enter your answer here..."
-                placeholderTextColor={Colors.text.secondary}
-                multiline
-                editable={!result}
-              />
-            </View>
-          )}
-
-          {/* Image Upload - for math questions */}
-          {question.allows_image_upload && !result && (
-            <View style={styles.imageUploadContainer}>
-              <TouchableOpacity
-                style={styles.imageUploadButton}
-                onPress={handleImageUpload}
-                disabled={!!result}
-              >
-                <Text style={styles.imageUploadButtonText}>
-                  {answerImage ? '📷 Change Image' : '📷 Upload Answer Image'}
-                </Text>
-              </TouchableOpacity>
-              {answerImage && (
-                <View style={styles.imagePreview}>
-                  <Image
-                    source={{ uri: answerImage }}
-                    style={styles.uploadedImage}
-                    onError={(error) => {
-                      console.warn('Failed to load answer image:', error.nativeEvent.error);
-                    }}
-                  />
-                  <TouchableOpacity
-                    style={styles.removeImageButton}
-                    onPress={() => setAnswerImage(null)}
-                  >
-                    <Text style={styles.removeImageText}>✕ Remove</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
-          )}
-
-          {/* Hint Button - for math questions */}
-          {question.hint && !result && (
-            <TouchableOpacity
-              style={styles.hintButton}
-              onPress={() => {
-                setShowHint(!showHint);
-                if (!showHint) setHintsUsed(prev => prev + 1);
-              }}
-            >
-              <Text style={styles.hintButtonText}>
-                {showHint ? '💡 Hide Hint' : '💡 Show Hint'}
-              </Text>
-            </TouchableOpacity>
-          )}
-
-          {/* Hint Display */}
-          {showHint && question.hint && (
-            <Card variant="elevated" style={styles.hintCard}>
-              <View style={styles.hintHeader}>
-                <IconCircle
-                  icon={Icons.info(24, Colors.warning.main)}
-                  size={36}
-                  backgroundColor={Colors.warning.light}
-                />
-                <Text style={styles.hintTitle}>Hint</Text>
-              </View>
-              <Text style={styles.hintText}>{question.hint}</Text>
-            </Card>
-          )}
-
-          {/* Result Card */}
-          {result && (
-            <Card
-              variant="elevated"
-              style={[
-                styles.resultCard,
-                result.correct ? styles.resultCardSuccess : styles.resultCardError,
-              ]}
-            >
-              <View style={styles.resultHeader}>
-                <IconCircle
-                  icon={result.correct ? Icons.success(28, Colors.success.main) : Icons.error(28, Colors.error.main)}
-                  size={48}
-                  backgroundColor={result.correct ? 'rgba(0, 230, 118, 0.1)' : 'rgba(255, 23, 68, 0.1)'}
-                />
-                <View style={styles.resultInfo}>
-                  <Text style={[
-                    styles.resultText,
-                    result.correct && styles.resultTextCorrect,
-                    !result.correct && styles.resultTextError,
-                  ]}>
-                    {result.correct ? 'Correct!' : 'Incorrect'}
-                  </Text>
-                  <Text style={styles.pointsText}>+{result.points_earned} Points</Text>
-                </View>
-              </View>
-              <Text style={styles.feedbackText}>{result.feedback}</Text>
-
-              {/* Answer Images (for DB questions) */}
-              {question?.answer_image_urls && question.answer_image_urls.length > 0 && (
-                <View style={styles.solutionContainer}>
-                  <Text style={styles.solutionTitle}>📸 Solution Images:</Text>
-                  {question.answer_image_urls.map((url, index) => (
-                    url ? (
-                      <Image
+                    return (
+                      <Card
                         key={index}
-                        source={{ uri: url }}
-                        style={styles.solutionImage}
-                        resizeMode="contain"
+                        variant={isSelected ? 'outlined' : 'default'}
+                        onPress={() => handleAnswerSelect(option)}
+                        disabled={!!result}
+                        style={[
+                          styles.optionCard,
+                          isSelected && styles.optionCardSelected,
+                          isCorrect && styles.optionCardCorrect,
+                          isWrong && styles.optionCardWrong,
+                        ]}
+                      >
+                        <View style={styles.optionContent}>
+                          <View style={[
+                            styles.optionLabelCircle,
+                            isSelected && styles.optionLabelCircleSelected,
+                            isCorrect && styles.optionLabelCircleCorrect,
+                            isWrong && styles.optionLabelCircleWrong,
+                          ]}>
+                            <Text style={[
+                              styles.optionLabelText,
+                              isSelected && styles.optionLabelTextSelected,
+                              isCorrect && styles.optionLabelTextCorrect,
+                              isWrong && styles.optionLabelTextWrong,
+                            ]}>
+                              {optionLabel}
+                            </Text>
+                          </View>
+                          <Text style={[
+                            styles.optionText,
+                            isSelected && styles.optionTextSelected,
+                            isCorrect && styles.optionTextCorrect,
+                            isWrong && styles.optionTextWrong,
+                          ]}>
+                            {option}
+                          </Text>
+                          {(isCorrect || isWrong) && (
+                            <View style={styles.optionIcon}>
+                              {isCorrect ? Icons.check(24, Colors.success.main) : Icons.close(24, Colors.error.main)}
+                            </View>
+                          )}
+                        </View>
+                      </Card>
+                    );
+                  })}
+                </View>
+              )}
+
+              {/* Text Input - for math and short answer questions */}
+              {question.allows_text_input && !result && (
+                <View style={styles.answerInputContainer}>
+                  <Text style={styles.answerInputLabel}>Your Answer:</Text>
+                  <TextInput
+                    style={styles.answerInput}
+                    value={textAnswer}
+                    onChangeText={setTextAnswer}
+                    placeholder="Enter your answer here..."
+                    placeholderTextColor={Colors.text.secondary}
+                    multiline
+                    editable={!result}
+                  />
+                </View>
+              )}
+
+              {/* Image Upload - for math questions */}
+              {question.allows_image_upload && !result && (
+                <View style={styles.imageUploadContainer}>
+                  <TouchableOpacity
+                    style={styles.imageUploadButton}
+                    onPress={handleImageUpload}
+                    disabled={!!result}
+                  >
+                    <Text style={styles.imageUploadButtonText}>
+                      {answerImage ? '📷 Change Image' : '📷 Upload Answer Image'}
+                    </Text>
+                  </TouchableOpacity>
+                  {answerImage && (
+                    <View style={styles.imagePreview}>
+                      <Image
+                        source={{ uri: answerImage }}
+                        style={styles.uploadedImage}
+                        onError={(error) => {
+                          console.warn('Failed to load answer image:', error.nativeEvent.error);
+                        }}
                       />
-                    ) : null
-                  ))}
+                      <TouchableOpacity
+                        style={styles.removeImageButton}
+                        onPress={() => setAnswerImage(null)}
+                      >
+                        <Text style={styles.removeImageText}>✕ Remove</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
                 </View>
               )}
 
-              {result.solution && (
-                <View style={styles.solutionContainer}>
-                  <Text style={styles.solutionTitle}>📚 Detailed Solution:</Text>
-                  <Text style={styles.solutionText}>{result.solution}</Text>
-                </View>
+              {/* Hint Button - for math questions */}
+              {question.hint && !result && (
+                <TouchableOpacity
+                  style={styles.hintButton}
+                  onPress={() => {
+                    setShowHint(!showHint);
+                    if (!showHint) setHintsUsed(prev => prev + 1);
+                  }}
+                >
+                  <Text style={styles.hintButtonText}>
+                    {showHint ? '💡 Hide Hint' : '💡 Show Hint'}
+                  </Text>
+                </TouchableOpacity>
               )}
-              {result.hint && !result.correct && (
-                <View style={styles.hintContainer}>
-                  <Text style={styles.hintTitle}>💡 Additional Hint:</Text>
-                  <Text style={styles.hintText}>{result.hint}</Text>
-                </View>
-              )}
-              {question.explanation && (
-                <View style={styles.explanationContainer}>
-                  <Text style={styles.explanationTitle}>📖 Teaching Explanation:</Text>
-                  <Text style={styles.explanationText}>{question.explanation}</Text>
-                </View>
-              )}
-            </Card>
-          )}
 
-          {/* Action Buttons */}
-          <View style={styles.buttonContainer}>
-            {!result ? (
-              <Button
-                title="Submit Answer"
-                variant="primary"
-                size="large"
-                fullWidth
-                onPress={handleSubmit}
-                disabled={(!selectedAnswer && !textAnswer && !answerImage) || loading}
-                loading={loading}
-                icon="checkmark-circle"
-                iconPosition="left"
-              />
-            ) : (
-              <>
-                <Button
-                  title="Next Question"
-                  variant="primary"
-                  size="large"
-                  fullWidth
-                  onPress={handleNext}
-                  disabled={loading}
-                  loading={loading}
-                  icon="arrow-forward"
-                  iconPosition="right"
-                  style={styles.nextButton}
-                />
-                <Button
-                  title="Back to Topics"
-                  variant="outline"
-                  fullWidth
-                  onPress={handleBack}
-                  icon="arrow-back"
-                  iconPosition="left"
-                />
-              </>
-            )}
-          </View>
+              {/* Hint Display */}
+              {showHint && question.hint && (
+                <Card variant="elevated" style={styles.hintCard}>
+                  <View style={styles.hintHeader}>
+                    <IconCircle
+                      icon={Icons.info(24, Colors.warning.main)}
+                      size={36}
+                      backgroundColor={Colors.warning.light}
+                    />
+                    <Text style={styles.hintTitle}>Hint</Text>
+                  </View>
+                  <Text style={styles.hintText}>{question.hint}</Text>
+                </Card>
+              )}
+
+              {/* Result Card */}
+              {result && (
+                <Card
+                  variant="elevated"
+                  style={[
+                    styles.resultCard,
+                    result.correct ? styles.resultCardSuccess : styles.resultCardError,
+                  ]}
+                >
+                  <View style={styles.resultHeader}>
+                    <IconCircle
+                      icon={result.correct ? Icons.success(28, Colors.success.main) : Icons.error(28, Colors.error.main)}
+                      size={48}
+                      backgroundColor={result.correct ? 'rgba(0, 230, 118, 0.1)' : 'rgba(255, 23, 68, 0.1)'}
+                    />
+                    <View style={styles.resultInfo}>
+                      <Text style={[
+                        styles.resultText,
+                        result.correct && styles.resultTextCorrect,
+                        !result.correct && styles.resultTextError,
+                      ]}>
+                        {result.correct ? 'Correct!' : 'Incorrect'}
+                      </Text>
+                      <Text style={styles.pointsText}>+{result.points_earned} Points</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.feedbackText}>{result.feedback}</Text>
+
+                  {/* Answer Images (for DB questions) */}
+                  {question?.answer_image_urls && question.answer_image_urls.length > 0 && (
+                    <View style={styles.solutionContainer}>
+                      <Text style={styles.solutionTitle}>📸 Solution Images:</Text>
+                      {question.answer_image_urls.map((url, index) => (
+                        url ? (
+                          <Image
+                            key={index}
+                            source={{ uri: url }}
+                            style={styles.solutionImage}
+                            resizeMode="contain"
+                          />
+                        ) : null
+                      ))}
+                    </View>
+                  )}
+
+                  {result.solution && (
+                    <View style={styles.solutionContainer}>
+                      <Text style={styles.solutionTitle}>📚 Detailed Solution:</Text>
+                      <Text style={styles.solutionText}>{result.solution}</Text>
+                    </View>
+                  )}
+                  {result.hint && !result.correct && (
+                    <View style={styles.hintContainer}>
+                      <Text style={styles.hintTitle}>💡 Additional Hint:</Text>
+                      <Text style={styles.hintText}>{result.hint}</Text>
+                    </View>
+                  )}
+                  {question.explanation && (
+                    <View style={styles.explanationContainer}>
+                      <Text style={styles.explanationTitle}>📖 Teaching Explanation:</Text>
+                      <Text style={styles.explanationText}>{question.explanation}</Text>
+                    </View>
+                  )}
+                </Card>
+              )}
+
+              {/* Action Buttons */}
+              <View style={styles.buttonContainer}>
+                {!result ? (
+                  <Button
+                    title="Submit Answer"
+                    variant="primary"
+                    size="large"
+                    fullWidth
+                    onPress={handleSubmit}
+                    disabled={(!selectedAnswer && !textAnswer && !answerImage) || loading}
+                    loading={loading}
+                    icon="checkmark-circle"
+                    iconPosition="left"
+                  />
+                ) : (
+                  <>
+                    <Button
+                      title="Next Question"
+                      variant="primary"
+                      size="large"
+                      fullWidth
+                      onPress={handleNext}
+                      disabled={loading}
+                      loading={loading}
+                      icon="arrow-forward"
+                      iconPosition="right"
+                      style={styles.nextButton}
+                    />
+                    <Button
+                      title="Back to Topics"
+                      variant="outline"
+                      fullWidth
+                      onPress={handleBack}
+                      icon="arrow-back"
+                      iconPosition="left"
+                    />
+                  </>
+                )}
+              </View>
             </>
           )}
         </View>

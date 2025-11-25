@@ -1,0 +1,49 @@
+﻿
+============================================================
+DKT API TEST SUITE
+============================================================
+API URL: https://nerdx.onrender.com/api/mobile
+Token: eyJhbGciOiJIUzI1NiIs...
+============================================================
+
+[TEST 1] Logging Interaction...
+Status: 401
+Response: {"message":"Invalid token","success":false}
+
+FAIL - Log Interaction (Status 401)
+
+------------------------------------------------------------
+
+[TEST 2] Getting Knowledge Map...
+Status: 401
+Response: {"message":"Invalid token","success":false}
+
+FAIL - Knowledge Map (Status 401)
+
+------------------------------------------------------------
+
+[TEST 3] Getting Skill Mastery...
+Status: 404
+Response: {"error":"Not found"}
+
+FAIL - Skill Mastery (Status 404)
+
+------------------------------------------------------------
+
+[TEST 4] Getting Recommendations...
+Status: 404
+Response: {"error":"Not found"}
+
+FAIL - Recommendations (Status 404)
+
+------------------------------------------------------------
+
+[TEST 5] Getting Interaction History...
+Status: 401
+Response: {"message":"Invalid token","success":false}
+
+FAIL - Interaction History (Status 401)
+
+============================================================
+TEST SUITE COMPLETE
+============================================================

@@ -2785,3 +2785,84 @@ def get_interaction_history():
         logger.error(f"Get interaction history error: {e}", exc_info=True)
         return jsonify({'success': False, 'message': 'Server error'}), 500
 
+
+# -----------------------------------------------------------------------------
+# OFFLINE SYNC ENDPOINTS
+# -----------------------------------------------------------------------------
+
+@mobile_bp.route('/sync/pull', methods=['GET'])
+@require_auth
+def sync_pull():
+    """
+    Pull changes from server to mobile app
+    Used by WatermelonDB sync engine
+    """
+    try:
+        last_pulled_at = request.args.get('last_pulled_at', type=int)
+        schema_version = request.args.get('schema_version', type=int)
+        migration = request.args.get('migration')
+        
+        # In a real implementation, we would query tables for changes since last_pulled_at
+        # For now, we return empty changes as we are primarily syncing UP (push)
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'changes': {
+                    'users': {'created': [], 'updated': [], 'deleted': []},
+                    'questions': {'created': [], 'updated': [], 'deleted': []},
+                    'interactions': {'created': [], 'updated': [], 'deleted': []},
+                },
+                'timestamp': int(datetime.datetime.utcnow().timestamp() * 1000)
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Sync pull error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+@mobile_bp.route('/sync/push', methods=['POST'])
+@require_auth
+def sync_push():
+    """
+    Push changes from mobile app to server
+    Used by WatermelonDB sync engine
+    """
+    try:
+        data = request.get_json()
+        changes = data.get('changes', {})
+        last_pulled_at = data.get('last_pulled_at')
+        
+        from services.deep_knowledge_tracing import dkt_service
+        
+        # Process pushed interactions
+        if 'interactions' in changes:
+            interactions = changes['interactions']
+            
+            # Handle created interactions (offline logs)
+            for created in interactions.get('created', []):
+                dkt_service.log_interaction(
+                    user_id=g.current_user_id,
+                    subject=created.get('subject'),
+                    topic=created.get('skill_id'), # Mapping skill_id to topic for now
+                    skill_id=created.get('skill_id'),
+                    question_id=created.get('question_id'),
+                    correct=created.get('correct'),
+                    confidence=created.get('confidence'),
+                    time_spent=created.get('time_spent'),
+                    hints_used=created.get('hints_used'),
+                    session_id=created.get('session_id'),
+                    device_id='offline_sync'
+                )
+                
+            # Handle updated interactions if needed
+            # Handle deleted interactions if needed
+            
+        return jsonify({
+            'success': True,
+            'message': 'Sync successful'
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Sync push error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
