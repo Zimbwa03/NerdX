@@ -11,7 +11,6 @@ import {
     StatusBar,
     Dimensions,
     Platform,
-    ImageBackground,
     Image,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -100,12 +99,7 @@ const TopicNotesDetailScreen: React.FC = () => {
     }
 
     return (
-        <ImageBackground
-            source={require('../../assets/images/science_background.png')}
-            style={styles.container}
-            resizeMode="cover"
-            onError={() => console.warn('Background image failed to load')}
-        >
+        <View style={styles.container}>
             <LinearGradient
                 colors={['rgba(76, 175, 80, 0.9)', 'rgba(255,255,255,0.8)']}
                 style={styles.overlay}
@@ -242,7 +236,7 @@ const TopicNotesDetailScreen: React.FC = () => {
                     )}
                 </ScrollView>
             </LinearGradient>
-        </ImageBackground>
+        </View>
     );
 };
 
