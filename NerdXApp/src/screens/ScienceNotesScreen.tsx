@@ -11,7 +11,6 @@ import {
     StatusBar,
     Dimensions,
     Platform,
-    ImageBackground,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -78,12 +77,7 @@ const ScienceNotesScreen: React.FC = () => {
     };
 
     return (
-        <ImageBackground
-            source={require('../../assets/images/science_background.png')}
-            style={styles.container}
-            resizeMode="cover"
-            onError={() => console.warn('Background image failed to load')}
-        >
+        <View style={styles.container}>
             <LinearGradient
                 colors={['rgba(76, 175, 80, 0.9)', 'rgba(255,255,255,0.8)']}
                 style={styles.overlay}
@@ -189,7 +183,7 @@ const ScienceNotesScreen: React.FC = () => {
                     )}
                 </ScrollView>
             </LinearGradient>
-        </ImageBackground>
+        </View>
     );
 };
 

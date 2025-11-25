@@ -28,25 +28,14 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "owner": "nerdxpro",
+    "plugins": [
+      "expo-font"
+    ],
     "extra": {
       "eas": {
-        "projectId": "ed536667-766a-4eb1-bc51-8825d97e6c89"
+        "projectId": "899d06f5-11b6-49aa-b8b3-496c37aad87d"
       }
-    },
-    "owner": "nerdx",
-    "plugins": [
-      "expo-font",
-      [
-        "@nozbe/watermelondb",
-        {
-          "android": {
-            "jsi": true
-          },
-          "ios": {
-            "jsi": true
-          }
-        }
-      ]
-    ]
+    }
   }
 }
