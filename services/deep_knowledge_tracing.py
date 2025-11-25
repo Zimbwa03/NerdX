@@ -108,6 +108,9 @@ class DeepKnowledgeTracing:
             # Trigger knowledge state update (async in production)
             self.update_knowledge_state(user_id, skill_id)
             
+            # Trigger SRS update
+            self.update_srs_state(user_id, skill_id, correct, confidence)
+            
             logger.info(f"Logged interaction {interaction_id} for user {user_id}, skill {skill_id}")
             return interaction_id
             
@@ -545,6 +548,373 @@ class DeepKnowledgeTracing:
         else:
             return f"Let's build your foundation in {skill['skill_name']} with some practice."
 
+
+    def update_srs_state(self, user_id: str, skill_id: str, correct: bool, confidence: Optional[str] = 'medium') -> bool:
+        """
+        Update Spaced Repetition System (SRS) state for a skill
+        
+        Uses a simplified SuperMemo-2 algorithm to calculate next review date
+        
+        Args:
+            user_id: Student ID
+            skill_id: Skill ID
+            correct: Whether the answer was correct
+            confidence: Student's self-reported confidence
+        """
+        try:
+            # Get current state
+            query = """
+            SELECT last_practiced_at, retention_strength, next_review_at
+            FROM student_knowledge_state
+            WHERE user_id = %s AND skill_id = %s
+            """
+            with self.db.cursor() as cur:
+                cur.execute(query, (user_id, skill_id))
+                row = cur.fetchone()
+            
+            if not row:
+                # First time seeing this skill
+                current_interval = 0
+            else:
+                # Use retention_strength as current interval in days
+                current_interval = float(row[1]) if row[1] else 0
+            
+            # Calculate new interval
+            new_interval = self._calculate_next_interval(current_interval, correct, confidence)
+            
+            # Calculate next review date
+            next_review_date = datetime.now() + timedelta(days=new_interval)
+            
+            # Update database
+            update_query = """
+            UPDATE student_knowledge_state
+            SET retention_strength = %s,
+                next_review_at = %s,
+                last_practiced_at = NOW()
+            WHERE user_id = %s AND skill_id = %s
+            """
+            with self.db.cursor() as cur:
+                cur.execute(update_query, (new_interval, next_review_date, user_id, skill_id))
+                self.db.commit()
+                
+            logger.info(f"SRS Update: User {user_id}, Skill {skill_id}, Interval {current_interval} -> {new_interval} days")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error updating SRS state: {str(e)}")
+            self.db.rollback()
+            return False
+
+    def _calculate_next_interval(self, current_interval: float, correct: bool, confidence: Optional[str]) -> float:
+        """
+        Calculate next review interval using modified SM-2
+        
+        Returns:
+            New interval in days
+        """
+        if not correct:
+            return 1.0  # Reset to 1 day if wrong
+        
+        # Determine Ease Factor based on confidence
+        # High confidence = easier = larger multiplier
+        if confidence == 'high':
+            multiplier = 2.5
+        elif confidence == 'low':
+            multiplier = 1.5
+        else: # medium or None
+            multiplier = 2.0
+            
+        if current_interval == 0:
+            return 1.0
+        elif current_interval == 1.0:
+            return 3.0
+        else:
+            return round(current_interval * multiplier, 1)
+
+    def get_recommendations(
+        self,
+        user_id: str,
+        subject: str,
+        topic: Optional[str] = None
+    ) -> Dict:
+        """
+        Recommend next question based on DKT predictions
+        
+        Strategy:
+        - Focus on skills with mastery in "learning zone" (0.4-0.7)
+        - Avoid too easy (>0.8) or too hard (<0.3)
+        - Prioritize skills not practiced recently
+        
+        Args:
+            user_id: Student ID
+            subject: Subject to practice
+            topic: Optional topic filter
+        
+        Returns:
+            Recommendation with skill_id and difficulty
+        """
+        try:
+            knowledge_map = self.get_knowledge_map(user_id, subject)
+            
+            # Filter by topic if specified
+            skills = knowledge_map['skills']
+            if topic:
+                skills = [s for s in skills if s['topic'] == topic]
+            
+            if not skills:
+                return {
+                    'recommended': False,
+                    'reason': 'No skills found for this subject/topic'
+                }
+            
+            # Score each skill for practice priority
+            scored_skills = []
+            for skill in skills:
+                mastery = skill['mastery']
+                
+                # Priority score (higher = should practice)
+                if 0.4 <= mastery <= 0.7:
+                    # Learning zone - highest priority
+                    score = 10
+                elif 0.7 < mastery < 0.8:
+                    # Near mastery - good for reinforcement
+                    score = 7
+                elif 0.3 <= mastery < 0.4:
+                    # Struggling but not hopeless
+                    score = 6
+                elif mastery >= 0.8:
+                    # Already mastered - low priority
+                    score = 2
+                else:
+                    # Very low mastery - might need prerequisite work
+                    score = 3
+                
+                # Boost score if not practiced recently
+                if skill['last_practiced']:
+                    days_since = (datetime.now() - datetime.fromisoformat(skill['last_practiced'])).days
+                    if days_since > 7:
+                        score += 3
+                    elif days_since > 3:
+                        score += 1
+                
+                scored_skills.append({
+                    **skill,
+                    'priority_score': score
+                })
+            
+            # Sort by priority
+            scored_skills.sort(key=lambda x: x['priority_score'], reverse=True)
+            
+            # Recommend top skill
+            top_skill = scored_skills[0]
+            
+            return {
+                'recommended': True,
+                'skill_id': top_skill['skill_id'],
+                'skill_name': top_skill['skill_name'],
+                'topic': top_skill['topic'],
+                'current_mastery': top_skill['mastery'],
+                'suggested_difficulty': self._suggest_difficulty(top_skill['mastery']),
+                'reason': self._generate_recommendation_reason(top_skill)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error generating recommendation: {str(e)}")
+            return {
+                'recommended': False,
+                'error': str(e)
+            }
+    
+    def _suggest_difficulty(self, mastery: float) -> str:
+        """Suggest question difficulty based on mastery level"""
+        if mastery >= 0.7:
+            return 'hard'  # Challenge them
+        elif mastery >= 0.4:
+            return 'medium'  # Appropriate level
+        else:
+            return 'easy'  # Build confidence
+    
+    def _generate_recommendation_reason(self, skill: Dict) -> str:
+        """Generate human-readable reason for recommendation"""
+        mastery = skill['mastery']
+        
+        if 0.4 <= mastery <= 0.7:
+            return f"You're in the learning zone for {skill['skill_name']}. Perfect time to practice!"
+        elif 0.7 < mastery < 0.8:
+            return f"Almost mastered {skill['skill_name']}! A few more questions to cement it."
+        elif mastery >= 0.8:
+            return f"Time to review {skill['skill_name']} to maintain mastery."
+        else:
+            return f"Let's build your foundation in {skill['skill_name']} with some practice."
+
+
+    def update_srs_state(self, user_id: str, skill_id: str, correct: bool, confidence: Optional[str] = 'medium') -> bool:
+        """
+        Update Spaced Repetition System (SRS) state for a skill
+        
+        Uses a simplified SuperMemo-2 algorithm to calculate next review date
+        
+        Args:
+            user_id: Student ID
+            skill_id: Skill ID
+            correct: Whether the answer was correct
+            confidence: Student's self-reported confidence
+        """
+        try:
+            # Get current state
+            query = """
+            SELECT last_practiced_at, retention_strength, next_review_at
+            FROM student_knowledge_state
+            WHERE user_id = %s AND skill_id = %s
+            """
+            with self.db.cursor() as cur:
+                cur.execute(query, (user_id, skill_id))
+                row = cur.fetchone()
+            
+            if not row:
+                # First time seeing this skill
+                current_interval = 0
+            else:
+                # Use retention_strength as current interval in days
+                current_interval = float(row[1]) if row[1] else 0
+            
+            # Calculate new interval
+            new_interval = self._calculate_next_interval(current_interval, correct, confidence)
+            
+            # Calculate next review date
+            next_review_date = datetime.now() + timedelta(days=new_interval)
+            
+            # Update database
+            update_query = """
+            UPDATE student_knowledge_state
+            SET retention_strength = %s,
+                next_review_at = %s,
+                last_practiced_at = NOW()
+            WHERE user_id = %s AND skill_id = %s
+            """
+            with self.db.cursor() as cur:
+                cur.execute(update_query, (new_interval, next_review_date, user_id, skill_id))
+                self.db.commit()
+                
+            logger.info(f"SRS Update: User {user_id}, Skill {skill_id}, Interval {current_interval} -> {new_interval} days")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error updating SRS state: {str(e)}")
+            self.db.rollback()
+            return False
+
+    def _calculate_next_interval(self, current_interval: float, correct: bool, confidence: Optional[str]) -> float:
+        """
+        Calculate next review interval using modified SM-2
+        
+        Returns:
+            New interval in days
+        """
+        if not correct:
+            return 1.0  # Reset to 1 day if wrong
+        
+        # Determine Ease Factor based on confidence
+        # High confidence = easier = larger multiplier
+        if confidence == 'high':
+            multiplier = 2.5
+        elif confidence == 'low':
+            multiplier = 1.5
+        else: # medium or None
+            multiplier = 2.0
+            
+        if current_interval == 0:
+            return 1.0
+        elif current_interval == 1.0:
+            return 3.0
+        else:
+            return round(current_interval * multiplier, 1)
+
+    def generate_daily_review_queue(self, user_id: str) -> List[Dict]:
+        """
+        Generate daily review queue for the user.
+        Populates daily_review_queue table and returns the list of items with questions.
+        """
+        try:
+            db = get_db_connection()
+            
+            # 1. Identify items due for review
+            with db.cursor() as cur:
+                # Select top 10 items due for review
+                cur.execute("""
+                    SELECT ks.skill_id, st.skill_name, st.subject, st.topic, ks.next_review_at
+                    FROM student_knowledge_state ks
+                    JOIN skills_taxonomy st ON ks.skill_id = st.skill_id
+                    WHERE ks.user_id = %s 
+                    AND ks.next_review_at <= NOW()
+                    ORDER BY ks.next_review_at ASC
+                    LIMIT 10
+                """, (user_id,))
+                due_items = cur.fetchall()
+                
+                # Insert into queue (ignore duplicates)
+                for item in due_items:
+                    skill_id = item[0]
+                    # Calculate priority (overdue days)
+                    review_date = item[4]
+                    if isinstance(review_date, str):
+                        review_date = datetime.fromisoformat(review_date)
+                    
+                    # Ensure review_date is timezone-aware or naive as needed, assuming naive for now
+                    if review_date.tzinfo:
+                        review_date = review_date.replace(tzinfo=None)
+                        
+                    overdue_days = (datetime.now() - review_date).days
+                    priority = min(max(overdue_days, 1), 10) # 1-10 scale
+                    
+                    cur.execute("""
+                        INSERT INTO daily_review_queue (
+                            user_id, skill_id, review_date, priority, created_at
+                        ) VALUES (%s, %s, %s, %s, NOW())
+                        ON CONFLICT (user_id, skill_id, review_date) DO NOTHING
+                    """, (user_id, skill_id, datetime.now().date(), priority))
+                
+                db.commit()
+            
+            # 2. Fetch the queue items
+            with db.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("""
+                    SELECT q.skill_id, st.skill_name, st.subject, st.topic, q.review_date
+                    FROM daily_review_queue q
+                    JOIN skills_taxonomy st ON q.skill_id = st.skill_id
+                    WHERE q.user_id = %s AND q.completed = FALSE AND q.review_date <= NOW()
+                    ORDER BY q.priority DESC
+                """, (user_id,))
+                reviews = cur.fetchall()
+            
+            # 3. Generate questions for each review item
+            from services.question_service import QuestionService
+            qs = QuestionService()
+            
+            enhanced_reviews = []
+            for review in reviews:
+                try:
+                    # Generate/Fetch question
+                    question = qs.get_question(
+                        user_id=user_id, 
+                        subject=review['subject'], 
+                        topic=review['topic'], 
+                        difficulty='medium' # Default for review
+                    )
+                    
+                    if question:
+                        review['question_data'] = question
+                        enhanced_reviews.append(review)
+                    else:
+                        logger.warning(f"Could not generate question for review item {review['skill_id']}")
+                except Exception as e:
+                    logger.error(f"Error generating question for review item {review['skill_id']}: {e}")
+            
+            return enhanced_reviews
+            
+        except Exception as e:
+            logger.error(f"Error generating daily review queue: {e}")
+            return []
 
 # Global instance
 dkt_service = DeepKnowledgeTracing()

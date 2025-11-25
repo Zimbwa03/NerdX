@@ -30,13 +30,15 @@ const QuizScreen: React.FC = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const { user, updateUser } = useAuth();
-  const { question: initialQuestion, subject, topic, isExamMode, year, paper } = route.params as {
+  const { question: initialQuestion, subject, topic, isExamMode, year, paper, isReviewMode, reviewItems } = route.params as {
     question?: Question;
     subject: any;
     topic?: any;
     isExamMode?: boolean;
     year?: string;
     paper?: string;
+    isReviewMode?: boolean;
+    reviewItems?: any[];
   };
 
   const [question, setQuestion] = useState<Question | undefined>(initialQuestion);
@@ -54,9 +56,9 @@ const QuizScreen: React.FC = () => {
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
   const [hintsUsed, setHintsUsed] = useState<number>(0);
 
-  // Initial fetch for exam mode if no question provided
+  // Initial fetch for exam mode OR review mode if no question provided
   useEffect(() => {
-    const fetchFirstExamQuestion = async () => {
+    const fetchFirstQuestion = async () => {
       if (isExamMode && !initialQuestion) {
         try {
           setLoading(true);
@@ -70,14 +72,37 @@ const QuizScreen: React.FC = () => {
         } finally {
           setLoading(false);
         }
+      } else if (isReviewMode && reviewItems && reviewItems.length > 0) {
+        // Load first review question
+        const firstReviewItem = reviewItems[0];
+        if (firstReviewItem.question_data) {
+          const qData = firstReviewItem.question_data;
+          const mappedQuestion: Question = {
+            id: qData.question_id || `review_${firstReviewItem.skill_id}`,
+            question_text: qData.question,
+            options: qData.options ? Object.values(qData.options) : [],
+            correct_answer: qData.correct_answer,
+            explanation: qData.explanation,
+            solution: qData.solution,
+            hint: qData.hint,
+            subject_id: firstReviewItem.subject,
+            topic_id: firstReviewItem.topic,
+            difficulty: 'medium',
+            allows_text_input: !qData.options,
+            allows_image_upload: false, // Default for now
+            question_image_url: qData.image_url
+          };
+          setQuestion(mappedQuestion);
+        }
       }
     };
 
-    fetchFirstExamQuestion();
-  }, [isExamMode, initialQuestion, year, paper]);
+    fetchFirstQuestion();
+  }, [isExamMode, initialQuestion, year, paper, isReviewMode, reviewItems]);
 
   // Determine gradient colors based on subject
   const getHeaderGradient = () => {
+    if (isReviewMode) return ['#6A1B9A', '#4A148C'];
     if (subject?.id === 'mathematics') return [Colors.subjects.mathematics, Colors.primary.dark];
     if (subject?.id === 'combined_science') return [Colors.subjects.science, Colors.secondary.dark];
     if (subject?.id === 'english') return [Colors.subjects.english, Colors.warning.dark];
@@ -113,7 +138,23 @@ const QuizScreen: React.FC = () => {
       );
       if (answerResult) {
         setResult(answerResult);
-        await logInteractionToDKT(answerResult.correct);
+
+        if (isReviewMode && reviewItems) {
+          // Submit review completion
+          const currentItem = reviewItems[questionCount - 1];
+          await dktService.completeReview({
+            skill_id: currentItem.skill_id,
+            question_id: question.id,
+            correct: answerResult.correct,
+            confidence: selectedConfidence || 'medium',
+            time_spent: Math.floor((Date.now() - questionStartTime) / 1000),
+            subject: currentItem.subject,
+            topic: currentItem.topic
+          });
+        } else {
+          await logInteractionToDKT(answerResult.correct);
+        }
+
         if (answerResult.correct && user) {
           // Update user stats if needed
         }
@@ -124,7 +165,6 @@ const QuizScreen: React.FC = () => {
       setLoading(false);
     }
   };
-
 
   // Log interaction to DKT system (Offline-First)
   const logInteractionToDKT = async (isCorrect: boolean) => {
@@ -197,6 +237,35 @@ const QuizScreen: React.FC = () => {
         const nextCount = questionCount + 1;
         newQuestion = await quizApi.getNextExamQuestion(nextCount, year, paper);
         setQuestionCount(nextCount);
+      } else if (isReviewMode && reviewItems) {
+        const nextIndex = questionCount; // 0-based index for next item (current count is 1-based)
+        if (nextIndex < reviewItems.length) {
+          const nextItem = reviewItems[nextIndex];
+          if (nextItem.question_data) {
+            const qData = nextItem.question_data;
+            newQuestion = {
+              id: qData.question_id || `review_${nextItem.skill_id}`,
+              question_text: qData.question,
+              options: qData.options ? Object.values(qData.options) : [],
+              correct_answer: qData.correct_answer,
+              explanation: qData.explanation,
+              solution: qData.solution,
+              hint: qData.hint,
+              subject_id: nextItem.subject,
+              topic_id: nextItem.topic,
+              difficulty: 'medium',
+              allows_text_input: !qData.options,
+              allows_image_upload: false,
+              question_image_url: qData.image_url
+            };
+            setQuestionCount(nextIndex + 1);
+          }
+        } else {
+          Alert.alert('Review Complete', 'You have completed your daily review!', [
+            { text: 'OK', onPress: () => navigation.goBack() }
+          ]);
+          return;
+        }
       } else {
         // Ensure we keep the same topic context for continuous practice
         newQuestion = await quizApi.generateQuestion(
@@ -251,7 +320,7 @@ const QuizScreen: React.FC = () => {
             <View style={styles.headerLeft}>
               {Icons.quiz(28, '#FFFFFF')}
               <View style={styles.headerText}>
-                <Text style={styles.title}>Quiz Question</Text>
+                <Text style={styles.title}>{isReviewMode ? 'Daily Review' : 'Quiz Question'}</Text>
                 <Text style={styles.credits}>Credits: {user?.credits || 0}</Text>
               </View>
             </View>
@@ -487,6 +556,35 @@ const QuizScreen: React.FC = () => {
                     </View>
                   )}
                 </Card>
+              )}
+
+              {/* Confidence Selection (SRS) */}
+              {!result && (
+                <View style={styles.confidenceContainer}>
+                  <Text style={styles.confidenceLabel}>How confident are you?</Text>
+                  <View style={styles.confidenceButtons}>
+                    {(['low', 'medium', 'high'] as const).map((level) => (
+                      <TouchableOpacity
+                        key={level}
+                        style={[
+                          styles.confidenceButton,
+                          selectedConfidence === level && styles.confidenceButtonSelected,
+                          selectedConfidence === level && level === 'low' && styles.confidenceButtonLow,
+                          selectedConfidence === level && level === 'medium' && styles.confidenceButtonMedium,
+                          selectedConfidence === level && level === 'high' && styles.confidenceButtonHigh,
+                        ]}
+                        onPress={() => setSelectedConfidence(level)}
+                      >
+                        <Text style={[
+                          styles.confidenceButtonText,
+                          selectedConfidence === level && styles.confidenceButtonTextSelected
+                        ]}>
+                          {level.charAt(0).toUpperCase() + level.slice(1)}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
               )}
 
               {/* Action Buttons */}
@@ -727,9 +825,11 @@ const styles = StyleSheet.create({
   },
   resultTextCorrect: {
     color: Colors.success.main,
+    backgroundColor: 'transparent',
   },
   resultTextError: {
     color: Colors.error.main,
+    backgroundColor: 'transparent',
   },
   pointsText: {
     fontSize: 16,
@@ -757,6 +857,50 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   solutionText: {
+    fontSize: 15,
+    color: Colors.text.secondary,
+    lineHeight: 22,
+  },
+  solutionImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  hintContainer: {
+    backgroundColor: Colors.warning.light + '20',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: Colors.warning.light,
+  },
+  hintTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.warning.dark,
+    marginBottom: 8,
+  },
+  hintText: {
+    fontSize: 15,
+    color: Colors.text.secondary,
+    lineHeight: 22,
+  },
+  explanationContainer: {
+    backgroundColor: Colors.info.light + '20',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: Colors.info.light,
+  },
+  explanationTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.info.dark,
+    marginBottom: 8,
+  },
+  explanationText: {
     fontSize: 15,
     color: Colors.text.secondary,
     lineHeight: 22,
@@ -798,56 +942,61 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: Colors.primary.main,
-    borderStyle: 'dashed',
+    borderColor: Colors.border.light,
   },
   imageUploadButtonText: {
-    color: Colors.primary.main,
     fontSize: 16,
-    fontWeight: '600',
+    color: Colors.text.primary,
+    fontWeight: '500',
   },
   imagePreview: {
-    marginTop: 12,
+    position: 'relative',
+    width: '100%',
+    height: 200,
     borderRadius: 12,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: Colors.primary.main,
+    borderColor: Colors.border.light,
   },
   uploadedImage: {
     width: '100%',
-    height: 200,
-    resizeMode: 'contain',
-    backgroundColor: Colors.background.subtle,
+    height: '100%',
   },
   removeImageButton: {
-    backgroundColor: Colors.error.main,
-    padding: 8,
-    alignItems: 'center',
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
   },
   removeImageText: {
-    color: Colors.text.white,
-    fontSize: 14,
-    fontWeight: '600',
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   hintButton: {
-    backgroundColor: 'rgba(255, 171, 0, 0.1)', // Warning tint
-    borderRadius: 12,
-    padding: 14,
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    justifyContent: 'center',
+    padding: 12,
+    backgroundColor: Colors.warning.light + '20',
+    borderRadius: 12,
+    marginBottom: 20,
     borderWidth: 1,
-    borderColor: Colors.warning.main,
+    borderColor: Colors.warning.light,
   },
   hintButtonText: {
-    color: Colors.warning.main,
     fontSize: 16,
+    color: Colors.warning.dark,
     fontWeight: '600',
   },
   hintCard: {
     marginBottom: 20,
-    backgroundColor: 'rgba(255, 171, 0, 0.05)',
+    backgroundColor: Colors.background.paper,
+    borderColor: Colors.warning.light,
     borderWidth: 1,
-    borderColor: Colors.warning.main,
   },
   hintHeader: {
     flexDirection: 'row',
@@ -855,63 +1004,60 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     gap: 12,
   },
-  hintTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: Colors.warning.main,
-  },
-  hintText: {
-    fontSize: 15,
-    color: Colors.text.secondary,
-    lineHeight: 22,
-  },
-  hintContainer: {
-    backgroundColor: 'rgba(255, 171, 0, 0.05)',
-    borderRadius: 12,
+  confidenceContainer: {
+    marginBottom: 24,
+    backgroundColor: Colors.background.paper,
     padding: 16,
-    marginTop: 12,
-    borderWidth: 1,
-    borderColor: Colors.warning.main,
-  },
-  explanationContainer: {
-    backgroundColor: Colors.background.subtle,
     borderRadius: 12,
-    padding: 16,
-    marginTop: 12,
     borderWidth: 1,
     borderColor: Colors.border.light,
   },
-  explanationTitle: {
+  confidenceLabel: {
     fontSize: 16,
     fontWeight: '600',
     color: Colors.text.primary,
-    marginBottom: 8,
+    marginBottom: 12,
+    textAlign: 'center',
   },
-  explanationText: {
-    fontSize: 15,
-    color: Colors.text.secondary,
-    lineHeight: 22,
+  confidenceButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 8,
   },
-  questionImageContainer: {
-    marginTop: 16,
-    marginBottom: 8,
-    borderRadius: 12,
-    overflow: 'hidden',
-    backgroundColor: Colors.background.subtle,
+  confidenceButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: Colors.border.light,
-  },
-  questionImage: {
-    width: '100%',
-    height: 250,
+    alignItems: 'center',
     backgroundColor: Colors.background.subtle,
   },
-  solutionImage: {
-    width: '100%',
-    height: 250,
-    marginBottom: 12,
-    borderRadius: 8,
-    backgroundColor: Colors.background.subtle,
+  confidenceButtonSelected: {
+    borderWidth: 2,
+    backgroundColor: Colors.background.paper,
+  },
+  confidenceButtonLow: {
+    borderColor: Colors.error.main,
+    backgroundColor: 'rgba(255, 23, 68, 0.1)',
+  },
+  confidenceButtonMedium: {
+    borderColor: Colors.warning.main,
+    backgroundColor: 'rgba(255, 145, 0, 0.1)',
+  },
+  confidenceButtonHigh: {
+    borderColor: Colors.success.main,
+    backgroundColor: 'rgba(0, 230, 118, 0.1)',
+  },
+  confidenceButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.text.secondary,
+  },
+  confidenceButtonTextSelected: {
+    color: Colors.text.primary,
+    fontWeight: 'bold',
   },
 });
 

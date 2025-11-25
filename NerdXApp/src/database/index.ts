@@ -5,6 +5,7 @@ import { schema } from './schema'
 import User from './models/User'
 import Question from './models/Question'
 import Interaction from './models/Interaction'
+import Project from './models/Project'
 
 // Create the adapter to the underlying database:
 const adapter = new SQLiteAdapter({
@@ -24,5 +25,6 @@ export const database = new Database({
         User,
         Question,
         Interaction,
+        Project,
     ],
 })

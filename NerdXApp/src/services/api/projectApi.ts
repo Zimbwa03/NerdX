@@ -35,6 +35,7 @@ export interface CreateProjectRequest {
 export interface ChatResponse {
   response: string;
   project_id: number;
+  credits_remaining?: number;
 }
 
 export const projectApi = {

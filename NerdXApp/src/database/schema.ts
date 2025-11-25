@@ -60,5 +60,23 @@ export const schema = appSchema({
                 { name: 'created_at', type: 'number' },
             ]
         }),
+        tableSchema({
+            name: 'projects',
+            columns: [
+                { name: 'remote_id', type: 'string', isIndexed: true },
+                { name: 'title', type: 'string' },
+                { name: 'subject', type: 'string' },
+                { name: 'student_name', type: 'string' },
+                { name: 'student_surname', type: 'string' },
+                { name: 'school', type: 'string' },
+                { name: 'form', type: 'string' },
+                { name: 'current_stage', type: 'string' },
+                { name: 'completed', type: 'boolean' },
+                { name: 'project_data', type: 'string' }, // JSON stringified
+                { name: 'created_at', type: 'number' },
+                { name: 'updated_at', type: 'number' },
+                { name: 'synced', type: 'boolean', isIndexed: true },
+            ]
+        }),
     ]
 })

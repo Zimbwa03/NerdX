@@ -9,8 +9,12 @@ import {
     ActivityIndicator,
     Alert,
     RefreshControl,
+    StatusBar,
+    Image,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { projectApi, Project } from '../services/api/projectApi';
 import { useAuth } from '../context/AuthContext';
 
@@ -33,7 +37,8 @@ const ProjectListScreen: React.FC = () => {
             const projectList = await projectApi.listProjects();
             setProjects(projectList);
         } catch (error: any) {
-            Alert.alert('Error', 'Failed to load projects');
+            console.error('Failed to load projects:', error);
+            // Don't show alert on initial load to avoid annoyance if offline
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -70,38 +75,60 @@ const ProjectListScreen: React.FC = () => {
         return colors[stage] || '#757575';
     };
 
-    if (loading) {
+    if (loading && !refreshing) {
         return (
             <View style={styles.centerContainer}>
-                <ActivityIndicator size="large" color="#9C27B0" />
-                <Text style={styles.loadingText}>Loading projects...</Text>
+                <ActivityIndicator size="large" color="#6A1B9A" />
+                <Text style={styles.loadingText}>Loading your projects...</Text>
             </View>
         );
     }
 
     return (
         <View style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>📚 My Projects</Text>
-                <Text style={styles.headerSubtitle}>
-                    {projects.length} {projects.length === 1 ? 'project' : 'projects'}
-                </Text>
-            </View>
+            <StatusBar barStyle="light-content" />
+            <LinearGradient
+                colors={['#4A148C', '#7B1FA2']}
+                style={styles.header}
+            >
+                <View style={styles.headerContent}>
+                    <View>
+                        <Text style={styles.headerTitle}>My Projects</Text>
+                        <Text style={styles.headerSubtitle}>
+                            {projects.length} Active {projects.length === 1 ? 'Project' : 'Projects'}
+                        </Text>
+                    </View>
+                    <TouchableOpacity style={styles.profileButton}>
+                        <Ionicons name="person-circle-outline" size={32} color="#FFF" />
+                    </TouchableOpacity>
+                </View>
+            </LinearGradient>
 
             <ScrollView
                 style={styles.scrollView}
                 contentContainerStyle={styles.scrollContent}
                 refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={['#9C27B0']} />
+                    <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={['#6A1B9A']} />
                 }
             >
                 {projects.length === 0 ? (
                     <View style={styles.emptyState}>
-                        <Text style={styles.emptyIcon}>📝</Text>
+                        <View style={styles.emptyIconContainer}>
+                            <Ionicons name="folder-open-outline" size={64} color="#BDBDBD" />
+                        </View>
                         <Text style={styles.emptyTitle}>No Projects Yet</Text>
                         <Text style={styles.emptyText}>
-                            Start your first ZIMSEC project and get AI-powered guidance!
+                            Start your first ZIMSEC School-Based Project and get AI-powered guidance!
                         </Text>
+                        <TouchableOpacity style={styles.createButton} onPress={handleNewProject}>
+                            <LinearGradient
+                                colors={['#6A1B9A', '#8E24AA']}
+                                style={styles.createButtonGradient}
+                            >
+                                <Ionicons name="add" size={24} color="#FFF" />
+                                <Text style={styles.createButtonText}>Create New Project</Text>
+                            </LinearGradient>
+                        </TouchableOpacity>
                     </View>
                 ) : (
                     projects.map((project) => (
@@ -109,36 +136,55 @@ const ProjectListScreen: React.FC = () => {
                             key={project.id}
                             style={styles.projectCard}
                             onPress={() => handleProjectPress(project)}
+                            activeOpacity={0.9}
                         >
-                            <View style={styles.projectHeader}>
-                                <Text style={styles.projectTitle} numberOfLines={2}>
-                                    {project.title}
-                                </Text>
+                            <View style={styles.cardHeader}>
+                                <View style={styles.iconContainer}>
+                                    <Text style={styles.projectIcon}>
+                                        {project.subject ? project.subject.charAt(0) : 'P'}
+                                    </Text>
+                                </View>
+                                <View style={styles.headerTextContainer}>
+                                    <Text style={styles.projectTitle} numberOfLines={1}>
+                                        {project.title}
+                                    </Text>
+                                    <Text style={styles.projectSubject}>{project.subject}</Text>
+                                </View>
                                 {project.completed && (
                                     <View style={styles.completedBadge}>
-                                        <Text style={styles.completedText}>✓</Text>
+                                        <Ionicons name="checkmark" size={12} color="#FFF" />
                                     </View>
                                 )}
                             </View>
 
-                            <Text style={styles.projectSubject}>{project.subject}</Text>
-
-                            <View style={styles.projectFooter}>
-                                <View style={[styles.stageBadge, { backgroundColor: getStageColor(project.current_stage) }]}>
-                                    <Text style={styles.stageText}>{project.current_stage}</Text>
+                            <View style={styles.cardFooter}>
+                                <View style={[styles.stageBadge, { backgroundColor: getStageColor(project.current_stage) + '20' }]}>
+                                    <Text style={[styles.stageText, { color: getStageColor(project.current_stage) }]}>
+                                        {project.current_stage}
+                                    </Text>
                                 </View>
-                                <Text style={styles.projectDate}>
-                                    Updated: {new Date(project.updated_at).toLocaleDateString()}
-                                </Text>
+                                <View style={styles.dateContainer}>
+                                    <Ionicons name="time-outline" size={14} color="#9E9E9E" />
+                                    <Text style={styles.projectDate}>
+                                        {new Date(project.updated_at).toLocaleDateString()}
+                                    </Text>
+                                </View>
                             </View>
                         </TouchableOpacity>
                     ))
                 )}
             </ScrollView>
 
-            <TouchableOpacity style={styles.fab} onPress={handleNewProject}>
-                <Text style={styles.fabText}>+</Text>
-            </TouchableOpacity>
+            {projects.length > 0 && (
+                <TouchableOpacity style={styles.fab} onPress={handleNewProject} activeOpacity={0.8}>
+                    <LinearGradient
+                        colors={['#6A1B9A', '#8E24AA']}
+                        style={styles.fabGradient}
+                    >
+                        <Ionicons name="add" size={32} color="#FFF" />
+                    </LinearGradient>
+                </TouchableOpacity>
+            )}
         </View>
     );
 };
@@ -146,84 +192,152 @@ const ProjectListScreen: React.FC = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F5F5',
+        backgroundColor: '#F5F7FA',
     },
     centerContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#F5F5F5',
+        backgroundColor: '#F5F7FA',
     },
     loadingText: {
-        marginTop: 10,
-        color: '#757575',
+        marginTop: 16,
+        color: '#666',
+        fontSize: 16,
     },
     header: {
-        backgroundColor: '#9C27B0',
-        padding: 20,
-        paddingTop: 50,
+        paddingTop: 60,
+        paddingBottom: 20,
+        paddingHorizontal: 20,
+        borderBottomLeftRadius: 24,
+        borderBottomRightRadius: 24,
+        elevation: 8,
+        shadowColor: '#6A1B9A',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+    },
+    headerContent: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
     },
     headerTitle: {
-        fontSize: 24,
+        fontSize: 28,
         fontWeight: 'bold',
         color: '#FFFFFF',
-        marginBottom: 5,
+        marginBottom: 4,
     },
     headerSubtitle: {
         fontSize: 14,
-        color: '#FFFFFF',
-        opacity: 0.9,
+        color: 'rgba(255, 255, 255, 0.8)',
+        fontWeight: '500',
+    },
+    profileButton: {
+        padding: 4,
     },
     scrollView: {
         flex: 1,
     },
     scrollContent: {
-        padding: 15,
+        padding: 20,
+        paddingBottom: 100,
     },
     emptyState: {
         alignItems: 'center',
         justifyContent: 'center',
         paddingVertical: 60,
     },
-    emptyIcon: {
-        fontSize: 64,
-        marginBottom: 20,
+    emptyIconContainer: {
+        width: 120,
+        height: 120,
+        borderRadius: 60,
+        backgroundColor: '#E1BEE7',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 24,
+        opacity: 0.5,
     },
     emptyTitle: {
-        fontSize: 20,
+        fontSize: 24,
         fontWeight: 'bold',
-        color: '#212121',
-        marginBottom: 10,
+        color: '#333',
+        marginBottom: 12,
     },
     emptyText: {
-        fontSize: 14,
-        color: '#757575',
+        fontSize: 16,
+        color: '#666',
         textAlign: 'center',
         paddingHorizontal: 40,
+        lineHeight: 24,
+        marginBottom: 32,
+    },
+    createButton: {
+        borderRadius: 30,
+        elevation: 4,
+        shadowColor: '#6A1B9A',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+    },
+    createButtonGradient: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 16,
+        paddingHorizontal: 32,
+        borderRadius: 30,
+    },
+    createButtonText: {
+        color: '#FFF',
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginLeft: 8,
     },
     projectCard: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 12,
+        borderRadius: 16,
         padding: 16,
-        marginBottom: 12,
+        marginBottom: 16,
         elevation: 2,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.03)',
     },
-    projectHeader: {
+    cardHeader: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        marginBottom: 8,
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    iconContainer: {
+        width: 48,
+        height: 48,
+        borderRadius: 12,
+        backgroundColor: '#F3E5F5',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 16,
+    },
+    projectIcon: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#7B1FA2',
+    },
+    headerTextContainer: {
+        flex: 1,
     },
     projectTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#212121',
-        flex: 1,
-        marginRight: 10,
+        color: '#333',
+        marginBottom: 4,
+    },
+    projectSubject: {
+        fontSize: 14,
+        color: '#666',
+        fontWeight: '500',
     },
     completedBadge: {
         backgroundColor: '#4CAF50',
@@ -232,56 +346,51 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         justifyContent: 'center',
         alignItems: 'center',
+        marginLeft: 8,
     },
-    completedText: {
-        color: '#FFFFFF',
-        fontSize: 14,
-        fontWeight: 'bold',
-    },
-    projectSubject: {
-        fontSize: 14,
-        color: '#757575',
-        marginBottom: 12,
-    },
-    projectFooter: {
+    cardFooter: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        paddingTop: 16,
+        borderTopWidth: 1,
+        borderTopColor: '#F5F5F5',
     },
     stageBadge: {
         paddingHorizontal: 12,
-        paddingVertical: 4,
-        borderRadius: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
     },
     stageText: {
-        color: '#FFFFFF',
         fontSize: 12,
         fontWeight: '600',
+    },
+    dateContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     projectDate: {
         fontSize: 12,
         color: '#9E9E9E',
+        marginLeft: 4,
     },
     fab: {
         position: 'absolute',
         right: 20,
         bottom: 20,
+        borderRadius: 28,
+        elevation: 8,
+        shadowColor: '#6A1B9A',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+    },
+    fabGradient: {
         width: 56,
         height: 56,
         borderRadius: 28,
-        backgroundColor: '#9C27B0',
         justifyContent: 'center',
         alignItems: 'center',
-        elevation: 4,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-    },
-    fabText: {
-        color: '#FFFFFF',
-        fontSize: 32,
-        fontWeight: 'bold',
     },
 });
 

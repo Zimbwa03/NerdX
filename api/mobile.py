@@ -2855,10 +2855,38 @@ def sync_push():
                     session_id=created.get('session_id'),
                     device_id='offline_sync'
                 )
-                
-            # Handle updated interactions if needed
-            # Handle deleted interactions if needed
+        
+        # Process pushed projects
+        if 'projects' in changes:
+            projects = changes['projects']
+            from services.project_assistant_service import ProjectAssistantService
+            project_service = ProjectAssistantService()
             
+            # Handle created projects
+            for created in projects.get('created', []):
+                # We need to adapt the data to match what create_project_mobile expects
+                # or just save it directly.
+                # Since the mobile app generates the ID, we might want to store it as a reference
+                # or just let the server generate a new one and eventually sync back.
+                # For simplicity in this phase, we'll create a new project.
+                try:
+                    project_data = {
+                        'title': created.get('title'),
+                        'subject': created.get('subject'),
+                        'student_name': created.get('student_name'),
+                        'student_surname': created.get('student_surname'),
+                        'school': created.get('school'),
+                        'form': created.get('form'),
+                    }
+                    project_service.create_project_mobile(g.current_user_id, project_data)
+                except Exception as e:
+                    logger.error(f"Failed to sync created project: {e}")
+
+            # Handle updated projects
+            for updated in projects.get('updated', []):
+                # Implement update logic if needed
+                pass
+
         return jsonify({
             'success': True,
             'message': 'Sync successful'
@@ -2866,4 +2894,210 @@ def sync_push():
         
     except Exception as e:
         logger.error(f"Sync push error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+# -----------------------------------------------------------------------------
+# SRS (SPACED REPETITION) ENDPOINTS
+# -----------------------------------------------------------------------------
+
+@mobile_bp.route('/dkt/daily-review', methods=['GET'])
+@require_auth
+def get_daily_review():
+    """
+    Get list of skills due for review today
+    """
+    try:
+        from services.deep_knowledge_tracing import dkt_service
+        
+        reviews = dkt_service.generate_daily_review_queue(g.current_user_id)
+        
+        return jsonify({
+            'success': True,
+            'count': len(reviews),
+            'reviews': reviews
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get daily review error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+@mobile_bp.route('/dkt/review-complete', methods=['POST'])
+@require_auth
+def complete_review():
+    """
+    Submit a review interaction and mark as completed in queue
+    """
+    try:
+        data = request.get_json()
+        skill_id = data.get('skill_id')
+        correct = data.get('correct')
+        
+        if not skill_id:
+            return jsonify({'success': False, 'message': 'Missing skill_id'}), 400
+            
+        from services.deep_knowledge_tracing import dkt_service
+        from database.external_db import get_db_connection
+        
+        # 1. Log interaction (updates SRS state)
+        interaction_id = dkt_service.log_interaction(
+            user_id=g.current_user_id,
+            subject=data.get('subject', 'general'),
+            topic=data.get('topic', 'general'),
+            skill_id=skill_id,
+            question_id=data.get('question_id'),
+            correct=correct,
+            confidence=data.get('confidence'),
+            time_spent=data.get('time_spent'),
+            hints_used=data.get('hints_used', 0),
+            session_id=data.get('session_id', 'review_session')
+        )
+        
+        # 2. Mark as completed in daily_review_queue
+        db = get_db_connection()
+        today = datetime.now().date()
+        
+        with db.cursor() as cur:
+            cur.execute("""
+                UPDATE daily_review_queue
+                SET completed = TRUE, completed_at = NOW()
+                WHERE user_id = %s AND skill_id = %s AND review_date = %s
+            """, (g.current_user_id, skill_id, today))
+            db.commit()
+            
+        return jsonify({
+            'success': True,
+            'interaction_id': interaction_id,
+            'message': 'Review completed'
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Complete review error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+# -----------------------------------------------------------------------------
+# PROJECT ASSISTANT ENDPOINTS
+# -----------------------------------------------------------------------------
+
+@mobile_bp.route('/project/create', methods=['POST'])
+@require_auth
+def create_project():
+    """Create a new project"""
+    try:
+        data = request.get_json()
+        from services.project_assistant_service import ProjectAssistantService
+        service = ProjectAssistantService()
+        
+        project = service.create_project_mobile(g.current_user_id, data)
+        
+        return jsonify({
+            'success': True,
+            'data': project
+        }), 200
+    except ValueError as e:
+        return jsonify({'success': False, 'message': str(e)}), 400
+    except Exception as e:
+        logger.error(f"Create project error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+@mobile_bp.route('/project/list', methods=['GET'])
+@require_auth
+def list_projects():
+    """List user's projects"""
+    try:
+        from services.project_assistant_service import ProjectAssistantService
+        service = ProjectAssistantService()
+        
+        projects = service.get_user_projects(g.current_user_id)
+        
+        return jsonify({
+            'success': True,
+            'data': {'projects': projects}
+        }), 200
+    except Exception as e:
+        logger.error(f"List projects error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+@mobile_bp.route('/project/<int:project_id>', methods=['GET'])
+@require_auth
+def get_project(project_id):
+    """Get project details"""
+    try:
+        from services.project_assistant_service import ProjectAssistantService
+        service = ProjectAssistantService()
+        
+        project = service.get_project_details(g.current_user_id, project_id)
+        
+        if not project:
+            return jsonify({'success': False, 'message': 'Project not found'}), 404
+            
+        return jsonify({
+            'success': True,
+            'data': project
+        }), 200
+    except Exception as e:
+        logger.error(f"Get project error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+@mobile_bp.route('/project/<int:project_id>/chat', methods=['POST'])
+@require_auth
+def project_chat(project_id):
+    """Send message to project assistant"""
+    try:
+        data = request.get_json()
+        message = data.get('message')
+        
+        if not message:
+            return jsonify({'success': False, 'message': 'Message required'}), 400
+            
+        from services.project_assistant_service import ProjectAssistantService
+        service = ProjectAssistantService()
+        
+        response = service.process_mobile_message(g.current_user_id, project_id, message)
+        
+        return jsonify({
+            'success': True,
+            'data': response
+        }), 200
+    except ValueError as e:
+        return jsonify({'success': False, 'message': str(e)}), 400
+    except Exception as e:
+        logger.error(f"Project chat error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+@mobile_bp.route('/project/<int:project_id>/history', methods=['GET'])
+@require_auth
+def project_history(project_id):
+    """Get chat history"""
+    try:
+        from services.project_assistant_service import ProjectAssistantService
+        service = ProjectAssistantService()
+        
+        history = service.get_chat_history(g.current_user_id, project_id)
+        
+        return jsonify({
+            'success': True,
+            'data': {'history': history}
+        }), 200
+    except Exception as e:
+        logger.error(f"Project history error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+@mobile_bp.route('/project/<int:project_id>/document', methods=['GET'])
+@require_auth
+def project_document(project_id):
+    """Generate project document"""
+    try:
+        from services.project_assistant_service import ProjectAssistantService
+        service = ProjectAssistantService()
+        
+        doc_url = service.generate_project_document(g.current_user_id, project_id)
+        
+        return jsonify({
+            'success': True,
+            'data': {'document_url': doc_url}
+        }), 200
+    except Exception as e:
+        logger.error(f"Project document error: {e}", exc_info=True)
         return jsonify({'success': False, 'message': 'Server error'}), 500

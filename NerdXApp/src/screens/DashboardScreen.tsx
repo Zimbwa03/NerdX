@@ -25,6 +25,8 @@ import { KnowledgeMapWidget } from '../components/KnowledgeMapWidget';
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 48) / 2;
 
+import { sync } from '../services/SyncService';
+
 const DashboardScreen: React.FC = () => {
   const navigation = useNavigation();
   const { user, logout, updateUser } = useAuth();
@@ -32,11 +34,15 @@ const DashboardScreen: React.FC = () => {
   const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
   const [knowledgeMap, setKnowledgeMap] = useState<KnowledgeMap | null>(null);
   const [loadingKnowledgeMap, setLoadingKnowledgeMap] = useState(false);
+  const [dailyReview, setDailyReview] = useState<{ count: number, reviews: any[] } | null>(null);
 
   useEffect(() => {
     // Refresh credits and gamification progress
     const refreshData = async () => {
       try {
+        // Trigger background sync
+        sync().catch(err => console.error('Sync failed:', err));
+
         const balance = await creditsApi.getBalance();
         if (user && balance !== user.credits) {
           updateUser({ credits: balance });
@@ -54,6 +60,14 @@ const DashboardScreen: React.FC = () => {
           console.error('Failed to load knowledge map:', error);
         } finally {
           setLoadingKnowledgeMap(false);
+        }
+
+        // Load Daily Review
+        try {
+          const reviewData = await dktService.getDailyReview();
+          setDailyReview(reviewData);
+        } catch (error) {
+          console.error('Failed to load daily review:', error);
         }
       } catch (error) {
         console.error('Failed to refresh data:', error);
@@ -98,6 +112,15 @@ const DashboardScreen: React.FC = () => {
       color: Colors.subjects.science,
     };
     navigation.navigate('Topics' as never, { subject } as never);
+  };
+
+  const startDailyReview = () => {
+    if (dailyReview && dailyReview.reviews.length > 0) {
+      navigation.navigate('Quiz' as never, {
+        isReviewMode: true,
+        reviewItems: dailyReview.reviews
+      } as never);
+    }
   };
 
   const navigateToCredits = () => {
@@ -156,6 +179,36 @@ const DashboardScreen: React.FC = () => {
       </View>
     </TouchableOpacity>
   );
+
+  const renderDailyReviewWidget = () => {
+    if (!dailyReview || dailyReview.count === 0) return null;
+
+    return (
+      <View style={styles.reviewWidget}>
+        <LinearGradient
+          colors={['#6A1B9A', '#4A148C']} // Purple gradient for "Brain/Memory"
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.reviewGradient}
+        >
+          <View style={styles.reviewContent}>
+            <View>
+              <Text style={styles.reviewTitle}>Daily Review</Text>
+              <Text style={styles.reviewSubtitle}>
+                {dailyReview.count} topics due for review
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.reviewButton}
+              onPress={startDailyReview}
+            >
+              <Text style={styles.reviewButtonText}>Start</Text>
+            </TouchableOpacity>
+          </View>
+        </LinearGradient>
+      </View>
+    );
+  };
 
   const renderProgressWidget = () => {
     if (!userProgress) return null;
@@ -253,6 +306,7 @@ const DashboardScreen: React.FC = () => {
         </LinearGradient>
 
         <View style={styles.mainContent}>
+          {renderDailyReviewWidget()}
           {renderProgressWidget()}
 
           <Text style={styles.sectionTitle}>Learning Hub</Text>
@@ -647,6 +701,49 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: Colors.text.secondary,
     textAlign: 'center',
+  },
+  reviewWidget: {
+    marginBottom: 24,
+    borderRadius: 24,
+    overflow: 'hidden',
+    elevation: 5,
+    shadowColor: '#6A1B9A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+  },
+  reviewGradient: {
+    padding: 20,
+  },
+  reviewContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  reviewTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  reviewSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.9)',
+  },
+  reviewButton: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  reviewButtonText: {
+    color: '#6A1B9A',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
 });
 

@@ -695,3 +695,174 @@ Remember to:
         except Exception as e:
             logger.error(f"Error loading project from database for {user_id}: {e}", exc_info=True)
             return None
+
+    # ==================== Mobile App Support ====================
+
+    def create_project_mobile(self, user_id: str, data: Dict) -> Dict:
+        """Create a new project from mobile app"""
+        try:
+            # Validate required fields
+            required = ['title', 'subject', 'student_name']
+            if not all(k in data for k in required):
+                raise ValueError("Missing required fields")
+
+            project_data = {
+                'project_title': data['title'],
+                'subject': data['subject'],
+                'student_name': data['student_name'],
+                'student_surname': data.get('student_surname', ''),
+                'school': data.get('school', ''),
+                'form': data.get('form', ''),
+                'active': True,
+                'mode': 'project_assistant',
+                'created_at': datetime.now().isoformat(),
+                'conversation_history': [],
+                'last_updated': datetime.now().isoformat()
+            }
+
+            # Save to database
+            if self._save_project_to_database(user_id, project_data):
+                # Get the created project to return its ID
+                projects = make_supabase_request("GET", "user_projects", filters={
+                    "user_id": f"eq.{user_id}",
+                    "project_title": f"eq.{project_data['project_title']}",
+                    "completed": "eq.false"
+                })
+                if projects:
+                    return projects[0]
+            
+            raise Exception("Failed to save project")
+
+        except Exception as e:
+            logger.error(f"Error creating mobile project for {user_id}: {e}")
+            raise
+
+    def get_user_projects(self, user_id: str) -> List[Dict]:
+        """Get all active projects for a user"""
+        try:
+            projects = make_supabase_request("GET", "user_projects", filters={
+                "user_id": f"eq.{user_id}",
+                "completed": "eq.false"
+            })
+            
+            # Parse project_data for each project
+            results = []
+            if projects:
+                for p in projects:
+                    # Ensure project_data is a dict
+                    p_data = p.get('project_data', {})
+                    if isinstance(p_data, str):
+                        try:
+                            p_data = json.loads(p_data)
+                        except:
+                            p_data = {}
+                    
+                    results.append({
+                        'id': p['id'],
+                        'title': p.get('project_title'),
+                        'subject': p.get('subject'),
+                        'current_stage': p.get('current_stage', 1),
+                        'updated_at': p.get('updated_at'),
+                        'completed': p.get('completed')
+                    })
+            
+            return results
+        except Exception as e:
+            logger.error(f"Error listing projects for {user_id}: {e}")
+            return []
+
+    def get_project_details(self, user_id: str, project_id: int) -> Optional[Dict]:
+        """Get detailed project info"""
+        try:
+            projects = make_supabase_request("GET", "user_projects", filters={
+                "id": f"eq.{project_id}",
+                "user_id": f"eq.{user_id}"
+            })
+            
+            if projects and len(projects) > 0:
+                project = projects[0]
+                # Ensure project_data is parsed
+                if isinstance(project.get('project_data'), str):
+                    try:
+                        project['project_data'] = json.loads(project['project_data'])
+                    except:
+                        pass
+                return project
+            return None
+        except Exception as e:
+            logger.error(f"Error getting project details {project_id}: {e}")
+            return None
+
+    def process_mobile_message(self, user_id: str, project_id: int, message: str) -> Dict:
+        """Process a chat message from mobile app"""
+        try:
+            # 1. Get project
+            project = self.get_project_details(user_id, project_id)
+            if not project:
+                raise ValueError("Project not found")
+
+            project_data = project.get('project_data', {})
+            
+            # 2. Check credits (1 credit per message)
+            credit_result = advanced_credit_service.check_and_deduct_credits(
+                user_id, 'project_assistant_followup'
+            )
+            
+            if not credit_result.get('success'):
+                raise ValueError(credit_result.get('message', 'Insufficient credits'))
+
+            # 3. Update history
+            conversation_history = project_data.get('conversation_history', [])
+            conversation_history.append({
+                'role': 'user',
+                'content': message,
+                'timestamp': datetime.now().isoformat()
+            })
+
+            # 4. Get AI Response
+            ai_response = self._get_ai_response(user_id, message, project_data)
+
+            # 5. Add AI response to history
+            conversation_history.append({
+                'role': 'assistant',
+                'content': ai_response,
+                'timestamp': datetime.now().isoformat()
+            })
+
+            # Keep history manageable
+            if len(conversation_history) > 50:
+                conversation_history = conversation_history[-50:]
+
+            # 6. Save updates
+            project_data['conversation_history'] = conversation_history
+            project_data['last_updated'] = datetime.now().isoformat()
+            
+            # Update database
+            self._save_project_to_database(user_id, project_data)
+
+            return {
+                'response': ai_response,
+                'project_id': project_id,
+                'credits_remaining': get_user_credits(user_id)
+            }
+
+        except Exception as e:
+            logger.error(f"Error processing mobile message: {e}")
+            raise
+
+    def get_chat_history(self, user_id: str, project_id: int) -> List[Dict]:
+        """Get chat history for a project"""
+        try:
+            project = self.get_project_details(user_id, project_id)
+            if project and project.get('project_data'):
+                return project['project_data'].get('conversation_history', [])
+            return []
+        except Exception as e:
+            logger.error(f"Error getting chat history: {e}")
+            return []
+
+    def generate_project_document(self, user_id: str, project_id: int) -> str:
+        """Generate a final document for the project"""
+        # Placeholder for document generation logic
+        # In a real implementation, this would generate a PDF or Word doc
+        return "https://example.com/project_document.pdf"

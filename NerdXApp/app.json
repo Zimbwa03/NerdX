@@ -35,7 +35,18 @@
     },
     "owner": "nerdx",
     "plugins": [
-      "expo-font"
+      "expo-font",
+      [
+        "@nozbe/watermelondb",
+        {
+          "android": {
+            "jsi": true
+          },
+          "ios": {
+            "jsi": true
+          }
+        }
+      ]
     ]
   }
 }

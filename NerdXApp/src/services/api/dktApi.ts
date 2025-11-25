@@ -159,6 +159,56 @@ class DKTService {
     }
 
     /**
+     * Get list of skills due for review today (SRS)
+     */
+    async getDailyReview(): Promise<{
+        count: number;
+        reviews: {
+            skill_id: string;
+            skill_name: string;
+            subject: string;
+            topic: string;
+            due_date: string;
+        }[];
+    }> {
+        try {
+            const response = await axios.get(`${API_URL}/dkt/daily-review`, {
+                headers: this.getAuthHeader(),
+            });
+            return response.data;
+        } catch (error: any) {
+            console.error('DKT get daily review error:', error);
+            return { count: 0, reviews: [] };
+        }
+    }
+
+    /**
+     * Submit a completed review item
+     */
+    async completeReview(params: {
+        skill_id: string;
+        question_id: string;
+        correct: boolean;
+        confidence?: 'low' | 'medium' | 'high';
+        time_spent?: number;
+        hints_used?: number;
+        subject?: string;
+        topic?: string;
+    }): Promise<boolean> {
+        try {
+            await axios.post(
+                `${API_URL}/dkt/review-complete`,
+                params,
+                { headers: this.getAuthHeader() }
+            );
+            return true;
+        } catch (error: any) {
+            console.error('DKT complete review error:', error);
+            return false;
+        }
+    }
+
+    /**
      * Get student's interaction history
      */
     async getInteractionHistory(
