@@ -1505,7 +1505,7 @@ def get_comprehension_questions_by_passage_id(passage_id: int) -> List[Dict]:
             return []
             
         # Ensure proper ordering even if database doesn't sort correctly
-                questions_response.sort(key=lambda x: x.get('question_order', 0))
+        questions_response.sort(key=lambda x: x.get('question_order', 0))
         
         return questions_response
         
