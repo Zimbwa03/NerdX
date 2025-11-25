@@ -6,6 +6,7 @@ import logging
 import jwt
 import hashlib
 import secrets
+import time
 from datetime import datetime, timedelta
 from functools import wraps
 from flask import Blueprint, request, jsonify, g
@@ -2813,7 +2814,7 @@ def sync_pull():
                     'questions': {'created': [], 'updated': [], 'deleted': []},
                     'interactions': {'created': [], 'updated': [], 'deleted': []},
                 },
-                'timestamp': int(datetime.utcnow().timestamp() * 1000)
+                'timestamp': int(time.time() * 1000)
             }
         }), 200
         
