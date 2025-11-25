@@ -16,6 +16,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import { quizApi, Question, AnswerResult } from '../services/api/quizApi';
+import { dktService } from '../services/api/dktApi';
 import { useAuth } from '../context/AuthContext';
 import { Icons, IconCircle } from '../components/Icons';
 import { Card } from '../components/Card';
@@ -43,6 +44,12 @@ const QuizScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [questionCount, setQuestionCount] = useState(1);
+
+  // DKT (Deep Knowledge Tracing) state
+  const [selectedConfidence, setSelectedConfidence] = useState<'low' | 'medium' | 'high' | null>(null);
+  const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+  const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
+  const [hintsUsed, setHintsUsed] = useState<number>(0);
 
   // Initial fetch for exam mode if no question provided
   useEffect(() => {
@@ -103,6 +110,7 @@ const QuizScreen: React.FC = () => {
       );
       if (answerResult) {
         setResult(answerResult);
+        await logInteractionToDKT(answerResult.correct);
         if (answerResult.correct && user) {
           // Update user stats if needed
         }
@@ -111,6 +119,36 @@ const QuizScreen: React.FC = () => {
       Alert.alert('Error', error.response?.data?.message || 'Failed to submit answer');
     } finally {
       setLoading(false);
+    }
+  };
+
+
+  // Log interaction to DKT system
+  const logInteractionToDKT = async (isCorrect: boolean) => {
+    if (!question || !subject) return;
+
+    try {
+      const timeSpent = Math.floor((Date.now() - questionStartTime) / 1000);
+      const skill_id = dktService.mapTopicToSkillId(
+        subject.id,
+        topic?.name || topic?.id || 'general'
+      );
+
+      await dktService.logInteraction({
+        subject: subject.id,
+        topic: topic?.name || topic?.id || 'general',
+        skill_id: skill_id,
+        question_id: question.id,
+        correct: isCorrect,
+        confidence: selectedConfidence || undefined,
+        time_spent: timeSpent,
+        hints_used: hintsUsed,
+        session_id: sessionId,
+      });
+
+      console.log(`✅ DKT: Logged interaction for ${skill_id}`);
+    } catch (error) {
+      console.error('Failed to log to DKT:', error);
     }
   };
 
@@ -165,6 +203,9 @@ const QuizScreen: React.FC = () => {
         setAnswerImage(null);
         setResult(null);
         setShowHint(false);
+        setSelectedConfidence(null);
+        setQuestionStartTime(Date.now());
+        setHintsUsed(0);
         if (user) {
           const newCredits = (user.credits || 0) - 1;
           updateUser({ credits: newCredits });
@@ -344,7 +385,10 @@ const QuizScreen: React.FC = () => {
           {question.hint && !result && (
             <TouchableOpacity
               style={styles.hintButton}
-              onPress={() => setShowHint(!showHint)}
+              onPress={() => {
+                setShowHint(!showHint);
+                if (!showHint) setHintsUsed(prev => prev + 1);
+              }}
             >
               <Text style={styles.hintButtonText}>
                 {showHint ? '💡 Hide Hint' : '💡 Show Hint'}

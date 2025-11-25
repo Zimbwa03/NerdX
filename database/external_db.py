@@ -1505,7 +1505,7 @@ def get_comprehension_questions_by_passage_id(passage_id: int) -> List[Dict]:
             return []
             
         # Ensure proper ordering even if database doesn't sort correctly
-        questions_response.sort(key=lambda x: x.get('question_order', 0))
+                questions_response.sort(key=lambda x: x.get('question_order', 0))
         
         return questions_response
         
@@ -1513,9 +1513,26 @@ def get_comprehension_questions_by_passage_id(passage_id: int) -> List[Dict]:
         logger.error(f"Error getting questions for passage {passage_id}: {e}")
         return []
 
-if __name__ == "__main__":
-    # Test the connection
-    if test_connection():
-        print("✅ Database connection successful!")
-    else:
-        print("❌ Database connection failed!")
+def get_db_connection():
+    """
+    Get direct database connection using psycopg2
+    Required for DKT service which performs complex transactions
+    """
+    try:
+        import psycopg2
+        import os
+        database_url = os.getenv('DATABASE_URL')
+        
+        if not database_url:
+            logger.error("DATABASE_URL environment variable not set - cannot establish direct connection")
+            return None
+            
+        conn = psycopg2.connect(database_url)
+        conn.autocommit = True
+        return conn
+    except ImportError:
+        logger.error("psycopg2 not installed - cannot establish direct connection")
+        return None
+    except Exception as e:
+        logger.error(f"Error connecting to database: {e}")
+        return None

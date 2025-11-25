@@ -2589,3 +2589,199 @@ def get_science_topic_notes(subject, topic):
         logger.error(f"Get topic notes error: {e}", exc_info=True)
         return jsonify({'success': False, 'message': 'Server error'}), 500
 
+# ============================================================================
+# DEEP KNOWLEDGE TRACING (DKT) ENDPOINTS
+# ============================================================================
+
+@mobile_bp.route('/dkt/log-interaction', methods=['POST'])
+@require_auth
+def log_interaction():
+    """
+    Log student interaction for DKT training
+    Called after EVERY question attempt
+    """
+    try:
+        data = request.get_json()
+        
+        # Required fields
+        subject = data.get('subject', '')
+        topic = data.get('topic', '')
+        skill_id = data.get('skill_id', '')
+        question_id = data.get('question_id', '')
+        correct = data.get('correct', False)
+        
+        # Optional fields
+        confidence = data.get('confidence')  # 'low', 'medium', 'high'
+        time_spent = data.get('time_spent')  # seconds
+        hints_used = data.get('hints_used', 0)
+        session_id = data.get('session_id')
+        device_id = data.get('device_id')
+        
+        if not all([subject, skill_id, question_id]):
+            return jsonify({
+                'success': False,
+                'message': 'subject, skill_id, and question_id are required'
+            }), 400
+        
+        from services.deep_knowledge_tracing import dkt_service
+        
+        interaction_id = dkt_service.log_interaction(
+            user_id=g.current_user_id,
+            subject=subject,
+            topic=topic,
+            skill_id=skill_id,
+            question_id=question_id,
+            correct=correct,
+            confidence=confidence,
+            time_spent=time_spent,
+            hints_used=hints_used,
+            session_id=session_id,
+            device_id=device_id
+        )
+        
+        if interaction_id == -1:
+            return jsonify({
+                'success': False,
+                'message': 'Failed to log interaction'
+            }), 500
+        
+        # Return updated mastery for this skill
+        mastery = dkt_service.predict_mastery(g.current_user_id, skill_id)
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'interaction_id': interaction_id,
+                'skill_mastery': mastery,
+                'message': 'Interaction logged successfully'
+            }
+        }), 201
+        
+    except Exception as e:
+        logger.error(f"Log interaction error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+@mobile_bp.route('/dkt/knowledge-map', methods=['GET'])
+@require_auth
+def get_knowledge_map():
+    """
+    Get visual knowledge map showing mastery across all skills
+    Used for dashboard visualization
+    """
+    try:
+        subject = request.args.get('subject')  # Optional filter
+        
+        from services.deep_knowledge_tracing import dkt_service
+        
+        knowledge_map = dkt_service.get_knowledge_map(
+            user_id=g.current_user_id,
+            subject=subject
+        )
+        
+        return jsonify({
+            'success': True,
+            'data': knowledge_map
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get knowledge map error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+@mobile_bp.route('/dkt/mastery/<skill_id>', methods=['GET'])
+@require_auth
+def get_skill_mastery(skill_id):
+    """
+    Get current mastery probability for a specific skill
+    """
+    try:
+        from services.deep_knowledge_tracing import dkt_service
+        
+        mastery = dkt_service.predict_mastery(g.current_user_id, skill_id)
+        
+        # Get interaction history for this skill
+        history = dkt_service.get_interaction_history(
+            user_id=g.current_user_id,
+            skill_id=skill_id,
+            limit=20
+        )
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'skill_id': skill_id,
+                'mastery_probability': mastery,
+                'status': dkt_service._get_mastery_status(mastery),
+                'total_interactions': len(history),
+                'recent_history': history[:5]  # Last 5 interactions
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get skill mastery error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+@mobile_bp.route('/dkt/recommend-next', methods=['POST'])
+@require_auth
+def recommend_next_question():
+    """
+    Get personalized question recommendation based on DKT predictions
+    Returns optimal skill and difficulty to practice next
+    """
+    try:
+        data = request.get_json()
+        subject = data.get('subject', '')
+        topic = data.get('topic')  # Optional
+        
+        if not subject:
+            return jsonify({
+                'success': False,
+                'message': 'subject is required'
+            }), 400
+        
+        from services.deep_knowledge_tracing import dkt_service
+        
+        recommendation = dkt_service.get_next_question_recommendation(
+            user_id=g.current_user_id,
+            subject=subject,
+            topic=topic
+        )
+        
+        return jsonify({
+            'success': True,
+            'data': recommendation
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Recommend next question error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+@mobile_bp.route('/dkt/interaction-history', methods=['GET'])
+@require_auth
+def get_interaction_history():
+    """
+    Get student's interaction history for review
+    """
+    try:
+        skill_id = request.args.get('skill_id')
+        limit = request.args.get('limit', 100, type=int)
+        
+        from services.deep_knowledge_tracing import dkt_service
+        
+        history = dkt_service.get_interaction_history(
+            user_id=g.current_user_id,
+            skill_id=skill_id,
+            limit=limit
+        )
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'total': len(history),
+                'interactions': history
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get interaction history error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+

@@ -19,6 +19,8 @@ import { Icons, IconCircle } from '../components/Icons';
 import { Colors } from '../theme/colors';
 import { Modal, ModalOptionCard } from '../components/Modal';
 import { gamificationService, UserProgress, Badge } from '../services/GamificationService';
+import { dktService, KnowledgeMap } from '../services/api/dktApi';
+import { KnowledgeMapWidget } from '../components/KnowledgeMapWidget';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 48) / 2;
@@ -28,6 +30,8 @@ const DashboardScreen: React.FC = () => {
   const { user, logout, updateUser } = useAuth();
   const [scienceModalVisible, setScienceModalVisible] = useState(false);
   const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
+  const [knowledgeMap, setKnowledgeMap] = useState<KnowledgeMap | null>(null);
+  const [loadingKnowledgeMap, setLoadingKnowledgeMap] = useState(false);
 
   useEffect(() => {
     // Refresh credits and gamification progress
@@ -40,6 +44,17 @@ const DashboardScreen: React.FC = () => {
 
         const progress = await gamificationService.getProgress();
         setUserProgress(progress);
+
+        // Load DKT knowledge map
+        try {
+          setLoadingKnowledgeMap(true);
+          const map = await dktService.getKnowledgeMap();
+          setKnowledgeMap(map);
+        } catch (error) {
+          console.error('Failed to load knowledge map:', error);
+        } finally {
+          setLoadingKnowledgeMap(false);
+        }
       } catch (error) {
         console.error('Failed to refresh data:', error);
       }
