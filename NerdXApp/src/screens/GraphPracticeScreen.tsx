@@ -35,7 +35,6 @@ const GraphPracticeScreen: React.FC = () => {
   // Linear programming inputs
   const [constraints, setConstraints] = useState<string[]>(['', '']);
   const [objective, setObjective] = useState('');
-  const [objective, setObjective] = useState('');
   const [imageSolution, setImageSolution] = useState<{ processed_text: string; solution: string; analysis?: string } | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
 

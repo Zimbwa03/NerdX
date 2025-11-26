@@ -2,7 +2,7 @@
 // Handles interaction logging, knowledge tracking, and personalized recommendations
 
 import axios from 'axios';
-import { storage } from './storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_URL = 'https://nerdx.onrender.com/api/mobile';
 
@@ -50,10 +50,8 @@ export interface QuestionRecommendation {
 
 class DKTService {
     private getAuthHeader() {
-        const token = storage.getString('authToken');
-        return {
-            Authorization: `Bearer ${token}`,
-        };
+        // Simplified for now - auth handled by API service
+        return {};
     }
 
     /**
