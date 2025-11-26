@@ -1,5 +1,6 @@
 // English API services
 import api from './config';
+import HybridAIService from '../HybridAIService';
 
 export interface ComprehensionData {
   passage: string;
@@ -221,6 +222,21 @@ export const englishApi = {
       return response.data.data || null;
     } catch (error: any) {
       console.error('Grade summary error:', error);
+      throw error;
+    }
+  },
+
+  // AI Help (Hybrid Online/Offline)
+  getAIHelp: async (question: string): Promise<string> => {
+    try {
+      const response = await HybridAIService.generateResponse(
+        question,
+        'english',
+        { maxTokens: 512 }
+      );
+      return response.text;
+    } catch (error) {
+      console.error('English AI help error:', error);
       throw error;
     }
   },

@@ -21,6 +21,7 @@ import { Modal, ModalOptionCard } from '../components/Modal';
 import { gamificationService, UserProgress, Badge } from '../services/GamificationService';
 import { dktService, KnowledgeMap } from '../services/api/dktApi';
 import { KnowledgeMapWidget } from '../components/KnowledgeMapWidget';
+import OfflineIndicator from '../components/OfflineIndicator';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 48) / 2;
@@ -284,6 +285,7 @@ const DashboardScreen: React.FC = () => {
                 <Text style={styles.nerdxId}>ID: {user?.nerdx_id || 'N/A'}</Text>
               </View>
             </View>
+            <OfflineIndicator />
             <TouchableOpacity onPress={navigateToProfile}>
               <IconCircle
                 icon={Icons.profile(32, Colors.primary.main)}

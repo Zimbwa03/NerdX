@@ -30,6 +30,8 @@ import PastPaperScreen from '../screens/PastPaperScreen';
 import ScienceNotesScreen from '../screens/ScienceNotesScreen';
 import TopicNotesDetailScreen from '../screens/TopicNotesDetailScreen';
 import MathSolverScreen from '../screens/MathSolverScreen';
+import OfflineSettingsScreen from '../screens/OfflineSettingsScreen';
+import ModelDownloadScreen from '../screens/ModelDownloadScreen';
 
 const Stack = createStackNavigator();
 
@@ -236,6 +238,20 @@ const AppNavigator: React.FC = () => {
             <Stack.Screen
               name="MathSolver"
               component={MathSolverScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="OfflineSettings"
+              component={OfflineSettingsScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="ModelDownload"
+              component={ModelDownloadScreen}
               options={{
                 headerShown: false,
               }}

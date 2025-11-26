@@ -1,5 +1,6 @@
 // Project Assistant API services - Database-backed
 import api from './config';
+import HybridAIService from '../HybridAIService';
 
 export interface Project {
   id: number;
@@ -106,6 +107,21 @@ export const projectApi = {
       return response.data.data?.document_url || null;
     } catch (error: any) {
       console.error('Generate document error:', error);
+      throw error;
+    }
+  },
+
+  // AI Help (Hybrid Online/Offline)
+  getAIHelp: async (question: string): Promise<string> => {
+    try {
+      const response = await HybridAIService.generateResponse(
+        question,
+        'general',
+        { maxTokens: 512 }
+      );
+      return response.text;
+    } catch (error) {
+      console.error('Project AI help error:', error);
       throw error;
     }
   },

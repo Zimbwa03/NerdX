@@ -1,5 +1,6 @@
 import api from './config';
 import { Platform } from 'react-native';
+import HybridAIService from '../HybridAIService';
 
 // Types
 export interface MathSolution {
@@ -121,6 +122,21 @@ export const mathApi = {
             return `${baseURL}${relativePath}`;
         } catch (error) {
             console.error('Voice speak error:', error);
+            throw error;
+        }
+    },
+
+    // AI Help (Hybrid Online/Offline)
+    getAIHelp: async (question: string): Promise<string> => {
+        try {
+            const response = await HybridAIService.generateResponse(
+                question,
+                'mathematics',
+                { maxTokens: 512 }
+            );
+            return response.text;
+        } catch (error) {
+            console.error('Math AI help error:', error);
             throw error;
         }
     }
