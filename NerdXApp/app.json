@@ -58,8 +58,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "dfd84aa7-b5ef-4d60-8fd1-9dbb4caa6bf4"
+        "projectId": "64c12ef5-abbd-4b71-8c9e-3e1ba2a0dcb2"
       }
-    }
+    },
+    "owner": "nerdx2"
   }
 }
