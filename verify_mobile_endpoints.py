@@ -37,7 +37,7 @@ def main():
     test_endpoint(
         "Math Solver", 
         "POST", 
-        "/mobile/math/solve", 
+        "/api/mobile/math/solve", 
         {"problem": "2*x + 5 = 15"}
     )
     
@@ -46,7 +46,7 @@ def main():
     test_endpoint(
         "Manim Quadratic", 
         "POST", 
-        "/mobile/math/animate/quadratic", 
+        "/api/mobile/math/animate/quadratic", 
         {"a": 1, "b": 0, "c": 0}
     )
     
@@ -54,7 +54,7 @@ def main():
     test_endpoint(
         "Manim Linear", 
         "POST", 
-        "/mobile/math/animate/linear", 
+        "/api/mobile/math/animate/linear", 
         {"m": 2, "c": 1}
     )
 
