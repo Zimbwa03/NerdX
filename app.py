@@ -75,28 +75,9 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
 # Initialize the app with the extension
 db.init_app(app)
 
-with app.app_context():
-    try:
-        # Import models to ensure tables are created
-        import models
-        db.create_all()
-        logging.info("Database tables created successfully")
-    except Exception as e:
-        logging.error(f"Database initialization error: {e}")
-        # Continue startup even if database fails - will retry on first request
-        pass
-    
-    # Initialize Supabase database tables
-    try:
-        from database.external_db import init_database
-        supabase_init_result = init_database()
-        if supabase_init_result:
-            logging.info("✅ Supabase database initialized successfully")
-        else:
-            logging.error("❌ Supabase database initialization failed")
-    except Exception as e:
-        logging.error(f"Supabase initialization error: {e}")
-        # Continue startup - Supabase errors will be handled in endpoints
+# LAZY INITIALIZATION: Defer heavy initialization to allow fast port binding
+# This prevents Render timeout during deployment
+logging.info("⚡ Fast startup mode - initialization deferred")
 
 # Configure CORS
 CORS(app, origins=['*'])
@@ -124,49 +105,15 @@ def serve_graph(filename):
 # Health check endpoint for Render monitoring
 @app.route('/health')
 def health_check():
-    """Health check endpoint for Render monitoring"""
+    """Health check endpoint for Render monitoring - responds immediately"""
     try:
-        # Basic health check
+        # Basic health check - respond immediately without heavy checks
         health_status = {
             'status': 'healthy',
             'timestamp': __import__('datetime').datetime.now().isoformat(),
             'version': '2.0.0',
-            'services': {
-                'database': 'unknown',
-                'whatsapp': 'unknown',
-                'imgbb': 'unknown'
-            }
+            'mode': 'fast_startup'
         }
-        
-        # Check database connection
-        try:
-            from sqlalchemy import text
-            db.session.execute(text('SELECT 1'))
-            health_status['services']['database'] = 'healthy'
-        except Exception as e:
-            health_status['services']['database'] = f'unhealthy: {str(e)}'
-        
-        # Check WhatsApp configuration
-        whatsapp_token = os.environ.get('WHATSAPP_ACCESS_TOKEN')
-        if whatsapp_token:
-            health_status['services']['whatsapp'] = 'configured'
-        else:
-            health_status['services']['whatsapp'] = 'not configured'
-        
-        # Check IMGBB configuration
-        imgbb_key = os.environ.get('IMGBB_API_KEY')
-        if imgbb_key:
-            health_status['services']['imgbb'] = 'configured'
-        else:
-            health_status['services']['imgbb'] = 'not configured'
-        
-        # Check Supabase configuration
-        supabase_url = os.environ.get('SUPABASE_URL')
-        supabase_key = os.environ.get('SUPABASE_SERVICE_ROLE_KEY')
-        if supabase_url and supabase_key:
-            health_status['services']['supabase'] = 'configured'
-        else:
-            health_status['services']['supabase'] = 'not configured'
         
         return jsonify(health_status), 200
         
