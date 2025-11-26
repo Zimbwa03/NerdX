@@ -140,6 +140,10 @@ const DashboardScreen: React.FC = () => {
     navigation.navigate('ProjectAssistantSetup' as never);
   };
 
+  const navigateToProjectList = () => {
+    navigation.navigate('ProjectList' as never);
+  };
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -340,7 +344,7 @@ const DashboardScreen: React.FC = () => {
               'Project Assistant',
               'AI-powered help',
               require('../../assets/images/project_assistant_card.png'),
-              navigateToProjectAssistant
+              navigateToProjectList
             )}
 
             {/* Full Width Cards */}

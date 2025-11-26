@@ -34,7 +34,7 @@ export const mathApi = {
     // SymPy Solver
     solveProblem: async (problem: string): Promise<MathSolution> => {
         try {
-            const response = await api.post('/mobile/math/solve', { problem });
+            const response = await api.post('/api/mobile/math/solve', { problem });
             return response.data.data;
         } catch (error) {
             console.error('Math solve error:', error);
@@ -57,7 +57,7 @@ export const mathApi = {
                 type,
             } as any);
 
-            const response = await api.post('/mobile/math/scan', formData, {
+            const response = await api.post('/api/mobile/math/scan', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
@@ -72,8 +72,8 @@ export const mathApi = {
     // Vector Search
     findSimilar: async (query: string): Promise<SimilarQuestion[]> => {
         try {
-            const response = await api.post('/mobile/math/search', { query });
-            return response.data.data;
+            const response = await api.post('/api/mobile/vector/search-similar', { query_text: query });
+            return response.data.data.results;
         } catch (error) {
             console.error('Math search error:', error);
             throw error;

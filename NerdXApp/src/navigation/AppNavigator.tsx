@@ -153,22 +153,21 @@ const AppNavigator: React.FC = () => {
               name="ProjectAssistantSetup"
               component={ProjectAssistantSetupScreen}
               options={{
-                title: 'Project Assistant Setup',
+                headerShown: false,
               }}
             />
             <Stack.Screen
               name="ProjectAssistant"
               component={ProjectAssistantScreen}
               options={{
-                title: 'Project Assistant',
-                headerBackTitle: 'Back',
+                headerShown: false,
               }}
             />
             <Stack.Screen
               name="ProjectList"
               component={ProjectListScreen}
               options={{
-                title: 'My Projects',
+                headerShown: false,
               }}
             />
             <Stack.Screen
