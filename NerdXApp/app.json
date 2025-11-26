@@ -46,6 +46,14 @@
         {
           "microphonePermission": "The app accesses your microphone to let you ask questions by voice."
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 24
+          }
+        }
       ]
     ],
     "extra": {
