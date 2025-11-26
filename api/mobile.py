@@ -10,6 +10,9 @@ import time
 from datetime import datetime, timedelta
 from functools import wraps
 from flask import Blueprint, request, jsonify, g
+from werkzeug.utils import secure_filename
+import uuid
+import os
 from database.external_db import (
     get_user_registration, create_user_registration, is_user_registered,
     get_user_stats, get_user_credits, add_credits, deduct_credits,
@@ -18,6 +21,8 @@ from database.external_db import (
 from services.advanced_credit_service import advanced_credit_service
 from services.question_service import QuestionService
 from services.mathematics_service import MathematicsService
+from services.math_ocr_service import MathOCRService
+from services.symbolic_solver_service import SymbolicSolverService
 from services.mathematics_teacher_service import mathematics_teacher_service
 from services.combined_science_generator import CombinedScienceGenerator
 from services.english_service import EnglishService
@@ -3101,3 +3106,634 @@ def project_document(project_id):
     except Exception as e:
         logger.error(f"Project document error: {e}", exc_info=True)
         return jsonify({'success': False, 'message': 'Server error'}), 500
+
+# -----------------------------------------------------------------------------
+# Mathematics Endpoints (Phases 1-3)
+# -----------------------------------------------------------------------------
+
+@mobile_bp.route('/math/solve', methods=['POST'])
+def solve_math_problem():
+    """Solve math problem step-by-step (SymPy)"""
+    try:
+        data = request.get_json()
+        problem = data.get('problem')
+        
+        if not problem:
+            return jsonify({'status': 'error', 'message': 'Problem required'}), 400
+            
+        from services.symbolic_solver_service import SymbolicSolverService
+        service = SymbolicSolverService()
+        
+        result = service.solve_equation_with_steps(problem)
+        
+        if result['success']:
+            return jsonify({'status': 'success', 'data': result}), 200
+        else:
+            return jsonify({'status': 'error', 'message': result.get('error')}), 400
+            
+    except Exception as e:
+        logger.error(f"Math solve error: {e}", exc_info=True)
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@mobile_bp.route('/math/scan', methods=['POST'])
+def scan_math_problem():
+    """Scan math problem from image (Pix2Text)"""
+    try:
+        if 'image' not in request.files:
+            return jsonify({'status': 'error', 'message': 'No image provided'}), 400
+            
+        image_file = request.files['image']
+        if image_file.filename == '':
+            return jsonify({'status': 'error', 'message': 'No selected file'}), 400
+            
+        from services.math_ocr_service import MathOCRService
+        service = MathOCRService()
+        
+        # Save temp file
+        filename = secure_filename(image_file.filename)
+        temp_path = os.path.join("temp_images", f"scan_{uuid.uuid4().hex}_{filename}")
+        os.makedirs("temp_images", exist_ok=True)
+        image_file.save(temp_path)
+        
+        # Scan
+        result = service.scan_equation(temp_path)
+        
+        # Cleanup
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+            
+        if result['success']:
+            return jsonify({'status': 'success', 'data': result}), 200
+        else:
+            return jsonify({'status': 'error', 'message': result.get('error')}), 400
+            
+    except Exception as e:
+        logger.error(f"Math scan error: {e}", exc_info=True)
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@mobile_bp.route('/math/search', methods=['POST'])
+def search_similar_questions():
+    """Search for similar past paper questions (Vector Search)"""
+    try:
+        data = request.get_json()
+        query = data.get('query')
+        
+        if not query:
+            return jsonify({'status': 'error', 'message': 'Query required'}), 400
+            
+        from services.vector_search_service import get_vector_search_service
+        service = get_vector_search_service()
+        
+        results = service.find_similar_questions(query)
+        
+        return jsonify({'status': 'success', 'data': results}), 200
+            
+    except Exception as e:
+        logger.error(f"Math search error: {e}", exc_info=True)
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@mobile_bp.route('/math/animate/quadratic', methods=['POST'])
+def animate_quadratic():
+    """Generate quadratic function animation"""
+    try:
+        data = request.get_json()
+        a = float(data.get('a', 1))
+        b = float(data.get('b', 0))
+        c = float(data.get('c', 0))
+        
+        from services.manim_service import ManimService
+        service = ManimService()
+        
+        result = service.render_quadratic(a, b, c)
+        
+        if result['success']:
+            return jsonify({'status': 'success', 'data': result}), 200
+        else:
+            return jsonify({'status': 'error', 'message': result.get('error')}), 400
+            
+    except Exception as e:
+        logger.error(f"Animation error: {e}", exc_info=True)
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@mobile_bp.route('/math/animate/linear', methods=['POST'])
+def animate_linear():
+    """Generate linear function animation"""
+    try:
+        data = request.get_json()
+        m = float(data.get('m', 1))
+        c = float(data.get('c', 0))
+        
+        from services.manim_service import ManimService
+        service = ManimService()
+        
+        result = service.render_linear(m, c)
+        
+        if result['success']:
+            return jsonify({'status': 'success', 'data': result}), 200
+        else:
+            return jsonify({'status': 'error', 'message': result.get('error')}), 400
+            
+    except Exception as e:
+        logger.error(f"Animation error: {e}", exc_info=True)
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+# ============================================================================
+# SYMPY SYMBOLIC SOLVER ENDPOINTS (Free Alternative to Wolfram Alpha)
+# ============================================================================
+
+@mobile_bp.route('/math/solve', methods=['POST'])
+@require_auth
+def solve_equation():
+    """Solve equation with step-by-step solution using SymPy"""
+    try:
+        data = request.get_json()
+        equation = data.get('equation', '').strip()
+        variable = data.get('variable', 'x').strip()
+        
+        if not equation:
+            return jsonify({'success': False, 'message': 'Equation is required'}), 400
+        
+        from services.symbolic_solver_service import symbolic_solver
+        result = symbolic_solver.solve_equation_with_steps(equation, variable)
+        
+        return jsonify({
+            'success': result.get('success', True),
+            'data': result
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Solve equation error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@mobile_bp.route('/math/differentiate', methods=['POST'])
+@require_auth
+def differentiate():
+    """Differentiate function with step-by-step explanation using SymPy"""
+    try:
+        data = request.get_json()
+        function = data.get('function', '').strip()
+        variable = data.get('variable', 'x').strip()
+        
+        if not function:
+            return jsonify({'success': False, 'message': 'Function is required'}), 400
+        
+        from services.symbolic_solver_service import symbolic_solver
+        result = symbolic_solver.differentiate_with_steps(function, variable)
+        
+        return jsonify({
+            'success': result.get('success', True),
+            'data': result
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Differentiate error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@mobile_bp.route('/math/integrate', methods=['POST'])
+@require_auth
+def integrate():
+    """Integrate function with step-by-step explanation using SymPy"""
+    try:
+        data = request.get_json()
+        function = data.get('function', '').strip()
+        variable = data.get('variable', 'x').strip()
+        lower_limit = data.get('lower_limit')
+        upper_limit = data.get('upper_limit')
+        
+        if not function:
+            return jsonify({'success': False, 'message': 'Function is required'}), 400
+        
+        from services.symbolic_solver_service import symbolic_solver
+        result = symbolic_solver.integrate_with_steps(function, variable, lower_limit, upper_limit)
+        
+        return jsonify({
+            'success': result.get('success', True),
+            'data': result
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Integrate error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@mobile_bp.route('/math/simplify', methods=['POST'])
+@require_auth
+def simplify():
+    """Simplify algebraic expression with steps using SymPy"""
+    try:
+        data = request.get_json()
+        expression = data.get('expression', '').strip()
+        
+        if not expression:
+            return jsonify({'success': False, 'message': 'Expression is required'}), 400
+        
+        from services.symbolic_solver_service import symbolic_solver
+        result = symbolic_solver.simplify_expression(expression)
+        
+        return jsonify({
+            'success': result.get('success', True),
+            'data': result
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Simplify error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# ============================================================================
+# PIX2TEXT OCR ENDPOINTS (Free Alternative to Mathpix)
+# ============================================================================
+
+@mobile_bp.route('/ocr/scan-equation', methods=['POST'])
+@require_auth
+def scan_equation():
+    """Scan mathematical equation from image using Pix2Text OCR"""
+    try:
+        # Get image from request (base64 or file upload)
+        if 'image' in request.files:
+            # File upload
+            image_file = request.files['image']
+            
+            # Save temporarily
+            import tempfile
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmp:
+                image_file.save(tmp.name)
+                temp_path = tmp.name
+            
+            from services.math_ocr_service import math_ocr_service
+            result = math_ocr_service.scan_equation(temp_path)
+            
+            # Clean up temp file
+            os.unlink(temp_path)
+            
+        elif request.json and 'image_url' in request.json:
+            # Download from URL
+            image_url = request.json.get('image_url')
+            
+            # Download image
+            import requests
+            import tempfile
+            response = requests.get(image_url)
+            
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmp:
+                tmp.write(response.content)
+                temp_path = tmp.name
+            
+            from services.math_ocr_service import math_ocr_service
+            result = math_ocr_service.scan_equation(temp_path)
+            
+            os.unlink(temp_path)
+            
+        else:
+            return jsonify({'success': False, 'message': 'Image file or image_url required'}), 400
+        
+        return jsonify({
+            'success': result.get('success', True),
+            'data': result
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"OCR scan equation error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@mobile_bp.route('/ocr/scan-page', methods=['POST'])
+@require_auth
+def scan_green_book_page():
+    """Scan full Green Book past paper page with layout analysis"""
+    try:
+        if 'image' in request.files:
+            image_file = request.files['image']
+            
+            import tempfile
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmp:
+                image_file.save(tmp.name)
+                temp_path = tmp.name
+            
+            from services.math_ocr_service import math_ocr_service
+            result = math_ocr_service.scan_full_page(temp_path, detect_layout=True)
+            
+            os.unlink(temp_path)
+            
+        elif request.json and 'image_url' in request.json:
+            image_url = request.json.get('image_url')
+            
+            import requests
+            import tempfile
+            response = requests.get(image_url)
+            
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmp:
+                tmp.write(response.content)
+                temp_path = tmp.name
+            
+            from services.math_ocr_service import math_ocr_service
+            result = math_ocr_service.scan_full_page(temp_path, detect_layout=True)
+            
+            os.unlink(temp_path)
+            
+        else:
+            return jsonify({'success': False, 'message': 'Image file or image_url required'}), 400
+        
+        return jsonify({
+            'success': result.get('success', True),
+            'data': result
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"OCR scan page error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@mobile_bp.route('/ocr/verify', methods=['GET'])
+@require_auth
+def verify_ocr_installation():
+    """Verify Pix2Text OCR is installed and working"""
+    try:
+        from services.math_ocr_service import math_ocr_service
+        result = math_ocr_service.verify_installation()
+        
+        return jsonify({
+            'success': result.get('installed', False),
+            'data': result
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"OCR verification error: {e}", exc_info=True)
+        return jsonify({
+            'success': False, 
+            'message': str(e),
+            'data': {
+                'installed': False,
+                'error': str(e)
+            }
+        }), 500
+
+# ============================================================================
+# VECTOR SEARCH ENDPOINTS (Free Alternative to Pinecone)
+# ============================================================================
+
+@mobile_bp.route('/vector/index-question', methods=['POST'])
+@require_auth
+def index_question():
+    """Index a question into vector database for similarity search"""
+    try:
+        data = request.get_json()
+        
+        question_data = {
+            'id': data.get('id', str(uuid.uuid4())),
+            'question_text': data.get('question_text', ''),
+            'topic': data.get('topic', ''),
+            'difficulty': data.get('difficulty', 'medium'),
+            'year': data.get('year', 2023),
+            'paper': data.get('paper', 1),
+            'question_number': data.get('question_number', 1),
+            'latex_equation': data.get('latex_equation', ''),
+            'solution': data.get('solution', ''),
+            'source': data.get('source', 'ZIMSEC')
+        }
+        
+        from services.vector_search_service import get_vector_search_service
+        service = get_vector_search_service()
+        
+        success = service.index_question(question_data)
+        
+        return jsonify({
+            'success': success,
+            'message': 'Question indexed successfully' if success else 'Failed to index question',
+            'question_id': question_data['id']
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Index question error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@mobile_bp.route('/vector/search-similar', methods=['POST'])
+@require_auth
+def search_similar_questions():
+    """Find similar questions using vector similarity search"""
+    try:
+        data = request.get_json()
+        
+        query_text = data.get('query_text', '')
+        top_k = data.get('top_k', 5)
+        filters = data.get('filters', {})
+        
+        if not query_text:
+            return jsonify({'success': False, 'message': 'query_text is required'}), 400
+        
+        from services.vector_search_service import get_vector_search_service
+        service = get_vector_search_service()
+        
+        similar_questions = service.find_similar_questions(query_text, top_k, filters)
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'query': query_text,
+                'results': similar_questions,
+                'count': len(similar_questions)
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Search similar questions error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@mobile_bp.route('/vector/stats', methods=['GET'])
+@require_auth
+def get_vector_stats():
+    """Get vector database statistics"""
+    try:
+        from services.vector_search_service import get_vector_search_service
+        service = get_vector_search_service()
+        
+        stats = service.get_collection_stats()
+        
+        return jsonify({
+            'success': True,
+            'data': stats
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get vector stats error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@mobile_bp.route('/vector/verify', methods=['GET'])
+@require_auth
+def verify_vector_installation():
+    """Verify Milvus and sentence-transformers installation"""
+    try:
+        from services.vector_search_service import get_vector_search_service
+        service = get_vector_search_service()
+        
+        result = service.verify_installation()
+        
+        return jsonify({
+            'success': result.get('installed', False),
+            'data': result
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Vector verification error: {e}", exc_info=True)
+        return jsonify({
+            'success': False,
+            'message': str(e),
+            'data': {
+                'installed': False,
+                'error': str(e)
+            }
+        }), 500
+
+# -----------------------------------------------------------------------------
+# Manim Animation Endpoints (Phase 4)
+# -----------------------------------------------------------------------------
+
+@mobile_bp.route('/math/animate/verify', methods=['GET'])
+def verify_animation_service():
+    """Check if Manim and dependencies are installed"""
+    try:
+        from services.manim_service import get_manim_service
+        service = get_manim_service()
+        deps = service.check_dependencies()
+        
+        return jsonify({
+            'status': 'success',
+            'dependencies': deps,
+            'ready_for_math': deps['latex'],
+            'ready_for_basic': deps['ffmpeg']
+        }), 200
+    except ImportError:
+        return jsonify({
+            'status': 'error',
+            'message': 'Manim service not found or dependencies missing'
+        }), 500
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@mobile_bp.route('/math/animate/quadratic', methods=['POST'])
+def animate_quadratic():
+    """Generate animation for quadratic function"""
+    try:
+        data = request.get_json()
+        a = float(data.get('a', 1))
+        b = float(data.get('b', 0))
+        c = float(data.get('c', 0))
+        quality = data.get('quality', 'l')  # Default to low for speed
+        
+        from services.manim_service import get_manim_service
+        service = get_manim_service()
+        
+        result = service.render_quadratic(a, b, c, quality)
+        
+        if result['success']:
+            return jsonify({
+                'status': 'success',
+                'video_url': f"/static/{result['video_path'].replace(os.sep, '/')}",
+                'render_id': result['render_id']
+            }), 200
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': result.get('error'),
+                'logs': result.get('logs')
+            }), 500
+            
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@mobile_bp.route('/math/animate/linear', methods=['POST'])
+def animate_linear():
+    """Generate animation for linear function"""
+    try:
+        data = request.get_json()
+        m = float(data.get('m', 1))
+        c = float(data.get('c', 0))
+        quality = data.get('quality', 'l')
+        
+        from services.manim_service import get_manim_service
+        service = get_manim_service()
+        
+        result = service.render_linear(m, c, quality)
+        
+        if result['success']:
+            return jsonify({
+                'status': 'success',
+                'video_url': f"/static/{result['video_path'].replace(os.sep, '/')}",
+                'render_id': result['render_id']
+            }), 200
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': result.get('error'),
+                'logs': result.get('logs')
+            }), 500
+            
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+# -----------------------------------------------------------------------------
+# Voice Feature Endpoints (Phase 5)
+# -----------------------------------------------------------------------------
+
+@mobile_bp.route('/voice/transcribe', methods=['POST'])
+def transcribe_audio():
+    """Transcribe uploaded audio file"""
+    try:
+        if 'audio' not in request.files:
+            return jsonify({'status': 'error', 'message': 'No audio file provided'}), 400
+            
+        audio_file = request.files['audio']
+        if audio_file.filename == '':
+            return jsonify({'status': 'error', 'message': 'No selected file'}), 400
+            
+        from services.voice_service import get_voice_service
+        service = get_voice_service()
+        
+        # Save temp file
+        filename = secure_filename(audio_file.filename)
+        temp_path = os.path.join(service.media_dir, f"temp_{uuid.uuid4().hex}_{filename}")
+        audio_file.save(temp_path)
+        
+        # Transcribe
+        result = service.transcribe_audio(temp_path)
+        
+        # Cleanup
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+            
+        if 'error' in result:
+            return jsonify({'status': 'error', 'message': result['error']}), 500
+            
+        return jsonify({
+            'status': 'success',
+            'text': result['text'],
+            'language': result['language']
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@mobile_bp.route('/voice/speak', methods=['POST'])
+def text_to_speech():
+    """Convert text to speech"""
+    try:
+        data = request.get_json()
+        text = data.get('text')
+        voice = data.get('voice', 'en-US-AriaNeural')
+        
+        if not text:
+            return jsonify({'status': 'error', 'message': 'No text provided'}), 400
+            
+        from services.voice_service import get_voice_service
+        service = get_voice_service()
+        
+        # Run async TTS in sync Flask
+        import asyncio
+        result = asyncio.run(service.text_to_speech(text, voice))
+        
+        if result['success']:
+            return jsonify({
+                'status': 'success',
+                'audio_url': f"/static/{result['audio_path']}"
+            }), 200
+        else:
+            return jsonify({'status': 'error', 'message': result.get('error')}), 500
+            
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500

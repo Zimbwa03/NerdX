@@ -19,9 +19,13 @@ import Markdown from 'react-native-markdown-display';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { teacherApi, TeacherSession } from '../services/api/teacherApi';
+import { mathApi } from '../services/api/mathApi';
 import { useAuth } from '../context/AuthContext';
 import { TypingIndicator } from '../components/TypingIndicator';
 import { Colors } from '../theme/colors';
+import { Audio } from 'expo-av';
+import * as ImagePicker from 'expo-image-picker';
+import { Ionicons } from '@expo/vector-icons';
 
 interface Message {
   id: string;
@@ -46,6 +50,9 @@ const TeacherModeScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [generatingNotes, setGeneratingNotes] = useState(false);
+  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
@@ -91,6 +98,121 @@ const TeacherModeScreen: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // --- Voice & Image Handlers ---
+
+  const startRecording = async () => {
+    try {
+      const permission = await Audio.requestPermissionsAsync();
+      if (permission.status === 'granted') {
+        await Audio.setAudioModeAsync({
+          allowsRecordingIOS: true,
+          playsInSilentModeIOS: true,
+        });
+
+        const { recording } = await Audio.Recording.createAsync(
+          Audio.RecordingOptionsPresets.HIGH_QUALITY
+        );
+
+        setRecording(recording);
+        setIsRecording(true);
+      } else {
+        Alert.alert('Permission Denied', 'Microphone permission is required.');
+      }
+    } catch (err) {
+      console.error('Failed to start recording', err);
+    }
+  };
+
+  const stopRecording = async () => {
+    if (!recording) return;
+
+    setIsRecording(false);
+    try {
+      await recording.stopAndUnloadAsync();
+      const uri = recording.getURI();
+      setRecording(null);
+
+      if (uri) {
+        // Transcribe
+        setSending(true);
+        try {
+          const result = await mathApi.transcribeAudio(uri);
+          setInputText(result.text);
+        } catch (error) {
+          Alert.alert('Error', 'Failed to transcribe audio.');
+        } finally {
+          setSending(false);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to stop recording', error);
+    }
+  };
+
+  const handleImagePick = async () => {
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (permission.status !== 'granted') {
+        Alert.alert('Permission Denied', 'Gallery permission is required.');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0].uri) {
+        setSending(true);
+        try {
+          // Scan the image
+          const scanResult = await mathApi.scanProblem(result.assets[0].uri);
+          if (scanResult.success) {
+            // Add the LaTeX/Text to input
+            const newText = inputText ? `${inputText}\n\n${scanResult.latex}` : scanResult.latex;
+            setInputText(newText);
+          } else {
+            Alert.alert('Scan Failed', 'Could not recognize equation.');
+          }
+        } catch (error) {
+          Alert.alert('Error', 'Failed to scan image.');
+        } finally {
+          setSending(false);
+        }
+      }
+    } catch (error) {
+      console.error('Image pick error', error);
+    }
+  };
+
+  const playResponse = async (text: string) => {
+    try {
+      if (sound) {
+        await sound.unloadAsync();
+      }
+
+      // Get audio URL
+      const audioUrl = await mathApi.speakText(text);
+
+      const { sound: newSound } = await Audio.Sound.createAsync(
+        { uri: audioUrl },
+        { shouldPlay: true }
+      );
+      setSound(newSound);
+    } catch (error) {
+      console.error('TTS Error', error);
+      Alert.alert('Error', 'Failed to play audio.');
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (sound) {
+        sound.unloadAsync();
+      }
+    };
+  }, [sound]);
 
   const handleSend = async () => {
     if (!inputText.trim() || !session || sending) return;
@@ -263,27 +385,38 @@ const TeacherModeScreen: React.FC = () => {
                 <Text style={styles.assistantAvatarSmallText}>👨‍🏫</Text>
               </View>
             )}
-            <View
-              style={[
-                styles.messageBubble,
-                message.role === 'user' ? styles.userMessage : styles.assistantMessage,
-              ]}
-            >
-              {message.role === 'user' ? (
-                <LinearGradient
-                  colors={Colors.gradients.primary}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.userMessageGradient}
+            <View style={{ maxWidth: '80%' }}>
+              <View
+                style={[
+                  styles.messageBubble,
+                  message.role === 'user' ? styles.userMessage : styles.assistantMessage,
+                  { maxWidth: '100%' }
+                ]}
+              >
+                {message.role === 'user' ? (
+                  <LinearGradient
+                    colors={Colors.gradients.primary}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.userMessageGradient}
+                  >
+                    <Text style={styles.userMessageText}>{message.content}</Text>
+                  </LinearGradient>
+                ) : (
+                  <View style={styles.markdownContainer}>
+                    <Markdown style={markdownStyles}>
+                      {message.content}
+                    </Markdown>
+                  </View>
+                )}
+              </View>
+              {message.role === 'assistant' && (
+                <TouchableOpacity
+                  style={styles.speakerButton}
+                  onPress={() => playResponse(message.content)}
                 >
-                  <Text style={styles.userMessageText}>{message.content}</Text>
-                </LinearGradient>
-              ) : (
-                <View style={styles.markdownContainer}>
-                  <Markdown style={markdownStyles}>
-                    {message.content}
-                  </Markdown>
-                </View>
+                  <Ionicons name="volume-high-outline" size={20} color={Colors.text.secondary} />
+                </TouchableOpacity>
               )}
             </View>
           </View>
@@ -329,6 +462,25 @@ const TeacherModeScreen: React.FC = () => {
         </TouchableOpacity>
 
         <View style={styles.inputRow}>
+          <TouchableOpacity
+            style={styles.mediaButton}
+            onPress={handleImagePick}
+            disabled={sending}
+          >
+            <Ionicons name="camera-outline" size={24} color={Colors.primary.main} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.mediaButton, isRecording && styles.recordingButton]}
+            onPress={isRecording ? stopRecording : startRecording}
+            disabled={sending}
+          >
+            <Ionicons
+              name={isRecording ? "stop-circle" : "mic-outline"}
+              size={24}
+              color={isRecording ? "#FFF" : Colors.primary.main}
+            />
+          </TouchableOpacity>
           <TextInput
             style={styles.textInput}
             value={inputText}
@@ -570,6 +722,21 @@ const styles = StyleSheet.create({
     color: Colors.primary.light,
     fontSize: 14,
     fontWeight: '500',
+  },
+  mediaButton: {
+    padding: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  recordingButton: {
+    backgroundColor: Colors.error.main,
+    borderRadius: 20,
+    padding: 10,
+  },
+  speakerButton: {
+    padding: 4,
+    marginTop: 4,
+    alignSelf: 'flex-start',
   },
 });
 

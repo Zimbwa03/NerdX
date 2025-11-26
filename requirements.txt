@@ -28,7 +28,17 @@ google-genai
 openai>=1.0.0
 sympy>=1.12
 
-# Data Processing and Visualization - Python 3.13 compatible
+# Vector Search and Embeddings (Free alternatives to Pinecone + OpenAI)
+chromadb>=0.4.0  # Embedded vector database (stable on Windows)
+sentence-transformers>=2.2.0  # Free sentence embeddings
+
+# Animation Engine
+manim>=0.18.0  # Math animation engine (requires ffmpeg + latex)
+
+# Voice Features
+openai-whisper>=20231117
+edge-tts>=6.1.9  # High-quality free neural TTS
+soundfile>=0.12.1
 numpy>=1.26.0
 matplotlib>=3.8.0
 seaborn>=0.13.0
@@ -37,6 +47,7 @@ seaborn>=0.13.0
 pillow>=10.0.0
 pytesseract>=0.3.10
 imgbbpy>=0.1.0
+pix2text[multilingual]>=1.1.0  # Free alternative to Mathpix OCR
 
 # Document Processing
 pypdf>=4.0.0

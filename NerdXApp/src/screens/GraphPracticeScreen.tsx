@@ -11,6 +11,7 @@ import {
   Alert,
   Image,
 } from 'react-native';
+import { Video, ResizeMode } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import { graphApi, GraphData } from '../services/api/graphApi';
@@ -27,14 +28,16 @@ const GraphPracticeScreen: React.FC = () => {
   const [showSolution, setShowSolution] = useState(false);
   const [graphType, setGraphType] = useState('linear');
   const [mode, setMode] = useState<Mode>('generate');
-  
+
   // Custom equation input
   const [customEquation, setCustomEquation] = useState('');
-  
+
   // Linear programming inputs
   const [constraints, setConstraints] = useState<string[]>(['', '']);
   const [objective, setObjective] = useState('');
+  const [objective, setObjective] = useState('');
   const [imageSolution, setImageSolution] = useState<{ processed_text: string; solution: string; analysis?: string } | null>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
   const graphTypes = [
     { id: 'linear', name: 'Linear', icon: '📈' },
@@ -60,6 +63,9 @@ const GraphPracticeScreen: React.FC = () => {
       setShowSolution(false);
       setAnswer('');
       setImageSolution(null);
+      setVideoUrl(null);
+
+      // Generate static graph
       const data = await graphApi.generateGraph(graphType);
       if (data) {
         setGraphData(data);
@@ -68,6 +74,27 @@ const GraphPracticeScreen: React.FC = () => {
           updateUser({ credits: newCredits });
         }
       }
+
+      // Generate Animation (Manim) if supported
+      if (graphType === 'quadratic' || graphType === 'linear') {
+        let animResult = null;
+        if (graphType === 'quadratic') {
+          // Default values for demo: y = x^2
+          animResult = await graphApi.generateQuadraticAnimation(1, 0, 0);
+        } else if (graphType === 'linear') {
+          // Default values for demo: y = x
+          animResult = await graphApi.generateLinearAnimation(1, 0);
+        }
+
+        if (animResult && animResult.video_path) {
+          // Construct full URL
+          // Assuming backend returns relative path like "static/media/..."
+          // We need to prepend base URL from config or hardcode for now
+          const baseUrl = 'https://nerdx.onrender.com/';
+          setVideoUrl(baseUrl + animResult.video_path);
+        }
+      }
+
     } catch (error: any) {
       Alert.alert('Error', error.response?.data?.message || 'Failed to generate graph');
     } finally {
@@ -144,7 +171,7 @@ const GraphPracticeScreen: React.FC = () => {
       setLoading(true);
       setGraphData(null);
       setImageSolution(null);
-      
+
       const solution = await graphApi.solveGraphFromImage(imageUri);
       if (solution) {
         setImageSolution(solution);
@@ -359,7 +386,7 @@ const GraphPracticeScreen: React.FC = () => {
           <Text style={styles.hintText}>
             Enter constraints (e.g., "2x + 3y ≤ 12", "x + y ≤ 8")
           </Text>
-          
+
           {constraints.map((constraint, index) => (
             <TextInput
               key={index}
@@ -374,7 +401,7 @@ const GraphPracticeScreen: React.FC = () => {
               autoCapitalize="none"
             />
           ))}
-          
+
           <TouchableOpacity
             style={styles.addButton}
             onPress={() => setConstraints([...constraints, ''])}
@@ -417,6 +444,19 @@ const GraphPracticeScreen: React.FC = () => {
                 onError={(error) => {
                   console.warn('Failed to load graph image:', error.nativeEvent.error);
                 }}
+              />
+            </View>
+          )}
+
+          {videoUrl && (
+            <View style={styles.videoContainer}>
+              <Text style={styles.questionLabel}>Visualization:</Text>
+              <Video
+                source={{ uri: videoUrl }}
+                style={styles.video}
+                useNativeControls
+                resizeMode={ResizeMode.CONTAIN}
+                isLooping
               />
             </View>
           )}
@@ -487,17 +527,17 @@ const GraphPracticeScreen: React.FC = () => {
           <View style={styles.solutionContainer}>
             <Text style={styles.solutionLabel}>Processed Text:</Text>
             <Text style={styles.solution}>{imageSolution.processed_text}</Text>
-            
+
             <Text style={[styles.solutionLabel, { marginTop: 15 }]}>Solution:</Text>
             <Text style={styles.solution}>{imageSolution.solution}</Text>
-            
+
             {imageSolution.analysis && (
               <>
                 <Text style={[styles.solutionLabel, { marginTop: 15 }]}>Analysis:</Text>
                 <Text style={styles.solution}>{imageSolution.analysis}</Text>
               </>
             )}
-            
+
             <TouchableOpacity
               style={styles.newGraphButton}
               onPress={resetView}
@@ -756,6 +796,17 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  videoContainer: {
+    marginTop: 20,
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  video: {
+    width: '100%',
+    height: 200,
+    backgroundColor: '#000',
+    borderRadius: 8,
   },
 });
 

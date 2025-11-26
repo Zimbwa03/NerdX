@@ -179,6 +179,16 @@ const SubjectsScreen: React.FC = () => {
                 color={Colors.subjects.mathematics}
               />
               <ModalOptionCard
+                icon="📸"
+                title="Scan & Solve"
+                description="Snap a photo of any math problem to solve it instantly"
+                onPress={() => {
+                  setMathModalVisible(false);
+                  navigation.navigate('MathSolver' as never);
+                }}
+                color={Colors.error.main}
+              />
+              <ModalOptionCard
                 icon="👨‍🏫"
                 title="AI Math Tutor"
                 description="Get step-by-step help and explanations"

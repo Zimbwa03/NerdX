@@ -80,4 +80,25 @@ export const graphApi = {
       throw error;
     }
   },
+
+  // Manim Animations
+  generateQuadraticAnimation: async (a: number, b: number, c: number): Promise<{ video_path: string } | null> => {
+    try {
+      const response = await api.post('/mobile/math/animate/quadratic', { a, b, c });
+      return response.data.data;
+    } catch (error) {
+      console.error('Quadratic animation error:', error);
+      return null;
+    }
+  },
+
+  generateLinearAnimation: async (m: number, c: number): Promise<{ video_path: string } | null> => {
+    try {
+      const response = await api.post('/mobile/math/animate/linear', { m, c });
+      return response.data.data;
+    } catch (error) {
+      console.error('Linear animation error:', error);
+      return null;
+    }
+  },
 };

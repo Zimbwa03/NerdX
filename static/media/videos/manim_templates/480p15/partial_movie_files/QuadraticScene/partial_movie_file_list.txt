@@ -1,0 +1,4 @@
+# This file is used internally by FFMPEG.
+file 'file:C:/Users/GWENJE/Downloads/NerdX Antigravity/NerdX/static/media/videos/manim_templates/480p15/partial_movie_files/QuadraticScene/1185818338_48084881_223132457.mp4'
+file 'file:C:/Users/GWENJE/Downloads/NerdX Antigravity/NerdX/static/media/videos/manim_templates/480p15/partial_movie_files/QuadraticScene/624642324_2176120958_3750551444.mp4'
+file 'file:C:/Users/GWENJE/Downloads/NerdX Antigravity/NerdX/static/media/videos/manim_templates/480p15/partial_movie_files/QuadraticScene/624642324_2844360058_172500322.mp4'

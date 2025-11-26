@@ -30,7 +30,19 @@
     },
     "owner": "nerdxpro",
     "plugins": [
-      "expo-font"
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you scan math problems."
+        }
+      ],
+      [
+        "expo-av",
+        {
+          "microphonePermission": "The app accesses your microphone to let you ask questions by voice."
+        }
+      ]
     ],
     "extra": {
       "eas": {

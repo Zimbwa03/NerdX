@@ -29,6 +29,7 @@ import FormulaSheetScreen from '../screens/FormulaSheetScreen';
 import PastPaperScreen from '../screens/PastPaperScreen';
 import ScienceNotesScreen from '../screens/ScienceNotesScreen';
 import TopicNotesDetailScreen from '../screens/TopicNotesDetailScreen';
+import MathSolverScreen from '../screens/MathSolverScreen';
 
 const Stack = createStackNavigator();
 
@@ -228,6 +229,13 @@ const AppNavigator: React.FC = () => {
             <Stack.Screen
               name="TopicNotesDetail"
               component={TopicNotesDetailScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="MathSolver"
+              component={MathSolverScreen}
               options={{
                 headerShown: false,
               }}
