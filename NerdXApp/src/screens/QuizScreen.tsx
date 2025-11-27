@@ -172,8 +172,21 @@ const QuizScreen: React.FC = () => {
 
     try {
       const timeSpent = Math.floor((Date.now() - questionStartTime) / 1000);
+
+      // Determine effective subject for DKT (especially for Combined Science)
+      let effectiveSubject = subject.id;
+      if (subject.id === 'combined_science') {
+        // Try to get sub-subject from topic or question
+        if (topic?.parent_subject) {
+          effectiveSubject = topic.parent_subject;
+        } else if (question.subject_id && question.subject_id !== 'combined_science') {
+          // If question has specific subject (e.g. 'biology')
+          effectiveSubject = question.subject_id;
+        }
+      }
+
       const skill_id = dktService.mapTopicToSkillId(
-        subject.id,
+        effectiveSubject,
         topic?.name || topic?.id || 'general'
       );
 

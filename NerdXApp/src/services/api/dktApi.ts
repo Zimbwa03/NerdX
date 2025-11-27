@@ -255,9 +255,26 @@ class DKTService {
      */
     mapTopicToSkillId(subject: string, topic: string): string {
         // Basic skill ID generation
-        // Format: subject_topic_normalized
+        // Format: prefix_topic_normalized
+
+        let prefix = subject.toLowerCase();
+
+        // Map full subject names to DB prefixes
+        const prefixMap: { [key: string]: string } = {
+            'mathematics': 'math',
+            'biology': 'bio',
+            'chemistry': 'chem',
+            'physics': 'physics',
+            'english': 'eng',
+            'combined_science': 'science' // Fallback, though should be specific sub-subject
+        };
+
+        if (prefixMap[prefix]) {
+            prefix = prefixMap[prefix];
+        }
+
         const normalized = topic.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-        return `${subject.toLowerCase()}_${normalized}`;
+        return `${prefix}_${normalized}`;
     }
 }
 
