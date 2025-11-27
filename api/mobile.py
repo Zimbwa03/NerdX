@@ -2745,69 +2745,7 @@ def project_document(project_id):
         logger.error(f"Project document error: {e}", exc_info=True)
         return jsonify({'success': False, 'message': 'Server error'}), 500
 
-# -----------------------------------------------------------------------------
-# Mathematics Endpoints (Phases 1-3)
-# -----------------------------------------------------------------------------
 
-@mobile_bp.route('/math/solve', methods=['POST'])
-def solve_math_problem():
-    """Solve math problem step-by-step (SymPy)"""
-    try:
-        data = request.get_json()
-        problem = data.get('problem')
-        
-        if not problem:
-            return jsonify({'status': 'error', 'message': 'Problem required'}), 400
-            
-        from services.symbolic_solver_service import SymbolicSolverService
-        service = SymbolicSolverService()
-        
-        result = service.solve_equation_with_steps(problem)
-        
-        if result['success']:
-            return jsonify({'status': 'success', 'data': result}), 200
-        else:
-            return jsonify({'status': 'error', 'message': result.get('error')}), 400
-            
-    except Exception as e:
-        logger.error(f"Math solve error: {e}", exc_info=True)
-        return jsonify({'status': 'error', 'message': str(e)}), 500
-
-@mobile_bp.route('/math/scan', methods=['POST'])
-def scan_math_problem():
-    """Scan math problem from image (Pix2Text)"""
-    try:
-        if 'image' not in request.files:
-            return jsonify({'status': 'error', 'message': 'No image provided'}), 400
-            
-        image_file = request.files['image']
-        if image_file.filename == '':
-            return jsonify({'status': 'error', 'message': 'No selected file'}), 400
-            
-        from services.math_ocr_service import MathOCRService
-        service = MathOCRService()
-        
-        # Save temp file
-        filename = secure_filename(image_file.filename)
-        temp_path = os.path.join("temp_images", f"scan_{uuid.uuid4().hex}_{filename}")
-        os.makedirs("temp_images", exist_ok=True)
-        image_file.save(temp_path)
-        
-        # Scan
-        result = service.scan_equation(temp_path)
-        
-        # Cleanup
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
-            
-        if result['success']:
-            return jsonify({'status': 'success', 'data': result}), 200
-        else:
-            return jsonify({'status': 'error', 'message': result.get('error')}), 400
-            
-    except Exception as e:
-        logger.error(f"Math scan error: {e}", exc_info=True)
-        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 # ============================================================================
 # SYMPY SYMBOLIC SOLVER ENDPOINTS (Free Alternative to Wolfram Alpha)
