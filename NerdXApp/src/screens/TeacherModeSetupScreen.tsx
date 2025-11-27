@@ -18,9 +18,9 @@ const TeacherModeSetupScreen: React.FC = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const { user } = useAuth();
-  const { subject } = route.params as { subject: any };
+  const { subject, preselectedSubject } = route.params as { subject?: any; preselectedSubject?: string };
 
-  const [selectedSubject, setSelectedSubject] = useState<string>('');
+  const [selectedSubject, setSelectedSubject] = useState<string>(preselectedSubject || '');
   const [selectedGradeLevel, setSelectedGradeLevel] = useState<string>('');
   const [selectedTopic, setSelectedTopic] = useState<string>('');
 

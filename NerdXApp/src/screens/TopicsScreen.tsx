@@ -154,6 +154,24 @@ const TopicsScreen: React.FC = () => {
     navigation.navigate('VirtualLab' as never);
   };
 
+  const handleScienceNotes = () => {
+    navigation.navigate('ScienceNotes' as never);
+  };
+
+  const handleTeacherMode = () => {
+    navigation.navigate('TeacherModeSetup' as never, {
+      preselectedSubject: activeTab,
+    } as never);
+  };
+
+  const handlePastPapers = () => {
+    navigation.navigate('PastPaper' as never);
+  };
+
+  const handleFormulaSheet = () => {
+    navigation.navigate('FormulaSheet' as never);
+  };
+
   const handleStartQuiz = async (topic?: Topic, questionType?: string) => {
     try {
       if (!user || (user.credits || 0) < 1) {
@@ -346,21 +364,84 @@ const TopicsScreen: React.FC = () => {
 
           {/* Virtual Lab for Science */}
           {subject.id === 'combined_science' && (
-            <Card variant="elevated" onPress={handleVirtualLab} style={styles.featureCard}>
-              <View style={styles.featureContent}>
-                <IconCircle
-                  icon={Icons.science(28, Colors.subjects.combinedScience)}
-                  size={56}
-                  backgroundColor={Colors.iconBg.science}
-                />
-                <View style={styles.featureInfo}>
-                  <Text style={styles.featureTitle}>Virtual Labs</Text>
-                  <Text style={styles.featureSubtitle}>Interactive experiments for {activeTab}</Text>
+            <>
+              <Card variant="elevated" onPress={handleVirtualLab} style={styles.featureCard}>
+                <View style={styles.featureContent}>
+                  <IconCircle
+                    icon={Icons.science(28, Colors.subjects.combinedScience)}
+                    size={56}
+                    backgroundColor={Colors.iconBg.science}
+                  />
+                  <View style={styles.featureInfo}>
+                    <Text style={styles.featureTitle}>Virtual Labs</Text>
+                    <Text style={styles.featureSubtitle}>Interactive experiments for {activeTab}</Text>
+                  </View>
+                  {Icons.arrowRight(24, Colors.text.secondary)}
                 </View>
-                {Icons.arrowRight(24, Colors.text.secondary)}
-              </View>
-            </Card>
+              </Card>
+
+              <Card variant="elevated" onPress={handleScienceNotes} style={styles.featureCard}>
+                <View style={styles.featureContent}>
+                  <IconCircle
+                    icon={Icons.comprehension(28, Colors.subjects.science)}
+                    size={56}
+                    backgroundColor={Colors.iconBg.science}
+                  />
+                  <View style={styles.featureInfo}>
+                    <Text style={styles.featureTitle}>Science Notes</Text>
+                    <Text style={styles.featureSubtitle}>Comprehensive notes for {activeTab}</Text>
+                  </View>
+                  {Icons.arrowRight(24, Colors.text.secondary)}
+                </View>
+              </Card>
+
+              <Card variant="elevated" onPress={handleTeacherMode} style={styles.featureCard}>
+                <View style={styles.featureContent}>
+                  <IconCircle
+                    icon={Icons.quiz(28, Colors.subjects.combinedScience)}
+                    size={56}
+                    backgroundColor={Colors.iconBg.science}
+                  />
+                  <View style={styles.featureInfo}>
+                    <Text style={styles.featureTitle}>Teacher Mode</Text>
+                    <Text style={styles.featureSubtitle}>AI tutor for {activeTab} topics</Text>
+                  </View>
+                  {Icons.arrowRight(24, Colors.text.secondary)}
+                </View>
+              </Card>
+
+              <Card variant="elevated" onPress={handlePastPapers} style={styles.featureCard}>
+                <View style={styles.featureContent}>
+                  <IconCircle
+                    icon={Icons.essay(28, Colors.subjects.science)}
+                    size={56}
+                    backgroundColor={Colors.iconBg.science}
+                  />
+                  <View style={styles.featureInfo}>
+                    <Text style={styles.featureTitle}>Past Papers</Text>
+                    <Text style={styles.featureSubtitle}>Practice with exam questions</Text>
+                  </View>
+                  {Icons.arrowRight(24, Colors.text.secondary)}
+                </View>
+              </Card>
+
+              <Card variant="elevated" onPress={handleFormulaSheet} style={styles.featureCard}>
+                <View style={styles.featureContent}>
+                  <IconCircle
+                    icon={Icons.mathematics(28, Colors.subjects.combinedScience)}
+                    size={56}
+                    backgroundColor={Colors.iconBg.science}
+                  />
+                  <View style={styles.featureInfo}>
+                    <Text style={styles.featureTitle}>Formula Sheet</Text>
+                    <Text style={styles.featureSubtitle}>Quick reference for {activeTab} formulas</Text>
+                  </View>
+                  {Icons.arrowRight(24, Colors.text.secondary)}
+                </View>
+              </Card>
+            </>
           )}
+
 
           {/* Exam Quiz Card - Only show at top level or for Combined Science tabs */}
           {(!currentParentSubject || subject.id === 'combined_science') && (
