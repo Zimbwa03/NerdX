@@ -94,7 +94,7 @@ export const mathApi = {
                 type,
             } as any);
 
-            const response = await api.post('/mobile/voice/transcribe', formData, {
+            const response = await api.post('/api/mobile/voice/transcribe', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
@@ -112,7 +112,7 @@ export const mathApi = {
     // Voice - Text to Speech
     speakText: async (text: string): Promise<string> => {
         try {
-            const response = await api.post('/mobile/voice/speak', { text });
+            const response = await api.post('/api/mobile/voice/speak', { text });
             // Return full URL by prepending base URL if needed, 
             // but backend returns relative path /static/...
             // api.defaults.baseURL handles the domain part for requests, 

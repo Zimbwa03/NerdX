@@ -47,6 +47,8 @@ export interface Question {
   // Exam Mode Fields
   question_image_url?: string;
   answer_image_urls?: string[];
+  subject_id?: string;
+  topic_id?: string;
 }
 
 export interface AnswerResult {
@@ -66,77 +68,110 @@ export interface AnswerResult {
 }
 
 export const quizApi = {
-  getSubjects: async (): Promise<Subject[]> => {
+  getSubjects: async (): Promise<Subject[]> =\u003e {
     try {
       const response = await api.get('/api/mobile/quiz/subjects');
-      return response.data.data || [];
+return response.data.data || [];
     } catch (error: any) {
-      console.error('Get subjects error:', error);
-      return [];
-    }
+  console.error('Get subjects error:', error);
+  return [];
+}
   },
 
-  getTopics: async (subject: string, parentSubject?: string): Promise<Topic[]> => {
-    try {
-      let url = `/api/mobile/quiz/topics?subject=${subject}`;
-      if (parentSubject) {
-        url += `&parent_subject=${parentSubject}`;
-      }
-      const response = await api.get(url);
-      return response.data.data || [];
-    } catch (error: any) {
-      console.error('Get topics error:', error);
-      return [];
+getTopics: async (subject: string, parentSubject?: string): Promise<Topic[]> =\u003e {
+  try {
+    let url = `/api/mobile/quiz/topics?subject=${subject}`;
+    if (parentSubject) {
+      url += `&parent_subject=${parentSubject}`;
     }
-  },
+    const response = await api.get(url);
+    return response.data.data || [];
+  } catch (error: any) {
+    console.error('Get topics error:', error);
+    return [];
+  }
+},
 
-  submitAnswer: async (
-    questionId: string,
-    answer: string,
-    imageUrl?: string,
-    subject?: string,
-    correctAnswer?: string,
-    solution?: string,
-    hint?: string
-  ): Promise<AnswerResult | null> => {
-    try {
-      const payload: any = {
-        question_id: questionId,
-        answer,
-      };
-      if (imageUrl) {
-        payload.image_url = imageUrl;
-      }
-      if (subject) {
-        payload.subject = subject;
-        payload.correct_answer = correctAnswer;
-        payload.solution = solution;
-        payload.hint = hint;
-      }
-      const response = await api.post('/api/mobile/quiz/submit-answer', payload);
-      return response.data.data || null;
-    } catch (error: any) {
-      console.error('Submit answer error:', error);
-      throw error;
+generateQuestion: async (
+  subject: string,
+  topic?: string,
+  difficulty: string = 'medium',
+  type: string = 'topical',
+  parent_subject?: string,
+  questionType?: string
+): Promise<Question | null> =\u003e {
+  try {
+    const payload: any = {
+      subject,
+      difficulty,
+      type,
+    };
+    if (topic) {
+      payload.topic = topic;
     }
-  },
+    if (parent_subject) {
+      payload.parent_subject = parent_subject;
+    }
+    if (questionType) {
+      payload.question_type = questionType;
+    }
+    const response = await api.post('/api/mobile/quiz/generate', payload);
+    return response.data.data || null;
+  } catch (error: any) {
+    console.error('Generate question error:', error);
+    throw error;
+  }
+},
 
-  getNextExamQuestion: async (
-    questionCount: number,
-    year?: string,
-    paper?: string
-  ): Promise<Question | null> => {
-    try {
-      const payload = {
-        question_count: questionCount,
-        year,
-        paper
-      };
-      const response = await api.post('/api/mobile/quiz/exam/next', payload);
-      return response.data.data || null;
-    } catch (error: any) {
-      console.error('Get exam question error:', error);
-      throw error;
+submitAnswer: async (
+  questionId: string,
+  answer: string,
+  imageUrl?: string,
+  subject?: string,
+  correctAnswer?: string,
+  solution?: string,
+  hint?: string,
+  questionText?: string
+): Promise<AnswerResult | null> =\u003e {
+  try {
+    const payload: any = {
+      question_id: questionId,
+      answer,
+    };
+    if (imageUrl) {
+      payload.image_url = imageUrl;
     }
-  },
+    if (subject) {
+      payload.subject = subject;
+      payload.correct_answer = correctAnswer;
+      payload.solution = solution;
+      payload.hint = hint;
+      payload.question_text = questionText;
+    }
+    const response = await api.post('/api/mobile/quiz/submit-answer', payload);
+    return response.data.data || null;
+  } catch (error: any) {
+    console.error('Submit answer error:', error);
+    throw error;
+  }
+},
+
+getNextExamQuestion: async (
+  questionCount: number,
+  year?: string,
+  paper?: string
+): Promise<Question | null> =\u003e {
+  try {
+    const payload = {
+      question_count: questionCount,
+      year,
+      paper
+    };
+    const response = await api.post('/api/mobile/quiz/exam/next', payload);
+    return response.data.data || null;
+  } catch (error: any) {
+    console.error('Get exam question error:', error);
+    throw error;
+  }
+},
 };

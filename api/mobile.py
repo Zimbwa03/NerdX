@@ -31,6 +31,7 @@ from services.paynow_service import PaynowService
 from services.graph_service import GraphService
 from services.graph_service import GraphService
 from services.image_service import ImageService
+from services.voice_service import get_voice_service
 from utils.url_utils import convert_local_path_to_public_url
 from config import Config
 import os
@@ -1370,6 +1371,110 @@ def get_essay_prompts():
         
     except Exception as e:
         logger.error(f"Get essay prompts error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@mobile_bp.route('/english/essay/free-response-topics', methods=['GET'])
+@require_auth
+def get_free_response_topics():
+    """Get free response essay topics"""
+    try:
+        english_service = EnglishService()
+        result = english_service.generate_free_response_topics()
+        
+        return jsonify({
+            'success': True,
+            'data': result.get('topics', [])
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get free response topics error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@mobile_bp.route('/english/essay/guided-composition', methods=['GET'])
+@require_auth
+def get_guided_composition():
+    """Get guided composition prompt"""
+    try:
+        english_service = EnglishService()
+        result = english_service.generate_guided_composition_prompt()
+        
+        return jsonify({
+            'success': True,
+            'data': result.get('prompt', {})
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get guided composition error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@mobile_bp.route('/english/essay/submit', methods=['POST'])
+@require_auth
+def submit_essay_marking():
+    """Submit essay for AI marking"""
+    try:
+        data = request.get_json()
+        essay_type = data.get('essay_type') # 'free_response' or 'guided'
+        student_name = data.get('student_name')
+        student_surname = data.get('student_surname')
+        essay_text = data.get('essay_text')
+        
+        # Optional context depending on type
+        topic = data.get('topic') # For free response
+        prompt = data.get('prompt') # For guided
+        
+        if not essay_type or not student_name or not student_surname or not essay_text:
+            return jsonify({'success': False, 'message': 'Missing required fields'}), 400
+            
+        # Check credits
+        credit_cost = advanced_credit_service.get_credit_cost('english_essay_marking')
+        user_credits = get_user_credits(g.current_user_id) or 0
+        
+        if user_credits < credit_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {credit_cost}'
+            }), 400
+            
+        english_service = EnglishService()
+        result = None
+        
+        if essay_type == 'free_response':
+            if not topic:
+                return jsonify({'success': False, 'message': 'Topic is required for free response'}), 400
+            result = english_service.mark_free_response_essay(student_name, student_surname, essay_text, topic)
+        elif essay_type == 'guided':
+            if not prompt:
+                return jsonify({'success': False, 'message': 'Prompt is required for guided composition'}), 400
+            result = english_service.mark_guided_composition(student_name, student_surname, essay_text, prompt)
+        else:
+            return jsonify({'success': False, 'message': 'Invalid essay type'}), 400
+            
+        if not result or not result.get('success'):
+            return jsonify({'success': False, 'message': 'Failed to mark essay'}), 500
+            
+        marking_result = result.get('result', {})
+        
+        # Generate PDF report
+        pdf_base64 = english_service.generate_essay_pdf_report(
+            student_name, student_surname, essay_type,
+            marking_result.get('score', 0), marking_result.get('max_score', 0),
+            marking_result.get('corrections', []), marking_result.get('teacher_comment', ''),
+            marking_result.get('corrected_essay', ''), marking_result.get('detailed_feedback', ''),
+            essay_text, topic.get('title') if topic else prompt.get('title')
+        )
+        
+        marking_result['pdf_report'] = pdf_base64
+        
+        # Deduct credits
+        deduct_credits(g.current_user_id, credit_cost, 'english_essay_marking', f'Marked {essay_type} essay')
+        
+        return jsonify({
+            'success': True,
+            'data': marking_result
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Submit essay marking error: {e}", exc_info=True)
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @mobile_bp.route('/english/essay/<essay_id>/report', methods=['GET'])
@@ -3288,6 +3393,51 @@ def animate_linear():
             
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
+# -----------------------------------------------------------------------------
+# Math OCR Endpoints
+# -----------------------------------------------------------------------------
+
+@mobile_bp.route('/math/scan', methods=['POST'])
+def scan_math_problem():
+    """Scan math problem from image"""
+    try:
+        if 'image' not in request.files:
+            return jsonify({'success': False, 'message': 'No image provided'}), 400
+            
+        image_file = request.files['image']
+        if image_file.filename == '':
+            return jsonify({'success': False, 'message': 'No selected file'}), 400
+            
+        from services.math_ocr_service import math_ocr_service
+        
+        # Save temp file
+        filename = secure_filename(image_file.filename)
+        # Use a temp directory
+        temp_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'temp')
+        os.makedirs(temp_dir, exist_ok=True)
+        
+        temp_path = os.path.join(temp_dir, f"scan_{uuid.uuid4().hex}_{filename}")
+        image_file.save(temp_path)
+        
+        # Scan
+        result = math_ocr_service.scan_equation(temp_path)
+        
+        # Cleanup
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+            
+        if result['success']:
+            return jsonify({
+                'success': True,
+                'data': result
+            }), 200
+        else:
+            return jsonify({'success': False, 'message': result.get('error')}), 500
+            
+    except Exception as e:
+        logger.error(f"Scan math problem error: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 # -----------------------------------------------------------------------------
 # Voice Feature Endpoints (Phase 5)

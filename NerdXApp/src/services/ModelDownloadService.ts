@@ -27,22 +27,25 @@ const STORAGE_KEYS = {
 // MODEL CONFIGURATION
 // ============================================
 
-// STEP 1: For LOCAL TESTING - Replace YOUR_COMPUTER_IP with your actual IP address
-// Example: const LOCAL_SERVER_URL = 'http://192.168.1.100:8080';
-const LOCAL_SERVER_URL = 'http://10.13.2.167:8080';
+// PRODUCTION CDN (Hugging Face Hub with CloudFront)
+// Model hosted at: https://huggingface.co/ngoni2003/nerdx-phi3-mini
+const PRODUCTION_CDN_URL = 'https://huggingface.co/ngoni2003/nerdx-phi3-mini/resolve/main';
 
-// STEP 2: For PRODUCTION - Replace with your CDN URL
-const PRODUCTION_CDN_URL = 'https://your-cdn.com/models/phi3';
+// LOCAL TESTING (Optional - for development only)
+// Uncomment and set to true if you want to test with a local server
+// const LOCAL_SERVER_URL = 'http://192.168.1.100:8080';
+// const USE_LOCAL_SERVER = false;
 
-// STEP 3: Set this to true for local testing, false for production
-const USE_LOCAL_SERVER = true;
+// Set to false for production (HTTPS), true only for local development
+const USE_LOCAL_SERVER = false;
 
 // Model file names (don't change these)
-const MODEL_FILE_NAME = 'phi-3-mini-4k-instruct-cpu-int4-rtn-block-32-acc-level-4.onnx';
-const MODEL_DATA_FILE_NAME = 'phi-3-mini-4k-instruct-cpu-int4-rtn-block-32-acc-level-4.onnx.data';
+const MODEL_FILE_NAME = 'phi3-mini-4k-instruct-cpu-int4-rtn-block-32-acc-level-4.onnx';
+const MODEL_DATA_FILE_NAME = 'phi3-mini-4k-instruct-cpu-int4-rtn-block-32-acc-level-4.onnx.data';
 
 // Construct the URL based on environment
-const BASE_URL = USE_LOCAL_SERVER ? LOCAL_SERVER_URL : PRODUCTION_CDN_URL;
+// For production, we use the Hugging Face CDN
+const BASE_URL = PRODUCTION_CDN_URL;
 const PHI3_MODEL_URL = `${BASE_URL}/${MODEL_FILE_NAME}`;
 const PHI3_MODEL_DATA_URL = `${BASE_URL}/${MODEL_DATA_FILE_NAME}`;
 

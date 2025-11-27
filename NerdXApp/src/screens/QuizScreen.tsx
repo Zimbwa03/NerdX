@@ -271,9 +271,10 @@ const QuizScreen: React.FC = () => {
         newQuestion = await quizApi.generateQuestion(
           subject.id,
           topic?.id,
-          'medium',
-          topic ? 'topical' : 'exam',
-          topic?.parent_subject
+          'medium',  // difficulty
+          topic ? 'topical' : 'exam',  // type
+          topic?.parent_subject,  // parent_subject for Combined Science
+          undefined  // questionType
         );
       }
 

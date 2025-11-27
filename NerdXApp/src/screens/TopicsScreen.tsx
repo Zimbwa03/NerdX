@@ -177,12 +177,10 @@ const TopicsScreen: React.FC = () => {
                 const question = await quizApi.generateQuestion(
                   subject.id,
                   topic?.id,
-                  'medium',
-                  topic ? 'topical' : 'exam',
-                  'medium',
-                  topic ? 'topical' : 'exam',
-                  topic?.parent_subject || (subject.id === 'combined_science' ? activeTab : currentParentSubject),
-                  questionType // Pass question type (e.g., for Pharmacology)
+                  'medium',  // difficulty
+                  topic ? 'topical' : 'exam',  // type
+                  topic?.parent_subject || (subject.id === 'combined_science' ? activeTab : currentParentSubject),  // parent_subject for Combined Science
+                  questionType  // Pass question type (e.g., for Pharmacology)
                 );
                 if (question) {
                   navigation.navigate('Quiz' as never, { question, subject, topic } as never);
@@ -437,7 +435,6 @@ const TopicsScreen: React.FC = () => {
                         )}
                       </View>
                       {Icons.arrowRight(24, Colors.text.secondary)}
-                      {Icons.arrowRight(24, Colors.text.secondary)}
                     </View>
                   </Card>
                 ))}
@@ -674,6 +671,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.text.white,
     opacity: 0.9,
+  },
+  modalDescription: {
+    fontSize: 16,
+    color: Colors.text.primary,
+    marginBottom: 20,
+    textAlign: 'center',
   },
 });
 
