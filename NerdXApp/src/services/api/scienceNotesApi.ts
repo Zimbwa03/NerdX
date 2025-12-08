@@ -1,47 +1,39 @@
-// Science Notes API service
-import api from './config';
+// Science Notes API service - OFFLINE VERSION
+// Notes are bundled with the app for instant, offline access
 
-export interface NotesSection {
-    title: string;
-    content: string; // Markdown formatted
-    diagrams: string[]; // Image URLs
-    subsections?: NotesSection[];
-}
+import { getTopics, getTopicNotes, TopicNotes, NotesSection } from '../../data/scienceNotes';
 
-export interface TopicNotes {
-    topic: string;
-    subject: string;
-    sections: NotesSection[];
-    key_points: string[];
-    exam_tips: string[];
-    summary: string;
-}
+// Re-export types for backwards compatibility
+export type { TopicNotes, NotesSection };
 
 export const scienceNotesApi = {
+    /**
+     * Get all topics for a subject
+     * Returns immediately from local data - no network required
+     */
     getTopics: async (subject: 'Biology' | 'Chemistry' | 'Physics'): Promise<string[]> => {
         try {
-            const response = await api.get('/api/mobile/science/notes/topics', {
-                params: { subject }
-            });
-            return response.data.data.topics || [];
+            // Return topics from local bundled data
+            return getTopics(subject);
         } catch (error: any) {
             console.error('Get topics error:', error);
             throw error;
         }
     },
 
+    /**
+     * Get detailed notes for a specific topic
+     * Returns immediately from local data - no network required
+     */
     getTopicNotes: async (
         subject: 'Biology' | 'Chemistry' | 'Physics',
         topic: string
     ): Promise<TopicNotes | null> => {
         try {
-            const response = await api.get(`/api/mobile/science/notes/${subject}/${topic}`);
-            return response.data.data || null;
+            // Return notes from local bundled data
+            return getTopicNotes(subject, topic);
         } catch (error: any) {
             console.error('Get topic notes error:', error);
-            if (error.response?.status === 404) {
-                return null; // Notes not yet available
-            }
             throw error;
         }
     },

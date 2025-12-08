@@ -1,18 +1,24 @@
 services:
   - type: web
     name: nerdx-bot
-    env: python
+    runtime: docker
     plan: starter
-    buildCommand: pip install --upgrade pip setuptools wheel && pip install -r requirements_render.txt
-    startCommand: gunicorn main:app --bind 0.0.0.0:$PORT --workers 1 --timeout 180 --preload
+    dockerfilePath: ./Dockerfile
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.13.0
       - key: PORT
         value: 10000
       - key: FLASK_ENV
         value: production
       - key: FLASK_DEBUG
         value: false
+      # Add your API keys as environment variables in Render dashboard
+      # - key: DEEPSEEK_API_KEY
+      # - key: GEMINI_API_KEY
+      # - key: DATABASE_URL
     healthCheckPath: /health
     autoDeploy: true
+    disk:
+      name: nerdx-data
+      mountPath: /app/data
+      sizeGB: 5  # For ML models and media files
+

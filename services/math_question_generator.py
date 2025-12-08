@@ -293,6 +293,206 @@ Generate the question now:"""
         """Generate fallback questions when DeepSeek API fails"""
 
         fallback_questions = {
+            "Sets": {
+                "easy": {
+                    "question": "List the elements of set A = {x : x is a prime number less than 15}",
+                    "solution": "Step 1: Identify prime numbers less than 15\nPrime numbers are numbers greater than 1 that have exactly two factors: 1 and themselves.\n\nStep 2: Check each number from 2 to 14\n2 = prime (factors: 1, 2)\n3 = prime (factors: 1, 3)\n4 = not prime (factors: 1, 2, 4)\n5 = prime (factors: 1, 5)\n7 = prime (factors: 1, 7)\n11 = prime (factors: 1, 11)\n13 = prime (factors: 1, 13)\n\nTherefore: A = {2, 3, 5, 7, 11, 13}",
+                    "answer": "A = {2, 3, 5, 7, 11, 13}",
+                    "points": 10
+                },
+                "medium": {
+                    "question": "If U = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, A = {2, 4, 6, 8} and B = {1, 2, 3, 4, 5}, find A ∩ B and A ∪ B.",
+                    "solution": "Step 1: Find the intersection A ∩ B\nA ∩ B contains elements that are in BOTH A and B\nA = {2, 4, 6, 8}\nB = {1, 2, 3, 4, 5}\nCommon elements: 2 and 4\nA ∩ B = {2, 4}\n\nStep 2: Find the union A ∪ B\nA ∪ B contains ALL elements in A or B (or both)\nA ∪ B = {1, 2, 3, 4, 5, 6, 8}\n\nTherefore: A ∩ B = {2, 4}, A ∪ B = {1, 2, 3, 4, 5, 6, 8}",
+                    "answer": "A ∩ B = {2, 4}, A ∪ B = {1, 2, 3, 4, 5, 6, 8}",
+                    "points": 20
+                },
+                "difficult": {
+                    "question": "In a class of 40 students, 25 study Mathematics, 15 study Physics, and 5 study both. How many study neither subject?",
+                    "solution": "Step 1: Use the formula for union of two sets\nn(A ∪ B) = n(A) + n(B) - n(A ∩ B)\n\nStep 2: Substitute values\nn(M ∪ P) = 25 + 15 - 5 = 35\n\nStep 3: Find those who study neither\nNeither = Total - n(M ∪ P)\nNeither = 40 - 35 = 5\n\nTherefore: 5 students study neither subject",
+                    "answer": "5",
+                    "points": 30
+                }
+            },
+            "Real Numbers": {
+                "easy": {
+                    "question": "Express 0.75 as a fraction in its simplest form.",
+                    "solution": "Step 1: Write as a fraction\n0.75 = 75/100\n\nStep 2: Simplify by dividing both numerator and denominator by their GCD\nGCD of 75 and 100 is 25\n75 ÷ 25 = 3\n100 ÷ 25 = 4\n\nTherefore: 0.75 = 3/4",
+                    "answer": "3/4",
+                    "points": 10
+                },
+                "medium": {
+                    "question": "Simplify: √48 + √27",
+                    "solution": "Step 1: Simplify √48\n√48 = √(16 × 3) = √16 × √3 = 4√3\n\nStep 2: Simplify √27\n√27 = √(9 × 3) = √9 × √3 = 3√3\n\nStep 3: Add the simplified surds\n4√3 + 3√3 = 7√3\n\nTherefore: √48 + √27 = 7√3",
+                    "answer": "7√3",
+                    "points": 20
+                },
+                "difficult": {
+                    "question": "Rationalize the denominator: 6/(√5 - √2)",
+                    "solution": "Step 1: Multiply by the conjugate\n6/(√5 - √2) × (√5 + √2)/(√5 + √2)\n\nStep 2: Simplify the numerator\n6(√5 + √2) = 6√5 + 6√2\n\nStep 3: Simplify the denominator using difference of squares\n(√5)² - (√2)² = 5 - 2 = 3\n\nStep 4: Write the final answer\n(6√5 + 6√2)/3 = 2√5 + 2√2 = 2(√5 + √2)\n\nTherefore: 6/(√5 - √2) = 2(√5 + √2)",
+                    "answer": "2(√5 + √2) or 2√5 + 2√2",
+                    "points": 30
+                }
+            },
+            "Financial Mathematics": {
+                "easy": {
+                    "question": "Calculate the simple interest on $500 at 5% per annum for 2 years.",
+                    "solution": "Step 1: Use the simple interest formula\nSimple Interest = (P × R × T)/100\n\nStep 2: Substitute values\nP = $500, R = 5%, T = 2 years\nSI = (500 × 5 × 2)/100\nSI = 5000/100 = $50\n\nTherefore: The simple interest is $50",
+                    "answer": "$50",
+                    "points": 10
+                },
+                "medium": {
+                    "question": "A shopkeeper marks up goods by 25% and offers a 10% discount. Find the profit percent.",
+                    "solution": "Step 1: Assume cost price = $100\nMarked price = 100 + 25% of 100 = $125\n\nStep 2: Calculate selling price after 10% discount\nDiscount = 10% of 125 = $12.50\nSelling price = 125 - 12.50 = $112.50\n\nStep 3: Calculate profit percent\nProfit = SP - CP = 112.50 - 100 = $12.50\nProfit % = (12.50/100) × 100 = 12.5%\n\nTherefore: Profit percent is 12.5%",
+                    "answer": "12.5%",
+                    "points": 20
+                },
+                "difficult": {
+                    "question": "Calculate the compound interest on $8000 at 10% per annum for 2 years, compounded annually.",
+                    "solution": "Step 1: Use compound interest formula\nA = P(1 + r/100)^n\n\nStep 2: Substitute values\nA = 8000(1 + 10/100)²\nA = 8000(1.1)²\nA = 8000 × 1.21\nA = $9680\n\nStep 3: Calculate compound interest\nCI = A - P = 9680 - 8000 = $1680\n\nTherefore: The compound interest is $1680",
+                    "answer": "$1680",
+                    "points": 30
+                }
+            },
+            "Measures and Mensuration": {
+                "easy": {
+                    "question": "Find the perimeter of a rectangle with length 12 cm and width 8 cm.",
+                    "solution": "Step 1: Use perimeter formula\nPerimeter = 2(length + width)\n\nStep 2: Substitute values\nPerimeter = 2(12 + 8)\nPerimeter = 2 × 20\nPerimeter = 40 cm\n\nTherefore: The perimeter is 40 cm",
+                    "answer": "40 cm",
+                    "points": 10
+                },
+                "medium": {
+                    "question": "Find the volume of a cylinder with radius 7 cm and height 10 cm. (Use π = 22/7)",
+                    "solution": "Step 1: Use volume formula\nVolume = πr²h\n\nStep 2: Substitute values\nVolume = (22/7) × 7² × 10\nVolume = (22/7) × 49 × 10\nVolume = 22 × 7 × 10\nVolume = 1540 cm³\n\nTherefore: The volume is 1540 cm³",
+                    "answer": "1540 cm³",
+                    "points": 20
+                },
+                "difficult": {
+                    "question": "Find the total surface area of a cone with radius 5 cm and slant height 13 cm. (Use π = 3.14)",
+                    "solution": "Step 1: Use total surface area formula\nTSA = πr² + πrl = πr(r + l)\n\nStep 2: Substitute values\nTSA = 3.14 × 5 × (5 + 13)\nTSA = 3.14 × 5 × 18\nTSA = 282.6 cm²\n\nTherefore: The total surface area is 282.6 cm²",
+                    "answer": "282.6 cm²",
+                    "points": 30
+                }
+            },
+            "Graphs": {
+                "easy": {
+                    "question": "Find the gradient of the line passing through points A(2, 3) and B(6, 11).",
+                    "solution": "Step 1: Use the gradient formula\nGradient = (y₂ - y₁)/(x₂ - x₁)\n\nStep 2: Substitute values\nGradient = (11 - 3)/(6 - 2)\nGradient = 8/4\nGradient = 2\n\nTherefore: The gradient is 2",
+                    "answer": "2",
+                    "points": 10
+                },
+                "medium": {
+                    "question": "Find the equation of the line with gradient 3 passing through the point (2, 5).",
+                    "solution": "Step 1: Use point-slope form\ny - y₁ = m(x - x₁)\n\nStep 2: Substitute m = 3 and point (2, 5)\ny - 5 = 3(x - 2)\ny - 5 = 3x - 6\ny = 3x - 6 + 5\ny = 3x - 1\n\nTherefore: The equation is y = 3x - 1",
+                    "answer": "y = 3x - 1",
+                    "points": 20
+                },
+                "difficult": {
+                    "question": "Find the coordinates of the point of intersection of lines y = 2x + 3 and y = -x + 9.",
+                    "solution": "Step 1: Set the equations equal\n2x + 3 = -x + 9\n\nStep 2: Solve for x\n2x + x = 9 - 3\n3x = 6\nx = 2\n\nStep 3: Find y by substituting x = 2\ny = 2(2) + 3 = 7\n\nTherefore: The point of intersection is (2, 7)",
+                    "answer": "(2, 7)",
+                    "points": 30
+                }
+            },
+            "Variation": {
+                "easy": {
+                    "question": "If y varies directly as x, and y = 12 when x = 4, find y when x = 7.",
+                    "solution": "Step 1: Write the direct variation equation\ny = kx where k is the constant\n\nStep 2: Find k using y = 12 when x = 4\n12 = k × 4\nk = 12/4 = 3\n\nStep 3: Find y when x = 7\ny = 3 × 7 = 21\n\nTherefore: y = 21",
+                    "answer": "21",
+                    "points": 10
+                },
+                "medium": {
+                    "question": "If y varies inversely as x, and y = 6 when x = 8, find x when y = 12.",
+                    "solution": "Step 1: Write the inverse variation equation\ny = k/x where k is the constant\n\nStep 2: Find k using y = 6 when x = 8\n6 = k/8\nk = 6 × 8 = 48\n\nStep 3: Find x when y = 12\n12 = 48/x\nx = 48/12 = 4\n\nTherefore: x = 4",
+                    "answer": "4",
+                    "points": 20
+                },
+                "difficult": {
+                    "question": "If z varies directly as x and inversely as the square of y, and z = 12 when x = 4 and y = 2, find z when x = 8 and y = 4.",
+                    "solution": "Step 1: Write the combined variation equation\nz = kx/y²\n\nStep 2: Find k using z = 12, x = 4, y = 2\n12 = k × 4/2²\n12 = k × 4/4\n12 = k\n\nStep 3: Find z when x = 8, y = 4\nz = 12 × 8/4²\nz = 96/16\nz = 6\n\nTherefore: z = 6",
+                    "answer": "6",
+                    "points": 30
+                }
+            },
+            "Vectors": {
+                "easy": {
+                    "question": "If a = (3, 4) and b = (2, -1), find a + b.",
+                    "solution": "Step 1: Add corresponding components\na + b = (3 + 2, 4 + (-1))\na + b = (5, 3)\n\nTherefore: a + b = (5, 3)",
+                    "answer": "(5, 3)",
+                    "points": 10
+                },
+                "medium": {
+                    "question": "Find the magnitude of vector v = (3, 4).",
+                    "solution": "Step 1: Use the magnitude formula\n|v| = √(x² + y²)\n\nStep 2: Substitute values\n|v| = √(3² + 4²)\n|v| = √(9 + 16)\n|v| = √25\n|v| = 5\n\nTherefore: The magnitude is 5 units",
+                    "answer": "5",
+                    "points": 20
+                },
+                "difficult": {
+                    "question": "If vectors a = 2i + 3j and b = 4i - j, find the vector 2a - 3b.",
+                    "solution": "Step 1: Calculate 2a\n2a = 2(2i + 3j) = 4i + 6j\n\nStep 2: Calculate 3b\n3b = 3(4i - j) = 12i - 3j\n\nStep 3: Calculate 2a - 3b\n2a - 3b = (4i + 6j) - (12i - 3j)\n2a - 3b = 4i - 12i + 6j + 3j\n2a - 3b = -8i + 9j\n\nTherefore: 2a - 3b = -8i + 9j",
+                    "answer": "-8i + 9j",
+                    "points": 30
+                }
+            },
+            "Matrices": {
+                "easy": {
+                    "question": "If A = [[2, 3], [1, 4]], find 2A.",
+                    "solution": "Step 1: Multiply each element by 2\n2A = [[2×2, 2×3], [2×1, 2×4]]\n2A = [[4, 6], [2, 8]]\n\nTherefore: 2A = [[4, 6], [2, 8]]",
+                    "answer": "[[4, 6], [2, 8]]",
+                    "points": 10
+                },
+                "medium": {
+                    "question": "Find the determinant of matrix M = [[3, 5], [2, 4]].",
+                    "solution": "Step 1: Use the determinant formula for 2×2 matrix\ndet(M) = ad - bc where M = [[a, b], [c, d]]\n\nStep 2: Substitute values\ndet(M) = (3 × 4) - (5 × 2)\ndet(M) = 12 - 10\ndet(M) = 2\n\nTherefore: The determinant is 2",
+                    "answer": "2",
+                    "points": 20
+                },
+                "difficult": {
+                    "question": "Find the inverse of matrix A = [[4, 3], [5, 4]].",
+                    "solution": "Step 1: Find the determinant\ndet(A) = (4 × 4) - (3 × 5) = 16 - 15 = 1\n\nStep 2: Find the adjugate matrix\nadj(A) = [[4, -3], [-5, 4]]\n\nStep 3: Calculate the inverse\nA⁻¹ = (1/det) × adj(A)\nA⁻¹ = (1/1) × [[4, -3], [-5, 4]]\nA⁻¹ = [[4, -3], [-5, 4]]\n\nTherefore: A⁻¹ = [[4, -3], [-5, 4]]",
+                    "answer": "[[4, -3], [-5, 4]]",
+                    "points": 30
+                }
+            },
+            "Transformation": {
+                "easy": {
+                    "question": "A point P(3, 2) is reflected in the x-axis. Find the image P'.",
+                    "solution": "Step 1: Apply reflection in x-axis rule\nReflection in x-axis: (x, y) → (x, -y)\n\nStep 2: Apply to point P(3, 2)\nP'(3, -2)\n\nTherefore: P' = (3, -2)",
+                    "answer": "(3, -2)",
+                    "points": 10
+                },
+                "medium": {
+                    "question": "Point A(4, 3) is translated by vector (−2, 5). Find the image A'.",
+                    "solution": "Step 1: Apply translation rule\nTranslation by (a, b): (x, y) → (x + a, y + b)\n\nStep 2: Apply to point A(4, 3) with translation (-2, 5)\nA' = (4 + (-2), 3 + 5)\nA' = (2, 8)\n\nTherefore: A' = (2, 8)",
+                    "answer": "(2, 8)",
+                    "points": 20
+                },
+                "difficult": {
+                    "question": "Point P(2, 5) is rotated 90° anticlockwise about the origin. Find the image P'.",
+                    "solution": "Step 1: Apply 90° anticlockwise rotation rule\nRotation 90° anticlockwise about origin: (x, y) → (-y, x)\n\nStep 2: Apply to point P(2, 5)\nP' = (-5, 2)\n\nTherefore: P' = (-5, 2)",
+                    "answer": "(-5, 2)",
+                    "points": 30
+                }
+            },
+            "Probability": {
+                "easy": {
+                    "question": "A bag contains 3 red balls and 5 blue balls. If one ball is drawn at random, find the probability of drawing a red ball.",
+                    "solution": "Step 1: Count total number of balls\nTotal = 3 + 5 = 8 balls\n\nStep 2: Count favorable outcomes (red balls)\nFavorable = 3\n\nStep 3: Calculate probability\nP(red) = Favorable/Total = 3/8\n\nTherefore: P(red ball) = 3/8",
+                    "answer": "3/8",
+                    "points": 10
+                },
+                "medium": {
+                    "question": "A fair die is thrown. Find the probability of getting a number greater than 4.",
+                    "solution": "Step 1: List all possible outcomes\nS = {1, 2, 3, 4, 5, 6}\nTotal outcomes = 6\n\nStep 2: List favorable outcomes (greater than 4)\nFavorable = {5, 6}\nNumber of favorable outcomes = 2\n\nStep 3: Calculate probability\nP(>4) = 2/6 = 1/3\n\nTherefore: P(number > 4) = 1/3",
+                    "answer": "1/3",
+                    "points": 20
+                },
+                "difficult": {
+                    "question": "Two fair coins are tossed. Find the probability of getting at least one head.",
+                    "solution": "Step 1: List all possible outcomes\nS = {HH, HT, TH, TT}\nTotal outcomes = 4\n\nStep 2: Find P(at least one head)\nMethod 1: Directly count\nFavorable = {HH, HT, TH} = 3\nP(at least one head) = 3/4\n\nOR Method 2: Use complement\nP(at least one head) = 1 - P(no heads)\nP(no heads) = P(TT) = 1/4\nP(at least one head) = 1 - 1/4 = 3/4\n\nTherefore: P(at least one head) = 3/4",
+                    "answer": "3/4",
+                    "points": 30
+                }
+            },
             "Statistics": {
                 "easy": {
                     "question": "Find the mean of the following data: 5, 8, 12, 15, 20",

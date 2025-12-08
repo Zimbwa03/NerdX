@@ -43,10 +43,16 @@ TOPICS = {
         "Sets",
         "Financial Mathematics",
         "Measures and Mensuration",
+        "Graphs",
         "Variation",
         "Algebra",
         "Geometry",
-        "Statistics"
+        "Statistics",
+        "Trigonometry",
+        "Vectors",
+        "Matrices",
+        "Transformation",
+        "Probability"
     ],
     "English": [
         "Grammar Usage and Vocabulary"

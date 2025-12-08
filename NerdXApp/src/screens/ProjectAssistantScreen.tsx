@@ -141,20 +141,33 @@ const ProjectAssistantScreen: React.FC = () => {
     if (!project) return;
 
     Alert.alert(
-      'Generate Document',
-      'This will generate your final project document (3 credits). Continue?',
+      'Generate PDF Document',
+      'This will generate your complete ZIMSEC project document as a PDF (3 credits). Continue?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Generate',
+          text: 'Generate & Download',
           onPress: async () => {
             try {
               setLoading(true);
-              const documentUrl = await projectApi.generateDocument(project.id);
-              if (documentUrl) {
+
+              // Add a loading message
+              setMessages((prev) => [...prev, {
+                id: 'generating',
+                role: 'assistant',
+                content: '📄 Generating your project document... This may take a moment as I compile all sections with AI-powered content.',
+                timestamp: new Date(),
+              }]);
+
+              const filePath = await projectApi.generateDocument(project.id);
+
+              // Remove loading message
+              setMessages((prev) => prev.filter((msg) => msg.id !== 'generating'));
+
+              if (filePath) {
                 Alert.alert(
-                  'Success',
-                  'Project document generated successfully! Check your email.',
+                  '✅ PDF Generated!',
+                  'Your ZIMSEC project document has been generated and is ready to download/share.',
                   [{ text: 'OK' }]
                 );
                 // Update credits
@@ -163,7 +176,9 @@ const ProjectAssistantScreen: React.FC = () => {
                 }
               }
             } catch (error: any) {
-              Alert.alert('Error', error.response?.data?.message || 'Failed to generate document');
+              // Remove loading message
+              setMessages((prev) => prev.filter((msg) => msg.id !== 'generating'));
+              Alert.alert('Error', error.message || 'Failed to generate document. Please try again.');
             } finally {
               setLoading(false);
             }

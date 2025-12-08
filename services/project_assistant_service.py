@@ -1,6 +1,6 @@
 """
 ZIMSEC Project Assistant Service - Conversational AI Version
-A ChatGPT-style chatbot where Gemini AI acts as a professional teacher
+A ChatGPT-style chatbot where DeepSeek AI acts as a professional teacher
 guiding students through their ZIMSEC School-Based Projects
 """
 
@@ -16,7 +16,10 @@ from services.advanced_credit_service import advanced_credit_service
 
 logger = logging.getLogger(__name__)
 
-# Import Google Gemini AI
+# Import requests for DeepSeek API
+import requests
+
+# Import Google Gemini AI (fallback only)
 try:
     import google.generativeai as genai
     GENAI_AVAILABLE = True
@@ -28,13 +31,18 @@ except ImportError:
 class ProjectAssistantService:
     """
     Conversational AI Project Assistant - like ChatGPT for ZIMSEC projects
-    Students chat naturally with Gemini AI acting as a professional teacher
+    Students chat naturally with DeepSeek AI acting as a professional teacher
     """
     
     def __init__(self):
         self.whatsapp_service = WhatsAppService()
         
-        # Initialize Gemini AI
+        # Initialize DeepSeek AI as primary provider
+        self.deepseek_api_key = os.getenv('DEEPSEEK_API_KEY')
+        self.deepseek_api_url = 'https://api.deepseek.com/chat/completions'
+        self._is_deepseek_configured = bool(self.deepseek_api_key)
+        
+        # Initialize Gemini AI as fallback
         self.gemini_model = None
         self._is_gemini_configured = False
         try:
@@ -42,60 +50,77 @@ class ProjectAssistantService:
                 api_key = os.getenv('GEMINI_API_KEY')
                 if api_key and genai:
                     genai.configure(api_key=api_key)
-                    # Use gemini-2.0-flash-exp for intelligent conversations
                     self.gemini_model = genai.GenerativeModel('gemini-2.0-flash-exp')
                     self._is_gemini_configured = True
-                    logger.info("✅ Project Assistant initialized with Gemini AI (gemini-2.0-flash-exp) for conversational tutoring")
-                else:
-                    logger.warning("GEMINI_API_KEY not found - AI tutoring unavailable")
-            else:
-                logger.warning("Google Generative AI not available")
         except Exception as e:
-            logger.error(f"Error initializing Gemini: {e}")
+            logger.error(f"Error initializing Gemini fallback: {e}")
+        
+        if self._is_deepseek_configured:
+            logger.info("✅ Project Assistant initialized with DeepSeek AI (primary)")
+        elif self._is_gemini_configured:
+            logger.warning("DeepSeek not available - using Gemini as primary")
+        else:
+            logger.warning("No AI services available")
     
-    # System prompt that makes Gemini AI a comprehensive research assistant
-    TEACHER_SYSTEM_PROMPT = """You are a comprehensive AI research assistant for ZIMSEC School-Based Projects (SBP). You provide COMPLETE, DETAILED assistance including research, writing, and guidance.
+    # System prompt that makes DeepSeek AI a comprehensive, engaging research assistant
+    TEACHER_SYSTEM_PROMPT = """You are NerdX AI — a brilliant, friendly, and enthusiastic research assistant for ZIMSEC School-Based Projects. You're like having a genius best friend who loves helping with projects!
 
-Your role is to:
-1. **Provide complete answers** - When students ask for research, provide thorough, detailed information with facts, statistics, and examples
-2. **Do the research for them** - Provide comprehensive research findings, existing solutions, case studies, and relevant data
-3. **Write content when asked** - Help students by writing project titles, problem statements, literature reviews, and analysis when requested
-4. **Generate study notes** - When asked, create detailed, well-organized notes they can include in their project documentation
-5. **Suggest relevant images** - When appropriate, describe visual aids, diagrams, charts, or images that would enhance their project
-6. **Give specific examples** - Provide real-world examples, case studies, and practical applications
-7. **Be comprehensive** - Give detailed, well-structured responses with bullet points, numbered lists, and clear organization
-8. **Provide sources** - Mention relevant sources, studies, or organizations they can reference
-9. **Be encouraging and supportive** - Students need confidence and motivation
-10. **Be highly interactive** - Ask clarifying questions, probe deeper, and engage actively with the student
+🎯 YOUR PERSONALITY:
+• Warm, encouraging, and genuinely excited to help
+• Use simple, clear language — no complicated jargon
+• Be conversational and fun, like chatting with a smart friend
+• Celebrate student progress with enthusiasm!
+• Ask thoughtful questions to understand their needs
 
-ZIMSEC School-Based Project stages:
-- Stage 1: Problem Identification - Help identify problems, write problem statements and project titles
-- Stage 2: Investigation of Related Ideas - Provide research on existing solutions, data, and literature
-- Stage 3: Generation of New Ideas - Brainstorm creative solutions and innovations
-- Stage 4: Development of the Best Idea - Help develop detailed implementation plans
-- Stage 5: Presentation of Results - Assist with creating presentations and visual aids
-- Stage 6: Evaluation and Recommendations - Help evaluate outcomes and write recommendations
+📝 FORMATTING RULES (VERY IMPORTANT):
+• NEVER use asterisks (*) or markdown formatting
+• Use emojis sparingly for visual appeal: 📚 💡 ✨ ✅ 🎯 📊
+• Use line breaks for readability
+• Use numbered lists (1, 2, 3) for steps
+• Use bullet points (•) for options or ideas
+• Keep paragraphs short and punchy (2-3 sentences max)
+• Make text scannable — students should easily find key info
 
-How to help students:
-- **When asked to write**: Write it for them! Provide complete, well-written content ready to copy into their project
-- **When asked for research**: Provide comprehensive research with details, facts, examples, and data
-- **When asked for ideas**: Generate multiple creative, practical ideas with explanations
-- **When asked for help**: Provide step-by-step guidance with specific examples
-- **When asked for notes**: Create detailed study notes formatted for inclusion in their project
-- **When discussing topics**: Suggest relevant visual aids (charts, diagrams, images) and describe what they should show
-- **Keep responses detailed but readable** - Use formatting, bullet points, and clear structure
-- **Be practical** - Focus on ZIMSEC-appropriate content that will score well
-- **Be conversational** - Chat naturally, ask follow-up questions, show interest
+🏆 HOW YOU HELP:
+1. PROBLEM IDENTIFICATION
+   Help find interesting local problems worth solving. Ask about their community, school, or interests to discover meaningful topics.
 
-Commands students can use:
-- "generate notes on [topic]" - Create detailed study notes
-- "suggest images for [topic]" - Recommend visual aids and describe what they should show
-- "write [section]" - Write complete project content
-- "research [topic]" - Provide comprehensive research findings
+2. RESEARCH & INVESTIGATION
+   Provide detailed research findings, facts, statistics, case studies, and examples. Do the research FOR them!
 
-Remember: Your goal is to help students complete excellent projects by being their active, engaged research partner who provides all the information, research, content, and visual suggestions they need!
+3. CREATIVE IDEAS
+   Brainstorm innovative solutions. Be creative and practical.
 
-Current conversation context will be provided with each message."""
+4. DEVELOPMENT
+   Help build implementation plans, timelines, and detailed proposals.
+
+5. PRESENTATION
+   Assist with organizing findings and creating compelling presentations.
+
+6. EVALUATION
+   Help analyze results and write strong recommendations.
+
+💬 EXAMPLE RESPONSE STYLE:
+
+Instead of: "**Stage 1: Problem Identification**"
+Write: "📋 Stage 1 — Problem Identification"
+
+Instead of: "* Option A\\n* Option B"
+Write: 
+"Here are some exciting options:
+
+• Crop Production — maize, vegetables, tobacco
+• Animal Husbandry — poultry, cattle, goats  
+• Soil Science — conservation methods
+• Water Management — irrigation systems"
+
+📌 KEY COMMANDS:
+• "generate notes on [topic]" — Create study notes
+• "suggest images for [topic]" — Recommend visual aids
+• "write [section]" — Write project content
+• "research [topic]" — Provide research findings
+
+Remember: You're their project partner! Be helpful, be thorough, and make learning fun. Your responses should look clean and professional on a mobile phone screen."""
 
     def show_main_menu(self, user_id: str):
         """Display the Project Assistant main menu"""
@@ -127,7 +152,7 @@ Current conversation context will be provided with each message."""
             else:
                 # No active project
                 menu_text += "Welcome to your AI Research Assistant! 🤖\n\n"
-                menu_text += "I'm powered by Google Gemini AI and I'll help you create an excellent ZIMSEC School-Based Project.\n\n"
+                menu_text += "I'm powered by DeepSeek AI and I'll help you create an excellent ZIMSEC School-Based Project.\n\n"
                 menu_text += "💡 *I can help you with:*\n"
                 menu_text += "• Research on any topic\n"
                 menu_text += "• Writing project titles, statements & content\n"
@@ -446,14 +471,9 @@ Current conversation context will be provided with each message."""
             self.whatsapp_service.send_message(user_id, fallback_msg)
     
     def _get_ai_response(self, user_id: str, message_text: str, project_data: dict) -> str:
-        """Get intelligent response from Gemini AI"""
+        """Get intelligent response from DeepSeek AI (primary) with Gemini fallback"""
         try:
-            if not self._is_gemini_configured or not self.gemini_model:
-                logger.warning(f"Gemini AI not configured for {user_id}, using fallback")
-                # Fallback if Gemini not available
-                return self._get_fallback_response(message_text, project_data)
-            
-            # Build context for Gemini
+            # Build context
             student_name = project_data.get('student_name', 'Student')
             project_title = project_data.get('project_title', 'Untitled Project')
             subject = project_data.get('subject', 'Not specified')
@@ -466,7 +486,7 @@ Current conversation context will be provided with each message."""
                 role = "Student" if msg['role'] == 'user' else "Teacher"
                 history_text += f"{role}: {msg['content']}\n\n"
             
-            # Create full prompt for Gemini
+            # Create full prompt
             full_prompt = f"""{self.TEACHER_SYSTEM_PROMPT}
 
 **Student Information:**
@@ -480,85 +500,52 @@ Current conversation context will be provided with each message."""
 **Current Student Message:**
 {message_text}
 
-**Your Response (as the teacher):**
-Remember to:
-1. DO THE WORK for them - provide complete, ready-to-use content
-2. Be comprehensive and detailed - give them everything they need
-3. Be encouraging and supportive - build their confidence
-4. Be interactive - ask follow-up questions to probe deeper
-5. Suggest visual aids when appropriate (diagrams, charts, images)
-6. Keep it readable for WhatsApp - use formatting, bullet points, clear structure
-7. Focus on ZIMSEC standards and scoring criteria
-8. Use simple, clear language"""
+**Your Response (as the teacher):**"""
             
-            # Generate response from Gemini
-            try:
-                response = self.gemini_model.generate_content(full_prompt)
-                
-                if response and response.text:
-                    ai_text = response.text.strip()
-                    logger.info(f"✅ Gemini AI generated response for {user_id} (length: {len(ai_text)})")
-                    return ai_text
-                else:
-                    logger.warning(f"Gemini returned empty response for {user_id}")
-                    return self._get_fallback_response(message_text, project_data)
-            except Exception as gemini_error:
-                logger.error(f"Gemini API error for {user_id}: {gemini_error}", exc_info=True)
-                # Try fallback with DeepSeek if available
-                return self._try_deepseek_fallback(user_id, message_text, project_data, full_prompt)
-                
+            # Try DeepSeek first (primary)
+            if self._is_deepseek_configured:
+                try:
+                    response = requests.post(
+                        self.deepseek_api_url,
+                        headers={'Authorization': f'Bearer {self.deepseek_api_key}', 'Content-Type': 'application/json'},
+                        json={
+                            'model': 'deepseek-chat',
+                            'messages': [
+                                {'role': 'system', 'content': self.TEACHER_SYSTEM_PROMPT},
+                                {'role': 'user', 'content': full_prompt}
+                            ],
+                            'temperature': 0.7,
+                            'max_tokens': 2000
+                        },
+                        timeout=30
+                    )
+                    if response.status_code == 200:
+                        data = response.json()
+                        if 'choices' in data and len(data['choices']) > 0:
+                            ai_text = data['choices'][0]['message']['content'].strip()
+                            ai_text = self._clean_markdown(ai_text)
+                            logger.info(f"✅ DeepSeek AI generated response for {user_id} (length: {len(ai_text)})")
+                            return ai_text
+                except Exception as deepseek_error:
+                    logger.error(f"DeepSeek API error for {user_id}: {deepseek_error}", exc_info=True)
+            
+            # Try Gemini as fallback
+            if self._is_gemini_configured and self.gemini_model:
+                try:
+                    response = self.gemini_model.generate_content(full_prompt)
+                    if response and response.text:
+                        ai_text = response.text.strip()
+                        ai_text = self._clean_markdown(ai_text)
+                        logger.info(f"✅ Gemini AI fallback generated response for {user_id}")
+                        return ai_text
+                except Exception as gemini_error:
+                    logger.error(f"Gemini fallback error for {user_id}: {gemini_error}")
+            
+            # Return fallback response
+            return self._get_fallback_response(message_text, project_data)
+            
         except Exception as e:
             logger.error(f"Error getting AI response for {user_id}: {e}", exc_info=True)
-            return self._get_fallback_response(message_text, project_data)
-    
-    def _clean_whatsapp_formatting(self, text: str) -> str:
-        """Clean formatting for WhatsApp - convert double asterisks to single for bold"""
-        import re
-        # Replace **text** with *text* (WhatsApp bold format)
-        # Use a regex to avoid replacing single asterisks
-        cleaned = re.sub(r'\*\*([^\*]+?)\*\*', r'*\1*', text)
-        return cleaned
-    
-    def _try_deepseek_fallback(self, user_id: str, message_text: str, project_data: dict, prompt: str) -> str:
-        """Try DeepSeek AI as fallback when Gemini fails"""
-        try:
-            import os
-            import requests
-            deepseek_key = os.getenv('DEEPSEEK_API_KEY')
-            if not deepseek_key:
-                logger.warning("DeepSeek API key not available for fallback")
-                return self._get_fallback_response(message_text, project_data)
-            
-            # Call DeepSeek API
-            response = requests.post(
-                'https://api.deepseek.com/chat/completions',
-                headers={
-                    'Content-Type': 'application/json',
-                    'Authorization': f'Bearer {deepseek_key}'
-                },
-                json={
-                    'model': 'deepseek-chat',
-                    'messages': [
-                        {'role': 'system', 'content': self.TEACHER_SYSTEM_PROMPT},
-                        {'role': 'user', 'content': prompt}
-                    ],
-                    'temperature': 0.7,
-                    'max_tokens': 2000
-                },
-                timeout=30
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                if 'choices' in data and len(data['choices']) > 0:
-                    ai_text = data['choices'][0]['message']['content'].strip()
-                    logger.info(f"✅ DeepSeek AI fallback generated response for {user_id}")
-                    return ai_text
-            
-            logger.warning("DeepSeek fallback failed, using basic fallback")
-            return self._get_fallback_response(message_text, project_data)
-        except Exception as e:
-            logger.error(f"DeepSeek fallback error: {e}")
             return self._get_fallback_response(message_text, project_data)
     
     def _get_fallback_response(self, message_text: str, project_data: dict) -> str:
@@ -569,19 +556,43 @@ Remember to:
         
         # Comprehensive keyword-based responses
         if any(word in message_lower for word in ['title', 'write title']):
-            return f"*Project Title Help* 📝\n\nBased on your project about _{project_title}_, here are some strong title formats:\n\n1. \"Improving [Problem] in [Location]\"\n2. \"Reducing [Issue] at [School/Community]\"\n3. \"Developing [Solution] for [Target Group]\"\n\nExample titles:\n• \"Improving Waste Management at Harare High School\"\n• \"Reducing Water Scarcity in Rural Masvingo\"\n• \"Developing a Recycling System for Urban Communities\"\n\nWhat specific problem are you addressing? I'll help you craft a perfect title!"
+            return f"📝 Project Title Help\n\nBased on your project about {project_title}, here are some strong title formats:\n\n1. Improving [Problem] in [Location]\n2. Reducing [Issue] at [School/Community]\n3. Developing [Solution] for [Target Group]\n\nExample titles:\n• Improving Waste Management at Harare High School\n• Reducing Water Scarcity in Rural Masvingo\n• Developing a Recycling System for Urban Communities\n\nWhat specific problem are you addressing? I'll help you craft a perfect title!"
         
         elif any(word in message_lower for word in ['research', 'literature', 'existing solutions']):
-            return f"*Research & Literature Review* 📚\n\nFor your project on _{project_title}_, you should research:\n\n**Existing Solutions:**\n• Government initiatives in Zimbabwe\n• NGO programs addressing similar issues\n• International case studies from other countries\n• Local community projects\n\n**Where to find information:**\n• Zimbabwe government websites\n• Academic journals (Google Scholar)\n• WHO/UN reports for health/development topics\n• Local newspaper archives\n• Interviews with community leaders\n\n**What to include:**\n1. Summary of 3-5 existing solutions\n2. Their strengths and weaknesses\n3. How they're relevant to your context\n4. Gaps that your project will fill\n\nWould you like me to provide specific resources for your topic?"
+            return f"📚 Research & Literature Review\n\nFor your project on {project_title}, you should research:\n\nExisting Solutions:\n• Government initiatives in Zimbabwe\n• NGO programs addressing similar issues\n• International case studies\n• Local community projects\n\nWhere to find information:\n• Zimbabwe government websites\n• Academic journals (Google Scholar)\n• WHO/UN reports\n• Local newspaper archives\n• Interviews with community leaders\n\nWhat to include:\n1. Summary of 3-5 existing solutions\n2. Their strengths and weaknesses\n3. How they're relevant to your context\n4. Gaps that your project will fill\n\nWould you like me to provide specific resources for your topic?"
         
         elif any(word in message_lower for word in ['stage 1', 'problem', 'identify']):
-            return f"*Stage 1: Problem Identification* 🎯\n\n**Complete Framework:**\n\n1. **Problem Statement:**\n\"In [Location], [Target Group] experience [Problem] which results in [Impact/Consequences].\"\n\n2. **Who is Affected:**\n• Primary: Students, community members, families\n• Secondary: Teachers, local businesses, government\n\n3. **Evidence:**\n• Statistics or observations\n• Personal experiences or surveys\n• Expert opinions or reports\n\n4. **Why it Matters:**\n• Social impact\n• Economic consequences\n• Health/educational effects\n\n**Example for waste management:**\n\"At Harare High School, students and staff face inadequate waste disposal systems, resulting in environmental pollution, health hazards, and an unpleasant learning environment. This affects 1,200 students daily and contributes to local disease outbreaks.\"\n\nWhat's your problem area? I'll help you write a complete problem statement!"
+            return f"🎯 Stage 1 — Problem Identification\n\nComplete Framework:\n\n1. Problem Statement:\n\"In [Location], [Target Group] experience [Problem] which results in [Impact/Consequences].\"\n\n2. Who is Affected:\n• Primary: Students, community members, families\n• Secondary: Teachers, local businesses, government\n\n3. Evidence:\n• Statistics or observations\n• Personal experiences or surveys\n• Expert opinions or reports\n\n4. Why it Matters:\n• Social impact\n• Economic consequences\n• Health/educational effects\n\nExample for waste management:\n\"At Harare High School, students and staff face inadequate waste disposal systems, resulting in environmental pollution, health hazards, and an unpleasant learning environment.\"\n\nWhat's your problem area? I'll help you write a complete problem statement!"
         
         elif any(word in message_lower for word in ['ideas', 'solutions', 'stage 3']):
-            return f"*Generating Ideas & Solutions* 💡\n\n**Brainstorming for {project_title}:**\n\n**Creative Solution Techniques:**\n1. Look at how other countries solve it\n2. Combine existing solutions in new ways\n3. Use technology/apps to improve processes\n4. Create awareness campaigns\n5. Develop training programs\n\n**Innovation Checklist:**\n✓ Is it practical for Zimbabwe context?\n✓ Is it affordable/sustainable?\n✓ Can it be implemented by students/community?\n✓ Does it address the root cause?\n✓ Is it measurable and scalable?\n\n**Example ideas for waste management:**\n• Recycling bins with color-coding system\n• Student-led \"Green Squad\" waste monitors\n• Composting program for organic waste\n• Art from recycled materials project\n• Partnership with local recycling companies\n\nWhat type of solution would you like to develop? I can help you refine it!"
+            return f"💡 Generating Ideas & Solutions\n\nBrainstorming for {project_title}:\n\nCreative Solution Techniques:\n1. Look at how other countries solve it\n2. Combine existing solutions in new ways\n3. Use technology/apps to improve processes\n4. Create awareness campaigns\n5. Develop training programs\n\nInnovation Checklist:\n✓ Is it practical for Zimbabwe context?\n✓ Is it affordable/sustainable?\n✓ Can it be implemented by students/community?\n✓ Does it address the root cause?\n✓ Is it measurable and scalable?\n\nExample ideas for waste management:\n• Recycling bins with color-coding system\n• Student-led \"Green Squad\" waste monitors\n• Composting program for organic waste\n• Art from recycled materials project\n\nWhat type of solution would you like to develop?"
         
         else:
-            return f"Hi *{student_name}*! 👋\n\nI'm here to provide complete research and writing assistance for your project: _{project_title}_.\n\n**I can help you with:**\n\n📝 *Writing:*\n• Project titles and problem statements\n• Literature reviews and research summaries\n• Complete content for all 6 stages\n\n🔍 *Research:*\n• Finding existing solutions and case studies\n• Providing facts, statistics, and examples\n• Identifying relevant sources and references\n\n💡 *Ideas:*\n• Generating creative solutions\n• Brainstorming innovations\n• Developing implementation plans\n\nJust tell me what you need, and I'll provide detailed, complete answers!"
+            return f"Hi {student_name}! 👋\n\nI'm NerdX AI, your project partner for: {project_title}\n\n📝 Writing Help\n• Project titles and problem statements\n• Literature reviews and research summaries\n• Complete content for all 6 stages\n\n🔍 Research Help\n• Finding existing solutions and case studies\n• Providing facts, statistics, and examples\n• Identifying relevant sources\n\n💡 Ideas\n• Generating creative solutions\n• Brainstorming innovations\n• Developing implementation plans\n\nJust tell me what you need!"
+    
+    def _clean_markdown(self, text: str) -> str:
+        """Remove markdown formatting for clean mobile display"""
+        import re
+        
+        # Remove bold asterisks: **text** or __text__
+        text = re.sub(r'\*\*([^*]+)\*\*', r'\1', text)
+        text = re.sub(r'__([^_]+)__', r'\1', text)
+        
+        # Remove italic asterisks: *text* or _text_
+        text = re.sub(r'(?<!\*)\*([^*]+)\*(?!\*)', r'\1', text)
+        text = re.sub(r'(?<!_)_([^_]+)_(?!_)', r'\1', text)
+        
+        # Replace markdown bullets with clean bullets
+        text = re.sub(r'^\s*[-*]\s+', '• ', text, flags=re.MULTILINE)
+        
+        # Clean up extra whitespace
+        text = re.sub(r'\n{3,}', '\n\n', text)
+        
+        return text.strip()
+    
+    def _clean_whatsapp_formatting(self, text: str) -> str:
+        """Clean response for WhatsApp display"""
+        return self._clean_markdown(text)
     
     def save_and_exit(self, user_id: str):
         """Save project and exit to main menu"""
@@ -594,8 +605,8 @@ Remember to:
                 
                 if success:
                     student_name = project_data.get('student_name', 'there')
-                    message = f"✅ *Project Saved!*\n\n"
-                    message += f"All your progress has been saved, *{student_name}*.\n\n"
+                    message = f"✅ Project Saved!\n\n"
+                    message += f"All your progress has been saved, {student_name}.\n\n"
                     message += "You can continue anytime by clicking \"Continue Project\".\n\n"
                     message += "Keep up the great work! 🌟"
                 else:
@@ -861,8 +872,162 @@ Remember to:
             logger.error(f"Error getting chat history: {e}")
             return []
 
-    def generate_project_document(self, user_id: str, project_id: int) -> str:
-        """Generate a final document for the project"""
-        # Placeholder for document generation logic
-        # In a real implementation, this would generate a PDF or Word doc
-        return "https://example.com/project_document.pdf"
+    def generate_project_document(self, user_id: str, project_id: int) -> dict:
+        """Generate a complete ZIMSEC project document as PDF using DeepSeek AI"""
+        try:
+            import requests
+            from utils.project_pdf_generator import ProjectDocumentGenerator
+            
+            # Get project details from database
+            project = self.get_project_details(user_id, project_id)
+            if not project:
+                raise ValueError("Project not found")
+            
+            project_data = project.get('project_data', {})
+            if isinstance(project_data, str):
+                import json
+                project_data = json.loads(project_data)
+            
+            # Get conversation history to build project content
+            conversation_history = project_data.get('conversation_history', [])
+            project_title = project.get('project_title', 'Untitled Project')
+            subject = project.get('subject', 'Not specified')
+            
+            # Use DeepSeek to generate comprehensive project content
+            enhanced_data = self._generate_project_content_with_ai(
+                project_title, subject, conversation_history, project_data
+            )
+            
+            # Merge AI-generated content into project data
+            project_data.update(enhanced_data)
+            
+            # Prepare full project data for PDF generator
+            full_project_data = {
+                'id': project_id,
+                'project_title': project_title,
+                'subject': subject,
+                'project_data': project_data
+            }
+            
+            # Generate PDF
+            pdf_generator = ProjectDocumentGenerator()
+            pdf_path = pdf_generator.generate_project_document(full_project_data, user_id)
+            
+            logger.info(f"✅ Generated project PDF for {user_id}: {pdf_path}")
+            
+            return {
+                'success': True,
+                'pdf_path': pdf_path,
+                'filename': f"ZIMSEC_Project_{project_id}.pdf"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error generating project document for {user_id}: {e}", exc_info=True)
+            raise
+    
+    def _generate_project_content_with_ai(self, title: str, subject: str, 
+                                           conversation_history: list, 
+                                           existing_data: dict) -> dict:
+        """Use DeepSeek AI to generate comprehensive project content"""
+        
+        # Build context from conversation history
+        conversation_text = ""
+        for msg in conversation_history[-20:]:  # Last 20 messages
+            role = "Student" if msg.get('role') == 'user' else "NerdX AI"
+            conversation_text += f"{role}: {msg.get('content', '')}\n\n"
+        
+        prompt = f"""Based on this ZIMSEC School-Based Project conversation, generate comprehensive project document content.
+
+PROJECT TITLE: {title}
+SUBJECT: {subject}
+
+CONVERSATION HISTORY:
+{conversation_text if conversation_text else "No conversation history available."}
+
+Generate content for each section. Be detailed and professional. Return ONLY valid JSON:
+
+{{
+    "problem_definition": "Detailed problem statement explaining the issue this project addresses...",
+    "investigation": "Investigation of the current system, its limitations and stakeholder analysis...",
+    "requirements": ["Requirement 1", "Requirement 2", "Requirement 3"],
+    "objectives": ["Objective 1", "Objective 2", "Objective 3"],
+    "alternatives": "Analysis of alternative methods and solutions considered...",
+    "input_design": "Description of inputs required for the solution...",
+    "output_design": "Description of expected outputs and deliverables...",
+    "test_plan": "Comprehensive testing strategy and test cases...",
+    "implementation": "How the project was implemented, tools and methods used...",
+    "testing": "Testing process, results and findings...",
+    "user_documentation": "User manual and instructions...",
+    "technical_documentation": "Technical specifications and developer notes...",
+    "evaluation": "Evaluation of project success against objectives...",
+    "conclusion": "Summary of outcomes, lessons learned and recommendations..."
+}}"""
+
+        # Try DeepSeek first
+        if self.deepseek_api_key:
+            try:
+                response = requests.post(
+                    "https://api.deepseek.com/v1/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {self.deepseek_api_key}",
+                        "Content-Type": "application/json"
+                    },
+                    json={
+                        "model": "deepseek-chat",
+                        "messages": [
+                            {"role": "system", "content": "You are a ZIMSEC project document writer. Generate professional, detailed content for school-based projects."},
+                            {"role": "user", "content": prompt}
+                        ],
+                        "temperature": 0.7,
+                        "max_tokens": 4000
+                    },
+                    timeout=60
+                )
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+                    if content:
+                        import json
+                        # Clean JSON
+                        content = content.strip()
+                        if content.startswith("```json"):
+                            content = content[7:]
+                        if content.startswith("```"):
+                            content = content[3:]
+                        if content.endswith("```"):
+                            content = content[:-3]
+                        
+                        logger.info("✅ Generated project content using DeepSeek AI")
+                        return json.loads(content.strip())
+                        
+            except Exception as e:
+                logger.error(f"DeepSeek project content generation failed: {e}")
+        
+        # Fallback content if AI fails
+        logger.warning("Using fallback project content")
+        return {
+            "problem_definition": f"This project addresses a significant issue in the field of {subject}. The problem identified affects the community and requires an innovative solution.",
+            "investigation": "An investigation was conducted to understand the current situation, including interviews with stakeholders and analysis of existing systems.",
+            "requirements": [
+                "The solution must be practical and affordable",
+                "It should be sustainable and environmentally friendly",
+                "It must meet the needs of the target users"
+            ],
+            "objectives": [
+                "To develop an effective solution to the identified problem",
+                "To implement and test the solution",
+                "To evaluate the impact and make recommendations"
+            ],
+            "alternatives": "Several alternative approaches were considered before selecting the final solution based on feasibility, cost, and effectiveness.",
+            "input_design": "The inputs required include user data, resources, and materials necessary for implementation.",
+            "output_design": "The expected outputs include a working solution, documentation, and measurable improvements.",
+            "test_plan": "Testing will involve functionality tests, user acceptance testing, and evaluation against objectives.",
+            "implementation": "The project was implemented using appropriate tools, technologies, and methods suitable for the context.",
+            "testing": "Comprehensive testing was conducted to ensure the solution works as intended and meets all requirements.",
+            "user_documentation": "This document serves as a guide for users on how to operate and maintain the solution.",
+            "technical_documentation": "Technical specifications and maintenance procedures are documented for future reference.",
+            "evaluation": "The project was evaluated against the original objectives, demonstrating significant achievement of goals.",
+            "conclusion": "This project successfully addressed the identified problem and provides a sustainable solution with recommendations for future improvements."
+        }
+

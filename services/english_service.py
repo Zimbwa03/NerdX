@@ -33,20 +33,20 @@ class EnglishService:
         self.deepseek_api_key = Config.DEEPSEEK_API_KEY
         self.deepseek_api_url = 'https://api.deepseek.com/chat/completions'
 
-        # Initialize Gemini AI
+        # Initialize AI - DeepSeek is now the primary provider
         try:
+            # Keep Gemini as fallback only
             if GENAI_AVAILABLE:
                 api_key = os.getenv('GEMINI_API_KEY')
                 if api_key and genai:
                     genai.configure(api_key=api_key)
-                    # Use the genai module directly, not a Client class
                     self.client = genai
                     self._is_configured = True
-                    logger.info("Enhanced ZIMSEC English Service initialized with Gemini AI")
+                    logger.info("Enhanced ZIMSEC English Service initialized with DeepSeek AI (primary) + Gemini (fallback)")
                 else:
-                    logger.warning("GEMINI_API_KEY not found - using fallback methods")
+                    logger.info("GEMINI_API_KEY not found - using DeepSeek only")
             else:
-                logger.warning("Google Generative AI not available - using fallback methods")
+                logger.info("Google Generative AI not available - using DeepSeek only")
         except Exception as e:
             logger.error(f"Error initializing English service: {e}")
 
@@ -529,16 +529,16 @@ Return ONLY valid JSON strictly using this structure (no markdown fences or comm
         return None
 
     def generate_grammar_question(self, last_question_type: Optional[str] = None) -> Optional[Dict]:
-        """Retrieve grammar questions using Gemini AI first with DeepSeek fallback"""
-        # Primary: Gemini AI generation
-        gemini_response = self.generate_ai_grammar_question(last_question_type=last_question_type)
-        if gemini_response and gemini_response.get('success'):
-            return gemini_response
-        
-        # Secondary: DeepSeek AI fallback
+        """Retrieve grammar questions using DeepSeek AI first with Gemini fallback"""
+        # Primary: DeepSeek AI generation
         deepseek_response = self.generate_deepseek_grammar_question(last_question_type=last_question_type)
         if deepseek_response and deepseek_response.get('success'):
             return deepseek_response
+        
+        # Secondary: Gemini AI fallback
+        gemini_response = self.generate_ai_grammar_question(last_question_type=last_question_type)
+        if gemini_response and gemini_response.get('success'):
+            return gemini_response
 
         # Tertiary: Database question
         try:
@@ -1073,6 +1073,109 @@ Return ONLY valid JSON:
             
         return None
 
+    def generate_comprehension(self, theme: str = None, form_level: int = 4) -> Dict:
+        """Generate comprehension passage - tries DeepSeek first, then Gemini, then fallback
+        
+        Args:
+            theme: Optional theme for the passage
+            form_level: ZIMSEC form level (1-4), defaults to 4 for O-Level
+            
+        Returns:
+            Dictionary with passage, title, and questions
+        """
+        # Select random theme if not provided
+        if not theme:
+            themes = [
+                "technology and youth",
+                "environmental conservation",
+                "Zimbabwean history and culture",
+                "education and career",
+                "sports and fitness",
+                "family and relationships",
+                "community development",
+                "health and nutrition",
+                "wildlife conservation",
+                "entrepreneurship"
+            ]
+            theme = random.choice(themes)
+        
+        # Try DeepSeek first
+        if self.deepseek_api_key:
+            try:
+                deepseek_result = self._generate_deepseek_comprehension(theme, form_level)
+                if deepseek_result:
+                    logger.info("Generated comprehension using DeepSeek AI")
+                    return deepseek_result
+            except Exception as e:
+                logger.warning(f"DeepSeek comprehension generation failed: {e}")
+        
+        # Try Gemini as fallback
+        gemini_result = self.generate_gemini_comprehension_passage(theme, form_level)
+        if gemini_result:
+            logger.info("Generated comprehension using Gemini AI")
+            return gemini_result
+            
+        # Final fallback
+        logger.info("Using fallback comprehension passage")
+        return self._get_fallback_comprehension()
+    
+    def _generate_deepseek_comprehension(self, theme: str, form_level: int = 4) -> Optional[Dict]:
+        """Generate comprehension passage using DeepSeek AI"""
+        if not self.deepseek_api_key:
+            return None
+            
+        try:
+            import requests
+            
+            prompt = f"""Generate a ZIMSEC O-Level English comprehension passage about {theme}.
+            
+Requirements:
+- Length: 400-500 words
+- Level: Form {form_level} (O-Level Zimbabwe)
+- Include 5 comprehension questions (mix of literal and inferential)
+- Include model answers for grading
+- Use Zimbabwean context where appropriate
+
+Return ONLY valid JSON in this exact format:
+{{
+    "title": "Passage Title",
+    "passage": "The full passage text...",
+    "questions": [
+        {{"question": "Question 1?", "answer": "Model answer 1", "type": "literal", "marks": 2}},
+        {{"question": "Question 2?", "answer": "Model answer 2", "type": "inferential", "marks": 3}}
+    ]
+}}"""
+            
+            response = requests.post(
+                "https://api.deepseek.com/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {self.deepseek_api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": "deepseek-chat",
+                    "messages": [
+                        {"role": "system", "content": "You are a ZIMSEC English examiner creating comprehension passages."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    "temperature": 0.7,
+                    "max_tokens": 2000
+                },
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+                if content:
+                    clean_content = self._clean_json_block(content)
+                    return json.loads(clean_content)
+                    
+        except Exception as e:
+            logger.error(f"DeepSeek comprehension generation error: {e}")
+            
+        return None
+
     def _get_fallback_comprehension(self) -> Dict:
         """Fallback comprehension passage when AI fails"""
 
@@ -1453,13 +1556,22 @@ Return ONLY valid JSON:
         return self._get_fallback_long_comprehension(theme)
 
     def generate_free_response_topics(self) -> Optional[Dict]:
-        """Generate free response essay topics using Gemini 2.5 Flash"""
-        if not self._is_configured or not self.client:
-            logger.warning("Gemini AI not configured - cannot generate topics")
-            return self._get_fallback_free_response_topics()
+        """Generate free response essay topics using DeepSeek first, then Gemini fallback"""
         
-        try:
-            prompt = """You are a ZIMSEC O-Level English examiner creating Paper 1 Section A (Free Response) topics.
+        # Try DeepSeek first (primary AI)
+        if self.deepseek_api_key:
+            try:
+                deepseek_result = self._generate_deepseek_free_response_topics()
+                if deepseek_result:
+                    logger.info("✅ Generated 7 free response topics using DeepSeek AI")
+                    return deepseek_result
+            except Exception as e:
+                logger.warning(f"DeepSeek free response topics failed: {e}")
+        
+        # Try Gemini as fallback
+        if self._is_configured and self.client:
+            try:
+                prompt = """You are a ZIMSEC O-Level English examiner creating Paper 1 Section A (Free Response) topics.
 
 Generate 7 diverse essay topics suitable for O-Level students (15-17 years old).
 Include a mix of:
@@ -1486,30 +1598,99 @@ Return ONLY valid JSON (no markdown fences):
     ... (6 more topics)
   ]
 }"""
-            
-            model = self.client.GenerativeModel('gemini-2.5-flash')
-            response = model.generate_content(
-                prompt,
-                generation_config=self.client.types.GenerationConfig(
-                    response_mime_type="application/json",
-                    temperature=0.8,
-                    max_output_tokens=2000
-                ),
-            )
-            
-            if response and hasattr(response, 'text') and response.text:
-                clean_text = self._clean_json_block(response.text)
-                data = json.loads(clean_text)
-                logger.info("✅ Generated 7 free response topics using Gemini 2.5 Flash")
-                return {
-                    'success': True,
-                    'topics': data.get('topics', [])
-                }
-            
-        except Exception as e:
-            logger.error(f"Error generating free response topics: {e}")
+                
+                model = self.client.GenerativeModel('gemini-2.5-flash')
+                response = model.generate_content(
+                    prompt,
+                    generation_config=self.client.types.GenerationConfig(
+                        response_mime_type="application/json",
+                        temperature=0.8,
+                        max_output_tokens=2000
+                    ),
+                )
+                
+                if response and hasattr(response, 'text') and response.text:
+                    clean_text = self._clean_json_block(response.text)
+                    data = json.loads(clean_text)
+                    logger.info("✅ Generated 7 free response topics using Gemini 2.5 Flash (fallback)")
+                    return {
+                        'success': True,
+                        'topics': data.get('topics', [])
+                    }
+                
+            except Exception as e:
+                logger.error(f"Gemini free response topics error: {e}")
         
         return self._get_fallback_free_response_topics()
+    
+    def _generate_deepseek_free_response_topics(self) -> Optional[Dict]:
+        """Generate free response topics using DeepSeek AI"""
+        if not self.deepseek_api_key:
+            return None
+            
+        try:
+            import requests
+            
+            prompt = """You are a ZIMSEC O-Level English examiner creating Paper 1 Section A (Free Response) topics.
+
+Generate 7 diverse essay topics suitable for O-Level students (15-17 years old) in Zimbabwe.
+Include a mix of:
+- Narrative (story telling)
+- Descriptive (describing person, place, event)
+- Expository (factual, explanatory)
+- Argumentative (persuasive)
+
+For each topic provide:
+1. Title
+2. Brief description/prompt
+3. Type (narrative, descriptive, etc.)
+4. Suggested length (350-450 words)
+
+Return ONLY valid JSON:
+{
+  "topics": [
+    {
+      "title": "A Day I Will Never Forget",
+      "description": "Write about a memorable day in your life that left a lasting impression on you.",
+      "type": "narrative",
+      "suggested_length": "350-450 words"
+    }
+  ]
+}"""
+            
+            response = requests.post(
+                "https://api.deepseek.com/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {self.deepseek_api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": "deepseek-chat",
+                    "messages": [
+                        {"role": "system", "content": "You are a ZIMSEC English examiner."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    "temperature": 0.8,
+                    "max_tokens": 2000
+                },
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+                if content:
+                    clean_content = self._clean_json_block(content)
+                    data = json.loads(clean_content)
+                    return {
+                        'success': True,
+                        'topics': data.get('topics', [])
+                    }
+                    
+        except Exception as e:
+            logger.error(f"DeepSeek free response topics error: {e}")
+            
+        return None
 
     def _get_fallback_free_response_topics(self) -> Dict:
         """Fallback free response topics when AI fails"""
@@ -1562,13 +1743,22 @@ Return ONLY valid JSON (no markdown fences):
         }
 
     def generate_guided_composition_prompt(self) -> Optional[Dict]:
-        """Generate a guided composition prompt for ZIMSEC using Gemini 2.5 Flash"""
-        if not self._is_configured or not self.client:
-            logger.warning("Gemini AI not configured - cannot generate guided composition")
-            return self._get_fallback_guided_composition()
+        """Generate a guided composition prompt for ZIMSEC using DeepSeek first, then Gemini fallback"""
         
-        try:
-            prompt = """You are a ZIMSEC O-Level English examiner creating Paper 1 Section B (Guided Composition) prompts.
+        # Try DeepSeek first (primary AI)
+        if self.deepseek_api_key:
+            try:
+                deepseek_result = self._generate_deepseek_guided_composition()
+                if deepseek_result:
+                    logger.info("✅ Generated guided composition prompt using DeepSeek AI")
+                    return deepseek_result
+            except Exception as e:
+                logger.warning(f"DeepSeek guided composition failed: {e}")
+        
+        # Try Gemini as fallback
+        if self._is_configured and self.client:
+            try:
+                prompt = """You are a ZIMSEC O-Level English examiner creating Paper 1 Section B (Guided Composition) prompts.
 
 Generate ONE guided composition prompt. Choose randomly from these formats:
 - Formal letter (to headmaster, council, newspaper editor)
@@ -1599,30 +1789,101 @@ Return ONLY valid JSON (no markdown fences):
   "suggested_length": "250-350 words",
   "format_requirements": "Use proper formal letter format with addresses, date, salutation, and closing."
 }"""
-            
-            model = self.client.GenerativeModel('gemini-2.5-flash')
-            response = model.generate_content(
-                prompt,
-                generation_config=self.client.types.GenerationConfig(
-                    response_mime_type="application/json",
-                    temperature=0.8,
-                    max_output_tokens=1500
-                ),
-            )
-            
-            if response and hasattr(response, 'text') and response.text:
-                clean_text = self._clean_json_block(response.text)
-                data = json.loads(clean_text)
-                logger.info("✅ Generated guided composition prompt using Gemini 2.5 Flash")
-                return {
-                    'success': True,
-                    'prompt': data
-                }
-            
-        except Exception as e:
-            logger.error(f"Error generating guided composition: {e}")
+                
+                model = self.client.GenerativeModel('gemini-2.5-flash')
+                response = model.generate_content(
+                    prompt,
+                    generation_config=self.client.types.GenerationConfig(
+                        response_mime_type="application/json",
+                        temperature=0.8,
+                        max_output_tokens=1500
+                    ),
+                )
+                
+                if response and hasattr(response, 'text') and response.text:
+                    clean_text = self._clean_json_block(response.text)
+                    data = json.loads(clean_text)
+                    logger.info("✅ Generated guided composition prompt using Gemini 2.5 Flash (fallback)")
+                    return {
+                        'success': True,
+                        'prompt': data
+                    }
+                
+            except Exception as e:
+                logger.error(f"Gemini guided composition error: {e}")
         
         return self._get_fallback_guided_composition()
+    
+    def _generate_deepseek_guided_composition(self) -> Optional[Dict]:
+        """Generate guided composition prompt using DeepSeek AI"""
+        if not self.deepseek_api_key:
+            return None
+            
+        try:
+            import requests
+            
+            prompt = """You are a ZIMSEC O-Level English examiner creating Paper 1 Section B (Guided Composition) prompts.
+
+Generate ONE guided composition prompt. Choose randomly from these formats:
+- Formal letter (to headmaster, council, newspaper editor)
+- Informal letter (to friend, relative)
+- Speech (for school assembly, debate, ceremony)
+- Report (school event, community project)
+- Magazine article (for school magazine, youth publication)
+
+The prompt should:
+- Be appropriate for 15-17 year old Zimbabwean students
+- Include clear context and situation
+- Provide 4-6 key points to guide the composition
+- Specify the format clearly
+- Be relevant to Zimbabwean school/community life
+
+Return ONLY valid JSON:
+{
+  "title": "Letter to the Headmaster",
+  "format": "formal_letter",
+  "context": "As the head of the Environmental Club, write a letter to your headmaster requesting permission and support to start a school garden project.",
+  "key_points": [
+    "Explain the purpose of the garden project",
+    "Describe the benefits for the school"
+  ],
+  "suggested_length": "250-350 words",
+  "format_requirements": "Use proper formal letter format with addresses, date, salutation, and closing."
+}"""
+            
+            response = requests.post(
+                "https://api.deepseek.com/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {self.deepseek_api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": "deepseek-chat",
+                    "messages": [
+                        {"role": "system", "content": "You are a ZIMSEC English examiner."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    "temperature": 0.8,
+                    "max_tokens": 1500
+                },
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+                if content:
+                    clean_content = self._clean_json_block(content)
+                    data = json.loads(clean_content)
+                    return {
+                        'success': True,
+                        'prompt': data
+                    }
+                    
+        except Exception as e:
+            logger.error(f"DeepSeek guided composition error: {e}")
+            
+        return None
     
     def _get_fallback_guided_composition(self) -> Dict:
         """Fallback guided composition when AI fails"""

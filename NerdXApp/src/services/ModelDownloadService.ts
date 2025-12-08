@@ -63,13 +63,20 @@ class ModelDownloadService {
         return `${RNFS.DocumentDirectoryPath}/models/phi3-mini-4k-instruct.onnx`;
     }
 
-    // Check if model is already downloaded
+    // Check if model is already downloaded (both files must exist)
     public async isModelDownloaded(): Promise<boolean> {
         try {
             const modelPath = this.getModelPath();
-            const exists = await RNFS.exists(modelPath);
+            const modelDataPath = this.getModelDataPath();
 
-            if (!exists) return false;
+            // Check both files exist
+            const mainExists = await RNFS.exists(modelPath);
+            const dataExists = await RNFS.exists(modelDataPath);
+
+            if (!mainExists || !dataExists) {
+                console.log(`Model check: main=${mainExists}, data=${dataExists}`);
+                return false;
+            }
 
             // Verify model info
             const modelInfo = await this.getModelInfo();
@@ -110,7 +117,7 @@ class ModelDownloadService {
         }
     }
 
-    // Download model with progress tracking
+    // Download model with progress tracking - downloads BOTH files
     public async downloadModel(): Promise<void> {
         // Check network connectivity
         if (!NetworkService.canDownloadLargeFiles()) {
@@ -128,6 +135,7 @@ class ModelDownloadService {
         }
 
         const modelPath = this.getModelPath();
+        const modelDataPath = this.getModelDataPath();
         const modelDir = modelPath.substring(0, modelPath.lastIndexOf('/'));
 
         // Create models directory if it doesn't exist
@@ -136,47 +144,105 @@ class ModelDownloadService {
             await RNFS.mkdir(modelDir);
         }
 
-        // Start download
+        try {
+            // Download both files sequentially
+            // File 1: Main ONNX model file (smaller, ~20MB)
+            console.log('📥 Starting download of main model file...');
+            await this.downloadSingleFile(
+                PHI3_MODEL_URL,
+                modelPath,
+                0,      // Start progress at 0%
+                5       // This file is ~5% of total (small config file)
+            );
+
+            // File 2: ONNX Data file (larger, ~2.5GB)
+            console.log('📥 Starting download of model data file...');
+            await this.downloadSingleFile(
+                PHI3_MODEL_DATA_URL,
+                modelDataPath,
+                5,      // Start progress at 5%
+                100     // End at 100%
+            );
+
+            // Verify both files exist
+            const mainExists = await RNFS.exists(modelPath);
+            const dataExists = await RNFS.exists(modelDataPath);
+
+            if (!mainExists || !dataExists) {
+                throw new Error('Download verification failed: one or more files missing');
+            }
+
+            // Get combined file size
+            const mainStat = await RNFS.stat(modelPath);
+            const dataStat = await RNFS.stat(modelDataPath);
+            const totalSize = parseInt(mainStat.size) + parseInt(dataStat.size);
+
+            // Save model info
+            const modelInfo: ModelInfo = {
+                version: PHI3_MODEL_VERSION,
+                size: totalSize,
+                downloadedAt: new Date().toISOString(),
+                modelPath: modelPath,
+            };
+            await AsyncStorage.setItem(STORAGE_KEYS.MODEL_INFO, JSON.stringify(modelInfo));
+            await AsyncStorage.setItem(STORAGE_KEYS.MODEL_VERSION, PHI3_MODEL_VERSION);
+
+            console.log('✅ Both model files downloaded successfully!');
+            console.log(`   Main file: ${mainStat.size} bytes`);
+            console.log(`   Data file: ${dataStat.size} bytes`);
+
+        } catch (error) {
+            // Clean up partial downloads on failure
+            console.error('Download failed, cleaning up partial files:', error);
+            await this.cleanupPartialDownload();
+            throw error;
+        }
+    }
+
+    // Helper method to download a single file with progress
+    private async downloadSingleFile(
+        url: string,
+        filePath: string,
+        progressStart: number,
+        progressEnd: number
+    ): Promise<void> {
         return new Promise((resolve, reject) => {
+            const progressRange = progressEnd - progressStart;
+
             const download = RNFS.downloadFile({
-                fromUrl: PHI3_MODEL_URL,
-                toFile: modelPath,
+                fromUrl: url,
+                toFile: filePath,
                 background: true,
-                discretionary: false, // Don't wait for optimal conditions
+                discretionary: false,
                 cacheable: false,
                 progressInterval: 500,
                 progressDivider: 1,
                 begin: (res) => {
-                    console.log('Download started:', res);
+                    console.log(`Download started: ${url}`);
+                    console.log(`Expected size: ${res.contentLength} bytes`);
                     this.downloadJobId = res.jobId;
                 },
                 progress: (res) => {
+                    // Calculate combined progress
+                    const fileProgress = (res.bytesWritten / res.contentLength) * progressRange;
+                    const overallProgress = progressStart + fileProgress;
+
                     const progress: DownloadProgress = {
                         bytesWritten: res.bytesWritten,
                         contentLength: res.contentLength,
-                        progress: (res.bytesWritten / res.contentLength) * 100,
+                        progress: overallProgress,
                     };
                     this.notifyProgressListeners(progress);
                 },
             });
 
             download.promise
-                .then(async (result) => {
+                .then((result) => {
                     if (result.statusCode === 200) {
-                        // Save model info
-                        const modelInfo: ModelInfo = {
-                            version: PHI3_MODEL_VERSION,
-                            size: result.bytesWritten,
-                            downloadedAt: new Date().toISOString(),
-                            modelPath: modelPath,
-                        };
-                        await AsyncStorage.setItem(STORAGE_KEYS.MODEL_INFO, JSON.stringify(modelInfo));
-                        await AsyncStorage.setItem(STORAGE_KEYS.MODEL_VERSION, PHI3_MODEL_VERSION);
-
-                        console.log('✅ Model downloaded successfully');
+                        console.log(`✅ File downloaded: ${filePath} (${result.bytesWritten} bytes)`);
                         resolve();
                     } else {
-                        throw new Error(`Download failed with status code: ${result.statusCode}`);
+                        reject(new Error(`Download failed with status code: ${result.statusCode}`));
                     }
                 })
                 .catch((error) => {
@@ -185,6 +251,31 @@ class ModelDownloadService {
                 });
         });
     }
+
+    // Get model data file path
+    private getModelDataPath(): string {
+        return `${RNFS.DocumentDirectoryPath}/models/phi3-mini-4k-instruct.onnx.data`;
+    }
+
+    // Clean up partial downloads
+    private async cleanupPartialDownload(): Promise<void> {
+        try {
+            const modelPath = this.getModelPath();
+            const modelDataPath = this.getModelDataPath();
+
+            if (await RNFS.exists(modelPath)) {
+                await RNFS.unlink(modelPath);
+                console.log('Cleaned up partial model file');
+            }
+            if (await RNFS.exists(modelDataPath)) {
+                await RNFS.unlink(modelDataPath);
+                console.log('Cleaned up partial data file');
+            }
+        } catch (error) {
+            console.error('Error during cleanup:', error);
+        }
+    }
+
 
     // Pause download (if supported)
     public async pauseDownload(): Promise<void> {
@@ -211,30 +302,34 @@ class ModelDownloadService {
             await RNFS.stopDownload(this.downloadJobId);
             this.downloadJobId = null;
 
-            // Clean up partial download
-            const modelPath = this.getModelPath();
-            const exists = await RNFS.exists(modelPath);
-            if (exists) {
-                await RNFS.unlink(modelPath);
-            }
+            // Clean up partial downloads (both files)
+            await this.cleanupPartialDownload();
         }
     }
 
-    // Delete downloaded model
+    // Delete downloaded model (both files)
     public async deleteModel(): Promise<void> {
         try {
             const modelPath = this.getModelPath();
-            const exists = await RNFS.exists(modelPath);
+            const modelDataPath = this.getModelDataPath();
 
-            if (exists) {
+            // Delete main model file
+            if (await RNFS.exists(modelPath)) {
                 await RNFS.unlink(modelPath);
+                console.log('Deleted main model file');
+            }
+
+            // Delete data file
+            if (await RNFS.exists(modelDataPath)) {
+                await RNFS.unlink(modelDataPath);
+                console.log('Deleted model data file');
             }
 
             // Clear model info
             await AsyncStorage.removeItem(STORAGE_KEYS.MODEL_INFO);
             await AsyncStorage.removeItem(STORAGE_KEYS.MODEL_VERSION);
 
-            console.log('Model deleted successfully');
+            console.log('✅ Both model files deleted successfully');
         } catch (error) {
             console.error('Error deleting model:', error);
             throw error;

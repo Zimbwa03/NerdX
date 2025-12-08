@@ -9,48 +9,17 @@ from config import Config
 logger = logging.getLogger(__name__)
 
 class AIService:
-    """Service for AI-powered question generation using DeepSeek and Gemini"""
+    """Service for AI-powered question generation using DeepSeek AI (primary provider)"""
 
     def __init__(self):
         self.deepseek_api_key = Config.DEEPSEEK_API_KEY
-        self.gemini_api_key = Config.GEMINI_API_KEY
-        self.gemini_science_model = self._normalize_gemini_model(
-            getattr(Config, 'SCIENCE_AI_MODEL', 'gemini-2.5-flash')
-        )
-        self.gemini_english_model = self._normalize_gemini_model(
-            getattr(Config, 'ENGLISH_AI_MODEL', 'gemini-2.5-flash')
-        )
+        # DeepSeek is now the primary AI provider for all subjects
+        self.deepseek_model = 'deepseek-chat'
+        self.deepseek_api_url = 'https://api.deepseek.com/chat/completions'
 
         if not self.deepseek_api_key:
             logger.warning("DEEPSEEK_API_KEY not configured - AI features will be limited")
             self.client = None
-
-    @staticmethod
-    def _normalize_gemini_model(configured_model: Optional[str]) -> str:
-        """Map legacy Gemini model names to supported defaults"""
-        default_model = 'gemini-2.5-flash'
-
-        if not configured_model:
-            return default_model
-
-        normalized = configured_model.strip()
-        legacy_map = {
-            'gemini-1.5-flash': default_model,
-            'gemini-1.5-flash-latest': default_model,
-            'gemini-pro': default_model,
-            'gemini-pro-vision': default_model
-        }
-
-        mapped = legacy_map.get(normalized.lower())
-        if mapped:
-            logger.warning(
-                "Legacy Gemini model '%s' detected. Switching to supported model '%s'",
-                normalized,
-                mapped
-            )
-            return mapped
-
-        return normalized
 
     def generate_math_questions(self, topic: str, difficulty: str, count: int = 1, chat_id: Optional[str] = None):
         """Generate mathematics questions using DeepSeek AI with fallback and caching"""
@@ -161,127 +130,17 @@ Generate ONE question now (not multiple, not an array):
             return None
 
     def generate_science_question(self, subject: str, topic: str, difficulty: str) -> Optional[Dict]:
-        """Generate a ZIMSEC O-level Combined Science question using Gemini AI (primary) with DeepSeek fallback"""
+        """Generate a ZIMSEC O-level Combined Science question using DeepSeek AI (primary)"""
         try:
-            # Try Gemini AI first for science questions
-            if self.gemini_api_key:
-                result = self._generate_science_with_gemini(subject, topic, difficulty)
-                if result:
-                    return result
-                else:
-                    logger.warning("Gemini AI failed, falling back to DeepSeek")
-
-            # Fallback to DeepSeek if Gemini fails or is not available
+            # DeepSeek AI is now the primary provider for science
             return self._generate_science_with_deepseek(subject, topic, difficulty)
 
         except Exception as e:
             logger.error(f"Error generating science question: {e}")
             return None
 
-    def _generate_science_with_gemini(self, subject: str, topic: str, difficulty: str) -> Optional[Dict]:
-        """Generate science question using Gemini AI"""
-        try:
-            difficulty_map = {
-                "easy": "Basic recall and understanding of fundamental concepts",
-                "medium": "Application of concepts with moderate analysis and problem-solving", 
-                "difficult": "Complex analysis, synthesis, evaluation and higher-order thinking"
-            }
-
-            # Enhanced ZIMSEC-specific context prompts
-            zimsec_context = {
-                "Biology": "ZIMSEC O-Level Combined Science Biology syllabus covering cell biology, human biology, plant biology, genetics, ecology, and evolution for Forms 1-4 students in Zimbabwe",
-                "Chemistry": "ZIMSEC O-Level Combined Science Chemistry syllabus covering atomic structure, chemical bonding, acids/bases, metals, organic chemistry, and chemical reactions for Forms 1-4 students in Zimbabwe",
-                "Physics": "ZIMSEC O-Level Combined Science Physics syllabus covering mechanics, heat, light, sound, electricity, magnetism, and modern physics for Forms 1-4 students in Zimbabwe"
-            }
-
-            prompt = f"""
-You are ScienceMentor, an expert ZIMSEC Combined Science tutor with deep knowledge of Zimbabwe's O-Level curriculum.
-
-CONTEXT: {zimsec_context.get(subject, '')}
-
-Generate ONE single {subject} MCQ question for the topic: {topic}
-Difficulty Level: {difficulty} - {difficulty_map[difficulty]}
-
-STRICT ZIMSEC O-LEVEL REQUIREMENTS:
-1. Generate EXACTLY ONE question (not multiple, not an array)
-2. Must strictly align with ZIMSEC Combined Science syllabus (Forms 1-4)
-3. Use terminology and concepts familiar to Zimbabwean O-Level students
-4. Include 4 realistic multiple choice options (A, B, C, D)
-5. Ensure distractors are plausible but clearly incorrect
-6. Provide comprehensive explanation with scientific reasoning
-7. Make it culturally relevant to Zimbabwe where appropriate
-8. Use proper scientific terminology expected at O-Level
-
-MANDATORY JSON FORMAT:
-{{
-    "question": "Clear, precise question statement with proper scientific terminology",
-    "options": {{
-        "A": "Option A - scientifically accurate or plausible distractor",
-        "B": "Option B - scientifically accurate or plausible distractor",
-        "C": "Option C - scientifically accurate or plausible distractor", 
-        "D": "Option D - scientifically accurate or plausible distractor"
-    }},
-    "correct_answer": "A",
-    "explanation": "Detailed scientific explanation including why the correct answer is right and why other options are incorrect. Include relevant ZIMSEC syllabus concepts.",
-    "points": {10 if difficulty == 'easy' else 20 if difficulty == 'medium' else 50},
-    "zimsec_topic": "{topic}",
-    "curriculum_reference": "ZIMSEC O-Level Combined Science"
-}}
-
-Generate ONE high-quality {subject} MCQ question for {topic} now:
-"""
-
-            headers = {
-                'Content-Type': 'application/json'
-            }
-
-            data = {
-                'contents': [{
-                    'parts': [{'text': prompt}]
-                }]
-            }
-
-            model = self.gemini_science_model or 'gemini-2.5-flash'
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={self.gemini_api_key}"
-
-            response = requests.post(url, headers=headers, json=data, timeout=30)
-
-            if response.status_code == 200:
-                result = response.json()
-                content = result['candidates'][0]['content']['parts'][0]['text']
-
-                # Extract JSON from response
-                json_start = content.find('{')
-                json_end = content.rfind('}') + 1
-                json_str = content[json_start:json_end]
-
-                question_data = json.loads(json_str)
-
-                # Validate response structure
-                if self._validate_science_question_data(question_data):
-                    logger.info("✅ Successfully generated science question with Gemini AI")
-                    return question_data
-                else:
-                    logger.warning("Invalid science question format from Gemini")
-                    return None
-            else:
-                if response.status_code == 404 and model != 'gemini-2.5-flash':
-                    logger.warning(
-                        "Gemini model '%s' not found. Retrying with 'gemini-2.5-flash'",
-                        model
-                    )
-                    self.gemini_science_model = 'gemini-2.5-flash'
-                    return self._generate_science_with_gemini(subject, topic, difficulty)
-
-                logger.error(f"Gemini API error: {response.status_code} - {response.text}")
-                return None
-
-        except Exception as e:
-            logger.error(f"Error with Gemini API for science questions: {e}")
-            return None
-
     def _generate_science_with_deepseek(self, subject: str, topic: str, difficulty: str) -> Optional[Dict]:
-        """Generate science question using DeepSeek AI as fallback"""
+        """Generate science question using DeepSeek AI (primary provider)"""
         try:
             difficulty_map = {
                 "easy": "Basic recall and understanding of fundamental concepts",
@@ -374,91 +233,16 @@ Generate ONE high-quality {subject} MCQ question for {topic} now:
         return True
 
     def generate_english_question(self, topic: str, difficulty: str) -> Optional[Dict]:
-        """Generate an English question using Gemini AI (fallback to DeepSeek)"""
+        """Generate an English question using DeepSeek AI (primary provider)"""
         try:
-            if self.gemini_api_key:
-                return self._generate_english_with_gemini(topic, difficulty)
-            else:
-                return self._generate_english_with_deepseek(topic, difficulty)
+            return self._generate_english_with_deepseek(topic, difficulty)
 
         except Exception as e:
             logger.error(f"Error generating English question: {e}")
             return None
 
-    def _generate_english_with_gemini(self, topic: str, difficulty: str) -> Optional[Dict]:
-        """Generate English question using Gemini AI"""
-        try:
-            prompt = f"""
-You are an expert English Language tutor for ZIMSEC O-Level curriculum.
-
-Generate ONE multiple choice English question for: {topic}
-Difficulty: {difficulty}
-
-Requirements:
-1. Align with ZIMSEC English Language syllabus
-2. Age-appropriate for Forms 1-4 students
-3. Multiple choice format with 4 options (A, B, C, D)
-4. Clear question with one correct answer
-5. Practical and educational
-
-MANDATORY JSON format:
-{{
-    "question": "Clear English language question",
-    "options": {{
-        "A": "First option",
-        "B": "Second option", 
-        "C": "Third option",
-        "D": "Fourth option"
-    }},
-    "correct_answer": "A",
-    "explanation": "Detailed explanation of why the answer is correct",
-    "points": {10 if difficulty == 'easy' else 20 if difficulty == 'medium' else 30}
-}}
-"""
-
-            headers = {
-                'Content-Type': 'application/json'
-            }
-
-            data = {
-                'contents': [{
-                    'parts': [{'text': prompt}]
-                }]
-            }
-
-            model = self.gemini_english_model or 'gemini-2.5-flash'
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={self.gemini_api_key}"
-
-            response = requests.post(url, headers=headers, json=data, timeout=30)
-
-            if response.status_code == 200:
-                result = response.json()
-                content = result['candidates'][0]['content']['parts'][0]['text']
-
-                # Extract JSON from response
-                json_start = content.find('{')
-                json_end = content.rfind('}') + 1
-                json_str = content[json_start:json_end]
-
-                return json.loads(json_str)
-            else:
-                if response.status_code == 404 and model != 'gemini-2.5-flash':
-                    logger.warning(
-                        "Gemini model '%s' not found. Retrying with 'gemini-2.5-flash'",
-                        model
-                    )
-                    self.gemini_english_model = 'gemini-2.5-flash'
-                    return self._generate_english_with_gemini(topic, difficulty)
-
-                logger.error(f"Gemini API error: {response.status_code}")
-                return self._generate_english_with_deepseek(topic, difficulty)
-
-        except Exception as e:
-            logger.error(f"Error with Gemini API: {e}")
-            return self._generate_english_with_deepseek(topic, difficulty)
-
     def _generate_english_with_deepseek(self, topic: str, difficulty: str) -> Optional[Dict]:
-        """Generate English question using DeepSeek AI as fallback"""
+        """Generate English question using DeepSeek AI (primary provider)"""
         try:
             prompt = f"""
 You are an expert English Language tutor for ZIMSEC O-Level curriculum.

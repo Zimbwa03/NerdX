@@ -100,11 +100,53 @@ export const projectApi = {
     }
   },
 
-  // Generate project document
+  // Generate and download project document as PDF
   generateDocument: async (projectId: number): Promise<string | null> => {
     try {
-      const response = await api.get(`/api/mobile/project/${projectId}/document`);
-      return response.data.data?.document_url || null;
+      const config = await api.get(`/api/mobile/project/${projectId}/document`, {
+        responseType: 'blob',
+      });
+
+      // Get the blob data
+      const blob = config.data;
+
+      // Convert blob to base64 for React Native
+      const reader = new FileReader();
+      return new Promise((resolve, reject) => {
+        reader.onloadend = async () => {
+          try {
+            const base64data = (reader.result as string).split(',')[1];
+
+            // Use expo-file-system to save the file
+            const FileSystem = require('expo-file-system');
+            const Sharing = require('expo-sharing');
+
+            const filename = `ZIMSEC_Project_${projectId}_${Date.now()}.pdf`;
+            const fileUri = `${FileSystem.documentDirectory}${filename}`;
+
+            // Write file
+            await FileSystem.writeAsStringAsync(fileUri, base64data, {
+              encoding: FileSystem.EncodingType.Base64,
+            });
+
+            // Share/download the file
+            if (await Sharing.isAvailableAsync()) {
+              await Sharing.shareAsync(fileUri, {
+                mimeType: 'application/pdf',
+                dialogTitle: 'Download Project Document',
+                UTI: 'com.adobe.pdf'
+              });
+            }
+
+            resolve(fileUri);
+          } catch (error) {
+            console.error('Error saving PDF:', error);
+            reject(error);
+          }
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
     } catch (error: any) {
       console.error('Generate document error:', error);
       throw error;

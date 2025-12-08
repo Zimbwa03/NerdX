@@ -15,7 +15,10 @@ from services.advanced_credit_service import advanced_credit_service
 
 logger = logging.getLogger(__name__)
 
-# Import Google Gemini AI
+# Import requests for DeepSeek API
+import requests
+
+# Import Google Gemini AI (fallback only)
 try:
     import google.generativeai as genai
     GENAI_AVAILABLE = True
@@ -33,7 +36,12 @@ class MathematicsTeacherService:
     def __init__(self):
         self.whatsapp_service = WhatsAppService()
         
-        # Initialize Gemini AI
+        # Initialize DeepSeek AI as primary provider
+        self.deepseek_api_key = os.getenv('DEEPSEEK_API_KEY')
+        self.deepseek_api_url = 'https://api.deepseek.com/chat/completions'
+        self._is_deepseek_configured = bool(self.deepseek_api_key)
+        
+        # Initialize Gemini AI as fallback
         self.gemini_model = None
         self._is_gemini_configured = False
         try:
@@ -43,13 +51,15 @@ class MathematicsTeacherService:
                     genai.configure(api_key=api_key)
                     self.gemini_model = genai.GenerativeModel('gemini-2.0-flash-exp')
                     self._is_gemini_configured = True
-                    logger.info("✅ Mathematics Teacher initialized with Gemini AI")
-                else:
-                    logger.warning("GEMINI_API_KEY not found - AI teaching unavailable")
-            else:
-                logger.warning("Google Generative AI not available")
         except Exception as e:
-            logger.error(f"Error initializing Gemini: {e}")
+            logger.error(f"Error initializing Gemini fallback: {e}")
+        
+        if self._is_deepseek_configured:
+            logger.info("✅ Mathematics Teacher initialized with DeepSeek AI (primary)")
+        elif self._is_gemini_configured:
+            logger.warning("DeepSeek not available - using Gemini as primary")
+        else:
+            logger.warning("No AI services available")
     
     # Professional Mathematics Teaching System Prompt
     MATH_TEACHER_SYSTEM_PROMPT = """You are a professional Mathematics teacher specializing in ZIMSEC and Cambridge O-Level Mathematics. You use proven teaching methods to help students develop deep conceptual understanding.
@@ -320,11 +330,8 @@ Current conversation context will be provided with each message."""
             }
     
     def _get_teaching_response(self, user_id: str, message: str, session_data: dict) -> str:
-        """Get teaching response from AI"""
+        """Get teaching response from DeepSeek AI (primary) with Gemini fallback"""
         try:
-            if not self._is_gemini_configured or not self.gemini_model:
-                return self._get_fallback_response(message, session_data)
-            
             # Build context
             subject = session_data.get('subject', 'Mathematics')
             grade_level = session_data.get('grade_level', 'O-Level')
@@ -343,55 +350,45 @@ Current conversation context will be provided with each message."""
             # Create full prompt
             full_prompt = f"{self.MATH_TEACHER_SYSTEM_PROMPT}\n\n{context}\n\nStudent's message: {message}\n\nYour response:"
             
-            try:
-                response = self.gemini_model.generate_content(full_prompt)
-                if response and response.text:
-                    return response.text.strip()
-                else:
-                    return self._try_deepseek_fallback(user_id, message, session_data, full_prompt)
-            except Exception as gemini_error:
-                logger.error(f"Gemini error: {gemini_error}")
-                return self._try_deepseek_fallback(user_id, message, session_data, full_prompt)
+            # Try DeepSeek first (primary)
+            if self._is_deepseek_configured:
+                try:
+                    response = requests.post(
+                        self.deepseek_api_url,
+                        headers={'Authorization': f'Bearer {self.deepseek_api_key}', 'Content-Type': 'application/json'},
+                        json={
+                            'model': 'deepseek-chat',
+                            'messages': [
+                                {'role': 'system', 'content': self.MATH_TEACHER_SYSTEM_PROMPT},
+                                {'role': 'user', 'content': full_prompt}
+                            ],
+                            'temperature': 0.7,
+                            'max_tokens': 2000
+                        },
+                        timeout=30
+                    )
+                    if response.status_code == 200:
+                        data = response.json()
+                        if 'choices' in data and len(data['choices']) > 0:
+                            return data['choices'][0]['message']['content'].strip()
+                except Exception as deepseek_error:
+                    logger.error(f"DeepSeek error: {deepseek_error}")
+            
+            # Try Gemini as fallback
+            if self._is_gemini_configured and self.gemini_model:
+                try:
+                    response = self.gemini_model.generate_content(full_prompt)
+                    if response and response.text:
+                        return response.text.strip()
+                except Exception as gemini_error:
+                    logger.error(f"Gemini fallback error: {gemini_error}")
+            
+            return self._get_fallback_response(message, session_data)
                 
         except Exception as e:
             logger.error(f"Error getting teaching response: {e}")
             return self._get_fallback_response(message, session_data)
     
-    def _try_deepseek_fallback(self, user_id: str, message: str, session_data: dict, prompt: str) -> str:
-        """Try DeepSeek AI as fallback"""
-        try:
-            import requests
-            deepseek_key = os.getenv('DEEPSEEK_API_KEY')
-            if not deepseek_key:
-                return self._get_fallback_response(message, session_data)
-            
-            response = requests.post(
-                'https://api.deepseek.com/chat/completions',
-                headers={
-                    'Content-Type': 'application/json',
-                    'Authorization': f'Bearer {deepseek_key}'
-                },
-                json={
-                    'model': 'deepseek-chat',
-                    'messages': [
-                        {'role': 'system', 'content': self.MATH_TEACHER_SYSTEM_PROMPT},
-                        {'role': 'user', 'content': prompt}
-                    ],
-                    'temperature': 0.7,
-                    'max_tokens': 2000
-                },
-                timeout=30
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                if 'choices' in data and len(data['choices']) > 0:
-                    return data['choices'][0]['message']['content'].strip()
-            
-            return self._get_fallback_response(message, session_data)
-        except Exception as e:
-            logger.error(f"DeepSeek fallback error: {e}")
-            return self._get_fallback_response(message, session_data)
     
     def _get_fallback_response(self, message: str, session_data: dict) -> str:
         """Fallback response when AI unavailable"""

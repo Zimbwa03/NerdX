@@ -15,13 +15,16 @@ from services.advanced_credit_service import advanced_credit_service
 
 logger = logging.getLogger(__name__)
 
-# Import Google Gemini AI
+# Import Google Gemini AI (fallback only)
 try:
     import google.generativeai as genai
     GENAI_AVAILABLE = True
 except ImportError:
     genai = None
     GENAI_AVAILABLE = False
+
+# Import requests for DeepSeek API
+import requests
 
 
 class CombinedScienceTeacherService:
@@ -33,7 +36,12 @@ class CombinedScienceTeacherService:
     def __init__(self):
         self.whatsapp_service = WhatsAppService()
         
-        # Initialize Gemini AI
+        # Initialize DeepSeek AI as primary provider
+        self.deepseek_api_key = os.getenv('DEEPSEEK_API_KEY')
+        self.deepseek_api_url = 'https://api.deepseek.com/chat/completions'
+        self._is_deepseek_configured = bool(self.deepseek_api_key)
+        
+        # Initialize Gemini AI as fallback
         self.gemini_model = None
         self._is_gemini_configured = False
         try:
@@ -41,16 +49,17 @@ class CombinedScienceTeacherService:
                 api_key = os.getenv('GEMINI_API_KEY')
                 if api_key and genai:
                     genai.configure(api_key=api_key)
-                    # Use gemini-2.0-flash-exp for intelligent teaching
                     self.gemini_model = genai.GenerativeModel('gemini-2.0-flash-exp')
                     self._is_gemini_configured = True
-                    logger.info("✅ Combined Science Teacher initialized with Gemini AI (gemini-2.0-flash-exp)")
-                else:
-                    logger.warning("GEMINI_API_KEY not found - AI teaching unavailable")
-            else:
-                logger.warning("Google Generative AI not available")
         except Exception as e:
-            logger.error(f"Error initializing Gemini: {e}")
+            logger.error(f"Error initializing Gemini fallback: {e}")
+        
+        if self._is_deepseek_configured:
+            logger.info("✅ Combined Science Teacher initialized with DeepSeek AI (primary)")
+        elif self._is_gemini_configured:
+            logger.warning("DeepSeek not available - using Gemini as primary")
+        else:
+            logger.warning("No AI services available")
     
     # Professional teacher system prompt from user
     TEACHER_SYSTEM_PROMPT = """You are a professional Combined Science teacher who provides personalized instruction and structured notes in Biology, Chemistry, and Physics. Your goal is to teach students clearly and create high-quality personalized PDF notes for each topic.
@@ -246,33 +255,33 @@ Current conversation context will be provided with each message."""
             subject = session_data.get('subject', 'Science')
             grade_level = session_data.get('grade_level', 'O-Level')
             
-            # Use Gemini to pick a random topic
-            if self._is_gemini_configured:
+            # Use DeepSeek to pick a random topic (primary)
+            if self._is_deepseek_configured:
                 prompt = f"Pick one random important topic for {grade_level} {subject} that ZIMSEC students should learn. Respond with ONLY the topic name, nothing else."
                 
                 try:
-                    response = self.gemini_model.generate_content(prompt)
-                    topic = response.text.strip()
-                    
-                    # Start teaching this topic
-                    self.start_teaching_session(user_id, topic)
-                    
+                    response = requests.post(
+                        self.deepseek_api_url,
+                        headers={'Authorization': f'Bearer {self.deepseek_api_key}', 'Content-Type': 'application/json'},
+                        json={'model': 'deepseek-chat', 'messages': [{'role': 'user', 'content': prompt}], 'max_tokens': 100},
+                        timeout=15
+                    )
+                    if response.status_code == 200:
+                        topic = response.json()['choices'][0]['message']['content'].strip()
+                        self.start_teaching_session(user_id, topic)
+                        return
                 except Exception as e:
-                    logger.error(f"Gemini error picking random topic: {e}")
-                    # Fallback topics
-                    fallback_topics = {
-                        'Biology': ['Cell Structure', 'Photosynthesis', 'Digestion', 'Respiration'],
-                        'Chemistry': ['Atomic Structure', 'Chemical Bonding', 'Acids and Bases', 'Periodic Table'],
-                        'Physics': ['Forces and Motion', 'Energy', 'Electricity', 'Waves']
-                    }
-                    import random
-                    topic = random.choice(fallback_topics.get(subject, ['General Science']))
-                    self.start_teaching_session(user_id, topic)
-            else:
-                self.whatsapp_service.send_message(
-                    user_id,
-                    "AI teacher is unavailable. Please type a topic you'd like to learn."
-                )
+                    logger.error(f"DeepSeek error picking random topic: {e}")
+            
+            # Fallback to static topics
+            fallback_topics = {
+                'Biology': ['Cell Structure', 'Photosynthesis', 'Digestion', 'Respiration'],
+                'Chemistry': ['Atomic Structure', 'Chemical Bonding', 'Acids and Bases', 'Periodic Table'],
+                'Physics': ['Forces and Motion', 'Energy', 'Electricity', 'Waves']
+            }
+            import random
+            topic = random.choice(fallback_topics.get(subject, ['General Science']))
+            self.start_teaching_session(user_id, topic)
         
         except Exception as e:
             logger.error(f"Error handling random topic for {user_id}: {e}")
@@ -284,24 +293,29 @@ Current conversation context will be provided with each message."""
             subject = session_data.get('subject', 'Science')
             grade_level = session_data.get('grade_level', 'O-Level')
             
-            if self._is_gemini_configured:
+            # Use DeepSeek to suggest topics (primary)
+            if self._is_deepseek_configured:
                 prompt = f"List 5 important topics for {grade_level} {subject} that ZIMSEC students should learn. Format as a simple numbered list."
                 
                 try:
-                    response = self.gemini_model.generate_content(prompt)
-                    suggestions = response.text.strip()
-                    
-                    message = f"📚 *Suggested {subject} Topics for {grade_level}:*\n\n"
-                    message += suggestions
-                    message += "\n\n💬 Type any topic name to start learning!"
-                    
-                    self.whatsapp_service.send_message(user_id, message)
-                    
+                    response = requests.post(
+                        self.deepseek_api_url,
+                        headers={'Authorization': f'Bearer {self.deepseek_api_key}', 'Content-Type': 'application/json'},
+                        json={'model': 'deepseek-chat', 'messages': [{'role': 'user', 'content': prompt}], 'max_tokens': 300},
+                        timeout=20
+                    )
+                    if response.status_code == 200:
+                        suggestions = response.json()['choices'][0]['message']['content'].strip()
+                        message = f"📚 *Suggested {subject} Topics for {grade_level}:*\n\n"
+                        message += suggestions
+                        message += "\n\n💬 Type any topic name to start learning!"
+                        self.whatsapp_service.send_message(user_id, message)
+                        return
                 except Exception as e:
-                    logger.error(f"Gemini error suggesting topics: {e}")
-                    self._send_fallback_topic_suggestions(user_id, subject, grade_level)
-            else:
-                self._send_fallback_topic_suggestions(user_id, subject, grade_level)
+                    logger.error(f"DeepSeek error suggesting topics: {e}")
+            
+            # Fallback to static topic suggestions
+            self._send_fallback_topic_suggestions(user_id, subject, grade_level)
         
         except Exception as e:
             logger.error(f"Error suggesting topics for {user_id}: {e}")

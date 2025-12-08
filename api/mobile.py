@@ -2730,20 +2730,39 @@ def project_history(project_id):
 @mobile_bp.route('/project/<int:project_id>/document', methods=['GET'])
 @require_auth
 def project_document(project_id):
-    """Generate project document"""
+    """Generate and download project document as PDF"""
     try:
         from services.project_assistant_service import ProjectAssistantService
+        from flask import send_file
+        import os
+        
         service = ProjectAssistantService()
         
-        doc_url = service.generate_project_document(g.current_user_id, project_id)
+        # Generate PDF document
+        result = service.generate_project_document(g.current_user_id, project_id)
         
-        return jsonify({
-            'success': True,
-            'data': {'document_url': doc_url}
-        }), 200
+        if result.get('success') and result.get('pdf_path'):
+            pdf_path = result['pdf_path']
+            filename = result.get('filename', f'project_{project_id}.pdf')
+            
+            # Check if file exists
+            if os.path.exists(pdf_path):
+                # Return the PDF file for download
+                return send_file(
+                    pdf_path,
+                    mimetype='application/pdf',
+                    as_attachment=True,
+                    download_name=filename
+                )
+            else:
+                logger.error(f"PDF file not found: {pdf_path}")
+                return jsonify({'success': False, 'message': 'PDF file not found'}), 500
+        else:
+            return jsonify({'success': False, 'message': 'Failed to generate document'}), 500
+            
     except Exception as e:
         logger.error(f"Project document error: {e}", exc_info=True)
-        return jsonify({'success': False, 'message': 'Server error'}), 500
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 
 
@@ -2758,7 +2777,8 @@ def solve_equation():
     """Solve equation with step-by-step solution using SymPy"""
     try:
         data = request.get_json()
-        equation = data.get('equation', '').strip()
+        # Accept both 'problem' (from frontend) and 'equation' (original)
+        equation = data.get('problem', data.get('equation', '')).strip()
         variable = data.get('variable', 'x').strip()
         
         if not equation:
@@ -3133,20 +3153,23 @@ def animate_quadratic():
         result = service.render_quadratic(a, b, c, quality)
         
         if result['success']:
+            video_path = f"/static/{result['video_path'].replace(os.sep, '/')}"
             return jsonify({
-                'status': 'success',
-                'video_url': f"/static/{result['video_path'].replace(os.sep, '/')}",
-                'render_id': result['render_id']
+                'success': True,
+                'data': {
+                    'video_path': video_path,
+                    'render_id': result['render_id']
+                }
             }), 200
         else:
             return jsonify({
-                'status': 'error',
+                'success': False,
                 'message': result.get('error'),
                 'logs': result.get('logs')
             }), 500
             
     except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 @mobile_bp.route('/math/animate/linear', methods=['POST'])
 def animate_linear():
@@ -3163,20 +3186,23 @@ def animate_linear():
         result = service.render_linear(m, c, quality)
         
         if result['success']:
+            video_path = f"/static/{result['video_path'].replace(os.sep, '/')}"
             return jsonify({
-                'status': 'success',
-                'video_url': f"/static/{result['video_path'].replace(os.sep, '/')}",
-                'render_id': result['render_id']
+                'success': True,
+                'data': {
+                    'video_path': video_path,
+                    'render_id': result['render_id']
+                }
             }), 200
         else:
             return jsonify({
-                'status': 'error',
+                'success': False,
                 'message': result.get('error'),
                 'logs': result.get('logs')
             }), 500
             
     except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 # -----------------------------------------------------------------------------
 # Math OCR Endpoints
@@ -3228,6 +3254,7 @@ def scan_math_problem():
 # -----------------------------------------------------------------------------
 
 @mobile_bp.route('/voice/transcribe', methods=['POST'])
+@require_auth
 def transcribe_audio():
     """Transcribe uploaded audio file"""
     try:
@@ -3266,6 +3293,7 @@ def transcribe_audio():
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @mobile_bp.route('/voice/speak', methods=['POST'])
+@require_auth
 def text_to_speech():
     """Convert text to speech"""
     try:

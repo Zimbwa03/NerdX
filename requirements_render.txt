@@ -45,3 +45,26 @@ requests>=2.32.5
 # Additional Utilities
 python-dotenv>=1.0.0
 python-dateutil>=2.8.2
+
+# ============================================
+# Mathematics Features (Manim & Pix2Text)
+# ============================================
+# Manim for graph animations (requires ffmpeg, latex - installed via Dockerfile)
+manim>=0.18.0
+
+# Pix2Text for OCR/Scan & Solve (downloads ML models on first use ~1GB)
+# Note: Use simpler install to avoid heavy multilingual deps
+pix2text
+
+# For text-to-speech (optional fallback)
+gtts>=2.5.0
+
+# ============================================
+# Voice Features (Whisper & Edge-TTS)
+# ============================================
+# OpenAI Whisper for speech-to-text transcription (requires ffmpeg)
+openai-whisper
+
+# Microsoft Edge TTS for text-to-speech
+edge-tts>=6.0.0
+
