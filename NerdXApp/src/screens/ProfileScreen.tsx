@@ -9,19 +9,24 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  StatusBar,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { userApi, UserProfile } from '../services/api/userApi';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { Icons, IconCircle } from '../components/Icons';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import Colors from '../theme/colors';
+import { useThemedColors } from '../theme/useThemedStyles';
 
 const ProfileScreen: React.FC = () => {
   const navigation = useNavigation();
   const { user, updateUser } = useAuth();
+  const { isDarkMode } = useTheme();
+  const themedColors = useThemedColors();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -84,15 +89,16 @@ const ProfileScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#1976D2" />
-        <Text style={styles.loadingText}>Loading profile...</Text>
+      <View style={[styles.centerContainer, { backgroundColor: themedColors.background.default }]}>
+        <ActivityIndicator size="large" color={themedColors.primary.main} />
+        <Text style={[styles.loadingText, { color: themedColors.text.secondary }]}>Loading profile...</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView style={[styles.container, { backgroundColor: themedColors.background.default }]} showsVerticalScrollIndicator={false}>
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={themedColors.background.default} />
       {/* Professional Header */}
       <LinearGradient
         colors={[Colors.secondary.main, Colors.secondary.dark]}
@@ -151,7 +157,7 @@ const ProfileScreen: React.FC = () => {
         {/* Form Fields */}
         <View style={styles.formSection}>
           <Text style={styles.sectionTitle}>Personal Information</Text>
-          
+
           <Card variant="elevated" style={styles.formCard}>
             <View style={styles.inputGroup}>
               <Text style={styles.label}>First Name</Text>

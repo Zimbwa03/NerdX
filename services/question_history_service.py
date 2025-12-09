@@ -55,6 +55,51 @@ class QuestionHistoryService:
             
         except Exception as e:
             logger.error(f"Error adding question to history: {e}")
+
+    def add_question_text_to_history(self, user_id: str, key: str, question_text: str):
+        """Add a question text to user's history to prevent duplicate AI-generated questions"""
+        try:
+            if user_id not in self.question_texts:
+                self.question_texts[user_id] = {}
+                
+            if key not in self.question_texts[user_id]:
+                self.question_texts[user_id][key] = []
+                
+            text_list = self.question_texts[user_id][key]
+            
+            # Normalize text for comparison (first 100 chars, lowercase)
+            normalized_text = question_text[:100].lower().strip() if question_text else ""
+            
+            # Check if already exists
+            if normalized_text not in text_list:
+                text_list.append(normalized_text)
+            
+            # Trim history if too long (keep last 20 question texts per key)
+            if len(text_list) > 20:
+                text_list.pop(0)  # Remove oldest
+                
+            logger.debug(f"Added question text to history for {user_id}/{key}")
+            
+        except Exception as e:
+            logger.error(f"Error adding question text to history: {e}")
+
+    def is_question_text_in_history(self, user_id: str, key: str, question_text: str) -> bool:
+        """Check if a question text is already in the user's history"""
+        try:
+            if user_id not in self.question_texts:
+                return False
+                
+            if key not in self.question_texts[user_id]:
+                return False
+                
+            # Normalize text for comparison
+            normalized_text = question_text[:100].lower().strip() if question_text else ""
+            
+            return normalized_text in self.question_texts[user_id][key]
+            
+        except Exception as e:
+            logger.error(f"Error checking question text history: {e}")
+            return False
             
     def get_recent_questions(self, user_id: str, subject: str) -> Set[str]:
         """Get set of recently shown question IDs for a subject"""

@@ -9,9 +9,12 @@ import {
     Animated,
     Dimensions,
     Alert,
+    StatusBar,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
+import { useTheme } from '../context/ThemeContext';
+import { useThemedColors } from '../theme/useThemedStyles';
 import { Colors } from '../theme/colors';
 import { Icons, IconCircle } from '../components/Icons';
 import { Card } from '../components/Card';
@@ -20,6 +23,8 @@ const { width } = Dimensions.get('window');
 
 const VirtualLabScreen: React.FC = () => {
     const navigation = useNavigation();
+    const { isDarkMode } = useTheme();
+    const themedColors = useThemedColors();
     const [activeLab, setActiveLab] = useState<'physics' | 'chemistry' | 'biology'>('physics');
 
     // Physics State (Pendulum)
@@ -121,27 +126,27 @@ const VirtualLabScreen: React.FC = () => {
 
 
     const renderPhysicsLab = () => (
-        <View style={styles.labContainer}>
-            <Text style={styles.labTitle}>Simple Pendulum</Text>
-            <Text style={styles.labDescription}>
+        <View style={[styles.labContainer, { backgroundColor: themedColors.background.paper }]}>
+            <Text style={[styles.labTitle, { color: themedColors.text.primary }]}>Simple Pendulum</Text>
+            <Text style={[styles.labDescription, { color: themedColors.text.secondary }]}>
                 Investigate how length affects the period of oscillation.
             </Text>
 
-            <View style={styles.simulationArea}>
-                <View style={styles.pendulumSupport} />
-                <Animated.View style={[styles.pendulumString, { height: length * 150, transform: [{ rotate: pendulumRotation }] }]}>
-                    <View style={styles.pendulumBob} />
+            <View style={[styles.simulationArea, { backgroundColor: isDarkMode ? '#2c2c2c' : '#E0E0E0' }]}>
+                <View style={[styles.pendulumSupport, { backgroundColor: themedColors.text.primary }]} />
+                <Animated.View style={[styles.pendulumString, { height: length * 150, transform: [{ rotate: pendulumRotation }], backgroundColor: themedColors.text.primary }]}>
+                    <View style={[styles.pendulumBob, { backgroundColor: themedColors.primary.main }]} />
                 </Animated.View>
             </View>
 
             <View style={styles.controls}>
-                <Text style={styles.controlLabel}>String Length: {length.toFixed(1)}m</Text>
+                <Text style={[styles.controlLabel, { color: themedColors.text.primary }]}>String Length: {length.toFixed(1)}m</Text>
                 <View style={styles.buttonRow}>
-                    <TouchableOpacity onPress={() => setLength(Math.max(0.1, length - 0.1))} style={styles.controlBtn}>
-                        <Text style={styles.btnText}>-</Text>
+                    <TouchableOpacity onPress={() => setLength(Math.max(0.1, length - 0.1))} style={[styles.controlBtn, { backgroundColor: themedColors.background.subtle }]}>
+                        <Text style={[styles.btnText, { color: themedColors.text.primary }]}>-</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => setLength(Math.min(2.0, length + 0.1))} style={styles.controlBtn}>
-                        <Text style={styles.btnText}>+</Text>
+                    <TouchableOpacity onPress={() => setLength(Math.min(2.0, length + 0.1))} style={[styles.controlBtn, { backgroundColor: themedColors.background.subtle }]}>
+                        <Text style={[styles.btnText, { color: themedColors.text.primary }]}>+</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -153,36 +158,36 @@ const VirtualLabScreen: React.FC = () => {
                 </TouchableOpacity>
 
                 <View style={styles.readout}>
-                    <Text style={styles.readoutText}>Period (T): {(2 * Math.PI * Math.sqrt(length / 9.8)).toFixed(2)}s</Text>
+                    <Text style={[styles.readoutText, { color: themedColors.secondary.main }]}>Period (T): {(2 * Math.PI * Math.sqrt(length / 9.8)).toFixed(2)}s</Text>
                 </View>
             </View>
         </View>
     );
 
     const renderChemistryLab = () => (
-        <View style={styles.labContainer}>
-            <Text style={styles.labTitle}>Acid-Base Titration</Text>
-            <Text style={styles.labDescription}>
+        <View style={[styles.labContainer, { backgroundColor: themedColors.background.paper }]}>
+            <Text style={[styles.labTitle, { color: themedColors.text.primary }]}>Acid-Base Titration</Text>
+            <Text style={[styles.labDescription, { color: themedColors.text.secondary }]}>
                 Neutralize the acid by adding base. Watch for the color change!
             </Text>
 
-            <View style={styles.simulationArea}>
-                <View style={styles.burette}>
-                    <View style={[styles.buretteLiquid, { height: `${100 - (titrantVolume * 2)}%` }]} />
+            <View style={[styles.simulationArea, { backgroundColor: isDarkMode ? '#2c2c2c' : '#E0E0E0' }]}>
+                <View style={[styles.burette, { borderColor: themedColors.text.primary }]}>
+                    <View style={[styles.buretteLiquid, { height: `${100 - (titrantVolume * 2)}%`, backgroundColor: themedColors.secondary.main }]} />
                 </View>
-                <View style={[styles.flask, { backgroundColor: solutionColor }]}>
-                    <Text style={styles.flaskLabel}>{titrantVolume}mL added</Text>
+                <View style={[styles.flask, { backgroundColor: solutionColor, borderColor: themedColors.text.primary }]}>
+                    <Text style={[styles.flaskLabel, { color: '#333' }]}>{titrantVolume}mL added</Text>
                 </View>
             </View>
 
             <View style={styles.controls}>
-                <Text style={styles.controlLabel}>pH Level: {ph.toFixed(1)}</Text>
+                <Text style={[styles.controlLabel, { color: themedColors.text.primary }]}>pH Level: {ph.toFixed(1)}</Text>
 
-                <TouchableOpacity style={styles.actionBtn} onPress={addTitrant}>
+                <TouchableOpacity style={[styles.actionBtn, { backgroundColor: themedColors.primary.main }]} onPress={addTitrant}>
                     <Text style={styles.actionBtnText}>Add 1mL Base (NaOH)</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={[styles.actionBtn, styles.resetBtn]} onPress={resetTitration}>
+                <TouchableOpacity style={[styles.actionBtn, styles.resetBtn, { backgroundColor: themedColors.warning.dark }]} onPress={resetTitration}>
                     <Text style={styles.actionBtnText}>Reset Experiment</Text>
                 </TouchableOpacity>
             </View>
@@ -190,15 +195,15 @@ const VirtualLabScreen: React.FC = () => {
     );
 
     const renderBiologyLab = () => (
-        <View style={styles.labContainer}>
-            <Text style={styles.labTitle}>Photosynthesis Rate</Text>
-            <Text style={styles.labDescription}>
+        <View style={[styles.labContainer, { backgroundColor: themedColors.background.paper }]}>
+            <Text style={[styles.labTitle, { color: themedColors.text.primary }]}>Photosynthesis Rate</Text>
+            <Text style={[styles.labDescription, { color: themedColors.text.secondary }]}>
                 Observe how light intensity affects oxygen production (bubbles).
             </Text>
 
-            <View style={styles.simulationArea}>
+            <View style={[styles.simulationArea, { backgroundColor: isDarkMode ? '#2c2c2c' : '#E0E0E0' }]}>
                 <View style={[styles.lamp, { opacity: lightIntensity / 100 }]} />
-                <View style={styles.beaker}>
+                <View style={[styles.beaker, { borderColor: themedColors.text.primary }]}>
                     <View style={styles.plant} />
                     {/* Animated bubbles would go here, simplified as a counter for now */}
                     <View style={styles.bubblesContainer}>
@@ -210,22 +215,22 @@ const VirtualLabScreen: React.FC = () => {
             </View>
 
             <View style={styles.controls}>
-                <Text style={styles.controlLabel}>Light Intensity: {lightIntensity}%</Text>
+                <Text style={[styles.controlLabel, { color: themedColors.text.primary }]}>Light Intensity: {lightIntensity}%</Text>
                 <View style={styles.buttonRow}>
-                    <TouchableOpacity onPress={() => setLightIntensity(Math.max(0, lightIntensity - 10))} style={styles.controlBtn}>
-                        <Text style={styles.btnText}>-</Text>
+                    <TouchableOpacity onPress={() => setLightIntensity(Math.max(0, lightIntensity - 10))} style={[styles.controlBtn, { backgroundColor: themedColors.background.subtle }]}>
+                        <Text style={[styles.btnText, { color: themedColors.text.primary }]}>-</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => setLightIntensity(Math.min(100, lightIntensity + 10))} style={styles.controlBtn}>
-                        <Text style={styles.btnText}>+</Text>
+                    <TouchableOpacity onPress={() => setLightIntensity(Math.min(100, lightIntensity + 10))} style={[styles.controlBtn, { backgroundColor: themedColors.background.subtle }]}>
+                        <Text style={[styles.btnText, { color: themedColors.text.primary }]}>+</Text>
                     </TouchableOpacity>
                 </View>
 
                 <View style={styles.readout}>
-                    <Text style={styles.readoutText}>Bubbles Counted: {bubbleCount}</Text>
-                    <Text style={styles.readoutSubText}>Rate: {(lightIntensity / 20).toFixed(1)} bubbles/sec</Text>
+                    <Text style={[styles.readoutText, { color: themedColors.secondary.main }]}>Bubbles Counted: {bubbleCount}</Text>
+                    <Text style={[styles.readoutSubText, { color: themedColors.text.secondary }]}>Rate: {(lightIntensity / 20).toFixed(1)} bubbles/sec</Text>
                 </View>
 
-                <TouchableOpacity style={[styles.actionBtn, styles.resetBtn]} onPress={() => setBubbleCount(0)}>
+                <TouchableOpacity style={[styles.actionBtn, styles.resetBtn, { backgroundColor: themedColors.warning.dark }]} onPress={() => setBubbleCount(0)}>
                     <Text style={styles.actionBtnText}>Reset Count</Text>
                 </TouchableOpacity>
             </View>
@@ -233,11 +238,11 @@ const VirtualLabScreen: React.FC = () => {
     );
 
     return (
-        <View style={styles.container}>
-            <StatusBar barStyle="light-content" backgroundColor={Colors.background.default} />
+        <View style={[styles.container, { backgroundColor: themedColors.background.default }]}>
+            <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={themedColors.background.default} />
 
             <LinearGradient
-                colors={Colors.gradients.primary}
+                colors={themedColors.gradients.primary}
                 style={styles.header}
             >
                 <View style={styles.headerContent}>
@@ -249,24 +254,24 @@ const VirtualLabScreen: React.FC = () => {
                 </View>
             </LinearGradient>
 
-            <View style={styles.tabBar}>
+            <View style={[styles.tabBar, { backgroundColor: themedColors.background.paper }]}>
                 <TouchableOpacity
-                    style={[styles.tab, activeLab === 'physics' && styles.activeTab]}
+                    style={[styles.tab, activeLab === 'physics' && { backgroundColor: themedColors.primary.main }]}
                     onPress={() => setActiveLab('physics')}
                 >
-                    <Text style={[styles.tabText, activeLab === 'physics' && styles.activeTabText]}>Physics</Text>
+                    <Text style={[styles.tabText, { color: themedColors.text.secondary }, activeLab === 'physics' && styles.activeTabText]}>Physics</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                    style={[styles.tab, activeLab === 'chemistry' && styles.activeTab]}
+                    style={[styles.tab, activeLab === 'chemistry' && { backgroundColor: themedColors.primary.main }]}
                     onPress={() => setActiveLab('chemistry')}
                 >
-                    <Text style={[styles.tabText, activeLab === 'chemistry' && styles.activeTabText]}>Chemistry</Text>
+                    <Text style={[styles.tabText, { color: themedColors.text.secondary }, activeLab === 'chemistry' && styles.activeTabText]}>Chemistry</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                    style={[styles.tab, activeLab === 'biology' && styles.activeTab]}
+                    style={[styles.tab, activeLab === 'biology' && { backgroundColor: themedColors.primary.main }]}
                     onPress={() => setActiveLab('biology')}
                 >
-                    <Text style={[styles.tabText, activeLab === 'biology' && styles.activeTabText]}>Biology</Text>
+                    <Text style={[styles.tabText, { color: themedColors.text.secondary }, activeLab === 'biology' && styles.activeTabText]}>Biology</Text>
                 </TouchableOpacity>
             </View>
 

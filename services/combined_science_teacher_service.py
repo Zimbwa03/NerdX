@@ -605,7 +605,7 @@ Current conversation context will be provided with each message."""
                     'temperature': 0.7,
                     'max_tokens': 2000
                 },
-                timeout=30
+                timeout=60
             )
             
             if response.status_code == 200:

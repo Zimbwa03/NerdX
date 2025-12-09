@@ -16,7 +16,10 @@ import { useAuth } from '../context/AuthContext';
 import { Icons, IconCircle } from '../components/Icons';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
-import Colors from '../theme/colors';
+import { Colors } from '../theme/colors';
+import { useTheme } from '../context/ThemeContext';
+import { useThemedColors } from '../theme/useThemedStyles';
+import { StatusBar } from 'react-native';
 
 interface ExamQuestion extends Question {
   userAnswer?: string;
@@ -30,6 +33,8 @@ const CombinedScienceExamScreen: React.FC = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const { user, updateUser } = useAuth();
+  const { isDarkMode } = useTheme();
+  const themedColors = useThemedColors();
   const { subject } = route.params as { subject: any };
 
   const [step, setStep] = useState<ExamStep>('select');
@@ -67,22 +72,22 @@ const CombinedScienceExamScreen: React.FC = () => {
 
     try {
       setGenerating(true);
-      
+
       // Initialize question structure - we'll generate questions on-demand
       // Pre-plan the distribution across subjects
       const questionsPerSubject = Math.ceil(selectedCount / 3);
       const subjects = ['Biology', 'Chemistry', 'Physics'];
       const questionPlan: { subject: string; topicId?: string }[] = [];
-      
+
       // Plan which subject each question should come from
       for (let i = 0; i < selectedCount; i++) {
         const subjectIndex = Math.floor(i / questionsPerSubject) % 3;
         questionPlan.push({ subject: subjects[subjectIndex] });
       }
-      
+
       // Shuffle the plan for better distribution
       const shuffledPlan = questionPlan.sort(() => Math.random() - 0.5);
-      
+
       // Initialize questions array with placeholders
       const initialQuestions: ExamQuestion[] = shuffledPlan.map((plan, index) => ({
         id: `placeholder-${index}`,
@@ -96,18 +101,18 @@ const CombinedScienceExamScreen: React.FC = () => {
         difficulty: 'medium',
         subject: plan.subject,
       }));
-      
+
       setQuestions(initialQuestions);
       setStep('exam');
       setCurrentQuestionIndex(0);
       setCurrentAnswer('');
-      
+
       // Deduct credits upfront
       if (user) {
         const newCredits = (user.credits || 0) - selectedCount;
         updateUser({ credits: newCredits });
       }
-      
+
       // Generate first question immediately
       await loadQuestion(0, shuffledPlan[0].subject);
     } catch (error: any) {
@@ -142,7 +147,7 @@ const CombinedScienceExamScreen: React.FC = () => {
         }
         return;
       }
-      
+
       const randomTopic = topics[Math.floor(Math.random() * topics.length)];
       const question = await quizApi.generateQuestion(
         'combined_science',
@@ -151,7 +156,7 @@ const CombinedScienceExamScreen: React.FC = () => {
         'exam',
         parentSubject
       );
-      
+
       if (question) {
         const updatedQuestions = [...questions];
         updatedQuestions[index] = { ...question, subject: parentSubject };
@@ -173,12 +178,12 @@ const CombinedScienceExamScreen: React.FC = () => {
   const handleNextQuestion = async () => {
     // Save current answer
     setAnswers({ ...answers, [currentQuestionIndex]: currentAnswer });
-    
+
     if (currentQuestionIndex < questions.length - 1) {
       const nextIndex = currentQuestionIndex + 1;
       setCurrentQuestionIndex(nextIndex);
       setCurrentAnswer(answers[nextIndex] || '');
-      
+
       // Load next question if it's a placeholder
       const nextQuestion = questions[nextIndex];
       if (nextQuestion && nextQuestion.question_text === 'Loading question...' && nextQuestion.subject) {
@@ -204,7 +209,7 @@ const CombinedScienceExamScreen: React.FC = () => {
 
     try {
       setLoading(true);
-      
+
       // Submit all answers and get results
       const examResults: { [key: number]: AnswerResult } = {};
       let correctCount = 0;
@@ -217,7 +222,7 @@ const CombinedScienceExamScreen: React.FC = () => {
       for (let i = 0; i < questions.length; i++) {
         const question = questions[i];
         const userAnswer = finalAnswers[i] || '';
-        
+
         if (userAnswer) {
           const result = await quizApi.submitAnswer(
             question.id,
@@ -228,19 +233,19 @@ const CombinedScienceExamScreen: React.FC = () => {
             question.solution,
             question.hint
           );
-          
+
           if (result) {
             examResults[i] = result;
             question.isCorrect = result.correct;
             question.userAnswer = userAnswer;
-            
+
             if (result.correct) {
               correctCount++;
               if (question.subject) {
                 subjectBreakdown[question.subject].correct++;
               }
             }
-            
+
             if (question.subject) {
               subjectBreakdown[question.subject].total++;
             }
@@ -300,9 +305,10 @@ const CombinedScienceExamScreen: React.FC = () => {
   // Render Step 1: Select number of questions
   if (step === 'select') {
     return (
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView style={[styles.container, { backgroundColor: themedColors.background.default }]} showsVerticalScrollIndicator={false}>
+        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
         <LinearGradient
-          colors={[Colors.primary.main, Colors.primary.dark]}
+          colors={themedColors.gradients.primary}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.header}
@@ -317,9 +323,9 @@ const CombinedScienceExamScreen: React.FC = () => {
         </LinearGradient>
 
         <View style={styles.contentContainer}>
-          <Card variant="elevated" style={styles.infoCard}>
-            <Text style={styles.infoTitle}>📝 Exam Information</Text>
-            <Text style={styles.infoText}>
+          <Card variant="elevated" style={[styles.infoCard, { backgroundColor: themedColors.background.paper }]}>
+            <Text style={[styles.infoTitle, { color: themedColors.text.primary }]}>📝 Exam Information</Text>
+            <Text style={[styles.infoText, { color: themedColors.text.secondary }]}>
               • Questions will be randomly selected from Biology, Chemistry, and Physics{'\n'}
               • Questions are evenly distributed across all three subjects{'\n'}
               • Each question costs 1 credit{'\n'}
@@ -327,21 +333,26 @@ const CombinedScienceExamScreen: React.FC = () => {
             </Text>
           </Card>
 
-          <Text style={styles.sectionTitle}>Select Number of Questions</Text>
+          <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>Select Number of Questions</Text>
           <View style={styles.countGrid}>
             {questionCounts.map((count) => (
               <TouchableOpacity
                 key={count}
                 style={[
                   styles.countButton,
-                  selectedCount === count && styles.countButtonSelected,
+                  {
+                    backgroundColor: themedColors.background.paper,
+                    borderColor: themedColors.primary.main
+                  },
+                  selectedCount === count && { backgroundColor: themedColors.primary.main },
                 ]}
                 onPress={() => handleSelectCount(count)}
               >
                 <Text
                   style={[
                     styles.countButtonText,
-                    selectedCount === count && styles.countButtonTextSelected,
+                    { color: themedColors.primary.main },
+                    selectedCount === count && { color: '#FFF' },
                   ]}
                 >
                   {count}
@@ -350,12 +361,12 @@ const CombinedScienceExamScreen: React.FC = () => {
             ))}
           </View>
 
-          <View style={styles.creditsInfo}>
-            <Text style={styles.creditsText}>
+          <View style={[styles.creditsInfo, { backgroundColor: themedColors.background.paper }]}>
+            <Text style={[styles.creditsText, { color: themedColors.text.primary }]}>
               Your Credits: {user?.credits || 0}
             </Text>
             {selectedCount && (
-              <Text style={styles.creditsText}>
+              <Text style={[styles.creditsText, { color: themedColors.text.primary }]}>
                 Required: {selectedCount} credits
               </Text>
             )}
@@ -383,9 +394,10 @@ const CombinedScienceExamScreen: React.FC = () => {
     const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
 
     return (
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView style={[styles.container, { backgroundColor: themedColors.background.default }]} showsVerticalScrollIndicator={false}>
+        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
         <LinearGradient
-          colors={[Colors.primary.main, Colors.primary.dark]}
+          colors={themedColors.gradients.primary}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.header}
@@ -411,21 +423,21 @@ const CombinedScienceExamScreen: React.FC = () => {
             </View>
           ) : currentQuestion && currentQuestion.question_text !== 'Loading question...' ? (
             <>
-              <Card variant="elevated" style={styles.questionCard}>
+              <Card variant="elevated" style={[styles.questionCard, { backgroundColor: themedColors.background.paper }]}>
                 <View style={styles.questionHeader}>
                   <IconCircle
-                    icon={Icons.info(24, Colors.primary.main)}
+                    icon={Icons.info(24, themedColors.primary.main)}
                     size={40}
-                    backgroundColor={Colors.iconBg.mathematics}
+                    backgroundColor={isDarkMode ? 'rgba(255,255,255,0.1)' : Colors.iconBg.mathematics}
                   />
                   <View style={styles.questionHeaderText}>
-                    <Text style={styles.questionLabel}>Question</Text>
+                    <Text style={[styles.questionLabel, { color: themedColors.text.primary }]}>Question</Text>
                     {currentQuestion.subject && (
-                      <Text style={styles.questionSubject}>{currentQuestion.subject}</Text>
+                      <Text style={[styles.questionSubject, { color: themedColors.text.secondary }]}>{currentQuestion.subject}</Text>
                     )}
                   </View>
                 </View>
-                <Text style={styles.questionText}>{currentQuestion.question_text}</Text>
+                <Text style={[styles.questionText, { color: themedColors.text.primary }]}>{currentQuestion.question_text}</Text>
               </Card>
 
               <View style={styles.optionsContainer}>
@@ -440,20 +452,23 @@ const CombinedScienceExamScreen: React.FC = () => {
                       onPress={() => handleAnswerSelect(option)}
                       style={[
                         styles.optionCard,
-                        isSelected && styles.optionCardSelected,
+                        { backgroundColor: themedColors.background.paper },
+                        isSelected && { borderColor: themedColors.primary.main, backgroundColor: isDarkMode ? 'rgba(98, 0, 234, 0.1)' : Colors.iconBg.mathematics },
                       ]}
                     >
                       <View style={styles.optionContent}>
                         <View
                           style={[
                             styles.optionLabelCircle,
-                            isSelected && styles.optionLabelCircleSelected,
+                            { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : Colors.iconBg.default },
+                            isSelected && { backgroundColor: themedColors.primary.main },
                           ]}
                         >
                           <Text
                             style={[
                               styles.optionLabelText,
-                              isSelected && styles.optionLabelTextSelected,
+                              { color: themedColors.text.primary },
+                              isSelected && { color: '#FFF' },
                             ]}
                           >
                             {optionLabel}
@@ -462,7 +477,8 @@ const CombinedScienceExamScreen: React.FC = () => {
                         <Text
                           style={[
                             styles.optionText,
-                            isSelected && styles.optionTextSelected,
+                            { color: themedColors.text.primary },
+                            isSelected && { color: themedColors.primary.dark },
                           ]}
                         >
                           {option}
@@ -528,7 +544,7 @@ const CombinedScienceExamScreen: React.FC = () => {
         </LinearGradient>
 
         <View style={styles.contentContainer}>
-          <Card variant="gradient" gradientColors={[Colors.success.main, Colors.success.dark]} style={styles.scoreCard}>
+          <Card variant="gradient" gradientColors={themedColors.gradients.success} style={styles.scoreCard}>
             <Text style={styles.scoreTitle}>Your Score</Text>
             <Text style={styles.scoreValue}>
               {score.correct}/{score.total}
@@ -536,15 +552,15 @@ const CombinedScienceExamScreen: React.FC = () => {
             <Text style={styles.scorePercentage}>{percentage}%</Text>
           </Card>
 
-          <Card variant="elevated" style={styles.breakdownCard}>
-            <Text style={styles.breakdownTitle}>Subject Breakdown</Text>
+          <Card variant="elevated" style={[styles.breakdownCard, { backgroundColor: themedColors.background.paper }]}>
+            <Text style={[styles.breakdownTitle, { color: themedColors.text.primary }]}>Subject Breakdown</Text>
             {Object.entries(breakdown).map(([subject, stats]) => (
-              <View key={subject} style={styles.breakdownRow}>
-                <Text style={styles.breakdownSubject}>{subject}</Text>
-                <Text style={styles.breakdownScore}>
+              <View key={subject} style={[styles.breakdownRow, { borderBottomColor: themedColors.border.light }]}>
+                <Text style={[styles.breakdownSubject, { color: themedColors.text.primary }]}>{subject}</Text>
+                <Text style={[styles.breakdownScore, { color: themedColors.text.primary }]}>
                   {stats.correct}/{stats.total}
                 </Text>
-                <Text style={styles.breakdownPercentage}>
+                <Text style={[styles.breakdownPercentage, { color: themedColors.primary.main }]}>
                   {stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0}%
                 </Text>
               </View>
@@ -580,9 +596,10 @@ const CombinedScienceExamScreen: React.FC = () => {
     const score = getTotalScore();
 
     return (
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView style={[styles.container, { backgroundColor: themedColors.background.default }]} showsVerticalScrollIndicator={false}>
+        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
         <LinearGradient
-          colors={[Colors.primary.main, Colors.primary.dark]}
+          colors={themedColors.gradients.primary}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.header}
@@ -610,50 +627,53 @@ const CombinedScienceExamScreen: React.FC = () => {
                 variant="elevated"
                 style={[
                   styles.reviewCard,
-                  isCorrect ? styles.reviewCardCorrect : styles.reviewCardWrong,
+                  { backgroundColor: themedColors.background.paper },
+                  isCorrect
+                    ? { borderColor: themedColors.success.main, backgroundColor: isDarkMode ? 'rgba(76, 175, 80, 0.1)' : '#E8F5E9', borderWidth: 2 }
+                    : { borderColor: themedColors.error.main, backgroundColor: isDarkMode ? 'rgba(244, 67, 54, 0.1)' : '#FFEBEE', borderWidth: 2 },
                 ]}
               >
                 <View style={styles.reviewHeader}>
                   <View style={styles.reviewHeaderLeft}>
-                    <Text style={styles.reviewQuestionNumber}>Question {index + 1}</Text>
+                    <Text style={[styles.reviewQuestionNumber, { color: themedColors.text.primary }]}>Question {index + 1}</Text>
                     {question.subject && (
-                      <Text style={styles.reviewSubject}>{question.subject}</Text>
+                      <Text style={[styles.reviewSubject, { color: themedColors.text.secondary }]}>{question.subject}</Text>
                     )}
                   </View>
                   <View style={styles.reviewIcon}>
                     {isCorrect ? (
                       <IconCircle
-                        icon={Icons.success(24, Colors.success.main)}
+                        icon={Icons.success(24, themedColors.success.main)}
                         size={40}
-                        backgroundColor="#E8F5E9"
+                        backgroundColor={isDarkMode ? 'rgba(76, 175, 80, 0.2)' : '#E8F5E9'}
                       />
                     ) : (
                       <IconCircle
-                        icon={Icons.error(24, Colors.error.main)}
+                        icon={Icons.error(24, themedColors.error.main)}
                         size={40}
-                        backgroundColor="#FFEBEE"
+                        backgroundColor={isDarkMode ? 'rgba(244, 67, 54, 0.2)' : '#FFEBEE'}
                       />
                     )}
                   </View>
                 </View>
 
-                <Text style={styles.reviewQuestionText}>{question.question_text}</Text>
+                <Text style={[styles.reviewQuestionText, { color: themedColors.text.primary }]}>{question.question_text}</Text>
 
-                <View style={styles.reviewAnswerSection}>
+                <View style={[styles.reviewAnswerSection, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : Colors.background.default }]}>
                   <View style={styles.reviewAnswerRow}>
-                    <Text style={styles.reviewAnswerLabel}>Your Answer:</Text>
+                    <Text style={[styles.reviewAnswerLabel, { color: themedColors.text.secondary }]}>Your Answer:</Text>
                     <Text
                       style={[
                         styles.reviewAnswerValue,
-                        isCorrect ? styles.reviewAnswerCorrect : styles.reviewAnswerWrong,
+                        isCorrect ? { color: themedColors.success.main } : { color: themedColors.error.main },
                       ]}
                     >
                       {userAnswer}
                     </Text>
                   </View>
                   <View style={styles.reviewAnswerRow}>
-                    <Text style={styles.reviewAnswerLabel}>Correct Answer:</Text>
-                    <Text style={styles.reviewAnswerCorrect}>
+                    <Text style={[styles.reviewAnswerLabel, { color: themedColors.text.secondary }]}>Correct Answer:</Text>
+                    <Text style={[styles.reviewAnswerCorrect, { color: themedColors.success.main }]}>
                       {question.correct_answer}
                     </Text>
                   </View>
@@ -661,15 +681,15 @@ const CombinedScienceExamScreen: React.FC = () => {
 
                 {result?.solution && (
                   <View style={styles.reviewExplanation}>
-                    <Text style={styles.reviewExplanationTitle}>📚 Explanation:</Text>
-                    <Text style={styles.reviewExplanationText}>{result.solution}</Text>
+                    <Text style={[styles.reviewExplanationTitle, { color: themedColors.text.primary }]}>📚 Explanation:</Text>
+                    <Text style={[styles.reviewExplanationText, { color: themedColors.text.secondary }]}>{result.solution}</Text>
                   </View>
                 )}
 
                 {question.explanation && (
                   <View style={styles.reviewExplanation}>
-                    <Text style={styles.reviewExplanationTitle}>📖 Teaching Note:</Text>
-                    <Text style={styles.reviewExplanationText}>{question.explanation}</Text>
+                    <Text style={[styles.reviewExplanationTitle, { color: themedColors.text.primary }]}>📖 Teaching Note:</Text>
+                    <Text style={[styles.reviewExplanationText, { color: themedColors.text.secondary }]}>{question.explanation}</Text>
                   </View>
                 )}
               </Card>

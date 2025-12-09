@@ -25,6 +25,7 @@ export const biologyNotes: Record<string, TopicNotes> = {
         topic: "Cell Structure and Organisation",
         subject: "Biology",
         summary: "Cells are the basic functional units and building blocks of all living organisms. This topic explores the structure of plant and animal cells, their organelles, and how specialized cells are adapted for specific functions.",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/Cell_Structure_Function_Organization_and_Life.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9CaW9sb2d5IC9DZWxsX1N0cnVjdHVyZV9GdW5jdGlvbl9Pcmdhbml6YXRpb25fYW5kX0xpZmUubTRhIiwiaWF0IjoxNzY1MjUzNDc1LCJleHAiOjUyNjU3NDk0NzV9.p1nVYnwZLzBYDp6hiGne7dnN7uygxRfeOQY6Cl6RY3w",
         sections: [
             {
                 title: "1. Introduction to Cells",
@@ -322,6 +323,7 @@ In multicellular organisms, cells are organized into increasingly complex struct
         topic: "Movement In and Out of Cells",
         subject: "Biology",
         summary: "Cells need to exchange substances with their environment. This topic covers the three main processes by which substances move in and out of cells: diffusion, osmosis, and active transport.",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/Movement%20in%20and%20out%20of%20the%20cell.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9CaW9sb2d5IC9Nb3ZlbWVudCBpbiBhbmQgb3V0IG9mIHRoZSBjZWxsLm00YSIsImlhdCI6MTc2NTI1MzUwMiwiZXhwIjo1MjY1NzQ5NTAyfQ.NGfqS9Nd1tBNe39bGgDmP2rld_slprMNxkijhBykhwk",
         sections: [
             {
                 title: "1. Introduction to Cell Transport",
@@ -614,6 +616,7 @@ Sometimes cells need to:
         topic: "Enzymes",
         subject: "Biology",
         summary: "Enzymes are biological catalysts that speed up chemical reactions in living organisms. They are proteins with specific shapes that allow them to catalyze particular reactions without being used up.",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/Enzymes.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9CaW9sb2d5IC9Fbnp5bWVzLm00YSIsImlhdCI6MTc2NTI1Mzc2NSwiZXhwIjo1MjY1NzQ5NzY1fQ.zeYa5GvWXb7bU3uiuamaQ-bMV4zuis4B__ItqFHSXgI",
         sections: [
             {
                 title: "1. What are Enzymes?",
@@ -1007,6 +1010,7 @@ Each enzyme has an **optimum pH**:
         topic: "Plant Nutrition",
         subject: "Biology",
         summary: "Plants are autotrophs that make their own food through photosynthesis. This topic covers the process of photosynthesis, factors affecting it, leaf structure adaptations, and mineral requirements for healthy plant growth.",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/Plant%20Nutrition.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9CaW9sb2d5IC9QbGFudCBOdXRyaXRpb24ubTRhIiwiaWF0IjoxNzY1MjUzNTQ4LCJleHAiOjUyNjU3NDk1NDh9.wJdnoQkHWFvLebdw0bwrXdYqgk58JroJln4YpC9HhUM",
         sections: [
             {
                 title: "1. Introduction to Plant Nutrition",
@@ -1369,6 +1373,7 @@ Plants need minerals (in addition to C, H, O from photosynthesis) for:
         topic: "Animal Nutrition",
         subject: "Biology",
         summary: "Animal nutrition covers the processes by which animals obtain and digest food. This includes the alimentary canal, digestive enzymes, teeth structure, and the importance of a balanced diet.",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/Human%20Nutrition.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9CaW9sb2d5IC9IdW1hbiBOdXRyaXRpb24ubTRhIiwiaWF0IjoxNzY1MjUzNjIxLCJleHAiOjUyNjU3NDk2MjF9.VKKCAsrsGHS9PwFT4a0nPFSKeE6U_LVa6hXBN_kufGE",
         sections: [
             {
                 title: "1. Types of Nutrition",
@@ -1396,6 +1401,7 @@ Plants need minerals (in addition to C, H, O from photosynthesis) for:
         topic: "Transport in Plants",
         subject: "Biology",
         summary: "Plants transport water, minerals, and food through specialized tissues called xylem and phloem.",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/Plant%20Transport.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9CaW9sb2d5IC9QbGFudCBUcmFuc3BvcnQubTRhIiwiaWF0IjoxNzY1MjUzNTMwLCJleHAiOjUyNjU3NDk1MzB9.FKAFgPEyXENkyvmBxFEeOMtuW2dICOVe-6-eAz5CO1U",
         sections: [
             {
                 title: "1. Vascular Tissues",
@@ -1419,6 +1425,7 @@ Plants need minerals (in addition to C, H, O from photosynthesis) for:
         topic: "Transport in Humans",
         subject: "Biology",
         summary: "The circulatory system transports blood containing oxygen, nutrients, and waste products around the body.",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/Human%20Transport.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9CaW9sb2d5IC9IdW1hbiBUcmFuc3BvcnQubTRhIiwiaWF0IjoxNzY1MjUzNjAyLCJleHAiOjUyNjU3NDk2MDJ9.9s4ztb4rdugaWg6YvAuY8KSbi18K0_3w1ZJ0FIFcHLQ",
         sections: [
             {
                 title: "1. The Heart",
@@ -1444,6 +1451,7 @@ Plants need minerals (in addition to C, H, O from photosynthesis) for:
         topic: "Respiration",
         subject: "Biology",
         summary: "Respiration is the process of releasing energy from glucose. It occurs in all living cells.",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/Respiration.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9CaW9sb2d5IC9SZXNwaXJhdGlvbi5tNGEiLCJpYXQiOjE3NjUyNTM1NzQsImV4cCI6NTI2NTc0OTU3NH0.0mK5SjVqZz6gdjTAlMzekrlFUPdurYfCdy3Mnbmv3Lg",
         sections: [
             {
                 title: "1. Aerobic Respiration",
@@ -1467,6 +1475,7 @@ Plants need minerals (in addition to C, H, O from photosynthesis) for:
         topic: "Excretion",
         subject: "Biology",
         summary: "Excretion is the removal of metabolic waste products from the body.",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/Excretion.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9CaW9sb2d5IC9FeGNyZXRpb24ubTRhIiwiaWF0IjoxNzY1MjUzNjc4LCJleHAiOjUyNjU3NDk2Nzh9.tOR6Sw5EtRl_RUYRRXf9SBw9BcbVSl0PD8yUMCg1BL4",
         sections: [
             {
                 title: "1. Excretory Organs",
@@ -1490,6 +1499,7 @@ Plants need minerals (in addition to C, H, O from photosynthesis) for:
         topic: "Coordination and Response",
         subject: "Biology",
         summary: "The nervous and endocrine systems coordinate body functions and responses to stimuli.",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/Biological_Foundation_Cells_Transport_Enzymes.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9CaW9sb2d5IC9CaW9sb2dpY2FsX0ZvdW5kYXRpb25fQ2VsbHNfVHJhbnNwb3J0X0VuenltZXMubTRhIiwiaWF0IjoxNzY1MjUzNzg2LCJleHAiOjUyNjU3NDk3ODZ9.6FHGyq2SbYDA4XyLrlIusUYhMaMLLqu7eiwFZMQSkfY",
         sections: [
             {
                 title: "1. The Nervous System",
@@ -1513,6 +1523,7 @@ Plants need minerals (in addition to C, H, O from photosynthesis) for:
         topic: "Reproduction",
         subject: "Biology",
         summary: "Reproduction ensures the continuation of species through asexual or sexual reproduction.",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/Fertile_Offspring_DNA_and_Hormones.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9CaW9sb2d5IC9GZXJ0aWxlX09mZnNwcmluZ19ETkFfYW5kX0hvcm1vbmVzLm00YSIsImlhdCI6MTc2NTI1MzY1MCwiZXhwIjo1MjY1NzQ5NjUwfQ.12jtglK9kisa9KCsfPGiQzGuGUjfj_mcszmmNUUBV6s",
         sections: [
             {
                 title: "1. Types of Reproduction",

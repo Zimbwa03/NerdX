@@ -12,6 +12,7 @@ export interface TopicNotes {
     topic: string;
     subject: string;
     summary: string;
+    audioUrl?: string; // Optional streaming audio URL for topic podcast
     sections: NotesSection[];
     key_points: string[];
     exam_tips: string[];

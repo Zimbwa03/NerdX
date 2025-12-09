@@ -19,6 +19,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { projectApi, ProjectDetails } from '../services/api/projectApi';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+import { useThemedColors } from '../theme/useThemedStyles';
+import { Colors } from '../theme/colors';
 
 interface Message {
   id: string;
@@ -31,6 +34,8 @@ const ProjectAssistantScreen: React.FC = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const { user, updateUser } = useAuth();
+  const { isDarkMode } = useTheme();
+  const themedColors = useThemedColors();
   const params = route.params as {
     projectId: number;
     projectTitle: string;
@@ -190,22 +195,22 @@ const ProjectAssistantScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#6A1B9A" />
-        <Text style={styles.loadingText}>Loading project...</Text>
+      <View style={[styles.centerContainer, { backgroundColor: themedColors.background.default }]}>
+        <ActivityIndicator size="large" color={themedColors.primary.main} />
+        <Text style={[styles.loadingText, { color: themedColors.text.secondary }]}>Loading project...</Text>
       </View>
     );
   }
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: themedColors.background.default }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={themedColors.background.default} />
       <LinearGradient
-        colors={['#4A148C', '#7B1FA2']}
+        colors={themedColors.gradients.primary}
         style={styles.header}
       >
         <View style={styles.headerTop}>
@@ -226,11 +231,11 @@ const ProjectAssistantScreen: React.FC = () => {
 
       <ScrollView
         ref={scrollViewRef}
-        style={styles.messagesContainer}
+        style={[styles.messagesContainer, { backgroundColor: themedColors.background.default }]}
         contentContainerStyle={styles.messagesContent}
       >
         <View style={styles.disclaimerContainer}>
-          <Text style={styles.disclaimerText}>
+          <Text style={[styles.disclaimerText, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#EFEFEF', color: themedColors.text.secondary }]}>
             AI can make mistakes. Please verify important information.
           </Text>
         </View>
@@ -246,7 +251,7 @@ const ProjectAssistantScreen: React.FC = () => {
             {message.role === 'assistant' && (
               <View style={styles.avatarContainer}>
                 <LinearGradient
-                  colors={['#7B1FA2', '#9C27B0']}
+                  colors={themedColors.gradients.primary}
                   style={styles.avatarGradient}
                 >
                   <Ionicons name="school" size={16} color="#FFF" />
@@ -257,23 +262,23 @@ const ProjectAssistantScreen: React.FC = () => {
             <View
               style={[
                 styles.messageBubble,
-                message.role === 'user' ? styles.userBubble : styles.assistantBubble,
+                message.role === 'user' ? styles.userBubble : [styles.assistantBubble, { backgroundColor: themedColors.background.paper, borderColor: themedColors.border.light }],
                 message.role === 'user' ? { borderBottomRightRadius: 4 } : { borderBottomLeftRadius: 4 }
               ]}
             >
               {message.role === 'user' ? (
                 <LinearGradient
-                  colors={['#6A1B9A', '#8E24AA']}
+                  colors={themedColors.gradients.primary}
                   style={styles.userBubbleGradient}
                 >
                   <Text style={styles.userMessageText}>{message.content}</Text>
                 </LinearGradient>
               ) : (
-                <Text style={styles.assistantMessageText}>{message.content}</Text>
+                <Text style={[styles.assistantMessageText, { color: themedColors.text.primary }]}>{message.content}</Text>
               )}
               <Text style={[
                 styles.timestamp,
-                message.role === 'user' ? styles.userTimestamp : styles.assistantTimestamp
+                message.role === 'user' ? styles.userTimestamp : [styles.assistantTimestamp, { color: themedColors.text.secondary }]
               ]}>
                 {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </Text>
@@ -285,27 +290,27 @@ const ProjectAssistantScreen: React.FC = () => {
           <View style={styles.typingContainer}>
             <View style={styles.avatarContainer}>
               <LinearGradient
-                colors={['#7B1FA2', '#9C27B0']}
+                colors={themedColors.gradients.primary}
                 style={styles.avatarGradient}
               >
                 <Ionicons name="school" size={16} color="#FFF" />
               </LinearGradient>
             </View>
-            <View style={styles.typingBubble}>
-              <ActivityIndicator size="small" color="#7B1FA2" />
+            <View style={[styles.typingBubble, { backgroundColor: themedColors.background.paper, borderColor: themedColors.border.light }]}>
+              <ActivityIndicator size="small" color={themedColors.primary.main} />
             </View>
           </View>
         )}
       </ScrollView>
 
-      <View style={styles.inputContainer}>
-        <View style={styles.inputWrapper}>
+      <View style={[styles.inputContainer, { backgroundColor: themedColors.background.paper, borderTopColor: themedColors.border.light }]}>
+        <View style={[styles.inputWrapper, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F7FA' }]}>
           <TextInput
-            style={styles.textInput}
+            style={[styles.textInput, { color: themedColors.text.primary }]}
             value={inputText}
             onChangeText={setInputText}
             placeholder="Ask for help with your project..."
-            placeholderTextColor="#9E9E9E"
+            placeholderTextColor={themedColors.text.secondary}
             multiline
             maxLength={1000}
             editable={!sending}
@@ -316,14 +321,14 @@ const ProjectAssistantScreen: React.FC = () => {
             disabled={!inputText.trim() || sending}
           >
             <LinearGradient
-              colors={(!inputText.trim() || sending) ? ['#E0E0E0', '#BDBDBD'] : ['#6A1B9A', '#8E24AA']}
+              colors={(!inputText.trim() || sending) ? ['#E0E0E0', '#BDBDBD'] : themedColors.gradients.primary}
               style={styles.sendButtonGradient}
             >
               <Ionicons name="send" size={20} color="#FFF" />
             </LinearGradient>
           </TouchableOpacity>
         </View>
-        <Text style={styles.creditsText}>
+        <Text style={[styles.creditsText, { color: themedColors.text.secondary }]}>
           Credits: {user?.credits || 0}
         </Text>
       </View>

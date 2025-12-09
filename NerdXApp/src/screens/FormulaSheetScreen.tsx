@@ -10,6 +10,8 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '../theme/colors';
 import { Icons } from '../components/Icons';
+import { useTheme } from '../context/ThemeContext';
+import { useThemedColors } from '../theme/useThemedStyles';
 
 interface FormulaCategory {
     id: string;
@@ -64,6 +66,8 @@ const formulaData: FormulaCategory[] = [
 ];
 
 const FormulaSheetScreen: React.FC = () => {
+    const { isDarkMode } = useTheme();
+    const themedColors = useThemedColors();
     const [expandedId, setExpandedId] = useState<string | null>(null);
 
     const toggleExpand = (id: string) => {
@@ -71,10 +75,10 @@ const FormulaSheetScreen: React.FC = () => {
     };
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: themedColors.background.default }]}>
             <StatusBar barStyle="light-content" backgroundColor={Colors.subjects.mathematics} />
             <LinearGradient
-                colors={[Colors.subjects.mathematics, '#1565C0']}
+                colors={themedColors.gradients.primary}
                 style={styles.header}
             >
                 <Text style={styles.headerTitle}>Formula Sheet</Text>
@@ -83,33 +87,33 @@ const FormulaSheetScreen: React.FC = () => {
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
                 {formulaData.map((category) => (
-                    <View key={category.id} style={styles.cardContainer}>
+                    <View key={category.id} style={[styles.cardContainer, { backgroundColor: themedColors.background.paper, borderColor: themedColors.border.light }]}>
                         <TouchableOpacity
-                            style={[styles.cardHeader, expandedId === category.id && styles.cardHeaderActive]}
+                            style={[styles.cardHeader, { backgroundColor: themedColors.background.paper }, expandedId === category.id && [styles.cardHeaderActive, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : Colors.background.subtle, borderBottomColor: themedColors.border.light }]]}
                             onPress={() => toggleExpand(category.id)}
                             activeOpacity={0.7}
                         >
                             <View style={styles.cardTitleContainer}>
-                                <View style={styles.iconContainer}>
+                                <View style={[styles.iconContainer, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : Colors.background.subtle }]}>
                                     {/* Placeholder for icon, using text for now if Icons doesn't have specific ones, 
                       but we can use a generic math icon or try to map from Icons */}
                                     <Text style={styles.iconText}>{category.icon === 'calculate' ? '📐' : category.icon === 'architecture' ? '🔷' : category.icon === 'waves' ? '🌊' : '🔢'}</Text>
                                 </View>
-                                <Text style={styles.cardTitle}>{category.title}</Text>
+                                <Text style={[styles.cardTitle, { color: themedColors.text.primary }]}>{category.title}</Text>
                             </View>
-                            {Icons.arrowRight(24, expandedId === category.id ? Colors.primary.main : Colors.text.secondary)}
+                            {Icons.arrowRight(24, expandedId === category.id ? themedColors.primary.main : themedColors.text.secondary)}
                         </TouchableOpacity>
 
                         {expandedId === category.id && (
-                            <View style={styles.cardContent}>
+                            <View style={[styles.cardContent, { backgroundColor: themedColors.background.paper }]}>
                                 {category.formulas.map((formula, index) => (
-                                    <View key={index} style={styles.formulaItem}>
-                                        <Text style={styles.formulaName}>{formula.name}</Text>
-                                        <View style={styles.equationContainer}>
-                                            <Text style={styles.equation}>{formula.equation}</Text>
+                                    <View key={index} style={[styles.formulaItem, { borderBottomColor: themedColors.border.light }]}>
+                                        <Text style={[styles.formulaName, { color: themedColors.text.secondary }]}>{formula.name}</Text>
+                                        <View style={[styles.equationContainer, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : Colors.background.subtle }]}>
+                                            <Text style={[styles.equation, { color: themedColors.primary.main }]}>{formula.equation}</Text>
                                         </View>
                                         {formula.description && (
-                                            <Text style={styles.formulaDescription}>{formula.description}</Text>
+                                            <Text style={[styles.formulaDescription, { color: themedColors.text.secondary }]}>{formula.description}</Text>
                                         )}
                                     </View>
                                 ))}

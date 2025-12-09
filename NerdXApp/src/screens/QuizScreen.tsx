@@ -18,6 +18,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { quizApi, Question, AnswerResult } from '../services/api/quizApi';
 import { dktService } from '../services/api/dktApi';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { database } from '../database';
 import Interaction from '../database/models/Interaction';
 import { SyncService } from '../services/SyncService';
@@ -25,11 +26,15 @@ import { Icons, IconCircle } from '../components/Icons';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Colors } from '../theme/colors';
+import { useThemedColors } from '../theme/useThemedStyles';
+import LoadingProgress from '../components/LoadingProgress';
 
 const QuizScreen: React.FC = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const { user, updateUser } = useAuth();
+  const { isDarkMode } = useTheme();
+  const themedColors = useThemedColors();
   const { question: initialQuestion, subject, topic, isExamMode, year, paper, isReviewMode, reviewItems } = route.params as {
     question?: Question;
     subject: any;
@@ -47,6 +52,7 @@ const QuizScreen: React.FC = () => {
   const [answerImage, setAnswerImage] = useState<string | null>(null);
   const [result, setResult] = useState<AnswerResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [generatingQuestion, setGeneratingQuestion] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [questionCount, setQuestionCount] = useState(1);
 
@@ -62,6 +68,7 @@ const QuizScreen: React.FC = () => {
       if (isExamMode && !initialQuestion) {
         try {
           setLoading(true);
+          setGeneratingQuestion(true);
           const firstQuestion = await quizApi.getNextExamQuestion(1, year, paper);
           if (firstQuestion) {
             setQuestion(firstQuestion);
@@ -71,6 +78,7 @@ const QuizScreen: React.FC = () => {
           navigation.goBack();
         } finally {
           setLoading(false);
+          setGeneratingQuestion(false);
         }
       } else if (isReviewMode && reviewItems && reviewItems.length > 0) {
         // Load first review question
@@ -244,6 +252,7 @@ const QuizScreen: React.FC = () => {
   const handleNext = async () => {
     try {
       setLoading(true);
+      setGeneratingQuestion(true); // Show loading progress
       let newQuestion: Question | null = null;
 
       if (isExamMode) {
@@ -312,6 +321,7 @@ const QuizScreen: React.FC = () => {
       Alert.alert('Error', error.response?.data?.message || 'Failed to load next question');
     } finally {
       setLoading(false);
+      setGeneratingQuestion(false);
     }
   };
 
@@ -320,8 +330,11 @@ const QuizScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.background.default} />
+    <View style={[styles.container, { backgroundColor: themedColors.background.default }]}>
+      <StatusBar
+        barStyle={isDarkMode ? "light-content" : "dark-content"}
+        backgroundColor={themedColors.background.default}
+      />
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Professional Header */}
         <LinearGradient
@@ -644,6 +657,13 @@ const QuizScreen: React.FC = () => {
           )}
         </View>
       </ScrollView>
+
+      {/* Loading Progress Overlay */}
+      <LoadingProgress
+        visible={generatingQuestion}
+        message={isExamMode ? 'Loading exam question...' : 'Generating your question...'}
+        estimatedTime={12}
+      />
     </View>
   );
 };

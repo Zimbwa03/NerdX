@@ -649,8 +649,14 @@ Remember: You're their project partner! Be helpful, be thorough, and make learni
         except Exception as e:
             logger.error(f"Error saving project data for {user_id}: {e}")
     
-    def _save_project_to_database(self, user_id: str, project_data: dict) -> bool:
-        """Save project to Supabase database for persistence"""
+    def _save_project_to_database(self, user_id: str, project_data: dict, project_id: int = None) -> bool:
+        """Save project to Supabase database for persistence
+        
+        Args:
+            user_id: The user's ID
+            project_data: The project data to save
+            project_id: Optional specific project ID to update (if None, searches for any incomplete project)
+        """
         try:
             # Prepare data for database
             db_data = {
@@ -663,7 +669,13 @@ Remember: You're their project partner! Be helpful, be thorough, and make learni
                 'completed': False
             }
             
-            # Check if project already exists
+            # If project_id is provided, update that specific project
+            if project_id:
+                success = make_supabase_request("PATCH", "user_projects", data=db_data, filters={"id": f"eq.{project_id}"})
+                logger.info(f"Updated project {project_id} in database for {user_id}")
+                return bool(success)
+            
+            # Otherwise, check if project already exists (legacy behavior for new projects)
             existing = make_supabase_request("GET", "user_projects", filters={
                 "user_id": f"eq.{user_id}",
                 "completed": "eq.false"
@@ -671,9 +683,9 @@ Remember: You're their project partner! Be helpful, be thorough, and make learni
             
             if existing and len(existing) > 0:
                 # Update existing project
-                project_id = existing[0]['id']
-                success = make_supabase_request("PATCH", "user_projects", data=db_data, filters={"id": f"eq.{project_id}"})
-                logger.info(f"Updated project {project_id} in database for {user_id}")
+                existing_id = existing[0]['id']
+                success = make_supabase_request("PATCH", "user_projects", data=db_data, filters={"id": f"eq.{existing_id}"})
+                logger.info(f"Updated project {existing_id} in database for {user_id}")
             else:
                 # Insert new project
                 db_data['created_at'] = datetime.now().isoformat()
@@ -848,8 +860,8 @@ Remember: You're their project partner! Be helpful, be thorough, and make learni
             project_data['conversation_history'] = conversation_history
             project_data['last_updated'] = datetime.now().isoformat()
             
-            # Update database
-            self._save_project_to_database(user_id, project_data)
+            # Update database with specific project_id to ensure correct project is updated
+            self._save_project_to_database(user_id, project_data, project_id=project_id)
 
             return {
                 'response': ai_response,
@@ -871,6 +883,29 @@ Remember: You're their project partner! Be helpful, be thorough, and make learni
         except Exception as e:
             logger.error(f"Error getting chat history: {e}")
             return []
+
+    def delete_project(self, user_id: str, project_id: int) -> bool:
+        """Delete a project by ID after verifying user ownership"""
+        try:
+            # Verify user owns this project
+            project = self.get_project_details(user_id, project_id)
+            if not project:
+                logger.warning(f"Project {project_id} not found or not owned by {user_id}")
+                return False
+            
+            # Delete the project
+            result = make_supabase_request(
+                "DELETE", 
+                "user_projects", 
+                filters={"id": f"eq.{project_id}", "user_id": f"eq.{user_id}"}
+            )
+            
+            logger.info(f"Deleted project {project_id} for user {user_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error deleting project {project_id}: {e}")
+            return False
 
     def generate_project_document(self, user_id: str, project_id: int) -> dict:
         """Generate a complete ZIMSEC project document as PDF using DeepSeek AI"""

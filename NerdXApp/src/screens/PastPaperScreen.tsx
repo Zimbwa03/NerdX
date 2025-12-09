@@ -12,12 +12,16 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { Colors } from '../theme/colors';
 import { Icons } from '../components/Icons';
+import { useTheme } from '../context/ThemeContext';
+import { useThemedColors } from '../theme/useThemedStyles';
 
 const years = ['2023', '2022', '2021', '2020', '2019'];
 const papers = ['Paper 1 (Multiple Choice)', 'Paper 2 (Structured)'];
 
 const PastPaperScreen: React.FC = () => {
     const navigation = useNavigation();
+    const { isDarkMode } = useTheme();
+    const themedColors = useThemedColors();
     const [selectedYear, setSelectedYear] = useState<string | null>(null);
     const [selectedPaper, setSelectedPaper] = useState<string | null>(null);
 
@@ -31,10 +35,10 @@ const PastPaperScreen: React.FC = () => {
     };
 
     return (
-        <View style={styles.container}>
-            <StatusBar barStyle="light-content" backgroundColor={Colors.subjects.mathematics} />
+        <View style={[styles.container, { backgroundColor: themedColors.background.default }]}>
+            <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
             <LinearGradient
-                colors={[Colors.subjects.mathematics, '#1565C0']}
+                colors={themedColors.gradients.primary}
                 style={styles.header}
             >
                 <Text style={styles.headerTitle}>Past Papers</Text>
@@ -43,21 +47,23 @@ const PastPaperScreen: React.FC = () => {
 
             <ScrollView style={styles.content}>
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Select Year</Text>
+                    <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>Select Year</Text>
                     <View style={styles.grid}>
                         {years.map((year) => (
                             <TouchableOpacity
                                 key={year}
                                 style={[
                                     styles.yearButton,
-                                    selectedYear === year && styles.selectedButton,
+                                    { backgroundColor: themedColors.background.paper, borderColor: themedColors.border.light },
+                                    selectedYear === year && { backgroundColor: themedColors.primary.main, borderColor: themedColors.primary.main },
                                 ]}
                                 onPress={() => setSelectedYear(year)}
                             >
                                 <Text
                                     style={[
                                         styles.yearText,
-                                        selectedYear === year && styles.selectedText,
+                                        { color: themedColors.text.primary },
+                                        selectedYear === year && { color: '#FFFFFF' },
                                     ]}
                                 >
                                     {year}
@@ -68,57 +74,60 @@ const PastPaperScreen: React.FC = () => {
                 </View>
 
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Select Paper</Text>
+                    <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>Select Paper</Text>
                     {papers.map((paper) => (
                         <TouchableOpacity
                             key={paper}
                             style={[
                                 styles.paperButton,
-                                selectedPaper === paper && styles.selectedButton,
+                                { backgroundColor: themedColors.background.paper, borderColor: themedColors.border.light },
+                                selectedPaper === paper && { backgroundColor: themedColors.background.paper, borderColor: themedColors.primary.main, borderWidth: 2 },
                             ]}
                             onPress={() => setSelectedPaper(paper)}
                         >
-                            <View style={styles.paperIcon}>
+                            <View style={[styles.paperIcon, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : Colors.background.subtle }]}>
                                 <Text style={{ fontSize: 20 }}>📝</Text>
                             </View>
                             <Text
                                 style={[
                                     styles.paperText,
-                                    selectedPaper === paper && styles.selectedText,
+                                    { color: themedColors.text.primary },
+                                    selectedPaper === paper && { color: themedColors.primary.main, fontWeight: 'bold' },
                                 ]}
                             >
                                 {paper}
                             </Text>
                             {selectedPaper === paper && (
                                 <View style={styles.checkIcon}>
-                                    {Icons.check(20, '#FFFFFF')}
+                                    {Icons.check(20, themedColors.primary.main)}
                                 </View>
                             )}
                         </TouchableOpacity>
                     ))}
                 </View>
 
-                <View style={styles.infoCard}>
-                    <Text style={styles.infoTitle}>Exam Mode Info</Text>
+                <View style={[styles.infoCard, { backgroundColor: isDarkMode ? 'rgba(98, 0, 234, 0.1)' : '#E3F2FD' }]}>
+                    <Text style={[styles.infoTitle, { color: themedColors.primary.main }]}>Exam Mode Info</Text>
                     <View style={styles.infoRow}>
                         <Text style={styles.infoIcon}>⏱️</Text>
-                        <Text style={styles.infoText}>Timed practice session</Text>
+                        <Text style={[styles.infoText, { color: themedColors.primary.dark }]}>Timed practice session</Text>
                     </View>
                     <View style={styles.infoRow}>
                         <Text style={styles.infoIcon}>📊</Text>
-                        <Text style={styles.infoText}>Detailed results analysis</Text>
+                        <Text style={[styles.infoText, { color: themedColors.primary.dark }]}>Detailed results analysis</Text>
                     </View>
                     <View style={styles.infoRow}>
                         <Text style={styles.infoIcon}>🤖</Text>
-                        <Text style={styles.infoText}>AI explanations for corrections</Text>
+                        <Text style={[styles.infoText, { color: themedColors.primary.dark }]}>AI explanations for corrections</Text>
                     </View>
                 </View>
             </ScrollView>
 
-            <View style={styles.footer}>
+            <View style={[styles.footer, { backgroundColor: themedColors.background.default, borderTopColor: themedColors.border.light }]}>
                 <TouchableOpacity
                     style={[
                         styles.startButton,
+                        { backgroundColor: themedColors.primary.main, shadowColor: themedColors.primary.main },
                         (!selectedYear || !selectedPaper) && styles.disabledButton,
                     ]}
                     onPress={handleStartExam}

@@ -15,10 +15,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { quizApi, Topic, Subject } from '../services/api/quizApi';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { Icons, IconCircle } from '../components/Icons';
 import { Card } from '../components/Card';
 import { Modal, ModalOptionCard } from '../components/Modal';
-import { Colors } from '../theme/colors';
+import { Colors, getColors } from '../theme/colors';
+import { useThemedColors } from '../theme/useThemedStyles';
 
 const { width } = Dimensions.get('window');
 
@@ -26,6 +28,8 @@ const TopicsScreen: React.FC = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const { user, updateUser } = useAuth();
+  const { isDarkMode } = useTheme();
+  const themedColors = useThemedColors();
   const { subject, parentSubject } = route.params as { subject: Subject; parentSubject?: string };
 
   // State for Combined Science Tabs
@@ -267,8 +271,11 @@ const TopicsScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.background.default} />
+    <View style={[styles.container, { backgroundColor: themedColors.background.default }]}>
+      <StatusBar
+        barStyle={isDarkMode ? "light-content" : "dark-content"}
+        backgroundColor={themedColors.background.default}
+      />
 
       {/* Professional Header */}
       <LinearGradient

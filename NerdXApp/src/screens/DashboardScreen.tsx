@@ -14,9 +14,11 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { creditsApi } from '../services/api/creditsApi';
 import { Icons, IconCircle } from '../components/Icons';
-import { Colors } from '../theme/colors';
+import { Colors, getColors } from '../theme/colors';
+import { useThemedColors } from '../theme/useThemedStyles';
 import { Modal, ModalOptionCard } from '../components/Modal';
 import { gamificationService, UserProgress, Badge } from '../services/GamificationService';
 import { dktService, KnowledgeMap } from '../services/api/dktApi';
@@ -28,9 +30,14 @@ const CARD_WIDTH = (width - 48) / 2;
 
 import { sync } from '../services/SyncService';
 
+
+
+
 const DashboardScreen: React.FC = () => {
   const navigation = useNavigation();
   const { user, logout, updateUser } = useAuth();
+  const { theme, isDarkMode, toggleTheme } = useTheme();
+  const themedColors = useThemedColors();
   const [scienceModalVisible, setScienceModalVisible] = useState(false);
   const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
   const [knowledgeMap, setKnowledgeMap] = useState<KnowledgeMap | null>(null);
@@ -271,12 +278,15 @@ const DashboardScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.background.default} />
+    <View style={[styles.container, { backgroundColor: themedColors.background.default }]}>
+      <StatusBar
+        barStyle={isDarkMode ? "light-content" : "dark-content"}
+        backgroundColor={themedColors.background.default}
+      />
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Professional Header with Space Gradient */}
         <LinearGradient
-          colors={Colors.gradients.primary}
+          colors={themedColors.gradients.primary}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.header}
@@ -290,6 +300,18 @@ const DashboardScreen: React.FC = () => {
               </View>
             </View>
             <OfflineIndicator />
+
+            {/* Theme Toggle Button */}
+            <TouchableOpacity
+              onPress={toggleTheme}
+              style={styles.themeToggleBtn}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.themeToggleEmoji}>
+                {isDarkMode ? '☀️' : '🌙'}
+              </Text>
+            </TouchableOpacity>
+
             <TouchableOpacity onPress={navigateToProfile}>
               <IconCircle
                 icon={Icons.profile(32, Colors.primary.main)}
@@ -463,6 +485,20 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '600',
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+  },
+  themeToggleBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  themeToggleEmoji: {
+    fontSize: 22,
   },
   creditsSummary: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',

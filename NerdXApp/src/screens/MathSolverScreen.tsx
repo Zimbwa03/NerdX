@@ -16,8 +16,12 @@ import * as ImagePicker from 'expo-image-picker';
 import Markdown from 'react-native-markdown-display';
 import { mathApi, MathSolution } from '../services/api/mathApi';
 import { Colors } from '../theme/colors';
+import { useTheme } from '../context/ThemeContext';
+import { useThemedColors } from '../theme/useThemedStyles';
 
 const MathSolverScreen: React.FC = () => {
+    const { isDarkMode } = useTheme();
+    const themedColors = useThemedColors();
     const [problem, setProblem] = useState('');
     const [solution, setSolution] = useState<MathSolution | null>(null);
     const [loading, setLoading] = useState(false);
@@ -84,10 +88,17 @@ const MathSolverScreen: React.FC = () => {
         setImageUri(null);
     };
 
+    const markdownStyles = StyleSheet.create({
+        body: {
+            color: themedColors.text.primary,
+            fontSize: 18,
+        },
+    });
+
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: themedColors.background.default }]}>
             <LinearGradient
-                colors={Colors.gradients.primary}
+                colors={themedColors.gradients.primary}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.header}
@@ -98,31 +109,31 @@ const MathSolverScreen: React.FC = () => {
 
             <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
                 {/* Input Section */}
-                <View style={styles.inputCard}>
-                    <View style={styles.inputRow}>
+                <View style={[styles.inputCard, { backgroundColor: themedColors.background.paper }]}>
+                    <View style={[styles.inputRow, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F7FA' }]}>
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, { color: themedColors.text.primary }]}
                             placeholder="e.g. x^2 + 5x + 6 = 0"
-                            placeholderTextColor={Colors.text.hint}
+                            placeholderTextColor={themedColors.text.hint}
                             value={problem}
                             onChangeText={setProblem}
                             multiline
                         />
                         {problem.length > 0 && (
                             <TouchableOpacity onPress={handleClear} style={styles.clearButton}>
-                                <Ionicons name="close-circle" size={20} color={Colors.text.secondary} />
+                                <Ionicons name="close-circle" size={20} color={themedColors.text.secondary} />
                             </TouchableOpacity>
                         )}
                     </View>
 
                     <View style={styles.actionButtons}>
-                        <TouchableOpacity style={styles.scanButton} onPress={handleScan}>
+                        <TouchableOpacity style={[styles.scanButton, { backgroundColor: themedColors.secondary.main }]} onPress={handleScan}>
                             <Ionicons name="camera" size={24} color="#FFF" />
                             <Text style={styles.buttonText}>Scan</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            style={[styles.solveButton, !problem.trim() && styles.disabledButton]}
+                            style={[styles.solveButton, { backgroundColor: themedColors.primary.main }, !problem.trim() && styles.disabledButton]}
                             onPress={handleSolve}
                             disabled={!problem.trim() || loading}
                         >
@@ -148,8 +159,8 @@ const MathSolverScreen: React.FC = () => {
                 {/* Solution Section */}
                 {solution && (
                     <View style={styles.solutionContainer}>
-                        <View style={styles.resultCard}>
-                            <Text style={styles.resultTitle}>Solution</Text>
+                        <View style={[styles.resultCard, { backgroundColor: isDarkMode ? 'rgba(76, 175, 80, 0.15)' : '#E8F5E9', borderLeftColor: themedColors.success.main }]}>
+                            <Text style={[styles.resultTitle, { color: themedColors.success.main }]}>Solution</Text>
                             <View style={styles.latexContainer}>
                                 <Markdown style={markdownStyles}>
                                     {`$$ ${solution.latex_solutions.join(', ')} $$`}
@@ -157,19 +168,19 @@ const MathSolverScreen: React.FC = () => {
                             </View>
                         </View>
 
-                        <Text style={styles.stepsHeader}>Step-by-Step Explanation</Text>
+                        <Text style={[styles.stepsHeader, { color: themedColors.text.primary }]}>Step-by-Step Explanation</Text>
 
                         {solution.steps.map((step, index) => (
-                            <View key={index} style={styles.stepCard}>
+                            <View key={index} style={[styles.stepCard, { backgroundColor: themedColors.background.paper, borderColor: themedColors.border.light }]}>
                                 <View style={styles.stepHeader}>
-                                    <View style={styles.stepNumber}>
-                                        <Text style={styles.stepNumberText}>{step.step}</Text>
+                                    <View style={[styles.stepNumber, { backgroundColor: themedColors.primary.light }]}>
+                                        <Text style={[styles.stepNumberText, { color: themedColors.primary.main }]}>{step.step}</Text>
                                     </View>
-                                    <Text style={styles.stepDescription}>{step.description}</Text>
+                                    <Text style={[styles.stepDescription, { color: themedColors.text.primary }]}>{step.description}</Text>
                                 </View>
 
                                 {step.latex && (
-                                    <View style={styles.stepLatex}>
+                                    <View style={[styles.stepLatex, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F7FA' }]}>
                                         <Markdown style={markdownStyles}>
                                             {`$$ ${step.latex} $$`}
                                         </Markdown>
@@ -177,7 +188,7 @@ const MathSolverScreen: React.FC = () => {
                                 )}
 
                                 {step.explanation && (
-                                    <Text style={styles.stepExplanation}>{step.explanation}</Text>
+                                    <Text style={[styles.stepExplanation, { color: themedColors.text.secondary }]}>{step.explanation}</Text>
                                 )}
                             </View>
                         ))}

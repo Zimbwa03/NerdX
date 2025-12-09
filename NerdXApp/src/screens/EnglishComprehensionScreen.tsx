@@ -20,12 +20,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { englishApi, ComprehensionData, GradingResult, SummaryGradingResult } from '../services/api/englishApi';
 import { useAuth } from '../context/AuthContext';
 import { Colors } from '../theme/colors';
+import { useTheme } from '../context/ThemeContext';
+import { useThemedColors } from '../theme/useThemedStyles';
 
 const { width } = Dimensions.get('window');
 
 const EnglishComprehensionScreen: React.FC = () => {
   const navigation = useNavigation();
   const { user, updateUser } = useAuth();
+  const { isDarkMode } = useTheme();
+  const themedColors = useThemedColors();
   const [comprehension, setComprehension] = useState<ComprehensionData | null>(null);
   const [loading, setLoading] = useState(false);
   const [answers, setAnswers] = useState<{ [key: number]: string }>({});
@@ -126,25 +130,18 @@ const EnglishComprehensionScreen: React.FC = () => {
   };
 
   return (
-    <ImageBackground
-      source={require('../../assets/images/english_background.png')}
-      style={styles.container}
-      resizeMode="cover"
-      onError={(error) => {
-        console.warn('Failed to load background image:', error.nativeEvent.error);
-      }}
-    >
+    <View style={[styles.container, { backgroundColor: themedColors.background.default }]}>
       <LinearGradient
-        colors={[Colors.gradients.primary[0], 'rgba(255,255,255,0.8)']}
+        colors={themedColors.gradients.primary}
         style={styles.overlay}
       >
         <StatusBar barStyle="light-content" />
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backButton, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.2)' }]}>
             <Ionicons name="arrow-back" size={24} color="#FFF" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Comprehension</Text>
-          <View style={styles.creditContainer}>
+          <View style={[styles.creditContainer, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.2)' }]}>
             <Ionicons name="wallet-outline" size={16} color="#FFF" />
             <Text style={styles.creditText}>{user?.credits || 0}</Text>
           </View>
@@ -152,16 +149,13 @@ const EnglishComprehensionScreen: React.FC = () => {
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {!comprehension && (
-            <View style={styles.welcomeCard}>
-              <LinearGradient
-                colors={['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.7)']}
-                style={styles.glassCard}
-              >
-                <View style={styles.iconContainer}>
-                  <Ionicons name="book-outline" size={48} color={Colors.primary} />
+            <View style={[styles.welcomeCard, { backgroundColor: themedColors.background.paper }]}>
+              <View style={styles.glassCard}>
+                <View style={[styles.iconContainer, { backgroundColor: isDarkMode ? 'rgba(98, 0, 234, 0.2)' : 'rgba(98, 0, 234, 0.1)' }]}>
+                  <Ionicons name="book-outline" size={48} color={themedColors.primary.main} />
                 </View>
-                <Text style={styles.welcomeTitle}>Master Comprehension</Text>
-                <Text style={styles.welcomeText}>
+                <Text style={[styles.welcomeTitle, { color: themedColors.text.primary }]}>Master Comprehension</Text>
+                <Text style={[styles.welcomeText, { color: themedColors.text.secondary }]}>
                   Practice with AI-generated passages tailored to the ZIMSEC syllabus.
                   Improve your reading and analytical skills.
                 </Text>
@@ -172,7 +166,7 @@ const EnglishComprehensionScreen: React.FC = () => {
                   disabled={loading}
                 >
                   <LinearGradient
-                    colors={loading ? ['#BDBDBD', '#9E9E9E'] : Colors.gradients.primary}
+                    colors={loading ? ['#BDBDBD', '#9E9E9E'] : themedColors.gradients.primary}
                     style={styles.gradientButton}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
@@ -187,135 +181,130 @@ const EnglishComprehensionScreen: React.FC = () => {
                     )}
                   </LinearGradient>
                 </TouchableOpacity>
-              </LinearGradient>
+              </View>
             </View>
           )}
 
           {comprehension && (
             <View style={styles.contentContainer}>
-              <View style={styles.passageCard}>
-                <LinearGradient
-                  colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.85)']}
-                  style={styles.glassCard}
-                >
-                  <Text style={styles.passageTitle}>Reading Passage</Text>
-                  <Text style={styles.passage}>{comprehension.passage}</Text>
-                </LinearGradient>
+              <View style={[styles.passageCard, { backgroundColor: themedColors.background.paper }]}>
+                <View style={styles.glassCard}>
+                  <Text style={[styles.passageTitle, { color: themedColors.primary.main, borderBottomColor: themedColors.border.light }]}>Reading Passage</Text>
+                  <Text style={[styles.passage, { color: themedColors.text.primary }]}>{comprehension.passage}</Text>
+                </View>
               </View>
 
               {/* Tabs */}
-              <View style={styles.tabContainer}>
+              <View style={[styles.tabContainer, { backgroundColor: themedColors.background.subtle }]}>
                 <TouchableOpacity
-                  style={[styles.tab, activeTab === 'questions' && styles.activeTab]}
+                  style={[styles.tab, activeTab === 'questions' && { backgroundColor: themedColors.primary.main }]}
                   onPress={() => setActiveTab('questions')}
                 >
-                  <Text style={[styles.tabText, activeTab === 'questions' && styles.activeTabText]}>Questions</Text>
+                  <Text style={[styles.tabText, { color: themedColors.text.secondary }, activeTab === 'questions' && styles.activeTabText]}>Questions</Text>
                 </TouchableOpacity>
                 {comprehension.summary_question && (
                   <TouchableOpacity
-                    style={[styles.tab, activeTab === 'summary' && styles.activeTab]}
+                    style={[styles.tab, activeTab === 'summary' && { backgroundColor: themedColors.primary.main }]}
                     onPress={() => setActiveTab('summary')}
                   >
-                    <Text style={[styles.tabText, activeTab === 'summary' && styles.activeTabText]}>Summary</Text>
+                    <Text style={[styles.tabText, { color: themedColors.text.secondary }, activeTab === 'summary' && styles.activeTabText]}>Summary</Text>
                   </TouchableOpacity>
                 )}
               </View>
 
               {activeTab === 'questions' ? (
                 <>
-                  <Text style={styles.sectionTitle}>Comprehension Questions</Text>
+                  <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>Comprehension Questions</Text>
                   {comprehension.questions.map((question, index) => {
                     const grade = gradingResult?.question_grades.find(g => g.question_index === index);
                     return (
-                      <View key={index} style={styles.questionCard}>
-                        <LinearGradient
-                          colors={['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.8)']}
-                          style={styles.glassCard}
-                        >
+                      <View key={index} style={[styles.questionCard, { backgroundColor: themedColors.background.paper }]}>
+                        <View style={styles.glassCard}>
                           <View style={styles.questionHeader}>
-                            <Text style={styles.questionNumber}>Q{index + 1}</Text>
+                            <Text style={[styles.questionNumber, { color: themedColors.primary.main }]}>Q{index + 1}</Text>
                             <View style={styles.marksContainer}>
-                              <Text style={styles.questionMarks}>{question.marks} marks</Text>
+                              <Text style={[styles.questionMarks, { color: themedColors.text.secondary, backgroundColor: themedColors.background.subtle }]}>{question.marks} marks</Text>
                               {submitted && grade && (
-                                <Text style={[styles.awardedMarks, { color: grade.marks_awarded === grade.max_marks ? Colors.success : Colors.warning }]}>
+                                <Text style={[styles.awardedMarks, { color: grade.marks_awarded === grade.max_marks ? themedColors.success.main : themedColors.warning.main }]}>
                                   {grade.marks_awarded}/{grade.max_marks}
                                 </Text>
                               )}
                             </View>
                           </View>
-                          <Text style={styles.questionText}>{question.question}</Text>
+                          <Text style={[styles.questionText, { color: themedColors.text.primary }]}>{question.question}</Text>
                           <TextInput
-                            style={[styles.answerInput, submitted && grade && { borderColor: grade.marks_awarded > 0 ? Colors.success : Colors.error, borderWidth: 2 }]}
+                            style={[
+                              styles.answerInput,
+                              { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F7FA', color: themedColors.text.primary, borderColor: themedColors.border.light },
+                              submitted && grade && { borderColor: grade.marks_awarded > 0 ? themedColors.success.main : themedColors.error.main, borderWidth: 2 }
+                            ]}
                             value={answers[index] || ''}
                             onChangeText={(text) => setAnswers({ ...answers, [index]: text })}
                             placeholder="Type your answer here..."
-                            placeholderTextColor="#9E9E9E"
+                            placeholderTextColor={themedColors.text.hint}
                             multiline
                             editable={!submitted}
                           />
                           {submitted && grade && (
-                            <View style={styles.feedbackContainer}>
-                              <Text style={styles.feedbackLabel}>AI Feedback:</Text>
-                              <Text style={styles.feedbackText}>{grade.feedback}</Text>
-                              <Text style={[styles.feedbackLabel, { marginTop: 10 }]}>Correct Answer:</Text>
-                              <Text style={styles.feedbackText}>{question.answer}</Text>
+                            <View style={[styles.feedbackContainer, { backgroundColor: isDarkMode ? 'rgba(76, 175, 80, 0.15)' : 'rgba(76, 175, 80, 0.1)', borderLeftColor: themedColors.success.main }]}>
+                              <Text style={[styles.feedbackLabel, { color: themedColors.success.main }]}>AI Feedback:</Text>
+                              <Text style={[styles.feedbackText, { color: themedColors.text.primary }]}>{grade.feedback}</Text>
+                              <Text style={[styles.feedbackLabel, { marginTop: 10, color: themedColors.success.main }]}>Correct Answer:</Text>
+                              <Text style={[styles.feedbackText, { color: themedColors.text.primary }]}>{question.answer}</Text>
                             </View>
                           )}
-                        </LinearGradient>
+                        </View>
                       </View>
                     );
                   })}
                 </>
               ) : (
                 <>
-                  <Text style={styles.sectionTitle}>Summary Writing</Text>
+                  <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>Summary Writing</Text>
                   {comprehension.summary_question && (
-                    <View style={styles.questionCard}>
-                      <LinearGradient
-                        colors={['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.8)']}
-                        style={styles.glassCard}
-                      >
+                    <View style={[styles.questionCard, { backgroundColor: themedColors.background.paper }]}>
+                      <View style={styles.glassCard}>
                         <View style={styles.questionHeader}>
-                          <Text style={styles.questionNumber}>Summary Question</Text>
-                          <Text style={styles.questionMarks}>{comprehension.summary_question.marks} marks</Text>
+                          <Text style={[styles.questionNumber, { color: themedColors.primary.main }]}>Summary Question</Text>
+                          <Text style={[styles.questionMarks, { color: themedColors.text.secondary, backgroundColor: themedColors.background.subtle }]}>{comprehension.summary_question.marks} marks</Text>
                         </View>
-                        <Text style={styles.questionText}>{comprehension.summary_question.question}</Text>
-                        <Text style={styles.limitText}>Max words: {comprehension.summary_question.max_words}</Text>
+                        <Text style={[styles.questionText, { color: themedColors.text.primary }]}>{comprehension.summary_question.question}</Text>
+                        <Text style={[styles.limitText, { color: themedColors.text.secondary }]}>Max words: {comprehension.summary_question.max_words}</Text>
 
                         <TextInput
-                          style={styles.summaryInput}
+                          style={[styles.summaryInput, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F7FA', color: themedColors.text.primary, borderColor: themedColors.border.light }]}
                           value={summaryAnswer}
                           onChangeText={setSummaryAnswer}
                           placeholder="Write your summary here..."
-                          placeholderTextColor="#9E9E9E"
+                          placeholderTextColor={themedColors.text.hint}
                           multiline
                           editable={!submitted}
                         />
-                        <Text style={styles.wordCount}>
+                        <Text style={[styles.wordCount, { color: themedColors.text.secondary }]}>
                           Word count: {summaryAnswer.trim().split(/\s+/).filter(w => w.length > 0).length}
                         </Text>
 
                         {submitted && summaryResult && (
-                          <View style={styles.feedbackContainer}>
-                            <Text style={styles.feedbackLabel}>Summary Feedback:</Text>
-                            <Text style={styles.feedbackText}>{summaryResult.feedback}</Text>
+                          <View style={[styles.feedbackContainer, { backgroundColor: isDarkMode ? 'rgba(76, 175, 80, 0.15)' : 'rgba(76, 175, 80, 0.1)', borderLeftColor: themedColors.success.main }]}>
+                            <Text style={[styles.feedbackLabel, { color: themedColors.success.main }]}>Summary Feedback:</Text>
+                            <Text style={[styles.feedbackText, { color: themedColors.text.primary }]}>{summaryResult.feedback}</Text>
 
-                            <View style={styles.scoreRow}>
-                              <Text style={styles.scoreItem}>Content: {summaryResult.content_points}/10</Text>
-                              <Text style={styles.scoreItem}>Language: {summaryResult.language_mark}/10</Text>
+                            <View style={[styles.scoreRow, { borderColor: themedColors.border.light }]}>
+                              <Text style={[styles.scoreItem, { color: themedColors.primary.main }]}>Content: {summaryResult.content_points}/10</Text>
+                              <Text style={[styles.scoreItem, { color: themedColors.primary.main }]}>Language: {summaryResult.language_mark}/10</Text>
                             </View>
 
                             {summaryResult.key_points_missed && summaryResult.key_points_missed.length > 0 && (
                               <>
-                                <Text style={[styles.feedbackLabel, { marginTop: 10 }]}>Missed Points:</Text>
+                                <Text style={[styles.feedbackLabel, { marginTop: 10, color: themedColors.success.main }]}>Missed Points:</Text>
                                 {summaryResult.key_points_missed.map((point, i) => (
-                                  <Text key={i} style={styles.bulletPoint}>• {point}</Text>
+                                  <Text key={i} style={[styles.bulletPoint, { color: themedColors.text.primary }]}>• {point}</Text>
                                 ))}
                               </>
                             )}
                           </View>
                         )}
-                      </LinearGradient>
+                      </View>
                     </View>
                   )}
                 </>
@@ -328,7 +317,7 @@ const EnglishComprehensionScreen: React.FC = () => {
                   disabled={loading}
                 >
                   <LinearGradient
-                    colors={loading ? ['#BDBDBD', '#9E9E9E'] : Colors.gradients.success}
+                    colors={loading ? ['#BDBDBD', '#9E9E9E'] : themedColors.gradients.success}
                     style={styles.gradientButton}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
@@ -343,20 +332,17 @@ const EnglishComprehensionScreen: React.FC = () => {
               )}
 
               {submitted && gradingResult && (
-                <View style={styles.resultCard}>
-                  <LinearGradient
-                    colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.9)']}
-                    style={styles.glassCard}
-                  >
-                    <Text style={styles.resultTitle}>Practice Complete!</Text>
-                    <View style={styles.scoreCircle}>
-                      <Text style={styles.scoreValue}>
+                <View style={[styles.resultCard, { backgroundColor: themedColors.background.paper }]}>
+                  <View style={styles.glassCard}>
+                    <Text style={[styles.resultTitle, { color: themedColors.text.primary }]}>Practice Complete!</Text>
+                    <View style={[styles.scoreCircle, { backgroundColor: isDarkMode ? 'rgba(76, 175, 80, 0.15)' : 'rgba(76, 175, 80, 0.1)', borderColor: themedColors.success.main }]}>
+                      <Text style={[styles.scoreValue, { color: themedColors.success.main }]}>
                         {Math.round(((gradingResult.total_score + (summaryResult?.total_score || 0)) /
                           (gradingResult.total_possible + (summaryResult?.max_score || 0))) * 100)}%
                       </Text>
-                      <Text style={styles.scoreLabel}>Total Score</Text>
+                      <Text style={[styles.scoreLabel, { color: themedColors.text.secondary }]}>Total Score</Text>
                     </View>
-                    <Text style={styles.overallFeedback}>{gradingResult.overall_feedback}</Text>
+                    <Text style={[styles.overallFeedback, { color: themedColors.text.primary }]}>{gradingResult.overall_feedback}</Text>
 
                     <TouchableOpacity
                       style={styles.actionButton}
@@ -371,7 +357,7 @@ const EnglishComprehensionScreen: React.FC = () => {
                       }}
                     >
                       <LinearGradient
-                        colors={Colors.gradients.primary}
+                        colors={themedColors.gradients.primary}
                         style={styles.gradientButton}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
@@ -379,14 +365,14 @@ const EnglishComprehensionScreen: React.FC = () => {
                         <Text style={styles.actionButtonText}>New Practice</Text>
                       </LinearGradient>
                     </TouchableOpacity>
-                  </LinearGradient>
+                  </View>
                 </View>
               )}
             </View>
           )}
         </ScrollView>
       </LinearGradient>
-    </ImageBackground>
+    </View>
   );
 };
 

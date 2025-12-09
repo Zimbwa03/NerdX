@@ -12,12 +12,16 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { quizApi, Subject } from '../services/api/quizApi';
+import { useTheme } from '../context/ThemeContext';
 import { Icons, IconCircle } from '../components/Icons';
 import { Card } from '../components/Card';
 import { Modal, ModalOptionCard } from '../components/Modal';
 import { Colors } from '../theme/colors';
+import { useThemedColors } from '../theme/useThemedStyles';
 
 const SubjectsScreen: React.FC = () => {
+  const { isDarkMode } = useTheme();
+  const themedColors = useThemedColors();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
   const [mathModalVisible, setMathModalVisible] = useState(false);
@@ -71,20 +75,20 @@ const SubjectsScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={Colors.primary.main} />
-        <Text style={styles.loadingText}>Loading subjects...</Text>
+      <View style={[styles.centerContainer, { backgroundColor: themedColors.background.default }]}>
+        <ActivityIndicator size="large" color={themedColors.primary.main} />
+        <Text style={[styles.loadingText, { color: themedColors.text.secondary }]}>Loading subjects...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.background.default} />
+    <View style={[styles.container, { backgroundColor: themedColors.background.default }]}>
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={themedColors.background.default} />
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Professional Header */}
         <LinearGradient
-          colors={Colors.gradients.primary}
+          colors={themedColors.gradients.primary}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.header}

@@ -22,6 +22,8 @@ import { teacherApi, TeacherSession } from '../services/api/teacherApi';
 import { mathApi } from '../services/api/mathApi';
 import { useAuth } from '../context/AuthContext';
 import { TypingIndicator } from '../components/TypingIndicator';
+import { useTheme } from '../context/ThemeContext';
+import { useThemedColors } from '../theme/useThemedStyles';
 import { Colors } from '../theme/colors';
 import { Audio } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
@@ -38,6 +40,8 @@ const TeacherModeScreen: React.FC = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const { user, updateUser } = useAuth();
+  const { isDarkMode } = useTheme();
+  const themedColors = useThemedColors();
   const { subject, gradeLevel, topic } = route.params as {
     subject: string;
     gradeLevel: string;
@@ -331,26 +335,80 @@ const TeacherModeScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={Colors.primary.main} />
-        <Text style={styles.loadingText}>Starting Teacher Mode...</Text>
+      <View style={[styles.centerContainer, { backgroundColor: themedColors.background.default }]}>
+        <ActivityIndicator size="large" color={themedColors.primary.main} />
+        <Text style={[styles.loadingText, { color: themedColors.text.secondary }]}>Starting Teacher Mode...</Text>
       </View>
     );
   }
 
+  const markdownStyles = StyleSheet.create({
+    body: {
+      color: themedColors.text.primary,
+      fontSize: 16,
+      lineHeight: 24,
+    },
+    heading1: {
+      color: themedColors.primary.main,
+      fontSize: 24,
+      fontWeight: 'bold',
+      marginVertical: 10,
+    },
+    heading2: {
+      color: themedColors.primary.main,
+      fontSize: 20,
+      fontWeight: 'bold',
+      marginVertical: 8,
+    },
+    strong: {
+      fontWeight: 'bold',
+      color: themedColors.secondary.main,
+    },
+    em: {
+      fontStyle: 'italic',
+      color: themedColors.text.secondary,
+    },
+    code_inline: {
+      backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#f0f0f0',
+      color: themedColors.secondary.main,
+      borderRadius: 4,
+      paddingHorizontal: 4,
+    },
+    code_block: {
+      backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#f5f5f5',
+      padding: 10,
+      borderRadius: 8,
+      marginVertical: 8,
+      borderColor: themedColors.border.light,
+      borderWidth: 1,
+    },
+    link: {
+      color: themedColors.secondary.main,
+      textDecorationLine: 'underline',
+    },
+    list_item: {
+      marginVertical: 4,
+      color: themedColors.text.primary,
+    },
+  });
+
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: themedColors.background.default }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={90}
     >
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={themedColors.background.default} />
       <LinearGradient
-        colors={Colors.gradients.primary}
+        colors={themedColors.gradients.primary}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.header}
       >
-        <View style={styles.headerContent}>
+        <TouchableOpacity style={{ position: 'absolute', top: 50, left: 20, zIndex: 1 }} onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color="#FFF" />
+        </TouchableOpacity>
+        <View style={[styles.headerContent, { paddingTop: 20 }]}>
           <View style={styles.teacherAvatar}>
             <Text style={styles.teacherAvatarText}>👨‍🏫</Text>
           </View>
@@ -371,7 +429,7 @@ const TeacherModeScreen: React.FC = () => {
         ref={flatListRef}
         data={messages}
         keyExtractor={(item) => item.id}
-        style={styles.messagesContainer}
+        style={[styles.messagesContainer, { backgroundColor: themedColors.background.default }]}
         contentContainerStyle={styles.messagesContent}
         renderItem={({ item: message }) => (
           <View
@@ -381,7 +439,7 @@ const TeacherModeScreen: React.FC = () => {
             ]}
           >
             {message.role === 'assistant' && (
-              <View style={styles.assistantAvatarSmall}>
+              <View style={[styles.assistantAvatarSmall, { backgroundColor: themedColors.primary.light }]}>
                 <Text style={styles.assistantAvatarSmallText}>👨‍🏫</Text>
               </View>
             )}
@@ -389,13 +447,13 @@ const TeacherModeScreen: React.FC = () => {
               <View
                 style={[
                   styles.messageBubble,
-                  message.role === 'user' ? styles.userMessage : styles.assistantMessage,
+                  message.role === 'user' ? styles.userMessage : [styles.assistantMessage, { backgroundColor: themedColors.background.paper, borderColor: themedColors.border.light }],
                   { maxWidth: '100%' }
                 ]}
               >
                 {message.role === 'user' ? (
                   <LinearGradient
-                    colors={Colors.gradients.primary}
+                    colors={themedColors.gradients.primary}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.userMessageGradient}
@@ -415,7 +473,7 @@ const TeacherModeScreen: React.FC = () => {
                   style={styles.speakerButton}
                   onPress={() => playResponse(message.content)}
                 >
-                  <Ionicons name="volume-high-outline" size={20} color={Colors.text.secondary} />
+                  <Ionicons name="volume-high-outline" size={20} color={themedColors.text.secondary} />
                 </TouchableOpacity>
               )}
             </View>
@@ -424,10 +482,10 @@ const TeacherModeScreen: React.FC = () => {
         ListFooterComponent={
           sending ? (
             <View style={[styles.messageRow, styles.assistantMessageRow]}>
-              <View style={styles.assistantAvatarSmall}>
+              <View style={[styles.assistantAvatarSmall, { backgroundColor: themedColors.primary.light }]}>
                 <Text style={styles.assistantAvatarSmallText}>👨‍🏫</Text>
               </View>
-              <View style={[styles.messageBubble, styles.assistantMessage]}>
+              <View style={[styles.messageBubble, styles.assistantMessage, { backgroundColor: themedColors.background.paper, borderColor: themedColors.border.light }]}>
                 <TypingIndicator />
               </View>
             </View>
@@ -435,22 +493,22 @@ const TeacherModeScreen: React.FC = () => {
         }
       />
 
-      <View style={styles.inputContainer}>
+      <View style={[styles.inputContainer, { backgroundColor: themedColors.background.paper, borderTopColor: themedColors.border.light }]}>
         {/* Quick Ask Buttons */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.quickAskContainer}>
           {currentSubjectQuestions.map((q, index) => (
             <TouchableOpacity
               key={index}
-              style={styles.quickAskButton}
+              style={[styles.quickAskButton, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F7FA', borderColor: themedColors.primary.main }]}
               onPress={() => handleQuickAsk(q)}
               disabled={sending}
             >
-              <Text style={styles.quickAskText}>{q}</Text>
+              <Text style={[styles.quickAskText, { color: themedColors.primary.main }]}>{q}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
         <TouchableOpacity
-          style={styles.notesButton}
+          style={[styles.notesButton, { backgroundColor: themedColors.success.main }]}
           onPress={handleGenerateNotes}
           disabled={generatingNotes}
         >
@@ -467,26 +525,26 @@ const TeacherModeScreen: React.FC = () => {
             onPress={handleImagePick}
             disabled={sending}
           >
-            <Ionicons name="camera-outline" size={24} color={Colors.primary.main} />
+            <Ionicons name="camera-outline" size={24} color={themedColors.primary.main} />
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.mediaButton, isRecording && styles.recordingButton]}
+            style={[styles.mediaButton, isRecording && [styles.recordingButton, { backgroundColor: themedColors.error.main }]]}
             onPress={isRecording ? stopRecording : startRecording}
             disabled={sending}
           >
             <Ionicons
               name={isRecording ? "stop-circle" : "mic-outline"}
               size={24}
-              color={isRecording ? "#FFF" : Colors.primary.main}
+              color={isRecording ? "#FFF" : themedColors.primary.main}
             />
           </TouchableOpacity>
           <TextInput
-            style={styles.textInput}
+            style={[styles.textInput, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F7FA', borderColor: themedColors.border.light, color: themedColors.text.primary }]}
             value={inputText}
             onChangeText={setInputText}
             placeholder="Ask a question..."
-            placeholderTextColor={Colors.text.hint}
+            placeholderTextColor={themedColors.text.disabled}
             multiline
             maxLength={500}
             editable={!sending}
@@ -499,7 +557,12 @@ const TeacherModeScreen: React.FC = () => {
             {sending ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.sendButtonText}>Send</Text>
+              <LinearGradient
+                colors={(!inputText.trim() || sending) ? ['#E0E0E0', '#BDBDBD'] : themedColors.gradients.primary}
+                style={{ borderRadius: 24, flex: 1, justifyContent: 'center', alignItems: 'center', width: '100%', height: '100%' }}
+              >
+                <Text style={styles.sendButtonText}>Send</Text>
+              </LinearGradient>
             )}
           </TouchableOpacity>
         </View>

@@ -28,6 +28,8 @@ import { useAuth } from '../context/AuthContext';
 import { Colors } from '../theme/colors';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
+import { useTheme } from '../context/ThemeContext';
+import { useThemedColors } from '../theme/useThemedStyles';
 
 const { width } = Dimensions.get('window');
 
@@ -36,6 +38,8 @@ type EssayType = 'free_response' | 'guided' | null;
 const EnglishEssayScreen: React.FC = () => {
   const navigation = useNavigation();
   const { user, updateUser } = useAuth();
+  const { isDarkMode } = useTheme();
+  const themedColors = useThemedColors();
 
   // State management
   const [essayType, setEssayType] = useState<EssayType>(null);
@@ -186,25 +190,18 @@ const EnglishEssayScreen: React.FC = () => {
   const wordCount = essayText.trim().split(/\s+/).filter(w => w.length > 0).length;
 
   return (
-    <ImageBackground
-      source={require('../../assets/images/english_background.png')}
-      style={styles.container}
-      resizeMode="cover"
-      onError={(error) => {
-        console.warn('Failed to load background image:', error.nativeEvent.error);
-      }}
-    >
+    <View style={[styles.container, { backgroundColor: themedColors.background.default }]}>
       <LinearGradient
-        colors={[Colors.gradients.primary[0], 'rgba(255,255,255,0.8)']}
+        colors={themedColors.gradients.primary}
         style={styles.overlay}
       >
         <StatusBar barStyle="light-content" />
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backButton, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.2)' }]}>
             <Ionicons name="arrow-back" size={24} color="#FFF" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Essay Writing</Text>
-          <View style={styles.creditContainer}>
+          <View style={[styles.creditContainer, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.2)' }]}>
             <Ionicons name="wallet-outline" size={16} color="#FFF" />
             <Text style={styles.creditText}>{user?.credits || 0}</Text>
           </View>
@@ -213,16 +210,13 @@ const EnglishEssayScreen: React.FC = () => {
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {/* Initial Selection Screen */}
           {!essayType && (
-            <View style={styles.welcomeCard}>
-              <LinearGradient
-                colors={['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.7)']}
-                style={styles.glassCard}
-              >
-                <View style={styles.iconContainer}>
-                  <Ionicons name="create-outline" size={48} color={Colors.primary} />
+            <View style={[styles.welcomeCard, { backgroundColor: themedColors.background.paper }]}>
+              <View style={styles.glassCard}>
+                <View style={[styles.iconContainer, { backgroundColor: isDarkMode ? 'rgba(98, 0, 234, 0.2)' : 'rgba(98, 0, 234, 0.1)' }]}>
+                  <Ionicons name="create-outline" size={48} color={themedColors.primary.main} />
                 </View>
-                <Text style={styles.welcomeTitle}>ZIMSEC Essay Writing</Text>
-                <Text style={styles.welcomeText}>
+                <Text style={[styles.welcomeTitle, { color: themedColors.text.primary }]}>ZIMSEC Essay Writing</Text>
+                <Text style={[styles.welcomeText, { color: themedColors.text.secondary }]}>
                   Choose your composition type and get professional marking with detailed feedback.
                 </Text>
 
@@ -232,7 +226,7 @@ const EnglishEssayScreen: React.FC = () => {
                   disabled={loading}
                 >
                   <LinearGradient
-                    colors={loading ? ['#BDBDBD', '#9E9E9E'] : Colors.gradients.primary}
+                    colors={loading ? ['#BDBDBD', '#9E9E9E'] : themedColors.gradients.primary}
                     style={styles.gradientButton}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
@@ -258,7 +252,7 @@ const EnglishEssayScreen: React.FC = () => {
                   disabled={loading}
                 >
                   <LinearGradient
-                    colors={loading ? ['#BDBDBD', '#9E9E9E'] : Colors.gradients.success}
+                    colors={loading ? ['#BDBDBD', '#9E9E9E'] : themedColors.gradients.success}
                     style={styles.gradientButton}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
@@ -278,11 +272,11 @@ const EnglishEssayScreen: React.FC = () => {
                   </LinearGradient>
                 </TouchableOpacity>
 
-                <View style={styles.infoBox}>
-                  <Ionicons name="information-circle-outline" size={20} color={Colors.primary} />
-                  <Text style={styles.infoText}>Essay marking costs 3 credits</Text>
+                <View style={[styles.infoBox, { backgroundColor: themedColors.background.subtle }]}>
+                  <Ionicons name="information-circle-outline" size={20} color={themedColors.primary.main} />
+                  <Text style={[styles.infoText, { color: themedColors.text.secondary }]}>Essay marking costs 3 credits</Text>
                 </View>
-              </LinearGradient>
+              </View>
             </View>
           )}
 
@@ -290,38 +284,35 @@ const EnglishEssayScreen: React.FC = () => {
           {essayType === 'free_response' && !selectedTopic && (
             <View style={styles.contentContainer}>
               <TouchableOpacity onPress={handleReset} style={styles.backToSelectionButton}>
-                <Ionicons name="arrow-back" size={20} color={Colors.primary} />
-                <Text style={styles.backToSelectionText}>Change Essay Type</Text>
+                <Ionicons name="arrow-back" size={20} color={themedColors.primary.main} />
+                <Text style={[styles.backToSelectionText, { color: themedColors.primary.main }]}>Change Essay Type</Text>
               </TouchableOpacity>
 
-              <Text style={styles.sectionTitle}>Select Your Topic</Text>
-              <Text style={styles.sectionSubtitle}>Choose 1 of 7 topics (350-450 words)</Text>
+              <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>Select Your Topic</Text>
+              <Text style={[styles.sectionSubtitle, { color: themedColors.text.secondary }]}>Choose 1 of 7 topics (350-450 words)</Text>
 
               {freeTopics.map((topic, index) => (
                 <TouchableOpacity
                   key={index}
-                  style={styles.topicCard}
+                  style={[styles.topicCard, { backgroundColor: themedColors.background.paper }]}
                   onPress={() => handleSelectTopic(topic)}
                 >
-                  <LinearGradient
-                    colors={['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.8)']}
-                    style={styles.glassCard}
-                  >
+                  <View style={styles.glassCard}>
                     <View style={styles.topicHeader}>
-                      <View style={styles.topicNumber}>
-                        <Text style={styles.topicNumberText}>{index + 1}</Text>
+                      <View style={[styles.topicNumber, { backgroundColor: themedColors.background.subtle }]}>
+                        <Text style={[styles.topicNumberText, { color: themedColors.primary.main }]}>{index + 1}</Text>
                       </View>
-                      <View style={styles.topicBadge}>
-                        <Text style={styles.topicBadgeText}>{topic.type}</Text>
+                      <View style={[styles.topicBadge, { backgroundColor: themedColors.secondary.light }]}>
+                        <Text style={[styles.topicBadgeText, { color: themedColors.secondary.dark }]}>{topic.type}</Text>
                       </View>
                     </View>
-                    <Text style={styles.topicTitle}>{topic.title}</Text>
-                    <Text style={styles.topicDescription}>{topic.description}</Text>
+                    <Text style={[styles.topicTitle, { color: themedColors.text.primary }]}>{topic.title}</Text>
+                    <Text style={[styles.topicDescription, { color: themedColors.text.secondary }]}>{topic.description}</Text>
                     <View style={styles.topicFooter}>
-                      <Ionicons name="text-outline" size={16} color={Colors.text.secondary} />
-                      <Text style={styles.topicLength}>{topic.suggested_length}</Text>
+                      <Ionicons name="text-outline" size={16} color={themedColors.text.secondary} />
+                      <Text style={[styles.topicLength, { color: themedColors.text.secondary }]}>{topic.suggested_length}</Text>
                     </View>
-                  </LinearGradient>
+                  </View>
                 </TouchableOpacity>
               ))}
             </View>
@@ -331,38 +322,35 @@ const EnglishEssayScreen: React.FC = () => {
           {essayType === 'guided' && guidedPrompt && !selectedTopic && (
             <View style={styles.contentContainer}>
               <TouchableOpacity onPress={handleReset} style={styles.backToSelectionButton}>
-                <Ionicons name="arrow-back" size={20} color={Colors.primary} />
-                <Text style={styles.backToSelectionText}>Change Essay Type</Text>
+                <Ionicons name="arrow-back" size={20} color={themedColors.primary.main} />
+                <Text style={[styles.backToSelectionText, { color: themedColors.primary.main }]}>Change Essay Type</Text>
               </TouchableOpacity>
 
-              <View style={styles.promptCard}>
-                <LinearGradient
-                  colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.85)']}
-                  style={styles.glassCard}
-                >
+              <View style={[styles.promptCard, { backgroundColor: themedColors.background.paper }]}>
+                <View style={styles.glassCard}>
                   <View style={styles.promptHeader}>
-                    <Ionicons name="document-text" size={32} color={Colors.success} />
-                    <View style={styles.promptBadge}>
-                      <Text style={styles.promptBadgeText}>{guidedPrompt.format.replace('_', ' ')}</Text>
+                    <Ionicons name="document-text" size={32} color={themedColors.success.main} />
+                    <View style={[styles.promptBadge, { backgroundColor: themedColors.background.subtle }]}>
+                      <Text style={[styles.promptBadgeText, { color: themedColors.text.primary }]}>{guidedPrompt.format.replace('_', ' ')}</Text>
                     </View>
                   </View>
-                  <Text style={styles.promptTitle}>{guidedPrompt.title}</Text>
-                  <Text style={styles.promptContext}>{guidedPrompt.context}</Text>
+                  <Text style={[styles.promptTitle, { color: themedColors.text.primary }]}>{guidedPrompt.title}</Text>
+                  <Text style={[styles.promptContext, { color: themedColors.text.secondary }]}>{guidedPrompt.context}</Text>
 
-                  <Text style={styles.keyPointsTitle}>Key Points to Cover:</Text>
+                  <Text style={[styles.keyPointsTitle, { color: themedColors.text.primary }]}>Key Points to Cover:</Text>
                   {guidedPrompt.key_points.map((point, index) => (
                     <View key={index} style={styles.keyPointItem}>
-                      <View style={styles.keyPointBullet}>
-                        <Text style={styles.keyPointBulletText}>{index + 1}</Text>
+                      <View style={[styles.keyPointBullet, { backgroundColor: themedColors.background.subtle }]}>
+                        <Text style={[styles.keyPointBulletText, { color: themedColors.primary.main }]}>{index + 1}</Text>
                       </View>
-                      <Text style={styles.keyPointText}>{point}</Text>
+                      <Text style={[styles.keyPointText, { color: themedColors.text.secondary }]}>{point}</Text>
                     </View>
                   ))}
 
                   {guidedPrompt.format_requirements && (
-                    <View style={styles.requirementsBox}>
-                      <Ionicons name="alert-circle-outline" size={18} color={Colors.warning} />
-                      <Text style={styles.requirementsText}>{guidedPrompt.format_requirements}</Text>
+                    <View style={[styles.requirementsBox, { backgroundColor: themedColors.warning.light + '20', borderColor: themedColors.warning.light }]}>
+                      <Ionicons name="alert-circle-outline" size={18} color={themedColors.warning.main} />
+                      <Text style={[styles.requirementsText, { color: themedColors.text.primary }]}>{guidedPrompt.format_requirements}</Text>
                     </View>
                   )}
 
@@ -371,7 +359,7 @@ const EnglishEssayScreen: React.FC = () => {
                     onPress={() => setSelectedTopic({} as FreeResponseTopic)} // Dummy to trigger writing mode
                   >
                     <LinearGradient
-                      colors={Colors.gradients.success}
+                      colors={themedColors.gradients.success}
                       style={styles.gradientButton}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 0 }}
@@ -380,7 +368,7 @@ const EnglishEssayScreen: React.FC = () => {
                       <Ionicons name="create-outline" size={20} color="#FFF" />
                     </LinearGradient>
                   </TouchableOpacity>
-                </LinearGradient>
+                </View>
               </View>
             </View>
           )}
@@ -392,86 +380,77 @@ const EnglishEssayScreen: React.FC = () => {
                 onPress={() => setSelectedTopic(null)}
                 style={styles.backToSelectionButton}
               >
-                <Ionicons name="arrow-back" size={20} color={Colors.primary} />
-                <Text style={styles.backToSelectionText}>Change Topic</Text>
+                <Ionicons name="arrow-back" size={20} color={themedColors.primary.main} />
+                <Text style={[styles.backToSelectionText, { color: themedColors.primary.main }]}>Change Topic</Text>
               </TouchableOpacity>
 
               {/* Student Information */}
-              <View style={styles.infoCard}>
-                <LinearGradient
-                  colors={['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.8)']}
-                  style={styles.glassCard}
-                >
-                  <Text style={styles.infoCardTitle}>Student Information</Text>
+              <View style={[styles.infoCard, { backgroundColor: themedColors.background.paper }]}>
+                <View style={styles.glassCard}>
+                  <Text style={[styles.infoCardTitle, { color: themedColors.text.primary }]}>Student Information</Text>
                   <View style={styles.inputRow}>
                     <View style={styles.inputContainer}>
-                      <Text style={styles.inputLabel}>Name</Text>
+                      <Text style={[styles.inputLabel, { color: themedColors.text.secondary }]}>Name</Text>
                       <TextInput
-                        style={styles.nameInput}
+                        style={[styles.nameInput, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F7FA', color: themedColors.text.primary, borderColor: themedColors.border.light }]}
                         value={studentName}
                         onChangeText={setStudentName}
                         placeholder="First name"
-                        placeholderTextColor="#9E9E9E"
+                        placeholderTextColor={themedColors.text.hint}
                       />
                     </View>
                     <View style={styles.inputContainer}>
-                      <Text style={styles.inputLabel}>Surname</Text>
+                      <Text style={[styles.inputLabel, { color: themedColors.text.secondary }]}>Surname</Text>
                       <TextInput
-                        style={styles.nameInput}
+                        style={[styles.nameInput, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F7FA', color: themedColors.text.primary, borderColor: themedColors.border.light }]}
                         value={studentSurname}
                         onChangeText={setStudentSurname}
                         placeholder="Last name"
-                        placeholderTextColor="#9E9E9E"
+                        placeholderTextColor={themedColors.text.hint}
                       />
                     </View>
                   </View>
-                </LinearGradient>
+                </View>
               </View>
 
               {/* Topic Display */}
-              <View style={styles.selectedTopicCard}>
-                <LinearGradient
-                  colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.85)']}
-                  style={styles.glassCard}
-                >
-                  <Text style={styles.selectedTopicLabel}>
+              <View style={[styles.selectedTopicCard, { backgroundColor: themedColors.background.paper }]}>
+                <View style={styles.glassCard}>
+                  <Text style={[styles.selectedTopicLabel, { color: themedColors.primary.main }]}>
                     {essayType === 'free_response' ? 'Your Topic' : 'Your Task'}
                   </Text>
-                  <Text style={styles.selectedTopicTitle}>
+                  <Text style={[styles.selectedTopicTitle, { color: themedColors.text.primary }]}>
                     {essayType === 'free_response' ? selectedTopic?.title : guidedPrompt?.title}
                   </Text>
-                  <Text style={styles.selectedTopicDescription}>
+                  <Text style={[styles.selectedTopicDescription, { color: themedColors.text.secondary }]}>
                     {essayType === 'free_response' ? selectedTopic?.description : guidedPrompt?.context}
                   </Text>
-                </LinearGradient>
+                </View>
               </View>
 
               {/* Essay Input */}
-              <View style={styles.essayCard}>
-                <LinearGradient
-                  colors={['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.8)']}
-                  style={styles.glassCard}
-                >
+              <View style={[styles.essayCard, { backgroundColor: themedColors.background.paper }]}>
+                <View style={styles.glassCard}>
                   <View style={styles.essayHeader}>
-                    <Text style={styles.essayTitle}>Write Your Essay</Text>
-                    <View style={styles.wordCountBadge}>
-                      <Ionicons name="text-outline" size={14} color={Colors.primary} />
-                      <Text style={styles.wordCountText}>{wordCount} words</Text>
+                    <Text style={[styles.essayTitle, { color: themedColors.text.primary }]}>Write Your Essay</Text>
+                    <View style={[styles.wordCountBadge, { backgroundColor: themedColors.background.subtle }]}>
+                      <Ionicons name="text-outline" size={14} color={themedColors.primary.main} />
+                      <Text style={[styles.wordCountText, { color: themedColors.text.secondary }]}>{wordCount} words</Text>
                     </View>
                   </View>
                   <TextInput
-                    style={styles.essayInput}
+                    style={[styles.essayInput, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F7FA', color: themedColors.text.primary, borderColor: themedColors.border.light }]}
                     value={essayText}
                     onChangeText={setEssayText}
                     placeholder="Start writing your essay here..."
-                    placeholderTextColor="#9E9E9E"
+                    placeholderTextColor={themedColors.text.hint}
                     multiline
                     textAlignVertical="top"
                   />
-                  <Text style={styles.essayHint}>
+                  <Text style={[styles.essayHint, { color: themedColors.text.secondary }]}>
                     Recommended: {essayType === 'free_response' ? selectedTopic?.suggested_length : guidedPrompt?.suggested_length}
                   </Text>
-                </LinearGradient>
+                </View>
               </View>
 
               {/* Submit Button */}
@@ -481,7 +460,7 @@ const EnglishEssayScreen: React.FC = () => {
                 disabled={loading}
               >
                 <LinearGradient
-                  colors={loading ? ['#BDBDBD', '#9E9E9E'] : Colors.gradients.primary}
+                  colors={loading ? ['#BDBDBD', '#9E9E9E'] : themedColors.gradients.primary}
                   style={styles.gradientButton}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
@@ -503,114 +482,104 @@ const EnglishEssayScreen: React.FC = () => {
           {submitted && markingResult && (
             <View style={styles.contentContainer}>
               {/* Score Card */}
-              <View style={styles.resultCard}>
-                <LinearGradient
-                  colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.9)']}
-                  style={styles.glassCard}
-                >
-                  <Text style={styles.resultTitle}>Marking Complete!</Text>
-                  <View style={styles.scoreCircle}>
-                    <Text style={styles.scoreValue}>{markingResult.score}</Text>
-                    <Text style={styles.scoreMax}>/ {markingResult.max_score}</Text>
+              <View style={[styles.resultCard, { backgroundColor: themedColors.background.paper }]}>
+                <View style={styles.glassCard}>
+                  <Text style={[styles.resultTitle, { color: themedColors.text.primary }]}>Marking Complete!</Text>
+                  <View style={[styles.scoreCircle, { backgroundColor: isDarkMode ? 'rgba(76, 175, 80, 0.15)' : 'rgba(76, 175, 80, 0.1)', borderColor: themedColors.success.main }]}>
+                    <Text style={[styles.scoreValue, { color: themedColors.success.main }]}>{markingResult.score}</Text>
+                    <Text style={[styles.scoreMax, { color: themedColors.text.secondary }]}>/ {markingResult.max_score}</Text>
                   </View>
-                  <Text style={styles.scorePercentage}>
+                  <Text style={[styles.scorePercentage, { color: themedColors.text.secondary }]}>
                     {Math.round((markingResult.score / markingResult.max_score) * 100)}%
                   </Text>
 
                   {/* Teacher Comment */}
-                  <View style={styles.teacherCommentBox}>
-                    <Ionicons name="chatbox-ellipses" size={24} color={Colors.error} />
-                    <Text style={styles.teacherComment}>{markingResult.teacher_comment}</Text>
+                  <View style={[styles.teacherCommentBox, { backgroundColor: themedColors.error.light + '20', borderColor: themedColors.error.main }]}>
+                    <Ionicons name="chatbox-ellipses" size={24} color={themedColors.error.main} />
+                    <Text style={[styles.teacherComment, { color: themedColors.text.primary }]}>{markingResult.teacher_comment}</Text>
                   </View>
 
                   {/* Breakdown */}
                   <View style={styles.breakdownContainer}>
-                    <Text style={styles.breakdownTitle}>Mark Breakdown</Text>
+                    <Text style={[styles.breakdownTitle, { color: themedColors.text.primary }]}>Mark Breakdown</Text>
                     {Object.entries(markingResult.breakdown).map(([key, value]) => (
                       <View key={key} style={styles.breakdownRow}>
-                        <Text style={styles.breakdownLabel}>
+                        <Text style={[styles.breakdownLabel, { color: themedColors.text.secondary }]}>
                           {key.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}:
                         </Text>
-                        <Text style={styles.breakdownValue}>{value} marks</Text>
+                        <Text style={[styles.breakdownValue, { color: themedColors.text.primary }]}>{value} marks</Text>
                       </View>
                     ))}
                   </View>
-                </LinearGradient>
+                </View>
               </View>
 
               {/* Corrections */}
               {markingResult.corrections && markingResult.corrections.length > 0 && (
-                <View style={styles.correctionsCard}>
-                  <LinearGradient
-                    colors={['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.8)']}
-                    style={styles.glassCard}
-                  >
+                <View style={[styles.correctionsCard, { backgroundColor: themedColors.background.paper }]}>
+                  <View style={styles.glassCard}>
                     <View style={styles.correctionsHeader}>
-                      <Ionicons name="checkmark-circle" size={24} color={Colors.error} />
-                      <Text style={styles.correctionsTitle}>Corrections ({markingResult.corrections.length})</Text>
+                      <Ionicons name="checkmark-circle" size={24} color={themedColors.error.main} />
+                      <Text style={[styles.correctionsTitle, { color: themedColors.text.primary }]}>Corrections ({markingResult.corrections.length})</Text>
                     </View>
 
                     {markingResult.corrections.slice(0, 10).map((correction, index) => (
-                      <View key={index} style={styles.correctionItem}>
-                        <View style={styles.correctionNumber}>
-                          <Text style={styles.correctionNumberText}>{index + 1}</Text>
+                      <View key={index} style={[styles.correctionItem, { borderBottomColor: themedColors.border.light }]}>
+                        <View style={[styles.correctionNumber, { backgroundColor: themedColors.background.subtle }]}>
+                          <Text style={[styles.correctionNumberText, { color: themedColors.text.secondary }]}>{index + 1}</Text>
                         </View>
                         <View style={styles.correctionContent}>
                           <View style={styles.correctionRow}>
-                            <Text style={styles.correctionLabel}>Wrong:</Text>
-                            <Text style={styles.correctionWrong}>{correction.wrong}</Text>
+                            <Text style={[styles.correctionLabel, { color: themedColors.error.main }]}>Wrong:</Text>
+                            <Text style={[styles.correctionWrong, { color: themedColors.text.secondary }]}>{correction.wrong}</Text>
                           </View>
                           <View style={styles.correctionRow}>
-                            <Text style={styles.correctionLabel}>Correct:</Text>
-                            <Text style={styles.correctionCorrect}>{correction.correct}</Text>
+                            <Text style={[styles.correctionLabel, { color: themedColors.success.main }]}>Correct:</Text>
+                            <Text style={[styles.correctionCorrect, { color: themedColors.text.primary }]}>{correction.correct}</Text>
                           </View>
                           <View style={styles.correctionTypeRow}>
-                            <View style={styles.correctionTypeBadge}>
-                              <Text style={styles.correctionTypeText}>{correction.type}</Text>
+                            <View style={[styles.correctionTypeBadge, { backgroundColor: themedColors.background.subtle }]}>
+                              <Text style={[styles.correctionTypeText, { color: themedColors.text.secondary }]}>{correction.type}</Text>
                             </View>
-                            <Text style={styles.correctionExplanation}>{correction.explanation}</Text>
+                            <Text style={[styles.correctionExplanation, { color: themedColors.text.hint }]}>{correction.explanation}</Text>
                           </View>
                         </View>
                       </View>
                     ))}
 
                     {markingResult.corrections.length > 10 && (
-                      <Text style={styles.moreCorrectionsText}>
+                      <Text style={[styles.moreCorrectionsText, { color: themedColors.text.secondary }]}>
                         +{markingResult.corrections.length - 10} more corrections in PDF report
                       </Text>
                     )}
-                  </LinearGradient>
+                  </View>
                 </View>
               )}
 
               {/* Detailed Feedback */}
-              <View style={styles.feedbackCard}>
-                <LinearGradient
-                  colors={['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.8)']}
-                  style={styles.glassCard}
-                >
-                  <Text style={styles.feedbackTitle}>Detailed Feedback</Text>
-                  <Text style={styles.feedbackText}>{markingResult.detailed_feedback}</Text>
-                </LinearGradient>
+              <View style={[styles.feedbackCard, { backgroundColor: themedColors.background.paper }]}>
+                <View style={styles.glassCard}>
+                  <Text style={[styles.feedbackTitle, { color: themedColors.text.primary }]}>Detailed Feedback</Text>
+                  <Text style={[styles.feedbackText, { color: themedColors.text.secondary }]}>{markingResult.detailed_feedback}</Text>
+                </View>
               </View>
 
               {/* Corrected Essay */}
-              <View style={styles.correctedEssayCard}>
-                <LinearGradient
-                  colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.85)']}
-                  style={styles.glassCard}
-                >
-                  <Text style={styles.correctedEssayTitle}>Corrected Version</Text>
-                  <ScrollView style={styles.correctedEssayScroll} nestedScrollEnabled>
-                    <Text style={styles.correctedEssayText}>{markingResult.corrected_essay}</Text>
-                  </ScrollView>
-                </LinearGradient>
-              </View>
+              {markingResult.corrected_essay && (
+                <View style={[styles.correctedEssayCard, { backgroundColor: themedColors.background.paper }]}>
+                  <View style={styles.glassCard}>
+                    <Text style={[styles.correctedEssayTitle, { color: themedColors.text.primary }]}>Corrected Version</Text>
+                    <ScrollView style={styles.correctedEssayScroll} nestedScrollEnabled>
+                      <Text style={[styles.correctedEssayText, { color: themedColors.text.primary }]}>{markingResult.corrected_essay}</Text>
+                    </ScrollView>
+                  </View>
+                </View>
+              )}
 
               {/* Action Buttons */}
-              <TouchableOpacity style={styles.downloadButton} onPress={handleDownloadPDF}>
+              <TouchableOpacity style={[styles.downloadButton, { shadowColor: themedColors.success.main }]} onPress={handleDownloadPDF}>
                 <LinearGradient
-                  colors={Colors.gradients.success}
+                  colors={themedColors.gradients.success}
                   style={styles.gradientButton}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
@@ -620,9 +589,9 @@ const EnglishEssayScreen: React.FC = () => {
                 </LinearGradient>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.newEssayButton} onPress={handleReset}>
+              <TouchableOpacity style={[styles.newEssayButton, { shadowColor: themedColors.primary.main }]} onPress={handleReset}>
                 <LinearGradient
-                  colors={Colors.gradients.primary}
+                  colors={themedColors.gradients.primary}
                   style={styles.gradientButton}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
@@ -634,7 +603,7 @@ const EnglishEssayScreen: React.FC = () => {
           )}
         </ScrollView>
       </LinearGradient>
-    </ImageBackground>
+    </View>
   );
 };
 

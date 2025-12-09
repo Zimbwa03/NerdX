@@ -7,16 +7,21 @@ import {
   ScrollView,
   ActivityIndicator,
   RefreshControl,
+  StatusBar,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { userApi, UserStats } from '../services/api/userApi';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { Icons, IconCircle, Icon } from '../components/Icons';
 import { Card } from '../components/Card';
 import Colors from '../theme/colors';
+import { useThemedColors } from '../theme/useThemedStyles';
 
 const ProgressScreen: React.FC = () => {
   const { user } = useAuth();
+  const { isDarkMode } = useTheme();
+  const themedColors = useThemedColors();
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -45,19 +50,20 @@ const ProgressScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#1976D2" />
-        <Text style={styles.loadingText}>Loading progress...</Text>
+      <View style={[styles.centerContainer, { backgroundColor: themedColors.background.default }]}>
+        <ActivityIndicator size="large" color={themedColors.primary.main} />
+        <Text style={[styles.loadingText, { color: themedColors.text.secondary }]}>Loading progress...</Text>
       </View>
     );
   }
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: themedColors.background.default }]}
       showsVerticalScrollIndicator={false}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={themedColors.background.default} />
       {/* Professional Header */}
       <LinearGradient
         colors={[Colors.warning.main, Colors.warning.dark]}

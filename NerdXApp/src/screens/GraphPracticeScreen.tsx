@@ -1,5 +1,5 @@
 // Graph Practice Screen Component - Enhanced with all bot features
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,17 +11,25 @@ import {
   Alert,
   Image,
 } from 'react-native';
-import { Video, ResizeMode } from 'expo-av';
+import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
+import * as MediaLibrary from 'expo-media-library';
+import * as Sharing from 'expo-sharing';
 import { useNavigation } from '@react-navigation/native';
 import { graphApi, GraphData } from '../services/api/graphApi';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+import { useThemedColors } from '../theme/useThemedStyles';
+import { Colors } from '../theme/colors';
 
 type Mode = 'generate' | 'custom' | 'upload' | 'linear';
 
 const GraphPracticeScreen: React.FC = () => {
   const navigation = useNavigation();
   const { user, updateUser } = useAuth();
+  const { isDarkMode } = useTheme();
+  const themedColors = useThemedColors();
   const [graphData, setGraphData] = useState<GraphData | null>(null);
   const [loading, setLoading] = useState(false);
   const [answer, setAnswer] = useState('');
@@ -37,6 +45,10 @@ const GraphPracticeScreen: React.FC = () => {
   const [objective, setObjective] = useState('');
   const [imageSolution, setImageSolution] = useState<{ processed_text: string; solution: string; analysis?: string } | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [videoLoading, setVideoLoading] = useState(false);
+  const [videoError, setVideoError] = useState<string | null>(null);
+  const [savingVideo, setSavingVideo] = useState(false);
+  const videoRef = useRef<Video>(null);
 
   const graphTypes = [
     { id: 'linear', name: 'Linear', icon: '📈' },
@@ -63,6 +75,8 @@ const GraphPracticeScreen: React.FC = () => {
       setAnswer('');
       setImageSolution(null);
       setVideoUrl(null);
+      setVideoError(null);
+      setVideoLoading(false);
 
       // Generate static graph
       const data = await graphApi.generateGraph(graphType);
@@ -86,11 +100,12 @@ const GraphPracticeScreen: React.FC = () => {
         }
 
         if (animResult && animResult.video_path) {
-          // Construct full URL
-          // Assuming backend returns relative path like "static/media/..."
-          // We need to prepend base URL from config or hardcode for now
-          const baseUrl = 'https://nerdx.onrender.com/';
-          setVideoUrl(baseUrl + animResult.video_path);
+          // Construct full URL - backend returns "/static/..."
+          const baseUrl = 'https://nerdx.onrender.com';
+          const videoPath = animResult.video_path.startsWith('/')
+            ? animResult.video_path
+            : '/' + animResult.video_path;
+          setVideoUrl(baseUrl + videoPath);
         }
       }
 
@@ -244,44 +259,44 @@ const GraphPracticeScreen: React.FC = () => {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
+    <ScrollView style={[styles.container, { backgroundColor: themedColors.background.default }]}>
+      <View style={[styles.header, { backgroundColor: themedColors.primary.main }]}>
         <Text style={styles.title}>📊 Graph Practice</Text>
         <Text style={styles.subtitle}>Practice reading and analyzing graphs</Text>
         <Text style={styles.credits}>Credits: {user?.credits || 0}</Text>
       </View>
 
       {/* Mode Selection */}
-      <View style={styles.modeContainer}>
+      <View style={[styles.modeContainer, { backgroundColor: themedColors.background.paper, borderBottomColor: themedColors.border.light }]}>
         <TouchableOpacity
-          style={[styles.modeButton, mode === 'generate' && styles.modeButtonActive]}
+          style={[styles.modeButton, { backgroundColor: themedColors.background.paper }, mode === 'generate' && { backgroundColor: themedColors.primary.main }]}
           onPress={() => { setMode('generate'); resetView(); }}
         >
-          <Text style={[styles.modeButtonText, mode === 'generate' && styles.modeButtonTextActive]}>
+          <Text style={[styles.modeButtonText, { color: themedColors.text.primary }, mode === 'generate' && { color: '#FFFFFF', fontWeight: 'bold' }]}>
             📈 Generate
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.modeButton, mode === 'custom' && styles.modeButtonActive]}
+          style={[styles.modeButton, { backgroundColor: themedColors.background.paper }, mode === 'custom' && { backgroundColor: themedColors.primary.main }]}
           onPress={() => { setMode('custom'); resetView(); }}
         >
-          <Text style={[styles.modeButtonText, mode === 'custom' && styles.modeButtonTextActive]}>
+          <Text style={[styles.modeButtonText, { color: themedColors.text.primary }, mode === 'custom' && { color: '#FFFFFF', fontWeight: 'bold' }]}>
             ✏️ Custom
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.modeButton, mode === 'upload' && styles.modeButtonActive]}
+          style={[styles.modeButton, { backgroundColor: themedColors.background.paper }, mode === 'upload' && { backgroundColor: themedColors.primary.main }]}
           onPress={() => { setMode('upload'); resetView(); }}
         >
-          <Text style={[styles.modeButtonText, mode === 'upload' && styles.modeButtonTextActive]}>
+          <Text style={[styles.modeButtonText, { color: themedColors.text.primary }, mode === 'upload' && { color: '#FFFFFF', fontWeight: 'bold' }]}>
             📷 Upload
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.modeButton, mode === 'linear' && styles.modeButtonActive]}
+          style={[styles.modeButton, { backgroundColor: themedColors.background.paper }, mode === 'linear' && { backgroundColor: themedColors.primary.main }]}
           onPress={() => { setMode('linear'); resetView(); }}
         >
-          <Text style={[styles.modeButtonText, mode === 'linear' && styles.modeButtonTextActive]}>
+          <Text style={[styles.modeButtonText, { color: themedColors.text.primary }, mode === 'linear' && { color: '#FFFFFF', fontWeight: 'bold' }]}>
             ⭐ Linear Prog
           </Text>
         </TouchableOpacity>
@@ -289,15 +304,16 @@ const GraphPracticeScreen: React.FC = () => {
 
       {/* Generate Mode */}
       {mode === 'generate' && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Select Graph Type</Text>
+        <View style={[styles.section, { borderBottomColor: themedColors.border.light }]}>
+          <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>Select Graph Type</Text>
           <View style={styles.graphTypesContainer}>
             {graphTypes.map((type) => (
               <TouchableOpacity
                 key={type.id}
                 style={[
                   styles.graphTypeButton,
-                  graphType === type.id && styles.graphTypeButtonSelected,
+                  { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F5F5', borderColor: themedColors.border.light },
+                  graphType === type.id && { backgroundColor: isDarkMode ? 'rgba(0, 229, 255, 0.2)' : '#E3F2FD', borderColor: themedColors.primary.main },
                 ]}
                 onPress={() => setGraphType(type.id)}
               >
@@ -305,7 +321,8 @@ const GraphPracticeScreen: React.FC = () => {
                 <Text
                   style={[
                     styles.graphTypeText,
-                    graphType === type.id && styles.graphTypeTextSelected,
+                    { color: themedColors.text.primary },
+                    graphType === type.id && { color: themedColors.primary.main, fontWeight: '600' },
                   ]}
                 >
                   {type.name}
@@ -315,7 +332,7 @@ const GraphPracticeScreen: React.FC = () => {
           </View>
 
           <TouchableOpacity
-            style={[styles.generateButton, loading && styles.generateButtonDisabled]}
+            style={[styles.generateButton, { backgroundColor: themedColors.primary.main }, loading && styles.generateButtonDisabled]}
             onPress={handleGenerate}
             disabled={loading}
           >
@@ -330,21 +347,22 @@ const GraphPracticeScreen: React.FC = () => {
 
       {/* Custom Equation Mode */}
       {mode === 'custom' && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Enter Custom Equation</Text>
-          <Text style={styles.hintText}>
+        <View style={[styles.section, { borderBottomColor: themedColors.border.light }]}>
+          <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>Enter Custom Equation</Text>
+          <Text style={[styles.hintText, { color: themedColors.text.secondary }]}>
             Examples: y = 2x + 3, y = x^2, y = sin(x), y = 2^x
           </Text>
           <TextInput
-            style={styles.equationInput}
+            style={[styles.equationInput, { backgroundColor: themedColors.background.paper, borderColor: themedColors.border.light, color: themedColors.text.primary }]}
             value={customEquation}
             onChangeText={setCustomEquation}
             placeholder="e.g., y = 2x + 3"
+            placeholderTextColor={themedColors.text.hint}
             autoCapitalize="none"
             autoCorrect={false}
           />
           <TouchableOpacity
-            style={[styles.generateButton, loading && styles.generateButtonDisabled]}
+            style={[styles.generateButton, { backgroundColor: themedColors.primary.main }, loading && styles.generateButtonDisabled]}
             onPress={handleCustomGraph}
             disabled={loading}
           >
@@ -359,13 +377,13 @@ const GraphPracticeScreen: React.FC = () => {
 
       {/* Image Upload Mode */}
       {mode === 'upload' && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Upload Graph Image</Text>
-          <Text style={styles.hintText}>
+        <View style={[styles.section, { borderBottomColor: themedColors.border.light }]}>
+          <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>Upload Graph Image</Text>
+          <Text style={[styles.hintText, { color: themedColors.text.secondary }]}>
             Upload an image of a graph problem to get AI-powered solution
           </Text>
           <TouchableOpacity
-            style={[styles.generateButton, loading && styles.generateButtonDisabled]}
+            style={[styles.generateButton, { backgroundColor: themedColors.primary.main }, loading && styles.generateButtonDisabled]}
             onPress={handleImageUpload}
             disabled={loading}
           >
@@ -380,16 +398,16 @@ const GraphPracticeScreen: React.FC = () => {
 
       {/* Linear Programming Mode */}
       {mode === 'linear' && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Linear Programming</Text>
-          <Text style={styles.hintText}>
+        <View style={[styles.section, { borderBottomColor: themedColors.border.light }]}>
+          <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>Linear Programming</Text>
+          <Text style={[styles.hintText, { color: themedColors.text.secondary }]}>
             Enter constraints (e.g., "2x + 3y ≤ 12", "x + y ≤ 8")
           </Text>
 
           {constraints.map((constraint, index) => (
             <TextInput
               key={index}
-              style={styles.constraintInput}
+              style={[styles.constraintInput, { backgroundColor: themedColors.background.paper, borderColor: themedColors.border.light, color: themedColors.text.primary }]}
               value={constraint}
               onChangeText={(text) => {
                 const newConstraints = [...constraints];
@@ -397,28 +415,30 @@ const GraphPracticeScreen: React.FC = () => {
                 setConstraints(newConstraints);
               }}
               placeholder={`Constraint ${index + 1} (e.g., 2x + 3y ≤ 12)`}
+              placeholderTextColor={themedColors.text.hint}
               autoCapitalize="none"
             />
           ))}
 
           <TouchableOpacity
-            style={styles.addButton}
+            style={[styles.addButton, { backgroundColor: themedColors.success.main }]}
             onPress={() => setConstraints([...constraints, ''])}
           >
             <Text style={styles.addButtonText}>+ Add Constraint</Text>
           </TouchableOpacity>
 
-          <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Objective Function (Optional)</Text>
+          <Text style={[styles.sectionTitle, { marginTop: 20, color: themedColors.text.primary }]}>Objective Function (Optional)</Text>
           <TextInput
-            style={styles.equationInput}
+            style={[styles.equationInput, { backgroundColor: themedColors.background.paper, borderColor: themedColors.border.light, color: themedColors.text.primary }]}
             value={objective}
             onChangeText={setObjective}
             placeholder="e.g., maximize 3x + 2y"
+            placeholderTextColor={themedColors.text.hint}
             autoCapitalize="none"
           />
 
           <TouchableOpacity
-            style={[styles.generateButton, loading && styles.generateButtonDisabled]}
+            style={[styles.generateButton, { backgroundColor: themedColors.primary.main }, loading && styles.generateButtonDisabled]}
             onPress={handleLinearProgramming}
             disabled={loading}
           >
@@ -435,7 +455,7 @@ const GraphPracticeScreen: React.FC = () => {
       {graphData && (
         <View style={styles.graphSection}>
           {graphData.graph_url && (
-            <View style={styles.imageContainer}>
+            <View style={[styles.imageContainer, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F5F5' }]}>
               <Image
                 source={{ uri: graphData.graph_url }}
                 style={styles.graphImage}
@@ -449,54 +469,143 @@ const GraphPracticeScreen: React.FC = () => {
 
           {videoUrl && (
             <View style={styles.videoContainer}>
-              <Text style={styles.questionLabel}>Visualization:</Text>
-              <Video
-                source={{ uri: videoUrl }}
-                style={styles.video}
-                useNativeControls
-                resizeMode={ResizeMode.CONTAIN}
-                isLooping
-              />
+              <Text style={[styles.questionLabel, { color: themedColors.text.primary }]}>Visualization:</Text>
+
+              {videoLoading && (
+                <View style={styles.videoLoadingContainer}>
+                  <ActivityIndicator size="large" color={themedColors.primary.main} />
+                  <Text style={[styles.videoLoadingText, { color: themedColors.text.secondary }]}>Loading video...</Text>
+                </View>
+              )}
+
+              {videoError && (
+                <View style={[styles.videoErrorContainer, { backgroundColor: isDarkMode ? 'rgba(244,67,54,0.2)' : '#FFEBEE' }]}>
+                  <Text style={[styles.videoErrorText, { color: '#F44336' }]}>⚠️ {videoError}</Text>
+                  <TouchableOpacity
+                    style={[styles.retryButton, { backgroundColor: themedColors.primary.main }]}
+                    onPress={handleGenerate}
+                  >
+                    <Text style={styles.retryButtonText}>Retry</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {!videoError && (
+                <>
+                  <Video
+                    ref={videoRef}
+                    source={{ uri: videoUrl }}
+                    style={[styles.video, videoLoading && { opacity: 0 }]}
+                    useNativeControls
+                    resizeMode={ResizeMode.CONTAIN}
+                    isLooping
+                    shouldPlay={true}
+                    onLoadStart={() => setVideoLoading(true)}
+                    onLoad={() => setVideoLoading(false)}
+                    onError={(error) => {
+                      console.error('Video error:', error);
+                      setVideoLoading(false);
+                      setVideoError('Failed to load video. The format may not be supported.');
+                    }}
+                    onPlaybackStatusUpdate={(status: AVPlaybackStatus) => {
+                      if (status.isLoaded && videoLoading) {
+                        setVideoLoading(false);
+                      }
+                    }}
+                  />
+
+                  {/* Save Video Button */}
+                  <TouchableOpacity
+                    style={[styles.saveVideoButton, { backgroundColor: themedColors.success.main }]}
+                    onPress={async () => {
+                      try {
+                        setSavingVideo(true);
+
+                        // Request permissions
+                        const { status } = await MediaLibrary.requestPermissionsAsync();
+                        if (status !== 'granted') {
+                          Alert.alert('Permission Required', 'Please grant permission to save videos.');
+                          return;
+                        }
+
+                        // Download video to local storage
+                        const filename = `graph_animation_${Date.now()}.mp4`;
+                        const localUri = FileSystem.documentDirectory + filename;
+
+                        const downloadResult = await FileSystem.downloadAsync(videoUrl, localUri);
+
+                        if (downloadResult.status === 200) {
+                          // Save to media library
+                          const asset = await MediaLibrary.createAssetAsync(downloadResult.uri);
+                          await MediaLibrary.createAlbumAsync('NerdX', asset, false);
+
+                          Alert.alert('Success', 'Video saved to your gallery in the NerdX album!');
+                        } else {
+                          // Fallback to sharing
+                          if (await Sharing.isAvailableAsync()) {
+                            await Sharing.shareAsync(downloadResult.uri);
+                          } else {
+                            Alert.alert('Error', 'Could not save video. Sharing not available.');
+                          }
+                        }
+                      } catch (error) {
+                        console.error('Save video error:', error);
+                        Alert.alert('Error', 'Failed to save video. Please try again.');
+                      } finally {
+                        setSavingVideo(false);
+                      }
+                    }}
+                    disabled={savingVideo || videoLoading}
+                  >
+                    {savingVideo ? (
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                    ) : (
+                      <Text style={styles.saveVideoButtonText}>📥 Save Video to Gallery</Text>
+                    )}
+                  </TouchableOpacity>
+                </>
+              )}
             </View>
           )}
 
-          <View style={styles.questionContainer}>
-            <Text style={styles.questionLabel}>Equation:</Text>
-            <Text style={styles.equation}>{graphData.equation}</Text>
+          <View style={[styles.questionContainer, { backgroundColor: themedColors.background.paper }]}>
+            <Text style={[styles.questionLabel, { color: themedColors.text.primary }]}>Equation:</Text>
+            <Text style={[styles.equation, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#F5F5F5', color: themedColors.secondary.main }]}>{graphData.equation}</Text>
 
             {graphData.constraints && graphData.constraints.length > 0 && (
               <>
-                <Text style={styles.questionLabel}>Constraints:</Text>
+                <Text style={[styles.questionLabel, { color: themedColors.text.primary }]}>Constraints:</Text>
                 {graphData.constraints.map((c, i) => (
-                  <Text key={i} style={styles.equation}>{c}</Text>
+                  <Text key={i} style={[styles.equation, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#F5F5F5', color: themedColors.secondary.main }]}>{c}</Text>
                 ))}
               </>
             )}
 
             {graphData.corner_points && graphData.corner_points.length > 0 && (
               <>
-                <Text style={styles.questionLabel}>Corner Points:</Text>
-                <Text style={styles.equation}>
+                <Text style={[styles.questionLabel, { color: themedColors.text.primary }]}>Corner Points:</Text>
+                <Text style={[styles.equation, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#F5F5F5', color: themedColors.secondary.main }]}>
                   {graphData.corner_points.map((p, i) => `(${p[0]}, ${p[1]})`).join(', ')}
                 </Text>
               </>
             )}
 
-            <Text style={styles.questionLabel}>Question:</Text>
-            <Text style={styles.question}>{graphData.question}</Text>
+            <Text style={[styles.questionLabel, { color: themedColors.text.primary }]}>Question:</Text>
+            <Text style={[styles.question, { color: themedColors.text.primary }]}>{graphData.question}</Text>
 
             {!showSolution && (
               <View style={styles.answerContainer}>
-                <Text style={styles.answerLabel}>Your Answer:</Text>
+                <Text style={[styles.answerLabel, { color: themedColors.text.primary }]}>Your Answer:</Text>
                 <TextInput
-                  style={styles.answerInput}
+                  style={[styles.answerInput, { backgroundColor: themedColors.background.paper, borderColor: themedColors.border.light, color: themedColors.text.primary }]}
                   value={answer}
                   onChangeText={setAnswer}
                   placeholder="Enter your answer..."
+                  placeholderTextColor={themedColors.text.hint}
                   multiline
                 />
                 <TouchableOpacity
-                  style={styles.submitButton}
+                  style={[styles.submitButton, { backgroundColor: themedColors.success.main }]}
                   onPress={handleSubmitAnswer}
                 >
                   <Text style={styles.submitButtonText}>Submit Answer</Text>
@@ -505,11 +614,11 @@ const GraphPracticeScreen: React.FC = () => {
             )}
 
             {showSolution && (
-              <View style={styles.solutionContainer}>
-                <Text style={styles.solutionLabel}>Solution:</Text>
-                <Text style={styles.solution}>{graphData.solution}</Text>
+              <View style={[styles.solutionContainer, { backgroundColor: isDarkMode ? 'rgba(76, 175, 80, 0.15)' : '#E8F5E9' }]}>
+                <Text style={[styles.solutionLabel, { color: themedColors.success.main }]}>Solution:</Text>
+                <Text style={[styles.solution, { color: themedColors.text.primary }]}>{graphData.solution}</Text>
                 <TouchableOpacity
-                  style={styles.newGraphButton}
+                  style={[styles.newGraphButton, { backgroundColor: themedColors.primary.main }]}
                   onPress={resetView}
                 >
                   <Text style={styles.newGraphButtonText}>Generate New Graph</Text>
@@ -523,22 +632,22 @@ const GraphPracticeScreen: React.FC = () => {
       {/* Image Solution Display */}
       {imageSolution && (
         <View style={styles.graphSection}>
-          <View style={styles.solutionContainer}>
-            <Text style={styles.solutionLabel}>Processed Text:</Text>
-            <Text style={styles.solution}>{imageSolution.processed_text}</Text>
+          <View style={[styles.solutionContainer, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F5F5' }]}>
+            <Text style={[styles.solutionLabel, { color: themedColors.text.primary }]}>Processed Text:</Text>
+            <Text style={[styles.solution, { color: themedColors.text.secondary }]}>{imageSolution.processed_text}</Text>
 
-            <Text style={[styles.solutionLabel, { marginTop: 15 }]}>Solution:</Text>
-            <Text style={styles.solution}>{imageSolution.solution}</Text>
+            <Text style={[styles.solutionLabel, { marginTop: 15, color: themedColors.text.primary }]}>Solution:</Text>
+            <Text style={[styles.solution, { color: themedColors.text.secondary }]}>{imageSolution.solution}</Text>
 
             {imageSolution.analysis && (
               <>
-                <Text style={[styles.solutionLabel, { marginTop: 15 }]}>Analysis:</Text>
-                <Text style={styles.solution}>{imageSolution.analysis}</Text>
+                <Text style={[styles.solutionLabel, { marginTop: 15, color: themedColors.text.primary }]}>Analysis:</Text>
+                <Text style={[styles.solution, { color: themedColors.text.secondary }]}>{imageSolution.analysis}</Text>
               </>
             )}
 
             <TouchableOpacity
-              style={styles.newGraphButton}
+              style={[styles.newGraphButton, { backgroundColor: themedColors.primary.main }]}
               onPress={resetView}
             >
               <Text style={styles.newGraphButtonText}>Try Another Image</Text>
@@ -803,9 +912,54 @@ const styles = StyleSheet.create({
   },
   video: {
     width: '100%',
-    height: 200,
+    height: 250,
     backgroundColor: '#000',
     borderRadius: 8,
+  },
+  videoLoadingContainer: {
+    width: '100%',
+    height: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    borderRadius: 8,
+  },
+  videoLoadingText: {
+    marginTop: 10,
+    fontSize: 14,
+  },
+  videoErrorContainer: {
+    width: '100%',
+    padding: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  videoErrorText: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 15,
+  },
+  retryButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 6,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  saveVideoButton: {
+    marginTop: 15,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+    width: '100%',
+    alignItems: 'center',
+  },
+  saveVideoButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

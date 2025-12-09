@@ -10,19 +10,24 @@ import {
   ActivityIndicator,
   Alert,
   Modal,
+  StatusBar,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { creditsApi, CreditPackage, PaymentStatus } from '../services/api/creditsApi';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { Icons, IconCircle } from '../components/Icons';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import Colors from '../theme/colors';
+import { useThemedColors } from '../theme/useThemedStyles';
 
 const CreditsScreen: React.FC = () => {
   const navigation = useNavigation();
   const { user, updateUser } = useAuth();
+  const { isDarkMode } = useTheme();
+  const themedColors = useThemedColors();
   const [packages, setPackages] = useState<CreditPackage[]>([]);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState<string | null>(null);
@@ -165,15 +170,16 @@ const CreditsScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#1976D2" />
-        <Text style={styles.loadingText}>Loading packages...</Text>
+      <View style={[styles.centerContainer, { backgroundColor: themedColors.background.default }]}>
+        <ActivityIndicator size="large" color={themedColors.primary.main} />
+        <Text style={[styles.loadingText, { color: themedColors.text.secondary }]}>Loading packages...</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView style={[styles.container, { backgroundColor: themedColors.background.default }]} showsVerticalScrollIndicator={false}>
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={themedColors.background.default} />
       {/* Professional Header */}
       <LinearGradient
         colors={[Colors.success.main, Colors.success.dark]}
@@ -356,7 +362,7 @@ const CreditsScreen: React.FC = () => {
                     style={[
                       styles.confirmButton,
                       (!phoneNumber.trim() || !email.trim() || purchasing) &&
-                        styles.confirmButtonDisabled,
+                      styles.confirmButtonDisabled,
                     ]}
                     onPress={handleConfirmPurchase}
                     disabled={!phoneNumber.trim() || !email.trim() || !!purchasing}

@@ -2727,6 +2727,30 @@ def project_history(project_id):
         logger.error(f"Project history error: {e}", exc_info=True)
         return jsonify({'success': False, 'message': 'Server error'}), 500
 
+@mobile_bp.route('/project/<int:project_id>', methods=['DELETE'])
+@require_auth
+def delete_project(project_id):
+    """Delete a project"""
+    try:
+        from services.project_assistant_service import ProjectAssistantService
+        service = ProjectAssistantService()
+        
+        success = service.delete_project(g.current_user_id, project_id)
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': 'Project deleted successfully'
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Project not found or could not be deleted'
+            }), 404
+    except Exception as e:
+        logger.error(f"Delete project error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
 @mobile_bp.route('/project/<int:project_id>/document', methods=['GET'])
 @require_auth
 def project_document(project_id):

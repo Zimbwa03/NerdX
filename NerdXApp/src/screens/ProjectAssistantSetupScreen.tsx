@@ -18,10 +18,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { projectApi } from '../services/api/projectApi';
+import { useTheme } from '../context/ThemeContext';
+import { useThemedColors } from '../theme/useThemedStyles';
+import { Colors } from '../theme/colors';
 
 const ProjectAssistantSetupScreen: React.FC = () => {
   const navigation = useNavigation();
   const { user, updateUser } = useAuth();
+  const { isDarkMode } = useTheme();
+  const themedColors = useThemedColors();
   const [loading, setLoading] = useState(false);
 
   const [projectTitle, setProjectTitle] = useState('');

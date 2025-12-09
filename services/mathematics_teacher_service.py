@@ -223,8 +223,8 @@ Current conversation context will be provided with each message."""
             # Store session
             session_manager.set_data(user_id, 'math_teacher', session_data)
             
-            # Generate initial teaching message
-            if self._is_gemini_configured and topic:
+            # Generate initial teaching message using DeepSeek AI (primary)
+            if (self._is_deepseek_configured or self._is_gemini_configured) and topic:
                 initial_prompt = f"Start teaching {topic} to a {grade_level} Mathematics student. Begin with a warm greeting, ask about their current understanding, and introduce the topic clearly."
                 initial_message = self._get_teaching_response(user_id, initial_prompt, session_data)
             elif topic:
@@ -365,7 +365,7 @@ Current conversation context will be provided with each message."""
                             'temperature': 0.7,
                             'max_tokens': 2000
                         },
-                        timeout=30
+                        timeout=60
                     )
                     if response.status_code == 200:
                         data = response.json()
@@ -433,8 +433,8 @@ Current conversation context will be provided with each message."""
                     'session_ended': False
                 }
             
-            # Generate notes using AI
-            if self._is_gemini_configured:
+            # Generate notes using DeepSeek AI (primary) with Gemini fallback
+            if self._is_deepseek_configured or self._is_gemini_configured:
                 subject = session_data.get('subject', 'Mathematics')
                 grade_level = session_data.get('grade_level', 'O-Level')
                 conversation_history = session_data.get('conversation_history', [])
@@ -449,7 +449,41 @@ Current conversation context will be provided with each message."""
                 prompt = f"{self.MATH_TEACHER_SYSTEM_PROMPT}\n\nSubject: {subject}\nGrade Level: {grade_level}\nTopic: {topic}{conversation_context}\n\nStudent request: Generate notes\n\nProvide comprehensive notes in valid JSON format."
                 
                 try:
-                    response = self.gemini_model.generate_content(prompt)
+                    # Try DeepSeek first (primary - faster response)
+                    if self._is_deepseek_configured:
+                        response = requests.post(
+                            self.deepseek_api_url,
+                            headers={'Authorization': f'Bearer {self.deepseek_api_key}', 'Content-Type': 'application/json'},
+                            json={
+                                'model': 'deepseek-chat',
+                                'messages': [
+                                    {'role': 'system', 'content': self.MATH_TEACHER_SYSTEM_PROMPT},
+                                    {'role': 'user', 'content': prompt}
+                                ],
+                                'temperature': 0.7,
+                                'max_tokens': 3000
+                            },
+                            timeout=45
+                        )
+                        if response.status_code == 200:
+                            data = response.json()
+                            if 'choices' in data and len(data['choices']) > 0:
+                                response_text = data['choices'][0]['message']['content'].strip()
+                                notes_data = self._parse_notes_response(response_text)
+                                if notes_data:
+                                    from utils.math_notes_pdf_generator import MathNotesPDFGenerator
+                                    pdf_generator = MathNotesPDFGenerator()
+                                    pdf_path = pdf_generator.generate_notes_pdf(notes_data, user_id)
+                                    return {
+                                        'success': True,
+                                        'pdf_url': pdf_path,
+                                        'response': f'✅ Your Mathematics notes on {topic} have been generated!',
+                                        'session_ended': False
+                                    }
+                    
+                    # Fallback to Gemini if DeepSeek fails
+                    if self._is_gemini_configured and self.gemini_model:
+                        response = self.gemini_model.generate_content(prompt)
                     notes_data = self._parse_notes_response(response.text)
                     
                     if notes_data:

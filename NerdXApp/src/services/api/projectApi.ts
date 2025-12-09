@@ -167,4 +167,15 @@ export const projectApi = {
       throw error;
     }
   },
+
+  // Delete a project
+  deleteProject: async (projectId: number): Promise<boolean> => {
+    try {
+      const response = await api.delete(`/api/mobile/project/${projectId}`);
+      return response.data.success;
+    } catch (error: any) {
+      console.error('Delete project error:', error);
+      throw error;
+    }
+  },
 };

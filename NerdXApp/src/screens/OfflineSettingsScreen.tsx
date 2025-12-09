@@ -4,8 +4,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import HybridAIService, { AIServiceConfig } from '../services/HybridAIService';
 import OfflineAIService from '../services/OfflineAIService';
+import { useTheme } from '../context/ThemeContext';
+import { useThemedColors } from '../theme/useThemedStyles';
 
 const OfflineSettingsScreen = ({ navigation }: any) => {
+    const { isDarkMode } = useTheme();
+    const themedColors = useThemedColors();
     const [config, setConfig] = useState<AIServiceConfig>(HybridAIService.getConfig());
     const [modelStatus, setModelStatus] = useState<{ isReady: boolean; modelInfo: any } | null>(null);
 
@@ -48,31 +52,31 @@ const OfflineSettingsScreen = ({ navigation }: any) => {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
+        <SafeAreaView style={[styles.container, { backgroundColor: themedColors.background.default }]}>
+            <View style={[styles.header, { backgroundColor: themedColors.background.paper, borderBottomColor: themedColors.border.light }]}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color="#333" />
+                    <Ionicons name="arrow-back" size={24} color={themedColors.text.primary} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Offline AI Settings</Text>
+                <Text style={[styles.headerTitle, { color: themedColors.text.primary }]}>Offline AI Settings</Text>
             </View>
 
             <ScrollView contentContainerStyle={styles.content}>
                 {/* Status Card */}
-                <View style={styles.card}>
-                    <Text style={styles.sectionTitle}>AI Model Status</Text>
+                <View style={[styles.card, { backgroundColor: themedColors.background.paper }]}>
+                    <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>AI Model Status</Text>
                     <View style={styles.statusRow}>
                         <View style={styles.statusIcon}>
                             <Ionicons
                                 name={modelStatus?.isReady ? "checkmark-circle" : "alert-circle"}
                                 size={24}
-                                color={modelStatus?.isReady ? "#10B981" : "#F59E0B"}
+                                color={modelStatus?.isReady ? themedColors.success.main : themedColors.warning.main}
                             />
                         </View>
                         <View style={styles.statusInfo}>
-                            <Text style={styles.statusLabel}>
+                            <Text style={[styles.statusLabel, { color: themedColors.text.primary }]}>
                                 {modelStatus?.isReady ? 'Phi-3 Model Ready' : 'Model Not Ready'}
                             </Text>
-                            <Text style={styles.statusSubtext}>
+                            <Text style={[styles.statusSubtext, { color: themedColors.text.secondary }]}>
                                 {modelStatus?.isReady
                                     ? 'You can use AI features offline.'
                                     : 'Download the model to enable offline AI.'}
@@ -80,67 +84,73 @@ const OfflineSettingsScreen = ({ navigation }: any) => {
                         </View>
                     </View>
 
-                    <TouchableOpacity style={styles.manageButton} onPress={handleManageModel}>
-                        <Text style={styles.manageButtonText}>Manage Model</Text>
-                        <Ionicons name="chevron-forward" size={20} color="#4F46E5" />
+                    <TouchableOpacity
+                        style={[
+                            styles.manageButton,
+                            { backgroundColor: isDarkMode ? 'rgba(79, 70, 229, 0.2)' : '#EEF2FF' }
+                        ]}
+                        onPress={handleManageModel}
+                    >
+                        <Text style={[styles.manageButtonText, { color: themedColors.primary.main }]}>Manage Model</Text>
+                        <Ionicons name="chevron-forward" size={20} color={themedColors.primary.main} />
                     </TouchableOpacity>
                 </View>
 
                 {/* Preferences */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionHeader}>Preferences</Text>
+                    <Text style={[styles.sectionHeader, { color: themedColors.text.secondary }]}>Preferences</Text>
 
-                    <View style={styles.settingRow}>
+                    <View style={[styles.settingRow, { backgroundColor: themedColors.background.paper }]}>
                         <View style={styles.settingInfo}>
-                            <Text style={styles.settingLabel}>Prefer Offline AI</Text>
-                            <Text style={styles.settingDescription}>
+                            <Text style={[styles.settingLabel, { color: themedColors.text.primary }]}>Prefer Offline AI</Text>
+                            <Text style={[styles.settingDescription, { color: themedColors.text.secondary }]}>
                                 Use offline model even when internet is available (saves data).
                             </Text>
                         </View>
                         <Switch
                             value={config.preferOffline}
                             onValueChange={(val) => updateConfig('preferOffline', val)}
-                            trackColor={{ false: '#D1D5DB', true: '#818CF8' }}
-                            thumbColor={config.preferOffline ? '#4F46E5' : '#F3F4F6'}
+                            trackColor={{ false: themedColors.border.light, true: themedColors.primary.light }}
+                            thumbColor={config.preferOffline ? themedColors.primary.main : '#F3F4F6'}
                             disabled={!modelStatus?.isReady}
                         />
                     </View>
 
-                    <View style={styles.settingRow}>
+                    <View style={[styles.settingRow, { backgroundColor: themedColors.background.paper }]}>
                         <View style={styles.settingInfo}>
-                            <Text style={styles.settingLabel}>Offline Only Mode</Text>
-                            <Text style={styles.settingDescription}>
+                            <Text style={[styles.settingLabel, { color: themedColors.text.primary }]}>Offline Only Mode</Text>
+                            <Text style={[styles.settingDescription, { color: themedColors.text.secondary }]}>
                                 Never use internet for AI features.
                             </Text>
                         </View>
                         <Switch
                             value={config.offlineOnly}
                             onValueChange={(val) => updateConfig('offlineOnly', val)}
-                            trackColor={{ false: '#D1D5DB', true: '#818CF8' }}
-                            thumbColor={config.offlineOnly ? '#4F46E5' : '#F3F4F6'}
+                            trackColor={{ false: themedColors.border.light, true: themedColors.primary.light }}
+                            thumbColor={config.offlineOnly ? themedColors.primary.main : '#F3F4F6'}
                             disabled={!modelStatus?.isReady}
                         />
                     </View>
 
-                    <View style={styles.settingRow}>
+                    <View style={[styles.settingRow, { backgroundColor: themedColors.background.paper }]}>
                         <View style={styles.settingInfo}>
-                            <Text style={styles.settingLabel}>Online Only Mode</Text>
-                            <Text style={styles.settingDescription}>
+                            <Text style={[styles.settingLabel, { color: themedColors.text.primary }]}>Online Only Mode</Text>
+                            <Text style={[styles.settingDescription, { color: themedColors.text.secondary }]}>
                                 Always use internet (higher quality, uses data).
                             </Text>
                         </View>
                         <Switch
                             value={config.onlineOnly}
                             onValueChange={(val) => updateConfig('onlineOnly', val)}
-                            trackColor={{ false: '#D1D5DB', true: '#818CF8' }}
-                            thumbColor={config.onlineOnly ? '#4F46E5' : '#F3F4F6'}
+                            trackColor={{ false: themedColors.border.light, true: themedColors.primary.light }}
+                            thumbColor={config.onlineOnly ? themedColors.primary.main : '#F3F4F6'}
                         />
                     </View>
                 </View>
 
-                <View style={styles.infoCard}>
-                    <Ionicons name="information-circle-outline" size={24} color="#6B7280" />
-                    <Text style={styles.infoText}>
+                <View style={[styles.infoCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F3F4F6' }]}>
+                    <Ionicons name="information-circle-outline" size={24} color={themedColors.text.secondary} />
+                    <Text style={[styles.infoText, { color: themedColors.text.secondary }]}>
                         Offline AI uses the Microsoft Phi-3 Mini model running directly on your device.
                         It provides fast responses without using data, but may be less capable than the online cloud model for very complex tasks.
                     </Text>

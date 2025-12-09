@@ -1,5 +1,6 @@
 // Professional Color Theme System
-export const Colors = {
+// Dark Theme Colors (Default - Space Theme)
+export const DarkColors = {
   // Space Theme - Deep Universe & Neon Accents
   primary: {
     main: '#7C4DFF', // Electric Violet
@@ -87,15 +88,113 @@ export const Colors = {
 
   // Gradients
   gradients: {
-    primary: ['#7C4DFF', '#3F1DCB'], // Violet Nebula
-    secondary: ['#00E5FF', '#00B2CC'], // Cyan Pulse
-    success: ['#00E676', '#00B248'],
-    warning: ['#FFC400', '#C79400'],
-    error: ['#FF1744', '#C4001D'],
-    dark: ['#1D1E33', '#0A0E21'], // Deep Space
-    card: ['#2D2F45', '#1D1E33'],
+    primary: ['#7C4DFF', '#3F1DCB'] as [string, string], // Violet Nebula
+    secondary: ['#00E5FF', '#00B2CC'] as [string, string], // Cyan Pulse
+    success: ['#00E676', '#00B248'] as [string, string],
+    warning: ['#FFC400', '#C79400'] as [string, string],
+    error: ['#FF1744', '#C4001D'] as [string, string],
+    dark: ['#1D1E33', '#0A0E21'] as [string, string], // Deep Space
+    card: ['#2D2F45', '#1D1E33'] as [string, string],
   }
 };
 
-export default Colors;
+// Light Theme Colors
+export const LightColors = {
+  // Professional Purple Theme
+  primary: {
+    main: '#6200EE',
+    light: '#9D46FF',
+    dark: '#3700B3',
+    darker: '#1A0066',
+    contrastText: '#FFFFFF',
+  },
 
+  secondary: {
+    main: '#03DAC6',
+    light: '#66FFF9',
+    dark: '#018786',
+    contrastText: '#000000',
+  },
+
+  success: {
+    main: '#4CAF50',
+    light: '#81C784',
+    dark: '#388E3C',
+  },
+
+  warning: {
+    main: '#FF9800',
+    light: '#FFB74D',
+    dark: '#F57C00',
+  },
+
+  error: {
+    main: '#F44336',
+    light: '#E57373',
+    dark: '#D32F2F',
+  },
+
+  info: {
+    main: '#2196F3',
+    light: '#64B5F6',
+    dark: '#1976D2',
+  },
+
+  subjects: {
+    mathematics: '#1976D2',
+    science: '#388E3C',
+    english: '#E65100',
+    combinedScience: '#00796B',
+  },
+
+  // Light Background Colors
+  background: {
+    default: '#FAFAFA',
+    paper: '#FFFFFF',
+    dark: '#F5F5F5',
+    subtle: '#EEEEEE',
+  },
+
+  // Text Colors for Light
+  text: {
+    primary: '#1A1A1A',
+    secondary: '#666666',
+    disabled: '#9E9E9E',
+    white: '#FFFFFF',
+    hint: '#9E9E9E',
+  },
+
+  // Border Colors
+  border: {
+    light: '#E0E0E0',
+    medium: '#BDBDBD',
+    dark: '#9E9E9E',
+  },
+
+  // Icon Background Colors
+  iconBg: {
+    mathematics: 'rgba(25, 118, 210, 0.1)',
+    science: 'rgba(56, 142, 60, 0.1)',
+    english: 'rgba(230, 81, 0, 0.1)',
+    default: 'rgba(98, 0, 238, 0.1)',
+  },
+
+  // Gradients for Light
+  gradients: {
+    primary: ['#7C4DFF', '#6200EE'] as [string, string],
+    secondary: ['#03DAC6', '#00796B'] as [string, string],
+    success: ['#4CAF50', '#388E3C'] as [string, string],
+    warning: ['#FF9800', '#F57C00'] as [string, string],
+    error: ['#F44336', '#D32F2F'] as [string, string],
+    dark: ['#E0E0E0', '#BDBDBD'] as [string, string],
+    card: ['#FFFFFF', '#F5F5F5'] as [string, string],
+  }
+};
+
+// Function to get colors based on theme
+export const getColors = (isDarkMode: boolean) => isDarkMode ? DarkColors : LightColors;
+
+// Default export (Dark theme for backward compatibility)
+export const Colors = DarkColors;
+
+export default Colors;

@@ -20,6 +20,9 @@ import { scienceNotesApi, TopicNotes } from '../services/api/scienceNotesApi';
 import { useAuth } from '../context/AuthContext';
 import { Colors } from '../theme/colors';
 import Markdown from 'react-native-markdown-display';
+import { useTheme } from '../context/ThemeContext';
+import { useThemedColors } from '../theme/useThemedStyles';
+import AudioStreamPlayer from '../components/AudioStreamPlayer';
 
 const { width } = Dimensions.get('window');
 
@@ -27,6 +30,8 @@ const TopicNotesDetailScreen: React.FC = () => {
     const route = useRoute();
     const navigation = useNavigation();
     const { user } = useAuth();
+    const { isDarkMode } = useTheme();
+    const themedColors = useThemedColors();
     const { subject, topic } = route.params as { subject: string; topic: string };
 
     const [notes, setNotes] = useState<TopicNotes | null>(null);
@@ -81,7 +86,50 @@ const TopicNotesDetailScreen: React.FC = () => {
             case 'Physics':
                 return '#2196F3';
             default:
-                return Colors.primary;
+                return themedColors.primary.main;
+        }
+    };
+
+    const markdownStyles = {
+        body: {
+            fontSize: 15,
+            color: themedColors.text.primary,
+            lineHeight: 24,
+        },
+        heading1: {
+            fontSize: 20,
+            fontWeight: 'bold',
+            color: themedColors.text.primary,
+            marginTop: 16,
+            marginBottom: 8,
+        },
+        heading2: {
+            fontSize: 18,
+            fontWeight: 'bold',
+            color: themedColors.text.primary,
+            marginTop: 12,
+            marginBottom: 6,
+        },
+        strong: {
+            fontWeight: 'bold',
+            color: themedColors.text.primary,
+        },
+        em: {
+            fontStyle: 'italic',
+            color: themedColors.text.primary,
+        },
+        bullet_list: {
+            marginVertical: 8,
+        },
+        ordered_list: {
+            marginVertical: 8,
+        },
+        list_item: {
+            marginBottom: 4,
+            color: themedColors.text.primary,
+        },
+        paragraph: {
+            color: themedColors.text.primary,
         }
     };
 
@@ -99,10 +147,12 @@ const TopicNotesDetailScreen: React.FC = () => {
     }
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: themedColors.background.default }]}>
             <LinearGradient
-                colors={['rgba(76, 175, 80, 0.9)', 'rgba(255,255,255,0.8)']}
+                colors={isDarkMode ? [themedColors.background.default, themedColors.background.paper] : [getSubjectColor(), '#FFFFFF']}
                 style={styles.overlay}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 0, y: 1 }}
             >
                 <StatusBar barStyle="light-content" />
 
@@ -126,18 +176,27 @@ const TopicNotesDetailScreen: React.FC = () => {
                     contentContainerStyle={styles.scrollContent}
                     showsVerticalScrollIndicator={false}
                 >
+                    {/* Audio Player - Shows when topic has audio podcast */}
+                    {notes.audioUrl && (
+                        <AudioStreamPlayer
+                            audioUrl={notes.audioUrl}
+                            topicTitle={topic}
+                            accentColor={getSubjectColor()}
+                        />
+                    )}
+
                     {/* Summary Card */}
                     {notes.summary && (
                         <View style={styles.summaryCard}>
                             <LinearGradient
-                                colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.85)']}
+                                colors={isDarkMode ? [themedColors.background.paper, themedColors.background.paper] : ['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.85)']}
                                 style={styles.cardGradient}
                             >
                                 <View style={styles.summaryHeader}>
                                     <Ionicons name="information-circle" size={24} color={getSubjectColor()} />
-                                    <Text style={styles.summaryTitle}>Overview</Text>
+                                    <Text style={[styles.summaryTitle, { color: themedColors.text.primary }]}>Overview</Text>
                                 </View>
-                                <Text style={styles.summaryText}>{notes.summary}</Text>
+                                <Text style={[styles.summaryText, { color: themedColors.text.secondary }]}>{notes.summary}</Text>
                             </LinearGradient>
                         </View>
                     )}
@@ -146,7 +205,7 @@ const TopicNotesDetailScreen: React.FC = () => {
                     {notes.sections.map((section, index) => (
                         <View key={index} style={styles.sectionCard}>
                             <LinearGradient
-                                colors={['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.8)']}
+                                colors={isDarkMode ? [themedColors.background.paper, themedColors.background.paper] : ['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.8)']}
                                 style={styles.cardGradient}
                             >
                                 <TouchableOpacity
@@ -156,11 +215,11 @@ const TopicNotesDetailScreen: React.FC = () => {
                                     <View style={[styles.sectionNumber, { backgroundColor: getSubjectColor() }]}>
                                         <Text style={styles.sectionNumberText}>{index + 1}</Text>
                                     </View>
-                                    <Text style={styles.sectionTitle}>{section.title}</Text>
+                                    <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>{section.title}</Text>
                                     <Ionicons
                                         name={expandedSections.has(index) ? 'chevron-up' : 'chevron-down'}
                                         size={24}
-                                        color={Colors.text.secondary}
+                                        color={themedColors.text.secondary}
                                     />
                                 </TouchableOpacity>
 
@@ -173,7 +232,7 @@ const TopicNotesDetailScreen: React.FC = () => {
                                         {section.diagrams && section.diagrams.length > 0 && (
                                             <View style={styles.diagramsContainer}>
                                                 {section.diagrams.map((diagram, dIndex) => (
-                                                    <View key={dIndex} style={styles.diagramCard}>
+                                                    <View key={dIndex} style={[styles.diagramCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#FFF' }]}>
                                                         <Image
                                                             source={{ uri: diagram }}
                                                             style={styles.diagramImage}
@@ -191,21 +250,21 @@ const TopicNotesDetailScreen: React.FC = () => {
 
                     {/* Key Points */}
                     {notes.key_points && notes.key_points.length > 0 && (
-                        <View style={styles.keyPointsCard}>
+                        <View style={[styles.keyPointsCard, { borderColor: isDarkMode ? 'rgba(76, 175, 80, 0.5)' : 'rgba(76, 175, 80, 0.3)' }]}>
                             <LinearGradient
-                                colors={['rgba(76, 175, 80, 0.1)', 'rgba(76, 175, 80, 0.05)']}
+                                colors={isDarkMode ? ['rgba(76, 175, 80, 0.15)', 'rgba(76, 175, 80, 0.05)'] : ['rgba(76, 175, 80, 0.1)', 'rgba(76, 175, 80, 0.05)']}
                                 style={styles.cardGradient}
                             >
                                 <View style={styles.keyPointsHeader}>
                                     <Ionicons name="bulb" size={24} color={getSubjectColor()} />
-                                    <Text style={styles.keyPointsTitle}>Key Points</Text>
+                                    <Text style={[styles.keyPointsTitle, { color: themedColors.text.primary }]}>Key Points</Text>
                                 </View>
                                 {notes.key_points.map((point, index) => (
                                     <View key={index} style={styles.keyPointItem}>
                                         <View style={[styles.keyPointBullet, { backgroundColor: getSubjectColor() }]}>
                                             <Text style={styles.keyPointBulletText}>✓</Text>
                                         </View>
-                                        <Text style={styles.keyPointText}>{point}</Text>
+                                        <Text style={[styles.keyPointText, { color: themedColors.text.primary }]}>{point}</Text>
                                     </View>
                                 ))}
                             </LinearGradient>
@@ -214,21 +273,21 @@ const TopicNotesDetailScreen: React.FC = () => {
 
                     {/* Exam Tips */}
                     {notes.exam_tips && notes.exam_tips.length > 0 && (
-                        <View style={styles.examTipsCard}>
+                        <View style={[styles.examTipsCard, { borderColor: isDarkMode ? 'rgba(255, 152, 0, 0.5)' : 'rgba(255, 152, 0, 0.3)' }]}>
                             <LinearGradient
-                                colors={['rgba(255, 152, 0, 0.1)', 'rgba(255, 152, 0, 0.05)']}
+                                colors={isDarkMode ? ['rgba(255, 152, 0, 0.15)', 'rgba(255, 152, 0, 0.05)'] : ['rgba(255, 152, 0, 0.1)', 'rgba(255, 152, 0, 0.05)']}
                                 style={styles.cardGradient}
                             >
                                 <View style={styles.examTipsHeader}>
-                                    <Ionicons name="school" size={24} color={Colors.warning} />
-                                    <Text style={styles.examTipsTitle}>Exam Tips</Text>
+                                    <Ionicons name="school" size={24} color={themedColors.warning.main} />
+                                    <Text style={[styles.examTipsTitle, { color: themedColors.text.primary }]}>Exam Tips</Text>
                                 </View>
                                 {notes.exam_tips.map((tip, index) => (
                                     <View key={index} style={styles.examTipItem}>
-                                        <View style={styles.examTipNumber}>
+                                        <View style={[styles.examTipNumber, { backgroundColor: themedColors.warning.main }]}>
                                             <Text style={styles.examTipNumberText}>{index + 1}</Text>
                                         </View>
-                                        <Text style={styles.examTipText}>{tip}</Text>
+                                        <Text style={[styles.examTipText, { color: themedColors.text.primary }]}>{tip}</Text>
                                     </View>
                                 ))}
                             </LinearGradient>
@@ -471,42 +530,6 @@ const styles = StyleSheet.create({
     },
 });
 
-const markdownStyles = {
-    body: {
-        fontSize: 15,
-        color: Colors.text.primary,
-        lineHeight: 24,
-    },
-    heading1: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: Colors.text.primary,
-        marginTop: 16,
-        marginBottom: 8,
-    },
-    heading2: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: Colors.text.primary,
-        marginTop: 12,
-        marginBottom: 6,
-    },
-    strong: {
-        fontWeight: 'bold',
-        color: Colors.text.primary,
-    },
-    em: {
-        fontStyle: 'italic',
-    },
-    bullet_list: {
-        marginVertical: 8,
-    },
-    ordered_list: {
-        marginVertical: 8,
-    },
-    list_item: {
-        marginBottom: 4,
-    },
-};
+
 
 export default TopicNotesDetailScreen;

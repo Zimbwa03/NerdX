@@ -17,7 +17,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { scienceNotesApi } from '../services/api/scienceNotesApi';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { Colors } from '../theme/colors';
+import { useThemedColors } from '../theme/useThemedStyles';
 
 const { width } = Dimensions.get('window');
 
@@ -26,6 +28,8 @@ type ScienceSubject = 'Biology' | 'Chemistry' | 'Physics';
 const ScienceNotesScreen: React.FC = () => {
     const navigation = useNavigation();
     const { user } = useAuth();
+    const { isDarkMode } = useTheme();
+    const themedColors = useThemedColors();
 
     const [activeTab, setActiveTab] = useState<ScienceSubject>('Biology');
     const [topics, setTopics] = useState<string[]>([]);

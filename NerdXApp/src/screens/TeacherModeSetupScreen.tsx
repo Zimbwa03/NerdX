@@ -12,12 +12,16 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+import { useThemedColors } from '../theme/useThemedStyles';
 import { Colors } from '../theme/colors';
 
 const TeacherModeSetupScreen: React.FC = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const { user } = useAuth();
+  const { isDarkMode } = useTheme();
+  const themedColors = useThemedColors();
   const { subject, preselectedSubject } = route.params as { subject?: any; preselectedSubject?: string };
 
   const [selectedSubject, setSelectedSubject] = useState<string>(preselectedSubject || '');
@@ -42,19 +46,19 @@ const TeacherModeSetupScreen: React.FC = () => {
       return;
     }
 
-    navigation.navigate('TeacherMode' as never, {
+    navigation.navigate('TeacherMode' as any, {
       subject: selectedSubject,
       gradeLevel: selectedGradeLevel,
       topic: selectedTopic || undefined,
-    } as never);
+    } as any);
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.background.default} />
+    <View style={[styles.container, { backgroundColor: themedColors.background.default }]}>
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={themedColors.background.default} />
       <ScrollView style={styles.scrollView}>
         <LinearGradient
-          colors={Colors.gradients.secondary}
+          colors={themedColors.gradients.secondary}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.header}
@@ -70,22 +74,24 @@ const TeacherModeSetupScreen: React.FC = () => {
           </View>
         </LinearGradient>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>1. Select Subject</Text>
+        <View style={[styles.section, { backgroundColor: themedColors.background.paper, borderBottomColor: themedColors.border.light }]}>
+          <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>1. Select Subject</Text>
           <View style={styles.optionsContainer}>
             {subjects.map((subj) => (
               <TouchableOpacity
                 key={subj}
                 style={[
                   styles.optionButton,
-                  selectedSubject === subj && styles.optionButtonSelected,
+                  { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F7FA', borderColor: themedColors.border.light },
+                  selectedSubject === subj && { backgroundColor: isDarkMode ? 'rgba(0, 229, 255, 0.2)' : 'rgba(0, 229, 255, 0.1)', borderColor: themedColors.secondary.main },
                 ]}
                 onPress={() => setSelectedSubject(subj)}
               >
                 <Text
                   style={[
                     styles.optionText,
-                    selectedSubject === subj && styles.optionTextSelected,
+                    { color: themedColors.text.secondary },
+                    selectedSubject === subj && { color: themedColors.secondary.main, fontWeight: '700' },
                   ]}
                 >
                   {subj === 'Biology' && '🧬 '}
@@ -98,22 +104,24 @@ const TeacherModeSetupScreen: React.FC = () => {
           </View>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>2. Select Grade Level</Text>
+        <View style={[styles.section, { backgroundColor: themedColors.background.paper, borderBottomColor: themedColors.border.light }]}>
+          <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>2. Select Grade Level</Text>
           <View style={styles.optionsContainer}>
             {gradeLevels.map((level) => (
               <TouchableOpacity
                 key={level}
                 style={[
                   styles.optionButton,
-                  selectedGradeLevel === level && styles.optionButtonSelected,
+                  { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F7FA', borderColor: themedColors.border.light },
+                  selectedGradeLevel === level && { backgroundColor: isDarkMode ? 'rgba(0, 229, 255, 0.2)' : 'rgba(0, 229, 255, 0.1)', borderColor: themedColors.secondary.main },
                 ]}
                 onPress={() => setSelectedGradeLevel(level)}
               >
                 <Text
                   style={[
                     styles.optionText,
-                    selectedGradeLevel === level && styles.optionTextSelected,
+                    { color: themedColors.text.secondary },
+                    selectedGradeLevel === level && { color: themedColors.secondary.main, fontWeight: '700' },
                   ]}
                 >
                   {level}
@@ -123,13 +131,13 @@ const TeacherModeSetupScreen: React.FC = () => {
           </View>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>3. Specific Topic (Optional)</Text>
-          <Text style={styles.sectionDescription}>
+        <View style={[styles.section, { backgroundColor: themedColors.background.paper, borderBottomColor: themedColors.border.light }]}>
+          <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>3. Specific Topic (Optional)</Text>
+          <Text style={[styles.sectionDescription, { color: themedColors.text.secondary }]}>
             Leave empty to let the AI teacher suggest topics for you
           </Text>
           <TouchableOpacity
-            style={styles.topicButton}
+            style={[styles.topicButton, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F7FA', borderColor: themedColors.border.light }]}
             onPress={() => {
               Alert.prompt(
                 'Enter Topic',
@@ -145,15 +153,15 @@ const TeacherModeSetupScreen: React.FC = () => {
               );
             }}
           >
-            <Text style={styles.topicButtonText}>
+            <Text style={[styles.topicButtonText, { color: themedColors.text.primary }]}>
               {selectedTopic || 'Tap to enter topic (optional)'}
             </Text>
           </TouchableOpacity>
         </View>
 
-        <View style={styles.infoBox}>
-          <Text style={styles.infoTitle}>💡 Teacher Mode Info</Text>
-          <Text style={styles.infoText}>
+        <View style={[styles.infoBox, { backgroundColor: isDarkMode ? 'rgba(0, 230, 118, 0.15)' : 'rgba(0, 230, 118, 0.1)' }]}>
+          <Text style={[styles.infoTitle, { color: themedColors.success.main }]}>💡 Teacher Mode Info</Text>
+          <Text style={[styles.infoText, { color: themedColors.text.secondary }]}>
             • Start session: 3 credits{'\n'}
             • Follow-up questions: 1 credit each{'\n'}
             • Generate notes: 1 credit{'\n'}
@@ -166,6 +174,7 @@ const TeacherModeSetupScreen: React.FC = () => {
           style={[
             styles.startButton,
             (!selectedSubject || !selectedGradeLevel) && styles.startButtonDisabled,
+            { backgroundColor: themedColors.success.main }
           ]}
           onPress={handleStart}
           disabled={!selectedSubject || !selectedGradeLevel}

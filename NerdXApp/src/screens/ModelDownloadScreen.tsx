@@ -5,8 +5,12 @@ import { Ionicons } from '@expo/vector-icons';
 import ModelDownloadService, { DownloadProgress, ModelInfo } from '../services/ModelDownloadService';
 import NetworkService from '../services/NetworkService';
 import OfflineAIService from '../services/OfflineAIService';
+import { useTheme } from '../context/ThemeContext';
+import { useThemedColors } from '../theme/useThemedStyles';
 
 const ModelDownloadScreen = ({ navigation }: any) => {
+    const { isDarkMode } = useTheme();
+    const themedColors = useThemedColors();
     const [isDownloading, setIsDownloading] = useState(false);
     const [progress, setProgress] = useState<DownloadProgress | null>(null);
     const [modelInfo, setModelInfo] = useState<ModelInfo | null>(null);
@@ -105,79 +109,85 @@ const ModelDownloadScreen = ({ navigation }: any) => {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
+        <SafeAreaView style={[styles.container, { backgroundColor: themedColors.background.default }]}>
+            <View style={[styles.header, { backgroundColor: themedColors.background.paper, borderBottomColor: themedColors.border.light }]}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color="#333" />
+                    <Ionicons name="arrow-back" size={24} color={themedColors.text.primary} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Offline AI Model</Text>
+                <Text style={[styles.headerTitle, { color: themedColors.text.primary }]}>Offline AI Model</Text>
             </View>
 
             <ScrollView contentContainerStyle={styles.content}>
-                <View style={styles.card}>
-                    <View style={styles.iconContainer}>
-                        <Ionicons name="hardware-chip-outline" size={48} color="#4F46E5" />
+                <View style={[styles.card, { backgroundColor: themedColors.background.paper }]}>
+                    <View style={[styles.iconContainer, { backgroundColor: isDarkMode ? 'rgba(79, 70, 229, 0.2)' : '#EEF2FF' }]}>
+                        <Ionicons name="hardware-chip-outline" size={48} color={themedColors.primary.main} />
                     </View>
-                    <Text style={styles.title}>Microsoft Phi-3 Mini</Text>
-                    <Text style={styles.description}>
+                    <Text style={[styles.title, { color: themedColors.text.primary }]}>Microsoft Phi-3 Mini</Text>
+                    <Text style={[styles.description, { color: themedColors.text.secondary }]}>
                         Download this powerful AI model to use NerdX features without an internet connection.
                         Perfect for studying on the go!
                     </Text>
 
-                    <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>Size:</Text>
-                        <Text style={styles.infoValue}>~2.5 GB</Text>
+                    <View style={[styles.infoRow, { borderTopColor: themedColors.border.light }]}>
+                        <Text style={[styles.infoLabel, { color: themedColors.text.secondary }]}>Size:</Text>
+                        <Text style={[styles.infoValue, { color: themedColors.text.primary }]}>~2.5 GB</Text>
                     </View>
                     <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>Version:</Text>
-                        <Text style={styles.infoValue}>1.0.0 (4-bit quantized)</Text>
+                        <Text style={[styles.infoLabel, { color: themedColors.text.secondary }]}>Version:</Text>
+                        <Text style={[styles.infoValue, { color: themedColors.text.primary }]}>1.0.0 (4-bit quantized)</Text>
                     </View>
                 </View>
 
                 {modelInfo ? (
-                    <View style={styles.statusCard}>
+                    <View style={[
+                        styles.statusCard,
+                        {
+                            backgroundColor: isDarkMode ? 'rgba(16, 185, 129, 0.1)' : '#ECFDF5',
+                            borderColor: themedColors.success.main
+                        }
+                    ]}>
                         <View style={styles.statusHeader}>
-                            <Ionicons name="checkmark-circle" size={24} color="#10B981" />
-                            <Text style={styles.statusTitle}>Model Installed</Text>
+                            <Ionicons name="checkmark-circle" size={24} color={themedColors.success.main} />
+                            <Text style={[styles.statusTitle, { color: themedColors.success.dark }]}>Model Installed</Text>
                         </View>
-                        <Text style={styles.statusText}>
+                        <Text style={[styles.statusText, { color: themedColors.success.main }]}>
                             Downloaded on {new Date(modelInfo.downloadedAt).toLocaleDateString()}
                         </Text>
-                        <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
-                            <Text style={styles.deleteButtonText}>Delete Model</Text>
+                        <TouchableOpacity style={[styles.deleteButton, { backgroundColor: themedColors.background.paper, borderColor: themedColors.error.main }]} onPress={handleDelete}>
+                            <Text style={[styles.deleteButtonText, { color: themedColors.error.main }]}>Delete Model</Text>
                         </TouchableOpacity>
                     </View>
                 ) : (
-                    <View style={styles.actionContainer}>
+                    <View style={[styles.actionContainer, { backgroundColor: themedColors.background.paper }]}>
                         {isDownloading ? (
                             <View style={styles.progressContainer}>
-                                <Text style={styles.progressText}>Downloading... {progress ? `${progress.progress.toFixed(1)}%` : 'Starting'}</Text>
-                                <View style={styles.progressBarBg}>
+                                <Text style={[styles.progressText, { color: themedColors.text.primary }]}>Downloading... {progress ? `${progress.progress.toFixed(1)}%` : 'Starting'}</Text>
+                                <View style={[styles.progressBarBg, { backgroundColor: themedColors.border.light }]}>
                                     <View
                                         style={[
                                             styles.progressBarFill,
-                                            { width: `${progress?.progress || 0}%` }
+                                            { width: `${progress?.progress || 0}%`, backgroundColor: themedColors.primary.main }
                                         ]}
                                     />
                                 </View>
-                                <Text style={styles.progressDetail}>
+                                <Text style={[styles.progressDetail, { color: themedColors.text.secondary }]}>
                                     {progress ? `${formatBytes(progress.bytesWritten)} / ${formatBytes(progress.contentLength)}` : ''}
                                 </Text>
                                 <TouchableOpacity style={styles.cancelButton} onPress={() => ModelDownloadService.cancelDownload()}>
-                                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                                    <Text style={[styles.cancelButtonText, { color: themedColors.error.main }]}>Cancel</Text>
                                 </TouchableOpacity>
                             </View>
                         ) : (
                             <>
                                 <View style={styles.requirementContainer}>
-                                    <Text style={styles.reqTitle}>Requirements:</Text>
+                                    <Text style={[styles.reqTitle, { color: themedColors.text.primary }]}>Requirements:</Text>
                                     <View style={styles.reqItem}>
                                         <Ionicons
                                             name={storageCheck?.hasSpace ? "checkmark-circle-outline" : "alert-circle-outline"}
                                             size={20}
-                                            color={storageCheck?.hasSpace ? "#10B981" : "#EF4444"}
+                                            color={storageCheck?.hasSpace ? themedColors.success.main : themedColors.error.main}
                                         />
-                                        <Text style={styles.reqText}>
+                                        <Text style={[styles.reqText, { color: themedColors.text.secondary }]}>
                                             Storage: {storageCheck ? formatBytes(storageCheck.available) : 'Checking...'} available
                                         </Text>
                                     </View>
@@ -185,9 +195,9 @@ const ModelDownloadScreen = ({ navigation }: any) => {
                                         <Ionicons
                                             name={networkState.isConnected ? "checkmark-circle-outline" : "alert-circle-outline"}
                                             size={20}
-                                            color={networkState.isConnected ? "#10B981" : "#EF4444"}
+                                            color={networkState.isConnected ? themedColors.success.main : themedColors.error.main}
                                         />
-                                        <Text style={styles.reqText}>
+                                        <Text style={[styles.reqText, { color: themedColors.text.secondary }]}>
                                             Network: {networkState.isConnected ? (networkState.connectionType === 'wifi' ? 'WiFi' : 'Cellular') : 'Offline'}
                                         </Text>
                                     </View>
@@ -196,6 +206,7 @@ const ModelDownloadScreen = ({ navigation }: any) => {
                                 <TouchableOpacity
                                     style={[
                                         styles.downloadButton,
+                                        { backgroundColor: themedColors.primary.main },
                                         (!storageCheck?.hasSpace || !networkState.isConnected) && styles.disabledButton
                                     ]}
                                     onPress={handleDownload}
@@ -204,7 +215,7 @@ const ModelDownloadScreen = ({ navigation }: any) => {
                                     <Ionicons name="download-outline" size={24} color="#FFF" />
                                     <Text style={styles.downloadButtonText}>Download Model</Text>
                                 </TouchableOpacity>
-                                <Text style={styles.noteText}>
+                                <Text style={[styles.noteText, { color: themedColors.text.secondary }]}>
                                     Note: You can download using WiFi or Mobile Data.
                                 </Text>
                             </>
