@@ -274,8 +274,10 @@ Generate the question now:"""
 
                     # Add both ID and text to history
                     question_history_service.add_question_to_history(user_id, ai_subject_key, question_identifier)
+                    # Combine subject, topic, and difficulty into a key for text history
+                    history_key = f"{subject}_{topic}_{difficulty}"
                     question_history_service.add_question_text_to_history(
-                        user_id, subject, topic, difficulty, formatted_question['question']
+                        user_id, history_key, formatted_question['question']
                     )
                     logger.info(f"Added AI question to history: {question_identifier} with text tracking")
                 except ImportError:
