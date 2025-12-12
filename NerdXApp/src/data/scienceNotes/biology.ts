@@ -1570,6 +1570,7 @@ Plants need minerals (in addition to C, H, O from photosynthesis) for:
         topic: "Human Influences on Ecosystem",
         subject: "Biology",
         summary: "Human activities impact ecosystems through pollution, deforestation, and conservation efforts.",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/Cell_Structure_Transport_and_Enzymes.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9CaW9sb2d5IC9DZWxsX1N0cnVjdHVyZV9UcmFuc3BvcnRfYW5kX0VuenltZXMubTRhIiwiaWF0IjoxNzY1NDcyNjYyLCJleHAiOjUyNjU5Njg2NjJ9.SDjQaBH2AZ97U4mVvmdTb-HZC81St3P25axNcoj2698",
         sections: [
             {
                 title: "1. Environmental Issues",
@@ -1593,6 +1594,7 @@ Plants need minerals (in addition to C, H, O from photosynthesis) for:
         topic: "Classification",
         subject: "Biology",
         summary: "Classification organizes living things into groups based on shared characteristics.",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/Naming_Life_and_The_Five_Kingdoms.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9CaW9sb2d5IC9OYW1pbmdfTGlmZV9hbmRfVGhlX0ZpdmVfS2luZ2RvbXMubTRhIiwiaWF0IjoxNzY1NDY3OTc4LCJleHAiOjUyNjU5NjM5Nzh9.tnV1OnmqkvJoG-jcTa3ol20A7KalhFb2hleC5wldIGA",
         sections: [
             {
                 title: "1. Taxonomy",

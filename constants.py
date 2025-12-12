@@ -19,17 +19,25 @@ TOPICS = {
         "Classification"
     ],
     "Chemistry": [
-        "Experimental Chemistry",
-        "Particulate Nature of Matter",
-        "Formulae and Stoichiometry",
-        "Electrolysis",
-        "Energy from Chemicals",
+        # Physical & Theoretical Chemistry
+        "States of Matter",
+        "Atoms, Elements and Compounds",
+        "Chemical Bonding",
+        "Stoichiometry",
+        "The Periodic Table",
+        # Reaction Dynamics & Energy
         "Chemical Reactions",
+        "Chemical Energetics",
+        "Electrochemistry",
+        "Redox Reactions",
+        # Inorganic & Environmental Chemistry
         "Acids, Bases and Salts",
-        "Periodic Table",
         "Metals",
-        "Chemistry of Environment",
-        "Organic Chemistry"
+        "Non-metals",
+        "Chemistry of the Environment",
+        # Organic & Practical Chemistry
+        "Organic Chemistry",
+        "Experimental Techniques and Chemical Analysis"
     ],
     "Physics": [
         "Motion, Forces and Energy",

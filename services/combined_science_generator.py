@@ -54,20 +54,149 @@ class CombinedScienceGenerator:
                 ]
             },
             "Chemistry": {
-                "Experimental Chemistry": [
-                    "Follow laboratory safety rules",
-                    "Use basic laboratory equipment",
-                    "Make accurate measurements"
+                "States of Matter": [
+                    "Describe particle arrangement and movement in solids, liquids, and gases",
+                    "Explain changes of state using kinetic theory (melting, boiling, evaporation)",
+                    "Compare properties of each state (shape, volume, compressibility, density)",
+                    "Explain Brownian motion as evidence for particle theory",
+                    "Interpret heating and cooling curves identifying state changes",
+                    "Distinguish between boiling and evaporation",
+                    "Apply particle theory to explain diffusion rates"
                 ],
-                "Particulate Nature of Matter": [
-                    "Describe states of matter",
-                    "Explain kinetic theory basics",
-                    "Understand changes of state"
+                "Atoms, Elements and Compounds": [
+                    "Describe atomic structure: protons, neutrons, electrons with their properties",
+                    "Calculate proton number, nucleon number, and electron arrangement",
+                    "Define isotopes and explain their similarities and differences",
+                    "Distinguish between elements, compounds, and mixtures",
+                    "Describe physical and chemical separation techniques",
+                    "Explain the differences between atoms, molecules, and ions",
+                    "Write electron configurations for first 20 elements"
+                ],
+                "Chemical Bonding": [
+                    "Explain why atoms bond (achieving stable electron configuration)",
+                    "Describe ionic bonding as electron transfer between metals and non-metals",
+                    "Describe covalent bonding as electron sharing between non-metals",
+                    "Draw dot-and-cross diagrams for ionic and covalent compounds",
+                    "Explain metallic bonding and the 'sea of electrons' model",
+                    "Compare properties of ionic, covalent, and metallic substances",
+                    "Relate structure and bonding to melting points and conductivity"
+                ],
+                "Stoichiometry": [
+                    "Write and balance chemical equations including state symbols",
+                    "Calculate relative atomic mass, formula mass, and molecular mass",
+                    "Apply the mole concept to calculations (n = m/M)",
+                    "Perform reacting mass calculations using molar ratios",
+                    "Calculate gas volumes at STP using molar volume (24 dm³)",
+                    "Calculate concentration and perform titration calculations",
+                    "Determine empirical and molecular formulae from percentage composition",
+                    "Calculate percentage yield and percentage purity"
+                ],
+                "The Periodic Table": [
+                    "Describe the structure of the periodic table (periods, groups)",
+                    "Explain trends in properties across periods and down groups",
+                    "Describe Group I alkali metals: reactions with water and air",
+                    "Describe Group VII halogens: displacement reactions and properties",
+                    "Explain properties of Group 0 noble gases",
+                    "Describe transition metal properties (variable oxidation states, catalysts)",
+                    "Predict chemical behavior based on periodic table position"
+                ],
+                "Chemical Reactions": [
+                    "Define and measure rate of reaction using different methods",
+                    "Explain how temperature, concentration, surface area, and catalysts affect rate",
+                    "Apply collision theory to explain factors affecting reaction rate",
+                    "Interpret rate graphs and identify order of reactions",
+                    "Distinguish between reversible and irreversible reactions",
+                    "Describe photochemical reactions (e.g., photosynthesis, photography)",
+                    "Apply Le Chatelier's principle to predict equilibrium shifts"
+                ],
+                "Chemical Energetics": [
+                    "Distinguish between exothermic and endothermic reactions with examples",
+                    "Draw and interpret energy profile diagrams",
+                    "Explain bond breaking (endothermic) and bond making (exothermic)",
+                    "Calculate enthalpy changes using bond energies",
+                    "Compare energy content of fuels and explain combustion",
+                    "Describe electrochemical cells and fuel cells",
+                    "Explain the energy changes in reversible reactions"
+                ],
+                "Electrochemistry": [
+                    "Distinguish between conductors, insulators, and electrolytes",
+                    "Explain electrolysis: movement of ions, electrode reactions",
+                    "Write half-equations for cathode and anode reactions",
+                    "Predict products of electrolysis of molten and aqueous compounds",
+                    "Describe industrial applications: aluminium extraction, copper purification, electroplating",
+                    "Explain why carbon anodes need replacement in aluminium extraction",
+                    "Describe simple electrochemical cells and identify the negative pole"
+                ],
+                "Redox Reactions": [
+                    "Define oxidation and reduction in terms of oxygen transfer",
+                    "Define oxidation and reduction in terms of electron transfer (OIL RIG)",
+                    "Identify oxidation state changes to determine redox reactions",
+                    "Write half-equations showing electron transfer",
+                    "Identify oxidising agents and reducing agents in reactions",
+                    "Describe tests for oxidising and reducing agents (KMnO₄, KI)",
+                    "Apply redox concepts to combustion, rusting, and metal extraction"
                 ],
                 "Acids, Bases and Salts": [
-                    "Identify properties of acids and bases",
-                    "Understand pH scale basics",
-                    "Explain neutralization reactions"
+                    "Define acids (H⁺ donors) and bases/alkalis (OH⁻ donors)",
+                    "Use the pH scale and indicators to classify solutions",
+                    "Distinguish between strong/weak acids and bases (degree of ionisation)",
+                    "Describe reactions of acids with metals, bases, and carbonates",
+                    "Classify oxides as acidic, basic, amphoteric, or neutral",
+                    "Apply solubility rules to predict salt precipitation",
+                    "Describe salt preparation methods: titration, excess solid, precipitation"
+                ],
+                "Metals": [
+                    "Describe physical and chemical properties of metals",
+                    "Arrange metals in the reactivity series using experimental evidence",
+                    "Predict displacement reactions in solutions and with oxides",
+                    "Explain extraction methods based on reactivity: electrolysis vs reduction",
+                    "Describe the blast furnace process for iron extraction",
+                    "Describe aluminium extraction by electrolysis of cryolite solution",
+                    "Explain why alloys are harder than pure metals",
+                    "Describe methods of rust prevention: barrier, galvanising, sacrificial"
+                ],
+                "Non-metals": [
+                    "Describe properties and uses of hydrogen gas",
+                    "Explain the Haber process: conditions, yield considerations, catalyst",
+                    "Describe fertilizer production and eutrophication problems",
+                    "Explain the Contact process for sulfuric acid manufacture",
+                    "Describe uses of sulfuric acid (batteries, fertilizers, paints)",
+                    "Explain carbon dioxide's role in greenhouse effect",
+                    "Describe carbon monoxide toxicity (binds to haemoglobin)",
+                    "Apply the limestone cycle: CaCO₃ → CaO → Ca(OH)₂ → limewater"
+                ],
+                "Chemistry of the Environment": [
+                    "Test for water and determine purity using melting/boiling points",
+                    "Describe the 4-step water treatment process",
+                    "State the composition of clean dry air",
+                    "Explain fractional distillation of liquid air",
+                    "Identify sources and effects of air pollutants (CO, SO₂, NOₓ)",
+                    "Describe acid rain formation and its environmental effects",
+                    "Explain catalytic converters and flue gas desulfurisation",
+                    "Describe the greenhouse effect and global warming",
+                    "Explain ozone layer depletion by CFCs and the Montreal Protocol"
+                ],
+                "Organic Chemistry": [
+                    "Explain carbon's unique properties: tetravalency and catenation",
+                    "Describe fractional distillation of crude oil and fraction uses",
+                    "Explain cracking: breaking long chains into useful products",
+                    "Compare alkanes (saturated) and alkenes (unsaturated)",
+                    "Describe the bromine water test for unsaturation",
+                    "Write equations for complete and incomplete combustion",
+                    "Describe addition reactions: hydrogenation, hydration, halogenation",
+                    "Compare fermentation and hydration for ethanol production",
+                    "Explain addition polymerisation and draw repeat units",
+                    "Discuss environmental problems with plastics and disposal solutions"
+                ],
+                "Experimental Techniques": [
+                    "Select appropriate apparatus for measuring volume accurately",
+                    "Test for purity using melting and boiling points",
+                    "Describe separation techniques: filtration, crystallisation, distillation, chromatography",
+                    "Calculate Rf values and identify substances using chromatography",
+                    "Identify cations using NaOH and ammonia solutions",
+                    "Test for anions: carbonates, halides, sulfates, nitrates",
+                    "Perform tests for gases: H₂, O₂, CO₂, Cl₂, NH₃",
+                    "Identify metal ions using flame tests"
                 ]
             },
             "Physics": {
