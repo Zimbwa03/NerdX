@@ -1,10 +1,7 @@
 // Deep Knowledge Tracing API Service
 // Handles interaction logging, knowledge tracking, and personalized recommendations
 
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const API_URL = 'https://nerdx.onrender.com/api/mobile';
+import api from './config';
 
 // Types
 export interface Interaction {
@@ -49,11 +46,6 @@ export interface QuestionRecommendation {
 }
 
 class DKTService {
-    private getAuthHeader() {
-        // Simplified for now - auth handled by API service
-        return {};
-    }
-
     /**
      * Log a student interaction after answering a question
      * This builds the learning history for DKT predictions
@@ -71,11 +63,7 @@ class DKTService {
         device_id?: string;
     }): Promise<{ success: boolean; skill_mastery?: number; error?: string }> {
         try {
-            const response = await axios.post(
-                `${API_URL}/dkt/log-interaction`,
-                params,
-                { headers: this.getAuthHeader() }
-            );
+            const response = await api.post('/api/mobile/dkt/log-interaction', params);
 
             return {
                 success: true,
@@ -97,10 +85,7 @@ class DKTService {
     async getKnowledgeMap(subject?: string): Promise<KnowledgeMap | null> {
         try {
             const params = subject ? { subject } : {};
-            const response = await axios.get(`${API_URL}/dkt/knowledge-map`, {
-                headers: this.getAuthHeader(),
-                params,
-            });
+            const response = await api.get('/api/mobile/dkt/knowledge-map', { params });
 
             return response.data.data as KnowledgeMap;
         } catch (error: any) {
@@ -120,9 +105,7 @@ class DKTService {
         recent_history: Interaction[];
     } | null> {
         try {
-            const response = await axios.get(`${API_URL}/dkt/mastery/${skill_id}`, {
-                headers: this.getAuthHeader(),
-            });
+            const response = await api.get(`/api/mobile/dkt/mastery/${skill_id}`);
 
             return response.data.data;
         } catch (error: any) {
@@ -140,11 +123,7 @@ class DKTService {
         topic?: string
     ): Promise<QuestionRecommendation> {
         try {
-            const response = await axios.post(
-                `${API_URL}/dkt/recommend-next`,
-                { subject, topic },
-                { headers: this.getAuthHeader() }
-            );
+            const response = await api.post('/api/mobile/dkt/recommend-next', { subject, topic });
 
             return response.data.data as QuestionRecommendation;
         } catch (error: any) {
@@ -170,9 +149,7 @@ class DKTService {
         }[];
     }> {
         try {
-            const response = await axios.get(`${API_URL}/dkt/daily-review`, {
-                headers: this.getAuthHeader(),
-            });
+            const response = await api.get('/api/mobile/dkt/daily-review');
             return response.data;
         } catch (error: any) {
             console.error('DKT get daily review error:', error);
@@ -194,11 +171,7 @@ class DKTService {
         topic?: string;
     }): Promise<boolean> {
         try {
-            await axios.post(
-                `${API_URL}/dkt/review-complete`,
-                params,
-                { headers: this.getAuthHeader() }
-            );
+            await api.post('/api/mobile/dkt/review-complete', params);
             return true;
         } catch (error: any) {
             console.error('DKT complete review error:', error);
@@ -217,10 +190,7 @@ class DKTService {
             const params: any = { limit };
             if (skill_id) params.skill_id = skill_id;
 
-            const response = await axios.get(`${API_URL}/dkt/interaction-history`, {
-                headers: this.getAuthHeader(),
-                params,
-            });
+            const response = await api.get('/api/mobile/dkt/interaction-history', { params });
 
             return response.data.data.interactions as Interaction[];
         } catch (error: any) {

@@ -497,7 +497,7 @@ Make this educational, knowledge-focused, and encouraging for O-Level students!"
                 }
             },
             "Physics": {
-                "Electricity": {
+                "Electricity (Current Electricity, Circuits)": {
                     "easy": {
                         "question": "What is the unit used to measure electric current?",
                         "options": {"A": "Volt", "B": "Ampere", "C": "Ohm", "D": "Watt"},
@@ -505,7 +505,7 @@ Make this educational, knowledge-focused, and encouraging for O-Level students!"
                         "explanation": "Electric current is measured in Amperes (or Amps for short). Think of it like measuring how much water flows through a pipe - Amps measure how much electricity flows through a wire."
                     }
                 },
-                "Motion, Forces and Energy": {
+                "Forces (Including Machines, Turning Effects, Friction, and Mechanical Structures)": {
                     "easy": {
                         "question": "What force pulls objects towards the Earth?",
                         "options": {"A": "Friction", "B": "Magnetism", "C": "Gravity", "D": "Air resistance"},
@@ -616,7 +616,25 @@ Make this educational, knowledge-focused, and encouraging for O-Level students!"
                 }
             },
             "Physics": {
-                "Motion, Forces and Energy": {
+                "Measurement and Physical Quantities": {
+                    "easy": {
+                        "question": "What is the SI unit of length?",
+                        "options": {"A": "Kilogram", "B": "Second", "C": "Metre", "D": "Ampere"},
+                        "correct_answer": "C",
+                        "explanation": "The metre (m) is the SI base unit for length. It's one of the seven fundamental SI units from which all other units are derived.",
+                        "cognitive_level": "knowledge_understanding"
+                    }
+                },
+                "Kinematics (Speed, Velocity, Acceleration, Graphs of Motion)": {
+                    "easy": {
+                        "question": "What is the difference between speed and velocity?",
+                        "options": {"A": "There is no difference", "B": "Velocity includes direction", "C": "Speed is faster", "D": "Velocity is measured in km/h"},
+                        "correct_answer": "B",
+                        "explanation": "Velocity is a vector quantity that includes both magnitude (how fast) and direction. Speed is a scalar that only tells us how fast something is moving.",
+                        "cognitive_level": "knowledge_understanding"
+                    }
+                },
+                "Forces (Including Machines, Turning Effects, Friction, and Mechanical Structures)": {
                     "easy": {
                         "question": "What is the unit of force?",
                         "options": {"A": "Joule", "B": "Newton", "C": "Watt", "D": "Pascal"},
@@ -625,7 +643,16 @@ Make this educational, knowledge-focused, and encouraging for O-Level students!"
                         "cognitive_level": "knowledge_understanding"
                     }
                 },
-                "Thermal Physics": {
+                "Work, Energy and Power": {
+                    "easy": {
+                        "question": "Which formula correctly calculates work done?",
+                        "options": {"A": "W = F + s", "B": "W = F × s", "C": "W = F ÷ s", "D": "W = F - s"},
+                        "correct_answer": "B",
+                        "explanation": "Work done equals Force multiplied by distance (W = Fs). Work is only done when a force moves an object in the direction of the force.",
+                        "cognitive_level": "knowledge_understanding"
+                    }
+                },
+                "Thermal Physics (Kinetic Theory, Thermal Properties, Heat Transfer)": {
                     "easy": {
                         "question": "Heat transfer by the movement of fluids is called...",
                         "options": {"A": "Conduction", "B": "Convection", "C": "Radiation", "D": "Expansion"},
@@ -634,7 +661,7 @@ Make this educational, knowledge-focused, and encouraging for O-Level students!"
                         "cognitive_level": "knowledge_understanding"
                     }
                 },
-                "Waves": {
+                "Waves (General Wave Properties, Optics, Sound)": {
                     "easy": {
                         "question": "Which equation correctly relates wave speed, frequency, and wavelength?",
                         "options": {"A": "v = f + λ", "B": "v = f - λ", "C": "v = f × λ", "D": "v = f ÷ λ"},
@@ -643,7 +670,7 @@ Make this educational, knowledge-focused, and encouraging for O-Level students!"
                         "cognitive_level": "knowledge_understanding"
                     }
                 },
-                "Electricity": {
+                "Electricity (Current Electricity, Circuits)": {
                     "easy": {
                         "question": "According to Ohm's law, voltage equals...",
                         "options": {"A": "Current × Resistance", "B": "Current + Resistance", "C": "Current ÷ Resistance", "D": "Current - Resistance"},
@@ -652,7 +679,25 @@ Make this educational, knowledge-focused, and encouraging for O-Level students!"
                         "cognitive_level": "knowledge_understanding"
                     }
                 },
-                "Nuclear Physics": {
+                "Magnetism and Electromagnetism": {
+                    "easy": {
+                        "question": "What happens when like magnetic poles are brought together?",
+                        "options": {"A": "They attract", "B": "They repel", "C": "Nothing happens", "D": "They demagnetize"},
+                        "correct_answer": "B",
+                        "explanation": "Like poles (N-N or S-S) repel each other, while unlike poles (N-S) attract. This is a fundamental property of magnets.",
+                        "cognitive_level": "knowledge_understanding"
+                    }
+                },
+                "Electronics (Logic Gates, Components)": {
+                    "easy": {
+                        "question": "What is the output of a NOT gate when the input is 1?",
+                        "options": {"A": "1", "B": "0", "C": "2", "D": "Cannot determine"},
+                        "correct_answer": "B",
+                        "explanation": "A NOT gate inverts its input. When the input is 1 (High), the output is 0 (Low), and vice versa. It's also called an inverter.",
+                        "cognitive_level": "knowledge_understanding"
+                    }
+                },
+                "Atomic and Nuclear Physics (Modern Physics)": {
                     "easy": {
                         "question": "Which type of radiation is stopped by a sheet of paper?",
                         "options": {"A": "Alpha", "B": "Beta", "C": "Gamma", "D": "X-rays"},
@@ -800,396 +845,560 @@ Make this educational, knowledge-focused, and encouraging for O-Level students!"
 
     def initialize_physics_support(self):
         """Initialize comprehensive Physics topic support with ZIMSEC guidelines"""
-        # Enhanced Physics topic details following comprehensive ZIMSEC guidelines
+        # Enhanced Physics topic details following comprehensive ZIMSEC O-Level syllabus (10 topics)
         self.physics_topic_details = {
-            "Motion, Forces and Energy": {
+            "Measurement and Physical Quantities": {
                 "objectives": [
-                    "Distinguish between distance and displacement, speed and velocity",
-                    "Calculate speed, velocity, and acceleration using appropriate formulas",
-                    "Interpret distance-time and speed-time graphs",
-                    "Apply Newton's three laws of motion to real situations", 
-                    "Calculate moments and apply principle of moments",
-                    "Understand different forms of energy and energy conservation",
-                    "Calculate kinetic energy, potential energy, work done, and power",
-                    "Understand and calculate efficiency of energy transfers",
-                    "Apply pressure concepts and Hooke's law"
+                    "Define physical quantities and distinguish between base and derived quantities",
+                    "Use SI units correctly and convert between unit prefixes",
+                    "Apply significant figures and accuracy in measurements",
+                    "Use vernier calipers and micrometers correctly",
+                    "Measure time using pendulums and stopwatches",
+                    "Distinguish between mass and weight",
+                    "Calculate density using mass and volume",
+                    "Understand scalars and vectors"
                 ],
                 "key_concepts": [
-                    "Distance vs displacement", "Speed vs velocity", "Acceleration calculations",
-                    "Distance-time graphs", "Speed-time graphs", "Newton's first law", 
-                    "Newton's second law (F=ma)", "Newton's third law", "Types of forces",
-                    "Friction and air resistance", "Terminal velocity", "Moments and levers",
-                    "Pressure calculations", "Hooke's law", "Forms of energy",
-                    "Kinetic energy (KE=½mv²)", "Gravitational potential energy (GPE=mgh)",
-                    "Energy conservation", "Work done (W=Fs)", "Power (P=E/t)", "Efficiency"
+                    "Physical quantities", "SI base units (m, kg, s, A, K, mol, cd)",
+                    "Derived units", "Unit prefixes (mega, kilo, milli, micro)",
+                    "Significant figures", "Vernier caliper (0.01 cm precision)",
+                    "Micrometer screw gauge (0.01 mm precision)", "Zero error correction",
+                    "Simple pendulum period", "Mass vs weight (W = mg)",
+                    "Density (ρ = m/V)", "Scalar vs vector quantities"
+                ],
+                "misconceptions": [
+                    "Mass and weight are the same thing",
+                    "Larger instruments are always more accurate",
+                    "Weight is constant everywhere",
+                    "Density depends on object size"
+                ]
+            },
+            "Kinematics (Speed, Velocity, Acceleration, Graphs of Motion)": {
+                "objectives": [
+                    "Distinguish between distance and displacement",
+                    "Distinguish between speed and velocity",
+                    "Calculate average speed and instantaneous speed",
+                    "Define and calculate acceleration",
+                    "Interpret distance-time graphs (gradient = speed)",
+                    "Interpret speed-time graphs (gradient = acceleration, area = distance)",
+                    "Apply SUVAT equations to uniformly accelerated motion",
+                    "Understand free fall and acceleration due to gravity (g = 10 m/s²)",
+                    "Analyze motion using ticker tape experiments"
+                ],
+                "key_concepts": [
+                    "Distance vs displacement", "Speed vs velocity (scalar vs vector)",
+                    "Average speed = total distance / total time",
+                    "Acceleration = (v - u) / t", "Distance-time graphs",
+                    "Speed-time graphs", "Area under graph = distance",
+                    "SUVAT equations (v = u + at, s = ut + ½at², v² = u² + 2as)",
+                    "Free fall (g = 10 m/s²)", "Ticker tape timer analysis"
                 ],
                 "misconceptions": [
                     "Distance and displacement are the same",
-                    "Speed and velocity are the same",
-                    "Heavier objects fall faster in vacuum",
-                    "Force is needed to keep objects moving at constant velocity",
-                    "Weight and mass are the same thing",
-                    "Energy can be created or destroyed"
+                    "Speed and velocity are always equal",
+                    "Negative acceleration always means slowing down",
+                    "Objects fall at different speeds in vacuum"
                 ]
             },
-            "Thermal Physics": {
+            "Forces (Including Machines, Turning Effects, Friction, and Mechanical Structures)": {
                 "objectives": [
-                    "Distinguish between heat and temperature clearly",
-                    "Explain thermal expansion in solids, liquids, and gases", 
-                    "Describe applications of thermal expansion (bimetallic strips, expansion gaps)",
-                    "Understand the three methods of heat transfer",
-                    "Explain conduction mechanism in metals and non-metals",
-                    "Describe convection currents and their applications",
-                    "Understand radiation properties and applications",
-                    "Analyze vacuum flask design and heat transfer control",
-                    "Calculate specific heat capacity and latent heat",
-                    "Apply thermal principles to real-world situations"
+                    "Define force and describe its effects on motion and shape",
+                    "Distinguish between contact and non-contact forces",
+                    "Calculate weight using W = mg",
+                    "Apply Newton's three laws of motion",
+                    "Calculate resultant force and predict motion",
+                    "Understand terminal velocity in fluids",
+                    "Calculate moments and apply principle of moments",
+                    "Understand center of gravity and stability",
+                    "Calculate pressure (P = F/A)",
+                    "Understand friction and its applications"
                 ],
                 "key_concepts": [
-                    "Heat vs temperature", "Thermal expansion in solids/liquids/gases",
-                    "Bimetallic strips", "Linear expansion applications", "Conduction mechanism",
-                    "Good and poor conductors", "Convection currents", "Natural vs forced convection",
-                    "Radiation properties", "Surface color and radiation", "Vacuum flask design",
-                    "Home insulation methods", "Specific heat capacity (E=mcΔθ)",
-                    "Latent heat of fusion and vaporization (E=mL)", "Thermometer types"
+                    "Force definition (push or pull)", "Newton (unit of force)",
+                    "Weight vs mass", "Newton's First Law (inertia)",
+                    "Newton's Second Law (F = ma)", "Newton's Third Law (action-reaction)",
+                    "Balanced vs unbalanced forces", "Terminal velocity",
+                    "Moment = Force × perpendicular distance",
+                    "Principle of moments (equilibrium)", "Center of gravity",
+                    "Pressure (P = F/A)", "Friction (useful and problematic)"
+                ],
+                "misconceptions": [
+                    "Force is needed to keep objects moving at constant velocity",
+                    "Heavier objects fall faster",
+                    "Weight and mass are identical",
+                    "Friction is always bad"
+                ]
+            },
+            "Work, Energy and Power": {
+                "objectives": [
+                    "Define work done and calculate using W = Fs",
+                    "Identify different forms of energy",
+                    "State and apply the law of conservation of energy",
+                    "Calculate kinetic energy (KE = ½mv²)",
+                    "Calculate gravitational potential energy (GPE = mgh)",
+                    "Calculate power (P = W/t or P = E/t)",
+                    "Calculate efficiency and interpret Sankey diagrams",
+                    "Compare renewable and non-renewable energy resources"
+                ],
+                "key_concepts": [
+                    "Work done (W = Fs, force × distance)", "Joule (unit of work/energy)",
+                    "Forms of energy (kinetic, potential, thermal, chemical, nuclear)",
+                    "Law of conservation of energy", "KE = ½mv²",
+                    "GPE = mgh", "Power = Work/time", "Watt (unit of power)",
+                    "Efficiency = (useful output / total input) × 100%",
+                    "Sankey diagrams", "Renewable energy sources",
+                    "Non-renewable energy sources"
+                ],
+                "misconceptions": [
+                    "Energy can be created or destroyed",
+                    "Power and energy are the same",
+                    "Work is done when holding a heavy object still"
+                ]
+            },
+            "Thermal Physics (Kinetic Theory, Thermal Properties, Heat Transfer)": {
+                "objectives": [
+                    "Describe the kinetic molecular model of matter",
+                    "Explain Brownian motion as evidence for particles",
+                    "Explain gas pressure in terms of particle collisions",
+                    "Describe thermal expansion in solids, liquids, and gases",
+                    "Distinguish between heat and temperature",
+                    "Measure temperature using thermometers",
+                    "Calculate energy using specific heat capacity (Q = mcΔθ)",
+                    "Calculate energy using latent heat (Q = mL)",
+                    "Compare evaporation and boiling",
+                    "Explain conduction, convection, and radiation"
+                ],
+                "key_concepts": [
+                    "States of matter (solid, liquid, gas)", "Particle arrangement and movement",
+                    "Brownian motion", "Gas pressure", "Thermal expansion",
+                    "Bimetallic strip", "Heat vs temperature",
+                    "Specific heat capacity (Q = mcΔθ)", "Latent heat (Q = mL)",
+                    "Evaporation vs boiling", "Conduction (solids, free electrons)",
+                    "Convection (fluids, density currents)", "Radiation (EM waves, no medium)",
+                    "Vacuum flask design"
                 ],
                 "misconceptions": [
                     "Heat and temperature are the same",
-                    "Conduction occurs in liquids and gases",
-                    "Radiation requires a medium to travel",
                     "All materials expand equally when heated",
-                    "Metal saucepan handles get hot by convection"
+                    "Conduction occurs in gases",
+                    "Radiation requires a medium"
                 ]
             },
-            "Waves": {
+            "Waves (General Wave Properties, Optics, Sound)": {
                 "objectives": [
-                    "Describe wave properties: amplitude, wavelength, frequency, period",
+                    "Describe wave properties (amplitude, wavelength, frequency, period)",
                     "Distinguish between transverse and longitudinal waves",
-                    "Apply the wave equation (v = fλ) to solve problems",
-                    "Explain wave behaviors: reflection, refraction, diffraction, dispersion",
-                    "Understand the complete electromagnetic spectrum and applications",
-                    "Describe sound wave properties and applications",
-                    "Explain ultrasound applications in medicine and industry",
-                    "Understand light behavior: reflection, refraction, total internal reflection",
-                    "Analyze lens behavior and applications",
-                    "Describe the eye and vision defects"
+                    "Apply the wave equation (v = fλ)",
+                    "Explain reflection, refraction, diffraction, and dispersion",
+                    "Apply laws of reflection",
+                    "Explain refraction and calculate refractive index",
+                    "Understand total internal reflection and critical angle",
+                    "Describe lens types and image formation",
+                    "Explain sound wave properties",
+                    "Calculate echo distances (d = vt/2)",
+                    "Describe ultrasound applications"
                 ],
                 "key_concepts": [
-                    "Transverse vs longitudinal waves", "Wave terminology (amplitude, wavelength, frequency)",
-                    "Wave equation (v=fλ)", "Wave speed in different media", "Reflection laws",
-                    "Refraction rules and refractive index", "Diffraction and gap size effects",
-                    "Electromagnetic spectrum order", "Radio waves applications", "Microwave uses and dangers",
-                    "Infrared radiation", "Visible light and colors", "Ultraviolet hazards", 
-                    "X-ray applications", "Gamma ray properties", "Sound speed in different media",
-                    "Echo calculations (d=vt/2)", "Audible range and ultrasound", "Medical ultrasound",
-                    "Sonar applications", "Light reflection and mirrors", "Light refraction and lenses",
-                    "Total internal reflection and optical fibers", "Eye structure and function",
-                    "Vision defects and corrections", "Dispersion and color"
+                    "Transverse vs longitudinal waves", "Amplitude, wavelength, frequency",
+                    "Wave equation (v = fλ)", "Period (T = 1/f)",
+                    "Law of reflection (i = r)", "Refraction rules",
+                    "Refractive index (n = sin i / sin r)", "Critical angle",
+                    "Total internal reflection", "Converging and diverging lenses",
+                    "Sound speed in different media", "Echo calculations (d = vt/2)",
+                    "Ultrasound applications", "Electromagnetic spectrum"
                 ],
                 "misconceptions": [
-                    "Sound and light waves are the same type",
-                    "All electromagnetic waves need a medium",
-                    "Loud sounds travel faster than quiet sounds",
-                    "Light always travels in straight lines",
-                    "Frequency and wavelength are independent of wave speed"
+                    "Sound and light are the same type of wave",
+                    "Sound travels in vacuum",
+                    "Louder sounds travel faster",
+                    "Light always travels in straight lines"
                 ]
             },
-            "Electricity": {
+            "Electricity (Current Electricity, Circuits)": {
                 "objectives": [
-                    "Explain charging by friction and electrostatic phenomena",
-                    "Understand electric fields and forces",
-                    "Describe uses and dangers of static electricity",
-                    "Define current, voltage, and resistance",
-                    "Apply Ohm's law to circuit calculations",
-                    "Analyze series and parallel circuits",
-                    "Calculate electrical power and energy consumption",
-                    "Choose appropriate fuses and understand safety features",
-                    "Understand mains electricity and three-pin plugs",
-                    "Explain electrical hazards and safety precautions"
+                    "Define electric current and explain charge flow",
+                    "Define e.m.f. and potential difference",
+                    "Define resistance and apply Ohm's Law (V = IR)",
+                    "Sketch and interpret I-V graphs for different components",
+                    "Calculate resistance in series and parallel circuits",
+                    "Analyze potential divider circuits with sensors",
+                    "Calculate electrical power (P = VI, P = I²R, P = V²/R)",
+                    "Calculate electrical energy (E = Pt, E = VIt)",
+                    "Explain electrical safety features (fuses, circuit breakers, earthing)"
                 ],
                 "key_concepts": [
-                    "Static electricity and charging by friction", "Like charges repel, unlike attract",
-                    "Electric fields and field lines", "Lightning formation", "Uses of static electricity",
-                    "Dangers of static and prevention", "Electric current definition",
-                    "Potential difference (voltage)", "Resistance and Ohm's law (V=IR)",
-                    "Series circuit rules", "Parallel circuit rules", "Circuit component symbols",
-                    "Electrical power equations (P=VI, P=I²R, P=V²/R)", "Energy calculations (E=Pt)",
-                    "Cost calculations", "Fuse selection and operation", "Three-pin plug wiring",
-                    "AC vs DC", "Electrical safety features", "Mains electricity hazards"
+                    "Electric current (I = Q/t)", "Ampere (unit of current)",
+                    "E.m.f. vs potential difference", "Volt (unit of p.d.)",
+                    "Resistance (R = V/I)", "Ohm (unit of resistance)",
+                    "Ohm's Law", "I-V graphs (resistor, filament lamp, diode)",
+                    "Series circuits (same current, V adds, R adds)",
+                    "Parallel circuits (same V, I adds, 1/R = 1/R₁ + 1/R₂)",
+                    "Potential dividers", "LDR and thermistor sensors",
+                    "Power equations", "Energy calculations (kWh)",
+                    "Fuses, circuit breakers, earthing"
                 ],
                 "misconceptions": [
-                    "Current gets used up as it flows through circuits",
-                    "Voltage and current are the same thing",
-                    "Conventional current flows from positive to negative",
-                    "Fuses increase the safety by allowing more current",
-                    "All materials conduct electricity equally"
+                    "Current gets used up in a circuit",
+                    "Voltage and current are the same",
+                    "Thick wires have more resistance",
+                    "Batteries are used up when they are dead"
                 ]
             },
-            "Nuclear Physics": {
+            "Magnetism and Electromagnetism": {
                 "objectives": [
-                    "Describe atomic structure using protons, neutrons, and electrons",
-                    "Understand atomic number, mass number, and isotopes",
-                    "Explain the nature of radioactive decay",
-                    "Compare alpha, beta, and gamma radiation properties",
-                    "Calculate half-life and interpret decay graphs",
-                    "Understand background radiation and its sources",
-                    "Apply radiation safety principles",
-                    "Evaluate medical applications of radioactivity",
-                    "Describe industrial uses of radioactivity",
-                    "Understand nuclear power generation"
+                    "Distinguish between soft and hard magnetic materials",
+                    "Describe magnetic poles and magnetic field lines",
+                    "Explain methods of magnetization and demagnetization",
+                    "Describe the magnetic effect of electric current",
+                    "Apply the Right-Hand Grip Rule for field direction",
+                    "Explain electromagnet applications",
+                    "Describe the motor effect and apply Fleming's Left-Hand Rule",
+                    "Explain DC motor operation",
+                    "Explain electromagnetic induction (Faraday's and Lenz's Laws)",
+                    "Describe AC generator operation",
+                    "Apply transformer equations (Vp/Vs = Np/Ns)",
+                    "Explain high voltage power transmission"
                 ],
                 "key_concepts": [
-                    "Subatomic particles (protons, neutrons, electrons)", "Atomic number and mass number",
-                    "Isotope definition and examples", "Radioactive decay process",
-                    "Alpha particle properties (helium nucleus, +2 charge, stopped by paper)",
-                    "Beta particle properties (electrons, -1 charge, stopped by aluminum)",
-                    "Gamma ray properties (EM waves, no charge, stopped by lead)",
-                    "Ionizing power vs penetrating power", "Half-life concept and calculations",
-                    "Background radiation sources", "Radiation detection methods",
-                    "Radiation safety (distance, shielding, time)", "Medical tracers",
-                    "Radiotherapy applications", "Carbon-14 dating", "Industrial applications",
-                    "Nuclear fission and fusion", "Nuclear power advantages and disadvantages"
+                    "Soft iron vs hard steel", "Magnetic domains",
+                    "Magnetic poles (N and S)", "Magnetic field lines",
+                    "Magnetization methods", "Demagnetization methods",
+                    "Right-Hand Grip Rule", "Electromagnets",
+                    "Motor effect", "Fleming's Left-Hand Rule",
+                    "DC motor components", "Split-ring commutator",
+                    "Electromagnetic induction", "Faraday's Law",
+                    "Lenz's Law (opposes change)", "AC generator",
+                    "Transformers (Vp/Vs = Np/Ns)", "Step-up vs step-down",
+                    "Power transmission (high V, low I, less I²R loss)"
                 ],
                 "misconceptions": [
-                    "Radioactive decay can be controlled or stopped",
+                    "All metals are magnetic",
+                    "Cutting a magnet gives isolated poles",
+                    "Transformers work with DC",
+                    "Current creates a magnetic field only in electromagnets"
+                ]
+            },
+            "Electronics (Logic Gates, Components)": {
+                "objectives": [
+                    "Distinguish between analogue and digital signals",
+                    "Explain advantages of digital over analogue signals",
+                    "Describe the function and truth table of NOT gate",
+                    "Describe the function and truth table of AND gate",
+                    "Describe the function and truth table of OR gate",
+                    "Describe the function and truth table of NAND gate",
+                    "Describe the function and truth table of NOR gate",
+                    "Explain LED operation and need for protective resistor",
+                    "Describe relay operation and applications",
+                    "Explain potential divider circuits with variable resistors"
+                ],
+                "key_concepts": [
+                    "Analogue signals (continuous)", "Digital signals (High/Low, 1/0)",
+                    "Logic gates", "NOT gate (inverter)",
+                    "AND gate (output 1 only if all inputs 1)",
+                    "OR gate (output 1 if any input 1)",
+                    "NAND gate (opposite of AND)", "NOR gate (opposite of OR)",
+                    "Truth tables", "Universal gates (NAND, NOR)",
+                    "LED with protective resistor", "Relay (low power controls high power)",
+                    "Variable resistor", "Threshold voltage"
+                ],
+                "misconceptions": [
+                    "Digital and analogue signals carry the same amount of information",
+                    "Logic gates can have more than two states",
+                    "LEDs work without resistors"
+                ]
+            },
+            "Atomic and Nuclear Physics (Modern Physics)": {
+                "objectives": [
+                    "Describe Rutherford's scattering experiment and conclusions",
+                    "Describe atomic structure (nucleus and electrons)",
+                    "Define proton number and nucleon number",
+                    "Define isotopes and explain their properties",
+                    "Define radioactivity as spontaneous and random decay",
+                    "Compare properties of alpha, beta, and gamma radiation",
+                    "Describe detection methods (Geiger-Müller tube)",
+                    "Explain background radiation sources",
+                    "Calculate half-life from decay data",
+                    "Explain uses of radioactive isotopes",
+                    "Distinguish between nuclear fission and fusion",
+                    "Describe safety precautions for handling radioactive materials"
+                ],
+                "key_concepts": [
+                    "Rutherford's experiment", "Nuclear model of atom",
+                    "Protons, neutrons, electrons", "Proton number (Z), nucleon number (A)",
+                    "Isotopes", "Radioactive decay (spontaneous, random)",
+                    "Alpha particles (He nucleus, +2, stopped by paper)",
+                    "Beta particles (electrons, -1, stopped by aluminium)",
+                    "Gamma rays (EM waves, 0, reduced by lead)",
+                    "Ionizing power vs penetrating power",
+                    "Geiger-Müller tube", "Background radiation",
+                    "Half-life calculations", "Uses of radioisotopes",
+                    "Nuclear fission (splitting)", "Chain reaction",
+                    "Nuclear fusion (joining)", "Safety precautions"
+                ],
+                "misconceptions": [
+                    "Radioactive decay can be controlled",
                     "All radiation is equally dangerous",
-                    "Radioactivity is always artificial/man-made",
-                    "Nuclear power and nuclear weapons are the same thing",
-                    "Radiation makes things permanently radioactive"
+                    "Radioactivity is man-made",
+                    "Radiation makes objects permanently radioactive"
                 ]
             }
         }
         
-        # Enhanced Physics aspect variations following comprehensive ZIMSEC guidelines with detailed subtopics
+        # Enhanced Physics aspect variations following comprehensive ZIMSEC O-Level syllabus (10 topics)
         self.physics_aspect_variations = {
-            "Motion, Forces and Energy": [
-                # SUBTOPIC 1.1: MOTION
+            "Measurement and Physical Quantities": [
+                # Physical Quantities and SI Units
+                "physical_quantities_definition", "base_quantities_length_mass_time",
+                "derived_quantities_speed_area_volume", "si_base_units_metre_kilogram_second",
+                "unit_prefixes_mega_kilo_milli_micro", "unit_conversions",
+                "significant_figures_accuracy", "scalar_quantities_examples",
+                "vector_quantities_examples", "scalar_vs_vector_differences",
+                # Measurement Instruments
+                "vernier_caliper_structure", "vernier_caliper_reading",
+                "micrometer_screw_gauge_structure", "micrometer_reading_technique",
+                "zero_error_positive_negative", "zero_error_correction",
+                "precision_vs_accuracy", "measurement_uncertainty",
+                # Time Measurement
+                "simple_pendulum_period", "pendulum_factors_affecting_period",
+                "stopwatch_reaction_time_error", "timing_multiple_oscillations",
+                # Mass, Weight, Density
+                "mass_definition_kg", "weight_definition_force",
+                "weight_mass_relationship_w_mg", "gravity_g_10ms2",
+                "weight_varies_location", "density_definition_formula",
+                "density_mass_volume_relationship", "measuring_density_regular_irregular"
+            ],
+            "Kinematics (Speed, Velocity, Acceleration, Graphs of Motion)": [
+                # Distance, Displacement, Speed, Velocity
                 "distance_vs_displacement_scalar_vector", "speed_vs_velocity_scalar_vector",
-                "average_speed_calculations_multi_stage", "instantaneous_speed_concept",
-                "acceleration_calculations_vu_t", "acceleration_positive_negative",
-                "distance_time_graphs_interpretation", "distance_time_graph_gradients",
-                "speed_time_graphs_interpretation", "speed_time_graph_acceleration",
-                "speed_time_graph_area_distance", "motion_equations_v_u_at",
-                "motion_equations_s_ut_05at2", "motion_equations_v2_u2_2as",
-                "unit_conversions_kmh_to_ms", "scalar_vector_quantities",
-                
-                # SUBTOPIC 1.2: FORCES
+                "average_speed_calculation", "instantaneous_speed_concept",
+                "total_distance_divided_total_time", "unit_conversions_kmh_to_ms",
+                # Acceleration
+                "acceleration_definition", "acceleration_formula_v_u_t",
+                "positive_negative_acceleration", "deceleration_concept",
+                "acceleration_units_ms2", "uniform_acceleration",
+                # Graphs of Motion
+                "distance_time_graph_stationary", "distance_time_graph_constant_speed",
+                "distance_time_graph_gradient_speed", "distance_time_graph_changing_speed",
+                "speed_time_graph_constant_speed", "speed_time_graph_acceleration",
+                "speed_time_graph_gradient_acceleration", "speed_time_graph_area_distance",
+                "interpreting_motion_graphs", "comparing_motion_graphs",
+                # SUVAT Equations
+                "suvat_v_u_at", "suvat_s_ut_half_at_squared",
+                "suvat_v_squared_u_squared_2as", "suvat_problem_solving",
+                # Free Fall
+                "free_fall_definition", "gravity_acceleration_10ms2",
+                "terminal_velocity_concept", "ticker_tape_timer_analysis"
+            ],
+            "Forces (Including Machines, Turning Effects, Friction, and Mechanical Structures)": [
+                # Force Basics
                 "force_definition_push_pull", "force_effects_motion_shape",
-                "contact_forces_friction_tension", "non_contact_forces_gravity_magnetic",
-                "weight_vs_mass_w_mg", "standard_gravity_10ms2",
-                "friction_opposes_motion", "friction_useful_problematic",
-                "air_resistance_terminal_velocity", "balanced_forces_equilibrium",
-                "unbalanced_forces_acceleration", "resultant_forces_calculation",
+                "newton_unit_of_force", "contact_forces_examples",
+                "non_contact_forces_examples", "resultant_force_calculation",
+                "balanced_forces_equilibrium", "unbalanced_forces_acceleration",
+                # Weight and Mass
+                "weight_vs_mass_distinction", "weight_formula_w_mg",
+                "weight_varies_gravity", "mass_constant_everywhere",
+                # Newton's Laws
                 "newtons_first_law_inertia", "newtons_first_law_applications",
-                "newtons_second_law_f_ma", "newtons_second_law_units",
+                "newtons_second_law_f_ma", "newtons_second_law_calculations",
                 "newtons_third_law_action_reaction", "newtons_third_law_examples",
-                "moments_force_distance", "principle_of_moments_equilibrium",
-                "moments_applications_levers", "centre_of_gravity_stability",
-                "pressure_force_area", "pressure_large_area_low",
-                "liquid_pressure_depth_density", "hookes_law_extension",
-                "hookes_law_elastic_limit",
-                
-                # SUBTOPIC 1.3: ENERGY
-                "energy_definition_capacity_work", "law_of_conservation_energy",
-                "kinetic_energy_ke_05mv2", "gravitational_potential_energy_gpe_mgh",
-                "elastic_potential_energy", "chemical_energy_fuels_batteries",
-                "thermal_heat_energy", "light_energy_sound_energy",
-                "electrical_energy_nuclear_energy", "energy_transfers_mechanical_electrical",
-                "energy_transformations_pendulum", "energy_transformations_falling_objects",
-                "energy_transformations_motor_generator", "energy_transformations_bulb_battery",
-                "work_done_force_distance", "work_done_energy_transferred",
-                "power_rate_energy_transfer", "power_equations_p_wt_p_et",
-                "efficiency_concept_useful_wasted", "efficiency_calculations_percentage",
-                "improving_efficiency_reduce_friction", "sankey_diagrams_interpretation",
-                "renewable_energy_sources", "non_renewable_energy_sources",
-                "energy_source_comparison", "cost_energy_calculations"
+                # Terminal Velocity
+                "terminal_velocity_definition", "forces_during_free_fall",
+                "air_resistance_increasing", "terminal_velocity_parachute",
+                # Moments and Equilibrium
+                "moment_definition_formula", "moment_force_perpendicular_distance",
+                "principle_of_moments", "equilibrium_conditions",
+                "center_of_gravity_concept", "stability_base_area_height",
+                # Pressure
+                "pressure_formula_f_a", "pressure_units_pascal",
+                "pressure_area_relationship", "pressure_applications",
+                # Friction
+                "friction_definition", "friction_useful_applications",
+                "friction_problematic_examples", "reducing_friction_lubrication"
             ],
-            "Thermal Physics": [
-                # SUBTOPIC 2.1: THERMAL PROPERTIES
-                "temperature_vs_heat_energy", "temperature_kinetic_energy",
-                "temperature_scales_celsius_kelvin", "thermometer_liquid_in_glass",
-                "mercury_vs_alcohol_thermometers", "clinical_thermometer_constriction",
-                "thermal_equilibrium_concept", "heat_flows_hot_to_cold",
-                "thermal_expansion_solids", "linear_expansion_applications",
-                "bimetallic_strips_thermostats", "expansion_gaps_railway_tracks",
-                "thermal_expansion_liquids", "water_irregular_expansion_4c",
-                "water_expands_freezing", "thermal_expansion_gases",
-                "expansion_problems_cracked_glass", "specific_heat_capacity_concept",
-                "specific_heat_capacity_equation_e_mcdt", "water_high_heat_capacity",
-                "specific_heat_capacity_applications", "latent_heat_fusion_vaporization",
-                "latent_heat_equation_e_ml", "latent_heat_applications_ice_sweating",
-                "heating_curves_state_changes",
-                
-                # SUBTOPIC 2.2: THERMAL PROCESSES
-                "conduction_solids_only", "conduction_mechanism_particles",
-                "conduction_metals_free_electrons", "good_conductors_metals",
-                "poor_conductors_insulators", "conduction_factors_material_thickness",
-                "convection_fluids_only", "convection_mechanism_density",
-                "convection_currents_water_air", "natural_vs_forced_convection",
-                "convection_applications_heating", "sea_breeze_land_breeze",
-                "radiation_electromagnetic_waves", "radiation_no_medium_vacuum",
-                "radiation_surface_color_effects", "dark_surfaces_absorb_emit",
-                "shiny_surfaces_reflect", "radiation_temperature_surface_area",
-                "vacuum_flask_double_wall_vacuum", "vacuum_flask_silvered_surfaces",
-                "vacuum_flask_stopper_insulation", "home_insulation_loft_cavity",
-                "double_glazing_air_gap", "controlling_heat_loss_gain",
-                "insulation_trapped_air"
+            "Work, Energy and Power": [
+                # Work Done
+                "work_done_definition", "work_formula_w_fs",
+                "work_joule_unit", "work_requires_force_and_motion",
+                "work_direction_consideration", "work_calculation_problems",
+                # Forms of Energy
+                "kinetic_energy_definition", "gravitational_potential_energy_definition",
+                "elastic_potential_energy", "chemical_energy_examples",
+                "thermal_energy_heat", "electrical_energy_examples",
+                "nuclear_energy_concept", "light_energy_sound_energy",
+                # Energy Calculations
+                "kinetic_energy_formula_half_mv_squared", "ke_calculation_problems",
+                "gravitational_pe_formula_mgh", "gpe_calculation_problems",
+                # Conservation of Energy
+                "law_of_conservation_energy", "energy_transfers_examples",
+                "energy_transformations_pendulum", "energy_transformations_falling_object",
+                "energy_chain_diagrams",
+                # Power
+                "power_definition_rate", "power_formula_w_t",
+                "power_watt_unit", "power_calculation_problems",
+                # Efficiency
+                "efficiency_definition", "efficiency_formula_percentage",
+                "sankey_diagrams_interpretation", "improving_efficiency",
+                # Energy Resources
+                "renewable_energy_sources", "nonrenewable_energy_sources",
+                "comparing_energy_sources", "environmental_impact_energy"
             ],
-            "Waves": [
-                # SUBTOPIC 3.1: GENERAL WAVE PROPERTIES
-                "wave_definition_transfer_energy", "waves_transfer_energy_not_matter",
-                "transverse_waves_perpendicular", "longitudinal_waves_parallel",
-                "transverse_examples_em_water", "longitudinal_examples_sound",
-                "amplitude_maximum_displacement", "amplitude_energy_intensity",
-                "wavelength_distance_phase", "frequency_waves_per_second",
-                "period_time_one_wave", "period_frequency_relationship_t_1f",
-                "wave_speed_distance_per_second", "wave_equation_v_flambda",
-                "wave_equation_rearrangements", "wavefronts_rays_direction",
-                
-                # SUBTOPIC 3.2: WAVE BEHAVIORS
-                "reflection_wave_bounces", "law_of_reflection_i_r",
-                "regular_specular_reflection", "diffuse_reflection_rough",
-                "refraction_direction_change", "refraction_speed_change",
-                "refraction_denser_medium_slows", "refraction_bends_toward_normal",
-                "refractive_index_n_speed", "refractive_index_snells_law",
-                "diffraction_spreading_gap", "diffraction_gap_size_wavelength",
-                "diffraction_long_wavelength_more", "dispersion_white_light_spectrum",
-                "dispersion_prism_roygbiv", "total_internal_reflection_conditions",
-                "critical_angle_calculation", "optical_fibers_tir_applications",
-                
-                # SUBTOPIC 3.3: ELECTROMAGNETIC SPECTRUM
-                "em_spectrum_transverse_waves", "em_spectrum_speed_light_vacuum",
-                "em_spectrum_order_radio_gamma", "em_spectrum_frequency_wavelength_energy",
-                "radio_waves_longest_wavelength", "radio_waves_broadcasting_wifi",
-                "microwaves_oven_radar", "microwaves_dangers_heating",
-                "infrared_thermal_imaging", "infrared_remote_controls",
-                "visible_light_400_700nm", "visible_light_colors_roygbiv",
-                "ultraviolet_fluorescence", "ultraviolet_dangers_skin_cancer",
-                "xrays_medical_imaging", "xrays_dangers_ionizing",
-                "gamma_rays_shortest_wavelength", "gamma_rays_sterilization_cancer",
-                "em_waves_comparison_penetration", "ionizing_vs_nonionizing",
-                
-                # SUBTOPIC 3.4: SOUND WAVES
+            "Thermal Physics (Kinetic Theory, Thermal Properties, Heat Transfer)": [
+                # Kinetic Molecular Model
+                "states_of_matter_particle_arrangement", "solid_particles_vibrating",
+                "liquid_particles_sliding", "gas_particles_random_motion",
+                "brownian_motion_evidence", "brownian_motion_explanation",
+                # Gas Pressure and Volume
+                "gas_pressure_particle_collisions", "pressure_temperature_relationship",
+                "pressure_volume_relationship", "explaining_gas_laws_kinetically",
+                # Thermal Expansion
+                "thermal_expansion_solids", "thermal_expansion_liquids",
+                "thermal_expansion_gases", "bimetallic_strip_applications",
+                "expansion_gaps_applications", "anomalous_expansion_water",
+                # Temperature and Heat
+                "temperature_vs_heat_difference", "thermometer_types",
+                "temperature_scales_celsius_kelvin", "thermal_equilibrium",
+                # Specific Heat Capacity
+                "specific_heat_capacity_definition", "shc_formula_q_mc_delta_theta",
+                "shc_calculation_problems", "water_high_shc_applications",
+                # Latent Heat
+                "latent_heat_fusion_definition", "latent_heat_vaporization_definition",
+                "latent_heat_formula_q_ml", "latent_heat_calculations",
+                "evaporation_vs_boiling", "cooling_by_evaporation",
+                # Heat Transfer
+                "conduction_mechanism_solids", "conduction_free_electrons_metals",
+                "good_poor_conductors", "convection_mechanism_fluids",
+                "convection_currents_examples", "radiation_electromagnetic_waves",
+                "radiation_no_medium_required", "surface_color_radiation",
+                "vacuum_flask_design", "home_insulation_methods"
+            ],
+            "Waves (General Wave Properties, Optics, Sound)": [
+                # General Wave Properties
+                "wave_definition_energy_transfer", "transverse_waves_definition",
+                "longitudinal_waves_definition", "wave_terms_amplitude",
+                "wave_terms_wavelength", "wave_terms_frequency",
+                "wave_terms_period", "period_frequency_relationship",
+                "wave_equation_v_f_lambda", "wave_equation_calculations",
+                # Wave Behaviors
+                "reflection_laws", "refraction_speed_change",
+                "refraction_direction_change", "refractive_index_calculation",
+                "diffraction_through_gaps", "critical_angle_total_internal_reflection",
+                # Light and Optics
+                "plane_mirrors_reflection", "converging_lens_images",
+                "diverging_lens_images", "optical_fibers_applications",
+                "dispersion_prism_spectrum", "color_filters",
+                # Sound Waves
                 "sound_longitudinal_waves", "sound_requires_medium",
-                "sound_speed_solids_liquids_gases", "sound_speed_air_340ms",
-                "sound_production_vibrating_objects", "loudness_amplitude_relationship",
-                "pitch_frequency_relationship", "quality_timbre_waveform",
-                "audible_range_20_20000hz", "infrasound_below_20hz",
-                "ultrasound_above_20khz", "ultrasound_medical_imaging",
-                "sonar_echo_depth_calculation", "sonar_distance_vt2",
-                "echo_reflection_delay", "noise_pollution_hearing_damage",
-                
-                # SUBTOPIC 3.5: LIGHT
-                "light_transverse_em_wave", "light_speed_3x10e8ms",
-                "luminous_vs_nonluminous", "light_reflection_laws",
-                "plane_mirror_image_properties", "concave_convex_mirrors",
-                "light_refraction_bending", "refractive_index_mediums",
-                "refraction_rules_denser_medium", "apparent_depth_water",
-                "convex_lens_converging", "concave_lens_diverging",
-                "lens_real_virtual_images", "lens_applications_camera_eye",
-                "dispersion_white_light", "primary_colors_rgb",
-                "color_filters_transmission", "total_internal_reflection_optical_fibers",
-                "eye_structure_cornea_lens_retina", "eye_accommodation_focusing",
-                "short_sight_myopia_correction", "long_sight_hyperopia_correction",
-                "camera_vs_eye_comparison"
+                "sound_speed_different_media", "loudness_amplitude",
+                "pitch_frequency", "echo_calculations_distance",
+                "ultrasound_applications", "audible_range_hearing"
             ],
-            "Electricity": [
-                # SUBTOPIC 4.1: STATIC ELECTRICITY
-                "charge_types_positive_negative", "like_charges_repel_unlike_attract",
-                "atoms_neutral_protons_electrons", "charging_electron_transfer",
-                "static_electricity_buildup", "charging_by_friction_rubbing",
-                "materials_perspex_polythene_glass", "electric_fields_region_force",
-                "electric_field_patterns", "electrostatic_attraction_induction",
-                "sparking_discharge_ionization", "lightning_formation_cloud_ground",
-                "lightning_dangers_damage_fires", "static_dangers_fires_explosions",
-                "static_uses_photocopiers_printers", "static_uses_electrostatic_precipitators",
-                "static_uses_spray_painting", "preventing_static_earthing",
-                "preventing_static_conductivity", "anti_static_materials",
-                
-                # SUBTOPIC 4.2: CURRENT ELECTRICITY
-                "current_flow_charge", "current_electron_flow_direction",
-                "conventional_current_positive_negative", "potential_difference_voltage",
-                "voltage_energy_per_charge", "resistance_opposition_current",
-                "conductors_metals_graphite", "insulators_plastic_rubber",
-                "ohms_law_v_ir", "ohms_law_direct_proportional",
-                "ohmic_conductors_constant_resistance", "nonohmic_filament_lamp_diode",
-                "circuit_symbols_components", "series_circuit_characteristics",
-                "series_current_same", "series_voltage_adds",
-                "series_resistance_adds", "parallel_circuit_characteristics",
-                "parallel_voltage_same", "parallel_current_adds",
-                "parallel_resistance_reciprocal", "electrical_power_p_vi",
-                "power_equations_p_i2r_p_v2r", "electrical_energy_e_pt",
-                "energy_equations_e_vit", "kilowatt_hours_kwh_units",
-                "cost_calculations_energy_price", "fuse_operation_rating",
-                "circuit_breaker_electromagnetic", "choosing_fuse_rating",
-                "variable_resistor_rheostat", "thermistor_temperature_sensor",
-                "ldr_light_dependent_resistor", "diode_rectification_one_direction",
-                "led_light_emitting_diode",
-                
-                # SUBTOPIC 4.3: MAINS ELECTRICITY
-                "mains_ac_alternating_current", "ac_vs_dc_direction",
-                "mains_voltage_230v_zimbabwe", "mains_frequency_50hz",
-                "three_pin_plug_wires", "live_wire_brown_dangerous",
-                "neutral_wire_blue_completes", "earth_wire_green_yellow_safety",
-                "plug_structure_cable_grip", "wiring_plug_correct_pins",
-                "earthing_safety_metal_case", "fuse_live_wire_protection",
-                "circuit_breaker_resettable", "rcd_residual_current_device",
-                "insulation_prevent_leakage", "double_insulation_plastic",
-                "electrical_hazards_shock_burns", "hazards_damaged_insulation",
-                "hazards_overheating_water", "safety_precautions_wet_hands",
-                "safety_precautions_overload", "energy_consumption_kwh",
-                "meter_reading_units", "efficiency_electrical_wasted_heat",
-                "reducing_costs_efficiency"
+            "Electricity (Current Electricity, Circuits)": [
+                # Current and Charge
+                "electric_current_definition", "current_formula_i_q_t",
+                "ampere_unit_current", "charge_carriers_electrons",
+                "conventional_vs_electron_current",
+                # E.m.f. and Potential Difference
+                "emf_definition_energy_source", "potential_difference_definition",
+                "volt_unit_pd", "emf_vs_pd_distinction",
+                # Resistance and Ohm's Law
+                "resistance_definition", "ohm_unit_resistance",
+                "ohms_law_v_ir", "ohms_law_calculations",
+                "factors_affecting_resistance", "resistivity_concept",
+                # I-V Graphs
+                "iv_graph_ohmic_conductor", "iv_graph_filament_lamp",
+                "iv_graph_diode", "interpreting_iv_graphs",
+                # Series and Parallel Circuits
+                "series_circuit_current_same", "series_circuit_voltage_adds",
+                "series_circuit_resistance_adds", "parallel_circuit_voltage_same",
+                "parallel_circuit_current_adds", "parallel_resistance_calculation",
+                "combined_series_parallel", "circuit_diagrams_symbols",
+                # Potential Dividers
+                "potential_divider_concept", "ldr_in_potential_divider",
+                "thermistor_in_potential_divider", "sensor_circuits",
+                # Electrical Power and Energy
+                "power_formula_p_vi", "power_formula_p_i2r",
+                "power_formula_p_v2_r", "energy_formula_e_pt",
+                "kilowatt_hour_unit", "electricity_cost_calculations",
+                # Electrical Safety
+                "fuse_operation_selection", "circuit_breaker_operation",
+                "earthing_safety", "three_pin_plug_wiring",
+                "electrical_hazards", "safety_precautions"
             ],
-            "Nuclear Physics": [
-                # SUBTOPIC 5.1: ATOMIC STRUCTURE
-                "atomic_structure_nucleus_electrons", "nucleus_protons_neutrons",
-                "subatomic_particles_table", "proton_charge_mass",
-                "neutron_charge_mass", "electron_charge_mass",
-                "atom_mostly_empty_space", "atomic_number_z_protons",
-                "mass_number_a_protons_neutrons", "atomic_notation_az_x",
-                "calculating_neutrons_n_a_z", "isotope_definition_same_z",
-                "isotope_examples_carbon_14", "radioactive_isotopes_unstable",
-                "electron_configuration_shells", "shell_max_electrons_2_8_8",
-                "electron_configuration_examples",
-                
-                # SUBTOPIC 5.2: RADIOACTIVITY
-                "radioactivity_spontaneous_decay", "radioactive_decay_random",
-                "radioactive_decay_unstable_stable", "alpha_particle_helium_nucleus",
-                "alpha_charge_2_mass_4", "alpha_most_ionizing_least_penetrating",
-                "alpha_stopped_paper_skin", "alpha_decay_mass_minus_4_z_minus_2",
-                "beta_particle_electron", "beta_charge_minus_1_mass_negligible",
-                "beta_medium_ionizing_penetrating", "beta_stopped_aluminum",
-                "beta_decay_z_plus_1_mass_same", "gamma_ray_em_wave",
-                "gamma_charge_0_mass_0", "gamma_least_ionizing_most_penetrating",
-                "gamma_reduced_lead_concrete", "radiation_comparison_table",
-                "ionizing_vs_penetrating_power", "geiger_muller_tube_detection",
-                "cloud_chamber_tracks", "photographic_film_badges",
-                "background_radiation_always_present", "background_natural_sources",
-                "background_artificial_sources", "measuring_radiation_subtract_background",
-                "half_life_definition_time_half", "half_life_constant_isotope",
-                "half_life_calculations", "half_life_graphs_exponential",
-                "half_life_examples_range", "radiation_hazards_ionizing_dna",
-                "radiation_hazards_cancer_mutation", "safety_distance_shielding_time",
-                "safety_handling_tongs_storage", "safety_personal_protection",
-                "trefoil_symbol_warning",
-                
-                # SUBTOPIC 5.3: USES OF RADIOACTIVITY
-                "medical_tracers_isotopes", "medical_tracers_short_half_life",
-                "technetium_99m_common_tracer", "iodine_131_thyroid",
-                "radiotherapy_external_gamma", "radiotherapy_cobalt_60",
-                "radiotherapy_internal_brachytherapy", "sterilization_cobalt_60",
-                "industrial_thickness_monitoring", "thickness_gauge_beta_sources",
-                "leak_detection_pipes", "level_monitoring_containers",
-                "radiography_welds_structures", "smoke_detector_americium_241",
-                "carbon_14_dating_principle", "carbon_14_dating_process",
-                "carbon_14_dating_limitations", "uranium_lead_dating_rocks",
-                "food_irradiation_preservation", "mutation_breeding_crops",
-                "sterile_insect_technique", "nuclear_fission_uranium_235",
-                "nuclear_fission_chain_reaction", "nuclear_reactor_components",
-                "nuclear_fission_advantages", "nuclear_fission_disadvantages",
-                "nuclear_fusion_light_nuclei", "nuclear_fusion_sun",
-                "nuclear_fusion_advantages", "nuclear_fusion_experimental"
+            "Magnetism and Electromagnetism": [
+                # Magnetic Materials and Domains
+                "magnetic_materials_ferromagnetic", "soft_iron_vs_hard_steel",
+                "magnetic_domains_concept", "domain_theory_magnetization",
+                # Magnetic Poles and Fields
+                "magnetic_poles_north_south", "like_poles_repel",
+                "magnetic_field_lines", "field_line_properties",
+                # Magnetization and Demagnetization
+                "magnetization_methods_stroking", "magnetization_electrical",
+                "demagnetization_methods", "temporary_permanent_magnets",
+                # Electromagnetism
+                "magnetic_effect_current", "right_hand_grip_rule",
+                "solenoid_magnetic_field", "electromagnet_construction",
+                "electromagnet_applications",
+                # Motor Effect
+                "motor_effect_force_on_wire", "flemings_left_hand_rule",
+                "force_factors_current_field", "dc_motor_operation",
+                "split_ring_commutator", "increasing_motor_force_speed",
+                # Electromagnetic Induction
+                "electromagnetic_induction_concept", "faradays_law",
+                "lenzs_law_opposes_change", "inducing_emf_methods",
+                "ac_generator_operation", "slip_rings_brushes",
+                # Transformers
+                "transformer_structure", "transformer_equation_vp_vs",
+                "step_up_step_down", "transformer_power_equation",
+                "power_transmission_high_voltage", "reducing_power_losses"
+            ],
+            "Electronics (Logic Gates, Components)": [
+                # Analogue and Digital Signals
+                "analogue_signals_continuous", "digital_signals_discrete",
+                "advantages_digital_signals", "binary_representation",
+                # Logic Gates
+                "not_gate_inverter", "not_gate_truth_table",
+                "and_gate_function", "and_gate_truth_table",
+                "or_gate_function", "or_gate_truth_table",
+                "nand_gate_function", "nand_gate_truth_table",
+                "nor_gate_function", "nor_gate_truth_table",
+                "universal_gates_nand_nor", "combined_logic_circuits",
+                "drawing_truth_tables", "logic_circuit_analysis",
+                # Electronic Components
+                "led_operation", "led_protective_resistor",
+                "relay_operation", "relay_applications",
+                "variable_resistor_rheostat", "potential_divider_sensors",
+                "thermistor_applications", "ldr_applications"
+            ],
+            "Atomic and Nuclear Physics (Modern Physics)": [
+                # Atomic Structure
+                "rutherford_scattering_experiment", "rutherford_conclusions",
+                "nuclear_model_atom", "nucleus_protons_neutrons",
+                "electrons_orbits_shells", "proton_number_z",
+                "nucleon_number_a", "isotope_definition",
+                "isotope_examples", "radioactive_isotopes",
+                # Radioactivity
+                "radioactivity_spontaneous_random", "types_of_radiation",
+                "alpha_particle_properties", "alpha_ionizing_penetrating",
+                "alpha_stopped_by", "beta_particle_properties",
+                "beta_ionizing_penetrating", "beta_stopped_by",
+                "gamma_ray_properties", "gamma_ionizing_penetrating",
+                "gamma_reduced_by", "comparing_radiation_types",
+                "detecting_radiation_gm_tube", "background_radiation_sources",
+                # Half-Life
+                "half_life_definition", "half_life_calculations",
+                "half_life_graphs", "radioactive_decay_curves",
+                # Uses of Radioisotopes
+                "medical_tracers", "radiotherapy_cancer_treatment",
+                "carbon_14_dating", "industrial_applications",
+                "smoke_detectors", "sterilization_applications",
+                # Nuclear Fission and Fusion
+                "nuclear_fission_splitting", "chain_reaction_concept",
+                "nuclear_reactor_components", "nuclear_fusion_joining",
+                "fusion_in_sun_stars", "fusion_advantages_challenges",
+                # Safety
+                "radiation_hazards", "safety_precautions_handling",
+                "distance_shielding_time", "radiation_warning_symbol"
             ]
         }
     

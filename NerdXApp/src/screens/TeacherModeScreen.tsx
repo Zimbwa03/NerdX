@@ -12,6 +12,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StatusBar,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -75,14 +76,18 @@ const TeacherModeScreen: React.FC = () => {
   const startSession = async () => {
     try {
       setLoading(true);
+      console.log('Starting Teacher Mode session with:', { subject, gradeLevel, topic });
+
       const sessionData = await teacherApi.startSession(subject, gradeLevel, topic);
-      if (sessionData) {
+      console.log('Session data received:', sessionData);
+
+      if (sessionData && sessionData.session_id) {
         setSession(sessionData);
         setMessages([
           {
             id: '1',
             role: 'assistant',
-            content: sessionData.initial_message,
+            content: sessionData.initial_message || 'Welcome to Teacher Mode! How can I help you learn today?',
             timestamp: new Date(),
           },
         ]);
@@ -91,11 +96,19 @@ const TeacherModeScreen: React.FC = () => {
           const newCredits = (user.credits || 0) - 3; // Teacher mode start costs 3 credits
           updateUser({ credits: newCredits });
         }
+      } else {
+        console.error('Invalid session data:', sessionData);
+        Alert.alert(
+          'Error',
+          'Failed to start Teacher Mode session. Please try again.'
+        );
+        navigation.goBack();
       }
     } catch (error: any) {
+      console.error('Teacher Mode error:', error);
       Alert.alert(
         'Error',
-        error.response?.data?.message || 'Failed to start Teacher Mode session'
+        error.response?.data?.message || error.message || 'Failed to start Teacher Mode session'
       );
       navigation.goBack();
     } finally {
@@ -338,6 +351,33 @@ const TeacherModeScreen: React.FC = () => {
       <View style={[styles.centerContainer, { backgroundColor: themedColors.background.default }]}>
         <ActivityIndicator size="large" color={themedColors.primary.main} />
         <Text style={[styles.loadingText, { color: themedColors.text.secondary }]}>Starting Teacher Mode...</Text>
+      </View>
+    );
+  }
+
+  // Show error state if session failed to initialize
+  if (!session) {
+    return (
+      <View style={[styles.centerContainer, { backgroundColor: themedColors.background.default }]}>
+        <Text style={{ fontSize: 48, marginBottom: 16 }}>😔</Text>
+        <Text style={[styles.loadingText, { color: themedColors.text.primary, fontSize: 18, fontWeight: 'bold' }]}>
+          Unable to start Teacher Mode
+        </Text>
+        <Text style={[styles.loadingText, { color: themedColors.text.secondary, textAlign: 'center', paddingHorizontal: 40 }]}>
+          There was an issue connecting to the teacher. Please try again.
+        </Text>
+        <TouchableOpacity
+          style={{ marginTop: 20, backgroundColor: themedColors.primary.main, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 }}
+          onPress={() => startSession()}
+        >
+          <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Retry</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={{ marginTop: 12 }}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={{ color: themedColors.text.secondary }}>Go Back</Text>
+        </TouchableOpacity>
       </View>
     );
   }

@@ -1,26 +1,36 @@
 // Main App Component
 import React from 'react';
-import { StatusBar } from 'react-native';
+import { StatusBar, View, StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { AuthProvider } from './src/context/AuthContext';
+import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import ErrorBoundary from './src/components/ErrorBoundary';
+import { NerdXLiveButton } from './src/components/NerdXLiveButton';
 
-// Inner component that uses theme
+// Inner component that uses theme and auth
 const AppContent: React.FC = () => {
   const { isDarkMode } = useTheme();
+  const { isAuthenticated } = useAuth();
 
   return (
-    <>
+    <View style={styles.container}>
       <StatusBar
         barStyle={isDarkMode ? "light-content" : "dark-content"}
         backgroundColor={isDarkMode ? "#0A0E21" : "#FAFAFA"}
       />
       <AppNavigator />
-    </>
+      {/* NerdX Live floating button - only available when logged in */}
+      {isAuthenticated && <NerdXLiveButton />}
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});
 
 const App: React.FC = () => {
   return (

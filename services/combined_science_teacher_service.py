@@ -539,12 +539,8 @@ Current conversation context will be provided with each message."""
         return cleaned
     
     def _get_gemini_teaching_response(self, user_id: str, message_text: str, session_data: dict) -> str:
-        """Get teaching response from Gemini AI"""
+        """Get teaching response - uses DeepSeek as primary, Gemini as fallback"""
         try:
-            if not self._is_gemini_configured or not self.gemini_model:
-                logger.warning(f"Gemini AI not configured for {user_id}, using fallback")
-                return self._get_fallback_teaching_response(message_text, session_data)
-            
             # Build context
             subject = session_data.get('subject', 'Science')
             grade_level = session_data.get('grade_level', 'O-Level')
@@ -562,18 +558,51 @@ Current conversation context will be provided with each message."""
                     context += f"{role}: {msg['content']}\n"
             
             # Create full prompt
-            full_prompt = f"{self.TEACHER_SYSTEM_PROMPT}\n\n{context}\n\nStudent's message: {message_text}\n\nYour response:"
+            full_prompt = f"{context}\n\nStudent's message: {message_text}\n\nYour response:"
             
-            try:
-                response = self.gemini_model.generate_content(full_prompt)
-                if response and response.text:
-                    return response.text.strip()
-                else:
-                    logger.warning(f"Gemini returned empty response for {user_id}")
-                    return self._try_deepseek_teaching_fallback(user_id, message_text, session_data, full_prompt)
-            except Exception as gemini_error:
-                logger.error(f"Gemini API error for {user_id}: {gemini_error}", exc_info=True)
-                return self._try_deepseek_teaching_fallback(user_id, message_text, session_data, full_prompt)
+            # Try DeepSeek FIRST (primary provider)
+            if self._is_deepseek_configured:
+                try:
+                    response = requests.post(
+                        self.deepseek_api_url,
+                        headers={
+                            'Content-Type': 'application/json',
+                            'Authorization': f'Bearer {self.deepseek_api_key}'
+                        },
+                        json={
+                            'model': 'deepseek-chat',
+                            'messages': [
+                                {'role': 'system', 'content': self.TEACHER_SYSTEM_PROMPT},
+                                {'role': 'user', 'content': full_prompt}
+                            ],
+                            'temperature': 0.7,
+                            'max_tokens': 2000
+                        },
+                        timeout=60
+                    )
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        if 'choices' in data and len(data['choices']) > 0:
+                            ai_text = data['choices'][0]['message']['content'].strip()
+                            logger.info(f"✅ DeepSeek AI generated teaching response for {user_id}")
+                            return ai_text
+                except Exception as deepseek_error:
+                    logger.error(f"DeepSeek API error for {user_id}: {deepseek_error}")
+            
+            # Try Gemini as fallback ONLY if DeepSeek fails
+            if self._is_gemini_configured and self.gemini_model:
+                try:
+                    full_gemini_prompt = f"{self.TEACHER_SYSTEM_PROMPT}\n\n{full_prompt}"
+                    response = self.gemini_model.generate_content(full_gemini_prompt)
+                    if response and response.text:
+                        logger.info(f"✅ Gemini AI fallback generated response for {user_id}")
+                        return response.text.strip()
+                except Exception as gemini_error:
+                    logger.error(f"Gemini API fallback error for {user_id}: {gemini_error}")
+            
+            # Final fallback
+            return self._get_fallback_teaching_response(message_text, session_data)
             
         except Exception as e:
             logger.error(f"Error getting AI teaching response: {e}", exc_info=True)

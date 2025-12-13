@@ -22,6 +22,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
 import { Colors } from '../theme/colors';
+import VoiceMathInput from '../components/VoiceMathInput';
 
 type Mode = 'generate' | 'custom' | 'upload' | 'linear';
 
@@ -90,22 +91,48 @@ const GraphPracticeScreen: React.FC = () => {
 
       // Generate Animation (Manim) if supported
       if (graphType === 'quadratic' || graphType === 'linear') {
-        let animResult = null;
-        if (graphType === 'quadratic') {
-          // Default values for demo: y = x^2
-          animResult = await graphApi.generateQuadraticAnimation(1, 0, 0);
-        } else if (graphType === 'linear') {
-          // Default values for demo: y = x
-          animResult = await graphApi.generateLinearAnimation(1, 0);
-        }
+        try {
+          setVideoLoading(true);
+          let animResult = null;
+          if (graphType === 'quadratic') {
+            // Default values for demo: y = x^2
+            animResult = await graphApi.generateQuadraticAnimation(1, 0, 0);
+          } else if (graphType === 'linear') {
+            // Default values for demo: y = x
+            animResult = await graphApi.generateLinearAnimation(1, 0);
+          }
 
-        if (animResult && animResult.video_path) {
-          // Construct full URL - backend returns "/static/..."
-          const baseUrl = 'https://nerdx.onrender.com';
-          const videoPath = animResult.video_path.startsWith('/')
-            ? animResult.video_path
-            : '/' + animResult.video_path;
-          setVideoUrl(baseUrl + videoPath);
+          if (animResult && animResult.video_path) {
+            // Construct full URL - backend returns "/static/..."
+            const baseUrl = 'https://nerdx.onrender.com';
+            const videoPath = animResult.video_path.startsWith('/')
+              ? animResult.video_path
+              : '/' + animResult.video_path;
+            const fullVideoUrl = baseUrl + videoPath;
+
+            // Validate the video URL is accessible before setting
+            try {
+              const response = await fetch(fullVideoUrl, { method: 'HEAD' });
+              if (response.ok) {
+                setVideoUrl(fullVideoUrl);
+              } else {
+                console.warn('Video URL not accessible:', response.status);
+                setVideoError('Animation video is not available. The server may still be generating it.');
+              }
+            } catch (fetchError) {
+              console.warn('Could not validate video URL:', fetchError);
+              // Still try to set the URL - the Video component will handle the error
+              setVideoUrl(fullVideoUrl);
+            }
+          } else {
+            console.log('Animation not available for this graph type');
+            // Don't show error for animation not available - it's optional
+          }
+        } catch (animError: any) {
+          console.warn('Animation generation failed:', animError);
+          setVideoError('Animation service is currently unavailable. Graph image is still available above.');
+        } finally {
+          setVideoLoading(false);
         }
       }
 
@@ -352,15 +379,24 @@ const GraphPracticeScreen: React.FC = () => {
           <Text style={[styles.hintText, { color: themedColors.text.secondary }]}>
             Examples: y = 2x + 3, y = x^2, y = sin(x), y = 2^x
           </Text>
-          <TextInput
-            style={[styles.equationInput, { backgroundColor: themedColors.background.paper, borderColor: themedColors.border.light, color: themedColors.text.primary }]}
-            value={customEquation}
-            onChangeText={setCustomEquation}
-            placeholder="e.g., y = 2x + 3"
-            placeholderTextColor={themedColors.text.hint}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
+          <View style={styles.inputWithVoice}>
+            <TextInput
+              style={[styles.equationInput, styles.inputFlex, { backgroundColor: themedColors.background.paper, borderColor: themedColors.border.light, color: themedColors.text.primary }]}
+              value={customEquation}
+              onChangeText={setCustomEquation}
+              placeholder="e.g., y = 2x + 3"
+              placeholderTextColor={themedColors.text.hint}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <VoiceMathInput
+              onTranscription={(text) => setCustomEquation(prev => prev ? `${prev} ${text}` : text)}
+              disabled={loading}
+            />
+          </View>
+          <Text style={[styles.voiceHintText, { color: themedColors.text.secondary }]}>
+            🎤 Tap mic to speak equation (e.g., "y equals 2x squared plus 3")
+          </Text>
           <TouchableOpacity
             style={[styles.generateButton, { backgroundColor: themedColors.primary.main }, loading && styles.generateButtonDisabled]}
             onPress={handleCustomGraph}
@@ -467,20 +503,23 @@ const GraphPracticeScreen: React.FC = () => {
             </View>
           )}
 
-          {videoUrl && (
+          {(videoUrl || videoError || videoLoading) && (
             <View style={styles.videoContainer}>
               <Text style={[styles.questionLabel, { color: themedColors.text.primary }]}>Visualization:</Text>
 
-              {videoLoading && (
+              {videoLoading && !videoError && (
                 <View style={styles.videoLoadingContainer}>
                   <ActivityIndicator size="large" color={themedColors.primary.main} />
-                  <Text style={[styles.videoLoadingText, { color: themedColors.text.secondary }]}>Loading video...</Text>
+                  <Text style={[styles.videoLoadingText, { color: themedColors.text.secondary }]}>Generating animation...</Text>
                 </View>
               )}
 
               {videoError && (
-                <View style={[styles.videoErrorContainer, { backgroundColor: isDarkMode ? 'rgba(244,67,54,0.2)' : '#FFEBEE' }]}>
-                  <Text style={[styles.videoErrorText, { color: '#F44336' }]}>⚠️ {videoError}</Text>
+                <View style={[styles.videoErrorContainer, { backgroundColor: isDarkMode ? 'rgba(244,67,54,0.2)' : '#FFEBEE', padding: 15, borderRadius: 8 }]}>
+                  <Text style={[styles.videoErrorText, { color: '#F44336', textAlign: 'center', marginBottom: 10 }]}>⚠️ {videoError}</Text>
+                  <Text style={[{ color: themedColors.text.secondary, fontSize: 12, textAlign: 'center', marginBottom: 10 }]}>
+                    The animation requires Manim to be running on the server. The graph image above is still available.
+                  </Text>
                   <TouchableOpacity
                     style={[styles.retryButton, { backgroundColor: themedColors.primary.main }]}
                     onPress={handleGenerate}
@@ -503,9 +542,9 @@ const GraphPracticeScreen: React.FC = () => {
                     onLoadStart={() => setVideoLoading(true)}
                     onLoad={() => setVideoLoading(false)}
                     onError={(error) => {
-                      console.error('Video error:', error);
+                      console.error('Video playback error:', error);
                       setVideoLoading(false);
-                      setVideoError('Failed to load video. The format may not be supported.');
+                      setVideoError('Failed to load video. The animation server may be unavailable or the video format is not supported.');
                     }}
                     onPlaybackStatusUpdate={(status: AVPlaybackStatus) => {
                       if (status.isLoaded && videoLoading) {
@@ -596,14 +635,23 @@ const GraphPracticeScreen: React.FC = () => {
             {!showSolution && (
               <View style={styles.answerContainer}>
                 <Text style={[styles.answerLabel, { color: themedColors.text.primary }]}>Your Answer:</Text>
-                <TextInput
-                  style={[styles.answerInput, { backgroundColor: themedColors.background.paper, borderColor: themedColors.border.light, color: themedColors.text.primary }]}
-                  value={answer}
-                  onChangeText={setAnswer}
-                  placeholder="Enter your answer..."
-                  placeholderTextColor={themedColors.text.hint}
-                  multiline
-                />
+                <View style={styles.inputWithVoice}>
+                  <TextInput
+                    style={[styles.answerInput, styles.inputFlex, { backgroundColor: themedColors.background.paper, borderColor: themedColors.border.light, color: themedColors.text.primary }]}
+                    value={answer}
+                    onChangeText={setAnswer}
+                    placeholder="Enter your answer..."
+                    placeholderTextColor={themedColors.text.hint}
+                    multiline
+                  />
+                  <VoiceMathInput
+                    onTranscription={(text) => setAnswer(prev => prev ? `${prev} ${text}` : text)}
+                    disabled={showSolution}
+                  />
+                </View>
+                <Text style={[styles.voiceHintText, { color: themedColors.text.secondary }]}>
+                  🎤 Tap mic to speak your answer
+                </Text>
                 <TouchableOpacity
                   style={[styles.submitButton, { backgroundColor: themedColors.success.main }]}
                   onPress={handleSubmitAnswer}
@@ -864,6 +912,18 @@ const styles = StyleSheet.create({
     minHeight: 100,
     textAlignVertical: 'top',
     marginBottom: 15,
+  },
+  inputWithVoice: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  inputFlex: {
+    flex: 1,
+  },
+  voiceHintText: {
+    fontSize: 12,
+    fontStyle: 'italic',
+    marginBottom: 12,
   },
   submitButton: {
     backgroundColor: '#4CAF50',

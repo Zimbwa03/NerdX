@@ -725,6 +725,79 @@ def generate_question():
         error_message = str(e) if str(e) else 'Server error'
         return jsonify({'success': False, 'message': f'Failed to generate question: {error_message}'}), 500
 
+@mobile_bp.route('/quiz/exam/next', methods=['POST'])
+@require_auth
+def get_next_exam_question():
+    """Get next exam question from olevel_maths table (hybrid: DB images + AI)"""
+    try:
+        data = request.get_json()
+        question_count = data.get('question_count', 1)
+        year = data.get('year')
+        paper = data.get('paper')
+        
+        # Check credits
+        credit_cost = advanced_credit_service.get_credit_cost('mathematics_exam')
+        user_credits = get_user_credits(g.current_user_id) or 0
+        
+        if user_credits < credit_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {credit_cost}, Available: {user_credits}'
+            }), 400
+        
+        # Import the math exam service
+        from services.math_exam_service import math_exam_service
+        
+        # Get next question (hybrid: DB or AI based on question_count)
+        question_data = math_exam_service.get_next_question(
+            g.current_user_id,
+            question_count,
+            year,
+            paper
+        )
+        
+        if not question_data:
+            return jsonify({'success': False, 'message': 'Failed to get exam question'}), 500
+        
+        # Deduct credits
+        deduct_credits(g.current_user_id, credit_cost, 'math_exam', f'Math exam question #{question_count}')
+        
+        # Filter out None values from answer_image_urls if present
+        if 'answer_image_urls' in question_data:
+            question_data['answer_image_urls'] = [
+                url for url in question_data['answer_image_urls'] if url
+            ]
+        
+        # Format question for mobile
+        question = {
+            'id': question_data.get('id', str(uuid.uuid4())),
+            'type': question_data.get('type', 'db_image'),
+            'question_text': question_data.get('question_text', 'Solve the problem shown in the image.'),
+            'question_image_url': question_data.get('question_image_url'),
+            'answer_image_urls': question_data.get('answer_image_urls', []),
+            'options': question_data.get('options', []),
+            'correct_answer': question_data.get('correct_answer', ''),
+            'solution': question_data.get('solution', ''),
+            'explanation': question_data.get('explanation', ''),
+            'topic': question_data.get('topic', ''),
+            'year': question_data.get('year', ''),
+            'difficulty': question_data.get('difficulty', 'medium'),
+            'allows_text_input': question_data.get('allows_text_input', True),
+            'allows_image_upload': question_data.get('allows_image_upload', True),
+            'is_ai': question_data.get('is_ai', False),
+            'points': 10
+        }
+        
+        return jsonify({
+            'success': True,
+            'data': question
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get exam question error: {e}", exc_info=True)
+        error_message = str(e) if str(e) else 'Server error'
+        return jsonify({'success': False, 'message': f'Failed to get exam question: {error_message}'}), 500
+
 @mobile_bp.route('/quiz/submit-answer', methods=['POST'])
 @require_auth
 def submit_answer():
@@ -2820,6 +2893,56 @@ def solve_equation():
         logger.error(f"Solve equation error: {e}", exc_info=True)
         return jsonify({'success': False, 'message': str(e)}), 500
 
+
+@mobile_bp.route('/math/voice-to-text', methods=['POST'])
+@require_auth
+def voice_to_math():
+    """
+    Convert voice recording to formatted mathematical text
+    Uses open-source Whisper for transcription + custom math parser
+    """
+    try:
+        # Check if audio file is in request
+        if 'audio' not in request.files:
+            return jsonify({
+                'success': False,
+                'message': 'Audio file is required'
+            }), 400
+        
+        audio_file = request.files['audio']
+        
+        if not audio_file.filename:
+            return jsonify({
+                'success': False,
+                'message': 'Invalid audio file'
+            }), 400
+        
+        # Read audio data
+        audio_data = audio_file.read()
+        filename = secure_filename(audio_file.filename)
+        
+        # Process with voice math service
+        from services.voice_math_service import voice_math_service
+        result = voice_math_service.process_voice_input(audio_data, filename)
+        
+        if result['success']:
+            return jsonify({
+                'success': True,
+                'data': {
+                    'text': result['text'],
+                    'original_transcription': result['original_transcription']
+                }
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'message': result.get('error', 'Failed to process voice input')
+            }), 500
+            
+    except Exception as e:
+        logger.error(f"Voice to math error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 @mobile_bp.route('/math/differentiate', methods=['POST'])
 @require_auth
 def differentiate():
@@ -3345,3 +3468,129 @@ def text_to_speech():
             
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
+# ============================================================================
+# FLASHCARD GENERATION ENDPOINTS (AI-Powered Study Cards)
+# ============================================================================
+
+@mobile_bp.route('/flashcards/generate', methods=['POST'])
+@require_auth
+def generate_flashcards():
+    """
+    Generate AI-powered flashcards for a science topic.
+    
+    Request body:
+        subject: string - 'Biology', 'Chemistry', or 'Physics'
+        topic: string - Topic name
+        count: int - Number of flashcards to generate (max 100 per batch)
+        notes_content: string - Optional notes content to base flashcards on
+    
+    Returns:
+        flashcards: Array of flashcard objects
+    """
+    try:
+        data = request.get_json()
+        
+        subject = data.get('subject', '')
+        topic = data.get('topic', '')
+        count = min(int(data.get('count', 20)), 100)  # Cap at 100
+        notes_content = data.get('notes_content', '')
+        
+        if not subject or not topic:
+            return jsonify({
+                'success': False,
+                'message': 'Subject and topic are required'
+            }), 400
+        
+        # Validate subject
+        if subject not in ['Biology', 'Chemistry', 'Physics']:
+            return jsonify({
+                'success': False,
+                'message': 'Invalid subject. Must be Biology, Chemistry, or Physics'
+            }), 400
+        
+        from services.flashcard_service import flashcard_service
+        
+        flashcards = flashcard_service.generate_flashcards(
+            subject=subject,
+            topic=topic,
+            notes_content=notes_content,
+            count=count
+        )
+        
+        logger.info(f"✅ Generated {len(flashcards)} flashcards for {topic} ({subject})")
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'flashcards': flashcards,
+                'count': len(flashcards),
+                'subject': subject,
+                'topic': topic
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Generate flashcards error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Failed to generate flashcards'}), 500
+
+
+@mobile_bp.route('/flashcards/generate-single', methods=['POST'])
+@require_auth
+def generate_single_flashcard():
+    """
+    Generate a single flashcard (for streaming mode with >100 cards).
+    
+    Request body:
+        subject: string - 'Biology', 'Chemistry', or 'Physics'
+        topic: string - Topic name
+        index: int - Card number in sequence (0-indexed)
+        notes_content: string - Notes content
+        previous_questions: array - List of previous questions to avoid
+    
+    Returns:
+        flashcard: Single flashcard object
+    """
+    try:
+        data = request.get_json()
+        
+        subject = data.get('subject', '')
+        topic = data.get('topic', '')
+        index = int(data.get('index', 0))
+        notes_content = data.get('notes_content', '')
+        previous_questions = data.get('previous_questions', [])
+        
+        if not subject or not topic:
+            return jsonify({
+                'success': False,
+                'message': 'Subject and topic are required'
+            }), 400
+        
+        from services.flashcard_service import flashcard_service
+        
+        flashcard = flashcard_service.generate_single_flashcard(
+            subject=subject,
+            topic=topic,
+            notes_content=notes_content,
+            index=index,
+            previous_questions=previous_questions
+        )
+        
+        if flashcard:
+            return jsonify({
+                'success': True,
+                'data': {
+                    'flashcard': flashcard,
+                    'index': index
+                }
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Failed to generate flashcard'
+            }), 500
+        
+    except Exception as e:
+        logger.error(f"Generate single flashcard error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Failed to generate flashcard'}), 500
+

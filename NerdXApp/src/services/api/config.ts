@@ -7,13 +7,8 @@ import { Platform } from 'react-native';
 // IMPORTANT: For APK builds, update this to your actual backend URL
 // For development: use localhost (Android emulator uses 10.0.2.2 to access host machine's localhost)
 // For production: use your deployed backend URL on Render
-export const API_BASE_URL = __DEV__
-  ? (Platform.OS === 'web'
-    ? 'https://nerdx.onrender.com'  // Use production for web testing
-    : Platform.OS === 'android'
-      ? 'http://10.0.2.2:5000'
-      : 'http://localhost:5000')
-  : 'https://nerdx.onrender.com'; // Production - Render backend URL
+// NOTE: Changed to always use Render server for testing NerdX Live feature
+export const API_BASE_URL = 'https://nerdx.onrender.com';
 
 console.log('🌐 API Base URL:', API_BASE_URL);
 console.log('🔧 Platform:', Platform.OS);

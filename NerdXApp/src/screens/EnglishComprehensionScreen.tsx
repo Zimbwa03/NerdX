@@ -22,6 +22,7 @@ import { useAuth } from '../context/AuthContext';
 import { Colors } from '../theme/colors';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
+import LoadingProgress from '../components/LoadingProgress';
 
 const { width } = Dimensions.get('window');
 
@@ -38,6 +39,7 @@ const EnglishComprehensionScreen: React.FC = () => {
   const [gradingResult, setGradingResult] = useState<GradingResult | null>(null);
   const [summaryResult, setSummaryResult] = useState<SummaryGradingResult | null>(null);
   const [activeTab, setActiveTab] = useState<'questions' | 'summary'>('questions');
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const handleGenerate = async () => {
     if ((user?.credits || 0) < 3) {
@@ -51,6 +53,7 @@ const EnglishComprehensionScreen: React.FC = () => {
 
     try {
       setLoading(true);
+      setIsGenerating(true);
       setSubmitted(false);
       setGradingResult(null);
       setSummaryResult(null);
@@ -69,6 +72,7 @@ const EnglishComprehensionScreen: React.FC = () => {
       Alert.alert('Error', error.response?.data?.message || 'Failed to generate comprehension');
     } finally {
       setLoading(false);
+      setIsGenerating(false);
     }
   };
 
@@ -131,6 +135,13 @@ const EnglishComprehensionScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: themedColors.background.default }]}>
+      {/* AI Loading Progress Overlay */}
+      <LoadingProgress
+        visible={isGenerating}
+        message="Generating comprehension passage..."
+        estimatedTime={10}
+      />
+
       <LinearGradient
         colors={themedColors.gradients.primary}
         style={styles.overlay}

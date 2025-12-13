@@ -21,6 +21,7 @@ import { Card } from '../components/Card';
 import { Modal, ModalOptionCard } from '../components/Modal';
 import { Colors, getColors } from '../theme/colors';
 import { useThemedColors } from '../theme/useThemedStyles';
+import LoadingProgress from '../components/LoadingProgress';
 
 const { width } = Dimensions.get('window');
 
@@ -40,6 +41,7 @@ const TopicsScreen: React.FC = () => {
   const [currentParentSubject, setCurrentParentSubject] = useState<string | undefined>(parentSubject);
   const [pharmaModalVisible, setPharmaModalVisible] = useState(false);
   const [selectedPharmaTopic, setSelectedPharmaTopic] = useState<Topic | null>(null);
+  const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
 
   useEffect(() => {
     if (subject.id === 'combined_science') {
@@ -196,6 +198,9 @@ const TopicsScreen: React.FC = () => {
             text: 'Start',
             onPress: async () => {
               try {
+                // Show AI loading progress
+                setIsGeneratingQuestion(true);
+
                 const question = await quizApi.generateQuestion(
                   subject.id,
                   topic?.id,
@@ -204,6 +209,10 @@ const TopicsScreen: React.FC = () => {
                   topic?.parent_subject || (subject.id === 'combined_science' ? activeTab : currentParentSubject),  // parent_subject for Combined Science
                   questionType  // Pass question type (e.g., for Pharmacology)
                 );
+
+                // Hide loading before navigation
+                setIsGeneratingQuestion(false);
+
                 if (question) {
                   navigation.navigate('Quiz' as never, { question, subject, topic } as never);
                   // Update user credits
@@ -211,6 +220,7 @@ const TopicsScreen: React.FC = () => {
                   updateUser({ credits: newCredits });
                 }
               } catch (error: any) {
+                setIsGeneratingQuestion(false);
                 Alert.alert('Error', error.response?.data?.message || 'Failed to start quiz');
               }
             },
@@ -272,6 +282,13 @@ const TopicsScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: themedColors.background.default }]}>
+      {/* AI Loading Progress Overlay */}
+      <LoadingProgress
+        visible={isGeneratingQuestion}
+        message="Preparing your personalized question..."
+        estimatedTime={8}
+      />
+
       <StatusBar
         barStyle={isDarkMode ? "light-content" : "dark-content"}
         backgroundColor={themedColors.background.default}

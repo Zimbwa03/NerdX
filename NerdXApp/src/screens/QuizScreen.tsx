@@ -28,6 +28,8 @@ import { Button } from '../components/Button';
 import { Colors } from '../theme/colors';
 import { useThemedColors } from '../theme/useThemedStyles';
 import LoadingProgress from '../components/LoadingProgress';
+import MathText from '../components/MathText';
+import VoiceMathInput from '../components/VoiceMathInput';
 
 const QuizScreen: React.FC = () => {
   const route = useRoute();
@@ -142,7 +144,8 @@ const QuizScreen: React.FC = () => {
         subject?.id,
         question.correct_answer,
         question.solution,
-        question.hint
+        question.hint,
+        question.question_text
       );
       if (answerResult) {
         setResult(answerResult);
@@ -331,6 +334,13 @@ const QuizScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: themedColors.background.default }]}>
+      {/* AI Loading Progress Overlay */}
+      <LoadingProgress
+        visible={generatingQuestion}
+        message="Generating your next question..."
+        estimatedTime={8}
+      />
+
       <StatusBar
         barStyle={isDarkMode ? "light-content" : "dark-content"}
         backgroundColor={themedColors.background.default}
@@ -369,7 +379,7 @@ const QuizScreen: React.FC = () => {
                   />
                   <Text style={styles.questionLabel}>Question</Text>
                 </View>
-                <Text style={styles.questionText}>{question.question_text}</Text>
+                <MathText style={styles.questionTextContainer} fontSize={16}>{question.question_text}</MathText>
 
                 {/* Question Image */}
                 {question.question_image_url && (
@@ -445,15 +455,32 @@ const QuizScreen: React.FC = () => {
               {question.allows_text_input && !result && (
                 <View style={styles.answerInputContainer}>
                   <Text style={styles.answerInputLabel}>Your Answer:</Text>
-                  <TextInput
-                    style={styles.answerInput}
-                    value={textAnswer}
-                    onChangeText={setTextAnswer}
-                    placeholder="Enter your answer here..."
-                    placeholderTextColor={Colors.text.secondary}
-                    multiline
-                    editable={!result}
-                  />
+                  <View style={styles.answerInputRow}>
+                    <TextInput
+                      style={[styles.answerInput, styles.answerInputFlex]}
+                      value={textAnswer}
+                      onChangeText={setTextAnswer}
+                      placeholder="Enter your answer here..."
+                      placeholderTextColor={Colors.text.secondary}
+                      multiline
+                      editable={!result}
+                    />
+                    {/* Voice-to-Math button for Mathematics */}
+                    {subject?.id === 'mathematics' && (
+                      <VoiceMathInput
+                        onTranscription={(text) => {
+                          // Append to existing answer or set new
+                          setTextAnswer(prev => prev ? `${prev} ${text}` : text);
+                        }}
+                        disabled={!!result}
+                      />
+                    )}
+                  </View>
+                  {subject?.id === 'mathematics' && (
+                    <Text style={styles.voiceHintText}>
+                      🎤 Tip: Tap mic to speak your answer (e.g., "2x squared plus 3")
+                    </Text>
+                  )}
                 </View>
               )}
 
@@ -567,19 +594,19 @@ const QuizScreen: React.FC = () => {
                   {result.solution && (
                     <View style={styles.solutionContainer}>
                       <Text style={styles.solutionTitle}>📚 Detailed Solution:</Text>
-                      <Text style={styles.solutionText}>{result.solution}</Text>
+                      <MathText>{result.solution}</MathText>
                     </View>
                   )}
                   {result.hint && !result.correct && (
                     <View style={styles.hintContainer}>
                       <Text style={styles.hintTitle}>💡 Additional Hint:</Text>
-                      <Text style={styles.hintText}>{result.hint}</Text>
+                      <MathText>{result.hint}</MathText>
                     </View>
                   )}
                   {question.explanation && (
                     <View style={styles.explanationContainer}>
                       <Text style={styles.explanationTitle}>📖 Teaching Explanation:</Text>
-                      <Text style={styles.explanationText}>{question.explanation}</Text>
+                      <MathText>{question.explanation}</MathText>
                     </View>
                   )}
                 </Card>
@@ -738,6 +765,9 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
     lineHeight: 28,
     fontWeight: '500',
+  },
+  questionTextContainer: {
+    marginTop: 4,
   },
   optionsContainer: {
     marginBottom: 20,
@@ -965,6 +995,19 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
     minHeight: 100,
     textAlignVertical: 'top',
+  },
+  answerInputRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  answerInputFlex: {
+    flex: 1,
+  },
+  voiceHintText: {
+    fontSize: 12,
+    color: Colors.text.secondary,
+    marginTop: 8,
+    fontStyle: 'italic',
   },
   imageUploadContainer: {
     marginBottom: 20,

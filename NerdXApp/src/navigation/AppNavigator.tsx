@@ -33,6 +33,29 @@ import MathSolverScreen from '../screens/MathSolverScreen';
 import OfflineSettingsScreen from '../screens/OfflineSettingsScreen';
 import ModelDownloadScreen from '../screens/ModelDownloadScreen';
 
+// Virtual Lab Simulation Screens
+import CellExplorerScreen from '../screens/virtualLab/CellExplorerScreen';
+import OsmosisScreen from '../screens/virtualLab/OsmosisScreen';
+import AtomBuilderScreen from '../screens/virtualLab/AtomBuilderScreen';
+import EquationBalancerScreen from '../screens/virtualLab/EquationBalancerScreen';
+import CircuitBuilderScreen from '../screens/virtualLab/CircuitBuilderScreen';
+import ProjectileMotionScreen from '../screens/virtualLab/ProjectileMotionScreen';
+// Phase 2 - Biology
+import FoodTestLabScreen from '../screens/virtualLab/FoodTestLabScreen';
+import PhotosynthesisReactorScreen from '../screens/virtualLab/PhotosynthesisReactorScreen';
+import EnzymeActionLabScreen from '../screens/virtualLab/EnzymeActionLabScreen';
+import TranspirationTrackerScreen from '../screens/virtualLab/TranspirationTrackerScreen';
+import HeartPumpScreen from '../screens/virtualLab/HeartPumpScreen';
+// Phase 2 - Chemistry
+import TitrationMasterScreen from '../screens/virtualLab/TitrationMasterScreen';
+import pHScaleExplorerScreen from '../screens/virtualLab/pHScaleExplorerScreen';
+import ElectrolysisSimulatorScreen from '../screens/virtualLab/ElectrolysisSimulatorScreen';
+// Phase 2 - Physics
+import MotionGrapherScreen from '../screens/virtualLab/MotionGrapherScreen';
+import NewtonsLawsLabScreen from '../screens/virtualLab/NewtonsLawsLabScreen';
+import ThermalExpansionScreen from '../screens/virtualLab/ThermalExpansionScreen';
+import WavePropertiesScreen from '../screens/virtualLab/WavePropertiesScreen';
+
 const Stack = createStackNavigator();
 
 const LoadingScreen: React.FC = () => (
@@ -205,6 +228,99 @@ const AppNavigator: React.FC = () => {
               options={{
                 headerShown: false,
               }}
+            />
+            {/* Virtual Lab Simulation Screens */}
+            <Stack.Screen
+              name="CellExplorer"
+              component={CellExplorerScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Osmosis"
+              component={OsmosisScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="AtomBuilder"
+              component={AtomBuilderScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="EquationBalancer"
+              component={EquationBalancerScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="CircuitBuilder"
+              component={CircuitBuilderScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="ProjectileMotion"
+              component={ProjectileMotionScreen}
+              options={{ headerShown: false }}
+            />
+            {/* Phase 2 Virtual Lab Screens */}
+            <Stack.Screen
+              name="FoodTestLab"
+              component={FoodTestLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="pHScaleExplorer"
+              component={pHScaleExplorerScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="WaveProperties"
+              component={WavePropertiesScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="ThermalExpansion"
+              component={ThermalExpansionScreen}
+              options={{ headerShown: false }}
+            />
+            {/* Additional Phase 2 Screens */}
+            <Stack.Screen
+              name="PhotosynthesisReactor"
+              component={PhotosynthesisReactorScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="EnzymeActionLab"
+              component={EnzymeActionLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="TranspirationTracker"
+              component={TranspirationTrackerScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="HeartPump"
+              component={HeartPumpScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="TitrationMaster"
+              component={TitrationMasterScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="ElectrolysisSimulator"
+              component={ElectrolysisSimulatorScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="MotionGrapher"
+              component={MotionGrapherScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="NewtonsLawsLab"
+              component={NewtonsLawsLabScreen}
+              options={{ headerShown: false }}
             />
             <Stack.Screen
               name="FormulaSheet"

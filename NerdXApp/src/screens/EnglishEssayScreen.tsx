@@ -30,6 +30,7 @@ import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
+import LoadingProgress from '../components/LoadingProgress';
 
 const { width } = Dimensions.get('window');
 
@@ -44,6 +45,7 @@ const EnglishEssayScreen: React.FC = () => {
   // State management
   const [essayType, setEssayType] = useState<EssayType>(null);
   const [loading, setLoading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Free Response state
   const [freeTopics, setFreeTopics] = useState<FreeResponseTopic[]>([]);
@@ -64,6 +66,7 @@ const EnglishEssayScreen: React.FC = () => {
   // Handle essay type selection
   const handleSelectEssayType = async (type: 'free_response' | 'guided') => {
     setLoading(true);
+    setIsGenerating(true);
     try {
       if (type === 'free_response') {
         const topics = await englishApi.getFreeResponseTopics();
@@ -80,6 +83,7 @@ const EnglishEssayScreen: React.FC = () => {
       Alert.alert('Error', error.response?.data?.message || 'Failed to load essay prompts');
     } finally {
       setLoading(false);
+      setIsGenerating(false);
     }
   };
 
@@ -191,6 +195,13 @@ const EnglishEssayScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: themedColors.background.default }]}>
+      {/* AI Loading Progress Overlay */}
+      <LoadingProgress
+        visible={isGenerating}
+        message="Preparing essay prompts..."
+        estimatedTime={8}
+      />
+
       <LinearGradient
         colors={themedColors.gradients.primary}
         style={styles.overlay}

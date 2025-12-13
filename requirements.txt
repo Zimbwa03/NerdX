@@ -8,6 +8,11 @@ flask-dance>=7.0.0
 werkzeug>=3.0.0
 gunicorn>=22.0.0
 
+# FastAPI for Real-time Voice Agent (NerdX Live)
+fastapi>=0.115.0
+uvicorn>=0.32.0
+websockets>=12.0
+
 # Build tools (required for Python 3.13)
 setuptools>=68.0.0
 wheel>=0.41.0

@@ -98,14 +98,12 @@ class MathExamService:
             # 1. Get count (simplified: just fetch up to 100 and pick one)
             # In production, use proper count query.
             
-            query_params = {
-                'select': '*',
-                'limit': 50 
-            }
+            # Build filters for Supabase query
+            filters = {}
             if year:
-                query_params['year'] = f"eq.{year}"
+                filters['year'] = f"eq.{year}"
                 
-            response = make_supabase_request('olevel_maths', 'GET', params=query_params)
+            response = make_supabase_request('GET', 'olevel_maths', filters=filters, limit=50)
             
             if not response or not isinstance(response, list) or len(response) == 0:
                 logger.warning("No DB questions found, falling back to AI")

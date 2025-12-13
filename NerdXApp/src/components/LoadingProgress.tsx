@@ -27,8 +27,11 @@ export const LoadingProgress: React.FC<LoadingProgressProps> = ({
     onComplete,
 }) => {
     const [progress, setProgress] = useState(0);
+    const [showOverlay, setShowOverlay] = useState(false);
     const progressAnim = useRef(new Animated.Value(0)).current;
     const pulseAnim = useRef(new Animated.Value(1)).current;
+    const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const pulseLoopRef = useRef<Animated.CompositeAnimation | null>(null);
 
     // Progress stages
     const stages = [
@@ -40,10 +43,10 @@ export const LoadingProgress: React.FC<LoadingProgressProps> = ({
         { threshold: 100, text: '✅ Almost ready!' },
     ];
 
-    const getCurrentStage = (progress: number) => {
-        for (const stage of stages) {
-            if (progress < stage.threshold) {
-                return stage.text;
+    const getCurrentStage = (currentProgress: number) => {
+        for (const s of stages) {
+            if (currentProgress < s.threshold) {
+                return s.text;
             }
         }
         return stages[stages.length - 1].text;
@@ -51,26 +54,27 @@ export const LoadingProgress: React.FC<LoadingProgressProps> = ({
 
     useEffect(() => {
         if (visible) {
+            // Show overlay and start progress animation
+            setShowOverlay(true);
             setProgress(0);
             progressAnim.setValue(0);
 
-            // Simulate progress with natural curve (fast start, slow middle, fast end)
+            // Simulate progress with natural curve
             const intervalTime = (estimatedTime * 1000) / 100;
             let currentProgress = 0;
 
-            const progressInterval = setInterval(() => {
-                // Non-linear progress curve
+            progressIntervalRef.current = setInterval(() => {
                 let increment = 1;
                 if (currentProgress < 20) {
-                    increment = 2.5; // Fast start
+                    increment = 2.5;
                 } else if (currentProgress < 60) {
-                    increment = 0.8; // Slow middle
+                    increment = 0.8;
                 } else if (currentProgress < 85) {
-                    increment = 0.5; // Very slow near end
+                    increment = 0.5;
                 } else if (currentProgress < 95) {
-                    increment = 0.3; // Almost stuck
+                    increment = 0.3;
                 } else {
-                    increment = 0.1; // Wait for completion
+                    increment = 0.1;
                 }
 
                 currentProgress = Math.min(95, currentProgress + increment);
@@ -83,8 +87,8 @@ export const LoadingProgress: React.FC<LoadingProgressProps> = ({
                 }).start();
             }, intervalTime);
 
-            // Pulse animation for the percentage
-            const pulseLoop = Animated.loop(
+            // Pulse animation
+            pulseLoopRef.current = Animated.loop(
                 Animated.sequence([
                     Animated.timing(pulseAnim, {
                         toValue: 1.1,
@@ -98,26 +102,47 @@ export const LoadingProgress: React.FC<LoadingProgressProps> = ({
                     }),
                 ])
             );
-            pulseLoop.start();
+            pulseLoopRef.current.start();
+        } else if (!visible && showOverlay) {
+            // Visible just became false - complete to 100% then hide
+            if (progressIntervalRef.current) {
+                clearInterval(progressIntervalRef.current);
+                progressIntervalRef.current = null;
+            }
 
-            return () => {
-                clearInterval(progressInterval);
-                pulseLoop.stop();
-            };
-        } else if (progress > 0 && progress < 100) {
-            // Complete the progress when loading finishes
+            // Animate to 100%
             setProgress(100);
             Animated.timing(progressAnim, {
                 toValue: 1,
                 duration: 300,
                 useNativeDriver: false,
             }).start(() => {
-                onComplete?.();
+                // Brief delay to show 100% before hiding
+                setTimeout(() => {
+                    if (pulseLoopRef.current) {
+                        pulseLoopRef.current.stop();
+                        pulseLoopRef.current = null;
+                    }
+                    setShowOverlay(false);
+                    setProgress(0);
+                    onComplete?.();
+                }, 400);
             });
         }
+
+        // Cleanup on unmount
+        return () => {
+            if (progressIntervalRef.current) {
+                clearInterval(progressIntervalRef.current);
+            }
+            if (pulseLoopRef.current) {
+                pulseLoopRef.current.stop();
+            }
+        };
     }, [visible]);
 
-    if (!visible && progress === 0) {
+    // Only show when showOverlay is true
+    if (!showOverlay) {
         return null;
     }
 

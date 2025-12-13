@@ -28,11 +28,13 @@ export const teacherApi = {
     topic?: string
   ): Promise<TeacherSession | null> => {
     try {
+      console.log('teacherApi.startSession called with:', { subject, grade_level, topic });
       const response = await api.post('/api/mobile/teacher/start', {
         subject,
         grade_level,
         topic,
       });
+      console.log('teacherApi.startSession response:', response.data);
       return response.data.data || null;
     } catch (error: any) {
       console.error('Start teacher session error:', error);

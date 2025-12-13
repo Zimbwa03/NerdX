@@ -23,6 +23,7 @@ import Markdown from 'react-native-markdown-display';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
 import AudioStreamPlayer from '../components/AudioStreamPlayer';
+import FlashcardSection from '../components/FlashcardSection';
 
 const { width } = Dimensions.get('window');
 
@@ -292,6 +293,16 @@ const TopicNotesDetailScreen: React.FC = () => {
                                 ))}
                             </LinearGradient>
                         </View>
+                    )}
+
+                    {/* AI Flashcards Section - All Science topics */}
+                    {(subject === 'Biology' || subject === 'Chemistry' || subject === 'Physics') && notes && (
+                        <FlashcardSection
+                            subject={subject}
+                            topic={topic}
+                            notes={notes}
+                            accentColor={getSubjectColor()}
+                        />
                     )}
                 </ScrollView>
             </LinearGradient>

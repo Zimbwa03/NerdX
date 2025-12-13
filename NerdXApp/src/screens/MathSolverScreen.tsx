@@ -18,6 +18,7 @@ import { mathApi, MathSolution } from '../services/api/mathApi';
 import { Colors } from '../theme/colors';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
+import VoiceMathInput from '../components/VoiceMathInput';
 
 const MathSolverScreen: React.FC = () => {
     const { isDarkMode } = useTheme();
@@ -127,6 +128,15 @@ const MathSolverScreen: React.FC = () => {
                     </View>
 
                     <View style={styles.actionButtons}>
+                        <View style={styles.voiceButtonContainer}>
+                            <VoiceMathInput
+                                onTranscription={(text) => {
+                                    setProblem(prev => prev ? `${prev} ${text}` : text);
+                                }}
+                                disabled={loading}
+                            />
+                        </View>
+
                         <TouchableOpacity style={[styles.scanButton, { backgroundColor: themedColors.secondary.main }]} onPress={handleScan}>
                             <Ionicons name="camera" size={24} color="#FFF" />
                             <Text style={styles.buttonText}>Scan</Text>
@@ -147,6 +157,10 @@ const MathSolverScreen: React.FC = () => {
                             )}
                         </TouchableOpacity>
                     </View>
+
+                    <Text style={[styles.voiceHintText, { color: themedColors.text.secondary }]}>
+                        🎤 Tap mic to speak your equation (e.g., "x squared plus 5x plus 6 equals 0")
+                    </Text>
                 </View>
 
                 {/* Image Preview */}
@@ -260,6 +274,16 @@ const styles = StyleSheet.create({
     actionButtons: {
         flexDirection: 'row',
         gap: 12,
+    },
+    voiceButtonContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    voiceHintText: {
+        fontSize: 12,
+        marginTop: 12,
+        fontStyle: 'italic',
+        textAlign: 'center',
     },
     scanButton: {
         flex: 1,

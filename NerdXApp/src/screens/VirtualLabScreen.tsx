@@ -1,284 +1,234 @@
-// Virtual Lab Screen - Interactive Science Simulations
-import React, { useState, useRef, useEffect } from 'react';
+// Virtual Lab Screen - Simulation Selection Hub
+// Refactored to serve as entry point for all 6 Phase 1 simulations
+
+import React, { useState } from 'react';
 import {
     View,
     Text,
     StyleSheet,
     ScrollView,
     TouchableOpacity,
-    Animated,
     Dimensions,
-    Alert,
     StatusBar,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
-import { Colors } from '../theme/colors';
-import { Icons, IconCircle } from '../components/Icons';
-import { Card } from '../components/Card';
+import { SimulationCard } from '../components/virtualLab';
+import { PHASE1_SIMULATIONS, PHASE2_SIMULATIONS, getAllSimulations, SUBJECT_COLORS, Subject } from '../data/virtualLab';
 
 const { width } = Dimensions.get('window');
 
+type FilterOption = 'all' | Subject;
+
 const VirtualLabScreen: React.FC = () => {
-    const navigation = useNavigation();
+    const navigation = useNavigation<any>();
     const { isDarkMode } = useTheme();
     const themedColors = useThemedColors();
-    const [activeLab, setActiveLab] = useState<'physics' | 'chemistry' | 'biology'>('physics');
+    const [activeFilter, setActiveFilter] = useState<FilterOption>('all');
 
-    // Physics State (Pendulum)
-    const [length, setLength] = useState(1.0); // meters
-    const [angle, setAngle] = useState(0);
-    const pendulumAnim = useRef(new Animated.Value(0)).current;
-    const [isOscillating, setIsOscillating] = useState(false);
+    // Get all simulations from both phases
+    const allSimulations = getAllSimulations();
 
-    // Chemistry State (Titration)
-    const [titrantVolume, setTitrantVolume] = useState(0);
-    const [ph, setPh] = useState(1); // Acidic start
-    const [solutionColor, setSolutionColor] = useState('#FFCDD2'); // Pinkish red (acid with indicator?) or clear? Let's say Phenolphthalein: Clear in acid, Pink in base.
-    // Let's model Strong Acid (HCl) + Strong Base (NaOH) with Phenolphthalein.
-    // Start: Acid (Clear). End: Base (Pink).
+    // Filter simulations based on active filter
+    const filteredSimulations = activeFilter === 'all'
+        ? allSimulations
+        : allSimulations.filter(sim => sim.subject === activeFilter);
 
-    // Biology State (Photosynthesis)
-    const [lightIntensity, setLightIntensity] = useState(50);
-    const [bubbleCount, setBubbleCount] = useState(0);
+    // Calculate stats
+    const totalXP = allSimulations.reduce((sum, sim) => sum + sim.xpReward, 0);
+    const totalSimulations = allSimulations.length;
 
-    // --- Physics Logic ---
-    useEffect(() => {
-        if (activeLab === 'physics' && isOscillating) {
-            const period = 2 * Math.PI * Math.sqrt(length / 9.8); // T = 2*pi*sqrt(L/g)
-            const duration = period * 1000; // ms
+    const handleSimulationPress = (simulationId: string) => {
+        // Map simulation IDs to screen names
+        const screenMap: Record<string, string> = {
+            // Phase 1
+            'cell-explorer': 'CellExplorer',
+            'osmosis-adventure': 'Osmosis',
+            'atom-builder': 'AtomBuilder',
+            'equation-balancer': 'EquationBalancer',
+            'circuit-builder': 'CircuitBuilder',
+            'projectile-motion': 'ProjectileMotion',
+            // Phase 2
+            'food-test-lab': 'FoodTestLab',
+            'photosynthesis-reactor': 'PhotosynthesisReactor',
+            'enzyme-action-lab': 'EnzymeActionLab',
+            'transpiration-tracker': 'TranspirationTracker',
+            'heart-pump': 'HeartPump',
+            'titration-master': 'TitrationMaster',
+            'ph-scale-explorer': 'pHScaleExplorer',
+            'electrolysis-simulator': 'ElectrolysisSimulator',
+            'motion-grapher': 'MotionGrapher',
+            'newtons-laws-lab': 'NewtonsLawsLab',
+            'thermal-expansion': 'ThermalExpansion',
+            'wave-properties': 'WaveProperties',
+        };
 
-            Animated.loop(
-                Animated.sequence([
-                    Animated.timing(pendulumAnim, {
-                        toValue: 1,
-                        duration: duration / 4,
-                        useNativeDriver: true,
-                    }),
-                    Animated.timing(pendulumAnim, {
-                        toValue: -1,
-                        duration: duration / 2,
-                        useNativeDriver: true,
-                    }),
-                    Animated.timing(pendulumAnim, {
-                        toValue: 0,
-                        duration: duration / 4,
-                        useNativeDriver: true,
-                    }),
-                ])
-            ).start();
-        } else {
-            pendulumAnim.setValue(0);
-        }
-    }, [length, isOscillating, activeLab]);
-
-    const pendulumRotation = pendulumAnim.interpolate({
-        inputRange: [-1, 1],
-        outputRange: ['-30deg', '30deg'],
-    });
-
-    // --- Chemistry Logic ---
-    const addTitrant = () => {
-        const newVol = titrantVolume + 1;
-        setTitrantVolume(newVol);
-
-        // Simple simulation: Equivalence point at 25ml
-        // pH curve approximation
-        let newPh = ph;
-        if (newVol < 20) newPh = 1 + (newVol * 0.1);
-        else if (newVol < 25) newPh = 3 + (newVol - 20); // Steep rise
-        else if (newVol === 25) newPh = 7;
-        else newPh = 11 + ((newVol - 25) * 0.1);
-
-        setPh(Math.min(14, newPh));
-
-        // Color change (Phenolphthalein)
-        if (newPh >= 8.2) {
-            setSolutionColor('#F48FB1'); // Pink
-        } else {
-            setSolutionColor('#E0F7FA'); // Clear/Watery
+        const screenName = screenMap[simulationId];
+        if (screenName) {
+            navigation.navigate(screenName);
         }
     };
 
-    const resetTitration = () => {
-        setTitrantVolume(0);
-        setPh(1);
-        setSolutionColor('#E0F7FA');
-    };
-
-    // --- Biology Logic ---
-    useEffect(() => {
-        let interval: NodeJS.Timeout;
-        if (activeLab === 'biology') {
-            // Rate of photosynthesis proportional to light intensity (simplified)
-            // Bubbles per second
-            const rate = lightIntensity / 20; // Max 5 bubbles/sec approx
-            if (rate > 0) {
-                interval = setInterval(() => {
-                    setBubbleCount(c => c + 1);
-                }, 1000 / rate);
-            }
-        }
-        return () => clearInterval(interval);
-    }, [lightIntensity, activeLab]);
-
-
-    const renderPhysicsLab = () => (
-        <View style={[styles.labContainer, { backgroundColor: themedColors.background.paper }]}>
-            <Text style={[styles.labTitle, { color: themedColors.text.primary }]}>Simple Pendulum</Text>
-            <Text style={[styles.labDescription, { color: themedColors.text.secondary }]}>
-                Investigate how length affects the period of oscillation.
-            </Text>
-
-            <View style={[styles.simulationArea, { backgroundColor: isDarkMode ? '#2c2c2c' : '#E0E0E0' }]}>
-                <View style={[styles.pendulumSupport, { backgroundColor: themedColors.text.primary }]} />
-                <Animated.View style={[styles.pendulumString, { height: length * 150, transform: [{ rotate: pendulumRotation }], backgroundColor: themedColors.text.primary }]}>
-                    <View style={[styles.pendulumBob, { backgroundColor: themedColors.primary.main }]} />
-                </Animated.View>
-            </View>
-
-            <View style={styles.controls}>
-                <Text style={[styles.controlLabel, { color: themedColors.text.primary }]}>String Length: {length.toFixed(1)}m</Text>
-                <View style={styles.buttonRow}>
-                    <TouchableOpacity onPress={() => setLength(Math.max(0.1, length - 0.1))} style={[styles.controlBtn, { backgroundColor: themedColors.background.subtle }]}>
-                        <Text style={[styles.btnText, { color: themedColors.text.primary }]}>-</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => setLength(Math.min(2.0, length + 0.1))} style={[styles.controlBtn, { backgroundColor: themedColors.background.subtle }]}>
-                        <Text style={[styles.btnText, { color: themedColors.text.primary }]}>+</Text>
-                    </TouchableOpacity>
-                </View>
-
-                <TouchableOpacity
-                    style={[styles.actionBtn, isOscillating ? styles.stopBtn : styles.startBtn]}
-                    onPress={() => setIsOscillating(!isOscillating)}
-                >
-                    <Text style={styles.actionBtnText}>{isOscillating ? 'Stop' : 'Start Oscillation'}</Text>
-                </TouchableOpacity>
-
-                <View style={styles.readout}>
-                    <Text style={[styles.readoutText, { color: themedColors.secondary.main }]}>Period (T): {(2 * Math.PI * Math.sqrt(length / 9.8)).toFixed(2)}s</Text>
-                </View>
-            </View>
-        </View>
-    );
-
-    const renderChemistryLab = () => (
-        <View style={[styles.labContainer, { backgroundColor: themedColors.background.paper }]}>
-            <Text style={[styles.labTitle, { color: themedColors.text.primary }]}>Acid-Base Titration</Text>
-            <Text style={[styles.labDescription, { color: themedColors.text.secondary }]}>
-                Neutralize the acid by adding base. Watch for the color change!
-            </Text>
-
-            <View style={[styles.simulationArea, { backgroundColor: isDarkMode ? '#2c2c2c' : '#E0E0E0' }]}>
-                <View style={[styles.burette, { borderColor: themedColors.text.primary }]}>
-                    <View style={[styles.buretteLiquid, { height: `${100 - (titrantVolume * 2)}%`, backgroundColor: themedColors.secondary.main }]} />
-                </View>
-                <View style={[styles.flask, { backgroundColor: solutionColor, borderColor: themedColors.text.primary }]}>
-                    <Text style={[styles.flaskLabel, { color: '#333' }]}>{titrantVolume}mL added</Text>
-                </View>
-            </View>
-
-            <View style={styles.controls}>
-                <Text style={[styles.controlLabel, { color: themedColors.text.primary }]}>pH Level: {ph.toFixed(1)}</Text>
-
-                <TouchableOpacity style={[styles.actionBtn, { backgroundColor: themedColors.primary.main }]} onPress={addTitrant}>
-                    <Text style={styles.actionBtnText}>Add 1mL Base (NaOH)</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={[styles.actionBtn, styles.resetBtn, { backgroundColor: themedColors.warning.dark }]} onPress={resetTitration}>
-                    <Text style={styles.actionBtnText}>Reset Experiment</Text>
-                </TouchableOpacity>
-            </View>
-        </View>
-    );
-
-    const renderBiologyLab = () => (
-        <View style={[styles.labContainer, { backgroundColor: themedColors.background.paper }]}>
-            <Text style={[styles.labTitle, { color: themedColors.text.primary }]}>Photosynthesis Rate</Text>
-            <Text style={[styles.labDescription, { color: themedColors.text.secondary }]}>
-                Observe how light intensity affects oxygen production (bubbles).
-            </Text>
-
-            <View style={[styles.simulationArea, { backgroundColor: isDarkMode ? '#2c2c2c' : '#E0E0E0' }]}>
-                <View style={[styles.lamp, { opacity: lightIntensity / 100 }]} />
-                <View style={[styles.beaker, { borderColor: themedColors.text.primary }]}>
-                    <View style={styles.plant} />
-                    {/* Animated bubbles would go here, simplified as a counter for now */}
-                    <View style={styles.bubblesContainer}>
-                        {Array.from({ length: Math.min(10, bubbleCount % 15) }).map((_, i) => (
-                            <View key={i} style={[styles.bubble, { bottom: i * 15, left: Math.random() * 40 }]} />
-                        ))}
-                    </View>
-                </View>
-            </View>
-
-            <View style={styles.controls}>
-                <Text style={[styles.controlLabel, { color: themedColors.text.primary }]}>Light Intensity: {lightIntensity}%</Text>
-                <View style={styles.buttonRow}>
-                    <TouchableOpacity onPress={() => setLightIntensity(Math.max(0, lightIntensity - 10))} style={[styles.controlBtn, { backgroundColor: themedColors.background.subtle }]}>
-                        <Text style={[styles.btnText, { color: themedColors.text.primary }]}>-</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => setLightIntensity(Math.min(100, lightIntensity + 10))} style={[styles.controlBtn, { backgroundColor: themedColors.background.subtle }]}>
-                        <Text style={[styles.btnText, { color: themedColors.text.primary }]}>+</Text>
-                    </TouchableOpacity>
-                </View>
-
-                <View style={styles.readout}>
-                    <Text style={[styles.readoutText, { color: themedColors.secondary.main }]}>Bubbles Counted: {bubbleCount}</Text>
-                    <Text style={[styles.readoutSubText, { color: themedColors.text.secondary }]}>Rate: {(lightIntensity / 20).toFixed(1)} bubbles/sec</Text>
-                </View>
-
-                <TouchableOpacity style={[styles.actionBtn, styles.resetBtn, { backgroundColor: themedColors.warning.dark }]} onPress={() => setBubbleCount(0)}>
-                    <Text style={styles.actionBtnText}>Reset Count</Text>
-                </TouchableOpacity>
-            </View>
-        </View>
-    );
+    const filterOptions: { key: FilterOption; label: string; color: string }[] = [
+        { key: 'all', label: 'All', color: themedColors.primary.main },
+        { key: 'biology', label: 'Biology', color: SUBJECT_COLORS.biology.primary },
+        { key: 'chemistry', label: 'Chemistry', color: SUBJECT_COLORS.chemistry.primary },
+        { key: 'physics', label: 'Physics', color: SUBJECT_COLORS.physics.primary },
+    ];
 
     return (
         <View style={[styles.container, { backgroundColor: themedColors.background.default }]}>
-            <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={themedColors.background.default} />
+            <StatusBar barStyle="light-content" />
 
+            {/* Header */}
             <LinearGradient
-                colors={themedColors.gradients.primary}
+                colors={['#1976D2', '#1565C0']}
                 style={styles.header}
             >
-                <View style={styles.headerContent}>
-                    <TouchableOpacity onPress={() => navigation.goBack()}>
-                        <Text style={styles.backButton}>← Back</Text>
+                <View style={styles.headerTop}>
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                        <Ionicons name="arrow-back" size={24} color="#FFF" />
                     </TouchableOpacity>
-                    <Text style={styles.title}>Virtual Labs</Text>
-                    <View style={{ width: 40 }} />
+                    <View style={styles.headerTitle}>
+                        <Text style={styles.title}>Virtual Lab</Text>
+                        <Text style={styles.subtitle}>Interactive Science Simulations</Text>
+                    </View>
+                    <View style={styles.headerStats}>
+                        <View style={styles.statBadge}>
+                            <Ionicons name="star" size={14} color="#FFD700" />
+                            <Text style={styles.statText}>{totalXP} XP</Text>
+                        </View>
+                    </View>
+                </View>
+
+                {/* Stats Row */}
+                <View style={styles.statsRow}>
+                    <View style={styles.statItem}>
+                        <Text style={styles.statNumber}>{totalSimulations}</Text>
+                        <Text style={styles.statLabel}>Simulations</Text>
+                    </View>
+                    <View style={[styles.statDivider, { backgroundColor: '#FFFFFF30' }]} />
+                    <View style={styles.statItem}>
+                        <Text style={styles.statNumber}>3</Text>
+                        <Text style={styles.statLabel}>Subjects</Text>
+                    </View>
+                    <View style={[styles.statDivider, { backgroundColor: '#FFFFFF30' }]} />
+                    <View style={styles.statItem}>
+                        <Text style={styles.statNumber}>Phase 1</Text>
+                        <Text style={styles.statLabel}>MVP Ready</Text>
+                    </View>
                 </View>
             </LinearGradient>
 
-            <View style={[styles.tabBar, { backgroundColor: themedColors.background.paper }]}>
-                <TouchableOpacity
-                    style={[styles.tab, activeLab === 'physics' && { backgroundColor: themedColors.primary.main }]}
-                    onPress={() => setActiveLab('physics')}
+            <ScrollView
+                style={styles.content}
+                contentContainerStyle={styles.contentContainer}
+                showsVerticalScrollIndicator={false}
+            >
+                {/* Filter Tabs */}
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.filterContainer}
+                    contentContainerStyle={styles.filterContent}
                 >
-                    <Text style={[styles.tabText, { color: themedColors.text.secondary }, activeLab === 'physics' && styles.activeTabText]}>Physics</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.tab, activeLab === 'chemistry' && { backgroundColor: themedColors.primary.main }]}
-                    onPress={() => setActiveLab('chemistry')}
-                >
-                    <Text style={[styles.tabText, { color: themedColors.text.secondary }, activeLab === 'chemistry' && styles.activeTabText]}>Chemistry</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.tab, activeLab === 'biology' && { backgroundColor: themedColors.primary.main }]}
-                    onPress={() => setActiveLab('biology')}
-                >
-                    <Text style={[styles.tabText, { color: themedColors.text.secondary }, activeLab === 'biology' && styles.activeTabText]}>Biology</Text>
-                </TouchableOpacity>
-            </View>
+                    {filterOptions.map((option) => (
+                        <TouchableOpacity
+                            key={option.key}
+                            style={[
+                                styles.filterTab,
+                                activeFilter === option.key
+                                    ? { backgroundColor: option.color }
+                                    : { backgroundColor: themedColors.background.paper }
+                            ]}
+                            onPress={() => setActiveFilter(option.key)}
+                        >
+                            <Text style={[
+                                styles.filterText,
+                                { color: activeFilter === option.key ? '#FFF' : themedColors.text.secondary }
+                            ]}>
+                                {option.label}
+                            </Text>
+                            {activeFilter === option.key && option.key !== 'all' && (
+                                <View style={styles.filterCount}>
+                                    <Text style={styles.filterCountText}>
+                                        {PHASE1_SIMULATIONS.filter(s => s.subject === option.key).length}
+                                    </Text>
+                                </View>
+                            )}
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
 
-            <ScrollView style={styles.content}>
-                {activeLab === 'physics' && renderPhysicsLab()}
-                {activeLab === 'chemistry' && renderChemistryLab()}
-                {activeLab === 'biology' && renderBiologyLab()}
+                {/* Simulations Grid */}
+                <View style={styles.simulationsGrid}>
+                    {filteredSimulations.map((simulation) => (
+                        <SimulationCard
+                            key={simulation.id}
+                            simulation={simulation}
+                            onPress={() => handleSimulationPress(simulation.id)}
+                        />
+                    ))}
+                </View>
+
+                {/* Info Card */}
+                <View style={[styles.infoCard, { backgroundColor: themedColors.background.paper }]}>
+                    <View style={styles.infoHeader}>
+                        <Ionicons name="information-circle" size={24} color={themedColors.primary.main} />
+                        <Text style={[styles.infoTitle, { color: themedColors.text.primary }]}>
+                            About Virtual Lab
+                        </Text>
+                    </View>
+                    <Text style={[styles.infoText, { color: themedColors.text.secondary }]}>
+                        These interactive simulations are designed to help you understand key ZIMSEC O-Level
+                        science concepts through hands-on experimentation. Complete each simulation and take
+                        the knowledge check quiz to earn XP!
+                    </Text>
+
+                    <View style={styles.featuresList}>
+                        <View style={styles.featureItem}>
+                            <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
+                            <Text style={[styles.featureText, { color: themedColors.text.primary }]}>
+                                Interactive experiments
+                            </Text>
+                        </View>
+                        <View style={styles.featureItem}>
+                            <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
+                            <Text style={[styles.featureText, { color: themedColors.text.primary }]}>
+                                Knowledge check quizzes
+                            </Text>
+                        </View>
+                        <View style={styles.featureItem}>
+                            <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
+                            <Text style={[styles.featureText, { color: themedColors.text.primary }]}>
+                                XP rewards for completion
+                            </Text>
+                        </View>
+                        <View style={styles.featureItem}>
+                            <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
+                            <Text style={[styles.featureText, { color: themedColors.text.primary }]}>
+                                Aligned with ZIMSEC syllabus
+                            </Text>
+                        </View>
+                    </View>
+                </View>
+
+                {/* Coming Soon */}
+                <View style={[styles.comingSoon, { backgroundColor: isDarkMode ? '#2a2a2a' : '#FFF3E0' }]}>
+                    <Ionicons name="rocket" size={24} color="#FF9800" />
+                    <View style={styles.comingSoonContent}>
+                        <Text style={[styles.comingSoonTitle, { color: themedColors.text.primary }]}>
+                            More Simulations Coming Soon!
+                        </Text>
+                        <Text style={[styles.comingSoonText, { color: themedColors.text.secondary }]}>
+                            Phase 2 will add 12 more simulations including Food Tests, Electrolysis,
+                            Thermal Expansion, and more.
+                        </Text>
+                    </View>
+                </View>
             </ScrollView>
         </View>
     );
@@ -287,241 +237,171 @@ const VirtualLabScreen: React.FC = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Colors.background.default,
     },
     header: {
         paddingTop: 50,
         paddingBottom: 20,
-        paddingHorizontal: 20,
+        paddingHorizontal: 16,
     },
-    headerContent: {
+    headerTop: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
+        marginBottom: 20,
+    },
+    backButton: {
+        padding: 8,
+        marginLeft: -8,
+    },
+    headerTitle: {
+        flex: 1,
+        marginLeft: 8,
     },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: Colors.text.white,
+        color: '#FFF',
     },
-    backButton: {
-        fontSize: 16,
-        color: Colors.text.white,
+    subtitle: {
+        fontSize: 14,
+        color: '#FFFFFF90',
+        marginTop: 2,
     },
-    tabBar: {
+    headerStats: {
+        alignItems: 'flex-end',
+    },
+    statBadge: {
         flexDirection: 'row',
-        backgroundColor: Colors.background.paper,
-        padding: 10,
-        justifyContent: 'space-around',
+        alignItems: 'center',
+        backgroundColor: '#00000030',
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 12,
+        gap: 4,
     },
-    tab: {
-        paddingVertical: 8,
-        paddingHorizontal: 16,
-        borderRadius: 20,
-    },
-    activeTab: {
-        backgroundColor: Colors.primary.main,
-    },
-    tabText: {
-        color: Colors.text.secondary,
+    statText: {
+        color: '#FFD700',
+        fontSize: 12,
         fontWeight: '600',
     },
-    activeTabText: {
-        color: Colors.text.white,
+    statsRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        backgroundColor: '#00000020',
+        borderRadius: 12,
+        paddingVertical: 12,
+    },
+    statItem: {
+        alignItems: 'center',
+        flex: 1,
+    },
+    statNumber: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#FFF',
+    },
+    statLabel: {
+        fontSize: 11,
+        color: '#FFFFFF80',
+        marginTop: 2,
+    },
+    statDivider: {
+        width: 1,
+        height: 30,
     },
     content: {
         flex: 1,
-        padding: 20,
     },
-    labContainer: {
-        backgroundColor: Colors.background.paper,
-        borderRadius: 16,
-        padding: 20,
-        alignItems: 'center',
+    contentContainer: {
+        padding: 16,
+        paddingBottom: 40,
     },
-    labTitle: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        color: Colors.text.primary,
-        marginBottom: 8,
+    filterContainer: {
+        marginBottom: 16,
+        marginHorizontal: -16,
     },
-    labDescription: {
-        fontSize: 14,
-        color: Colors.text.secondary,
-        textAlign: 'center',
-        marginBottom: 24,
+    filterContent: {
+        paddingHorizontal: 16,
+        gap: 8,
     },
-    simulationArea: {
-        width: '100%',
-        height: 300,
-        backgroundColor: '#E0E0E0', // Light bg for contrast
-        borderRadius: 12,
-        marginBottom: 20,
-        overflow: 'hidden',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
-    },
-    // Physics Styles
-    pendulumSupport: {
-        width: 100,
-        height: 4,
-        backgroundColor: '#333',
-        position: 'absolute',
-        top: 20,
-    },
-    pendulumString: {
-        width: 2,
-        backgroundColor: '#333',
-        alignItems: 'center',
-        justifyContent: 'flex-end',
-        position: 'absolute',
-        top: 20,
-        transformOrigin: 'top center', // Note: React Native might need anchor point workaround
-    },
-    pendulumBob: {
-        width: 30,
-        height: 30,
-        borderRadius: 15,
-        backgroundColor: Colors.primary.main,
-    },
-    // Chemistry Styles
-    burette: {
-        width: 20,
-        height: 150,
-        borderWidth: 2,
-        borderColor: '#333',
-        position: 'absolute',
-        top: 20,
-        backgroundColor: 'rgba(255,255,255,0.5)',
-        justifyContent: 'flex-end',
-    },
-    buretteLiquid: {
-        width: '100%',
-        backgroundColor: Colors.secondary.main,
-    },
-    flask: {
-        width: 80,
-        height: 100,
-        borderWidth: 2,
-        borderColor: '#333',
-        borderTopLeftRadius: 40,
-        borderTopRightRadius: 40,
-        borderBottomLeftRadius: 10,
-        borderBottomRightRadius: 10,
-        position: 'absolute',
-        bottom: 20,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    flaskLabel: {
-        fontSize: 10,
-        color: '#333',
-    },
-    // Biology Styles
-    lamp: {
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        backgroundColor: '#FFD700', // Sun yellow
-        position: 'absolute',
-        top: 20,
-        right: 20,
-        shadowColor: '#FFD700',
-        shadowRadius: 20,
-        shadowOpacity: 1,
-    },
-    beaker: {
-        width: 100,
-        height: 150,
-        borderWidth: 2,
-        borderColor: '#333',
-        backgroundColor: 'rgba(173, 216, 230, 0.3)', // Light blue water
-        position: 'absolute',
-        bottom: 20,
-        alignItems: 'center',
-        justifyContent: 'flex-end',
-    },
-    plant: {
-        width: 40,
-        height: 80,
-        backgroundColor: 'green',
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-    },
-    bubblesContainer: {
-        position: 'absolute',
-        width: '100%',
-        height: '100%',
-    },
-    bubble: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        backgroundColor: 'rgba(255,255,255,0.7)',
-        position: 'absolute',
-    },
-    controls: {
-        width: '100%',
-        alignItems: 'center',
-    },
-    controlLabel: {
-        fontSize: 16,
-        color: Colors.text.primary,
-        marginBottom: 10,
-    },
-    buttonRow: {
+    filterTab: {
         flexDirection: 'row',
-        gap: 20,
-        marginBottom: 20,
-    },
-    controlBtn: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
-        backgroundColor: Colors.background.subtle,
         alignItems: 'center',
-        justifyContent: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 20,
+        marginRight: 8,
+        gap: 6,
     },
-    btnText: {
-        fontSize: 24,
-        color: Colors.text.white,
-    },
-    actionBtn: {
-        paddingVertical: 12,
-        paddingHorizontal: 24,
-        backgroundColor: Colors.primary.main,
-        borderRadius: 8,
-        marginBottom: 10,
-        width: '100%',
-        alignItems: 'center',
-    },
-    startBtn: {
-        backgroundColor: Colors.success.main,
-    },
-    stopBtn: {
-        backgroundColor: Colors.error.main,
-    },
-    resetBtn: {
-        backgroundColor: Colors.warning.dark,
-    },
-    actionBtnText: {
-        color: Colors.text.white,
-        fontWeight: 'bold',
-        fontSize: 16,
-    },
-    readout: {
-        marginTop: 10,
-        alignItems: 'center',
-    },
-    readoutText: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: Colors.secondary.main,
-    },
-    readoutSubText: {
+    filterText: {
         fontSize: 14,
-        color: Colors.text.secondary,
+        fontWeight: '600',
+    },
+    filterCount: {
+        backgroundColor: '#FFFFFF30',
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 10,
+    },
+    filterCountText: {
+        color: '#FFF',
+        fontSize: 11,
+        fontWeight: 'bold',
+    },
+    simulationsGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+    },
+    infoCard: {
+        padding: 20,
+        borderRadius: 16,
+        marginTop: 8,
+        marginBottom: 16,
+    },
+    infoHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 12,
+        gap: 10,
+    },
+    infoTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    infoText: {
+        fontSize: 14,
+        lineHeight: 22,
+        marginBottom: 16,
+    },
+    featuresList: {
+        gap: 10,
+    },
+    featureItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+    },
+    featureText: {
+        fontSize: 14,
+    },
+    comingSoon: {
+        flexDirection: 'row',
+        padding: 16,
+        borderRadius: 12,
+        gap: 12,
+    },
+    comingSoonContent: {
+        flex: 1,
+    },
+    comingSoonTitle: {
+        fontSize: 14,
+        fontWeight: '600',
+        marginBottom: 4,
+    },
+    comingSoonText: {
+        fontSize: 12,
+        lineHeight: 18,
     },
 });
 

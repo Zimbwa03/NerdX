@@ -40,11 +40,20 @@ TOPICS = {
         "Experimental Techniques and Chemical Analysis"
     ],
     "Physics": [
-        "Motion, Forces and Energy",
-        "Thermal Physics",
-        "Waves",
-        "Electricity",
-        "Nuclear Physics"
+        # Measurement & Mechanics
+        "Measurement and Physical Quantities",
+        "Kinematics (Speed, Velocity, Acceleration, Graphs of Motion)",
+        "Forces (Including Machines, Turning Effects, Friction, and Mechanical Structures)",
+        "Work, Energy and Power",
+        # Thermal & Waves
+        "Thermal Physics (Kinetic Theory, Thermal Properties, Heat Transfer)",
+        "Waves (General Wave Properties, Optics, Sound)",
+        # Electricity & Magnetism
+        "Electricity (Current Electricity, Circuits)",
+        "Magnetism and Electromagnetism",
+        # Electronics & Modern Physics
+        "Electronics (Logic Gates, Components)",
+        "Atomic and Nuclear Physics (Modern Physics)"
     ],
     "Mathematics": [
         "Real Numbers",

@@ -1,5 +1,11 @@
 // Model Download Service for Phi-3 model management
-import RNFS from 'react-native-fs';
+// Note: react-native-fs requires a development build and won't work in Expo Go
+let RNFS: any = null;
+try {
+    RNFS = require('react-native-fs').default;
+} catch (error) {
+    console.warn('react-native-fs not available - model download features disabled (requires development build)');
+}
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetworkService from './NetworkService';
 
@@ -60,11 +66,13 @@ class ModelDownloadService {
 
     // Get model storage path
     private getModelPath(): string {
+        if (!RNFS) return '';
         return `${RNFS.DocumentDirectoryPath}/models/phi3-mini-4k-instruct.onnx`;
     }
 
     // Check if model is already downloaded (both files must exist)
     public async isModelDownloaded(): Promise<boolean> {
+        if (!RNFS) return false; // RNFS not available in Expo Go
         try {
             const modelPath = this.getModelPath();
             const modelDataPath = this.getModelDataPath();
@@ -101,6 +109,7 @@ class ModelDownloadService {
 
     // Check available storage space
     public async checkStorageSpace(): Promise<{ available: number; required: number; hasSpace: boolean }> {
+        if (!RNFS) return { available: 0, required: PHI3_MODEL_SIZE, hasSpace: false };
         try {
             const freeSpace = await RNFS.getFSInfo();
             const availableSpace = freeSpace.freeSpace;
@@ -119,6 +128,9 @@ class ModelDownloadService {
 
     // Download model with progress tracking - downloads BOTH files
     public async downloadModel(): Promise<void> {
+        if (!RNFS) {
+            throw new Error('Model download not available in Expo Go. Please use a development build.');
+        }
         // Check network connectivity
         if (!NetworkService.canDownloadLargeFiles()) {
             throw new Error('No network connection available for download');
@@ -254,11 +266,13 @@ class ModelDownloadService {
 
     // Get model data file path
     private getModelDataPath(): string {
+        if (!RNFS) return '';
         return `${RNFS.DocumentDirectoryPath}/models/phi3-mini-4k-instruct.onnx.data`;
     }
 
     // Clean up partial downloads
     private async cleanupPartialDownload(): Promise<void> {
+        if (!RNFS) return;
         try {
             const modelPath = this.getModelPath();
             const modelDataPath = this.getModelDataPath();
@@ -298,6 +312,7 @@ class ModelDownloadService {
 
     // Cancel download
     public async cancelDownload(): Promise<void> {
+        if (!RNFS) return;
         if (this.downloadJobId !== null) {
             await RNFS.stopDownload(this.downloadJobId);
             this.downloadJobId = null;
@@ -309,6 +324,7 @@ class ModelDownloadService {
 
     // Delete downloaded model (both files)
     public async deleteModel(): Promise<void> {
+        if (!RNFS) return;
         try {
             const modelPath = this.getModelPath();
             const modelDataPath = this.getModelDataPath();
