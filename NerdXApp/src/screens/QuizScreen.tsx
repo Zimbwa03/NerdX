@@ -704,8 +704,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingTop: 50,
-    paddingBottom: 30,
+    paddingTop: 35,
+    paddingBottom: 16,
     paddingHorizontal: 20,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
@@ -740,11 +740,11 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
   contentContainer: {
-    padding: 20,
-    paddingTop: 10,
+    padding: 16,
+    paddingTop: 8,
   },
   questionCard: {
-    marginBottom: 20,
+    marginBottom: 12,
     backgroundColor: Colors.background.paper,
     borderColor: Colors.border.light,
     borderWidth: 1,
@@ -993,7 +993,7 @@ const styles = StyleSheet.create({
     padding: 16,
     fontSize: 16,
     color: Colors.text.primary,
-    minHeight: 100,
+    minHeight: 70,
     textAlignVertical: 'top',
   },
   answerInputRow: {

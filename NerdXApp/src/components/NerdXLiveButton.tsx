@@ -19,10 +19,10 @@ import { Ionicons } from '@expo/vector-icons';
 
 const BUTTON_SIZE = 60;
 
-// WebSocket server URL - Azure App Service production
+// WebSocket server URL - Render production deployment
 const WS_URL = __DEV__
     ? 'ws://192.168.210.42:8001/ws/nerdx-live' // Local network IP for development
-    : 'wss://nerdx-voice-h0c4gtftdpf4fwd5.southafricanorth-01.azurewebsites.net/ws/nerdx-live';
+    : 'wss://nerdx-voice.onrender.com/ws/nerdx-live'; // Render production URL
 
 // Connection states
 type ConnectionState = 'idle' | 'connecting' | 'active' | 'error';

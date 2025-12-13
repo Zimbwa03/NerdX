@@ -14,6 +14,7 @@ import numpy as np
 from typing import Dict, List, Optional, Tuple
 from datetime import datetime, timedelta
 from database.external_db import get_db_connection
+from psycopg2.extras import RealDictCursor
 
 logger = logging.getLogger(__name__)
 

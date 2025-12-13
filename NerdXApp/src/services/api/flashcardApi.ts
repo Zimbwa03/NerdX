@@ -26,7 +26,7 @@ export const flashcardApi = {
         try {
             const token = await getAuthToken();
 
-            const response = await fetch(`${API_BASE_URL}/flashcards/generate`, {
+            const response = await fetch(`${API_BASE_URL}/api/mobile/flashcards/generate`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -67,7 +67,7 @@ export const flashcardApi = {
         try {
             const token = await getAuthToken();
 
-            const response = await fetch(`${API_BASE_URL}/flashcards/generate-single`, {
+            const response = await fetch(`${API_BASE_URL}/api/mobile/flashcards/generate-single`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

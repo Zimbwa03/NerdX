@@ -24,7 +24,7 @@ class MathQuestionGenerator:
 
         # Extended timeout and retry parameters for DeepSeek API V3.1 quality generation
         self.max_retries = 3  # More retries for better success rate
-        self.base_timeout = 60  # Increased timeout for DeepSeek V3.1
+        self.base_timeout = 90  # Increased timeout for DeepSeek V3.1
         self.retry_delay = 3   # Reduced delay between retries for faster response
 
     def generate_question(self, subject: str, topic: str, difficulty: str = 'medium', user_id: str = None) -> Optional[Dict]:
@@ -54,7 +54,7 @@ class MathQuestionGenerator:
                 timeouts = [45, 60]           # Adequate timeouts for complex graph questions
                 max_attempts = 3              # 3 attempts for graph questions
             else:
-                timeouts = [30, 45, 60]       # Progressive timeouts for topical questions  
+                timeouts = [45, 60, 90]        # Progressive timeouts for topical questions  
                 max_attempts = 3              # 3 attempts for quality generation
 
             for attempt in range(max_attempts):
