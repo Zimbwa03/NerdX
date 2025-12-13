@@ -1,0 +1,41 @@
+# NerdX Voice Agent - Dockerfile for AWS App Runner
+# Minimal container for real-time voice AI tutoring
+
+FROM python:3.11-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Install system dependencies for audio processing
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements for voice agent
+COPY requirements_voice.txt .
+
+# Install Python dependencies
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements_voice.txt
+
+# Copy voice agent code
+COPY services/voice_agent.py ./services/
+COPY run_voice_agent.py .
+
+# Create empty __init__.py for services module
+RUN touch services/__init__.py
+
+# Expose port
+EXPOSE 8001
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8001/health || exit 1
+
+# Start command
+CMD ["python", "run_voice_agent.py"]

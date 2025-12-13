@@ -21,6 +21,51 @@ try:
 except ImportError:
     pass
 
+import struct
+import io
+
+def convert_pcm_to_wav(pcm_base64: str, sample_rate: int = 24000, channels: int = 1, sample_width: int = 2) -> str:
+    """
+    Convert raw PCM audio to WAV format for mobile playback.
+    Gemini returns audio/pcm at 24kHz (output) or 16kHz (input) mono 16-bit.
+    Returns base64-encoded WAV data.
+    """
+    try:
+        pcm_data = base64.b64decode(pcm_base64)
+        
+        # Create WAV file in memory
+        wav_buffer = io.BytesIO()
+        
+        # WAV header parameters
+        byte_rate = sample_rate * channels * sample_width
+        block_align = channels * sample_width
+        data_size = len(pcm_data)
+        
+        # Write WAV header (44 bytes)
+        wav_buffer.write(b'RIFF')
+        wav_buffer.write(struct.pack('<I', 36 + data_size))  # File size - 8
+        wav_buffer.write(b'WAVE')
+        wav_buffer.write(b'fmt ')
+        wav_buffer.write(struct.pack('<I', 16))  # Subchunk1 size (PCM)
+        wav_buffer.write(struct.pack('<H', 1))   # Audio format (1 = PCM)
+        wav_buffer.write(struct.pack('<H', channels))
+        wav_buffer.write(struct.pack('<I', sample_rate))
+        wav_buffer.write(struct.pack('<I', byte_rate))
+        wav_buffer.write(struct.pack('<H', block_align))
+        wav_buffer.write(struct.pack('<H', sample_width * 8))  # Bits per sample
+        wav_buffer.write(b'data')
+        wav_buffer.write(struct.pack('<I', data_size))
+        wav_buffer.write(pcm_data)
+        
+        # Get WAV bytes and encode to base64
+        wav_bytes = wav_buffer.getvalue()
+        wav_base64 = base64.b64encode(wav_bytes).decode('utf-8')
+        
+        return wav_base64
+    except Exception as e:
+        logger.error(f"PCM to WAV conversion failed: {e}")
+        return pcm_base64  # Return original on error
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -65,6 +110,41 @@ async def lifespan(app: FastAPI):
         logger.info("✅ Gemini API key configured")
     yield
     logger.info("👋 NerdX Live Voice Agent shutting down...")
+
+
+def convert_m4a_to_pcm(m4a_base64: str) -> str:
+    """
+    Convert M4A/AAC audio to raw PCM for Gemini Live API.
+    Returns base64-encoded 16-bit little-endian PCM at 16kHz mono.
+    """
+    try:
+        from pydub import AudioSegment
+        import io
+        
+        # Decode base64 to bytes
+        m4a_bytes = base64.b64decode(m4a_base64)
+        
+        # Load M4A audio
+        audio = AudioSegment.from_file(io.BytesIO(m4a_bytes), format="m4a")
+        
+        # Convert to 16kHz mono 16-bit PCM
+        audio = audio.set_frame_rate(16000).set_channels(1).set_sample_width(2)
+        
+        # Export as raw PCM
+        pcm_bytes = audio.raw_data
+        
+        # Encode back to base64
+        pcm_base64 = base64.b64encode(pcm_bytes).decode('utf-8')
+        logger.info(f"🔄 Converted M4A ({len(m4a_base64)} chars) to PCM ({len(pcm_base64)} chars)")
+        return pcm_base64
+        
+    except ImportError:
+        logger.warning("pydub not installed - audio conversion disabled. Install with: pip install pydub")
+        # Return original data - Gemini will reject it but at least we tried
+        return m4a_base64
+    except Exception as e:
+        logger.error(f"Audio conversion failed: {e}")
+        return m4a_base64
 
 
 # Create FastAPI app
@@ -154,7 +234,7 @@ class GeminiLiveSession:
             return False
     
     async def send_audio_chunk(self, audio_base64: str):
-        """Send audio chunk to Gemini"""
+        """Send audio chunk to Gemini (converts M4A to PCM first)"""
         if not self.gemini_ws or not self.is_active:
             return
         
@@ -163,13 +243,16 @@ class GeminiLiveSession:
             return
             
         try:
-            logger.info(f"📤 Sending audio to Gemini, size: {len(audio_base64)} chars")
+            # Convert M4A to PCM (Gemini Live API only accepts raw PCM)
+            pcm_base64 = convert_m4a_to_pcm(audio_base64)
+            
+            logger.info(f"📤 Sending PCM audio to Gemini, size: {len(pcm_base64)} chars")
             message = {
                 "realtimeInput": {
                     "mediaChunks": [
                         {
-                            "mimeType": "audio/mp4",  # M4A/AAC format from mobile
-                            "data": audio_base64
+                            "mimeType": "audio/pcm;rate=16000",  # Raw PCM 16kHz mono
+                            "data": pcm_base64
                         }
                     ]
                 }
@@ -201,12 +284,26 @@ class GeminiLiveSession:
                                 if "inlineData" in part:
                                     inline_data = part["inlineData"]
                                     if inline_data.get("mimeType", "").startswith("audio/"):
-                                        # Forward audio to client
-                                        await self.client_ws.send_json({
-                                            "type": "audio",
-                                            "data": inline_data.get("data", ""),
-                                            "mimeType": inline_data.get("mimeType", "audio/pcm")
-                                        })
+                                        # Convert PCM to WAV for mobile playback
+                                        audio_data = inline_data.get("data", "")
+                                        mime_type = inline_data.get("mimeType", "audio/pcm")
+                                        
+                                        # If it's PCM audio, convert to WAV
+                                        if "pcm" in mime_type.lower() and audio_data:
+                                            # Gemini outputs 24kHz audio
+                                            wav_data = convert_pcm_to_wav(audio_data, sample_rate=24000)
+                                            await self.client_ws.send_json({
+                                                "type": "audio",
+                                                "data": wav_data,
+                                                "mimeType": "audio/wav"
+                                            })
+                                        else:
+                                            # Forward as-is for other formats
+                                            await self.client_ws.send_json({
+                                                "type": "audio",
+                                                "data": audio_data,
+                                                "mimeType": mime_type
+                                            })
                     
                     # Check for turn complete
                     if content.get("turnComplete"):

@@ -19,10 +19,10 @@ import { Ionicons } from '@expo/vector-icons';
 
 const BUTTON_SIZE = 60;
 
-// WebSocket server URL - update this for production
+// WebSocket server URL - Azure App Service production
 const WS_URL = __DEV__
-    ? 'ws://192.168.210.42:8001/ws/nerdx-live' // Local network IP
-    : 'wss://your-production-server.com/ws/nerdx-live';
+    ? 'ws://192.168.210.42:8001/ws/nerdx-live' // Local network IP for development
+    : 'wss://nerdx-voice-h0c4gtftdpf4fwd5.southafricanorth-01.azurewebsites.net/ws/nerdx-live';
 
 // Connection states
 type ConnectionState = 'idle' | 'connecting' | 'active' | 'error';
@@ -64,7 +64,8 @@ export const NerdXLiveButton: React.FC<NerdXLiveButtonProps> = ({
         }
 
         try {
-            const audioUri = `data:audio/mp4;base64,${audioData}`;
+            // Backend now sends WAV audio (converted from PCM)
+            const audioUri = `data:audio/wav;base64,${audioData}`;
 
             if (soundRef.current) {
                 await soundRef.current.unloadAsync();
