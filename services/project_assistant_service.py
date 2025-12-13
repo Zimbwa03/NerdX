@@ -491,7 +491,7 @@ Remember: You're their project partner! Be helpful, be thorough, and make learni
             self.whatsapp_service.send_message(user_id, fallback_msg)
     
     def _get_ai_response(self, user_id: str, message_text: str, project_data: dict) -> str:
-        """Get intelligent response from DeepSeek AI (primary) with Gemini fallback"""
+        """Get intelligent response from Gemini AI (primary) with DeepSeek fallback"""
         try:
             # Build context
             student_name = project_data.get('student_name', 'Student')
@@ -520,9 +520,21 @@ Remember: You're their project partner! Be helpful, be thorough, and make learni
 **Current Student Message:**
 {message_text}
 
-**Your Response (as the teacher):**"""
+**Your Response (as the teacher):"""
             
-            # Try DeepSeek first (primary)
+            # Try Gemini FIRST (primary)
+            if self._is_gemini_configured and self.gemini_model:
+                try:
+                    response = self.gemini_model.generate_content(full_prompt)
+                    if response and response.text:
+                        ai_text = response.text.strip()
+                        ai_text = self._clean_markdown(ai_text)
+                        logger.info(f"✅ Gemini AI generated response for {user_id} (length: {len(ai_text)})")
+                        return ai_text
+                except Exception as gemini_error:
+                    logger.error(f"Gemini API error for {user_id}: {gemini_error}", exc_info=True)
+            
+            # Try DeepSeek as fallback
             if self._is_deepseek_configured:
                 try:
                     response = requests.post(
@@ -544,22 +556,10 @@ Remember: You're their project partner! Be helpful, be thorough, and make learni
                         if 'choices' in data and len(data['choices']) > 0:
                             ai_text = data['choices'][0]['message']['content'].strip()
                             ai_text = self._clean_markdown(ai_text)
-                            logger.info(f"✅ DeepSeek AI generated response for {user_id} (length: {len(ai_text)})")
+                            logger.info(f"✅ DeepSeek AI fallback generated response for {user_id}")
                             return ai_text
                 except Exception as deepseek_error:
-                    logger.error(f"DeepSeek API error for {user_id}: {deepseek_error}", exc_info=True)
-            
-            # Try Gemini as fallback
-            if self._is_gemini_configured and self.gemini_model:
-                try:
-                    response = self.gemini_model.generate_content(full_prompt)
-                    if response and response.text:
-                        ai_text = response.text.strip()
-                        ai_text = self._clean_markdown(ai_text)
-                        logger.info(f"✅ Gemini AI fallback generated response for {user_id}")
-                        return ai_text
-                except Exception as gemini_error:
-                    logger.error(f"Gemini fallback error for {user_id}: {gemini_error}")
+                    logger.error(f"DeepSeek fallback error for {user_id}: {deepseek_error}")
             
             # Return fallback response
             return self._get_fallback_response(message_text, project_data)

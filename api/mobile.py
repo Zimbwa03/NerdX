@@ -1942,6 +1942,154 @@ def generate_teacher_notes():
         error_message = str(e) if str(e) else 'Server error'
         return jsonify({'success': False, 'message': f'Failed to generate notes: {error_message}'}), 500
 
+
+@mobile_bp.route('/teacher/multimodal', methods=['POST'])
+@require_auth
+def teacher_multimodal_message():
+    """Send message with multimodal attachments to Teacher Mode"""
+    try:
+        data = request.get_json()
+        message = data.get('message', '').strip()
+        attachments = data.get('attachments', [])
+        
+        if not message and not attachments:
+            return jsonify({'success': False, 'message': 'Message or attachments required'}), 400
+        
+        from services.combined_science_teacher_service import CombinedScienceTeacherService
+        teacher_service = CombinedScienceTeacherService()
+        
+        result = teacher_service.process_multimodal_message(
+            g.current_user_id, message, attachments
+        )
+        
+        if result.get('success'):
+            return jsonify({
+                'success': True,
+                'data': {
+                    'response': result.get('response'),
+                    'credits_remaining': result.get('credits_remaining')
+                }
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'message': result.get('error', 'Failed to process message')
+            }), 400
+            
+    except Exception as e:
+        logger.error(f"Teacher multimodal message error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/teacher/analyze-image', methods=['POST'])
+@require_auth
+def teacher_analyze_image():
+    """Analyze a science image (diagrams, lab results, etc.)"""
+    try:
+        data = request.get_json()
+        image_data = data.get('image')  # Base64-encoded
+        mime_type = data.get('mime_type', 'image/png')
+        prompt = data.get('prompt')
+        
+        if not image_data:
+            return jsonify({'success': False, 'message': 'Image data is required'}), 400
+        
+        from services.combined_science_teacher_service import CombinedScienceTeacherService
+        teacher_service = CombinedScienceTeacherService()
+        
+        result = teacher_service.analyze_science_image(
+            g.current_user_id, image_data, mime_type, prompt
+        )
+        
+        if result.get('success'):
+            return jsonify({
+                'success': True,
+                'data': {
+                    'analysis': result.get('text')
+                }
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'message': result.get('error', 'Failed to analyze image')
+            }), 400
+            
+    except Exception as e:
+        logger.error(f"Teacher analyze image error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/teacher/analyze-document', methods=['POST'])
+@require_auth
+def teacher_analyze_document():
+    """Analyze a study document (textbook pages, past papers)"""
+    try:
+        data = request.get_json()
+        document_data = data.get('document')  # Base64-encoded
+        mime_type = data.get('mime_type', 'application/pdf')
+        prompt = data.get('prompt')
+        
+        if not document_data:
+            return jsonify({'success': False, 'message': 'Document data is required'}), 400
+        
+        from services.combined_science_teacher_service import CombinedScienceTeacherService
+        teacher_service = CombinedScienceTeacherService()
+        
+        result = teacher_service.analyze_study_document(
+            g.current_user_id, document_data, mime_type, prompt
+        )
+        
+        if result.get('success'):
+            return jsonify({
+                'success': True,
+                'data': {
+                    'analysis': result.get('text')
+                }
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'message': result.get('error', 'Failed to analyze document')
+            }), 400
+            
+    except Exception as e:
+        logger.error(f"Teacher analyze document error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/teacher/search', methods=['POST'])
+@require_auth
+def teacher_web_search():
+    """Search web for science topics with Google grounding"""
+    try:
+        data = request.get_json()
+        query = data.get('query', '').strip()
+        
+        if not query:
+            return jsonify({'success': False, 'message': 'Search query is required'}), 400
+        
+        from services.combined_science_teacher_service import CombinedScienceTeacherService
+        teacher_service = CombinedScienceTeacherService()
+        
+        result = teacher_service.search_science_topic(g.current_user_id, query)
+        
+        if result.get('success'):
+            return jsonify({
+                'success': True,
+                'data': {
+                    'response': result.get('text')
+                }
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'message': result.get('error', 'Failed to search')
+            }), 400
+            
+    except Exception as e:
+        logger.error(f"Teacher web search error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 # ============================================================================
 # PROJECT ASSISTANT ENDPOINTS (Database-Backed)
 # ============================================================================

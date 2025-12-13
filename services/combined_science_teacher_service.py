@@ -23,6 +23,14 @@ except ImportError:
     genai = None
     GENAI_AVAILABLE = False
 
+# Import Gemini Interactions API Service for multimodal features
+try:
+    from services.gemini_interactions_service import get_gemini_interactions_service
+    INTERACTIONS_API_AVAILABLE = True
+except ImportError:
+    get_gemini_interactions_service = None
+    INTERACTIONS_API_AVAILABLE = False
+
 # Import requests for DeepSeek API
 import requests
 
@@ -53,6 +61,18 @@ class CombinedScienceTeacherService:
                     self._is_gemini_configured = True
         except Exception as e:
             logger.error(f"Error initializing Gemini fallback: {e}")
+        
+        # Initialize Gemini Interactions Service for multimodal features
+        self.interactions_service = None
+        self._is_interactions_configured = False
+        if INTERACTIONS_API_AVAILABLE:
+            try:
+                self.interactions_service = get_gemini_interactions_service()
+                self._is_interactions_configured = self.interactions_service.is_available()
+                if self._is_interactions_configured:
+                    logger.info("✅ Gemini Interactions API configured for Teacher Mode")
+            except Exception as e:
+                logger.error(f"Error initializing Interactions API: {e}")
         
         if self._is_deepseek_configured:
             logger.info("✅ Combined Science Teacher initialized with DeepSeek AI (primary)")
@@ -539,7 +559,7 @@ Current conversation context will be provided with each message."""
         return cleaned
     
     def _get_gemini_teaching_response(self, user_id: str, message_text: str, session_data: dict) -> str:
-        """Get teaching response - uses DeepSeek as primary, Gemini as fallback"""
+        """Get teaching response - uses Gemini as primary, DeepSeek as fallback"""
         try:
             # Build context
             subject = session_data.get('subject', 'Science')
@@ -560,7 +580,18 @@ Current conversation context will be provided with each message."""
             # Create full prompt
             full_prompt = f"{context}\n\nStudent's message: {message_text}\n\nYour response:"
             
-            # Try DeepSeek FIRST (primary provider)
+            # Try Gemini FIRST (primary provider)
+            if self._is_gemini_configured and self.gemini_model:
+                try:
+                    full_gemini_prompt = f"{self.TEACHER_SYSTEM_PROMPT}\n\n{full_prompt}"
+                    response = self.gemini_model.generate_content(full_gemini_prompt)
+                    if response and response.text:
+                        logger.info(f"✅ Gemini AI generated teaching response for {user_id}")
+                        return response.text.strip()
+                except Exception as gemini_error:
+                    logger.error(f"Gemini API error for {user_id}: {gemini_error}")
+            
+            # Try DeepSeek as fallback ONLY if Gemini fails
             if self._is_deepseek_configured:
                 try:
                     response = requests.post(
@@ -585,21 +616,10 @@ Current conversation context will be provided with each message."""
                         data = response.json()
                         if 'choices' in data and len(data['choices']) > 0:
                             ai_text = data['choices'][0]['message']['content'].strip()
-                            logger.info(f"✅ DeepSeek AI generated teaching response for {user_id}")
+                            logger.info(f"✅ DeepSeek AI fallback generated teaching response for {user_id}")
                             return ai_text
                 except Exception as deepseek_error:
-                    logger.error(f"DeepSeek API error for {user_id}: {deepseek_error}")
-            
-            # Try Gemini as fallback ONLY if DeepSeek fails
-            if self._is_gemini_configured and self.gemini_model:
-                try:
-                    full_gemini_prompt = f"{self.TEACHER_SYSTEM_PROMPT}\n\n{full_prompt}"
-                    response = self.gemini_model.generate_content(full_gemini_prompt)
-                    if response and response.text:
-                        logger.info(f"✅ Gemini AI fallback generated response for {user_id}")
-                        return response.text.strip()
-                except Exception as gemini_error:
-                    logger.error(f"Gemini API fallback error for {user_id}: {gemini_error}")
+                    logger.error(f"DeepSeek API fallback error for {user_id}: {deepseek_error}")
             
             # Final fallback
             return self._get_fallback_teaching_response(message_text, session_data)
@@ -880,6 +900,254 @@ Current conversation context will be provided with each message."""
                 user_id,
                 f"📚 *Study Notes on {topic}*\n\nI've prepared basic notes on this topic, but I'm having trouble sending the PDF. Please try requesting notes again in a few moments."
             )
+    
+    # ==================== Multimodal & Deep Research Features ====================
+    
+    def process_multimodal_message(self, user_id: str, message: str, 
+                                   attachments: List[Dict]) -> Dict:
+        """
+        Process a message with multimodal attachments (images, audio, video, documents)
+        for enhanced science teaching
+        
+        Args:
+            user_id: User ID
+            message: Text message
+            attachments: List of attachments with 'type', 'data', 'mime_type'
+            
+        Returns:
+            dict with response
+        """
+        try:
+            if not self._is_interactions_configured:
+                # Fallback to text-only processing
+                return self._handle_text_only_fallback(user_id, message)
+            
+            session_data = session_manager.get_data(user_id, 'science_teacher') or {}
+            subject = session_data.get('subject', 'Science')
+            grade_level = session_data.get('grade_level', 'O-Level')
+            topic = session_data.get('topic', 'General Science')
+            
+            # Build multimodal input
+            input_content = []
+            
+            # Add context prompt
+            context_prompt = f"""You are a professional Combined Science teacher.
+Subject: {subject}
+Grade Level: {grade_level}
+Current Topic: {topic}
+
+Student's message: {message}
+
+Analyze any provided materials (images of diagrams, lab results, documents, etc.) 
+and provide educational guidance. Explain scientific concepts clearly."""
+            
+            input_content.append({"type": "text", "text": context_prompt})
+            
+            # Add attachments
+            for attachment in attachments:
+                att_type = attachment.get('type', 'image')
+                att_data = attachment.get('data')
+                att_mime = attachment.get('mime_type', 'image/png')
+                
+                if att_type in ['image', 'audio', 'video', 'document']:
+                    input_content.append({
+                        "type": att_type,
+                        "data": att_data,
+                        "mime_type": att_mime
+                    })
+            
+            # Create interaction with multimodal content
+            result = self.interactions_service.create_interaction(
+                input_content=input_content,
+                model='flash'
+            )
+            
+            if result.get('success') and result.get('text'):
+                # Save to conversation history
+                conversation_history = session_data.get('conversation_history', [])
+                conversation_history.append({
+                    'role': 'user',
+                    'content': message,
+                    'attachments': len(attachments)
+                })
+                conversation_history.append({
+                    'role': 'assistant',
+                    'content': result['text']
+                })
+                session_data['conversation_history'] = conversation_history[-20:]
+                session_manager.set_data(user_id, 'science_teacher', session_data)
+                
+                return {
+                    'success': True,
+                    'response': result['text'],
+                    'credits_remaining': get_user_credits(user_id)
+                }
+            
+            return self._handle_text_only_fallback(user_id, message)
+            
+        except Exception as e:
+            logger.error(f"Error processing multimodal message: {e}")
+            return self._handle_text_only_fallback(user_id, message)
+    
+    def analyze_science_image(self, user_id: str, image_data: str, 
+                              mime_type: str = 'image/png',
+                              prompt: str = None) -> Dict:
+        """
+        Analyze a science-related image (diagrams, lab results, equations)
+        
+        Args:
+            user_id: User ID
+            image_data: Base64-encoded image
+            mime_type: Image MIME type
+            prompt: Optional custom prompt
+            
+        Returns:
+            dict with analysis
+        """
+        try:
+            if not self._is_interactions_configured:
+                return {'success': False, 'error': 'Image analysis not available'}
+            
+            session_data = session_manager.get_data(user_id, 'science_teacher') or {}
+            subject = session_data.get('subject', 'Science')
+            grade_level = session_data.get('grade_level', 'O-Level')
+            
+            if not prompt:
+                prompt = f"""Analyze this science image for a {grade_level} {subject} student.
+
+Please provide:
+1. Description of what the image shows
+2. Scientific explanation of the concepts depicted
+3. Key learning points for the student
+4. Related topics they should study
+5. Any exam tips related to this content"""
+            
+            result = self.interactions_service.analyze_image(
+                image_data=image_data,
+                mime_type=mime_type,
+                prompt=prompt
+            )
+            
+            if result.get('success'):
+                logger.info(f"🔬 Analyzed science image for {user_id}")
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error analyzing science image: {e}")
+            return {'success': False, 'error': str(e)}
+    
+    def analyze_study_document(self, user_id: str, document_data: str,
+                               mime_type: str = 'application/pdf',
+                               prompt: str = None) -> Dict:
+        """
+        Analyze a study document (textbook pages, past papers, notes)
+        
+        Args:
+            user_id: User ID
+            document_data: Base64-encoded document
+            mime_type: Document MIME type
+            prompt: Optional custom prompt
+            
+        Returns:
+            dict with analysis and study points
+        """
+        try:
+            if not self._is_interactions_configured:
+                return {'success': False, 'error': 'Document analysis not available'}
+            
+            session_data = session_manager.get_data(user_id, 'science_teacher') or {}
+            subject = session_data.get('subject', 'Science')
+            grade_level = session_data.get('grade_level', 'O-Level')
+            
+            if not prompt:
+                prompt = f"""Analyze this study document for a {grade_level} {subject} student.
+
+Please provide:
+1. Summary of the key content
+2. Main scientific concepts covered
+3. Important definitions and formulas
+4. Study tips and exam-relevant points
+5. Suggested revision approach
+
+Be comprehensive but accessible for a secondary school student."""
+            
+            result = self.interactions_service.analyze_document(
+                document_data=document_data,
+                mime_type=mime_type,
+                prompt=prompt
+            )
+            
+            if result.get('success'):
+                logger.info(f"📄 Analyzed study document for {user_id}")
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error analyzing study document: {e}")
+            return {'success': False, 'error': str(e)}
+    
+    def search_science_topic(self, user_id: str, query: str) -> Dict:
+        """
+        Search web for science topics with Google grounding
+        
+        Args:
+            user_id: User ID
+            query: Search query
+            
+        Returns:
+            dict with grounded response
+        """
+        try:
+            if not self._is_interactions_configured:
+                return {'success': False, 'error': 'Web search not available'}
+            
+            session_data = session_manager.get_data(user_id, 'science_teacher') or {}
+            subject = session_data.get('subject', 'Science')
+            grade_level = session_data.get('grade_level', 'O-Level')
+            
+            # Enhanced query with educational context
+            enhanced_query = f"""For a ZIMSEC {grade_level} {subject} student:
+
+{query}
+
+Provide accurate, educational information with sources. Focus on content relevant 
+to the Zimbabwe curriculum and O-Level/A-Level science examinations."""
+            
+            result = self.interactions_service.search_with_grounding(enhanced_query)
+            
+            if result.get('success') and result.get('text'):
+                # Add to conversation history
+                conversation_history = session_data.get('conversation_history', [])
+                conversation_history.append({
+                    'role': 'user',
+                    'content': f"🔍 Search: {query}"
+                })
+                conversation_history.append({
+                    'role': 'assistant',
+                    'content': f"🌐 **Search Results**\n\n{result['text']}"
+                })
+                session_data['conversation_history'] = conversation_history[-20:]
+                session_manager.set_data(user_id, 'science_teacher', session_data)
+                
+                logger.info(f"🔍 Science topic search for {user_id}")
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error with science topic search: {e}")
+            return {'success': False, 'error': str(e)}
+    
+    def _handle_text_only_fallback(self, user_id: str, message: str) -> Dict:
+        """Fallback for when multimodal is not available"""
+        session_data = session_manager.get_data(user_id, 'science_teacher') or {}
+        response = self._get_gemini_teaching_response(user_id, message, session_data)
+        
+        return {
+            'success': True,
+            'response': response,
+            'credits_remaining': get_user_credits(user_id)
+        }
     
     def exit_teacher_mode(self, user_id: str):
         """Exit teacher mode and return to main menu"""

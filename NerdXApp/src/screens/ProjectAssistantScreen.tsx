@@ -1,4 +1,4 @@
-// Project Assistant Screen - Professional Chat Interface
+// Project Assistant Screen - Professional Chat Interface with Deep Research
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
@@ -13,11 +13,14 @@ import {
   Platform,
   StatusBar,
   Image,
+  Modal,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { projectApi, ProjectDetails } from '../services/api/projectApi';
+import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
+import { projectApi, ProjectDetails, ResearchSession, ResearchStatus } from '../services/api/projectApi';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
@@ -47,6 +50,9 @@ const ProjectAssistantScreen: React.FC = () => {
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [showToolbar, setShowToolbar] = useState(false);
+  const [activeResearch, setActiveResearch] = useState<ResearchSession | null>(null);
+  const [researchPolling, setResearchPolling] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
@@ -193,6 +199,172 @@ const ProjectAssistantScreen: React.FC = () => {
     );
   };
 
+  // ==================== Deep Research Handlers ====================
+
+  const handleStartResearch = async () => {
+    if (!project) return;
+
+    Alert.prompt(
+      '🔬 Deep Research',
+      'Enter a research topic for your project (this uses AI to do comprehensive internet research):',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Start Research',
+          onPress: async (query) => {
+            if (!query?.trim()) {
+              Alert.alert('Error', 'Please enter a research topic');
+              return;
+            }
+
+            try {
+              setSending(true);
+              setMessages((prev) => [...prev, {
+                id: 'research-start',
+                role: 'assistant',
+                content: `🔬 **Starting Deep Research**\n\nTopic: "${query}"\n\nThis may take a few minutes as I analyze multiple sources...`,
+                timestamp: new Date(),
+              }]);
+
+              const session = await projectApi.startResearch(project.id, query);
+
+              if (session?.interaction_id) {
+                setActiveResearch(session);
+                setResearchPolling(true);
+                pollResearchStatus(session.interaction_id);
+              }
+            } catch (error: any) {
+              setMessages((prev) => prev.filter((msg) => msg.id !== 'research-start'));
+              Alert.alert('Error', error.message || 'Failed to start research');
+            } finally {
+              setSending(false);
+            }
+          },
+        },
+      ],
+      'plain-text'
+    );
+  };
+
+  const pollResearchStatus = async (interactionId: string) => {
+    if (!project) return;
+
+    try {
+      const status = await projectApi.checkResearchStatus(project.id, interactionId);
+
+      if (status?.status === 'completed' && status.result) {
+        // Research completed - add result to chat
+        setMessages((prev) => prev.filter((msg) => msg.id !== 'research-start'));
+        setMessages((prev) => [...prev, {
+          id: `research-${Date.now()}`,
+          role: 'assistant',
+          content: `📊 **Research Complete**\n\n${status.result}`,
+          timestamp: new Date(),
+        }]);
+        setActiveResearch(null);
+        setResearchPolling(false);
+      } else if (status?.status === 'failed') {
+        setMessages((prev) => prev.filter((msg) => msg.id !== 'research-start'));
+        Alert.alert('Research Failed', status.message || 'Unable to complete research');
+        setActiveResearch(null);
+        setResearchPolling(false);
+      } else {
+        // Still in progress - poll again after 5 seconds
+        setTimeout(() => pollResearchStatus(interactionId), 5000);
+      }
+    } catch (error) {
+      console.error('Research polling error:', error);
+      setResearchPolling(false);
+    }
+  };
+
+  const handleWebSearch = async () => {
+    if (!project) return;
+
+    Alert.prompt(
+      '🌐 Web Search',
+      'Enter a search query with Google-grounded factual results:',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Search',
+          onPress: async (query) => {
+            if (!query?.trim()) return;
+
+            try {
+              setSending(true);
+              const result = await projectApi.searchWeb(project.id, query);
+
+              if (result?.response) {
+                setMessages((prev) => [...prev, {
+                  id: `search-${Date.now()}`,
+                  role: 'assistant',
+                  content: `🌐 **Search Results**\n\nQuery: "${query}"\n\n${result.response}`,
+                  timestamp: new Date(),
+                }]);
+              }
+            } catch (error: any) {
+              Alert.alert('Error', error.message || 'Search failed');
+            } finally {
+              setSending(false);
+            }
+          },
+        },
+      ],
+      'plain-text'
+    );
+  };
+
+  const handleDocumentUpload = async () => {
+    if (!project) return;
+
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['application/pdf', 'image/*'],
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled || !result.assets?.[0]) return;
+
+      const file = result.assets[0];
+      setSending(true);
+
+      // Read file as base64
+      const base64 = await FileSystem.readAsStringAsync(file.uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      setMessages((prev) => [...prev, {
+        id: 'analyzing',
+        role: 'assistant',
+        content: `📄 **Analyzing Document**\n\nFile: ${file.name}\n\nProcessing with AI...`,
+        timestamp: new Date(),
+      }]);
+
+      const analysis = await projectApi.analyzeDocument(
+        project.id,
+        base64,
+        file.mimeType || 'application/pdf'
+      );
+
+      setMessages((prev) => prev.filter((msg) => msg.id !== 'analyzing'));
+
+      if (analysis?.analysis) {
+        setMessages((prev) => [...prev, {
+          id: `doc-${Date.now()}`,
+          role: 'assistant',
+          content: `📄 **Document Analysis**\n\n**File:** ${file.name}\n\n${analysis.analysis}`,
+          timestamp: new Date(),
+        }]);
+      }
+    } catch (error: any) {
+      setMessages((prev) => prev.filter((msg) => msg.id !== 'analyzing'));
+      Alert.alert('Error', error.message || 'Failed to analyze document');
+    } finally {
+      setSending(false);
+    }
+  };
+
   if (loading) {
     return (
       <View style={[styles.centerContainer, { backgroundColor: themedColors.background.default }]}>
@@ -304,6 +476,52 @@ const ProjectAssistantScreen: React.FC = () => {
       </ScrollView>
 
       <View style={[styles.inputContainer, { backgroundColor: themedColors.background.paper, borderTopColor: themedColors.border.light }]}>
+        {/* AI Tools Toolbar */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.toolbarContainer}
+          contentContainerStyle={styles.toolbarContent}
+        >
+          <TouchableOpacity
+            style={[styles.toolbarButton, { backgroundColor: isDarkMode ? 'rgba(103,80,164,0.15)' : '#EDE7F6' }]}
+            onPress={handleStartResearch}
+            disabled={sending || researchPolling}
+          >
+            <Ionicons name="flask-outline" size={18} color={themedColors.primary.main} />
+            <Text style={[styles.toolbarButtonText, { color: themedColors.primary.main }]}>
+              {researchPolling ? 'Researching...' : 'Deep Research'}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.toolbarButton, { backgroundColor: isDarkMode ? 'rgba(0,150,136,0.15)' : '#E0F2F1' }]}
+            onPress={handleWebSearch}
+            disabled={sending}
+          >
+            <Ionicons name="globe-outline" size={18} color={themedColors.success.main} />
+            <Text style={[styles.toolbarButtonText, { color: themedColors.success.main }]}>Web Search</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.toolbarButton, { backgroundColor: isDarkMode ? 'rgba(33,150,243,0.15)' : '#E3F2FD' }]}
+            onPress={handleDocumentUpload}
+            disabled={sending}
+          >
+            <Ionicons name="document-attach-outline" size={18} color="#2196F3" />
+            <Text style={[styles.toolbarButtonText, { color: '#2196F3' }]}>Upload PDF</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.toolbarButton, { backgroundColor: isDarkMode ? 'rgba(255,152,0,0.15)' : '#FFF3E0' }]}
+            onPress={handleGenerateDocument}
+            disabled={sending}
+          >
+            <Ionicons name="download-outline" size={18} color="#FF9800" />
+            <Text style={[styles.toolbarButtonText, { color: '#FF9800' }]}>Generate PDF</Text>
+          </TouchableOpacity>
+        </ScrollView>
+
         <View style={[styles.inputWrapper, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F7FA' }]}>
           <TextInput
             style={[styles.textInput, { color: themedColors.text.primary }]}
@@ -329,7 +547,7 @@ const ProjectAssistantScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
         <Text style={[styles.creditsText, { color: themedColors.text.secondary }]}>
-          Credits: {user?.credits || 0}
+          Credits: {user?.credits || 0} {researchPolling && '• 🔬 Research in progress...'}
         </Text>
       </View>
     </KeyboardAvoidingView>
@@ -536,6 +754,28 @@ const styles = StyleSheet.create({
     color: '#9E9E9E',
     textAlign: 'center',
     marginTop: 8,
+  },
+  toolbarContainer: {
+    maxHeight: 44,
+    marginBottom: 12,
+  },
+  toolbarContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 2,
+  },
+  toolbarButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 20,
+    gap: 6,
+  },
+  toolbarButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
   },
 });
 

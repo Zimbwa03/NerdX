@@ -84,4 +84,94 @@ export const teacherApi = {
       throw error;
     }
   },
+
+  // ==================== Multimodal Features ====================
+
+  // Send multimodal message (with images, audio, video, documents)
+  sendMultimodalMessage: async (
+    message: string,
+    attachments: Attachment[]
+  ): Promise<TeacherMessageResponse | null> => {
+    try {
+      const response = await api.post('/api/mobile/teacher/multimodal', {
+        message,
+        attachments,
+      });
+      return response.data.data || null;
+    } catch (error: any) {
+      console.error('Multimodal message error:', error);
+      throw error;
+    }
+  },
+
+  // Analyze a science image (diagrams, lab results)
+  analyzeImage: async (
+    imageBase64: string,
+    mimeType: string = 'image/png',
+    prompt?: string
+  ): Promise<ImageAnalysis | null> => {
+    try {
+      const response = await api.post('/api/mobile/teacher/analyze-image', {
+        image: imageBase64,
+        mime_type: mimeType,
+        prompt,
+      });
+      return response.data.data || null;
+    } catch (error: any) {
+      console.error('Analyze image error:', error);
+      throw error;
+    }
+  },
+
+  // Analyze a study document (textbook pages, past papers)
+  analyzeDocument: async (
+    documentBase64: string,
+    mimeType: string = 'application/pdf',
+    prompt?: string
+  ): Promise<DocumentAnalysis | null> => {
+    try {
+      const response = await api.post('/api/mobile/teacher/analyze-document', {
+        document: documentBase64,
+        mime_type: mimeType,
+        prompt,
+      });
+      return response.data.data || null;
+    } catch (error: any) {
+      console.error('Analyze document error:', error);
+      throw error;
+    }
+  },
+
+  // Web search with Google grounding for science topics
+  searchWeb: async (query: string): Promise<WebSearchResult | null> => {
+    try {
+      const response = await api.post('/api/mobile/teacher/search', {
+        query,
+      });
+      return response.data.data || null;
+    } catch (error: any) {
+      console.error('Web search error:', error);
+      throw error;
+    }
+  },
 };
+
+// ==================== Additional Interfaces ====================
+
+export interface Attachment {
+  type: 'image' | 'audio' | 'video' | 'document';
+  data: string; // Base64-encoded data
+  mime_type: string;
+}
+
+export interface ImageAnalysis {
+  analysis: string;
+}
+
+export interface DocumentAnalysis {
+  analysis: string;
+}
+
+export interface WebSearchResult {
+  response: string;
+}

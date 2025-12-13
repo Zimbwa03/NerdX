@@ -19,7 +19,8 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import Markdown from 'react-native-markdown-display';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
-import { teacherApi, TeacherSession } from '../services/api/teacherApi';
+import * as DocumentPicker from 'expo-document-picker';
+import { teacherApi, TeacherSession, Attachment } from '../services/api/teacherApi';
 import { mathApi } from '../services/api/mathApi';
 import { useAuth } from '../context/AuthContext';
 import { TypingIndicator } from '../components/TypingIndicator';
@@ -58,6 +59,7 @@ const TeacherModeScreen: React.FC = () => {
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const [inputMode, setInputMode] = useState<'text' | 'voice' | 'camera' | 'search' | 'document'>('text');
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
@@ -346,6 +348,98 @@ const TeacherModeScreen: React.FC = () => {
     setInputText(question);
   };
 
+  // ==================== Multimodal Handlers ====================
+
+  const handleWebSearch = async () => {
+    if (!session) return;
+
+    Alert.prompt(
+      '🌐 Science Search',
+      'Search the web for accurate science information:',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Search',
+          onPress: async (query) => {
+            if (!query?.trim()) return;
+
+            try {
+              setSending(true);
+              const result = await teacherApi.searchWeb(query);
+
+              if (result?.response) {
+                const assistantMessage: Message = {
+                  id: `search-${Date.now()}`,
+                  role: 'assistant',
+                  content: `🌐 **Science Search Results**\n\nQuery: "${query}"\n\n${result.response}`,
+                  timestamp: new Date(),
+                };
+                setMessages((prev) => [...prev, assistantMessage]);
+              }
+            } catch (error: any) {
+              Alert.alert('Error', error.message || 'Search failed');
+            } finally {
+              setSending(false);
+            }
+          },
+        },
+      ],
+      'plain-text'
+    );
+  };
+
+  const handleDocumentUpload = async () => {
+    if (!session) return;
+
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['application/pdf', 'image/*'],
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled || !result.assets?.[0]) return;
+
+      const file = result.assets[0];
+      setSending(true);
+
+      // Read file as base64
+      const base64 = await FileSystem.readAsStringAsync(file.uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      // Add analyzing message
+      setMessages((prev) => [...prev, {
+        id: 'analyzing',
+        role: 'assistant',
+        content: `📄 **Analyzing Study Material**\n\nFile: ${file.name}\n\nExtracting key concepts...`,
+        timestamp: new Date(),
+      }]);
+
+      const analysis = await teacherApi.analyzeDocument(
+        base64,
+        file.mimeType || 'application/pdf'
+      );
+
+      // Remove analyzing message and add result
+      setMessages((prev) => prev.filter((msg) => msg.id !== 'analyzing'));
+
+      if (analysis?.analysis) {
+        const assistantMessage: Message = {
+          id: `doc-${Date.now()}`,
+          role: 'assistant',
+          content: `📄 **Document Analysis**\n\n**File:** ${file.name}\n\n${analysis.analysis}`,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
+      }
+    } catch (error: any) {
+      setMessages((prev) => prev.filter((msg) => msg.id !== 'analyzing'));
+      Alert.alert('Error', error.message || 'Failed to analyze document');
+    } finally {
+      setSending(false);
+    }
+  };
+
   if (loading) {
     return (
       <View style={[styles.centerContainer, { backgroundColor: themedColors.background.default }]}>
@@ -560,51 +654,118 @@ const TeacherModeScreen: React.FC = () => {
         </TouchableOpacity>
 
         <View style={styles.inputRow}>
+          {/* Mode Toggle Button - shows current active mode */}
           <TouchableOpacity
-            style={styles.mediaButton}
-            onPress={handleImagePick}
-            disabled={sending}
-          >
-            <Ionicons name="camera-outline" size={24} color={themedColors.primary.main} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.mediaButton, isRecording && [styles.recordingButton, { backgroundColor: themedColors.error.main }]]}
-            onPress={isRecording ? stopRecording : startRecording}
-            disabled={sending}
+            style={[styles.modeToggleButton, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : '#F0F0F0' }]}
+            onPress={() => {
+              // Cycle through modes: text -> voice -> camera -> search -> document -> text
+              const modes: ('text' | 'voice' | 'camera' | 'search' | 'document')[] = ['text', 'voice', 'camera', 'search', 'document'];
+              const currentIndex = modes.indexOf(inputMode);
+              const nextIndex = (currentIndex + 1) % modes.length;
+              setInputMode(modes[nextIndex]);
+            }}
+            disabled={sending || isRecording}
           >
             <Ionicons
-              name={isRecording ? "stop-circle" : "mic-outline"}
-              size={24}
-              color={isRecording ? "#FFF" : themedColors.primary.main}
+              name={
+                inputMode === 'text' ? 'chatbubble-outline' :
+                  inputMode === 'voice' ? 'mic-outline' :
+                    inputMode === 'camera' ? 'camera-outline' :
+                      inputMode === 'search' ? 'globe-outline' :
+                        'document-attach-outline'
+              }
+              size={22}
+              color={
+                inputMode === 'voice' ? themedColors.error.main :
+                  inputMode === 'search' ? themedColors.success.main :
+                    inputMode === 'document' ? '#2196F3' :
+                      themedColors.primary.main
+              }
             />
           </TouchableOpacity>
-          <TextInput
-            style={[styles.textInput, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F7FA', borderColor: themedColors.border.light, color: themedColors.text.primary }]}
-            value={inputText}
-            onChangeText={setInputText}
-            placeholder="Ask a question..."
-            placeholderTextColor={themedColors.text.disabled}
-            multiline
-            maxLength={500}
-            editable={!sending}
-          />
-          <TouchableOpacity
-            style={[styles.sendButton, (!inputText.trim() || sending) && styles.sendButtonDisabled]}
-            onPress={handleSend}
-            disabled={!inputText.trim() || sending}
-          >
-            {sending ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <LinearGradient
-                colors={(!inputText.trim() || sending) ? ['#E0E0E0', '#BDBDBD'] : themedColors.gradients.primary}
-                style={{ borderRadius: 24, flex: 1, justifyContent: 'center', alignItems: 'center', width: '100%', height: '100%' }}
+
+          {/* Conditional Action Button based on mode */}
+          {inputMode === 'voice' && (
+            <TouchableOpacity
+              style={[styles.actionModeButton, isRecording && { backgroundColor: themedColors.error.main }]}
+              onPress={isRecording ? stopRecording : startRecording}
+              disabled={sending}
+            >
+              <Ionicons
+                name={isRecording ? "stop-circle" : "mic"}
+                size={24}
+                color={isRecording ? "#FFF" : themedColors.error.main}
+              />
+              <Text style={[styles.actionModeText, { color: isRecording ? '#FFF' : themedColors.error.main }]}>
+                {isRecording ? 'Stop' : 'Tap to Speak'}
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {inputMode === 'camera' && (
+            <TouchableOpacity
+              style={styles.actionModeButton}
+              onPress={handleImagePick}
+              disabled={sending}
+            >
+              <Ionicons name="camera" size={24} color={themedColors.primary.main} />
+              <Text style={[styles.actionModeText, { color: themedColors.primary.main }]}>Scan Image</Text>
+            </TouchableOpacity>
+          )}
+
+          {inputMode === 'search' && (
+            <TouchableOpacity
+              style={styles.actionModeButton}
+              onPress={handleWebSearch}
+              disabled={sending}
+            >
+              <Ionicons name="globe" size={24} color={themedColors.success.main} />
+              <Text style={[styles.actionModeText, { color: themedColors.success.main }]}>Web Search</Text>
+            </TouchableOpacity>
+          )}
+
+          {inputMode === 'document' && (
+            <TouchableOpacity
+              style={styles.actionModeButton}
+              onPress={handleDocumentUpload}
+              disabled={sending}
+            >
+              <Ionicons name="document-attach" size={24} color="#2196F3" />
+              <Text style={[styles.actionModeText, { color: '#2196F3' }]}>Upload PDF</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Text Input - only show in text mode or when other modes aren't active */}
+          {inputMode === 'text' && (
+            <>
+              <TextInput
+                style={[styles.textInput, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F7FA', borderColor: themedColors.border.light, color: themedColors.text.primary }]}
+                value={inputText}
+                onChangeText={setInputText}
+                placeholder="Ask a question..."
+                placeholderTextColor={themedColors.text.disabled}
+                multiline
+                maxLength={500}
+                editable={!sending}
+              />
+              <TouchableOpacity
+                style={[styles.sendButton, (!inputText.trim() || sending) && styles.sendButtonDisabled]}
+                onPress={handleSend}
+                disabled={!inputText.trim() || sending}
               >
-                <Text style={styles.sendButtonText}>Send</Text>
-              </LinearGradient>
-            )}
-          </TouchableOpacity>
+                {sending ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <LinearGradient
+                    colors={(!inputText.trim() || sending) ? ['#E0E0E0', '#BDBDBD'] : themedColors.gradients.primary}
+                    style={{ borderRadius: 24, flex: 1, justifyContent: 'center', alignItems: 'center', width: '100%', height: '100%' }}
+                  >
+                    <Ionicons name="send" size={20} color="#FFF" />
+                  </LinearGradient>
+                )}
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       </View>
     </KeyboardAvoidingView>
@@ -889,6 +1050,29 @@ const markdownStyles = StyleSheet.create({
   },
   list_item: {
     marginVertical: 4,
+  },
+  modeToggleButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  actionModeButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    gap: 8,
+  },
+  actionModeText: {
+    fontSize: 15,
+    fontWeight: '600',
   },
 });
 
