@@ -1946,9 +1946,183 @@ def generate_teacher_notes():
 # PROJECT ASSISTANT ENDPOINTS (Database-Backed)
 # ============================================================================
 
+@mobile_bp.route('/project/<int:project_id>/research', methods=['POST'])
+@require_auth
+def start_project_research(project_id):
+    """Start Deep Research for a project topic"""
+    try:
+        data = request.get_json()
+        query = data.get('query', '').strip()
+        
+        if not query:
+            return jsonify({'success': False, 'message': 'Research query is required'}), 400
+        
+        from services.project_assistant_service import ProjectAssistantService
+        service = ProjectAssistantService()
+        
+        result = service.start_deep_research(g.current_user_id, project_id, query)
+        
+        if result.get('success'):
+            return jsonify({
+                'success': True,
+                'data': {
+                    'interaction_id': result.get('interaction_id'),
+                    'status': result.get('status', 'in_progress'),
+                    'message': result.get('message', 'Deep Research started')
+                }
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'message': result.get('error', 'Failed to start research')
+            }), 400
+            
+    except Exception as e:
+        logger.error(f"Start project research error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/project/<int:project_id>/research/status/<interaction_id>', methods=['GET'])
+@require_auth
+def check_project_research_status(project_id, interaction_id):
+    """Check the status of a Deep Research task"""
+    try:
+        from services.project_assistant_service import ProjectAssistantService
+        service = ProjectAssistantService()
+        
+        result = service.check_research_status(g.current_user_id, project_id, interaction_id)
+        
+        return jsonify({
+            'success': result.get('success', False),
+            'data': {
+                'status': result.get('status', 'unknown'),
+                'result': result.get('result'),
+                'message': result.get('message', '')
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Check research status error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/project/<int:project_id>/analyze-document', methods=['POST'])
+@require_auth
+def analyze_project_document(project_id):
+    """Analyze a PDF or document for a project"""
+    try:
+        data = request.get_json()
+        document_data = data.get('document')  # Base64-encoded document
+        mime_type = data.get('mime_type', 'application/pdf')
+        prompt = data.get('prompt')  # Optional custom prompt
+        
+        if not document_data:
+            return jsonify({'success': False, 'message': 'Document data is required'}), 400
+        
+        from services.project_assistant_service import ProjectAssistantService
+        service = ProjectAssistantService()
+        
+        result = service.analyze_document_for_project(
+            g.current_user_id, project_id, document_data, mime_type, prompt
+        )
+        
+        if result.get('success'):
+            return jsonify({
+                'success': True,
+                'data': {
+                    'analysis': result.get('text'),
+                    'interaction_id': result.get('interaction_id')
+                }
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'message': result.get('error', 'Failed to analyze document')
+            }), 400
+            
+    except Exception as e:
+        logger.error(f"Analyze project document error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/project/<int:project_id>/multimodal-chat', methods=['POST'])
+@require_auth
+def project_multimodal_chat(project_id):
+    """Send message with multimodal attachments (images, audio, video, documents)"""
+    try:
+        data = request.get_json()
+        message = data.get('message', '').strip()
+        attachments = data.get('attachments', [])
+        
+        if not message and not attachments:
+            return jsonify({'success': False, 'message': 'Message or attachments required'}), 400
+        
+        from services.project_assistant_service import ProjectAssistantService
+        service = ProjectAssistantService()
+        
+        result = service.process_multimodal_message(
+            g.current_user_id, project_id, message, attachments
+        )
+        
+        if result.get('success') or result.get('response'):
+            return jsonify({
+                'success': True,
+                'data': {
+                    'response': result.get('response'),
+                    'project_id': project_id,
+                    'credits_remaining': result.get('credits_remaining')
+                }
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'message': result.get('error', 'Failed to process message')
+            }), 400
+            
+    except Exception as e:
+        logger.error(f"Project multimodal chat error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/project/<int:project_id>/web-search', methods=['POST'])
+@require_auth
+def project_web_search(project_id):
+    """Search web with Google grounding for factual project research"""
+    try:
+        data = request.get_json()
+        query = data.get('query', '').strip()
+        
+        if not query:
+            return jsonify({'success': False, 'message': 'Search query is required'}), 400
+        
+        from services.project_assistant_service import ProjectAssistantService
+        service = ProjectAssistantService()
+        
+        result = service.search_with_grounding(g.current_user_id, project_id, query)
+        
+        if result.get('success'):
+            return jsonify({
+                'success': True,
+                'data': {
+                    'response': result.get('text'),
+                    'interaction_id': result.get('interaction_id')
+                }
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'message': result.get('error', 'Failed to search')
+            }), 400
+            
+    except Exception as e:
+        logger.error(f"Project web search error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
 # ============================================================================
 # GRAPH PRACTICE ENDPOINTS
 # ============================================================================
+
 
 
 @mobile_bp.route('/math/graph/generate', methods=['POST'])

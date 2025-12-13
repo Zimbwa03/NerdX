@@ -178,4 +178,122 @@ export const projectApi = {
       throw error;
     }
   },
+
+  // ==================== Deep Research & Multimodal Features ====================
+
+  // Start Deep Research for a project topic
+  startResearch: async (
+    projectId: number,
+    query: string
+  ): Promise<ResearchSession | null> => {
+    try {
+      const response = await api.post(`/api/mobile/project/${projectId}/research`, {
+        query,
+      });
+      return response.data.data || null;
+    } catch (error: any) {
+      console.error('Start research error:', error);
+      throw error;
+    }
+  },
+
+  // Check Deep Research status
+  checkResearchStatus: async (
+    projectId: number,
+    interactionId: string
+  ): Promise<ResearchStatus | null> => {
+    try {
+      const response = await api.get(
+        `/api/mobile/project/${projectId}/research/status/${interactionId}`
+      );
+      return response.data.data || null;
+    } catch (error: any) {
+      console.error('Check research status error:', error);
+      throw error;
+    }
+  },
+
+  // Analyze a document (PDF, etc.) for the project
+  analyzeDocument: async (
+    projectId: number,
+    documentBase64: string,
+    mimeType: string = 'application/pdf',
+    prompt?: string
+  ): Promise<DocumentAnalysis | null> => {
+    try {
+      const response = await api.post(`/api/mobile/project/${projectId}/analyze-document`, {
+        document: documentBase64,
+        mime_type: mimeType,
+        prompt,
+      });
+      return response.data.data || null;
+    } catch (error: any) {
+      console.error('Analyze document error:', error);
+      throw error;
+    }
+  },
+
+  // Send multimodal message (with images, audio, video, documents)
+  sendMultimodalMessage: async (
+    projectId: number,
+    message: string,
+    attachments: Attachment[]
+  ): Promise<ChatResponse | null> => {
+    try {
+      const response = await api.post(`/api/mobile/project/${projectId}/multimodal-chat`, {
+        message,
+        attachments,
+      });
+      return response.data.data || null;
+    } catch (error: any) {
+      console.error('Multimodal message error:', error);
+      throw error;
+    }
+  },
+
+  // Web search with Google grounding
+  searchWeb: async (
+    projectId: number,
+    query: string
+  ): Promise<WebSearchResult | null> => {
+    try {
+      const response = await api.post(`/api/mobile/project/${projectId}/web-search`, {
+        query,
+      });
+      return response.data.data || null;
+    } catch (error: any) {
+      console.error('Web search error:', error);
+      throw error;
+    }
+  },
 };
+
+// ==================== Additional Interfaces ====================
+
+export interface ResearchSession {
+  interaction_id: string;
+  status: 'in_progress' | 'completed' | 'failed';
+  message: string;
+}
+
+export interface ResearchStatus {
+  status: 'in_progress' | 'completed' | 'failed' | 'unknown';
+  result?: string;
+  message: string;
+}
+
+export interface DocumentAnalysis {
+  analysis: string;
+  interaction_id?: string;
+}
+
+export interface Attachment {
+  type: 'image' | 'audio' | 'video' | 'document';
+  data: string; // Base64-encoded data
+  mime_type: string;
+}
+
+export interface WebSearchResult {
+  response: string;
+  interaction_id?: string;
+}

@@ -27,6 +27,14 @@ except ImportError:
     genai = None
     GENAI_AVAILABLE = False
 
+# Import Gemini Interactions API Service for Deep Research
+try:
+    from services.gemini_interactions_service import get_gemini_interactions_service
+    INTERACTIONS_API_AVAILABLE = True
+except ImportError:
+    get_gemini_interactions_service = None
+    INTERACTIONS_API_AVAILABLE = False
+
 
 class ProjectAssistantService:
     """
@@ -54,6 +62,18 @@ class ProjectAssistantService:
                     self._is_gemini_configured = True
         except Exception as e:
             logger.error(f"Error initializing Gemini fallback: {e}")
+        
+        # Initialize Gemini Interactions Service for Deep Research
+        self.interactions_service = None
+        self._is_interactions_configured = False
+        if INTERACTIONS_API_AVAILABLE:
+            try:
+                self.interactions_service = get_gemini_interactions_service()
+                self._is_interactions_configured = self.interactions_service.is_available()
+                if self._is_interactions_configured:
+                    logger.info("✅ Gemini Interactions API configured for Deep Research")
+            except Exception as e:
+                logger.error(f"Error initializing Interactions API: {e}")
         
         if self._is_deepseek_configured:
             logger.info("✅ Project Assistant initialized with DeepSeek AI (primary)")
@@ -906,6 +926,348 @@ Remember: You're their project partner! Be helpful, be thorough, and make learni
         except Exception as e:
             logger.error(f"Error deleting project {project_id}: {e}")
             return False
+
+    # ==================== Deep Research & Multimodal Features ====================
+    
+    def start_deep_research(self, user_id: str, project_id: int, query: str) -> Dict:
+        """
+        Start a Deep Research task for the project using Gemini Deep Research agent
+        
+        Args:
+            user_id: User ID
+            project_id: Project ID
+            query: Research query/topic
+            
+        Returns:
+            dict with 'success', 'interaction_id', 'status', 'message'
+        """
+        try:
+            if not self._is_interactions_configured:
+                return {
+                    'success': False,
+                    'error': 'Deep Research not available. Gemini Interactions API not configured.'
+                }
+            
+            # Get project for context
+            project = self.get_project_details(user_id, project_id)
+            if not project:
+                return {'success': False, 'error': 'Project not found'}
+            
+            project_data = project.get('project_data', {})
+            project_title = project.get('project_title', 'Untitled Project')
+            subject = project.get('subject', 'General')
+            
+            # Build research context
+            research_context = f"""ZIMSEC School-Based Project Research Request
+
+Project: {project_title}
+Subject: {subject}
+Student Request: {query}
+
+Please conduct comprehensive research for this ZIMSEC O-Level School-Based Project. Include:
+- Current academic and professional perspectives
+- Zimbabwe-specific context and examples where applicable
+- Practical implementation considerations for students
+- Relevant statistics, case studies, and expert opinions
+- References to support the findings
+
+Focus on providing actionable, educational content suitable for a secondary school project."""
+            
+            # Start Deep Research
+            result = self.interactions_service.start_deep_research(
+                query=query,
+                context=research_context
+            )
+            
+            if result.get('success'):
+                # Store research interaction ID in project data
+                research_sessions = project_data.get('research_sessions', [])
+                research_sessions.append({
+                    'interaction_id': result['interaction_id'],
+                    'query': query,
+                    'started_at': datetime.now().isoformat(),
+                    'status': 'in_progress'
+                })
+                project_data['research_sessions'] = research_sessions
+                self._save_project_to_database(user_id, project_data, project_id)
+                
+                logger.info(f"🔬 Started Deep Research for project {project_id}: {result['interaction_id']}")
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error starting Deep Research: {e}", exc_info=True)
+            return {'success': False, 'error': str(e)}
+    
+    def check_research_status(self, user_id: str, project_id: int, interaction_id: str) -> Dict:
+        """
+        Check the status of a Deep Research task
+        
+        Args:
+            user_id: User ID
+            project_id: Project ID
+            interaction_id: The interaction ID from start_deep_research
+            
+        Returns:
+            dict with 'success', 'status', 'result' (if completed)
+        """
+        try:
+            if not self._is_interactions_configured:
+                return {'success': False, 'error': 'Deep Research not available'}
+            
+            result = self.interactions_service.poll_research_status(interaction_id)
+            
+            # If completed, save results to project
+            if result.get('status') == 'completed' and result.get('result'):
+                project = self.get_project_details(user_id, project_id)
+                if project:
+                    project_data = project.get('project_data', {})
+                    
+                    # Update research session status
+                    research_sessions = project_data.get('research_sessions', [])
+                    for session in research_sessions:
+                        if session.get('interaction_id') == interaction_id:
+                            session['status'] = 'completed'
+                            session['completed_at'] = datetime.now().isoformat()
+                            session['result_preview'] = result['result'][:500] if result['result'] else None
+                    
+                    # Add research result to conversation history
+                    conversation_history = project_data.get('conversation_history', [])
+                    conversation_history.append({
+                        'role': 'assistant',
+                        'content': f"🔬 **Deep Research Complete**\n\n{result['result']}",
+                        'timestamp': datetime.now().isoformat(),
+                        'type': 'deep_research',
+                        'interaction_id': interaction_id
+                    })
+                    project_data['conversation_history'] = conversation_history
+                    project_data['research_sessions'] = research_sessions
+                    self._save_project_to_database(user_id, project_data, project_id)
+                    
+                    logger.info(f"✅ Deep Research completed for project {project_id}")
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error checking research status: {e}")
+            return {'success': False, 'error': str(e)}
+    
+    def analyze_document_for_project(self, user_id: str, project_id: int, 
+                                     document_data: str, mime_type: str,
+                                     prompt: str = None) -> Dict:
+        """
+        Analyze a PDF or document for the project using multimodal understanding
+        
+        Args:
+            user_id: User ID
+            project_id: Project ID
+            document_data: Base64-encoded document data
+            mime_type: MIME type (e.g., 'application/pdf')
+            prompt: Optional custom prompt
+            
+        Returns:
+            dict with analysis result
+        """
+        try:
+            if not self._is_interactions_configured:
+                return {'success': False, 'error': 'Document analysis not available'}
+            
+            # Get project context
+            project = self.get_project_details(user_id, project_id)
+            if not project:
+                return {'success': False, 'error': 'Project not found'}
+            
+            project_title = project.get('project_title', 'Untitled Project')
+            subject = project.get('subject', 'General')
+            
+            # Build analysis prompt
+            if not prompt:
+                prompt = f"""Analyze this document in the context of a ZIMSEC School-Based Project.
+
+Project: {project_title}
+Subject: {subject}
+
+Please provide:
+1. A comprehensive summary of the document content
+2. Key points relevant to the project
+3. Useful quotes or statistics that could be referenced
+4. How this document could support the project research
+5. Any limitations or considerations"""
+            
+            result = self.interactions_service.analyze_document(
+                document_data=document_data,
+                mime_type=mime_type,
+                prompt=prompt
+            )
+            
+            if result.get('success') and result.get('text'):
+                # Add analysis to conversation history
+                project_data = project.get('project_data', {})
+                conversation_history = project_data.get('conversation_history', [])
+                conversation_history.append({
+                    'role': 'assistant',
+                    'content': f"📄 **Document Analysis**\n\n{result['text']}",
+                    'timestamp': datetime.now().isoformat(),
+                    'type': 'document_analysis'
+                })
+                project_data['conversation_history'] = conversation_history
+                self._save_project_to_database(user_id, project_data, project_id)
+                
+                logger.info(f"📄 Document analyzed for project {project_id}")
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error analyzing document: {e}")
+            return {'success': False, 'error': str(e)}
+    
+    def process_multimodal_message(self, user_id: str, project_id: int, 
+                                   message: str, attachments: List[Dict]) -> Dict:
+        """
+        Process a message with multimodal attachments (images, audio, video, documents)
+        
+        Args:
+            user_id: User ID
+            project_id: Project ID
+            message: Text message
+            attachments: List of attachments with 'type', 'data', 'mime_type'
+            
+        Returns:
+            dict with response
+        """
+        try:
+            if not self._is_interactions_configured:
+                # Fallback to text-only processing
+                return self.process_mobile_message(user_id, project_id, message)
+            
+            project = self.get_project_details(user_id, project_id)
+            if not project:
+                return {'success': False, 'error': 'Project not found'}
+            
+            project_data = project.get('project_data', {})
+            project_title = project.get('project_title', 'Untitled Project')
+            subject = project.get('subject', 'General')
+            
+            # Build multimodal input
+            input_content = []
+            
+            # Add context prompt
+            context_prompt = f"""You are NerdX AI, helping with a ZIMSEC School-Based Project.
+
+Project: {project_title}
+Subject: {subject}
+
+Student's message: {message}
+
+Analyze any provided attachments and respond helpfully."""
+            
+            input_content.append({"type": "text", "text": context_prompt})
+            
+            # Add attachments
+            for attachment in attachments:
+                att_type = attachment.get('type', 'image')
+                att_data = attachment.get('data')
+                att_mime = attachment.get('mime_type', 'image/png')
+                
+                if att_type in ['image', 'audio', 'video', 'document']:
+                    input_content.append({
+                        "type": att_type,
+                        "data": att_data,
+                        "mime_type": att_mime
+                    })
+            
+            # Create interaction with multimodal content
+            result = self.interactions_service.create_interaction(
+                input_content=input_content,
+                model='flash'
+            )
+            
+            if result.get('success') and result.get('text'):
+                # Save to conversation history
+                conversation_history = project_data.get('conversation_history', [])
+                conversation_history.append({
+                    'role': 'user',
+                    'content': message,
+                    'timestamp': datetime.now().isoformat(),
+                    'attachments': len(attachments)
+                })
+                conversation_history.append({
+                    'role': 'assistant',
+                    'content': result['text'],
+                    'timestamp': datetime.now().isoformat()
+                })
+                project_data['conversation_history'] = conversation_history
+                self._save_project_to_database(user_id, project_data, project_id)
+                
+                return {
+                    'success': True,
+                    'response': result['text'],
+                    'project_id': project_id,
+                    'credits_remaining': get_user_credits(user_id)
+                }
+            
+            # Fallback to regular processing if multimodal fails
+            return self.process_mobile_message(user_id, project_id, message)
+            
+        except Exception as e:
+            logger.error(f"Error processing multimodal message: {e}")
+            return self.process_mobile_message(user_id, project_id, message)
+    
+    def search_with_grounding(self, user_id: str, project_id: int, query: str) -> Dict:
+        """
+        Search web with Google grounding for factual project research
+        
+        Args:
+            user_id: User ID
+            project_id: Project ID
+            query: Search query
+            
+        Returns:
+            dict with grounded response
+        """
+        try:
+            if not self._is_interactions_configured:
+                return {'success': False, 'error': 'Web search not available'}
+            
+            project = self.get_project_details(user_id, project_id)
+            if not project:
+                return {'success': False, 'error': 'Project not found'}
+            
+            project_title = project.get('project_title', 'Untitled Project')
+            subject = project.get('subject', 'General')
+            
+            # Enhanced query with project context
+            enhanced_query = f"""For a ZIMSEC {subject} School-Based Project titled "{project_title}":
+
+{query}
+
+Please provide accurate, current information with sources where possible. Focus on information relevant to Zimbabwe or similar contexts."""
+            
+            result = self.interactions_service.search_with_grounding(enhanced_query)
+            
+            if result.get('success') and result.get('text'):
+                # Save to conversation history
+                project_data = project.get('project_data', {})
+                conversation_history = project_data.get('conversation_history', [])
+                conversation_history.append({
+                    'role': 'user',
+                    'content': f"🔍 Search: {query}",
+                    'timestamp': datetime.now().isoformat()
+                })
+                conversation_history.append({
+                    'role': 'assistant',
+                    'content': f"🌐 **Web Search Results**\n\n{result['text']}",
+                    'timestamp': datetime.now().isoformat(),
+                    'type': 'web_search'
+                })
+                project_data['conversation_history'] = conversation_history
+                self._save_project_to_database(user_id, project_data, project_id)
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error with grounded search: {e}")
+            return {'success': False, 'error': str(e)}
 
     def generate_project_document(self, user_id: str, project_id: int) -> dict:
         """Generate a complete ZIMSEC project document as PDF using DeepSeek AI"""

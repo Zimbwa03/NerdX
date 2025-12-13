@@ -20,9 +20,8 @@ import { Ionicons } from '@expo/vector-icons';
 const BUTTON_SIZE = 60;
 
 // WebSocket server URL - Render production deployment
-const WS_URL = __DEV__
-    ? 'ws://192.168.210.42:8001/ws/nerdx-live' // Local network IP for development
-    : 'wss://nerdx-voice.onrender.com/ws/nerdx-live'; // Render production URL
+// Using Render URL for both dev and production since voice agent is hosted there
+const WS_URL = 'wss://nerdx-voice.onrender.com/ws/nerdx-live';
 
 // Connection states
 type ConnectionState = 'idle' | 'connecting' | 'active' | 'error';
