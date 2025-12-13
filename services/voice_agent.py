@@ -187,7 +187,7 @@ class GeminiLiveSession:
             logger.info("🔗 Connecting to Gemini Live API...")
             self.gemini_ws = await websockets.connect(
                 gemini_url,
-                extra_headers={
+                additional_headers={
                     "Content-Type": "application/json"
                 }
             )
