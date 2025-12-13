@@ -118,15 +118,19 @@ def convert_m4a_to_pcm(m4a_base64: str) -> str:
     Returns base64-encoded 16-bit little-endian PCM at 16kHz mono.
     """
     try:
-        # Configure pydub to use ffmpeg from imageio-ffmpeg (bundled binary)
+        from pydub import AudioSegment
+        import io
+        
+        # Try to set ffmpeg path from imageio-ffmpeg (bundled binary for cloud deployments)
         try:
             import imageio_ffmpeg
-            from pydub import AudioSegment
-            AudioSegment.converter = imageio_ffmpeg.get_ffmpeg_exe()
+            ffmpeg_path = imageio_ffmpeg.get_ffmpeg_exe()
+            AudioSegment.converter = ffmpeg_path
+            logger.info(f"✅ Using ffmpeg from imageio: {ffmpeg_path}")
         except ImportError:
-            from pydub import AudioSegment
-        
-        import io
+            logger.info("imageio-ffmpeg not available, using system ffmpeg")
+        except Exception as e:
+            logger.warning(f"imageio-ffmpeg error: {e}, using system ffmpeg")
         
         # Decode base64 to bytes
         m4a_bytes = base64.b64decode(m4a_base64)
@@ -145,9 +149,8 @@ def convert_m4a_to_pcm(m4a_base64: str) -> str:
         logger.info(f"🔄 Converted M4A ({len(m4a_base64)} chars) to PCM ({len(pcm_base64)} chars)")
         return pcm_base64
         
-    except ImportError:
-        logger.warning("pydub not installed - audio conversion disabled. Install with: pip install pydub")
-        # Return original data - Gemini will reject it but at least we tried
+    except ImportError as e:
+        logger.warning(f"pydub not installed: {e}")
         return m4a_base64
     except Exception as e:
         logger.error(f"Audio conversion failed: {e}")
