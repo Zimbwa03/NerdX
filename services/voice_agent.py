@@ -118,7 +118,14 @@ def convert_m4a_to_pcm(m4a_base64: str) -> str:
     Returns base64-encoded 16-bit little-endian PCM at 16kHz mono.
     """
     try:
-        from pydub import AudioSegment
+        # Configure pydub to use ffmpeg from imageio-ffmpeg (bundled binary)
+        try:
+            import imageio_ffmpeg
+            from pydub import AudioSegment
+            AudioSegment.converter = imageio_ffmpeg.get_ffmpeg_exe()
+        except ImportError:
+            from pydub import AudioSegment
+        
         import io
         
         # Decode base64 to bytes
