@@ -9,7 +9,9 @@ uvicorn>=0.32.0
 websockets>=12.0
 
 # Audio processing
-pydub>=0.25.0
+pydub>=0.25.1
+audioop-lts>=0.2.1  # Backport of audioop for Python 3.13+
+numpy
 imageio-ffmpeg>=0.4.0  # Bundles ffmpeg binary - no apt-get needed
 
 # Environment variables
