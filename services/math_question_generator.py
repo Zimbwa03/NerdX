@@ -9,10 +9,20 @@ import os
 import json
 import requests
 import time
+import random
 from typing import Dict, List, Optional
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
+
+# Import structured prompts
+try:
+    from services.math_prompts_master import get_random_prompt, get_prompt, get_all_topics
+    PROMPTS_AVAILABLE = True
+    logger.info("✅ Structured math prompts loaded (2,520 prompts)")
+except ImportError:
+    PROMPTS_AVAILABLE = False
+    logger.warning("⚠️ Structured prompts not available, using default prompts")
 
 # Try to import Gemini AI
 try:
@@ -176,7 +186,7 @@ class MathQuestionGenerator:
         return self.generate_question(subject, topic, difficulty)
 
     def _create_question_prompt(self, subject: str, topic: str, difficulty: str, recent_topics: set = None) -> str:
-        """Create optimized prompt for DeepSeek AI"""
+        """Create optimized prompt using structured prompts when available"""
         
         if recent_topics is None:
             recent_topics = set()
@@ -187,12 +197,58 @@ class MathQuestionGenerator:
             "difficult": "Complex problem-solving, multi-step reasoning, synthesis of several concepts"
         }
         
+        # Try to get a structured prompt for this topic
+        structured_prompt = None
+        subtopic = topic
+        learning_obj = f"Test understanding of {topic}"
+        
+        if PROMPTS_AVAILABLE:
+            try:
+                prompt_data = get_random_prompt(topic, difficulty=difficulty)
+                if prompt_data:
+                    structured_prompt = prompt_data.get('prompt', '')
+                    subtopic = prompt_data.get('subtopic', topic)
+                    learning_obj = prompt_data.get('learning_objective', learning_obj)
+                    logger.info(f"Using structured prompt: {prompt_data.get('id', 'unknown')} for {topic}")
+            except Exception as e:
+                logger.warning(f"Error getting structured prompt: {e}")
+        
         # Build variation instruction if we have recent topics
         variation_note = ""
         if recent_topics and topic.lower() in [t.lower() for t in recent_topics]:
             variation_note = "\nIMPORTANT: Generate a DIFFERENT question from previous ones on this topic. Vary the numbers, scenario, or approach."
         
-        prompt = f"""Generate a high-quality {difficulty} level {subject} question about {topic} for ZIMSEC O-Level students.
+        points = 10 if difficulty == 'easy' else 20 if difficulty == 'medium' else 30
+        
+        # Use structured prompt if available
+        if structured_prompt:
+            prompt = f"""Generate a ZIMSEC O-Level Mathematics question.
+
+**Topic:** {topic}
+**Subtopic:** {subtopic}
+**Difficulty:** {difficulty} - {difficulty_descriptions[difficulty]}
+**Learning Objective:** {learning_obj}
+{variation_note}
+
+**Specific Instructions:**
+{structured_prompt}
+
+Return your response in this EXACT JSON format:
+{{
+    "question": "Clear, focused question testing the concept",
+    "solution": "Complete step-by-step solution with working",
+    "answer": "Final answer only",
+    "points": {points},
+    "explanation": "Conceptual explanation of what is being tested",
+    "teaching_explanation": "Friendly tutor-style explanation with analogies",
+    "difficulty": "{difficulty}",
+    "subtopic": "{subtopic}"
+}}
+
+Generate the question now:"""
+        else:
+            # Default prompt when structured prompts not available
+            prompt = f"""Generate a high-quality {difficulty} level {subject} question about {topic} for ZIMSEC O-Level students.
 {variation_note}
 Requirements:
 - Create a clear, specific question following ZIMSEC exam format
@@ -209,8 +265,9 @@ Return your response in this EXACT JSON format:
     "question": "Your generated question here",
     "solution": "Complete step-by-step solution with clear working",
     "answer": "Final answer only",
-    "points": {10 if difficulty == 'easy' else 20 if difficulty == 'medium' else 50},
-    "explanation": "Brief explanation of the concept being tested"
+    "points": {points},
+    "explanation": "Brief explanation of the concept being tested",
+    "teaching_explanation": "Friendly tutor-style explanation"
 }}
 
 Generate the question now:"""
