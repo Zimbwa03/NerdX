@@ -104,35 +104,17 @@ const MathText: React.FC<MathTextProps> = ({
         let processed = escapeHtml(part);
 
         if (highlightMath) {
-          // Highlight numbers with optional decimals, currency symbols, percentages
-          // Pattern: $5000, 6341.21, 8%, 0.08, (1.02), etc.
+          // Highlight standalone numbers using capture groups (compatible with all JS engines)
+          // Captures: (before)(number)(after) - preserves spacing
           processed = processed.replace(
-            /(\$?\d+(?:,\d{3})*(?:\.\d+)?%?)/g,
-            '<span class="math-number">$1</span>'
+            /(^|\s|\()(\$?\d+(?:,\d{3})*(?:\.\d+)?%?)(\s|$|[)\.,;:!?])/g,
+            '$1<span class="math-number">$2</span>$3'
           );
 
-          // Highlight mathematical operators and symbols
+          // Highlight = signs with proper spacing preserved
           processed = processed.replace(
-            /(\s*[\+\-\×\÷\=]\s*)/g,
+            /(\s=\s)/g,
             '<span class="math-operator">$1</span>'
-          );
-
-          // Highlight variable expressions like P, r, n, t, A, x², y³
-          processed = processed.replace(
-            /\b([A-Za-z])\s*=\s*/g,
-            '<span class="math-variable">$1</span> = '
-          );
-
-          // Highlight expressions in parentheses with numbers: (1 + 0.08/4), (1.02)^(12)
-          processed = processed.replace(
-            /(\([^)]*\d+[^)]*\))/g,
-            '<span class="math-expression">$1</span>'
-          );
-
-          // Highlight exponents/powers: ^(12), ^3, ^(4*3)
-          processed = processed.replace(
-            /(\^[\(\d][^\s]*)/g,
-            '<span class="math-power">$1</span>'
           );
         }
 
