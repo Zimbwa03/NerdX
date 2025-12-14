@@ -23,8 +23,9 @@ const BUTTON_SIZE = 60;
 // Using Render URL for both dev and production since voice agent is hosted there
 const WS_URL = 'wss://nerdx-voice.onrender.com/ws/nerdx-live';
 
-// Connection states
-type ConnectionState = 'idle' | 'connecting' | 'active' | 'error';
+// Connection states for tap-to-talk mode
+// idle -> connecting -> ready -> recording -> processing -> ready
+type ConnectionState = 'idle' | 'connecting' | 'ready' | 'recording' | 'processing' | 'error';
 
 interface NerdXLiveButtonProps {
     serverUrl?: string;
@@ -46,7 +47,6 @@ export const NerdXLiveButton: React.FC<NerdXLiveButtonProps> = ({
     const soundRef = useRef<Audio.Sound | null>(null);
     const audioQueueRef = useRef<string[]>([]);
     const isPlayingRef = useRef(false);
-    const recordingCycleActiveRef = useRef(false);
 
     // Audio playback queue
     const playNextAudio = useCallback(async () => {
@@ -89,7 +89,7 @@ export const NerdXLiveButton: React.FC<NerdXLiveButtonProps> = ({
         }
     }, []);
 
-    // Start recording
+    // Start recording (called when user taps to speak)
     const startRecording = useCallback(async () => {
         try {
             // Clean up any existing recording first
@@ -131,137 +131,77 @@ export const NerdXLiveButton: React.FC<NerdXLiveButtonProps> = ({
             });
 
             recordingRef.current = recording;
-            recordingCycleActiveRef.current = true;
-            console.log('🎙️ Recording started');
-
-            // Start the recording cycle
-            startRecordingCycle();
+            setConnectionState('recording');
+            console.log('🎙️ Recording started - tap again to send');
         } catch (error) {
             console.error('Error starting recording:', error);
             Alert.alert('Microphone Error', 'Could not access microphone. Please try again.');
-            endSession();
         }
     }, []);
 
-    // Recording cycle
-    const startRecordingCycle = useCallback(async () => {
-        // Track if current recording has been processed
-        let isRecordingProcessed = false;
+    // Stop recording and send audio (called when user taps again)
+    const stopRecordingAndSend = useCallback(async () => {
+        if (!recordingRef.current) return;
 
-        const recordAndSend = async () => {
-            if (!wsRef.current || !recordingCycleActiveRef.current) return;
+        try {
+            const uri = recordingRef.current.getURI();
 
-            // Wait for audio chunk duration (3 seconds)
-            await new Promise(resolve => setTimeout(resolve, 3000));
-
-            if (!recordingRef.current || !recordingCycleActiveRef.current) return;
-
-            // Mark recording as being processed to prevent double-unload
-            if (isRecordingProcessed) return;
-            isRecordingProcessed = true;
-
+            // Stop recording
             try {
-                // Get URI before stopping (in case stop fails)
-                const uri = recordingRef.current.getURI();
-
-                // Try to stop and unload
-                try {
-                    await recordingRef.current.stopAndUnloadAsync();
-                } catch (stopError: any) {
-                    // Ignore "already unloaded" errors
-                    if (!stopError?.message?.includes('already been unloaded')) {
-                        console.warn('Recording stop warning:', stopError);
-                    }
-                }
-                recordingRef.current = null;
-
-                console.log('🎤 Recording saved to:', uri);
-
-                // Send audio if we have valid data and connection
-                if (uri && wsRef.current && recordingCycleActiveRef.current) {
-                    try {
-                        const response = await fetch(uri);
-                        const blob = await response.blob();
-
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                            const base64data = reader.result as string;
-                            const base64 = base64data.split(',')[1] || base64data;
-
-                            if (wsRef.current && recordingCycleActiveRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-                                console.log('📤 Sending audio chunk, size:', base64.length);
-                                wsRef.current.send(JSON.stringify({
-                                    type: 'audio',
-                                    data: base64,
-                                }));
-                            }
-                        };
-                        reader.onerror = () => {
-                            console.warn('FileReader error - skipping chunk');
-                        };
-                        reader.readAsDataURL(blob);
-                    } catch (fetchError) {
-                        // Network error reading the file - just skip this chunk
-                        console.warn('Could not read audio file - skipping chunk');
-                    }
-                }
-
-                // Start a new recording if still active
-                if (recordingCycleActiveRef.current && wsRef.current) {
-                    isRecordingProcessed = false; // Reset for next recording
-                    try {
-                        const { recording } = await Audio.Recording.createAsync({
-                            android: {
-                                extension: '.m4a',
-                                outputFormat: Audio.AndroidOutputFormat.MPEG_4,
-                                audioEncoder: Audio.AndroidAudioEncoder.AAC,
-                                sampleRate: 16000,
-                                numberOfChannels: 1,
-                                bitRate: 128000,
-                            },
-                            ios: {
-                                extension: '.m4a',
-                                audioQuality: Audio.IOSAudioQuality.MEDIUM,
-                                sampleRate: 16000,
-                                numberOfChannels: 1,
-                                bitRate: 128000,
-                                outputFormat: Audio.IOSOutputFormat.MPEG4AAC,
-                            },
-                            web: {
-                                mimeType: 'audio/webm',
-                                bitsPerSecond: 128000,
-                            },
-                        });
-                        recordingRef.current = recording;
-
-                        // Continue the cycle
-                        recordAndSend();
-                    } catch (createError) {
-                        console.error('Could not create new recording:', createError);
-                        // Don't crash - just stop the cycle gracefully
-                    }
-                }
-            } catch (error) {
-                console.error('Error in recording cycle:', error);
-                // Continue the cycle if still active
-                if (recordingCycleActiveRef.current) {
-                    isRecordingProcessed = false;
-                    setTimeout(recordAndSend, 1000); // Retry after 1 second
+                await recordingRef.current.stopAndUnloadAsync();
+            } catch (e: any) {
+                if (!e?.message?.includes('already been unloaded')) {
+                    console.warn('Stop recording warning:', e);
                 }
             }
-        };
+            recordingRef.current = null;
 
-        recordAndSend();
+            console.log('🎤 Recording stopped:', uri);
+            setConnectionState('processing');
+
+            // Send audio to server
+            if (uri && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                try {
+                    const response = await fetch(uri);
+                    const blob = await response.blob();
+
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        const base64data = reader.result as string;
+                        const base64 = base64data.split(',')[1] || base64data;
+
+                        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                            console.log('📤 Sending audio to AI, size:', base64.length);
+                            wsRef.current.send(JSON.stringify({
+                                type: 'audio',
+                                data: base64,
+                            }));
+                        }
+                    };
+                    reader.onerror = () => {
+                        console.error('Error reading audio file');
+                        setConnectionState('ready');
+                    };
+                    reader.readAsDataURL(blob);
+                } catch (fetchError) {
+                    console.error('Error sending audio:', fetchError);
+                    setConnectionState('ready');
+                }
+            } else {
+                setConnectionState('ready');
+            }
+        } catch (error) {
+            console.error('Error in stop recording:', error);
+            setConnectionState('ready');
+        }
     }, []);
 
-    // Stop recording
+    // Stop recording without sending (for cleanup)
     const stopRecording = useCallback(async () => {
-        recordingCycleActiveRef.current = false;
         if (recordingRef.current) {
             try {
                 await recordingRef.current.stopAndUnloadAsync();
             } catch (error: any) {
-                // Silently ignore "already unloaded" errors
                 if (!error?.message?.includes('already been unloaded')) {
                     console.warn('Recording cleanup:', error);
                 }
@@ -272,7 +212,6 @@ export const NerdXLiveButton: React.FC<NerdXLiveButtonProps> = ({
 
     // End session
     const endSession = useCallback(async () => {
-        recordingCycleActiveRef.current = false;
         await stopRecording();
 
         if (soundRef.current) {
@@ -305,19 +244,21 @@ export const NerdXLiveButton: React.FC<NerdXLiveButtonProps> = ({
             switch (data.type) {
                 case 'ready':
                     console.log('🎧 NerdX Live ready:', data.message);
-                    setConnectionState('active');
-                    startRecording();
+                    setConnectionState('ready');
+                    console.log('💡 Tap the button to start speaking');
                     break;
 
                 case 'audio':
                     if (data.data) {
+                        console.log('🔊 Received AI audio response');
                         audioQueueRef.current.push(data.data);
                         playNextAudio();
                     }
                     break;
 
                 case 'turnComplete':
-                    console.log('✅ AI turn complete');
+                    console.log('✅ AI turn complete - tap to speak again');
+                    setConnectionState('ready');
                     break;
 
                 case 'interrupted':
@@ -334,7 +275,7 @@ export const NerdXLiveButton: React.FC<NerdXLiveButtonProps> = ({
         } catch (error) {
             console.error('Error parsing WebSocket message:', error);
         }
-    }, [playNextAudio, startRecording, endSession]);
+    }, [playNextAudio, endSession]);
 
     // Connect to server
     const connect = useCallback(async () => {
@@ -380,28 +321,46 @@ export const NerdXLiveButton: React.FC<NerdXLiveButtonProps> = ({
         }
     }, [connectionState, serverUrl, handleWebSocketMessage, endSession, onSessionStart]);
 
-    // Handle button press
+    // Handle button press - tap-to-talk flow
     const handlePress = useCallback(() => {
-        if (connectionState === 'idle') {
-            connect();
-        } else if (connectionState === 'active' || connectionState === 'connecting') {
-            endSession();
-        } else if (connectionState === 'error') {
-            setConnectionState('idle');
+        switch (connectionState) {
+            case 'idle':
+                connect();
+                break;
+            case 'ready':
+                // Start recording when ready
+                startRecording();
+                break;
+            case 'recording':
+                // Stop and send when recording
+                stopRecordingAndSend();
+                break;
+            case 'processing':
+                // Do nothing while processing - wait for AI
+                console.log('⏳ Waiting for AI response...');
+                break;
+            case 'connecting':
+            case 'error':
+                // Cancel/reset
+                endSession();
+                break;
         }
-    }, [connectionState, connect, endSession]);
+    }, [connectionState, connect, startRecording, stopRecordingAndSend, endSession]);
 
     // Get button icon based on state
     const getIcon = () => {
         switch (connectionState) {
             case 'connecting':
+            case 'processing':
                 return <Ionicons name="sync" size={28} color="#fff" />;
-            case 'active':
-                return <Ionicons name="mic" size={28} color="#fff" />;
+            case 'ready':
+                return <Ionicons name="mic-outline" size={28} color="#fff" />;
+            case 'recording':
+                return <Ionicons name="stop" size={28} color="#fff" />;
             case 'error':
                 return <Ionicons name="alert-circle" size={28} color="#fff" />;
             default:
-                return <Ionicons name="mic-outline" size={28} color="#fff" />;
+                return <Ionicons name="chatbubble-ellipses-outline" size={28} color="#fff" />;
         }
     };
 
@@ -409,13 +368,34 @@ export const NerdXLiveButton: React.FC<NerdXLiveButtonProps> = ({
     const getButtonColor = () => {
         switch (connectionState) {
             case 'connecting':
-                return '#FF9800';
-            case 'active':
-                return '#4CAF50';
+            case 'processing':
+                return '#FF9800'; // Orange - waiting
+            case 'ready':
+                return '#4CAF50'; // Green - ready to record
+            case 'recording':
+                return '#F44336'; // Red - recording
             case 'error':
-                return '#F44336';
+                return '#9E9E9E'; // Grey - error
             default:
-                return '#6C63FF';
+                return '#6C63FF'; // Purple - idle
+        }
+    };
+
+    // Get status label
+    const getStatusLabel = () => {
+        switch (connectionState) {
+            case 'connecting':
+                return 'Connecting...';
+            case 'ready':
+                return 'Tap to speak';
+            case 'recording':
+                return 'Recording... tap to send';
+            case 'processing':
+                return 'AI thinking...';
+            case 'error':
+                return 'Error';
+            default:
+                return '';
         }
     };
 
@@ -433,9 +413,7 @@ export const NerdXLiveButton: React.FC<NerdXLiveButtonProps> = ({
             {connectionState !== 'idle' && (
                 <View style={styles.labelContainer}>
                     <Text style={styles.labelText}>
-                        {connectionState === 'connecting' && 'Connecting...'}
-                        {connectionState === 'active' && 'Live'}
-                        {connectionState === 'error' && 'Error'}
+                        {getStatusLabel()}
                     </Text>
                 </View>
             )}
