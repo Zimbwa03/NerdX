@@ -1,4 +1,5 @@
 // MathText Component - Renders LaTeX math notation professionally
+// ENHANCED: Automatically highlights numbers, expressions, and formulas in engaging blue
 import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, Text, Dimensions } from 'react-native';
 import { WebView } from 'react-native-webview';
@@ -11,23 +12,25 @@ interface MathTextProps {
   children: string;
   style?: object;
   fontSize?: number;
+  highlightMath?: boolean; // Enable math highlighting (default: true)
 }
 
 /**
  * MathText Component
  * Renders text with LaTeX math notation using KaTeX via WebView
+ * ENHANCED: Automatically highlights numbers, variables, and expressions in blue
  * Supports both inline math \( \) and display math \[ \]
  */
 const MathText: React.FC<MathTextProps> = ({
   children,
   style,
-  fontSize = 16
+  fontSize = 16,
+  highlightMath = true
 }) => {
   const { isDarkMode } = useTheme();
   const themedColors = useThemedColors();
-  const [webViewHeight, setWebViewHeight] = useState(40); // Start small, will auto-resize
+  const [webViewHeight, setWebViewHeight] = useState(40);
 
-  // Handle null/undefined children
   if (!children || typeof children !== 'string') {
     return null;
   }
@@ -57,7 +60,7 @@ const MathText: React.FC<MathTextProps> = ({
     return latexPatterns.some(pattern => pattern.test(children));
   }, [children]);
 
-  // If no LaTeX, render as plain text
+  // If no LaTeX, render as plain text (but still highlight math expressions)
   if (!hasLatex) {
     return (
       <Text style={[styles.plainText, { color: themedColors.text.primary }, style]}>
@@ -93,21 +96,58 @@ const MathText: React.FC<MathTextProps> = ({
 
     return parts.map((part, index) => {
       if (part.startsWith('$$') && part.endsWith('$$')) {
-        // Display math - keep as is for KaTeX
         return part;
       } else if (part.startsWith('$') && part.endsWith('$')) {
-        // Inline math - keep as is for KaTeX
         return part;
       } else {
-        // Regular text - escape HTML
-        return escapeHtml(part);
+        // Regular text - escape HTML but also highlight math-like content
+        let processed = escapeHtml(part);
+
+        if (highlightMath) {
+          // Highlight numbers with optional decimals, currency symbols, percentages
+          // Pattern: $5000, 6341.21, 8%, 0.08, (1.02), etc.
+          processed = processed.replace(
+            /(\$?\d+(?:,\d{3})*(?:\.\d+)?%?)/g,
+            '<span class="math-number">$1</span>'
+          );
+
+          // Highlight mathematical operators and symbols
+          processed = processed.replace(
+            /(\s*[\+\-\×\÷\=]\s*)/g,
+            '<span class="math-operator">$1</span>'
+          );
+
+          // Highlight variable expressions like P, r, n, t, A, x², y³
+          processed = processed.replace(
+            /\b([A-Za-z])\s*=\s*/g,
+            '<span class="math-variable">$1</span> = '
+          );
+
+          // Highlight expressions in parentheses with numbers: (1 + 0.08/4), (1.02)^(12)
+          processed = processed.replace(
+            /(\([^)]*\d+[^)]*\))/g,
+            '<span class="math-expression">$1</span>'
+          );
+
+          // Highlight exponents/powers: ^(12), ^3, ^(4*3)
+          processed = processed.replace(
+            /(\^[\(\d][^\s]*)/g,
+            '<span class="math-power">$1</span>'
+          );
+        }
+
+        return processed;
       }
     }).join('');
-  }, [children]);
+  }, [children, highlightMath]);
 
   const textColor = isDarkMode ? '#E0E0E0' : '#212121';
   const bgColor = isDarkMode ? '#1D1E33' : '#FFFFFF';
-  const linkColor = isDarkMode ? '#00E5FF' : '#1976D2';
+  // Enhanced math colors - vibrant blue that stands out
+  const mathColor = isDarkMode ? '#00BFFF' : '#1565C0'; // Deep sky blue / Blue 800
+  const mathNumberColor = isDarkMode ? '#00E5FF' : '#0277BD'; // Cyan accent / Light blue 800
+  const mathOperatorColor = isDarkMode ? '#64FFDA' : '#00897B'; // Teal accent
+  const mathVariableColor = isDarkMode ? '#FF80AB' : '#D81B60'; // Pink accent
 
   const htmlContent = `
     <!DOCTYPE html>
@@ -126,18 +166,21 @@ const MathText: React.FC<MathTextProps> = ({
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
           font-size: ${fontSize}px;
-          line-height: 1.6;
+          line-height: 1.7;
           color: ${textColor};
           background-color: transparent;
           padding: 8px 4px;
           word-wrap: break-word;
         }
+        
+        /* LaTeX math rendered by KaTeX */
         .katex {
-          font-size: 1.1em;
-          color: ${linkColor};
+          font-size: 1.15em;
+          color: ${mathColor};
+          font-weight: 500;
         }
         .katex-display {
-          margin: 12px 0;
+          margin: 16px 0;
           overflow-x: auto;
           overflow-y: hidden;
         }
@@ -149,14 +192,63 @@ const MathText: React.FC<MathTextProps> = ({
           overflow-y: hidden;
           text-align: center;
         }
-        p {
-          margin-bottom: 8px;
+        
+        /* Enhanced math highlighting classes */
+        .math-number {
+          color: ${mathNumberColor};
+          font-weight: 600;
+          font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+          background: ${isDarkMode ? 'rgba(0, 229, 255, 0.12)' : 'rgba(2, 119, 189, 0.08)'};
+          padding: 1px 4px;
+          border-radius: 4px;
+          margin: 0 1px;
         }
-        /* Style for step-by-step solutions */
+        
+        .math-operator {
+          color: ${mathOperatorColor};
+          font-weight: 600;
+          font-size: 1.1em;
+        }
+        
+        .math-variable {
+          color: ${mathVariableColor};
+          font-weight: 600;
+          font-style: italic;
+        }
+        
+        .math-expression {
+          color: ${mathColor};
+          font-weight: 500;
+          background: ${isDarkMode ? 'rgba(0, 191, 255, 0.1)' : 'rgba(21, 101, 192, 0.08)'};
+          padding: 2px 6px;
+          border-radius: 4px;
+          border-left: 3px solid ${mathColor};
+        }
+        
+        .math-power {
+          color: ${mathNumberColor};
+          font-weight: 600;
+          font-size: 0.9em;
+          vertical-align: super;
+        }
+        
+        p {
+          margin-bottom: 12px;
+        }
+        
+        /* Step-by-step solutions styling */
         br {
           display: block;
           content: "";
-          margin-top: 4px;
+          margin-top: 6px;
+        }
+        
+        /* Make equations stand out */
+        .katex-display .katex {
+          padding: 8px 16px;
+          background: ${isDarkMode ? 'rgba(0, 191, 255, 0.08)' : 'rgba(21, 101, 192, 0.05)'};
+          border-radius: 8px;
+          border: 1px solid ${isDarkMode ? 'rgba(0, 191, 255, 0.2)' : 'rgba(21, 101, 192, 0.15)'};
         }
       </style>
     </head>
@@ -179,7 +271,7 @@ const MathText: React.FC<MathTextProps> = ({
           setTimeout(function() {
             const height = document.body.scrollHeight;
             window.ReactNativeWebView.postMessage(JSON.stringify({ height: height }));
-          }, 100);
+          }, 150);
         });
       </script>
     </body>
@@ -190,8 +282,7 @@ const MathText: React.FC<MathTextProps> = ({
     try {
       const data = JSON.parse(event.nativeEvent.data);
       if (data.height) {
-        // Use the actual height with minimal padding
-        setWebViewHeight(Math.max(data.height + 8, 30));
+        setWebViewHeight(Math.max(data.height + 12, 30));
       }
     } catch (e) {
       // Ignore parsing errors
@@ -234,3 +325,4 @@ const styles = StyleSheet.create({
 });
 
 export default MathText;
+
