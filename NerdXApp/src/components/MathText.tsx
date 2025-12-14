@@ -25,7 +25,7 @@ const MathText: React.FC<MathTextProps> = ({
 }) => {
   const { isDarkMode } = useTheme();
   const themedColors = useThemedColors();
-  const [webViewHeight, setWebViewHeight] = useState(100);
+  const [webViewHeight, setWebViewHeight] = useState(40); // Start small, will auto-resize
 
   // Handle null/undefined children
   if (!children || typeof children !== 'string') {
@@ -190,12 +190,14 @@ const MathText: React.FC<MathTextProps> = ({
     try {
       const data = JSON.parse(event.nativeEvent.data);
       if (data.height) {
-        setWebViewHeight(Math.max(data.height + 20, 50));
+        // Use the actual height with minimal padding
+        setWebViewHeight(Math.max(data.height + 8, 30));
       }
     } catch (e) {
       // Ignore parsing errors
     }
   };
+
 
   return (
     <View style={[styles.container, style]}>

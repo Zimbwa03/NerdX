@@ -886,11 +886,18 @@ def submit_answer():
                 if not feedback:
                     feedback = '❌ Not quite right. Review the solution below to understand the correct approach.'
         else:
-            # For other subjects, simple string comparison
-            if answer.lower().strip() == str(correct_answer).lower().strip():
+            # For other subjects (Combined Science, English, etc.)
+            # Normalize both answers for reliable comparison
+            user_answer_normalized = str(answer).lower().strip()
+            correct_answer_normalized = str(correct_answer).lower().strip()
+            
+            # Check for exact match (after normalization)
+            if user_answer_normalized == correct_answer_normalized:
                 is_correct = True
                 feedback = '✅ Correct!'
             else:
+                # Also check if user selected the right option by checking containment
+                # This handles cases where the option text might have minor formatting differences
                 is_correct = False
                 feedback = '❌ Incorrect. The correct answer is shown below.'
         

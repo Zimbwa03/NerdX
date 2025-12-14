@@ -26,21 +26,51 @@ class MathExamService:
         """
         Get the next question based on the current count.
         If count % 3 == 0, generate AI question.
-        Else, fetch from DB.
+        Else, fetch from DB (with AI fallback if DB fails).
         """
         try:
             # Logic: Every 3rd question is AI (3, 6, 9...)
             is_ai_turn = (question_count % 3 == 0)
             
             if is_ai_turn:
+                logger.info(f"Question #{question_count}: AI turn")
                 return self._generate_ai_question(user_id)
             else:
-                return self._fetch_db_question(year, paper)
+                logger.info(f"Question #{question_count}: DB turn")
+                try:
+                    question = self._fetch_db_question(year, paper)
+                    if question:
+                        return question
+                    else:
+                        logger.info("DB returned empty, falling back to AI")
+                        return self._generate_ai_question(user_id)
+                except Exception as db_error:
+                    logger.warning(f"DB fetch failed ({db_error}), falling back to AI")
+                    return self._generate_ai_question(user_id)
                 
         except Exception as e:
-            logger.error(f"Error getting next exam question: {e}")
-            # Fallback to AI if DB fails, or simple error
-            return self._generate_ai_question(user_id)
+            logger.error(f"Error getting next exam question: {e}", exc_info=True)
+            # Ultimate fallback to AI
+            try:
+                return self._generate_ai_question(user_id)
+            except Exception as ai_error:
+                logger.error(f"AI fallback also failed: {ai_error}")
+                # Return a minimal error response so the frontend can show a message
+                return {
+                    'id': str(uuid.uuid4()),
+                    'type': 'error',
+                    'question_text': 'Unable to load question. Please try again.',
+                    'question_image_url': None,
+                    'options': [],
+                    'correct_answer': '',
+                    'solution': '',
+                    'explanation': '',
+                    'allows_text_input': False,
+                    'allows_image_upload': False,
+                    'is_ai': False,
+                    'error': True
+                }
+
 
     def _generate_ai_question(self, user_id: str) -> Dict:
         """Generate a question using DeepSeek (via MathQuestionGenerator)"""
