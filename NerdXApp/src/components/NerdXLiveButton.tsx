@@ -145,68 +145,109 @@ export const NerdXLiveButton: React.FC<NerdXLiveButtonProps> = ({
 
     // Recording cycle
     const startRecordingCycle = useCallback(async () => {
+        // Track if current recording has been processed
+        let isRecordingProcessed = false;
+
         const recordAndSend = async () => {
             if (!wsRef.current || !recordingCycleActiveRef.current) return;
 
+            // Wait for audio chunk duration (3 seconds)
             await new Promise(resolve => setTimeout(resolve, 3000));
 
             if (!recordingRef.current || !recordingCycleActiveRef.current) return;
 
+            // Mark recording as being processed to prevent double-unload
+            if (isRecordingProcessed) return;
+            isRecordingProcessed = true;
+
             try {
-                await recordingRef.current.stopAndUnloadAsync();
+                // Get URI before stopping (in case stop fails)
                 const uri = recordingRef.current.getURI();
+
+                // Try to stop and unload
+                try {
+                    await recordingRef.current.stopAndUnloadAsync();
+                } catch (stopError: any) {
+                    // Ignore "already unloaded" errors
+                    if (!stopError?.message?.includes('already been unloaded')) {
+                        console.warn('Recording stop warning:', stopError);
+                    }
+                }
+                recordingRef.current = null;
+
                 console.log('🎤 Recording saved to:', uri);
 
+                // Send audio if we have valid data and connection
                 if (uri && wsRef.current && recordingCycleActiveRef.current) {
-                    const response = await fetch(uri);
-                    const blob = await response.blob();
+                    try {
+                        const response = await fetch(uri);
+                        const blob = await response.blob();
 
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                        const base64data = reader.result as string;
-                        const base64 = base64data.split(',')[1] || base64data;
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                            const base64data = reader.result as string;
+                            const base64 = base64data.split(',')[1] || base64data;
 
-                        if (wsRef.current && recordingCycleActiveRef.current) {
-                            console.log('📤 Sending audio chunk, size:', base64.length);
-                            wsRef.current.send(JSON.stringify({
-                                type: 'audio',
-                                data: base64,
-                            }));
-                        }
-                    };
-                    reader.readAsDataURL(blob);
+                            if (wsRef.current && recordingCycleActiveRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                                console.log('📤 Sending audio chunk, size:', base64.length);
+                                wsRef.current.send(JSON.stringify({
+                                    type: 'audio',
+                                    data: base64,
+                                }));
+                            }
+                        };
+                        reader.onerror = () => {
+                            console.warn('FileReader error - skipping chunk');
+                        };
+                        reader.readAsDataURL(blob);
+                    } catch (fetchError) {
+                        // Network error reading the file - just skip this chunk
+                        console.warn('Could not read audio file - skipping chunk');
+                    }
                 }
 
                 // Start a new recording if still active
-                if (recordingCycleActiveRef.current) {
-                    const { recording } = await Audio.Recording.createAsync({
-                        android: {
-                            extension: '.m4a',
-                            outputFormat: Audio.AndroidOutputFormat.MPEG_4,
-                            audioEncoder: Audio.AndroidAudioEncoder.AAC,
-                            sampleRate: 16000,
-                            numberOfChannels: 1,
-                            bitRate: 128000,
-                        },
-                        ios: {
-                            extension: '.m4a',
-                            audioQuality: Audio.IOSAudioQuality.MEDIUM,
-                            sampleRate: 16000,
-                            numberOfChannels: 1,
-                            bitRate: 128000,
-                            outputFormat: Audio.IOSOutputFormat.MPEG4AAC,
-                        },
-                        web: {
-                            mimeType: 'audio/webm',
-                            bitsPerSecond: 128000,
-                        },
-                    });
-                    recordingRef.current = recording;
+                if (recordingCycleActiveRef.current && wsRef.current) {
+                    isRecordingProcessed = false; // Reset for next recording
+                    try {
+                        const { recording } = await Audio.Recording.createAsync({
+                            android: {
+                                extension: '.m4a',
+                                outputFormat: Audio.AndroidOutputFormat.MPEG_4,
+                                audioEncoder: Audio.AndroidAudioEncoder.AAC,
+                                sampleRate: 16000,
+                                numberOfChannels: 1,
+                                bitRate: 128000,
+                            },
+                            ios: {
+                                extension: '.m4a',
+                                audioQuality: Audio.IOSAudioQuality.MEDIUM,
+                                sampleRate: 16000,
+                                numberOfChannels: 1,
+                                bitRate: 128000,
+                                outputFormat: Audio.IOSOutputFormat.MPEG4AAC,
+                            },
+                            web: {
+                                mimeType: 'audio/webm',
+                                bitsPerSecond: 128000,
+                            },
+                        });
+                        recordingRef.current = recording;
 
-                    recordAndSend();
+                        // Continue the cycle
+                        recordAndSend();
+                    } catch (createError) {
+                        console.error('Could not create new recording:', createError);
+                        // Don't crash - just stop the cycle gracefully
+                    }
                 }
             } catch (error) {
                 console.error('Error in recording cycle:', error);
+                // Continue the cycle if still active
+                if (recordingCycleActiveRef.current) {
+                    isRecordingProcessed = false;
+                    setTimeout(recordAndSend, 1000); // Retry after 1 second
+                }
             }
         };
 
@@ -219,10 +260,13 @@ export const NerdXLiveButton: React.FC<NerdXLiveButtonProps> = ({
         if (recordingRef.current) {
             try {
                 await recordingRef.current.stopAndUnloadAsync();
-                recordingRef.current = null;
-            } catch (error) {
-                console.error('Error stopping recording:', error);
+            } catch (error: any) {
+                // Silently ignore "already unloaded" errors
+                if (!error?.message?.includes('already been unloaded')) {
+                    console.warn('Recording cleanup:', error);
+                }
             }
+            recordingRef.current = null;
         }
     }, []);
 

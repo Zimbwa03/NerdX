@@ -1065,7 +1065,7 @@ const styles = StyleSheet.create({
   },
   quickAskContainer: {
     marginBottom: 12,
-    maxHeight: 40,
+    minHeight: 40,
   },
   quickAskButton: {
     backgroundColor: Colors.background.subtle,
@@ -1152,6 +1152,9 @@ const markdownStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
+    borderWidth: 1.5,
+    borderColor: 'rgba(103,80,164,0.4)',
+    backgroundColor: 'rgba(103,80,164,0.1)',
   },
   actionModeButton: {
     flex: 1,
