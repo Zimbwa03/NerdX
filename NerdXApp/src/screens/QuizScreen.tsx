@@ -90,16 +90,19 @@ const QuizScreen: React.FC = () => {
           const mappedQuestion: Question = {
             id: qData.question_id || `review_${firstReviewItem.skill_id}`,
             question_text: qData.question,
+            question_type: qData.question_type || 'multiple_choice',
             options: qData.options ? Object.values(qData.options) : [],
             correct_answer: qData.correct_answer,
             explanation: qData.explanation,
             solution: qData.solution,
             hint: qData.hint,
+            points: qData.points || 10,
+            topic: firstReviewItem.topic || '',
             subject_id: firstReviewItem.subject,
             topic_id: firstReviewItem.topic,
             difficulty: 'medium',
             allows_text_input: !qData.options,
-            allows_image_upload: false, // Default for now
+            allows_image_upload: false,
             question_image_url: qData.image_url
           };
           setQuestion(mappedQuestion);
@@ -271,11 +274,14 @@ const QuizScreen: React.FC = () => {
             newQuestion = {
               id: qData.question_id || `review_${nextItem.skill_id}`,
               question_text: qData.question,
+              question_type: qData.question_type || 'multiple_choice',
               options: qData.options ? Object.values(qData.options) : [],
               correct_answer: qData.correct_answer,
               explanation: qData.explanation,
               solution: qData.solution,
               hint: qData.hint,
+              points: qData.points || 10,
+              topic: nextItem.topic || '',
               subject_id: nextItem.subject,
               topic_id: nextItem.topic,
               difficulty: 'medium',
