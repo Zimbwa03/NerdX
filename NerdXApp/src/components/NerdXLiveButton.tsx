@@ -176,6 +176,17 @@ export const NerdXLiveButton: React.FC<NerdXLiveButtonProps> = ({
                                 type: 'audio',
                                 data: base64,
                             }));
+
+                            // Add timeout - if no response in 15 seconds, return to ready
+                            setTimeout(() => {
+                                setConnectionState((current) => {
+                                    if (current === 'processing') {
+                                        console.log('⏰ AI response timeout - returning to ready');
+                                        return 'ready';
+                                    }
+                                    return current;
+                                });
+                            }, 15000);
                         }
                     };
                     reader.onerror = () => {
@@ -336,8 +347,9 @@ export const NerdXLiveButton: React.FC<NerdXLiveButtonProps> = ({
                 stopRecordingAndSend();
                 break;
             case 'processing':
-                // Do nothing while processing - wait for AI
-                console.log('⏳ Waiting for AI response...');
+                // Allow cancel during processing - return to ready
+                console.log('🔄 Canceling AI wait - returning to ready');
+                setConnectionState('ready');
                 break;
             case 'connecting':
             case 'error':
