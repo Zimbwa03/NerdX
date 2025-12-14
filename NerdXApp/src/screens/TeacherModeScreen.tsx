@@ -263,7 +263,7 @@ const TeacherModeScreen: React.FC = () => {
           response = { response: `🌐 **Search Results**\n\n${result.response}` };
         }
       } else if (activeMode === 'deep_research') {
-        // Use Deep Research - show searching indicator
+        // Use Deep Research API endpoint
         setMessages((prev) => [...prev, {
           id: 'researching',
           role: 'assistant',
@@ -271,7 +271,7 @@ const TeacherModeScreen: React.FC = () => {
           timestamp: new Date(),
         }]);
 
-        const result = await teacherApi.searchWeb(query); // Using searchWeb for now as it uses grounded search
+        const result = await teacherApi.deepResearch(query);
         setMessages((prev) => prev.filter((msg) => msg.id !== 'researching'));
 
         if (result?.response) {

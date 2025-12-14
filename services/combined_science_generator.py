@@ -254,11 +254,40 @@ class CombinedScienceGenerator:
             'difficult': "Evaluation and synthesis level. Multi-step problems requiring deeper understanding."
         }
         
+        # Randomly vary question style for variety
+        question_style = random.choice([
+            'direct_knowledge',      # 50% direct knowledge
+            'direct_knowledge',
+            'direct_knowledge',
+            'application',           # 30% application
+            'application',
+            'situational'            # 20% situational/context
+        ])
+        
+        style_guidance = {
+            'direct_knowledge': """Generate a DIRECT KNOWLEDGE question like ZIMSEC/Cambridge style:
+- Ask about definitions, concepts, processes, or principles
+- Examples: "What is...", "Which statement correctly describes...", "Define...", "Name the..."
+- NO story or situation context - ask directly about the science concept
+- Focus on testing understanding of facts and concepts""",
+            'application': """Generate an APPLICATION question:
+- Test how well students can apply scientific concepts to scenarios
+- Examples: "Calculate...", "Predict what happens when...", "Explain why..."
+- Brief context is OK, but focus on testing the scientific principle""",
+            'situational': """Generate a SITUATIONAL question with local context:
+- Use brief Zimbabwean names/places naturally
+- Apply science concept to a real-world situation
+- Keep the situation brief (one sentence), focus on the science"""
+        }
+        
         prompt = f"""Generate a ZIMSEC O-Level Combined Science question for {subject} - {topic}.
 
-**IMPORTANT: This is for O-Level students (ages 15-17). Keep content age-appropriate and not too advanced.**
+**STUDENT LEVEL:** O-Level students (ages 15-17). Keep content age-appropriate.
 
-**Learning Objectives to Address:**
+**QUESTION STYLE:** {question_style.upper()}
+{style_guidance.get(question_style, style_guidance['direct_knowledge'])}
+
+**Learning Objectives:**
 {chr(10).join(f"• {obj}" for obj in objectives)}
 
 **Question Requirements:**
@@ -266,49 +295,17 @@ class CombinedScienceGenerator:
 - Topic: {topic}
 - Difficulty: {difficulty} ({difficulty_guidance.get(difficulty, 'Standard level')})
 - Format: Multiple choice (4 options A, B, C, D)
-- ZIMSEC O-Level standard - appropriate for teenagers
-- Use simple, clear language suitable for 15-17 year olds
-- Include Zimbabwean context where natural (names, places, examples)
+- Use clear, simple language suitable for teenagers
+- One option must be clearly correct
 
-**CRITICAL: Question Focus (70% Theory, 30% Application):**
-- PRIORITIZE: Theoretical knowledge, concepts, definitions, processes
-- INCLUDE: Real-world applications and problem-solving
-- MINIMIZE: Laboratory experiments and practical procedures
-- FOCUS ON: Understanding WHY things happen, not just HOW to do experiments
-- EMPHASIZE: Conceptual understanding over procedural knowledge
+**IMPORTANT - Avoid:**
+- Overly complex laboratory procedures
+- University-level content
+- Ambiguous options where multiple could be correct
 
-**Question Types to Generate:**
-- Definitions and terminology (What is...?)
-- Process explanations (How does...?)
-- Cause and effect relationships (Why does...?)
-- Comparisons and contrasts (Difference between...?)
-- Applications to real life (When would you...?)
-- Concept connections (How are X and Y related?)
-
-**Avoid These Question Types:**
-- Step-by-step laboratory procedures
-- Equipment identification only
-- Measurement techniques without theory
-- Pure memorization of experimental steps
-
-**Explanation Requirements:**
-- Write like a patient, caring tutor explaining to a teenager
-- Break down complex ideas into simple steps
-- Use everyday examples and analogies
-- Keep explanations 2-3 sentences maximum
-- Focus on helping students understand concepts, not procedures
-- Use encouraging, supportive tone
-
-**Content Guidelines:**
-- Avoid university-level concepts
-- Use vocabulary appropriate for O-Level students
-- Include practical, real-world applications
-- Make connections to students' daily experiences
-- Keep mathematical calculations simple and clear
-
-Return ONLY a JSON object:
+Return ONLY a valid JSON object:
 {{
-    "question": "Clear, knowledge-focused question testing understanding of concepts",
+    "question": "Clear, focused question testing understanding of {topic}",
     "options": {{
         "A": "First option",
         "B": "Second option", 
@@ -316,14 +313,14 @@ Return ONLY a JSON object:
         "D": "Fourth option"
     }},
     "correct_answer": "B",
-    "explanation": "Simple, clear explanation focusing on WHY this is correct and the underlying concept. Use everyday language and examples.",
+    "explanation": "Short explanation (2-3 sentences) of WHY the correct answer is right. Focus on the key scientific concept.",
+    "teaching_explanation": "A friendly, encouraging explanation written like a patient tutor. Use an analogy or everyday example to help the student understand. Different from the main explanation - more like a teaching moment.",
     "difficulty": "{difficulty}",
-    "learning_objective": "What conceptual knowledge students should gain from this question",
-    "real_world_application": "How this concept applies to everyday life or future studies",
-    "question_type": "knowledge_focused"
+    "learning_objective": "What the student should learn from this question",
+    "question_style": "{question_style}"
 }}
 
-Make this educational, knowledge-focused, and encouraging for O-Level students!"""
+Generate an educational {question_style.replace('_', ' ')} question now!"""
 
         return prompt
     

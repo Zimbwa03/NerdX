@@ -53,6 +53,7 @@ const ProjectAssistantScreen: React.FC = () => {
   const [showToolbar, setShowToolbar] = useState(false);
   const [activeResearch, setActiveResearch] = useState<ResearchSession | null>(null);
   const [researchPolling, setResearchPolling] = useState(false);
+  const [activeMode, setActiveMode] = useState<'chat' | 'web_search' | 'deep_research'>('chat');
   const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
@@ -107,10 +108,13 @@ const ProjectAssistantScreen: React.FC = () => {
   const handleSend = async () => {
     if (!inputText.trim() || !project || sending) return;
 
+    const query = inputText.trim();
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: inputText.trim(),
+      content: activeMode === 'chat' ? query :
+        activeMode === 'web_search' ? `🌐 Search: ${query}` :
+        `🔬 Research: ${query}`,
       timestamp: new Date(),
     };
 
@@ -119,7 +123,43 @@ const ProjectAssistantScreen: React.FC = () => {
     setSending(true);
 
     try {
-      const response = await projectApi.sendMessage(project.id, userMessage.content);
+      let response: any = null;
+
+      // Route to different API based on active mode
+      if (activeMode === 'web_search') {
+        // Use Web Search with Google grounding
+        const result = await projectApi.searchWeb(project.id, query);
+        if (result?.response) {
+          response = { response: `🌐 **Search Results**\n\n${result.response}` };
+        }
+      } else if (activeMode === 'deep_research') {
+        // Use Deep Research - show searching indicator
+        setMessages((prev) => [...prev, {
+          id: 'researching',
+          role: 'assistant',
+          content: '🔬 **Performing Deep Research...**\n\nThis may take a moment as I analyze multiple sources...',
+          timestamp: new Date(),
+        }]);
+
+        const session = await projectApi.startResearch(project.id, query);
+        
+        if (session?.interaction_id) {
+          setActiveResearch(session);
+          setResearchPolling(true);
+          pollResearchStatus(session.interaction_id);
+          // Don't add response here - it will be added when polling completes
+          setSending(false);
+          return;
+        } else {
+          setMessages((prev) => prev.filter((msg) => msg.id !== 'researching'));
+        }
+      } else {
+        // Regular chat with AI
+        const chatResponse = await projectApi.sendMessage(project.id, query);
+        if (chatResponse) {
+          response = chatResponse;
+        }
+      }
 
       if (response) {
         const assistantMessage: Message = {
@@ -140,7 +180,8 @@ const ProjectAssistantScreen: React.FC = () => {
         }
       }
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.message || 'Failed to send message');
+      setMessages((prev) => prev.filter((msg) => msg.id !== 'researching'));
+      Alert.alert('Error', error.response?.data?.message || error.message || 'Failed to send message');
       // Remove failed message
       setMessages((prev) => prev.filter((msg) => msg.id !== userMessage.id));
     } finally {

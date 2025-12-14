@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Mathematics Question Generator using DeepSeek AI
+Mathematics Question Generator using Gemini AI (primary) and DeepSeek AI (fallback)
 Generates ZIMSEC-style mathematics questions with step-by-step solutions
 """
 
@@ -14,119 +14,165 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
+# Try to import Gemini AI
+try:
+    import google.generativeai as genai
+    GENAI_AVAILABLE = True
+    logger.info("✅ google.generativeai loaded for Math Question Generator")
+except ImportError:
+    genai = None
+    GENAI_AVAILABLE = False
+    logger.warning("⚠️ google.generativeai not available, will use DeepSeek only")
+
 
 class MathQuestionGenerator:
-    """DeepSeek AI-powered mathematics question generator"""
+    """Gemini AI (primary) + DeepSeek AI (fallback) mathematics question generator"""
 
     def __init__(self):
-        self.api_key = os.environ.get('DEEPSEEK_API_KEY')
-        self.api_url = 'https://api.deepseek.com/chat/completions'
+        # DeepSeek configuration (fallback)
+        self.deepseek_api_key = os.environ.get('DEEPSEEK_API_KEY')
+        self.deepseek_api_url = 'https://api.deepseek.com/chat/completions'
+        
+        # Gemini configuration (primary - faster and more reliable)
+        self.gemini_api_key = os.environ.get('GEMINI_API_KEY')
+        self._gemini_configured = False
+        
+        if self.gemini_api_key and GENAI_AVAILABLE:
+            try:
+                genai.configure(api_key=self.gemini_api_key)
+                self._gemini_configured = True
+                logger.info("✅ Gemini AI configured as PRIMARY provider for math questions")
+            except Exception as e:
+                logger.error(f"Failed to configure Gemini: {e}")
+        
+        if self.deepseek_api_key:
+            logger.info("✅ DeepSeek AI configured as FALLBACK provider")
+        
+        # Legacy compatibility
+        self.api_key = self.deepseek_api_key
+        self.api_url = self.deepseek_api_url
 
-        # Extended timeout and retry parameters for DeepSeek API V3.1 quality generation
-        self.max_retries = 3  # More retries for better success rate
-        self.base_timeout = 90  # Increased timeout for DeepSeek V3.1
-        self.retry_delay = 3   # Reduced delay between retries for faster response
+        # Reduced timeout parameters to prevent worker crashes
+        self.max_retries = 2  # Reduced retries for faster fallback
+        self.base_timeout = 25  # Reduced timeout to prevent worker kills
+        self.retry_delay = 1   # Minimal delay between retries
 
     def generate_question(self, subject: str, topic: str, difficulty: str = 'medium', user_id: str = None) -> Optional[Dict]:
         """
-        Generate a question using DeepSeek AI with anti-repetition logic and improved error handling
+        Generate a question using Gemini AI (primary) with DeepSeek fallback.
+        Uses reduced timeouts to prevent Gunicorn worker crashes.
         """
         try:
-            # Get recent AI topics for this user to avoid repetition (simplified)
+            # Get recent AI topics for this user to avoid repetition
             recent_topics = set()
             if user_id:
                 try:
-                    # Try to import question history service for AI anti-repetition
                     from services.question_history_service import question_history_service
                     ai_subject_key = f"{subject}_AI"
                     recent_questions = question_history_service.get_recent_questions(user_id, ai_subject_key)
-                    recent_topics = {q.split('_')[0] for q in recent_questions if '_' in q}  # Extract topic from stored format
+                    recent_topics = {q.split('_')[0] for q in recent_questions if '_' in q}
                 except ImportError:
-                    # If question history service is not available, continue without anti-repetition
                     logger.info("Question history service not available, continuing without anti-repetition")
                     recent_topics = set()
             
-            # Create comprehensive prompt for DeepSeek AI with variation
-            prompt = self._create_question_prompt(subject, topic, difficulty, recent_topics)
-
-            # Optimized timeout settings for DeepSeek API V3.1
-            if 'graph' in topic.lower():
-                timeouts = [45, 60]           # Adequate timeouts for complex graph questions
-                max_attempts = 3              # 3 attempts for graph questions
-            else:
-                timeouts = [45, 60, 90]        # Progressive timeouts for topical questions  
-                max_attempts = 3              # 3 attempts for quality generation
-
-            for attempt in range(max_attempts):
-                timeout = timeouts[min(attempt, len(timeouts) - 1)]
-                logger.info(f"AI API attempt {attempt + 1}/{max_attempts} (timeout: {timeout}s)")
-
+            # PRIMARY: Try Gemini AI first (faster and more reliable)
+            if self._gemini_configured:
+                logger.info(f"🔷 Trying Gemini AI (primary) for {subject}/{topic}")
+                gemini_result = self._generate_with_gemini(subject, topic, difficulty, recent_topics)
+                if gemini_result:
+                    # Validate and format response
+                    question_data = self._validate_and_format_question(gemini_result, subject, topic, difficulty, user_id)
+                    if question_data:
+                        question_data['source'] = 'gemini_ai'
+                        logger.info(f"✅ Gemini AI generated question for {subject}/{topic}")
+                        return question_data
+                logger.warning("Gemini AI failed, falling back to DeepSeek")
+            
+            # FALLBACK: Try DeepSeek with reduced timeout
+            if self.deepseek_api_key:
+                logger.info(f"🔶 Trying DeepSeek AI (fallback) for {subject}/{topic}")
+                prompt = self._create_question_prompt(subject, topic, difficulty, recent_topics)
+                
+                # Single attempt with reduced timeout to prevent worker crash
                 try:
-                    # Make request to DeepSeek AI with progressive timeout
-                    response = self._send_api_request(prompt, timeout)
-
+                    response = self._send_api_request(prompt, timeout=25)
                     if response:
-                        # Validate and format response
                         question_data = self._validate_and_format_question(response, subject, topic, difficulty, user_id)
                         if question_data:
-                            logger.info(f"✅ Successfully generated question for {subject}/{topic} on attempt {attempt + 1}")
+                            question_data['source'] = 'deepseek_ai'
+                            logger.info(f"✅ DeepSeek AI generated question for {subject}/{topic}")
                             return question_data
-                        else:
-                            logger.warning(f"Question validation failed on attempt {attempt + 1}")
-
                 except requests.exceptions.Timeout:
-                    logger.warning(f"DeepSeek API V3.1 timeout on attempt {attempt + 1}/{max_attempts} (waited {timeout}s)")
-                    if attempt < max_attempts - 1:
-                        time.sleep(2)  # Reduced retry delay for DeepSeek V3.1
-                    continue
-
-                except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as e:
-                    logger.warning(f"DeepSeek API V3.1 connection error: {e}")
-                    if attempt < max_attempts - 1:
-                        time.sleep(2)  # Reduced retry delay for DeepSeek V3.1
-                    continue
-
+                    logger.warning("DeepSeek API timeout (25s limit to prevent worker crash)")
                 except Exception as e:
-                    logger.error(f"DeepSeek API V3.1 error on attempt {attempt + 1}: {e}")
-                    if attempt < max_attempts - 1:
-                        time.sleep(2)  # Reduced retry delay for DeepSeek V3.1
-                    continue
+                    logger.warning(f"DeepSeek API error: {e}")
 
-            # All attempts failed, use local fallback questions
-            logger.warning(f"All DeepSeek API attempts failed for {subject}/{topic}, using local fallback questions")
+            # FINAL FALLBACK: Use local fallback questions
+            logger.warning(f"All AI providers failed for {subject}/{topic}, using local fallback questions")
             return self._generate_fallback_question(subject, topic, difficulty)
 
         except Exception as e:
             logger.error(f"Critical error in generate_question: {e}")
             return self._generate_fallback_question(subject, topic, difficulty)
 
+    def _generate_with_gemini(self, subject: str, topic: str, difficulty: str, recent_topics: set = None) -> Optional[Dict]:
+        """
+        Generate a math question using Gemini AI.
+        Returns parsed question data or None on failure.
+        """
+        if not self._gemini_configured or not GENAI_AVAILABLE:
+            return None
+        
+        try:
+            # Build the prompt
+            prompt = self._create_question_prompt(subject, topic, difficulty, recent_topics)
+            
+            # Use Gemini Flash for speed
+            model = genai.GenerativeModel('gemini-2.0-flash-exp')
+            
+            # Request JSON response
+            response = model.generate_content(
+                prompt,
+                generation_config=genai.types.GenerationConfig(
+                    response_mime_type="application/json",
+                    temperature=0.8,
+                    max_output_tokens=2000
+                ),
+                request_options={'timeout': 20}  # 20 second timeout
+            )
+            
+            if response and hasattr(response, 'text') and response.text:
+                # Parse JSON response
+                text = response.text.strip()
+                
+                # Clean markdown fences if present
+                if text.startswith('```json'):
+                    text = text[7:]
+                if text.startswith('```'):
+                    text = text[3:]
+                if text.endswith('```'):
+                    text = text[:-3]
+                text = text.strip()
+                
+                question_data = json.loads(text)
+                logger.info(f"Gemini generated: {question_data.get('question', '')[:80]}...")
+                return question_data
+            
+            logger.warning("Empty response from Gemini")
+            return None
+            
+        except json.JSONDecodeError as e:
+            logger.error(f"Gemini JSON parse error: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Gemini generation error: {e}")
+            return None
+
     def generate_question_with_gemini(self, subject: str, topic: str, difficulty: str = 'medium') -> Optional[Dict]:
         """
-        Generate a question using Gemini AI for graph-related topics.
+        Legacy method for backward compatibility.
+        Now calls the main generate_question which uses Gemini as primary.
         """
-        # Define guidelines for Gemini AI graph questions
-        guidelines = {
-            "Algebra": {
-                "Linear Equations": "Focus on solving for unknowns, word problems involving linear relationships",
-                "Quadratic Equations": "Include factoring, completing the square, quadratic formula methods",
-                "Simultaneous Equations": "Use substitution and elimination methods, practical applications",
-                "Inequalities": "Include number line representations, compound inequalities",
-                "Factorization": "Cover common factors, difference of squares, trinomial factoring",
-                "Algebraic Expressions": "Simplification, substitution, expanding brackets",
-                "Graph - Linear Programming": """Generate questions in this EXACT format:\n\nAnswer the whole of this question on the grid on page 26.\n\n(a) Draw the graphs of these inequalities by shading the unwanted region.\n\n(i) [inequality 1, e.g., 2x+y≤40]\n(ii) [inequality 2, e.g., x+2y≤48] \n(iii) [inequality 3, e.g., x≥0]\n(iv) [inequality 4, e.g., y≥5]\n\n(b) Mark R the region defined by the four inequalities in (a).\n\nThe solution should explain how to plot each inequality and identify the feasible region R."""
-            },
-            "Geometry": {
-                "Angles": "Include angle relationships, parallel lines, triangles, polygons",
-                "Triangles": "Properties, congruence, similarity, Pythagorean theorem",
-                "Quadrilaterals": "Properties of rectangles, squares, parallelograms, rhombus"
-            }
-        }
-        
-        # Use Gemini API details here (placeholder, actual implementation needed)
-        # For now, we'll just call the DeepSeek fallback as a placeholder
-        logger.info(f"Switching to Gemini AI for graph question generation (topic: {topic})")
-        
-        # Fallback to DeepSeek for now
         return self.generate_question(subject, topic, difficulty)
 
     def _create_question_prompt(self, subject: str, topic: str, difficulty: str, recent_topics: set = None) -> str:

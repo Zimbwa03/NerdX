@@ -154,6 +154,21 @@ export const teacherApi = {
       throw error;
     }
   },
+
+  // Deep Research using Gemini Deep Research agent
+  deepResearch: async (query: string): Promise<DeepResearchResult | null> => {
+    try {
+      console.log('teacherApi.deepResearch called with:', query);
+      const response = await api.post('/api/mobile/teacher/deep-research', {
+        query,
+      });
+      console.log('teacherApi.deepResearch response:', response.data);
+      return response.data.data || null;
+    } catch (error: any) {
+      console.error('Deep research error:', error);
+      throw error;
+    }
+  },
 };
 
 // ==================== Additional Interfaces ====================
@@ -174,4 +189,9 @@ export interface DocumentAnalysis {
 
 export interface WebSearchResult {
   response: string;
+}
+
+export interface DeepResearchResult {
+  response: string;
+  status?: string;
 }

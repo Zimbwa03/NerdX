@@ -664,14 +664,50 @@ def generate_question():
                 options = [options.get(k, '') for k in sorted(options.keys()) if options.get(k)]
             
             # Get correct answer - could be in different fields
-            correct_answer = question_data.get('answer') or question_data.get('correct_answer') or question_data.get('acceptable_answers', [{}])[0]
+            correct_answer = question_data.get('answer') or question_data.get('correct_answer') or ''
+            acceptable_answers = question_data.get('acceptable_answers', [])
+            if not correct_answer and acceptable_answers:
+                correct_answer = acceptable_answers[0] if isinstance(acceptable_answers, list) and len(acceptable_answers) > 0 else str(acceptable_answers)
             if isinstance(correct_answer, list) and len(correct_answer) > 0:
                 correct_answer = correct_answer[0]
             if not correct_answer:
                 correct_answer = ''
             
-            # Get solution/explanation
-            solution = question_data.get('solution') or question_data.get('explanation') or question_data.get('feedback', '')
+            # Get solution/explanation - English service returns a nested dict
+            explanation_obj = question_data.get('explanation', {})
+            if isinstance(explanation_obj, dict):
+                # Build a comprehensive solution string from the explanation dict
+                solution_parts = []
+                
+                # Correct answer
+                correction = explanation_obj.get('correction', '') or correct_answer
+                if correction:
+                    solution_parts.append(f"✅ Correct Answer: {correction}")
+                
+                # Grammar rule
+                rule = explanation_obj.get('rule', '')
+                if rule:
+                    solution_parts.append(f"\n📚 Rule: {rule}")
+                
+                # Error analysis
+                error_analysis = explanation_obj.get('error_analysis', '')
+                if error_analysis:
+                    solution_parts.append(f"\n⚠️ Why: {error_analysis}")
+                
+                # ZIMSEC importance
+                zimsec_importance = explanation_obj.get('zimsec_importance', '')
+                if zimsec_importance:
+                    solution_parts.append(f"\n🎓 ZIMSEC Tip: {zimsec_importance}")
+                
+                # Examples
+                examples = explanation_obj.get('examples', [])
+                if examples and isinstance(examples, list) and len(examples) > 0:
+                    solution_parts.append(f"\n📝 Examples: {'; '.join(examples[:2])}")
+                
+                solution = '\n'.join(solution_parts) if solution_parts else f"The correct answer is: {correct_answer}"
+            else:
+                # Fallback if explanation is already a string
+                solution = str(explanation_obj) if explanation_obj else question_data.get('solution', '') or question_data.get('feedback', '') or f"The correct answer is: {correct_answer}"
         else:
             # For other subjects (including Mathematics), use standard format
             options = question_data.get('options', [])
@@ -694,7 +730,8 @@ def generate_question():
             'correct_answer': correct_answer,
             'solution': solution,
             'hint': question_data.get('hint', '') if subject == 'mathematics' else '',
-            'explanation': question_data.get('explanation', ''),
+            # For English, use the formatted solution since explanation is a dict
+            'explanation': solution if subject == 'english' else (question_data.get('explanation', '') if not isinstance(question_data.get('explanation'), dict) else ''),
             'points': question_data.get('points', 10),
             'topic': topic or '',
             'difficulty': difficulty,
@@ -712,7 +749,9 @@ def generate_question():
             'hint_level_2': question_data.get('hint_level_2', ''),
             'hint_level_3': question_data.get('hint_level_3', ''),
             'common_mistakes': question_data.get('common_mistakes', []),
-            'learning_objective': question_data.get('learning_objective', '')
+            'learning_objective': question_data.get('learning_objective', ''),
+            # Separate teaching explanation for Combined Science (different from solution)
+            'teaching_explanation': question_data.get('teaching_explanation', '') or question_data.get('real_world_application', '')
         }
         
         return jsonify({
@@ -887,19 +926,56 @@ def submit_answer():
                     feedback = '❌ Not quite right. Review the solution below to understand the correct approach.'
         else:
             # For other subjects (Combined Science, English, etc.)
-            # Normalize both answers for reliable comparison
-            user_answer_normalized = str(answer).lower().strip()
-            correct_answer_normalized = str(correct_answer).lower().strip()
+            # Handle MCQ answer validation: could be option letter (A/B/C/D) or full option text
+            user_answer_normalized = str(answer).strip()
+            correct_answer_normalized = str(correct_answer).strip()
             
-            # Check for exact match (after normalization)
-            if user_answer_normalized == correct_answer_normalized:
+            # Get options from the request data for flexible matching
+            options = data.get('options', [])
+            
+            # Check for exact match first (handles both letter or text)
+            if user_answer_normalized.lower() == correct_answer_normalized.lower():
                 is_correct = True
-                feedback = '✅ Correct!'
+                feedback = '✅ Correct! Well done!'
             else:
-                # Also check if user selected the right option by checking containment
-                # This handles cases where the option text might have minor formatting differences
-                is_correct = False
-                feedback = '❌ Incorrect. The correct answer is shown below.'
+                # If correct_answer is a letter (A/B/C/D), check if user sent the matching option text
+                if correct_answer_normalized.upper() in ['A', 'B', 'C', 'D']:
+                    # User might have sent the full option text, need to find if it matches
+                    option_index = ord(correct_answer_normalized.upper()) - ord('A')
+                    
+                    # Options could be dict or list
+                    correct_option_text = None
+                    if isinstance(options, dict):
+                        correct_option_text = options.get(correct_answer_normalized.upper(), '')
+                    elif isinstance(options, list) and 0 <= option_index < len(options):
+                        correct_option_text = options[option_index]
+                    
+                    # Check if user's answer matches the correct option text
+                    if correct_option_text and user_answer_normalized.lower() == str(correct_option_text).lower().strip():
+                        is_correct = True
+                        feedback = '✅ Correct! Well done!'
+                    else:
+                        # Also check if user sent just the letter that matches
+                        user_letter = user_answer_normalized.upper()
+                        if user_letter in ['A', 'B', 'C', 'D'] and user_letter == correct_answer_normalized.upper():
+                            is_correct = True
+                            feedback = '✅ Correct! Well done!'
+                        else:
+                            is_correct = False
+                            feedback = '❌ Incorrect. The correct answer is shown below.'
+                else:
+                    # Correct answer is text, check if user's answer contains key parts
+                    # This handles minor formatting differences
+                    user_lower = user_answer_normalized.lower()
+                    correct_lower = correct_answer_normalized.lower()
+                    
+                    # Check for substantial overlap (80% match or containment)
+                    if user_lower in correct_lower or correct_lower in user_lower:
+                        is_correct = True
+                        feedback = '✅ Correct! Well done!'
+                    else:
+                        is_correct = False
+                        feedback = '❌ Incorrect. The correct answer is shown below.'
         
         points_earned = 10 if is_correct else 0
         
@@ -2095,6 +2171,95 @@ def teacher_web_search():
             
     except Exception as e:
         logger.error(f"Teacher web search error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/teacher/deep-research', methods=['POST'])
+@require_auth
+def teacher_deep_research():
+    """Perform Deep Research for a science topic using Gemini Deep Research agent"""
+    try:
+        data = request.get_json()
+        query = data.get('query', '').strip()
+        
+        if not query:
+            return jsonify({'success': False, 'message': 'Research query is required'}), 400
+        
+        # Check credits for deep research (more expensive than regular search)
+        credit_cost = advanced_credit_service.get_credit_cost('teacher_mode_followup')
+        user_credits = get_user_credits(g.current_user_id) or 0
+        
+        if user_credits < credit_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {credit_cost}'
+            }), 400
+        
+        # Get session data for context
+        from utils.session_manager import session_manager
+        session_data = session_manager.get_data(g.current_user_id, 'science_teacher') or {}
+        subject = session_data.get('subject', 'Science')
+        grade_level = session_data.get('grade_level', 'O-Level')
+        
+        # Try to use Gemini Deep Research agent
+        try:
+            from services.gemini_interactions_service import get_gemini_interactions_service
+            interactions_service = get_gemini_interactions_service()
+            
+            if interactions_service and interactions_service.is_available():
+                # Enhanced query with educational context
+                enhanced_query = f"""For a ZIMSEC {grade_level} {subject} student:
+
+{query}
+
+Provide comprehensive, educational research with accurate scientific information. 
+Focus on content relevant to the Zimbabwe curriculum and O-Level/A-Level science examinations.
+Include key concepts, definitions, examples, and exam tips."""
+
+                # Use grounded search for Deep Research (synchronous)
+                result = interactions_service.search_with_grounding(enhanced_query)
+                
+                if result.get('success') and result.get('text'):
+                    # Deduct credits
+                    deduct_credits(g.current_user_id, credit_cost, 'teacher_deep_research', f'Deep Research: {query[:50]}')
+                    
+                    logger.info(f"🔬 Deep Research completed for {g.current_user_id}")
+                    
+                    return jsonify({
+                        'success': True,
+                        'data': {
+                            'response': result.get('text'),
+                            'status': 'completed'
+                        }
+                    }), 200
+        except Exception as interactions_error:
+            logger.warning(f"Deep Research via Interactions API failed, using fallback: {interactions_error}")
+        
+        # Fallback: Use regular web search with enhanced prompt
+        from services.combined_science_teacher_service import CombinedScienceTeacherService
+        teacher_service = CombinedScienceTeacherService()
+        
+        result = teacher_service.search_science_topic(g.current_user_id, query)
+        
+        if result.get('success'):
+            # Deduct credits
+            deduct_credits(g.current_user_id, credit_cost, 'teacher_deep_research', f'Deep Research (fallback): {query[:50]}')
+            
+            return jsonify({
+                'success': True,
+                'data': {
+                    'response': result.get('text'),
+                    'status': 'completed'
+                }
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'message': result.get('error', 'Failed to perform deep research')
+            }), 400
+            
+    except Exception as e:
+        logger.error(f"Teacher deep research error: {e}", exc_info=True)
         return jsonify({'success': False, 'message': str(e)}), 500
 
 # ============================================================================
