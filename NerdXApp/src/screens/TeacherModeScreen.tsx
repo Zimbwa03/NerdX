@@ -59,7 +59,8 @@ const TeacherModeScreen: React.FC = () => {
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [sound, setSound] = useState<Audio.Sound | null>(null);
-  const [inputMode, setInputMode] = useState<'text' | 'voice' | 'camera' | 'search' | 'document'>('text');
+  const [activeMode, setActiveMode] = useState<'chat' | 'web_search' | 'deep_research' | 'document'>('chat');
+  const [showModeMenu, setShowModeMenu] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
@@ -239,16 +240,48 @@ const TeacherModeScreen: React.FC = () => {
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: inputText.trim(),
+      content: activeMode === 'chat' ? inputText.trim() :
+        activeMode === 'web_search' ? `🌐 Search: ${inputText.trim()}` :
+          activeMode === 'deep_research' ? `🔬 Research: ${inputText.trim()}` :
+            `📄 Document: ${inputText.trim()}`,
       timestamp: new Date(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    const query = inputText.trim();
     setInputText('');
     setSending(true);
 
     try {
-      const response = await teacherApi.sendMessage(session.session_id, userMessage.content);
+      let response: any;
+
+      // Route to different API based on active mode
+      if (activeMode === 'web_search') {
+        // Use Web Search with Google grounding
+        const result = await teacherApi.searchWeb(query);
+        if (result?.response) {
+          response = { response: `🌐 **Search Results**\n\n${result.response}` };
+        }
+      } else if (activeMode === 'deep_research') {
+        // Use Deep Research - show searching indicator
+        setMessages((prev) => [...prev, {
+          id: 'researching',
+          role: 'assistant',
+          content: '🔬 **Performing Deep Research...**\n\nThis may take a moment as I analyze multiple sources...',
+          timestamp: new Date(),
+        }]);
+
+        const result = await teacherApi.searchWeb(query); // Using searchWeb for now as it uses grounded search
+        setMessages((prev) => prev.filter((msg) => msg.id !== 'researching'));
+
+        if (result?.response) {
+          response = { response: `📊 **Research Complete**\n\n${result.response}` };
+        }
+      } else {
+        // Regular chat with Gemini
+        response = await teacherApi.sendMessage(session.session_id, query);
+      }
+
       if (response) {
         if (response.session_ended) {
           Alert.alert('Session Ended', response.response, [
@@ -272,7 +305,8 @@ const TeacherModeScreen: React.FC = () => {
         }
       }
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.message || 'Failed to send message');
+      setMessages((prev) => prev.filter((msg) => msg.id !== 'researching'));
+      Alert.alert('Error', error.response?.data?.message || error.message || 'Failed to send message');
       // Remove user message on error
       setMessages((prev) => prev.filter((msg) => msg.id !== userMessage.id));
     } finally {
@@ -653,122 +687,183 @@ const TeacherModeScreen: React.FC = () => {
           )}
         </TouchableOpacity>
 
+        {/* Mode Selection Popup */}
+        {showModeMenu && (
+          <View style={[styles.modeMenuPopup, { backgroundColor: isDarkMode ? '#2A2A3E' : '#FFFFFF' }]}>
+            <TouchableOpacity
+              style={[styles.modeMenuItem, activeMode === 'chat' && styles.modeMenuItemActive]}
+              onPress={() => { setActiveMode('chat'); setShowModeMenu(false); }}
+            >
+              <Ionicons name="chatbubble-outline" size={20} color={activeMode === 'chat' ? themedColors.primary.main : themedColors.text.secondary} />
+              <Text style={[styles.modeMenuText, activeMode === 'chat' && { color: themedColors.primary.main, fontWeight: '600' }]}>Chat</Text>
+              <Text style={styles.modeMenuDesc}>Ask questions normally</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.modeMenuItem, activeMode === 'web_search' && styles.modeMenuItemActive]}
+              onPress={() => { setActiveMode('web_search'); setShowModeMenu(false); }}
+            >
+              <Ionicons name="globe-outline" size={20} color={activeMode === 'web_search' ? themedColors.success.main : themedColors.text.secondary} />
+              <Text style={[styles.modeMenuText, activeMode === 'web_search' && { color: themedColors.success.main, fontWeight: '600' }]}>Web Search</Text>
+              <Text style={styles.modeMenuDesc}>Search with Google grounding</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.modeMenuItem, activeMode === 'deep_research' && styles.modeMenuItemActive]}
+              onPress={() => { setActiveMode('deep_research'); setShowModeMenu(false); }}
+            >
+              <Ionicons name="flask-outline" size={20} color={activeMode === 'deep_research' ? '#FF9800' : themedColors.text.secondary} />
+              <Text style={[styles.modeMenuText, activeMode === 'deep_research' && { color: '#FF9800', fontWeight: '600' }]}>Deep Research</Text>
+              <Text style={styles.modeMenuDesc}>Comprehensive AI research</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.modeMenuItem, activeMode === 'document' && styles.modeMenuItemActive]}
+              onPress={() => { handleDocumentUpload(); setShowModeMenu(false); }}
+            >
+              <Ionicons name="document-attach-outline" size={20} color="#2196F3" />
+              <Text style={[styles.modeMenuText, { color: '#2196F3' }]}>Upload PDF</Text>
+              <Text style={styles.modeMenuDesc}>Analyze study materials</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.modeMenuItem}
+              onPress={() => { handleImagePick(); setShowModeMenu(false); }}
+            >
+              <Ionicons name="camera-outline" size={20} color={themedColors.text.secondary} />
+              <Text style={styles.modeMenuText}>Scan Image</Text>
+              <Text style={styles.modeMenuDesc}>Take a photo of a problem</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.modeMenuItem}
+              onPress={() => { isRecording ? stopRecording() : startRecording(); setShowModeMenu(false); }}
+            >
+              <Ionicons name="mic-outline" size={20} color={isRecording ? themedColors.error.main : themedColors.text.secondary} />
+              <Text style={[styles.modeMenuText, isRecording && { color: themedColors.error.main }]}>
+                {isRecording ? 'Stop Recording' : 'Voice Input'}
+              </Text>
+              <Text style={styles.modeMenuDesc}>Speak your question</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Input Row - Always visible */}
         <View style={styles.inputRow}>
-          {/* Mode Toggle Button - shows current active mode */}
+          {/* Mode Toggle Button */}
           <TouchableOpacity
             style={[styles.modeToggleButton, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : '#F0F0F0' }]}
-            onPress={() => {
-              // Cycle through modes: text -> voice -> camera -> search -> document -> text
-              const modes: ('text' | 'voice' | 'camera' | 'search' | 'document')[] = ['text', 'voice', 'camera', 'search', 'document'];
-              const currentIndex = modes.indexOf(inputMode);
-              const nextIndex = (currentIndex + 1) % modes.length;
-              setInputMode(modes[nextIndex]);
-            }}
-            disabled={sending || isRecording}
+            onPress={() => setShowModeMenu(!showModeMenu)}
+            disabled={sending}
           >
             <Ionicons
               name={
-                inputMode === 'text' ? 'chatbubble-outline' :
-                  inputMode === 'voice' ? 'mic-outline' :
-                    inputMode === 'camera' ? 'camera-outline' :
-                      inputMode === 'search' ? 'globe-outline' :
-                        'document-attach-outline'
+                activeMode === 'chat' ? 'chatbubble-outline' :
+                  activeMode === 'web_search' ? 'globe-outline' :
+                    activeMode === 'deep_research' ? 'flask-outline' :
+                      'document-attach-outline'
               }
               size={22}
               color={
-                inputMode === 'voice' ? themedColors.error.main :
-                  inputMode === 'search' ? themedColors.success.main :
-                    inputMode === 'document' ? '#2196F3' :
+                activeMode === 'web_search' ? themedColors.success.main :
+                  activeMode === 'deep_research' ? '#FF9800' :
+                    activeMode === 'document' ? '#2196F3' :
                       themedColors.primary.main
               }
             />
           </TouchableOpacity>
 
-          {/* Conditional Action Button based on mode */}
-          {inputMode === 'voice' && (
-            <TouchableOpacity
-              style={[styles.actionModeButton, isRecording && { backgroundColor: themedColors.error.main }]}
-              onPress={isRecording ? stopRecording : startRecording}
-              disabled={sending}
-            >
+          {/* Mode Indicator Chip (show when not in chat mode) */}
+          {activeMode !== 'chat' && (
+            <View style={[
+              styles.modeChip,
+              {
+                backgroundColor:
+                  activeMode === 'web_search' ? 'rgba(0,150,136,0.15)' :
+                    activeMode === 'deep_research' ? 'rgba(255,152,0,0.15)' :
+                      'rgba(33,150,243,0.15)'
+              }
+            ]}>
               <Ionicons
-                name={isRecording ? "stop-circle" : "mic"}
-                size={24}
-                color={isRecording ? "#FFF" : themedColors.error.main}
+                name={
+                  activeMode === 'web_search' ? 'globe' :
+                    activeMode === 'deep_research' ? 'flask' :
+                      'document-attach'
+                }
+                size={14}
+                color={
+                  activeMode === 'web_search' ? themedColors.success.main :
+                    activeMode === 'deep_research' ? '#FF9800' :
+                      '#2196F3'
+                }
               />
-              <Text style={[styles.actionModeText, { color: isRecording ? '#FFF' : themedColors.error.main }]}>
-                {isRecording ? 'Stop' : 'Tap to Speak'}
+              <Text style={[
+                styles.modeChipText,
+                {
+                  color:
+                    activeMode === 'web_search' ? themedColors.success.main :
+                      activeMode === 'deep_research' ? '#FF9800' :
+                        '#2196F3'
+                }
+              ]}>
+                {activeMode === 'web_search' ? 'Web' : activeMode === 'deep_research' ? 'Research' : 'Doc'}
               </Text>
-            </TouchableOpacity>
-          )}
-
-          {inputMode === 'camera' && (
-            <TouchableOpacity
-              style={styles.actionModeButton}
-              onPress={handleImagePick}
-              disabled={sending}
-            >
-              <Ionicons name="camera" size={24} color={themedColors.primary.main} />
-              <Text style={[styles.actionModeText, { color: themedColors.primary.main }]}>Scan Image</Text>
-            </TouchableOpacity>
-          )}
-
-          {inputMode === 'search' && (
-            <TouchableOpacity
-              style={styles.actionModeButton}
-              onPress={handleWebSearch}
-              disabled={sending}
-            >
-              <Ionicons name="globe" size={24} color={themedColors.success.main} />
-              <Text style={[styles.actionModeText, { color: themedColors.success.main }]}>Web Search</Text>
-            </TouchableOpacity>
-          )}
-
-          {inputMode === 'document' && (
-            <TouchableOpacity
-              style={styles.actionModeButton}
-              onPress={handleDocumentUpload}
-              disabled={sending}
-            >
-              <Ionicons name="document-attach" size={24} color="#2196F3" />
-              <Text style={[styles.actionModeText, { color: '#2196F3' }]}>Upload PDF</Text>
-            </TouchableOpacity>
-          )}
-
-          {/* Text Input - only show in text mode or when other modes aren't active */}
-          {inputMode === 'text' && (
-            <>
-              <TextInput
-                style={[styles.textInput, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F7FA', borderColor: themedColors.border.light, color: themedColors.text.primary }]}
-                value={inputText}
-                onChangeText={setInputText}
-                placeholder="Ask a question..."
-                placeholderTextColor={themedColors.text.disabled}
-                multiline
-                maxLength={500}
-                editable={!sending}
-              />
-              <TouchableOpacity
-                style={[styles.sendButton, (!inputText.trim() || sending) && styles.sendButtonDisabled]}
-                onPress={handleSend}
-                disabled={!inputText.trim() || sending}
-              >
-                {sending ? (
-                  <ActivityIndicator color="#FFFFFF" />
-                ) : (
-                  <LinearGradient
-                    colors={(!inputText.trim() || sending) ? ['#E0E0E0', '#BDBDBD'] : themedColors.gradients.primary}
-                    style={{ borderRadius: 24, flex: 1, justifyContent: 'center', alignItems: 'center', width: '100%', height: '100%' }}
-                  >
-                    <Ionicons name="send" size={20} color="#FFF" />
-                  </LinearGradient>
-                )}
+              <TouchableOpacity onPress={() => setActiveMode('chat')}>
+                <Ionicons name="close-circle" size={16} color={themedColors.text.secondary} />
               </TouchableOpacity>
-            </>
+            </View>
           )}
+
+          {/* Text Input - Always visible */}
+          <TextInput
+            style={[
+              styles.textInput,
+              {
+                backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F7FA',
+                borderColor: themedColors.border.light,
+                color: themedColors.text.primary,
+                flex: 1
+              }
+            ]}
+            value={inputText}
+            onChangeText={setInputText}
+            placeholder={
+              activeMode === 'web_search' ? 'Search the web...' :
+                activeMode === 'deep_research' ? 'Enter research topic...' :
+                  'Ask a question...'
+            }
+            placeholderTextColor={themedColors.text.disabled}
+            multiline
+            maxLength={500}
+            editable={!sending}
+          />
+
+          {/* Send Button */}
+          <TouchableOpacity
+            style={[styles.sendButton, (!inputText.trim() || sending) && styles.sendButtonDisabled]}
+            onPress={handleSend}
+            disabled={!inputText.trim() || sending}
+          >
+            {sending ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <LinearGradient
+                colors={
+                  (!inputText.trim() || sending) ? ['#E0E0E0', '#BDBDBD'] :
+                    activeMode === 'web_search' ? ['#00897B', '#00695C'] :
+                      activeMode === 'deep_research' ? ['#FF9800', '#F57C00'] :
+                        themedColors.gradients.primary
+                }
+                style={{ borderRadius: 24, flex: 1, justifyContent: 'center', alignItems: 'center', width: '100%', height: '100%' }}
+              >
+                <Ionicons name="send" size={20} color="#FFF" />
+              </LinearGradient>
+            )}
+          </TouchableOpacity>
         </View>
       </View>
-    </KeyboardAvoidingView>
+    </View>
+    </KeyboardAvoidingView >
   );
 };
 
@@ -1072,6 +1167,53 @@ const markdownStyles = StyleSheet.create({
   },
   actionModeText: {
     fontSize: 15,
+    fontWeight: '600',
+  },
+  modeMenuPopup: {
+    position: 'absolute',
+    bottom: 75,
+    left: 12,
+    right: 12,
+    borderRadius: 16,
+    padding: 8,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    zIndex: 100,
+  },
+  modeMenuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 10,
+    gap: 12,
+  },
+  modeMenuItemActive: {
+    backgroundColor: 'rgba(103,80,164,0.1)',
+  },
+  modeMenuText: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#666',
+    flex: 1,
+  },
+  modeMenuDesc: {
+    fontSize: 12,
+    color: '#999',
+  },
+  modeChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    gap: 4,
+    marginRight: 8,
+  },
+  modeChipText: {
+    fontSize: 12,
     fontWeight: '600',
   },
 });
