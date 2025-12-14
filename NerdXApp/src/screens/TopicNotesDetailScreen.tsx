@@ -99,24 +99,24 @@ const TopicNotesDetailScreen: React.FC = () => {
         },
         heading1: {
             fontSize: 20,
-            fontWeight: 'bold',
+            fontWeight: 'bold' as const,
             color: themedColors.text.primary,
             marginTop: 16,
             marginBottom: 8,
         },
         heading2: {
             fontSize: 18,
-            fontWeight: 'bold',
+            fontWeight: 'bold' as const,
             color: themedColors.text.primary,
             marginTop: 12,
             marginBottom: 6,
         },
         strong: {
-            fontWeight: 'bold',
+            fontWeight: 'bold' as const,
             color: themedColors.text.primary,
         },
         em: {
-            fontStyle: 'italic',
+            fontStyle: 'italic' as const,
             color: themedColors.text.primary,
         },
         bullet_list: {
@@ -523,7 +523,7 @@ const styles = StyleSheet.create({
         width: 24,
         height: 24,
         borderRadius: 12,
-        backgroundColor: Colors.warning,
+        backgroundColor: Colors.warning.main,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,

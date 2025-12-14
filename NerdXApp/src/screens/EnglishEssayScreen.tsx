@@ -703,7 +703,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: 15,
     elevation: 3,
-    shadowColor: Colors.primary,
+    shadowColor: Colors.primary.main,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -740,7 +740,7 @@ const styles = StyleSheet.create({
   infoText: {
     marginLeft: 10,
     fontSize: 14,
-    color: Colors.primary,
+    color: Colors.primary.main,
     fontWeight: '600',
   },
   contentContainer: {
@@ -755,7 +755,7 @@ const styles = StyleSheet.create({
   backToSelectionText: {
     marginLeft: 8,
     fontSize: 16,
-    color: Colors.primary,
+    color: Colors.primary.main,
     fontWeight: '600',
   },
   sectionTitle: {
@@ -789,7 +789,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.primary.main,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -805,7 +805,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   topicBadgeText: {
-    color: Colors.primary,
+    color: Colors.primary.main,
     fontSize: 12,
     fontWeight: '600',
     textTransform: 'capitalize',
@@ -854,7 +854,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   promptBadgeText: {
-    color: Colors.success,
+    color: Colors.success.main,
     fontSize: 12,
     fontWeight: '600',
     textTransform: 'capitalize',
@@ -885,7 +885,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: Colors.success,
+    backgroundColor: Colors.success.main,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
@@ -913,14 +913,14 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     flex: 1,
     fontSize: 13,
-    color: Colors.warning,
+    color: Colors.warning.main,
     lineHeight: 20,
   },
   startWritingButton: {
     borderRadius: 12,
     overflow: 'hidden',
     elevation: 3,
-    shadowColor: Colors.success,
+    shadowColor: Colors.success.main,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -989,7 +989,7 @@ const styles = StyleSheet.create({
   selectedTopicTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: Colors.primary,
+    color: Colors.primary.main,
     marginBottom: 8,
   },
   selectedTopicDescription: {
@@ -1029,7 +1029,7 @@ const styles = StyleSheet.create({
   wordCountText: {
     marginLeft: 5,
     fontSize: 13,
-    color: Colors.primary,
+    color: Colors.primary.main,
     fontWeight: '600',
   },
   essayInput: {
@@ -1053,7 +1053,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     elevation: 3,
-    shadowColor: Colors.primary,
+    shadowColor: Colors.primary.main,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -1099,12 +1099,12 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 10,
     borderWidth: 4,
-    borderColor: Colors.primary,
+    borderColor: Colors.primary.main,
   },
   scoreValue: {
     fontSize: 40,
     fontWeight: 'bold',
-    color: Colors.primary,
+    color: Colors.primary.main,
   },
   scoreMax: {
     fontSize: 20,
@@ -1124,13 +1124,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 20,
     borderLeftWidth: 4,
-    borderLeftColor: Colors.error,
+    borderLeftColor: Colors.error.main,
   },
   teacherComment: {
     flex: 1,
     marginLeft: 12,
     fontSize: 16,
-    color: Colors.error,
+    color: Colors.error.main,
     fontWeight: 'bold',
     lineHeight: 22,
   },
@@ -1157,7 +1157,7 @@ const styles = StyleSheet.create({
   breakdownValue: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: Colors.primary,
+    color: Colors.primary.main,
   },
   correctionsCard: {
     borderRadius: 16,
@@ -1191,7 +1191,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: Colors.error,
+    backgroundColor: Colors.error.main,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -1217,13 +1217,13 @@ const styles = StyleSheet.create({
   correctionWrong: {
     flex: 1,
     fontSize: 13,
-    color: Colors.error,
+    color: Colors.error.main,
     textDecorationLine: 'line-through',
   },
   correctionCorrect: {
     flex: 1,
     fontSize: 13,
-    color: Colors.success,
+    color: Colors.success.main,
     fontWeight: '600',
   },
   correctionTypeRow: {
@@ -1240,7 +1240,7 @@ const styles = StyleSheet.create({
   },
   correctionTypeText: {
     fontSize: 11,
-    color: Colors.primary,
+    color: Colors.primary.main,
     fontWeight: '600',
     textTransform: 'capitalize',
   },
@@ -1252,7 +1252,7 @@ const styles = StyleSheet.create({
   },
   moreCorrectionsText: {
     fontSize: 13,
-    color: Colors.primary,
+    color: Colors.primary.main,
     textAlign: 'center',
     fontWeight: '600',
     marginTop: 10,
@@ -1307,7 +1307,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: 15,
     elevation: 3,
-    shadowColor: Colors.success,
+    shadowColor: Colors.success.main,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -1323,7 +1323,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: 20,
     elevation: 3,
-    shadowColor: Colors.primary,
+    shadowColor: Colors.primary.main,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

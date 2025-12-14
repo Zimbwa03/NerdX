@@ -471,7 +471,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     elevation: 3,
-    shadowColor: Colors.primary,
+    shadowColor: Colors.primary.main,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -511,7 +511,7 @@ const styles = StyleSheet.create({
   passageTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: Colors.primary,
+    color: Colors.primary.main,
     marginBottom: 15,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0,0,0,0.05)',
@@ -548,7 +548,7 @@ const styles = StyleSheet.create({
   questionNumber: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: Colors.primary,
+    color: Colors.primary.main,
   },
   questionMarks: {
     fontSize: 12,
@@ -581,12 +581,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(76, 175, 80, 0.1)',
     borderRadius: 12,
     borderLeftWidth: 4,
-    borderLeftColor: Colors.success,
+    borderLeftColor: Colors.success.main,
   },
   feedbackLabel: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: Colors.success,
+    color: Colors.success.main,
     marginBottom: 5,
   },
   feedbackText: {
@@ -600,7 +600,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 20,
     elevation: 3,
-    shadowColor: Colors.success,
+    shadowColor: Colors.success.main,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -638,12 +638,12 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 25,
     borderWidth: 4,
-    borderColor: Colors.success,
+    borderColor: Colors.success.main,
   },
   scoreValue: {
     fontSize: 36,
     fontWeight: 'bold',
-    color: Colors.success,
+    color: Colors.success.main,
   },
   scoreLabel: {
     fontSize: 14,
@@ -664,7 +664,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   activeTab: {
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.primary.main,
   },
   tabText: {
     fontSize: 16,
@@ -718,7 +718,7 @@ const styles = StyleSheet.create({
   scoreItem: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: Colors.primary,
+    color: Colors.primary.main,
   },
   bulletPoint: {
     fontSize: 14,

@@ -21,7 +21,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { database } from '../database';
 import Interaction from '../database/models/Interaction';
-import { SyncService } from '../services/SyncService';
+import { sync as syncDatabase } from '../services/SyncService';
 import { Icons, IconCircle } from '../components/Icons';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
@@ -221,7 +221,7 @@ const QuizScreen: React.FC = () => {
       console.log(`✅ Offline DKT: Logged interaction for ${skill_id}`);
 
       // Trigger background sync if online
-      SyncService.sync();
+      syncDatabase();
 
     } catch (error) {
       console.error('Failed to log to local DB:', error);
@@ -1135,6 +1135,17 @@ const styles = StyleSheet.create({
   confidenceButtonTextSelected: {
     color: Colors.text.primary,
     fontWeight: 'bold',
+  },
+  questionImageContainer: {
+    marginTop: 16,
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: Colors.background.subtle,
+  },
+  questionImage: {
+    width: '100%',
+    height: 200,
+    resizeMode: 'contain',
   },
 });
 

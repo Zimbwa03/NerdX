@@ -1,5 +1,6 @@
 // Authentication API services
 import api from './config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface LoginData {
   identifier: string; // email or phone
@@ -22,6 +23,17 @@ export interface AuthResponse {
   user?: any;
   message?: string;
 }
+
+// Helper function to get auth token
+export const getAuthToken = async (): Promise<string | null> => {
+  try {
+    const token = await AsyncStorage.getItem('@auth_token');
+    return token;
+  } catch (error) {
+    console.error('Error getting auth token:', error);
+    return null;
+  }
+};
 
 export const authApi = {
   login: async (data: LoginData): Promise<AuthResponse> => {
@@ -68,3 +80,4 @@ export const authApi = {
     }
   },
 };
+

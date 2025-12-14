@@ -133,7 +133,7 @@ const ElectrolysisSimulatorScreen: React.FC = () => {
             <Svg width={CANVAS_WIDTH} height={220} viewBox={`0 0 ${CANVAS_WIDTH} 220`}>
                 {/* Battery/Power source */}
                 <Rect x={CANVAS_WIDTH / 2 - 40} y={5} width={80} height={30} rx={5} fill="#37474F" />
-                <Text fontSize={10} fill="#FFF" x={CANVAS_WIDTH / 2 - 15} y={25}>DC Power</Text>
+                <SvgText fontSize={10} fill="#FFF" x={CANVAS_WIDTH / 2 - 15} y={25}>DC Power</SvgText>
                 <SvgText x={CANVAS_WIDTH / 2 - 35} y={22} fontSize={14} fill="#F44336" fontWeight="bold">−</SvgText>
                 <SvgText x={CANVAS_WIDTH / 2 + 30} y={22} fontSize={14} fill="#4CAF50" fontWeight="bold">+</SvgText>
 

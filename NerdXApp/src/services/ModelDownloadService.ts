@@ -229,12 +229,12 @@ class ModelDownloadService {
                 cacheable: false,
                 progressInterval: 500,
                 progressDivider: 1,
-                begin: (res) => {
+                begin: (res: { contentLength: number; jobId: number }) => {
                     console.log(`Download started: ${url}`);
                     console.log(`Expected size: ${res.contentLength} bytes`);
                     this.downloadJobId = res.jobId;
                 },
-                progress: (res) => {
+                progress: (res: { bytesWritten: number; contentLength: number }) => {
                     // Calculate combined progress
                     const fileProgress = (res.bytesWritten / res.contentLength) * progressRange;
                     const overallProgress = progressStart + fileProgress;
@@ -249,7 +249,7 @@ class ModelDownloadService {
             });
 
             download.promise
-                .then((result) => {
+                .then((result: { statusCode: number; bytesWritten: number }) => {
                     if (result.statusCode === 200) {
                         console.log(`✅ File downloaded: ${filePath} (${result.bytesWritten} bytes)`);
                         resolve();
@@ -257,7 +257,7 @@ class ModelDownloadService {
                         reject(new Error(`Download failed with status code: ${result.statusCode}`));
                     }
                 })
-                .catch((error) => {
+                .catch((error: Error) => {
                     console.error('Download error:', error);
                     reject(error);
                 });

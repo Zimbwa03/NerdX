@@ -161,10 +161,10 @@ const EnzymeActionLabScreen: React.FC = () => {
                         <View style={styles.tubeContainer}>
                             <Svg width={60} height={140}>
                                 <Rect x={15} y={10} width={30} height={90} rx={2} fill="transparent" stroke={themedColors.text.primary} strokeWidth={2} />
-                                <Ellipse cx={30} cy={100} r={15} fill="transparent" stroke={themedColors.text.primary} strokeWidth={2} />
+                                <Ellipse cx={30} cy={100} rx={15} ry={8} fill="transparent" stroke={themedColors.text.primary} strokeWidth={2} />
                                 {/* Solution */}
                                 <Rect x={17} y={30} width={26} height={68} fill="#E1BEE7" />
-                                <Ellipse cx={30} cy={98} r={13} fill="#E1BEE7" />
+                                <Ellipse cx={30} cy={98} rx={13} ry={6} fill="#E1BEE7" />
                             </Svg>
                             <Text style={[styles.tubeLabel, { color: themedColors.text.secondary }]}>Starch +</Text>
                             <Text style={[styles.tubeLabel, { color: themedColors.text.secondary }]}>Amylase</Text>
@@ -177,10 +177,10 @@ const EnzymeActionLabScreen: React.FC = () => {
                         <View style={styles.tubeContainer}>
                             <Svg width={60} height={140}>
                                 <Rect x={15} y={10} width={30} height={90} rx={2} fill="transparent" stroke={themedColors.text.primary} strokeWidth={2} />
-                                <Ellipse cx={30} cy={100} r={15} fill="transparent" stroke={themedColors.text.primary} strokeWidth={2} />
+                                <Ellipse cx={30} cy={100} rx={15} ry={8} fill="transparent" stroke={themedColors.text.primary} strokeWidth={2} />
                                 {/* Solution with iodine */}
                                 <Rect x={17} y={30} width={26} height={68} fill={getIodineColor()} opacity={0.8} />
-                                <Ellipse cx={30} cy={98} r={13} fill={getIodineColor()} opacity={0.8} />
+                                <Ellipse cx={30} cy={98} rx={13} ry={6} fill={getIodineColor()} opacity={0.8} />
                             </Svg>
                             <Text style={[styles.tubeLabel, { color: themedColors.text.secondary }]}>Iodine</Text>
                             <Text style={[styles.tubeLabel, { color: themedColors.text.secondary }]}>Test</Text>

@@ -1,5 +1,6 @@
-// Progress Screen Component - Professional UI/UX Design
-import React, { useState, useEffect } from 'react';
+// Enhanced Progress Screen - Gamified Learning Experience
+// Complete redesign with level system, achievements, streak tracking, and analytics
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,8 +9,11 @@ import {
   ActivityIndicator,
   RefreshControl,
   StatusBar,
+  TouchableOpacity,
+  Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
 import { userApi, UserStats } from '../services/api/userApi';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -17,294 +21,629 @@ import { Icons, IconCircle, Icon } from '../components/Icons';
 import { Card } from '../components/Card';
 import Colors from '../theme/colors';
 import { useThemedColors } from '../theme/useThemedStyles';
+import { gamificationService, LevelInfo, DailyGoal, DailyActivity } from '../services/GamificationService';
+import { dktService, KnowledgeMap } from '../services/api/dktApi';
 
-const ProgressScreen: React.FC = () => {
+// Import new components
+import { LevelProgressRing } from '../components/AnimatedProgressRing';
+import { StreakCalendar } from '../components/StreakCalendar';
+import { AchievementGallery, BadgeData } from '../components/AchievementBadge';
+import { SubjectMasteryCard, getDefaultSubjectData, SubjectMasteryData } from '../components/SubjectMasteryCard';
+import { WeeklyActivityChart, DailyGoalsWidget } from '../components/WeeklyActivityChart';
+
+const { width } = Dimensions.get('window');
+
+// Quick Stat Card Component
+interface QuickStatProps {
+  icon: string;
+  value: string | number;
+  label: string;
+  color: string;
+}
+
+const QuickStatCard: React.FC<QuickStatProps> = ({ icon, value, label, color }) => {
+  const themedColors = useThemedColors();
+
+  return (
+    <View style={[styles.quickStat, { backgroundColor: themedColors.background.paper }]}>
+      <View style={[styles.quickStatIcon, { backgroundColor: color + '20' }]}>
+        <Text style={styles.quickStatEmoji}>{icon}</Text>
+      </View>
+      <Text style={[styles.quickStatValue, { color: themedColors.text.primary }]}>
+        {value}
+      </Text>
+      <Text style={[styles.quickStatLabel, { color: themedColors.text.secondary }]}>
+        {label}
+      </Text>
+    </View>
+  );
+};
+
+const EnhancedProgressScreen: React.FC = () => {
   const { user } = useAuth();
   const { isDarkMode } = useTheme();
   const themedColors = useThemedColors();
-  const [stats, setStats] = useState<UserStats | null>(null);
+  const navigation = useNavigation();
+
+  // Loading states
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    loadStats();
-  }, []);
+  // Data states
+  const [levelInfo, setLevelInfo] = useState<LevelInfo | null>(null);
+  const [overallStats, setOverallStats] = useState<any>(null);
+  const [streakHistory, setStreakHistory] = useState<boolean[]>([]);
+  const [badges, setBadges] = useState<BadgeData[]>([]);
+  const [dailyGoals, setDailyGoals] = useState<DailyGoal[]>([]);
+  const [weeklyActivity, setWeeklyActivity] = useState<DailyActivity[]>([]);
+  const [subjectMastery, setSubjectMastery] = useState<SubjectMasteryData[]>([]);
+  const [knowledgeMap, setKnowledgeMap] = useState<KnowledgeMap | null>(null);
 
-  const loadStats = async () => {
+  const loadAllData = useCallback(async () => {
     try {
-      setLoading(true);
-      const data = await userApi.getStats();
-      setStats(data);
+      // Load all gamification data
+      const [
+        levelData,
+        statsData,
+        streakData,
+        badgesData,
+        goalsData,
+        activityData,
+        progressData,
+        mapData,
+      ] = await Promise.all([
+        gamificationService.getLevelInfo(),
+        gamificationService.getOverallStats(),
+        gamificationService.getStreakHistory(),
+        gamificationService.getAllBadges(),
+        gamificationService.getDailyGoals(),
+        gamificationService.getWeeklyActivity(),
+        gamificationService.getProgress(),
+        dktService.getKnowledgeMap().catch(() => null),
+      ]);
+
+      setLevelInfo(levelData);
+      setOverallStats(statsData);
+      setStreakHistory(streakData);
+      setBadges(badgesData as BadgeData[]);
+      setDailyGoals(goalsData);
+      setWeeklyActivity(activityData);
+      setKnowledgeMap(mapData);
+
+      // Build subject mastery data
+      const defaultSubjects = getDefaultSubjectData();
+      const updatedSubjects = defaultSubjects.map(subj => ({
+        ...subj,
+        mastery: progressData.subjectMastery[subj.subject] || 0,
+        skillsCount: mapData?.skills?.filter(s => s.subject.toLowerCase() === subj.subject).length || 0,
+        masteredSkills: mapData?.skills?.filter(s =>
+          s.subject.toLowerCase() === subj.subject && s.mastery >= 0.8
+        ).length || 0,
+      }));
+      setSubjectMastery(updatedSubjects);
+
     } catch (error) {
-      console.error('Failed to load stats:', error);
+      console.error('Failed to load progress data:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadAllData();
+    // Also check streak when screen loads
+    gamificationService.checkStreak();
+  }, [loadAllData]);
 
   const onRefresh = () => {
     setRefreshing(true);
-    loadStats();
+    loadAllData();
+  };
+
+  // Format weekly activity for chart
+  const formatWeeklyActivity = () => {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return weeklyActivity.map((activity, index) => {
+      const date = new Date(activity.date);
+      return {
+        day: days[date.getDay()],
+        date: activity.date,
+        questionsAnswered: activity.questionsAnswered,
+        correctAnswers: activity.correctAnswers,
+      };
+    });
   };
 
   if (loading) {
     return (
       <View style={[styles.centerContainer, { backgroundColor: themedColors.background.default }]}>
         <ActivityIndicator size="large" color={themedColors.primary.main} />
-        <Text style={[styles.loadingText, { color: themedColors.text.secondary }]}>Loading progress...</Text>
+        <Text style={[styles.loadingText, { color: themedColors.text.secondary }]}>
+          Loading your progress...
+        </Text>
       </View>
     );
   }
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: themedColors.background.default }]}
-      showsVerticalScrollIndicator={false}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-    >
-      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={themedColors.background.default} />
-      {/* Professional Header */}
-      <LinearGradient
-        colors={[Colors.warning.main, Colors.warning.dark]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.header}
+    <View style={[styles.container, { backgroundColor: themedColors.background.default }]}>
+      <StatusBar
+        barStyle={isDarkMode ? "light-content" : "dark-content"}
+        backgroundColor={themedColors.background.default}
+      />
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={themedColors.primary.main}
+          />
+        }
       >
-        <View style={styles.headerContent}>
-          <View>
-            <Text style={styles.title}>Your Progress</Text>
-            <Text style={styles.subtitle}>Track your learning journey</Text>
-          </View>
-          {Icons.progress(32, '#FFFFFF')}
-        </View>
-      </LinearGradient>
-
-      {/* Stats Grid */}
-      <View style={styles.statsContainer}>
-        <Card variant="gradient" gradientColors={[Colors.success.main, Colors.success.dark]} style={styles.statCard}>
-          <IconCircle
-            icon={Icons.credits(28, '#FFFFFF')}
-            size={48}
-            backgroundColor="rgba(255, 255, 255, 0.2)"
-          />
-          <Text style={styles.statValue}>{stats?.credits || user?.credits || 0}</Text>
-          <Text style={styles.statLabel}>Credits</Text>
-        </Card>
-
-        <Card variant="gradient" gradientColors={[Colors.primary.main, Colors.primary.dark]} style={styles.statCard}>
-          <IconCircle
-            icon={Icons.success(28, '#FFFFFF')}
-            size={48}
-            backgroundColor="rgba(255, 255, 255, 0.2)"
-          />
-          <Text style={styles.statValue}>{stats?.total_points || 0}</Text>
-          <Text style={styles.statLabel}>Total Points</Text>
-        </Card>
-
-        <Card variant="gradient" gradientColors={[Colors.error.main, Colors.error.dark]} style={styles.statCard}>
-          <IconCircle
-            icon={<Icon name="flame" size={28} color="#FFFFFF" library="ionicons" />}
-            size={48}
-            backgroundColor="rgba(255, 255, 255, 0.2)"
-          />
-          <Text style={styles.statValue}>{stats?.streak_count || 0}</Text>
-          <Text style={styles.statLabel}>Day Streak</Text>
-        </Card>
-
-        <Card variant="gradient" gradientColors={[Colors.secondary.main, Colors.secondary.dark]} style={styles.statCard}>
-          <IconCircle
-            icon={Icons.progress(28, '#FFFFFF')}
-            size={48}
-            backgroundColor="rgba(255, 255, 255, 0.2)"
-          />
-          <Text style={styles.statValue}>{stats?.accuracy || 0}%</Text>
-          <Text style={styles.statLabel}>Accuracy</Text>
-        </Card>
-      </View>
-
-      {/* Details Section */}
-      <View style={styles.detailsContainer}>
-        <Text style={styles.sectionTitle}>Activity Details</Text>
-        <Card variant="elevated" style={styles.detailCard}>
-          <View style={styles.detailContent}>
-            <IconCircle
-              icon={Icons.quiz(24, Colors.primary.main)}
-              size={40}
-              backgroundColor={Colors.iconBg.mathematics}
-            />
-            <View style={styles.detailInfo}>
-              <Text style={styles.detailTitle}>Questions Answered</Text>
-              <Text style={styles.detailValue}>{stats?.questions_answered || 0}</Text>
-            </View>
-          </View>
-        </Card>
-
-        {stats?.last_activity && (
-          <Card variant="elevated" style={styles.detailCard}>
-            <View style={styles.detailContent}>
-              <IconCircle
-                icon={<Icon name="time" size={24} color={Colors.warning.main} library="ionicons" />}
-                size={40}
-                backgroundColor={Colors.iconBg.english}
+        {/* Hero Section - Level & XP */}
+        <LinearGradient
+          colors={themedColors.gradients.primary}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.heroSection}
+        >
+          <View style={styles.heroContent}>
+            {/* Level Progress Ring */}
+            <View style={styles.levelRingContainer}>
+              <LevelProgressRing
+                level={levelInfo?.level || 1}
+                currentXP={levelInfo?.currentXP || 0}
+                xpForNextLevel={levelInfo?.xpForNextLevel || 100}
+                size={160}
               />
-              <View style={styles.detailInfo}>
-                <Text style={styles.detailTitle}>Last Activity</Text>
-                <Text style={styles.detailValue}>
-                  {new Date(stats.last_activity).toLocaleDateString()}
+            </View>
+
+            {/* Rank Badge */}
+            <View style={styles.rankBadge}>
+              <Text style={styles.rankIcon}>{levelInfo?.rankIcon || '🌱'}</Text>
+              <Text style={styles.rankName}>{levelInfo?.rank || 'Novice Explorer'}</Text>
+            </View>
+
+            {/* XP Progress Text */}
+            <Text style={styles.xpProgressText}>
+              {levelInfo?.currentXP?.toLocaleString() || 0} / {levelInfo?.xpForNextLevel?.toLocaleString() || 100} XP
+            </Text>
+            <Text style={styles.nextLevelText}>
+              {(levelInfo?.xpForNextLevel || 100) - (levelInfo?.currentXP || 0)} XP to Level {(levelInfo?.level || 1) + 1}
+            </Text>
+          </View>
+        </LinearGradient>
+
+        <View style={styles.mainContent}>
+          {/* Quick Stats Grid */}
+          <View style={styles.quickStatsGrid}>
+            <QuickStatCard
+              icon="🔥"
+              value={overallStats?.streak || 0}
+              label="Day Streak"
+              color={Colors.warning.main}
+            />
+            <QuickStatCard
+              icon="📊"
+              value={`${overallStats?.accuracy || 0}%`}
+              label="Accuracy"
+              color={Colors.success.main}
+            />
+            <QuickStatCard
+              icon="❓"
+              value={overallStats?.totalQuestions || 0}
+              label="Questions"
+              color={Colors.primary.main}
+            />
+            <QuickStatCard
+              icon="💎"
+              value={user?.credits || 0}
+              label="Credits"
+              color={Colors.secondary.main}
+            />
+          </View>
+
+          {/* Daily Goals Widget */}
+          {dailyGoals.length > 0 && (
+            <DailyGoalsWidget goals={dailyGoals} />
+          )}
+
+          {/* Streak Calendar */}
+          <StreakCalendar
+            streakHistory={streakHistory}
+            currentStreak={overallStats?.streak || 0}
+          />
+
+          {/* Subject Mastery Section */}
+          <View style={[styles.sectionContainer, { backgroundColor: themedColors.background.paper }]}>
+            <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>
+              📚 Subject Mastery
+            </Text>
+            {subjectMastery.map((subject) => (
+              <SubjectMasteryCard
+                key={subject.subject}
+                data={subject}
+                compact
+                onPress={() => {
+                  // Navigate to subject topics
+                  const subjectObj = {
+                    id: subject.subject,
+                    name: subject.displayName,
+                    icon: subject.icon,
+                    color: subject.color,
+                  };
+                  navigation.navigate('Topics' as never, { subject: subjectObj } as never);
+                }}
+              />
+            ))}
+          </View>
+
+          {/* Weekly Activity Chart */}
+          <WeeklyActivityChart data={formatWeeklyActivity()} />
+
+          {/* Achievement Gallery */}
+          <AchievementGallery
+            badges={badges}
+            title={`🏆 Achievements (${badges.filter(b => b.isUnlocked).length}/${badges.length})`}
+          />
+
+          {/* Knowledge Map Preview */}
+          {knowledgeMap && knowledgeMap.total_skills > 0 && (
+            <View style={[styles.sectionContainer, { backgroundColor: themedColors.background.paper }]}>
+              <View style={styles.sectionHeader}>
+                <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>
+                  📊 Skills Overview
                 </Text>
+                <TouchableOpacity style={styles.viewAllBtn}>
+                  <Text style={[styles.viewAllText, { color: Colors.primary.main }]}>
+                    View All →
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.skillsGrid}>
+                <View style={[styles.skillStat, { backgroundColor: Colors.success.main + '15' }]}>
+                  <Text style={[styles.skillStatValue, { color: Colors.success.main }]}>
+                    {knowledgeMap.mastered_skills}
+                  </Text>
+                  <Text style={[styles.skillStatLabel, { color: themedColors.text.secondary }]}>
+                    Mastered
+                  </Text>
+                </View>
+                <View style={[styles.skillStat, { backgroundColor: Colors.primary.main + '15' }]}>
+                  <Text style={[styles.skillStatValue, { color: Colors.primary.main }]}>
+                    {knowledgeMap.learning_skills}
+                  </Text>
+                  <Text style={[styles.skillStatLabel, { color: themedColors.text.secondary }]}>
+                    Learning
+                  </Text>
+                </View>
+                <View style={[styles.skillStat, { backgroundColor: Colors.warning.main + '15' }]}>
+                  <Text style={[styles.skillStatValue, { color: Colors.warning.main }]}>
+                    {knowledgeMap.struggling_skills}
+                  </Text>
+                  <Text style={[styles.skillStatLabel, { color: themedColors.text.secondary }]}>
+                    Needs Work
+                  </Text>
+                </View>
               </View>
             </View>
-          </Card>
-        )}
-      </View>
+          )}
 
-      {/* Achievements Section */}
-      <View style={styles.achievementsContainer}>
-        <Text style={styles.sectionTitle}>Achievements</Text>
-        <Card variant="elevated" style={styles.achievementCard}>
-          <View style={styles.achievementContent}>
-            <IconCircle
-              icon={<Icon name="trophy" size={28} color={Colors.warning.main} library="ionicons" />}
-              size={56}
-              backgroundColor={Colors.iconBg.english}
-            />
-            <View style={styles.achievementInfo}>
-              <Text style={styles.achievementTitle}>Getting Started</Text>
-              <Text style={styles.achievementDescription}>Complete your first quiz</Text>
+          {/* Lifetime Stats */}
+          <View style={[styles.sectionContainer, { backgroundColor: themedColors.background.paper }]}>
+            <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>
+              📈 Lifetime Statistics
+            </Text>
+
+            <View style={styles.lifetimeStats}>
+              <View style={styles.lifetimeStat}>
+                <IconCircle
+                  icon={<Icon name="school" size={20} color={Colors.primary.main} library="ionicons" />}
+                  size={40}
+                  backgroundColor={Colors.primary.main + '20'}
+                />
+                <View style={styles.lifetimeStatInfo}>
+                  <Text style={[styles.lifetimeStatValue, { color: themedColors.text.primary }]}>
+                    {overallStats?.totalQuizzes || 0}
+                  </Text>
+                  <Text style={[styles.lifetimeStatLabel, { color: themedColors.text.secondary }]}>
+                    Quizzes Completed
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.lifetimeStat}>
+                <IconCircle
+                  icon={<Icon name="star" size={20} color={Colors.warning.main} library="ionicons" />}
+                  size={40}
+                  backgroundColor={Colors.warning.main + '20'}
+                />
+                <View style={styles.lifetimeStatInfo}>
+                  <Text style={[styles.lifetimeStatValue, { color: themedColors.text.primary }]}>
+                    {overallStats?.totalXP?.toLocaleString() || 0}
+                  </Text>
+                  <Text style={[styles.lifetimeStatLabel, { color: themedColors.text.secondary }]}>
+                    Total XP Earned
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.lifetimeStat}>
+                <IconCircle
+                  icon={<Icon name="trophy" size={20} color={Colors.success.main} library="ionicons" />}
+                  size={40}
+                  backgroundColor={Colors.success.main + '20'}
+                />
+                <View style={styles.lifetimeStatInfo}>
+                  <Text style={[styles.lifetimeStatValue, { color: themedColors.text.primary }]}>
+                    {overallStats?.perfectScores || 0}
+                  </Text>
+                  <Text style={[styles.lifetimeStatLabel, { color: themedColors.text.secondary }]}>
+                    Perfect Scores
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.lifetimeStat}>
+                <IconCircle
+                  icon={<Icon name="flame" size={20} color={Colors.error.main} library="ionicons" />}
+                  size={40}
+                  backgroundColor={Colors.error.main + '20'}
+                />
+                <View style={styles.lifetimeStatInfo}>
+                  <Text style={[styles.lifetimeStatValue, { color: themedColors.text.primary }]}>
+                    {overallStats?.longestStreak || 0}
+                  </Text>
+                  <Text style={[styles.lifetimeStatLabel, { color: themedColors.text.secondary }]}>
+                    Longest Streak
+                  </Text>
+                </View>
+              </View>
             </View>
-            {Icons.arrowRight(24, Colors.text.secondary)}
           </View>
-        </Card>
-      </View>
-    </ScrollView>
+
+          {/* Motivational Footer */}
+          <View style={styles.motivationalFooter}>
+            <LinearGradient
+              colors={[Colors.secondary.main, Colors.secondary.dark]}
+              style={styles.motivationalGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <Text style={styles.motivationalEmoji}>🚀</Text>
+              <Text style={styles.motivationalText}>
+                Keep learning! You're doing amazing!
+              </Text>
+              <Text style={styles.motivationalSubtext}>
+                Every question brings you closer to mastery
+              </Text>
+            </LinearGradient>
+          </View>
+
+          {/* Bottom Spacing */}
+          <View style={styles.bottomSpacer} />
+        </View>
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background.paper,
+  },
+  scrollView: {
+    flex: 1,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.background.paper,
   },
   loadingText: {
-    marginTop: 10,
-    color: Colors.text.secondary,
+    marginTop: 16,
     fontSize: 16,
   },
-  header: {
-    paddingTop: 50,
-    paddingBottom: 30,
-    paddingHorizontal: 20,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+
+  // Hero Section
+  heroSection: {
+    paddingTop: 60,
+    paddingBottom: 40,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    shadowColor: Colors.primary.dark,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
   },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  heroContent: {
     alignItems: 'center',
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: Colors.text.white,
-    marginBottom: 8,
+  levelRingContainer: {
+    marginBottom: 16,
   },
-  subtitle: {
+  rankBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginBottom: 12,
+  },
+  rankIcon: {
+    fontSize: 20,
+    marginRight: 8,
+  },
+  rankName: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  xpProgressText: {
+    color: 'rgba(255,255,255,0.9)',
     fontSize: 16,
-    color: Colors.text.white,
-    opacity: 0.9,
+    fontWeight: '500',
   },
-  statsContainer: {
+  nextLevelText: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 13,
+    marginTop: 4,
+  },
+
+  // Main Content
+  mainContent: {
+    padding: 20,
+    marginTop: -20,
+  },
+
+  // Quick Stats
+  quickStatsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    padding: 20,
-    paddingTop: 10,
     justifyContent: 'space-between',
-  },
-  statCard: {
-    width: '48%',
     marginBottom: 16,
+  },
+  quickStat: {
+    width: (width - 52) / 4,
     alignItems: 'center',
-    padding: 16,
+    padding: 12,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  statValue: {
-    fontSize: 28,
+  quickStatIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
+  },
+  quickStatEmoji: {
+    fontSize: 18,
+  },
+  quickStatValue: {
+    fontSize: 18,
     fontWeight: 'bold',
-    color: Colors.text.white,
-    marginTop: 12,
-    marginBottom: 4,
   },
-  statLabel: {
-    fontSize: 14,
-    color: Colors.text.white,
-    opacity: 0.9,
+  quickStatLabel: {
+    fontSize: 10,
+    marginTop: 2,
+    textAlign: 'center',
   },
-  detailsContainer: {
+
+  // Section Container
+  sectionContainer: {
+    borderRadius: 20,
     padding: 20,
-    paddingTop: 10,
+    marginVertical: 12,
+    shadowColor: Colors.primary.dark,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: Colors.text.primary,
-    marginBottom: 16,
-    marginLeft: 4,
-  },
-  detailCard: {
-    marginBottom: 12,
-  },
-  detailContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 4,
-    gap: 16,
-  },
-  detailInfo: {
-    flex: 1,
-  },
-  detailTitle: {
-    fontSize: 14,
-    color: Colors.text.secondary,
-    marginBottom: 4,
-  },
-  detailValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: Colors.text.primary,
-  },
-  achievementsContainer: {
-    padding: 20,
-    paddingTop: 10,
-  },
-  achievementCard: {
-    marginBottom: 12,
-  },
-  achievementContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 4,
-    gap: 16,
-  },
-  achievementInfo: {
-    flex: 1,
-  },
-  achievementTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: Colors.text.primary,
-    marginBottom: 4,
+    fontWeight: 'bold',
+    marginBottom: 16,
   },
-  achievementDescription: {
+  viewAllBtn: {
+    padding: 4,
+  },
+  viewAllText: {
     fontSize: 14,
-    color: Colors.text.secondary,
-    lineHeight: 20,
+    fontWeight: '600',
+  },
+
+  // Skills Grid
+  skillsGrid: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  skillStat: {
+    flex: 1,
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 16,
+  },
+  skillStatValue: {
+    fontSize: 28,
+    fontWeight: 'bold',
+  },
+  skillStatLabel: {
+    fontSize: 12,
+    marginTop: 4,
+  },
+
+  // Lifetime Stats
+  lifetimeStats: {
+    gap: 12,
+  },
+  lifetimeStat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  lifetimeStatInfo: {
+    flex: 1,
+  },
+  lifetimeStatValue: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  lifetimeStatLabel: {
+    fontSize: 13,
+  },
+
+  // Motivational Footer
+  motivationalFooter: {
+    marginVertical: 20,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  motivationalGradient: {
+    padding: 24,
+    alignItems: 'center',
+  },
+  motivationalEmoji: {
+    fontSize: 40,
+    marginBottom: 12,
+  },
+  motivationalText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  motivationalSubtext: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 14,
+    marginTop: 8,
+    textAlign: 'center',
+  },
+
+  // Spacing
+  bottomSpacer: {
+    height: 40,
   },
 });
 
-export default ProgressScreen;
+export default EnhancedProgressScreen;

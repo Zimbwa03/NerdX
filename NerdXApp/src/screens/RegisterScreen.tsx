@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 20,
     elevation: 4,
-    shadowColor: Colors.primary,
+    shadowColor: Colors.primary.main,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -383,7 +383,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   loginLinkBold: {
-    color: Colors.primary,
+    color: Colors.primary.main,
     fontSize: 15,
     fontWeight: 'bold',
   },
