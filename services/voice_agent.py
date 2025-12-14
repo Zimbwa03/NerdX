@@ -293,15 +293,18 @@ class GeminiLiveSession:
                             for part in model_turn["parts"]:
                                 if "inlineData" in part:
                                     inline_data = part["inlineData"]
-                                    if inline_data.get("mimeType", "").startswith("audio/"):
+                                    mime_type = inline_data.get("mimeType", "")
+                                    logger.info(f"🔊 Received audio from Gemini: {mime_type}")
+                                    
+                                    if mime_type.startswith("audio/"):
                                         # Convert PCM to WAV for mobile playback
                                         audio_data = inline_data.get("data", "")
-                                        mime_type = inline_data.get("mimeType", "audio/pcm")
                                         
                                         # If it's PCM audio, convert to WAV
                                         if "pcm" in mime_type.lower() and audio_data:
                                             # Gemini outputs 24kHz audio
                                             wav_data = convert_pcm_to_wav(audio_data, sample_rate=24000)
+                                            logger.info(f"📢 Sending WAV audio to client, size: {len(wav_data)}")
                                             await self.client_ws.send_json({
                                                 "type": "audio",
                                                 "data": wav_data,
@@ -309,6 +312,7 @@ class GeminiLiveSession:
                                             })
                                         else:
                                             # Forward as-is for other formats
+                                            logger.info(f"📢 Sending {mime_type} audio to client, size: {len(audio_data)}")
                                             await self.client_ws.send_json({
                                                 "type": "audio",
                                                 "data": audio_data,
