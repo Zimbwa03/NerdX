@@ -862,8 +862,7 @@ const TeacherModeScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       </View>
-    </View>
-    </KeyboardAvoidingView >
+    </KeyboardAvoidingView>
   );
 };
 
