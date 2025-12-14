@@ -148,7 +148,8 @@ const QuizScreen: React.FC = () => {
         question.correct_answer,
         question.solution,
         question.hint,
-        question.question_text
+        question.question_text,
+        question.options  // Pass options for proper MCQ validation
       );
       if (answerResult) {
         setResult(answerResult);

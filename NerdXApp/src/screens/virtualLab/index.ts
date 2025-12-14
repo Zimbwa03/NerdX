@@ -16,7 +16,7 @@ export { default as HeartPumpScreen } from './HeartPumpScreen';
 
 // Phase 2 - Chemistry
 export { default as TitrationMasterScreen } from './TitrationMasterScreen';
-export { default as pHScaleExplorerScreen } from './pHScaleExplorerScreen';
+export { default as PHScaleExplorerScreen } from './pHScaleExplorerScreen';
 export { default as ElectrolysisSimulatorScreen } from './ElectrolysisSimulatorScreen';
 
 // Phase 2 - Physics

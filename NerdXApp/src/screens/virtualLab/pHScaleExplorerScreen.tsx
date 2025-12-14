@@ -46,7 +46,7 @@ const getPHColor = (ph: number): string => {
     return PH_COLORS[index];
 };
 
-const pHScaleExplorerScreen: React.FC = () => {
+const PHScaleExplorerScreen: React.FC = () => {
     const navigation = useNavigation();
     const { isDarkMode } = useTheme();
     const themedColors = useThemedColors();
@@ -434,4 +434,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default pHScaleExplorerScreen;
+export default PHScaleExplorerScreen;

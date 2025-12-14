@@ -48,7 +48,7 @@ import TranspirationTrackerScreen from '../screens/virtualLab/TranspirationTrack
 import HeartPumpScreen from '../screens/virtualLab/HeartPumpScreen';
 // Phase 2 - Chemistry
 import TitrationMasterScreen from '../screens/virtualLab/TitrationMasterScreen';
-import pHScaleExplorerScreen from '../screens/virtualLab/pHScaleExplorerScreen';
+import PHScaleExplorerScreen from '../screens/virtualLab/pHScaleExplorerScreen';
 import ElectrolysisSimulatorScreen from '../screens/virtualLab/ElectrolysisSimulatorScreen';
 // Phase 2 - Physics
 import MotionGrapherScreen from '../screens/virtualLab/MotionGrapherScreen';
@@ -268,7 +268,7 @@ const AppNavigator: React.FC = () => {
             />
             <Stack.Screen
               name="pHScaleExplorer"
-              component={pHScaleExplorerScreen}
+              component={PHScaleExplorerScreen}
               options={{ headerShown: false }}
             />
             <Stack.Screen

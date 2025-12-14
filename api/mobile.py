@@ -933,44 +933,77 @@ def submit_answer():
             # Get options from the request data for flexible matching
             options = data.get('options', [])
             
+            # Normalize options to list format
+            if isinstance(options, dict):
+                options = [options.get(k, '') for k in ['A', 'B', 'C', 'D'] if options.get(k)]
+            
             # Check for exact match first (handles both letter or text)
             if user_answer_normalized.lower() == correct_answer_normalized.lower():
                 is_correct = True
                 feedback = '✅ Correct! Well done!'
             else:
-                # If correct_answer is a letter (A/B/C/D), check if user sent the matching option text
+                # CASE 1: correct_answer is a letter (A/B/C/D)
                 if correct_answer_normalized.upper() in ['A', 'B', 'C', 'D']:
-                    # User might have sent the full option text, need to find if it matches
-                    option_index = ord(correct_answer_normalized.upper()) - ord('A')
+                    correct_letter = correct_answer_normalized.upper()
+                    option_index = ord(correct_letter) - ord('A')
                     
-                    # Options could be dict or list
+                    # Get the correct option text
                     correct_option_text = None
-                    if isinstance(options, dict):
-                        correct_option_text = options.get(correct_answer_normalized.upper(), '')
-                    elif isinstance(options, list) and 0 <= option_index < len(options):
-                        correct_option_text = options[option_index]
+                    if isinstance(options, list) and 0 <= option_index < len(options):
+                        correct_option_text = str(options[option_index]).strip()
                     
                     # Check if user's answer matches the correct option text
-                    if correct_option_text and user_answer_normalized.lower() == str(correct_option_text).lower().strip():
+                    if correct_option_text and user_answer_normalized.lower() == correct_option_text.lower():
+                        is_correct = True
+                        feedback = '✅ Correct! Well done!'
+                    # Check if user sent the correct letter
+                    elif user_answer_normalized.upper() == correct_letter:
                         is_correct = True
                         feedback = '✅ Correct! Well done!'
                     else:
-                        # Also check if user sent just the letter that matches
-                        user_letter = user_answer_normalized.upper()
-                        if user_letter in ['A', 'B', 'C', 'D'] and user_letter == correct_answer_normalized.upper():
+                        # Check if user selected a DIFFERENT option - find which one they selected
+                        user_selected_letter = None
+                        if user_answer_normalized.upper() in ['A', 'B', 'C', 'D']:
+                            user_selected_letter = user_answer_normalized.upper()
+                        else:
+                            # User sent option text - find which letter it matches
+                            for i, opt in enumerate(options):
+                                if str(opt).strip().lower() == user_answer_normalized.lower():
+                                    user_selected_letter = chr(ord('A') + i)
+                                    break
+                        
+                        # Compare the letters
+                        if user_selected_letter and user_selected_letter == correct_letter:
                             is_correct = True
                             feedback = '✅ Correct! Well done!'
                         else:
                             is_correct = False
                             feedback = '❌ Incorrect. The correct answer is shown below.'
+                
+                # CASE 2: correct_answer is text (full option text)
                 else:
-                    # Correct answer is text, check if user's answer contains key parts
-                    # This handles minor formatting differences
-                    user_lower = user_answer_normalized.lower()
-                    correct_lower = correct_answer_normalized.lower()
+                    # Find which letter corresponds to the correct answer text
+                    correct_letter = None
+                    for i, opt in enumerate(options):
+                        if str(opt).strip().lower() == correct_answer_normalized.lower():
+                            correct_letter = chr(ord('A') + i)
+                            break
                     
-                    # Check for substantial overlap (80% match or containment)
-                    if user_lower in correct_lower or correct_lower in user_lower:
+                    # Find which letter the user selected
+                    user_letter = None
+                    if user_answer_normalized.upper() in ['A', 'B', 'C', 'D']:
+                        user_letter = user_answer_normalized.upper()
+                    else:
+                        for i, opt in enumerate(options):
+                            if str(opt).strip().lower() == user_answer_normalized.lower():
+                                user_letter = chr(ord('A') + i)
+                                break
+                    
+                    # Compare
+                    if correct_letter and user_letter and correct_letter == user_letter:
+                        is_correct = True
+                        feedback = '✅ Correct! Well done!'
+                    elif user_answer_normalized.lower() == correct_answer_normalized.lower():
                         is_correct = True
                         feedback = '✅ Correct! Well done!'
                     else:

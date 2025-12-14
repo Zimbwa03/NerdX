@@ -131,7 +131,8 @@ export const quizApi = {
     correctAnswer?: string,
     solution?: string,
     hint?: string,
-    questionText?: string
+    questionText?: string,
+    options?: string[]  // Added: options array for proper MCQ validation
   ): Promise<AnswerResult | null> => {
     try {
       const payload: any = {
@@ -147,6 +148,10 @@ export const quizApi = {
         payload.solution = solution;
         payload.hint = hint;
         payload.question_text = questionText;
+      }
+      // Include options for MCQ answer validation
+      if (options && options.length > 0) {
+        payload.options = options;
       }
       const response = await api.post('/api/mobile/quiz/submit-answer', payload);
       return response.data.data || null;
