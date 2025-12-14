@@ -675,7 +675,7 @@ Remember: You're their project partner! Be helpful, be thorough, and make learni
         Args:
             user_id: The user's ID
             project_data: The project data to save
-            project_id: Optional specific project ID to update (if None, searches for any incomplete project)
+            project_id: Optional specific project ID to update (if None, creates a NEW project)
         """
         try:
             # Prepare data for database
@@ -695,22 +695,11 @@ Remember: You're their project partner! Be helpful, be thorough, and make learni
                 logger.info(f"Updated project {project_id} in database for {user_id}")
                 return bool(success)
             
-            # Otherwise, check if project already exists (legacy behavior for new projects)
-            existing = make_supabase_request("GET", "user_projects", filters={
-                "user_id": f"eq.{user_id}",
-                "completed": "eq.false"
-            })
-            
-            if existing and len(existing) > 0:
-                # Update existing project
-                existing_id = existing[0]['id']
-                success = make_supabase_request("PATCH", "user_projects", data=db_data, filters={"id": f"eq.{existing_id}"})
-                logger.info(f"Updated project {existing_id} in database for {user_id}")
-            else:
-                # Insert new project
-                db_data['created_at'] = datetime.now().isoformat()
-                success = make_supabase_request("POST", "user_projects", data=db_data)
-                logger.info(f"Inserted new project in database for {user_id}")
+            # FIXED: Always insert a new project instead of overwriting existing ones
+            # This ensures project history is preserved
+            db_data['created_at'] = datetime.now().isoformat()
+            success = make_supabase_request("POST", "user_projects", data=db_data)
+            logger.info(f"Inserted new project in database for {user_id}")
             
             return bool(success)
             
