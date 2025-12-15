@@ -17,6 +17,7 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import { quizApi, Question, AnswerResult } from '../services/api/quizApi';
 import { dktService } from '../services/api/dktApi';
+import { gamificationService } from '../services/GamificationService';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { database } from '../database';
@@ -170,8 +171,24 @@ const QuizScreen: React.FC = () => {
           await logInteractionToDKT(answerResult.correct);
         }
 
-        if (answerResult.correct && user) {
-          // Update user stats if needed
+        // Track progress in gamification service (for Progress screen)
+        try {
+          // Log question answered for XP and stats
+          await gamificationService.logQuestionAnswered(answerResult.correct);
+
+          // Check and update streak
+          await gamificationService.checkStreak();
+
+          // Update subject mastery based on quiz performance
+          const subjectKey = subject?.id === 'combined_science'
+            ? (topic?.parent_subject || 'science')
+            : subject?.id || 'general';
+          const scorePercent = answerResult.correct ? 100 : 0;
+          await gamificationService.updateMastery(subjectKey, scorePercent);
+
+          console.log('✅ Gamification: Progress tracked successfully');
+        } catch (gamError) {
+          console.error('Failed to update gamification:', gamError);
         }
       }
     } catch (error: any) {
@@ -181,7 +198,7 @@ const QuizScreen: React.FC = () => {
     }
   };
 
-  // Log interaction to DKT system (Offline-First)
+  // Log interaction to DKT system (Offline-First with fallback)
   const logInteractionToDKT = async (isCorrect: boolean) => {
     if (!question || !subject) return;
 
@@ -205,30 +222,52 @@ const QuizScreen: React.FC = () => {
         topic?.name || topic?.id || 'general'
       );
 
-      // Save to local database
-      await database.write(async () => {
-        await database.get<Interaction>('interactions').create(interaction => {
-          interaction.userId = user?.id || 'anonymous';
-          interaction.questionId = question.id;
-          interaction.skillId = skill_id;
-          interaction.subject = subject.id;
-          interaction.correct = isCorrect;
-          interaction.confidence = selectedConfidence || 'medium';
-          interaction.timeSpent = timeSpent;
-          interaction.hintsUsed = hintsUsed;
-          interaction.sessionId = sessionId;
-          interaction.timestamp = Date.now();
-          interaction.synced = false; // Mark as pending sync
+      // Try to save to local database if available (WatermelonDB)
+      if (database) {
+        try {
+          await database.write(async () => {
+            await database.get<Interaction>('interactions').create(interaction => {
+              interaction.userId = user?.id || 'anonymous';
+              interaction.questionId = question.id;
+              interaction.skillId = skill_id;
+              interaction.subject = subject.id;
+              interaction.correct = isCorrect;
+              interaction.confidence = selectedConfidence || 'medium';
+              interaction.timeSpent = timeSpent;
+              interaction.hintsUsed = hintsUsed;
+              interaction.sessionId = sessionId;
+              interaction.timestamp = Date.now();
+              interaction.synced = false; // Mark as pending sync
+            });
+          });
+          console.log(`✅ Offline DKT: Logged interaction for ${skill_id}`);
+          // Trigger background sync if online
+          syncDatabase();
+        } catch (dbError) {
+          console.warn('WatermelonDB write failed, using API fallback:', dbError);
+        }
+      }
+
+      // Also try to log directly to DKT API (online fallback)
+      try {
+        await dktService.logInteraction({
+          subject: effectiveSubject,
+          topic: topic?.name || topic?.id || 'general',
+          skill_id,
+          question_id: question.id,
+          correct: isCorrect,
+          confidence: selectedConfidence || undefined,
+          time_spent: timeSpent,
+          hints_used: hintsUsed,
+          session_id: sessionId,
         });
-      });
-
-      console.log(`✅ Offline DKT: Logged interaction for ${skill_id}`);
-
-      // Trigger background sync if online
-      syncDatabase();
+        console.log(`✅ DKT API: Logged interaction for ${skill_id}`);
+      } catch (apiError) {
+        console.warn('DKT API logging failed (offline?):', apiError);
+      }
 
     } catch (error) {
-      console.error('Failed to log to local DB:', error);
+      console.error('Failed to log interaction:', error);
     }
   };
 

@@ -26,6 +26,7 @@ export const physicsNotes: Record<string, TopicNotes> = {
         subject: "Physics",
         summary: "This topic covers the fundamental concepts of physical quantities, SI units, and measurement techniques. It includes the use of precision instruments like vernier calipers and micrometers, time measurement using pendulums, and the distinction between mass and weight. Understanding accurate measurement is essential for all experimental physics.",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/From_SI_Units_to_Micrometer_Precision.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9QaHlzaWNzL0Zyb21fU0lfVW5pdHNfdG9fTWljcm9tZXRlcl9QcmVjaXNpb24ubTRhIiwiaWF0IjoxNzY1NjAxMDY2LCJleHAiOjUyNjYwOTcwNjZ9.8fuO1vBYaVh5Q01J4_f_CJ1Qhs2wFvZs3L7re5rSSuw",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/The_Language_of_Physics.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL1BoeXNpY3MvVGhlX0xhbmd1YWdlX29mX1BoeXNpY3MubXA0IiwiaWF0IjoxNzY1Nzk3MzQ3LCJleHAiOjUyNjYyOTMzNDd9.2dd9hRzHol6avdWy2nP4Yt-OMS0e947Lud3VUAczz-o",
         sections: [
             {
                 title: "1. Physical Quantities and Units",
@@ -279,6 +280,7 @@ Used for objects like stones with no geometric formula. Based on principle: **ob
         subject: "Physics",
         summary: "Kinematics is the study of motion without considering the forces causing it. This topic covers the fundamental concepts of distance, displacement, speed, velocity, and acceleration. It includes graphical analysis of motion, the equations of uniformly accelerated motion (SUVAT), free fall under gravity, and experimental techniques using ticker tape timers.",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/The_Physics_of_Motion_Kinematics_Explained.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9QaHlzaWNzL1RoZV9QaHlzaWNzX29mX01vdGlvbl9LaW5lbWF0aWNzX0V4cGxhaW5lZC5tNGEiLCJpYXQiOjE3NjU2MDEzMjUsImV4cCI6NTI2NjA5NzMyNX0.7XkYX0oCebBVcsoajY4asJS3OdzECNyYaMVnxc6W_iw",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/The_World_in_Motion.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL1BoeXNpY3MvVGhlX1dvcmxkX2luX01vdGlvbi5tcDQiLCJpYXQiOjE3NjU3OTczODYsImV4cCI6NTI2NjI5MzM4Nn0.sehNa3WVKbZVrVYWX6o36hMn9wRfLAMm6Td1uMQMOlM",
         sections: [
             {
                 title: "1. Fundamentals of Motion",
@@ -536,6 +538,7 @@ In real world, air resistance affects falling objects:
         subject: "Physics",
         summary: "This topic covers the fundamental concept of force as a push or pull that can change motion or shape. It includes vector representation of forces, motion under gravity (vertical projection), terminal velocity in fluids, and experimental analysis using ticker tape timers. Understanding forces is essential for explaining how objects interact and move.",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/Newton_s_Laws_and_Terminal_Velocity.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9QaHlzaWNzL05ld3Rvbl9zX0xhd3NfYW5kX1Rlcm1pbmFsX1ZlbG9jaXR5Lm00YSIsImlhdCI6MTc2NTYwMTE4OSwiZXhwIjoxNzc1MTkxNTg5fQ.TKaKtvSdeKCzRZi1ka-8dM2OoJlcpIUn-M4hTeP_d0U",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/Forces__Push_and_Pull.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL1BoeXNpY3MvRm9yY2VzX19QdXNoX2FuZF9QdWxsLm1wNCIsImlhdCI6MTc2NTc5NzI4MSwiZXhwIjo1MjY2MjkzMjgxfQ.lrlz6g93CDfohdI_dvAyf3kxzqCXkWBAjU2KHg1NmpM",
         sections: [
             {
                 title: "1. Introduction to Forces",
@@ -713,6 +716,7 @@ A "10-dot" interval = 10 × 0.02 = **0.2 seconds**
         subject: "Physics",
         summary: "This topic covers the physics of work, energy, and power. It includes the conditions for work to be done, various forms of energy stores, the principle of conservation of energy, and the formulas for kinetic and gravitational potential energy. Power as the rate of doing work and efficiency calculations are also covered, along with renewable and non-renewable energy resources.",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/Work_Energy_and_Power_Defined.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9QaHlzaWNzL1dvcmtfRW5lcmd5X2FuZF9Qb3dlcl9EZWZpbmVkLm00YSIsImlhdCI6MTc2NTYwMTM1MywiZXhwIjo1MjY2MDk3MzUzfQ.UMtOickFHVPV9VMTjQxM5N7BSh6s_-DKvkQyMlAC7M4",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/WORK,_ENERGY,_&_POWER.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL1BoeXNpY3MvV09SSyxfRU5FUkdZLF8mX1BPV0VSLm1wNCIsImlhdCI6MTc2NTc5NzQxNywiZXhwIjo1MjY2MjkzNDE3fQ.617GpxWwmyCbC6Py_0bglzyxy5QBHJJAZyfbAaA4iFU",
         sections: [
             {
                 title: "1. Work Done",
@@ -953,6 +957,7 @@ Almost all energy originates from the Sun:
         subject: "Physics",
         summary: "This topic covers the kinetic molecular model of matter, explaining the behaviour of solids, liquids, and gases. It includes Brownian motion as evidence for particle theory, gas pressure and its relationship with temperature and volume, thermal expansion, temperature measurement, specific heat capacity, latent heat, and the three methods of heat transfer: conduction, convection, and radiation.",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/Kinetic_Theory_Brownian_Motion_and_Pressure.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9QaHlzaWNzL0tpbmV0aWNfVGhlb3J5X0Jyb3duaWFuX01vdGlvbl9hbmRfUHJlc3N1cmUubTRhIiwiaWF0IjoxNzY1NjAxMDkxLCJleHAiOjUyNjYwOTcwOTF9.YriBHZhnt43-Af0X2MA5O8Y6b5r4EHZy9J2W94ACx7A",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/Thermal_Physics.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL1BoeXNpY3MvVGhlcm1hbF9QaHlzaWNzLm1wNCIsImlhdCI6MTc2NTc5ODQ3MSwiZXhwIjo1MjY2Mjk0NDcxfQ.2gBwVJMKEeRUm80K6jhpP516h2q-WuUU237GIdZKj54",
         sections: [
             {
                 title: "1. Kinetic Molecular Model of Matter",
@@ -1194,6 +1199,7 @@ Heat transfer via **infrared electromagnetic waves**. Works through vacuum!
         subject: "Physics",
         summary: "This topic covers the nature and properties of waves, including transverse and longitudinal waves. It includes the wave equation, wave behaviours (reflection, refraction, diffraction), light optics (mirrors, lenses, total internal reflection), and sound waves including ultrasound applications and echoes.",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/The_Core_Rules_of_All_Waves.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9QaHlzaWNzL1RoZV9Db3JlX1J1bGVzX29mX0FsbF9XYXZlcy5tNGEiLCJpYXQiOjE3NjU2MDEzMDIsImV4cCI6NTI2NjA5NzMwMn0.lVTNfc3jxXoE2IoFEP19Q8JBwmEq0QRHVipaOj7Jsa0",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/Understanding_Waves.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL1BoeXNpY3MvVW5kZXJzdGFuZGluZ19XYXZlcy5tcDQiLCJpYXQiOjE3NjU3OTczOTgsImV4cCI6NTI2NjI5MzM5OH0.jfXt8-baLWLSw-qO5mMwf-hanVjvZEzPtVzMqdeUwVk",
         sections: [
             {
                 title: "1. General Wave Properties",
@@ -1421,6 +1427,7 @@ $$v = \\frac{2d}{t}$$
         subject: "Physics",
         summary: "This topic covers electric current as the flow of charge, electromotive force (e.m.f.) and potential difference (p.d.), resistance and Ohm's Law, I-V characteristic graphs, series and parallel circuits, potential dividers with sensors, electrical power and energy calculations, and electrical safety features including fuses, circuit breakers, and earthing.",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/Circuit_Fundamentals_Current_Voltage_Resistance.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9QaHlzaWNzL0NpcmN1aXRfRnVuZGFtZW50YWxzX0N1cnJlbnRfVm9sdGFnZV9SZXNpc3RhbmNlLm00YSIsImlhdCI6MTc2NTYwMTAzMCwiZXhwIjo1MjY2MDk3MDMwfQ.C0d-IHvSd8OcZpX3HWA5VrSRj2P3g1EfVjB8ZnCRBKY",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/The_Explainer__Electricity.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL1BoeXNpY3MvVGhlX0V4cGxhaW5lcl9fRWxlY3RyaWNpdHkubXA0IiwiaWF0IjoxNzY1Nzk3MzMxLCJleHAiOjUyNjYyOTMzMzF9.-CBJD9bf62qdpASxMdgmu7eFAHpxwD_gfNPqPxKrPBA",
         sections: [
             {
                 title: "1. Electric Current",
@@ -1693,6 +1700,7 @@ $$E = Pt = VIt$$
         subject: "Physics",
         summary: "This topic covers magnetic materials and domain theory, magnetic poles and field lines, magnetization and demagnetization methods, electromagnetism (magnetic effect of current), the motor effect with Fleming's Left-Hand Rule, DC motors, electromagnetic induction (Faraday's and Lenz's Laws), AC generators, and transformers for power transmission.",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/Magnetic_Domains_and_How_to_Control_Them.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9QaHlzaWNzL01hZ25ldGljX0RvbWFpbnNfYW5kX0hvd190b19Db250cm9sX1RoZW0ubTRhIiwiaWF0IjoxNzY1NjAxMTY3LCJleHAiOjUyNjYwOTcxNjd9.jUhA2hhqgu1sr7JM1saParWaxfgn9Xvt2k6hrko5AcE",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/Magnetism__The_Hidden_Force.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL1BoeXNpY3MvTWFnbmV0aXNtX19UaGVfSGlkZGVuX0ZvcmNlLm1wNCIsImlhdCI6MTc2NTc5NzI5NywiZXhwIjo1MjY2MjkzMjk3fQ.bnVjVTBvjBY0vlzKSLcDRk3qWKoR0j8NCMLksJ_bhrY",
         sections: [
             {
                 title: "1. Simple Phenomena of Magnetism",
@@ -1929,6 +1937,7 @@ $$V_p \\times I_p = V_s \\times I_s$$
         subject: "Physics",
         summary: "This topic covers the difference between analogue and digital signals, the five main logic gates (NOT, AND, OR, NAND, NOR) with their truth tables and functions, and key electronic components including LEDs, relays, and variable resistors used in control circuits.",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/Analogue_Digital_Signals_and_Logic_Gates.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9QaHlzaWNzL0FuYWxvZ3VlX0RpZ2l0YWxfU2lnbmFsc19hbmRfTG9naWNfR2F0ZXMubTRhIiwiaWF0IjoxNzY1NjAxMDExLCJleHAiOjUyNjYwOTcwMTF9.9prhXiTd9i3aBjCqdVd1XXBtMshtSSsRnHaoDbWpgpo",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/The_Logic_of_Electronics.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL1BoeXNpY3MvVGhlX0xvZ2ljX29mX0VsZWN0cm9uaWNzLm1wNCIsImlhdCI6MTc2NTc5NzM2MiwiZXhwIjo1MjY2MjkzMzYyfQ.YgTLz1aPtXIfV4R0-iKv3NGkfoAYaws-1703XGMPp4s",
         sections: [
             {
                 title: "1. Analogue and Digital Electronics",
@@ -2162,6 +2171,7 @@ Output is HIGH if **AT LEAST ONE input is HIGH**.
         subject: "Physics",
         summary: "This topic covers the nuclear model of the atom from Rutherford's scattering experiment, subatomic particles and isotopes, radioactivity including alpha, beta, and gamma radiation, half-life calculations, uses of radioisotopes, nuclear fission and fusion, and safety precautions for handling radioactive materials.",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/The_Atom_Is_Mostly_Empty_Space%20(1).m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9QaHlzaWNzL1RoZV9BdG9tX0lzX01vc3RseV9FbXB0eV9TcGFjZSAoMSkubTRhIiwiaWF0IjoxNzY1NjAxMjEwLCJleHAiOjUyNjYwOTcyMTB9.9xI06cISSA7M9623jS5mGCK25wO65JnfcG-JPdNPqZQ",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/Atomic_&_Nuclear_Physics.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL1BoeXNpY3MvQXRvbWljXyZfTnVjbGVhcl9QaHlzaWNzLm1wNCIsImlhdCI6MTc2NTc5NzI2NCwiZXhwIjo1MjY2MjkzMjY0fQ.14qsNly_ar7TUbW5-9wfjSFCz3WM0rfJZHDi-HDB_NM",
         sections: [
             {
                 title: "1. Atomic Structure",

@@ -81,7 +81,9 @@ const EnhancedProgressScreen: React.FC = () => {
 
   const loadAllData = useCallback(async () => {
     try {
-      // Load all gamification data
+      console.log('📊 Progress: Loading all data...');
+
+      // Load all gamification data with better error handling
       const [
         levelData,
         statsData,
@@ -90,37 +92,46 @@ const EnhancedProgressScreen: React.FC = () => {
         goalsData,
         activityData,
         progressData,
-        mapData,
       ] = await Promise.all([
-        gamificationService.getLevelInfo(),
-        gamificationService.getOverallStats(),
-        gamificationService.getStreakHistory(),
-        gamificationService.getAllBadges(),
-        gamificationService.getDailyGoals(),
-        gamificationService.getWeeklyActivity(),
-        gamificationService.getProgress(),
-        dktService.getKnowledgeMap().catch(() => null),
+        gamificationService.getLevelInfo().catch(e => { console.error('getLevelInfo error:', e); return null; }),
+        gamificationService.getOverallStats().catch(e => { console.error('getOverallStats error:', e); return null; }),
+        gamificationService.getStreakHistory().catch(e => { console.error('getStreakHistory error:', e); return []; }),
+        gamificationService.getAllBadges().catch(e => { console.error('getAllBadges error:', e); return []; }),
+        gamificationService.getDailyGoals().catch(e => { console.error('getDailyGoals error:', e); return []; }),
+        gamificationService.getWeeklyActivity().catch(e => { console.error('getWeeklyActivity error:', e); return []; }),
+        gamificationService.getProgress().catch(e => { console.error('getProgress error:', e); return null; }),
       ]);
 
-      setLevelInfo(levelData);
-      setOverallStats(statsData);
-      setStreakHistory(streakData);
-      setBadges(badgesData as BadgeData[]);
-      setDailyGoals(goalsData);
-      setWeeklyActivity(activityData);
-      setKnowledgeMap(mapData);
+      // Fetch remote knowledge map (server-side DKT data)
+      let mapData: KnowledgeMap | null = null;
+      try {
+        mapData = await dktService.getKnowledgeMap();
+      } catch (error) {
+        console.log('DKT knowledge map unavailable (offline or no data yet)');
+      }
+
+      // Set local gamification data
+      if (levelData) setLevelInfo(levelData);
+      if (statsData) setOverallStats(statsData);
+      setStreakHistory(streakData || []);
+      setBadges((badgesData || []) as BadgeData[]);
+      setDailyGoals(goalsData || []);
+      setWeeklyActivity(activityData || []);
+      if (mapData) setKnowledgeMap(mapData);
 
       // Build subject mastery data
       const defaultSubjects = getDefaultSubjectData();
       const updatedSubjects = defaultSubjects.map(subj => ({
         ...subj,
-        mastery: progressData.subjectMastery[subj.subject] || 0,
+        mastery: progressData?.subjectMastery?.[subj.subject] || 0,
         skillsCount: mapData?.skills?.filter(s => s.subject.toLowerCase() === subj.subject).length || 0,
         masteredSkills: mapData?.skills?.filter(s =>
           s.subject.toLowerCase() === subj.subject && s.mastery >= 0.8
         ).length || 0,
       }));
       setSubjectMastery(updatedSubjects);
+
+      console.log('✅ Progress: Data loaded successfully');
 
     } catch (error) {
       console.error('Failed to load progress data:', error);
@@ -134,6 +145,14 @@ const EnhancedProgressScreen: React.FC = () => {
     loadAllData();
     // Also check streak when screen loads
     gamificationService.checkStreak();
+
+    // Safety timeout - prevent stuck loading state after 10 seconds
+    const timeout = setTimeout(() => {
+      setLoading(false);
+      setRefreshing(false);
+    }, 10000);
+
+    return () => clearTimeout(timeout);
   }, [loadAllData]);
 
   const onRefresh = () => {

@@ -23,6 +23,7 @@ import Markdown from 'react-native-markdown-display';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
 import AudioStreamPlayer from '../components/AudioStreamPlayer';
+import VideoStreamPlayer from '../components/VideoStreamPlayer';
 import FlashcardSection from '../components/FlashcardSection';
 
 const { width } = Dimensions.get('window');
@@ -177,6 +178,15 @@ const TopicNotesDetailScreen: React.FC = () => {
                     contentContainerStyle={styles.scrollContent}
                     showsVerticalScrollIndicator={false}
                 >
+                    {/* Video Player - Shows when topic has video lesson */}
+                    {notes.videoUrl && (
+                        <VideoStreamPlayer
+                            videoUrl={notes.videoUrl}
+                            topicTitle={topic}
+                            accentColor={getSubjectColor()}
+                        />
+                    )}
+
                     {/* Audio Player - Shows when topic has audio podcast */}
                     {notes.audioUrl && (
                         <AudioStreamPlayer

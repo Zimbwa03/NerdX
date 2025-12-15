@@ -13,6 +13,7 @@ export interface TopicNotes {
     subject: string;
     summary: string;
     audioUrl?: string; // Optional streaming audio URL for topic podcast
+    videoUrl?: string; // Optional streaming video URL for topic video lesson
     sections: NotesSection[];
     key_points: string[];
     exam_tips: string[];

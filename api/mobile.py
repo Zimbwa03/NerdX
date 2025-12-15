@@ -4001,7 +4001,6 @@ def text_to_speech():
 # ============================================================================
 
 @mobile_bp.route('/flashcards/generate', methods=['POST'])
-@require_auth
 def generate_flashcards():
     """
     Generate AI-powered flashcards for a science topic.
@@ -4063,7 +4062,6 @@ def generate_flashcards():
 
 
 @mobile_bp.route('/flashcards/generate-single', methods=['POST'])
-@require_auth
 def generate_single_flashcard():
     """
     Generate a single flashcard (for streaming mode with >100 cards).
