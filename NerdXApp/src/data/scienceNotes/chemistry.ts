@@ -244,6 +244,7 @@ Impurities disrupt regular particle arrangement in solids and alter forces betwe
         topic: "Atoms, Elements and Compounds",
         subject: "Chemistry",
         summary: "Everything in the physical universe is made of matter composed of atoms. Understanding atomic structure explains why elements behave the way they do and how they interact to form compounds. This topic covers atomic structure, electron arrangement, the periodic table, and different types of chemical bonding.",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Building_Blocks_of_Reality.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9CdWlsZGluZ19CbG9ja3Nfb2ZfUmVhbGl0eS5tcDQiLCJpYXQiOjE3NjU4Njk4NzYsImV4cCI6NTI2NjM2NTg3Nn0.lvGS0nLBqFV_MXHnh_Tj26xDY-axr4SkYLZa7juyhRk",
         sections: [
             {
                 title: "1. Atomic Structure",
@@ -452,6 +453,7 @@ Atoms bond to achieve a **stable electron configuration** (full outer shell like
         subject: "Chemistry",
         summary: "Chemical bonding explains how atoms combine to form compounds. Atoms bond to achieve a stable electron configuration (full outer shell). The three main types of bonding are ionic (electron transfer), covalent (electron sharing), and metallic (sea of delocalised electrons).",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/Ionic_Covalent_and_Metallic_Bonding_Explained.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0lvbmljX0NvdmFsZW50X2FuZF9NZXRhbGxpY19Cb25kaW5nX0V4cGxhaW5lZC5tNGEiLCJpYXQiOjE3NjU0NzAyMjAsImV4cCI6NTI2NTk2NjIyMH0.g9uIb2Bt8YQojNsXSBHaUuqpBVZ60o-9Y6sXIDdIbb8",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Understanding_Chemical_Bonding.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9VbmRlcnN0YW5kaW5nX0NoZW1pY2FsX0JvbmRpbmcubXA0IiwiaWF0IjoxNzY1ODcwMjEzLCJleHAiOjUyNjYzNjYyMTN9.ikscsYUmSpPCPsXvL8HgrHph9tubLOI3EBFLs9WpPTg",
         sections: [
             {
                 title: "1. Why Do Atoms Bond?",
@@ -615,6 +617,7 @@ Strong **electrostatic attraction** between positive metal ions and negative sea
         topic: "Stoichiometry",
         subject: "Chemistry",
         summary: "Stoichiometry is the calculation of quantities in chemical reactions. It covers naming compounds, writing formulae, balancing equations, the mole concept, and calculations involving reacting masses, gas volumes, and solution concentrations.",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Stoichiometry__The_Recipe.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9TdG9pY2hpb21ldHJ5X19UaGVfUmVjaXBlLm1wNCIsImlhdCI6MTc2NTg3MDE2MSwiZXhwIjo1MjY2MzY2MTYxfQ.6ttVeW0TsinpTrk_HIIo8UR6AFyVbvJYj3X7WNxWBlA",
         sections: [
             {
                 title: "1. Naming Compounds and Writing Formulae",
@@ -921,6 +924,7 @@ $$\\% \\text{ Purity} = \\frac{\\text{Mass of Pure Substance}}{\\text{Total Mass
         topic: "The Periodic Table",
         subject: "Chemistry",
         summary: "The Periodic Table is a systematic classification of elements arranged by increasing proton number. Elements with similar properties are in the same vertical groups. This topic covers the structure, Group I (Alkali Metals), Group VII (Halogens), Group 0 (Noble Gases), Transition Elements, and trends across periods.",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Periodic_Table__Chaos_to_Order.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9QZXJpb2RpY19UYWJsZV9fQ2hhb3NfdG9fT3JkZXIubXA0IiwiaWF0IjoxNzY1ODcwMTI1LCJleHAiOjUyNjYzNjYxMjV9.q8Cy-SpEI50mjSdJmABup2QDX_KoDiXc7axR0ge_i4E",
         sections: [
             {
                 title: "1. Structure of the Periodic Table",
@@ -1330,6 +1334,7 @@ $$2AgBr \\xrightarrow{\\text{light}} 2Ag + Br_2$$
         subject: "Chemistry",
         summary: "Chemical reactions involve energy transfer. Exothermic reactions release heat (temperature rises), while endothermic reactions absorb heat (temperature falls). The overall energy change depends on bond breaking (endothermic) versus bond forming (exothermic). This topic also covers fuels, electrochemical cells, and equilibrium.",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/Bond_Breaking_and_Forming_Energy_Payoff.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0JvbmRfQnJlYWtpbmdfYW5kX0Zvcm1pbmdfRW5lcmd5X1BheW9mZi5tNGEiLCJpYXQiOjE3NjU0NzAxMjgsImV4cCI6NTI2NTk2NjEyOH0.58DuvE1w_aCjNQUjwGxpQjlhTuaB4l65S_MuKXqHMq4",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Chemical_Energetics%20(1).mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9DaGVtaWNhbF9FbmVyZ2V0aWNzICgxKS5tcDQiLCJpYXQiOjE3NjU4Njk4OTAsImV4cCI6NTI2NjM2NTg5MH0.y347fd66JwJX0L3JmRTViWAitgWDl3V--aDjDbHfSuI",
         sections: [
             {
                 title: "1. Exothermic and Endothermic Reactions",
@@ -1543,6 +1548,7 @@ N₂ + 3H₂ ⇌ 2NH₃ (Exothermic)
         subject: "Chemistry",
         summary: "Electrochemistry covers the relationship between electricity and chemical reactions. Electrolysis uses electricity to decompose ionic compounds. Electrochemical cells use chemical reactions to generate electricity. Key concepts include conductors, electrolytes, and predicting products at electrodes.",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/Electrolysis_and_the_Four_Conductors.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0VsZWN0cm9seXNpc19hbmRfdGhlX0ZvdXJfQ29uZHVjdG9ycy5tNGEiLCJpYXQiOjE3NjU0NzAxNjEsImV4cCI6NTI2NTk2NjE2MX0.sxl-oyxt64GLw0rRgQhgPKFb_16ofMBqV9PYg7oomKI",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Electrochemistry.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9FbGVjdHJvY2hlbWlzdHJ5Lm1wNCIsImlhdCI6MTc2NTg2OTkxOCwiZXhwIjo1MjY2MzY1OTE4fQ.fKL2xNYiSCTg8yeJ960tiBoHiGfeJdo8B-MuwBRxplA",
         sections: [
             {
                 title: "1. Conductors, Insulators, and Electrolytes",
@@ -1779,6 +1785,7 @@ Clean energy technology
         topic: "Redox Reactions",
         subject: "Chemistry",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/Oxidation_Reduction_The_Universal_Chemistry_Rule%20(1).m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL094aWRhdGlvbl9SZWR1Y3Rpb25fVGhlX1VuaXZlcnNhbF9DaGVtaXN0cnlfUnVsZSAoMSkubTRhIiwiaWF0IjoxNzY1NDcxMDM0LCJleHAiOjUyNjU5NjcwMzR9.TvxrOLfAF5O_sdTDXsakebHvskCt1myAMthONa4svx0",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Redox_Reactions__The_Electron_Exchange.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9SZWRveF9SZWFjdGlvbnNfX1RoZV9FbGVjdHJvbl9FeGNoYW5nZS5tcDQiLCJpYXQiOjE3NjU4NzAxNDcsImV4cCI6NTI2NjM2NjE0N30.Zaw3oQ0C30mOMfsM2eDgvmwh5o8AUS3rWU4Xt1tU9z4",
         summary: "Redox reactions involve simultaneous oxidation and reduction. Oxidation is loss of electrons (or gain of oxygen); Reduction is gain of electrons (or loss of oxygen). Remember OIL RIG. Oxidation states help track electron movement, and tests can identify oxidising/reducing agents.",
         sections: [
             {
@@ -1960,6 +1967,7 @@ Light reduces silver ions to silver metal
         topic: "Acids, Bases and Salts",
         subject: "Chemistry",
         summary: "Acids release H⁺ ions in water; alkalis release OH⁻ ions. The pH scale measures acidity (0-14). Acids react with metals, bases, and carbonates to form salts. Salts can be prepared by titration, excess solid method, or precipitation depending on solubility.",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Acids,_Bases,_&_Salts.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9BY2lkcyxfQmFzZXMsXyZfU2FsdHMubXA0IiwiaWF0IjoxNzY1ODY5ODYxLCJleHAiOjUyNjYzNjU4NjF9.NXMIYW7xDXx8atobAjJE_SvDq9tkNeNEkIDhENlLEOM",
         sections: [
             {
                 title: "1. Acids and Alkalis",
@@ -2174,6 +2182,7 @@ Examples: H₂O, CO, N₂O`,
         topic: "Metals",
         subject: "Chemistry",
         summary: "Metals have characteristic properties due to metallic bonding (delocalised electrons). The Reactivity Series ranks metals by their tendency to form ions. Extraction method depends on reactivity: electrolysis for reactive metals, carbon reduction for less reactive. Alloys are harder than pure metals due to disrupted layers.",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/The_Explainer__Metals.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9UaGVfRXhwbGFpbmVyX19NZXRhbHMubXA0IiwiaWF0IjoxNzY1ODcwMTk3LCJleHAiOjUyNjYzNjYxOTd9.G3HP5FrivaW4Cz2M3F9tMUvEEQvNznsVC0G0eegYwU8",
         sections: [
             {
                 title: "1. General Properties of Metals",
@@ -2578,6 +2587,7 @@ $$Ca(OH)_2 + CO_2 \\rightarrow CaCO_3 + H_2O$$
         subject: "Chemistry",
         summary: "Environmental chemistry covers water treatment, air composition, pollution, and climate change. Key topics include the water treatment process, fractional distillation of air, acid rain formation, the greenhouse effect, and ozone layer depletion by CFCs.",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/Proving_Water_Identity_and_Purity.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL1Byb3ZpbmdfV2F0ZXJfSWRlbnRpdHlfYW5kX1B1cml0eS5tNGEiLCJpYXQiOjE3NjU0NzEwNzMsImV4cCI6NTI2NTk2NzA3M30.6DzLpihrabU9gIwrwYr9bppQlg2nZlWqNaCADVwNirY",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/The_Chemistry_of_Our_Environment.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9UaGVfQ2hlbWlzdHJ5X29mX091cl9FbnZpcm9ubWVudC5tcDQiLCJpYXQiOjE3NjU4NzAxODEsImV4cCI6NTI2NjM2NjE4MX0.jKlQDvHi6oPM0-MbHkYfrbhkoPNa-ZtOzBCQVXWHaCA",
         sections: [
             {
                 title: "1. Water (H₂O)",
@@ -2750,6 +2760,7 @@ Limestone neutralizes SO₂ → produces gypsum`,
         subject: "Chemistry",
         summary: "Organic chemistry is the study of carbon compounds. Carbon's unique properties (tetravalency, catenation) allow millions of compounds. Key topics include crude oil fractionation, alkanes (saturated), alkenes (unsaturated), combustion, addition reactions, alcohols, and polymers.",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/How_Carbon_Builds_Life_and_Plastic.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0hvd19DYXJib25fQnVpbGRzX0xpZmVfYW5kX1BsYXN0aWMubTRhIiwiaWF0IjoxNzY1NDcwMTgxLCJleHAiOjUyNjU5NjYxODF9.1YqEZUZcHLpPBF-7BVuPje_OfMv65EU_FQNFpF0h8nc",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Organic_Chemistry.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9PcmdhbmljX0NoZW1pc3RyeS5tcDQiLCJpYXQiOjE3NjU4NzAxMDQsImV4cCI6NTI2NjM2NjEwNH0.aLnvV2qklP8es74z5MAa2365hLQOHA-MLIAu0cdqu2Q",
         sections: [
             {
                 title: "1. Introduction and Crude Oil",
@@ -2958,6 +2969,7 @@ $$n(CH_2=CH_2) \\rightarrow -(CH_2-CH_2)_n-$$
         subject: "Chemistry",
         summary: "Experimental chemistry covers laboratory apparatus, measuring techniques, purity testing using melting/boiling points, separation methods (filtration, crystallisation, distillation, chromatography), and qualitative analysis including tests for cations, anions, and gases.",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/Chemical_Separation_Purity_and_Identification_Techniques.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0NoZW1pY2FsX1NlcGFyYXRpb25fUHVyaXR5X2FuZF9JZGVudGlmaWNhdGlvbl9UZWNobmlxdWVzLm00YSIsImlhdCI6MTc2NTQ3MDE0NiwiZXhwIjo1MjY1OTY2MTQ2fQ.geDywo9wENvXFpqYZ1yCGYjNsjMCvouczL2eLQ6QlR4",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Experimental_Techniques.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9FeHBlcmltZW50YWxfVGVjaG5pcXVlcy5tcDQiLCJpYXQiOjE3NjU4Njk5NDIsImV4cCI6NTI2NjM2NTk0Mn0.DhWSK0NLkKVbLPnSefOYZ-YvW6FCxnnr-bC9QQTX72w",
         sections: [
             {
                 title: "1. Laboratory Apparatus and Measurement",
