@@ -56,11 +56,11 @@
         }
       ]
     ],
-    "owner": "nerdx4",
     "extra": {
       "eas": {
-        "projectId": "366612d9-1719-47d7-ba58-c2daa0a8fbce"
+        "projectId": "10b09e1c-bb91-462f-a44b-541668902670"
       }
-    }
+    },
+    "owner": "nerdx5"
   }
 }

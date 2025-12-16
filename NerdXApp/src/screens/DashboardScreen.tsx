@@ -1,4 +1,5 @@
-// Dashboard Screen Component - Professional UI/UX Design
+// Dashboard Screen Component - World-Class UI/UX Design ✨
+// Featuring: Animated cards, Motivational quotes, Floating particles
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -10,6 +11,7 @@ import {
   Image,
   StatusBar,
   Platform,
+  Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -24,6 +26,11 @@ import { gamificationService, UserProgress, Badge } from '../services/Gamificati
 import { dktService, KnowledgeMap } from '../services/api/dktApi';
 import { KnowledgeMapWidget } from '../components/KnowledgeMapWidget';
 import OfflineIndicator from '../components/OfflineIndicator';
+
+// ✨ New animated components
+import MotivationalSlider from '../components/MotivationalSlider';
+import AnimatedCard from '../components/AnimatedCard';
+import FloatingParticles from '../components/FloatingParticles';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 48) / 2;
@@ -279,6 +286,9 @@ const DashboardScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: themedColors.background.default }]}>
+      {/* ✨ Floating Particles Background */}
+      <FloatingParticles count={20} />
+
       <StatusBar
         barStyle={isDarkMode ? "light-content" : "dark-content"}
         backgroundColor={themedColors.background.default}
@@ -334,57 +344,72 @@ const DashboardScreen: React.FC = () => {
         </LinearGradient>
 
         <View style={styles.mainContent}>
+          {/* ✨ Motivational Quotes Slider - Rotates every 3 seconds */}
+          <MotivationalSlider intervalMs={3000} showCategory={true} showAuthor={true} />
+
           {renderDailyReviewWidget()}
           {renderProgressWidget()}
 
-          <Text style={styles.sectionTitle}>Learning Hub</Text>
+          <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>Learning Hub</Text>
 
           <View style={styles.gridContainer}>
-            {/* Main Subject Cards */}
-            {renderFeatureCard(
-              'Mathematics',
-              'Master numbers & logic',
-              require('../../assets/images/math_card.png'),
-              () => navigateToSubject('mathematics')
-            )}
+            {/* ✨ Animated Subject Cards with Neon Glow */}
+            <AnimatedCard
+              title="Mathematics"
+              subtitle="Master numbers & logic"
+              imageSource={require('../../assets/images/math_card.png')}
+              onPress={() => navigateToSubject('mathematics')}
+              glowColor={Colors.subjects.mathematics}
+              index={0}
+            />
 
-            {renderFeatureCard(
-              'Science',
-              'Explore the universe',
-              require('../../assets/images/science_card.png'),
-              handleSciencePress
-            )}
+            <AnimatedCard
+              title="Science"
+              subtitle="Explore the universe"
+              imageSource={require('../../assets/images/science_card.png')}
+              onPress={handleSciencePress}
+              glowColor={Colors.subjects.science}
+              index={1}
+            />
 
-            {renderFeatureCard(
-              'English',
-              'Perfect your language',
-              require('../../assets/images/english_card.png'),
-              () => navigateToSubject('english')
-            )}
+            <AnimatedCard
+              title="English"
+              subtitle="Perfect your language"
+              imageSource={require('../../assets/images/english_card.png')}
+              onPress={() => navigateToSubject('english')}
+              glowColor={Colors.subjects.english}
+              index={2}
+            />
 
-            {renderFeatureCard(
-              'Project Assistant',
-              'AI-powered help',
-              require('../../assets/images/project_assistant_card.png'),
-              navigateToProjectList
-            )}
+            <AnimatedCard
+              title="Project Assistant"
+              subtitle="AI-powered help"
+              imageSource={require('../../assets/images/project_assistant_card.png')}
+              onPress={navigateToProjectList}
+              glowColor={Colors.primary.main}
+              index={3}
+            />
 
             {/* Full Width Cards */}
-            {renderFeatureCard(
-              'My Progress',
-              'Track your learning journey and achievements',
-              require('../../assets/images/profile_card.png'),
-              navigateToProgress,
-              true
-            )}
+            <AnimatedCard
+              title="My Progress"
+              subtitle="Track your learning journey"
+              imageSource={require('../../assets/images/profile_card.png')}
+              onPress={navigateToProgress}
+              glowColor="#a18cd1"
+              fullWidth={true}
+              index={4}
+            />
 
-            {renderFeatureCard(
-              'Credits & Store',
-              'Manage your wallet and subscriptions',
-              require('../../assets/images/credits_card.png'),
-              navigateToCredits,
-              true
-            )}
+            <AnimatedCard
+              title="Credits & Store"
+              subtitle="Manage wallet & subscriptions"
+              imageSource={require('../../assets/images/credits_card.png')}
+              onPress={navigateToCredits}
+              glowColor="#fbc2eb"
+              fullWidth={true}
+              index={5}
+            />
           </View>
 
           {/* Logout Button */}

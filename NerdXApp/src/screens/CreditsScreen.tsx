@@ -1,4 +1,5 @@
-// Credits Screen Component - Professional UI/UX Design
+// Credits Screen Component - Advanced UI ✨
+// Features: Transaction history, Analytics, Premium packages
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
@@ -11,10 +12,11 @@ import {
   Alert,
   Modal,
   StatusBar,
+  RefreshControl,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
-import { creditsApi, CreditPackage, PaymentStatus } from '../services/api/creditsApi';
+import { creditsApi, CreditPackage, PaymentStatus, CreditTransaction } from '../services/api/creditsApi';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { Icons, IconCircle } from '../components/Icons';
@@ -22,6 +24,11 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import Colors from '../theme/colors';
 import { useThemedColors } from '../theme/useThemedStyles';
+
+// ✨ New advanced components
+import TransactionHistoryCard from '../components/TransactionHistoryCard';
+import SpendingChart from '../components/SpendingChart';
+import PremiumPackageCard from '../components/PremiumPackageCard';
 
 const CreditsScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -39,20 +46,37 @@ const CreditsScreen: React.FC = () => {
   const [checkingPayment, setCheckingPayment] = useState(false);
   const paymentCheckInterval = useRef<NodeJS.Timeout | null>(null);
 
+  // ✨ New state for advanced features
+  const [transactions, setTransactions] = useState<CreditTransaction[]>([]);
+  const [transactionsLoading, setTransactionsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'all' | 'purchase' | 'usage'>('all');
+  const [refreshing, setRefreshing] = useState(false);
+
   useEffect(() => {
-    loadPackages();
+    loadData();
   }, []);
 
-  const loadPackages = async () => {
+  const loadData = async () => {
     try {
       setLoading(true);
-      const data = await creditsApi.getPackages();
-      setPackages(data);
+      const [packagesData, transactionsData] = await Promise.all([
+        creditsApi.getPackages(),
+        creditsApi.getTransactions(20),
+      ]);
+      setPackages(packagesData);
+      setTransactions(transactionsData);
     } catch (error) {
-      Alert.alert('Error', 'Failed to load credit packages. Please try again.');
+      Alert.alert('Error', 'Failed to load data. Please try again.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadData();
+    await refreshCredits();
+    setRefreshing(false);
   };
 
   useEffect(() => {
@@ -178,7 +202,13 @@ const CreditsScreen: React.FC = () => {
   }
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: themedColors.background.default }]} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: themedColors.background.default }]}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary.main]} />
+      }
+    >
       <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={themedColors.background.default} />
       {/* Professional Header */}
       <LinearGradient
@@ -213,51 +243,119 @@ const CreditsScreen: React.FC = () => {
         </Card>
       </View>
 
-      {/* Credit Packages */}
+      {/* ✨ Analytics Dashboard */}
+      <View style={styles.analyticsContainer}>
+        <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>
+          📊 Spending Overview
+        </Text>
+
+        {/* Quick Stats */}
+        <View style={styles.statsRow}>
+          <View style={[styles.statCard, { backgroundColor: themedColors.background.paper }]}>
+            <Text style={[styles.statValue, { color: Colors.success.main }]}>
+              ${transactions.filter(t => t.transaction_type === 'purchase').reduce((sum, t) => sum + Math.abs(t.credits_change) * 0.1, 0).toFixed(2)}
+            </Text>
+            <Text style={[styles.statLabel, { color: themedColors.text.secondary }]}>
+              Total Spent
+            </Text>
+          </View>
+          <View style={[styles.statCard, { backgroundColor: themedColors.background.paper }]}>
+            <Text style={[styles.statValue, { color: Colors.info.main }]}>
+              {transactions.filter(t => t.transaction_type === 'usage').reduce((sum, t) => sum + Math.abs(t.credits_change), 0)}
+            </Text>
+            <Text style={[styles.statLabel, { color: themedColors.text.secondary }]}>
+              Credits Used
+            </Text>
+          </View>
+        </View>
+
+        {/* Spending Chart */}
+        <SpendingChart
+          data={[
+            { month: 'Jul', amount: 10 },
+            { month: 'Aug', amount: 15 },
+            { month: 'Sep', amount: 8 },
+            { month: 'Oct', amount: 20 },
+            { month: 'Nov', amount: 12 },
+            { month: 'Dec', amount: 18 },
+          ]}
+        />
+      </View>
+
+      {/* ✨ Premium Credit Packages */}
       <View style={styles.packagesContainer}>
-        <Text style={styles.sectionTitle}>Credit Packages</Text>
-        {packages.map((packageItem) => (
-          <Card
-            key={packageItem.id}
-            variant="elevated"
-            onPress={() => handlePurchase(packageItem)}
-            disabled={purchasing === packageItem.id}
-            style={styles.packageCard}
-          >
-            <View style={styles.packageContent}>
-              <View style={styles.packageHeader}>
-                <View style={styles.packageInfo}>
-                  <Text style={styles.packageName}>{packageItem.name}</Text>
-                  <Text style={styles.packageDescription}>{packageItem.description}</Text>
-                </View>
-                <View style={styles.packagePriceContainer}>
-                  <Text style={styles.packagePrice}>${packageItem.price}</Text>
-                  <Text style={styles.packageCurrency}>USD</Text>
-                </View>
-              </View>
-              <View style={styles.packageCreditsContainer}>
-                <IconCircle
-                  icon={Icons.credits(24, Colors.success.main)}
-                  size={40}
-                  backgroundColor={Colors.iconBg.default}
-                />
-                <Text style={styles.packageCredits}>{packageItem.credits} Credits</Text>
-              </View>
-              {purchasing === packageItem.id ? (
-                <ActivityIndicator size="small" color={Colors.primary.main} style={styles.purchasingIndicator} />
-              ) : (
-                <Button
-                  title="Purchase"
-                  variant="primary"
-                  fullWidth
-                  icon="card"
-                  iconPosition="left"
-                  style={styles.purchaseButton}
-                />
-              )}
-            </View>
-          </Card>
-        ))}
+        <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>
+          💎 Credit Packages
+        </Text>
+
+        {packages.map((packageItem, index) => {
+          const isBestValue = packageItem.credits >= 500;
+          const isPopular = packageItem.credits >= 200 && packageItem.credits < 500;
+
+          return (
+            <PremiumPackageCard
+              key={packageItem.id}
+              package={packageItem}
+              onPress={() => handlePurchase(packageItem)}
+              isBestValue={isBestValue}
+              isPopular={isPopular}
+              index={index}
+            />
+          );
+        })}
+      </View>
+
+      {/* ✨ Transaction History */}
+      <View style={styles.transactionsContainer}>
+        <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>
+          📜 Transaction History
+        </Text>
+
+        {/* Filter Tabs */}
+        <View style={styles.tabsContainer}>
+          {(['all', 'purchase', 'usage'] as const).map((tab) => (
+            <TouchableOpacity
+              key={tab}
+              style={[
+                styles.tab,
+                activeTab === tab && { backgroundColor: Colors.primary.main },
+              ]}
+              onPress={() => setActiveTab(tab)}
+            >
+              <Text
+                style={[
+                  styles.tabText,
+                  { color: activeTab === tab ? '#FFFFFF' : themedColors.text.secondary },
+                ]}
+              >
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Transaction List */}
+        {transactions
+          .filter(t => {
+            if (activeTab === 'all') return true;
+            return t.transaction_type.toLowerCase() === activeTab;
+          })
+          .slice(0, 10)
+          .map((transaction) => (
+            <TransactionHistoryCard
+              key={transaction.id}
+              transaction={transaction}
+            />
+          ))}
+
+        {transactions.length === 0 && (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyEmoji}>📋</Text>
+            <Text style={[styles.emptyText, { color: themedColors.text.secondary }]}>
+              No transactions yet
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* Refresh Button */}
@@ -650,6 +748,64 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
     fontSize: 16,
     fontWeight: '600',
+  },
+  // ✨ New advanced UI styles
+  analyticsContainer: {
+    padding: 20,
+    paddingTop: 10,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  statCard: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+  },
+  transactionsContainer: {
+    padding: 20,
+    paddingTop: 10,
+  },
+  tabsContainer: {
+    flexDirection: 'row',
+    marginBottom: 16,
+    gap: 8,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: Colors.iconBg.default,
+    alignItems: 'center',
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyEmoji: {
+    fontSize: 48,
+    marginBottom: 12,
+  },
+  emptyText: {
+    fontSize: 16,
   },
 });
 
