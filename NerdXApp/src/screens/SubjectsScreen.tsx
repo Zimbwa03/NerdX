@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
   },
   modalDescription: {
     fontSize: 15,
-    color: Colors.text.secondary,
+    color: '#666666',
     marginBottom: 16,
     lineHeight: 22,
   },

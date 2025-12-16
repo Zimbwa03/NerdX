@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     modalTitle: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: Colors.text.primary,
+        color: '#1A1A1A',
     },
     closeButton: {
         width: 32,
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     },
     closeButtonText: {
         fontSize: 20,
-        color: Colors.text.secondary,
+        color: '#666666',
         fontWeight: '600',
     },
     modalBody: {
@@ -194,17 +194,17 @@ const styles = StyleSheet.create({
     optionTitle: {
         fontSize: 16,
         fontWeight: '600',
-        color: Colors.text.primary,
+        color: '#1A1A1A',
         marginBottom: 4,
     },
     optionDescription: {
         fontSize: 13,
-        color: Colors.text.secondary,
+        color: '#666666',
         lineHeight: 18,
     },
     optionArrow: {
         fontSize: 20,
-        color: Colors.text.secondary,
+        color: '#666666',
         marginLeft: 8,
     },
 });

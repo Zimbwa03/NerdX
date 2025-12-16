@@ -30,7 +30,7 @@ export const flashcardApi = {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': token ? `Bearer ${token}` : '',
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
                 },
                 body: JSON.stringify({
                     subject,
@@ -39,6 +39,13 @@ export const flashcardApi = {
                     notes_content: notesContent,
                 }),
             });
+
+            // Check for non-OK response (server error)
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Flashcard API HTTP error:', response.status, errorText.substring(0, 200));
+                throw new Error(`Server error: ${response.status}`);
+            }
 
             const data = await response.json();
 
@@ -53,6 +60,7 @@ export const flashcardApi = {
             throw error;
         }
     },
+
 
     /**
      * Generate a single flashcard (for streaming mode with >100 cards)
@@ -71,7 +79,7 @@ export const flashcardApi = {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': token ? `Bearer ${token}` : '',
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
                 },
                 body: JSON.stringify({
                     subject,
@@ -81,6 +89,13 @@ export const flashcardApi = {
                     previous_questions: previousQuestions,
                 }),
             });
+
+            // Check for non-OK response (server error)
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Flashcard API HTTP error:', response.status, errorText.substring(0, 200));
+                return null;
+            }
 
             const data = await response.json();
 

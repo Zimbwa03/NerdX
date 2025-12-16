@@ -1,5 +1,14 @@
 {
   "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleDebug"
+      },
+      "prebuildCommand": "npx expo prebuild --clean --platform android"
+    },
     "preview": {
       "android": {
         "buildType": "apk"

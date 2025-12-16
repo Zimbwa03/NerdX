@@ -263,8 +263,9 @@ export const FlashcardPlayer: React.FC<FlashcardPlayerProps> = ({
                         {/* Question */}
                         <ScrollView
                             style={styles.contentScroll}
-                            showsVerticalScrollIndicator={false}
+                            showsVerticalScrollIndicator={true}
                             contentContainerStyle={styles.contentContainer}
+                            nestedScrollEnabled={true}
                         >
                             <Text style={[styles.questionText, { color: themedColors.text.primary }]}>
                                 {currentCard.question}
@@ -314,8 +315,9 @@ export const FlashcardPlayer: React.FC<FlashcardPlayerProps> = ({
 
                         <ScrollView
                             style={styles.contentScroll}
-                            showsVerticalScrollIndicator={false}
+                            showsVerticalScrollIndicator={true}
                             contentContainerStyle={styles.contentContainer}
+                            nestedScrollEnabled={true}
                         >
                             <Text style={[styles.answerText, { color: isDarkMode ? '#FFF' : themedColors.text.primary }]}>
                                 {currentCard.answer}
@@ -525,10 +527,11 @@ const styles = StyleSheet.create({
     },
     contentScroll: {
         flex: 1,
+        maxHeight: 140,
     },
     contentContainer: {
         flexGrow: 1,
-        justifyContent: 'center',
+        paddingVertical: 4,
     },
     questionText: {
         fontSize: 18,

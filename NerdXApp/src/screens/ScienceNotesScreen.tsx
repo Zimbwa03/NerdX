@@ -83,7 +83,9 @@ const ScienceNotesScreen: React.FC = () => {
     return (
         <View style={styles.container}>
             <LinearGradient
-                colors={['rgba(76, 175, 80, 0.9)', 'rgba(255,255,255,0.8)']}
+                colors={['#1A237E', '#283593', '#3949AB']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
                 style={styles.overlay}
             >
                 <StatusBar barStyle="light-content" />
@@ -111,7 +113,7 @@ const ScienceNotesScreen: React.FC = () => {
                             <Ionicons
                                 name={getSubjectIcon(subject) as any}
                                 size={20}
-                                color={activeTab === subject ? '#FFF' : Colors.text.secondary}
+                                color={activeTab === subject ? '#FFF' : 'rgba(255,255,255,0.7)'}
                             />
                             <Text
                                 style={[
@@ -132,13 +134,13 @@ const ScienceNotesScreen: React.FC = () => {
                 >
                     {loading ? (
                         <View style={styles.loadingContainer}>
-                            <ActivityIndicator size="large" color={getSubjectColor(activeTab)} />
+                            <ActivityIndicator size="large" color="#FFF" />
                             <Text style={styles.loadingText}>Loading topics...</Text>
                         </View>
                     ) : (
                         <View style={styles.topicsContainer}>
-                            <Text style={styles.sectionTitle}>{activeTab} Topics</Text>
-                            <Text style={styles.sectionSubtitle}>
+                            <Text style={[styles.sectionTitle, { color: '#FFFFFF' }]}>{activeTab} Topics</Text>
+                            <Text style={[styles.sectionSubtitle, { color: 'rgba(255,255,255,0.85)' }]}>
                                 Detailed notes aligned with ZIMSEC syllabus
                             </Text>
 
@@ -149,11 +151,11 @@ const ScienceNotesScreen: React.FC = () => {
                                     onPress={() => handleTopicPress(topic)}
                                 >
                                     <LinearGradient
-                                        colors={['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.8)']}
+                                        colors={['#FFFFFF', '#F8F9FA']}
                                         style={styles.topicCardGradient}
                                     >
                                         <View style={styles.topicCardContent}>
-                                            <View style={[styles.topicIcon, { backgroundColor: `${getSubjectColor(activeTab)}20` }]}>
+                                            <View style={[styles.topicIcon, { backgroundColor: `${getSubjectColor(activeTab)}15` }]}>
                                                 <Ionicons
                                                     name="book-outline"
                                                     size={24}
@@ -161,13 +163,13 @@ const ScienceNotesScreen: React.FC = () => {
                                                 />
                                             </View>
                                             <View style={styles.topicInfo}>
-                                                <Text style={styles.topicTitle}>{topic}</Text>
-                                                <Text style={styles.topicSubtitle}>Tap to view notes</Text>
+                                                <Text style={[styles.topicTitle, { color: '#1A1A1A' }]}>{topic}</Text>
+                                                <Text style={[styles.topicSubtitle, { color: '#666666' }]}>Tap to view notes</Text>
                                             </View>
                                             <Ionicons
                                                 name="chevron-forward"
                                                 size={24}
-                                                color={Colors.text.secondary}
+                                                color={getSubjectColor(activeTab)}
                                             />
                                         </View>
                                     </LinearGradient>
@@ -176,9 +178,9 @@ const ScienceNotesScreen: React.FC = () => {
 
                             {topics.length === 0 && !loading && (
                                 <View style={styles.emptyState}>
-                                    <Ionicons name="document-text-outline" size={64} color={Colors.text.secondary} />
-                                    <Text style={styles.emptyStateText}>No notes available yet</Text>
-                                    <Text style={styles.emptyStateSubtext}>
+                                    <Ionicons name="document-text-outline" size={64} color="rgba(255,255,255,0.7)" />
+                                    <Text style={[styles.emptyStateText, { color: '#FFFFFF' }]}>No notes available yet</Text>
+                                    <Text style={[styles.emptyStateSubtext, { color: 'rgba(255,255,255,0.8)' }]}>
                                         Notes for {activeTab} topics are being prepared
                                     </Text>
                                 </View>
@@ -248,15 +250,15 @@ const styles = StyleSheet.create({
         gap: 6,
     },
     activeTab: {
-        backgroundColor: 'rgba(76, 175, 80, 0.9)',
+        backgroundColor: 'rgba(255, 255, 255, 0.25)',
     },
     tabText: {
         fontSize: 14,
         fontWeight: '600',
-        color: Colors.text.secondary,
+        color: 'rgba(255, 255, 255, 0.7)',
     },
     activeTabText: {
-        color: '#FFF',
+        color: '#FFFFFF',
     },
     scrollContent: {
         paddingBottom: 40,
@@ -270,7 +272,7 @@ const styles = StyleSheet.create({
     loadingText: {
         marginTop: 16,
         fontSize: 16,
-        color: Colors.text.secondary,
+        color: 'rgba(255, 255, 255, 0.9)',
     },
     topicsContainer: {
         paddingHorizontal: 20,

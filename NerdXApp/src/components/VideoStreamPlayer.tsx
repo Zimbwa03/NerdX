@@ -16,7 +16,7 @@ import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Slider from '@react-native-community/slider';
-// Note: expo-screen-orientation can be added for orientation lock support
+import * as ScreenOrientation from 'expo-screen-orientation';
 
 interface VideoStreamPlayerProps {
     videoUrl: string;
@@ -60,6 +60,8 @@ const VideoStreamPlayer: React.FC<VideoStreamPlayerProps> = ({
             if (videoRef.current) {
                 videoRef.current.unloadAsync().catch(() => { });
             }
+            // Reset orientation to portrait when leaving
+            ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => { });
         };
     }, []);
 
@@ -163,8 +165,24 @@ const VideoStreamPlayer: React.FC<VideoStreamPlayerProps> = ({
         resetControlsTimer();
     };
 
-    const handleFullscreen = () => {
-        setIsFullscreen(!isFullscreen);
+    const handleFullscreen = async () => {
+        try {
+            if (isFullscreen) {
+                // Exit fullscreen - lock to portrait
+                await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+                setIsFullscreen(false);
+            } else {
+                // Enter fullscreen - unlock to allow rotation (landscape preferred)
+                await ScreenOrientation.unlockAsync();
+                // Give a hint to rotate by setting landscape
+                await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+                setIsFullscreen(true);
+            }
+        } catch (err) {
+            console.warn('Screen orientation error:', err);
+            // Fallback: just toggle fullscreen state
+            setIsFullscreen(!isFullscreen);
+        }
         resetControlsTimer();
     };
 
