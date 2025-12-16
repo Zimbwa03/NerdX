@@ -110,8 +110,7 @@ const AppNavigator: React.FC = () => {
               name="Dashboard"
               component={DashboardScreen}
               options={{
-                title: 'NerdX Dashboard',
-                headerLeft: () => null,
+                headerShown: false,
               }}
             />
             <Stack.Screen
@@ -154,7 +153,7 @@ const AppNavigator: React.FC = () => {
               name="Profile"
               component={ProfileScreen}
               options={{
-                title: 'Profile',
+                headerShown: false,
               }}
             />
             <Stack.Screen

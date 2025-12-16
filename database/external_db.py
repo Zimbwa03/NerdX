@@ -652,31 +652,34 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
         nerdx_id = generate_nerdx_id()
         logger.info(f"🆔 Generated NerdX ID: {nerdx_id}")
 
-        # Convert date_of_birth from DD/MM/YYYY to YYYY-MM-DD format for database
+        # Convert date_of_birth from various formats to YYYY-MM-DD format for database
         try:
             if '/' in date_of_birth:
-                # Parse DD/MM/YYYY format
+                # Parse DD/MM/YYYY format (with slashes)
                 day, month, year = date_of_birth.split('/')
                 # Ensure proper formatting with zero padding
                 formatted_date = f"{year}-{month.zfill(2)}-{day.zfill(2)}"
                 logger.info(f"Converted date from {date_of_birth} to {formatted_date}")
+            elif len(date_of_birth) == 8 and date_of_birth.isdigit():
+                # Parse DDMMYYYY format (no separators)
+                day = date_of_birth[0:2]
+                month = date_of_birth[2:4]
+                year = date_of_birth[4:8]
+                formatted_date = f"{year}-{month}-{day}"
+                logger.info(f"📅 Converted date from {date_of_birth} (DDMMYYYY) to {formatted_date}")
             else:
                 # Assume it's already in YYYY-MM-DD format
                 formatted_date = date_of_birth
+                logger.info(f"Date already in correct format: {formatted_date}")
 
             # Validate the converted date
             from datetime import datetime
             datetime.strptime(formatted_date, '%Y-%m-%d')
+            logger.info(f"✅ Date validation successful: {formatted_date}")
 
         except (ValueError, IndexError) as e:
             logger.error(f"Invalid date format: {date_of_birth}, error: {e}")
-            # Try to parse as YYYY-MM-DD in case it's already formatted
-            try:
-                datetime.strptime(date_of_birth, '%Y-%m-%d')
-                formatted_date = date_of_birth
-            except ValueError:
-                logger.error(f"Could not parse date in any format: {date_of_birth}")
-                raise Exception(f"Invalid date format: {date_of_birth}")
+            raise Exception(f"Invalid date format: {date_of_birth}. Expected DD/MM/YYYY or DDMMYYYY")
 
         # Prepare registration data
         registration_data = {

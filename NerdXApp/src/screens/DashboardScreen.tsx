@@ -9,6 +9,7 @@ import {
   ScrollView,
   Dimensions,
   Image,
+  ImageBackground,
   StatusBar,
   Platform,
   Animated,
@@ -286,169 +287,197 @@ const DashboardScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: themedColors.background.default }]}>
-      {/* ✨ Floating Particles Background */}
-      <FloatingParticles count={20} />
+      {/* 🎨 Professional Background Image */}
+      <ImageBackground
+        source={require('../../assets/images/default_background.png')}
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      >
+        {/* ✨ Floating Particles Background */}
+        <FloatingParticles count={20} />
 
-      <StatusBar
-        barStyle={isDarkMode ? "light-content" : "dark-content"}
-        backgroundColor={themedColors.background.default}
-      />
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Professional Header with Space Gradient */}
-        <LinearGradient
-          colors={themedColors.gradients.primary}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.header}
-        >
-          <View style={styles.headerContent}>
-            <View style={styles.userInfo}>
-              <Text style={styles.welcomeText}>Welcome back,</Text>
-              <Text style={styles.userName}>{user?.name || 'Explorer'}</Text>
-              <View style={styles.idBadge}>
-                <Text style={styles.nerdxId}>ID: {user?.nerdx_id || 'N/A'}</Text>
+        <StatusBar
+          barStyle={isDarkMode ? "light-content" : "dark-content"}
+          backgroundColor={themedColors.background.default}
+        />
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          {/* ✨ Modern Compact Transparent Header */}
+          <View style={styles.modernHeader}>
+            {/* Top Row - Icons and Actions */}
+            <View style={styles.topRow}>
+              <View style={styles.leftSection}>
+                <Text style={styles.appTitle}>NerdX</Text>
+              </View>
+
+              <View style={styles.rightSection}>
+                <OfflineIndicator />
+
+                {/* Theme Toggle */}
+                <TouchableOpacity
+                  onPress={toggleTheme}
+                  style={styles.iconButton}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.iconEmoji}>
+                    {isDarkMode ? '☀️' : '🌙'}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Profile Button */}
+                <TouchableOpacity
+                  onPress={navigateToProfile}
+                  style={styles.profileButton}
+                  activeOpacity={0.8}
+                >
+                  <LinearGradient
+                    colors={[Colors.primary.main, Colors.primary.dark]}
+                    style={styles.profileGradient}
+                  >
+                    <Text style={styles.profileInitial}>
+                      {(user?.name || 'N')[0].toUpperCase()}
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
               </View>
             </View>
-            <OfflineIndicator />
 
-            {/* Theme Toggle Button */}
-            <TouchableOpacity
-              onPress={toggleTheme}
-              style={styles.themeToggleBtn}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.themeToggleEmoji}>
-                {isDarkMode ? '☀️' : '🌙'}
-              </Text>
-            </TouchableOpacity>
+            {/* User Info Row - Compact */}
+            <View style={styles.userRow}>
+              <View style={styles.userNameSection}>
+                <Text style={styles.greeting}>Welcome back 👋</Text>
+                <Text style={styles.displayName}>{user?.name || 'Explorer'}</Text>
+                <View style={styles.compactIdBadge}>
+                  <Text style={styles.compactId}>ID: {user?.nerdx_id || 'N/A'}</Text>
+                </View>
+              </View>
 
-            <TouchableOpacity onPress={navigateToProfile}>
-              <IconCircle
-                icon={Icons.profile(32, Colors.primary.main)}
-                size={56}
-                backgroundColor="#FFFFFF"
-              />
-            </TouchableOpacity>
-          </View>
-
-          {/* Credits Summary */}
-          <View style={styles.creditsSummary}>
-            <View style={styles.creditRow}>
-              <Text style={styles.creditsLabel}>Available Credits</Text>
-              <TouchableOpacity onPress={navigateToCredits} style={styles.addCreditsBtn}>
-                <Text style={styles.addCreditsText}>+ Top Up</Text>
+              {/* Floating Credits Badge */}
+              <TouchableOpacity
+                onPress={navigateToCredits}
+                style={styles.floatingCreditsBadge}
+                activeOpacity={0.9}
+              >
+                <LinearGradient
+                  colors={['rgba(124, 77, 255, 0.2)', 'rgba(63, 29, 203, 0.2)']}
+                  style={styles.creditsBadgeGradient}
+                >
+                  <Text style={styles.creditsValue}>{user?.credits || 0}</Text>
+                  <Text style={styles.creditsLabelSmall}>Credits</Text>
+                  <View style={styles.topUpIndicator}>
+                    <Text style={styles.topUpText}>+</Text>
+                  </View>
+                </LinearGradient>
               </TouchableOpacity>
             </View>
-            <Text style={styles.creditsAmount}>{user?.credits || 0}</Text>
-          </View>
-        </LinearGradient>
-
-        <View style={styles.mainContent}>
-          {/* ✨ Motivational Quotes Slider - Rotates every 3 seconds */}
-          <MotivationalSlider intervalMs={3000} showCategory={true} showAuthor={true} />
-
-          {renderDailyReviewWidget()}
-          {renderProgressWidget()}
-
-          <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>Learning Hub</Text>
-
-          <View style={styles.gridContainer}>
-            {/* ✨ Animated Subject Cards with Neon Glow */}
-            <AnimatedCard
-              title="Mathematics"
-              subtitle="Master numbers & logic"
-              imageSource={require('../../assets/images/math_card.png')}
-              onPress={() => navigateToSubject('mathematics')}
-              glowColor={Colors.subjects.mathematics}
-              index={0}
-            />
-
-            <AnimatedCard
-              title="Science"
-              subtitle="Explore the universe"
-              imageSource={require('../../assets/images/science_card.png')}
-              onPress={handleSciencePress}
-              glowColor={Colors.subjects.science}
-              index={1}
-            />
-
-            <AnimatedCard
-              title="English"
-              subtitle="Perfect your language"
-              imageSource={require('../../assets/images/english_card.png')}
-              onPress={() => navigateToSubject('english')}
-              glowColor={Colors.subjects.english}
-              index={2}
-            />
-
-            <AnimatedCard
-              title="Project Assistant"
-              subtitle="AI-powered help"
-              imageSource={require('../../assets/images/project_assistant_card.png')}
-              onPress={navigateToProjectList}
-              glowColor={Colors.primary.main}
-              index={3}
-            />
-
-            {/* Full Width Cards */}
-            <AnimatedCard
-              title="My Progress"
-              subtitle="Track your learning journey"
-              imageSource={require('../../assets/images/profile_card.png')}
-              onPress={navigateToProgress}
-              glowColor="#a18cd1"
-              fullWidth={true}
-              index={4}
-            />
-
-            <AnimatedCard
-              title="Credits & Store"
-              subtitle="Manage wallet & subscriptions"
-              imageSource={require('../../assets/images/credits_card.png')}
-              onPress={navigateToCredits}
-              glowColor="#fbc2eb"
-              fullWidth={true}
-              index={5}
-            />
           </View>
 
-          {/* Logout Button */}
-          <TouchableOpacity
-            style={styles.logoutButton}
-            onPress={handleLogout}
-            activeOpacity={0.8}
-          >
-            <View style={styles.logoutContent}>
-              {Icons.logout(20, Colors.error.main)}
-              <Text style={styles.logoutButtonText}>Sign Out</Text>
+          <View style={styles.mainContent}>
+            {/* ✨ Motivational Quotes Slider - Rotates every 3 seconds */}
+            <MotivationalSlider intervalMs={3000} showCategory={true} showAuthor={true} />
+
+            {renderDailyReviewWidget()}
+            {renderProgressWidget()}
+
+            <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>Learning Hub</Text>
+
+            <View style={styles.gridContainer}>
+              {/* ✨ Animated Subject Cards with Neon Glow */}
+              <AnimatedCard
+                title="Mathematics"
+                subtitle="Master numbers & logic"
+                imageSource={require('../../assets/images/math_card.png')}
+                onPress={() => navigateToSubject('mathematics')}
+                glowColor={Colors.subjects.mathematics}
+                index={0}
+              />
+
+              <AnimatedCard
+                title="Science"
+                subtitle="Explore the universe"
+                imageSource={require('../../assets/images/science_card.png')}
+                onPress={handleSciencePress}
+                glowColor={Colors.subjects.science}
+                index={1}
+              />
+
+              <AnimatedCard
+                title="English"
+                subtitle="Perfect your language"
+                imageSource={require('../../assets/images/english_card.png')}
+                onPress={() => navigateToSubject('english')}
+                glowColor={Colors.subjects.english}
+                index={2}
+              />
+
+              <AnimatedCard
+                title="Project Assistant"
+                subtitle="AI-powered help"
+                imageSource={require('../../assets/images/project_assistant_card.png')}
+                onPress={navigateToProjectList}
+                glowColor={Colors.primary.main}
+                index={3}
+              />
+
+              {/* Full Width Cards */}
+              <AnimatedCard
+                title="My Progress"
+                subtitle="Track your learning journey"
+                imageSource={require('../../assets/images/profile_card.png')}
+                onPress={navigateToProgress}
+                glowColor="#a18cd1"
+                fullWidth={true}
+                index={4}
+              />
+
+              <AnimatedCard
+                title="Credits & Store"
+                subtitle="Manage wallet & subscriptions"
+                imageSource={require('../../assets/images/credits_card.png')}
+                onPress={navigateToCredits}
+                glowColor="#fbc2eb"
+                fullWidth={true}
+                index={5}
+              />
             </View>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
 
-      {/* Science Mode Selection Modal */}
-      <Modal
-        visible={scienceModalVisible}
-        onClose={() => setScienceModalVisible(false)}
-        title="Combined Science"
-      >
-        <Text style={styles.modalDescription}>Choose your learning mode:</Text>
-        <ModalOptionCard
-          icon="👨‍🏫"
-          title="Teacher Mode"
-          description="Interactive AI teaching with personalized explanations and notes"
-          onPress={handleTeacherMode}
-          color={Colors.subjects.science}
-        />
-        <ModalOptionCard
-          icon="📝"
-          title="Practice Mode"
-          description="Practice questions by topic and test your knowledge"
-          onPress={handlePracticeMode}
-          color={Colors.primary.main}
-        />
-      </Modal>
-    </View>
+            {/* Logout Button */}
+            <TouchableOpacity
+              style={styles.logoutButton}
+              onPress={handleLogout}
+              activeOpacity={0.8}
+            >
+              <View style={styles.logoutContent}>
+                {Icons.logout(20, Colors.error.main)}
+                <Text style={styles.logoutButtonText}>Sign Out</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+
+        {/* Science Mode Selection Modal */}
+        <Modal
+          visible={scienceModalVisible}
+          onClose={() => setScienceModalVisible(false)}
+          title="Combined Science"
+        >
+          <Text style={styles.modalDescription}>Choose your learning mode:</Text>
+          <ModalOptionCard
+            icon="👨‍🏫"
+            title="Teacher Mode"
+            description="Interactive AI teaching with personalized explanations and notes"
+            onPress={handleTeacherMode}
+            color={Colors.subjects.science}
+          />
+          <ModalOptionCard
+            icon="📝"
+            title="Practice Mode"
+            description="Practice questions by topic and test your knowledge"
+            onPress={handlePracticeMode}
+            color={Colors.primary.main}
+          />
+        </Modal>
+      </ImageBackground>
+    </View >
   );
 };
 
@@ -460,34 +489,84 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-  header: {
-    paddingTop: 60,
-    paddingBottom: 40,
-    paddingHorizontal: 24,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
-    shadowColor: Colors.primary.dark,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.5,
-    shadowRadius: 20,
-    elevation: 10,
+  backgroundImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
   },
-  headerContent: {
+  // ✨ Modern Compact Header Styles
+  modernHeader: {
+    paddingTop: 50,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 16,
   },
-  userInfo: {
+  leftSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  appTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+    textShadowColor: Colors.primary.main,
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
+  },
+  rightSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  iconButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  iconEmoji: {
+    fontSize: 18,
+  },
+  profileButton: {
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  profileGradient: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profileInitial: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  userRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  userNameSection: {
     flex: 1,
   },
-  welcomeText: {
-    fontSize: 16,
+  greeting: {
+    fontSize: 14,
     color: 'rgba(255, 255, 255, 0.8)',
     marginBottom: 4,
-    fontWeight: '500',
   },
-  userName: {
+  displayName: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#FFFFFF',
@@ -496,77 +575,58 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
   },
-  idBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    paddingHorizontal: 12,
+  compactIdBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: 8,
     alignSelf: 'flex-start',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
-  nerdxId: {
-    fontSize: 12,
-    color: '#FFFFFF',
+  compactId: {
+    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.9)',
     fontWeight: '600',
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
-  themeToggleBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  themeToggleEmoji: {
-    fontSize: 22,
-  },
-  creditsSummary: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  floatingCreditsBadge: {
     borderRadius: 20,
-    padding: 20,
+    overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: 'rgba(124, 77, 255, 0.3)',
   },
-  creditRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  creditsBadgeGradient: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     alignItems: 'center',
-    marginBottom: 8,
+    position: 'relative',
   },
-  creditsLabel: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.9)',
-    fontWeight: '500',
-  },
-  addCreditsBtn: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    shadowColor: '#FFFFFF',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 8,
-  },
-  addCreditsText: {
-    color: Colors.primary.main,
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  creditsAmount: {
-    fontSize: 36,
+  creditsValue: {
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    letterSpacing: 1,
-    textShadowColor: 'rgba(255, 255, 255, 0.5)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
+  },
+  creditsLabelSmall: {
+    fontSize: 10,
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginTop: 2,
+  },
+  topUpIndicator: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: Colors.success.main,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  topUpText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
   },
   mainContent: {
     padding: 24,

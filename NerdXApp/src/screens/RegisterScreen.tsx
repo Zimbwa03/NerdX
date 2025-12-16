@@ -11,7 +11,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  ImageBackground,
+
   StatusBar,
   Dimensions,
 } from 'react-native';
@@ -97,15 +97,12 @@ const RegisterScreen: React.FC = () => {
 
   return (
     <ImageBackground
-      source={require('../../assets/images/login_background.png')}
+      source={require('../../assets/images/default_background.png')}
       style={styles.container}
       resizeMode="cover"
-      onError={(error) => {
-        console.warn('Failed to load background image:', error.nativeEvent.error);
-      }}
     >
       <LinearGradient
-        colors={[Colors.gradients.primary[0], 'rgba(255,255,255,0.1)']}
+        colors={['rgba(0, 0, 0, 0.6)', 'rgba(0, 0, 0, 0.8)']}
         style={styles.overlay}
       >
         <StatusBar barStyle="light-content" />
@@ -126,10 +123,7 @@ const RegisterScreen: React.FC = () => {
             </View>
 
             <View style={styles.formContainer}>
-              <LinearGradient
-                colors={['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.8)']}
-                style={styles.glassCard}
-              >
+              <View style={styles.glassCard}>
                 <Text style={styles.formTitle}>Sign Up</Text>
                 <Text style={styles.formSubtitle}>Fill in your details to get started</Text>
 
@@ -244,7 +238,7 @@ const RegisterScreen: React.FC = () => {
                     <Text style={styles.loginLinkBold}>Sign In</Text>
                   </TouchableOpacity>
                 </View>
-              </LinearGradient>
+              </View>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -302,6 +296,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   glassCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 24,
     padding: 24,
     shadowColor: '#000',
@@ -313,13 +310,13 @@ const styles = StyleSheet.create({
   formTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: Colors.text.primary,
+    color: '#FFFFFF',
     marginBottom: 5,
     textAlign: 'center',
   },
   formSubtitle: {
     fontSize: 14,
-    color: Colors.text.secondary,
+    color: 'rgba(255, 255, 255, 0.9)',
     marginBottom: 25,
     textAlign: 'center',
   },
@@ -330,11 +327,11 @@ const styles = StyleSheet.create({
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F7FA',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 12,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
+    borderColor: 'rgba(255, 255, 255, 0.3)',
     height: 56,
   },
   inputIcon: {
@@ -345,7 +342,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     fontSize: 16,
-    color: Colors.text.primary,
+    color: '#FFFFFF',
     paddingRight: 16,
   },
   registerButton: {

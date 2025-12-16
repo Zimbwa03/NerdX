@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  ImageBackground,
+
   Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -62,15 +62,12 @@ const LoginScreen: React.FC = () => {
 
   return (
     <ImageBackground
-      source={require('../../assets/images/login_background.png')}
-      style={styles.backgroundImage}
+      source={require('../../assets/images/default_background.png')}
+      style={styles.container}
       resizeMode="cover"
-      onError={(error) => {
-        console.warn('Failed to load background image:', error.nativeEvent.error);
-      }}
     >
       <LinearGradient
-        colors={['rgba(98, 0, 234, 0.4)', 'rgba(0, 0, 0, 0.8)']}
+        colors={['rgba(0, 0, 0, 0.6)', 'rgba(0, 0, 0, 0.8)']}
         style={styles.gradientOverlay}
       >
         <KeyboardAvoidingView
@@ -153,17 +150,12 @@ const LoginScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  backgroundImage: {
+  container: {
     flex: 1,
-    width: width,
-    height: height,
   },
   gradientOverlay: {
     flex: 1,
     justifyContent: 'center',
-  },
-  container: {
-    flex: 1,
   },
   content: {
     padding: 24,
@@ -204,9 +196,11 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   glassCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     borderRadius: 24,
     padding: 32,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -219,13 +213,13 @@ const styles = StyleSheet.create({
   formTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: Colors.text.primary,
+    color: '#FFFFFF',
     marginBottom: 8,
     textAlign: 'center',
   },
   formSubtitle: {
     fontSize: 15,
-    color: Colors.text.secondary,
+    color: 'rgba(255, 255, 255, 0.9)',
     marginBottom: 32,
     textAlign: 'center',
   },
@@ -236,10 +230,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: Colors.border.light,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
     borderRadius: 16,
     marginBottom: 20,
-    backgroundColor: Colors.background.paper,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     height: 56,
   },
   inputIcon: {
@@ -250,7 +244,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     fontSize: 16,
-    color: Colors.text.primary,
+    color: '#FFFFFF',
     paddingRight: 20,
   },
   loginButton: {
