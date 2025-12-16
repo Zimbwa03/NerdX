@@ -1,6 +1,23 @@
 // Offline AI Service using ONNX Runtime React Native
 // Implements proper InferenceSession API for Phi-3 model text generation
-import { InferenceSession, Tensor } from 'onnxruntime-react-native';
+// Note: ONNX Runtime is only available in EAS development builds, not Expo Go
+
+// Conditionally import ONNX Runtime to prevent crashes in Expo Go
+let InferenceSession: any = null;
+let Tensor: any = null;
+let isONNXAvailable = false;
+
+try {
+    const onnx = require('onnxruntime-react-native');
+    InferenceSession = onnx.InferenceSession;
+    Tensor = onnx.Tensor;
+    isONNXAvailable = true;
+    console.log('✅ ONNX Runtime loaded successfully');
+} catch (error) {
+    console.warn('⚠️ ONNX Runtime not available (Expo Go). Offline AI features disabled.');
+    console.warn('To enable offline AI, build with EAS: eas build --profile development --platform android');
+}
+
 import ModelDownloadService, { ModelInfo } from './ModelDownloadService';
 import { phi3Tokenizer } from './Phi3Tokenizer';
 
@@ -43,6 +60,14 @@ class OfflineAIService {
 
         if (this.isInitializing) {
             console.log('Model initialization already in progress');
+            return false;
+        }
+
+        // Check if ONNX Runtime is available (not in Expo Go)
+        if (!isONNXAvailable) {
+            const errorMsg = 'ONNX Runtime not available. Please build with EAS to enable offline AI.';
+            console.warn(errorMsg);
+            this.initializationError = errorMsg;
             return false;
         }
 

@@ -529,7 +529,7 @@ const GraphPracticeScreen: React.FC = () => {
                 </View>
               )}
 
-              {!videoError && (
+              {!videoError && videoUrl && (
                 <>
                   <Video
                     ref={videoRef}
