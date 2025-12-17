@@ -11,9 +11,10 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-
+  ImageBackground,
   StatusBar,
   Dimensions,
+  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -31,6 +32,8 @@ const RegisterScreen: React.FC = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigation = useNavigation();
@@ -95,6 +98,50 @@ const RegisterScreen: React.FC = () => {
     navigation.goBack();
   };
 
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    try {
+      // Placeholder for Google Sign-In
+      Alert.alert(
+        'Google Sign-Up',
+        'Quickly create your account using Google. Proceed?',
+        [
+          { text: 'Cancel', style: 'cancel', onPress: () => setIsLoading(false) },
+          {
+            text: 'Continue',
+            onPress: async () => {
+              try {
+                // Mock user data
+                const mockUserInfo = {
+                  email: 'google_user@gmail.com',
+                  name: 'Google User',
+                  given_name: 'Google',
+                  family_name: 'User',
+                  picture: 'https://via.placeholder.com/150'
+                };
+
+                const response = await authApi.socialLogin('google', mockUserInfo);
+
+                if (response.success && response.token && response.user) {
+                  await login(response.user, response.token);
+                } else {
+                  Alert.alert('Sign Up Failed', response.message || 'Could not sign up with Google');
+                }
+              } catch (error) {
+                Alert.alert('Error', 'An error occurred during Google Sign-Up');
+              } finally {
+                setIsLoading(false);
+              }
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      Alert.alert('Error', 'Google Sign-Up failed');
+      setIsLoading(false);
+    }
+  };
+
   return (
     <ImageBackground
       source={require('../../assets/images/default_background.png')}
@@ -116,7 +163,11 @@ const RegisterScreen: React.FC = () => {
           >
             <View style={styles.headerSection}>
               <View style={styles.iconContainer}>
-                <Ionicons name="person-add-outline" size={40} color="#FFF" />
+                <Image
+                  source={require('../../assets/images/logo.png')}
+                  style={styles.logoImage}
+                  resizeMode="contain"
+                />
               </View>
               <Text style={styles.title}>Create Account</Text>
               <Text style={styles.subtitle}>Join NerdX Learning Platform</Text>
@@ -197,8 +248,18 @@ const RegisterScreen: React.FC = () => {
                     placeholderTextColor={Colors.text.disabled}
                     value={password}
                     onChangeText={setPassword}
-                    secureTextEntry
+                    secureTextEntry={!showPassword}
                   />
+                  <TouchableOpacity
+                    onPress={() => setShowPassword(!showPassword)}
+                    style={styles.showHideButton}
+                  >
+                    <Ionicons
+                      name={showPassword ? "eye-outline" : "eye-off-outline"}
+                      size={20}
+                      color={Colors.text.secondary}
+                    />
+                  </TouchableOpacity>
                 </View>
 
                 <View style={styles.inputWrapper}>
@@ -209,8 +270,18 @@ const RegisterScreen: React.FC = () => {
                     placeholderTextColor={Colors.text.disabled}
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
-                    secureTextEntry
+                    secureTextEntry={!showConfirmPassword}
                   />
+                  <TouchableOpacity
+                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                    style={styles.showHideButton}
+                  >
+                    <Ionicons
+                      name={showConfirmPassword ? "eye-outline" : "eye-off-outline"}
+                      size={20}
+                      color={Colors.text.secondary}
+                    />
+                  </TouchableOpacity>
                 </View>
 
                 <TouchableOpacity
@@ -230,6 +301,23 @@ const RegisterScreen: React.FC = () => {
                       <Text style={styles.registerButtonText}>Create Account</Text>
                     )}
                   </LinearGradient>
+                </TouchableOpacity>
+
+                <View style={styles.separatorContainer}>
+                  <View style={styles.separatorLine} />
+                  <Text style={styles.separatorText}>OR</Text>
+                  <View style={styles.separatorLine} />
+                </View>
+
+                <TouchableOpacity
+                  style={styles.googleButton}
+                  onPress={handleGoogleSignIn}
+                  disabled={isLoading}
+                >
+                  <View style={styles.googleIconContainer}>
+                    <Ionicons name="logo-google" size={24} color="#EA4335" />
+                  </View>
+                  <Text style={styles.googleButtonText}>Sign up with Google</Text>
                 </TouchableOpacity>
 
                 <View style={styles.loginLinkContainer}>
@@ -272,12 +360,18 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.9)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 15,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.3)',
+    overflow: 'hidden',
+    padding: 8,
+  },
+  logoImage: {
+    width: '100%',
+    height: '100%',
   },
   title: {
     fontSize: 32,
@@ -370,6 +464,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
+  showHideButton: {
+    paddingHorizontal: 16,
+    height: '100%',
+    justifyContent: 'center',
+  },
   loginLinkContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -382,6 +481,47 @@ const styles = StyleSheet.create({
   loginLinkBold: {
     color: Colors.primary.main,
     fontSize: 15,
+    fontWeight: 'bold',
+  },
+  separatorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  separatorLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  separatorText: {
+    color: 'rgba(255, 255, 255, 0.6)',
+    paddingHorizontal: 16,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    height: 56,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  googleIconContainer: {
+    marginRight: 12,
+  },
+  googleButtonText: {
+    color: '#333333',
+    fontSize: 16,
     fontWeight: 'bold',
   },
 });

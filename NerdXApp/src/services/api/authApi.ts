@@ -79,5 +79,20 @@ export const authApi = {
       };
     }
   },
+
+  socialLogin: async (provider: string, userInfo: any): Promise<AuthResponse> => {
+    try {
+      const response = await api.post('/api/mobile/auth/social-login', {
+        provider,
+        user: userInfo,
+      });
+      return response.data;
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Social login failed',
+      };
+    }
+  },
 };
 

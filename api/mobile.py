@@ -194,12 +194,16 @@ def register():
             # Get user data
             user_data = get_user_registration(user_identifier)
             
+            if not user_data:
+                logger.error(f"Failed to retrieve user data for {user_identifier} after registration")
+                return jsonify({'success': False, 'message': 'Post-registration data retrieval failed'}), 500
+
             return jsonify({
                 'success': True,
                 'token': token,
                 'user': {
                     'id': user_data.get('chat_id'),
-                    'nerdx_id': nerdx_id,
+                    'nerdx_id': user_data.get('nerdx_id'),
                     'name': name,
                     'surname': surname,
                     'email': email,
@@ -210,11 +214,87 @@ def register():
             }), 201
             
         except Exception as e:
-            logger.error(f"Registration error: {e}")
-            return jsonify({'success': False, 'message': 'Registration failed'}), 500
+            logger.error(f"Registration error: {str(e)}", exc_info=True)
+            return jsonify({'success': False, 'message': f'Registration failed: {str(e)}'}), 500
             
     except Exception as e:
-        logger.error(f"Register endpoint error: {e}")
+        logger.error(f"Register endpoint error: {str(e)}", exc_info=True)
+        return jsonify({'success': False, 'message': f'Server error: {str(e)}'}), 500
+
+@mobile_bp.route('/auth/social-login', methods=['POST'])
+def social_login():
+    """Handle social authentication (Google, etc.)"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'message': 'No data provided'}), 400
+            
+        # Social login data from frontend (Supabase user object)
+        provider = data.get('provider', 'google')
+        user_info = data.get('user', {})
+        email = user_info.get('email', '').lower()
+        
+        if not email:
+            return jsonify({'success': False, 'message': 'Email is required for social login'}), 400
+            
+        # Check if user is already registered in our system
+        if is_user_registered(email):
+            # Existing user - generate token and return user data
+            user_data = get_user_registration(email)
+            credits = get_user_credits(email) or 0
+            token = generate_token(email)
+            
+            return jsonify({
+                'success': True,
+                'token': token,
+                'user': {
+                    'id': user_data.get('chat_id'),
+                    'nerdx_id': user_data.get('nerdx_id'),
+                    'name': user_data.get('name'),
+                    'surname': user_data.get('surname'),
+                    'email': email,
+                    'credits': credits,
+                },
+                'message': 'Logged in with Google'
+            }), 200
+        else:
+            # New user via social login - create registration
+            name = user_info.get('given_name') or user_info.get('name', 'User')
+            surname = user_info.get('family_name') or 'Social'
+            
+            # Create user registration in Supabase
+            try:
+                # Use email as user_identifier for social sign-ups
+                create_user_registration(
+                    email,
+                    name,
+                    surname,
+                    '2000-01-01', # Default DOB for social
+                    None # No referral for now
+                )
+                
+                user_data = get_user_registration(email)
+                token = generate_token(email)
+                
+                return jsonify({
+                    'success': True,
+                    'token': token,
+                    'user': {
+                        'id': email,
+                        'nerdx_id': user_data.get('nerdx_id'),
+                        'name': name,
+                        'surname': surname,
+                        'email': email,
+                        'credits': 75, # Welcome bonus
+                    },
+                    'message': 'Account created via Google'
+                }), 201
+            except Exception as e:
+                logger.error(f"Social registration error: {e}", exc_info=True)
+                return jsonify({'success': False, 'message': f'Social registration failed: {str(e)}'}), 500
+                
+    except Exception as e:
+        logger.error(f"Social login error: {e}", exc_info=True)
         return jsonify({'success': False, 'message': 'Server error'}), 500
 
 @mobile_bp.route('/auth/login', methods=['POST'])

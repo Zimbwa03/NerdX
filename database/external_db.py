@@ -802,8 +802,8 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
         logger.error(f"💥 CRITICAL: User registration FAILED for {chat_id}: {e}", exc_info=True)
         logger.error(f"🚫 Registration cannot proceed without Supabase success")
 
-        # NO FALLBACKS - must fail if Supabase fails
-        return None
+        # Raise exception so the caller (API) knows it failed
+        raise e
 
 def is_user_registered(chat_id):
     """Check if user is already registered - matches backup function exactly"""

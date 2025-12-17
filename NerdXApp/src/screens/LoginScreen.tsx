@@ -10,8 +10,9 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-
+  ImageBackground,
   Dimensions,
+  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -26,6 +27,7 @@ const { width, height } = Dimensions.get('window');
 const LoginScreen: React.FC = () => {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigation = useNavigation();
   const { login } = useAuth();
@@ -60,6 +62,51 @@ const LoginScreen: React.FC = () => {
     navigation.navigate('Register' as never);
   };
 
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    try {
+      // Placeholder for Google Sign-In
+      // In a real implementation, you would use expo-auth-session or similar
+      Alert.alert(
+        'Google Sign-In',
+        'This feature will link with your Google account. Proceed?',
+        [
+          { text: 'Cancel', style: 'cancel', onPress: () => setIsLoading(false) },
+          {
+            text: 'Sign In',
+            onPress: async () => {
+              try {
+                // Mock user data that would come from Google/Supabase
+                const mockUserInfo = {
+                  email: 'google_user@gmail.com',
+                  name: 'Google User',
+                  given_name: 'Google',
+                  family_name: 'User',
+                  picture: 'https://via.placeholder.com/150'
+                };
+
+                const response = await authApi.socialLogin('google', mockUserInfo);
+
+                if (response.success && response.token && response.user) {
+                  await login(response.user, response.token);
+                } else {
+                  Alert.alert('Sign In Failed', response.message || 'Could not sign in with Google');
+                }
+              } catch (error) {
+                Alert.alert('Error', 'An error occurred during Google Sign-In');
+              } finally {
+                setIsLoading(false);
+              }
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      Alert.alert('Error', 'Google Sign-In failed');
+      setIsLoading(false);
+    }
+  };
+
   return (
     <ImageBackground
       source={require('../../assets/images/default_background.png')}
@@ -78,10 +125,10 @@ const LoginScreen: React.FC = () => {
             {/* Logo/Icon Section */}
             <View style={styles.logoSection}>
               <View style={styles.iconContainer}>
-                <IconCircle
-                  icon={Icons.quiz(48, Colors.primary.main)}
-                  size={100}
-                  backgroundColor="rgba(255, 255, 255, 0.9)"
+                <Image
+                  source={require('../../assets/images/logo.png')}
+                  style={styles.logoImage}
+                  resizeMode="contain"
                 />
               </View>
               <Text style={styles.title}>NerdX</Text>
@@ -119,8 +166,19 @@ const LoginScreen: React.FC = () => {
                     placeholderTextColor={Colors.text.hint}
                     value={password}
                     onChangeText={setPassword}
-                    secureTextEntry
+                    secureTextEntry={!showPassword}
                   />
+                  <TouchableOpacity
+                    onPress={() => setShowPassword(!showPassword)}
+                    style={styles.showHideButton}
+                  >
+                    <Icon
+                      name={showPassword ? "eye" : "eye-off"}
+                      size={20}
+                      color={Colors.text.secondary}
+                      library="ionicons"
+                    />
+                  </TouchableOpacity>
                 </View>
 
                 <Button
@@ -135,6 +193,23 @@ const LoginScreen: React.FC = () => {
                   iconPosition="left"
                   style={styles.loginButton}
                 />
+
+                <View style={styles.separatorContainer}>
+                  <View style={styles.separatorLine} />
+                  <Text style={styles.separatorText}>OR</Text>
+                  <View style={styles.separatorLine} />
+                </View>
+
+                <TouchableOpacity
+                  style={styles.googleButton}
+                  onPress={handleGoogleSignIn}
+                  disabled={isLoading}
+                >
+                  <View style={styles.googleIconContainer}>
+                    <Icon name="logo-google" size={24} color="#EA4335" library="ionicons" />
+                  </View>
+                  <Text style={styles.googleButtonText}>Sign in with Google</Text>
+                </TouchableOpacity>
 
                 <TouchableOpacity onPress={navigateToRegister} style={styles.linkContainer}>
                   <Text style={styles.linkText}>Don't have an account? </Text>
@@ -175,6 +250,18 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.44,
     shadowRadius: 10.32,
     elevation: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 50,
+    width: 100,
+    height: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+    padding: 10,
+  },
+  logoImage: {
+    width: '100%',
+    height: '100%',
   },
   title: {
     fontSize: 42,
@@ -261,6 +348,11 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 10,
   },
+  showHideButton: {
+    paddingHorizontal: 16,
+    height: '100%',
+    justifyContent: 'center',
+  },
   linkContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -274,6 +366,47 @@ const styles = StyleSheet.create({
     color: Colors.primary.main,
     fontSize: 15,
     fontWeight: '700',
+  },
+  separatorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  separatorLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  separatorText: {
+    color: 'rgba(255, 255, 255, 0.6)',
+    paddingHorizontal: 16,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    height: 56,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  googleIconContainer: {
+    marginRight: 12,
+  },
+  googleButtonText: {
+    color: '#333333',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 
