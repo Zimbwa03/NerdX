@@ -216,7 +216,7 @@ const ProjectAssistantSetupScreen: React.FC = () => {
           <Text style={styles.infoText}>
             • <Text style={styles.bold}>3 Credits</Text> to start a new project session{'\n'}
             • <Text style={styles.bold}>1 Credit</Text> per follow-up question{'\n'}
-            • Get comprehensive research, writing help, and guidance for all ZIMSEC project stages.
+            • Get comprehensive research, writing help, and guidance for all project stages.
           </Text>
         </View>
 

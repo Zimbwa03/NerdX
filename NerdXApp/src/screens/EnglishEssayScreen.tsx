@@ -226,7 +226,7 @@ const EnglishEssayScreen: React.FC = () => {
                 <View style={[styles.iconContainer, { backgroundColor: isDarkMode ? 'rgba(98, 0, 234, 0.2)' : 'rgba(98, 0, 234, 0.1)' }]}>
                   <Ionicons name="create-outline" size={48} color={themedColors.primary.main} />
                 </View>
-                <Text style={[styles.welcomeTitle, { color: themedColors.text.primary }]}>ZIMSEC Essay Writing</Text>
+                <Text style={[styles.welcomeTitle, { color: themedColors.text.primary }]}>Essay Writing</Text>
                 <Text style={[styles.welcomeText, { color: themedColors.text.secondary }]}>
                   Choose your composition type and get professional marking with detailed feedback.
                 </Text>

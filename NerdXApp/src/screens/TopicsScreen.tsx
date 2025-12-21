@@ -22,6 +22,7 @@ import { Modal, ModalOptionCard } from '../components/Modal';
 import { Colors, getColors } from '../theme/colors';
 import { useThemedColors } from '../theme/useThemedStyles';
 import LoadingProgress from '../components/LoadingProgress';
+import { Ionicons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 
@@ -176,6 +177,17 @@ const TopicsScreen: React.FC = () => {
 
   const handleFormulaSheet = () => {
     navigation.navigate('FormulaSheet' as never);
+  };
+
+  const handleMathNotes = (topicName: string) => {
+    navigation.navigate('MathNotesDetail' as never, { topic: topicName } as never);
+  };
+
+  const handleMathTutor = (topicName: string) => {
+    navigation.navigate('TeacherModeSetup' as never, {
+      preselectedSubject: 'Mathematics',
+      preselectedTopic: topicName
+    } as never);
   };
 
   const handleStartQuiz = async (topic?: Topic, questionType?: string) => {
@@ -337,20 +349,75 @@ const TopicsScreen: React.FC = () => {
         {/* Special Features */}
         <View style={styles.featuresContainer}>
           {subject.id === 'mathematics' && (
-            <Card variant="elevated" onPress={handleGraphPractice} style={styles.featureCard}>
-              <View style={styles.featureContent}>
-                <IconCircle
-                  icon={Icons.graph(28, Colors.subjects.mathematics)}
-                  size={56}
-                  backgroundColor={Colors.iconBg.mathematics}
-                />
-                <View style={styles.featureInfo}>
-                  <Text style={styles.featureTitle}>Graph Practice</Text>
-                  <Text style={styles.featureSubtitle}>Practice reading and analyzing graphs</Text>
-                </View>
-                {Icons.arrowRight(24, Colors.text.secondary)}
+            <>
+              {/* Math Notes Section - All Topics */}
+              <View style={styles.mathNotesSection}>
+                <Text style={styles.mathNotesSectionTitle}>📘 Professional Math Notes</Text>
+                <Text style={styles.mathNotesSectionSubtitle}>O-Level Standard - Tap to study</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.mathTopicsScroll}>
+                  {[
+                    'Real Numbers',
+                    'Fractions, Decimals & Percentages',
+                    'Ratio and Proportion',
+                    'Algebraic Expressions',
+                    'Quadratic Equations',
+                    'Linear Equations & Inequalities',
+                    'Indices and Logarithms',
+                    'Angles and Polygons',
+                    'Pythagoras Theorem',
+                    'Trigonometry',
+                    'Circle Theorems',
+                    'Statistics',
+                    'Probability',
+                    'Mensuration',
+                  ].map((topicName, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      style={[styles.mathTopicChip, { backgroundColor: Colors.iconBg.mathematics }]}
+                      onPress={() => handleMathNotes(topicName)}
+                    >
+                      <Text style={[styles.mathTopicChipText, { color: Colors.subjects.mathematics }]}>{topicName}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
               </View>
-            </Card>
+
+              {/* AI Math Tutor */}
+              <Card
+                variant="elevated"
+                onPress={() => handleMathTutor('Quadratic Equations')}
+                style={[styles.featureCard, { borderLeftColor: Colors.secondary.main, borderLeftWidth: 4 }]}
+              >
+                <View style={styles.featureContent}>
+                  <IconCircle
+                    icon={<Ionicons name="chatbubbles-outline" size={28} color={Colors.secondary.main} />}
+                    size={56}
+                    backgroundColor="rgba(0, 229, 255, 0.1)"
+                  />
+                  <View style={styles.featureInfo}>
+                    <Text style={styles.featureTitle}>AI Math Tutor</Text>
+                    <Text style={styles.featureSubtitle}>Interactive Socratic tutoring with graphs</Text>
+                  </View>
+                  {Icons.arrowRight(24, Colors.text.secondary)}
+                </View>
+              </Card>
+
+              {/* Graph Practice */}
+              <Card variant="elevated" onPress={handleGraphPractice} style={styles.featureCard}>
+                <View style={styles.featureContent}>
+                  <IconCircle
+                    icon={Icons.graph(28, Colors.subjects.mathematics)}
+                    size={56}
+                    backgroundColor={Colors.iconBg.mathematics}
+                  />
+                  <View style={styles.featureInfo}>
+                    <Text style={styles.featureTitle}>Graph Practice</Text>
+                    <Text style={styles.featureSubtitle}>Practice reading and analyzing graphs</Text>
+                  </View>
+                  {Icons.arrowRight(24, Colors.text.secondary)}
+                </View>
+              </Card>
+            </>
           )}
 
           {subject.id === 'english' && (
@@ -771,6 +838,40 @@ const styles = StyleSheet.create({
     color: Colors.text.secondary,
     textAlign: 'center',
     marginTop: 20,
+  },
+  mathNotesSection: {
+    backgroundColor: Colors.background.paper,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+  },
+  mathNotesSectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.text.primary,
+    marginBottom: 4,
+  },
+  mathNotesSectionSubtitle: {
+    fontSize: 13,
+    color: Colors.text.secondary,
+    marginBottom: 12,
+  },
+  mathTopicsScroll: {
+    marginTop: 8,
+  },
+  mathTopicChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: Colors.subjects.mathematics,
+  },
+  mathTopicChipText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
   backButton: {
     fontSize: 16,

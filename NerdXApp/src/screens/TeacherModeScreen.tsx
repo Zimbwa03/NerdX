@@ -30,12 +30,16 @@ import { Colors } from '../theme/colors';
 import { Audio } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
+import { Dimensions } from 'react-native';
+
+const { width } = Dimensions.get('window');
 
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  graph_url?: string;
 }
 
 const TeacherModeScreen: React.FC = () => {
@@ -295,6 +299,7 @@ const TeacherModeScreen: React.FC = () => {
           role: 'assistant',
           content: response.response,
           timestamp: new Date(),
+          graph_url: response.graph_url,
         };
 
         setMessages((prev) => [...prev, assistantMessage]);
@@ -633,6 +638,16 @@ const TeacherModeScreen: React.FC = () => {
                     <Markdown style={markdownStyles}>
                       {message.content}
                     </Markdown>
+                    {message.graph_url && (
+                      <View style={styles.graphContainer}>
+                        <Image
+                          source={{ uri: `http://localhost:5000${message.graph_url}` }}
+                          style={styles.graphImage}
+                          resizeMode="contain"
+                        />
+                        <Text style={styles.graphCaption}>Mathematical Graph</Text>
+                      </View>
+                    )}
                   </View>
                 )}
               </View>
@@ -1095,6 +1110,26 @@ const styles = StyleSheet.create({
     padding: 4,
     marginTop: 4,
     alignSelf: 'flex-start',
+  },
+  graphContainer: {
+    marginTop: 12,
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+  },
+  graphImage: {
+    width: width * 0.65,
+    height: 180,
+    borderRadius: 4,
+  },
+  graphCaption: {
+    fontSize: 10,
+    color: Colors.text.secondary,
+    marginTop: 4,
+    fontStyle: 'italic',
   },
   modeToggleButton: {
     width: 44,

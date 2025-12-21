@@ -183,7 +183,7 @@ const VirtualLabScreen: React.FC = () => {
                         </Text>
                     </View>
                     <Text style={[styles.infoText, { color: themedColors.text.secondary }]}>
-                        These interactive simulations are designed to help you understand key ZIMSEC O-Level
+                        These interactive simulations are designed to help you understand key O-Level
                         science concepts through hands-on experimentation. Complete each simulation and take
                         the knowledge check quiz to earn XP!
                     </Text>
@@ -210,7 +210,7 @@ const VirtualLabScreen: React.FC = () => {
                         <View style={styles.featureItem}>
                             <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
                             <Text style={[styles.featureText, { color: themedColors.text.primary }]}>
-                                Aligned with ZIMSEC syllabus
+                                Aligned with O-Level syllabus
                             </Text>
                         </View>
                     </View>

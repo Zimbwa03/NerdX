@@ -1,4 +1,4 @@
-// Login Screen Component - Professional UI/UX Design
+// Login Screen Component - Premium UI/UX Design
 import React, { useState } from 'react';
 import {
   View,
@@ -13,6 +13,7 @@ import {
   ImageBackground,
   Dimensions,
   Image,
+  StatusBar,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -21,6 +22,7 @@ import { authApi } from '../services/api/authApi';
 import { Icons, IconCircle, Icon } from '../components/Icons';
 import { Button } from '../components/Button';
 import { Colors } from '../theme/colors';
+import { Ionicons } from '@expo/vector-icons';
 
 const { width, height } = Dimensions.get('window');
 
@@ -47,7 +49,6 @@ const LoginScreen: React.FC = () => {
 
       if (response.success && response.token && response.user) {
         await login(response.user, response.token);
-        // Navigation will be handled by auth state change
       } else {
         Alert.alert('Login Failed', response.message || 'Invalid credentials');
       }
@@ -65,8 +66,6 @@ const LoginScreen: React.FC = () => {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      // Placeholder for Google Sign-In
-      // In a real implementation, you would use expo-auth-session or similar
       Alert.alert(
         'Google Sign-In',
         'This feature will link with your Google account. Proceed?',
@@ -76,7 +75,6 @@ const LoginScreen: React.FC = () => {
             text: 'Sign In',
             onPress: async () => {
               try {
-                // Mock user data that would come from Google/Supabase
                 const mockUserInfo = {
                   email: 'google_user@gmail.com',
                   name: 'Google User',
@@ -108,119 +106,169 @@ const LoginScreen: React.FC = () => {
   };
 
   return (
-    <ImageBackground
-      source={require('../../assets/images/default_background.png')}
-      style={styles.container}
-      resizeMode="cover"
-    >
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+
+      {/* Animated Background Gradient */}
       <LinearGradient
-        colors={['rgba(0, 0, 0, 0.6)', 'rgba(0, 0, 0, 0.8)']}
-        style={styles.gradientOverlay}
+        colors={['#0F0C29', '#302B63', '#24243E']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.backgroundGradient}
       >
+        {/* Decorative Circles */}
+        <View style={styles.decorativeCircle1} />
+        <View style={styles.decorativeCircle2} />
+        <View style={styles.decorativeCircle3} />
+
         <KeyboardAvoidingView
-          style={styles.container}
+          style={styles.keyboardView}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
           <View style={styles.content}>
-            {/* Logo/Icon Section */}
+            {/* Logo Section */}
             <View style={styles.logoSection}>
-              <View style={styles.iconContainer}>
-                <Image
-                  source={require('../../assets/images/logo.png')}
-                  style={styles.logoImage}
-                  resizeMode="contain"
-                />
-              </View>
+              <LinearGradient
+                colors={['#667eea', '#764ba2']}
+                style={styles.logoGradient}
+              >
+                <View style={styles.logoInner}>
+                  <Image
+                    source={require('../../assets/images/logo.png')}
+                    style={styles.logoImage}
+                    resizeMode="contain"
+                  />
+                </View>
+              </LinearGradient>
               <Text style={styles.title}>NerdX</Text>
               <Text style={styles.subtitle}>Master Your Future</Text>
             </View>
 
             {/* Login Form Card */}
             <View style={styles.glassCard}>
-              <Text style={styles.formTitle}>Welcome Back</Text>
-              <Text style={styles.formSubtitle}>Sign in to continue learning</Text>
+              <LinearGradient
+                colors={['rgba(255,255,255,0.15)', 'rgba(255,255,255,0.05)']}
+                style={styles.glassGradient}
+              >
+                <Text style={styles.formTitle}>Welcome Back</Text>
+                <Text style={styles.formSubtitle}>Sign in to continue learning</Text>
 
-              <View style={styles.form}>
-                <View style={styles.inputContainer}>
-                  <View style={styles.inputIcon}>
-                    {Icons.profile(20, Colors.text.secondary)}
+                <View style={styles.form}>
+                  {/* Email Input */}
+                  <View style={styles.inputContainer}>
+                    <LinearGradient
+                      colors={['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)']}
+                      style={styles.inputGradient}
+                    >
+                      <View style={styles.inputIcon}>
+                        <Ionicons name="mail-outline" size={22} color="rgba(255,255,255,0.7)" />
+                      </View>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Email or Phone Number"
+                        placeholderTextColor="rgba(255,255,255,0.5)"
+                        value={identifier}
+                        onChangeText={setIdentifier}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                      />
+                    </LinearGradient>
                   </View>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Email or Phone Number"
-                    placeholderTextColor={Colors.text.hint}
-                    value={identifier}
-                    onChangeText={setIdentifier}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                  />
-                </View>
 
-                <View style={styles.inputContainer}>
-                  <View style={styles.inputIcon}>
-                    <Icon name="lock-closed" size={20} color={Colors.text.secondary} library="ionicons" />
+                  {/* Password Input */}
+                  <View style={styles.inputContainer}>
+                    <LinearGradient
+                      colors={['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)']}
+                      style={styles.inputGradient}
+                    >
+                      <View style={styles.inputIcon}>
+                        <Ionicons name="lock-closed-outline" size={22} color="rgba(255,255,255,0.7)" />
+                      </View>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Password"
+                        placeholderTextColor="rgba(255,255,255,0.5)"
+                        value={password}
+                        onChangeText={setPassword}
+                        secureTextEntry={!showPassword}
+                      />
+                      <TouchableOpacity
+                        onPress={() => setShowPassword(!showPassword)}
+                        style={styles.showHideButton}
+                      >
+                        <Ionicons
+                          name={showPassword ? "eye-outline" : "eye-off-outline"}
+                          size={22}
+                          color="rgba(255,255,255,0.7)"
+                        />
+                      </TouchableOpacity>
+                    </LinearGradient>
                   </View>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Password"
-                    placeholderTextColor={Colors.text.hint}
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry={!showPassword}
-                  />
+
+                  {/* Forgot Password */}
+                  <TouchableOpacity style={styles.forgotPassword}>
+                    <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+                  </TouchableOpacity>
+
+                  {/* Sign In Button */}
                   <TouchableOpacity
-                    onPress={() => setShowPassword(!showPassword)}
-                    style={styles.showHideButton}
+                    style={styles.signInButton}
+                    onPress={handleLogin}
+                    disabled={isLoading}
+                    activeOpacity={0.8}
                   >
-                    <Icon
-                      name={showPassword ? "eye" : "eye-off"}
-                      size={20}
-                      color={Colors.text.secondary}
-                      library="ionicons"
+                    <LinearGradient
+                      colors={['#667eea', '#764ba2']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.signInGradient}
+                    >
+                      {isLoading ? (
+                        <ActivityIndicator color="#FFFFFF" size="small" />
+                      ) : (
+                        <>
+                          <Text style={styles.signInText}>Sign In</Text>
+                          <Ionicons name="arrow-forward" size={20} color="#FFFFFF" style={styles.signInIcon} />
+                        </>
+                      )}
+                    </LinearGradient>
+                  </TouchableOpacity>
+
+                  {/* Separator */}
+                  <View style={styles.separatorContainer}>
+                    <View style={styles.separatorLine} />
+                    <Text style={styles.separatorText}>OR</Text>
+                    <View style={styles.separatorLine} />
+                  </View>
+
+                  {/* Google Sign In */}
+                  <TouchableOpacity
+                    style={styles.googleButton}
+                    onPress={handleGoogleSignIn}
+                    disabled={isLoading}
+                    activeOpacity={0.8}
+                  >
+                    <Image
+                      source={{ uri: 'https://www.google.com/favicon.ico' }}
+                      style={styles.googleIcon}
                     />
+                    <Text style={styles.googleButtonText}>Continue with Google</Text>
                   </TouchableOpacity>
                 </View>
+              </LinearGradient>
+            </View>
 
-                <Button
-                  title="Sign In"
-                  variant="primary"
-                  size="large"
-                  fullWidth
-                  onPress={handleLogin}
-                  disabled={isLoading}
-                  loading={isLoading}
-                  icon="log-in"
-                  iconPosition="left"
-                  style={styles.loginButton}
-                />
-
-                <View style={styles.separatorContainer}>
-                  <View style={styles.separatorLine} />
-                  <Text style={styles.separatorText}>OR</Text>
-                  <View style={styles.separatorLine} />
-                </View>
-
-                <TouchableOpacity
-                  style={styles.googleButton}
-                  onPress={handleGoogleSignIn}
-                  disabled={isLoading}
-                >
-                  <View style={styles.googleIconContainer}>
-                    <Icon name="logo-google" size={24} color="#EA4335" library="ionicons" />
-                  </View>
-                  <Text style={styles.googleButtonText}>Sign in with Google</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity onPress={navigateToRegister} style={styles.linkContainer}>
-                  <Text style={styles.linkText}>Don't have an account? </Text>
-                  <Text style={styles.linkTextBold}>Sign Up</Text>
-                </TouchableOpacity>
-              </View>
+            {/* Sign Up Link */}
+            <View style={styles.signUpContainer}>
+              <Text style={styles.signUpText}>Don't have an account? </Text>
+              <TouchableOpacity onPress={navigateToRegister}>
+                <Text style={styles.signUpLink}>Sign Up</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </KeyboardAvoidingView>
       </LinearGradient>
-    </ImageBackground>
+    </View>
   );
 };
 
@@ -228,35 +276,66 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  gradientOverlay: {
+  backgroundGradient: {
     flex: 1,
-    justifyContent: 'center',
+  },
+  decorativeCircle1: {
+    position: 'absolute',
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    backgroundColor: 'rgba(102, 126, 234, 0.15)',
+    top: -100,
+    right: -100,
+  },
+  decorativeCircle2: {
+    position: 'absolute',
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: 'rgba(118, 75, 162, 0.1)',
+    bottom: 100,
+    left: -50,
+  },
+  decorativeCircle3: {
+    position: 'absolute',
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: 'rgba(102, 126, 234, 0.08)',
+    top: height * 0.4,
+    right: -30,
+  },
+  keyboardView: {
+    flex: 1,
   },
   content: {
-    padding: 24,
     flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 40,
     justifyContent: 'center',
   },
   logoSection: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 24,
   },
-  iconContainer: {
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.44,
-    shadowRadius: 10.32,
-    elevation: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 50,
-    width: 100,
-    height: 100,
+  logoGradient: {
+    width: 72,
+    height: 72,
+    borderRadius: 20,
+    padding: 2,
+    shadowColor: '#667eea',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+  logoInner: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    overflow: 'hidden',
     padding: 10,
   },
   logoImage: {
@@ -264,67 +343,58 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   title: {
-    fontSize: 42,
+    fontSize: 36,
     fontWeight: '800',
-    textAlign: 'center',
-    marginTop: 20,
-    color: Colors.text.white,
+    color: '#FFFFFF',
+    marginTop: 16,
     letterSpacing: 1,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
   },
   subtitle: {
-    fontSize: 18,
-    textAlign: 'center',
-    color: 'rgba(255, 255, 255, 0.9)',
-    marginTop: 8,
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.7)',
+    marginTop: 4,
     fontWeight: '500',
-    letterSpacing: 0.5,
   },
   glassCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     borderRadius: 24,
-    padding: 32,
+    overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 12,
-    },
-    shadowOpacity: 0.58,
-    shadowRadius: 16.00,
-    elevation: 24,
+    borderColor: 'rgba(255,255,255,0.18)',
+  },
+  glassGradient: {
+    padding: 28,
   },
   formTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
+    fontSize: 26,
+    fontWeight: '700',
     color: '#FFFFFF',
-    marginBottom: 8,
     textAlign: 'center',
+    marginBottom: 6,
   },
   formSubtitle: {
-    fontSize: 15,
-    color: 'rgba(255, 255, 255, 0.9)',
-    marginBottom: 32,
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.7)',
     textAlign: 'center',
+    marginBottom: 28,
   },
   form: {
     width: '100%',
   },
   inputContainer: {
+    marginBottom: 16,
+    borderRadius: 14,
+    overflow: 'hidden',
+  },
+  inputGradient: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    borderRadius: 16,
-    marginBottom: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     height: 56,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
   },
   inputIcon: {
-    paddingLeft: 20,
+    paddingLeft: 18,
     paddingRight: 12,
   },
   input: {
@@ -332,40 +402,46 @@ const styles = StyleSheet.create({
     height: '100%',
     fontSize: 16,
     color: '#FFFFFF',
-    paddingRight: 20,
-  },
-  loginButton: {
-    marginTop: 12,
-    marginBottom: 24,
-    borderRadius: 16,
-    height: 56,
-    shadowColor: Colors.primary.main,
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 10,
+    paddingRight: 16,
   },
   showHideButton: {
     paddingHorizontal: 16,
     height: '100%',
     justifyContent: 'center',
   },
-  linkContainer: {
+  forgotPassword: {
+    alignSelf: 'flex-end',
+    marginBottom: 20,
+  },
+  forgotPasswordText: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  signInButton: {
+    borderRadius: 14,
+    overflow: 'hidden',
+    marginBottom: 24,
+    shadowColor: '#667eea',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  signInGradient: {
+    height: 56,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  linkText: {
-    color: Colors.text.secondary,
-    fontSize: 15,
-  },
-  linkTextBold: {
-    color: Colors.primary.main,
-    fontSize: 15,
+  signInText: {
+    color: '#FFFFFF',
+    fontSize: 17,
     fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  signInIcon: {
+    marginLeft: 8,
   },
   separatorContainer: {
     flexDirection: 'row',
@@ -375,12 +451,12 @@ const styles = StyleSheet.create({
   separatorLine: {
     flex: 1,
     height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255,255,255,0.15)',
   },
   separatorText: {
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: 'rgba(255,255,255,0.5)',
     paddingHorizontal: 16,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
   },
   googleButton: {
@@ -388,25 +464,39 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 14,
     height: 56,
-    marginBottom: 24,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
     elevation: 5,
   },
-  googleIconContainer: {
+  googleIcon: {
+    width: 22,
+    height: 22,
     marginRight: 12,
   },
   googleButtonText: {
     color: '#333333',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
+  },
+  signUpContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 28,
+    marginBottom: 20,
+  },
+  signUpText: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 15,
+  },
+  signUpLink: {
+    color: '#667eea',
+    fontSize: 15,
+    fontWeight: '700',
   },
 });
 

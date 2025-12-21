@@ -34,6 +34,10 @@ const ModelDownloadScreen = ({ navigation }: any) => {
     }, []);
 
     const checkStatus = async () => {
+        // Refresh network state
+        await NetworkService.refresh();
+        setNetworkState(NetworkService.getCurrentState());
+
         const info = await ModelDownloadService.getModelInfo();
         setModelInfo(info);
 
@@ -183,12 +187,17 @@ const ModelDownloadScreen = ({ navigation }: any) => {
                                     <Text style={[styles.reqTitle, { color: themedColors.text.primary }]}>Requirements:</Text>
                                     <View style={styles.reqItem}>
                                         <Ionicons
-                                            name={storageCheck?.hasSpace ? "checkmark-circle-outline" : "alert-circle-outline"}
+                                            name={storageCheck === null ? "hourglass-outline" : (storageCheck.hasSpace ? "checkmark-circle-outline" : "alert-circle-outline")}
                                             size={20}
-                                            color={storageCheck?.hasSpace ? themedColors.success.main : themedColors.error.main}
+                                            color={storageCheck === null ? themedColors.text.secondary : (storageCheck.hasSpace ? themedColors.success.main : themedColors.error.main)}
                                         />
                                         <Text style={[styles.reqText, { color: themedColors.text.secondary }]}>
-                                            Storage: {storageCheck ? formatBytes(storageCheck.available) : 'Checking...'} available
+                                            Storage: {storageCheck === null
+                                                ? 'Checking...'
+                                                : storageCheck.available > 0
+                                                    ? `${formatBytes(storageCheck.available)} available`
+                                                    : 'Requires Dev Build to check'
+                                            }
                                         </Text>
                                     </View>
                                     <View style={styles.reqItem}>
@@ -198,7 +207,10 @@ const ModelDownloadScreen = ({ navigation }: any) => {
                                             color={networkState.isConnected ? themedColors.success.main : themedColors.error.main}
                                         />
                                         <Text style={[styles.reqText, { color: themedColors.text.secondary }]}>
-                                            Network: {networkState.isConnected ? (networkState.connectionType === 'wifi' ? 'WiFi' : 'Cellular') : 'Offline'}
+                                            Network: {networkState.isConnected
+                                                ? (networkState.connectionType === 'wifi' ? 'WiFi Connected' : 'Cellular Connected')
+                                                : 'Offline - Connect to download'
+                                            }
                                         </Text>
                                     </View>
                                 </View>
@@ -207,10 +219,10 @@ const ModelDownloadScreen = ({ navigation }: any) => {
                                     style={[
                                         styles.downloadButton,
                                         { backgroundColor: themedColors.primary.main },
-                                        (!storageCheck?.hasSpace || !networkState.isConnected) && styles.disabledButton
+                                        (!networkState.isConnected) && styles.disabledButton
                                     ]}
                                     onPress={handleDownload}
-                                    disabled={!storageCheck?.hasSpace || !networkState.isConnected}
+                                    disabled={!networkState.isConnected}
                                 >
                                     <Ionicons name="download-outline" size={24} color="#FFF" />
                                     <Text style={styles.downloadButtonText}>Download Model</Text>

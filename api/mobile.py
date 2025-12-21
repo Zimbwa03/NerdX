@@ -1883,7 +1883,7 @@ def upload_image():
         return jsonify({'success': False, 'message': f'Failed to process image: {error_message}'}), 500
 
 # ============================================================================
-# TEACHER MODE ENDPOINTS (Combined Science Chatbot)
+# TEACHER MODE ENDPOINTS (Multi-Subject Chatbot - Math, Science, etc.)
 # ============================================================================
 
 @mobile_bp.route('/teacher/start', methods=['POST'])
@@ -1892,7 +1892,7 @@ def start_teacher_mode():
     """Start Teacher Mode session"""
     try:
         data = request.get_json()
-        subject = data.get('subject', '')  # Biology, Chemistry, Physics
+        subject = data.get('subject', '')  # Mathematics, Biology, Chemistry, Physics
         grade_level = data.get('grade_level', '')  # Form 1-2, O-Level, A-Level
         topic = data.get('topic', '')  # Optional topic
         
@@ -1909,14 +1909,15 @@ def start_teacher_mode():
                 'message': f'Insufficient credits. Required: {credit_cost}'
             }), 400
         
-        # Start teacher mode session
-        from services.combined_science_teacher_service import CombinedScienceTeacherService
-        teacher_service = CombinedScienceTeacherService()
-        
         # Initialize session
         session_id = str(uuid.uuid4())
         from utils.session_manager import session_manager
-        session_manager.set_data(g.current_user_id, 'science_teacher', {
+        
+        # Determine which service to use based on subject
+        is_mathematics = subject.lower() == 'mathematics' or subject.lower() == 'math'
+        session_key = 'math_teacher' if is_mathematics else 'science_teacher'
+        
+        session_manager.set_data(g.current_user_id, session_key, {
             'active': True,
             'session_id': session_id,
             'subject': subject,
@@ -1929,10 +1930,18 @@ def start_teacher_mode():
         # Deduct credits
         deduct_credits(g.current_user_id, credit_cost, 'teacher_mode_start', f'Started Teacher Mode: {subject}')
         
-        # Get initial message from teacher
-        initial_message = f"👨‍🏫 Welcome to Teacher Mode!\n\nI'm your {subject} teacher. How can I help you learn today?"
-        if topic:
-            initial_message += f"\n\nWe'll be focusing on: {topic}"
+        # Get appropriate initial message based on subject
+        if is_mathematics:
+            subject_emoji = '📐'
+            initial_message = f"{subject_emoji} Welcome to Mathematics Teacher Mode!\n\nI'm your AI Mathematics tutor. I use proven teaching methods including:\n\n• **Socratic Method** - Guiding you through questions\n• **Worked Examples** - Step-by-step solutions\n• **Progressive Difficulty** - Building from basics\n• **Real-World Applications** - Making math meaningful\n\nHow can I help you learn today?"
+            if topic:
+                initial_message += f"\n\n📖 We'll be focusing on: **{topic}**"
+        else:
+            # Science subjects (Biology, Chemistry, Physics)
+            subject_emoji = '🧬' if subject.lower() == 'biology' else ('⚗️' if subject.lower() == 'chemistry' else '⚛️')
+            initial_message = f"{subject_emoji} Welcome to Teacher Mode!\n\nI'm your {subject} teacher. How can I help you learn today?"
+            if topic:
+                initial_message += f"\n\nWe'll be focusing on: {topic}"
         
         return jsonify({
             'success': True,
@@ -1962,11 +1971,21 @@ def send_teacher_message():
         if not message:
             return jsonify({'success': False, 'message': 'Message is required'}), 400
         
+        from utils.session_manager import session_manager
+        
+        # Try to find active session (Math or Science)
+        math_session = session_manager.get_data(g.current_user_id, 'math_teacher')
+        science_session = session_manager.get_data(g.current_user_id, 'science_teacher')
+        
+        # Determine which session is active
+        is_mathematics = math_session and math_session.get('active')
+        session_key = 'math_teacher' if is_mathematics else 'science_teacher'
+        session_data = math_session if is_mathematics else science_session
+        
         # Check if user wants to exit
         exit_commands = ['exit', 'quit', 'back', 'main menu', 'leave']
         if message.lower() in exit_commands:
-            from utils.session_manager import session_manager
-            session_manager.clear_session(g.current_user_id, 'science_teacher')
+            session_manager.clear_session(g.current_user_id, session_key)
             return jsonify({
                 'success': True,
                 'data': {
@@ -1985,44 +2004,40 @@ def send_teacher_message():
                 'message': f'Insufficient credits. Required: {credit_cost}'
             }), 400
         
-        # Get session data
-        from utils.session_manager import session_manager
-        session_data = session_manager.get_data(g.current_user_id, 'science_teacher')
-        
         if not session_data or not session_data.get('active'):
             return jsonify({'success': False, 'message': 'No active teacher session'}), 400
         
-        # Get AI response using the service's handle_conversation method
-        from services.combined_science_teacher_service import CombinedScienceTeacherService
-        teacher_service = CombinedScienceTeacherService()
-        
-        # Use the service's handle_conversation which handles credits and AI response
-        # We need to get the response directly, so we'll call the internal method
-        session_data = session_manager.get_data(g.current_user_id, 'science_teacher')
-        if not session_data or not session_data.get('active'):
-            return jsonify({'success': False, 'message': 'No active teacher session'}), 400
-        
-        # Get AI response using internal method
+        # Get AI response based on subject
         conversation_history = session_data.get('conversation_history', [])
         conversation_history.append({'role': 'user', 'content': message})
         
-        # Get response from Gemini
-        response_text = teacher_service._get_gemini_teaching_response(
-            g.current_user_id, message, session_data
-        )
+        if is_mathematics:
+            # Use Mathematics Teacher Service
+            from services.mathematics_teacher_service import MathematicsTeacherService
+            teacher_service = MathematicsTeacherService()
+            response_text = teacher_service._get_teaching_response(g.current_user_id, message, session_data)
+        else:
+            # Use Combined Science Teacher Service
+            from services.combined_science_teacher_service import CombinedScienceTeacherService
+            teacher_service = CombinedScienceTeacherService()
+            response_text = teacher_service._get_gemini_teaching_response(
+                g.current_user_id, message, session_data
+            )
         
         conversation_history.append({'role': 'assistant', 'content': response_text})
         
         # Update session
         session_data['conversation_history'] = conversation_history[-20:]  # Keep last 20
-        session_manager.set_data(g.current_user_id, 'science_teacher', session_data)
+        session_manager.set_data(g.current_user_id, session_key, session_data)
         
-        # Credits already deducted by check_and_deduct_credits in handle_conversation logic
-        # But we need to deduct here since we're bypassing handle_conversation
+        # Deduct credits
         deduct_credits(g.current_user_id, credit_cost, 'teacher_mode_followup', 'Teacher Mode conversation')
         
-        # Clean formatting
-        clean_response = teacher_service._clean_whatsapp_formatting(response_text)
+        # Clean formatting (both services should have this method)
+        if hasattr(teacher_service, '_clean_whatsapp_formatting'):
+            clean_response = teacher_service._clean_whatsapp_formatting(response_text)
+        else:
+            clean_response = response_text
         
         return jsonify({
             'success': True,
@@ -2036,6 +2051,7 @@ def send_teacher_message():
         logger.error(f"Send teacher message error: {e}", exc_info=True)
         error_message = str(e) if str(e) else 'Server error'
         return jsonify({'success': False, 'message': f'AI service error: {error_message}'}), 500
+
 
 @mobile_bp.route('/teacher/generate-notes', methods=['POST'])
 @require_auth
@@ -4109,10 +4125,10 @@ def generate_flashcards():
             }), 400
         
         # Validate subject
-        if subject not in ['Biology', 'Chemistry', 'Physics']:
+        if subject not in ['Biology', 'Chemistry', 'Physics', 'Mathematics']:
             return jsonify({
                 'success': False,
-                'message': 'Invalid subject. Must be Biology, Chemistry, or Physics'
+                'message': 'Invalid subject. Must be Biology, Chemistry, Physics, or Mathematics'
             }), 400
         
         from services.flashcard_service import flashcard_service
@@ -4199,3 +4215,37 @@ def generate_single_flashcard():
         logger.error(f"Generate single flashcard error: {e}", exc_info=True)
         return jsonify({'success': False, 'message': 'Failed to generate flashcard'}), 500
 
+@mobile_bp.route('/math/notes/generate', methods=['POST'])
+def generate_math_notes():
+    """Generate professional math notes using DeepSeek AI"""
+    try:
+        data = request.get_json()
+        topic = data.get('topic', '')
+        grade_level = data.get('grade_level', 'O-Level')
+        
+        if not topic:
+            return jsonify({'success': False, 'message': 'Topic is required'}), 400
+            
+        from services.math_notes_service import math_notes_service
+        notes = math_notes_service.generate_topic_notes(topic, grade_level)
+        
+        if notes:
+            return jsonify({'success': True, 'data': notes}), 200
+        else:
+            return jsonify({'success': False, 'message': 'Failed to generate math notes'}), 500
+            
+    except Exception as e:
+        logger.error(f"Generate math notes error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Internal server error'}), 500
+
+@mobile_bp.route('/math/notes/topics', methods=['GET'])
+def get_math_topics():
+    """Get list of available math topics"""
+    # Fallback/Default topics if none provided by a database
+    from constants import MATHEMATICS_TOPICS
+    return jsonify({
+        'success': True, 
+        'data': {
+            'topics': list(MATHEMATICS_TOPICS.keys()) if isinstance(MATHEMATICS_TOPICS, dict) else MATHEMATICS_TOPICS
+        }
+    }), 200

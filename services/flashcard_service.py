@@ -121,12 +121,6 @@ class FlashcardService:
             logger.error(f"Error generating single flashcard: {e}")
             return self._generate_single_fallback(topic, index)
     
-    def _create_batch_prompt(self, subject: str, topic: str, notes_content: str, count: int) -> str:
-        """Create prompt for batch flashcard generation"""
-        
-        # Truncate notes if too long (keep first 8000 chars)
-        truncated_notes = notes_content[:8000] if len(notes_content) > 8000 else notes_content
-        
         return f"""You are an expert ZIMSEC O-Level {subject} teacher creating educational flashcards for students.
 
 TOPIC: {topic}
@@ -138,12 +132,14 @@ NOTES CONTENT TO BASE FLASHCARDS ON:
 TASK: Generate exactly {count} educational flashcards that comprehensively cover this topic.
 
 REQUIREMENTS:
-1. Each flashcard must test understanding, not just memorization
-2. Questions should range from easy to difficult
-3. Distribute cards across ALL sections of the topic
-4. Answers should be concise but complete (2-4 sentences max)
-5. Include a helpful hint for harder questions
-6. Make flashcards engaging and relevant to ZIMSEC exams
+1. Each flashcard must test understanding, not just memorization.
+2. For Mathematics, include step-by-step logic in the answer where appropriate.
+3. Use KaTeX for ALL mathematical formulas and expressions (use $[formula]$ for inline and $$[formula]$$ for blocks).
+4. Questions should range from easy to difficult.
+5. Distribute cards across ALL sections of the topic.
+6. Answers should be concise but complete (2-4 sentences max).
+7. Include a helpful hint for harder questions.
+8. Make flashcards engaging and relevant to ZIMSEC exams.
 
 DIFFICULTY DISTRIBUTION:
 - 30% Easy: Definitions, simple facts
@@ -195,6 +191,10 @@ REQUIRED DIFFICULTY: {difficulty}
 
 NOTES EXCERPT:
 {truncated_notes[:3000]}
+
+REQUIREMENTS FOR MATHEMATICS:
+- Use KaTeX for ALL mathematical formulas ($[formula]$ or $$[formula]$$).
+- Focus on logic and problem-solving steps.
 
 Generate ONE flashcard in this exact JSON format:
 {{

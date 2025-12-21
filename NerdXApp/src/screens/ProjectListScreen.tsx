@@ -147,7 +147,7 @@ const ProjectListScreen: React.FC = () => {
                         </View>
                         <Text style={[styles.emptyTitle, { color: themedColors.text.primary }]}>No Projects Yet</Text>
                         <Text style={[styles.emptyText, { color: themedColors.text.secondary }]}>
-                            Start your first ZIMSEC School-Based Project and get AI-powered guidance!
+                            Start your first School-Based Project and get AI-powered guidance!
                         </Text>
                         <TouchableOpacity style={styles.createButton} onPress={handleNewProject}>
                             <LinearGradient

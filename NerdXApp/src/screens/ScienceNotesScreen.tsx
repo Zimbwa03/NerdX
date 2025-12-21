@@ -141,7 +141,7 @@ const ScienceNotesScreen: React.FC = () => {
                         <View style={styles.topicsContainer}>
                             <Text style={[styles.sectionTitle, { color: '#FFFFFF' }]}>{activeTab} Topics</Text>
                             <Text style={[styles.sectionSubtitle, { color: 'rgba(255,255,255,0.85)' }]}>
-                                Detailed notes aligned with ZIMSEC syllabus
+                                Detailed notes aligned with O-Level syllabus
                             </Text>
 
                             {topics.map((topic, index) => (

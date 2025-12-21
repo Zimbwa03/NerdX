@@ -121,7 +121,7 @@ export const projectApi = {
             const FileSystem = require('expo-file-system');
             const Sharing = require('expo-sharing');
 
-            const filename = `ZIMSEC_Project_${projectId}_${Date.now()}.pdf`;
+            const filename = `Project_${projectId}_${Date.now()}.pdf`;
             const fileUri = `${FileSystem.documentDirectory}${filename}`;
 
             // Write file

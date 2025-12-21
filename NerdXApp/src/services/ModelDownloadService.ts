@@ -1,13 +1,21 @@
 // Model Download Service for Phi-3 model management
-// Note: react-native-fs requires a development build and won't work in Expo Go
-let RNFS: any = null;
-try {
-    RNFS = require('react-native-fs').default;
-} catch (error) {
-    console.warn('react-native-fs not available - model download features disabled (requires development build)');
-}
+// Uses expo-file-system as primary (works in all builds) with react-native-fs as enhanced option
+import * as ExpoFileSystem from 'expo-file-system';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetworkService from './NetworkService';
+
+// Try to import react-native-fs for enhanced download features (background downloads, progress)
+let RNFS: any = null;
+let RNFS_AVAILABLE = false;
+try {
+    RNFS = require('react-native-fs').default;
+    if (RNFS && typeof RNFS.getFSInfo === 'function') {
+        RNFS_AVAILABLE = true;
+        console.log('✅ react-native-fs loaded successfully');
+    }
+} catch (error) {
+    console.warn('react-native-fs not available - using expo-file-system fallback');
+}
 
 export interface DownloadProgress {
     bytesWritten: number;
@@ -66,20 +74,38 @@ class ModelDownloadService {
 
     // Get model storage path
     private getModelPath(): string {
-        if (!RNFS) return '';
-        return `${RNFS.DocumentDirectoryPath}/models/phi3-mini-4k-instruct.onnx`;
+        if (RNFS_AVAILABLE && RNFS) {
+            return `${RNFS.DocumentDirectoryPath}/models/phi3-mini-4k-instruct.onnx`;
+        }
+        return `${ExpoFileSystem.documentDirectory}models/phi3-mini-4k-instruct.onnx`;
+    }
+
+    // Get model data path
+    private getModelDataPath(): string {
+        if (RNFS_AVAILABLE && RNFS) {
+            return `${RNFS.DocumentDirectoryPath}/models/phi3-mini-4k-instruct.onnx.data`;
+        }
+        return `${ExpoFileSystem.documentDirectory}models/phi3-mini-4k-instruct.onnx.data`;
     }
 
     // Check if model is already downloaded (both files must exist)
     public async isModelDownloaded(): Promise<boolean> {
-        if (!RNFS) return false; // RNFS not available in Expo Go
         try {
             const modelPath = this.getModelPath();
             const modelDataPath = this.getModelDataPath();
 
-            // Check both files exist
-            const mainExists = await RNFS.exists(modelPath);
-            const dataExists = await RNFS.exists(modelDataPath);
+            let mainExists = false;
+            let dataExists = false;
+
+            if (RNFS_AVAILABLE && RNFS) {
+                mainExists = await RNFS.exists(modelPath);
+                dataExists = await RNFS.exists(modelDataPath);
+            } else {
+                const mainInfo = await ExpoFileSystem.getInfoAsync(modelPath);
+                const dataInfo = await ExpoFileSystem.getInfoAsync(modelDataPath);
+                mainExists = mainInfo.exists;
+                dataExists = dataInfo.exists;
+            }
 
             if (!mainExists || !dataExists) {
                 console.log(`Model check: main=${mainExists}, data=${dataExists}`);
@@ -90,6 +116,7 @@ class ModelDownloadService {
             const modelInfo = await this.getModelInfo();
             return modelInfo !== null && modelInfo.version === PHI3_MODEL_VERSION;
         } catch (error) {
+
             console.error('Error checking model download status:', error);
             return false;
         }
@@ -109,28 +136,56 @@ class ModelDownloadService {
 
     // Check available storage space
     public async checkStorageSpace(): Promise<{ available: number; required: number; hasSpace: boolean }> {
-        if (!RNFS) return { available: 0, required: PHI3_MODEL_SIZE, hasSpace: false };
-        try {
-            const freeSpace = await RNFS.getFSInfo();
-            const availableSpace = freeSpace.freeSpace;
-            const requiredSpace = PHI3_MODEL_SIZE;
+        console.log('📊 Checking storage space...');
+        console.log(`   RNFS_AVAILABLE: ${RNFS_AVAILABLE}`);
 
-            return {
-                available: availableSpace,
-                required: requiredSpace,
-                hasSpace: availableSpace > requiredSpace * 1.2, // 20% buffer
-            };
+        try {
+            // Try react-native-fs first (better accuracy on native builds)
+            if (RNFS_AVAILABLE && RNFS) {
+                try {
+                    const freeSpace = await RNFS.getFSInfo();
+                    console.log('   RNFS.getFSInfo result:', freeSpace);
+                    const availableSpace = freeSpace?.freeSpace || 0;
+                    if (availableSpace > 0) {
+                        return {
+                            available: availableSpace,
+                            required: PHI3_MODEL_SIZE,
+                            hasSpace: availableSpace > PHI3_MODEL_SIZE * 1.2,
+                        };
+                    }
+                } catch (rnfsError) {
+                    console.warn('   RNFS.getFSInfo failed:', rnfsError);
+                }
+            }
+
+            // Use expo-file-system (works in all builds including Expo Go)
+            console.log('   Trying expo-file-system...');
+            const freeSpace = await ExpoFileSystem.getFreeDiskStorageAsync();
+            console.log('   ExpoFileSystem.getFreeDiskStorageAsync result:', freeSpace);
+
+            if (freeSpace !== null && freeSpace !== undefined && freeSpace > 0) {
+                return {
+                    available: freeSpace,
+                    required: PHI3_MODEL_SIZE,
+                    hasSpace: freeSpace > PHI3_MODEL_SIZE * 1.2,
+                };
+            }
+
+            // If we still don't have storage info, return a large placeholder to allow download attempt
+            console.warn('   Could not determine storage space, allowing download attempt');
+            return { available: 10_000_000_000, required: PHI3_MODEL_SIZE, hasSpace: true };
         } catch (error) {
             console.error('Error checking storage space:', error);
-            return { available: 0, required: PHI3_MODEL_SIZE, hasSpace: false };
+            // Return a permissive value to allow download attempt - download will fail if no space
+            return { available: 10_000_000_000, required: PHI3_MODEL_SIZE, hasSpace: true };
         }
     }
 
     // Download model with progress tracking - downloads BOTH files
     public async downloadModel(): Promise<void> {
-        if (!RNFS) {
-            throw new Error('Model download not available in Expo Go. Please use a development build.');
-        }
+        console.log('📥 Starting model download...');
+        console.log(`   RNFS_AVAILABLE: ${RNFS_AVAILABLE}`);
+
         // Check network connectivity
         if (!NetworkService.canDownloadLargeFiles()) {
             throw new Error('No network connection available for download');
@@ -146,6 +201,16 @@ class ModelDownloadService {
             );
         }
 
+        // Use RNFS if available, otherwise fall back to expo-file-system
+        if (RNFS_AVAILABLE && RNFS) {
+            await this.downloadWithRNFS();
+        } else {
+            await this.downloadWithExpoFS();
+        }
+    }
+
+    // Download using react-native-fs (with progress tracking)
+    private async downloadWithRNFS(): Promise<void> {
         const modelPath = this.getModelPath();
         const modelDataPath = this.getModelDataPath();
         const modelDir = modelPath.substring(0, modelPath.lastIndexOf('/'));
@@ -199,7 +264,7 @@ class ModelDownloadService {
             await AsyncStorage.setItem(STORAGE_KEYS.MODEL_INFO, JSON.stringify(modelInfo));
             await AsyncStorage.setItem(STORAGE_KEYS.MODEL_VERSION, PHI3_MODEL_VERSION);
 
-            console.log('✅ Both model files downloaded successfully!');
+            console.log('✅ Both model files downloaded successfully with RNFS!');
             console.log(`   Main file: ${mainStat.size} bytes`);
             console.log(`   Data file: ${dataStat.size} bytes`);
 
@@ -210,6 +275,83 @@ class ModelDownloadService {
             throw error;
         }
     }
+
+    // Download using expo-file-system (fallback, basic progress)
+    private async downloadWithExpoFS(): Promise<void> {
+        console.log('📥 Using expo-file-system for download...');
+
+        const modelDir = `${ExpoFileSystem.documentDirectory}models/`;
+        const modelPath = `${modelDir}phi3-mini-4k-instruct.onnx`;
+        const modelDataPath = `${modelDir}phi3-mini-4k-instruct.onnx.data`;
+
+        // Create models directory
+        const dirInfo = await ExpoFileSystem.getInfoAsync(modelDir);
+        if (!dirInfo.exists) {
+            await ExpoFileSystem.makeDirectoryAsync(modelDir, { intermediates: true });
+        }
+
+        try {
+            // Download main model file
+            console.log('📥 Downloading main model file with ExpoFS...');
+            this.notifyProgressListeners({ bytesWritten: 0, contentLength: PHI3_MODEL_SIZE, progress: 0 });
+
+            const mainDownload = await ExpoFileSystem.downloadAsync(
+                PHI3_MODEL_URL,
+                modelPath
+            );
+
+            if (mainDownload.status !== 200) {
+                throw new Error(`Main file download failed with status: ${mainDownload.status}`);
+            }
+
+            this.notifyProgressListeners({ bytesWritten: PHI3_MODEL_SIZE * 0.05, contentLength: PHI3_MODEL_SIZE, progress: 5 });
+
+            // Download data file
+            console.log('📥 Downloading model data file with ExpoFS...');
+            const dataDownload = await ExpoFileSystem.downloadAsync(
+                PHI3_MODEL_DATA_URL,
+                modelDataPath
+            );
+
+            if (dataDownload.status !== 200) {
+                throw new Error(`Data file download failed with status: ${dataDownload.status}`);
+            }
+
+            this.notifyProgressListeners({ bytesWritten: PHI3_MODEL_SIZE, contentLength: PHI3_MODEL_SIZE, progress: 100 });
+
+            // Verify files
+            const mainInfo = await ExpoFileSystem.getInfoAsync(modelPath);
+            const dataInfo = await ExpoFileSystem.getInfoAsync(modelDataPath);
+
+            if (!mainInfo.exists || !dataInfo.exists) {
+                throw new Error('Download verification failed: files missing');
+            }
+
+            // Save model info
+            const modelInfo: ModelInfo = {
+                version: PHI3_MODEL_VERSION,
+                size: (mainInfo.size || 0) + (dataInfo.size || 0),
+                downloadedAt: new Date().toISOString(),
+                modelPath: modelPath,
+            };
+            await AsyncStorage.setItem(STORAGE_KEYS.MODEL_INFO, JSON.stringify(modelInfo));
+            await AsyncStorage.setItem(STORAGE_KEYS.MODEL_VERSION, PHI3_MODEL_VERSION);
+
+            console.log('✅ Model files downloaded successfully with ExpoFS!');
+
+        } catch (error) {
+            console.error('ExpoFS download failed:', error);
+            // Clean up
+            try {
+                await ExpoFileSystem.deleteAsync(modelPath, { idempotent: true });
+                await ExpoFileSystem.deleteAsync(modelDataPath, { idempotent: true });
+            } catch (cleanupError) {
+                console.warn('Cleanup failed:', cleanupError);
+            }
+            throw error;
+        }
+    }
+
 
     // Helper method to download a single file with progress
     private async downloadSingleFile(
@@ -230,7 +372,7 @@ class ModelDownloadService {
                 progressInterval: 500,
                 progressDivider: 1,
                 begin: (res: { contentLength: number; jobId: number }) => {
-                    console.log(`Download started: ${url}`);
+                    console.log(`Download started: ${url} `);
                     console.log(`Expected size: ${res.contentLength} bytes`);
                     this.downloadJobId = res.jobId;
                 },
@@ -254,7 +396,7 @@ class ModelDownloadService {
                         console.log(`✅ File downloaded: ${filePath} (${result.bytesWritten} bytes)`);
                         resolve();
                     } else {
-                        reject(new Error(`Download failed with status code: ${result.statusCode}`));
+                        reject(new Error(`Download failed with status code: ${result.statusCode} `));
                     }
                 })
                 .catch((error: Error) => {
@@ -264,27 +406,27 @@ class ModelDownloadService {
         });
     }
 
-    // Get model data file path
-    private getModelDataPath(): string {
-        if (!RNFS) return '';
-        return `${RNFS.DocumentDirectoryPath}/models/phi3-mini-4k-instruct.onnx.data`;
-    }
-
     // Clean up partial downloads
     private async cleanupPartialDownload(): Promise<void> {
-        if (!RNFS) return;
         try {
             const modelPath = this.getModelPath();
             const modelDataPath = this.getModelDataPath();
 
-            if (await RNFS.exists(modelPath)) {
-                await RNFS.unlink(modelPath);
-                console.log('Cleaned up partial model file');
+            if (RNFS_AVAILABLE && RNFS) {
+                if (await RNFS.exists(modelPath)) {
+                    await RNFS.unlink(modelPath);
+                    console.log('Cleaned up partial model file');
+                }
+                if (await RNFS.exists(modelDataPath)) {
+                    await RNFS.unlink(modelDataPath);
+                    console.log('Cleaned up partial data file');
+                }
+            } else {
+                await ExpoFileSystem.deleteAsync(modelPath, { idempotent: true });
+                await ExpoFileSystem.deleteAsync(modelDataPath, { idempotent: true });
+                console.log('Cleaned up partial files with ExpoFS');
             }
-            if (await RNFS.exists(modelDataPath)) {
-                await RNFS.unlink(modelDataPath);
-                console.log('Cleaned up partial data file');
-            }
+
         } catch (error) {
             console.error('Error during cleanup:', error);
         }
@@ -312,33 +454,37 @@ class ModelDownloadService {
 
     // Cancel download
     public async cancelDownload(): Promise<void> {
-        if (!RNFS) return;
-        if (this.downloadJobId !== null) {
+        if (RNFS_AVAILABLE && RNFS && this.downloadJobId !== null) {
             await RNFS.stopDownload(this.downloadJobId);
             this.downloadJobId = null;
-
-            // Clean up partial downloads (both files)
-            await this.cleanupPartialDownload();
         }
+        // Clean up partial downloads (both files)
+        await this.cleanupPartialDownload();
     }
 
     // Delete downloaded model (both files)
     public async deleteModel(): Promise<void> {
-        if (!RNFS) return;
         try {
             const modelPath = this.getModelPath();
             const modelDataPath = this.getModelDataPath();
 
-            // Delete main model file
-            if (await RNFS.exists(modelPath)) {
-                await RNFS.unlink(modelPath);
-                console.log('Deleted main model file');
-            }
+            if (RNFS_AVAILABLE && RNFS) {
+                // Delete main model file
+                if (await RNFS.exists(modelPath)) {
+                    await RNFS.unlink(modelPath);
+                    console.log('Deleted main model file');
+                }
 
-            // Delete data file
-            if (await RNFS.exists(modelDataPath)) {
-                await RNFS.unlink(modelDataPath);
-                console.log('Deleted model data file');
+                // Delete data file
+                if (await RNFS.exists(modelDataPath)) {
+                    await RNFS.unlink(modelDataPath);
+                    console.log('Deleted model data file');
+                }
+            } else {
+                // Use ExpoFS
+                await ExpoFileSystem.deleteAsync(modelPath, { idempotent: true });
+                await ExpoFileSystem.deleteAsync(modelDataPath, { idempotent: true });
+                console.log('Deleted model files with ExpoFS');
             }
 
             // Clear model info

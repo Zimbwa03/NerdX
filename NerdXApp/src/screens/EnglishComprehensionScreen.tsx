@@ -167,7 +167,7 @@ const EnglishComprehensionScreen: React.FC = () => {
                 </View>
                 <Text style={[styles.welcomeTitle, { color: themedColors.text.primary }]}>Master Comprehension</Text>
                 <Text style={[styles.welcomeText, { color: themedColors.text.secondary }]}>
-                  Practice with AI-generated passages tailored to the ZIMSEC syllabus.
+                  Practice with AI-generated passages tailored to the O-Level syllabus.
                   Improve your reading and analytical skills.
                 </Text>
 

@@ -376,7 +376,6 @@ const DashboardScreen: React.FC = () => {
             <MotivationalSlider intervalMs={3000} showCategory={true} showAuthor={true} />
 
             {renderDailyReviewWidget()}
-            {renderProgressWidget()}
 
             <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>Learning Hub</Text>
 

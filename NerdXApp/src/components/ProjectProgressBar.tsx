@@ -7,7 +7,7 @@ interface ProjectProgressBarProps {
     compact?: boolean;
 }
 
-const ZIMSEC_STAGES = [
+const PROJECT_STAGES = [
     { key: 'Selection', label: 'Selection', order: 1 },
     { key: 'Investigation', label: 'Investigation', order: 2 },
     { key: 'Design', label: 'Design', order: 3 },
@@ -18,8 +18,8 @@ const ZIMSEC_STAGES = [
 ];
 
 const ProjectProgressBar: React.FC<ProjectProgressBarProps> = ({ currentStage, compact = false }) => {
-    const currentStageIndex = ZIMSEC_STAGES.findIndex(s => s.key === currentStage);
-    const progress = currentStageIndex >= 0 ? ((currentStageIndex + 1) / ZIMSEC_STAGES.length) * 100 : 0;
+    const currentStageIndex = PROJECT_STAGES.findIndex(s => s.key === currentStage);
+    const progress = currentStageIndex >= 0 ? ((currentStageIndex + 1) / PROJECT_STAGES.length) * 100 : 0;
 
     if (compact) {
         return (
@@ -45,7 +45,7 @@ const ProjectProgressBar: React.FC<ProjectProgressBarProps> = ({ currentStage, c
             <Text style={styles.percentage}>{Math.round(progress)}% Complete</Text>
 
             <View style={styles.stagesContainer}>
-                {ZIMSEC_STAGES.map((stage, index) => {
+                {PROJECT_STAGES.map((stage, index) => {
                     const isCompleted = index < currentStageIndex;
                     const isCurrent = stage.key === currentStage;
 

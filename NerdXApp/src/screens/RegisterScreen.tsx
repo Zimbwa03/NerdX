@@ -1,4 +1,4 @@
-// Register Screen Component - Professional UI/UX Design
+// Register Screen Component - Premium UI/UX Design (Matching Login Screen)
 import React, { useState } from 'react';
 import {
   View,
@@ -11,19 +11,17 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  ImageBackground,
-  StatusBar,
   Dimensions,
   Image,
+  StatusBar,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../services/api/authApi';
-import { Colors } from '../theme/colors';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 const RegisterScreen: React.FC = () => {
   const [name, setName] = useState('');
@@ -39,8 +37,27 @@ const RegisterScreen: React.FC = () => {
   const navigation = useNavigation();
   const { login } = useAuth();
 
+  // Auto-format date of birth as DD/MM/YYYY
+  const formatDateOfBirth = (text: string) => {
+    // Remove all non-numeric characters
+    const cleaned = text.replace(/\D/g, '');
+
+    // Format with slashes
+    let formatted = '';
+    if (cleaned.length > 0) {
+      formatted = cleaned.substring(0, 2);
+    }
+    if (cleaned.length > 2) {
+      formatted += '/' + cleaned.substring(2, 4);
+    }
+    if (cleaned.length > 4) {
+      formatted += '/' + cleaned.substring(4, 8);
+    }
+
+    setDateOfBirth(formatted);
+  };
+
   const handleRegister = async () => {
-    // Validation
     if (!name || !surname || !password) {
       Alert.alert('Error', 'Name, surname, and password are required');
       return;
@@ -80,7 +97,6 @@ const RegisterScreen: React.FC = () => {
             text: 'OK',
             onPress: async () => {
               await login(response.user, response.token);
-              // Navigation will be handled by auth state change
             },
           },
         ]);
@@ -101,7 +117,6 @@ const RegisterScreen: React.FC = () => {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      // Placeholder for Google Sign-In
       Alert.alert(
         'Google Sign-Up',
         'Quickly create your account using Google. Proceed?',
@@ -111,7 +126,6 @@ const RegisterScreen: React.FC = () => {
             text: 'Continue',
             onPress: async () => {
               try {
-                // Mock user data
                 const mockUserInfo = {
                   email: 'google_user@gmail.com',
                   name: 'Google User',
@@ -143,16 +157,21 @@ const RegisterScreen: React.FC = () => {
   };
 
   return (
-    <ImageBackground
-      source={require('../../assets/images/default_background.png')}
-      style={styles.container}
-      resizeMode="cover"
-    >
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+
+      {/* Background Gradient - Matching Login */}
       <LinearGradient
-        colors={['rgba(0, 0, 0, 0.6)', 'rgba(0, 0, 0, 0.8)']}
-        style={styles.overlay}
+        colors={['#0F0C29', '#302B63', '#24243E']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.backgroundGradient}
       >
-        <StatusBar barStyle="light-content" />
+        {/* Decorative Circles */}
+        <View style={styles.decorativeCircle1} />
+        <View style={styles.decorativeCircle2} />
+        <View style={styles.decorativeCircle3} />
+
         <KeyboardAvoidingView
           style={styles.keyboardView}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -161,177 +180,255 @@ const RegisterScreen: React.FC = () => {
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
-            <View style={styles.headerSection}>
-              <View style={styles.iconContainer}>
-                <Image
-                  source={require('../../assets/images/logo.png')}
-                  style={styles.logoImage}
-                  resizeMode="contain"
-                />
-              </View>
+            {/* Logo Section */}
+            <View style={styles.logoSection}>
+              <LinearGradient
+                colors={['#667eea', '#764ba2']}
+                style={styles.logoGradient}
+              >
+                <View style={styles.logoInner}>
+                  <Image
+                    source={require('../../assets/images/logo.png')}
+                    style={styles.logoImage}
+                    resizeMode="contain"
+                  />
+                </View>
+              </LinearGradient>
               <Text style={styles.title}>Create Account</Text>
               <Text style={styles.subtitle}>Join NerdX Learning Platform</Text>
             </View>
 
-            <View style={styles.formContainer}>
-              <View style={styles.glassCard}>
+            {/* Registration Form Card */}
+            <View style={styles.glassCard}>
+              <LinearGradient
+                colors={['rgba(255,255,255,0.15)', 'rgba(255,255,255,0.05)']}
+                style={styles.glassGradient}
+              >
                 <Text style={styles.formTitle}>Sign Up</Text>
                 <Text style={styles.formSubtitle}>Fill in your details to get started</Text>
 
-                <View style={styles.inputRow}>
-                  <View style={[styles.inputWrapper, { flex: 1, marginRight: 8 }]}>
-                    <Ionicons name="person-outline" size={20} color={Colors.text.secondary} style={styles.inputIcon} />
-                    <TextInput
-                      style={styles.input}
-                      placeholder="First Name"
-                      placeholderTextColor={Colors.text.disabled}
-                      value={name}
-                      onChangeText={setName}
-                      autoCapitalize="words"
-                    />
+                <View style={styles.form}>
+                  {/* Name Row */}
+                  <View style={styles.inputRow}>
+                    <View style={[styles.inputContainer, { flex: 1, marginRight: 8 }]}>
+                      <LinearGradient
+                        colors={['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)']}
+                        style={styles.inputGradient}
+                      >
+                        <View style={styles.inputIcon}>
+                          <Ionicons name="person-outline" size={20} color="rgba(255,255,255,0.7)" />
+                        </View>
+                        <TextInput
+                          style={styles.input}
+                          placeholder="First Name"
+                          placeholderTextColor="rgba(255,255,255,0.5)"
+                          value={name}
+                          onChangeText={setName}
+                          autoCapitalize="words"
+                        />
+                      </LinearGradient>
+                    </View>
+                    <View style={[styles.inputContainer, { flex: 1, marginLeft: 8 }]}>
+                      <LinearGradient
+                        colors={['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)']}
+                        style={styles.inputGradient}
+                      >
+                        <View style={styles.inputIcon}>
+                          <Ionicons name="person-outline" size={20} color="rgba(255,255,255,0.7)" />
+                        </View>
+                        <TextInput
+                          style={styles.input}
+                          placeholder="Surname"
+                          placeholderTextColor="rgba(255,255,255,0.5)"
+                          value={surname}
+                          onChangeText={setSurname}
+                          autoCapitalize="words"
+                        />
+                      </LinearGradient>
+                    </View>
                   </View>
-                  <View style={[styles.inputWrapper, { flex: 1, marginLeft: 8 }]}>
-                    <Ionicons name="person-outline" size={20} color={Colors.text.secondary} style={styles.inputIcon} />
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Surname"
-                      placeholderTextColor={Colors.text.disabled}
-                      value={surname}
-                      onChangeText={setSurname}
-                      autoCapitalize="words"
-                    />
+
+                  {/* Email Input */}
+                  <View style={styles.inputContainer}>
+                    <LinearGradient
+                      colors={['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)']}
+                      style={styles.inputGradient}
+                    >
+                      <View style={styles.inputIcon}>
+                        <Ionicons name="mail-outline" size={20} color="rgba(255,255,255,0.7)" />
+                      </View>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Email Address"
+                        placeholderTextColor="rgba(255,255,255,0.5)"
+                        value={email}
+                        onChangeText={setEmail}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                      />
+                    </LinearGradient>
                   </View>
-                </View>
 
-                <View style={styles.inputWrapper}>
-                  <Ionicons name="mail-outline" size={20} color={Colors.text.secondary} style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Email Address"
-                    placeholderTextColor={Colors.text.disabled}
-                    value={email}
-                    onChangeText={setEmail}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                  />
-                </View>
+                  {/* Phone Input */}
+                  <View style={styles.inputContainer}>
+                    <LinearGradient
+                      colors={['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)']}
+                      style={styles.inputGradient}
+                    >
+                      <View style={styles.inputIcon}>
+                        <Ionicons name="call-outline" size={20} color="rgba(255,255,255,0.7)" />
+                      </View>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Phone Number (optional)"
+                        placeholderTextColor="rgba(255,255,255,0.5)"
+                        value={phoneNumber}
+                        onChangeText={setPhoneNumber}
+                        keyboardType="phone-pad"
+                      />
+                    </LinearGradient>
+                  </View>
 
-                <View style={styles.inputWrapper}>
-                  <Ionicons name="call-outline" size={20} color={Colors.text.secondary} style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Phone Number (optional)"
-                    placeholderTextColor={Colors.text.disabled}
-                    value={phoneNumber}
-                    onChangeText={setPhoneNumber}
-                    keyboardType="phone-pad"
-                  />
-                </View>
+                  {/* Date of Birth Input */}
+                  <View style={styles.inputContainer}>
+                    <LinearGradient
+                      colors={['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)']}
+                      style={styles.inputGradient}
+                    >
+                      <View style={styles.inputIcon}>
+                        <Ionicons name="calendar-outline" size={20} color="rgba(255,255,255,0.7)" />
+                      </View>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Date of Birth (DD/MM/YYYY)"
+                        placeholderTextColor="rgba(255,255,255,0.5)"
+                        value={dateOfBirth}
+                        onChangeText={formatDateOfBirth}
+                        keyboardType="number-pad"
+                        maxLength={10}
+                      />
+                    </LinearGradient>
+                  </View>
 
-                <View style={styles.inputWrapper}>
-                  <Ionicons name="calendar-outline" size={20} color={Colors.text.secondary} style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Date of Birth (DD/MM/YYYY)"
-                    placeholderTextColor={Colors.text.disabled}
-                    value={dateOfBirth}
-                    onChangeText={setDateOfBirth}
-                    keyboardType="numeric"
-                  />
-                </View>
+                  {/* Password Input */}
+                  <View style={styles.inputContainer}>
+                    <LinearGradient
+                      colors={['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)']}
+                      style={styles.inputGradient}
+                    >
+                      <View style={styles.inputIcon}>
+                        <Ionicons name="lock-closed-outline" size={20} color="rgba(255,255,255,0.7)" />
+                      </View>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Password"
+                        placeholderTextColor="rgba(255,255,255,0.5)"
+                        value={password}
+                        onChangeText={setPassword}
+                        secureTextEntry={!showPassword}
+                      />
+                      <TouchableOpacity
+                        onPress={() => setShowPassword(!showPassword)}
+                        style={styles.showHideButton}
+                      >
+                        <Ionicons
+                          name={showPassword ? "eye-outline" : "eye-off-outline"}
+                          size={20}
+                          color="rgba(255,255,255,0.7)"
+                        />
+                      </TouchableOpacity>
+                    </LinearGradient>
+                  </View>
 
-                <View style={styles.inputWrapper}>
-                  <Ionicons name="lock-closed-outline" size={20} color={Colors.text.secondary} style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Password"
-                    placeholderTextColor={Colors.text.disabled}
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry={!showPassword}
-                  />
+                  {/* Confirm Password Input */}
+                  <View style={styles.inputContainer}>
+                    <LinearGradient
+                      colors={['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)']}
+                      style={styles.inputGradient}
+                    >
+                      <View style={styles.inputIcon}>
+                        <Ionicons name="lock-closed-outline" size={20} color="rgba(255,255,255,0.7)" />
+                      </View>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Confirm Password"
+                        placeholderTextColor="rgba(255,255,255,0.5)"
+                        value={confirmPassword}
+                        onChangeText={setConfirmPassword}
+                        secureTextEntry={!showConfirmPassword}
+                      />
+                      <TouchableOpacity
+                        onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                        style={styles.showHideButton}
+                      >
+                        <Ionicons
+                          name={showConfirmPassword ? "eye-outline" : "eye-off-outline"}
+                          size={20}
+                          color="rgba(255,255,255,0.7)"
+                        />
+                      </TouchableOpacity>
+                    </LinearGradient>
+                  </View>
+
+                  {/* Create Account Button */}
                   <TouchableOpacity
-                    onPress={() => setShowPassword(!showPassword)}
-                    style={styles.showHideButton}
+                    style={styles.signUpButton}
+                    onPress={handleRegister}
+                    disabled={isLoading}
+                    activeOpacity={0.8}
                   >
-                    <Ionicons
-                      name={showPassword ? "eye-outline" : "eye-off-outline"}
-                      size={20}
-                      color={Colors.text.secondary}
-                    />
+                    <LinearGradient
+                      colors={['#667eea', '#764ba2']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.signUpGradient}
+                    >
+                      {isLoading ? (
+                        <ActivityIndicator color="#FFFFFF" size="small" />
+                      ) : (
+                        <>
+                          <Text style={styles.signUpText}>Create Account</Text>
+                          <Ionicons name="arrow-forward" size={20} color="#FFFFFF" style={styles.signUpIcon} />
+                        </>
+                      )}
+                    </LinearGradient>
                   </TouchableOpacity>
-                </View>
 
-                <View style={styles.inputWrapper}>
-                  <Ionicons name="lock-closed-outline" size={20} color={Colors.text.secondary} style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Confirm Password"
-                    placeholderTextColor={Colors.text.disabled}
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                    secureTextEntry={!showConfirmPassword}
-                  />
-                  <TouchableOpacity
-                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                    style={styles.showHideButton}
-                  >
-                    <Ionicons
-                      name={showConfirmPassword ? "eye-outline" : "eye-off-outline"}
-                      size={20}
-                      color={Colors.text.secondary}
-                    />
-                  </TouchableOpacity>
-                </View>
-
-                <TouchableOpacity
-                  style={[styles.registerButton, isLoading && styles.registerButtonDisabled]}
-                  onPress={handleRegister}
-                  disabled={isLoading}
-                >
-                  <LinearGradient
-                    colors={isLoading ? ['#BDBDBD', '#9E9E9E'] : Colors.gradients.primary}
-                    style={styles.gradientButton}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                  >
-                    {isLoading ? (
-                      <ActivityIndicator color="#FFFFFF" />
-                    ) : (
-                      <Text style={styles.registerButtonText}>Create Account</Text>
-                    )}
-                  </LinearGradient>
-                </TouchableOpacity>
-
-                <View style={styles.separatorContainer}>
-                  <View style={styles.separatorLine} />
-                  <Text style={styles.separatorText}>OR</Text>
-                  <View style={styles.separatorLine} />
-                </View>
-
-                <TouchableOpacity
-                  style={styles.googleButton}
-                  onPress={handleGoogleSignIn}
-                  disabled={isLoading}
-                >
-                  <View style={styles.googleIconContainer}>
-                    <Ionicons name="logo-google" size={24} color="#EA4335" />
+                  {/* Separator */}
+                  <View style={styles.separatorContainer}>
+                    <View style={styles.separatorLine} />
+                    <Text style={styles.separatorText}>OR</Text>
+                    <View style={styles.separatorLine} />
                   </View>
-                  <Text style={styles.googleButtonText}>Sign up with Google</Text>
-                </TouchableOpacity>
 
-                <View style={styles.loginLinkContainer}>
-                  <Text style={styles.loginLinkText}>Already have an account? </Text>
-                  <TouchableOpacity onPress={navigateToLogin}>
-                    <Text style={styles.loginLinkBold}>Sign In</Text>
+                  {/* Google Sign Up */}
+                  <TouchableOpacity
+                    style={styles.googleButton}
+                    onPress={handleGoogleSignIn}
+                    disabled={isLoading}
+                    activeOpacity={0.8}
+                  >
+                    <Image
+                      source={{ uri: 'https://www.google.com/favicon.ico' }}
+                      style={styles.googleIcon}
+                    />
+                    <Text style={styles.googleButtonText}>Continue with Google</Text>
                   </TouchableOpacity>
                 </View>
-              </View>
+              </LinearGradient>
+            </View>
+
+            {/* Sign In Link */}
+            <View style={styles.signInContainer}>
+              <Text style={styles.signInText}>Already have an account? </Text>
+              <TouchableOpacity onPress={navigateToLogin}>
+                <Text style={styles.signInLink}>Sign In</Text>
+              </TouchableOpacity>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
       </LinearGradient>
-    </ImageBackground>
+    </View>
   );
 };
 
@@ -339,34 +436,66 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  overlay: {
+  backgroundGradient: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.2)',
+  },
+  decorativeCircle1: {
+    position: 'absolute',
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    backgroundColor: 'rgba(102, 126, 234, 0.15)',
+    top: -100,
+    right: -100,
+  },
+  decorativeCircle2: {
+    position: 'absolute',
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: 'rgba(118, 75, 162, 0.1)',
+    bottom: 100,
+    left: -50,
+  },
+  decorativeCircle3: {
+    position: 'absolute',
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: 'rgba(102, 126, 234, 0.08)',
+    top: height * 0.5,
+    right: -30,
   },
   keyboardView: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: 40,
-    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 50,
+    paddingBottom: 30,
   },
-  headerSection: {
+  logoSection: {
     alignItems: 'center',
-    marginTop: 60,
-    marginBottom: 30,
+    marginBottom: 20,
   },
-  iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(255,255,255,0.9)',
+  logoGradient: {
+    width: 64,
+    height: 64,
+    borderRadius: 18,
+    padding: 2,
+    shadowColor: '#667eea',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+  logoInner: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
-    overflow: 'hidden',
     padding: 8,
   },
   logoImage: {
@@ -374,114 +503,101 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontSize: 28,
+    fontWeight: '800',
     color: '#FFFFFF',
-    marginBottom: 5,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    marginTop: 12,
+    letterSpacing: 0.5,
   },
   subtitle: {
-    fontSize: 16,
-    color: 'rgba(255,255,255,0.9)',
-  },
-  formContainer: {
-    paddingHorizontal: 20,
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.7)',
+    marginTop: 4,
+    fontWeight: '500',
   },
   glassCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 24,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.18)',
+  },
+  glassGradient: {
     padding: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.2,
-    shadowRadius: 20,
-    elevation: 10,
   },
   formTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: '700',
     color: '#FFFFFF',
-    marginBottom: 5,
     textAlign: 'center',
+    marginBottom: 4,
   },
   formSubtitle: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.9)',
-    marginBottom: 25,
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.7)',
     textAlign: 'center',
+    marginBottom: 24,
+  },
+  form: {
+    width: '100%',
   },
   inputRow: {
     flexDirection: 'row',
-    marginBottom: 16,
+    marginBottom: 0,
   },
-  inputWrapper: {
+  inputContainer: {
+    marginBottom: 14,
+    borderRadius: 14,
+    overflow: 'hidden',
+  },
+  inputGradient: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 12,
-    marginBottom: 16,
+    height: 52,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    height: 56,
+    borderColor: 'rgba(255,255,255,0.15)',
   },
   inputIcon: {
-    marginLeft: 16,
-    marginRight: 12,
+    paddingLeft: 16,
+    paddingRight: 10,
   },
   input: {
     flex: 1,
     height: '100%',
-    fontSize: 16,
+    fontSize: 15,
     color: '#FFFFFF',
-    paddingRight: 16,
-  },
-  registerButton: {
-    borderRadius: 12,
-    overflow: 'hidden',
-    marginTop: 10,
-    marginBottom: 20,
-    elevation: 4,
-    shadowColor: Colors.primary.main,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-  },
-  registerButtonDisabled: {
-    elevation: 0,
-    shadowOpacity: 0,
-  },
-  gradientButton: {
-    paddingVertical: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  registerButtonText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: 'bold',
+    paddingRight: 14,
   },
   showHideButton: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     height: '100%',
     justifyContent: 'center',
   },
-  loginLinkContainer: {
+  signUpButton: {
+    borderRadius: 14,
+    overflow: 'hidden',
+    marginBottom: 20,
+    marginTop: 6,
+    shadowColor: '#667eea',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  signUpGradient: {
+    height: 54,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  loginLinkText: {
-    color: Colors.text.secondary,
-    fontSize: 15,
+  signUpText: {
+    color: '#FFFFFF',
+    fontSize: 17,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
-  loginLinkBold: {
-    color: Colors.primary.main,
-    fontSize: 15,
-    fontWeight: 'bold',
+  signUpIcon: {
+    marginLeft: 8,
   },
   separatorContainer: {
     flexDirection: 'row',
@@ -491,12 +607,12 @@ const styles = StyleSheet.create({
   separatorLine: {
     flex: 1,
     height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255,255,255,0.15)',
   },
   separatorText: {
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: 'rgba(255,255,255,0.5)',
     paddingHorizontal: 16,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
   },
   googleButton: {
@@ -504,25 +620,39 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    height: 56,
-    marginBottom: 20,
+    borderRadius: 14,
+    height: 54,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
     elevation: 5,
   },
-  googleIconContainer: {
+  googleIcon: {
+    width: 20,
+    height: 20,
     marginRight: 12,
   },
   googleButtonText: {
     color: '#333333',
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  signInContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 24,
+    marginBottom: 20,
+  },
+  signInText: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 15,
+  },
+  signInLink: {
+    color: '#667eea',
+    fontSize: 15,
+    fontWeight: '700',
   },
 });
 

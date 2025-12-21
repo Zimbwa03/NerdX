@@ -14,6 +14,7 @@ export interface TeacherMessageResponse {
   response: string;
   session_id: string;
   session_ended?: boolean;
+  graph_url?: string;
 }
 
 export interface TeacherNotes {

@@ -32,6 +32,7 @@ import TopicNotesDetailScreen from '../screens/TopicNotesDetailScreen';
 import MathSolverScreen from '../screens/MathSolverScreen';
 import OfflineSettingsScreen from '../screens/OfflineSettingsScreen';
 import ModelDownloadScreen from '../screens/ModelDownloadScreen';
+import MathNotesDetailScreen from '../screens/MathNotesDetailScreen';
 
 // Virtual Lab Simulation Screens
 import CellExplorerScreen from '../screens/virtualLab/CellExplorerScreen';
@@ -352,6 +353,13 @@ const AppNavigator: React.FC = () => {
             <Stack.Screen
               name="MathSolver"
               component={MathSolverScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="MathNotesDetail"
+              component={MathNotesDetailScreen}
               options={{
                 headerShown: false,
               }}

@@ -114,7 +114,7 @@ const ProjectAssistantScreen: React.FC = () => {
       role: 'user',
       content: activeMode === 'chat' ? query :
         activeMode === 'web_search' ? `🌐 Search: ${query}` :
-        `🔬 Research: ${query}`,
+          `🔬 Research: ${query}`,
       timestamp: new Date(),
     };
 
@@ -142,7 +142,7 @@ const ProjectAssistantScreen: React.FC = () => {
         }]);
 
         const session = await projectApi.startResearch(project.id, query);
-        
+
         if (session?.interaction_id) {
           setActiveResearch(session);
           setResearchPolling(true);
@@ -194,7 +194,7 @@ const ProjectAssistantScreen: React.FC = () => {
 
     Alert.alert(
       'Generate PDF Document',
-      'This will generate your complete ZIMSEC project document as a PDF (3 credits). Continue?',
+      'This will generate your complete project document as a PDF (3 credits). Continue?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -219,7 +219,7 @@ const ProjectAssistantScreen: React.FC = () => {
               if (filePath) {
                 Alert.alert(
                   '✅ PDF Generated!',
-                  'Your ZIMSEC project document has been generated and is ready to download/share.',
+                  'Your project document has been generated and is ready to download/share.',
                   [{ text: 'OK' }]
                 );
                 // Update credits
