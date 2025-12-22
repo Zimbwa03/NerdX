@@ -51,6 +51,15 @@ const DashboardScreen: React.FC = () => {
   const [knowledgeMap, setKnowledgeMap] = useState<KnowledgeMap | null>(null);
   const [loadingKnowledgeMap, setLoadingKnowledgeMap] = useState(false);
   const [dailyReview, setDailyReview] = useState<{ count: number, reviews: any[] } | null>(null);
+  const [selectedLevel, setSelectedLevel] = useState<'O Level' | 'A Level'>('O Level');
+
+  // A Level subject colors
+  const aLevelColors = {
+    pure_mathematics: '#8B5CF6', // Purple
+    chemistry: '#10B981', // Green
+    physics: '#3B82F6', // Blue
+    biology: '#14B8A6', // Teal
+  };
 
   useEffect(() => {
     // Refresh credits and gamification progress
@@ -157,6 +166,16 @@ const DashboardScreen: React.FC = () => {
 
   const navigateToProjectList = () => {
     navigation.navigate('ProjectList' as never);
+  };
+
+  const navigateToALevelSubject = (subjectId: string, subjectName: string) => {
+    const subject: Partial<Subject> = {
+      id: subjectId,
+      name: subjectName,
+      icon: 'science',
+      color: aLevelColors[subjectId as keyof typeof aLevelColors] || Colors.primary.main,
+    };
+    navigation.navigate('Topics' as never, { subject } as never);
   };
 
   const handleLogout = async () => {
@@ -379,45 +398,134 @@ const DashboardScreen: React.FC = () => {
 
             <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>Learning Hub</Text>
 
+            {/* O Level / A Level Tab Selector */}
+            <View style={styles.levelTabContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.levelTab,
+                  selectedLevel === 'O Level' && styles.levelTabActive
+                ]}
+                onPress={() => setSelectedLevel('O Level')}
+                activeOpacity={0.8}
+              >
+                {selectedLevel === 'O Level' ? (
+                  <LinearGradient
+                    colors={[Colors.primary.main, Colors.primary.dark]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.levelTabGradient}
+                  >
+                    <Text style={styles.levelTabTextActive}>O Level</Text>
+                  </LinearGradient>
+                ) : (
+                  <Text style={styles.levelTabText}>O Level</Text>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.levelTab,
+                  selectedLevel === 'A Level' && styles.levelTabActive
+                ]}
+                onPress={() => setSelectedLevel('A Level')}
+                activeOpacity={0.8}
+              >
+                {selectedLevel === 'A Level' ? (
+                  <LinearGradient
+                    colors={['#8B5CF6', '#6D28D9']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.levelTabGradient}
+                  >
+                    <Text style={styles.levelTabTextActive}>A Level</Text>
+                  </LinearGradient>
+                ) : (
+                  <Text style={styles.levelTabText}>A Level</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+
             <View style={styles.gridContainer}>
-              {/* ✨ Animated Subject Cards with Neon Glow */}
-              <AnimatedCard
-                title="Mathematics"
-                subtitle="Master numbers & logic"
-                imageSource={require('../../assets/images/math_card.png')}
-                onPress={() => navigateToSubject('mathematics')}
-                glowColor={Colors.subjects.mathematics}
-                index={0}
-              />
+              {selectedLevel === 'O Level' ? (
+                <>
+                  {/* ✨ O Level Subject Cards */}
+                  <AnimatedCard
+                    title="Mathematics"
+                    subtitle="Master numbers & logic"
+                    imageSource={require('../../assets/images/math_card.png')}
+                    onPress={() => navigateToSubject('mathematics')}
+                    glowColor={Colors.subjects.mathematics}
+                    index={0}
+                  />
 
-              <AnimatedCard
-                title="Science"
-                subtitle="Explore the universe"
-                imageSource={require('../../assets/images/science_card.png')}
-                onPress={handleSciencePress}
-                glowColor={Colors.subjects.science}
-                index={1}
-              />
+                  <AnimatedCard
+                    title="Science"
+                    subtitle="Explore the universe"
+                    imageSource={require('../../assets/images/science_card.png')}
+                    onPress={handleSciencePress}
+                    glowColor={Colors.subjects.science}
+                    index={1}
+                  />
 
-              <AnimatedCard
-                title="English"
-                subtitle="Perfect your language"
-                imageSource={require('../../assets/images/english_card.png')}
-                onPress={() => navigateToSubject('english')}
-                glowColor={Colors.subjects.english}
-                index={2}
-              />
+                  <AnimatedCard
+                    title="English"
+                    subtitle="Perfect your language"
+                    imageSource={require('../../assets/images/english_card.png')}
+                    onPress={() => navigateToSubject('english')}
+                    glowColor={Colors.subjects.english}
+                    index={2}
+                  />
 
-              <AnimatedCard
-                title="Project Assistant"
-                subtitle="AI-powered help"
-                imageSource={require('../../assets/images/project_assistant_card.png')}
-                onPress={navigateToProjectList}
-                glowColor={Colors.primary.main}
-                index={3}
-              />
+                  <AnimatedCard
+                    title="Project Assistant"
+                    subtitle="AI-powered help"
+                    imageSource={require('../../assets/images/project_assistant_card.png')}
+                    onPress={navigateToProjectList}
+                    glowColor={Colors.primary.main}
+                    index={3}
+                  />
+                </>
+              ) : (
+                <>
+                  {/* ✨ A Level Subject Cards */}
+                  <AnimatedCard
+                    title="Pure Mathematics"
+                    subtitle="Advanced calculus & algebra"
+                    imageSource={require('../../assets/images/a_level_pure_math_card.png')}
+                    onPress={() => navigateToALevelSubject('pure_mathematics', 'Pure Mathematics')}
+                    glowColor={aLevelColors.pure_mathematics}
+                    index={0}
+                  />
 
-              {/* Full Width Cards */}
+                  <AnimatedCard
+                    title="Chemistry"
+                    subtitle="Organic & inorganic"
+                    imageSource={require('../../assets/images/a_level_chemistry_card.png')}
+                    onPress={() => navigateToALevelSubject('chemistry', 'Chemistry')}
+                    glowColor={aLevelColors.chemistry}
+                    index={1}
+                  />
+
+                  <AnimatedCard
+                    title="Physics"
+                    subtitle="Mechanics & quantum"
+                    imageSource={require('../../assets/images/a_level_physics_card.png')}
+                    onPress={() => navigateToALevelSubject('physics', 'Physics')}
+                    glowColor={aLevelColors.physics}
+                    index={2}
+                  />
+
+                  <AnimatedCard
+                    title="Biology"
+                    subtitle="Cell biology & genetics"
+                    imageSource={require('../../assets/images/a_level_biology_card.png')}
+                    onPress={() => navigateToALevelSubject('biology', 'Biology')}
+                    glowColor={aLevelColors.biology}
+                    index={3}
+                  />
+                </>
+              )}
+
+              {/* Full Width Cards - Always visible */}
               <AnimatedCard
                 title="My Progress"
                 subtitle="Track your learning journey"
@@ -637,6 +745,51 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
     marginBottom: 20,
     marginLeft: 4,
+  },
+  // O Level / A Level Tab Styles
+  levelTabContainer: {
+    flexDirection: 'row',
+    marginBottom: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 16,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  levelTab: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  levelTabActive: {
+    shadowColor: Colors.primary.main,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  levelTabGradient: {
+    width: '100%',
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  levelTabText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.7)',
+  },
+  levelTabTextActive: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   gridContainer: {
     flexDirection: 'row',
