@@ -1236,6 +1236,127 @@ def start_session():
         logger.error(f"Start session error: {e}")
         return jsonify({'success': False, 'message': 'Server error'}), 500
 
+
+@mobile_bp.route('/virtual-lab/knowledge-check', methods=['POST'])
+@require_auth
+def generate_virtual_lab_knowledge_check():
+    """
+    Generate Virtual Lab knowledge-check questions using DeepSeek (no credit deduction).
+
+    Payload:
+      - simulation_id (optional, for analytics/debug)
+      - subject: biology | chemistry | physics
+      - topic: string
+      - difficulty: easy | medium | hard
+      - count: int (default 5, max 20)
+
+    Returns:
+      data: [
+        { id, question_text, options, correct_index, explanation }
+      ]
+    """
+    try:
+        data = request.get_json() or {}
+
+        simulation_id = data.get('simulation_id') or data.get('simulationId') or ''
+        subject = (data.get('subject') or '').strip().lower()
+        topic = (data.get('topic') or '').strip()
+        difficulty_in = (data.get('difficulty') or 'medium').strip().lower()
+        count_raw = data.get('count', 5)
+
+        if subject not in ['biology', 'chemistry', 'physics']:
+            return jsonify({'success': False, 'message': 'Invalid subject'}), 400
+
+        # Map app difficulty to generator difficulty
+        difficulty_map = {
+            'easy': 'easy',
+            'medium': 'medium',
+            'hard': 'difficult',
+            'difficult': 'difficult',
+        }
+        difficulty = difficulty_map.get(difficulty_in, 'medium')
+
+        try:
+            count = int(count_raw)
+        except Exception:
+            count = 5
+        count = max(1, min(count, 20))
+
+        parent_subject = subject.capitalize()
+        if not topic:
+            # Sensible defaults per subject if topic omitted
+            topic = 'Cell Structure and Organisation' if subject == 'biology' else (
+                'Acids, Bases and Salts' if subject == 'chemistry' else 'Kinematics'
+            )
+
+        science_gen = CombinedScienceGenerator()
+        questions = []
+
+        def _options_to_list(opts):
+            if isinstance(opts, dict):
+                # Ensure A,B,C,D order
+                ordered = []
+                for k in ['A', 'B', 'C', 'D']:
+                    if opts.get(k):
+                        ordered.append(opts.get(k))
+                # Fallback to key-sorted order if unexpected keys
+                return ordered if ordered else [opts.get(k, '') for k in sorted(opts.keys()) if opts.get(k)]
+            if isinstance(opts, list):
+                return [str(o) for o in opts if str(o).strip()]
+            return []
+
+        def _correct_index_from_answer(answer, options):
+            # DeepSeek generator typically returns A/B/C/D
+            if isinstance(answer, str):
+                a = answer.strip().upper()
+                if a in ['A', 'B', 'C', 'D']:
+                    return ['A', 'B', 'C', 'D'].index(a)
+                # Sometimes the answer is the option text
+                for idx, opt in enumerate(options):
+                    if opt.strip().lower() == answer.strip().lower():
+                        return idx
+            return 0
+
+        for _ in range(count):
+            q = science_gen.generate_topical_question(parent_subject, topic, difficulty, g.current_user_id)
+            if not q:
+                continue
+
+            options = _options_to_list(q.get('options', []))
+            # Ensure we always have 4 options for the mobile UI
+            if len(options) < 4:
+                # Pad with plausible placeholders if DeepSeek response is malformed
+                while len(options) < 4:
+                    options.append(f"Option {chr(65 + len(options))}")
+            options = options[:4]
+
+            answer = q.get('answer') or q.get('correct_answer') or 'A'
+            correct_index = _correct_index_from_answer(answer, options)
+            explanation = q.get('explanation') or q.get('solution') or ''
+
+            questions.append({
+                'id': str(uuid.uuid4()),
+                'question_text': q.get('question', '') or q.get('question_text', ''),
+                'options': options,
+                'correct_index': correct_index,
+                'explanation': explanation,
+                'meta': {
+                    'simulation_id': simulation_id,
+                    'subject': subject,
+                    'topic': topic,
+                    'difficulty': difficulty_in,
+                }
+            })
+
+        if not questions:
+            return jsonify({'success': False, 'message': 'Failed to generate questions'}), 500
+
+        return jsonify({'success': True, 'data': questions}), 200
+
+    except Exception as e:
+        logger.error(f"Virtual lab knowledge check generation error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
 @mobile_bp.route('/quiz/session/<session_id>', methods=['GET'])
 @require_auth
 def get_session(session_id):

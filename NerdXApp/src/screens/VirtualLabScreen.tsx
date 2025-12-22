@@ -69,6 +69,9 @@ const VirtualLabScreen: React.FC = () => {
         const screenName = screenMap[simulationId];
         if (screenName) {
             navigation.navigate(screenName);
+        } else {
+            // Fallback to interactive screen for newly added simulations
+            navigation.navigate('VirtualLabInteractive', { simulationId });
         }
     };
 
@@ -117,8 +120,8 @@ const VirtualLabScreen: React.FC = () => {
                     </View>
                     <View style={[styles.statDivider, { backgroundColor: '#FFFFFF30' }]} />
                     <View style={styles.statItem}>
-                        <Text style={styles.statNumber}>Phase 1</Text>
-                        <Text style={styles.statLabel}>MVP Ready</Text>
+                        <Text style={styles.statNumber}>AI</Text>
+                        <Text style={styles.statLabel}>Check-ups</Text>
                     </View>
                 </View>
             </LinearGradient>
@@ -155,7 +158,7 @@ const VirtualLabScreen: React.FC = () => {
                             {activeFilter === option.key && option.key !== 'all' && (
                                 <View style={styles.filterCount}>
                                     <Text style={styles.filterCountText}>
-                                        {PHASE1_SIMULATIONS.filter(s => s.subject === option.key).length}
+                                        {allSimulations.filter(s => s.subject === option.key).length}
                                     </Text>
                                 </View>
                             )}
@@ -216,16 +219,15 @@ const VirtualLabScreen: React.FC = () => {
                     </View>
                 </View>
 
-                {/* Coming Soon */}
-                <View style={[styles.comingSoon, { backgroundColor: isDarkMode ? '#2a2a2a' : '#FFF3E0' }]}>
-                    <Ionicons name="rocket" size={24} color="#FF9800" />
+                {/* Update */}
+                <View style={[styles.comingSoon, { backgroundColor: isDarkMode ? '#2a2a2a' : '#E8F5E9' }]}>
+                    <Ionicons name="sparkles" size={24} color="#4CAF50" />
                     <View style={styles.comingSoonContent}>
                         <Text style={[styles.comingSoonTitle, { color: themedColors.text.primary }]}>
-                            More Simulations Coming Soon!
+                            New simulations added
                         </Text>
                         <Text style={[styles.comingSoonText, { color: themedColors.text.secondary }]}>
-                            Phase 2 will add 12 more simulations including Food Tests, Electrolysis,
-                            Thermal Expansion, and more.
+                            You can now pick how many AI-generated questions to attempt after each simulation.
                         </Text>
                     </View>
                 </View>

@@ -333,6 +333,82 @@ export const gamificationService = {
         await gamificationService.checkLabBadges(progress.labsCompleted);
     },
 
+    /**
+     * Log a Virtual Lab knowledge-check completion.
+     * - Adds earned XP/points (from the lab reward calculation)
+     * - Updates question/accuracy stats (without awarding extra per-question XP)
+     * - Updates daily + weekly activity counters
+     */
+    logVirtualLabKnowledgeCheck: async (params: {
+        xpEarned: number;
+        totalQuestions: number;
+        correctAnswers: number;
+        subjectForMastery?: 'science' | string;
+        scorePercent?: number;
+    }) => {
+        const { xpEarned, totalQuestions, correctAnswers } = params;
+        const progress = await gamificationService.getProgress();
+
+        // Reset daily counters if new day
+        const todayLabel = new Date().toDateString();
+        const lastResetLabel = new Date(progress.lastGoalsResetDate).toDateString();
+        if (todayLabel !== lastResetLabel) {
+            progress.todayQuestionsAnswered = 0;
+            progress.todayQuizzesCompleted = 0;
+            progress.todayStudyMinutes = 0;
+            progress.lastGoalsResetDate = new Date().toISOString();
+        }
+
+        // Update question stats (NO extra XP here)
+        const tq = Math.max(0, Number.isFinite(totalQuestions) ? totalQuestions : 0);
+        const ca = Math.max(0, Number.isFinite(correctAnswers) ? correctAnswers : 0);
+        progress.totalQuestionsAnswered += tq;
+        progress.todayQuestionsAnswered += tq;
+        progress.totalCorrectAnswers += Math.min(ca, tq);
+
+        // Update weekly activity bucket for today
+        const dateStr = new Date().toISOString().split('T')[0];
+        const activity = progress.weeklyActivity || [];
+        const existing = activity.find(a => a.date === dateStr);
+        if (existing) {
+            existing.questionsAnswered += tq;
+            existing.correctAnswers += Math.min(ca, tq);
+        } else {
+            activity.push({
+                date: dateStr,
+                questionsAnswered: tq,
+                correctAnswers: Math.min(ca, tq),
+                quizzesCompleted: 0,
+                studyTimeMinutes: 0,
+            });
+        }
+        progress.weeklyActivity = activity;
+
+        // Award lab XP/points and increment lab counters
+        progress.labsCompleted++;
+        progress.labXPEarned += xpEarned;
+        progress.totalXP += xpEarned;
+        progress.points += xpEarned;
+
+        await gamificationService.saveProgress(progress);
+
+        // Badges
+        await gamificationService.checkLabBadges(progress.labsCompleted);
+        await gamificationService.checkQuestionBadges(progress.totalQuestionsAnswered);
+        await gamificationService.checkXPBadges(progress.totalXP);
+
+        // Update streak
+        await gamificationService.checkStreak();
+
+        // Subject mastery (Virtual Labs contribute to Science mastery)
+        const subjectForMastery = (params.subjectForMastery || 'science').toString();
+        const scorePercent =
+            typeof params.scorePercent === 'number'
+                ? params.scorePercent
+                : (tq > 0 ? Math.round((Math.min(ca, tq) / tq) * 100) : 0);
+        await gamificationService.updateMastery(subjectForMastery, scorePercent);
+    },
+
     // Check and update streak
     checkStreak: async (): Promise<number> => {
         const progress = await gamificationService.getProgress();
