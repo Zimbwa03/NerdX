@@ -955,470 +955,449 @@ Almost all energy originates from the Sun:
     "Thermal Physics (Kinetic Theory, Thermal Properties, Heat Transfer)": {
         topic: "Thermal Physics (Kinetic Theory, Thermal Properties, Heat Transfer)",
         subject: "Physics",
-        summary: "This topic covers the kinetic molecular model of matter, explaining the behaviour of solids, liquids, and gases. It includes Brownian motion as evidence for particle theory, gas pressure and its relationship with temperature and volume, thermal expansion, temperature measurement, specific heat capacity, latent heat, and the three methods of heat transfer: conduction, convection, and radiation.",
+        summary: "The Kinetic Theory of Matter explains the physical properties of solids, liquids, and gases by considering matter as tiny, constantly moving particles. This topic covers states of matter, Brownian motion as evidence for particle theory, gas laws (pressure, volume, temperature relationships), thermal expansion, specific heat capacity, specific latent heat, and the three mechanisms of heat transfer: conduction, convection, and radiation.",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/Kinetic_Theory_Brownian_Motion_and_Pressure.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9QaHlzaWNzL0tpbmV0aWNfVGhlb3J5X0Jyb3duaWFuX01vdGlvbl9hbmRfUHJlc3N1cmUubTRhIiwiaWF0IjoxNzY1NjAxMDkxLCJleHAiOjUyNjYwOTcwOTF9.YriBHZhnt43-Af0X2MA5O8Y6b5r4EHZy9J2W94ACx7A",
         videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/Thermal_Physics.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL1BoeXNpY3MvVGhlcm1hbF9QaHlzaWNzLm1wNCIsImlhdCI6MTc2NTc5ODQ3MSwiZXhwIjo1MjY2Mjk0NDcxfQ.2gBwVJMKEeRUm80K6jhpP516h2q-WuUU237GIdZKj54",
         sections: [
             {
-                title: "1. Kinetic Molecular Model of Matter",
-                content: `## A. States of Matter
+                title: "1. The Kinetic Theory of Matter",
+                content: `## Introduction
 
-All matter consists of particles (atoms, molecules, ions) in constant motion.
+The Kinetic Theory of Matter serves as the fundamental model for explaining the physical properties of solids, liquids, and gases. It connects the microscopic behaviour of individual particles to the macroscopic thermal phenomena we can observe and measure.
 
-| Feature | Solid | Liquid | Gas |
-|---------|-------|--------|-----|
-| **Shape** | Fixed (rigid structure) | Variable (takes container shape) | Variable (fills container) |
-| **Volume** | Fixed (incompressible) | Fixed (difficult to compress) | No fixed volume (highly compressible) |
-| **Arrangement** | Regular lattice (close-packed) | Irregular (mostly touching) | Random and sparse (far apart) |
-| **Motion** | Vibration only (fixed positions) | Translational (slide past each other) | Rapid, random motion (high speeds) |
-| **Forces** | Very strong | Moderate | Negligible (except during collisions) |
+## States of Matter: A Molecular Comparison
 
-## B. Brownian Motion
+| State | Molecular Arrangement & Motion | Intermolecular Forces |
+|-------|-------------------------------|----------------------|
+| **Solid** | Close together in regular pattern. Each molecule **vibrates about a fixed position** | Strong attractive and repulsive forces create stable structure |
+| **Liquid** | Close together but not fixed. Able to **move and slide past each other** | Forces strong enough to keep molecules together (definite volume) |
+| **Gas** | Far apart, move **randomly and rapidly**. Occupy entire container volume | Negligibly small except during brief collisions |
 
-**Evidence for Kinetic Particle Theory**
+## Brownian Motion: Visualizing the Invisible
 
-**Experiment:** Smoke particles in glass cell, illuminated and viewed under microscope
+**Evidence for the existence of unseen, fast-moving particles.**
 
-**Observation:** Bright specks dance in random, jerky, zig-zag motion
+### Classic Demonstration:
+Observe tiny smoke particles in a glass cell under a microscope → particles move **randomly and haphazardly**.
 
-**Explanation:**
-1. Air is filled with invisible molecules moving at high speeds
-2. Air molecules collide with larger smoke particles from all directions
-3. Uneven bombardment pushes smoke particle in random directions
-4. Direction of imbalance constantly changes → jerky motion
+### The Mechanism:
+1. A smoke particle is **massive** compared to individual air molecules
+2. Bombarded on all sides by countless air molecules
+3. Random motion means **unequal collisions** on different sides
+4. Creates **net force** in a specific direction
+5. Net force changes rapidly as collision pattern shifts → **jerky, zig-zag motion**
 
-**Conclusion:** Matter is made of tiny particles in constant random motion
+## The Gas Laws
 
-## C. Gases and Pressure
+For a **fixed mass of gas**, clear relationships exist between pressure, volume, and temperature:
 
-### Molecular Cause of Pressure:
-- Gas particles strike container walls and rebound
-- Change in momentum creates force
-- **Pressure = Force ÷ Area** (billions of tiny impacts)
+| Relationship | At Constant... | Effect |
+|--------------|----------------|--------|
+| **Pressure ↔ Volume** | Temperature | P ↑ → V ↓ (Boyle's Law) |
+| **Volume ↔ Temperature** | Pressure | T ↑ → V ↑ |
+| **Pressure ↔ Temperature** | Volume | T ↑ → P ↑ |
 
-### Effect of Temperature (Pressure Law):
-- Heating increases particle kinetic energy
-- Particles hit walls **more frequently** and **with greater force**
-- **Pressure increases** (at constant volume)
+## Absolute Zero and the Kelvin Scale
 
-### Effect of Volume (Boyle's Law):
-- Compression forces particles closer together
-- Particles hit walls more frequently
-- **P ∝ 1/V** (at constant temperature)
-- Formula: **P₁V₁ = P₂V₂**`,
+When gas properties are plotted against temperature, extrapolation reaches **-273 °C** — called **Absolute Zero** (where molecules theoretically stop moving).
+
+**Conversion:** $$T(K) = θ(°C) + 273$$
+
+## The Combined Gas Law
+
+$$\\frac{p_1 V_1}{T_1} = \\frac{p_2 V_2}{T_2}$$
+
+**Example:** Bicycle pump with 50 cm³ air at 17°C and 1.0 atm. Find pressure when compressed to 10 cm³ at 27°C.
+
+**Solution:**
+1. T₁ = 17 + 273 = 290 K
+2. T₂ = 27 + 273 = 300 K
+3. p₂ = (p₁V₁T₂)/(V₁T₁) = (1.0 × 50 × 300)/(10 × 290) ≈ **5.2 atm**`,
                 diagrams: [],
                 subsections: []
             },
             {
-                title: "2. Thermal Properties and Temperature",
-                content: `## A. Thermal Expansion
+                title: "2. Thermal Properties and Energy Transfer",
+                content: `## Thermal Expansion
 
-When heated, particles gain energy → vibrate more (solids) or move faster (liquids/gases) → occupy more volume.
+Matter expands when heated and contracts when cooled. When heated, molecules gain kinetic energy and vibrate more rapidly, forcing them slightly further apart.
 
-**Relative Expansion:** Gases > Liquids > Solids
+### Degree of Expansion:
+- **Gases** expand the most
+- **Liquids** expand more than solids
+- **Solids** expand the least
 
-### Applications:
-- **Expansion gaps:** Bridges and railway tracks allow for summer swelling
-- **Bimetallic strips:** Two metals expand differently → strip bends (thermostats, fire alarms)
-- **Shrink-fitting:** Heat metal tire, fit on wheel, let cool for tight grip
-- **Anomalous expansion of water:** Water expands when freezing (ice floats - essential for aquatic life!)
+## Specific Heat Capacity (c)
 
-## B. Temperature Measurement
+> **Definition:** The energy needed to raise the temperature of **1 kg** of a substance by **1 °C**.
 
-**Temperature vs Heat:**
-- Heat = Total energy transferred
-- Temperature = Average kinetic energy of particles
-
-### Liquid-in-Glass Thermometer:
-- **Sensitivity:** Larger bulb + narrower tube = detects smaller changes
-- **Range:** Limited by liquid's freezing/boiling points
-- **Responsiveness:** Thin glass walls = faster reaction
-
-### Thermocouple:
-- Two different metal wires joined at two ends
-- Temperature difference creates voltage
-- **Advantages:** Very fast response, measures very high temperatures (>1000°C)
-
-### Calibration Fixed Points:
-- **0°C:** Pure melting ice
-- **100°C:** Steam above boiling water (at 1 atm)`,
-                diagrams: [],
-                subsections: []
-            },
-            {
-                title: "3. Specific Heat Capacity",
-                content: `## Definition
-
-The amount of thermal energy required to raise the temperature of **1 kg** of substance by **1°C**.
-
-## Formula
-
-$$E = mc\\Delta T$$
+**Formula:** $$E = mcΔT$$
 
 Where:
-- **E** = Energy (J)
-- **m** = Mass (kg)
-- **c** = Specific heat capacity (J/kg°C)
-- **ΔT** = Temperature change (°C)
+- E = Energy transferred (J)
+- m = Mass (kg)
+- c = Specific heat capacity (J/kg°C)
+- ΔT = Temperature change (°C)
 
-## Physical Meaning
+### Sample Values:
 
-| Low c | High c |
-|-------|--------|
-| Heats up quickly, cools quickly | Resists temperature change |
-| e.g., Copper: 390 J/kg°C | e.g., Water: 4200 J/kg°C |
+| Substance | Specific Heat Capacity |
+|-----------|----------------------|
+| Water | **4200 J/(kg°C)** |
+| Ice | 2000 J/(kg°C) |
+| Aluminium | 900 J/(kg°C) |
 
-## Water's Unique Role (High c = 4200 J/kg°C)
+**High c (water):** Requires large energy to heat—excellent coolant.
+**Low c (aluminium):** Heats up quickly.
 
-- **Sea breeze:** Land heats faster than sea → air rises over land → cool sea air rushes in
-- **Excellent coolant:** Absorbs massive heat without boiling (car engines, power stations)`,
+## Specific Latent Heat (l)
+
+> **Definition:** The thermal energy required to change the state of **1 kg** of a substance **without any temperature change**.
+
+Energy is used to **break intermolecular bonds**, not increase kinetic energy.
+
+**Formula:** $$E = ml$$
+
+### Two Types:
+
+| Type | Process | Value (Water) |
+|------|---------|---------------|
+| **Latent Heat of Fusion (lf)** | Solid → Liquid | 340,000 J/kg |
+| **Latent Heat of Vaporisation (lv)** | Liquid → Gas | 2,300,000 J/kg |
+
+**Note:** lv >> lf (vaporization requires more energy)`,
                 diagrams: [],
                 subsections: []
             },
             {
-                title: "4. Latent Heat and Phase Changes",
-                content: `## The Concept
+                title: "3. Multi-Stage Heat Transfer Calculation",
+                content: `## Example: Ice to Steam
 
-During state changes (melting/boiling), energy is supplied but **temperature stays constant**.
+**Problem:** How much heat is needed to change **20 g of ice at 0°C** to **steam at 100°C**?
 
-**Why?** Energy breaks intermolecular bonds, NOT increasing particle speed.
+### Stage 1: Melting the Ice (0°C)
 
-This "hidden" energy is **Latent Heat**.
+Energy to change state from solid ice to liquid water:
 
-## Types of Latent Heat
+$$E_1 = m × l_f = 20g × 340 J/g = \\textbf{6800 J}$$
 
-| Type | Process | Description |
-|------|---------|-------------|
-| **Latent Heat of Fusion (Lf)** | Melting/Freezing | Energy to separate particles from solid lattice |
-| **Latent Heat of Vaporization (Lv)** | Boiling/Condensing | Energy to completely separate particles into gas |
+### Stage 2: Heating the Water (0°C → 100°C)
 
-**Note:** Lv >> Lf (vaporization requires pushing against atmosphere and complete separation)
+Energy to heat liquid water from melting point to boiling point:
 
-## Formula
+$$E_2 = m × c × ΔT = 20g × 4.2 J/(g°C) × 100°C = \\textbf{8400 J}$$
 
-$$E = mL$$
+### Stage 3: Boiling the Water (100°C)
 
-Where:
-- **E** = Energy (J)
-- **m** = Mass (kg)
-- **L** = Specific latent heat (J/kg)
+Energy to change state from liquid water to steam:
 
-## Evaporation vs Boiling
+$$E_3 = m × l_v = 20g × 2300 J/g = \\textbf{46000 J}$$
 
-| Feature | Evaporation | Boiling |
-|---------|-------------|---------|
-| **Temperature** | Any temperature | At boiling point only |
-| **Location** | Surface only | Throughout liquid (bubbles) |
-| **Rate** | Slow | Rapid |
-| **Cooling effect** | Yes (fastest molecules escape) | No (constant temperature) |
+### Total Heat Required:
 
-**Applications of Evaporative Cooling:** Sweating, refrigerators, earthenware pots`,
+$$E_{total} = E_1 + E_2 + E_3 = 6800 + 8400 + 46000 = \\textbf{61200 J}$$
+
+## Key Insight
+
+| Stage | Temperature Change? | Where Energy Goes |
+|-------|--------------------|--------------------|
+| Heating | YES | Increases particle kinetic energy |
+| State Change | NO (constant T) | Breaks intermolecular bonds |`,
                 diagrams: [],
                 subsections: []
             },
             {
-                title: "5. Heat Transfer Methods",
-                content: `## A. Conduction
+                title: "4. Mechanisms of Heat Transfer",
+                content: `## Conduction
 
-Heat transfer through a medium **without movement of the medium**.
+Heat flows through matter from higher to lower temperature **without movement of matter as a whole**. Most significant in **solids**.
 
-### Mechanism 1: Lattice Vibration (Slow)
-- Heated particles vibrate more vigorously
-- Collide with neighbours, passing on kinetic energy
-- Occurs in all solids
+### Two Mechanisms:
 
-### Mechanism 2: Free Electron Diffusion (Fast - Metals only)
-- Metals have "sea" of delocalized electrons
-- Electrons gain energy and move rapidly through lattice
-- Transfer heat much faster than vibrations
+| Mechanism | How It Works | Where |
+|-----------|--------------|-------|
+| **Lattice Vibrations** | Heated molecules vibrate more vigorously, passing energy to neighbours | All solids |
+| **Free Electron Flow** | Electrons gain kinetic energy and travel quickly, transferring energy | **Metals only** |
 
-**Metals = Conductors | Non-metals = Insulators**
+**Metals = excellent conductors** (free electrons), **Non-metals = insulators**
 
-## B. Convection
+## Convection
 
-Heat transfer by **actual movement of fluid** (liquid or gas). Relies on density changes.
+Heat transfer through **fluids** (liquids and gases) via **movement of the fluid itself**. Relies on density changes.
 
-### The Convection Cycle:
-1. Fluid heated at bottom → particles move faster → expansion
-2. Heated fluid becomes **less dense**
-3. Warm fluid **rises** (upthrust)
-4. Cool, denser fluid **sinks** to replace it
-5. Creates continuous **convection current**
+### The Convection Current Cycle:
 
-## C. Radiation
+1. Fluid is heated → expands → becomes **less dense**
+2. Less dense warm fluid **rises**
+3. Cooler, denser fluid **sinks** to take its place
+4. This fluid is heated and the **cycle repeats**
 
-Heat transfer via **infrared electromagnetic waves**. Works through vacuum!
+## Radiation
+
+Heat transfer by **electromagnetic waves** (mostly infrared), **does NOT require a medium**.
+
+This is how Earth receives energy from the Sun (through vacuum of space).
 
 ### Surface Effects:
-| Surface | Absorption | Emission | Reflection |
-|---------|------------|----------|------------|
-| Dull/Matt Black | Best | Best | Poor |
-| Shiny/Silver/White | Poor | Poor | Best |
 
-**Examples:** Black cooling fins emit heat; Silver firefighter suits reflect heat
+| Surface Type | Emission | Absorption |
+|--------------|----------|------------|
+| **Dull, black** | Best emitter | Best absorber |
+| **Shiny, polished** | Poor emitter | Poor absorber |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Application: The Vacuum Flask",
+                content: `## Design Excellence
 
-## D. Vacuum Flask (Thermos)
+The vacuum flask minimizes heat transfer by **all three mechanisms** simultaneously.
 
-| Feature | Stops |
-|---------|-------|
-| **Vacuum** | Conduction + Convection (no particles) |
-| **Silvered walls** | Radiation (reflects heat) |
-| **Insulating stopper** | Conduction through neck, convection of vapor |
-| **Double glass walls** | Glass is poor conductor |`,
+## How Each Mechanism is Stopped:
+
+### 1. Stopping Conduction & Convection
+
+Double-walled glass vessel with **vacuum** between walls.
+
+**Why it works:** Both conduction and convection require **particles** to transfer energy. The near-total absence of particles in the vacuum almost completely prevents heat transfer.
+
+### 2. Reducing Radiation
+
+The walls facing the vacuum are **silvered** (shiny and reflective).
+
+**Why it works:** Shiny surfaces are **poor emitters** and **poor absorbers** of radiation.
+- For hot liquids: reflects thermal radiation back into the liquid
+- For cold liquids: reflects external radiation away
+
+### 3. Residual Transfer
+
+Small amount of heat can still transfer through:
+- Thin glass at top where walls meet
+- The stopper
+
+## Summary Table
+
+| Mechanism | How Flask Stops It |
+|-----------|-------------------|
+| Conduction | Vacuum (no particles) |
+| Convection | Vacuum (no fluid to flow) |
+| Radiation | Silvered surfaces (reflect infrared) |`,
                 diagrams: [],
                 subsections: []
             }
         ],
         key_points: [
-            "States of matter: Solid (fixed shape, vibrating), Liquid (flows, slides), Gas (random, fast, compressible)",
-            "Brownian motion: Evidence for kinetic theory - random jerky movement from particle collisions",
-            "Gas pressure caused by particle collisions with walls",
-            "Boyle's Law: P₁V₁ = P₂V₂ (pressure inversely proportional to volume)",
+            "Kinetic Theory: all matter consists of particles in constant motion; explains solid/liquid/gas properties",
+            "Brownian motion: random zig-zag motion of smoke particles = evidence for invisible air molecules",
+            "Gas laws: P↔V (at constant T), V↔T (at constant P), P↔T (at constant V)",
+            "Absolute Zero = -273°C (0 K); use Kelvin for gas law calculations: T(K) = θ(°C) + 273",
+            "Combined gas law: p₁V₁/T₁ = p₂V₂/T₂ for fixed mass of gas",
             "Thermal expansion: Gases > Liquids > Solids",
-            "Specific heat capacity: E = mcΔT (water has high c = 4200 J/kg°C)",
-            "Latent heat: Energy for state change without temperature change (E = mL)",
-            "Lv >> Lf (vaporization needs more energy than fusion)",
-            "Evaporation causes cooling (fastest molecules escape)",
-            "Conduction: Through material (metals best - free electrons)",
-            "Convection: Fluid movement (hot rises, cold sinks)",
-            "Radiation: EM waves, works in vacuum; black surfaces best absorbers/emitters"
+            "Specific heat capacity: E = mcΔT; water has high c (4200 J/kg°C) = excellent coolant",
+            "Specific latent heat: E = ml; lv >> lf (vaporization requires more energy than fusion)",
+            "During state changes, temperature stays constant (energy breaks bonds, not increases KE)",
+            "Conduction: through material via lattice vibrations + free electrons (metals best)",
+            "Convection: fluid movement (hot rises, cold sinks) creating convection currents",
+            "Radiation: EM waves through vacuum; dull black surfaces = best absorbers AND emitters"
         ],
         exam_tips: [
-            "Explain Brownian motion in terms of molecular bombardment",
-            "Use kinetic theory to explain gas pressure changes with temperature/volume",
-            "Know why temperature stays constant during state changes (latent heat)",
-            "Distinguish evaporation (surface, any temp, cooling) from boiling (throughout, fixed temp)",
-            "Explain why metals conduct better (free electrons)",
-            "Describe vacuum flask features and what each prevents",
-            "Black surfaces are both best absorbers AND best emitters"
+            "ALWAYS convert to Kelvin for gas law calculations (add 273 to Celsius)",
+            "Explain Brownian motion in terms of unequal molecular bombardment",
+            "Know why temperature stays constant during state changes (energy breaks bonds)",
+            "Multi-stage calculations: identify heating stages (E=mcΔT) and state change stages (E=ml)",
+            "Explain why metals conduct heat better than non-metals (free electrons)",
+            "Convection only works in fluids (cannot occur in solids or vacuum)",
+            "Radiation is only method that works through a vacuum",
+            "Vacuum flask: vacuum stops conduction/convection, silvered surfaces reduce radiation",
+            "Black surfaces are both best absorbers AND best emitters of radiation"
         ]
     },
 
     "Waves (General Wave Properties, Optics, Sound)": {
         topic: "Waves (General Wave Properties, Optics, Sound)",
         subject: "Physics",
-        summary: "This topic covers the nature and properties of waves, including transverse and longitudinal waves. It includes the wave equation, wave behaviours (reflection, refraction, diffraction), light optics (mirrors, lenses, total internal reflection), and sound waves including ultrasound applications and echoes.",
+        summary: "This comprehensive topic covers the fundamental principles of waves, light (optics), and sound. It establishes the essential vocabulary and mathematical relationships that describe all mechanical waves, analyzes the phenomena of reflection and refraction, explains how lenses form images, and explores the nature of sound as a longitudinal wave with practical applications including echoes and speed of sound calculations.",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/The_Core_Rules_of_All_Waves.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9QaHlzaWNzL1RoZV9Db3JlX1J1bGVzX29mX0FsbF9XYXZlcy5tNGEiLCJpYXQiOjE3NjU2MDEzMDIsImV4cCI6NTI2NjA5NzMwMn0.lVTNfc3jxXoE2IoFEP19Q8JBwmEq0QRHVipaOj7Jsa0",
         videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/Understanding_Waves.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL1BoeXNpY3MvVW5kZXJzdGFuZGluZ19XYXZlcy5tcDQiLCJpYXQiOjE3NjU3OTczOTgsImV4cCI6NTI2NjI5MzM5OH0.jfXt8-baLWLSw-qO5mMwf-hanVjvZEzPtVzMqdeUwVk",
         sections: [
             {
                 title: "1. General Wave Properties",
-                content: `## A. Nature of Waves
+                content: `## A. Core Wave Terminology
 
-A **wave** is a disturbance that transfers **energy** from one place to another **without transferring matter**.
-
-**Example:** Mexican wave in stadium - people oscillate in place, but the wave moves around.
-
-## B. Types of Waves
-
-### Transverse Waves:
-- Particles oscillate **perpendicular (90°)** to wave direction
-- Structure: **Crests** (highest) and **Troughs** (lowest)
-- Examples: Light, EM waves, water ripples, guitar strings
-
-### Longitudinal Waves:
-- Particles oscillate **parallel** to wave direction
-- Structure: **Compressions** (high pressure) and **Rarefactions** (low pressure)
-- Examples: Sound, ultrasound, P-waves (earthquakes)
-
-## C. Wave Terminology
+The following terms are essential for describing wave characteristics:
 
 | Term | Symbol | Definition | Unit |
 |------|--------|------------|------|
-| **Amplitude** | A | Maximum displacement from rest | m |
-| **Wavelength** | λ | Distance between consecutive points in phase | m |
-| **Frequency** | f | Number of waves per second | Hz |
-| **Period** | T | Time for one complete wave (T = 1/f) | s |
-| **Speed** | v | Distance moved by wavefront per second | m/s |
+| **Wavelength** | λ (lambda) | The distance between successive crests of a wave | m |
+| **Frequency** | f | The number of complete waves generated per second, or the number of crests passing a chosen point per second | Hz |
+| **Amplitude** | a | The height of a crest or the depth of a trough, measured from the undisturbed position of the medium | m |
+| **Speed** | v | The distance moved in the direction of travel by a crest or any point on the wave in one second | m/s |
 
-**Amplitude determines:** Sound loudness, Light brightness
-**Frequency determines:** Sound pitch, Light colour
+## B. The Wave Equation
 
-## D. The Wave Equation
+A fundamental relationship connects the speed, frequency, and wavelength of any wave:
 
-$$v = f\\lambda$$
+$$v = f \\times \\lambda$$
 
-Where:
-- **v** = Wave speed (m/s)
-- **f** = Frequency (Hz)
-- **λ** = Wavelength (m)`,
+This equation states that the **speed of a wave is the product of its frequency and wavelength**.
+
+### Worked Example:
+
+**Given:** A wave with frequency = 3 Hz and wavelength = 20 cm
+
+**Solution:**
+$$v = f \\times \\lambda = 3 \\text{ Hz} \\times 20 \\text{ cm} = 60 \\text{ cm/s}$$
+
+## C. Classifying Waves: Transverse vs. Longitudinal
+
+Mechanical waves are classified into two primary types based on particle motion relative to wave travel:
+
+| Wave Type | Key Differentiator | Structure | Examples |
+|-----------|-------------------|-----------|----------|
+| **Transverse** | Particles vibrate **at right angles** to the direction of wave travel | Crests (highest) and Troughs (lowest) | Water waves, light, EM waves, guitar strings |
+| **Longitudinal** | Particles vibrate **to and fro along the same line** as the wave's direction | Compressions (closer) and Rarefactions (further apart) | Sound waves, ultrasound, P-waves (earthquakes) |
+
+> **Key Insight:** Visualize a longitudinal wave by pushing and pulling the end of a spring - this sends compressions and rarefactions along its length.`,
                 diagrams: [],
                 subsections: []
             },
             {
-                title: "2. Wave Behaviours",
-                content: `## A. Reflection
+                title: "2. The Physics of Light (Optics)",
+                content: `## A. The Law of Reflection
 
-Waves bounce off a barrier (stays in same medium).
+The Law of Reflection governs how light bounces off a surface:
 
-**Law of Reflection:** Angle of incidence = Angle of reflection (**i = r**)
+> **Angle of incidence (i) = Angle of reflection (r)**
 
-**Properties unchanged:** Speed, frequency, wavelength (only direction changes)
+Both angles are measured relative to the **normal**, which is a line perpendicular to the reflecting surface at the point of incidence.
 
-## B. Refraction
+## B. The Law of Refraction (Snell's Law)
 
-Bending of waves when passing between different media (due to speed change).
+Refraction is the **bending of light** as it passes from one medium to another. This occurs because the **speed of light changes** when it crosses the boundary between different materials.
 
-### In Water (Ripple Tank):
-- **Deep → Shallow:** Speed decreases → Wavelength decreases → Bends **towards normal**
-- **Shallow → Deep:** Speed increases → Wavelength increases → Bends **away from normal**
+### Refractive Index (n):
 
-> **Frequency stays constant** during refraction (determined by source only)
+$$n = \\frac{\\text{Speed of light in air (or vacuum)}}{\\text{Speed of light in medium}}$$
 
-## C. Diffraction
+A medium with a higher refractive index is considered **"optically denser"**.
 
-Spreading of waves through narrow gaps or around obstacles.
+### Snell's Law:
 
-### Key Principle:
-- **Maximum spreading:** Gap width ≈ Wavelength
-- **Little diffraction:** Gap >> Wavelength
+$$n = \\frac{\\sin i}{\\sin r}$$
 
-**Why you can hear around corners but not see:** Sound has long wavelength (diffracts well); Light has tiny wavelength (doesn't diffract significantly)`,
+### Key Principles of Refraction:
+
+| Transition | Light Behaviour | Angle Comparison |
+|------------|-----------------|------------------|
+| **Air → Glass** (less dense → more dense) | Bends **towards** the normal | i > r |
+| **Glass → Air** (more dense → less dense) | Bends **away from** the normal | i < r |
+| **Along the normal** | No refraction (straight line) | i = r = 0° |
+
+## C. Converging Lenses and Image Formation
+
+A **converging lens** is thicker at the centre than at the edge. It causes parallel rays of light to converge.
+
+### Key Terminology:
+
+| Term | Definition |
+|------|------------|
+| **Principal Focus (F)** | The point on the principal axis to which a beam of light parallel to the axis is converged after passing through the lens |
+| **Focal Length (f)** | The distance from the centre of the lens to the principal focus |
+
+### Ray Diagram Construction:
+
+To determine the position and nature of an image:
+1. A ray travelling **parallel to the principal axis** is refracted to pass through the principal focus (F)
+2. A ray passing through the **centre of the lens** continues undeviated
+3. The point where these rays intersect marks the **top of the image**
+
+### Image Types:
+
+| Image Type | Characteristics | How Formed |
+|------------|-----------------|------------|
+| **Real Image** | Can be projected onto a screen | Light rays actually converge at this point |
+| **Virtual Image** | Cannot be formed on a screen; only seen by looking through the lens | Light rays appear to diverge from this point |`,
                 diagrams: [],
                 subsections: []
             },
             {
-                title: "3. Light (Optics)",
-                content: `## A. Properties of Light
+                title: "3. The Physics of Sound",
+                content: `## A. The Nature of Sound Waves
 
-- Transverse electromagnetic wave
-- Speed in vacuum: **c = 3.0 × 10⁸ m/s**
-- Doesn't need a medium
+Sound is a **mechanical wave** that requires a medium for its transmission. It cannot travel through a vacuum.
 
-## B. Plane Mirror Images
+> **Bell Jar Experiment:** A ringing bell inside a sealed jar becomes inaudible as the air is pumped out - demonstrating sound needs a medium.
+
+### Key Properties:
 
 | Property | Description |
 |----------|-------------|
-| **Virtual** | Cannot be projected on screen |
-| **Upright** | Same orientation as object |
-| **Laterally inverted** | Left-right swapped |
-| **Same size** | Magnification = 1 |
-| **Equidistant** | Image distance = Object distance |
+| **Wave Type** | Progressive longitudinal wave |
+| **Particle Motion** | Vibrate back and forth parallel to the direction of wave motion |
+| **Wave Propagation** | Series of **compressions** (particles closer together) and **rarefactions** (particles spread further apart) |
 
-## C. Refraction of Light
+## B. Echoes and Speed of Sound Calculation
 
-### Refractive Index (n):
-$$n = \\frac{\\text{Speed in vacuum}}{\\text{Speed in medium}}$$
+### What is an Echo?
 
-Glass: n ≈ 1.5 (light is 1.5× slower in glass)
+An **echo** is simply the **reflection of a sound wave**. When a sound wave encounters a hard surface (wall, cliff), it bounces back.
 
-### Snell's Law:
-$$n = \\frac{\\sin i}{\\sin r}$$
+### Calculating the Speed of Sound:
 
-- **Less dense → More dense:** Light slows, bends **towards normal** (i > r)
-- **More dense → Less dense:** Light speeds up, bends **away from normal** (i < r)
+The phenomenon of echoes can be used to measure the speed of sound.
 
-## D. Total Internal Reflection (TIR)
+**Method:**
+1. Measure the **total time (t)** for a sound to travel to a barrier and return
+2. Know the **distance (d)** to the barrier
+3. Remember: sound travels **to the barrier AND back** = total distance of **2d**
 
-### Conditions for TIR:
-1. Light travelling from **denser → rarer** medium
-2. Angle of incidence > **Critical Angle (c)**
+### Formula:
 
-### Critical Angle:
-$$n = \\frac{1}{\\sin c}$$
-
-### Applications:
-- **Optical fibres:** Telecommunications, medical endoscopes
-- **Prisms:** Periscopes, binoculars (90° or 180° reflection)`,
-                diagrams: [],
-                subsections: []
-            },
-            {
-                title: "4. Lenses",
-                content: `## A. Converging (Convex) Lens
-
-**Shape:** Thicker in middle
-**Action:** Bends parallel rays inward to Principal Focus
-
-### Image Types:
-| Object Position | Image Type |
-|-----------------|------------|
-| **u > f** (outside focal length) | Real, inverted, can be projected |
-| **u < f** (inside focal length) | Virtual, upright, magnified (magnifying glass) |
-
-**Uses:** Cameras, human eye, projectors, magnifying glass
-
-## B. Diverging (Concave) Lens
-
-**Shape:** Thinner in middle
-**Action:** Spreads parallel rays outward (appear to come from virtual focus)
-
-**Image:** Always virtual, upright, diminished
-
-**Uses:** Peepholes, correcting short-sightedness`,
-                diagrams: [],
-                subsections: []
-            },
-            {
-                title: "5. Sound",
-                content: `## A. Properties of Sound
-
-- **Mechanical, longitudinal wave** (needs medium)
-- Produced by vibrating sources (vocal cords, strings, speakers)
-
-### Bell Jar Experiment:
-Bell becomes silent as air is pumped out → proves sound needs medium
-
-### Speed of Sound:
-| Medium | Speed | Reason |
-|--------|-------|--------|
-| **Gases (Air)** | ~340 m/s | Particles far apart (slowest) |
-| **Liquids (Water)** | ~1500 m/s | Particles closer |
-| **Solids (Steel)** | ~5000 m/s | Particles tightly packed (fastest) |
-
-### Audible Characteristics:
-- **Loudness** = Amplitude (larger = louder)
-- **Pitch** = Frequency (higher = higher pitch)
-- **Audible range:** 20 Hz - 20,000 Hz (20 kHz)
-
-| Type | Frequency |
-|------|-----------|
-| Infrasound | < 20 Hz |
-| Audible | 20 Hz - 20 kHz |
-| Ultrasound | > 20 kHz |
-
-## B. Ultrasound Applications
-
-- **Sonar:** Measure sea depth (d = vt/2)
-- **Medical imaging:** Prenatal scans (safe, no X-ray danger)
-- **Cleaning:** Vibrations shake dirt off jewelry
-
-## C. Echoes
-
-Echo = **Reflection of sound** from hard surface
-
-### Echo Calculation:
 $$v = \\frac{2d}{t}$$
 
-- **2d** because sound travels to wall AND back
-- d = distance to wall
-- t = total time for round trip`,
+Where:
+- **v** = Speed of sound (m/s)
+- **d** = Distance to the barrier (m)
+- **t** = Total time for round trip (s)
+
+### Worked Example:
+
+**Given:** A person claps 50 m from a wall and hears the echo after 0.3 seconds.
+
+**Solution:**
+$$v = \\frac{2d}{t} = \\frac{2 \\times 50}{0.3} = \\frac{100}{0.3} = 333.3 \\text{ m/s}$$`,
                 diagrams: [],
                 subsections: []
             }
         ],
         key_points: [
-            "Waves transfer energy without transferring matter",
-            "Transverse: oscillation perpendicular to travel (light, water)",
-            "Longitudinal: oscillation parallel to travel (sound)",
-            "Wave equation: v = fλ",
-            "Frequency determines pitch (sound) and colour (light)",
-            "Amplitude determines loudness (sound) and brightness (light)",
-            "Reflection: i = r (angle of incidence = angle of reflection)",
-            "Refraction: bending due to speed change; frequency stays constant",
-            "Diffraction: maximum when gap ≈ wavelength",
-            "TIR: denser→rarer medium + angle > critical angle",
-            "Sound needs medium; travels fastest in solids",
-            "Echo calculation: v = 2d/t"
+            "Wavelength (λ): Distance between successive crests of a wave",
+            "Frequency (f): Number of complete waves per second, measured in Hz",
+            "Amplitude: Height of crest/depth of trough from undisturbed position",
+            "Wave equation: v = f × λ (speed = frequency × wavelength)",
+            "Transverse waves: Particles vibrate perpendicular to wave direction (water, light)",
+            "Longitudinal waves: Particles vibrate parallel to wave direction (sound)",
+            "Law of Reflection: Angle of incidence = Angle of reflection (i = r)",
+            "Refractive index (n): Speed in air ÷ Speed in medium",
+            "Snell's Law: n = sin i / sin r",
+            "Light bends towards normal when entering denser medium (i > r)",
+            "Light bends away from normal when entering less dense medium (i < r)",
+            "Converging lens: Thicker in centre, brings parallel rays to principal focus",
+            "Real image: Can be projected; Virtual image: Only seen through lens",
+            "Sound is a longitudinal mechanical wave requiring a medium",
+            "Echo calculation: v = 2d/t (remember sound travels there AND back)"
         ],
         exam_tips: [
-            "Draw wave diagrams with clear labels (amplitude, wavelength, crests, troughs)",
-            "Use wave equation v = fλ correctly",
-            "Remember: frequency NEVER changes during refraction",
-            "Know conditions for TIR (denser to rarer + i > c)",
-            "Distinguish converging (real/virtual images) from diverging lenses (always virtual)",
-            "Sound: higher frequency = higher pitch; higher amplitude = louder",
-            "Echo problems: remember to use 2d for total distance"
+            "Always identify wave type first: transverse (perpendicular) or longitudinal (parallel)",
+            "Use the wave equation v = fλ - ensure units are consistent (m, Hz, m/s)",
+            "For reflection problems: always draw the normal line first, then measure angles from it",
+            "Snell's Law: remember n = sin i / sin r (angle in air is typically angle i)",
+            "When light enters denser medium → slows down → bends towards normal",
+            "When light enters less dense medium → speeds up → bends away from normal",
+            "For lens ray diagrams: always draw the two key rays (parallel to axis, through centre)",
+            "Sound needs medium - this is why the bell jar experiment is important to describe",
+            "Echo problems: CRITICAL - use 2d not d because sound travels to barrier AND back",
+            "Always state what an echo is (reflection of sound) before calculating"
         ]
     },
 
@@ -1971,236 +1950,147 @@ Transmit at **HIGH VOLTAGE** (e.g., 400,000V)
     "Electronics (Logic Gates, Components)": {
         topic: "Electronics (Logic Gates, Components)",
         subject: "Physics",
-        summary: "This topic covers the difference between analogue and digital signals, the five main logic gates (NOT, AND, OR, NAND, NOR) with their truth tables and functions, and key electronic components including LEDs, relays, and variable resistors used in control circuits.",
+        summary: "This comprehensive topic covers the essential building blocks of electronic systems, including core components that direct and control the flow of electric current (diodes, capacitors, LDRs, thermistors) and digital logic gates (NOT, AND, OR, NAND, NOR) that serve as the foundation for digital circuits and computation.",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/Analogue_Digital_Signals_and_Logic_Gates.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9QaHlzaWNzL0FuYWxvZ3VlX0RpZ2l0YWxfU2lnbmFsc19hbmRfTG9naWNfR2F0ZXMubTRhIiwiaWF0IjoxNzY1NjAxMDExLCJleHAiOjUyNjYwOTcwMTF9.9prhXiTd9i3aBjCqdVd1XXBtMshtSSsRnHaoDbWpgpo",
         videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/The_Logic_of_Electronics.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL1BoeXNpY3MvVGhlX0xvZ2ljX29mX0VsZWN0cm9uaWNzLm1wNCIsImlhdCI6MTc2NTc5NzM2MiwiZXhwIjo1MjY2MjkzMzYyfQ.YgTLz1aPtXIfV4R0-iKv3NGkfoAYaws-1703XGMPp4s",
         sections: [
             {
-                title: "1. Analogue and Digital Electronics",
-                content: `## A. Analogue Signals
+                title: "1. Core Electronic Components",
+                content: `## A. Diodes
 
-**Nature:** Vary **continuously** over a range of values. No sudden jumps.
+A **semiconductor diode** is a component that permits current to flow in **only one direction**, a critical function known as **rectification**.
 
-**Examples:**
-- Audio signals from microphone
-- Temperature sensors (thermistor resistance)
-- Moving-coil meters
+### Function:
+- Allows passage of one half of an alternating current (a.c.) cycle while blocking the other
+- Effectively converts **a.c. into direct current (d.c.)**
+- Essential for powering electronic devices that require a steady, one-directional current
 
-**Graph:** Smooth, continuous wavy line (sine wave)
+## B. Capacitors
 
-## B. Digital Signals
+The primary function of a **capacitor** is to **store electric charge**.
 
-**Nature:** Only **two distinct states** - High and Low
+### How It Works:
+1. When connected to a power source, the positive terminal attracts electrons from one plate
+2. The negative terminal repels electrons onto the other plate
+3. This builds up a **positive charge** on the first plate and an **equal negative charge** on the second
+4. A **potential difference** is established across the capacitor
+5. Once fully charged to the voltage of the supply, the capacitor effectively **blocks the flow of direct current**
 
-| State | Also Called | Voltage |
-|-------|-------------|---------|
-| **High** | Logic 1, ON | ~5V |
-| **Low** | Logic 0, OFF | ~0V |
+## C. Input Sensors
 
-**Examples:**
-- Switches (ON/OFF)
-- Logic gates
-- Computer data (binary: 1s and 0s)
+### Light-Dependent Resistor (LDR):
+- An input transducer whose resistance changes in response to **light intensity**
+- **Key Principle:** Resistance **decreases** as light intensity **increases**
 
-**Graph:** Square wave (horizontal lines at High/Low, vertical transitions)
+### Thermistor:
+- An input transducer whose resistance changes significantly with **temperature**
+- **Key Principle:** Resistance **falls** as temperature **rises**
 
-## Advantage of Digital:
-- **Noise resistant:** If 5V signal corrupted to 4.5V, still recognized as "High"
-- Analogue corruption = quality loss
-- Digital storage/transmission very reliable (CDs, Internet)`,
+### Applications:
+Both LDR and thermistor are frequently used as **variable resistors** within **potential divider circuits**, allowing changes in light or temperature to be converted into a **voltage signal** that can control other parts of a system, such as a transistor switch.`,
                 diagrams: [],
                 subsections: []
             },
             {
-                title: "2. Logic Gates Overview",
+                title: "2. Digital Logic Gates",
                 content: `## What Are Logic Gates?
 
-**Definition:** Fundamental building blocks of digital circuits
+Logic gates are the **fundamental building blocks of digital electronic circuits**. They perform logical operations on one or more binary inputs to produce a single binary output.
 
-**Function:** Take binary inputs (0 or 1) → Produce single binary output based on logical rule
+### Binary States:
+| State | Representation |
+|-------|----------------|
+| **Low** | 0 |
+| **High** | 1 |
 
-## The Five Main Gates:
+## NOT Gate (Inverter)
 
-| Gate | Inputs | Function |
-|------|--------|----------|
-| **NOT** | 1 | Inverts the input |
-| **AND** | 2 | Output HIGH only if ALL inputs HIGH |
-| **OR** | 2 | Output HIGH if ANY input HIGH |
-| **NAND** | 2 | Opposite of AND |
-| **NOR** | 2 | Opposite of OR |
+A NOT gate is an **inverter** that produces an output which is the **logical opposite** of its single input.
 
-> **NAND and NOR** are "universal gates" - can build any other gate from them`,
-                diagrams: [],
-                subsections: []
-            },
-            {
-                title: "3. NOT Gate (Inverter)",
-                content: `## Function
-
-**Inverts** (reverses) the input signal.
-
-- Input 1 → Output 0
-- Input 0 → Output 1
-
-## Logic
-
-"The output is true only if the input is **NOT** true."
-
-## Truth Table
-
-| Input A | Output Q |
-|---------|----------|
+| Input | Output |
+|-------|--------|
 | 0 | **1** |
 | 1 | **0** |
 
-**Memory tip:** Output is always the **opposite** of input`,
-                diagrams: [],
-                subsections: []
-            },
-            {
-                title: "4. AND Gate",
-                content: `## Function
+## AND Gate
 
-Output is HIGH **only if ALL inputs are HIGH**.
+An AND gate produces a **high (1) output only if ALL of its inputs are high (1)**.
 
-## Analogy
-
-- Security box needing **two keys** turned together
-- Two switches in **series** - both must be closed
-
-## Logic
-
-"Output is true only if A **AND** B are true."
-
-## Truth Table
-
-| A | B | Output Q |
-|---|---|----------|
+| Input A | Input B | Output |
+|---------|---------|--------|
 | 0 | 0 | 0 |
 | 0 | 1 | 0 |
 | 1 | 0 | 0 |
 | 1 | 1 | **1** |
 
-**Memory tip:** Only ONE combination gives output 1 (both inputs = 1)`,
-                diagrams: [],
-                subsections: []
-            },
-            {
-                title: "5. OR Gate",
-                content: `## Function
+## OR Gate
 
-Output is HIGH if **AT LEAST ONE input is HIGH**.
+An OR gate produces a **high (1) output if ANY of its inputs are high (1)**.
 
-## Analogy
-
-- Doorbell with buttons at front AND back door
-- Two switches in **parallel** - either one works
-
-## Logic
-
-"Output is true if A **OR** B (or both) are true."
-
-## Truth Table
-
-| A | B | Output Q |
-|---|---|----------|
+| Input A | Input B | Output |
+|---------|---------|--------|
 | 0 | 0 | 0 |
 | 0 | 1 | **1** |
 | 1 | 0 | **1** |
 | 1 | 1 | **1** |
 
-**Memory tip:** Only ONE combination gives output 0 (both inputs = 0)`,
-                diagrams: [],
-                subsections: []
-            },
-            {
-                title: "6. NAND and NOR Gates",
-                content: `## NAND Gate (NOT-AND)
+## NAND Gate (NOT-AND)
 
-**Opposite of AND:** Output LOW only if ALL inputs HIGH
+A NAND gate produces a **low (0) output only if ALL of its inputs are high (1)**.
 
-| A | B | Output Q |
-|---|---|----------|
+| Input A | Input B | Output |
+|---------|---------|--------|
 | 0 | 0 | **1** |
 | 0 | 1 | **1** |
 | 1 | 0 | **1** |
 | 1 | 1 | 0 |
 
-**Construction:** AND gate followed by NOT gate
-
----
+> **Construction:** AND gate followed by NOT gate
 
 ## NOR Gate (NOT-OR)
 
-**Opposite of OR:** Output HIGH only if ALL inputs LOW
+A NOR gate produces a **high (1) output only if ALL of its inputs are low (0)**.
 
-| A | B | Output Q |
-|---|---|----------|
+| Input A | Input B | Output |
+|---------|---------|--------|
 | 0 | 0 | **1** |
 | 0 | 1 | 0 |
 | 1 | 0 | 0 |
 | 1 | 1 | 0 |
 
-**Construction:** OR gate followed by NOT gate`,
-                diagrams: [],
-                subsections: []
-            },
-            {
-                title: "7. Electronic Components",
-                content: `## A. Light Emitting Diode (LED)
-
-- Emits light when current flows (forward bias)
-- **Digital indicator:** ON = Logic 1, OFF = Logic 0
-- **MUST have series resistor** to limit current (prevents burnout)
-
-## B. Relay
-
-**Electromagnetically operated switch**
-
-### How It Works:
-1. Small current flows through coil
-2. Creates magnetic field, magnetizes iron core
-3. Attracts movable armature
-4. Closes high-power circuit contacts
-
-### Purpose:
-- Low-power circuit (5V) controls high-power circuit (230V)
-- **Electrical isolation** - protects electronics from mains voltage
-
-## C. Variable Resistor (Potentiometer)
-
-- Resistance changed by turning knob/slider
-- Used in **potential divider circuits**
-- Sets **threshold voltage** for control circuits
-
-**Example:** Automatic street light
-- LDR detects darkness
-- Variable resistor adjusts sensitivity (when lights turn on)`,
+> **Construction:** OR gate followed by NOT gate`,
                 diagrams: [],
                 subsections: []
             }
         ],
         key_points: [
-            "Analogue: continuous values; Digital: only High (1) or Low (0)",
-            "Digital signals resist noise/interference better than analogue",
-            "NOT gate: inverts input (1→0, 0→1)",
-            "AND gate: output 1 only if ALL inputs are 1",
-            "OR gate: output 1 if ANY input is 1",
-            "NAND = NOT + AND; NOR = NOT + OR",
-            "NAND and NOR are universal gates",
-            "LED needs series resistor to prevent burnout",
-            "Relay: low-power circuit controls high-power circuit safely",
-            "Variable resistors set threshold in control circuits"
+            "Diode: Allows current flow in one direction only (rectification) - converts a.c. to d.c.",
+            "Capacitor: Stores electric charge; blocks d.c. when fully charged",
+            "LDR (Light-Dependent Resistor): Resistance DECREASES as light intensity INCREASES",
+            "Thermistor: Resistance FALLS as temperature RISES",
+            "LDR and thermistor used in potential divider circuits as variable resistors",
+            "Logic gates: Fundamental building blocks of digital circuits",
+            "NOT gate: Inverts input (0→1, 1→0)",
+            "AND gate: Output HIGH only if ALL inputs are HIGH",
+            "OR gate: Output HIGH if ANY input is HIGH",
+            "NAND gate: Opposite of AND - output LOW only if ALL inputs HIGH",
+            "NOR gate: Opposite of OR - output HIGH only if ALL inputs LOW",
+            "NAND = AND followed by NOT; NOR = OR followed by NOT"
         ],
         exam_tips: [
-            "Memorize all five truth tables",
-            "NAND truth table: opposite of AND (flip the outputs)",
-            "NOR truth table: opposite of OR (flip the outputs)",
-            "Draw circuit diagrams with correct gate symbols",
-            "Explain why LEDs need protective resistors",
-            "Describe how relays provide electrical isolation"
+            "Diodes allow current in ONE direction only - draw arrow showing current direction",
+            "Remember: LDR - Light UP, Resistance DOWN; Thermistor - Temp UP, Resistance DOWN",
+            "Memorize all five logic gate truth tables - they are frequently examined",
+            "NOT gate is the only single-input gate; all others have two inputs",
+            "AND gate: Think 'both A AND B must be 1'",
+            "OR gate: Think 'A OR B (or both) must be 1'",
+            "NAND truth table: Opposite of AND (flip all outputs)",
+            "NOR truth table: Opposite of OR (flip all outputs)",
+            "Be able to construct truth tables for combined logic gate circuits",
+            "Know the applications of input sensors (LDR in light-sensitive circuits, thermistor in temperature-sensitive circuits)"
         ]
     },
+
 
     "Atomic and Nuclear Physics (Modern Physics)": {
         topic: "Atomic and Nuclear Physics (Modern Physics)",
@@ -2213,243 +2103,267 @@ Output is HIGH if **AT LEAST ONE input is HIGH**.
                 title: "1. The Structure of the Atom: The Nuclear Model",
                 content: `## The Nuclear Model
 
-The nuclear model describes the atom as a system with an incredibly dense, positively charged central core—the **nucleus**—which contains almost all of the atom's mass.
+The nuclear model describes the atom as a system with an incredibly dense, positively charged central core—the ** nucleus **—which contains almost all of the atom's mass.
 
 ## Defining the Nucleus: Protons and Nucleons
 
-The nucleus is composed of two primary types of particles, collectively known as **nucleons**:
+The nucleus is composed of two primary types of particles, collectively known as ** nucleons **:
 
 | Particle | Symbol | Charge | Mass | Role |
-|----------|--------|--------|------|------|
-| **Proton** | p | +1 | 1 | Identifies element (defines Z) |
-| **Neutron** | n | 0 | 1 | Adds mass, provides stability |
+| ----------| --------| --------| ------| ------|
+| ** Proton ** | p | +1 | 1 | Identifies element(defines Z) |
+| ** Neutron ** | n | 0 | 1 | Adds mass, provides stability |
 
 ### Key Numbers:
 
 | Number | Symbol | Definition |
-|--------|--------|------------|
-| **Proton Number (Z)** | Z | Number of protons in the nucleus |
-| **Nucleon Number (A)** | A | Total number of nucleons (protons + neutrons) |
-| **Neutrons** | A - Z | Calculated by subtracting Z from A |
+| --------| --------| ------------|
+| ** Proton Number(Z) ** | Z | Number of protons in the nucleus |
+| ** Nucleon Number(A) ** | A | Total number of nucleons(protons + neutrons) |
+| ** Neutrons ** | A - Z | Calculated by subtracting Z from A |
 
 ## Standard Nuclide Notation
 
-To uniquely identify a specific nucleus (nuclide), use this format:
+To uniquely identify a specific nucleus(nuclide), use this format:
 
-$$^A_Z X$$
+$$ ^ A_Z X$$
 
 Where:
-- **X** = Chemical symbol of the element
-- **A** (superscript) = Nucleon Number (mass number) — **always the larger number**
-- **Z** (subscript) = Proton Number (atomic number)
+- ** X ** = Chemical symbol of the element
+    - ** A ** (superscript) = Nucleon Number(mass number) — ** always the larger number **
+- ** Z ** (subscript) = Proton Number(atomic number)
 
-**Example:** $$^{226}_{88}Ra$$ (Radium)
-- Proton Number (Z) = 88
-- Nucleon Number (A) = 226
-- Neutrons = 226 - 88 = **138**
+    ** Example:** $$ ^ { 226}_{ 88 } Ra$$(Radium)
+        - Proton Number(Z) = 88
+            - Nucleon Number(A) = 226
+                - Neutrons = 226 - 88 = ** 138 **
 
 ## Understanding Isotopes
 
-> **Isotopes** are atoms of the same element that contain the same number of protons but have a **different number of neutrons**.
+    > ** Isotopes ** are atoms of the same element that contain the same number of protons but have a ** different number of neutrons **.
 
-| Property | Same or Different? |
-|----------|-------------------|
-| Proton number (Z) | **Same** |
-| Nucleon number (A) | **Different** |
-| Chemical properties | **Same** (same electrons) |
-| Physical properties | **Different** (different mass) |
+| Property | Same or Different ? |
+| ----------| -------------------|
+| Proton number(Z) | ** Same ** |
+| Nucleon number(A) | ** Different ** |
+| Chemical properties | ** Same ** (same electrons) |
+| Physical properties | ** Different ** (different mass) |
 
-**Example:** Carbon-12 (6p, 6n) vs Carbon-14 (6p, 8n)`,
+** Example:** Carbon - 12(6p, 6n) vs Carbon - 14(6p, 8n)`,
                 diagrams: [],
                 subsections: []
             },
             {
                 title: "2. The Nature of Radioactivity and its Emissions",
-                content: `## What is Radioactivity?
+                content: `## What is Radioactivity ?
 
-Radioactivity is a natural process originating from the nuclei of **unstable atoms**. In an attempt to become more stable, these nuclei emit energy in the form of radiation.
+    Radioactivity is a natural process originating from the nuclei of ** unstable atoms **.In an attempt to become more stable, these nuclei emit energy in the form of radiation.
 
 ## The Three Types of Radiation
 
-| Radiation Type | Nature | Penetrating Power | Ionising Power |
-|----------------|--------|-------------------|----------------|
-| **Alpha (α)** | Helium nucleus (2p + 2n) | Stopped by **paper** or few cm of air | **High** |
-| **Beta (β)** | Fast-moving electrons | Stopped by **few mm of aluminium** | Medium |
-| **Gamma (γ)** | Electromagnetic waves | Reduced by **several cm of lead** | Low |
+    | Radiation Type | Nature | Penetrating Power | Ionising Power |
+| ----------------| --------| -------------------| ----------------|
+| ** Alpha(α) ** | Helium nucleus(2p + 2n) | Stopped by ** paper ** or few cm of air | ** High ** |
+| ** Beta(β) ** | Fast - moving electrons | Stopped by ** few mm of aluminium ** | Medium |
+| ** Gamma(γ) ** | Electromagnetic waves | Reduced by ** several cm of lead ** | Low |
 
 ## Behaviour in Electric Fields
 
-| Radiation | Behaviour | Reason |
-|-----------|-----------|--------|
-| **Alpha (α)** | Deflected towards **negative plate** | Positively charged (+2), but large mass = less deflection |
-| **Beta (β)** | Strongly deflected towards **positive plate** | Negatively charged (-1), very small mass = large deflection |
-| **Gamma (γ)** | **Completely undeflected** | No charge |
+    | Radiation | Behaviour | Reason |
+| -----------| -----------| --------|
+| ** Alpha(α) ** | Deflected towards ** negative plate ** | Positively charged(+2), but large mass = less deflection |
+| ** Beta(β) ** | Strongly deflected towards ** positive plate ** | Negatively charged(-1), very small mass = large deflection |
+| ** Gamma(γ) ** | ** Completely undeflected ** | No charge |
 
 ## Behaviour in Magnetic Fields
 
-- Magnetic fields exert force on **moving charged particles**, causing curved paths
-- Use **Fleming's Left-Hand Rule** to predict direction
-- **Beta particles** (negative) deflect **opposite** to conventional current direction
-- **Gamma rays** are **unaffected** (no charge)
+    - Magnetic fields exert force on ** moving charged particles **, causing curved paths
+        - Use ** Fleming's Left-Hand Rule** to predict direction
+            - ** Beta particles ** (negative) deflect ** opposite ** to conventional current direction
+                - ** Gamma rays ** are ** unaffected ** (no charge)
 
 ## Detecting Radiation
 
-### Geiger-Müller (GM) Tube:
-1. Radiation enters through thin **mica window**
-2. **Ionizes argon gas** atoms
+### Geiger - Müller(GM) Tube:
+1. Radiation enters through thin ** mica window **
+    2. ** Ionizes argon gas ** atoms
 3. Electrons accelerated by high voltage → cascade of ionization
-4. Creates **current pulse** → registered as a "click"
+4. Creates ** current pulse ** → registered as a "click"
 
 ### Background Radiation:
-Always present from natural sources (radon gas, cosmic rays, Carbon-14)
-- Must **subtract** from readings for "corrected count rate"`,
+Always present from natural sources(radon gas, cosmic rays, Carbon - 14)
+    - Must ** subtract ** from readings for "corrected count rate"`,
                 diagrams: [],
                 subsections: []
             },
             {
-                title: "3. Decay Equations and Half-Life",
-                content: `## Radioactive Decay Equations
+                title: "3. The Process of Radioactive Decay",
+                content: `## The Spontaneous and Random Nature of Decay
 
-### Alpha Decay (α):
-- Mass number **decreases by 4**
-- Proton number **decreases by 2**
-$$^{238}_{92}U \\rightarrow ^{234}_{90}Th + ^4_2\\alpha$$
+Radioactive decay is defined by two key characteristics:
 
-### Beta Decay (β):
-- Mass number **stays same**
-- Proton number **increases by 1**
-$$^{14}_6C \\rightarrow ^{14}_7N + ^0_{-1}\\beta$$
+| Characteristic | Meaning |
+| ----------------| ---------|
+| ** Spontaneous ** | The decay process is NOT influenced by external factors(temperature, pressure, chemical environment) |
+| ** Random ** | It is ** impossible to predict ** which specific nucleus will decay at any given moment |
 
-### Gamma Decay (γ):
-- **No change** in mass or proton number
-- Just releases energy
+> ** Exam Tip:** "Random" means you cannot predict which individual nucleus decays next or when—we can only describe the overall rate for a large number of nuclei.
 
-## Half-Life (t₁/₂)
+## Balancing Nuclear Equations
 
-**Definition:** Time for half the radioactive nuclei to decay (or activity to halve).
+When a nucleus decays, both ** Nucleon Number(A) ** and ** Proton Number(Z) ** must be conserved on both sides of the equation.
 
-### Calculation Example:
-**Problem:** 800 counts/min, half-life = 4 hours. Count rate after 12 hours?
+## Alpha(α) Decay
 
-**Method:** 12h ÷ 4h = **3 half-lives**
+The nucleus emits an alpha particle(Helium nucleus: $$ ^ 4_2He$$)
 
-| Time | Count Rate |
-|------|------------|
-| Start | 800 |
-| After 4h (1st) | 400 |
-| After 8h (2nd) | 200 |
-| After 12h (3rd) | **100** |`,
+    | Change | Effect |
+| --------| --------|
+| Nucleon Number(A) | ** Decreases by 4 ** |
+| Proton Number(Z) | ** Decreases by 2 ** |
+
+** Example:** $$ ^ { 226}_{ 88 } Ra \\rightarrow ^ { 222}_{ 86 } Rn + ^ 4_2He$$
+
+## Beta(β) Decay
+
+The nucleus emits a beta particle(high - energy electron: $$ ^0_{- 1}e$$)
+This occurs when a ** neutron converts to a proton ** and an electron.
+
+| Change | Effect |
+| --------| --------|
+| Nucleon Number(A) | ** Unchanged ** |
+| Proton Number(Z) | ** Increases by 1 ** |
+
+** Example:** $$ ^ { 234}_{ 90 } Th \\rightarrow ^ { 234}_{ 91 } Pa + ^0_{ -1 } e$$
+
+## Gamma(γ) Decay
+
+Emission of a high - energy photon—allows nucleus to transition from high - energy state to lower, more stable state.Often occurs after alpha or beta decay.
+
+| Change | Effect |
+| --------| --------|
+| Nucleon Number(A) | ** Unchanged ** |
+| Proton Number(Z) | ** Unchanged ** | `,
                 diagrams: [],
                 subsections: []
             },
             {
-                title: "4. Uses of Radioisotopes",
-                content: `## Choosing Isotopes
+                title: "4. Understanding and Calculating Half-Life",
+                content: `## Defining Half - Life(t₁/₂)
 
-Based on **penetrating power** and **half-life**.
+    > The ** half - life ** of a radioactive element is the average time taken for ** half of the atoms ** in a given sample to decay.
 
-| Use | Type | Why This Type? |
-|-----|------|----------------|
-| **Smoke Detectors** | Alpha | Highly ionizing, easily blocked |
-| **Thickness Control** | Beta | Penetrates paper/foil but absorbed by changes |
-| **Medical Tracers** | Gamma | Escapes body, short half-life |
-| **Sterilization** | Gamma | Kills bacteria without heating |
-| **Carbon Dating** | Beta (C-14) | Known half-life (5730 years) |
+        Alternatively: The time required for the ** activity ** (rate of decay) to fall to half of its initial value.
 
-### Smoke Detector (Alpha):
-- Alpha ionizes air, creates steady current
-- Smoke attaches to ions, stops current → alarm sounds
+## Interpreting the Decay Curve
 
-### Thickness Control (Beta):
-- Beta source on one side, detector on other
-- Thicker material = less radiation through = adjust rollers
+### Steps to find half - life from a graph:
 
-### Medical Tracer (Gamma):
-- Patient injected with Technetium-99
-- Gamma camera tracks flow, finds blockages
-- Short half-life = patient not radioactive long`,
+1. ** Identify Initial Activity:** Note the activity at t = 0(e.g., 80 units)
+2. ** Calculate Half - Activity:** Divide by 2(80 ÷ 2 = 40 units)
+3. ** Find the First Half - Life:** Trace from 40 units horizontally to curve, then down to time axis
+4. ** Confirm the Constant:** Repeat from 40 to 20 units—time should be the same
+
+## Solving Half - Life Problems
+
+### Example Problem:
+"In an experiment, the count-rate falls from **200 counts/s to 25 counts/s** in **75 minutes**. What is the half-life?"
+
+### Solution:
+
+** Step 1:** Track the decay by successive halving:
+
+| Half - Life | Count Rate |
+| -----------| ------------|
+| Start | 200 counts / s |
+| 1st half - life | 100 counts / s |
+| 2nd half - life | 50 counts / s |
+| 3rd half - life | ** 25 counts / s ** |
+
+** Step 2:** Count the number of half - lives: ** 3 half - lives **
+
+** Step 3:** Calculate:
+- 3 half - lives = 75 minutes
+    - 1 half - life = 75 ÷ 3 = ** 25 minutes **
+
+## Quick Reference
+
+    | Starting Activity | After 1 t₁/₂ | After 2 t₁/₂ | After 3 t₁/₂ |
+        | -------------------| --------------| --------------| --------------|
+| 100 % | 50 % | 25 % | 12.5 % | `,
                 diagrams: [],
                 subsections: []
             },
             {
-                title: "5. Nuclear Energy",
-                content: `## A. Nuclear Fission
+                title: "5. Applications and Safety of Radioactive Materials",
+                content: `## Detecting Radiation
 
-**Definition:** Splitting heavy nucleus into lighter nuclei + energy + neutrons
+### Geiger - Müller(GM) Tube:
+1. Metal cylinder(cathode) with central wire(anode)
+2. Filled with low - pressure argon gas, sealed by thin mica window
+3. Radiation ionizes argon gas
+4. Electrons accelerated → cascade of ionization
+5. Current pulse registered as a "click" on counter
 
-### The Process:
-1. Slow neutron hits U-235
-2. Nucleus absorbs, becomes unstable, splits
-3. Releases daughter nuclei + energy + 2-3 neutrons
+### Cloud and Bubble Chambers:
+Visualize paths of individual particles—radiation leaves visible trails in supersaturated vapour.
 
-### Chain Reaction:
-New neutrons hit more U-235 → cascading reaction → enormous energy
+## Practical Uses of Radioisotopes
 
-### Nuclear Reactor (Controlled Fission):
-- **Control Rods (Boron):** Absorb excess neutrons, control rate
-- **Moderator (Graphite/Water):** Slows neutrons for absorption
+    | Application | Radiation Type | Why This Type ? |
+| -------------| ----------------| ----------------|
+| ** Radioactive Tracers ** | Gamma | Can be detected outside the body |
+| ** Thickness Control ** | Beta | Absorbed proportionally by material thickness |
+| ** Sterilization ** | Gamma | High penetrating power—reaches all parts |
 
-## B. Nuclear Fusion
+### Thickness Control(Paper Mills):
+- Beta source on one side, detector on the other
+    - If paper too thick → less radiation detected → adjust rollers
+        - Alpha too easily stopped; Gamma too penetrating
 
-**Definition:** Joining light nuclei to form heavier nucleus
+### Sterilization:
+Gamma rays used due to ** high penetrating power **—sterilizes even inside packaging.
 
-$$\\text{Deuterium + Tritium} \\rightarrow \\text{Helium + Energy}$$
+## Essential Safety Precautions
 
-- Releases **more energy** than fission per kg
-- Powers the **Sun and stars**
-- **Challenge:** Needs millions of degrees (nuclei repel)`,
-                diagrams: [],
-                subsections: []
-            },
-            {
-                title: "6. Safety Precautions",
-                content: `## Dangers of Radiation
+Ionizing radiation damages living tissue(DNA damage → mutations / cancer)
 
-Ionizing radiation damages DNA → mutations/cancer
+### The Three Core Principles:
 
-## Handling Rules
-
-| Rule | Method |
-|------|--------|
-| **Distance** | Use long tongs; intensity drops with distance² |
-| **Shielding** | Keep in lead-lined boxes |
-| **Time** | Minimize exposure duration |
-| **Monitoring** | Wear dosimeters (film badges) |
-
-## Waste Disposal
-
-Nuclear waste radioactive for **thousands of years**.
-
-### Safe Disposal:
-1. **Vitrify** (turn into glass)
-2. **Encase** in steel/concrete
-3. **Bury** deep underground in stable geology
-4. Prevent **groundwater contamination**`,
+| Principle | Method |
+| -----------| --------|
+| ** Distance ** | Use forceps / tongs to maximize distance from source.Intensity drops with distance² |
+| ** Shielding ** | Store in ** lead - lined boxes **.Lead absorbs all three types, especially gamma |
+| ** Time ** | Limit exposure duration to the ** absolute minimum ** necessary | `,
                 diagrams: [],
                 subsections: []
             }
         ],
         key_points: [
-            "Rutherford's experiment proved: atom mostly empty, nucleus tiny and dense",
-            "Protons identify element; neutrons add mass; electrons determine chemistry",
-            "Isotopes: same protons, different neutrons",
-            "Alpha: +2, heavy, stopped by paper, most ionizing",
-            "Beta: -1, light, stopped by aluminium",
-            "Gamma: neutral, massless, needs thick lead",
-            "Half-life: time for activity to halve",
-            "Alpha decay: A-4, Z-2; Beta decay: A same, Z+1",
-            "Fission: heavy nucleus splits, chain reaction",
-            "Fusion: light nuclei join, powers stars, needs extreme heat",
-            "Safety: distance, shielding, time, monitoring"
+            "The nucleus contains protons and neutrons (nucleons); proton number (Z) identifies the element",
+            "Nuclide notation: $$^A_Z X$$ where A (top) = nucleon number, Z (bottom) = proton number",
+            "Isotopes: same proton number, different neutron number → same chemical properties, different mass",
+            "Radioactive decay is SPONTANEOUS (unaffected by external conditions) and RANDOM (cannot predict which nucleus decays)",
+            "Alpha (α): helium nucleus (+2), stopped by paper, highest ionizing power",
+            "Beta (β): fast electron (-1), stopped by aluminium, deflected towards positive plate",
+            "Gamma (γ): EM wave (neutral), reduced by lead, undeflected by fields",
+            "Alpha decay: A decreases by 4, Z decreases by 2; Beta decay: A unchanged, Z increases by 1",
+            "Half-life: average time for half of the radioactive nuclei to decay",
+            "Half-life calculations: divide by 2 for each half-life, count how many halvings",
+            "Radioisotope applications depend on penetrating power and half-life",
+            "Safety precautions: Distance (use tongs), Shielding (lead-lined boxes), Time (minimize exposure)"
         ],
         exam_tips: [
-            "Explain Rutherford's observations and conclusions",
-            "Calculate neutrons using A - Z",
-            "Know properties of alpha, beta, gamma (penetration, ionization)",
-            "Practice half-life calculations (divide by 2 for each half-life)",
-            "Balance nuclear equations (mass numbers and proton numbers)",
-            "Explain why specific isotopes are used for specific jobs",
-            "Know safety precautions and waste disposal methods"
+            "Remember nuclide notation: A (mass) is the LARGER number on TOP, Z (atomic) is on BOTTOM",
+            "Calculate neutrons: Neutrons = A - Z (nucleon number minus proton number)",
+            "Know the behaviour of each radiation type in electric and magnetic fields",
+            "Explain why 'random' means we cannot predict which nucleus decays next",
+            "Practice balancing nuclear equations: A and Z must be conserved on both sides",
+            "For half-life problems: track successive halvings to find number of half-lives, then divide total time",
+            "Explain why specific radioisotopes are chosen for specific applications (penetrating power + half-life)",
+            "Know the three safety principles: Distance, Shielding, Time",
+            "Beta particles deflect opposite to conventional current (they are negative)",
+            "Gamma rays are unaffected by fields because they have no charge"
         ]
     }
 };
