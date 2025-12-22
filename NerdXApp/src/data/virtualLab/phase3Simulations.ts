@@ -1,7 +1,81 @@
-// Phase 3: Expanded Virtual Lab simulations (template-driven)
-// These simulations use the generic template screen + DeepSeek-generated knowledge checks.
+// Phase 3: Expanded Virtual Lab simulations (hands-on + DeepSeek-generated knowledge checks)
 
-import { SimulationMetadata, QuizQuestion } from './simulationTypes';
+import { SimulationMetadata, QuizQuestion, HandsOnActivityConfig } from './simulationTypes';
+
+// ----------------------------
+// Hands-on activity helpers
+// ----------------------------
+
+const exp = (cfg: HandsOnActivityConfig): HandsOnActivityConfig => cfg;
+
+const bioExp = (idPrefix: string, intro: string, taskTheme: 'rate' | 'balance' | 'control' = 'rate') =>
+  exp({
+    type: 'experiment_runner',
+    intro,
+    controls: [
+      { id: 'a', label: 'Factor A', min: 0, max: 10, step: 1, defaultValue: 5 },
+      { id: 'b', label: 'Factor B', min: 0, max: 10, step: 1, defaultValue: 5 },
+      { id: 'c', label: 'Factor C', min: 0, max: 10, step: 1, defaultValue: 5 },
+    ],
+    readouts: [
+      { id: 'rate', label: 'Process rate', unit: 'units', formula: '(a*b)/10 + c/2', decimals: 1 },
+      { id: 'eff', label: 'Efficiency', unit: '%', formula: '10*rate', decimals: 0 },
+    ],
+    tasks: [
+      { id: `${idPrefix}-t1`, instruction: 'Make the rate high (≥ 8)', condition: 'rate >= 8' },
+      { id: `${idPrefix}-t2`, instruction: 'Make the rate low (≤ 4)', condition: 'rate <= 4' },
+      { id: `${idPrefix}-t3`, instruction: taskTheme === 'control' ? 'Keep rate between 5 and 7' : 'Set Factor C to 8 or more', condition: taskTheme === 'control' ? 'rate >= 5 && rate <= 7' : 'c >= 8' },
+    ],
+    requiredTasksToUnlock: 2,
+  });
+
+const chemExp = (idPrefix: string, intro: string) =>
+  exp({
+    type: 'experiment_runner',
+    intro,
+    controls: [
+      { id: 'acid', label: 'Acid amount', unit: 'mL', min: 0, max: 50, step: 5, defaultValue: 25 },
+      { id: 'base', label: 'Base amount', unit: 'mL', min: 0, max: 50, step: 5, defaultValue: 25 },
+      { id: 'conc', label: 'Concentration', unit: 'x', min: 1, max: 5, step: 1, defaultValue: 2 },
+    ],
+    readouts: [
+      { id: 'excess', label: 'Excess (acid - base)', unit: 'mL', formula: 'acid - base', decimals: 0 },
+      { id: 'ph', label: 'Estimated pH', formula: '7 + (base - acid)/(10*conc)', decimals: 2 },
+    ],
+    tasks: [
+      { id: `${idPrefix}-t1`, instruction: 'Make the mixture neutral (pH 6.8–7.2)', condition: 'ph >= 6.8 && ph <= 7.2' },
+      { id: `${idPrefix}-t2`, instruction: 'Make the mixture acidic (pH ≤ 6.5)', condition: 'ph <= 6.5' },
+      { id: `${idPrefix}-t3`, instruction: 'Make the mixture alkaline (pH ≥ 7.5)', condition: 'ph >= 7.5' },
+    ],
+    requiredTasksToUnlock: 2,
+  });
+
+const physExp = (idPrefix: string, intro: string) =>
+  exp({
+    type: 'experiment_runner',
+    intro,
+    controls: [
+      { id: 'x', label: 'Value X', min: 1, max: 20, step: 1, defaultValue: 10 },
+      { id: 'y', label: 'Value Y', min: 1, max: 20, step: 1, defaultValue: 5 },
+      { id: 't', label: 'Time', unit: 's', min: 1, max: 20, step: 1, defaultValue: 5 },
+    ],
+    readouts: [
+      { id: 'result', label: 'Result', formula: '(x*y)/t', decimals: 2 },
+      { id: 'check', label: 'Check', formula: 'result', decimals: 2 },
+    ],
+    tasks: [
+      { id: `${idPrefix}-t1`, instruction: 'Make result ≥ 10', condition: 'result >= 10' },
+      { id: `${idPrefix}-t2`, instruction: 'Make result ≤ 5', condition: 'result <= 5' },
+      { id: `${idPrefix}-t3`, instruction: 'Keep time between 4 and 8 seconds', condition: 't >= 4 && t <= 8' },
+    ],
+    requiredTasksToUnlock: 2,
+  });
+
+const match = (prompt: string, pairs: { left: string; right: string }[], requiredCorrectToUnlock = 3): HandsOnActivityConfig =>
+  exp({ type: 'matching', prompt, pairs, requiredCorrectToUnlock });
+
+const seq = (prompt: string, steps: string[]): HandsOnActivityConfig =>
+  exp({ type: 'sequencing', prompt, steps, requiredCorrectToUnlock: steps.length });
 
 const makeFallbackQuestions = (prefix: string, topic: string): QuizQuestion[] => [
   {
@@ -54,6 +128,7 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'bra-2', text: 'Explain why oxygen is needed in aerobic respiration' },
       { id: 'bra-3', text: 'Link respiration to energy for movement, growth, and repair' },
     ],
+    handsOnActivity: bioExp('bra', 'Adjust oxygen availability, fuel supply, and temperature to see how aerobic energy production changes.', 'rate'),
     quizQuestions: makeFallbackQuestions('bra', 'Respiration'),
   },
   {
@@ -72,6 +147,7 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'brn-2', text: 'State products of anaerobic respiration in yeast and muscles' },
       { id: 'brn-3', text: 'Explain oxygen debt and lactic acid buildup' },
     ],
+    handsOnActivity: bioExp('brn', 'Reduce oxygen and see how “energy yield” and “efficiency” changes in anaerobic conditions.', 'rate'),
     quizQuestions: makeFallbackQuestions('brn', 'Respiration'),
   },
   {
@@ -90,6 +166,7 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'bge-2', text: 'Describe adaptations of alveoli for efficient exchange' },
       { id: 'bge-3', text: 'Relate breathing rate to exercise demand' },
     ],
+    handsOnActivity: bioExp('bge', 'Change surface area, ventilation and gradient to model diffusion rate in the lungs.', 'rate'),
     quizQuestions: makeFallbackQuestions('bge', 'Gas exchange'),
   },
   {
@@ -108,6 +185,13 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'bdj-2', text: 'State roles of enzymes in digestion' },
       { id: 'bdj-3', text: 'Explain absorption in villi' },
     ],
+    handsOnActivity: seq('Arrange the digestion process in the correct order:', [
+      'Ingestion',
+      'Digestion',
+      'Absorption',
+      'Assimilation',
+      'Egestion',
+    ]),
     quizQuestions: makeFallbackQuestions('bdj', 'Digestion'),
   },
   {
@@ -126,7 +210,49 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'bef-2', text: 'Construct a food chain and a food web' },
       { id: 'bef-3', text: 'Explain energy loss between trophic levels' },
     ],
+    handsOnActivity: match('Match each ecology term to its meaning:', [
+      { left: 'Producer', right: 'Makes its own food (photosynthesis)' },
+      { left: 'Primary consumer', right: 'Eats producers' },
+      { left: 'Decomposer', right: 'Breaks down dead matter' },
+      { left: 'Trophic level', right: 'Feeding position in a chain' },
+    ]),
     quizQuestions: makeFallbackQuestions('bef', 'Ecology'),
+  },
+  {
+    id: 'bio-population-growth',
+    title: 'Population Growth Simulator',
+    subject: 'biology',
+    topic: 'Ecology',
+    description: 'Explore how birth rate, death rate, and resources affect population growth over time.',
+    difficulty: 'medium',
+    xpReward: 175,
+    estimatedTime: '15-20 mins',
+    icon: 'leaf',
+    color: '#4CAF50',
+    learningObjectives: [
+      { id: 'bpg-1', text: 'Define population and carrying capacity (intro level)' },
+      { id: 'bpg-2', text: 'Explain how limiting factors affect population size' },
+      { id: 'bpg-3', text: 'Predict conditions for population increase or decrease' },
+    ],
+    handsOnActivity: exp({
+      type: 'experiment_runner',
+      intro: 'Adjust birth rate, death rate, and resources and observe a simple growth model.',
+      controls: [
+        { id: 'birth', label: 'Birth rate', unit: 'x', min: 0, max: 10, step: 1, defaultValue: 6 },
+        { id: 'death', label: 'Death rate', unit: 'x', min: 0, max: 10, step: 1, defaultValue: 4 },
+        { id: 'res', label: 'Resources', unit: 'x', min: 0, max: 10, step: 1, defaultValue: 5 },
+      ],
+      readouts: [
+        { id: 'growth', label: 'Growth index', unit: 'units', formula: '(birth - death) + res/2', decimals: 1 },
+      ],
+      tasks: [
+        { id: 'bpg-t1', instruction: 'Make growth positive (≥ 2)', condition: 'growth >= 2' },
+        { id: 'bpg-t2', instruction: 'Make growth negative (≤ -1)', condition: 'growth <= -1' },
+        { id: 'bpg-t3', instruction: 'Increase resources to 8 or more', condition: 'res >= 8' },
+      ],
+      requiredTasksToUnlock: 2,
+    }),
+    quizQuestions: makeFallbackQuestions('bpg', 'Ecology'),
   },
   {
     id: 'bio-photosynthesis-limiting-factors',
@@ -144,6 +270,7 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'blf-2', text: 'Predict graphs for rate vs limiting factors' },
       { id: 'blf-3', text: 'Explain why plateaus occur in rate graphs' },
     ],
+    handsOnActivity: bioExp('blf', 'Adjust light, CO₂ and temperature to model changes in photosynthesis rate.', 'rate'),
     quizQuestions: makeFallbackQuestions('blf', 'Photosynthesis'),
   },
   {
@@ -162,6 +289,7 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'bxt-2', text: 'Explain transpiration pull and cohesion-tension' },
       { id: 'bxt-3', text: 'Identify factors affecting transpiration' },
     ],
+    handsOnActivity: bioExp('bxt', 'Change environment factors to see how transpiration rate changes.', 'rate'),
     quizQuestions: makeFallbackQuestions('bxt', 'Transport in Plants'),
   },
   {
@@ -180,6 +308,12 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'bpt-2', text: 'Explain source and sink concepts' },
       { id: 'bpt-3', text: 'Compare xylem and phloem transport' },
     ],
+    handsOnActivity: match('Match the term to the correct description:', [
+      { left: 'Translocation', right: 'Movement of sugars in phloem' },
+      { left: 'Source', right: 'Where sugars are produced (e.g., leaf)' },
+      { left: 'Sink', right: 'Where sugars are used/stored (e.g., root/fruit)' },
+      { left: 'Phloem', right: 'Living tissue that transports sucrose' },
+    ]),
     quizQuestions: makeFallbackQuestions('bpt', 'Transport in Plants'),
   },
   {
@@ -198,6 +332,7 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'bth-2', text: 'Explain negative feedback in temperature control' },
       { id: 'bth-3', text: 'Describe vasodilation and vasoconstriction' },
     ],
+    handsOnActivity: bioExp('bth', 'Model thermoregulation by adjusting heat loss/gain factors and aiming for stable conditions.', 'control'),
     quizQuestions: makeFallbackQuestions('bth', 'Homeostasis'),
   },
   {
@@ -216,6 +351,7 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'bbg-2', text: 'Describe negative feedback control' },
       { id: 'bbg-3', text: 'Explain diabetes as loss of glucose regulation' },
     ],
+    handsOnActivity: bioExp('bbg', 'Adjust intake, activity, and hormone response to keep glucose stable.', 'control'),
     quizQuestions: makeFallbackQuestions('bbg', 'Homeostasis'),
   },
   {
@@ -234,6 +370,7 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'bkf-2', text: 'Explain selective reabsorption' },
       { id: 'bkf-3', text: 'Relate ADH to water balance' },
     ],
+    handsOnActivity: bioExp('bkf', 'Explore urine output and water balance by changing intake and control factors.', 'control'),
     quizQuestions: makeFallbackQuestions('bkf', 'Excretion'),
   },
   {
@@ -252,6 +389,13 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'bfp-2', text: 'Explain pollination and fertilisation' },
       { id: 'bfp-3', text: 'Describe seed and fruit formation' },
     ],
+    handsOnActivity: seq('Arrange the plant reproduction steps in order:', [
+      'Pollination',
+      'Pollen tube growth',
+      'Fertilisation',
+      'Seed formation',
+      'Fruit formation',
+    ]),
     quizQuestions: makeFallbackQuestions('bfp', 'Reproduction'),
   },
   {
@@ -270,6 +414,12 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'bhr-2', text: 'Outline the menstrual cycle' },
       { id: 'bhr-3', text: 'State basic roles of reproductive hormones' },
     ],
+    handsOnActivity: match('Match each item to its role:', [
+      { left: 'Ovary', right: 'Produces ova (eggs)' },
+      { left: 'Testis', right: 'Produces sperm' },
+      { left: 'Uterus', right: 'Where foetus develops' },
+      { left: 'Hormone', right: 'Chemical messenger controlling processes' },
+    ]),
     quizQuestions: makeFallbackQuestions('bhr', 'Reproduction'),
   },
   {
@@ -288,6 +438,12 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'bgi-2', text: 'Use Punnett squares for monohybrid crosses' },
       { id: 'bgi-3', text: 'Predict offspring ratios for dominant/recessive traits' },
     ],
+    handsOnActivity: match('Match genetics terms to meanings:', [
+      { left: 'Genotype', right: 'Genetic makeup (alleles) of an organism' },
+      { left: 'Phenotype', right: 'Observable characteristic' },
+      { left: 'Dominant', right: 'Expressed when one allele is present' },
+      { left: 'Recessive', right: 'Expressed only when two alleles are present' },
+    ]),
     quizQuestions: makeFallbackQuestions('bgi', 'Inheritance'),
   },
   {
@@ -306,6 +462,12 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'bva-2', text: 'Give examples of advantageous adaptations' },
       { id: 'bva-3', text: 'Relate selection pressure to survival' },
     ],
+    handsOnActivity: match('Match an adaptation to its benefit:', [
+      { left: 'Camouflage', right: 'Avoids predators by blending in' },
+      { left: 'Thick fur', right: 'Reduces heat loss in cold climates' },
+      { left: 'Long roots', right: 'Reaches water deep in soil' },
+      { left: 'Sharp beak', right: 'Helps obtain specific food' },
+    ]),
     quizQuestions: makeFallbackQuestions('bva', 'Adaptation'),
   },
   {
@@ -324,6 +486,12 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'bmd-2', text: 'Explain vaccination in simple terms' },
       { id: 'bmd-3', text: 'Describe basic hygiene-based prevention' },
     ],
+    handsOnActivity: match('Match the prevention method to what it helps reduce:', [
+      { left: 'Hand washing', right: 'Reduces pathogen transfer by contact' },
+      { left: 'Boiling water', right: 'Kills many microorganisms' },
+      { left: 'Vaccination', right: 'Builds immune memory' },
+      { left: 'Mosquito nets', right: 'Reduces insect-borne transmission' },
+    ]),
     quizQuestions: makeFallbackQuestions('bmd', 'Health and Disease'),
   },
   {
@@ -342,6 +510,7 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'bec-2', text: 'Describe conservation strategies (protected areas, laws)' },
       { id: 'bec-3', text: 'Relate conservation to biodiversity' },
     ],
+    handsOnActivity: bioExp('bec', 'Adjust “pressure” factors and see how biodiversity/efficiency changes in a simple ecosystem model.', 'balance'),
     quizQuestions: makeFallbackQuestions('bec', 'Conservation'),
   },
 
@@ -364,6 +533,12 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'cbb-2', text: 'Explain why ionic compounds conduct when molten' },
       { id: 'cbb-3', text: 'Link bonding to melting point and conductivity' },
     ],
+    handsOnActivity: match('Match bonding type to a typical property:', [
+      { left: 'Ionic', right: 'Conducts when molten/aqueous' },
+      { left: 'Covalent (simple)', right: 'Low melting point' },
+      { left: 'Metallic', right: 'Good electrical conductor (solid)' },
+      { left: 'Giant covalent', right: 'Very high melting point' },
+    ]),
     quizQuestions: makeFallbackQuestions('cbb', 'Chemical Bonding'),
   },
   {
@@ -382,6 +557,12 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'cmr-2', text: 'Predict displacement reactions' },
       { id: 'cmr-3', text: 'Relate reactivity to extraction methods' },
     ],
+    handsOnActivity: match('Match the metal to the typical reactivity description:', [
+      { left: 'Potassium', right: 'Very reactive' },
+      { left: 'Magnesium', right: 'Reacts with dilute acids' },
+      { left: 'Copper', right: 'Low reactivity (often unreactive with dilute acids)' },
+      { left: 'Zinc', right: 'Moderately reactive; displaces copper' },
+    ]),
     quizQuestions: makeFallbackQuestions('cmr', 'Metals'),
   },
   {
@@ -400,6 +581,7 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'can-2', text: 'Describe neutralisation' },
       { id: 'can-3', text: 'Predict products of acid + base reactions' },
     ],
+    handsOnActivity: chemExp('can', 'Mix acid and base and observe how the estimated pH changes.'),
     quizQuestions: makeFallbackQuestions('can', 'Acids, Bases and Salts'),
   },
   {
@@ -418,6 +600,13 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'csp-2', text: 'Explain precipitation for insoluble salts' },
       { id: 'csp-3', text: 'Describe filtration and crystallisation steps' },
     ],
+    handsOnActivity: seq('Arrange the soluble salt preparation steps:', [
+      'Add excess insoluble base to acid',
+      'Filter to remove excess solid',
+      'Heat to concentrate solution',
+      'Cool to crystallise',
+      'Dry crystals',
+    ]),
     quizQuestions: makeFallbackQuestions('csp', 'Salts'),
   },
   {
@@ -436,6 +625,24 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'crr-2', text: 'Interpret simple rate graphs' },
       { id: 'crr-3', text: 'Explain catalysts in terms of activation energy' },
     ],
+    handsOnActivity: exp({
+      type: 'experiment_runner',
+      intro: 'Adjust temperature, concentration, and surface area and observe a simple rate model.',
+      controls: [
+        { id: 'temp', label: 'Temperature', unit: '°C', min: 10, max: 80, step: 5, defaultValue: 30 },
+        { id: 'conc', label: 'Concentration', unit: 'x', min: 1, max: 5, step: 1, defaultValue: 2 },
+        { id: 'area', label: 'Surface area', unit: 'x', min: 1, max: 5, step: 1, defaultValue: 2 },
+      ],
+      readouts: [
+        { id: 'rate', label: 'Rate', unit: 'units', formula: '(temp/20) + conc + area', decimals: 1 },
+      ],
+      tasks: [
+        { id: 'crr-t1', instruction: 'Make the rate high (≥ 9)', condition: 'rate >= 9' },
+        { id: 'crr-t2', instruction: 'Make the rate low (≤ 6)', condition: 'rate <= 6' },
+        { id: 'crr-t3', instruction: 'Increase temperature to 60°C or more', condition: 'temp >= 60' },
+      ],
+      requiredTasksToUnlock: 2,
+    }),
     quizQuestions: makeFallbackQuestions('crr', 'Rates of Reaction'),
   },
   {
@@ -454,6 +661,24 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'cee-2', text: 'Relate energy changes to temperature change' },
       { id: 'cee-3', text: 'Interpret basic energy profiles' },
     ],
+    handsOnActivity: exp({
+      type: 'experiment_runner',
+      intro: 'Adjust “energy released/absorbed” and “mass of water” to see temperature change.',
+      controls: [
+        { id: 'q', label: 'Heat change (Q)', unit: 'kJ', min: -50, max: 50, step: 5, defaultValue: 10 },
+        { id: 'm', label: 'Water mass', unit: 'kg', min: 1, max: 10, step: 1, defaultValue: 2 },
+        { id: 'c', label: 'Specific heat factor', unit: 'x', min: 1, max: 5, step: 1, defaultValue: 4 },
+      ],
+      readouts: [
+        { id: 'dT', label: 'Temperature change', unit: '°C', formula: 'q/(m*c)', decimals: 2 },
+      ],
+      tasks: [
+        { id: 'cee-t1', instruction: 'Make dT positive (exothermic effect)', condition: 'dT > 0' },
+        { id: 'cee-t2', instruction: 'Make dT negative (endothermic effect)', condition: 'dT < 0' },
+        { id: 'cee-t3', instruction: 'Make |dT| small (between -1 and 1)', condition: 'dT >= -1 && dT <= 1' },
+      ],
+      requiredTasksToUnlock: 2,
+    }),
     quizQuestions: makeFallbackQuestions('cee', 'Energetics'),
   },
   {
@@ -472,6 +697,24 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'cec-2', text: 'Identify anode and cathode in a cell' },
       { id: 'cec-3', text: 'Relate reactivity to voltage produced' },
     ],
+    handsOnActivity: exp({
+      type: 'experiment_runner',
+      intro: 'Choose two different metals and an electrolyte strength and observe a simple voltage model.',
+      controls: [
+        { id: 'm1', label: 'Metal A reactivity', unit: 'x', min: 1, max: 10, step: 1, defaultValue: 8 },
+        { id: 'm2', label: 'Metal B reactivity', unit: 'x', min: 1, max: 10, step: 1, defaultValue: 3 },
+        { id: 'e', label: 'Electrolyte strength', unit: 'x', min: 1, max: 5, step: 1, defaultValue: 2 },
+      ],
+      readouts: [
+        { id: 'V', label: 'Cell voltage', unit: 'V', formula: '(m1 - m2)/5 + e/2', decimals: 2 },
+      ],
+      tasks: [
+        { id: 'cec-t1', instruction: 'Make voltage high (≥ 2.0 V)', condition: 'V >= 2' },
+        { id: 'cec-t2', instruction: 'Make voltage low (≤ 1.0 V)', condition: 'V <= 1' },
+        { id: 'cec-t3', instruction: 'Increase electrolyte strength to 4 or 5', condition: 'e >= 4' },
+      ],
+      requiredTasksToUnlock: 2,
+    }),
     quizQuestions: makeFallbackQuestions('cec', 'Electricity and Chemistry'),
   },
   {
@@ -490,6 +733,12 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'coh-2', text: 'Explain saturated vs unsaturated' },
       { id: 'coh-3', text: 'Describe bromine water test for alkenes' },
     ],
+    handsOnActivity: match('Match the hydrocarbon type to a key feature:', [
+      { left: 'Alkane', right: 'Saturated; single bonds only' },
+      { left: 'Alkene', right: 'Unsaturated; contains C=C' },
+      { left: 'Bromine water test', right: 'Decolourises with alkenes' },
+      { left: 'General formula (alkane)', right: 'CₙH₂ₙ₊₂' },
+    ]),
     quizQuestions: makeFallbackQuestions('coh', 'Organic Chemistry'),
   },
   {
@@ -508,6 +757,12 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'coa-2', text: 'Describe simple reactions (combustion, neutralisation)' },
       { id: 'coa-3', text: 'Relate structure to properties (solubility, acidity)' },
     ],
+    handsOnActivity: match('Match the group to the compound type:', [
+      { left: '-OH', right: 'Alcohol functional group' },
+      { left: '-COOH', right: 'Carboxylic acid functional group' },
+      { left: 'Ethanoic acid', right: 'Weak acid found in vinegar' },
+      { left: 'Ethanol', right: 'Alcohol; can burn as a fuel' },
+    ]),
     quizQuestions: makeFallbackQuestions('coa', 'Organic Chemistry'),
   },
   {
@@ -526,6 +781,12 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'caw-2', text: 'Describe basic water purification steps' },
       { id: 'caw-3', text: 'Identify examples of air and water pollution' },
     ],
+    handsOnActivity: seq('Arrange the basic water purification steps:', [
+      'Coagulation/settling',
+      'Filtration',
+      'Chlorination (disinfection)',
+      'Safe storage',
+    ]),
     quizQuestions: makeFallbackQuestions('caw', 'Air and Water'),
   },
   {
@@ -544,6 +805,25 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'cai-2', text: 'Calculate neutrons from mass and atomic number' },
       { id: 'cai-3', text: 'Explain why isotopes have similar chemical properties' },
     ],
+    handsOnActivity: exp({
+      type: 'experiment_runner',
+      intro: 'Adjust protons and neutrons to model atomic number and mass number.',
+      controls: [
+        { id: 'p', label: 'Protons', min: 1, max: 20, step: 1, defaultValue: 6 },
+        { id: 'n', label: 'Neutrons', min: 0, max: 25, step: 1, defaultValue: 6 },
+        { id: 'e', label: 'Electrons', min: 1, max: 20, step: 1, defaultValue: 6 },
+      ],
+      readouts: [
+        { id: 'Z', label: 'Atomic number (Z)', formula: 'p', decimals: 0 },
+        { id: 'A', label: 'Mass number (A)', formula: 'p + n', decimals: 0 },
+      ],
+      tasks: [
+        { id: 'cai-t1', instruction: 'Make an isotope (change neutrons)', condition: 'n != 6' },
+        { id: 'cai-t2', instruction: 'Set mass number to 12 or more', condition: 'A >= 12' },
+        { id: 'cai-t3', instruction: 'Keep atomic number at 6', condition: 'Z == 6' },
+      ],
+      requiredTasksToUnlock: 2,
+    }),
     quizQuestions: makeFallbackQuestions('cai', 'Atomic Structure'),
   },
   {
@@ -562,6 +842,12 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'csm-2', text: 'Distinguish simple vs fractional distillation' },
       { id: 'csm-3', text: 'Explain chromatography for pigments' },
     ],
+    handsOnActivity: match('Match the mixture to the best separation method:', [
+      { left: 'Sand + water', right: 'Filtration' },
+      { left: 'Ethanol + water', right: 'Fractional distillation' },
+      { left: 'Salt + water', right: 'Evaporation/crystallisation' },
+      { left: 'Ink pigments', right: 'Chromatography' },
+    ]),
     quizQuestions: makeFallbackQuestions('csm', 'Separation Techniques'),
   },
   {
@@ -580,6 +866,12 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'crx-2', text: 'Identify oxidising and reducing agents' },
       { id: 'crx-3', text: 'Apply redox ideas to simple reactions' },
     ],
+    handsOnActivity: match('Match the idea to the correct statement:', [
+      { left: 'Oxidation', right: 'Loss of electrons' },
+      { left: 'Reduction', right: 'Gain of electrons' },
+      { left: 'Oxidising agent', right: 'Causes oxidation; gets reduced' },
+      { left: 'Reducing agent', right: 'Causes reduction; gets oxidised' },
+    ]),
     quizQuestions: makeFallbackQuestions('crx', 'Redox'),
   },
   {
@@ -598,6 +890,24 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'cmo-2', text: 'Convert mass to moles and vice versa' },
       { id: 'cmo-3', text: 'Use ratios from balanced equations' },
     ],
+    handsOnActivity: exp({
+      type: 'experiment_runner',
+      intro: 'Change mass and molar mass to see how the amount (moles) changes.',
+      controls: [
+        { id: 'm', label: 'Mass', unit: 'g', min: 1, max: 200, step: 1, defaultValue: 18 },
+        { id: 'mm', label: 'Molar mass', unit: 'g/mol', min: 1, max: 100, step: 1, defaultValue: 18 },
+        { id: 'k', label: 'Ratio factor', unit: 'x', min: 1, max: 5, step: 1, defaultValue: 1 },
+      ],
+      readouts: [
+        { id: 'n', label: 'Moles', unit: 'mol', formula: '(m/mm)*k', decimals: 3 },
+      ],
+      tasks: [
+        { id: 'cmo-t1', instruction: 'Make moles ≥ 2.000', condition: 'n >= 2' },
+        { id: 'cmo-t2', instruction: 'Make moles ≤ 0.500', condition: 'n <= 0.5' },
+        { id: 'cmo-t3', instruction: 'Set molar mass to 50 g/mol or more', condition: 'mm >= 50' },
+      ],
+      requiredTasksToUnlock: 2,
+    }),
     quizQuestions: makeFallbackQuestions('cmo', 'Stoichiometry'),
   },
   {
@@ -616,6 +926,12 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'cpt-2', text: 'Describe trends in Group 1 and Group 7' },
       { id: 'cpt-3', text: 'Relate electron shells to periodic position' },
     ],
+    handsOnActivity: match('Match the group to a typical trend:', [
+      { left: 'Group 1', right: 'Reactivity increases down the group' },
+      { left: 'Group 7', right: 'Reactivity decreases down the group' },
+      { left: 'Noble gases', right: 'Very unreactive' },
+      { left: 'Period', right: 'Number of electron shells' },
+    ]),
     quizQuestions: makeFallbackQuestions('cpt', 'Periodic Table'),
   },
   {
@@ -634,6 +950,12 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'cpm-2', text: 'Distinguish addition polymerisation' },
       { id: 'cpm-3', text: 'Relate material properties to uses' },
     ],
+    handsOnActivity: seq('Arrange addition polymerisation steps:', [
+      'Many monomers are present',
+      'Double bonds open',
+      'Monomers join to form long chain',
+      'Polymer formed',
+    ]),
     quizQuestions: makeFallbackQuestions('cpm', 'Polymers'),
   },
 
@@ -656,6 +978,25 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'pew-2', text: 'Relate force, distance, and work' },
       { id: 'pew-3', text: 'Identify forms of energy and transfers' },
     ],
+    handsOnActivity: exp({
+      type: 'experiment_runner',
+      intro: 'Adjust force, distance, and time to see how work and power change.',
+      controls: [
+        { id: 'F', label: 'Force', unit: 'N', min: 1, max: 200, step: 1, defaultValue: 50 },
+        { id: 'd', label: 'Distance', unit: 'm', min: 1, max: 50, step: 1, defaultValue: 10 },
+        { id: 't', label: 'Time', unit: 's', min: 1, max: 30, step: 1, defaultValue: 5 },
+      ],
+      readouts: [
+        { id: 'W', label: 'Work', unit: 'J', formula: 'F*d', decimals: 0 },
+        { id: 'P', label: 'Power', unit: 'W', formula: '(F*d)/t', decimals: 1 },
+      ],
+      tasks: [
+        { id: 'pew-t1', instruction: 'Make power ≥ 200 W', condition: 'P >= 200' },
+        { id: 'pew-t2', instruction: 'Make work ≤ 300 J', condition: 'W <= 300' },
+        { id: 'pew-t3', instruction: 'Set time between 4 and 8 s', condition: 't >= 4 && t <= 8' },
+      ],
+      requiredTasksToUnlock: 2,
+    }),
     quizQuestions: makeFallbackQuestions('pew', 'Energy'),
   },
   {
@@ -674,6 +1015,24 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'ppf-2', text: 'Explain pressure increases with depth' },
       { id: 'ppf-3', text: 'Apply pressure ideas to everyday examples' },
     ],
+    handsOnActivity: exp({
+      type: 'experiment_runner',
+      intro: 'Adjust depth and density to observe a simple fluid pressure model (P ∝ ρ × h).',
+      controls: [
+        { id: 'rho', label: 'Density', unit: 'x', min: 1, max: 10, step: 1, defaultValue: 5 },
+        { id: 'h', label: 'Depth', unit: 'm', min: 0, max: 20, step: 1, defaultValue: 5 },
+        { id: 'g', label: 'Gravity factor', unit: 'x', min: 8, max: 12, step: 1, defaultValue: 10 },
+      ],
+      readouts: [
+        { id: 'P', label: 'Pressure', unit: 'units', formula: 'rho*h*g', decimals: 0 },
+      ],
+      tasks: [
+        { id: 'ppf-t1', instruction: 'Make pressure high (≥ 800)', condition: 'P >= 800' },
+        { id: 'ppf-t2', instruction: 'Make pressure low (≤ 200)', condition: 'P <= 200' },
+        { id: 'ppf-t3', instruction: 'Set depth to 10 m or more', condition: 'h >= 10' },
+      ],
+      requiredTasksToUnlock: 2,
+    }),
     quizQuestions: makeFallbackQuestions('ppf', 'Pressure'),
   },
   {
@@ -692,6 +1051,25 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'pmc-2', text: 'State conservation of momentum principle' },
       { id: 'pmc-3', text: 'Relate impulse to change in momentum' },
     ],
+    handsOnActivity: exp({
+      type: 'experiment_runner',
+      intro: 'Change masses and velocities to see momentum and total momentum.',
+      controls: [
+        { id: 'm1', label: 'Mass 1', unit: 'kg', min: 1, max: 10, step: 1, defaultValue: 2 },
+        { id: 'v1', label: 'Velocity 1', unit: 'm/s', min: -10, max: 10, step: 1, defaultValue: 5 },
+        { id: 'm2', label: 'Mass 2', unit: 'kg', min: 1, max: 10, step: 1, defaultValue: 2 },
+      ],
+      readouts: [
+        { id: 'p1', label: 'Momentum 1', unit: 'kg·m/s', formula: 'm1*v1', decimals: 1 },
+        { id: 'pt', label: 'Total momentum', unit: 'kg·m/s', formula: 'm1*v1 + m2*0', decimals: 1 },
+      ],
+      tasks: [
+        { id: 'pmc-t1', instruction: 'Make p1 positive', condition: 'p1 > 0' },
+        { id: 'pmc-t2', instruction: 'Make p1 negative', condition: 'p1 < 0' },
+        { id: 'pmc-t3', instruction: 'Make |p1| ≥ 20', condition: 'p1 >= 20 || p1 <= -20' },
+      ],
+      requiredTasksToUnlock: 2,
+    }),
     quizQuestions: makeFallbackQuestions('pmc', 'Momentum'),
   },
   {
@@ -710,6 +1088,24 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'plr-2', text: 'Draw incident, reflected rays, and normal' },
       { id: 'plr-3', text: 'Describe image properties in a plane mirror' },
     ],
+    handsOnActivity: exp({
+      type: 'experiment_runner',
+      intro: 'Change the angle of incidence and observe the reflected angle (law of reflection).',
+      controls: [
+        { id: 'i', label: 'Angle of incidence', unit: '°', min: 0, max: 80, step: 5, defaultValue: 30 },
+        { id: 'n', label: 'Normal reference', unit: 'x', min: 1, max: 1, step: 1, defaultValue: 1 },
+        { id: 'k', label: 'Mirror quality', unit: 'x', min: 1, max: 5, step: 1, defaultValue: 3 },
+      ],
+      readouts: [
+        { id: 'r', label: 'Angle of reflection', unit: '°', formula: 'i', decimals: 0 },
+      ],
+      tasks: [
+        { id: 'plr-t1', instruction: 'Set incidence ≥ 50°', condition: 'i >= 50' },
+        { id: 'plr-t2', instruction: 'Set incidence ≤ 20°', condition: 'i <= 20' },
+        { id: 'plr-t3', instruction: 'Confirm r equals i (always true here)', condition: 'r == i' },
+      ],
+      requiredTasksToUnlock: 2,
+    }),
     quizQuestions: makeFallbackQuestions('plr', 'Light'),
   },
   {
@@ -728,6 +1124,12 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'plf-2', text: 'Predict bending towards/away from normal' },
       { id: 'plf-3', text: 'Explain refraction using speed change' },
     ],
+    handsOnActivity: match('Match the situation to what happens to the ray:', [
+      { left: 'Air → water', right: 'Bends towards the normal' },
+      { left: 'Water → air', right: 'Bends away from the normal' },
+      { left: 'Higher refractive index', right: 'Light slows down' },
+      { left: 'Refraction', right: 'Bending due to speed change' },
+    ]),
     quizQuestions: makeFallbackQuestions('plf', 'Light'),
   },
   {
@@ -746,6 +1148,24 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'pll-2', text: 'Define focal point and focal length' },
       { id: 'pll-3', text: 'Relate lenses to eye/camera correction' },
     ],
+    handsOnActivity: exp({
+      type: 'experiment_runner',
+      intro: 'Adjust focal length and object distance and observe image distance using a simple lens model.',
+      controls: [
+        { id: 'f', label: 'Focal length', unit: 'cm', min: 5, max: 30, step: 1, defaultValue: 10 },
+        { id: 'u', label: 'Object distance', unit: 'cm', min: 6, max: 100, step: 1, defaultValue: 30 },
+        { id: 'k', label: 'Lens type factor', unit: 'x', min: 1, max: 1, step: 1, defaultValue: 1 },
+      ],
+      readouts: [
+        { id: 'v', label: 'Image distance', unit: 'cm', formula: '1/(1/f - 1/u)', decimals: 2 },
+      ],
+      tasks: [
+        { id: 'pll-t1', instruction: 'Make image distance large (v ≥ 40 cm)', condition: 'v >= 40' },
+        { id: 'pll-t2', instruction: 'Make image distance small (v ≤ 20 cm)', condition: 'v <= 20' },
+        { id: 'pll-t3', instruction: 'Set object distance to 50 cm or more', condition: 'u >= 50' },
+      ],
+      requiredTasksToUnlock: 2,
+    }),
     quizQuestions: makeFallbackQuestions('pll', 'Lenses'),
   },
   {
@@ -764,6 +1184,12 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'pmf-2', text: 'Predict attraction/repulsion' },
       { id: 'pmf-3', text: 'Relate field strength to line density' },
     ],
+    handsOnActivity: match('Match the statement to the correct idea:', [
+      { left: 'Like poles', right: 'Repel' },
+      { left: 'Unlike poles', right: 'Attract' },
+      { left: 'Field lines', right: 'Show direction from N to S outside magnet' },
+      { left: 'Stronger field', right: 'Lines closer together' },
+    ]),
     quizQuestions: makeFallbackQuestions('pmf', 'Magnetism'),
   },
   {
@@ -782,6 +1208,24 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'pem-2', text: 'State factors affecting strength' },
       { id: 'pem-3', text: 'Give common uses of electromagnets' },
     ],
+    handsOnActivity: exp({
+      type: 'experiment_runner',
+      intro: 'Change turns, current, and core factor to see electromagnet strength.',
+      controls: [
+        { id: 'turns', label: 'Turns of coil', unit: 'x', min: 10, max: 200, step: 10, defaultValue: 50 },
+        { id: 'I', label: 'Current', unit: 'A', min: 0, max: 10, step: 1, defaultValue: 3 },
+        { id: 'core', label: 'Core factor', unit: 'x', min: 1, max: 5, step: 1, defaultValue: 2 },
+      ],
+      readouts: [
+        { id: 'S', label: 'Strength', unit: 'units', formula: '(turns/10)*I*core', decimals: 0 },
+      ],
+      tasks: [
+        { id: 'pem-t1', instruction: 'Make strength ≥ 300', condition: 'S >= 300' },
+        { id: 'pem-t2', instruction: 'Make strength ≤ 120', condition: 'S <= 120' },
+        { id: 'pem-t3', instruction: 'Set core factor to 4 or 5', condition: 'core >= 4' },
+      ],
+      requiredTasksToUnlock: 2,
+    }),
     quizQuestions: makeFallbackQuestions('pem', 'Electromagnets'),
   },
   {
@@ -800,6 +1244,25 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'pep-2', text: 'Relate power, energy, and time' },
       { id: 'pep-3', text: 'Interpret appliance ratings (W, kWh)' },
     ],
+    handsOnActivity: exp({
+      type: 'experiment_runner',
+      intro: 'Adjust voltage, current, and time to see power and energy used.',
+      controls: [
+        { id: 'V', label: 'Voltage', unit: 'V', min: 0, max: 240, step: 10, defaultValue: 120 },
+        { id: 'I', label: 'Current', unit: 'A', min: 0, max: 10, step: 1, defaultValue: 2 },
+        { id: 't', label: 'Time', unit: 'h', min: 0, max: 5, step: 0.5, defaultValue: 1 },
+      ],
+      readouts: [
+        { id: 'P', label: 'Power', unit: 'W', formula: 'V*I', decimals: 0 },
+        { id: 'E', label: 'Energy', unit: 'Wh', formula: '(V*I)*t', decimals: 0 },
+      ],
+      tasks: [
+        { id: 'pep-t1', instruction: 'Make power ≥ 500 W', condition: 'P >= 500' },
+        { id: 'pep-t2', instruction: 'Make energy ≤ 200 Wh', condition: 'E <= 200' },
+        { id: 'pep-t3', instruction: 'Set time to 2 hours or more', condition: 't >= 2' },
+      ],
+      requiredTasksToUnlock: 2,
+    }),
     quizQuestions: makeFallbackQuestions('pep', 'Electricity'),
   },
   {
@@ -818,6 +1281,12 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'pht-2', text: 'Relate particle model to heat transfer' },
       { id: 'pht-3', text: 'Identify methods in household situations' },
     ],
+    handsOnActivity: match('Match the heat transfer method to the example:', [
+      { left: 'Conduction', right: 'Heat through a metal spoon' },
+      { left: 'Convection', right: 'Hot water rising in a pot' },
+      { left: 'Radiation', right: 'Heat from the Sun' },
+      { left: 'Insulation', right: 'Reduces heat transfer' },
+    ]),
     quizQuestions: makeFallbackQuestions('pht', 'Heat Transfer'),
   },
   {
@@ -836,6 +1305,24 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'psw-2', text: 'Relate pitch to frequency' },
       { id: 'psw-3', text: 'Relate loudness to amplitude' },
     ],
+    handsOnActivity: exp({
+      type: 'experiment_runner',
+      intro: 'Adjust frequency and wave speed to see wavelength (λ = v/f).',
+      controls: [
+        { id: 'v', label: 'Wave speed', unit: 'm/s', min: 100, max: 400, step: 10, defaultValue: 340 },
+        { id: 'f', label: 'Frequency', unit: 'Hz', min: 50, max: 400, step: 10, defaultValue: 200 },
+        { id: 'A', label: 'Amplitude', unit: 'x', min: 1, max: 10, step: 1, defaultValue: 5 },
+      ],
+      readouts: [
+        { id: 'lam', label: 'Wavelength', unit: 'm', formula: 'v/f', decimals: 2 },
+      ],
+      tasks: [
+        { id: 'psw-t1', instruction: 'Make wavelength ≥ 2.0 m', condition: 'lam >= 2' },
+        { id: 'psw-t2', instruction: 'Make wavelength ≤ 1.0 m', condition: 'lam <= 1' },
+        { id: 'psw-t3', instruction: 'Set frequency to 300 Hz or more', condition: 'f >= 300' },
+      ],
+      requiredTasksToUnlock: 2,
+    }),
     quizQuestions: makeFallbackQuestions('psw', 'Sound'),
   },
   {
@@ -854,6 +1341,12 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'psh-2', text: 'Explain how length affects pendulum period' },
       { id: 'psh-3', text: 'Relate oscillations to wave motion' },
     ],
+    handsOnActivity: match('Match the term to the correct idea:', [
+      { left: 'Period', right: 'Time for one complete oscillation' },
+      { left: 'Frequency', right: 'Number of oscillations per second' },
+      { left: 'Longer pendulum', right: 'Longer period (slower swings)' },
+      { left: 'Amplitude', right: 'Maximum displacement from equilibrium' },
+    ]),
     quizQuestions: makeFallbackQuestions('psh', 'Oscillations'),
   },
   {
@@ -872,6 +1365,24 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'pdb-2', text: 'Predict float/sink using density comparison' },
       { id: 'pdb-3', text: 'Explain buoyancy in simple terms' },
     ],
+    handsOnActivity: exp({
+      type: 'experiment_runner',
+      intro: 'Adjust mass and volume to compute density and predict floating in water (ρwater ≈ 1).',
+      controls: [
+        { id: 'm', label: 'Mass', unit: 'kg', min: 1, max: 20, step: 1, defaultValue: 2 },
+        { id: 'V', label: 'Volume', unit: 'L', min: 1, max: 20, step: 1, defaultValue: 4 },
+        { id: 'rw', label: 'Water density', unit: 'x', min: 1, max: 1, step: 1, defaultValue: 1 },
+      ],
+      readouts: [
+        { id: 'rho', label: 'Density', unit: 'kg/L', formula: 'm/V', decimals: 2 },
+      ],
+      tasks: [
+        { id: 'pdb-t1', instruction: 'Make object float (density < 1)', condition: 'rho < 1' },
+        { id: 'pdb-t2', instruction: 'Make object sink (density > 1)', condition: 'rho > 1' },
+        { id: 'pdb-t3', instruction: 'Make density close to 1 (0.9–1.1)', condition: 'rho >= 0.9 && rho <= 1.1' },
+      ],
+      requiredTasksToUnlock: 2,
+    }),
     quizQuestions: makeFallbackQuestions('pdb', 'Density'),
   },
   {
@@ -890,6 +1401,12 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'pri-2', text: 'Explain shielding and penetration' },
       { id: 'pri-3', text: 'State common uses and safety precautions' },
     ],
+    handsOnActivity: match('Match the radiation type to a key property:', [
+      { left: 'Alpha (α)', right: 'Stopped by paper; low penetration' },
+      { left: 'Beta (β)', right: 'Stopped by thin metal; medium penetration' },
+      { left: 'Gamma (γ)', right: 'Needs thick lead; high penetration' },
+      { left: 'Ionising', right: 'Can damage living cells' },
+    ]),
     quizQuestions: makeFallbackQuestions('pri', 'Radioactivity'),
   },
   {
@@ -908,6 +1425,25 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'pfe-2', text: 'Describe equilibrium conditions' },
       { id: 'pfe-3', text: 'Relate net force to acceleration' },
     ],
+    handsOnActivity: exp({
+      type: 'experiment_runner',
+      intro: 'Apply two forces and observe net force (positive/negative).',
+      controls: [
+        { id: 'F1', label: 'Force 1', unit: 'N', min: 0, max: 100, step: 5, defaultValue: 50 },
+        { id: 'F2', label: 'Force 2', unit: 'N', min: 0, max: 100, step: 5, defaultValue: 30 },
+        { id: 'm', label: 'Mass', unit: 'kg', min: 1, max: 20, step: 1, defaultValue: 10 },
+      ],
+      readouts: [
+        { id: 'Fnet', label: 'Net force', unit: 'N', formula: 'F1 - F2', decimals: 0 },
+        { id: 'a', label: 'Acceleration', unit: 'm/s²', formula: '(F1 - F2)/m', decimals: 2 },
+      ],
+      tasks: [
+        { id: 'pfe-t1', instruction: 'Make net force zero (balanced)', condition: 'Fnet == 0' },
+        { id: 'pfe-t2', instruction: 'Make net force positive', condition: 'Fnet > 0' },
+        { id: 'pfe-t3', instruction: 'Make acceleration at least 2.0', condition: 'a >= 2' },
+      ],
+      requiredTasksToUnlock: 2,
+    }),
     quizQuestions: makeFallbackQuestions('pfe', 'Forces and Motion'),
   },
   {
@@ -926,6 +1462,24 @@ export const PHASE3_SIMULATIONS: SimulationMetadata[] = [
       { id: 'pcm-2', text: 'Explain centripetal force direction' },
       { id: 'pcm-3', text: 'Relate circular motion to everyday examples' },
     ],
+    handsOnActivity: exp({
+      type: 'experiment_runner',
+      intro: 'Change speed and radius to see centripetal acceleration (a = v²/r).',
+      controls: [
+        { id: 'v', label: 'Speed', unit: 'm/s', min: 1, max: 20, step: 1, defaultValue: 10 },
+        { id: 'r', label: 'Radius', unit: 'm', min: 1, max: 20, step: 1, defaultValue: 5 },
+        { id: 'k', label: 'Factor', unit: 'x', min: 1, max: 1, step: 1, defaultValue: 1 },
+      ],
+      readouts: [
+        { id: 'a', label: 'Centripetal accel.', unit: 'm/s²', formula: '(v*v)/r', decimals: 2 },
+      ],
+      tasks: [
+        { id: 'pcm-t1', instruction: 'Make acceleration ≥ 20', condition: 'a >= 20' },
+        { id: 'pcm-t2', instruction: 'Make acceleration ≤ 8', condition: 'a <= 8' },
+        { id: 'pcm-t3', instruction: 'Set radius to 10 m or more', condition: 'r >= 10' },
+      ],
+      requiredTasksToUnlock: 2,
+    }),
     quizQuestions: makeFallbackQuestions('pcm', 'Circular Motion'),
   },
 ];

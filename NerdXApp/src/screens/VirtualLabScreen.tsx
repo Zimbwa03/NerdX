@@ -70,8 +70,8 @@ const VirtualLabScreen: React.FC = () => {
         if (screenName) {
             navigation.navigate(screenName);
         } else {
-            // Fallback to generic template screen for newly added simulations
-            navigation.navigate('VirtualLabTemplate', { simulationId });
+            // Fallback to interactive screen for newly added simulations
+            navigation.navigate('VirtualLabInteractive', { simulationId });
         }
     };
 
