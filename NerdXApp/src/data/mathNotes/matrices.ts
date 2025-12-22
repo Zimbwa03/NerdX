@@ -138,20 +138,14 @@ $$ \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix} \\begin{pmatrix} x \\\\ y \\
                     {
                         question: 'Solve using matrices: $3x + 2y = 11$, $4x - y = 7$.',
                         steps: [
-                            'Matrix forms: $A = \\begin{pmatrix} 3 & 2 \\\\ 4 & -1 \\end{pmatrix}$, $B = \\begin{pmatrix} 11 \\\\ 7 \\end{pmatrix}$.',
-                            'Find $|A| = (3)(-1) - (2)(4) = -3 - 8 = -11$.',
-                            'Find $A^{-1} = \\frac{1}{-11} \\begin{pmatrix} -1 & -2 \\\\ -4 & 3 \\end{pmatrix} = \\frac{1}{11} \\begin{pmatrix} 1 & 2 \\\\ 4 & -3 \\end{pmatrix}$.',
-                            'Calculate $X = A^{-1}B = \\frac{1}{11} \\begin{pmatrix} 1 & 2 \\\\ 4 & -3 \\end{pmatrix} \\begin{pmatrix} 11 \\\\ 7 \\end{pmatrix}$.',
-                            '$\\begin{pmatrix} (1)(11)+(2)(7) \\\\ (4)(11)+(-3)(7) \\end{pmatrix} = \\begin{pmatrix} 11+14 \\\\ 44-21 \\end{pmatrix} = \\begin{pmatrix} 25 \\\\ 23 \\end{pmatrix}$ ?? Wait.',
-                            'Recheck steps: Determinant is $-11$. Inverse swaps $a,d$ to $-1, 3$ and negates $b,c$ to $-2, -4$.',
-                            '$A^{-1} = -\\frac{1}{11} \\begin{pmatrix} -1 & -2 \\\\ -4 & 3 \\end{pmatrix} = \\frac{1}{11} \\begin{pmatrix} 1 & 2 \\\\ 4 & -3 \\end{pmatrix}$. Matrix mult:',
-                            'Row 1: $1(11) + 2(7) = 11+14 = 25$.',
-                            'Row 2: $4(11) - 3(7) = 44-21 = 23$.',
-                            'Wait $\\frac{25}{11}$ and $\\frac{23}{11}$? Let me check standard solving.',
-                            '$y = 4x - 7 \\Rightarrow 3x + 2(4x-7) = 11 \\Rightarrow 11x - 14 = 11 \\Rightarrow 11x=25$. Yes. Calculations correct.',
-                            'Let\'s try an integer example for clarity.'
+                            'Write in matrix form: $A\\,X = B$ where $A = \\begin{pmatrix} 3 & 2 \\\\ 4 & -1 \\end{pmatrix}$, $X = \\begin{pmatrix} x \\\\ y \\end{pmatrix}$, $B = \\begin{pmatrix} 11 \\\\ 7 \\end{pmatrix}$.',
+                            'Find determinant: $|A| = (3)(-1) - (2)(4) = -3 - 8 = -11 \\neq 0$, so $A^{-1}$ exists.',
+                            'Compute inverse: $A^{-1} = \\frac{1}{|A|}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix} = \\frac{1}{-11}\\begin{pmatrix} -1 & -2 \\\\ -4 & 3 \\end{pmatrix} = \\frac{1}{11}\\begin{pmatrix} 1 & 2 \\\\ 4 & -3 \\end{pmatrix}$.',
+                            'Now $X = A^{-1}B = \\frac{1}{11}\\begin{pmatrix} 1 & 2 \\\\ 4 & -3 \\end{pmatrix}\\begin{pmatrix} 11 \\\\ 7 \\end{pmatrix}$.',
+                            'Multiply: $\\begin{pmatrix} 1(11) + 2(7) \\\\ 4(11) + (-3)(7) \\end{pmatrix} = \\begin{pmatrix} 25 \\\\ 23 \\end{pmatrix}$.',
+                            'Therefore $X = \\frac{1}{11}\\begin{pmatrix} 25 \\\\ 23 \\end{pmatrix} = \\begin{pmatrix} \\frac{25}{11} \\\\ \\frac{23}{11} \\end{pmatrix}$.'
                         ],
-                        final_answer: 'Re-doing with cleaner numbers for the notes.'
+                        final_answer: '$x = \\frac{25}{11}$, $y = \\frac{23}{11}$'
                     },
                     {
                         question: 'Use matrices to solve: $2x + y = 7$ and $x - y = 2$.',
