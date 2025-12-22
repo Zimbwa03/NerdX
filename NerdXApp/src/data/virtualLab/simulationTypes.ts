@@ -4,6 +4,82 @@
 export type Subject = 'biology' | 'chemistry' | 'physics';
 export type Difficulty = 'easy' | 'medium' | 'hard';
 
+// ============================
+// Hands-on Activity Types
+// ============================
+
+export type HandsOnActivityType = 'experiment_runner' | 'matching' | 'sequencing';
+
+export interface ExperimentControl {
+    id: string;
+    label: string;
+    unit?: string;
+    min: number;
+    max: number;
+    step: number;
+    defaultValue: number;
+}
+
+export interface ExperimentReadout {
+    id: string;
+    label: string;
+    unit?: string;
+    /**
+     * A simple formula string using control IDs, e.g.:
+     *  - "a*b"
+     *  - "a/(b+c)"
+     *  - "a + 2*b"
+     * Supported operators: + - * / ( )
+     */
+    formula: string;
+    decimals?: number;
+}
+
+export interface ExperimentTask {
+    id: string;
+    instruction: string;
+    /**
+     * Condition string using control/readout IDs.
+     * Examples:
+     *  - "rate >= 8"
+     *  - "temp >= 35 && temp <= 40"
+     */
+    condition: string;
+}
+
+export interface ExperimentRunnerConfig {
+    type: 'experiment_runner';
+    intro?: string;
+    controls: ExperimentControl[];
+    readouts: ExperimentReadout[];
+    tasks: ExperimentTask[];
+    requiredTasksToUnlock?: number; // default = all
+}
+
+export interface MatchingPair {
+    left: string;
+    right: string;
+}
+
+export interface MatchingActivityConfig {
+    type: 'matching';
+    prompt?: string;
+    pairs: MatchingPair[];
+    requiredCorrectToUnlock?: number; // default = all
+}
+
+export interface SequencingActivityConfig {
+    type: 'sequencing';
+    prompt?: string;
+    steps: string[]; // correct order
+    requiredCorrectToUnlock?: number; // default = all
+}
+
+export type HandsOnActivityConfig =
+    | ExperimentRunnerConfig
+    | MatchingActivityConfig
+    | SequencingActivityConfig;
+
 export interface QuizQuestion {
     id: string;
     question: string;
@@ -31,6 +107,7 @@ export interface SimulationMetadata {
     color: string;
     learningObjectives: LearningObjective[];
     quizQuestions: QuizQuestion[];
+    handsOnActivity?: HandsOnActivityConfig;
 }
 
 export interface SimulationProgress {

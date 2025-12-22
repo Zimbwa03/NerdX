@@ -639,6 +639,7 @@ def generate_question():
         topic = data.get('topic')
         difficulty = data.get('difficulty', 'medium')
         question_type = data.get('type', 'topical')  # 'topical' or 'exam'
+        question_format = (data.get('question_format') or 'mcq').lower()  # 'mcq' or 'structured'
         
         if not subject:
             return jsonify({'success': False, 'message': 'Subject is required'}), 400
@@ -709,7 +710,10 @@ def generate_question():
                     topic = TOPICS[parent_subject][0]
             
             science_gen = CombinedScienceGenerator()
-            question_data = science_gen.generate_topical_question(parent_subject, topic or 'Cell Structure and Organisation', difficulty, g.current_user_id)
+            if question_format == 'structured':
+                question_data = science_gen.generate_structured_question(parent_subject, topic or 'Cell Structure and Organisation', difficulty, g.current_user_id)
+            else:
+                question_data = science_gen.generate_topical_question(parent_subject, topic or 'Cell Structure and Organisation', difficulty, g.current_user_id)
         elif subject == 'english':
             english_service = EnglishService()
             # English service uses different method - get grammar or vocabulary question
@@ -800,11 +804,34 @@ def generate_question():
         question_type_mobile = question_data.get('question_type', '') or question_data.get('type', 'short_answer')
         if subject == 'mathematics' and not options:
             question_type_mobile = 'short_answer'  # Math questions allow text input
+        if subject == 'combined_science' and (question_data.get('question_type') or '').lower() == 'structured':
+            question_type_mobile = 'structured'
+            # Structured science uses typed answers; options/correct_answer are not used
+            options = []
+            correct_answer = ''
+            # Provide a compact "solution" string (model answers) for UI display if desired
+            try:
+                parts = question_data.get('parts', []) if isinstance(question_data.get('parts'), list) else []
+                model_lines = []
+                for p in parts:
+                    label = p.get('label', '')
+                    model = (p.get('model_answer') or '').strip()
+                    marks = p.get('marks', '')
+                    if model:
+                        model_lines.append(f"{label} [{marks}]: {model}")
+                if model_lines:
+                    solution = "MODEL ANSWERS:\n" + "\n".join(model_lines[:10])
+            except Exception:
+                pass
         
         # Format question for mobile
         question = {
             'id': str(uuid.uuid4()),
-            'question_text': question_data.get('question', '') or question_data.get('question_text', ''),
+            'question_text': (
+                question_data.get('question', '') or
+                question_data.get('question_text', '') or
+                (question_data.get('stem', '') if (question_data.get('question_type') or '').lower() == 'structured' else '')
+            ),
             'question_type': question_type_mobile,
             'options': options if isinstance(options, list) else [],
             'correct_answer': correct_answer,
@@ -818,6 +845,7 @@ def generate_question():
             'allows_text_input': (
                 subject == 'mathematics' or 
                 question_type_mobile == 'short_answer' or
+                question_type_mobile == 'structured' or
                 (subject == 'english' and not options)  # English grammar questions without MCQ options need text input
             ),
             'allows_image_upload': subject == 'mathematics',  # Math questions support image upload
@@ -833,6 +861,20 @@ def generate_question():
             # Separate teaching explanation for Combined Science (different from solution)
             'teaching_explanation': question_data.get('teaching_explanation', '') or question_data.get('real_world_application', '')
         }
+        
+        # Include structured payload for the app (so it can render parts and resubmit for marking)
+        if subject == 'combined_science' and question_type_mobile == 'structured':
+            question['structured_question'] = {
+                'question_type': 'structured',
+                'subject': question_data.get('subject', ''),
+                'topic': question_data.get('topic', ''),
+                'difficulty': question_data.get('difficulty', difficulty),
+                'stem': question_data.get('stem', ''),
+                'parts': question_data.get('parts', []),
+                'total_marks': question_data.get('total_marks', 0),
+                # rubric is needed for server-side marking in stateless mobile flow
+                'marking_rubric': question_data.get('marking_rubric', {})
+            }
         
         return jsonify({
             'success': True,
@@ -927,10 +969,12 @@ def submit_answer():
         answer = data.get('answer', '').strip()
         image_url = data.get('image_url', '')  # For image-based answers
         subject = data.get('subject', '')
+        question_type = (data.get('question_type') or '').lower()
         correct_answer = data.get('correct_answer', '')
         solution = data.get('solution', '')
         hint = data.get('hint', '')
         question_text = data.get('question_text', '') # Need question text for AI analysis
+        structured_question = data.get('structured_question')  # For structured science marking
         
         if not question_id:
             return jsonify({'success': False, 'message': 'Question ID is required'}), 400
@@ -1004,6 +1048,44 @@ def submit_answer():
             else:
                 if not feedback:
                     feedback = '❌ Not quite right. Review the solution below to understand the correct approach.'
+        elif subject == 'combined_science' and (question_type == 'structured' or isinstance(structured_question, dict)):
+            # ZIMSEC-style structured question marking (DeepSeek) for mobile.
+            try:
+                from services.combined_science_generator import CombinedScienceGenerator
+                gen = CombinedScienceGenerator()
+                evaluation = gen.evaluate_structured_answer(structured_question or {}, answer if answer else "Image Answer")
+
+                if not evaluation or not evaluation.get('success'):
+                    return jsonify({'success': False, 'message': 'Failed to evaluate structured answer'}), 500
+
+                is_correct = bool(evaluation.get('is_correct', False))
+                feedback = (evaluation.get('overall_teacher_feedback') or '').strip() or ('✅ Good work!' if is_correct else '❌ Not quite right.')
+                detailed_solution = (evaluation.get('well_detailed_explanation') or '').strip() or (solution or 'No solution provided')
+                analysis_result = {
+                    'what_went_right': '',
+                    'what_went_wrong': '',
+                    'improvement_tips': '\n'.join(evaluation.get('next_steps', [])) if isinstance(evaluation.get('next_steps'), list) else '',
+                    'encouragement': feedback,
+                    'related_topic': structured_question.get('topic', '') if isinstance(structured_question, dict) else ''
+                }
+
+                # Add a compact per-part summary into feedback (optional, but helpful)
+                per_part = evaluation.get('per_part', [])
+                if isinstance(per_part, list) and per_part:
+                    lines = []
+                    for p in per_part[:6]:
+                        lbl = p.get('label', '')
+                        got = p.get('awarded', 0)
+                        mx = p.get('max_marks', p.get('marks', 0))
+                        tfb = (p.get('teacher_feedback') or '').strip()
+                        if tfb:
+                            lines.append(f"{lbl} [{got}/{mx}]: {tfb}")
+                    if lines:
+                        feedback = feedback + "\n\nPart feedback:\n" + "\n".join(lines)
+
+            except Exception as se:
+                logger.error(f"Structured answer evaluation error: {se}", exc_info=True)
+                return jsonify({'success': False, 'message': 'Error evaluating structured answer'}), 500
         else:
             # For other subjects (Combined Science, English, etc.)
             # Handle MCQ answer validation: could be option letter (A/B/C/D) or full option text
@@ -1152,6 +1234,127 @@ def start_session():
         }), 200
     except Exception as e:
         logger.error(f"Start session error: {e}")
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+@mobile_bp.route('/virtual-lab/knowledge-check', methods=['POST'])
+@require_auth
+def generate_virtual_lab_knowledge_check():
+    """
+    Generate Virtual Lab knowledge-check questions using DeepSeek (no credit deduction).
+
+    Payload:
+      - simulation_id (optional, for analytics/debug)
+      - subject: biology | chemistry | physics
+      - topic: string
+      - difficulty: easy | medium | hard
+      - count: int (default 5, max 20)
+
+    Returns:
+      data: [
+        { id, question_text, options, correct_index, explanation }
+      ]
+    """
+    try:
+        data = request.get_json() or {}
+
+        simulation_id = data.get('simulation_id') or data.get('simulationId') or ''
+        subject = (data.get('subject') or '').strip().lower()
+        topic = (data.get('topic') or '').strip()
+        difficulty_in = (data.get('difficulty') or 'medium').strip().lower()
+        count_raw = data.get('count', 5)
+
+        if subject not in ['biology', 'chemistry', 'physics']:
+            return jsonify({'success': False, 'message': 'Invalid subject'}), 400
+
+        # Map app difficulty to generator difficulty
+        difficulty_map = {
+            'easy': 'easy',
+            'medium': 'medium',
+            'hard': 'difficult',
+            'difficult': 'difficult',
+        }
+        difficulty = difficulty_map.get(difficulty_in, 'medium')
+
+        try:
+            count = int(count_raw)
+        except Exception:
+            count = 5
+        count = max(1, min(count, 20))
+
+        parent_subject = subject.capitalize()
+        if not topic:
+            # Sensible defaults per subject if topic omitted
+            topic = 'Cell Structure and Organisation' if subject == 'biology' else (
+                'Acids, Bases and Salts' if subject == 'chemistry' else 'Kinematics'
+            )
+
+        science_gen = CombinedScienceGenerator()
+        questions = []
+
+        def _options_to_list(opts):
+            if isinstance(opts, dict):
+                # Ensure A,B,C,D order
+                ordered = []
+                for k in ['A', 'B', 'C', 'D']:
+                    if opts.get(k):
+                        ordered.append(opts.get(k))
+                # Fallback to key-sorted order if unexpected keys
+                return ordered if ordered else [opts.get(k, '') for k in sorted(opts.keys()) if opts.get(k)]
+            if isinstance(opts, list):
+                return [str(o) for o in opts if str(o).strip()]
+            return []
+
+        def _correct_index_from_answer(answer, options):
+            # DeepSeek generator typically returns A/B/C/D
+            if isinstance(answer, str):
+                a = answer.strip().upper()
+                if a in ['A', 'B', 'C', 'D']:
+                    return ['A', 'B', 'C', 'D'].index(a)
+                # Sometimes the answer is the option text
+                for idx, opt in enumerate(options):
+                    if opt.strip().lower() == answer.strip().lower():
+                        return idx
+            return 0
+
+        for _ in range(count):
+            q = science_gen.generate_topical_question(parent_subject, topic, difficulty, g.current_user_id)
+            if not q:
+                continue
+
+            options = _options_to_list(q.get('options', []))
+            # Ensure we always have 4 options for the mobile UI
+            if len(options) < 4:
+                # Pad with plausible placeholders if DeepSeek response is malformed
+                while len(options) < 4:
+                    options.append(f"Option {chr(65 + len(options))}")
+            options = options[:4]
+
+            answer = q.get('answer') or q.get('correct_answer') or 'A'
+            correct_index = _correct_index_from_answer(answer, options)
+            explanation = q.get('explanation') or q.get('solution') or ''
+
+            questions.append({
+                'id': str(uuid.uuid4()),
+                'question_text': q.get('question', '') or q.get('question_text', ''),
+                'options': options,
+                'correct_index': correct_index,
+                'explanation': explanation,
+                'meta': {
+                    'simulation_id': simulation_id,
+                    'subject': subject,
+                    'topic': topic,
+                    'difficulty': difficulty_in,
+                }
+            })
+
+        if not questions:
+            return jsonify({'success': False, 'message': 'Failed to generate questions'}), 500
+
+        return jsonify({'success': True, 'data': questions}), 200
+
+    except Exception as e:
+        logger.error(f"Virtual lab knowledge check generation error: {e}", exc_info=True)
         return jsonify({'success': False, 'message': 'Server error'}), 500
 
 @mobile_bp.route('/quiz/session/<session_id>', methods=['GET'])

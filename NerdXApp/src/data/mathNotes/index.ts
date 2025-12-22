@@ -8,6 +8,7 @@ import { vectorsNotes, vectorsTopics } from './vectors';
 import { transformationsNotes, transformationsTopics } from './transformations';
 import { setsNotes, setsTopics } from './sets';
 import { functionsNotes, functionsTopics } from './functions';
+import { syllabusTopicNotes, syllabusTopics } from './syllabusTopics';
 import { MathTopicNotes } from './types';
 
 export { MathTopicNotes, MathNotesSection, MathWorkedExample } from './types';
@@ -15,6 +16,7 @@ export { MathTopicNotes, MathNotesSection, MathWorkedExample } from './types';
 // Combine all notes into a single object
 export const mathNotes: Record<string, Record<string, MathTopicNotes>> = {
     Mathematics: {
+        ...syllabusTopicNotes,
         ...numberNotes,
         ...algebraNotes,
         ...geometryNotes,
@@ -31,6 +33,8 @@ export const mathNotes: Record<string, Record<string, MathTopicNotes>> = {
 // O-Level Topics in recommended study order
 export const mathTopics: Record<string, string[]> = {
     Mathematics: [
+        // Broad syllabus topics (ZIMSEC headings)
+        ...syllabusTopics,
         // Number topics (Foundation)
         ...numberTopics,
         // Sets
@@ -67,6 +71,8 @@ export function getMathTopicNotes(topic: string, subject: string = 'Mathematics'
 
 // Export all available topics for quick reference
 export const allMathTopics = [
+    // ZIMSEC broad topics
+    ...syllabusTopics,
     // Number
     ...numberTopics,
     // Sets

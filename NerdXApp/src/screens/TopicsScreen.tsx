@@ -355,22 +355,28 @@ const TopicsScreen: React.FC = () => {
                 <Text style={styles.mathNotesSectionTitle}>📘 Professional Math Notes</Text>
                 <Text style={styles.mathNotesSectionSubtitle}>O-Level Standard - Tap to study</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.mathTopicsScroll}>
-                  {[
-                    'Real Numbers',
-                    'Fractions, Decimals & Percentages',
-                    'Ratio and Proportion',
-                    'Algebraic Expressions',
-                    'Quadratic Equations',
-                    'Linear Equations & Inequalities',
-                    'Indices and Logarithms',
-                    'Angles and Polygons',
-                    'Pythagoras Theorem',
-                    'Trigonometry',
-                    'Circle Theorems',
-                    'Statistics',
-                    'Probability',
-                    'Mensuration',
-                  ].map((topicName, index) => (
+                  {(topics && topics.length > 0
+                    ? topics.map(t => t.name)
+                    : [
+                        'Number Theory',
+                        'Sets',
+                        'Indices & Standard Form',
+                        'Algebra',
+                        'Inequalities',
+                        'Sequences & Series',
+                        'Matrices',
+                        'Vectors',
+                        'Geometry',
+                        'Mensuration',
+                        'Trigonometry',
+                        'Transformation Geometry',
+                        'Statistics',
+                        'Probability',
+                        'Graphs',
+                        'Variation',
+                        'Loci & Construction',
+                      ]
+                  ).map((topicName, index) => (
                     <TouchableOpacity
                       key={index}
                       style={[styles.mathTopicChip, { backgroundColor: Colors.iconBg.mathematics }]}

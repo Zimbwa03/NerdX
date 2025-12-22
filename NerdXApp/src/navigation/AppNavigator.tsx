@@ -56,6 +56,8 @@ import MotionGrapherScreen from '../screens/virtualLab/MotionGrapherScreen';
 import NewtonsLawsLabScreen from '../screens/virtualLab/NewtonsLawsLabScreen';
 import ThermalExpansionScreen from '../screens/virtualLab/ThermalExpansionScreen';
 import WavePropertiesScreen from '../screens/virtualLab/WavePropertiesScreen';
+import VirtualLabTemplateScreen from '../screens/virtualLab/VirtualLabTemplateScreen';
+import VirtualLabInteractiveScreen from '../screens/virtualLab/VirtualLabInteractiveScreen';
 
 const Stack = createStackNavigator();
 
@@ -320,6 +322,16 @@ const AppNavigator: React.FC = () => {
             <Stack.Screen
               name="NewtonsLawsLab"
               component={NewtonsLawsLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="VirtualLabTemplate"
+              component={VirtualLabTemplateScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="VirtualLabInteractive"
+              component={VirtualLabInteractiveScreen}
               options={{ headerShown: false }}
             />
             <Stack.Screen

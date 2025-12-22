@@ -2,6 +2,7 @@
 // Phase 1: 6 High-Impact Simulations
 
 import { SimulationMetadata, ChemicalEquation, Badge } from './simulationTypes';
+import { PHASE3_SIMULATIONS } from './phase3Simulations';
 
 // ============================================
 // PHASE 1 SIMULATIONS
@@ -485,17 +486,17 @@ export const CELL_ORGANELLES = {
 
 // Helper function to get simulation by ID
 export const getSimulationById = (id: string): SimulationMetadata | undefined => {
-    return [...PHASE1_SIMULATIONS, ...PHASE2_SIMULATIONS].find(sim => sim.id === id);
+    return [...PHASE1_SIMULATIONS, ...PHASE2_SIMULATIONS, ...PHASE3_SIMULATIONS].find(sim => sim.id === id);
 };
 
 // Helper function to get simulations by subject
 export const getSimulationsBySubject = (subject: 'biology' | 'chemistry' | 'physics'): SimulationMetadata[] => {
-    return [...PHASE1_SIMULATIONS, ...PHASE2_SIMULATIONS].filter(sim => sim.subject === subject);
+    return [...PHASE1_SIMULATIONS, ...PHASE2_SIMULATIONS, ...PHASE3_SIMULATIONS].filter(sim => sim.subject === subject);
 };
 
 // Get all simulations
 export const getAllSimulations = (): SimulationMetadata[] => {
-    return [...PHASE1_SIMULATIONS, ...PHASE2_SIMULATIONS];
+    return [...PHASE1_SIMULATIONS, ...PHASE2_SIMULATIONS, ...PHASE3_SIMULATIONS];
 };
 
 // ============================================
