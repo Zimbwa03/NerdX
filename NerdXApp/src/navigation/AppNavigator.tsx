@@ -33,6 +33,8 @@ import MathSolverScreen from '../screens/MathSolverScreen';
 import OfflineSettingsScreen from '../screens/OfflineSettingsScreen';
 import ModelDownloadScreen from '../screens/ModelDownloadScreen';
 import MathNotesDetailScreen from '../screens/MathNotesDetailScreen';
+import ALevelPhysicsScreen from '../screens/ALevelPhysicsScreen';
+import ALevelPhysicsNotesScreen from '../screens/ALevelPhysicsNotesScreen';
 
 // Virtual Lab Simulation Screens
 import CellExplorerScreen from '../screens/virtualLab/CellExplorerScreen';
@@ -386,6 +388,21 @@ const AppNavigator: React.FC = () => {
             <Stack.Screen
               name="ModelDownload"
               component={ModelDownloadScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            {/* A Level Physics Screens */}
+            <Stack.Screen
+              name="ALevelPhysics"
+              component={ALevelPhysicsScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="ALevelPhysicsNotes"
+              component={ALevelPhysicsNotesScreen}
               options={{
                 headerShown: false,
               }}

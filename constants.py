@@ -76,6 +76,41 @@ TOPICS = {
     ]
 }
 
+# A Level Physics Topics (Cambridge/ZIMSEC A Level Syllabus)
+A_LEVEL_PHYSICS_TOPICS = {
+    "AS Level": [
+        "Physical Quantities and Units",
+        "Kinematics",
+        "Dynamics",
+        "Forces, Density, and Pressure",
+        "Work, Energy, and Power",
+        "Deformation of Solids",
+        "Waves",
+        "Superposition",
+        "Electricity",
+        "D.C. Circuits",
+        "Particle Physics"
+    ],
+    "A2 Level": [
+        "Motion in a Circle",
+        "Gravitational Fields",
+        "Temperature",
+        "Ideal Gases",
+        "Thermodynamics",
+        "Oscillations",
+        "Electric Fields",
+        "Capacitance",
+        "Magnetic Fields",
+        "Alternating Currents",
+        "Quantum Physics",
+        "Nuclear Physics",
+        "Astronomy and Cosmology"
+    ]
+}
+
+# All A Level Physics topics flat list
+A_LEVEL_PHYSICS_ALL_TOPICS = A_LEVEL_PHYSICS_TOPICS["AS Level"] + A_LEVEL_PHYSICS_TOPICS["A2 Level"]
+
 # Difficulty levels
 DIFFICULTY_LEVELS = {
     'easy': {

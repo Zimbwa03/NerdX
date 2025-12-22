@@ -169,9 +169,16 @@ const DashboardScreen: React.FC = () => {
   };
 
   const navigateToALevelSubject = (subjectId: string, subjectName: string) => {
+    // Navigate to dedicated A Level Physics screen
+    if (subjectId === 'physics') {
+      navigation.navigate('ALevelPhysics' as never);
+      return;
+    }
+
+    // For other A Level subjects, use Topics screen (to be implemented)
     const subject: Partial<Subject> = {
-      id: subjectId,
-      name: subjectName,
+      id: `a_level_${subjectId}`,
+      name: `A Level ${subjectName}`,
       icon: 'science',
       color: aLevelColors[subjectId as keyof typeof aLevelColors] || Colors.primary.main,
     };

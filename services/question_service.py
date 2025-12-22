@@ -2,7 +2,7 @@ import json
 import logging
 import hashlib
 from typing import Dict, List, Optional
-from constants import TOPICS, DIFFICULTY_LEVELS, POINT_VALUES
+from constants import TOPICS, DIFFICULTY_LEVELS, POINT_VALUES, A_LEVEL_PHYSICS_ALL_TOPICS
 from services.ai_service import AIService
 from database.external_db import (
     get_random_mcq_question, save_ai_question_to_database,
@@ -172,6 +172,11 @@ class QuestionService:
                 from services.combined_science_generator import combined_science_generator
                 logger.info(f"Generating diverse professional O-Level {subject} question for {topic}")
                 question_data = combined_science_generator.generate_topical_question(subject, topic, difficulty, user_id)
+            elif subject == "a_level_physics":
+                # Use A Level Physics generator for advanced physics questions
+                from services.a_level_physics_generator import a_level_physics_generator
+                logger.info(f"Generating A Level Physics question for {topic}")
+                question_data = a_level_physics_generator.generate_question(topic, difficulty, user_id)
             elif subject == "English":
                 question_data = self.ai_service.generate_english_question(topic, difficulty)
             else:
