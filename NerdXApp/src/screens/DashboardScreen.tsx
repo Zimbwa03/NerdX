@@ -181,6 +181,18 @@ const DashboardScreen: React.FC = () => {
       return;
     }
 
+    // Navigate to dedicated A Level Pure Mathematics screen
+    if (subjectId === 'pure_mathematics') {
+      navigation.navigate('ALevelPureMath' as never);
+      return;
+    }
+
+    // Navigate to dedicated A Level Biology screen
+    if (subjectId === 'biology') {
+      navigation.navigate('ALevelBiology' as never);
+      return;
+    }
+
     // For other A Level subjects, use Topics screen (to be implemented)
     const subject: Partial<Subject> = {
       id: `a_level_${subjectId}`,

@@ -2,7 +2,7 @@ import json
 import logging
 import hashlib
 from typing import Dict, List, Optional
-from constants import TOPICS, DIFFICULTY_LEVELS, POINT_VALUES, A_LEVEL_PHYSICS_ALL_TOPICS
+from constants import TOPICS, DIFFICULTY_LEVELS, POINT_VALUES, A_LEVEL_PHYSICS_ALL_TOPICS, A_LEVEL_CHEMISTRY_ALL_TOPICS, A_LEVEL_PURE_MATH_ALL_TOPICS, A_LEVEL_BIOLOGY_ALL_TOPICS
 from services.ai_service import AIService
 from database.external_db import (
     get_random_mcq_question, save_ai_question_to_database,
@@ -18,12 +18,25 @@ class QuestionService:
     def __init__(self):
         self.ai_service = AIService()
     
-    def get_question(self, user_id: str, subject: str, topic: str, difficulty: str, force_ai: bool = False) -> Optional[Dict]:
-        """Get a question for the user (from database or generate new)"""
+    def get_question(self, user_id: str, subject: str, topic: str, difficulty: str, force_ai: bool = False, question_type: str = None) -> Optional[Dict]:
+        """Get a question for the user (from database or generate new)
+        
+        Args:
+            user_id: The user's ID
+            subject: The subject for the question
+            topic: The topic within the subject
+            difficulty: Difficulty level (easy, medium, difficult)
+            force_ai: If True, skip database and generate new question
+            question_type: Optional type for A Level Biology (mcq, structured, essay)
+        """
         try:
-            # Validate input parameters
-            if not self._validate_question_params(subject, topic, difficulty):
+            # Validate input parameters - skip for A Level subjects
+            if not subject.startswith('a_level_') and not self._validate_question_params(subject, topic, difficulty):
                 return None
+            
+            # A Level Biology always generates fresh questions (3 types: mcq, structured, essay)
+            if subject == 'a_level_biology':
+                force_ai = True
             
             # Try to get from database first (unless forced AI generation)
             if not force_ai:
@@ -32,7 +45,7 @@ class QuestionService:
                     return db_question
             
             # Generate new question using AI with diversity tracking
-            ai_question = self._generate_ai_question(subject, topic, difficulty, user_id)
+            ai_question = self._generate_ai_question(subject, topic, difficulty, user_id, question_type)
             if ai_question:
                 # Save to database for future use
                 self._save_generated_question(ai_question, subject, topic, difficulty)
@@ -162,8 +175,16 @@ class QuestionService:
             logger.error(f"Error getting database question: {e}")
             return None
     
-    def _generate_ai_question(self, subject: str, topic: str, difficulty: str, user_id: str = None) -> Optional[Dict]:
-        """Generate a new question using AI with O-Level appropriate quality"""
+    def _generate_ai_question(self, subject: str, topic: str, difficulty: str, user_id: str = None, question_type: str = None) -> Optional[Dict]:
+        """Generate a new question using AI with O-Level appropriate quality
+        
+        Args:
+            subject: The subject for the question
+            topic: The topic within the subject
+            difficulty: Difficulty level (easy, medium, difficult)
+            user_id: Optional user ID for tracking
+            question_type: Optional question type for A Level Biology (mcq, structured, essay)
+        """
         try:
             if subject == "Mathematics":
                 question_data = self.ai_service.generate_math_question(topic, difficulty)
@@ -182,6 +203,17 @@ class QuestionService:
                 from services.a_level_chemistry_generator import a_level_chemistry_generator
                 logger.info(f"Generating A Level Chemistry question for {topic}")
                 question_data = a_level_chemistry_generator.generate_question(topic, difficulty, user_id)
+            elif subject == "a_level_pure_math":
+                # Use A Level Pure Mathematics generator (DeepSeek)
+                from services.a_level_pure_math_generator import a_level_pure_math_generator
+                logger.info(f"Generating A Level Pure Mathematics question for {topic}")
+                question_data = a_level_pure_math_generator.generate_question(topic, difficulty, user_id)
+            elif subject == "a_level_biology":
+                # Use A Level Biology generator (DeepSeek) - supports MCQ, Structured, Essay
+                from services.a_level_biology_generator import a_level_biology_generator
+                bio_question_type = question_type if question_type else 'mcq'
+                logger.info(f"Generating A Level Biology {bio_question_type} question for {topic}")
+                question_data = a_level_biology_generator.generate_question(topic, difficulty, user_id, bio_question_type)
             elif subject == "English":
                 question_data = self.ai_service.generate_english_question(topic, difficulty)
             else:

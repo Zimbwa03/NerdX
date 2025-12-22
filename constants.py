@@ -163,6 +163,77 @@ A_LEVEL_CHEMISTRY_TOPICS = {
 # All A Level Chemistry topics flat list
 A_LEVEL_CHEMISTRY_ALL_TOPICS = A_LEVEL_CHEMISTRY_TOPICS["AS Level"] + A_LEVEL_CHEMISTRY_TOPICS["A2 Level"]
 
+# A Level Pure Mathematics Topics (ZIMSEC Syllabus 6042)
+A_LEVEL_PURE_MATH_TOPICS = {
+    "Lower Sixth": [
+        "Polynomials",
+        "Rational Functions",
+        "Indices, Surds and Logarithms",
+        "Quadratic Functions",
+        "Functions",
+        "Coordinate Geometry",
+        "Sequences and Series",
+        "Binomial Theorem",
+        "Trigonometry (Identities & Equations)",
+        "Differentiation",
+        "Applications of Differentiation",
+        "Integration"
+    ],
+    "Upper Sixth": [
+        "Further Trigonometry",
+        "Hyperbolic Functions",
+        "Further Differentiation",
+        "Further Integration Techniques",
+        "Differential Equations",
+        "Complex Numbers",
+        "Matrices and Determinants",
+        "Vectors in 3D",
+        "Summation of Series",
+        "Numerical Methods",
+        "Proof and Mathematical Induction",
+        "Group Theory"
+    ]
+}
+
+# All A Level Pure Mathematics topics flat list
+A_LEVEL_PURE_MATH_ALL_TOPICS = A_LEVEL_PURE_MATH_TOPICS["Lower Sixth"] + A_LEVEL_PURE_MATH_TOPICS["Upper Sixth"]
+
+# A Level Biology Topics (ZIMSEC A Level Syllabus 6030)
+A_LEVEL_BIOLOGY_TOPICS = {
+    "Lower Sixth": [
+        "Cell Structure",
+        "Biological Molecules",
+        "Enzymes",
+        "Cell Membranes and Transport",
+        "The Cell Cycle and Mitosis",
+        "Nucleic Acids and Protein Synthesis",
+        "Transport in Plants",
+        "Transport in Mammals",
+        "Gas Exchange",
+        "Infectious Diseases",
+        "Immunity",
+        "Smoking and Health"
+    ],
+    "Upper Sixth": [
+        "Energy and Respiration",
+        "Photosynthesis",
+        "Homeostasis",
+        "Excretion",
+        "Coordination: Nervous System",
+        "Coordination: Hormones",
+        "Inherited Change",
+        "Selection and Evolution",
+        "Biodiversity and Classification",
+        "Genetic Technology",
+        "Ecology",
+        "Human Impact on Environment",
+        "Reproduction"
+    ]
+}
+
+# All A Level Biology topics flat list
+A_LEVEL_BIOLOGY_ALL_TOPICS = A_LEVEL_BIOLOGY_TOPICS["Lower Sixth"] + A_LEVEL_BIOLOGY_TOPICS["Upper Sixth"]
+
 # Difficulty levels
 DIFFICULTY_LEVELS = {
     'easy': {

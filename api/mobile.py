@@ -730,6 +730,28 @@ def generate_question():
                 question_data = question_result.get('question_data', {})
             else:
                 question_data = None
+        
+        elif subject == 'a_level_physics':
+            # A Level Physics - uses DeepSeek generator
+            from services.a_level_physics_generator import a_level_physics_generator
+            question_data = a_level_physics_generator.generate_question(topic or 'Kinematics', difficulty, g.current_user_id)
+        
+        elif subject == 'a_level_pure_math':
+            # A Level Pure Mathematics - uses DeepSeek generator
+            from services.a_level_pure_math_generator import a_level_pure_math_generator
+            question_data = a_level_pure_math_generator.generate_question(topic or 'Polynomials', difficulty, g.current_user_id)
+        
+        elif subject == 'a_level_biology':
+            # A Level Biology - uses DeepSeek generator with MCQ, Structured, Essay support
+            from services.a_level_biology_generator import a_level_biology_generator
+            # question_type can be 'mcq', 'structured', or 'essay'
+            bio_question_type = data.get('question_type', 'mcq')
+            question_data = a_level_biology_generator.generate_question(
+                topic or 'Cell Structure', 
+                difficulty, 
+                g.current_user_id, 
+                bio_question_type
+            )
 
         
         if not question_data:

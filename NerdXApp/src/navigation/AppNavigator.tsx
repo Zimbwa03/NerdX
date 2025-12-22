@@ -37,6 +37,10 @@ import ALevelPhysicsScreen from '../screens/ALevelPhysicsScreen';
 import ALevelPhysicsNotesScreen from '../screens/ALevelPhysicsNotesScreen';
 import ALevelChemistryScreen from '../screens/ALevelChemistryScreen';
 import ALevelChemistryNotesScreen from '../screens/ALevelChemistryNotesScreen';
+import ALevelPureMathScreen from '../screens/ALevelPureMathScreen';
+import ALevelPureMathNotesScreen from '../screens/ALevelPureMathNotesScreen';
+import ALevelBiologyScreen from '../screens/ALevelBiologyScreen';
+import ALevelBiologyNotesScreen from '../screens/ALevelBiologyNotesScreen';
 
 // Virtual Lab Simulation Screens
 import CellExplorerScreen from '../screens/virtualLab/CellExplorerScreen';
@@ -420,6 +424,36 @@ const AppNavigator: React.FC = () => {
             <Stack.Screen
               name="ALevelChemistryNotes"
               component={ALevelChemistryNotesScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            {/* A Level Pure Mathematics Screens */}
+            <Stack.Screen
+              name="ALevelPureMath"
+              component={ALevelPureMathScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="ALevelPureMathNotes"
+              component={ALevelPureMathNotesScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            {/* A Level Biology Screens */}
+            <Stack.Screen
+              name="ALevelBiology"
+              component={ALevelBiologyScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="ALevelBiologyNotes"
+              component={ALevelBiologyNotesScreen}
               options={{
                 headerShown: false,
               }}
