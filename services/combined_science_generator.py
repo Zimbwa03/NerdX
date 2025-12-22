@@ -8,7 +8,7 @@ import requests
 import time
 import logging
 import random
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -236,6 +236,414 @@ class CombinedScienceGenerator:
         except Exception as e:
             logger.error(f"Error generating {subject} question for {topic}: {e}")
             return self._get_fallback_question(subject, topic, difficulty, user_id)
+
+    def generate_structured_question(self, subject: str, topic: str, difficulty: str = 'medium', user_id: str = None) -> Optional[Dict]:
+        """
+        Generate a ZIMSEC-style O-Level *Structured* question (not MCQ).
+
+        Output is a dict that includes:
+        - question_type='structured'
+        - stem/context
+        - parts with labels and marks
+        - an internal marking rubric (used for AI evaluation)
+        """
+        try:
+            if not self.api_key:
+                logger.error("DeepSeek API key not configured (structured)")
+                return self._get_fallback_structured_question(subject, topic, difficulty, user_id)
+
+            prompt = self._create_olevel_structured_prompt(subject, topic, difficulty)
+            result = self._call_deepseek_api(prompt, f"{subject}_{topic}_{difficulty}_structured")
+
+            if result:
+                return self._validate_and_enhance_structured_question(result, subject, topic, difficulty, user_id)
+
+            logger.warning(f"DeepSeek structured generation failed for {subject}/{topic}, using fallback")
+            return self._get_fallback_structured_question(subject, topic, difficulty, user_id)
+
+        except Exception as e:
+            logger.error(f"Error generating structured {subject} question for {topic}: {e}")
+            return self._get_fallback_structured_question(subject, topic, difficulty, user_id)
+
+    def evaluate_structured_answer(self, structured_question: Dict[str, Any], student_answer: str) -> Dict[str, Any]:
+        """
+        Evaluate a student's answer to a structured question using DeepSeek (preferred),
+        falling back to a heuristic rubric matcher if needed.
+        """
+        try:
+            if not structured_question or structured_question.get('question_type') != 'structured':
+                return {
+                    'success': False,
+                    'error': 'Invalid structured question payload',
+                    'marks_awarded': 0,
+                    'total_marks': 0,
+                    'is_correct': False,
+                    'overall_feedback': 'Invalid question data.'
+                }
+
+            total_marks = int(structured_question.get('total_marks') or 0)
+            rubric = structured_question.get('marking_rubric') or structured_question.get('rubric') or {}
+
+            if not self.api_key:
+                logger.warning("DeepSeek API key not configured (structured evaluation) - using fallback evaluator")
+                return self._fallback_evaluate_structured_answer(structured_question, student_answer)
+
+            prompt = self._create_structured_evaluation_prompt(structured_question, rubric, student_answer)
+            result = self._call_deepseek_api(prompt, "structured_evaluation")
+
+            if isinstance(result, dict) and result.get('success') is True:
+                # Ensure core fields exist
+                result.setdefault('total_marks', total_marks)
+                if not result.get('percentage') and result.get('total_marks'):
+                    try:
+                        result['percentage'] = round((float(result.get('marks_awarded', 0)) / float(result['total_marks'])) * 100, 1)
+                    except Exception:
+                        result['percentage'] = 0.0
+                return result
+
+            # If DeepSeek returned something unexpected, fallback.
+            logger.warning("DeepSeek structured evaluation returned invalid result - using fallback")
+            return self._fallback_evaluate_structured_answer(structured_question, student_answer)
+
+        except Exception as e:
+            logger.error(f"Error evaluating structured answer: {e}")
+            return self._fallback_evaluate_structured_answer(structured_question, student_answer)
+
+    def _create_olevel_structured_prompt(self, subject: str, topic: str, difficulty: str) -> str:
+        """Create a ZIMSEC O-Level structured-question prompt (parts, marks, rubric)."""
+        objectives = self.learning_objectives.get(subject, {}).get(topic, [
+            f"Understand key concepts of {topic}",
+            f"Apply {topic} knowledge to exam-style questions"
+        ])
+
+        difficulty_guidance = {
+            'easy': "Short recall + simple application. 3-4 parts. Total 6-8 marks.",
+            'medium': "Mixed recall/application/explain. 4-6 parts with subparts. Total 8-12 marks.",
+            'difficult': "More depth and reasoning. 5-7 parts with subparts. Total 10-15 marks."
+        }
+
+        # ZIMSEC structured questions: short stem, then (a)(i)(ii) style parts, marks in brackets.
+        return f"""Create ONE ZIMSEC O-Level *Structured* question for Combined Science ({subject}) on the topic: {topic}.
+
+STUDENT LEVEL: ZIMSEC O-Level Forms 1-4 (ages 15-17 in Zimbabwe).
+
+STYLE REQUIREMENTS (must follow):
+- Must be a *STRUCTURED* question (NOT multiple choice).
+- Must be broken into parts like (a)(i), (a)(ii), (b), (c)(i) etc.
+- Each part must have a mark allocation like [2] and the total marks must be realistic for ZIMSEC.
+- Use clear ZIMSEC command words: state, define, describe, explain, calculate, name, label, suggest.
+- Keep the stem/context brief and exam-like (avoid long stories).
+- Ensure it is *exactly one* question with parts (not a paper, not multiple questions).
+
+Learning Objectives:
+{chr(10).join(f"- {obj}" for obj in objectives)}
+
+Difficulty: {difficulty} ({difficulty_guidance.get(difficulty, 'Standard')})
+
+OUTPUT FORMAT: Return ONLY valid JSON. No markdown. No extra text.
+
+JSON schema (example fields):
+{{
+  "question_type": "structured",
+  "subject": "{subject}",
+  "topic": "{topic}",
+  "difficulty": "{difficulty}",
+  "stem": "Short exam-style context/instructions (1-3 lines).",
+  "parts": [
+    {{
+      "label": "(a)(i)",
+      "question": "Part question text",
+      "marks": 2,
+      "command_word": "state",
+      "expected_points": ["marking point 1", "marking point 2"],
+      "model_answer": "A concise model answer a ZIMSEC marker expects"
+    }}
+  ],
+  "total_marks": 10,
+  "marking_rubric": {{
+    "(a)(i)": {{
+      "marks": 2,
+      "points": ["point 1", "point 2"],
+      "accept_alternatives": ["acceptable alternative phrasing if any"]
+    }}
+  }},
+  "teacher_notes": "Short examiner/teacher note (1-2 lines) about common misconceptions."
+}}
+
+Generate the structured question now."""
+
+    def _validate_and_enhance_structured_question(self, question_data: Dict[str, Any], subject: str, topic: str, difficulty: str, user_id: str = None) -> Dict[str, Any]:
+        """Validate and enhance structured question payload for consistency."""
+        try:
+            if not isinstance(question_data, dict):
+                return self._get_fallback_structured_question(subject, topic, difficulty, user_id)
+
+            # Required fields
+            for field in ['stem', 'parts', 'total_marks']:
+                if field not in question_data:
+                    logger.warning(f"Structured question missing field {field}")
+                    return self._get_fallback_structured_question(subject, topic, difficulty, user_id)
+
+            parts = question_data.get('parts')
+            if not isinstance(parts, list) or len(parts) < 2:
+                logger.warning("Structured question parts invalid/too few")
+                return self._get_fallback_structured_question(subject, topic, difficulty, user_id)
+
+            # Normalize parts and compute totals if needed
+            normalized_parts: List[Dict[str, Any]] = []
+            computed_total = 0
+            for p in parts:
+                if not isinstance(p, dict):
+                    continue
+                label = str(p.get('label') or '').strip() or "(a)"
+                qtext = str(p.get('question') or '').strip()
+                marks = p.get('marks', 1)
+                try:
+                    marks_i = int(marks)
+                except Exception:
+                    marks_i = 1
+                marks_i = max(1, min(10, marks_i))
+                computed_total += marks_i
+
+                normalized_parts.append({
+                    'label': label,
+                    'question': qtext,
+                    'marks': marks_i,
+                    'command_word': str(p.get('command_word') or '').strip().lower(),
+                    'expected_points': p.get('expected_points') if isinstance(p.get('expected_points'), list) else [],
+                    'model_answer': str(p.get('model_answer') or '').strip()
+                })
+
+            if not normalized_parts or any(not p.get('question') for p in normalized_parts):
+                logger.warning("Structured question parts missing text")
+                return self._get_fallback_structured_question(subject, topic, difficulty, user_id)
+
+            total_marks = question_data.get('total_marks')
+            try:
+                total_marks_i = int(total_marks)
+            except Exception:
+                total_marks_i = computed_total
+            if total_marks_i <= 0:
+                total_marks_i = computed_total
+
+            # Ensure rubric exists and aligns with parts
+            rubric = question_data.get('marking_rubric')
+            if not isinstance(rubric, dict):
+                rubric = {}
+            for p in normalized_parts:
+                lbl = p['label']
+                if lbl not in rubric:
+                    rubric[lbl] = {
+                        'marks': p['marks'],
+                        'points': p.get('expected_points', []),
+                        'accept_alternatives': []
+                    }
+
+            # Add metadata for compatibility with DB/mobile
+            from constants import DIFFICULTY_LEVELS
+            points_value = DIFFICULTY_LEVELS.get(difficulty, {}).get('point_value', 10)
+
+            question_data_out = {
+                'question_type': 'structured',
+                'subject': subject,
+                'topic': topic,
+                'difficulty': difficulty,
+                'stem': str(question_data.get('stem') or '').strip(),
+                'parts': normalized_parts,
+                'total_marks': total_marks_i,
+                'marking_rubric': rubric,
+                'teacher_notes': str(question_data.get('teacher_notes') or '').strip(),
+                'source': 'ai_generated_olevel',
+                'points': points_value,
+                'category': subject
+            }
+            return question_data_out
+
+        except Exception as e:
+            logger.error(f"Error validating structured question: {e}")
+            return self._get_fallback_structured_question(subject, topic, difficulty, user_id)
+
+    def _create_structured_evaluation_prompt(self, structured_question: Dict[str, Any], rubric: Dict[str, Any], student_answer: str) -> str:
+        """Prompt DeepSeek to mark like a ZIMSEC marker and give teacher feedback."""
+        stem = structured_question.get('stem', '')
+        parts = structured_question.get('parts', [])
+        total_marks = structured_question.get('total_marks', 0)
+        subject = structured_question.get('subject', 'Combined Science')
+        topic = structured_question.get('topic', '')
+        difficulty = structured_question.get('difficulty', 'medium')
+
+        # Keep prompt size manageable: include only essential rubric points
+        compact_rubric = rubric
+        return f"""You are an experienced ZIMSEC O-Level Combined Science examiner and a professional teacher.
+
+TASK:
+1) Mark the student's answer to the structured question using the marking rubric.
+2) Provide professional teacher feedback that is encouraging, clear, and detailed.
+3) Explain correct scientific ideas and correct misconceptions.
+
+SUBJECT: {subject}
+TOPIC: {topic}
+DIFFICULTY: {difficulty}
+
+STRUCTURED QUESTION:
+Stem: {stem}
+Parts: {json.dumps(parts, ensure_ascii=False)}
+
+MARKING RUBRIC (internal):
+{json.dumps(compact_rubric, ensure_ascii=False)}
+
+STUDENT ANSWER (raw text):
+{student_answer}
+
+OUTPUT: Return ONLY valid JSON (no markdown, no extra text):
+{{
+  "success": true,
+  "total_marks": {total_marks},
+  "marks_awarded": 0,
+  "percentage": 0.0,
+  "is_correct": false,
+  "per_part": [
+    {{
+      "label": "(a)(i)",
+      "max_marks": 2,
+      "awarded": 0,
+      "what_was_correct": ["..."],
+      "what_was_missing": ["..."],
+      "teacher_feedback": "Short part-specific feedback",
+      "model_answer": "Concise model answer"
+    }}
+  ],
+  "overall_teacher_feedback": "Professional teacher feedback in 6-10 lines. Encourage, correct, and guide improvement.",
+  "well_detailed_explanation": "A well explained breakdown of the correct science (8-14 lines), using simple language suitable for teenagers.",
+  "next_steps": ["Two or three study tips specific to the topic"]
+}}
+
+Mark strictly but fairly like ZIMSEC. Determine is_correct=true if percentage >= 60%."""
+
+    def _fallback_evaluate_structured_answer(self, structured_question: Dict[str, Any], student_answer: str) -> Dict[str, Any]:
+        """Heuristic evaluator when AI is unavailable. Matches keywords from rubric points."""
+        try:
+            parts = structured_question.get('parts', [])
+            rubric = structured_question.get('marking_rubric', {}) or {}
+            total_marks = int(structured_question.get('total_marks') or 0)
+            student_lower = (student_answer or '').lower()
+
+            marks_awarded = 0
+            per_part = []
+
+            for p in parts:
+                label = p.get('label')
+                max_marks = int(p.get('marks') or 1)
+                points = []
+                r = rubric.get(label) or {}
+                if isinstance(r, dict):
+                    points = r.get('points') if isinstance(r.get('points'), list) else []
+
+                # Simple keyword scoring: count matched points, cap at max_marks
+                matched = []
+                missing = []
+                for pt in points:
+                    pt_text = str(pt).strip()
+                    if not pt_text:
+                        continue
+                    # keyword-ish match: require at least one significant token present
+                    tokens = [t for t in pt_text.lower().replace('/', ' ').replace(',', ' ').split() if len(t) >= 4]
+                    if tokens and any(tok in student_lower for tok in tokens):
+                        matched.append(pt_text)
+                    else:
+                        missing.append(pt_text)
+
+                awarded = min(max_marks, max(0, len(matched)))
+                marks_awarded += awarded
+
+                per_part.append({
+                    'label': label,
+                    'max_marks': max_marks,
+                    'awarded': awarded,
+                    'what_was_correct': matched[:3],
+                    'what_was_missing': missing[:3],
+                    'teacher_feedback': "Good attempt. Add the missing key points for full marks." if awarded < max_marks else "Well done. You covered the key points.",
+                    'model_answer': p.get('model_answer', '')
+                })
+
+            if total_marks <= 0:
+                total_marks = sum(int(p.get('marks') or 1) for p in parts) or max(1, marks_awarded)
+
+            percentage = round((marks_awarded / total_marks) * 100, 1) if total_marks else 0.0
+            is_correct = percentage >= 60.0
+
+            return {
+                'success': True,
+                'total_marks': total_marks,
+                'marks_awarded': marks_awarded,
+                'percentage': percentage,
+                'is_correct': is_correct,
+                'per_part': per_part,
+                'overall_teacher_feedback': "Good effort. Review the model answers and focus on the missing scientific points." if not is_correct else "Excellent work. Keep practising structured questions.",
+                'well_detailed_explanation': "Compare your answer with the model answers and ensure you include the key scientific terms and ideas expected at O-Level.",
+                'next_steps': ["Rewrite your answers using the model answers as a guide.", "Learn the key definitions and processes for this topic."]
+            }
+        except Exception as e:
+            logger.error(f"Fallback structured evaluation error: {e}")
+            return {
+                'success': False,
+                'error': 'Evaluation failed',
+                'total_marks': 0,
+                'marks_awarded': 0,
+                'percentage': 0.0,
+                'is_correct': False,
+                'overall_teacher_feedback': 'Sorry, I could not evaluate your answer right now.'
+            }
+
+    def _get_fallback_structured_question(self, subject: str, topic: str, difficulty: str, user_id: str = None) -> Dict[str, Any]:
+        """Fallback structured questions when AI fails."""
+        # Minimal safe fallback for common topics.
+        if subject == "Biology":
+            stem = "Answer the following questions on cells."
+            parts = [
+                {"label": "(a)(i)", "question": "State the function of the nucleus in a cell.", "marks": 2, "command_word": "state",
+                 "expected_points": ["Controls cell activities", "Contains genetic material (DNA)"], "model_answer": "The nucleus controls cell activities and contains genetic material (DNA)."},
+                {"label": "(a)(ii)", "question": "Name ONE structure found in plant cells but not in animal cells.", "marks": 1, "command_word": "name",
+                 "expected_points": ["Cell wall OR chloroplast OR large permanent vacuole"], "model_answer": "Cell wall (or chloroplast)."}
+            ]
+            total = 3
+        elif subject == "Chemistry":
+            stem = "Answer the following questions on states of matter."
+            parts = [
+                {"label": "(a)", "question": "Describe the arrangement of particles in a solid.", "marks": 2, "command_word": "describe",
+                 "expected_points": ["Closely packed", "Regular arrangement / fixed positions"], "model_answer": "Particles are closely packed in a regular arrangement and vibrate about fixed positions."},
+                {"label": "(b)", "question": "Explain why gases are easily compressed.", "marks": 2, "command_word": "explain",
+                 "expected_points": ["Particles far apart", "Large spaces between particles"], "model_answer": "Gas particles are far apart with large spaces between them, so they can be pushed closer together."}
+            ]
+            total = 4
+        else:  # Physics
+            stem = "Answer the following questions on electricity."
+            parts = [
+                {"label": "(a)", "question": "State the unit of electric current.", "marks": 1, "command_word": "state",
+                 "expected_points": ["ampere (A)"], "model_answer": "Ampere (A)."},
+                {"label": "(b)", "question": "State Ohm's law.", "marks": 2, "command_word": "state",
+                 "expected_points": ["V is proportional to I", "Provided temperature is constant"], "model_answer": "The current through a conductor is proportional to the potential difference across it, provided temperature is constant."}
+            ]
+            total = 3
+
+        rubric = {p["label"]: {"marks": p["marks"], "points": p.get("expected_points", []), "accept_alternatives": []} for p in parts}
+        from constants import DIFFICULTY_LEVELS
+        points_value = DIFFICULTY_LEVELS.get(difficulty, {}).get('point_value', 10)
+
+        return {
+            'question_type': 'structured',
+            'subject': subject,
+            'topic': topic,
+            'difficulty': difficulty,
+            'stem': stem,
+            'parts': parts,
+            'total_marks': total,
+            'marking_rubric': rubric,
+            'teacher_notes': "Write answers in full sentences and use correct scientific terms.",
+            'source': 'fallback_olevel',
+            'points': points_value,
+            'category': subject
+        }
     
     def _create_olevel_prompt(self, subject: str, topic: str, difficulty: str) -> str:
         """Create O-Level appropriate prompt for DeepSeek AI"""
