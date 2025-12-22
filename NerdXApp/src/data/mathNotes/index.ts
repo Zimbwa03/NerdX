@@ -3,6 +3,11 @@ import { numberNotes, numberTopics } from './numbers';
 import { algebraNotes, algebraTopics } from './algebra';
 import { geometryNotes, geometryTopics } from './geometry';
 import { statisticsNotes, mensurationNotes, statisticsTopics, mensurationTopics } from './statistics';
+import { matricesNotes, matricesTopics } from './matrices';
+import { vectorsNotes, vectorsTopics } from './vectors';
+import { transformationsNotes, transformationsTopics } from './transformations';
+import { setsNotes, setsTopics } from './sets';
+import { functionsNotes, functionsTopics } from './functions';
 import { MathTopicNotes } from './types';
 
 export { MathTopicNotes, MathNotesSection, MathWorkedExample } from './types';
@@ -15,6 +20,11 @@ export const mathNotes: Record<string, Record<string, MathTopicNotes>> = {
         ...geometryNotes,
         ...statisticsNotes,
         ...mensurationNotes,
+        ...matricesNotes,
+        ...vectorsNotes,
+        ...transformationsNotes,
+        ...setsNotes,
+        ...functionsNotes,
     },
 };
 
@@ -23,10 +33,18 @@ export const mathTopics: Record<string, string[]> = {
     Mathematics: [
         // Number topics (Foundation)
         ...numberTopics,
+        // Sets
+        ...setsTopics,
         // Algebra topics
         ...algebraTopics,
-        // Geometry topics
+        // Functions
+        ...functionsTopics,
+        // Matrices & Vectors
+        ...matricesTopics,
+        ...vectorsTopics,
+        // Geometry & Transformations
         ...geometryTopics,
+        ...transformationsTopics,
         // Statistics and Probability
         ...statisticsTopics,
         // Mensuration
@@ -50,22 +68,22 @@ export function getMathTopicNotes(topic: string, subject: string = 'Mathematics'
 // Export all available topics for quick reference
 export const allMathTopics = [
     // Number
-    'Real Numbers',
-    'Fractions, Decimals & Percentages',
-    'Ratio and Proportion',
+    ...numberTopics,
+    // Sets
+    ...setsTopics,
     // Algebra
-    'Algebraic Expressions',
-    'Quadratic Equations',
-    'Linear Equations & Inequalities',
-    'Indices and Logarithms',
+    ...algebraTopics,
+    // Functions
+    ...functionsTopics,
     // Geometry
-    'Angles and Polygons',
-    'Pythagoras Theorem',
-    'Trigonometry',
-    'Circle Theorems',
+    ...geometryTopics,
+    // Matrices/Vectors
+    ...matricesTopics,
+    ...vectorsTopics,
+    // Transformations
+    ...transformationsTopics,
     // Statistics
-    'Statistics',
-    'Probability',
+    ...statisticsTopics,
     // Mensuration
-    'Mensuration',
+    ...mensurationTopics,
 ];

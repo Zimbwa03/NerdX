@@ -31,6 +31,25 @@ where $f$ = frequency, $x$ = midpoint of class.
                             'Mode = $5$ (appears 3 times).'
                         ],
                         final_answer: 'Mean = $6.5$, Median = $6$, Mode = $5$'
+                    },
+                    {
+                        question: 'The mean of $5$ numbers is $12$. When a sixth number is added, the mean becomes $13$. Find the sixth number.',
+                        steps: [
+                            'Sum of 5 numbers = $5 \\times 12 = 60$.',
+                            'Sum of 6 numbers = $6 \\times 13 = 78$.',
+                            'Sixth number = New Sum - Old Sum = $78 - 60 = 18$.'
+                        ],
+                        final_answer: '$18$'
+                    },
+                    {
+                        question: 'For the frequency distribution: $x$: 10, 20, 30; $f$: 5, 3, 2. Calculate the mean.',
+                        steps: [
+                            'Calculate $fx$: $10(5)=50$, $20(3)=60$, $30(2)=60$.',
+                            'Sum of $fx = 50 + 60 + 60 = 170$.',
+                            'Sum of $f = 5 + 3 + 2 = 10$.',
+                            'Mean = $\\frac{170}{10} = 17$.'
+                        ],
+                        final_answer: '$17$'
                     }
                 ]
             },
@@ -51,13 +70,21 @@ $$\\sigma = \\sqrt{\\text{Variance}} = \\sqrt{\\frac{\\sum (x - \\bar{x})^2}{n}}
                     {
                         question: 'Find the standard deviation of: $2, 4, 4, 4, 5, 5, 7, 9$',
                         steps: [
-                            'Mean $\\bar{x} = \\frac{2+4+4+4+5+5+7+9}{8} = \\frac{40}{8} = 5$.',
-                            'Calculate $(x - \\bar{x})^2$ for each: $(2-5)^2=9$, $(4-5)^2=1$, $(4-5)^2=1$, $(4-5)^2=1$, $(5-5)^2=0$, $(5-5)^2=0$, $(7-5)^2=4$, $(9-5)^2=16$.',
-                            'Sum = $9+1+1+1+0+0+4+16 = 32$.',
+                            'Mean $\\bar{x} = 5$.',
+                            'Sum of $(x - \\bar{x})^2 = 32$.',
                             'Variance = $\\frac{32}{8} = 4$.',
                             'Standard Deviation = $\\sqrt{4} = 2$.'
                         ],
                         final_answer: '$\\sigma = 2$'
+                    },
+                    {
+                        question: 'Given $n=10$, $\\sum x^2 = 2500$, mean $= 14$. Find the variance.',
+                        steps: [
+                            'Variance formula: $\\frac{\\sum x^2}{n} - (\\text{mean})^2$.',
+                            'Variance = $\\frac{2500}{10} - (14)^2$.',
+                            'Variance = $250 - 196 = 54$.'
+                        ],
+                        final_answer: '$54$'
                     }
                 ]
             },
@@ -81,6 +108,15 @@ $$\\sigma = \\sqrt{\\text{Variance}} = \\sqrt{\\frac{\\sum (x - \\bar{x})^2}{n}}
                             'IQR = $Q_3 - Q_1$.'
                         ],
                         final_answer: 'Read values from the graph at the specified y-coordinates.'
+                    },
+                    {
+                        question: 'Analysis of a Box-and-Whisker Plot: Min=10, Q1=15, Med=22, Q3=30, Max=45. Find range and IQR.',
+                        steps: [
+                            'Range = Max - Min = $45 - 10 = 35$.',
+                            'IQR = $Q_3 - Q_1 = 30 - 15 = 15$.',
+                            'Median = $22$.'
+                        ],
+                        final_answer: 'Range = $35$, IQR = $15$'
                     }
                 ]
             },
@@ -98,7 +134,33 @@ $$\\sigma = \\sqrt{\\text{Variance}} = \\sqrt{\\frac{\\sum (x - \\bar{x})^2}{n}}
 - Positive correlation: Points trend upward.
 - Negative correlation: Points trend downward.
 - No correlation: Points scattered randomly.`,
-                worked_examples: []
+                worked_examples: [
+                    {
+                        question: 'In a pie chart representing 60 students, 15 students chose "Blue". Calculate the sector angle.',
+                        steps: [
+                            'Fraction = $\\frac{15}{60} = \\frac{1}{4}$.',
+                            'Angle = $\\frac{1}{4} \\times 360° = 90°$.'
+                        ],
+                        final_answer: '$90°$'
+                    },
+                    {
+                        question: 'For a histogram, a class width is 5 and frequency is 20. Calculate the frequency density.',
+                        steps: [
+                            'Frequency Density = $\\frac{\\text{Frequency}}{\\text{Class Width}}$.',
+                            'FD = $\\frac{20}{5} = 4$.',
+                            'Height of bar = 4.'
+                        ],
+                        final_answer: '$4$'
+                    },
+                    {
+                        question: 'A pie chart sector angle is $120°$. If the total frequency is $90$, find the frequency for this sector.',
+                        steps: [
+                            'Fraction of total = $\\frac{120}{360} = \\frac{1}{3}$.',
+                            'Frequency = $\\frac{1}{3} \\times 90 = 30$.'
+                        ],
+                        final_answer: '$30$'
+                    }
+                ]
             }
         ],
         key_points: [
@@ -143,6 +205,15 @@ $$P(\\text{Event}) = \\frac{\\text{Number of favorable outcomes}}{\\text{Total n
                             '(b) $P(\\text{not blue}) = 1 - P(\\text{blue}) = 1 - \\frac{3}{10} = \\frac{7}{10}$.'
                         ],
                         final_answer: '(a) $\\frac{1}{2}$ (b) $\\frac{7}{10}$'
+                    },
+                    {
+                        question: 'A letter is chosen at random from the word PROBABILITY. Find the probability that it is (a) a B (b) a vowel.',
+                        steps: [
+                            'Total letters = 11.',
+                            '(a) There are 2 Bs. $P(B) = \\frac{2}{11}$.',
+                            '(b) Vowels are O, A, I, I (4 vowels). $P(\\text{Vowel}) = \\frac{4}{11}$.'
+                        ],
+                        final_answer: '(a) $\\frac{2}{11}$ (b) $\\frac{4}{11}$'
                     }
                 ]
             },
@@ -166,6 +237,14 @@ $$P(A \\text{ or } B) = P(A) + P(B) - P(A \\text{ and } B)$$`,
                             'Events are independent: $P(\\text{Head and } 6) = \\frac{1}{2} \\times \\frac{1}{6} = \\frac{1}{12}$.'
                         ],
                         final_answer: '$\\frac{1}{12}$'
+                    },
+                    {
+                        question: 'Two events A and B are mutually exclusive. $P(A) = 0.3$ and $P(B) = 0.4$. Find $P(A \\text{ or } B)$.',
+                        steps: [
+                            'Mutually exclusive $\\Rightarrow P(A \\text{ or } B) = P(A) + P(B)$.',
+                            '$0.3 + 0.4 = 0.7$.'
+                        ],
+                        final_answer: '$0.7$'
                     }
                 ]
             },
@@ -188,6 +267,16 @@ $$P(A \\text{ or } B) = P(A) + P(B) - P(A \\text{ and } B)$$`,
                             '$P(\\text{both red}) = \\frac{3}{5} \\times \\frac{1}{2} = \\frac{3}{10}$.'
                         ],
                         final_answer: '$\\frac{3}{10}$'
+                    },
+                    {
+                        question: 'A box contains 4 black and 6 white pens. Two pens are drawn at random. Find probability they are of different colors.',
+                        steps: [
+                            'Options: (Black then White) OR (White then Black).',
+                            '$P(BW) = \\frac{4}{10} \\times \\frac{6}{9} = \\frac{24}{90} = \\frac{4}{15}$.',
+                            '$P(WB) = \\frac{6}{10} \\times \\frac{4}{9} = \\frac{24}{90} = \\frac{4}{15}$.',
+                            'Total = $\\frac{4}{15} + \\frac{4}{15} = \\frac{8}{15}$.'
+                        ],
+                        final_answer: '$\\frac{8}{15}$'
                     }
                 ]
             },
@@ -210,6 +299,16 @@ $$P(A \\cup B) = P(A) + P(B) - P(A \\cap B)$$`,
                             '$P(\\text{Maths or Science}) = 0.6 + 0.5 - 0.3 = 0.8$.'
                         ],
                         final_answer: '$0.8$ or $\\frac{4}{5}$'
+                    },
+                    {
+                        question: 'Given $P(A) = 0.7$, $P(B) = 0.4$ and $P(A \\cup B) = 0.9$. Find $P(A \\cap B)$.',
+                        steps: [
+                            '$P(A \\cup B) = P(A) + P(B) - P(A \\cap B)$.',
+                            '$0.9 = 0.7 + 0.4 - P(A \\cap B)$.',
+                            '$0.9 = 1.1 - P(A \\cap B)$.',
+                            '$P(A \\cap B) = 1.1 - 0.9 = 0.2$.'
+                        ],
+                        final_answer: '$0.2$'
                     }
                 ]
             }
@@ -271,6 +370,24 @@ Area = $\\pi r^2$`,
                             'Area = $\\frac{1}{2} \\times 20 \\times 5 = 50$ cm².'
                         ],
                         final_answer: '$50$ cm²'
+                    },
+                    {
+                        question: 'The perimeter of a rectangle is $30$ cm. If the length is $9$ cm, find the width and area.',
+                        steps: [
+                            'Perimeter = $2(l+w) \\Rightarrow 30 = 2(9+w)$.',
+                            '$15 = 9+w \\Rightarrow w = 6$ cm.',
+                            'Area = $l \\times w = 9 \\times 6 = 54$ cm².'
+                        ],
+                        final_answer: 'Width = $6$ cm, Area = $54$ cm²'
+                    },
+                    {
+                        question: 'Find the area of a triangle with sides $5$ cm, $5$ cm, and $6$ cm.',
+                        steps: [
+                            'Use Heron\'s formula. $s = \\frac{5+5+6}{2} = 8$.',
+                            'Area = $\\sqrt{8(8-5)(8-5)(8-6)} = \\sqrt{8(3)(3)(2)} = \\sqrt{144} = 12$ cm².',
+                            'Alternatively, drop a perpendicular to base $6$. height = $\\sqrt{5^2-3^2}=4$. Area = $\\frac{1}{2}(6)(4)=12$.'
+                        ],
+                        final_answer: '$12$ cm²'
                     }
                 ]
             },
@@ -296,6 +413,24 @@ $$\\text{Segment Area} = \\text{Sector Area} - \\text{Triangle Area}$$`,
                             'Area = $\\frac{1}{6} \\times 22 \\times 7 = \\frac{154}{6} = 25\\frac{2}{3}$ cm².'
                         ],
                         final_answer: '$25\\frac{2}{3}$ cm² or $\\approx 25.67$ cm²'
+                    },
+                    {
+                        question: 'Calculate the arc length of a semicircle with diameter $14$ cm.',
+                        steps: [
+                            'Radius $r = 7$ cm. Angle = $180°$.',
+                            'Arc = $\\frac{180}{360} \\times 2\\pi r = \\frac{1}{2} \\times 2\\pi(7) = 7\\pi$.',
+                            '$7 \\times \\frac{22}{7} = 22$ cm.'
+                        ],
+                        final_answer: '$22$ cm'
+                    },
+                    {
+                        question: 'A segment is cut from a circle of radius $10$ cm by a chord subtending $90°$ at the center. Find the segment area.',
+                        steps: [
+                            'Sector Area = $\\frac{90}{360} \\pi (10)^2 = \\frac{1}{4} (100\\pi) = 25\\pi$.',
+                            'Triangle Area = $\\frac{1}{2} r^2 \\sin 90° = \\frac{1}{2} (100)(1) = 50$.',
+                            'Segment Area = $25\\pi - 50 = 25(\\pi - 2) \\approx 28.5$ cm².'
+                        ],
+                        final_answer: '$\\approx 28.5$ cm²'
                     }
                 ]
             },
@@ -341,6 +476,16 @@ Volume = $\\frac{1}{3} \\times \\text{Base Area} \\times h$`,
                             'Volume = $\\frac{1}{3} \\times \\pi \\times 4^2 \\times 9 = \\frac{1}{3} \\times \\pi \\times 144 = 48\\pi$ cm³.'
                         ],
                         final_answer: 'Volume = $48\\pi \\approx 150.8$ cm³'
+                    },
+                    {
+                        question: 'A sphere has a volume of $36\\pi$ cm³. Find its radius.',
+                        steps: [
+                            'Volume = $\\frac{4}{3}\\pi r^3 = 36\\pi$.',
+                            'Divide by $\\pi$: $\\frac{4}{3}r^3 = 36$.',
+                            '$r^3 = 36 \\times \\frac{3}{4} = 27$.',
+                            '$r = \\sqrt[3]{27} = 3$ cm.'
+                        ],
+                        final_answer: '$3$ cm'
                     }
                 ]
             },
@@ -364,6 +509,16 @@ If corresponding lengths are in ratio $a : b$, then:
                             'Volume of larger = $40 \\times \\frac{125}{8} = \\frac{5000}{8} = 625$ cm³.'
                         ],
                         final_answer: '$625$ cm³'
+                    },
+                    {
+                        question: 'Two similar jugs have capacities $500$ ml and $4000$ ml. The height of the smaller jug is $10$ cm. Find the height of the larger jug.',
+                        steps: [
+                            'Volume ratio = $\\frac{4000}{500} = 8$.',
+                            '$k^3 = 8 \\Rightarrow k = \\sqrt[3]{8} = 2$.',
+                            'Height ratio = $2$.',
+                            'Height of larger = $10 \\times 2 = 20$ cm.'
+                        ],
+                        final_answer: '$20$ cm'
                     }
                 ]
             }

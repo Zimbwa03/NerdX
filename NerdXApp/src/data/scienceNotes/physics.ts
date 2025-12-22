@@ -1698,237 +1698,273 @@ $$E = Pt = VIt$$
     "Magnetism and Electromagnetism": {
         topic: "Magnetism and Electromagnetism",
         subject: "Physics",
-        summary: "This topic covers magnetic materials and domain theory, magnetic poles and field lines, magnetization and demagnetization methods, electromagnetism (magnetic effect of current), the motor effect with Fleming's Left-Hand Rule, DC motors, electromagnetic induction (Faraday's and Lenz's Laws), AC generators, and transformers for power transmission.",
+        summary: "Electromagnetic induction is the phenomenon where a voltage is produced (induced) in an electrical conductor by moving it through a magnetic field or by changing the magnetic field around it. This principle forms the fundamental basis for modern electricity generation and power transmission. The key laws governing induction are Faraday's Law (magnitude of induced voltage) and Lenz's Law (direction of induced current). Applications include AC and DC generators, and transformers for efficient power distribution.",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/Magnetic_Domains_and_How_to_Control_Them.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9QaHlzaWNzL01hZ25ldGljX0RvbWFpbnNfYW5kX0hvd190b19Db250cm9sX1RoZW0ubTRhIiwiaWF0IjoxNzY1NjAxMTY3LCJleHAiOjUyNjYwOTcxNjd9.jUhA2hhqgu1sr7JM1saParWaxfgn9Xvt2k6hrko5AcE",
         videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/Magnetism__The_Hidden_Force.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL1BoeXNpY3MvTWFnbmV0aXNtX19UaGVfSGlkZGVuX0ZvcmNlLm1wNCIsImlhdCI6MTc2NTc5NzI5NywiZXhwIjo1MjY2MjkzMjk3fQ.bnVjVTBvjBY0vlzKSLcDRk3qWKoR0j8NCMLksJ_bhrY",
         sections: [
             {
-                title: "1. Simple Phenomena of Magnetism",
-                content: `## A. Magnetic Materials and Domain Theory
+                title: "1. Introduction to Electromagnetic Induction",
+                content: `## What is Electromagnetic Induction?
 
-**Ferromagnetic Materials:** Interact strongly with magnetic fields due to Magnetic Domains.
+> **Electromagnetic induction** is the phenomenon where a voltage is produced (induced) in an electrical conductor by moving it through a magnetic field or by changing the magnetic field around it.
 
-| Type | Property | Use |
-|------|----------|-----|
-| **Soft (Iron)** | Easy to magnetize AND demagnetize | Electromagnets, transformer cores |
-| **Hard (Steel)** | Hard to magnetize, hard to demagnetize | Permanent magnets |
+This principle forms the fundamental basis for **modern electricity generation** and large-scale power transmission.
 
-**Non-Magnetic:** Copper, Wood, Plastic, Glass, Aluminium
+## Demonstrating Electromagnetic Induction
 
-## B. Magnetic Poles and Fields
+### Experiment 1: Moving Wire in Magnetic Field
+- Connect a wire to a sensitive meter
+- Move the wire **up or down** between the poles of a magnet
+- **Result**: Meter shows a deflection (current induced)
+- **Crucial**: Deflection only occurs **while the wire is in motion**
+- If wire is stationary, **no current** is produced
 
-**Poles:** North (N) and South (S) - regions of strongest force
-- Cannot have isolated monopole (cut magnet → 2 smaller magnets)
+### Experiment 2: Magnet Moving into Coil
+- Push a bar magnet **into** a coil of wire → Current induced in one direction
+- Pull the magnet **out** of the coil → Current induced in **opposite direction**
+- Hold magnet **stationary** inside coil → **No current flows**
 
-**Law of Magnetism:**
-- **Like poles REPEL** (N-N, S-S)
-- **Unlike poles ATTRACT** (N-S)
+## The Core Principle
 
-### Field Lines:
-- Emerge from **North**, enter **South**
-- **Never cross** each other
-- **Closer lines** = Stronger field
-- **Parallel lines** = Uniform field`,
+| Key Requirement | Effect |
+|-----------------|--------|
+| **Relative motion** between conductor and magnetic field | Conductor "cuts" through magnetic field lines |
+| **Cutting field lines** | Direct cause of induced voltage |
+| **No motion** | No induced voltage |`,
                 diagrams: [],
                 subsections: []
             },
             {
-                title: "2. Magnetization and Demagnetization",
-                content: `## Magnetization Methods (Making Magnets)
+                title: "2. The Governing Laws of Induction",
+                content: `## Faraday's Law: The Magnitude of Induced Voltage
 
-| Method | How It Works |
-|--------|--------------|
-| **Stroking** | Stroke steel with magnet in one direction only |
-| **Electrical** | Place steel in solenoid with D.C. current (most effective) |
+> **Faraday's Law** states that a voltage is induced in a conductor whenever it cuts magnetic field lines. The magnitude of the induced voltage is proportional to the **rate of change of magnetic flux**.
 
-## Demagnetization Methods (Destroying Magnets)
+### Three Factors That Increase Induced Voltage:
 
-| Method | How It Works |
-|--------|--------------|
-| **Hammering** | Shakes domains loose through vibration |
-| **Heating** | Above Curie temperature, domains randomize |
-| **A.C. Electrical** | Slowly withdraw from A.C. solenoid (fields flip rapidly, scrambling domains) |`,
+| Factor | Explanation |
+|--------|-------------|
+| **Speed** | Increasing the speed at which the conductor moves through the field (cuts field lines faster) |
+| **Field Strength** | Using a stronger magnet (more field lines to cut) |
+| **Conductor Length** | Increasing the length of conductor in the field (use a coil with many turns) |
+
+**Memory Aid**: "Faster you cut field lines = More voltage"
+
+## Lenz's Law: The Direction of Induced Current
+
+> **Lenz's Law** states: "The direction of the induced current is such as to **oppose the change** causing it."
+
+### Conservation of Energy Explanation
+
+| Action | Result | Why? |
+|--------|--------|------|
+| Push N-pole into coil | Coil creates N-pole at that end | Repels incoming magnet |
+| Work must be done | Against this opposing force | This work provides energy for the induced current |
+
+**Key Insight**: The induced magnetic field always **opposes** the motion that created it.
+
+## Fleming's Right-Hand Rule
+
+A practical tool to determine the direction of induced current.
+
+### Hold Right Hand with Thumb + First + Second Fingers at 90°:
+
+| Finger | Represents | Memory Aid |
+|--------|------------|------------|
+| **Thumb** | Direction of **M**otion (conductor) | thu**M**b = **M**otion |
+| **First Finger** | Direction of magnetic **F**ield (N→S) | **F**irst = **F**ield |
+| **Second Finger** | Direction of induced **C**urrent | se**C**ond = **C**urrent |`,
                 diagrams: [],
                 subsections: []
             },
             {
-                title: "3. Electromagnetism",
-                content: `## A. Magnetic Effect of Current
+                title: "3. Electrical Generators",
+                content: `## The A.C. Generator (Alternator)
 
-Moving charge (current) generates a magnetic field.
+The most significant application of electromagnetic induction—converts **mechanical energy → electrical energy**.
 
-### Straight Wire:
-- Field lines form **concentric circles** around wire
-- Strongest near wire, weaker further away
+### Key Components:
 
-**Right-Hand Grip Rule:** Thumb = Current direction, Fingers = Field direction
+| Component | Function |
+|-----------|----------|
+| **Rectangular coil** | Rotates in the magnetic field |
+| **Permanent magnet** | Provides the magnetic field |
+| **Slip rings** | Fixed to axle, rotate with coil |
+| **Carbon brushes** | Maintain contact with slip rings |
 
-### Solenoid (Long Coil):
-- **Inside:** Strong, uniform field (parallel lines)
-- **Outside:** Like a bar magnet (N and S poles)
+### How It Works:
 
-**Right-Hand Grip Rule (Solenoid):** Fingers curl with current, Thumb points to **North Pole**
+1. As the coil rotates, one side moves **upward** and the other **downward**
+2. Current is induced in one direction
+3. After 180° rotation, the direction of motion reverses
+4. **Current direction reverses** → produces **Alternating Current (A.C.)**
 
-## B. Electromagnets
+### The Output Waveform:
 
-**Structure:** Solenoid + Soft iron core
+| Coil Position | Rate of Cutting Field Lines | Voltage |
+|---------------|----------------------------|---------|
+| **Horizontal** | Maximum (moving vertically through field) | **Peak voltage** |
+| **Vertical** | Zero (moving parallel to field) | **Zero voltage** |
 
-### Increasing Strength:
-1. Increase current
-2. Increase number of turns
-3. Use soft iron core
+This produces a **sinusoidal (sine wave)** output.
 
-### Applications:
-- Electric bells
-- Relays (small current controls large circuit)
-- Scrapyard cranes
-- Circuit breakers`,
+## The D.C. Generator (Dynamo)
+
+Similar to the A.C. generator but produces **Direct Current**.
+
+### The Critical Difference:
+
+| Feature | A.C. Generator | D.C. Generator |
+|---------|----------------|----------------|
+| **Output connector** | Slip rings | **Split-ring commutator** |
+| **Current direction** | Alternates | Always same direction |
+
+### How the Commutator Works:
+
+1. Commutator is a ring split into two halves
+2. Each half connects to one end of the coil
+3. Every half-rotation, the segments **swap contact** with the brushes
+4. This happens **exactly when** current in the coil reverses
+5. **Result**: Current in external circuit always flows in the **same direction**
+
+The output is **pulsating D.C.**—rises and falls in magnitude but never reverses.`,
                 diagrams: [],
                 subsections: []
             },
             {
-                title: "4. Motor Effect and DC Motor",
-                content: `## A. Motor Effect
+                title: "4. Transformers",
+                content: `## What is a Transformer?
 
-Current-carrying wire in magnetic field experiences a **force**.
+> A **transformer** is a passive electrical device that uses electromagnetic induction to efficiently **change the voltage** of an alternating current.
 
-(Fields interact: add on one side, cancel on other → wire pushed)
+Transformers are **indispensable** in the electrical grid for:
+- **Step-up**: Increase voltage for efficient long-distance transmission
+- **Step-down**: Decrease voltage to safe, usable levels for consumers
 
-**Exception:** No force if wire parallel to field lines
+## Structure and Principle of Operation
 
-## B. Fleming's Left-Hand Rule
+### Key Components:
 
-Hold left hand with thumb + first + second fingers at 90°:
+| Component | Function |
+|-----------|----------|
+| **Primary coil** | Input coil (connected to A.C. supply) |
+| **Secondary coil** | Output coil (connected to load) |
+| **Soft iron core** | Links magnetic flux between coils |
 
-| Finger | Represents |
-|--------|------------|
-| **Thumb** | Force/Motion (Thrust) |
-| **First Finger** | Field (N→S) |
-| **Second Finger** | Current (Conventional: +→−) |
+### How It Works:
 
-## C. D.C. Motor
+1. A.C. flows through primary coil
+2. Creates a **continuously changing magnetic field** in the iron core
+3. Iron core **guides** this changing field to the secondary coil
+4. Changing field **induces an alternating voltage** in secondary coil
 
-**Converts:** Electrical energy → Mechanical energy (rotation)
+> ⚠️ **CRITICAL**: Transformers **ONLY work with A.C.** — D.C. produces a steady, unchanging magnetic field, so no induction occurs!
 
-### Components:
-- **Coil:** Carries current in magnetic field
-- **Permanent magnets:** Provide field (stator)
-- **Split-ring commutator:** Reverses current every half turn
-- **Carbon brushes:** Maintain electrical contact
+## Transformer Equations
 
-### Increasing Speed/Torque:
-- Increase current
-- More turns on coil
-- Stronger magnets
-- Soft iron core inside coil`,
-                diagrams: [],
-                subsections: []
-            },
-            {
-                title: "5. Electromagnetic Induction",
-                content: `## A. The Principle
-
-Motion/changing field → **Generates e.m.f.** (voltage)
-
-### Experiments:
-- Moving wire through field → Current induced
-- Moving magnet into coil → Current induced
-- **Stationary magnet in coil → NO current** (no field change)
-
-## B. Faraday's Law
-
-> Induced e.m.f. is proportional to the **rate of change of magnetic flux**
-
-"Faster you cut field lines = More voltage"
-
-### To Increase Induced E.M.F.:
-- Move faster
-- Use stronger magnet
-- More turns on coil
-
-## C. Lenz's Law
-
-> Induced current creates a magnetic field that **opposes the change** causing it
-
-**Example:** Push N-pole into coil → Coil becomes N-pole to repel (conservation of energy)
-
-## D. A.C. Generator
-
-**Converts:** Mechanical energy → Electrical energy (A.C.)
-
-### Components:
-- Coil, Magnets, **Slip rings** (not split), Brushes
-
-### Output:
-- **Sine wave** (alternating current)
-- Horizontal coil = Maximum e.m.f.
-- Vertical coil = Zero e.m.f.`,
-                diagrams: [],
-                subsections: []
-            },
-            {
-                title: "6. Transformers",
-                content: `## A. Structure
-
-- **Primary coil:** Input (connected to A.C. supply)
-- **Secondary coil:** Output (connected to load)
-- **Soft iron core:** Links magnetic flux between coils
-
-## B. How It Works
-
-1. A.C. in primary → Changing magnetic field
-2. Core guides field to secondary
-3. Changing field induces e.m.f. in secondary
-
-> **Transformers ONLY work with A.C.** (D.C. = constant field = no induction)
-
-## C. Transformer Equation
+### Voltage-Turns Ratio:
 
 $$\\frac{V_p}{V_s} = \\frac{N_p}{N_s}$$
 
-| Type | Turns | Voltage | Current |
-|------|-------|---------|---------|
-| **Step-Up** | Ns > Np | Increases | Decreases |
-| **Step-Down** | Ns < Np | Decreases | Increases |
+| Symbol | Meaning |
+|--------|---------|
+| Vp | Primary voltage |
+| Vs | Secondary voltage |
+| Np | Number of turns on primary coil |
+| Ns | Number of turns on secondary coil |
 
-## D. Power Equation (Ideal)
+### Types of Transformers:
+
+| Type | Turns Relationship | Voltage | Current |
+|------|-------------------|---------|---------|
+| **Step-Up** | Ns > Np | **Increases** | Decreases |
+| **Step-Down** | Ns < Np | **Decreases** | Increases |
+
+### Power Conservation (Ideal Transformer):
 
 $$V_p \\times I_p = V_s \\times I_s$$
 
-(Power in = Power out; energy conserved)
+**Key Insight**: If voltage steps **up**, current steps **down** (and vice versa) to conserve energy.
 
-## E. Power Transmission
+## Power Transmission
 
-**Problem:** Power loss in cables = I²R
+### The Problem:
+Power loss in cables = **I²R** (heat loss)
 
-**Solution:** Transmit at HIGH VOLTAGE (400,000V)
-- Step-up transformer increases V, decreases I
-- Lower I = Much less I²R heat loss
-- Step-down locally to safe 230V`,
+### The Solution:
+Transmit at **HIGH VOLTAGE** (e.g., 400,000V)
+
+| Step | Purpose |
+|------|---------|
+| Step-up transformer at power station | Increases V, decreases I |
+| Lower current | **Much less I²R heat loss** |
+| Step-down transformers locally | Reduces voltage to safe 230V |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Summary of Key Principles",
+                content: `## Core Takeaways for Revision
+
+| Principle | Key Points |
+|-----------|------------|
+| **Core Requirement** | Electric current is induced ONLY when there is **relative motion** between conductor and magnetic field |
+| **Faraday's Law** | Magnitude of induced voltage ∝ rate of cutting field lines (speed, field strength, conductor length) |
+| **Lenz's Law** | Induced current creates a magnetic field that **OPPOSES the change** causing it (conservation of energy) |
+| **Generators** | Use continuous rotation to induce continuous current; slip rings for A.C., commutator for D.C. |
+| **Transformers** | Use EM induction between coils to change A.C. voltages; essential for efficient power distribution |
+
+## Fleming's Right-Hand Rule Summary
+
+| Finger | Represents |
+|--------|------------|
+| **Thumb** | Motion of conductor |
+| **First (index)** | Field direction (N→S) |
+| **Second (middle)** | Current direction |
+
+## Generator Comparison
+
+| Feature | A.C. Generator | D.C. Generator |
+|---------|----------------|----------------|
+| Output type | Alternating current | Direct current |
+| Connector | Slip rings | Split-ring commutator |
+| Waveform | Sine wave | Pulsating D.C. |
+
+## Transformer Equation Summary
+
+| Equation | Purpose |
+|----------|---------|
+| Vp/Vs = Np/Ns | Voltage-turns relationship |
+| Vp × Ip = Vs × Is | Power conservation |`,
                 diagrams: [],
                 subsections: []
             }
         ],
         key_points: [
-            "Soft iron: easy to magnetize/demagnetize (electromagnets)",
-            "Hard steel: permanent magnets",
-            "Like poles repel, unlike poles attract",
-            "Current creates magnetic field (Right-Hand Grip Rule)",
-            "Electromagnet strength: more current, more turns, iron core",
-            "Motor effect: current + field → force (Fleming's Left-Hand Rule)",
-            "Split-ring commutator reverses current for continuous rotation",
-            "Electromagnetic induction: moving/changing field → e.m.f.",
-            "Lenz's Law: induced current opposes the change causing it",
-            "Transformers only work with A.C. (Vp/Vs = Np/Ns)",
-            "High voltage transmission reduces I²R power loss"
+            "Electromagnetic induction: voltage is induced when a conductor moves through a magnetic field (or field changes around it)",
+            "Induction requires RELATIVE MOTION between conductor and field—no motion means no induced voltage",
+            "Faraday's Law: induced voltage ∝ rate of cutting field lines (increase speed, field strength, or number of turns)",
+            "Lenz's Law: induced current opposes the change causing it (conservation of energy)",
+            "Fleming's Right-Hand Rule: thuMb=Motion, First=Field, seCond=Current",
+            "A.C. Generator uses SLIP RINGS to produce alternating current (sine wave output)",
+            "D.C. Generator uses SPLIT-RING COMMUTATOR to produce direct current (pulsating output)",
+            "Horizontal coil = maximum e.m.f.; Vertical coil = zero e.m.f.",
+            "Transformers ONLY work with A.C. (D.C. produces constant field = no induction)",
+            "Transformer equation: Vp/Vs = Np/Ns; Power: Vp × Ip = Vs × Is",
+            "Step-up transformer: increases voltage, decreases current; Step-down: decreases voltage, increases current",
+            "High voltage transmission reduces power loss (P = I²R, so lower I = much less heat loss)"
         ],
         exam_tips: [
-            "Use correct hand rule: LEFT for motor, RIGHT for field direction",
-            "Know why split-ring commutator is needed (reverses current)",
-            "Explain why transformers don't work with D.C.",
-            "Practice transformer calculations (step-up vs step-down)",
-            "Remember: induced current OPPOSES the change (Lenz's Law)",
-            "Explain power transmission: high V = low I = less I²R loss"
+            "Always state that induction requires RELATIVE MOTION or CHANGING magnetic field",
+            "Use Fleming's RIGHT-Hand Rule for generators; LEFT-Hand Rule for motors",
+            "Know why there's NO current when magnet is stationary inside coil (no field change)",
+            "Explain Lenz's Law in terms of conservation of energy (work must be done against opposing force)",
+            "Distinguish between slip rings (A.C.) and split-ring commutator (D.C.)",
+            "Remember: horizontal coil = max voltage, vertical coil = zero voltage",
+            "Explain why transformers don't work with D.C. (steady field = no induction)",
+            "Practice transformer calculations: Vp/Vs = Np/Ns",
+            "Know why high voltage is used for transmission (reduces I²R power loss)",
+            "If voltage steps UP, current steps DOWN (conservation of energy)"
         ]
     },
 
@@ -2169,84 +2205,104 @@ Output is HIGH if **AT LEAST ONE input is HIGH**.
     "Atomic and Nuclear Physics (Modern Physics)": {
         topic: "Atomic and Nuclear Physics (Modern Physics)",
         subject: "Physics",
-        summary: "This topic covers the nuclear model of the atom from Rutherford's scattering experiment, subatomic particles and isotopes, radioactivity including alpha, beta, and gamma radiation, half-life calculations, uses of radioisotopes, nuclear fission and fusion, and safety precautions for handling radioactive materials.",
+        summary: "The nuclear model describes the atom as having an incredibly dense, positively charged central core—the nucleus—containing almost all of the atom's mass. The nucleus is composed of protons and neutrons (nucleons), with the proton number defining the element. Radioactivity is the spontaneous emission of radiation from unstable nuclei, with three types: alpha (helium nuclei), beta (electrons), and gamma (electromagnetic waves). Half-life quantifies decay rate, and radioactive materials have important applications in medicine, industry, and research.",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/The_Atom_Is_Mostly_Empty_Space%20(1).m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9QaHlzaWNzL1RoZV9BdG9tX0lzX01vc3RseV9FbXB0eV9TcGFjZSAoMSkubTRhIiwiaWF0IjoxNzY1NjAxMjEwLCJleHAiOjUyNjYwOTcyMTB9.9xI06cISSA7M9623jS5mGCK25wO65JnfcG-JPdNPqZQ",
         videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/Atomic_&_Nuclear_Physics.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL1BoeXNpY3MvQXRvbWljXyZfTnVjbGVhcl9QaHlzaWNzLm1wNCIsImlhdCI6MTc2NTc5NzI2NCwiZXhwIjo1MjY2MjkzMjY0fQ.14qsNly_ar7TUbW5-9wfjSFCz3WM0rfJZHDi-HDB_NM",
         sections: [
             {
-                title: "1. Atomic Structure",
-                content: `## A. Rutherford's Scattering Experiment (Geiger-Marsden)
+                title: "1. The Structure of the Atom: The Nuclear Model",
+                content: `## The Nuclear Model
 
-**Procedure:** Fired alpha particles at thin gold foil, detected with fluorescent screen.
+The nuclear model describes the atom as a system with an incredibly dense, positively charged central core—the **nucleus**—which contains almost all of the atom's mass.
 
-### Three Critical Observations:
+## Defining the Nucleus: Protons and Nucleons
 
-| Observation | Conclusion |
-|-------------|------------|
-| >99% passed straight through | Atom is mostly **empty space** |
-| Some deflected at small angles | Positive charge concentrated somewhere (repels α) |
-| ~1 in 8000 bounced straight back | Mass concentrated in tiny, dense **nucleus** |
+The nucleus is composed of two primary types of particles, collectively known as **nucleons**:
 
-### The Nuclear Structure:
-- **Nucleus:** Tiny (1/10,000 of atom), dense, positive charge, at center
-- **Electrons:** Orbit in shells at large distance
+| Particle | Symbol | Charge | Mass | Role |
+|----------|--------|--------|------|------|
+| **Proton** | p | +1 | 1 | Identifies element (defines Z) |
+| **Neutron** | n | 0 | 1 | Adds mass, provides stability |
 
-## B. Subatomic Particles
+### Key Numbers:
 
-| Particle | Mass | Charge | Location | Role |
-|----------|------|--------|----------|------|
-| **Proton (p)** | 1 | +1 | Nucleus | Identifies element |
-| **Neutron (n)** | 1 | 0 | Nucleus | "Nuclear glue" |
-| **Electron (e)** | 1/1840 | -1 | Shells | Chemical bonding |
+| Number | Symbol | Definition |
+|--------|--------|------------|
+| **Proton Number (Z)** | Z | Number of protons in the nucleus |
+| **Nucleon Number (A)** | A | Total number of nucleons (protons + neutrons) |
+| **Neutrons** | A - Z | Calculated by subtracting Z from A |
 
-### Notation: $$^A_Z X$$
-- **Z** (bottom) = Proton number = Number of protons
-- **A** (top) = Mass number = Protons + Neutrons
-- Neutrons = A - Z
+## Standard Nuclide Notation
 
-## C. Isotopes
+To uniquely identify a specific nucleus (nuclide), use this format:
 
-**Definition:** Same element (same protons), different neutrons
+$$^A_Z X$$
 
-- **Same chemical properties** (same electrons)
-- **Different physical properties** (different mass)
-- Some stable, some **radioactive**
+Where:
+- **X** = Chemical symbol of the element
+- **A** (superscript) = Nucleon Number (mass number) — **always the larger number**
+- **Z** (subscript) = Proton Number (atomic number)
 
-**Example:** Carbon-12 (6p, 6n, stable) vs Carbon-14 (6p, 8n, radioactive)`,
+**Example:** $$^{226}_{88}Ra$$ (Radium)
+- Proton Number (Z) = 88
+- Nucleon Number (A) = 226
+- Neutrons = 226 - 88 = **138**
+
+## Understanding Isotopes
+
+> **Isotopes** are atoms of the same element that contain the same number of protons but have a **different number of neutrons**.
+
+| Property | Same or Different? |
+|----------|-------------------|
+| Proton number (Z) | **Same** |
+| Nucleon number (A) | **Different** |
+| Chemical properties | **Same** (same electrons) |
+| Physical properties | **Different** (different mass) |
+
+**Example:** Carbon-12 (6p, 6n) vs Carbon-14 (6p, 8n)`,
                 diagrams: [],
                 subsections: []
             },
             {
-                title: "2. Radioactivity",
-                content: `## Definition
+                title: "2. The Nature of Radioactivity and its Emissions",
+                content: `## What is Radioactivity?
 
-**Spontaneous, random** decay of unstable nuclei.
+Radioactivity is a natural process originating from the nuclei of **unstable atoms**. In an attempt to become more stable, these nuclei emit energy in the form of radiation.
 
-- **Spontaneous:** Cannot speed up/slow down (not affected by heat/chemicals)
-- **Random:** Cannot predict which nucleus decays next
+## The Three Types of Radiation
 
-## Types of Radiation
+| Radiation Type | Nature | Penetrating Power | Ionising Power |
+|----------------|--------|-------------------|----------------|
+| **Alpha (α)** | Helium nucleus (2p + 2n) | Stopped by **paper** or few cm of air | **High** |
+| **Beta (β)** | Fast-moving electrons | Stopped by **few mm of aluminium** | Medium |
+| **Gamma (γ)** | Electromagnetic waves | Reduced by **several cm of lead** | Low |
 
-| Feature | Alpha (α) | Beta (β) | Gamma (γ) |
-|---------|-----------|----------|-----------|
-| **Nature** | Helium nucleus (2p+2n) | High-speed electron | EM wave |
-| **Charge** | +2 | -1 | 0 |
-| **Mass** | 4 | 1/1840 | 0 |
-| **Speed** | ~10% c | ~90% c | Speed of light |
-| **Ionizing** | Strongest | Moderate | Weakest |
-| **Penetrating** | Paper stops | 5mm aluminium | Thick lead/concrete |
-| **Deflection** | Towards negative | Towards positive | None |
+## Behaviour in Electric Fields
+
+| Radiation | Behaviour | Reason |
+|-----------|-----------|--------|
+| **Alpha (α)** | Deflected towards **negative plate** | Positively charged (+2), but large mass = less deflection |
+| **Beta (β)** | Strongly deflected towards **positive plate** | Negatively charged (-1), very small mass = large deflection |
+| **Gamma (γ)** | **Completely undeflected** | No charge |
+
+## Behaviour in Magnetic Fields
+
+- Magnetic fields exert force on **moving charged particles**, causing curved paths
+- Use **Fleming's Left-Hand Rule** to predict direction
+- **Beta particles** (negative) deflect **opposite** to conventional current direction
+- **Gamma rays** are **unaffected** (no charge)
 
 ## Detecting Radiation
 
-**Geiger-Müller Tube:**
-1. Radiation enters through mica window
-2. Ionizes argon gas atoms
-3. Electrons create current pulse
-4. Counter registers "click"
+### Geiger-Müller (GM) Tube:
+1. Radiation enters through thin **mica window**
+2. **Ionizes argon gas** atoms
+3. Electrons accelerated by high voltage → cascade of ionization
+4. Creates **current pulse** → registered as a "click"
 
-**Background Radiation:** Always present (radon, cosmic rays, C-14)
-- Must subtract from readings for "corrected count rate"`,
+### Background Radiation:
+Always present from natural sources (radon gas, cosmic rays, Carbon-14)
+- Must **subtract** from readings for "corrected count rate"`,
                 diagrams: [],
                 subsections: []
             },

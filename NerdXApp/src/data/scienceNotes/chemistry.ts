@@ -29,894 +29,2200 @@ export const chemistryNotes: Record<string, TopicNotes> = {
     "States of Matter": {
         topic: "States of Matter",
         subject: "Chemistry",
-        summary: "The Kinetic Particle Theory explains the physical properties of matter and how it behaves during changes of state. All matter is composed of tiny particles (atoms, molecules, or ions) that are in constant motion. The properties of solids, liquids, and gases are determined by the arrangement, proximity, and movement of these particles.",
+        summary: "The Kinetic Particle Theory explains the physical properties of matter and how it behaves during changes of state. The core principle is that everything is made of particles, and the physical form that matter takes—solid, liquid, or gas—depends entirely on how these particles are arranged and how they move. This topic is foundational for understanding chemical reactions and industrial processes.",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/Kinetic_Theory_States_of_Matter_Explained.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0tpbmV0aWNfVGhlb3J5X1N0YXRlc19vZl9NYXR0ZXJfRXhwbGFpbmVkLm00YSIsImlhdCI6MTc2NTQ3MDI0MiwiZXhwIjo1MjY1OTY2MjQyfQ._HXh5bEmEzGe8jd34j8GoO4I9HOK40iIswemyI5O5sM",
         sections: [
             {
-                title: "1. The Kinetic Particle Theory",
-                content: `## Key Principles
+                title: "1. Introduction and The Kinetic Particle Theory",
+                content: `## Why Study States of Matter?
 
-**Composition:** All matter is composed of minute particles that are too small to be seen even with ordinary microscopes.
+| Reason | Explanation |
+|--------|-------------|
+| **Foundation of Chemical Reactions** | Understanding particle behaviour explains how and why reactions occur |
+| **Explaining Physical Properties** | Why are some substances hard while others flow? Answers lie in particle arrangement |
+| **Industrial Processes** | Making plastics, extracting metals — all involve controlling states of matter |
 
-**Motion:** These particles are continuously moving. In solids, they vibrate; in liquids and gases, they move randomly and collide with one another.
+---
 
-**Energy & Temperature:** Temperature is a measure of the average kinetic energy of particles. As a substance absorbs heat energy, particles gain kinetic energy and move faster.
+## The Kinetic Particle Theory
+
+The **Kinetic Particle Theory** is a model explaining the properties and behaviour of solids, liquids, and gases.
+
+### Three Key Assumptions:
+
+1. **All substances are made of tiny, moving particles**
+2. **Particles have kinetic energy** — their speed and energy increase with temperature
+3. **The differences between states are due to particle arrangement and movement**
+
+> **Key Term:** "Kinetic" means "about motion" — the theory is built on the idea that particles are always moving.
+
+---
 
 ## Evidence for Particle Theory
 
-### A. Brownian Motion
-The random, erratic, jerky movement of microscopic visible particles suspended in a fluid.
+### Brownian Motion
 
-**Observation:** Smoke particles suspended in air appear to dance around randomly in a zigzag path.
+**Definition:** The random, erratic, jerky movement of microscopic particles suspended in a fluid.
 
-**Explanation:** The smoke particles are being bombarded by millions of tiny, invisible, fast-moving air molecules. Uneven collisions cause the visible particle to jerk in random directions.
+**Observation:** Smoke particles in air appear to dance randomly in a zigzag path.
 
-### B. Diffusion
-The spontaneous net movement of particles from a region of **higher concentration** to a region of **lower concentration**.
+**Explanation:** Smoke particles are bombarded by millions of tiny, invisible, fast-moving air molecules. Uneven collisions cause the visible particle to jerk in random directions.
 
-**Process:** Occurs due to random motion of particles. They spread out until evenly distributed (equilibrium).
+### Diffusion
 
-**Factors Affecting Diffusion:**
-- **State of Matter:** Fastest in gases (high kinetic energy, large spaces), slower in liquids, negligible in solids
-- **Molecular Mass:** Lighter particles diffuse faster than heavier ones
-- **Temperature:** Higher temperature = faster diffusion
+**Definition:** The spontaneous net movement of particles from a region of **higher concentration** to a region of **lower concentration**.
 
-**Examples:**
-- Potassium manganate(VII) crystal spreading purple colour in water
-- Perfume scent spreading across a room`,
+**Factors Affecting Diffusion Rate:**
+
+| Factor | Effect |
+|--------|--------|
+| **State of Matter** | Fastest in gases, slower in liquids, negligible in solids |
+| **Molecular Mass** | Lighter particles diffuse faster than heavier ones |
+| **Temperature** | Higher temperature = faster diffusion |`,
                 diagrams: [],
                 subsections: []
             },
             {
                 title: "2. The Three States of Matter",
-                content: `## Comparison of Properties
+                content: `## Solids
+
+| Property | Particle-Level Explanation |
+|----------|---------------------------|
+| **Shape & Volume** | Definite shape, definite volume — particles held in fixed positions by very strong forces |
+| **Arrangement** | Regular, fixed pattern (lattice) — strong forces lock particles in ordered structure |
+| **Movement** | Vibrate in fixed positions — particles have kinetic energy but cannot move from place to place |
+| **Forces** | Very strong — hold particles tightly in fixed positions |
+| **Compressibility** | Cannot be compressed — particles already packed as closely as possible |
+
+**Examples:** Ice, chalk, sulfur
+
+---
+
+## Liquids
+
+| Property | Particle-Level Explanation |
+|----------|---------------------------|
+| **Shape & Volume** | No definite shape, BUT definite volume — particles can slide past each other but forces keep them close |
+| **Arrangement** | Random, but close together — not in fixed pattern, free to move throughout liquid |
+| **Movement** | Move randomly and slide past one another — kinetic energy allows movement within the volume |
+| **Forces** | Strong — keep particles in close contact but allow them to move past each other |
+| **Compressibility** | Cannot be compressed — particles in close contact, negligible space between them |
+
+**Examples:** Water, molten iron
+
+---
+
+## Gases
+
+| Property | Particle-Level Explanation |
+|----------|---------------------------|
+| **Shape & Volume** | No definite shape, no definite volume — forces are very weak, particles have high kinetic energy |
+| **Arrangement** | Very far apart and random — no order due to high energy and negligible forces |
+| **Movement** | Move rapidly and randomly — collide with each other and container walls |
+| **Forces** | Very weak (negligible) — particles move independently and far from one another |
+| **Compressibility** | Easily compressed — large empty spaces between particles can be reduced |
+
+**Examples:** Steam (water vapour), air, oxygen
+
+---
+
+## Summary Comparison
 
 | Property | Solid | Liquid | Gas |
 |----------|-------|--------|-----|
-| **Shape** | Fixed shape | Takes container shape | Fills any container |
-| **Volume** | Fixed volume | Fixed volume | No fixed volume |
-| **Compressibility** | Cannot compress | Cannot compress easily | Easily compressed |
-| **Fluidity** | Does not flow | Flows easily | Flows freely |
-
-## Particle Arrangement & Motion
-
-### Solid
-- **Packing:** Tightly packed in fixed, regular pattern (lattice)
-- **Forces:** Strong intermolecular forces hold particles firmly
-- **Movement:** Particles vibrate about fixed positions
-
-### Liquid
-- **Packing:** Closely packed but irregular, disordered arrangement
-- **Forces:** Weaker forces than solids; particles stay in contact but not locked
-- **Movement:** Particles slide past one another, move randomly over short distances
-
-### Gas
-- **Packing:** Far apart with large empty spaces; no regular arrangement
-- **Forces:** Negligible forces of attraction; particles act independently
-- **Movement:** Move randomly at high speeds in all directions, colliding frequently`,
+| **Shape** | Fixed | Takes container shape | Fills container |
+| **Volume** | Fixed | Fixed | Variable |
+| **Particle Arrangement** | Regular lattice | Random, close | Random, far apart |
+| **Particle Movement** | Vibrate in place | Slide past each other | Move rapidly, randomly |
+| **Forces** | Very strong | Strong | Very weak |
+| **Compressibility** | No | No | Yes |`,
                 diagrams: [],
                 subsections: []
             },
             {
                 title: "3. Changes of State",
-                content: `## The Processes
+                content: `## Overview of State Changes
 
-### Melting (Solid → Liquid)
-- **Energy:** Absorbs heat (Endothermic)
-- **Mechanism:** Energy makes particles vibrate more vigorously. At melting point, particles overcome forces holding the lattice
-- **Result:** Rigid structure collapses; particles slide over one another
+When a substance is heated or cooled, its particles gain or lose energy, which can cause it to change state.
 
-### Freezing (Liquid → Solid)
-- **Energy:** Releases heat (Exothermic)
-- **Mechanism:** Particles lose kinetic energy, move slower. Forces lock particles back into fixed lattice
+---
 
-### Boiling (Liquid → Gas)
-- **Energy:** Requires significant heat
-- **Mechanism:** Particles move fast enough to completely overcome intermolecular forces
-- **Result:** Bubbles form inside liquid and rise. Occurs at specific **boiling point**
+## Melting (Solid → Liquid)
 
-### Evaporation (Liquid → Gas)
-- **Location:** Occurs at surface only, below boiling point
-- **Mechanism:** High-energy surface particles escape into air
-- **Cooling Effect:** Fastest particles leave, so remaining liquid cools (e.g., sweating)
+| Aspect | Details |
+|--------|---------|
+| **Definition** | Solid turns into a liquid |
+| **Particle Behaviour** | Particles gain energy, vibrate more vigorously. At **melting point**, particles break free from fixed positions in lattice |
+| **Energy Change** | Energy is **taken in (ENDOTHERMIC)** |
 
-### Condensation (Gas → Liquid)
-- Gas particles lose energy, slow down, forces clump them together
+---
 
-### Sublimation (Solid → Gas)
-- Direct change without becoming liquid
-- **Examples:** Iodine crystals, Dry Ice, Ammonium Chloride
+## Freezing/Solidification (Liquid → Solid)
 
-### Deposition (Gas → Solid)
-- Direct change without becoming liquid
-- **Example:** Frost forming on cold windows
+| Aspect | Details |
+|--------|---------|
+| **Definition** | Liquid turns into a solid |
+| **Particle Behaviour** | Particles lose kinetic energy, move more slowly. Forces pull them into fixed positions, forming regular lattice |
+| **Energy Change** | Energy is **given out (EXOTHERMIC)** |
 
-## Boiling vs Evaporation
+---
+
+## Boiling (Liquid → Gas)
+
+| Aspect | Details |
+|--------|---------|
+| **Definition** | Liquid turns into a gas at a specific temperature |
+| **Particle Behaviour** | Particles gain enough energy to overcome all forces of attraction. Bubbles form throughout liquid |
+| **Energy Change** | Energy is **taken in (ENDOTHERMIC)** |
+
+---
+
+## Evaporation (Liquid → Gas)
+
+| Aspect | Details |
+|--------|---------|
+| **Definition** | Liquid turns into gas at temperature **below** boiling point |
+| **Particle Behaviour** | Occurs only at **surface**. Some particles gain enough energy through random collisions to escape into air |
+| **Energy Change** | Energy is **taken in (ENDOTHERMIC)** |
+
+---
+
+## Condensation (Gas → Liquid)
+
+| Aspect | Details |
+|--------|---------|
+| **Definition** | Gas turns into a liquid |
+| **Particle Behaviour** | Particles lose kinetic energy, move more slowly. Forces of attraction cause them to stay close together |
+| **Energy Change** | Energy is **given out (EXOTHERMIC)** |
+
+---
+
+## Boiling vs Evaporation (EXAM FOCUS)
 
 | Feature | Boiling | Evaporation |
 |---------|---------|-------------|
-| **Temperature** | Only at boiling point | Any temperature |
+| **Temperature** | Only at boiling point | Any temperature below boiling point |
 | **Location** | Throughout liquid (bubbles) | Surface only |
 | **Speed** | Fast, vigorous | Slow, gradual |
-| **Energy Source** | External heat | Surroundings or liquid itself |
+| **Energy Source** | External heat applied | Surroundings or liquid itself |
+
+---
 
 ## Heating and Cooling Curves
 
-**Sloped Lines:** Temperature rising, heat converted to kinetic energy, particles move faster
+**Sloped Lines:** Temperature rising — heat converted to kinetic energy, particles move faster
 
 **Flat Lines (Plateaus):** Change of state occurring
-- Temperature doesn't rise even though heat is applied
-- Energy used to break intermolecular bonds, not increase speed
+- Temperature stays constant even though heat is applied
+- Energy used to break intermolecular bonds, NOT increase speed
 - This "hidden" energy is called **Latent Heat**`,
                 diagrams: [],
                 subsections: []
             },
             {
-                title: "4. Behavior of Gases",
-                content: `## Gas Pressure
+                title: "4. Effect of Temperature and Pressure",
+                content: `## The Effect of Heating
 
-**Definition:** Force exerted per unit area on container walls
+When a substance is heated:
+1. Particles **absorb heat energy** → convert to kinetic energy
+2. Particles **move faster**
+3. In solids: vibrate more; in liquids/gases: move more quickly
+4. Substance **expands**
+5. If enough heat: melting or boiling occurs
 
-**Cause:** Gas particles in constant random motion collide frequently with container walls. Billions of collisions per second create steady pressure.
+**Example:** Scent of flowers travels faster in a warm room — gas particles have more kinetic energy and diffuse more quickly.
 
-**Temperature Effect:**
-- Heating transfers energy to particles → move faster
-- Hit walls harder (more force) and more often
-- **Pressure rises**
+---
 
-**Volume Effect (Boyle's Law):**
-- Compressing gas into smaller volume
-- Particles hit walls more often (less space to travel)
-- **Pressure rises**
+## The Effect of Cooling
 
-## Factors Affecting Diffusion Rate
+When a substance is cooled:
+1. Particles **lose kinetic energy** → slow down
+2. Forces of attraction **pull particles closer together**
+3. Substance **contracts**
+4. If cooled enough: gas condenses, liquid freezes
 
-### 1. Temperature
-Higher temperature → Higher kinetic energy → Faster particle movement → **Faster diffusion**
+---
 
-### 2. Relative Molecular Mass (Mr)
-Heavier particles move slower at same temperature.
+## Gas Pressure
 
-**The Rule:** Lower Mr = Faster diffusion
+**Definition:** Force exerted by gas particles colliding with container walls.
 
-**Example:** 
-- Ammonia (NH₃, Mr = 17) is lighter than Hydrogen Chloride (HCl, Mr = 36.5)
-- Therefore, Ammonia diffuses faster
+**Cause:** Constant motion of particles → frequent collisions with walls → billions of collisions per second create steady pressure.
 
-**Classic Experiment:**
-Cotton wool soaked in Ammonia and HCl placed at opposite ends of sealed tube. White ring of Ammonium Chloride forms **closer to the HCl end** because Ammonia traveled further in the same time.`,
+### Factors Affecting Gas Pressure:
+
+| Factor | Effect |
+|--------|--------|
+| **Temperature ↑** | Particles move faster → hit walls harder and more often → **pressure increases** |
+| **Volume ↓** | Same particles in smaller space → collide with walls more frequently → **pressure increases** |
+| **Number of particles ↑** | More collisions with walls → **pressure increases** |
+
+---
+
+## Practical Examples
+
+| Scenario | Explanation |
+|----------|-------------|
+| **Pumping bicycle tyre** | Forcing more air particles into fixed volume → more frequent collisions → higher pressure |
+| **Balloon bursting** | Adding more particles → pressure increases → eventually too great for balloon material |
+| **Sealed container cooled** | Particles lose energy, move slower → fewer, weaker collisions → pressure decreases |`,
                 diagrams: [],
                 subsections: []
             },
             {
-                title: "5. Purity and States of Matter",
-                content: `## Defining Purity
+                title: "5. Real-Life Applications",
+                content: `## Applications of States of Matter
 
-In chemistry, a **pure substance** consists of only one type of substance (element or compound) with no impurities. It has distinct physical properties.
+| Application | Scientific Explanation |
+|-------------|----------------------|
+| **Pressure Cookers** | Water vapour heated above 100°C in sealed container. High kinetic energy → frequent, forceful collisions → very high pressure. Higher pressure raises boiling point → food cooks faster |
+| **Smell of Flowers/Burnt Food** | Scent travels via **diffusion**. Gas particles move randomly from high to low concentration, colliding with air particles. Faster at higher temperatures due to increased kinetic energy |
+| **Pumping Bicycle Tyre** | Gas compression. Air forced into fixed volume → more particles → more frequent collisions → higher pressure |
+| **Molten Iron** | At temperatures over 1540°C, particles in solid iron gain enough kinetic energy to overcome strong forces → iron melts → can be poured and shaped |
 
-**Example:** Pure water = 100% H₂O molecules. Tap water is a "mixture" (contains dissolved minerals and chlorine).
+---
 
-## Effect of Impurities
+## Diffusion Rate Comparison
 
-Impurities disrupt regular particle arrangement in solids and alter forces between particles in liquids.
+**Classic Experiment:** Cotton wool soaked in ammonia and HCl placed at opposite ends of sealed tube.
 
-### Melting Point
-- Impurities **lower** the melting point
-- Substance melts over a **range** of temperatures instead of sharp point
-- **Application:** Salt on icy roads lowers ice melting point, causing it to melt below 0°C
+| Gas | Relative Molecular Mass | Speed |
+|-----|------------------------|-------|
+| Ammonia (NH₃) | 17 | Faster (lighter) |
+| Hydrogen Chloride (HCl) | 36.5 | Slower (heavier) |
 
-### Boiling Point
-- Impurities **raise** the boiling point
-- **Example:** Pure water boils at exactly 100°C. Salt water boils above 100°C.
+**Result:** White ring of ammonium chloride forms **closer to the HCl end** because ammonia traveled further in the same time.
 
-## Testing for Purity
-- Pure substances have **sharp, fixed** melting and boiling points
-- Impure substances melt/boil over a **range** of temperatures`,
+**Rule:** Lower Mr = Faster diffusion`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "6. Exam Focus: Common Questions and Keywords",
+                content: `## Essential Keywords for Top Marks
+
+### For Solids:
+- Vibrate in fixed positions
+- Strong forces of attraction
+- Regular lattice
+- Packed closely together
+
+### For Liquids:
+- Slide past one another
+- Overcome forces of attraction
+- Random arrangement
+- Close together
+
+### For Gases:
+- Move rapidly and randomly
+- Far apart
+- Negligible/weak forces
+- Collide with container walls
+
+### For Changes of State:
+- Gain/lose kinetic energy
+- Overcome the forces
+- Break free from positions
+
+---
+
+## Sample Exam Questions with Guidance
+
+### Q1: Why does the smell of burnt food travel through the house?
+
+**Answer Structure:**
+1. Smell is caused by **gas particles**
+2. Gas particles **move randomly and quickly** in all directions
+3. **Diffusion** — particles spread from high to low concentration
+4. Particles **collide with air particles**, bouncing in all directions, helping them spread
+
+---
+
+### Q2: Why does a balloon burst if you keep blowing?
+
+**Answer Structure:**
+1. Blowing **increases number of gas particles** inside
+2. More particles = **more frequent collisions** with balloon walls
+3. Increased collision frequency = **increased pressure**
+4. Balloon bursts when **pressure exceeds material strength**
+
+---
+
+### Q3: Why can you pour liquids?
+
+**Answer Structure:**
+1. Particles are **close together but not in fixed positions**
+2. Forces are **strong enough to keep particles together**
+3. But **weak enough to allow particles to slide past each other**
+4. This sliding ability allows **flowing and pouring**
+
+---
+
+### Q4: Why do solids expand on heating?
+
+**Answer Structure:**
+1. Particles in solid are held in **fixed lattice**, can only **vibrate**
+2. When heated, particles **gain energy**
+3. Converted to **kinetic energy** → **vibrate more vigorously**
+4. Increased vibration makes particles take up **slightly more space** → solid **expands**`,
                 diagrams: [],
                 subsections: []
             }
         ],
         key_points: [
-            "All matter is made of particles in constant motion (Kinetic Theory)",
+            "All matter is made of particles in constant motion (Kinetic Particle Theory)",
             "Temperature measures the average kinetic energy of particles",
             "Brownian motion provides visual evidence for particle theory",
-            "Diffusion is movement from high to low concentration",
-            "Solids: fixed shape, particles vibrate in lattice",
-            "Liquids: fixed volume, particles slide past each other",
-            "Gases: no fixed shape/volume, particles move freely",
-            "Latent heat is energy used to change state without changing temperature",
-            "Evaporation occurs at surface; boiling occurs throughout liquid",
-            "Lighter molecules (lower Mr) diffuse faster",
-            "Impurities lower melting point and raise boiling point"
+            "Diffusion: movement from high to low concentration; faster with lower molecular mass",
+            "Solids: fixed shape, particles vibrate in regular lattice, very strong forces",
+            "Liquids: fixed volume, particles slide past each other, strong forces",
+            "Gases: no fixed shape/volume, particles move rapidly and randomly, very weak forces",
+            "Melting and boiling are ENDOTHERMIC (energy taken in); freezing and condensation are EXOTHERMIC (energy given out)",
+            "Latent heat: energy used to change state without changing temperature",
+            "Evaporation occurs at surface at any temperature; boiling occurs throughout at boiling point",
+            "Gas pressure caused by particle collisions with container walls",
+            "Increasing temperature or decreasing volume increases gas pressure",
+            "Lighter molecules (lower Mr) diffuse faster than heavier ones"
         ],
         exam_tips: [
-            "Draw particle diagrams for each state showing arrangement and spacing",
-            "Explain Brownian motion using collisions with invisible particles",
-            "Use kinetic theory to explain why temperature stays constant during state changes",
-            "Compare boiling vs evaporation using at least 3 differences",
-            "Calculate Mr to predict which gas diffuses faster",
-            "Explain gas pressure in terms of particle collisions with walls",
-            "Know how impurities affect melting (lower/range) and boiling points (raise)"
+            "ALWAYS explain using particles — examiners want particle-level explanations, not just observations",
+            "Use specific keywords: 'vibrate in fixed positions' for solids, 'slide past one another' for liquids",
+            "Draw particle diagrams showing correct arrangement and spacing for each state",
+            "Explain Brownian motion as collisions with invisible particles causing random movement",
+            "For heating/cooling curves, explain flat sections using latent heat — energy breaks bonds, not increases temperature",
+            "Compare boiling vs evaporation using at least 3 differences (temperature, location, speed)",
+            "Calculate Mr to predict which gas diffuses faster — lower Mr = faster diffusion",
+            "Explain gas pressure in terms of frequency and force of particle collisions with walls",
+            "Link real-life examples (pressure cooker, bike pump) to particle behaviour and pressure"
         ]
     },
 
     "Atoms, Elements and Compounds": {
         topic: "Atoms, Elements and Compounds",
         subject: "Chemistry",
-        summary: "Everything in the physical universe is made of matter composed of atoms. Understanding atomic structure explains why elements behave the way they do and how they interact to form compounds. This topic covers atomic structure, electron arrangement, the periodic table, and different types of chemical bonding.",
+        summary: "All physical substances in the universe are composed of atoms, elements, and compounds. Understanding atomic structure explains why elements behave the way they do and how they interact to form compounds. This topic covers subatomic particles, proton and nucleon numbers, electron arrangement, the difference between elements, compounds, and mixtures, and the formation of molecules and ions through bonding.",
         videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Building_Blocks_of_Reality.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9CdWlsZGluZ19CbG9ja3Nfb2ZfUmVhbGl0eS5tcDQiLCJpYXQiOjE3NjU4Njk4NzYsImV4cCI6NTI2NjM2NTg3Nn0.lvGS0nLBqFV_MXHnh_Tj26xDY-axr4SkYLZa7juyhRk",
         sections: [
             {
-                title: "1. Atomic Structure",
-                content: `## The Structure of an Atom
+                title: "1. Introduction: The Building Blocks of Matter",
+                content: `## Defining the Basics
 
-An **atom** is the smallest particle of a chemical element that can exist while retaining the chemical properties of that element.
+| Concept | Core Definition | Simple Example |
+|---------|-----------------|----------------|
+| **Atom** | The smallest particle of an element | A single carbon atom |
+| **Element** | A pure substance consisting of only one type of atom | The element carbon |
+| **Compound** | A substance consisting of different elements chemically bonded together | Carbon dioxide (CO₂) |
 
-### Sub-atomic Particles
+---
 
-| Particle | Charge | Relative Mass | Location |
-|----------|--------|---------------|----------|
-| **Proton** | +1 | 1 | Nucleus |
-| **Neutron** | 0 | 1 | Nucleus |
-| **Electron** | -1 | ~1/1840 (negligible) | Shells around nucleus |
+## The Importance of This Topic
 
-**Note on Size:** If an atom were the size of a football stadium, the nucleus would be a marble on the center spot. Most of an atom is empty space.
+Understanding atoms, elements, and compounds is the **absolute foundation** of chemistry:
+- **Medicines** that keep us healthy
+- **Materials** used to build aircraft
+- **Pollutants** that affect our environment
 
-## Key Definitions
+All are composed of these basic components. Mastering these concepts is the **first and most critical step** to understanding how the material world works.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. The Structure of an Atom",
+                content: `## Subatomic Particles
 
-**Proton Number (Atomic Number, Z):** Number of protons in the nucleus - the "identity card" for an element.
+Atoms are composed of three types of **subatomic particles**:
 
-**Electrical Neutrality:** In a neutral atom: Number of Protons = Number of Electrons
+| Particle | Relative Mass | Electric Charge | Position in Atom |
+|----------|---------------|-----------------|------------------|
+| **Proton** | 1 unit | Positive (+1) | In the nucleus |
+| **Neutron** | 1 unit | None (0) | In the nucleus |
+| **Electron** | Almost nothing (~1/1840) | Negative (−1) | Moving around nucleus |
 
-**Nucleon Number (Mass Number, A):** Total of protons + neutrons in the nucleus.
+---
 
-**Formula:** Number of Neutrons = A - Z
+## Why Atoms Are Electrically Neutral
+
+An atom has **no overall electrical charge** because it contains an **equal number** of positive protons and negative electrons.
+
+**Example:** Sodium atom contains:
+- 11 protons (+11 charge)
+- 11 electrons (−11 charge)
+- Overall charge = **zero**
+
+---
+
+## Proton Number and Nucleon Number
+
+| Term | Definition | Importance |
+|------|------------|------------|
+| **Proton Number (Z)** | Number of protons in the nucleus | **Uniquely identifies** an element |
+| **Nucleon Number (A)** | Total number of protons + neutrons | Also called Mass Number |
+
+### Formula:
+$$\\text{Number of Neutrons} = \\text{Nucleon Number} - \\text{Proton Number}$$
+$$n = A - Z$$
+
+---
+
+## Electron Shells (Bohr Model)
+
+Electrons orbit the nucleus in specific regions called **electron shells**.
+
+### Shell Filling Rules:
+
+| Shell | Maximum Electrons |
+|-------|-------------------|
+| **1st Shell** | 2 electrons |
+| **2nd Shell** | 8 electrons |
+| **3rd Shell** | 8 electrons (for first 20 elements) |
+
+### Example Electron Distributions:
+
+| Element | Protons | Electron Configuration |
+|---------|---------|----------------------|
+| Hydrogen (H) | 1 | 1 |
+| Carbon (C) | 6 | 2,4 |
+| Sodium (Na) | 11 | 2,8,1 |
+| Chlorine (Cl) | 17 | 2,8,7 |
+| Calcium (Ca) | 20 | 2,8,8,2 |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. Elements: Pure Substances",
+                content: `## Definition
+
+An **element** is a pure substance made up of **only one type of atom**.
+
+Each element is represented by a unique **chemical symbol** (e.g., C for Carbon, Na for Sodium).
+
+---
+
+## Atoms vs Elements
+
+It is crucial to distinguish between these terms:
+
+| Term | Meaning | Analogy |
+|------|---------|---------|
+| **Atom** | A single, individual particle | A single brick |
+| **Element** | The bulk substance composed of many identical atoms | An entire wall built from one type of brick |
+
+---
 
 ## Isotopes
 
-**Isotopes** are atoms of the same element with the same number of protons but different numbers of neutrons.
+**Isotopes** are atoms of the **same element** with the **same number of protons** but **different numbers of neutrons**.
 
-### Chemical vs Physical Properties
-- **Chemical:** Identical (same electron arrangement)
-- **Physical:** Different masses, densities, melting points, diffusion rates
+### Properties of Isotopes:
 
-**Example - Chlorine:**
-- ³⁵Cl (18 neutrons, 75% abundance)
-- ³⁷Cl (20 neutrons, 25% abundance)
-- Relative Atomic Mass = 35.5 (average)
+| Property Type | Same or Different? | Explanation |
+|---------------|-------------------|-------------|
+| **Chemical properties** | SAME | Same electron arrangement |
+| **Physical properties** | DIFFERENT | Different masses, densities, melting points |
 
-### Uses of Radioisotopes
-- **Medical:** Cobalt-60 for cancer radiotherapy, sterilizing surgical instruments
-- **Industrial:** Tracers for detecting pipe leaks, thickness gauges in paper/metal mills`,
+### Example: Chlorine Isotopes
+
+| Isotope | Protons | Neutrons | Abundance |
+|---------|---------|----------|-----------|
+| ³⁵Cl | 17 | 18 | 75% |
+| ³⁷Cl | 17 | 20 | 25% |
+
+**Relative Atomic Mass of Cl = 35.5** (weighted average)`,
                 diagrams: [],
                 subsections: []
             },
             {
-                title: "2. Electron Arrangement and the Periodic Table",
-                content: `## Shell Rules (Electronic Configuration)
+                title: "4. Compounds: Chemically Combined Elements",
+                content: `## How Compounds Are Formed
 
-- **1st Shell:** Maximum 2 electrons
-- **2nd Shell:** Maximum 8 electrons
-- **3rd Shell:** Maximum 8 electrons (for first 20 elements)
-- **Filling Order:** Lowest energy shell fills first
+**Compounds** are new substances formed when atoms of different elements join together during a **chemical reaction** through **chemical bonds**.
 
-**Example - Sodium (²³₁₁Na):** 11 electrons → Configuration: **2.8.1**
+---
 
-## The Periodic Table Structure
+## Signs of a Chemical Change
 
-Elements are arranged by increasing proton number.
+1. **New substance formed** — with different properties
+2. **Energy change** — heat/light given out or taken in
 
-### Groups (Vertical Columns)
-Elements in the same group have the **same number of outer shell electrons** and react similarly.
+---
 
-| Group | Outer Electrons | Name | Properties |
-|-------|-----------------|------|------------|
-| I | 1 | Alkali Metals | Highly reactive, lose 1 electron easily |
-| VII | 7 | Halogens | Reactive non-metals, gain 1 electron |
-| 0/VIII | 8 (or 2 for He) | Noble Gases | Full outer shell, unreactive (inert) |
+## Classic Example: Iron + Sulfur
 
-### Periods (Horizontal Rows)
-The period number = number of electron shells occupied.
+When iron powder and sulfur powder react:
+- Mixture glows brightly (energy given out)
+- New black substance forms: **iron(II) sulfide**
+- New substance is NOT magnetic (unlike iron)
 
-**Trend across period:** Character changes from metallic → non-metallic`,
+---
+
+## Mixtures vs Compounds (EXAM FOCUS)
+
+| Feature | Mixture | Compound |
+|---------|---------|----------|
+| **Formation** | Simple physical mixing | Chemical reaction |
+| **Separation** | Physical methods (magnet, filtration) | Only by chemical reactions |
+| **Properties** | Components keep original properties | New properties, different from elements |
+| **Composition** | Variable proportions | Fixed ratio |
+| **Bonding** | No chemical bonds | Chemical bonds present |
+
+---
+
+## Physical vs Chemical Change
+
+| Physical Change | Chemical Change |
+|-----------------|-----------------|
+| No new substance formed | New substance formed |
+| Usually reversible | Usually difficult to reverse |
+| Small energy change | Often large energy change |
+| Example: dissolving sugar | Example: burning wood |`,
                 diagrams: [],
                 subsections: []
             },
             {
-                title: "3. Elements, Mixtures, and Compounds",
-                content: `## Definitions
+                title: "5. Molecules and Ions",
+                content: `## Molecules
 
-### Element
-A pure substance consisting of only **one type of atom** (e.g., O₂, Fe, Na). Cannot be broken down further by chemical means.
+A **molecule** is a distinct group of two or more atoms held together by **covalent bonds** (shared electrons).
 
-### Compound
-Two or more different elements **chemically bonded** in a fixed ratio (e.g., H₂O, CO₂, NaCl).
-- **Fixed Composition:** H₂O is always H₂O; H₂O₂ is different (hydrogen peroxide)
-- **New Properties:** Na (reactive metal) + Cl₂ (poisonous gas) → NaCl (safe table salt)
+**Examples:** H₂O (water), CH₄ (methane), H₂ (hydrogen gas), CO₂ (carbon dioxide)
 
-### Mixture
-Two or more substances **physically mixed** but not chemically bonded (e.g., air, saltwater, brass).
-- Components retain individual properties
-- Variable composition
-- Can be separated by physical methods
+---
 
-## Separation Techniques
+## Covalent Bonding
 
-| Method | Separates | Principle |
-|--------|-----------|-----------|
-| **Filtration** | Insoluble solid from liquid | Particle size (filter paper as sieve) |
-| **Crystallisation** | Soluble solid from solution | Solubility decreases on cooling |
-| **Simple Distillation** | Solvent from solution | Large boiling point difference |
-| **Fractional Distillation** | Miscible liquids | Small boiling point differences |
-| **Chromatography** | Substances with different solubilities | Solubility competition |
-| **Magnetism** | Magnetic from non-magnetic | Magnetic properties |
+**Covalent bond:** Chemical bond formed when atoms **share electrons**.
 
-## Chromatography Details
+This allows atoms to achieve a **stable arrangement** of electrons in their outer shells (like noble gases).
 
-**Purity Test:** Pure substance = single spot; Impure = multiple spots
+---
 
-**Rf Value (Retention Factor):**
-$$R_f = \\frac{\\text{Distance moved by substance}}{\\text{Distance moved by solvent front}}$$
+## Ions
 
-**Locating Agents:** Chemicals that reveal colorless substances (e.g., Ninhydrin turns amino acids purple)`,
+An **ion** is an atom (or group of atoms) that has **lost or gained** one or more electrons, resulting in an **electrical charge**.
+
+### Types of Ions:
+
+| Type | Formation | Charge | Example |
+|------|-----------|--------|---------|
+| **Cation** (positive ion) | Metal atom **loses** electrons | Positive (+) | Na⁺, Mg²⁺, Al³⁺ |
+| **Anion** (negative ion) | Non-metal atom **gains** electrons | Negative (−) | Cl⁻, O²⁻, S²⁻ |
+
+---
+
+## Ionic Bonding
+
+**Ionic bond:** The strong **electrostatic force of attraction** between oppositely charged ions.
+
+**Examples:** NaCl (sodium chloride), MgO (magnesium oxide)
+
+### Formation of NaCl:
+1. Sodium atom **loses 1 electron** → Na⁺
+2. Chlorine atom **gains 1 electron** → Cl⁻
+3. Opposite charges attract → ionic bond forms
+
+---
+
+## Summary: Covalent vs Ionic
+
+| Feature | Covalent Bonding | Ionic Bonding |
+|---------|------------------|---------------|
+| **Between** | Non-metal + Non-metal | Metal + Non-metal |
+| **Process** | Electron **sharing** | Electron **transfer** |
+| **Particles formed** | Molecules | Ions |
+| **Examples** | H₂O, CO₂, CH₄ | NaCl, MgO, CaCl₂ |`,
                 diagrams: [],
                 subsections: []
             },
             {
-                title: "4. Bonding: The Structure of Matter",
-                content: `## Why Atoms Bond
-Atoms bond to achieve a **stable electron configuration** (full outer shell like Noble Gases).
+                title: "6. Summary: Atoms, Elements, and Compounds",
+                content: `## Key Distinctions
 
-## A. Ionic Bonding
+| Feature | Atom | Element | Compound |
+|---------|------|---------|----------|
+| **Definition** | Smallest particle of an element | Pure substance of one type of atom | Different atoms chemically bonded |
+| **Composition** | Protons, neutrons, electrons | Many identical atoms | Different atoms in fixed ratio |
+| **Representation** | Symbol (e.g., Na) | Symbol (e.g., Na) | Formula (e.g., NaCl) |
+| **Can be broken down?** | Only into subatomic particles | Not by chemical means | Yes, into elements by chemical reactions |
 
-**Occurs between:** Metal + Non-metal
+---
 
-**Process:** Complete **transfer of electrons**
-- Metal loses electrons → Positive ion (Cation)
-- Non-metal gains electrons → Negative ion (Anion)
+## Illustrative Example
 
-**The Bond:** Strong electrostatic attraction between oppositely charged ions
+| Substance | Type | Description |
+|-----------|------|-------------|
+| Sodium (Na) | Element | Reactive, soft metal |
+| Chlorine (Cl₂) | Element | Poisonous, green gas |
+| Sodium Chloride (NaCl) | Compound | White, edible crystal (table salt) |
 
-**Structure:** Giant Ionic Lattice (regular 3D arrangement)
+> **Key Point:** The compound NaCl has **completely different properties** from its constituent elements Na and Cl₂.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "7. The Evolving Model of the Atom",
+                content: `## Historical Development
 
-**Properties:**
-- High melting/boiling points (strong forces)
-- Conducts electricity when molten or dissolved (ions free to move)
-- Does NOT conduct when solid (ions locked in place)
-- Often soluble in water
+| Scientist | Model | Key Features |
+|-----------|-------|--------------|
+| **John Dalton** | Solid sphere | Atoms are tiny, solid, indivisible particles |
+| **J.J. Thomson** | Plum pudding | Sphere of positive charge with electrons embedded like "raisins in a bun" |
+| **Ernest Rutherford** | Nuclear model | Mostly empty space with tiny, dense, positive nucleus at center |
+| **Niels Bohr** | Planetary model | Electrons orbit nucleus in fixed energy levels (shells) |
+| **James Chadwick** | Modern model | Added neutrons (mass but no charge) to the nucleus |
 
-**Example:** NaCl - Sodium (2.8.1) transfers 1 electron to Chlorine (2.8.7) → Na⁺ (2.8) and Cl⁻ (2.8.8)
+---
 
-## B. Covalent Bonding
+## Dot-and-Cross Diagrams
 
-**Occurs between:** Non-metal + Non-metal
+Chemists use **dot-and-cross diagrams** to show electron arrangement in bonding:
+- Electrons from one atom shown as **dots (•)**
+- Electrons from other atom shown as **crosses (x)**
 
-**Process:** **Sharing pairs of electrons**
+### Ionic Bonding Example (NaCl):
+- Na transfers 1 electron (shown as x) to Cl
+- Na becomes Na⁺ (2,8 configuration)
+- Cl becomes Cl⁻ (2,8,8 configuration)
 
-**The Bond:** Attraction between shared electrons and both nuclei
+### Covalent Bonding Example (H₂O):
+- Oxygen shares electrons with 2 hydrogen atoms
+- All atoms achieve stable configurations`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "8. Real-Life Applications",
+                content: `## Applications in Industry
 
-### Simple Molecular Structures (e.g., H₂O, CO₂, CH₄)
-- Low melting/boiling points (weak forces between molecules)
-- Do NOT conduct electricity (no free ions or electrons)
-- Usually gases or liquids at room temperature
+| Substance | Application |
+|-----------|-------------|
+| **Iron** | Making steel for buildings, bridges, cars |
+| **Aluminium** | Aircraft (strong + low density) |
+| **Ammonia (compound)** | Fertilisers (Haber process) |
+| **Limestone (CaCO₃)** | Cement and lime production |
 
-### Giant Covalent Structures
+---
 
-| Substance | Structure | Properties |
-|-----------|-----------|------------|
-| **Diamond** | Each C bonds to 4 others | Very hard, high m.p., insulator |
-| **Graphite** | C bonds to 3 others, sheets | Soft, slippery, CONDUCTS (delocalised electrons) |
-| **Silicon Dioxide** | Similar to diamond | Hard, high m.p. |
+## Applications in Medicine
 
-## C. Metallic Bonding
+| Substance | Application |
+|-----------|-------------|
+| **Cobalt-60** | Cancer radiotherapy |
+| **Chlorine compounds** | Manufacturing many medical drugs |
+| **Oxygen** | Life support in hospitals |
 
-**Occurs in:** Pure metals and alloys
+---
 
-**Structure:** Lattice of positive ions surrounded by "sea" of delocalised electrons
+## Applications in Daily Life
 
-**The Bond:** Attraction between positive ions and electron sea
+| Substance | Application |
+|-----------|-------------|
+| **Copper** | Electrical wiring (excellent conductor) |
+| **Sodium chloride** | Table salt for seasoning |
+| **Carbon dioxide** | Fizz in carbonated drinks |
+| **Methane** | Fuel for heating and cooking |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "9. Common Exam Questions and Mistakes",
+                content: `## Sample Exam Questions
 
-**Properties:**
-- **Excellent conductors:** Delocalised electrons carry charge
-- **Malleable/Ductile:** Layers slide without breaking
-- **High melting points:** Strong attractions`,
+### Q1: "An atom has 9 protons. Which element is it?"
+
+**Answer:** Look up element with proton number 9 in Periodic Table → **Fluorine (F)**
+
+---
+
+### Q2: "Which two particles are isotopes?"
+
+**How to Answer:**
+- Find particles with **same proton number** but **different nucleon number**
+- Isotopes = same element, different neutrons
+
+---
+
+### Q3: "Explain the difference between a mixture of iron and sulfur and the compound iron sulfide."
+
+**Answer Structure:**
+1. **Formation:** Mixture = physical mixing; Compound = chemical reaction
+2. **Separation:** Mixture = magnet; Compound = only by chemical reaction
+3. **Properties:** Mixture = iron still magnetic; Compound = new properties, not magnetic
+
+---
+
+## Common Mistakes to Avoid
+
+| Common Mistake | Correct Understanding |
+|----------------|----------------------|
+| Confusing Nucleon Number with neutrons | Nucleon Number = protons + neutrons. Subtract proton number to find neutrons |
+| Using "atom," "molecule," "element" interchangeably | Atom = single particle; Element = bulk substance; Molecule = atoms joined by covalent bonds |
+| Thinking mixture = compound | Mixture = no chemical bonds, original properties; Compound = chemical bonds, new properties |
+| Believing neutrons affect chemical properties | Chemical properties determined by **electrons** (= protons in neutral atom), NOT neutrons |`,
                 diagrams: [],
                 subsections: []
             }
         ],
         key_points: [
-            "Atoms contain protons (+), neutrons (0), and electrons (-)",
-            "Proton number defines the element; neutrons affect mass only",
-            "Isotopes: same protons, different neutrons",
-            "Electron configuration: 2, 8, 8 for first 20 elements",
-            "Group number = number of outer electrons",
-            "Compounds have fixed composition and new properties",
-            "Mixtures can be separated by physical methods",
-            "Ionic bonding: electron transfer, metal + non-metal",
-            "Covalent bonding: electron sharing, non-metal + non-metal",
-            "Metallic bonding: sea of delocalised electrons",
-            "Graphite conducts; Diamond doesn't (delocalised electrons)"
+            "Atom: smallest particle of an element; Element: pure substance of one atom type; Compound: different atoms chemically bonded",
+            "Subatomic particles: protons (+1, in nucleus), neutrons (0, in nucleus), electrons (−1, in shells)",
+            "Proton number uniquely identifies an element; Number of neutrons = Nucleon number − Proton number",
+            "Atoms are electrically neutral: number of protons = number of electrons",
+            "Electron shell rules: 1st shell = 2, 2nd shell = 8, 3rd shell = 8 (for first 20 elements)",
+            "Isotopes: same protons, different neutrons — same chemical properties, different physical properties",
+            "Compounds formed by chemical reactions have NEW properties different from constituent elements",
+            "Mixtures: no chemical bonds, physical separation; Compounds: chemical bonds, chemical separation only",
+            "Molecules: atoms joined by covalent bonds (sharing electrons) — non-metal + non-metal",
+            "Ions: atoms that have lost/gained electrons; Ionic bonds: metal + non-metal (electron transfer)",
+            "Chemical properties are determined by electrons in outer shell, not by neutrons"
         ],
         exam_tips: [
-            "Calculate protons, neutrons, electrons from nuclide notation (ᴬzX)",
-            "Write electron configurations and link to Group number",
-            "Draw dot-and-cross diagrams for ionic and covalent compounds",
-            "Compare ionic vs covalent properties (m.p., conductivity)",
-            "Explain why graphite conducts but diamond doesn't",
-            "Choose correct separation method based on physical properties",
-            "Calculate Rf values in chromatography"
+            "Use the formula: Neutrons = Nucleon Number − Proton Number (n = A − Z)",
+            "To identify an element, use its proton number and look it up in the Periodic Table",
+            "Isotopes have SAME proton number but DIFFERENT nucleon number — learn to spot them in tables",
+            "Draw dot-and-cross diagrams showing electron transfer (ionic) or sharing (covalent)",
+            "When comparing mixtures vs compounds, discuss: formation, separation method, and properties",
+            "Remember: compounds have FIXED composition and NEW properties unlike their elements",
+            "For ionic compounds, metals LOSE electrons (form cations), non-metals GAIN electrons (form anions)",
+            "Know historical atomic models: Dalton → Thomson → Rutherford → Bohr → Chadwick",
+            "Link electron configuration to Group number: outer electrons = Group number"
         ]
     },
 
     "Chemical Bonding": {
         topic: "Chemical Bonding",
         subject: "Chemistry",
-        summary: "Chemical bonding explains how atoms combine to form compounds. Atoms bond to achieve a stable electron configuration (full outer shell). The three main types of bonding are ionic (electron transfer), covalent (electron sharing), and metallic (sea of delocalised electrons).",
+        summary: "Chemical bonding is the force of attraction that holds atoms together. Atoms bond to achieve a stable electron arrangement (full outer shell like noble gases). The three main types are ionic (electron transfer between metal and non-metal), covalent (electron sharing between non-metals), and metallic (sea of delocalised electrons). Each type results in distinct structures and properties.",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/Ionic_Covalent_and_Metallic_Bonding_Explained.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0lvbmljX0NvdmFsZW50X2FuZF9NZXRhbGxpY19Cb25kaW5nX0V4cGxhaW5lZC5tNGEiLCJpYXQiOjE3NjU0NzAyMjAsImV4cCI6NTI2NTk2NjIyMH0.g9uIb2Bt8YQojNsXSBHaUuqpBVZ60o-9Y6sXIDdIbb8",
         videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Understanding_Chemical_Bonding.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9VbmRlcnN0YW5kaW5nX0NoZW1pY2FsX0JvbmRpbmcubXA0IiwiaWF0IjoxNzY1ODcwMjEzLCJleHAiOjUyNjYzNjYyMTN9.ikscsYUmSpPCPsXvL8HgrHph9tubLOI3EBFLs9WpPTg",
         sections: [
             {
-                title: "1. Why Do Atoms Bond?",
-                content: `## The Goal: A Full Outer Shell
+                title: "1. Introduction to Chemical Bonding",
+                content: `## What is Chemical Bonding?
 
-**Noble Gases (Group 0/VIII):** Helium, Neon, Argon are chemically inert because they have a full outer shell.
-- Helium: stable duplet (2 electrons)
-- Others: stable octet (8 electrons)
+**Chemical bonding** is the force of attraction that holds atoms together in elements and compounds.
 
-**Other Elements:** Atoms with incomplete outer shells are unstable and reactive. They must interact with other atoms to achieve Noble Gas configuration by:
-- **Transferring electrons** (Ionic bonding)
-- **Sharing electrons** (Covalent bonding)`,
+When atoms of different elements bond, a **new substance with unique properties** is formed.
+
+---
+
+## Why Do Atoms Bond?
+
+Atoms bond to achieve a **stable electron arrangement** — a **full outer shell of electrons** like the noble gases.
+
+### Noble Gas Electron Configurations (Stable):
+
+| Noble Gas | Electron Configuration | Outer Shell |
+|-----------|----------------------|-------------|
+| **Helium (He)** | 2 | Full (2 electrons) |
+| **Neon (Ne)** | 2.8 | Full (8 electrons) |
+| **Argon (Ar)** | 2.8.8 | Full (8 electrons) |
+
+> **Key Point:** Noble gases are **unreactive** because they already have full outer shells. Other atoms must **lose, gain, or share electrons** to achieve this stable configuration.
+
+---
+
+## The Three Main Types of Chemical Bonds
+
+| Bond Type | Description |
+|-----------|-------------|
+| **Ionic** | Transfer of electrons from metal to non-metal → oppositely charged ions attract |
+| **Covalent** | Sharing of electron pairs between non-metal atoms |
+| **Metallic** | Attraction between positive metal ions and a "sea" of delocalised electrons |`,
                 diagrams: [],
                 subsections: []
             },
             {
-                title: "2. Ionic Bonding",
-                content: `## The Process: Electron Transfer
+                title: "2. Ionic Bonding: Electron Transfer",
+                content: `## Definition
 
-Occurs between: **Metal + Non-metal**
+An **ionic bond** is the **strong electrostatic force of attraction** between **oppositely charged ions**.
 
-### The Metal (Giver)
-- Has few outer electrons (1, 2, or 3)
-- **Loses electrons** to empty outer shell
-- Becomes a **Positive Ion (Cation)**
-- Example: Na (2.8.1) → Na⁺ (2.8) [loses 1 electron]
+This type of bond forms between **metals and non-metals**.
 
-### The Non-Metal (Taker)
-- Has nearly full outer shell (5, 6, or 7 electrons)
-- **Gains electrons** to complete octet
-- Becomes a **Negative Ion (Anion)**
-- Example: Cl (2.8.7) → Cl⁻ (2.8.8) [gains 1 electron]
+---
 
-## The Ionic Bond
-Strong **electrostatic attraction** between oppositely charged ions. Acts in all directions (non-directional).
+## How Ions Are Formed: Example — Sodium Chloride (NaCl)
+
+### Step-by-Step Process:
+
+| Step | What Happens |
+|------|--------------|
+| **1. Metal Atom** | Sodium (Na) has configuration 2.8.1 — needs to lose 1 electron to achieve stable 2.8 |
+| **2. Non-Metal Atom** | Chlorine (Cl) has configuration 2.8.7 — needs to gain 1 electron to achieve stable 2.8.8 |
+| **3. Electron Transfer** | Sodium's outer electron transfers to chlorine |
+| **4. Ion Formation** | Na⁺ (positive ion) and Cl⁻ (negative ion) formed |
+| **5. Ionic Bond** | Oppositely charged ions attract → ionic bond forms |
+
+---
+
+## Example: Magnesium Oxide (MgO)
+
+Ionic bonding can involve transfer of **more than one electron**:
+
+| Atom | Configuration | Electrons Transferred | Ion Formed |
+|------|---------------|----------------------|------------|
+| Magnesium (Mg) | 2.8.2 | Loses 2 electrons | Mg²⁺ |
+| Oxygen (O) | 2.6 | Gains 2 electrons | O²⁻ |
+
+---
 
 ## Giant Ionic Lattice Structure
-Millions of ions stack in a regular, repeating 3D pattern. In NaCl, every Na⁺ is surrounded by 6 Cl⁻ ions.
 
-## Properties of Ionic Compounds
+In solid state, ionic compounds form a **giant ionic lattice** — a regular, repeating 3D arrangement of alternating positive and negative ions.
 
-| Property | Explanation |
-|----------|-------------|
-| **High m.p./b.p.** | Strong forces between millions of ions |
-| **Conducts when molten/dissolved** | Ions free to move |
-| **Insulator when solid** | Ions locked in lattice |
-| **Soluble in water** | Polar water molecules pull ions apart |
-| **Brittle** | Same-charge ions repel when layers shift |
-
-**Note:** Higher charges = stronger attraction. MgO (2+ and 2-) has higher m.p. than NaCl (1+ and 1-)`,
+In NaCl, each Na⁺ is surrounded by 6 Cl⁻ ions.`,
                 diagrams: [],
                 subsections: []
             },
             {
-                title: "3. Covalent Bonding",
-                content: `## The Process: Electron Sharing
+                title: "3. Properties of Ionic Compounds",
+                content: `## Properties and Explanations
 
-Occurs between: **Non-metal + Non-metal**
+| Property | Description | Explanation (Why?) |
+|----------|-------------|-------------------|
+| **High Melting & Boiling Points** | Crystalline solids at room temperature | Large amount of energy needed to overcome **strong electrostatic forces** between ions in the lattice |
+| **Electrical Conductivity (Solid)** | Do NOT conduct when solid | Ions are **fixed in position** in the lattice, cannot move |
+| **Electrical Conductivity (Molten/Aqueous)** | DO conduct when molten or dissolved | Ions are **free to move** and carry electric charge |
+| **Solubility** | Many are soluble in water | **Polar water molecules** can surround ions and pull them from the lattice |
+| **Brittle** | Shatter when struck | When layers shift, **same-charge ions repel** → structure breaks |
 
-Both atoms need to gain electrons, so they **share pairs** instead. Shared electrons count toward both atoms' outer shells.
+---
+
+## Effect of Ion Charge
+
+Higher charges = Stronger attraction = Higher melting point
+
+| Compound | Ion Charges | Melting Point |
+|----------|-------------|---------------|
+| NaCl | +1 and −1 | 801°C |
+| MgO | +2 and −2 | 2852°C |
+
+> **Exam Tip:** MgO has a higher melting point than NaCl because the ions have greater charges, leading to stronger electrostatic attraction.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. Covalent Bonding: Electron Sharing",
+                content: `## Definition
+
+A **covalent bond** is formed when two atoms **share one or more pairs of electrons**.
+
+More precisely: The **strong electrostatic attraction** between the **positively charged nuclei** and the **shared pair of electrons** between them.
+
+Covalent bonding occurs between **non-metal atoms**.
+
+---
+
+## How Electrons Are Shared: Example — Hydrogen (H₂)
+
+1. Each hydrogen atom has **1 electron**
+2. Two hydrogen atoms **share their electrons** to form a **shared pair**
+3. The shared pair orbits **both nuclei**
+4. Each hydrogen now effectively has **2 electrons** (stable like helium)
+
+---
 
 ## Types of Covalent Bonds
-- **Single bond:** 1 shared pair (H-H, Cl-Cl, H-O-H)
-- **Double bond:** 2 shared pairs (O=O, O=C=O) - stronger, shorter
-- **Triple bond:** 3 shared pairs (N≡N) - very strong, unreactive
 
-## Type A: Simple Molecular Structures
-Small distinct molecules (H₂O, CO₂, CH₄, NH₃)
+| Type | Shared Pairs | Examples | Notes |
+|------|--------------|----------|-------|
+| **Single Bond** | 1 pair | H₂, Cl₂, H₂O, CH₄ | Most common |
+| **Double Bond** | 2 pairs | O₂, CO₂ | Stronger, shorter than single |
+| **Triple Bond** | 3 pairs | N₂ | Very strong, very unreactive |
+
+---
+
+## Key Examples
+
+### Methane (CH₄)
+- Carbon (2.4) shares 4 electrons with 4 hydrogen atoms
+- Each C-H bond is a single covalent bond
+
+### Carbon Dioxide (CO₂)
+- Carbon forms **2 double bonds** (one with each oxygen)
+- O=C=O
+
+### Nitrogen (N₂)
+- Each nitrogen (2.5) needs 3 more electrons
+- They share **3 pairs** → triple bond (N≡N)`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Properties of Covalent Substances",
+                content: `## Type A: Simple Molecular Structures
+
+**Examples:** H₂O, CO₂, CH₄, NH₃, Cl₂
+
+These consist of **individual molecules** held together by **weak intermolecular forces**.
 
 | Property | Explanation |
 |----------|-------------|
-| **Low m.p./b.p.** | Weak forces BETWEEN molecules (intermolecular) |
-| **Insulator** | No ions, no free electrons |
-| **Usually insoluble in water** | Non-polar; dissolve in organic solvents |
+| **Low Melting & Boiling Points** | The **forces between molecules** (intermolecular) are **weak** and require little energy to overcome |
+| **Poor Electrical Conductivity** | No free-moving charged particles (no ions, no free electrons) |
+| **Usually Insoluble in Water** | Non-polar molecules; dissolve in organic solvents |
 
-**Key Point:** Covalent bonds INSIDE molecules are strong. Only weak intermolecular forces break when melting/boiling.
+> **COMMON MISTAKE:** Students often say "covalent bonds are weak." This is WRONG! The **covalent bonds within molecules are STRONG**. It is the **intermolecular forces between molecules that are weak**.
+
+---
 
 ## Type B: Giant Covalent Structures
 
+In these structures, **all atoms are linked by a network of strong covalent bonds** throughout the entire crystal.
+
 ### Diamond (Pure Carbon)
-- Each C bonds to **4 others** in rigid tetrahedral arrangement
-- **Hardest natural substance** (cutting tools, drill bits)
-- **Very high m.p.** (3500°C+)
-- **Insulator** - all electrons in bonds
+
+| Feature | Details |
+|---------|---------|
+| **Structure** | Each C bonds to **4 others** in rigid tetrahedral arrangement |
+| **Hardness** | **Hardest known natural substance** |
+| **Melting Point** | Very high (3500°C+) — many strong bonds to break |
+| **Conductivity** | **Insulator** — all electrons locked in bonds |
+| **Uses** | Cutting tools, drill bits |
 
 ### Graphite (Pure Carbon)
-- Each C bonds to **3 others** forming flat hexagonal sheets
-- **Soft and slippery** - weak forces between layers (lubricant, pencils)
-- **Conducts electricity** - 4th electron is delocalised and free to move
-- Used in electrodes
+
+| Feature | Details |
+|---------|---------|
+| **Structure** | Each C bonds to **3 others** → hexagonal layers |
+| **Between Layers** | Weak forces — layers slide easily |
+| **Hardness** | **Soft and slippery** |
+| **Conductivity** | **CONDUCTS electricity** — 4th electron is delocalised |
+| **Uses** | Lubricant, pencil "lead," electrodes |
 
 ### Silicon Dioxide (SiO₂)
-- Similar to diamond structure
-- Hard, high m.p., insulator
-- Main component of glass and sand`,
+
+- Similar structure to diamond
+- Hard, high melting point, insulator
+- Used for glass and lining furnaces`,
                 diagrams: [],
                 subsections: []
             },
             {
-                title: "4. Metallic Bonding",
-                content: `## The Structure
+                title: "6. Metallic Bonding: Sea of Electrons",
+                content: `## Definition and Structure
 
-**Occurs in:** Pure metals and alloys (Cu, Fe, Mg)
+**Metallic bonding** is the **electrostatic attraction** between:
+- A **regular lattice of positive metal ions**
+- A **"sea" of delocalised electrons**
 
-- Metal atoms lose outer electrons → **Positive ions**
-- Ions pack in regular layers (lattice)
-- Outer electrons become **delocalised** (free to move)
-- Forms a **"sea of electrons"** surrounding the ions
+---
 
-## The Metallic Bond
-Strong **electrostatic attraction** between positive metal ions and negative sea of delocalised electrons.
+## How Metallic Bonding Works
 
-## Properties of Metals
+1. Metal atoms **lose outer-shell electrons**
+2. Atoms become **positive ions**
+3. Ions pack in **regular layers** (lattice)
+4. Outer electrons become **delocalised** (free to move throughout structure)
+5. These form a **"sea of electrons"** surrounding the positive ions
+
+---
+
+## Properties of Metals Explained
 
 | Property | Explanation |
 |----------|-------------|
-| **Excellent conductors** | Delocalised electrons carry current |
-| **Good heat conductors** | Mobile electrons transfer kinetic energy |
-| **High m.p.** | Strong attraction between ions and electron sea |
-| **Malleable & Ductile** | Layers slide; electron sea maintains bond |
+| **Good Electrical Conductivity** | Delocalised electrons are **free to move** and carry electric charge when voltage applied |
+| **Good Thermal Conductivity** | Free-moving electrons **absorb and transfer heat energy** quickly throughout the structure |
+| **High Melting Points** | **Strong attraction** between positive ions and electron sea requires much energy to break |
+| **Malleable (can be hammered)** | Layers of ions can **slide over each other** without breaking bonds — electron sea moves and maintains bonding |
+| **Ductile (can be drawn into wire)** | Same reason as malleability — structure is flexible |
 
-**Malleability:** Metals can be hammered into shape without breaking because layers of ions slide over each other while the electron sea keeps them bonded.
+---
 
-**More electrons donated = stronger bond = higher m.p.**
-(Mg donates 2e⁻ → higher m.p. than Na which donates 1e⁻)
+## Effect of Number of Electrons
 
-## Summary Comparison Table
+More electrons donated = Stronger metallic bond = Higher melting point
 
-| Feature | Ionic | Simple Covalent | Giant Covalent | Metallic |
-|---------|-------|-----------------|----------------|----------|
-| Particles | Ions | Molecules | Atoms | Ions + electrons |
-| M.P. | High | Low | Very High | High |
-| Conductivity | Molten/aqueous only | No | No (except graphite) | Yes |
-| Solubility | Water soluble | Usually insoluble | Insoluble | Insoluble |`,
+| Metal | Electrons Donated | Relative Melting Point |
+|-------|-------------------|----------------------|
+| Sodium (Na) | 1 | Lower |
+| Magnesium (Mg) | 2 | Higher |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "7. How Bonding Determines Properties",
+                content: `## Master Comparison Table
+
+| Structure Type | Bonding | Melting/Boiling Point | Electrical Conductivity |
+|----------------|---------|----------------------|------------------------|
+| **Ionic Lattice** (NaCl) | Ionic | HIGH — strong electrostatic forces between ions | Solid: NO (ions fixed). Molten/Aqueous: YES (ions free) |
+| **Simple Molecular** (H₂O, CO₂) | Covalent within molecules | LOW — weak intermolecular forces | NO — no free particles |
+| **Giant Covalent** (Diamond) | Covalent throughout | VERY HIGH — vast network of strong bonds | NO — electrons fixed in bonds |
+| **Giant Covalent** (Graphite) | Covalent (3 bonds/atom) | VERY HIGH | YES — delocalised electrons |
+| **Metallic** (Cu, Fe) | Metallic | HIGH — strong ion-electron attraction | YES — free electrons in solid AND liquid |
+
+---
+
+## Key Principle
+
+> **The type of bonding within a substance determines its physical properties, especially melting point and electrical conductivity.**`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "8. Representing Bonds with Diagrams",
+                content: `## Dot-and-Cross Diagrams
+
+**Purpose:** Show outer-shell electrons involved in bonding.
+
+**Convention:**
+- Electrons from one atom shown as **dots (•)**
+- Electrons from other atom shown as **crosses (×)**
+
+---
+
+## Ionic Bonding Diagrams
+
+For ionic compounds:
+1. Show electron transfer from metal to non-metal
+2. Place square brackets around each ion
+3. **Write the charge** on each ion (e.g., Na⁺, Cl⁻)
+4. Show full outer shells after transfer
+
+### Example: NaCl
+- Na transfers 1 electron to Cl
+- Na⁺ (2.8) and Cl⁻ (2.8.8)
+
+---
+
+## Covalent Bonding Diagrams
+
+For covalent compounds:
+1. Show shared pairs between atoms
+2. Draw **complete outer shells** for all atoms
+3. Shared electrons shown overlapping between atoms
+
+### Example: H₂O
+- Oxygen shares 2 electrons (one with each hydrogen)
+- Oxygen achieves stable 8, each hydrogen achieves stable 2
+
+### Example: CH₄
+- Carbon shares 4 electrons with 4 hydrogen atoms
+- Carbon achieves stable 8, each H achieves stable 2
+
+---
+
+## Giant Structure Lattice Diagrams
+
+Show the **regular, repeating arrangement** of particles:
+- **Ionic lattice:** Alternating positive and negative ions
+- **Diamond lattice:** Each carbon bonded to 4 others in 3D network`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "9. Real-Life Applications",
+                content: `## Applications Based on Bonding Properties
+
+| Substance | Structure | Property Used | Application |
+|-----------|-----------|---------------|-------------|
+| **Diamond** | Giant covalent | Extreme hardness | Drilling/cutting tools |
+| **Graphite** | Giant covalent (layers) | Slippery layers | Lubricant, pencil "lead" |
+| **Graphite** | Giant covalent | Conducts electricity | Electrodes, electric motor brushes |
+| **Silica (SiO₂)** | Giant covalent | Transparent, hard | Glass-making |
+| **Silica** | Giant covalent | Very high melting point | Furnace linings |
+| **Copper** | Metallic | Excellent conductor, ductile | Electrical wiring |
+| **Iron** | Metallic | Strong | Steel for buildings, bridges |
+| **Aluminium** | Metallic | Strong but light | Aircraft construction |
+
+---
+
+## Why Structure Matters
+
+The connection between bonding → properties → uses is central to chemistry and engineering.
+
+Understanding HOW atoms are bonded explains WHY substances behave as they do and WHERE they can be used.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "10. Common Exam Questions",
+                content: `## Q1: Ionic Bonding Question
+
+**"Lithium (proton number 3) reacts with Fluorine (proton number 9). Draw a dot-and-cross diagram. Describe the structure of lithium fluoride."**
+
+### Model Answer:
+
+1. **Electron configurations:**
+   - Lithium: 2.1 (needs to lose 1 electron)
+   - Fluorine: 2.7 (needs to gain 1 electron)
+
+2. **Transfer:** Li transfers 1 electron to F
+
+3. **Ions formed:** Li⁺ (2) and F⁻ (2.8)
+
+4. **Structure:** Giant ionic lattice — regular, repeating arrangement of alternating Li⁺ and F⁻ ions held by strong electrostatic forces
+
+---
+
+## Q2: Covalent Bonding Question
+
+**"Draw a dot-and-cross diagram for methane (CH₄). State two physical properties and explain why."**
+
+### Model Answer:
+
+1. **Diagram:** Carbon at center, sharing 1 electron with each of 4 hydrogen atoms
+
+2. **Property 1: Low melting/boiling point**
+   - Methane exists as simple individual molecules
+   - Forces **between molecules** are very weak
+   - Little energy needed to overcome them
+
+3. **Property 2: Does not conduct electricity**
+   - No ions or delocalised electrons
+   - No free-moving charged particles
+
+---
+
+## Q3: Comparison Question
+
+**"Explain why graphite conducts electricity but diamond does not."**
+
+### Model Answer:
+
+- **Diamond:** Each carbon is bonded to **4 others**. All 4 outer electrons are in bonds, **held tightly in fixed positions**. No free electrons → cannot conduct.
+
+- **Graphite:** Each carbon is bonded to **3 others**. The **4th electron is delocalised** and free to move along the layers. These mobile electrons can carry current → conducts electricity.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "11. Common Mistakes and Summary",
+                content: `## Common Mistakes to Avoid
+
+| Common Mistake | Correct Understanding |
+|----------------|----------------------|
+| "Simple molecular substances have weak covalent bonds" | **WRONG!** Covalent bonds within molecules are STRONG. The **intermolecular forces** are weak |
+| Forgetting charges on ionic diagrams | Always add **square brackets AND charges** (e.g., [Na]⁺, [Cl]⁻) |
+| Drawing incomplete outer shells in covalent diagrams | Show **complete outer shells** for ALL atoms to demonstrate stable configuration |
+| "Ionic compounds conduct electricity" | Too vague! They conduct **only when molten or dissolved** — NOT when solid |
+
+---
+
+## Master Summary Table
+
+| Feature | Ionic | Covalent | Metallic |
+|---------|-------|----------|----------|
+| **Atoms Involved** | Metal + Non-metal | Non-metal + Non-metal | Metal atoms only |
+| **Bond Formation** | Electron TRANSFER → ions attract | Electron SHARING → shared pairs | Ions + delocalised electrons |
+| **Structure** | Giant ionic lattice | Simple molecular OR Giant covalent | Giant metallic lattice |
+| **Example** | NaCl, MgO | H₂O, CH₄, Diamond | Cu, Fe, Mg |
+| **Melting Point** | High | Simple: Low; Giant: Very High | High |
+| **Conductivity** | Solid: No; Molten/Aq: Yes | Simple: No; Graphite: Yes | Yes (solid and liquid) |
+| **Other Properties** | Brittle, water soluble | Simple: gases/liquids | Malleable, ductile |`,
                 diagrams: [],
                 subsections: []
             }
         ],
         key_points: [
-            "Atoms bond to achieve full outer shell (Noble Gas configuration)",
-            "Ionic: Metal TRANSFERS electrons to non-metal → ions → lattice",
-            "Ionic compounds: high m.p., conduct when molten/dissolved, brittle",
-            "Covalent: Non-metals SHARE electrons → molecules or giant structures",
-            "Simple covalent: low m.p. (weak intermolecular forces), insulators",
-            "Diamond: 4 bonds per C, hard, insulator",
-            "Graphite: 3 bonds per C, soft layers, CONDUCTS (delocalised electrons)",
-            "Metallic: positive ions in sea of delocalised electrons",
-            "Metals: conduct, malleable, ductile (layers slide, electrons maintain bond)"
+            "Atoms bond to achieve a full outer shell (stable Noble Gas configuration)",
+            "Ionic bonding: TRANSFER of electrons from metal to non-metal → oppositely charged ions → giant ionic lattice",
+            "Ionic compounds: high m.p., conduct when molten/dissolved (NOT solid), brittle, often water soluble",
+            "Covalent bonding: SHARING of electron pairs between non-metal atoms",
+            "Simple molecular structures: low m.p. (weak INTERMOLECULAR forces), do not conduct",
+            "Covalent bonds inside molecules are STRONG — intermolecular forces are weak",
+            "Giant covalent structures (diamond, graphite, silica): very high m.p., many strong bonds to break",
+            "Diamond: 4 bonds per C, hardest natural substance, insulator",
+            "Graphite: 3 bonds per C, layers slide, CONDUCTS (delocalised 4th electron)",
+            "Metallic bonding: positive ions in sea of delocalised electrons → conduct, malleable, ductile",
+            "Conductivity depends on free-moving charged particles (ions or electrons)"
         ],
         exam_tips: [
-            "Distinguish intramolecular (within molecule) vs intermolecular (between molecules) forces",
-            "Explain why ionic compounds conduct when molten but not solid (ion movement)",
-            "Describe sea of electrons model for metallic bonding",
-            "Explain graphite's uses: pencils (slippery layers), electrodes (conducts)",
-            "Deduce ionic compound formulas from group numbers (Group 2 + Group 7 → MCl₂)",
-            "Draw dot-and-cross diagrams for ionic and covalent bonds"
+            "Always distinguish between INTERMOLECULAR forces (weak, between molecules) and COVALENT bonds (strong, within molecules)",
+            "Ionic compounds conduct when MOLTEN or DISSOLVED — never say 'ionic compounds conduct' without qualification",
+            "For ionic dot-and-cross diagrams: show transfer, use square brackets, write ion charges",
+            "For covalent diagrams: show complete outer shells for all atoms",
+            "Explain graphite vs diamond: graphite has delocalised electrons (3 bonds per C), diamond doesn't (4 bonds per C)",
+            "Higher ion charges = stronger ionic bonds = higher melting point (MgO > NaCl)",
+            "Metals are malleable because layers slide while electron sea maintains bonding",
+            "Link structure → properties → uses in application questions"
         ]
     },
 
     "Stoichiometry": {
         topic: "Stoichiometry",
         subject: "Chemistry",
-        summary: "Stoichiometry is the calculation of quantities in chemical reactions. It covers naming compounds, writing formulae, balancing equations, the mole concept, and calculations involving reacting masses, gas volumes, and solution concentrations.",
+        summary: "Stoichiometry is the area of chemistry that involves using relationships between reactants and products in chemical reactions to determine quantitative data. From balanced equations, we can determine mole ratios and convert between moles, masses, volumes, and concentrations. Stoichiometry is the 'recipe' aspect of chemistry, essential for predicting outcomes and optimizing reactions.",
         videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Stoichiometry__The_Recipe.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9TdG9pY2hpb21ldHJ5X19UaGVfUmVjaXBlLm1wNCIsImlhdCI6MTc2NTg3MDE2MSwiZXhwIjo1MjY2MzY2MTYxfQ.6ttVeW0TsinpTrk_HIIo8UR6AFyVbvJYj3X7WNxWBlA",
         sections: [
             {
-                title: "1. Naming Compounds and Writing Formulae",
-                content: `## Naming Compounds
+                title: "1. Introduction to Stoichiometry",
+                content: `## What is Stoichiometry?
 
-### Metal + Non-metal (Ionic)
-- Metal named first (unchanged)
-- Non-metal ending changes to **-ide**
-- Examples: Sodium Chloride (NaCl), Magnesium Oxide (MgO)
-- With oxygen + another non-metal: ending often **-ate** (e.g., Copper Sulfate)
+**Stoichiometry** is the area of chemistry that deals with the **quantitative relationships** in chemical reactions.
 
-### Two Non-metals (Covalent)
-Use Greek prefixes to show number of atoms:
-- Mono- (1), Di- (2), Tri- (3), Tetra- (4), Penta- (5)
-- Examples: Carbon Dioxide (CO₂), Sulfur Trioxide (SO₃)
+From a balanced equation, we can determine:
+- How many **moles** react
+- How these convert to **grams** using Ar and Mr
 
-### Transition Metals (Variable Valency)
-Roman numerals show the charge:
-- Copper(I) Oxide = Cu₂O (Cu⁺)
-- Copper(II) Oxide = CuO (Cu²⁺)
-- Iron(III) Chloride = FeCl₃ (Fe³⁺)
+---
 
-## Valency (Combining Power)
+## Why is Stoichiometry Important?
 
-| Group | Valency | Action |
-|-------|---------|--------|
-| I | 1 | Lose 1e⁻ |
-| II | 2 | Lose 2e⁻ |
-| III | 3 | Lose 3e⁻ |
-| V | 3 | Gain/Share 3e⁻ |
-| VI | 2 | Gain/Share 2e⁻ |
-| VII | 1 | Gain/Share 1e⁻ |
+| Purpose | Description |
+|---------|-------------|
+| **Predicting Outcomes** | Calculate the expected amount of product (theoretical yield) |
+| **Optimising Reactions** | Determine precise amounts of reactants needed for complete reaction |
+| **Industrial Applications** | Essential in Haber process, Contact process, etc. — minimise waste |
 
-## Cross-Over Method for Formulae
-1. Write symbols and valencies
-2. Cross valencies to become subscripts
-3. Simplify if possible
+---
 
-**Example:** Al (valency 3) + O (valency 2) → Al₂O₃
+## The Foundation
 
-## Common Compound Ions
-- NH₄⁺ (Ammonium), OH⁻ (Hydroxide), NO₃⁻ (Nitrate)
-- SO₄²⁻ (Sulfate), CO₃²⁻ (Carbonate), PO₄³⁻ (Phosphate)
+The **balanced chemical equation** provides the exact **mole ratio** — the recipe for the reaction.
 
-**Use brackets for multiple ions:** Ca(NO₃)₂`,
+**Example:** C(s) + O₂(g) → CO₂(g)
+- 1 mole of carbon atoms reacts with 1 mole of oxygen molecules
+- Produces 1 mole of carbon dioxide molecules`,
                 diagrams: [],
                 subsections: []
             },
             {
-                title: "2. Chemical Equations",
-                content: `## Law of Conservation of Mass
-Mass is neither created nor destroyed - atoms are rearranged.
+                title: "2. Chemical Formulae and Equations",
+                content: `## Writing Correct Chemical Formulae
 
-## Word Equations
-Reactants → Products
-Example: Magnesium + Oxygen → Magnesium Oxide
+A chemical formula uses element symbols and subscripts to show the number of atoms.
 
-## Balancing Symbol Equations
-**Rule:** Only change coefficients (big numbers), NEVER subscripts
+| Compound | Constituent Atoms | Chemical Formula |
+|----------|-------------------|------------------|
+| Water | 2 Hydrogen, 1 Oxygen | H₂O |
+| Carbon dioxide | 1 Carbon, 2 Oxygen | CO₂ |
+| Ethanol | 2 Carbon, 6 Hydrogen, 1 Oxygen | C₂H₅OH |
 
-**Steps:**
-1. Count atoms on each side
-2. Add coefficients to balance
-3. Check all elements are balanced
+---
 
-**Example:** Mg + O₂ → MgO
-- Left: 1 Mg, 2 O | Right: 1 Mg, 1 O ❌
-- Balance O: Mg + O₂ → 2MgO
-- Balance Mg: **2Mg + O₂ → 2MgO** ✓
+## Writing Word Equations
 
-**Complex Example:** C₃H₈ + O₂ → CO₂ + H₂O
-1. Balance C: need 3 CO₂
-2. Balance H: need 4 H₂O
-3. Balance O: (3×2) + (4×1) = 10 O → need 5 O₂
-4. **C₃H₈ + 5O₂ → 3CO₂ + 4H₂O**
+Word equations show names of reactants and products:
+
+**iron + sulfur → iron(II) sulfide**
+
+- The **+** symbol means "reacts with"
+- The **→** symbol means "to form"
+
+---
+
+## Balancing Chemical Equations
+
+Equations must be balanced to obey the **Law of Conservation of Mass**: atoms are not created or destroyed in reactions.
+
+### Example: Sodium + Chlorine
+
+**Unbalanced:** Na(s) + Cl₂(g) → NaCl(s)
+- Problem: 2 Cl atoms on left, 1 on right
+
+**Balanced:** 2Na(s) + Cl₂(g) → 2NaCl(s)
+- Now: 2 Na and 2 Cl on both sides ✓
+
+---
 
 ## State Symbols
-- **(s)** = Solid
-- **(l)** = Liquid
-- **(g)** = Gas
-- **(aq)** = Aqueous (dissolved in water)`,
+
+| Symbol | Meaning |
+|--------|---------|
+| **(s)** | Solid |
+| **(l)** | Liquid |
+| **(g)** | Gas |
+| **(aq)** | Aqueous (dissolved in water) |
+
+> **Critical:** Without a balanced equation, all subsequent calculations will be incorrect!`,
                 diagrams: [],
                 subsections: []
             },
             {
-                title: "3. Relative Masses",
-                content: `## The Standard: Carbon-12
-All atomic masses are compared to ¹²C (assigned mass = 12.000)
+                title: "3. The Mole Concept",
+                content: `## What is a Mole?
 
-**1 atomic mass unit = 1/12 mass of Carbon-12 atom**
+The **mole** is the chemist's fundamental unit for amount of substance.
 
-## Relative Atomic Mass (Aᵣ)
-Weighted average mass of isotopes compared to ¹²C
+All stoichiometric calculations are routed through moles.
 
-- **No units** (it's relative)
-- Accounts for isotope abundance
-- Chlorine: 35.5 (75% ³⁵Cl + 25% ³⁷Cl)
+---
 
-Common values: H=1, C=12, N=14, O=16, Na=23, Mg=24, S=32, Cl=35.5, Cu=64
+## Relative Masses
 
-## Relative Molecular/Formula Mass (Mᵣ)
-Sum of Aᵣ of all atoms in formula
+### Relative Atomic Mass (Ar)
+- The relative mass of an atom of an element
+- Found in the Periodic Table
+- **No units** (it's relative to Carbon-12)
 
-**Example:** CuSO₄·5H₂O
-- Cu = 64
-- S = 32
-- 4×O = 64
-- 5×H₂O = 5×18 = 90
-- **Total Mᵣ = 250**`,
-                diagrams: [],
-                subsections: []
-            },
-            {
-                title: "4. The Mole Concept",
-                content: `## Definition
-**One mole** = amount containing same number of particles as atoms in 12g of Carbon-12
+### Relative Formula Mass (Mr)
+- The **sum of all Ar values** in a formula
 
-## Avogadro Constant (L)
-**L = 6.02 × 10²³ particles per mole**
+| Substance | Atoms | Calculation | Mr |
+|-----------|-------|-------------|-----|
+| Ammonia (NH₃) | 1 N, 3 H | (1×14) + (3×1) | **17** |
+| Magnesium Nitrate Mg(NO₃)₂ | 1 Mg, 2 N, 6 O | 24 + (2×14) + (6×16) | **148** |
 
-- 1 mol of H atoms = 6.02 × 10²³ atoms
-- 1 mol of H₂ molecules = 6.02 × 10²³ molecules
-
-## Molar Mass
-Mass of 1 mole = Aᵣ or Mᵣ in **grams**
-
-- Aᵣ of Fe = 56 → 1 mol Fe = 56g
-- Mᵣ of CO₂ = 44 → 1 mol CO₂ = 44g
+---
 
 ## The Key Formula
 
 $$n = \\frac{m}{M_r}$$
 
-Where: n = moles, m = mass (g), Mᵣ = molar mass
+Where:
+- **n** = moles
+- **m** = mass in grams
+- **Mr** = molar mass (g/mol)
 
-**Rearrangements:**
-- Mass = n × Mᵣ
-- Mᵣ = m ÷ n
+### Rearrangements:
+- **Mass** = n × Mr
+- **Mr** = m ÷ n
 
-**Example:** Moles in 250g of CaCO₃?
-- Mᵣ = 40 + 12 + 48 = 100
-- n = 250 ÷ 100 = **2.5 mol**`,
+---
+
+## Worked Example: Mass to Moles
+
+**Question:** 1.4 g of iron displaces 1.6 g of copper. Find the mole ratio. (Ar: Fe = 56, Cu = 64)
+
+**Solution:**
+1. Moles of Fe = 1.4 ÷ 56 = **0.025 mol**
+2. Moles of Cu = 1.6 ÷ 64 = **0.025 mol**
+3. Mole ratio = **1:1**`,
                 diagrams: [],
                 subsections: []
             },
             {
-                title: "5. Calculations from Equations",
-                content: `## The Mole Ratio
-Coefficients in balanced equations = mole ratio
+                title: "4. Stoichiometric Calculations",
+                content: `## From Mass of Reactant to Mass of Product
 
-**2Mg + O₂ → 2MgO**
-Meaning: 2 mol Mg : 1 mol O₂ : 2 mol MgO
+### Worked Example: Carbon + Oxygen
+
+**Equation:** C + O₂ → CO₂
+
+| Step | Action |
+|------|--------|
+| **1. Write Balanced Equation** | C + O₂ → CO₂ |
+| **2. Write Mole Relationship** | 1 mol C : 1 mol O₂ : 1 mol CO₂ |
+| **3. Convert to Grams** | 12g C : 32g O₂ : 44g CO₂ |
+
+**Question:** What mass of CO₂ is produced from 6g of carbon?
+
+**Solution:**
+- 12g C produces 44g CO₂
+- 6g C is half of 12g
+- Mass of CO₂ = 44 ÷ 2 = **22g**
+
+---
+
+## Working Out Equations from Masses
+
+### Worked Example
+
+**Given:** 1.4g Fe reacts with CuSO₄ to produce 1.6g Cu
+
+**Solution:**
+1. Moles of Fe = 1.4 ÷ 56 = 0.025 mol
+2. Moles of Cu = 1.6 ÷ 64 = 0.025 mol
+3. Mole ratio = 1:1
+4. **Equation:** Fe(s) + CuSO₄(aq) → Cu(s) + FeSO₄(aq)
+
+---
 
 ## Standard Calculation Steps
+
 1. **Balance** the equation
 2. **Calculate moles** of known substance
 3. **Use ratio** to find moles of unknown
-4. **Convert** moles to mass
-
-**Example:** Mass of Fe from 160g Fe₂O₃?
-Equation: Fe₂O₃ + 3CO → 2Fe + 3CO₂
-
-1. Mᵣ of Fe₂O₃ = 160
-2. Moles = 160 ÷ 160 = 1 mol
-3. Ratio: 1 mol Fe₂O₃ → 2 mol Fe
-4. Mass = 2 × 56 = **112g Fe**
-
-## Limiting Reactant
-- **Limiting reactant:** Completely consumed; determines max product
-- **Excess reactant:** Left over after reaction
-- Always calculate using the limiting reactant`,
+4. **Convert** moles to required units`,
                 diagrams: [],
                 subsections: []
             },
             {
-                title: "6. Reactions Involving Gases",
-                content: `## Avogadro's Law
-Equal volumes of gases at same T and P contain equal numbers of molecules
+                title: "5. Limiting and Excess Reactants",
+                content: `## Definitions
 
-## Molar Gas Volume (Vₘ)
-At room temperature and pressure (r.t.p.):
-**1 mol of any gas = 24 dm³ = 24,000 cm³**
+### Excess Reactant
+The reactant that is **NOT completely used up** — some is left over after reaction.
 
-## Gas Volume Formula
+### Limiting Reactant
+The reactant that is **completely consumed** — determines the maximum amount of product.
 
-$$n = \\frac{V}{24}$$ (V in dm³)
+---
 
-$$n = \\frac{V}{24000}$$ (V in cm³)
+## How to Identify
 
-**Example:** Volume of H₂ from 6g Mg with excess acid?
-Mg + 2HCl → MgCl₂ + H₂
+In exam questions:
+- **Limiting reactant:** Quantity given precisely
+- **Excess reactant:** Described as "in excess" or "until no more dissolves"
 
-1. Moles Mg = 6 ÷ 24 = 0.25 mol
-2. Ratio: 1 mol Mg → 1 mol H₂
-3. Volume = 0.25 × 24 = **6 dm³**`,
+### Example:
+"10g of chalk was reacted with an **excess** of dilute hydrochloric acid."
+
+| Reactant | Type | Reason |
+|----------|------|--------|
+| Chalk (CaCO₃) | Limiting | Precise quantity given (10g) |
+| HCl | Excess | Described as "excess" |
+
+> **Critical:** All calculations must be based on the **limiting reactant**.
+
+---
+
+## Importance
+
+Identifying the limiting reactant is essential for calculating:
+- The **maximum possible product** (theoretical yield)
+- How much excess reactant remains
+
+---
+
+## Practical Example: Salt Preparation
+
+When preparing a salt from an insoluble base and acid:
+- Base is added **in excess** until no more dissolves
+- Acid is the **limiting reactant** — completely used up
+- Undissolved base is filtered off`,
                 diagrams: [],
                 subsections: []
             },
             {
-                title: "7. Concentration of Solutions",
-                content: `## Molarity (mol/dm³)
-1M solution = 1 mole dissolved in 1 dm³ (1 litre)
+                title: "6. Percentage Yield",
+                content: `## Definition
 
-## The Concentration Formula
+**Percentage yield** measures the **efficiency** of a reaction — comparing actual product with theoretical maximum.
 
-$$n = C \\times V$$
+---
 
-Where: n = moles, C = concentration (mol/dm³), V = volume (dm³)
+## The Formula
 
-**CRITICAL:** Convert cm³ to dm³ by ÷1000
+$$\\% \\text{ Yield} = \\frac{\\text{Actual Mass Obtained}}{\\text{Calculated (Theoretical) Mass}} \\times 100\\%$$
 
-**Example:** Moles in 50 cm³ of 2.0 mol/dm³ H₂SO₄?
-- V = 50 ÷ 1000 = 0.05 dm³
-- n = 2.0 × 0.05 = **0.1 mol**
+---
 
-## Titration Calculations
-1. Write balanced equation
-2. Calculate moles of known (n = C × V)
-3. Use ratio for moles of unknown
-4. Calculate concentration (C = n ÷ V)`,
+## Worked Example: Aspirin Synthesis
+
+**Given:**
+- 100.0g salicylic acid (C₇H₆O₃) produces 121.2g aspirin (C₉H₈O₄)
+- Mole ratio = 1:1
+
+### Step 1: Calculate Theoretical Mass
+
+| Calculation | Value |
+|-------------|-------|
+| Mr of salicylic acid | 138 |
+| Mr of aspirin | 180 |
+| From 138g salicylic acid → | 180g aspirin |
+| From 100.0g salicylic acid → | (180/138) × 100.0 = **130.5g** |
+
+### Step 2: Apply Formula
+
+$$\\% \\text{ Yield} = \\frac{121.2}{130.5} \\times 100 = \\textbf{92.9\\%}$$
+
+---
+
+## Why is Yield Less Than 100%?
+
+| Reason | Explanation |
+|--------|-------------|
+| **Reversible reactions** | Equilibrium reached before completion |
+| **Product lost** | During separation/purification |
+| **Side reactions** | By-products formed |
+| **Impure reactants** | Less active material than expected |`,
                 diagrams: [],
                 subsections: []
             },
             {
-                title: "8. Formulae Calculations",
-                content: `## Percentage Composition by Mass
+                title: "7. Diagrams and Mole Ratios",
+                content: `## Interpreting Reaction Diagrams
 
-$$\\% = \\frac{A_r \\times \\text{atoms}}{M_r} \\times 100$$
+Diagrams show the same reaction at two scales:
 
-**Example:** % Nitrogen in NH₄NO₃?
-- Mᵣ = 14 + 4 + 14 + 48 = 80
-- N atoms = 2, mass = 28
-- % N = (28 ÷ 80) × 100 = **35%**
+| Level | Interpretation | Example |
+|-------|----------------|---------|
+| **Particle (Microscopic)** | 1 atom of C + 1 molecule of O₂ → 1 molecule of CO₂ |
+| **Mole (Macroscopic)** | 1 mol of C + 1 mol of O₂ → 1 mol of CO₂ |
 
-## Empirical Formula
-Simplest whole-number ratio of atoms
+---
 
-**Method:**
-1. Write mass (or %) of each element
-2. Divide by Aᵣ to get moles
-3. Divide all by smallest number
-4. Round to whole numbers (×2 if 0.5)
+## Key Insight
 
-## Molecular Formula
-Actual number of atoms in molecule
+The **ratio remains the same** at both scales:
+- Ratio of particles (1:1:1) = Ratio of moles (1:1:1)
 
-**Method:**
-1. Find mass of empirical formula
-2. n = Actual Mᵣ ÷ Empirical mass
-3. Multiply empirical formula by n
+This mole ratio is the essential link used in **all stoichiometric calculations**.
 
-**Example:** Empirical = CH₂ (mass 14), Mᵣ = 42
-- n = 42 ÷ 14 = 3
-- Molecular = **C₃H₆**`,
+---
+
+## Coefficients = Mole Ratio
+
+In the balanced equation: **2Mg + O₂ → 2MgO**
+
+| Substance | Coefficient | Moles |
+|-----------|-------------|-------|
+| Mg | 2 | 2 mol |
+| O₂ | 1 | 1 mol |
+| MgO | 2 | 2 mol |
+
+The mole ratio is **2:1:2**`,
                 diagrams: [],
                 subsections: []
             },
             {
-                title: "9. Yield and Purity",
-                content: `## Percentage Yield
+                title: "8. Real-Life Applications",
+                content: `## Industrial Applications
 
-$$\\% \\text{ Yield} = \\frac{\\text{Actual Yield}}{\\text{Theoretical Yield}} \\times 100$$
+| Application | Use of Stoichiometry |
+|-------------|---------------------|
+| **Haber Process** (Ammonia) | Calculate precise ratio of N₂ and H₂ to maximise yield |
+| **Contact Process** (Sulfuric Acid) | Optimise reactant ratios for economic efficiency |
+| **Blast Furnace** (Iron) | Determine amount of coke (carbon) needed to reduce all iron ore |
 
-**Why less than 100%?**
-- Reversible reactions (equilibrium)
-- Product lost during separation
-- Side reactions create by-products
-- Impure reactants
+---
 
-## Percentage Purity
+## Laboratory Applications
 
-$$\\% \\text{ Purity} = \\frac{\\text{Mass of Pure Substance}}{\\text{Total Mass}} \\times 100$$
+### Making Salts
+- Add base **in excess** to ensure acid (limiting reactant) is completely used
+- Filter off excess base
+- Pure salt obtained
 
-**Important:** Only pure substance reacts!
-- 100g limestone at 80% purity = use 80g in calculations`,
+### Titration
+A practical application of stoichiometry:
+
+1. React solution of **known concentration** with **unknown concentration**
+2. Measure exact volume needed for neutralisation
+3. Use mole ratios to calculate unknown concentration
+
+**Formula flow:**
+- n(known) = C × V
+- Use mole ratio from equation
+- C(unknown) = n ÷ V
+
+---
+
+## Why This Matters
+
+Stoichiometry ensures:
+- **Maximum efficiency** — no wasted reactants
+- **Cost control** — precise quantities used
+- **Quality control** — predictable product amounts`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "9. Common Exam Questions",
+                content: `## Example 1: Calculate Mr
+
+**Question:** Calculate the Mr of NH₄NO₃
+
+**Approach:**
+1. Count atoms: N = 2, H = 4, O = 3
+2. Find Ar values: N = 14, H = 1, O = 16
+3. Calculate: (2×14) + (4×1) + (3×16) = 28 + 4 + 48 = **80**
+
+---
+
+## Example 2: Mass-to-Mass Calculation
+
+**Question:** 7.00 kg of CaO was formed. What mass of CaCO₃ was heated?
+
+**Approach:**
+1. Balanced equation: CaCO₃ → CaO + CO₂ (ratio 1:1)
+2. Calculate Mr:
+   - CaCO₃: 40 + 12 + 48 = 100
+   - CaO: 40 + 16 = 56
+3. Mass ratio: 100g CaCO₃ produces 56g CaO
+4. Solve: Mass CaCO₃ = (7.00 ÷ 56) × 100 = **12.5 kg**
+
+---
+
+## Example 3: Titration Calculation
+
+**Approach:**
+1. Calculate moles of known: n = C × V (volume in dm³)
+2. Use mole ratio from equation
+3. Calculate unknown concentration: C = n ÷ V
+
+---
+
+## Key Calculation Steps
+
+| Step | Action |
+|------|--------|
+| 1 | Write BALANCED equation |
+| 2 | Calculate MOLES of known substance |
+| 3 | Use MOLE RATIO from equation |
+| 4 | Convert to required UNITS (mass, concentration, volume) |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "10. Common Mistakes and Summary",
+                content: `## Common Mistakes to Avoid
+
+| Common Mistake | Correct Approach |
+|----------------|------------------|
+| **Forgetting to balance** | ALWAYS balance equation first — mole ratios come from coefficients |
+| **Using mass directly in ratio** | Coefficients represent MOLES, not mass. Convert mass → moles first |
+| **Errors with brackets in Mr** | Mg(NO₃)₂ has 2 N atoms (1×2) and 6 O atoms (3×2) |
+| **Wrong volume units** | Convert cm³ to dm³ by ÷1000 before using concentration formula |
+
+---
+
+## The Stoichiometry Workflow
+
+1. **Foundation:** Balanced chemical equation (provides mole ratio)
+2. **Central Unit:** Convert given quantity to MOLES
+3. **The Bridge:** Use mole ratio to find moles of target substance
+4. **Final Answer:** Convert moles to required units
+5. **Reality Check:** Apply percentage yield for actual results
+
+---
+
+## Master Summary
+
+| Concept | Formula/Definition |
+|---------|-------------------|
+| **Mr** | Sum of all Ar values in formula |
+| **Moles from mass** | n = m ÷ Mr |
+| **Moles from concentration** | n = C × V (V in dm³) |
+| **Moles from gas volume** | n = V ÷ 24 (V in dm³ at r.t.p.) |
+| **Limiting reactant** | Completely consumed; determines max product |
+| **Percentage yield** | (Actual ÷ Theoretical) × 100% |`,
                 diagrams: [],
                 subsections: []
             }
         ],
         key_points: [
-            "Metal + non-metal: name ends in -ide (e.g., chloride, oxide)",
-            "Use cross-over method: valencies become subscripts",
-            "Balance equations by changing coefficients only, not subscripts",
-            "n = m/Mᵣ (moles = mass ÷ molar mass)",
-            "Avogadro constant: 6.02 × 10²³ particles per mole",
-            "1 mol of any gas = 24 dm³ at r.t.p.",
-            "n = C × V (concentration × volume in dm³)",
-            "Empirical formula: simplest ratio; Molecular: actual atoms",
-            "% Yield = (Actual/Theoretical) × 100",
-            "Limiting reactant determines maximum product"
+            "Stoichiometry uses balanced equations to calculate amounts in reactions",
+            "The balanced equation provides the exact mole ratio — the reaction 'recipe'",
+            "n = m/Mr (moles = mass ÷ molar mass) — the key conversion formula",
+            "Mr is the sum of all Ar values in the formula — watch brackets carefully",
+            "Coefficients in equations represent moles, NOT masses",
+            "Convert mass to moles BEFORE using mole ratios",
+            "Limiting reactant: completely consumed, determines maximum product",
+            "Excess reactant: some left over after reaction",
+            "% Yield = (Actual/Theoretical) × 100 — measures reaction efficiency",
+            "Always check equation is balanced before starting calculations",
+            "Standard workflow: Equation → Moles → Ratio → Convert to answer"
         ],
         exam_tips: [
-            "Always show working: formula, substitution, answer with units",
+            "ALWAYS balance the equation first — unbalanced = wrong mole ratio = wrong answer",
+            "Show all working: formula → substitution → answer with units",
+            "Coefficients represent MOLES not GRAMS — always convert mass to moles first",
+            "Watch brackets in Mr calculations: Mg(NO₃)₂ has 2 N and 6 O atoms",
             "Convert cm³ to dm³ (÷1000) before concentration calculations",
-            "Check equations are balanced before doing mole calculations",
-            "For gases: use 24 dm³ per mole at r.t.p.",
-            "Identify limiting reactant - calculate moles of both reactants",
-            "For impure samples: calculate mass of pure substance first",
-            "Round empirical formula ratios carefully (1.5 → multiply by 2)"
+            "Identify the limiting reactant — all calculations are based on this",
+            "For % yield, calculate theoretical yield first, then apply formula",
+            "Use the standard workflow: Balance → Moles → Ratio → Convert"
+        ]
+    },
+
+    "Chemical Reactions": {
+        topic: "Chemical Reactions",
+        subject: "Chemistry",
+        summary: "A chemical reaction is a process that leads to the transformation of one set of chemical substances to another. These processes are fundamental to chemistry, converting reactants into products. Understanding reaction types, energy changes, reaction rates, and reversibility is essential for predicting outcomes and controlling reactions in both laboratory and industrial settings.",
+        sections: [
+            {
+                title: "1. Introduction to Chemical Reactions",
+                content: `## What is a Chemical Reaction?
+
+A **chemical reaction** is a process that leads to the **chemical transformation** of one set of substances to another.
+
+---
+
+## Chemical Change vs Physical Change
+
+| Feature | Chemical Change | Physical Change |
+|---------|-----------------|-----------------|
+| **New substances** | New substances formed with different properties | No new substances formed |
+| **Energy** | Significant energy change (heat, light) | Small energy changes (state changes) |
+| **Reversibility** | Difficult to reverse | Usually easy to reverse |
+| **Example** | Fe + S → FeS (iron(II) sulfide) | Dissolving sugar in water |
+
+---
+
+## Signs of a Chemical Change
+
+1. **New substances formed** with different properties
+2. **Energy taken in or given out** (heat, light, sound)
+3. **Difficult to reverse**
+
+### Example: Iron + Sulfur
+
+When iron powder and sulfur are heated:
+- New black compound (iron(II) sulfide) forms
+- Reaction glows brightly (energy released)
+- Cannot easily separate Fe and S again`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. Types of Chemical Reactions",
+                content: `## 1. Combination Reactions
+
+Elements or compounds **join together** to form a more complex product.
+
+**Example:** 2Mg(s) + O₂(g) → 2MgO(s)
+- Magnesium + Oxygen → Magnesium oxide
+
+---
+
+## 2. Decomposition Reactions
+
+A compound **breaks down** into simpler substances (often requires heat).
+
+**Example 1:** CaCO₃(s) → CaO(s) + CO₂(g)
+- Calcium carbonate decomposes on heating
+
+**Example 2:** 2H₂O₂(aq) → 2H₂O(l) + O₂(g)
+- Hydrogen peroxide decomposition (catalysed by MnO₂)
+
+---
+
+## 3. Displacement Reactions
+
+A **more reactive element displaces** a less reactive element from a compound.
+
+**Example:** Zn(s) + H₂SO₄(aq) → ZnSO₄(aq) + H₂(g)
+- Zinc displaces hydrogen from sulfuric acid
+
+> Predicted by the **reactivity series**
+
+---
+
+## 4. Double Displacement (Precipitation)
+
+Two soluble compounds react to form an **insoluble solid (precipitate)**.
+
+**Example:** BaCl₂(aq) + MgSO₄(aq) → BaSO₄(s) + MgCl₂(aq)
+- White precipitate of barium sulfate forms
+
+---
+
+## 5. Neutralisation Reactions
+
+An **acid + base → salt + water**
+
+**Example:** HCl(aq) + NaOH(aq) → NaCl(aq) + H₂O(l)`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. Writing and Balancing Equations",
+                content: `## Word Equations
+
+The simplest description of a reaction:
+
+**iron + sulfur → iron(II) sulfide**
+
+- **+** means "reacts with"
+- **→** means "to form"
+
+---
+
+## Symbol Equations with State Symbols
+
+| Symbol | Meaning |
+|--------|---------|
+| **(s)** | Solid |
+| **(l)** | Liquid |
+| **(g)** | Gas |
+| **(aq)** | Aqueous (dissolved in water) |
+
+---
+
+## Balancing Equations
+
+### The Law of Conservation of Mass
+> Atoms are NOT created or destroyed in a reaction
+
+### Rules:
+1. Only change **coefficients** (big numbers in front)
+2. NEVER change **subscripts** (small numbers in formulae)
+
+---
+
+## Worked Example 1: Sodium + Chlorine
+
+**Unbalanced:** Na + Cl₂ → NaCl
+- Left: 1 Na, 2 Cl | Right: 1 Na, 1 Cl ❌
+
+**Balancing:**
+1. Put 2 in front of NaCl: Na + Cl₂ → 2NaCl
+2. Put 2 in front of Na: 2Na + Cl₂ → 2NaCl
+
+**Balanced:** 2Na(s) + Cl₂(g) → 2NaCl(s) ✓
+
+---
+
+## Worked Example 2: Aluminium + Oxygen
+
+**Unbalanced:** Al + O₂ → Al₂O₃
+- Left: 1 Al, 2 O | Right: 2 Al, 3 O ❌
+
+**Balancing:**
+1. Find LCM for oxygen (6): Al + 3O₂ → 2Al₂O₃
+2. Balance aluminium (4): 4Al + 3O₂ → 2Al₂O₃
+
+**Balanced:** 4Al(s) + 3O₂(g) → 2Al₂O₃(s) ✓`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. Energy Changes in Reactions",
+                content: `## Exothermic Reactions
+
+Reactions that **give out energy** to the surroundings.
+
+| Feature | Details |
+|---------|---------|
+| **Energy flow** | Released to surroundings |
+| **Temperature** | Surroundings get HOTTER |
+| **Energy diagram** | Products LOWER than reactants |
+
+### Examples:
+- Burning fuels (combustion)
+- Sodium reacting with water
+- Respiration in cells
+
+---
+
+## Endothermic Reactions
+
+Reactions that **take in energy** from the surroundings.
+
+| Feature | Details |
+|---------|---------|
+| **Energy flow** | Absorbed from surroundings |
+| **Temperature** | Surroundings get COLDER |
+| **Energy diagram** | Products HIGHER than reactants |
+
+### Examples:
+- Photosynthesis
+- Thermal decomposition of CaCO₃
+- Ethanoic acid + sodium carbonate
+
+---
+
+## Bond Energy Explanation
+
+| Process | Energy |
+|---------|--------|
+| **Breaking bonds** | TAKES IN energy (endothermic) |
+| **Making bonds** | RELEASES energy (exothermic) |
+
+### Overall Energy Change:
+- **Exothermic:** Energy released by new bonds > Energy needed to break old bonds
+- **Endothermic:** Energy needed to break old bonds > Energy released by new bonds`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Rate of Chemical Reactions",
+                content: `## What is Reaction Rate?
+
+The **speed** at which reactants are used up or products are formed.
+
+$$\\text{Rate} = \\frac{\\text{Amount of product formed}}{\\text{Time taken}}$$
+
+**Example:** Volume of H₂ produced per minute (cm³/min)
+
+---
+
+## Collision Theory
+
+For a reaction to occur:
+1. Particles must **collide**
+2. Collisions must have **sufficient energy**
+3. Only **successful collisions** lead to reaction
+
+---
+
+## Factors Affecting Rate
+
+| Factor | Effect | Explanation |
+|--------|--------|-------------|
+| **Temperature ↑** | Rate increases | Particles move faster, more frequent AND more energetic collisions |
+| **Concentration ↑** | Rate increases | More particles in same volume = more frequent collisions |
+| **Surface Area ↑** | Rate increases | More particles exposed = more frequent collisions |
+| **Catalyst added** | Rate increases | Provides alternative pathway with LOWER activation energy |
+
+---
+
+## Catalysts
+
+A **catalyst** is a substance that:
+- **Increases** the rate of reaction
+- Is **chemically unchanged** at the end
+- Can be **recovered and reused**
+
+### Examples:
+- MnO₂ catalyses H₂O₂ decomposition
+- Iron catalyst in Haber process
+
+---
+
+## Enzymes: Biological Catalysts
+
+**Enzymes** are proteins made by living things that catalyse reactions in cells.
+
+### Examples:
+- Amylase in saliva (breaks down starch)
+- Enzymes in biological detergents`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "6. Reversible Reactions and Equilibrium",
+                content: `## Reversible Reactions
+
+Some reactions can proceed in **both directions**:
+- Forward: Reactants → Products
+- Reverse: Products → Reactants
+
+Shown with double arrow: **⇌**
+
+---
+
+## Classic Example: Hydrated Copper Sulfate
+
+$$\\text{CuSO}_4\\cdot5\\text{H}_2\\text{O (s)} \\rightleftharpoons \\text{CuSO}_4\\text{ (s)} + 5\\text{H}_2\\text{O (l)}$$
+
+| State | Colour | Name |
+|-------|--------|------|
+| **Hydrated** | BLUE crystals | Copper sulfate pentahydrate |
+| **Anhydrous** | WHITE powder | Anhydrous copper sulfate |
+
+- Heating removes water (turns white)
+- Adding water restores blue colour (releases heat)
+
+---
+
+## Dynamic Equilibrium
+
+In a **closed system**, reversible reactions reach **equilibrium** when:
+- Rate of forward reaction = Rate of reverse reaction
+- Concentrations remain CONSTANT
+- Reactions are still occurring (hence "dynamic")
+
+---
+
+## Industrial Example: Haber Process
+
+$$\\text{N}_2\\text{(g)} + 3\\text{H}_2\\text{(g)} \\rightleftharpoons 2\\text{NH}_3\\text{(g)}$$
+
+Conditions are manipulated (temperature, pressure) to maximise ammonia yield.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "7. Interpreting Diagrams and Graphs",
+                content: `## Rate of Reaction Graphs
+
+### What the Graph Shows:
+- **Y-axis:** Amount of product (e.g., volume of gas)
+- **X-axis:** Time
+
+### Key Features:
+
+| Feature | Meaning |
+|---------|---------|
+| **Steep curve** | Fast reaction rate |
+| **Shallow curve** | Slow reaction rate |
+| **Curve flattens** | Reaction has STOPPED (limiting reactant used up) |
+| **Same final height** | Same amount of limiting reactant |
+
+---
+
+## Comparing Experiments
+
+If Curve B is steeper than Curve A:
+- Experiment B has **faster rate**
+- Could be due to: higher temperature, higher concentration, larger surface area, or catalyst
+
+If both reach same final volume:
+- Same amount of **limiting reactant** was used
+
+---
+
+## Apparatus Diagrams to Know
+
+### Filtration
+- Separates **insoluble solid** from liquid
+- Residue (solid) trapped by filter paper
+- Filtrate (liquid) passes through
+
+### Crystallisation
+- Obtains dissolved solid from solution
+- Heat to concentrate → cool to crystallise
+
+### Simple Distillation
+- Separates liquid solvent from solution
+- Flask → Condenser → Collection beaker`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "8. Real-Life Applications",
+                content: `## Industrial Processes
+
+| Process | Reaction Type | Application |
+|---------|---------------|-------------|
+| **Haber Process** | Reversible, combination | Ammonia for fertilisers |
+| **Contact Process** | Reversible | Sulfuric acid production |
+| **Blast Furnace** | Reduction (redox) | Iron extraction from ore |
+| **Electrolysis of Brine** | Electrolysis | Chlorine, NaOH, hydrogen |
+| **Cracking** | Decomposition | Petrol and alkenes from crude oil |
+
+---
+
+## Biological Reactions
+
+| Process | Type | Details |
+|---------|------|---------|
+| **Photosynthesis** | Endothermic | Plants convert CO₂ + H₂O → glucose + O₂ using light |
+| **Respiration** | Exothermic | Cells release energy from glucose + O₂ → CO₂ + H₂O |
+
+---
+
+## Environmental Reactions
+
+| Reaction | Details |
+|----------|---------|
+| **Rusting** | Slow oxidation of iron requiring O₂ and H₂O |
+| **Acid Rain** | SO₂ from fossil fuels reacts with O₂ and H₂O in atmosphere |
+
+### Rusting:
+$$4\\text{Fe} + 3\\text{O}_2 + 2x\\text{H}_2\\text{O} \\rightarrow 2\\text{Fe}_2\\text{O}_3\\cdot x\\text{H}_2\\text{O}$$`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "9. Common Exam Questions",
+                content: `## Example 1: Balancing Equations
+
+**Question:** Balance: Na + H₂O → NaOH + H₂
+
+**Method:**
+1. Right side: 2 Na, 4 H, 2 O (in 2NaOH + H₂)
+2. Balance Na: put 2 in front of Na
+3. Balance O: put 2 in front of H₂O
+
+**Answer:** 2Na + 2H₂O → 2NaOH + H₂ ✓
+
+---
+
+## Example 2: Reactivity Observations
+
+**Question:** Calcium produces "many bubbles rapidly" with HCl. Iron produces "a few bubbles very slowly". Arrange in order of reactivity.
+
+**Method:**
+- More bubbles + faster = MORE reactive
+- Few bubbles + slow = LESS reactive
+
+**Answer:** Iron < Calcium (increasing reactivity)
+
+---
+
+## Example 3: Rate Graph Interpretation
+
+**Question:** At what time did the reaction stop? Write the word equation.
+
+**Method:**
+1. Reaction stops when curve becomes **horizontal**
+2. Read time value from x-axis
+3. Metal carbonate + acid → salt + water + carbon dioxide
+
+**Answer:**
+- Time when curve flattens
+- Calcium carbonate + Hydrochloric acid → Calcium chloride + Water + Carbon dioxide`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "10. Common Mistakes to Avoid",
+                content: `## Mistakes Table
+
+| Common Mistake | Correct Understanding |
+|----------------|----------------------|
+| **Changing subscripts to balance** | Only change COEFFICIENTS (big numbers in front), never subscripts |
+| **Confusing displacement and decomposition** | Displacement: A + BC → AC + B. Decomposition: AB → A + B |
+| **Aqueous electrolysis product errors** | If metal is very reactive, HYDROGEN forms at cathode instead of metal |
+| **Thinking catalyst is "used up"** | Catalyst is UNCHANGED at end and can be RECOVERED |
+| **Confusing exothermic and endothermic** | Exothermic = gives OUT heat (surroundings get HOT). Endothermic = takes IN heat (surroundings get COLD) |
+
+---
+
+## Key Reminders
+
+- Always **balance equations** before calculations
+- Identify reaction type from reactants and products
+- Rate graphs: **steeper = faster**, **flat = stopped**
+- Catalysts provide **alternative pathway with lower energy**
+- Reversible reactions use **double arrow (⇌)**`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "11. Detailed Summary",
+                content: `## Core Concepts
+
+| Concept | Key Points |
+|---------|------------|
+| **Chemical vs Physical Change** | Chemical = new substances, energy change, hard to reverse |
+| **Reaction Types** | Combination, Decomposition, Displacement, Precipitation, Neutralisation |
+| **Balanced Equations** | Same atoms on both sides; only change coefficients |
+
+---
+
+## Energy in Reactions
+
+| Type | Energy Flow | Temperature Change |
+|------|-------------|-------------------|
+| **Exothermic** | Releases energy | Surroundings get hotter |
+| **Endothermic** | Absorbs energy | Surroundings get colder |
+
+- Bond breaking = endothermic
+- Bond making = exothermic
+
+---
+
+## Rate of Reaction
+
+| Factor | How it Increases Rate |
+|--------|----------------------|
+| **↑ Temperature** | Faster, more energetic collisions |
+| **↑ Concentration** | More frequent collisions |
+| **↑ Surface Area** | More particles exposed |
+| **Catalyst** | Lower activation energy pathway |
+
+---
+
+## Reversible Reactions
+
+- Can proceed in BOTH directions
+- Reach **dynamic equilibrium** when rates are equal
+- Represented by ⇌ symbol`,
+                diagrams: [],
+                subsections: []
+            }
+        ],
+        key_points: [
+            "Chemical change: new substances formed, energy change, difficult to reverse",
+            "Physical change: no new substances, easily reversed",
+            "Reaction types: Combination, Decomposition, Displacement, Precipitation, Neutralisation",
+            "Balanced equations have same atoms on both sides — only change coefficients, not subscripts",
+            "Exothermic reactions RELEASE energy — surroundings get hotter",
+            "Endothermic reactions ABSORB energy — surroundings get colder",
+            "Rate affected by: temperature, concentration, surface area, catalysts",
+            "Collision theory: particles must collide with sufficient energy",
+            "Catalysts increase rate without being chemically changed",
+            "Reversible reactions can proceed in both directions (⇌)",
+            "Dynamic equilibrium: forward rate = reverse rate, no net change"
+        ],
+        exam_tips: [
+            "When balancing, only change COEFFICIENTS (big numbers), never subscripts",
+            "Know the products of each reaction type: acid + carbonate → salt + water + CO₂",
+            "Exothermic = exo = exit = energy EXITS (releases). Endothermic = energy enters (absorbs)",
+            "Rate graphs: steeper curve = faster reaction; flat line = reaction stopped",
+            "A catalyst is NOT used up — it can be recovered unchanged",
+            "For electrolysis of aqueous solutions: if metal is reactive, H₂ forms at cathode instead",
+            "Remember state symbols: (s) solid, (l) liquid, (g) gas, (aq) aqueous",
+            "Displacement reactions are predicted by the reactivity series"
         ]
     },
 
@@ -3694,59 +5000,3589 @@ Gold (Au)
     "Organic Chemistry": {
         topic: "Organic Chemistry",
         subject: "Chemistry",
-        summary: "Organic chemistry is the study of carbon compounds. This includes hydrocarbons (alkanes, alkenes) and their reactions.",
+        summary: "Organic chemistry is the comprehensive study of carbon compounds, which form the basis of all known life and a vast array of industrial materials. This topic covers hydrocarbons (alkanes and alkenes), fractional distillation, cracking, homologous series, isomerism, alcohols, carboxylic acids, esters, and polymerisation.",
         sections: [
             {
-                title: "1. Hydrocarbons",
-                content: `## Alkanes (Saturated)
+                title: "1. Fuels and Crude Oil",
+                content: `## Introduction to Hydrocarbon Fuels
+
+**Hydrocarbons** are compounds containing only **carbon and hydrogen**. They are derived primarily from crude oil, the world's most critical energy source.
+
+**Crude oil** is a complex mixture of thousands of different hydrocarbons, formed over millions of years from high-pressure, high-temperature decomposition of ancient marine organisms.
+
+---
+
+## Fractional Distillation of Crude Oil
+
+**Principle:** Different hydrocarbon molecules have **different boiling points**.
+
+**Process:**
+1. Crude oil is heated until it vaporizes
+2. Fed into the bottom of a tall **fractionating column**
+3. Column is hottest at bottom, coolest at top
+4. As vapor rises, it cools and condenses at different levels
+
+**Key Point:** Longer carbon chains = higher boiling point = condense lower in column
+
+---
+
+## Main Fractions and Their Uses
+
+| Fraction | Common Uses |
+|----------|-------------|
+| **Refinery Gas** | Bottled gas for heating and cooking (LPG) |
+| **Petrol (Gasoline)** | Fuel for cars |
+| **Kerosene** | Fuel for jet engines, oil for lamps and stoves |
+| **Diesel Oil** | Fuel for diesel engines |
+| **Lubricating Oil** | Lubricants, waxes, and polishes |
+| **Bitumen** | Making roads and roofing |
+
+---
+
+## Trends in Properties (As Chain Length INCREASES)
+
+| Property | Trend | Explanation |
+|----------|-------|-------------|
+| **Boiling Point** | INCREASES | Larger molecules have greater surface area → stronger intermolecular forces |
+| **Viscosity** | INCREASES | Longer chains are more entangled → liquid becomes thicker |
+| **Volatility** | DECREASES | Less tendency to vaporize |
+| **Flammability** | DECREASES | Less volatile = less flammable vapor |
+
+---
+
+## Cracking: Converting Long Chains to Short Chains
+
+**Problem:** Fractional distillation produces surplus of long-chain fractions (bitumen) but insufficient short-chain fractions (petrol).
+
+**Solution:** **Cracking** — thermal decomposition of long-chain hydrocarbons into shorter, more valuable ones.
+
+**Key Products:**
+- Shorter-chain **alkanes** (for petrol)
+- **Alkenes** (for chemical industry)
+
+**Example Reaction:**
+
+$$C_{10}H_{22} → C_8H_{18} + C_2H_4$$
+(Decane → Octane + Ethene)`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. Homologous Series and Isomerism",
+                content: `## What is a Homologous Series?
+
+A **homologous series** is a family of organic compounds that share certain structural and chemical characteristics.
+
+### Key Features:
+
+| Feature | Description |
+|---------|-------------|
+| **Same General Formula** | All members represented by one formula (e.g., CₙH₂ₙ₊₂ for alkanes) |
+| **Successive Members Differ by CH₂** | Each member has one more carbon and two more hydrogens |
+| **Gradual Change in Physical Properties** | Boiling point, viscosity show consistent trends |
+| **Similar Chemical Properties** | All members have same functional group → same reactions |
+
+---
+
+## Functional Groups
+
+A **functional group** is a specific atom or group of atoms that determines the characteristic chemical reactions of a compound.
+
+| Homologous Series | Functional Group | General Formula |
+|-------------------|------------------|-----------------|
+| **Alkanes** | C−C single bond only | CₙH₂ₙ₊₂ |
+| **Alkenes** | C=C double bond | CₙH₂ₙ |
+| **Alcohols** | −OH (hydroxyl) | CₙH₂ₙ₊₁OH |
+| **Carboxylic Acids** | −COOH (carboxyl) | CₙH₂ₙ₊₁COOH |
+
+---
+
+## Structural Isomerism
+
+**Structural isomers** are compounds with the **same molecular formula** but **different structural arrangements**.
+
+### Example: C₄H₁₀ (Two Isomers of Butane)
+
+| Isomer | Structure | Name |
+|--------|-----------|------|
+| **Straight-chain** | CH₃−CH₂−CH₂−CH₃ | Butane (n-butane) |
+| **Branched** | (CH₃)₃CH | 2-methylpropane (isobutane) |
+
+---
+
+### Example: C₄H₈ (Isomers of Butene)
+
+| Isomer | Double Bond Position | Name |
+|--------|---------------------|------|
+| 1 | Between C1 and C2 | But-1-ene |
+| 2 | Between C2 and C3 | But-2-ene |
+| 3 | Branched with methyl group | 2-methylpropene |
+
+> **Note:** Different structures lead to different physical and chemical properties, even with the same molecular formula.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. Alkanes and Alkenes: Saturated vs. Unsaturated",
+                content: `## The Importance of Saturation
+
+| Type | Definition | Bonds | Reactivity |
+|------|------------|-------|------------|
+| **Saturated** | Maximum possible hydrogen atoms | Single C−C bonds only | Generally UNREACTIVE |
+| **Unsaturated** | Contains at least one C=C double bond | Double bond present | More REACTIVE |
+
+---
+
+## Alkanes: The Saturated Hydrocarbons
 
 **General Formula:** CₙH₂ₙ₊₂
 
-**Examples:**
-- Methane: CH₄
-- Ethane: C₂H₆
-- Propane: C₃H₈
-- Butane: C₄H₁₀
+### First Four Alkanes:
 
-**Properties:**
-- Single bonds only (C-C)
-- Saturated
-- Burn in air (combustion)
-- Undergo substitution reactions
+| Name | Formula | Structure |
+|------|---------|-----------|
+| **Methane** | CH₄ | CH₄ |
+| **Ethane** | C₂H₆ | CH₃−CH₃ |
+| **Propane** | C₃H₈ | CH₃−CH₂−CH₃ |
+| **Butane** | C₄H₁₀ | CH₃−CH₂−CH₂−CH₃ |
 
-## Alkenes (Unsaturated)
+### Key Reactions of Alkanes:
+
+**1. Combustion (Most Important)**
+$$CH_4 + 2O_2 → CO_2 + 2H_2O$$
+
+**2. Substitution with Chlorine (UV light required)**
+$$CH_4 + Cl_2 \\xrightarrow{UV} CH_3Cl + HCl$$
+
+---
+
+## Alkenes: The Unsaturated Hydrocarbons
 
 **General Formula:** CₙH₂ₙ
 
-**Examples:**
-- Ethene: C₂H₄
-- Propene: C₃H₆
+### First Three Alkenes:
 
-**Properties:**
-- Contains C=C double bond
-- Unsaturated
-- More reactive than alkanes
-- Undergo addition reactions
-- Decolorize bromine water (test)
+| Name | Formula | Structure |
+|------|---------|-----------|
+| **Ethene** | C₂H₄ | CH₂=CH₂ |
+| **Propene** | C₃H₆ | CH₃−CH=CH₂ |
+| **Butene** | C₄H₈ | CH₃−CH₂−CH=CH₂ |
 
-## Combustion:
-Complete: CH₄ + 2O₂ → CO₂ + 2H₂O
-Incomplete: CH₄ + O₂ → CO + 2H₂O (not enough oxygen)`,
+### Key Reaction: Addition Reactions
+
+The C=C double bond breaks, atoms from another reactant are **added** to the carbons.
+
+**Example: Addition of Bromine**
+$$CH_2=CH_2 + Br_2 → CH_2Br-CH_2Br$$
+
+---
+
+## Test for Unsaturation: The Bromine Water Test
+
+| Test | Result with Alkane | Result with Alkene |
+|------|-------------------|-------------------|
+| Add **orange bromine water** | Stays ORANGE (no reaction) | Turns COLOURLESS (addition reaction) |
+
+> **Exam Focus:** The **decolorization of bromine water** is the definitive test for the presence of a C=C double bond.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. Alcohols, Carboxylic Acids, and Esters",
+                content: `## Alcohols: The −OH Functional Group
+
+### Ethanol (C₂H₅OH)
+
+**Structural Formula:** CH₃−CH₂−OH
+
+### Manufacturing by Fermentation:
+
+$$C_6H_{12}O_6 \\xrightarrow{yeast} 2C_2H_5OH + 2CO_2$$
+(Glucose → Ethanol + Carbon dioxide)
+
+**Conditions:**
+- Yeast provides enzymes as catalyst
+- Absence of air (anaerobic)
+- Warm temperature (~30-40°C)
+
+### Uses of Ethanol:
+
+| Use | Application |
+|-----|-------------|
+| **Fuel** | Clean burning, blended with petrol (biofuel) |
+| **Solvent** | In perfumes, cosmetics, pharmaceuticals |
+
+---
+
+## Carboxylic Acids: The −COOH Functional Group
+
+### Ethanoic Acid (CH₃COOH)
+
+**Common Name:** Acetic acid (main component of vinegar)
+
+**Structural Formula:** CH₃−COOH
+
+### Formation by Oxidation of Ethanol:
+
+| Method | Description |
+|--------|-------------|
+| **Biological** | Bacteria in air oxidize ethanol → turns wine into vinegar |
+| **Chemical** | Heat ethanol with acidified potassium manganate(VII) |
+
+### Properties:
+
+- **Weak acid** — only partially ionizes in water
+- Higher pH than strong acids of same concentration
+- Lower electrical conductivity than strong acids
+
+---
+
+## Esters: The −COO− Functional Group
+
+### Formation: Esterification
+
+**Esterification** is the reaction between a **carboxylic acid** and an **alcohol**:
+
+$$\\text{Carboxylic Acid} + \\text{Alcohol} \\xrightleftharpoons{H_2SO_4} \\text{Ester} + \\text{Water}$$
+
+**Example:**
+$$CH_3COOH + C_3H_7OH \\xrightleftharpoons{} CH_3COOC_3H_7 + H_2O$$
+(Ethanoic acid + Propanol → Propyl ethanoate + Water)
+
+### Key Features:
+
+| Feature | Description |
+|---------|-------------|
+| **Condensation Reaction** | Small molecule (H₂O) is eliminated |
+| **Reversible** | Reaction reaches equilibrium |
+| **Catalyst** | Concentrated H₂SO₄ (also dehydrating agent) |
+
+### Uses of Esters:
+
+Esters have **sweet, fruity smells** and are used as:
+- Artificial **flavorings** in foods and drinks
+- **Fragrances** in perfumes
+- **Solvents** (e.g., nail polish remover)`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Macromolecules and Polymerisation",
+                content: `## The World of Giant Molecules
+
+**Macromolecules** are very large molecules, often with thousands of atoms.
+
+**Polymers** are long-chain macromolecules built from many smaller, repeating units called **monomers**.
+
+| Type | Examples |
+|------|----------|
+| **Natural Polymers** | Starch, cellulose, proteins |
+| **Synthetic Polymers** | Polythene, PVC, nylon, Terylene |
+
+---
+
+## Addition Polymerisation
+
+**Definition:** Monomers add together so that the polymer contains **ALL atoms** of the monomers.
+
+**Requirement:** Monomers must have a **C=C double bond**
+
+**Mechanism:** Double bond breaks, monomers link to form long saturated chain
+
+### Example 1: Poly(ethene)
+
+$$n\\text{ }CH_2=CH_2 → [-CH_2-CH_2-]_n$$
+
+| Monomer | Polymer | Repeating Unit |
+|---------|---------|----------------|
+| Ethene (CH₂=CH₂) | Poly(ethene) | −CH₂−CH₂− |
+
+### Example 2: PVC
+
+$$n\\text{ }CH_2=CHCl → [-CH_2-CHCl-]_n$$
+
+| Monomer | Polymer | Use |
+|---------|---------|-----|
+| Chloroethene (CH₂=CHCl) | Poly(chloroethene) / PVC | Pipes, window frames |
+
+---
+
+## Condensation Polymerisation
+
+**Definition:** Monomers join with the **elimination of a small molecule** (usually water).
+
+**Key Differences from Addition:**
+
+| Feature | Addition | Condensation |
+|---------|----------|--------------|
+| Monomers | Single type with C=C | Two different types |
+| Functional Groups | Double bond | Two functional groups each |
+| Products | Polymer only | Polymer + small molecule (H₂O) |
+
+### Examples:
+
+| Polymer | Type | Linkage |
+|---------|------|---------|
+| **Nylon** | Polyamide | −CONH− (amide link) |
+| **Terylene** | Polyester | −COO− (ester link) |
+
+---
+
+## Natural Polymers and Hydrolysis
+
+### Natural Polymers:
+
+| Polymer | Monomer Units |
+|---------|---------------|
+| **Proteins** | Amino acids |
+| **Starch** | Glucose |
+| **Cellulose** | Glucose |
+
+### Hydrolysis: Breaking Down Polymers
+
+**Hydrolysis** = breaking down polymers into monomers by reaction with water.
+
+| Polymer | Products of Hydrolysis |
+|---------|----------------------|
+| Starch | Glucose |
+| Proteins | Amino acids |
+| Fats | Glycerol + Fatty acids |
+
+> **In Digestion:** Enzymes catalyze hydrolysis at body temperature, breaking food macromolecules into absorbable units.`,
                 diagrams: [],
                 subsections: []
             }
         ],
         key_points: [
-            "Alkanes are saturated (single bonds only), CₙH₂ₙ₊₂",
-            "Alkenes are unsaturated (have C=C), CₙH₂ₙ",
-            "Alkenes decolorize bromine water",
-            "Complete combustion produces CO₂ and H₂O",
-            "Incomplete combustion produces CO (toxic)"
+            "Crude oil is separated by fractional distillation based on different boiling points",
+            "Longer carbon chains = higher boiling point, higher viscosity, lower flammability",
+            "Cracking converts long-chain alkanes into shorter alkanes + alkenes",
+            "Homologous series: same general formula, differ by CH₂, similar chemical properties",
+            "Alkanes (CₙH₂ₙ₊₂): saturated, single bonds, unreactive, undergo combustion and substitution",
+            "Alkenes (CₙH₂ₙ): unsaturated, C=C double bond, reactive, undergo addition reactions",
+            "Bromine water test: alkenes decolorize orange bromine water (addition reaction)",
+            "Ethanol made by fermentation of glucose using yeast enzymes",
+            "Ethanoic acid formed by oxidation of ethanol",
+            "Esterification: acid + alcohol → ester + water (condensation, reversible)",
+            "Addition polymerisation: monomers with C=C join, all atoms retained",
+            "Condensation polymerisation: two monomers join, small molecule (H₂O) eliminated",
+            "Hydrolysis: polymers broken down into monomers by reaction with water"
         ],
         exam_tips: [
-            "Know the first four alkanes and alkenes",
-            "Draw structural formulas correctly",
-            "Describe the bromine water test for unsaturation"
+            "Know the order of fractions in distillation column (gas at top, bitumen at bottom)",
+            "Explain trends in properties using intermolecular forces and chain length",
+            "Always draw structural formulas showing all bonds for alkanes and alkenes",
+            "Remember: bromine water stays orange with alkanes, turns colourless with alkenes",
+            "For esterification, name of ester = alcohol part + acid part (propyl ethanoate)",
+            "In addition polymerisation, show the C=C breaking and forming single bonds",
+            "Know the difference between polyamides (nylon) and polyesters (Terylene)",
+            "Link hydrolysis to digestion — enzymes speed up the process at body temperature",
+            "When drawing repeating units, show brackets with subscript 'n'"
+        ]
+    },
+
+    "Experimental Techniques and Chemical Analysis": {
+        topic: "Experimental Techniques and Chemical Analysis",
+        subject: "Chemistry",
+        summary: "Mastery of experimental techniques and qualitative analysis is paramount for success in the O-Level Pure Chemistry Practical Examination. These skills form the foundational bedrock of the subject, demanding not only procedural accuracy in handling apparatus and executing experiments but also the diligent memorization of key chemical tests and their corresponding observations.",
+        sections: [
+            {
+                title: "1. Selection and Use of Laboratory Apparatus",
+                content: `## The Principle of "Fit for Purpose"
+
+In practical chemistry, the strategic selection of laboratory apparatus is a critical skill. The principle of **"fit for purpose"** dictates that the chosen instrument must match the requirements of the task, particularly concerning the level of precision needed.
+
+> **Examiner's Note:** In a practical examination, choosing an apparatus with the appropriate degree of precision is as important as the measurement itself.
+
+---
+
+## Measuring Volume: A Comparison of Precision
+
+| Apparatus | Primary Use Case | Level of Accuracy | Examiner's Note |
+|-----------|------------------|-------------------|-----------------|
+| **Beaker** | Holding solutions, carrying out reactions, approximate volume measurements | Low (Approximate) | Suitable for holding reagents but should **never** be used for accurate volume measurement |
+| **Measuring Cylinder** | Measuring approximate volumes where high precision is not required | Medium | Use for measuring volumes of reagents for preparations, but not for volumetric analysis like titration |
+| **Burette** | Accurately delivering variable volumes of a liquid, most commonly in titrations | High (Precise) | The standard instrument for adding the titrant (e.g., acid) to the flask. Allows for precise volume control |
+| **Pipette** | Accurately delivering a fixed, predetermined volume of a liquid | High (Precise) | Essential for measuring the fixed volume of a solution (e.g., alkali) into the conical flask for titration |
+
+---
+
+## Measuring Mass and Time
+
+For accurate measurements of mass and time in the school laboratory, the standard instruments are:
+
+| Quantity | Instrument | Purpose |
+|----------|------------|---------|
+| **Mass** | Electronic Balance | Provides direct, precise readings of mass in grams |
+| **Time** | Stopwatch | Essential for quantitative experiments, such as determining reaction rates |
+
+---
+
+## Methods for the Collection of Gases
+
+The method chosen to collect a gas depends on its physical properties, specifically its **density relative to air** and its **solubility in water**.
+
+| Collection Method | Principle of Use | Suitable Gases |
+|-------------------|------------------|----------------|
+| **Upward displacement of air** (Downward delivery) | Used for gases that are **heavier (denser) than air**. The gas sinks and pushes the lighter air upwards and out of the gas jar. | Carbon dioxide (CO₂) |
+| **Downward displacement of air** (Upward delivery) | Used for gases that are **lighter (less dense) than air**. The gas rises and pushes the heavier air downwards and out. | Ammonia (NH₃), Hydrogen (H₂) |
+| **Over water** | Used for gases that are **sparingly soluble in water**. The gas displaces the water from an inverted measuring cylinder or gas jar. | Hydrogen (H₂), Oxygen (O₂) |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. Methods of Purification and Assessing Purity",
+                content: `## The Importance of Purity
+
+Achieving and verifying the purity of a substance is a fundamental objective in chemistry. The presence of impurities can alter the physical and chemical properties of a substance, leading to unreliable experimental results and potentially unsafe commercial products.
+
+---
+
+## The Criteria of Purity
+
+Melting and boiling points serve as crucial indicators of a substance's purity.
+
+| Substance Type | Melting/Boiling Point Behaviour |
+|----------------|--------------------------------|
+| **Pure Substance** | Sharp, fixed melting point and boiling point (e.g., pure water boils at exactly 100°C and freezes at 0°C) |
+| **Impure Substance** | Melts and boils over a **range** of temperatures, not at a single fixed point |
+
+### Effect of Impurities:
+- **Impurities LOWER the melting point** (and cause it to melt over a range)
+- **Impurities RAISE the boiling point**
+
+> **Examiner's Note:** Simply stating that 'impurities lower the melting point' is insufficient. For full credit, you must also state that impurities cause the substance to **melt over a range of temperatures**. A sharp, fixed melting point is the definitive characteristic of a pure substance.
+
+---
+
+## Separation and Purification Techniques
+
+### 1. Filtration
+**Purpose:** Separate an **insoluble solid** from a liquid
+
+**Process:**
+- The mixture is poured through filter paper, which acts as a sieve
+- Solid particles (too large to pass through) are trapped and collected as the **residue**
+- The liquid that passes through is known as the **filtrate**
+
+---
+
+### 2. Crystallisation
+**Purpose:** Obtain a pure **soluble solid** (solute) from its solution
+
+**Principle:** Most soluble solids are less soluble at lower temperatures
+
+**Process:**
+1. Heat the solution to evaporate some solvent → creates a saturated solution
+2. Cool the solution → solubility decreases
+3. Solute forms pure solid crystals
+4. Collect crystals by filtration
+
+---
+
+### 3. Simple Distillation
+**Purpose:** Separate a **pure solvent** from a solution
+
+**Process:**
+1. Heat the solution to boil the solvent (it turns into vapor)
+2. Dissolved solutes are left behind
+3. Vapor passes through a condenser
+4. Vapor cools and condenses back into pure liquid for collection
+
+---
+
+### 4. Fractional Distillation
+**Purpose:** Separate a mixture of two or more **miscible liquids** with different boiling points
+
+**Process:**
+1. Heat the mixture → liquid with lower boiling point vaporizes first
+2. Vapors rise through a **fractionating column**
+3. Repeated condensation and vaporization separates the liquids
+4. More volatile liquid reaches the top first and is distilled over
+
+**Example:** Separating ethanol (b.p. 78°C) from water (b.p. 100°C)
+
+---
+
+### 5. Paper Chromatography
+**Purpose:** Separate a mixture of substances based on differing solubilities and attraction to paper
+
+**Process:**
+1. Solvent moves up the paper by capillary action
+2. Dissolved substances are carried at different rates
+3. Substances separate into distinct spots
+
+**Identifying Purity:**
+- **Pure substance** = produces only ONE spot
+- **Impure substance** = produces MULTIPLE spots
+
+### The Rf (Retention Factor) Value:
+
+$$R_f = \\frac{\\text{Distance travelled by spot}}{\\text{Distance travelled by solvent front}}$$
+
+Each substance has a characteristic Rf value under specific conditions.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. Qualitative Analysis: Testing for Cations",
+                content: `## The Logic of Ion Testing
+
+Qualitative Analysis is a systematic, investigative process used to identify the presence of specific ions in an unknown substance. It involves prescribed chemical tests that produce distinct and observable results, such as:
+- Formation of a **precipitate**
+- A **colour change**
+- Evolution of a **gas**
+
+---
+
+## Testing for Cations (Positive Ions)
+
+The standard tests for identifying common cations use **aqueous sodium hydroxide (NaOH)** and **aqueous ammonia (NH₃)**.
+
+| Cation | Test with Aqueous NaOH | Test with Aqueous Ammonia |
+|--------|------------------------|---------------------------|
+| **Copper(II) Cu²⁺** | **Light blue precipitate** forms, **insoluble** in excess NaOH | **Light blue precipitate** forms, **dissolves in excess** ammonia to form a **dark blue solution** |
+| **Iron(II) Fe²⁺** | **Green precipitate** forms, **insoluble** in excess NaOH | **Green precipitate** forms, **insoluble** in excess ammonia |
+| **Iron(III) Fe³⁺** | **Red-brown precipitate** forms, **insoluble** in excess NaOH | **Red-brown precipitate** forms, **insoluble** in excess ammonia |
+| **Aluminium Al³⁺** | **White precipitate** forms, **soluble in excess** NaOH to form a **colourless solution** | **White precipitate** forms, **insoluble** in excess ammonia |
+| **Zinc Zn²⁺** | **White precipitate** forms, **soluble in excess** NaOH to form a **colourless solution** | **White precipitate** forms, **soluble in excess** ammonia to form a **colourless solution** |
+| **Calcium Ca²⁺** | **White precipitate** forms, **insoluble** in excess NaOH | **No precipitate**, or very slight white precipitate |
+| **Ammonium NH₄⁺** | Add NaOH and **heat gently**. Ammonia gas evolved → turns **damp red litmus paper blue** | No reaction |
+
+---
+
+## Memory Tips for Cation Tests
+
+### Precipitate Colours:
+- **Blue** = Copper(II)
+- **Green** = Iron(II)
+- **Red-brown** = Iron(III)
+- **White** = Aluminium, Zinc, Calcium
+
+### Solubility in Excess NaOH:
+- **Dissolves** = Aluminium, Zinc (amphoteric hydroxides)
+- **Does NOT dissolve** = Copper, Iron(II), Iron(III), Calcium
+
+### Solubility in Excess Ammonia:
+- **Dissolves** to give **dark blue** = Copper(II)
+- **Dissolves** to give **colourless** = Zinc
+- **All others** = Insoluble`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. Qualitative Analysis: Testing for Anions",
+                content: `## Testing for Anions (Negative Ions)
+
+The identification of anions follows a set of specific tests with predictable positive results.
+
+---
+
+### Carbonate (CO₃²⁻)
+
+| Test | Observation | Ionic Equation |
+|------|-------------|----------------|
+| Add a **dilute acid** (e.g., HCl) | **Effervescence** (fizzing) observed. Gas produced turns **limewater milky/cloudy** | CO₃²⁻(aq) + 2H⁺(aq) → H₂O(l) + CO₂(g) |
+
+---
+
+### Halide Ions: Chloride, Bromide, Iodide
+
+> **IMPORTANT:** Always **acidify with dilute nitric acid first**, then add aqueous silver nitrate.
+
+| Halide Ion | Precipitate Colour | Ionic Equation |
+|------------|-------------------|----------------|
+| **Chloride (Cl⁻)** | **White** precipitate of silver chloride | Ag⁺(aq) + Cl⁻(aq) → AgCl(s) |
+| **Bromide (Br⁻)** | **Cream** precipitate of silver bromide | Ag⁺(aq) + Br⁻(aq) → AgBr(s) |
+| **Iodide (I⁻)** | **Yellow** precipitate of silver iodide | Ag⁺(aq) + I⁻(aq) → AgI(s) |
+
+> **Examiner's Note:** A common error is to forget the initial acidification with dilute nitric acid. This step is crucial because it removes interfering ions, such as carbonate ions, which would also form a precipitate with silver nitrate, leading to a **false positive result**. Marks are consistently lost for this omission.
+
+---
+
+### Sulfate (SO₄²⁻)
+
+| Test | Observation | Ionic Equation |
+|------|-------------|----------------|
+| Acidify with dilute acid (e.g., HCl or HNO₃), then add **aqueous barium nitrate** or **barium chloride** | **White precipitate** of barium sulfate forms | Ba²⁺(aq) + SO₄²⁻(aq) → BaSO₄(s) |
+
+---
+
+### Nitrate (NO₃⁻)
+
+| Test | Observation |
+|------|-------------|
+| Add **aqueous sodium hydroxide** and a piece of **aluminium foil**, then **warm gently** | **Ammonia gas** is produced, which turns **damp red litmus paper blue** |
+
+**Ionic Equation:**
+8Al(s) + 3NO₃⁻(aq) + 5OH⁻(aq) + 2H₂O(l) → 8AlO₂⁻(aq) + 3NH₃(g)
+
+---
+
+## Summary Table: Anion Tests
+
+| Anion | Reagent(s) | Positive Result |
+|-------|------------|-----------------|
+| **CO₃²⁻** | Dilute acid | Effervescence, gas turns limewater milky |
+| **Cl⁻** | Dilute HNO₃ + AgNO₃ | White precipitate |
+| **Br⁻** | Dilute HNO₃ + AgNO₃ | Cream precipitate |
+| **I⁻** | Dilute HNO₃ + AgNO₃ | Yellow precipitate |
+| **SO₄²⁻** | Dilute acid + BaCl₂/Ba(NO₃)₂ | White precipitate |
+| **NO₃⁻** | NaOH + Al foil + heat | Ammonia gas (turns red litmus blue) |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Identification of Common Laboratory Gases",
+                content: `## Confirmatory Gas Tests
+
+When a chemical test results in the evolution of a gas, a secondary confirmatory test is required to positively identify it.
+
+---
+
+## Summary of Gas Tests
+
+| Gas | Formula | Test | Positive Result |
+|-----|---------|------|-----------------|
+| **Ammonia** | NH₃ | Hold damp red litmus paper at the mouth of the tube | Litmus paper turns **blue** |
+| **Carbon Dioxide** | CO₂ | Bubble through limewater (calcium hydroxide solution) | Limewater turns **milky/cloudy** |
+| **Chlorine** | Cl₂ | Hold damp litmus paper at the mouth of the tube | Litmus paper is **bleached white** |
+| **Hydrogen** | H₂ | Hold a **lighted splint** at the mouth of the tube | Gas burns with a **'squeaky pop'** sound |
+| **Oxygen** | O₂ | Insert a **glowing splint** into the tube | Splint **relights** |
+
+---
+
+## Important Safety Notes
+
+⚠️ **Chlorine (Cl₂)** is a **poisonous gas**. Always perform tests in a fume cupboard or well-ventilated area.
+
+⚠️ **Hydrogen (H₂)** is **flammable**. Test only small quantities.
+
+---
+
+## Distinguishing Between Gases: Quick Reference
+
+| Property | Ammonia | Carbon Dioxide | Chlorine | Hydrogen | Oxygen |
+|----------|---------|----------------|----------|----------|--------|
+| **Colour** | Colourless | Colourless | Yellow-green | Colourless | Colourless |
+| **Smell** | Pungent | Odourless | Choking/bleach | Odourless | Odourless |
+| **Density vs Air** | Lighter | Heavier | Heavier | Much lighter | Slightly heavier |
+| **Solubility** | Very soluble | Slightly soluble | Soluble | Sparingly soluble | Sparingly soluble |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "6. Volumetric Analysis: Titration",
+                content: `## The Purpose of Titration
+
+Acid-base titration is a fundamental **quantitative technique** used to determine the exact concentration of a solution by reacting it with a solution of known concentration. The procedure demands:
+- Careful technique
+- Precise volume measurements using a burette and pipette
+- Correct use of an acid-base indicator
+
+---
+
+## Step-by-Step Titration Procedure
+
+### Step 1: Preparation
+Use a **pipette** to accurately measure a fixed volume (e.g., 25.0 cm³) of the alkali and transfer it into a clean **conical flask**.
+
+### Step 2: Add Indicator
+Add **2-3 drops** of a suitable indicator (e.g., methyl orange) to the alkali in the conical flask.
+
+### Step 3: Apparatus Setup
+Place the conical flask on a **white tile** directly beneath the burette. The white background makes the colour change at the end-point easier to see.
+
+### Step 4: Initial Reading
+Fill the burette with the acid, ensuring the space below the tap is filled. Record the **initial volume reading** to **two decimal places**.
+
+### Step 5: Titration
+Add the acid from the burette to the flask **gradually** while **continuously swirling** the flask to ensure the solutions mix thoroughly.
+
+### Step 6: End-Point
+**Stop adding acid** at the exact moment the indicator shows a **permanent colour change**. This is the **end-point** of the titration.
+
+### Step 7: Final Reading
+Record the **final volume reading** from the burette. The volume of acid added (the **titre**) is calculated by:
+
+$$\\text{Titre} = \\text{Final Reading} - \\text{Initial Reading}$$
+
+### Step 8: Repeatability
+Repeat the entire titration at least **two more times**. Consistent results (titres within **0.20 cm³** of each other) are known as **concordant results** and are used to calculate an average.
+
+---
+
+## Choice of Indicators
+
+The choice of indicator is important for accurately determining the end-point.
+
+| Indicator | Colour in Alkali | Colour at End-Point (Acid Added) | Suitable For |
+|-----------|------------------|----------------------------------|--------------|
+| **Methyl Orange** | Yellow | Orange/Red | Strong acid + Strong/Weak alkali |
+| **Phenolphthalein** | Pink | Colourless | Strong alkali + Strong/Weak acid |
+
+---
+
+## Common Errors in Titration
+
+| Error | Effect on Results |
+|-------|-------------------|
+| Air bubbles in burette | Inaccurate volume reading |
+| Not swirling flask | Incomplete mixing, false end-point |
+| Over-running end-point | Titre too high |
+| Reading burette at wrong angle (parallax) | Inaccurate volume reading |
+| Not rinsing equipment properly | Contamination |
+
+---
+
+## Calculating Concentration from Titration
+
+Using the formula:
+
+$$\\text{moles} = \\text{concentration (mol/dm³)} \\times \\text{volume (dm³)}$$
+
+**Remember:** Volume in cm³ ÷ 1000 = Volume in dm³`,
+                diagrams: [],
+                subsections: []
+            }
+        ],
+        key_points: [
+            "Choose apparatus based on 'fit for purpose' principle - burette and pipette for precise measurements",
+            "Pure substances have sharp, fixed melting and boiling points",
+            "Impurities LOWER melting point (with range) and RAISE boiling point",
+            "Filtration separates insoluble solid from liquid; crystallisation obtains pure soluble solid",
+            "Simple distillation separates solvent from solution; fractional distillation separates miscible liquids",
+            "Rf value = Distance by spot ÷ Distance by solvent front",
+            "Cation tests use NaOH(aq) and NH₃(aq) - note precipitate colours and solubility in excess",
+            "Copper gives dark blue solution in excess ammonia; Al and Zn dissolve in excess NaOH",
+            "For halide tests: ALWAYS acidify with HNO₃ first, then add AgNO₃",
+            "Halide precipitates: Cl⁻ = white, Br⁻ = cream, I⁻ = yellow",
+            "Gas tests: H₂ = squeaky pop, O₂ = relights splint, CO₂ = milky limewater, NH₃ = blue litmus",
+            "Titration requires concordant results (within 0.20 cm³) for reliable average"
+        ],
+        exam_tips: [
+            "Always state the accuracy level when selecting apparatus - examiners want to see you understand precision",
+            "When testing for purity, mention BOTH the lowered melting point AND the range of temperatures",
+            "For chromatography questions, always calculate and show the Rf value calculation",
+            "In cation tests, clearly state the precipitate colour AND what happens in excess reagent",
+            "NEVER forget to acidify with dilute nitric acid before adding silver nitrate for halide tests",
+            "For gas tests, state both the test AND the expected observation",
+            "In titration, emphasize concordant results and the importance of swirling",
+            "Always record burette readings to TWO decimal places",
+            "Know the ionic equations for precipitation reactions - examiners often ask for these"
+        ]
+    },
+
+    "Redox Reactions": {
+        topic: "Redox Reactions",
+        subject: "Chemistry",
+        summary: "Redox reactions are a cornerstone of chemistry, describing the vast category of chemical changes that involve the transfer of electrons. These reactions are fundamental to countless processes, from the rusting of iron and the combustion of fuel to the complex metabolic reactions that sustain life itself. Mastering oxidation states, half-equations, and identifying oxidising and reducing agents is essential for O-Level success.",
+        sections: [
+            {
+                title: "1. The Three Core Definitions of Redox Reactions",
+                content: `## Introduction
+
+Redox reactions describe chemical changes involving the **transfer of electrons**. To fully grasp this topic, we understand redox through three distinct yet interconnected definitions.
+
+---
+
+## Definition 1: Oxygen and Hydrogen Transfer
+
+The original definitions were based on observation of reactions involving oxygen and hydrogen.
+
+| Process | Definition | Example |
+|---------|------------|---------|
+| **Oxidation** | Gain of oxygen OR Loss of hydrogen | Magnesium burning: 2Mg + O₂ → 2MgO (Mg gains oxygen) |
+| **Reduction** | Loss of oxygen OR Gain of hydrogen | Copper oxide + hydrogen: CuO + H₂ → Cu + H₂O (CuO loses oxygen) |
+
+> **Critical Point:** Oxidation and reduction are **coupled processes** — one cannot occur without the other. In the second example, while CuO is reduced, the H₂ is simultaneously oxidised (gains oxygen to form water).
+
+---
+
+## Definition 2: Electron Transfer (The "OIL RIG" Rule)
+
+A more fundamental definition focuses on **electron transfer** between chemical species.
+
+### The OIL RIG Mnemonic:
+- **O**xidation **I**s **L**oss of electrons
+- **R**eduction **I**s **G**ain of electrons
+
+### Example: Formation of Sodium Chloride
+
+$$2Na(s) + Cl_2(g) → 2NaCl(s)$$
+
+| Species | Process | Explanation |
+|---------|---------|-------------|
+| **Sodium (Na)** | Oxidised | Loses one electron → Na⁺ |
+| **Chlorine (Cl₂)** | Reduced | Each Cl atom gains one electron → Cl⁻ |
+
+---
+
+## Definition 3: Change in Oxidation State
+
+The most versatile method for identifying redox reactions uses the **oxidation state** (oxidation number) — a system of "electron book-keeping" that assigns a number to each atom.
+
+| Process | Definition |
+|---------|------------|
+| **Oxidation** | INCREASE in oxidation state |
+| **Reduction** | DECREASE in oxidation state |
+
+This method works even in complex covalent compounds where electrons are shared, not fully transferred.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. Mastering Oxidation States",
+                content: `## The Importance of Oxidation States
+
+The ability to assign oxidation states is **essential** for O-Level chemistry. It is the most robust method for analyzing redox reactions and is frequently tested in examinations.
+
+---
+
+## Rules for Assigning Oxidation States
+
+Apply these rules **in order** to correctly analyse a chemical reaction:
+
+| Rule | Description | Examples |
+|------|-------------|----------|
+| **1. Elements** | Oxidation state of uncombined elements = **0** | Na = 0, O₂ = 0, Cl₂ = 0 |
+| **2. Simple Ions** | Oxidation state = charge on the ion | Na⁺ = +1, Cl⁻ = −1, Fe³⁺ = +3 |
+| **3. Oxygen** | Almost always **−2** in compounds | Exceptions: peroxides (−1), OF₂ (+2) |
+| **4. Hydrogen** | Almost always **+1** in compounds | Exception: metal hydrides (−1) |
+| **5. Neutral Compounds** | Sum of all oxidation states = **0** | In H₂O: 2(+1) + (−2) = 0 |
+| **6. Roman Numerals** | Roman numeral in name = oxidation state | Iron(III) sulfate: Fe = +3 |
+
+---
+
+## The Oxidation State Number Line
+
+A number line helps visualise oxidation and reduction:
+
+\`\`\`
+←— REDUCTION (decrease)  |  OXIDATION (increase) —→
+... -3  -2  -1   0  +1  +2  +3  +4  +5  +6  +7 ...
+\`\`\`
+
+| Direction | Process | Example |
+|-----------|---------|---------|
+| Move **RIGHT** (↑) | Oxidation | S in H₂S (−2) → S in SO₂ (+4) |
+| Move **LEFT** (↓) | Reduction | Mn in MnO₄⁻ (+7) → Mn²⁺ (+2) |
+
+---
+
+## Worked Example 1: Sulfur in Sulfuric Acid (H₂SO₄)
+
+**Goal:** Find oxidation state of sulfur (S)
+
+1. **Total charge:** Neutral compound, so sum = 0
+2. **Known values:** H = +1, O = −2
+3. **Equation:** (2 × H) + (1 × S) + (4 × O) = 0
+4. **Solve:**
+   - (2 × +1) + S + (4 × −2) = 0
+   - +2 + S − 8 = 0
+   - S = **+6**
+
+---
+
+## Worked Example 2: Manganese in KMnO₄
+
+**Goal:** Find oxidation state of manganese (Mn)
+
+1. **Total charge:** Neutral compound, so sum = 0
+2. **Known values:** K = +1 (Group I), O = −2
+3. **Equation:** (1 × K) + (1 × Mn) + (4 × O) = 0
+4. **Solve:**
+   - (+1) + Mn + (4 × −2) = 0
+   - +1 + Mn − 8 = 0
+   - Mn = **+7**
+
+> **Note:** The Roman numeral (VII) in "potassium manganate(VII)" confirms this!`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. Identifying Oxidising and Reducing Agents",
+                content: `## Core Definitions
+
+The roles of agents are defined by their effect on **other reactants**:
+
+| Agent | Definition | What It Does | What Happens To It |
+|-------|------------|--------------|-------------------|
+| **Oxidising Agent** | Causes oxidation in another substance | **Accepts electrons** (e⁻) | Is **REDUCED** itself |
+| **Reducing Agent** | Causes reduction in another substance | **Donates electrons** (e⁻) | Is **OXIDISED** itself |
+
+### Memory Tip:
+- **Oxidising agent** = electron thief = gets reduced
+- **Reducing agent** = electron donor = gets oxidised
+
+---
+
+## Laboratory Identification Tests (EXAM FOCUS)
+
+These tests produce distinct colour changes that are essential for practical assessments.
+
+### Test for a REDUCING Agent
+
+| Reagent | Observation if Reducing Agent Present |
+|---------|--------------------------------------|
+| **Acidified potassium manganate(VII)** (KMnO₄) — a powerful oxidising agent with deep purple colour | **Purple → Colourless** |
+
+**Explanation:** The reducing agent reduces the MnO₄⁻ ions (purple) to Mn²⁺ ions (colourless).
+
+---
+
+### Test for an OXIDISING Agent
+
+| Reagent | Observation if Oxidising Agent Present |
+|---------|---------------------------------------|
+| **Aqueous potassium iodide** (KI) — a good reducing agent | **Colourless → Brown** |
+
+**Explanation:** The oxidising agent oxidises the colourless I⁻ ions to brown I₂ (iodine).
+
+**Ionic Half-Equation:**
+$$2I^-(aq) → I_2(aq) + 2e^-$$
+
+---
+
+## Common Oxidising and Reducing Agents
+
+| Oxidising Agents | Reducing Agents |
+|-----------------|-----------------|
+| Potassium manganate(VII), KMnO₄ | Hydrogen, H₂ |
+| Potassium dichromate(VI), K₂Cr₂O₇ | Carbon, C |
+| Concentrated sulfuric acid, H₂SO₄ | Carbon monoxide, CO |
+| Chlorine, Cl₂ | Metals (e.g., Mg, Zn, Fe) |
+| Oxygen, O₂ | Potassium iodide, KI |
+| Hydrogen peroxide, H₂O₂ | Sulfur dioxide, SO₂ |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. Ionic Half-Equations",
+                content: `## What Are Half-Equations?
+
+Ionic half-equations are a powerful tool to deconstruct a redox reaction into its **two constituent parts**:
+- The **oxidation** process
+- The **reduction** process
+
+By writing separate equations, we make the **transfer of electrons (e⁻) explicit**.
+
+---
+
+## Constructing Half-Equations
+
+A half-equation must be balanced for **both atoms and charge**. Electrons are added to ensure the net charge is equal on both sides.
+
+### Example of Oxidation (Electron Loss):
+
+When Fe²⁺ is oxidised to Fe³⁺:
+
+$$Fe^{2+} → Fe^{3+} + e^-$$
+
+| Side | Charge |
+|------|--------|
+| Left | +2 |
+| Right | +3 + (−1) = +2 ✓ |
+
+---
+
+### Example of Reduction (Electron Gain):
+
+When Cl₂ is reduced to Cl⁻:
+
+$$Cl_2 + 2e^- → 2Cl^-$$
+
+| Side | Charge |
+|------|--------|
+| Left | 0 + (−2) = −2 |
+| Right | 2 × (−1) = −2 ✓ |
+
+---
+
+## Combining Half-Equations (EXAM FOCUS)
+
+To obtain the **overall balanced ionic equation**, combine the oxidation and reduction half-equations.
+
+**Critical Step:** The number of electrons **lost** must equal the number **gained**.
+
+### Worked Example: Sodium + Chlorine
+
+**Step 1:** Write the two half-equations:
+- Oxidation: Na → Na⁺ + e⁻
+- Reduction: Cl₂ + 2e⁻ → 2Cl⁻
+
+**Step 2:** Balance the electrons:
+- Oxidation involves 1e⁻, reduction involves 2e⁻
+- Multiply oxidation equation by 2:
+  - **2Na → 2Na⁺ + 2e⁻**
+
+**Step 3:** Combine the equations:
+$$2Na + Cl_2 + 2e^- → 2Na^+ + 2Cl^- + 2e^-$$
+
+**Step 4:** Cancel the electrons:
+$$2Na + Cl_2 → 2Na^+ + 2Cl^-$$
+
+This can also be written as: **2Na + Cl₂ → 2NaCl**
+
+---
+
+## More Half-Equation Examples
+
+| Species | Half-Equation | Type |
+|---------|---------------|------|
+| Mg → Mg²⁺ | Mg → Mg²⁺ + 2e⁻ | Oxidation |
+| O₂ → O²⁻ | O₂ + 4e⁻ → 2O²⁻ | Reduction |
+| Fe²⁺ → Fe³⁺ | Fe²⁺ → Fe³⁺ + e⁻ | Oxidation |
+| Cu²⁺ → Cu | Cu²⁺ + 2e⁻ → Cu | Reduction |
+| Zn → Zn²⁺ | Zn → Zn²⁺ + 2e⁻ | Oxidation |
+| H⁺ → H₂ | 2H⁺ + 2e⁻ → H₂ | Reduction |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Redox Reactions in Everyday Life",
+                content: `## Real-World Applications
+
+Redox reactions are not confined to the laboratory — they are fundamental to many natural and industrial processes.
+
+---
+
+## 5.1 Corrosion (Rusting)
+
+Corrosion is the gradual destruction of metals through chemical reactions with their environment.
+
+### The Rusting of Iron:
+
+| Aspect | Details |
+|--------|---------|
+| **Product** | Hydrated iron(III) oxide: Fe₂O₃·2H₂O (flaky, red-brown rust) |
+| **Requirements** | Both **oxygen** AND **water** must be present |
+| **Iron's Role** | Reducing agent (is oxidised): Fe → Fe³⁺ + 3e⁻ |
+| **Oxygen's Role** | Oxidising agent (is reduced): O₂ + 4e⁻ + 2H₂O → 4OH⁻ |
+
+### Prevention of Rusting:
+
+| Method | How It Works |
+|--------|--------------|
+| **Painting/Oiling** | Creates barrier to exclude oxygen and water |
+| **Galvanising** | Coating with zinc (more reactive, sacrifices itself) |
+| **Electroplating** | Coating with less reactive metal (e.g., chromium) |
+| **Alloying** | Mixing with other metals (e.g., stainless steel with chromium) |
+
+---
+
+## 5.2 Bleaching
+
+Many bleaching processes rely on **oxidation** to remove unwanted colour.
+
+| Agent | Action | Application |
+|-------|--------|-------------|
+| **Chlorine (Cl₂)** | Powerful oxidising agent | Industrial bleaching of paper and textiles |
+| **Hydrogen peroxide (H₂O₂)** | Oxidising agent | Hair bleaching, fabric whitening |
+| **Sodium hypochlorite (NaOCl)** | Releases chlorine | Household bleach |
+
+**Mechanism:** The bleach (oxidising agent) chemically alters the structure of coloured dye molecules, rendering them **colourless**.
+
+---
+
+## 5.3 Respiration
+
+Cellular respiration is the process by which living cells generate energy.
+
+$$C_6H_{12}O_6 + 6O_2 → 6CO_2 + 6H_2O + \\text{Energy}$$
+
+| Component | Role |
+|-----------|------|
+| **Glucose (C₆H₁₂O₆)** | Reducing agent — is oxidised |
+| **Oxygen (O₂)** | Oxidising agent — is reduced |
+| **Products** | Carbon dioxide, water, and **energy** (ATP) |
+
+---
+
+## 5.4 Combustion
+
+The burning of fuels is a rapid redox reaction releasing heat and light.
+
+### Example: Burning Methane
+
+$$CH_4 + 2O_2 → CO_2 + 2H_2O + \\text{Energy}$$
+
+| Component | Role |
+|-----------|------|
+| **Methane (CH₄)** | Fuel — is oxidised (C goes from −4 to +4) |
+| **Oxygen (O₂)** | Oxidising agent — is reduced |
+| **Energy Released** | Large amounts of heat and light |
+
+### Complete vs Incomplete Combustion:
+
+| Type | Conditions | Products |
+|------|------------|----------|
+| **Complete** | Excess oxygen | CO₂ + H₂O |
+| **Incomplete** | Limited oxygen | CO (toxic) + H₂O + C (soot) |`,
+                diagrams: [],
+                subsections: []
+            }
+        ],
+        key_points: [
+            "Oxidation: gain of oxygen, loss of hydrogen, loss of electrons, INCREASE in oxidation state",
+            "Reduction: loss of oxygen, gain of hydrogen, gain of electrons, DECREASE in oxidation state",
+            "OIL RIG: Oxidation Is Loss, Reduction Is Gain (of electrons)",
+            "Oxidation and reduction are COUPLED — one cannot occur without the other",
+            "Oxidation state rules: elements = 0, O = −2, H = +1, sum in neutral compound = 0",
+            "Oxidising agent: accepts electrons and is REDUCED itself",
+            "Reducing agent: donates electrons and is OXIDISED itself",
+            "Test for reducing agent: acidified KMnO₄ turns from purple to colourless",
+            "Test for oxidising agent: KI solution turns from colourless to brown",
+            "Half-equations must be balanced for both atoms AND charge",
+            "When combining half-equations, electrons lost must equal electrons gained",
+            "Rusting requires BOTH oxygen AND water; iron is oxidised, oxygen is reduced"
+        ],
+        exam_tips: [
+            "Always show your working when calculating oxidation states — examiners want to see the method",
+            "Remember OIL RIG for electron transfer: Oxidation Is Loss, Reduction Is Gain",
+            "When identifying agents, ask: 'What happens to THIS species?' — if reduced, it's an oxidising agent",
+            "For colour change tests: KMnO₄ (purple→colourless) tests for reducing agents; KI (colourless→brown) tests for oxidising agents",
+            "Half-equations MUST balance for charge — add electrons to make both sides equal",
+            "When combining half-equations, multiply to make electrons cancel before adding",
+            "In rusting questions, always state BOTH oxygen AND water are required",
+            "Link combustion to oxidation — the fuel is the reducing agent, oxygen is the oxidising agent",
+            "Use oxidation state changes to identify what is oxidised and what is reduced in complex reactions"
+        ]
+    },
+
+    "Chemistry of the Environment": {
+        topic: "Chemistry of the Environment",
+        subject: "Chemistry",
+        summary: "Environmental chemistry examines the atmosphere's composition, the separation of air components, air pollution from fossil fuel combustion, the carbon cycle, the greenhouse effect, and water chemistry. Understanding these concepts is essential for comprehending climate change and environmental protection.",
+        sections: [
+            {
+                title: "1. The Atmosphere: Composition and Separation",
+                content: `## Composition of Clean, Dry Air
+
+The atmosphere is a critical mixture of gases that supports life and regulates climate.
+
+| Gas | Percentage | Notes |
+|-----|------------|-------|
+| **Nitrogen (N₂)** | 78% | Most abundant gas |
+| **Oxygen (O₂)** | 21% | Essential for respiration and combustion |
+| **Argon (Ar)** | ~0.9% | Main component of the remaining 1% |
+| **Carbon Dioxide (CO₂)** | ~0.04% | Greenhouse gas, essential for photosynthesis |
+| **Water Vapour (H₂O)** | Variable | Depends on humidity |
+| **Other Noble Gases** | Trace | Helium, neon, krypton, xenon |
+
+---
+
+## Industrial Separation of Air (Fractional Distillation of Liquid Air)
+
+The gases in air are separated for industrial and medical use through fractional distillation.
+
+### Process Steps:
+
+| Step | Description |
+|------|-------------|
+| **1. Filtration** | Air filtered to remove dust particles |
+| **2. Purification** | Water vapour and CO₂ removed (would solidify and block pipes) |
+| **3. Liquefaction** | Air compressed and rapidly expanded → cools to ~−200°C → becomes liquid |
+| **4. Fractional Distillation** | Liquid air warmed in fractionating column |
+
+### Separation Principle:
+
+| Gas | Boiling Point | Collection Point |
+|-----|---------------|------------------|
+| **Nitrogen** | −196°C (lower) | Boils FIRST → collected at TOP |
+| **Oxygen** | −183°C (higher) | Remains liquid longer → collected at BOTTOM |
+
+> **Examiner's Note:** The substance with **weaker intermolecular forces** has the **lower boiling point** and vaporizes first. Nitrogen's forces are weaker than oxygen's.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. Air Pollution: Sources, Effects, and Solutions",
+                content: `## Key Pollutants from Fossil Fuel Combustion
+
+| Pollutant | Formula | Origin | Environmental Impact |
+|-----------|---------|--------|---------------------|
+| **Carbon Monoxide** | CO | Incomplete combustion (insufficient air) in car engines, furnaces | **Highly poisonous** — binds irreversibly to haemoglobin, prevents oxygen transport, causes death |
+| **Sulfur Dioxide** | SO₂ | Burning of sulfur impurities in coal at power stations | Eye/throat irritant, respiratory problems, **causes acid rain** |
+| **Nitrogen Oxides** | NOₓ | High-temperature combustion in car engines | Respiratory problems, contributes to acid rain and smog |
+| **Particulates** | — | Incomplete combustion, diesel engines | Respiratory diseases, reduced visibility |
+
+---
+
+## Acid Rain: Formation and Impact
+
+### Formation:
+
+**Step 1:** Sulfur impurities burn:
+$$S(s) + O_2(g) → SO_2(g)$$
+
+**Step 2:** SO₂ dissolves in atmospheric water:
+$$SO_2(g) + H_2O(l) ⇌ H_2SO_3(aq)$$
+(Sulfurous acid)
+
+### Environmental Damage:
+
+| Effect | Description |
+|--------|-------------|
+| **Buildings & Statues** | Corrodes limestone and marble (calcium carbonate) |
+| **Aquatic Ecosystems** | Lowers pH of rivers/lakes → kills fish and aquatic life |
+| **Forests** | Damages trees, can kill entire forests |
+
+---
+
+## Industrial Solution: Flue Gas Desulfurisation
+
+Modern power stations remove SO₂ from waste gases before release.
+
+**Method:** React flue gases with powdered **limestone (calcium carbonate)**:
+
+$$CaCO_3 + SO_2 → CaSO_3 + CO_2$$
+
+**Benefit:** Calcium sulfite can be oxidised to **calcium sulfate (gypsum)** — used to make plasterboard.
+
+> **Key Principle:** A harmful waste product is converted into a commercially valuable resource.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. The Carbon Cycle and Global Climate",
+                content: `## The Carbon Cycle
+
+The carbon cycle is a natural equilibrium involving the movement of carbon (as CO₂) between atmosphere, oceans, land, and living organisms.
+
+### Key Processes:
+
+| Process | Effect on CO₂ | Description |
+|---------|---------------|-------------|
+| **Photosynthesis** | REMOVES from atmosphere | Plants absorb CO₂, convert to glucose using sunlight |
+| **Respiration** | RELEASES to atmosphere | All organisms break down carbon compounds for energy |
+| **Combustion** | RELEASES to atmosphere | Burning fuels releases large quantities of CO₂ |
+| **Decomposition** | RELEASES to atmosphere | Bacteria/fungi break down dead organisms |
+
+---
+
+## Disruption: The Role of Fossil Fuels
+
+For millions of years, carbon from dead organisms was buried and converted to **coal, petroleum, and natural gas** — locking carbon underground.
+
+**Problem:** Burning fossil fuels since the Industrial Revolution has rapidly released this stored carbon, **disrupting the natural balance**.
+
+---
+
+## The Greenhouse Effect
+
+### Natural Greenhouse Effect (Essential for Life):
+
+1. Sun's energy warms Earth's surface
+2. Earth reflects some energy back as **infrared radiation (heat)**
+3. **Greenhouse gases** (CO₂, CH₄) absorb and trap this heat
+4. Atmosphere stays warm enough to support life
+
+### Enhanced Greenhouse Effect (Problematic):
+
+| Cause | Result |
+|-------|--------|
+| Increased CO₂ and CH₄ from human activities | MORE heat trapped than natural |
+| Burning fossil fuels, deforestation | Rising global average temperatures |
+| Industrial agriculture (methane from livestock) | Climate change |
+
+---
+
+## Natural vs Enhanced Greenhouse Effect
+
+| Aspect | Natural | Enhanced |
+|--------|---------|----------|
+| **Cause** | Natural greenhouse gases | Human activities increasing gas concentrations |
+| **Effect** | Keeps planet warm enough for life | Causes excessive warming |
+| **Outcome** | Essential and beneficial | Leads to climate change |
+
+> **Exam Warning:** Don't confuse these! The natural greenhouse effect is VITAL — without it, Earth would be too cold for life. The ENHANCED effect is the problem.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. Water Chemistry and Purification",
+                content: `## Chemical Tests for the Presence of Water
+
+| Test | Reagent | Original Colour | Colour with Water |
+|------|---------|-----------------|-------------------|
+| **Anhydrous Copper(II) Sulfate** | CuSO₄ (anhydrous) | **White** | **Blue** |
+| **Cobalt(II) Chloride Paper** | CoCl₂ paper | **Blue** | **Pink** |
+
+### Copper(II) Sulfate Reaction (Reversible):
+
+$$CuSO_4(s) + 5H_2O(l) ⇌ CuSO_4·5H_2O(s)$$
+$$\\text{(white)} \\hspace{3cm} \\text{(blue)}$$
+
+---
+
+## Water Treatment Process
+
+| Step | Process | Purpose |
+|------|---------|---------|
+| **1. Screening** | Pass through mesh screen | Remove large solids (twigs, leaves) |
+| **2. Coagulation** | Add iron(III) sulfate | Causes fine particles to clump together |
+| **3. Sedimentation** | Hold in tanks | Clumped particles settle to bottom |
+| **4. Filtration** | Pass through sand filters | Remove remaining suspended particles |
+| **5. Chlorination** | Add chlorine | Kill bacteria and microorganisms |
+| **6. Fluoridation** | Add fluoride compound | Prevent tooth decay |
+
+---
+
+## Pure Water vs Potable Water
+
+| Type | Definition | Characteristics |
+|------|------------|-----------------|
+| **Pure Water** | Only H₂O molecules, no dissolved substances | Boils at exactly 100°C, freezes at exactly 0°C |
+| **Potable Water** | Safe for drinking but contains dissolved minerals | Boiling point slightly above 100°C, freezing point slightly below 0°C |
+
+### Effect of Dissolved Substances (Impurities):
+
+| Property | Effect |
+|----------|--------|
+| **Melting/Freezing Point** | LOWERED (below 0°C) |
+| **Boiling Point** | RAISED (above 100°C) |
+
+> **Key Point:** Potable water is NOT pure water — it still contains dissolved salts and minerals, just no harmful bacteria.`,
+                diagrams: [],
+                subsections: []
+            }
+        ],
+        key_points: [
+            "Air composition: 78% nitrogen, 21% oxygen, ~1% argon + traces of CO₂ and noble gases",
+            "Fractional distillation of liquid air: nitrogen (b.p. −196°C) collected first at top, oxygen (b.p. −183°C) at bottom",
+            "Carbon monoxide: colourless, odourless, toxic — binds to haemoglobin, prevents oxygen transport",
+            "Sulfur dioxide causes acid rain: SO₂ + H₂O ⇌ H₂SO₃",
+            "Acid rain damages buildings (limestone/marble), kills aquatic life, destroys forests",
+            "Flue gas desulfurisation uses limestone to remove SO₂ from power station emissions",
+            "Carbon cycle: photosynthesis removes CO₂, respiration/combustion/decomposition release CO₂",
+            "Burning fossil fuels releases stored carbon, disrupting the natural carbon cycle balance",
+            "Natural greenhouse effect is essential for life; enhanced effect causes global warming",
+            "Main greenhouse gases: carbon dioxide (CO₂) and methane (CH₄)",
+            "Test for water: anhydrous CuSO₄ (white→blue) or cobalt chloride paper (blue→pink)",
+            "Pure water: exactly 100°C b.p., 0°C f.p.; impurities raise b.p. and lower f.p."
+        ],
+        exam_tips: [
+            "Know the exact percentages: 78% nitrogen, 21% oxygen — these are commonly asked",
+            "Explain fractional distillation using boiling points and intermolecular forces",
+            "Always state that CO is dangerous because it binds to haemoglobin IRREVERSIBLY",
+            "Write balanced equations for acid rain formation: S + O₂ → SO₂ and SO₂ + H₂O ⇌ H₂SO₃",
+            "Distinguish between NATURAL greenhouse effect (essential) and ENHANCED (problematic)",
+            "Link human activities to carbon cycle disruption — burning fossil fuels releases stored carbon",
+            "Remember both water tests and their colour changes for practical exams",
+            "Explain why potable water is NOT pure — it contains dissolved minerals that affect physical properties",
+            "Know the water treatment steps in order: screening → coagulation → sedimentation → filtration → chlorination"
+        ]
+    },
+
+    "Acids, Bases and Salts": {
+        topic: "Acids, Bases and Salts",
+        subject: "Chemistry",
+        summary: "Acids produce hydrogen ions (H⁺) in water; bases neutralise acids; alkalis are soluble bases that produce hydroxide ions (OH⁻). Salts are ionic compounds formed from neutralisation reactions. This topic covers acid/base reactions, pH scale, salt preparation methods, indicators, and real-world applications including fertiliser production and soil treatment.",
+        sections: [
+            {
+                title: "1. Introduction to Acids, Bases and Salts",
+                content: `## Key Definitions
+
+| Term | Definition | Key Characteristics |
+|------|-----------|---------------------|
+| **Acid** | Produces H⁺ ions in water | Proton DONOR; turns blue litmus RED |
+| **Base** | Neutralises an acid | Proton ACCEPTOR; includes metal oxides/hydroxides |
+| **Alkali** | Soluble base producing OH⁻ ions | Turns red litmus BLUE |
+| **Salt** | Ionic compound from neutralisation | H⁺ replaced by metal/ammonium ion |
+
+---
+
+## Importance in Daily Life
+
+| Area | Examples |
+|------|----------|
+| **Food** | Citric acid in fruits; ethanoic acid in vinegar |
+| **Industry** | Limestone (CaCite₃) for cement and roads |
+| **Agriculture** | Ammonium nitrate fertiliser from neutralisation |
+
+> **Key insight:** The behaviour of acids and bases is determined by the presence of H⁺ and OH⁻ ions respectively.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. Properties of Acids",
+                content: `## Key Acid Reactions
+
+### 1. Acid + Metal → Salt + Hydrogen
+
+$$\\text{Zn(s)} + \\text{H}_2\\text{SO}_4\\text{(aq)} \\rightarrow \\text{ZnSO}_4\\text{(aq)} + \\text{H}_2\\text{(g)}$$
+
+- Reactive metal displaces hydrogen
+- Observed as fizzing/effervescence
+- This is a **REDOX reaction** (metal oxidised, H⁺ reduced)
+
+---
+
+### 2. Acid + Base → Salt + Water
+
+$$\\text{CuO(s)} + \\text{H}_2\\text{SO}_4\\text{(aq)} \\rightarrow \\text{CuSO}_4\\text{(aq)} + \\text{H}_2\\text{O(l)}$$
+
+- **Neutralisation** reaction
+- Acidity and basicity cancelled out
+
+---
+
+### 3. Acid + Carbonate → Salt + Water + CO₂
+
+$$\\text{CaCO}_3\\text{(s)} + 2\\text{HCl(aq)} \\rightarrow \\text{CaCl}_2\\text{(aq)} + \\text{H}_2\\text{O(l)} + \\text{CO}_2\\text{(g)}$$
+
+- Vigorous fizzing from CO₂ production
+- Test: limewater turns milky
+
+---
+
+## Acid Strength vs Concentration
+
+| Property | Strong Acid | Weak Acid |
+|----------|-------------|-----------|
+| **Definition** | Fully ionises in water | Partially ionises |
+| **Example** | HCl, H₂SO₄, HNO₃ | CH₃COOH (ethanoic), H₂CO₃ |
+| **pH (same conc.)** | Very low (1-2) | Moderate (3-5) |
+| **Conductivity** | High (many ions) | Low (few ions) |
+
+> **Strong acid:** HCl(aq) → H⁺(aq) + Cl⁻(aq) — complete dissociation
+> **Weak acid:** CH₃COOH ⇌ CH₃COO⁻ + H⁺ — partial, equilibrium`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. Properties of Bases and Alkalis",
+                content: `## Base vs Alkali
+
+| Feature | Base | Alkali |
+|---------|------|--------|
+| **Definition** | Neutralises acids | SOLUBLE base |
+| **In water** | May not dissolve | Dissolves to give OH⁻ ions |
+| **Example** | CuO, Fe₂O₃ (insoluble) | NaOH, Ca(OH)₂ (soluble) |
+
+> **All alkalis are bases, but NOT all bases are alkalis.**
+
+---
+
+## Examples
+
+| Substance | Type | Reason |
+|-----------|------|--------|
+| Sodium hydroxide (NaOH) | Alkali | Soluble, produces OH⁻ |
+| Calcium hydroxide Ca(OH)₂ | Alkali | Slightly soluble |
+| Ammonia solution (NH₃) | Weak alkali | Partially reacts with water |
+| Copper(II) oxide (CuO) | Base (NOT alkali) | Insoluble but neutralises acid |
+
+---
+
+## Alkali Strength
+
+| Property | Strong Alkali | Weak Alkali |
+|----------|---------------|-------------|
+| **Example** | NaOH | NH₃ solution |
+| **Ionisation** | Full | Partial |
+| **pH (same conc.)** | 13-14 | 10-11 |
+| **Conductivity** | High | Low |
+
+Strong alkali: NaOH → Na⁺ + OH⁻ (complete)
+Weak alkali: NH₃ + H₂O ⇌ NH₄⁺ + OH⁻ (partial)`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. Salts: Definition and Preparation",
+                content: `## What is a Salt?
+
+A **salt** is an ionic compound formed when the H⁺ from an acid is replaced by a metal ion or ammonium ion.
+
+---
+
+## Solubility Rules (MUST KNOW)
+
+| Salt Type | Solubility | Exceptions |
+|-----------|-----------|------------|
+| All **sodium, potassium, ammonium** salts | SOLUBLE | None |
+| All **nitrates** | SOLUBLE | None |
+| Most **chlorides** | SOLUBLE | AgCl, PbCl₂ insoluble |
+| Most **sulfates** | SOLUBLE | BaSO₄, PbSO₄, CaSO₄ insoluble |
+| Most **carbonates** | INSOLUBLE | Na₂CO₃, K₂CO₃, (NH₄)₂CO₃ soluble |
+
+---
+
+## Preparing SOLUBLE Salts
+
+### Method: Acid + Excess Insoluble Reactant
+
+**Example: Making CuSO₄ crystals**
+
+| Step | Process |
+|------|---------|
+| **1. React** | Add excess CuO to warm dilute H₂SO₄, stir until no more dissolves |
+| **2. Filter** | Remove unreacted excess CuO |
+| **3. Crystallise** | Heat filtrate gently, then cool to form crystals |
+| **4. Dry** | Remove crystals and pat dry |
+
+---
+
+## Preparing INSOLUBLE Salts
+
+### Method: Precipitation
+
+**Example: Making BaSO₄**
+
+1. Mix solutions of BaCl₂(aq) + MgSO₄(aq)
+2. White precipitate of BaSO₄ forms instantly
+3. Filter, wash with distilled water, dry
+
+**Ionic equation:** Ba²⁺(aq) + SO₄²⁻(aq) → BaSO₄(s)
+
+**Spectator ions:** Mg²⁺ and Cl⁻ (remain dissolved, don't react)`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. The pH Scale",
+                content: `## Definition
+
+The **pH scale** measures the concentration of H⁺ ions in a solution.
+
+> It is an **inverse scale**: Higher [H⁺] = Lower pH
+
+---
+
+## pH Values
+
+| pH | Type | [H⁺] ions | Examples |
+|----|------|-----------|----------|
+| **0-2** | Strong acid | Very high | HCl, H₂SO₄ |
+| **3-6** | Weak acid | Moderate | Vinegar, lemon juice |
+| **7** | Neutral | Equal H⁺ and OH⁻ | Pure water |
+| **8-11** | Weak alkali | Low | Ammonia, baking soda |
+| **12-14** | Strong alkali | Very low | NaOH, Ca(OH)₂ |
+
+---
+
+## Importance of pH
+
+| Application | Why pH Matters |
+|-------------|----------------|
+| **Agriculture** | Crops need optimal soil pH for nutrient uptake |
+| **Industry** | Many reactions require specific pH |
+| **Environment** | Acid rain lowers lake pH, killing aquatic life |
+| **Medicine** | Blood pH must stay between 7.35-7.45 |
+
+---
+
+## Comparing Acid/Alkali Strength
+
+At the **same concentration**:
+- Strong acid has **lower pH** than weak acid
+- Strong alkali has **higher pH** than weak alkali
+- Strong acid/alkali has **higher conductivity** (more ions)`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "6. Neutralisation Reactions",
+                content: `## Definition
+
+**Neutralisation:** Acid + Base → Salt + Water
+
+---
+
+## General Equations
+
+| Reactants | Products |
+|-----------|----------|
+| Acid + Base/Alkali | Salt + Water |
+| Acid + Carbonate | Salt + Water + CO₂ |
+| Acid + Metal | Salt + Hydrogen |
+
+---
+
+## Ionic Equation for Neutralisation
+
+$$\\text{H}^+\\text{(aq)} + \\text{OH}^-\\text{(aq)} \\rightarrow \\text{H}_2\\text{O(l)}$$
+
+This is the **essential reaction** in all acid-alkali neutralisations.
+
+---
+
+## Proton Transfer
+
+| Role | Substance | Action |
+|------|-----------|--------|
+| **Proton DONOR** | Acid | Releases H⁺ ions |
+| **Proton ACCEPTOR** | Base | Accepts H⁺ ions |
+
+### Example with metal oxide:
+
+$$2\\text{H}^+\\text{(aq)} + \\text{O}^{2-}\\text{(s)} \\rightarrow \\text{H}_2\\text{O(l)}$$
+
+---
+
+## Everyday Applications
+
+| Application | Method |
+|-------------|--------|
+| **Treating acidic soil** | Add lime (CaO) or limestone (CaCO₃) |
+| **Antacid tablets** | Contain weak bases to neutralise stomach acid |
+| **Treating acid spills** | Use sodium carbonate or bicarbonate |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "7. Indicators",
+                content: `## What are Indicators?
+
+**Indicators** are chemicals that show distinct colour changes at different pH values.
+
+---
+
+## Common Indicators
+
+| Indicator | In Acid | In Alkali | Best Use |
+|-----------|---------|-----------|----------|
+| **Litmus** | RED | BLUE | General testing |
+| **Methyl Orange** | RED/Orange | YELLOW | Strong acid titrations |
+| **Phenolphthalein** | COLOURLESS | PINK | Strong alkali titrations |
+| **Universal Indicator** | Red→Orange→Yellow | Green→Blue→Purple | Estimating pH value |
+
+---
+
+## Using Indicators in Titrations
+
+In a **titration**:
+1. Add indicator to solution in flask
+2. Add solution from burette drop by drop
+3. **End-point** = moment indicator changes colour
+4. This shows neutralisation is complete
+
+---
+
+## Universal Indicator Colour Chart
+
+| pH | Colour |
+|----|--------|
+| 1-2 | Red |
+| 3-4 | Orange |
+| 5-6 | Yellow |
+| 7 | Green |
+| 8-9 | Blue |
+| 10-11 | Indigo |
+| 12-14 | Purple/Violet |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "8. Real-Life Applications",
+                content: `## Industrial Processes
+
+| Application | Chemistry Involved |
+|-------------|-------------------|
+| **Fertiliser production** | NH₃ + HNO₃ → NH₄NO₃ (ammonium nitrate) |
+| **Lime manufacturing** | CaCO₃ → CaO + CO₂ (thermal decomposition) |
+| **Pollution control** | Limestone neutralises SO₂ in power stations |
+
+---
+
+## Agriculture
+
+| Problem | Solution | Chemistry |
+|---------|----------|-----------|
+| Acidic soil | Add lime or limestone | Base neutralises acid |
+| Need fertiliser | Apply ammonium salts | Made from acid-base reactions |
+
+---
+
+## Daily Life
+
+| Item | Acid/Base Involved |
+|------|-------------------|
+| **Vinegar** | Dilute ethanoic acid |
+| **Fizzy drinks** | CO₂ dissolved → carbonic acid |
+| **Baking powder** | Carbonate releases CO₂ when heated or with acid |
+| **Antacids** | Weak bases (Mg(OH)₂, CaCO₃) neutralise stomach acid |
+
+---
+
+## Photography (Traditional)
+
+**Making silver bromide for film:**
+- AgNO₃(aq) + KBr(aq) → AgBr(s) + KNO₃(aq)
+- AgBr precipitates as light-sensitive coating`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "9. Common Exam Questions",
+                content: `## Example 1: Matching pH Values
+
+**Question:** Four solutions have pH values 1, 4, 10, 13. Match to: HCl, vinegar, ammonia, NaOH.
+
+**Method:**
+1. Classify each: HCl (strong acid), vinegar (weak acid), ammonia (weak alkali), NaOH (strong alkali)
+2. Match to pH:
+   - pH 1 → HCl (strong acid, lowest pH)
+   - pH 4 → Vinegar (weak acid)
+   - pH 10 → Ammonia (weak alkali)
+   - pH 13 → NaOH (strong alkali, highest pH)
+
+---
+
+## Example 2: Soil Treatment
+
+**Question:** Why control soil acidity? Compare CaCO₃ and Ca(OH)₂.
+
+**Answer:**
+- **Part (i):** Different crops need optimal pH for nutrient absorption
+- **Part (ii):**
+  - CaCO₃ advantage: Insoluble, so reacts slowly = long-lasting effect
+  - Ca(OH)₂ advantage: More soluble, so neutralises quickly when rapid pH change needed
+
+---
+
+## Example 3: Salt Preparation
+
+**Question:** Describe how to prepare pure, dry copper sulfate crystals.
+
+**Answer:**
+1. Add excess copper oxide to warm dilute sulfuric acid, stir
+2. Filter to remove unreacted copper oxide
+3. Heat filtrate to concentrate the solution
+4. Cool slowly to form crystals
+5. Filter and dry the crystals`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "10. Common Mistakes to Avoid",
+                content: `## Key Distinctions
+
+| Mistake | Correct Understanding |
+|---------|----------------------|
+| **Base = Alkali** | NO! Alkali is a SOLUBLE base. CuO is a base but NOT an alkali (insoluble) |
+| **Strong = Concentrated** | NO! Strong = degree of ionisation. Concentrated = amount dissolved |
+| **Higher pH = stronger acid** | NO! pH is INVERSE. Lower pH = stronger acid (more H⁺) |
+| **Acid + metal is neutralisation** | NO! Acid + metal is a REDOX reaction (electron transfer) |
+
+---
+
+## Common Errors in Calculations
+
+| Error | Correction |
+|-------|------------|
+| Forgetting water in product | Acid + base always produces H₂O |
+| Wrong salt formula | Check metal valency and acid used |
+| Confusing reactant excess | The INSOLUBLE reactant should be in excess |
+
+---
+
+## Memory Tips
+
+- **Strong acids:** HCl, H₂SO₄, HNO₃ — the "big three"
+- **Insoluble sulfates:** "Barium, Lead, Calcium" — BLC = "Big Lead Cow"
+- **Insoluble chlorides:** Silver and Lead only — "Ag and Pb don't like Cl"`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "11. Detailed Summary",
+                content: `## Core Definitions Recap
+
+| Term | Definition |
+|------|------------|
+| **Acid** | Proton (H⁺) DONOR; produces H⁺ in water |
+| **Base** | Proton ACCEPTOR; neutralises acids |
+| **Alkali** | SOLUBLE base; produces OH⁻ in water |
+| **Salt** | Ionic compound from neutralisation |
+
+---
+
+## Key Reactions Summary
+
+| Reaction | Products |
+|----------|----------|
+| Acid + Metal | Salt + H₂ (REDOX) |
+| Acid + Base | Salt + H₂O (Neutralisation) |
+| Acid + Carbonate | Salt + H₂O + CO₂ |
+
+---
+
+## Strength vs Concentration
+
+| Property | Meaning |
+|----------|---------|
+| **Strength** | Degree of ionisation (intrinsic property) |
+| **Concentration** | Amount dissolved per volume (can be changed) |
+
+---
+
+## Salt Preparation Methods
+
+| Salt Type | Method |
+|-----------|--------|
+| **Soluble** | Acid + excess insoluble reactant → filter → crystallise |
+| **Insoluble** | Precipitation → filter → wash → dry |
+
+---
+
+## pH Scale
+
+- pH 1-6: Acidic (lower = stronger)
+- pH 7: Neutral
+- pH 8-14: Alkaline (higher = stronger)`,
+                diagrams: [],
+                subsections: []
+            }
+        ],
+        key_points: [
+            "Acid = proton (H⁺) donor; Base = proton acceptor; Alkali = soluble base producing OH⁻",
+            "Strong acids (HCl, H₂SO₄, HNO₃) fully ionise; weak acids partially ionise",
+            "Acid + metal → salt + hydrogen (REDOX reaction)",
+            "Acid + base → salt + water (NEUTRALISATION)",
+            "Acid + carbonate → salt + water + carbon dioxide",
+            "pH scale: 0-6 acidic, 7 neutral, 8-14 alkaline; lower pH = more acidic",
+            "Strong acid/alkali: higher conductivity, more extreme pH (at same concentration)",
+            "Soluble salts: prepared by reaction, filtration, crystallisation",
+            "Insoluble salts: prepared by precipitation, filtration, washing",
+            "Know solubility rules: all Na/K/NH₄ salts soluble; most carbonates insoluble",
+            "H⁺(aq) + OH⁻(aq) → H₂O(l) — the ionic equation for neutralisation"
+        ],
+        exam_tips: [
+            "NEVER confuse base with alkali — all alkalis are bases, but NOT all bases are alkalis",
+            "NEVER confuse strong with concentrated — strength is ionisation, concentration is amount dissolved",
+            "Remember pH is INVERSE — lower pH = more H⁺ ions = STRONGER acid",
+            "Acid + metal is REDOX, NOT neutralisation (electrons are transferred)",
+            "Know the 'big three' strong acids: HCl, H₂SO₄, HNO₃",
+            "Know insoluble exceptions: AgCl, PbCl₂, BaSO₄, PbSO₄, CaSO₄, most carbonates",
+            "For preparing soluble salts: use EXCESS of the INSOLUBLE reactant to ensure all acid reacts",
+            "Write ionic equations by removing spectator ions — only show ions that form the product"
+        ]
+    },
+
+    "Electrochemistry": {
+        topic: "Electrochemistry",
+        subject: "Chemistry",
+        summary: "Electrochemistry studies the relationship between chemical reactions and electricity. Electrolysis is the breakdown of ionic compounds using electricity, with reduction at the cathode and oxidation at the anode. Key applications include metal extraction (aluminium), metal purification (copper), electroplating, and the industrial electrolysis of brine to produce chlorine, sodium hydroxide, and hydrogen.",
+        sections: [
+            {
+                title: "1. Introduction to Electrochemistry",
+                content: `## What is Electrochemistry?
+
+**Electrochemistry** is the study of the relationship between **chemical reactions and electricity**.
+
+Two key processes:
+- **Electrolytic cells:** Use electricity to drive chemical reactions (electrolysis)
+- **Simple cells (batteries):** Use chemical reactions to generate electricity
+
+---
+
+## Industrial Importance
+
+| Application | Description |
+|-------------|-------------|
+| **Metal Extraction** | Producing reactive metals like aluminium from ores |
+| **Metal Purification** | Refining copper to high purity for wiring |
+| **Electroplating** | Coating objects with protective/decorative metal layer |
+| **Chemical Manufacturing** | Electrolysis of brine produces Cl₂, NaOH, H₂ |
+
+> All these processes rely on substances that can conduct electricity through ion movement.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. Electrical Conductivity",
+                content: `## Types of Materials
+
+| Type | Definition | Examples |
+|------|------------|----------|
+| **Conductors** | Allow electricity to pass through | All metals |
+| **Non-conductors (Insulators)** | Do NOT allow electricity | Plastic, rubber |
+| **Electrolytes** | Conduct when molten or dissolved (ions move) | NaCl, PbBr₂ |
+| **Non-electrolytes** | Never conduct (no free ions) | Glucose, ethanol |
+
+---
+
+## Why Electrolytes Conduct
+
+Ionic compounds conduct electricity when:
+1. **Molten** — ions free to move
+2. **Dissolved in water (aqueous)** — ions free to move
+
+They do NOT conduct when:
+- **Solid** — ions locked in fixed lattice positions
+
+---
+
+## Key Point
+
+> **Electrolytes conduct because they have FREE-MOVING IONS that carry electrical charge.**`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. Electrolysis",
+                content: `## Definition
+
+**Electrolysis** = The breakdown of a substance using electricity
+
+---
+
+## Requirements for Electrolysis
+
+| Requirement | Reason |
+|-------------|--------|
+| 1. Ionic compound | Contains ions that can be discharged |
+| 2. Ions must be FREE to move | Either molten OR dissolved in water |
+
+---
+
+## The Electrolytic Cell
+
+| Component | Description |
+|-----------|-------------|
+| **Electrodes** | Conductive rods (graphite or metal) — entry/exit points for electricity |
+| **Anode** | **POSITIVE** electrode (remember: **P**ositive **A**node = PA) |
+| **Cathode** | **NEGATIVE** electrode |
+| **Electrolyte** | The molten or dissolved ionic compound |
+
+---
+
+## What Happens During Electrolysis
+
+| At Electrode | Ion Attracted | Process | Name |
+|--------------|---------------|---------|------|
+| **Cathode (−)** | Positive ions (cations) | GAIN electrons | **REDUCTION** |
+| **Anode (+)** | Negative ions (anions) | LOSE electrons | **OXIDATION** |
+
+> **Memory aid:** OIL RIG — Oxidation Is Loss, Reduction Is Gain`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. Electrolysis of Common Substances",
+                content: `## 4.1 Molten Compounds — Simple!
+
+### Example: Molten Lead(II) Bromide (PbBr₂)
+
+| Feature | Details |
+|---------|---------|
+| **Ions present** | Pb²⁺ and Br⁻ |
+| **At Cathode (−)** | Pb²⁺ gains electrons → Pb (molten lead metal) |
+| **At Anode (+)** | Br⁻ loses electrons → Br₂ (red-brown bromine vapour) |
+
+> **General Rule:** Molten ionic compounds → Metal at cathode, Non-metal at anode
+
+---
+
+## 4.2 Aqueous Solutions — More Complex!
+
+Water introduces H⁺ and OH⁻ ions → **competition at electrodes**
+
+### Rules for Predicting Products:
+
+**At Cathode (−):** Competition between metal ion and H⁺
+- Metal MORE reactive than hydrogen → **H₂ produced**
+- Metal LESS reactive than hydrogen → **Metal produced**
+
+**At Anode (+):** Competition between anion and OH⁻
+- Concentrated halide (Cl⁻, Br⁻, I⁻) → **Halogen produced**
+- Dilute solution or other anions → **O₂ produced** (from OH⁻)
+
+---
+
+## Examples Table
+
+| Electrolyte | Cathode (−) | Anode (+) | Reasoning |
+|-------------|-------------|-----------|-----------|
+| Conc. KBr | H₂ | Br₂ | K more reactive than H; concentrated halide |
+| Dilute NaCl | H₂ | O₂ | Na more reactive than H; dilute so OH⁻ discharged |
+| Conc. HCl | H₂ | Cl₂ | Only H⁺ present; concentrated halide |
+| CuSO₄ (aq) | Cu | O₂ | Cu less reactive than H; no halide present |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Half-Equations",
+                content: `## What are Half-Equations?
+
+Half-equations show the **electron transfer** at each electrode.
+
+| Process | Electrode | Electrons |
+|---------|-----------|-----------|
+| **Oxidation** | Anode (+) | Electrons on PRODUCT side (loss) |
+| **Reduction** | Cathode (−) | Electrons on REACTANT side (gain) |
+
+---
+
+## Examples: Molten Lead(II) Bromide
+
+### At Anode (Oxidation):
+$$2\\text{Br}^- \\rightarrow \\text{Br}_2 + 2\\text{e}^-$$
+
+### At Cathode (Reduction):
+$$\\text{Pb}^{2+} + 2\\text{e}^- \\rightarrow \\text{Pb}$$
+
+---
+
+## Examples: Aqueous Copper(II) Sulfate (Inert Electrodes)
+
+### At Anode (Oxidation):
+$$4\\text{OH}^-\\text{(aq)} \\rightarrow 2\\text{H}_2\\text{O(l)} + \\text{O}_2\\text{(g)} + 4\\text{e}^-$$
+
+### At Cathode (Reduction):
+$$\\text{Cu}^{2+}\\text{(aq)} + 2\\text{e}^- \\rightarrow \\text{Cu(s)}$$
+
+---
+
+## How to Write Half-Equations
+
+| Step | Action |
+|------|--------|
+| 1 | Write the ion being discharged |
+| 2 | Write the product formed |
+| 3 | Balance the ATOMS |
+| 4 | Balance the CHARGE by adding electrons |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "6. Uses of Electrolysis",
+                content: `## 6.1 Extraction of Metals
+
+Used for metals **too reactive to be extracted by carbon reduction**.
+
+**Example: Aluminium from bauxite (Al₂O₃)**
+- Aluminium is high in reactivity series
+- Only electrolysis can break the strong bonds
+
+---
+
+## 6.2 Purification (Refining) of Metals
+
+**Example: Purifying Copper**
+
+| Component | Material |
+|-----------|----------|
+| **Anode** | Impure copper (large block) |
+| **Cathode** | Pure copper (thin sheet) |
+| **Electrolyte** | Copper(II) sulfate solution |
+
+**Process:**
+1. Anode dissolves: Cu → Cu²⁺ + 2e⁻
+2. Ions move through electrolyte
+3. Deposit on cathode: Cu²⁺ + 2e⁻ → Cu
+4. Impurities left behind as sludge
+
+---
+
+## 6.3 Electroplating
+
+Coating one metal with a layer of another.
+
+| Purpose | Example |
+|---------|---------|
+| **Decoration** | Gold-plated jewellery |
+| **Corrosion protection** | Chromium-plated car parts |
+
+**Setup:**
+- Object to be plated = **CATHODE**
+- Plating metal = **ANODE**
+- Electrolyte = solution of plating metal's salt`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "7. Diagram Analysis",
+                content: `## Interpreting Electrolysis Diagrams
+
+For any electrolysis diagram, identify:
+
+| Feature | What to Look For |
+|---------|------------------|
+| **Battery** | Source of electrons |
+| **Anode (+)** | Connected to positive terminal |
+| **Cathode (−)** | Connected to negative terminal |
+| **Ion movement** | Cations → Cathode; Anions → Anode |
+| **Products** | What forms at each electrode |
+
+---
+
+## Step-by-Step Analysis: Molten PbBr₂
+
+| Step | What Happens |
+|------|--------------|
+| 1 | Battery pumps electrons to cathode |
+| 2 | Pb²⁺ ions migrate to cathode |
+| 3 | Br⁻ ions migrate to anode |
+| 4 | At cathode: Pb²⁺ + 2e⁻ → Pb (molten lead forms) |
+| 5 | At anode: 2Br⁻ → Br₂ + 2e⁻ (brown vapour) |
+| 6 | Electrons flow back to battery, completing circuit |
+
+---
+
+## Key Observations
+
+| Product | Observation |
+|---------|-------------|
+| Bromine | Red-brown vapour/fumes |
+| Chlorine | Yellow-green gas, bleaches |
+| Oxygen | Colourless gas, relights splint |
+| Hydrogen | Colourless gas, squeaky pop |
+| Copper | Pink/brown metal deposit |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "8. The Chlor-Alkali Industry",
+                content: `## Electrolysis of Brine
+
+**Brine** = concentrated sodium chloride solution (NaCl)
+
+---
+
+## Three Products
+
+| Product | At | Half-Equation |
+|---------|-----|---------------|
+| **Hydrogen (H₂)** | Cathode | 2H⁺ + 2e⁻ → H₂ |
+| **Chlorine (Cl₂)** | Anode | 2Cl⁻ → Cl₂ + 2e⁻ |
+| **Sodium hydroxide (NaOH)** | Remains in solution | Na⁺ + OH⁻ |
+
+---
+
+## Uses of Products
+
+### Chlorine (Cl₂)
+- Manufacturing PVC plastic
+- Making bleaches, paints, dyes
+- Sterilising water supplies
+- Producing pesticides and drugs
+
+### Sodium Hydroxide (NaOH)
+- Making soaps and detergents
+- Manufacturing textiles (rayon)
+- Paper production
+- Making ceramics
+
+### Hydrogen (H₂)
+- Haber process (ammonia production)
+- Making margarine (hydrogenation)
+- Producing hydrochloric acid
+- Clean fuel for rockets`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "9. Common Exam Questions",
+                content: `## Example 1: Identifying Products
+
+**Question:** Lead(II) bromide produces brown fumes at the anode when electrolysed. Explain.
+
+**Answer:**
+1. PbBr₂ contains Pb²⁺ and Br⁻ ions
+2. Br⁻ ions are attracted to the positive anode
+3. At anode: 2Br⁻ → Br₂ + 2e⁻ (oxidation)
+4. Bromine is a red-brown vapour → "brown fumes"
+
+---
+
+## Example 2: Dilute Aqueous Solutions
+
+**Question:** For dilute NaCl electrolysis, what forms at each electrode?
+
+**Answer:**
+1. **Ions present:** Na⁺, Cl⁻, H⁺, OH⁻
+2. **At Cathode (−):** Na is more reactive than H, so H₂ produced
+3. **At Anode (+):** Solution is DILUTE, so OH⁻ discharged → O₂ produced
+4. **Electrolyte change:** H⁺ and OH⁻ removed, concentration of NaCl increases
+
+---
+
+## Key Exam Tips
+
+| If asked... | Remember to... |
+|-------------|----------------|
+| Products of electrolysis | State the ions, apply the rules, name products |
+| Half-equations | Balance atoms first, then balance charge with electrons |
+| Change to electrolyte | Explain which ions are removed/what remains |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "10. Common Mistakes to Avoid",
+                content: `## Confusion: Anode vs Cathode
+
+| Error | Correction |
+|-------|------------|
+| Mixing up charges | **P**ositive **A**node (PA), Cathode is negative |
+| Wrong ion migration | **C**ations go to **C**athode; **A**nions go to **A**node |
+
+---
+
+## Errors in Half-Equations
+
+| Mistake | How to Fix |
+|---------|------------|
+| Unbalanced atoms | Count atoms on both sides — add coefficients |
+| Unbalanced charge | Add electrons to the more positive side |
+| Electrons on wrong side | Oxidation: e⁻ on product side. Reduction: e⁻ on reactant side |
+
+---
+
+## Checklist for Half-Equations
+
+1. ✓ Write ion being discharged
+2. ✓ Write product formed
+3. ✓ Balance atoms (may need coefficients)
+4. ✓ Balance charge (add electrons)
+5. ✓ Check: oxidation = electrons on right; reduction = electrons on left
+
+---
+
+## Memory Aids
+
+- **OIL RIG:** Oxidation Is Loss, Reduction Is Gain
+- **PA:** Positive Anode
+- **CCC:** Cations go to Cathode`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "11. Detailed Summary",
+                content: `## Core Definitions
+
+| Term | Definition |
+|------|------------|
+| **Electrolysis** | Breakdown of ionic compound using electricity |
+| **Electrolyte** | Molten or dissolved ionic compound that conducts |
+| **Anode** | Positive electrode — oxidation occurs |
+| **Cathode** | Negative electrode — reduction occurs |
+
+---
+
+## The Electrolysis Process
+
+| Step | What Happens |
+|------|--------------|
+| 1 | Electrolyte must be molten or aqueous (ions free) |
+| 2 | Cations (positive) move to cathode (negative) |
+| 3 | Anions (negative) move to anode (positive) |
+| 4 | At cathode: cations GAIN electrons (reduction) |
+| 5 | At anode: anions LOSE electrons (oxidation) |
+
+---
+
+## Predicting Products
+
+| Electrolyte Type | At Cathode (−) | At Anode (+) |
+|------------------|----------------|--------------|
+| **Molten** | Metal | Non-metal |
+| **Aqueous (reactive metal)** | Hydrogen | Halogen (if conc.) or Oxygen |
+| **Aqueous (unreactive metal)** | Metal | Halogen (if conc.) or Oxygen |
+
+---
+
+## Key Applications
+
+| Use | Process |
+|-----|---------|
+| **Extraction** | Aluminium from bauxite |
+| **Purification** | Copper refining |
+| **Electroplating** | Coating with another metal |
+| **Chlor-alkali** | Brine → Cl₂, NaOH, H₂ |`,
+                diagrams: [],
+                subsections: []
+            }
+        ],
+        key_points: [
+            "Electrolysis = breakdown of ionic compound using electricity",
+            "Requires electrolyte (ionic compound) with FREE-MOVING ions (molten or aqueous)",
+            "Anode = POSITIVE electrode (PA = Positive Anode)",
+            "Cathode = NEGATIVE electrode",
+            "Cations (positive ions) move to cathode; Anions (negative ions) move to anode",
+            "Oxidation (electron loss) occurs at anode; Reduction (electron gain) at cathode",
+            "OIL RIG: Oxidation Is Loss, Reduction Is Gain",
+            "Molten compounds → metal at cathode, non-metal at anode",
+            "Aqueous solutions: consider competition with H⁺ and OH⁻ ions",
+            "Electrolysis of brine produces: chlorine, sodium hydroxide, hydrogen",
+            "Uses: metal extraction (Al), metal purification (Cu), electroplating"
+        ],
+        exam_tips: [
+            "Remember PA = Positive Anode; cathode is negative",
+            "Cations to Cathode, Anions to Anode (C to C, A to A)",
+            "For aqueous solutions: compare metal reactivity to hydrogen to predict cathode product",
+            "For aqueous solutions: concentrated halide → halogen; dilute/other → oxygen at anode",
+            "Half-equations: balance atoms FIRST, then balance charge with electrons",
+            "Oxidation half-equation: electrons on PRODUCT side (being lost)",
+            "Reduction half-equation: electrons on REACTANT side (being gained)",
+            "Know observations: Br₂ = brown, Cl₂ = yellow-green, Cu = pink deposit"
+        ]
+    },
+
+    "Metals": {
+        topic: "Metals",
+        subject: "Chemistry",
+        summary: "Metals are elements that lose electrons to form positive ions. The reactivity series ranks metals by their tendency to react, which determines displacement reactions, thermal decomposition patterns, and extraction methods. Key topics include blast furnace iron extraction, electrolytic aluminium extraction, transition metal properties, alloy formation, and corrosion prevention through sacrificial protection.",
+        sections: [
+            {
+                title: "1. Key Terminology",
+                content: `## Essential Definitions
+
+| Term | Definition |
+|------|------------|
+| **Ore** | A rock containing enough metal to make extraction economical |
+| **Displacement Reaction** | A more reactive element takes the place of a less reactive one in a compound |
+| **Alloy** | A mixture containing a metal and at least one other element |
+| **Corrosion** | Chemical reaction of metals with substances in environment (oxygen, water) |
+| **Reduction** | Gain of electrons OR removal of oxygen |
+| **Oxidation** | Loss of electrons OR gain of oxygen |
+
+---
+
+## Why These Terms Matter
+
+- **Ore**: Determines which rocks are worth mining
+- **Displacement**: Predicts which reactions will occur
+- **Alloy**: Explains why mixed metals are stronger`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. The Reactivity Series",
+                content: `## The Reactivity Series (ZIMSEC)
+
+**Most Reactive → Least Reactive:**
+
+| Metal | Symbol | Memory Aid |
+|-------|--------|------------|
+| Potassium | K | **P**lease |
+| Sodium | Na | **S**top |
+| Calcium | Ca | **C**alling |
+| Magnesium | Mg | **M**e |
+| Aluminium | Al | **A** |
+| Zinc | Zn | **Z**ebra |
+| Iron | Fe | **I**n |
+| Lead | Pb | **L**ondon |
+| Copper | Cu | **C**ity |
+| Silver | Ag | **S**oon |
+| Gold | Au | **G**o! |
+
+---
+
+## What the Series Tells Us
+
+| Position | Reactivity | Compound Stability | Extraction Method |
+|----------|------------|-------------------|-------------------|
+| **Top** (K, Na, Ca) | Very reactive | Very stable compounds | Electrolysis only |
+| **Middle** (Mg → Fe) | Moderately reactive | Moderately stable | Carbon reduction |
+| **Bottom** (Cu, Ag, Au) | Unreactive | Unstable compounds | Found native or heating |
+
+> **Key insight:** More reactive metals form more stable compounds and are harder to extract.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2.1 Displacement Reactions",
+                content: `## The Principle
+
+A **more reactive metal** will displace a **less reactive metal** from a solution of its salt.
+
+---
+
+## Classic Example: Zinc + Copper Sulfate
+
+$$\\text{Zn(s)} + \\text{CuSO}_4\\text{(aq)} \\rightarrow \\text{ZnSO}_4\\text{(aq)} + \\text{Cu(s)}$$
+
+### Observations:
+- Blue solution **fades** (Cu²⁺ ions removed)
+- **Pink-brown** copper metal deposited
+- Solution becomes **colourless** (ZnSO₄)
+
+---
+
+## Ionic Equation
+
+$$\\text{Zn(s)} + \\text{Cu}^{2+}\\text{(aq)} \\rightarrow \\text{Zn}^{2+}\\text{(aq)} + \\text{Cu(s)}$$
+
+| Species | Change | Process |
+|---------|--------|---------|
+| Zinc | Loses 2e⁻ | Oxidation |
+| Copper ion | Gains 2e⁻ | Reduction |
+
+> **Displacement reactions are REDOX reactions** — electron transfer occurs.
+
+---
+
+## Predicting Reactions
+
+| Will it React? | Answer |
+|----------------|--------|
+| Mg + ZnSO₄ | ✓ Yes (Mg more reactive than Zn) |
+| Cu + ZnSO₄ | ✗ No (Cu less reactive than Zn) |
+| Fe + CuSO₄ | ✓ Yes (Fe more reactive than Cu) |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2.2 Thermal Decomposition",
+                content: `## The Principle
+
+**Thermal decomposition** = breaking down by heating
+
+> More reactive metals form **more stable** compounds that are **harder to decompose**.
+
+---
+
+## Carbonates
+
+| Metal Position | What Happens |
+|----------------|--------------|
+| K, Na (top) | Do NOT decompose on heating — too stable |
+| Ca → Cu (middle/bottom) | Decompose to metal oxide + CO₂ |
+
+**General equation:** 
+$$\\text{Metal carbonate} \\xrightarrow{\\Delta} \\text{Metal oxide} + \\text{CO}_2$$
+
+**Example:** CaCO₃ → CaO + CO₂
+
+---
+
+## Hydroxides
+
+| Metal Position | What Happens |
+|----------------|--------------|
+| K, Na (top) | Do NOT decompose — too stable |
+| Ca → Cu (middle/bottom) | Decompose to metal oxide + water |
+
+**General equation:**
+$$\\text{Metal hydroxide} \\xrightarrow{\\Delta} \\text{Metal oxide} + \\text{H}_2\\text{O}$$
+
+---
+
+## Nitrates
+
+| Metal Position | Products |
+|----------------|----------|
+| K, Na (top) | Metal nitrite + oxygen |
+| Ca → Cu (middle/bottom) | Metal oxide + brown NO₂ + oxygen |
+
+---
+
+## Apparent Unreactivity of Aluminium
+
+Despite being high in series, aluminium appears unreactive because:
+- Thin layer of **Al₂O₃** forms instantly in air
+- This oxide layer is **tough and protective**
+- Prevents further reaction with air/water`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. Extraction of Metals",
+                content: `## Choosing the Extraction Method
+
+| Metal Position | Method | Reason |
+|----------------|--------|--------|
+| **K, Na, Ca, Mg, Al** (above carbon) | Electrolysis | Too reactive for carbon reduction |
+| **Zn, Fe, Pb, Cu** (below carbon) | Carbon reduction | Carbon can reduce the oxide |
+| **Ag, Au** (very bottom) | Found native or simple heating | Very unreactive |
+
+---
+
+## Key Principle
+
+$$\\text{Reactivity: } \\text{K} > \\text{Na} > \\text{Ca} > \\text{Mg} > \\text{Al} > \\boxed{\\text{Carbon}} > \\text{Zn} > \\text{Fe} > \\text{Pb} > \\text{Cu}$$
+
+> Carbon can only reduce oxides of metals **below it** in the reactivity series.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3.1 Extraction of Iron (Blast Furnace)",
+                content: `## Raw Materials (The Charge)
+
+| Material | Purpose |
+|----------|---------|
+| **Iron ore (Fe₂O₃)** | Source of iron |
+| **Coke (carbon)** | Burns to provide heat; produces reducing agent |
+| **Limestone (CaCO₃)** | Flux to remove sand impurities |
+| **Hot air** | Supplies oxygen for combustion |
+
+---
+
+## Key Reactions
+
+### 1. Coke burns (provides heat)
+$$\\text{C} + \\text{O}_2 \\rightarrow \\text{CO}_2$$
+
+### 2. Carbon dioxide reduced to carbon monoxide
+$$\\text{CO}_2 + \\text{C} \\rightarrow 2\\text{CO}$$
+
+### 3. Reduction of iron ore (THE KEY REACTION!)
+$$\\text{Fe}_2\\text{O}_3 + 3\\text{CO} \\rightarrow 2\\text{Fe} + 3\\text{CO}_2$$
+
+> **EXAM TIP:** The reducing agent is **carbon monoxide (CO)**, NOT carbon!
+
+---
+
+## Slag Formation (Removing Impurities)
+
+### Step 1: Limestone decomposes
+$$\\text{CaCO}_3 \\rightarrow \\text{CaO} + \\text{CO}_2$$
+
+### Step 2: Calcium oxide reacts with sand
+$$\\text{CaO} + \\text{SiO}_2 \\rightarrow \\text{CaSiO}_3 \\text{ (slag)}$$
+
+---
+
+## Products and Uses
+
+| Product | Use |
+|---------|-----|
+| **Molten iron** | Collected at bottom; made into steel |
+| **Slag** | Floats on iron; used for road building |
+| **Hot waste gases** | Used to heat incoming air blast |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3.2 Extraction of Aluminium",
+                content: `## Why Electrolysis?
+
+- Aluminium is **above carbon** in reactivity series
+- Carbon reduction CANNOT work
+- Electrolysis of **molten aluminium oxide** required
+
+---
+
+## The Role of Cryolite
+
+| Problem | Solution |
+|---------|----------|
+| Al₂O₃ melts above 2000°C | Dissolve in molten **cryolite** |
+| Very expensive to heat | Cryolite lowers melting point to ~1000°C |
+
+> **Cryolite = Na₃AlF₆** — acts as a solvent, saves energy
+
+---
+
+## Electrode Reactions
+
+### At Cathode (−) — REDUCTION
+$$\\text{Al}^{3+} + 3\\text{e}^- \\rightarrow \\text{Al}$$
+
+Molten aluminium collects at bottom of cell
+
+### At Anode (+) — OXIDATION
+$$2\\text{O}^{2-} \\rightarrow \\text{O}_2 + 4\\text{e}^-$$
+
+Oxygen gas released
+
+---
+
+## Why Anodes Need Replacing
+
+- Oxygen reacts with hot carbon anodes
+- Forms carbon dioxide: C + O₂ → CO₂
+- Anodes **burn away** and must be replaced periodically
+
+---
+
+## Summary
+
+| Feature | Details |
+|---------|---------|
+| **Electrolyte** | Al₂O₃ dissolved in molten cryolite |
+| **Cathode product** | Molten aluminium |
+| **Anode product** | Oxygen gas |
+| **Anode material** | Carbon/graphite (needs replacing) |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3.3 Extraction of Zinc",
+                content: `## Overview
+
+Zinc is extracted from **zinc blende (ZnS)** in three steps.
+
+---
+
+## Step 1: Roasting
+
+Heating the ore strongly in air converts sulfide to oxide.
+
+$$2\\text{ZnS} + 3\\text{O}_2 \\rightarrow 2\\text{ZnO} + 2\\text{SO}_2$$
+
+---
+
+## Step 2: Reduction
+
+Zinc oxide is reduced by carbon at high temperature.
+
+$$\\text{ZnO} + \\text{C} \\rightarrow \\text{Zn} + \\text{CO}$$
+
+---
+
+## Step 3: Distillation
+
+- Furnace temperature is above zinc's boiling point
+- Zinc forms as a **gas/vapour**
+- Vapour is cooled and **condensed** to liquid zinc
+
+---
+
+## Summary Table
+
+| Step | Process | Equation |
+|------|---------|----------|
+| 1 | Roasting | ZnS + O₂ → ZnO + SO₂ |
+| 2 | Reduction | ZnO + C → Zn + CO |
+| 3 | Distillation | Zn(g) → Zn(l) |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. Transition Metals",
+                content: `## What are Transition Metals?
+
+Metallic elements located **between Groups II and III** of the Periodic Table.
+
+Examples: Iron, Copper, Zinc, Nickel, Chromium, Manganese
+
+---
+
+## Characteristic Properties
+
+| Property | Details |
+|----------|---------|
+| **High density** | Much denser than Group I/II metals |
+| **High melting points** | Iron: 1538°C vs Sodium: 98°C |
+| **Coloured compounds** | CuSO₄ = blue; FeCl₃ = yellow |
+| **Variable oxidation states** | Fe²⁺ and Fe³⁺; Cu⁺ and Cu²⁺ |
+| **Catalytic activity** | Excellent catalysts for reactions |
+
+---
+
+## Transition Metals as Catalysts
+
+| Metal | Industrial Process |
+|-------|-------------------|
+| **Iron** | Haber process (ammonia production) |
+| **Vanadium(V) oxide** | Contact process (sulfuric acid production) |
+| **Nickel** | Hydrogenation of vegetable oils |
+| **Manganese(IV) oxide** | Decomposition of hydrogen peroxide |
+
+---
+
+## Variable Oxidation States Examples
+
+| Metal | Ion 1 | Ion 2 | Compound Examples |
+|-------|-------|-------|-------------------|
+| Iron | Fe²⁺ (green) | Fe³⁺ (yellow/brown) | FeSO₄, FeCl₃ |
+| Copper | Cu⁺ | Cu²⁺ (blue) | Cu₂O, CuSO₄ |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Alloys",
+                content: `## Definition
+
+An **alloy** is a mixture containing a metal and at least one other element (metal or non-metal).
+
+---
+
+## Why Alloys are Stronger than Pure Metals
+
+### Pure Metal Structure:
+- All atoms same size
+- Regular arrangement
+- Layers can **slide easily** over each other
+- Metal is soft and malleable
+
+### Alloy Structure:
+- Atoms of **different sizes**
+- Disrupts regular arrangement
+- Layers **cannot slide easily**
+- Alloy is **harder and stronger**
+
+---
+
+## Common Alloys
+
+| Alloy | Composition | Properties | Uses |
+|-------|-------------|------------|------|
+| **Mild Steel** | 99.5% Fe, 0.5% C | Easily worked, rusts easily | Car bodies, machinery |
+| **Stainless Steel** | 70% Fe, 20% Cr, 10% Ni | Hard, strong, rust-resistant | Cutlery, surgical instruments |
+| **Brass** | 70% Cu, 30% Zn | Strong, corrosion-resistant | Musical instruments, taps |
+| **Bronze** | 90% Cu, 10% Sn | Hard, corrosion-resistant | Statues, medals |
+| **Solder** | Pb + Sn | Low melting point | Joining metals |
+
+---
+
+## Why Add Different Elements?
+
+| Element Added | Effect |
+|---------------|--------|
+| **Carbon** to iron | Increases hardness (steel) |
+| **Chromium** to steel | Increases corrosion resistance |
+| **Zinc** to copper | Increases strength (brass) |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "6. Corrosion and Rusting",
+                content: `## What is Corrosion?
+
+**Corrosion** = gradual chemical attack on metals by substances in environment
+
+---
+
+## Rusting of Iron
+
+### Conditions Required (BOTH needed):
+1. **Oxygen** (from air)
+2. **Water**
+
+If either is absent, rusting will NOT occur.
+
+---
+
+## The Product: Rust
+
+$$\\text{Rust} = \\text{Hydrated iron(III) oxide}$$
+
+Formula: **Fe₂O₃·xH₂O**
+
+- Reddish-brown, flaky solid
+- Does NOT protect the metal underneath
+- Continues to spread and weakens structure
+
+---
+
+## Preventing Rusting
+
+| Method | How it Works |
+|--------|--------------|
+| **Painting** | Barrier — keeps out water and oxygen |
+| **Oiling/Greasing** | Barrier — especially for moving parts |
+| **Plastic coating** | Barrier — used for bike handlebars |
+| **Galvanising** | Zinc coating — barrier + sacrificial protection |
+| **Tin plating** | Barrier — used for food cans |
+| **Chromium plating** | Barrier — decorative and protective |
+
+---
+
+## Sacrificial Protection
+
+A **more reactive metal** is attached to the iron/steel.
+
+| Feature | Details |
+|---------|---------|
+| **Metals used** | Zinc or Magnesium |
+| **How it works** | Reactive metal corrodes INSTEAD of iron |
+| **Why it works** | More reactive metal loses electrons first |
+| **Uses** | Ship hulls, underground pipelines |
+
+> The zinc or magnesium is "sacrificed" to protect the iron.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "7. ZIMSEC Exam Tips",
+                content: `## Critical Distinction: Roasting vs Rusting
+
+| Term | Definition | Process Type |
+|------|------------|--------------|
+| **Roasting** | Heating sulfide ore in AIR to form oxide | Industrial extraction step |
+| **Rusting** | Corrosion of iron requiring O₂ + H₂O | Unwanted degradation |
+
+> Confusing these terms loses marks!
+
+---
+
+## Common Exam Mistakes
+
+| Mistake | Correction |
+|---------|------------|
+| "Carbon reduces iron ore" | **Carbon monoxide (CO)** is the reducing agent |
+| "Aluminium reacts easily" | Appears unreactive due to **protective oxide layer** |
+| "Cryolite is the electrolyte" | Cryolite is a **solvent**; Al₂O₃ is the electrolyte |
+| "More reactive = easier to extract" | **Opposite!** More reactive = harder to extract |
+
+---
+
+## Key Equations to Memorise
+
+| Process | Equation |
+|---------|----------|
+| Iron reduction | Fe₂O₃ + 3CO → 2Fe + 3CO₂ |
+| Aluminium at cathode | Al³⁺ + 3e⁻ → Al |
+| Zinc roasting | 2ZnS + 3O₂ → 2ZnO + 2SO₂ |
+| Displacement | Zn + CuSO₄ → ZnSO₄ + Cu |
+
+---
+
+## Marks-Earning Points
+
+- Always identify the **reducing agent** correctly
+- State **conditions** for reactions (e.g., heat, molten, aqueous)
+- For electrolysis, specify which electrode (cathode/anode)
+- For rusting, always state **BOTH** conditions: oxygen AND water`,
+                diagrams: [],
+                subsections: []
+            }
+        ],
+        key_points: [
+            "Reactivity series: K > Na > Ca > Mg > Al > Zn > Fe > Pb > Cu > Ag > Au",
+            "More reactive metals displace less reactive metals from their salt solutions",
+            "Displacement reactions are REDOX reactions involving electron transfer",
+            "More reactive metals form more stable compounds that are harder to decompose",
+            "Carbon can only reduce oxides of metals BELOW it in the reactivity series",
+            "Iron is extracted in blast furnace; reducing agent is CARBON MONOXIDE (not carbon)",
+            "Aluminium extracted by electrolysis because it is above carbon in series",
+            "Cryolite lowers melting point of Al₂O₃, saving energy",
+            "Transition metals: high density, coloured compounds, variable oxidation states, catalysts",
+            "Alloys are harder than pure metals because different-sized atoms prevent layer sliding",
+            "Rusting requires BOTH oxygen AND water; prevented by barriers or sacrificial protection"
+        ],
+        exam_tips: [
+            "In blast furnace, the reducing agent is CARBON MONOXIDE (CO), not carbon — this is a common error!",
+            "Aluminium appears unreactive because of protective aluminium oxide layer",
+            "Don't confuse ROASTING (extraction step) with RUSTING (corrosion of iron)",
+            "Cryolite is a SOLVENT that lowers melting point; Al₂O₃ is the electrolyte",
+            "For displacement: check reactivity series — only MORE reactive metals displace",
+            "Transition metals have VARIABLE oxidation states — Fe²⁺ AND Fe³⁺",
+            "Alloys are stronger because different-sized atoms disrupt regular arrangement",
+            "Sacrificial protection: the MORE reactive metal corrodes INSTEAD of iron"
+        ]
+    },
+
+    "Non-metals": {
+        topic: "Non-metals",
+        subject: "Chemistry",
+        summary: "Non-metals gain electrons to form negative ions. Key topics include the halogens (Group VII) with their displacement reactions and reactivity trends, hydrogen and oxygen preparation and uses, the Haber process for ammonia manufacture, the Contact process for sulfuric acid production, carbon allotropes (diamond/graphite), carbon cycle, and limestone uses. These elements are fundamental to life, industry, and environmental chemistry.",
+        sections: [
+            {
+                title: "1. The Halogens (Group VII)",
+                content: `## Introduction
+
+The **halogens** occupy Group VII and are highly reactive non-metals showing clear periodic trends.
+
+---
+
+## Physical Properties
+
+| Halogen | Appearance | State at Room Temp | Reactivity |
+|---------|------------|-------------------|------------|
+| **Chlorine** | Yellow-green | Gas | Highest |
+| **Bromine** | Red-brown | Liquid | Intermediate |
+| **Iodine** | Grey-black | Solid | Lowest |
+
+> **Trend:** Reactivity DECREASES down Group VII
+
+---
+
+## Displacement Reactions
+
+A more reactive halogen displaces a less reactive one from its salt solution.
+
+### Example 1: Chlorine + Potassium Bromide
+
+$$\\text{Cl}_2\\text{(g)} + 2\\text{KBr(aq)} \\rightarrow 2\\text{KCl(aq)} + \\text{Br}_2\\text{(aq)}$$
+
+**Observation:** Colourless solution turns orange/yellow (bromine formed)
+
+### Example 2: Bromine + Potassium Iodide
+
+$$\\text{Br}_2\\text{(aq)} + 2\\text{KI(aq)} \\rightarrow 2\\text{KBr(aq)} + \\text{I}_2\\text{(aq)}$$
+
+**Observation:** Solution turns brown (iodine formed)
+
+---
+
+## Uses of Chlorine
+
+| Application | Why Chlorine? |
+|-------------|---------------|
+| **Sterilising water** | Kills bacteria in drinking water and pools |
+| **Bleaches** | Household and industrial bleaching |
+| **Making PVC** | Feedstock for plastic production |
+| **Medical drugs** | Many pharmaceuticals contain chlorine |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. Hydrogen and Oxygen",
+                content: `## Hydrogen
+
+### Laboratory Preparation
+
+$$\\text{Zn(s)} + \\text{H}_2\\text{SO}_4\\text{(aq)} \\rightarrow \\text{ZnSO}_4\\text{(aq)} + \\text{H}_2\\text{(g)}$$
+
+- Zinc + dilute sulfuric acid
+- Collected by upward delivery (less dense than air)
+
+### Industrial Uses
+
+| Use | Application |
+|-----|-------------|
+| **Haber Process** | Making ammonia (with N₂) |
+| **Fuel Cells** | Clean energy: H₂ + O₂ → H₂O + electricity |
+| **Hydrogenation** | Making margarine from vegetable oils |
+
+---
+
+## Oxygen
+
+### Laboratory Preparation
+
+$$2\\text{H}_2\\text{O}_2\\text{(aq)} \\xrightarrow{\\text{MnO}_2} 2\\text{H}_2\\text{O(l)} + \\text{O}_2\\text{(g)}$$
+
+- Hydrogen peroxide decomposition
+- **MnO₂ is a catalyst** (not consumed)
+
+### Uses
+
+| Use | Details |
+|-----|---------|
+| **Medical** | Respiratory support for patients |
+| **Welding** | Oxy-acetylene flame cuts/welds steel |
+| **Respiration** | Essential for all aerobic life |
+
+---
+
+## Test for Oxygen
+
+A **glowing splint relights** in oxygen.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2.1 Types of Oxides",
+                content: `## Classification of Oxides
+
+| Type | Definition | Examples |
+|------|------------|----------|
+| **Acidic** | Non-metal oxides that react with bases → salt + water | SO₂, CO₂, NO₂ |
+| **Basic** | Metal oxides that react with acids → salt + water | MgO, CuO, CaO |
+| **Amphoteric** | React with BOTH acids AND bases | Al₂O₃, ZnO |
+| **Neutral** | React with NEITHER acids nor bases | CO, H₂O |
+
+---
+
+## Examples
+
+### Acidic Oxide Reaction
+$$\\text{SO}_2 + 2\\text{NaOH} \\rightarrow \\text{Na}_2\\text{SO}_3 + \\text{H}_2\\text{O}$$
+
+### Basic Oxide Reaction
+$$\\text{MgO} + 2\\text{HCl} \\rightarrow \\text{MgCl}_2 + \\text{H}_2\\text{O}$$
+
+### Amphoteric Oxide
+- With acid: ZnO + 2HCl → ZnCl₂ + H₂O
+- With alkali: ZnO + 2NaOH → Na₂ZnO₂ + H₂O
+
+---
+
+## Common Misconception
+
+> **NOT all non-metal oxides are acidic!**
+> CO (carbon monoxide) and H₂O (water) are NEUTRAL oxides.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. The Haber Process",
+                content: `## Purpose
+
+Manufacturing **ammonia (NH₃)** for fertilisers from nitrogen and hydrogen.
+
+---
+
+## The Reaction
+
+$$\\text{N}_2\\text{(g)} + 3\\text{H}_2\\text{(g)} \\rightleftharpoons 2\\text{NH}_3\\text{(g)}$$
+
+This is a **reversible reaction** — equilibrium reached.
+
+---
+
+## Industrial Conditions
+
+| Condition | Value | Reason |
+|-----------|-------|--------|
+| **Temperature** | 450°C | Compromise: low temp gives high yield but slow rate |
+| **Pressure** | 200 atm | High pressure favours forward reaction (fewer moles) |
+| **Catalyst** | Iron | Speeds up reaction; doesn't affect equilibrium position |
+
+---
+
+## Why These Conditions?
+
+### Temperature Compromise:
+- Forward reaction is **exothermic** (releases heat)
+- Low temp → high yield BUT very slow
+- 450°C = acceptable rate AND reasonable yield
+
+### Pressure Reasoning:
+- 4 moles → 2 moles (fewer on right)
+- High pressure favours side with fewer moles
+- Very high pressure too expensive → 200 atm is economical
+
+---
+
+## Making Fertilisers
+
+### Ammonium Nitrate
+
+$$\\text{NH}_3\\text{(aq)} + \\text{HNO}_3\\text{(aq)} \\rightarrow \\text{NH}_4\\text{NO}_3\\text{(aq)}$$
+
+- Neutralisation reaction
+- Provides nitrogen for plant growth
+
+---
+
+## Test for Ammonium Ions
+
+1. Warm sample with sodium hydroxide (NaOH)
+2. If NH₄⁺ present → ammonia gas released
+3. **Ammonia turns damp red litmus paper BLUE**`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. The Contact Process",
+                content: `## Purpose
+
+Manufacturing **sulfuric acid (H₂SO₄)** — the world's most used industrial chemical.
+
+---
+
+## Stage 1: Making Sulfur Dioxide
+
+$$\\text{S(s)} + \\text{O}_2\\text{(g)} \\rightarrow \\text{SO}_2\\text{(g)}$$
+
+Burn sulfur in air.
+
+---
+
+## Stage 2: Catalytic Oxidation
+
+$$2\\text{SO}_2\\text{(g)} + \\text{O}_2\\text{(g)} \\rightleftharpoons 2\\text{SO}_3\\text{(g)}$$
+
+| Condition | Value |
+|-----------|-------|
+| **Catalyst** | Vanadium(V) oxide (V₂O₅) |
+| **Temperature** | 450°C |
+| **Pressure** | 1-2 atmospheres |
+
+---
+
+## Stage 3: Making Sulfuric Acid
+
+**Why not add SO₃ directly to water?**
+- Reaction is violently exothermic
+- Creates dangerous acidic mist
+
+**Instead:**
+1. Dissolve SO₃ in concentrated H₂SO₄ → **oleum (H₂S₂O₇)**
+2. Dilute oleum with water → concentrated H₂SO₄
+
+$$\\text{SO}_3 + \\text{H}_2\\text{SO}_4 \\rightarrow \\text{H}_2\\text{S}_2\\text{O}_7$$
+$$\\text{H}_2\\text{S}_2\\text{O}_7 + \\text{H}_2\\text{O} \\rightarrow 2\\text{H}_2\\text{SO}_4$$
+
+---
+
+## Properties of Sulfuric Acid
+
+| Property | Details |
+|----------|---------|
+| **Strong acid (dilute)** | Fully ionises; reacts with metals/bases/carbonates |
+| **Dehydrating agent (conc.)** | Removes water from substances; chars sugar to carbon |
+
+---
+
+## Acid Rain
+
+| Cause | Effect |
+|-------|--------|
+| SO₂ from burning fossil fuels | Forms H₂SO₃ and H₂SO₄ in atmosphere |
+| Falls as acid rain | Damages buildings, kills aquatic life, destroys forests |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Carbon and its Compounds",
+                content: `## Allotropes of Carbon
+
+**Allotropes** = different structural forms of the same element
+
+| Property | Diamond | Graphite |
+|----------|---------|----------|
+| **Bonding** | Each C bonded to 4 others (tetrahedral) | Each C bonded to 3 others (hexagonal layers) |
+| **Hardness** | Extremely hard | Soft and slippery |
+| **Conductivity** | Does NOT conduct | DOES conduct electricity |
+| **Reason** | All electrons in bonds | One free electron per C (delocalised) |
+| **Uses** | Cutting tools, jewellery | Lubricants, pencils, electrodes |
+
+---
+
+## Carbon Oxides
+
+### Carbon Monoxide (CO)
+- Produced by **incomplete combustion**
+- **HIGHLY POISONOUS**
+- Binds to haemoglobin → prevents oxygen transport
+- Industrial use: **reducing agent in blast furnace**
+
+### Carbon Dioxide (CO₂)
+- Test: Bubbles through limewater → turns milky
+
+$$\\text{CO}_2 + \\text{Ca(OH)}_2 \\rightarrow \\text{CaCO}_3 + \\text{H}_2\\text{O}$$
+
+---
+
+## The Carbon Cycle
+
+| Adding CO₂ | Removing CO₂ |
+|------------|--------------|
+| Respiration | Photosynthesis |
+| Combustion | Dissolving in oceans |
+| Decomposition | |
+
+---
+
+## Limestone (CaCO₃)
+
+### Thermal Decomposition
+
+$$\\text{CaCO}_3 \\xrightarrow{\\Delta} \\text{CaO} + \\text{CO}_2$$
+
+### Uses
+
+| Application | Purpose |
+|-------------|---------|
+| **Agriculture** | Neutralising acidic soils |
+| **Flue gas desulfurisation** | Removing SO₂ from power station emissions |
+| **Cement/concrete** | Construction material |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "6. Safety and Exam Focus",
+                content: `## Safety Precautions
+
+| Chemical | Hazard | Precaution |
+|----------|--------|------------|
+| **Chlorine** | Poisonous gas | Use in fume cupboard |
+| **Conc. H₂SO₄** | Highly corrosive | Wear goggles/gloves |
+| **CO** | Toxic, odourless | Ensure good ventilation |
+
+---
+
+## Common Exam Misconceptions
+
+| Misconception | Correct Statement |
+|---------------|-------------------|
+| "Diamond conducts electricity" | NO! All electrons are in bonds — no free electrons |
+| "SO₃ is added directly to water" | NO! Creates dangerous mist. Dissolve in H₂SO₄ first |
+| "Haber uses low temp for high yield" | NO! Low temp = slow reaction. 450°C is a COMPROMISE |
+| "All non-metal oxides are acidic" | NO! CO and H₂O are NEUTRAL oxides |
+
+---
+
+## Key Equations to Memorise
+
+| Process | Equation |
+|---------|----------|
+| Haber process | N₂ + 3H₂ ⇌ 2NH₃ |
+| Making ammonium nitrate | NH₃ + HNO₃ → NH₄NO₃ |
+| Contact process (stage 2) | 2SO₂ + O₂ ⇌ 2SO₃ |
+| Limestone decomposition | CaCO₃ → CaO + CO₂ |
+| CO₂ test | CO₂ + Ca(OH)₂ → CaCO₃ + H₂O |
+
+---
+
+## Marks-Earning Points
+
+- Always state CONDITIONS when asked about industrial processes
+- Know the CATALYST for each process (Fe for Haber, V₂O₅ for Contact)
+- Explain WHY specific conditions are used (compromise, economics)
+- Distinguish between ALLOTROPES and ISOTOPES`,
+                diagrams: [],
+                subsections: []
+            }
+        ],
+        key_points: [
+            "Halogens (Group VII): reactivity DECREASES down the group",
+            "More reactive halogens displace less reactive ones from salt solutions",
+            "Hydrogen: Haber process reactant, fuel cells, hydrogenation",
+            "Oxygen: prepared from H₂O₂ decomposition with MnO₂ catalyst",
+            "Haber process: N₂ + 3H₂ ⇌ 2NH₃ at 450°C, 200 atm, iron catalyst",
+            "Contact process: 2SO₂ + O₂ ⇌ 2SO₃ at 450°C, V₂O₅ catalyst",
+            "SO₃ dissolved in H₂SO₄ (not water) to make oleum, then diluted",
+            "Diamond: hard, doesn't conduct; Graphite: soft, conducts electricity",
+            "Difference is in structure: diamond tetrahedral, graphite layered with free electrons",
+            "CO is poisonous (binds to haemoglobin); CO₂ test = limewater turns milky",
+            "Limestone thermal decomposition: CaCO₃ → CaO + CO₂"
+        ],
+        exam_tips: [
+            "Halogen reactivity DECREASES down Group VII — opposite to metals!",
+            "Displacement: more reactive halogen oxidises the less reactive halide ion",
+            "Haber process: 450°C is a COMPROMISE between rate and yield",
+            "Never say SO₃ is added to water — it creates dangerous mist; dissolve in H₂SO₄ first",
+            "Diamond does NOT conduct — all electrons are in covalent bonds",
+            "Graphite DOES conduct — each carbon has one delocalised electron",
+            "CO and H₂O are NEUTRAL oxides — don't say all non-metal oxides are acidic",
+            "Know the test for ammonia: turns damp red litmus paper BLUE"
+        ]
+    },
+
+    "The Periodic Table": {
+        topic: "The Periodic Table",
+        subject: "Chemistry",
+        summary: "The Periodic Table is a systematic arrangement of elements by atomic number, revealing predictable patterns in properties. Periods (horizontal rows) indicate electron shells; Groups (vertical columns) indicate valence electrons. Key groups include Group 1 (Alkali Metals), Group 2 (Alkaline Earth Metals), Group 17 (Halogens), Group 18 (Noble Gases), and Transition Elements. Understanding electronic configuration explains reactivity trends and chemical behaviour.",
+        sections: [
+            {
+                title: "1. Structure of the Periodic Table",
+                content: `## 1.1 Periods (Horizontal Rows)
+
+There are **7 periods** in the modern Periodic Table.
+
+> **Rule:** Period Number = Number of occupied electron shells
+
+**Example:** Sodium (Na) is in Period 3 → has 3 electron shells (2,8,1)
+
+---
+
+## 1.2 Groups (Vertical Columns)
+
+Groups are numbered 1-18 (or I to VIII/0 in older system).
+
+> **Rule:** Group Number = Number of electrons in outer shell (valence electrons)
+
+This is why elements in the **same group have similar chemical properties** — they have the same number of valence electrons.
+
+---
+
+## 1.3 Metals vs Non-Metals
+
+| Position | Type | Example |
+|----------|------|---------|
+| **Left side + centre** | Metals | Na, Fe, Cu |
+| **Right side** | Non-metals | O, Cl, S |
+
+### Properties Comparison
+
+| Property | Metals | Non-Metals |
+|----------|--------|------------|
+| **Conductivity** | Good conductors | Poor conductors |
+| **Malleability** | Malleable, ductile | Brittle |
+| **Melting point** | Usually high | Usually low |
+| **Oxides** | Basic | Acidic |
+
+> **Exception:** Graphite (carbon) conducts electricity despite being a non-metal.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. Electronic Configuration",
+                content: `## Decoding an Element's Position
+
+| Rule | Meaning |
+|------|---------|
+| **Period Number** | = Number of electron shells |
+| **Group Number** | = Number of outer shell electrons |
+
+---
+
+## Worked Example: Magnesium (Mg)
+
+1. Atomic number: 12 → 12 electrons
+2. Electronic configuration: 2, 8, 2
+3. **Period:** 3 (three shells occupied)
+4. **Group:** 2 (two electrons in outer shell)
+
+---
+
+## Why Electronic Structure Matters
+
+Chemical reactions involve the **outermost (valence) electrons**.
+
+| Group | Valence Electrons | Tendency | Ion Formed |
+|-------|-------------------|----------|------------|
+| **Group 1** | 1 | Lose 1 electron | +1 (e.g., Na⁺) |
+| **Group 2** | 2 | Lose 2 electrons | +2 (e.g., Mg²⁺) |
+| **Group 17** | 7 | Gain 1 electron | -1 (e.g., Cl⁻) |
+| **Group 18** | 8 (full) | No change | None (stable) |
+
+> Elements in the same group have similar properties because they have the **same number of valence electrons**.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. Periodic Trends",
+                content: `## 3.1 Trends Down a Group
+
+### Reactivity of METALS (Group 1)
+
+> **Trend:** Reactivity INCREASES down the group
+
+**Reason:** 
+- More shells → outer electron further from nucleus
+- Inner shells SHIELD the outer electron
+- Easier to LOSE the outer electron
+
+**Example:** K is more reactive than Na
+
+---
+
+### Reactivity of NON-METALS (Group 17)
+
+> **Trend:** Reactivity DECREASES down the group
+
+**Reason:**
+- More shells → outer shell further from nucleus
+- Harder to ATTRACT and GAIN an electron
+
+**Example:** Cl is more reactive than I
+
+---
+
+## Physical Properties Down Group 17/18
+
+| Property | Trend Down Group |
+|----------|------------------|
+| **Colour** | Gets darker (pale yellow → grey-black) |
+| **State** | Gas → Liquid → Solid |
+| **Boiling point** | Increases |
+
+---
+
+## 3.2 Trends Across a Period (Period 3)
+
+| Left → Right | Character |
+|--------------|-----------|
+| Na, Mg | Reactive metals |
+| Al | Less reactive metal |
+| Si, P, S | Non-metals |
+| Cl | Very reactive non-metal |
+| Ar | Unreactive noble gas |
+
+> **Trend:** Metallic character DECREASES across a period (left to right)`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. Important Groups",
+                content: `## 4.1 Group 1 – Alkali Metals
+
+| Property | Details |
+|----------|---------|
+| **Softness** | Can be cut with a knife |
+| **Density** | Low (Li, Na, K float on water) |
+| **Storage** | Under oil (prevent reaction with air/water) |
+| **Ion formed** | +1 (lose 1 electron) |
+| **Reactivity** | INCREASES down group |
+
+**Examples:** Lithium, Sodium, Potassium
+
+---
+
+## 4.2 Group 2 – Alkaline Earth Metals
+
+| Property | Details |
+|----------|---------|
+| **Reactivity** | Reactive but less than Group 1 |
+| **Hardness** | Harder than Group 1 |
+| **Ion formed** | +2 (lose 2 electrons) |
+| **Reactivity** | INCREASES down group |
+
+**Examples:** Magnesium, Calcium
+
+---
+
+## 4.3 Group 17 – Halogens
+
+| Property | Details |
+|----------|---------|
+| **Molecules** | Diatomic (Cl₂, Br₂, I₂) |
+| **Colour** | Deepens down group |
+| **Ion formed** | -1 (gain 1 electron) |
+| **Reactivity** | DECREASES down group |
+
+**Uses:** Chlorine sterilises water supplies
+
+---
+
+## 4.4 Group 18 – Noble Gases
+
+| Property | Details |
+|----------|---------|
+| **State** | Colourless gases |
+| **Structure** | Monatomic (single atoms) |
+| **Reactivity** | Almost completely UNREACTIVE |
+
+**Reason for stability:** Full outer shell of electrons
+
+**Examples:** Helium, Neon, Argon`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Transition Elements",
+                content: `## Location
+
+The block of metallic elements **between Group 2 and Group 13**.
+
+Examples: Iron, Copper, Zinc, Nickel, Chromium
+
+---
+
+## Key Characteristics
+
+| Characteristic | Details |
+|----------------|---------|
+| **Coloured compounds** | CuSO₄ = blue, FeCl₃ = yellow |
+| **Variable oxidation states** | Fe²⁺ AND Fe³⁺; Cu⁺ AND Cu²⁺ |
+| **Catalytic activity** | Excellent catalysts for reactions |
+| **Complex ions** | Form ions like [Co(H₂O)₆]²⁺ |
+
+---
+
+## Transition Metals as Catalysts
+
+| Metal/Compound | Industrial Process |
+|----------------|-------------------|
+| **Iron** | Haber process (ammonia) |
+| **Vanadium(V) oxide** | Contact process (sulfuric acid) |
+| **Manganese(IV) oxide** | Decomposition of H₂O₂ |
+| **Nickel** | Hydrogenation of oils |
+
+---
+
+## Common Uses
+
+| Element | Use |
+|---------|-----|
+| **Iron (Fe)** | Steel for construction |
+| **Copper (Cu)** | Electrical wiring (good conductor) |
+| **Zinc (Zn)** | Galvanising iron (rust prevention) |
+| **Silver (Ag)** | Electronics (best conductor) |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "6. Applications",
+                content: `## Predictive Power
+
+The Periodic Table allows us to:
+- **Predict properties** based on position
+- **Explain reactivity patterns**
+- **Understand compound formation**
+
+---
+
+## Industrial Applications
+
+| Application | Elements Used |
+|-------------|---------------|
+| **Construction** | Iron (steel), Aluminium |
+| **Electrical wiring** | Copper |
+| **Catalysts** | Transition metals (Fe, V, Ni) |
+| **Fertilisers** | Nitrogen compounds |
+
+---
+
+## Biological Importance
+
+| Element | Role in Body |
+|---------|--------------|
+| **Calcium** | Strong bones and teeth |
+| **Potassium** | Nerve function |
+| **Iron** | Oxygen transport in blood |
+| **Sodium** | Fluid balance |
+
+---
+
+## Historical Note
+
+Dmitri Mendeleev left gaps for undiscovered elements and successfully predicted their properties — proving the validity of the periodic law.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "7. Exam Revision Guide",
+                content: `## Key Definitions
+
+| Term | Definition |
+|------|------------|
+| **Group** | Vertical column; elements have similar properties |
+| **Period** | Horizontal row; elements have same number of shells |
+| **Valence electrons** | Electrons in the outermost shell |
+| **Transition element** | Metal in the central block, forms coloured compounds |
+| **Catalyst** | Speeds up reaction without being used up |
+
+---
+
+## Key Distinctions
+
+| Concept 1 | vs | Concept 2 |
+|-----------|-----|-----------|
+| Mixture | vs | Compound (chemically bonded) |
+| Ionic bonding | vs | Covalent bonding |
+| Physical change | vs | Chemical change |
+
+---
+
+## Worked Example: Finding Ion Charges
+
+**Question:** NiO is ionic. Find the ion formulae.
+
+**Answer:**
+1. O is in Group 16 → gains 2 electrons → **O²⁻**
+2. NiO is neutral → charges must balance
+3. Nickel must be → **Ni²⁺**
+
+---
+
+## Common Exam Questions
+
+| Question Type | Key Points to Include |
+|---------------|----------------------|
+| "Why similar properties in a group?" | Same number of valence electrons |
+| "Why does reactivity increase down Group 1?" | Outer electron further from nucleus, easier to lose |
+| "Why are noble gases unreactive?" | Full outer shell of electrons |
+| "Describe ionic structure" | Giant lattice, oppositely charged ions, electrostatic attraction |`,
+                diagrams: [],
+                subsections: []
+            }
+        ],
+        key_points: [
+            "Period number = number of electron shells; Group number = number of outer electrons",
+            "Elements in the same GROUP have similar chemical properties (same valence electrons)",
+            "Metals are on the left; non-metals are on the right",
+            "Group 1 (Alkali Metals): Very reactive, form +1 ions, reactivity INCREASES down group",
+            "Group 17 (Halogens): Reactive non-metals, form -1 ions, reactivity DECREASES down group",
+            "Group 18 (Noble Gases): Full outer shell = stable = unreactive",
+            "Transition metals: Coloured compounds, variable oxidation states, catalysts",
+            "Reactivity of metals increases down a group (easier to lose outer electrons)",
+            "Reactivity of non-metals decreases down a group (harder to gain electrons)",
+            "Metallic character decreases across a period (left to right)",
+            "Electronic configuration determines an element's chemical properties"
+        ],
+        exam_tips: [
+            "Period = shells, Group = outer electrons — memorise this rule!",
+            "Group 1 metals get MORE reactive down the group; Group 17 halogens get LESS reactive",
+            "Noble gases are unreactive because they have a FULL outer shell",
+            "Transition metals form COLOURED compounds and have VARIABLE oxidation states",
+            "When asked why elements in same group are similar, always mention VALENCE ELECTRONS",
+            "For ionic compound charges: non-metal ion charge is usually known, then balance to find metal ion charge",
+            "Remember the catalysts: Iron for Haber process, V₂O₅ for Contact process",
+            "Physical properties trend down Group 17: colour darkens, state changes gas→liquid→solid"
         ]
     }
 };
