@@ -639,6 +639,7 @@ def generate_question():
         topic = data.get('topic')
         difficulty = data.get('difficulty', 'medium')
         question_type = data.get('type', 'topical')  # 'topical' or 'exam'
+        question_format = (data.get('question_format') or 'mcq').lower()  # 'mcq' or 'structured'
         
         if not subject:
             return jsonify({'success': False, 'message': 'Subject is required'}), 400
@@ -709,7 +710,10 @@ def generate_question():
                     topic = TOPICS[parent_subject][0]
             
             science_gen = CombinedScienceGenerator()
-            question_data = science_gen.generate_topical_question(parent_subject, topic or 'Cell Structure and Organisation', difficulty, g.current_user_id)
+            if question_format == 'structured':
+                question_data = science_gen.generate_structured_question(parent_subject, topic or 'Cell Structure and Organisation', difficulty, g.current_user_id)
+            else:
+                question_data = science_gen.generate_topical_question(parent_subject, topic or 'Cell Structure and Organisation', difficulty, g.current_user_id)
         elif subject == 'english':
             english_service = EnglishService()
             # English service uses different method - get grammar or vocabulary question
@@ -800,11 +804,17 @@ def generate_question():
         question_type_mobile = question_data.get('question_type', '') or question_data.get('type', 'short_answer')
         if subject == 'mathematics' and not options:
             question_type_mobile = 'short_answer'  # Math questions allow text input
+        if subject == 'combined_science' and (question_data.get('question_type') or '').lower() == 'structured':
+            question_type_mobile = 'structured'
         
         # Format question for mobile
         question = {
             'id': str(uuid.uuid4()),
-            'question_text': question_data.get('question', '') or question_data.get('question_text', ''),
+            'question_text': (
+                question_data.get('question', '') or
+                question_data.get('question_text', '') or
+                (question_data.get('stem', '') if (question_data.get('question_type') or '').lower() == 'structured' else '')
+            ),
             'question_type': question_type_mobile,
             'options': options if isinstance(options, list) else [],
             'correct_answer': correct_answer,

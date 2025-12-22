@@ -1052,7 +1052,9 @@ Don't worry - no charges were made to your account."""
                     whatsapp_service.send_interactive_message(user_id, message, buttons)
             return
 
-        if session_type == 'question':
+        if session_type == 'science_structured_question':
+            handle_science_structured_answer(user_id, message_text)
+        elif session_type == 'question':
             handle_question_answer(user_id, message_text)
         elif session_type == 'topic_selection':
             handle_topic_selection(user_id, message_text)
@@ -1075,6 +1077,85 @@ Don't worry - no charges were made to your account."""
 
     except Exception as e:
         logger.error(f"Error handling session message for {user_id}: {e}", exc_info=True)
+
+
+def handle_science_structured_answer(user_id: str, student_answer: str):
+    """Handle typed answers for structured Biology/Chemistry/Physics questions."""
+    try:
+        from database.session_db import get_user_session, clear_user_session
+        session = get_user_session(user_id)
+        if not session or session.get('session_type') != 'science_structured_question':
+            whatsapp_service.send_message(user_id, "❌ No active structured question found. Please choose a topic to start.")
+            return
+
+        structured_question = session.get('question_data') or {}
+        subject = session.get('subject') or structured_question.get('subject') or 'Science'
+        topic = session.get('topic') or structured_question.get('topic') or ''
+        difficulty = session.get('difficulty') or structured_question.get('difficulty') or 'medium'
+
+        # Evaluate with DeepSeek through CombinedScienceGenerator
+        from services.combined_science_generator import CombinedScienceGenerator
+        gen = CombinedScienceGenerator()
+        evaluation = gen.evaluate_structured_answer(structured_question, student_answer)
+
+        if not evaluation or not evaluation.get('success'):
+            whatsapp_service.send_message(
+                user_id,
+                "❌ Sorry, I couldn't evaluate your answer right now. Please try again in a moment."
+            )
+            return
+
+        total = evaluation.get('total_marks', structured_question.get('total_marks', 0))
+        awarded = evaluation.get('marks_awarded', 0)
+        percentage = evaluation.get('percentage', 0.0)
+        is_correct = evaluation.get('is_correct', False)
+
+        header = f"🧪 *{subject} - {topic}* ({difficulty.title()})\n"
+        header += f"📝 *Structured Question Marking*\n\n"
+        header += f"📌 *Score:* {awarded}/{total} ({percentage}%)\n"
+        header += f"{'✅' if is_correct else '❌'} *Result:* {'Good pass' if is_correct else 'Needs improvement'}\n\n"
+
+        # Build per-part feedback (keep WhatsApp message length sane)
+        per_part_lines = []
+        per_parts = evaluation.get('per_part', [])
+        if isinstance(per_parts, list) and per_parts:
+            per_part_lines.append("*Part-by-part feedback:*")
+            for p in per_parts[:6]:
+                label = p.get('label', '')
+                max_marks = p.get('max_marks', '')
+                got = p.get('awarded', '')
+                tfb = (p.get('teacher_feedback') or '').strip()
+                if tfb:
+                    per_part_lines.append(f"- {label} [{got}/{max_marks}]: {tfb}")
+                else:
+                    per_part_lines.append(f"- {label} [{got}/{max_marks}]")
+            per_part_lines.append("")
+
+        overall = (evaluation.get('overall_teacher_feedback') or '').strip()
+        explanation = (evaluation.get('well_detailed_explanation') or '').strip()
+
+        message = header
+        if per_part_lines:
+            message += "\n".join(per_part_lines) + "\n"
+        if overall:
+            message += f"*Teacher Feedback:*\n{overall}\n\n"
+        if explanation:
+            message += f"*Well Detailed Explanation:*\n{explanation}\n"
+
+        # Navigation
+        buttons = [
+            {"text": "▶️ Next Question", "callback_data": f"difficulty_{difficulty}_{subject.lower()}_{topic.replace(' ', '_')}_structured"},
+            {"text": "🔙 Back to Topics", "callback_data": f"science_{subject}"},
+            {"text": "🏠 Main Menu", "callback_data": "main_menu"}
+        ]
+        whatsapp_service.send_interactive_message(user_id, message[:1024], buttons)
+
+        # Clear session after marking to avoid confusion
+        clear_user_session(user_id)
+
+    except Exception as e:
+        logger.error(f"Error handling structured science answer for {user_id}: {e}", exc_info=True)
+        whatsapp_service.send_message(user_id, "❌ Error marking your answer. Please try again.")
 
 def handle_question_answer(user_id: str, answer: str):
     """Handle user's answer to a question"""
@@ -1486,26 +1567,60 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
 
                 # Validate subject and topic
                 if subject in TOPICS and topic in TOPICS.get(subject, []):
-                    # Show difficulty selection for this topic
-                    show_difficulty_selection(user_id, subject, topic, user_name)
+                    # For pure sciences, ask question format first (Structured vs MCQ)
+                    if subject in ["Biology", "Chemistry", "Physics"]:
+                        show_science_question_type_selection(user_id, subject, topic, user_name)
+                    else:
+                        # Show difficulty selection for this topic
+                        show_difficulty_selection(user_id, subject, topic, user_name)
                 else:
                     whatsapp_service.send_message(user_id, f"❌ Invalid topic selection: {subject} - {topic}")
             else:
                 whatsapp_service.send_message(user_id, "❌ Invalid topic selection format.")
+        elif selection_id.startswith('qtype_'):
+            # Format: qtype_structured_subject_topic OR qtype_mcq_subject_topic
+            parts = selection_id.split("_", 3)
+            if len(parts) >= 4:
+                qtype = parts[1].lower()
+                subject = parts[2].title()
+                topic = parts[3].replace("_", " ")
+
+                if subject in TOPICS and topic in TOPICS.get(subject, []) and qtype in ["structured", "mcq"]:
+                    # Show difficulty options, carrying question type in callback data (5th segment)
+                    message = f"🧪 *{subject} - {topic}*\n\nChoose difficulty for *{qtype.upper()}* questions:"
+                    buttons = [
+                        {"text": "🟢 Easy", "callback_data": f"difficulty_easy_{subject.lower()}_{topic.replace(' ', '_')}_{qtype}"},
+                        {"text": "🟡 Medium", "callback_data": f"difficulty_medium_{subject.lower()}_{topic.replace(' ', '_')}_{qtype}"},
+                        {"text": "🔴 Difficult", "callback_data": f"difficulty_difficult_{subject.lower()}_{topic.replace(' ', '_')}_{qtype}"},
+                        {"text": "🔙 Back", "callback_data": f"topic_{subject}_{topic.replace(' ', '_')}"}
+                    ]
+                    whatsapp_service.send_interactive_message(user_id, message, buttons)
+                else:
+                    whatsapp_service.send_message(user_id, "❌ Invalid question format selection.")
+            else:
+                whatsapp_service.send_message(user_id, "❌ Invalid question format selection.")
         elif selection_id.startswith('difficulty_'):
             # Extract difficulty, subject, and topic
-            parts = selection_id.split("_", 3)
+            parts = selection_id.split("_")
+            # difficulty_<level>_<subject>_<topic>[_<qtype>]
             if len(parts) >= 4:
                 difficulty = parts[1]
                 subject = parts[2].title()
-                topic = parts[3].replace("_", " ")  # Remove .title() to preserve original case
+                # topic might contain underscores; qtype (if present) is last token
+                qtype = 'mcq'
+                if len(parts) >= 5 and parts[-1] in ['mcq', 'structured']:
+                    qtype = parts[-1]
+                    topic_raw = "_".join(parts[3:-1])
+                else:
+                    topic_raw = "_".join(parts[3:])
+                topic = topic_raw.replace("_", " ")  # Remove .title() to preserve original case
 
-                logger.info(f"Generating {difficulty} {subject} question for topic: {topic}")
+                logger.info(f"Generating {difficulty} {subject} question for topic: {topic} (type={qtype})")
 
                 # Validate parameters
                 if difficulty in DIFFICULTY_LEVELS and subject in TOPICS and topic in TOPICS.get(subject, []) :
                     # Generate and send question
-                    generate_and_send_question(user_id, subject, topic, difficulty, user_name)
+                    generate_and_send_question(user_id, subject, topic, difficulty, user_name, question_type=qtype)
                 else:
                     whatsapp_service.send_message(user_id, f"❌ Invalid parameters: {difficulty}, {subject}, {topic}")
             else:
@@ -2055,6 +2170,22 @@ def show_difficulty_selection(chat_id: str, subject: str, topic: str, user_name:
     except Exception as e:
         logger.error(f"Error showing difficulty selection for {chat_id}: {e}", exc_info=True)
         whatsapp_service.send_message(chat_id, "❌ Error showing difficulty options. Please try again.")
+
+
+def show_science_question_type_selection(chat_id: str, subject: str, topic: str, user_name: str):
+    """Show question type selection (Structured vs MCQ) for pure science topics."""
+    try:
+        message = f"🧪 *{subject} - {topic}*\n\n"
+        message += f"👤 Welcome {user_name}!\n\nChoose question format:"
+        buttons = [
+            {"text": "📝 Structured", "callback_data": f"qtype_structured_{subject.lower()}_{topic.replace(' ', '_')}"},
+            {"text": "✅ Multiple Choice (MCQ)", "callback_data": f"qtype_mcq_{subject.lower()}_{topic.replace(' ', '_')}"},
+            {"text": "🔙 Back to Topics", "callback_data": f"science_{subject}"}
+        ]
+        whatsapp_service.send_interactive_message(chat_id, message, buttons)
+    except Exception as e:
+        logger.error(f"Error showing science question type selection for {chat_id}: {e}", exc_info=True)
+        whatsapp_service.send_message(chat_id, "❌ Error showing question format options. Please try again.")
 
 
 def handle_subject_selection(user_id: str, subject: str):
@@ -3146,7 +3277,7 @@ def handle_combined_exam_answer(user_id: str, user_answer: str):
         logger.error(f"Error handling combined exam answer for {user_id}: {e}", exc_info=True)
         whatsapp_service.send_message(user_id, "❌ Error processing your answer. Please try again.")
 
-def generate_and_send_question(chat_id: str, subject: str, topic: str, difficulty: str, user_name: str):
+def generate_and_send_question(chat_id: str, subject: str, topic: str, difficulty: str, user_name: str, question_type: str = 'mcq'):
     """Generate and send a question to the user"""
     try:
         # Validate input parameters
@@ -3155,7 +3286,7 @@ def generate_and_send_question(chat_id: str, subject: str, topic: str, difficult
             whatsapp_service.send_message(chat_id, "❌ Invalid request parameters. Please try again.")
             return
 
-        logger.info(f"Starting question generation for {chat_id}: {subject}/{topic}/{difficulty}")
+        logger.info(f"Starting question generation for {chat_id}: {subject}/{topic}/{difficulty} (type={question_type})")
 
         # Validate difficulty level
         if difficulty not in ['easy', 'medium', 'difficult']:
@@ -3200,20 +3331,28 @@ def generate_and_send_question(chat_id: str, subject: str, topic: str, difficult
         # Send loading message with more specific text
         whatsapp_service.send_message(chat_id, f"🧬 Generating {difficulty} {subject} question on {topic}...\n⏳ Please wait while our AI creates your question...")
 
-        # Initialize AI service and generate question
-        from services.ai_service import AIService
-        ai_service = AIService()
-
         question_data = None
 
         if subject in ["Biology", "Chemistry", "Physics"]:
-            logger.info(f"Generating science question: {subject} - {topic} - {difficulty}")
-            question_data = ai_service.generate_science_question(subject, topic, difficulty)
+            if (question_type or 'mcq').lower() == 'structured':
+                logger.info(f"Generating structured science question: {subject} - {topic} - {difficulty}")
+                from services.combined_science_generator import CombinedScienceGenerator
+                science_gen = CombinedScienceGenerator()
+                question_data = science_gen.generate_structured_question(subject, topic, difficulty, chat_id)
+            else:
+                logger.info(f"Generating MCQ science question: {subject} - {topic} - {difficulty}")
+                from services.ai_service import AIService
+                ai_service = AIService()
+                question_data = ai_service.generate_science_question(subject, topic, difficulty)
         elif subject == "Mathematics":
             logger.info(f"Generating math question: {topic} - {difficulty}")
+            from services.ai_service import AIService
+            ai_service = AIService()
             question_data = ai_service.generate_math_question(topic, difficulty)
         elif subject == "English":
             logger.info(f"Generating English question: {topic} - {difficulty}")
+            from services.ai_service import AIService
+            ai_service = AIService()
             question_data = ai_service.generate_english_question(topic, difficulty)
         else:
             logger.error(f"Unsupported subject: {subject}")
@@ -3247,6 +3386,10 @@ def send_question_to_user(chat_id: str, question_data: Dict, subject: str, topic
 
         # Format the question message
         if subject in ["Biology", "Chemistry", "Physics"]:
+            # Structured science questions are typed answers and marked by DeepSeek
+            if (question_data.get('question_type') or '').lower() == 'structured':
+                return _send_structured_science_question_to_user(chat_id, question_data, subject, topic, difficulty, user_name, credits_used, new_balance)
+
             # Science MCQ format
             message = f"🧪 *{subject} - {topic}*\n"
             message += f"👤 {user_name} | 🎯 {difficulty.title()} Level | 💎 {question_data.get('points', 10)} points\n"
@@ -3380,6 +3523,52 @@ def send_question_to_user(chat_id: str, question_data: Dict, subject: str, topic
     except Exception as e:
         logger.error(f"Error sending question to {chat_id}: {e}", exc_info=True)
         whatsapp_service.send_message(chat_id, f"❌ Error displaying question: {str(e)}")
+
+
+def _send_structured_science_question_to_user(chat_id: str, question_data: Dict, subject: str, topic: str, difficulty: str, user_name: str, credits_used: int, new_balance: int):
+    """Send a structured science question and store a session for typed answer marking."""
+    try:
+        stem = (question_data.get('stem') or '').strip()
+        parts = question_data.get('parts') or []
+        total_marks = question_data.get('total_marks', '')
+
+        message = f"🧪 *{subject} - {topic}*\n"
+        message += f"👤 {user_name} | 🎯 {difficulty.title()} | 📝 *Structured* | 💯 {total_marks} marks\n"
+        message += f"💳 *Credits Used:* {credits_used} | 💰 *Balance:* {new_balance}\n\n"
+
+        if stem:
+            message += f"*Stem/Instructions:*\n{stem}\n\n"
+
+        message += "*Question (answer all parts):*\n"
+        for p in parts[:10]:
+            label = p.get('label', '')
+            q = (p.get('question') or '').strip()
+            marks = p.get('marks', 1)
+            message += f"{label} {q} [{marks}]\n"
+
+        message += "\n✍️ *Reply with your answers labelled*, for example:\n"
+        message += "a(i) ...\na(ii) ...\n(b) ...\n\n"
+        message += "_I will mark it (ZIMSEC-style) and give professional teacher feedback + a well detailed explanation._"
+
+        whatsapp_service.send_message(chat_id, message[:4096])
+
+        from database.session_db import save_user_session
+        session_data = {
+            'question_data': question_data,  # store as dict (not double-encoded)
+            'subject': subject,
+            'topic': topic,
+            'difficulty': difficulty,
+            'question_source': question_data.get('source', 'ai_generated_olevel'),
+            'session_type': 'science_structured_question'
+        }
+        save_user_session(chat_id, session_data)
+        logger.info(f"Stored science_structured_question session for {chat_id}")
+        return True
+
+    except Exception as e:
+        logger.error(f"Error sending structured science question to {chat_id}: {e}", exc_info=True)
+        whatsapp_service.send_message(chat_id, "❌ Error sending structured question. Please try again.")
+        return False
 
 
 def handle_science_answer(user_id: str, selected_answer: str, session_key: str):
