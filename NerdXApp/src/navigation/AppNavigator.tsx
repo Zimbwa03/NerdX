@@ -35,6 +35,8 @@ import ModelDownloadScreen from '../screens/ModelDownloadScreen';
 import MathNotesDetailScreen from '../screens/MathNotesDetailScreen';
 import ALevelPhysicsScreen from '../screens/ALevelPhysicsScreen';
 import ALevelPhysicsNotesScreen from '../screens/ALevelPhysicsNotesScreen';
+import ALevelChemistryScreen from '../screens/ALevelChemistryScreen';
+import ALevelChemistryNotesScreen from '../screens/ALevelChemistryNotesScreen';
 
 // Virtual Lab Simulation Screens
 import CellExplorerScreen from '../screens/virtualLab/CellExplorerScreen';
@@ -403,6 +405,21 @@ const AppNavigator: React.FC = () => {
             <Stack.Screen
               name="ALevelPhysicsNotes"
               component={ALevelPhysicsNotesScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            {/* A Level Chemistry Screens */}
+            <Stack.Screen
+              name="ALevelChemistry"
+              component={ALevelChemistryScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="ALevelChemistryNotes"
+              component={ALevelChemistryNotesScreen}
               options={{
                 headerShown: false,
               }}

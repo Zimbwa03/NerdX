@@ -177,6 +177,11 @@ class QuestionService:
                 from services.a_level_physics_generator import a_level_physics_generator
                 logger.info(f"Generating A Level Physics question for {topic}")
                 question_data = a_level_physics_generator.generate_question(topic, difficulty, user_id)
+            elif subject == "a_level_chemistry":
+                # Use A Level Chemistry generator for advanced chemistry questions
+                from services.a_level_chemistry_generator import a_level_chemistry_generator
+                logger.info(f"Generating A Level Chemistry question for {topic}")
+                question_data = a_level_chemistry_generator.generate_question(topic, difficulty, user_id)
             elif subject == "English":
                 question_data = self.ai_service.generate_english_question(topic, difficulty)
             else:

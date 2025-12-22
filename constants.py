@@ -111,6 +111,58 @@ A_LEVEL_PHYSICS_TOPICS = {
 # All A Level Physics topics flat list
 A_LEVEL_PHYSICS_ALL_TOPICS = A_LEVEL_PHYSICS_TOPICS["AS Level"] + A_LEVEL_PHYSICS_TOPICS["A2 Level"]
 
+# A Level Chemistry Topics (Cambridge/ZIMSEC A Level Syllabus)
+A_LEVEL_CHEMISTRY_TOPICS = {
+    "AS Level": [
+        # Physical Chemistry
+        "Atomic Structure",
+        "Atoms, Molecules and Stoichiometry",
+        "Chemical Bonding",
+        "States of Matter",
+        "Chemical Energetics",
+        "Electrochemistry",
+        "Equilibria",
+        "Reaction Kinetics",
+        # Inorganic Chemistry
+        "The Periodic Table: Chemical Periodicity",
+        "Group 2 Elements",
+        "Group 17 Elements",
+        "Nitrogen and Sulfur",
+        # Organic Chemistry
+        "Introduction to Organic Chemistry",
+        "Hydrocarbons",
+        "Halogen Compounds",
+        "Hydroxy Compounds",
+        "Carbonyl Compounds",
+        "Carboxylic Acids and Derivatives",
+        "Nitrogen Compounds",
+        "Polymerisation",
+        "Organic Synthesis",
+        "Analytical Techniques"
+    ],
+    "A2 Level": [
+        # Physical Chemistry
+        "Chemical Energetics (Advanced)",
+        "Electrochemistry (Advanced)",
+        "Equilibria (Advanced)",
+        "Reaction Kinetics (Advanced)",
+        # Inorganic Chemistry
+        "Chemistry of Transition Elements",
+        # Organic Chemistry
+        "Benzene and Aromatic Compounds",
+        "Phenols",
+        "Carbonyl Compounds (Advanced)",
+        "Carboxylic Acids and Derivatives (Advanced)",
+        "Nitrogen Compounds (Advanced)",
+        "Polymerisation (Advanced)",
+        "Organic Synthesis (Advanced)",
+        "Analytical Techniques (Advanced)"
+    ]
+}
+
+# All A Level Chemistry topics flat list
+A_LEVEL_CHEMISTRY_ALL_TOPICS = A_LEVEL_CHEMISTRY_TOPICS["AS Level"] + A_LEVEL_CHEMISTRY_TOPICS["A2 Level"]
+
 # Difficulty levels
 DIFFICULTY_LEVELS = {
     'easy': {

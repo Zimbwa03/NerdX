@@ -175,6 +175,12 @@ const DashboardScreen: React.FC = () => {
       return;
     }
 
+    // Navigate to dedicated A Level Chemistry screen
+    if (subjectId === 'chemistry') {
+      navigation.navigate('ALevelChemistry' as never);
+      return;
+    }
+
     // For other A Level subjects, use Topics screen (to be implemented)
     const subject: Partial<Subject> = {
       id: `a_level_${subjectId}`,
