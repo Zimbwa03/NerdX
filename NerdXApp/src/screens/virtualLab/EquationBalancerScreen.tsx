@@ -123,7 +123,7 @@ const EquationBalancerScreen: React.FC = () => {
         }
     };
 
-    const handleQuizComplete = (score: number, xpEarned: number) => {
+    const handleQuizComplete = () => {
         setShowQuiz(false);
     };
 
@@ -363,9 +363,7 @@ const EquationBalancerScreen: React.FC = () => {
             {/* Knowledge Check */}
             <KnowledgeCheck
                 visible={showQuiz}
-                questions={simulation.quizQuestions}
-                simulationTitle={simulation.title}
-                xpReward={simulation.xpReward}
+                simulation={simulation}
                 onComplete={handleQuizComplete}
                 onClose={() => setShowQuiz(false)}
             />

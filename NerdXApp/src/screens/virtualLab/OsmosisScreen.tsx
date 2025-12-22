@@ -125,9 +125,9 @@ const OsmosisScreen: React.FC = () => {
         observations.some(o => o.solutionType === 'isotonic') &&
         observations.some(o => o.solutionType === 'hypertonic');
 
-    const handleQuizComplete = (score: number, xpEarned: number) => {
+    const handleQuizComplete = () => {
         setShowQuiz(false);
-        // Save progress
+        // Save progress (handled by KnowledgeCheck logging)
     };
 
     const renderWaterMolecules = () => {
@@ -450,9 +450,7 @@ const OsmosisScreen: React.FC = () => {
             {/* Knowledge Check */}
             <KnowledgeCheck
                 visible={showQuiz}
-                questions={simulation.quizQuestions}
-                simulationTitle={simulation.title}
-                xpReward={simulation.xpReward}
+                simulation={simulation}
                 onComplete={handleQuizComplete}
                 onClose={() => setShowQuiz(false)}
             />

@@ -416,9 +416,7 @@ const ProjectileMotionScreen: React.FC = () => {
             {/* Knowledge Check */}
             <KnowledgeCheck
                 visible={showQuiz}
-                questions={simulation.quizQuestions}
-                simulationTitle={simulation.title}
-                xpReward={simulation.xpReward}
+                simulation={simulation}
                 onComplete={() => setShowQuiz(false)}
                 onClose={() => setShowQuiz(false)}
             />

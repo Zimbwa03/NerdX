@@ -79,10 +79,9 @@ const CellExplorerScreen: React.FC = () => {
         }
     };
 
-    const handleQuizComplete = (score: number, xpEarned: number) => {
+    const handleQuizComplete = () => {
         setShowQuiz(false);
         setIsComplete(true);
-        // In a real app, save progress to storage/backend here
     };
 
     const renderPlantCell = () => (
@@ -462,9 +461,7 @@ const CellExplorerScreen: React.FC = () => {
             {/* Knowledge Check Quiz Modal */}
             <KnowledgeCheck
                 visible={showQuiz}
-                questions={simulation.quizQuestions}
-                simulationTitle={simulation.title}
-                xpReward={simulation.xpReward}
+                simulation={simulation}
                 onComplete={handleQuizComplete}
                 onClose={() => setShowQuiz(false)}
             />
