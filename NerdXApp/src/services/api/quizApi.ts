@@ -16,6 +16,28 @@ export interface Topic {
   is_parent?: boolean;
 }
 
+// Structured question part interface for Paper 2 style questions
+export interface StructuredQuestionPart {
+  label: string;         // e.g., "(a)(i)", "(b)"
+  question: string;      // The part question text
+  marks: number;         // Mark allocation for this part
+  command_word?: string; // e.g., "state", "explain", "describe"
+  model_answer?: string; // Expected answer for marking
+  expected_points?: string[]; // Key marking points
+}
+
+// Full structured question interface
+export interface StructuredQuestion {
+  question_type: 'structured';
+  subject: string;
+  topic: string;
+  difficulty: string;
+  stem: string;          // Main question context/stem
+  parts: StructuredQuestionPart[];
+  total_marks: number;
+  marking_rubric?: Record<string, any>;
+}
+
 export interface Question {
   id: string;
   question_text: string;
@@ -49,6 +71,9 @@ export interface Question {
   answer_image_urls?: string[];
   subject_id?: string;
   topic_id?: string;
+
+  // Structured Question Fields (Paper 2 style)
+  structured_question?: StructuredQuestion;
 }
 
 export interface AnswerResult {
@@ -98,7 +123,8 @@ export const quizApi = {
     difficulty: string = 'medium',
     type: string = 'topical',
     parent_subject?: string,
-    questionType?: string
+    questionType?: string,
+    questionFormat?: 'mcq' | 'structured'  // For O-Level Paper 2 style structured questions
   ): Promise<Question | null> => {
     try {
       const payload: any = {
@@ -114,6 +140,10 @@ export const quizApi = {
       }
       if (questionType) {
         payload.question_type = questionType;
+      }
+      // For Combined Science structured questions (Paper 2 style)
+      if (questionFormat) {
+        payload.question_format = questionFormat;
       }
       const response = await api.post('/api/mobile/quiz/generate', payload);
       return response.data.data || null;
@@ -132,7 +162,8 @@ export const quizApi = {
     solution?: string,
     hint?: string,
     questionText?: string,
-    options?: string[]  // Added: options array for proper MCQ validation
+    options?: string[],  // Added: options array for proper MCQ validation
+    structuredQuestion?: StructuredQuestion  // For Paper 2 structured question marking
   ): Promise<AnswerResult | null> => {
     try {
       const payload: any = {
@@ -152,6 +183,11 @@ export const quizApi = {
       // Include options for MCQ answer validation
       if (options && options.length > 0) {
         payload.options = options;
+      }
+      // Include structured question for Paper 2 style marking
+      if (structuredQuestion) {
+        payload.structured_question = structuredQuestion;
+        payload.question_type = 'structured';
       }
       const response = await api.post('/api/mobile/quiz/submit-answer', payload);
       return response.data.data || null;

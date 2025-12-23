@@ -721,12 +721,14 @@ Return ONLY a valid JSON object:
         "D": "Fourth option"
     }},
     "correct_answer": "B",
-    "explanation": "Short explanation (2-3 sentences) of WHY the correct answer is right. Focus on the key scientific concept.",
-    "teaching_explanation": "A friendly, encouraging explanation written like a patient tutor. Use an analogy or everyday example to help the student understand. Different from the main explanation - more like a teaching moment.",
+    "explanation": "DETAILED SOLUTION: A thorough scientific explanation (4-6 sentences) covering WHY the correct answer is right, why other options are wrong, and the underlying scientific principle. Use proper scientific terminology.",
+    "teaching_explanation": "TEACHER FEEDBACK: A warm, encouraging explanation written as if you're a patient tutor having a conversation with the student. Use a relatable analogy, everyday example, or real-life application to help them truly understand. MUST BE DIFFERENT from the explanation above - focus on making the concept memorable and easy to understand.",
     "difficulty": "{difficulty}",
     "learning_objective": "What the student should learn from this question",
     "question_style": "{question_style}"
 }}
+
+CRITICAL: The 'explanation' and 'teaching_explanation' MUST be completely different texts with different approaches!
 
 Generate an educational {question_style.replace('_', ' ')} question now!"""
 
@@ -1139,7 +1141,9 @@ Generate an educational {question_style.replace('_', ' ')} question now!"""
             'question_type': 'mcq',
             'source': 'fallback_olevel',
             'learning_objective': f"Understand basic concepts of {topic}",
-            'real_world_application': f"Apply {topic} knowledge in everyday situations"
+            'real_world_application': f"Apply {topic} knowledge in everyday situations",
+            # Generate a friendly teaching explanation different from the main explanation
+            'teaching_explanation': f"Great effort! 🌟 This question tests your understanding of {topic}. Remember, {subject} concepts are all around us in daily life. Keep practicing and you'll master this topic! If you got it wrong, don't worry - every mistake is a chance to learn something new."
         })
         
         return result

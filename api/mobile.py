@@ -901,7 +901,12 @@ def generate_question():
             'solution': solution,
             'hint': question_data.get('hint', '') if subject == 'mathematics' else '',
             # For English, use the formatted solution since explanation is a dict
-            'explanation': solution if subject == 'english' else (question_data.get('explanation', '') if not isinstance(question_data.get('explanation'), dict) else ''),
+            # For Combined Science, use teaching_explanation for the "Teaching Explanation" section (different from solution)
+            'explanation': (
+                solution if subject == 'english' 
+                else (question_data.get('teaching_explanation', '') or question_data.get('real_world_application', '') or question_data.get('explanation', '')) if subject == 'combined_science'
+                else (question_data.get('explanation', '') if not isinstance(question_data.get('explanation'), dict) else '')
+            ),
             'points': question_data.get('points', 10),
             'topic': topic or '',
             'difficulty': difficulty,

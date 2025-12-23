@@ -43,6 +43,10 @@ const TopicsScreen: React.FC = () => {
   const [pharmaModalVisible, setPharmaModalVisible] = useState(false);
   const [selectedPharmaTopic, setSelectedPharmaTopic] = useState<Topic | null>(null);
   const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
+  
+  // Combined Science Question Type Modal (MCQ vs Structured)
+  const [scienceQuestionTypeModalVisible, setScienceQuestionTypeModalVisible] = useState(false);
+  const [selectedScienceTopic, setSelectedScienceTopic] = useState<Topic | null>(null);
 
   useEffect(() => {
     if (subject.id === 'combined_science') {
@@ -132,6 +136,10 @@ const TopicsScreen: React.FC = () => {
       // Show Pharmacology Question Type Modal
       setSelectedPharmaTopic(topic);
       setPharmaModalVisible(true);
+    } else if (subject.id === 'combined_science') {
+      // Show Combined Science Question Type Modal (MCQ vs Structured - Paper 1 vs Paper 2)
+      setSelectedScienceTopic(topic);
+      setScienceQuestionTypeModalVisible(true);
     } else {
       // Start quiz
       handleStartQuiz(topic);
@@ -142,6 +150,13 @@ const TopicsScreen: React.FC = () => {
     setPharmaModalVisible(false);
     if (selectedPharmaTopic) {
       handleStartQuiz(selectedPharmaTopic, type);
+    }
+  };
+
+  const handleScienceQuizStart = (format: 'mcq' | 'structured') => {
+    setScienceQuestionTypeModalVisible(false);
+    if (selectedScienceTopic) {
+      handleStartQuiz(selectedScienceTopic, undefined, format);
     }
   };
 
@@ -190,7 +205,7 @@ const TopicsScreen: React.FC = () => {
     } as never);
   };
 
-  const handleStartQuiz = async (topic?: Topic, questionType?: string) => {
+  const handleStartQuiz = async (topic?: Topic, questionType?: string, questionFormat?: 'mcq' | 'structured') => {
     try {
       if (!user || (user.credits || 0) < 1) {
         Alert.alert(
@@ -201,9 +216,11 @@ const TopicsScreen: React.FC = () => {
         return;
       }
 
+      const questionFormatLabel = questionFormat === 'structured' ? 'Structured (Paper 2)' : 'Multiple Choice (Paper 1)';
+      
       Alert.alert(
         'Start Quiz',
-        `Start ${topic ? topic.name : 'Exam'} quiz for ${subject.name}?`,
+        `Start ${topic ? topic.name : 'Exam'} quiz for ${subject.name}?${questionFormat ? `\n\nFormat: ${questionFormatLabel}` : ''}`,
         [
           { text: 'Cancel', style: 'cancel' },
           {
@@ -219,7 +236,8 @@ const TopicsScreen: React.FC = () => {
                   'medium',  // difficulty
                   topic ? 'topical' : 'exam',  // type
                   topic?.parent_subject || (subject.id === 'combined_science' ? activeTab : currentParentSubject),  // parent_subject for Combined Science
-                  questionType  // Pass question type (e.g., for Pharmacology)
+                  questionType,  // Pass question type (e.g., for Pharmacology)
+                  questionFormat  // Pass question format (mcq or structured for Paper 1/2)
                 );
 
                 // Hide loading before navigation
@@ -641,6 +659,29 @@ const TopicsScreen: React.FC = () => {
           description="Quick concept verification"
           onPress={() => handlePharmaQuizStart('True/False')}
           color={Colors.secondary.main}
+        />
+      </Modal>
+
+      {/* Combined Science Question Type Modal (Paper 1 vs Paper 2) */}
+      <Modal
+        visible={scienceQuestionTypeModalVisible}
+        onClose={() => setScienceQuestionTypeModalVisible(false)}
+        title={`${activeTab} - ${selectedScienceTopic?.name || 'Practice'}`}
+      >
+        <Text style={styles.modalDescription}>Choose your question format:</Text>
+        <ModalOptionCard
+          icon="📝"
+          title="Multiple Choice (Paper 1)"
+          description="Quick MCQ questions with 4 options - great for revision"
+          onPress={() => handleScienceQuizStart('mcq')}
+          color={Colors.subjects.science}
+        />
+        <ModalOptionCard
+          icon="📋"
+          title="Structured (Paper 2)"
+          description="ZIMSEC-style written questions with multiple parts - deeper understanding"
+          onPress={() => handleScienceQuizStart('structured')}
+          color={Colors.subjects.combinedScience}
         />
       </Modal>
     </View>

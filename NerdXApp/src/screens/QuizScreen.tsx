@@ -15,7 +15,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
-import { quizApi, Question, AnswerResult } from '../services/api/quizApi';
+import { quizApi, Question, AnswerResult, StructuredQuestion } from '../services/api/quizApi';
 import { dktService } from '../services/api/dktApi';
 import { gamificationService } from '../services/GamificationService';
 import { useAuth } from '../context/AuthContext';
@@ -58,6 +58,9 @@ const QuizScreen: React.FC = () => {
   const [generatingQuestion, setGeneratingQuestion] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [questionCount, setQuestionCount] = useState(1);
+  
+  // Structured question state (Paper 2 style)
+  const [structuredAnswers, setStructuredAnswers] = useState<Record<string, string>>({});
 
   // DKT (Deep Knowledge Tracing) state
   const [selectedConfidence, setSelectedConfidence] = useState<'low' | 'medium' | 'high' | null>(null);
@@ -132,11 +135,32 @@ const QuizScreen: React.FC = () => {
   const handleSubmit = async () => {
     if (!question) return;
 
-    const answerToSubmit = question.allows_text_input ? textAnswer : selectedAnswer;
-
-    if (!answerToSubmit && !answerImage) {
-      Alert.alert('Error', 'Please enter your answer or upload an image');
-      return;
+    // For structured questions, combine all part answers
+    const isStructured = question.question_type === 'structured' && question.structured_question;
+    let answerToSubmit: string;
+    
+    if (isStructured) {
+      // Combine all structured answers into a formatted string
+      const parts = question.structured_question?.parts || [];
+      const answersFormatted = parts.map(part => {
+        const answer = structuredAnswers[part.label] || '';
+        return `${part.label}: ${answer}`;
+      }).join('\n\n');
+      answerToSubmit = answersFormatted;
+      
+      // Check if at least one answer is filled
+      const hasAnyAnswer = Object.values(structuredAnswers).some(a => a.trim().length > 0);
+      if (!hasAnyAnswer) {
+        Alert.alert('Error', 'Please answer at least one part of the question');
+        return;
+      }
+    } else {
+      answerToSubmit = question.allows_text_input ? textAnswer : selectedAnswer;
+      
+      if (!answerToSubmit && !answerImage) {
+        Alert.alert('Error', 'Please enter your answer or upload an image');
+        return;
+      }
     }
 
     try {
@@ -150,7 +174,8 @@ const QuizScreen: React.FC = () => {
         question.solution,
         question.hint,
         question.question_text,
-        question.options  // Pass options for proper MCQ validation
+        question.options,  // Pass options for proper MCQ validation
+        isStructured ? question.structured_question : undefined  // Pass structured question for marking
       );
       if (answerResult) {
         setResult(answerResult);
@@ -359,6 +384,7 @@ const QuizScreen: React.FC = () => {
         setSelectedConfidence(null);
         setQuestionStartTime(Date.now());
         setHintsUsed(0);
+        setStructuredAnswers({});  // Reset structured question answers
         if (user) {
           const newCredits = (user.credits || 0) - 1;
           updateUser({ credits: newCredits });
@@ -497,8 +523,59 @@ const QuizScreen: React.FC = () => {
                 </View>
               )}
 
+              {/* Structured Question Parts - for Paper 2 style questions */}
+              {question.question_type === 'structured' && question.structured_question && (
+                <View style={styles.structuredContainer}>
+                  <View style={styles.structuredHeader}>
+                    <Text style={styles.structuredTitle}>📋 Structured Question</Text>
+                    <Text style={styles.structuredMarks}>
+                      Total: {question.structured_question.total_marks} marks
+                    </Text>
+                  </View>
+                  
+                  {question.structured_question.parts.map((part, index) => (
+                    <Card key={index} variant="elevated" style={styles.structuredPartCard}>
+                      <View style={styles.structuredPartHeader}>
+                        <Text style={styles.structuredPartLabel}>{part.label}</Text>
+                        <Text style={styles.structuredPartMarks}>[{part.marks}]</Text>
+                      </View>
+                      <Text style={styles.structuredPartQuestion}>{part.question}</Text>
+                      
+                      {!result ? (
+                        <TextInput
+                          style={styles.structuredPartInput}
+                          value={structuredAnswers[part.label] || ''}
+                          onChangeText={(text) => setStructuredAnswers(prev => ({
+                            ...prev,
+                            [part.label]: text
+                          }))}
+                          placeholder={`Enter your answer for ${part.label}...`}
+                          placeholderTextColor={Colors.text.secondary}
+                          multiline
+                          numberOfLines={3}
+                          textAlignVertical="top"
+                        />
+                      ) : (
+                        <View style={styles.structuredPartAnswerDisplay}>
+                          <Text style={styles.structuredPartAnswerLabel}>Your Answer:</Text>
+                          <Text style={styles.structuredPartAnswerText}>
+                            {structuredAnswers[part.label] || '(No answer provided)'}
+                          </Text>
+                          {part.model_answer && (
+                            <View style={styles.structuredModelAnswer}>
+                              <Text style={styles.structuredModelLabel}>✓ Model Answer:</Text>
+                              <Text style={styles.structuredModelText}>{part.model_answer}</Text>
+                            </View>
+                          )}
+                        </View>
+                      )}
+                    </Card>
+                  ))}
+                </View>
+              )}
+
               {/* Text Input - for math and short answer questions */}
-              {question.allows_text_input && !result && (
+              {question.allows_text_input && question.question_type !== 'structured' && !result && (
                 <View style={styles.answerInputContainer}>
                   <Text style={styles.answerInputLabel}>Your Answer:</Text>
                   <View style={styles.answerInputRow}>
@@ -1192,6 +1269,110 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 200,
     resizeMode: 'contain',
+  },
+  // Structured Question Styles (Paper 2)
+  structuredContainer: {
+    marginBottom: 20,
+  },
+  structuredHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingHorizontal: 4,
+  },
+  structuredTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.subjects.combinedScience,
+  },
+  structuredMarks: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.text.secondary,
+    backgroundColor: Colors.background.subtle,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  structuredPartCard: {
+    marginBottom: 12,
+    backgroundColor: Colors.background.paper,
+    borderColor: Colors.border.light,
+    borderWidth: 1,
+    borderLeftWidth: 4,
+    borderLeftColor: Colors.subjects.science,
+  },
+  structuredPartHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  structuredPartLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: Colors.subjects.combinedScience,
+  },
+  structuredPartMarks: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.primary.main,
+    backgroundColor: Colors.primary.light + '30',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  structuredPartQuestion: {
+    fontSize: 15,
+    color: Colors.text.primary,
+    lineHeight: 22,
+    marginBottom: 12,
+  },
+  structuredPartInput: {
+    backgroundColor: Colors.background.subtle,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 15,
+    color: Colors.text.primary,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  structuredPartAnswerDisplay: {
+    backgroundColor: Colors.background.subtle,
+    borderRadius: 8,
+    padding: 12,
+  },
+  structuredPartAnswerLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.text.secondary,
+    marginBottom: 4,
+  },
+  structuredPartAnswerText: {
+    fontSize: 14,
+    color: Colors.text.primary,
+    lineHeight: 20,
+  },
+  structuredModelAnswer: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border.light,
+  },
+  structuredModelLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.success.main,
+    marginBottom: 4,
+  },
+  structuredModelText: {
+    fontSize: 14,
+    color: Colors.success.dark,
+    lineHeight: 20,
+    fontStyle: 'italic',
   },
 });
 

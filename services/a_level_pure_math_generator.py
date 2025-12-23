@@ -170,8 +170,8 @@ class ALevelPureMathGenerator:
     def __init__(self):
         self.deepseek_api_key = os.environ.get('DEEPSEEK_API_KEY')
         self.deepseek_url = "https://api.deepseek.com/v1/chat/completions"
-        self.max_retries = 3
-        self.timeout = 45  # Longer timeout for math questions
+        self.max_retries = 2  # Reduced retries to prevent worker timeout
+        self.timeout = 30  # Shorter timeout to prevent worker death
     
     def generate_question(self, topic: str, difficulty: str = "medium", user_id: str = None, question_type: str = "mcq") -> Optional[Dict]:
         """
@@ -218,11 +218,21 @@ class ALevelPureMathGenerator:
                 question_data['ai_model'] = 'deepseek'
                 return question_data
             
-            return None
+            # If AI generation failed, use fallback question
+            logger.warning(f"AI generation failed for {topic_name}, using fallback")
+            fallback = self._get_fallback_question(topic_name, difficulty)
+            fallback['subject'] = 'A Level Pure Mathematics'
+            fallback['level'] = level
+            return fallback
             
         except Exception as e:
             logger.error(f"Error generating A Level Pure Math question: {e}")
-            return None
+            # Return fallback on exception too
+            try:
+                topic_name = self._get_topic_name(topic) or topic
+                return self._get_fallback_question(topic_name, difficulty)
+            except:
+                return None
     
     def _get_topic_name(self, topic_id: str) -> Optional[str]:
         """Convert topic ID to display name"""
@@ -311,23 +321,21 @@ REQUIREMENTS:
 7. Provide a DETAILED worked solution showing every step
 8. Include teaching points that help students understand the concept
 
-RESPONSE FORMAT (strict JSON):
+RESPONSE FORMAT (strict JSON only - keep explanation SHORT, max 3 sentences):
 {{
-    "question": "The full question text with any necessary mathematical expressions",
+    "question": "Question text with mathematical expressions",
     "options": {{
-        "A": "First option (mathematically formatted)",
-        "B": "Second option",
-        "C": "Third option",
-        "D": "Fourth option"
+        "A": "Option A",
+        "B": "Option B",
+        "C": "Option C",
+        "D": "Option D"
     }},
     "correct_answer": "A",
-    "explanation": "Brief explanation of why this answer is correct",
-    "solution": "DETAILED step-by-step working showing all mathematical steps clearly",
-    "teaching_explanation": "Key concepts and common mistakes to avoid - helpful teaching points",
-    "formulas_used": ["List of formulas used in solving"]
+    "explanation": "Brief 2-3 sentence explanation of the answer",
+    "solution": "Key steps: Step 1... Step 2... Final answer"
 }}
 
-Generate an A Level Pure Mathematics MCQ now:"""
+Generate ONE A Level Pure Mathematics MCQ (keep response under 500 words):"""
 
         return prompt
     
@@ -411,10 +419,8 @@ Generate the structured A Level Pure Mathematics question now:"""
                         {
                             "role": "system",
                             "content": """You are an expert A Level Pure Mathematics examiner for ZIMSEC examinations. 
-You generate rigorous, high-quality mathematics questions that test deep understanding.
-Always use proper mathematical notation and provide complete worked solutions.
-Your explanations should be clear enough for students to learn from their mistakes.
-Always respond with valid JSON only - no markdown formatting or extra text."""
+Generate questions with clear solutions. Use proper mathematical notation.
+IMPORTANT: Keep explanations concise (2-3 sentences). Always respond with valid, complete JSON only."""
                         },
                         {
                             "role": "user",
@@ -422,10 +428,10 @@ Always respond with valid JSON only - no markdown formatting or extra text."""
                         }
                     ],
                     "temperature": 0.7,
-                    "max_tokens": 2500 if question_type == "structured" else 1800
+                    "max_tokens": 1500 if question_type == "structured" else 1000  # Reduced for faster responses
                 }
                 
-                timeout = self.timeout + (attempt * 10)  # Increase timeout with each retry
+                timeout = self.timeout + (attempt * 5)  # Smaller timeout increase
                 logger.info(f"DeepSeek Pure Math {question_type} attempt {attempt + 1}/{self.max_retries}")
                 
                 response = requests.post(
@@ -458,7 +464,7 @@ Always respond with valid JSON only - no markdown formatting or extra text."""
         return None
     
     def _parse_question_response(self, content: str) -> Optional[Dict]:
-        """Parse the JSON response from DeepSeek"""
+        """Parse the JSON response from DeepSeek with truncation recovery"""
         try:
             content = content.strip()
             
@@ -466,17 +472,30 @@ Always respond with valid JSON only - no markdown formatting or extra text."""
             if '```json' in content:
                 start = content.find('```json') + 7
                 end = content.find('```', start)
-                content = content[start:end].strip()
+                if end > start:
+                    content = content[start:end].strip()
+                else:
+                    content = content[start:].strip()
             elif '```' in content:
                 start = content.find('```') + 3
                 end = content.find('```', start)
-                content = content[start:end].strip()
+                if end > start:
+                    content = content[start:end].strip()
+                else:
+                    content = content[start:].strip()
             
             # Clean any leading/trailing whitespace or newlines
             content = content.strip()
             
-            # Parse JSON
-            question_data = json.loads(content)
+            # Try to parse JSON, with recovery for truncated responses
+            try:
+                question_data = json.loads(content)
+            except json.JSONDecodeError as e:
+                logger.warning(f"Initial JSON parse failed: {e}")
+                # Attempt to recover truncated JSON
+                question_data = self._recover_truncated_json(content)
+                if not question_data:
+                    return None
             
             # Validate required fields for MCQ
             if 'options' in question_data:
@@ -506,10 +525,132 @@ Always respond with valid JSON only - no markdown formatting or extra text."""
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse JSON response: {e}")
             logger.error(f"Content preview: {content[:500]}...")
+            # Try to recover truncated JSON
+            recovered = self._recover_truncated_json(content)
+            if recovered:
+                return recovered
             return None
         except Exception as e:
             logger.error(f"Error parsing question response: {e}")
             return None
+    
+    def _recover_truncated_json(self, content: str) -> Optional[Dict]:
+        """Attempt to recover data from a truncated JSON response"""
+        try:
+            # Find where JSON starts
+            json_start = content.find('{')
+            if json_start == -1:
+                return None
+            
+            content = content[json_start:]
+            
+            # Try to extract key fields even from incomplete JSON
+            import re
+            
+            # Extract question
+            question_match = re.search(r'"question"\s*:\s*"([^"]+)"', content)
+            question = question_match.group(1) if question_match else None
+            
+            if not question:
+                return None
+            
+            # Extract options
+            options = {}
+            for letter in ['A', 'B', 'C', 'D']:
+                opt_match = re.search(rf'"{letter}"\s*:\s*"([^"]+)"', content)
+                if opt_match:
+                    options[letter] = opt_match.group(1)
+            
+            # Extract correct answer
+            answer_match = re.search(r'"correct_answer"\s*:\s*"([ABCD])"', content)
+            correct_answer = answer_match.group(1) if answer_match else 'A'
+            
+            # If we have enough data, construct a valid response
+            if question and len(options) >= 4:
+                logger.info("Successfully recovered truncated JSON response")
+                return {
+                    "question": question,
+                    "options": options,
+                    "correct_answer": correct_answer,
+                    "explanation": "Solution: Work through the problem step by step using the relevant mathematical techniques.",
+                    "solution": "See the worked solution above."
+                }
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Failed to recover truncated JSON: {e}")
+            return None
+    
+    def _get_fallback_question(self, topic: str, difficulty: str) -> Dict:
+        """Return a fallback question when AI generation fails"""
+        fallback_questions = {
+            "Polynomials": {
+                "question": "Given that (x - 2) is a factor of f(x) = x³ + ax² - 4x + 4, find the value of a.",
+                "options": {"A": "a = -1", "B": "a = 0", "C": "a = 1", "D": "a = 2"},
+                "correct_answer": "A",
+                "explanation": "Using the factor theorem: f(2) = 0. So 8 + 4a - 8 + 4 = 0, giving 4a + 4 = 0, hence a = -1.",
+                "solution": "By factor theorem, if (x-2) is a factor, then f(2) = 0.\nf(2) = 8 + 4a - 8 + 4 = 4a + 4 = 0\nTherefore a = -1"
+            },
+            "Rational Functions": {
+                "question": "Express 3/(x² - 1) in partial fractions.",
+                "options": {
+                    "A": "3/(2(x-1)) - 3/(2(x+1))",
+                    "B": "3/(2(x-1)) + 3/(2(x+1))", 
+                    "C": "1/(x-1) - 1/(x+1)",
+                    "D": "3/(x-1) - 3/(x+1)"
+                },
+                "correct_answer": "A",
+                "explanation": "x² - 1 = (x-1)(x+1). Using cover-up: A = 3/2 when x=1, B = -3/2 when x=-1.",
+                "solution": "3/(x²-1) = A/(x-1) + B/(x+1)\nUsing cover-up method: A = 3/2, B = -3/2"
+            },
+            "Quadratic Functions": {
+                "question": "Find the range of values of k for which x² + kx + 9 = 0 has real roots.",
+                "options": {"A": "k ≤ -6 or k ≥ 6", "B": "-6 < k < 6", "C": "k < -6 or k > 6", "D": "-6 ≤ k ≤ 6"},
+                "correct_answer": "A",
+                "explanation": "For real roots, discriminant ≥ 0. b² - 4ac ≥ 0, so k² - 36 ≥ 0, giving k ≤ -6 or k ≥ 6.",
+                "solution": "For real roots: b² - 4ac ≥ 0\nk² - 4(1)(9) ≥ 0\nk² ≥ 36\nk ≤ -6 or k ≥ 6"
+            },
+            "Differentiation": {
+                "question": "Find dy/dx when y = x³e^(2x).",
+                "options": {
+                    "A": "3x²e^(2x) + 2x³e^(2x)",
+                    "B": "x²e^(2x)(3 + 2x)",
+                    "C": "3x²e^(2x)",
+                    "D": "6x²e^(2x)"
+                },
+                "correct_answer": "B",
+                "explanation": "Using product rule: dy/dx = 3x²e^(2x) + x³(2e^(2x)) = e^(2x)(3x² + 2x³) = x²e^(2x)(3 + 2x).",
+                "solution": "Using product rule on y = x³·e^(2x):\ndy/dx = 3x²·e^(2x) + x³·2e^(2x) = x²e^(2x)(3 + 2x)"
+            },
+            "Integration": {
+                "question": "Evaluate ∫(2x + 1)/(x² + x) dx.",
+                "options": {"A": "ln|x² + x| + C", "B": "ln|x(x+1)| + C", "C": "ln|x| + ln|x+1| + C", "D": "All of the above"},
+                "correct_answer": "D",
+                "explanation": "Notice that d/dx(x² + x) = 2x + 1. So the integral is ln|x² + x| + C, which equals all the given forms.",
+                "solution": "∫(2x+1)/(x²+x) dx = ln|x²+x| + C (since numerator is derivative of denominator)"
+            }
+        }
+        
+        # Get fallback for topic or use a default
+        if topic in fallback_questions:
+            question = fallback_questions[topic].copy()
+        else:
+            # Default fallback
+            question = {
+                "question": f"Simplify: (x² - 4)/(x - 2)",
+                "options": {"A": "x + 2", "B": "x - 2", "C": "x² + 2", "D": "(x - 2)²"},
+                "correct_answer": "A",
+                "explanation": "x² - 4 = (x+2)(x-2), so (x²-4)/(x-2) = (x+2)(x-2)/(x-2) = x + 2 for x ≠ 2.",
+                "solution": "Factor the numerator: x² - 4 = (x+2)(x-2)\nCancel common factor: (x+2)(x-2)/(x-2) = x + 2"
+            }
+        
+        question["topic"] = topic
+        question["difficulty"] = difficulty
+        question["source"] = "fallback"
+        
+        logger.info(f"Using fallback question for Pure Math topic: {topic}")
+        return question
     
     def generate_exam_question(self, level: str = "Lower Sixth", difficulty: str = "medium") -> Optional[Dict]:
         """
