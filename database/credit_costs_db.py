@@ -155,6 +155,64 @@ def create_credit_costs_table():
                     'category': 'Premium Features',
                     'component': 'Image Problem Solving',
                     'description': 'Credit cost for solving problems from uploaded images'
+                },
+                
+                # A-Level Subjects
+                {
+                    'action_key': 'a_level_biology_topical',
+                    'cost': 5,
+                    'category': 'A-Level',
+                    'component': 'Biology Topical Questions',
+                    'description': 'Credit cost for A-Level Biology topical questions (MCQ, Structured, Essay)'
+                },
+                {
+                    'action_key': 'a_level_biology_exam',
+                    'cost': 8,
+                    'category': 'A-Level',
+                    'component': 'Biology Exam Practice',
+                    'description': 'Credit cost for A-Level Biology exam practice questions'
+                },
+                {
+                    'action_key': 'a_level_chemistry_topical',
+                    'cost': 5,
+                    'category': 'A-Level',
+                    'component': 'Chemistry Topical Questions',
+                    'description': 'Credit cost for A-Level Chemistry topical questions'
+                },
+                {
+                    'action_key': 'a_level_chemistry_exam',
+                    'cost': 8,
+                    'category': 'A-Level',
+                    'component': 'Chemistry Exam Practice',
+                    'description': 'Credit cost for A-Level Chemistry exam practice questions'
+                },
+                {
+                    'action_key': 'a_level_physics_topical',
+                    'cost': 5,
+                    'category': 'A-Level',
+                    'component': 'Physics Topical Questions',
+                    'description': 'Credit cost for A-Level Physics topical questions'
+                },
+                {
+                    'action_key': 'a_level_physics_exam',
+                    'cost': 8,
+                    'category': 'A-Level',
+                    'component': 'Physics Exam Practice',
+                    'description': 'Credit cost for A-Level Physics exam practice questions'
+                },
+                {
+                    'action_key': 'a_level_pure_math_topical',
+                    'cost': 5,
+                    'category': 'A-Level',
+                    'component': 'Pure Mathematics Topical Questions',
+                    'description': 'Credit cost for A-Level Pure Mathematics topical questions'
+                },
+                {
+                    'action_key': 'a_level_pure_math_exam',
+                    'cost': 8,
+                    'category': 'A-Level',
+                    'component': 'Pure Mathematics Exam Practice',
+                    'description': 'Credit cost for A-Level Pure Mathematics exam practice questions'
                 }
             ]
             
@@ -194,7 +252,16 @@ class CreditCostService:
             'audio_feature': 10,
             'voice_chat': 10,
             'image_solve': 3,
-            'graph_generation': 3
+            'graph_generation': 3,
+            # A-Level Subjects
+            'a_level_biology_topical': 5,
+            'a_level_biology_exam': 8,
+            'a_level_chemistry_topical': 5,
+            'a_level_chemistry_exam': 8,
+            'a_level_physics_topical': 5,
+            'a_level_physics_exam': 8,
+            'a_level_pure_math_topical': 5,
+            'a_level_pure_math_exam': 8
         }
     
     def get_credit_cost(self, action_key: str) -> int:
@@ -318,6 +385,54 @@ class CreditCostService:
         except Exception as e:
             logger.error(f"Error getting costs by category: {e}")
             return {}
+    
+    def add_credit_cost(self, action_key: str, cost: int, category: str, component: str, description: str = None) -> bool:
+        """Add a new credit cost or update existing one"""
+        try:
+            if not DATABASE_AVAILABLE or not SessionLocal:
+                logger.error("No database session available for adding credit costs")
+                return False
+            
+            session = SessionLocal()
+            try:
+                # Check if it already exists
+                existing = session.query(CreditCost).filter_by(action_key=action_key).first()
+                
+                if existing:
+                    # Update existing
+                    existing.cost = cost
+                    existing.category = category
+                    existing.component = component
+                    existing.description = description or existing.description
+                    existing.is_active = True
+                    existing.updated_at = datetime.utcnow()
+                    logger.info(f"Updated credit cost for '{action_key}' to {cost}")
+                else:
+                    # Add new
+                    credit_cost = CreditCost(
+                        action_key=action_key,
+                        cost=cost,
+                        category=category,
+                        component=component,
+                        description=description or f'Credit cost for {action_key}',
+                        is_active=True
+                    )
+                    session.add(credit_cost)
+                    logger.info(f"Added credit cost for '{action_key}': {cost}")
+                
+                session.commit()
+                return True
+                
+            except Exception as e:
+                logger.error(f"Error adding/updating credit cost: {e}")
+                session.rollback()
+                return False
+            finally:
+                session.close()
+                
+        except Exception as e:
+            logger.error(f"Error in add_credit_cost: {e}")
+            return False
 
 # Create service instance
 credit_cost_service = CreditCostService()
