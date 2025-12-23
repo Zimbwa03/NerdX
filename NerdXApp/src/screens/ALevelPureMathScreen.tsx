@@ -1,5 +1,5 @@
 // A Level Pure Mathematics Screen - ZIMSEC Syllabus (6042)
-// Professional UI with all 24 topics organized by Lower/Upper Sixth
+// Premium Modern UI with glass-morphism and professional polish
 // Uses DeepSeek for AI-powered question generation
 import React, { useState } from 'react';
 import {
@@ -18,24 +18,32 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { Colors } from '../theme/colors';
 import { useThemedColors } from '../theme/useThemedStyles';
-import { Card } from '../components/Card';
-import { Icons, IconCircle } from '../components/Icons';
 import { aLevelPureMathTopics, ALevelPureMathTopic, topicCounts } from '../data/aLevelPureMath';
 import { quizApi } from '../services/api/quizApi';
 import LoadingProgress from '../components/LoadingProgress';
+import {
+    ALevelTopicCard,
+    ALevelFeatureCard,
+    ALevelExamCard,
+    ALevelInfoCard,
+} from '../components/ALevelTopicCard';
 
 const { width } = Dimensions.get('window');
 
-// Theme colors for Pure Mathematics (Purple/Violet theme)
-const pureMathColors = {
-    primary: ['#7C3AED', '#8B5CF6', '#A78BFA'], // Violet gradient
-    secondary: ['#6D28D9', '#7C3AED'], // Darker violet
-    lowerSixth: ['#8B5CF6', '#7C3AED'], // Purple
-    upperSixth: ['#EC4899', '#DB2777'], // Pink/Magenta for contrast
-    accent: '#A78BFA',
-    light: 'rgba(139, 92, 246, 0.1)',
+// Premium color palette for Pure Mathematics
+const pureMathTheme = {
+    primary: '#8B5CF6',      // Violet
+    secondary: '#A78BFA',    // Light violet
+    tertiary: '#7C3AED',     // Deep violet
+    accent: '#C4B5FD',       // Soft lavender
+    gradient: {
+        header: ['#7C3AED', '#8B5CF6', '#A78BFA'] as [string, string, string],
+        lowerSixth: ['#8B5CF6', '#7C3AED'] as [string, string],
+        upperSixth: ['#EC4899', '#DB2777'] as [string, string],
+    },
+    lowerSixthPrimary: '#8B5CF6',
+    upperSixthPrimary: '#EC4899',
 };
 
 const ALevelPureMathScreen: React.FC = () => {
@@ -52,29 +60,32 @@ const ALevelPureMathScreen: React.FC = () => {
         topic => topic.difficulty === selectedLevel
     );
 
+    const currentPrimaryColor = selectedLevel === 'Lower Sixth' 
+        ? pureMathTheme.lowerSixthPrimary 
+        : pureMathTheme.upperSixthPrimary;
+
     const handleTopicPress = async (topic: ALevelPureMathTopic) => {
         try {
             if (!user || (user.credits || 0) < 1) {
                 Alert.alert(
                     'Insufficient Credits',
-                    'You need at least 1 credit to start a quiz. Please buy credits first.',
+                    'You need at least 1 credit to start a quiz. Please purchase credits first.',
                     [{ text: 'OK' }]
                 );
                 return;
             }
 
             Alert.alert(
-                'Start Quiz',
-                `Start ${topic.name} quiz?\n\n📚 ${topic.description}`,
+                '📐 Start Quiz',
+                `${topic.name}\n\n${topic.description}`,
                 [
                     { text: 'Cancel', style: 'cancel' },
                     {
-                        text: 'Start',
+                        text: 'Start Quiz',
                         onPress: async () => {
                             try {
                                 setIsGeneratingQuestion(true);
 
-                                // Use DeepSeek for mathematics (not Gemini)
                                 const question = await quizApi.generateQuestion(
                                     'a_level_pure_math',
                                     topic.id,
@@ -133,12 +144,12 @@ const ALevelPureMathScreen: React.FC = () => {
             }
 
             Alert.alert(
-                'Start Exam',
-                `Start A Level Pure Mathematics ${selectedLevel} Exam?\n\nThis will test you on mixed topics from ${selectedLevel}.`,
+                '📝 Start Exam',
+                `A Level Pure Mathematics ${selectedLevel} Exam\n\nThis will test you on mixed topics from ${selectedLevel}.`,
                 [
                     { text: 'Cancel', style: 'cancel' },
                     {
-                        text: 'Start',
+                        text: 'Begin Exam',
                         onPress: async () => {
                             try {
                                 setIsGeneratingQuestion(true);
@@ -174,7 +185,7 @@ const ALevelPureMathScreen: React.FC = () => {
         }
     };
 
-    // Get icon for topic based on name
+    // Get icon for topic based on id
     const getTopicIcon = (topicId: string): string => {
         const iconMap: { [key: string]: string } = {
             'polynomials': 'function-variant',
@@ -206,247 +217,214 @@ const ALevelPureMathScreen: React.FC = () => {
     };
 
     return (
-        <View style={[styles.container, { backgroundColor: themedColors.background.default }]}>
+        <View style={[styles.container, { backgroundColor: isDarkMode ? '#0D0F1C' : '#F8F9FC' }]}>
             {/* Loading Overlay */}
             <LoadingProgress
                 visible={isGeneratingQuestion}
-                message="DeepSeek is generating your A Level Pure Mathematics question..."
+                message="DeepSeek is generating your Pure Mathematics question..."
                 estimatedTime={10}
             />
 
             <StatusBar barStyle="light-content" />
 
-            {/* Header with Purple Gradient */}
+            {/* Premium Header with decorative elements */}
             <LinearGradient
-                colors={pureMathColors.primary}
+                colors={pureMathTheme.gradient.header}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.header}
             >
+                {/* Decorative background shapes */}
+                <View style={styles.headerDecoration}>
+                    <View style={[styles.decorCircle, styles.decorCircle1]} />
+                    <View style={[styles.decorCircle, styles.decorCircle2]} />
+                    <View style={[styles.decorCircle, styles.decorCircle3]} />
+                </View>
+
                 <View style={styles.headerContent}>
-                    <View style={{ flex: 1 }}>
+                    <View style={styles.headerLeft}>
                         <TouchableOpacity
                             onPress={() => navigation.goBack()}
                             style={styles.backButton}
+                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                         >
-                            <Text style={styles.backButtonText}>← Back</Text>
+                            <Ionicons name="arrow-back" size={22} color="rgba(255,255,255,0.9)" />
+                            <Text style={styles.backButtonText}>Back</Text>
                         </TouchableOpacity>
-                        <Text style={styles.title}>A Level Pure Math</Text>
-                        <Text style={styles.subtitle}>ZIMSEC Syllabus 6042 • {topicCounts.total} Topics</Text>
+                        
+                        <Text style={styles.title}>Pure Mathematics</Text>
+                        <View style={styles.subtitleRow}>
+                            <View style={styles.syllabusTag}>
+                                <Text style={styles.syllabusText}>ZIMSEC 6042</Text>
+                            </View>
+                            <Text style={styles.topicCount}>{topicCounts.total} Topics</Text>
+                        </View>
                     </View>
+                    
                     <View style={styles.headerIcon}>
-                        <MaterialCommunityIcons name="math-integral-box" size={48} color="rgba(255,255,255,0.9)" />
+                        <MaterialCommunityIcons name="math-integral-box" size={42} color="rgba(255,255,255,0.95)" />
                     </View>
                 </View>
             </LinearGradient>
 
-            {/* Level Tabs - Lower Sixth / Upper Sixth */}
-            <View style={[styles.tabContainer, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]}>
+            {/* Premium Level Tabs */}
+            <View style={[
+                styles.tabContainer,
+                { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)' }
+            ]}>
                 <TouchableOpacity
-                    style={[
-                        styles.tab,
-                        selectedLevel === 'Lower Sixth' && styles.tabActive
-                    ]}
+                    style={[styles.tab, selectedLevel === 'Lower Sixth' && styles.tabActive]}
                     onPress={() => setSelectedLevel('Lower Sixth')}
+                    activeOpacity={0.8}
                 >
                     {selectedLevel === 'Lower Sixth' ? (
                         <LinearGradient
-                            colors={pureMathColors.lowerSixth}
+                            colors={pureMathTheme.gradient.lowerSixth}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
                             style={styles.tabGradient}
                         >
                             <Text style={styles.tabTextActive}>Lower Sixth</Text>
-                            <Text style={styles.tabSubtext}>Form 5 • {topicCounts.lowerSixth} Topics</Text>
+                            <Text style={styles.tabSubtext}>Form 5 • {topicCounts.lowerSixth}</Text>
                         </LinearGradient>
                     ) : (
                         <View style={styles.tabInactive}>
-                            <Text style={[styles.tabText, { color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }]}>Lower Sixth</Text>
-                            <Text style={[styles.tabSubtextInactive, { color: isDarkMode ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }]}>Form 5 • {topicCounts.lowerSixth} Topics</Text>
+                            <Text style={[styles.tabText, { color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)' }]}>
+                                Lower Sixth
+                            </Text>
+                            <Text style={[styles.tabSubtextInactive, { color: isDarkMode ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.35)' }]}>
+                                Form 5 • {topicCounts.lowerSixth}
+                            </Text>
                         </View>
                     )}
                 </TouchableOpacity>
+
                 <TouchableOpacity
-                    style={[
-                        styles.tab,
-                        selectedLevel === 'Upper Sixth' && styles.tabActive
-                    ]}
+                    style={[styles.tab, selectedLevel === 'Upper Sixth' && styles.tabActive]}
                     onPress={() => setSelectedLevel('Upper Sixth')}
+                    activeOpacity={0.8}
                 >
                     {selectedLevel === 'Upper Sixth' ? (
                         <LinearGradient
-                            colors={pureMathColors.upperSixth}
+                            colors={pureMathTheme.gradient.upperSixth}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
                             style={styles.tabGradient}
                         >
                             <Text style={styles.tabTextActive}>Upper Sixth</Text>
-                            <Text style={styles.tabSubtext}>Form 6 • {topicCounts.upperSixth} Topics</Text>
+                            <Text style={styles.tabSubtext}>Form 6 • {topicCounts.upperSixth}</Text>
                         </LinearGradient>
                     ) : (
                         <View style={styles.tabInactive}>
-                            <Text style={[styles.tabText, { color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }]}>Upper Sixth</Text>
-                            <Text style={[styles.tabSubtextInactive, { color: isDarkMode ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }]}>Form 6 • {topicCounts.upperSixth} Topics</Text>
+                            <Text style={[styles.tabText, { color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)' }]}>
+                                Upper Sixth
+                            </Text>
+                            <Text style={[styles.tabSubtextInactive, { color: isDarkMode ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.35)' }]}>
+                                Form 6 • {topicCounts.upperSixth}
+                            </Text>
                         </View>
                     )}
                 </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-                {/* Feature Buttons */}
-                <View style={styles.featuresContainer}>
-                    {/* Pure Math Notes */}
-                    <Card variant="elevated" onPress={handlePureMathNotes} style={styles.featureCard}>
-                        <View style={styles.featureContent}>
-                            <IconCircle
-                                icon={<MaterialCommunityIcons name="book-open-page-variant" size={28} color="#8B5CF6" />}
-                                size={56}
-                                backgroundColor={pureMathColors.light}
-                            />
-                            <View style={styles.featureInfo}>
-                                <Text style={[styles.featureTitle, { color: themedColors.text.primary }]}>Mathematics Notes</Text>
-                                <Text style={[styles.featureSubtitle, { color: themedColors.text.secondary }]}>Comprehensive A Level notes with examples</Text>
-                            </View>
-                            {Icons.arrowRight(24, Colors.text.secondary)}
-                        </View>
-                    </Card>
+            <ScrollView 
+                style={styles.scrollView} 
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.scrollContent}
+            >
+                {/* Feature Cards Section */}
+                <View style={styles.section}>
+                    <ALevelFeatureCard
+                        title="Mathematics Notes"
+                        subtitle="Comprehensive A Level notes with worked examples"
+                        icon={<MaterialCommunityIcons name="book-open-page-variant" size={26} color="#8B5CF6" />}
+                        iconBgColor="rgba(139, 92, 246, 0.12)"
+                        onPress={handlePureMathNotes}
+                        isDarkMode={isDarkMode}
+                    />
 
-                    {/* AI Math Tutor */}
-                    <Card variant="elevated" onPress={handleAITutor} style={styles.featureCard}>
-                        <View style={styles.featureContent}>
-                            <IconCircle
-                                icon={<Ionicons name="school-outline" size={28} color="#EC4899" />}
-                                size={56}
-                                backgroundColor="rgba(236, 72, 153, 0.1)"
-                            />
-                            <View style={styles.featureInfo}>
-                                <Text style={[styles.featureTitle, { color: themedColors.text.primary }]}>AI Math Tutor</Text>
-                                <Text style={[styles.featureSubtitle, { color: themedColors.text.secondary }]}>Interactive Socratic tutoring with DeepSeek</Text>
-                            </View>
-                            {Icons.arrowRight(24, Colors.text.secondary)}
-                        </View>
-                    </Card>
+                    <ALevelFeatureCard
+                        title="AI Math Tutor"
+                        subtitle="Interactive Socratic tutoring powered by DeepSeek"
+                        icon={<Ionicons name="school-outline" size={26} color="#EC4899" />}
+                        iconBgColor="rgba(236, 72, 153, 0.12)"
+                        onPress={handleAITutor}
+                        isDarkMode={isDarkMode}
+                    />
 
-                    {/* Formula Sheet */}
-                    <Card variant="elevated" onPress={handleFormulaSheet} style={styles.featureCard}>
-                        <View style={styles.featureContent}>
-                            <IconCircle
-                                icon={<MaterialCommunityIcons name="math-compass" size={28} color="#06B6D4" />}
-                                size={56}
-                                backgroundColor="rgba(6, 182, 212, 0.1)"
-                            />
-                            <View style={styles.featureInfo}>
-                                <Text style={[styles.featureTitle, { color: themedColors.text.primary }]}>Formula Sheet</Text>
-                                <Text style={[styles.featureSubtitle, { color: themedColors.text.secondary }]}>Quick reference for all A Level formulas</Text>
-                            </View>
-                            {Icons.arrowRight(24, Colors.text.secondary)}
-                        </View>
-                    </Card>
+                    <ALevelFeatureCard
+                        title="Formula Sheet"
+                        subtitle="Quick reference for all A Level formulas"
+                        icon={<MaterialCommunityIcons name="math-compass" size={26} color="#06B6D4" />}
+                        iconBgColor="rgba(6, 182, 212, 0.12)"
+                        onPress={handleFormulaSheet}
+                        isDarkMode={isDarkMode}
+                    />
 
-                    {/* Start Exam */}
-                    <Card
-                        variant="gradient"
-                        gradientColors={selectedLevel === 'Lower Sixth'
-                            ? pureMathColors.lowerSixth
-                            : pureMathColors.upperSixth}
+                    {/* Premium Exam Card */}
+                    <ALevelExamCard
+                        title={`Start ${selectedLevel} Exam`}
+                        subtitle={`Mixed questions from all ${selectedLevel} topics`}
+                        gradientColors={selectedLevel === 'Lower Sixth' 
+                            ? pureMathTheme.gradient.lowerSixth 
+                            : pureMathTheme.gradient.upperSixth}
+                        icon={<MaterialCommunityIcons name="file-document-edit-outline" size={28} color="#FFFFFF" />}
                         onPress={handleStartExam}
-                        style={styles.examCard}
-                    >
-                        <View style={styles.examContent}>
-                            <IconCircle
-                                icon={Icons.quiz(32, '#FFFFFF')}
-                                size={64}
-                                backgroundColor="rgba(255, 255, 255, 0.2)"
-                            />
-                            <View style={styles.examInfo}>
-                                <Text style={styles.examTitle}>Start {selectedLevel} Exam</Text>
-                                <Text style={styles.examSubtitle}>Mixed questions from all {selectedLevel} topics</Text>
-                            </View>
-                        </View>
-                    </Card>
+                    />
                 </View>
 
-                {/* Topics List */}
-                <View style={styles.topicsContainer}>
-                    <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>
-                        {selectedLevel} Topics
-                    </Text>
-                    <Text style={[styles.sectionSubtitle, { color: themedColors.text.secondary }]}>
-                        Tap a topic to practice • Powered by DeepSeek AI
+                {/* Topics Section */}
+                <View style={styles.section}>
+                    <View style={styles.sectionHeader}>
+                        <Text style={[styles.sectionTitle, { color: isDarkMode ? '#FFFFFF' : '#1A1A2E' }]}>
+                            {selectedLevel} Topics
+                        </Text>
+                        <View style={[styles.aiPoweredBadge, { backgroundColor: isDarkMode ? 'rgba(139, 92, 246, 0.15)' : 'rgba(139, 92, 246, 0.1)' }]}>
+                            <MaterialCommunityIcons name="lightning-bolt" size={14} color="#8B5CF6" />
+                            <Text style={styles.aiPoweredText}>DeepSeek AI</Text>
+                        </View>
+                    </View>
+                    <Text style={[styles.sectionSubtitle, { color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(26,26,46,0.5)' }]}>
+                        Tap any topic to start practicing
                     </Text>
 
                     {filteredTopics.map((topic, index) => (
-                        <Card
+                        <ALevelTopicCard
                             key={topic.id}
-                            variant="elevated"
+                            title={topic.name}
+                            description={topic.description}
+                            icon={getTopicIcon(topic.id)}
+                            primaryColor={currentPrimaryColor}
+                            badges={[
+                                { 
+                                    text: topic.paperRelevance, 
+                                    color: currentPrimaryColor,
+                                    icon: 'file-document-outline'
+                                },
+                            ]}
+                            objectives={topic.learningObjectives.length}
                             onPress={() => handleTopicPress(topic)}
-                            style={styles.topicCard}
-                        >
-                            <View style={styles.topicContent}>
-                                <View style={[
-                                    styles.topicNumber,
-                                    {
-                                        backgroundColor: selectedLevel === 'Lower Sixth'
-                                            ? pureMathColors.light
-                                            : 'rgba(236, 72, 153, 0.1)'
-                                    }
-                                ]}>
-                                    <MaterialCommunityIcons
-                                        name={getTopicIcon(topic.id) as any}
-                                        size={24}
-                                        color={selectedLevel === 'Lower Sixth' ? '#8B5CF6' : '#EC4899'}
-                                    />
-                                </View>
-                                <View style={styles.topicInfo}>
-                                    <Text style={[styles.topicName, { color: themedColors.text.primary }]}>
-                                        {topic.name}
-                                    </Text>
-                                    <Text style={[styles.topicDescription, { color: themedColors.text.secondary }]} numberOfLines={2}>
-                                        {topic.description}
-                                    </Text>
-                                    <View style={styles.topicBadges}>
-                                        <View style={[styles.badge, { backgroundColor: 'rgba(139, 92, 246, 0.1)' }]}>
-                                            <Text style={[styles.badgeText, { color: '#8B5CF6' }]}>
-                                                {topic.paperRelevance}
-                                            </Text>
-                                        </View>
-                                        <View style={[styles.badge, { backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}>
-                                            <Text style={[styles.badgeText, { color: '#10B981' }]}>
-                                                {topic.learningObjectives.length} objectives
-                                            </Text>
-                                        </View>
-                                    </View>
-                                </View>
-                                <Ionicons
-                                    name="chevron-forward"
-                                    size={24}
-                                    color={selectedLevel === 'Lower Sixth' ? '#8B5CF6' : '#EC4899'}
-                                />
-                            </View>
-                        </Card>
+                            index={index}
+                            isDarkMode={isDarkMode}
+                        />
                     ))}
                 </View>
 
-                {/* Bottom Info Card */}
-                <View style={styles.infoContainer}>
-                    <LinearGradient
-                        colors={['rgba(139, 92, 246, 0.1)', 'rgba(236, 72, 153, 0.1)']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={styles.infoCard}
-                    >
-                        <MaterialCommunityIcons name="information-outline" size={24} color="#8B5CF6" />
-                        <View style={styles.infoContent}>
-                            <Text style={[styles.infoTitle, { color: themedColors.text.primary }]}>
-                                ZIMSEC A Level Pure Mathematics
-                            </Text>
-                            <Text style={[styles.infoText, { color: themedColors.text.secondary }]}>
-                                Syllabus Code: 6042{'\n'}
-                                Paper 1 & 2 • 3 hours each • 120 marks{'\n'}
-                                Questions generated using DeepSeek AI
-                            </Text>
-                        </View>
-                    </LinearGradient>
+                {/* Info Card */}
+                <View style={styles.section}>
+                    <ALevelInfoCard
+                        title="ZIMSEC A Level Pure Mathematics"
+                        content={`Syllabus Code: 6042\nPaper 1 & 2 • 3 hours each • 120 marks\nQuestions generated using DeepSeek AI`}
+                        gradientColors={isDarkMode 
+                            ? ['rgba(139, 92, 246, 0.08)', 'rgba(236, 72, 153, 0.05)']
+                            : ['rgba(139, 92, 246, 0.06)', 'rgba(236, 72, 153, 0.04)']}
+                        iconColor="#8B5CF6"
+                        isDarkMode={isDarkMode}
+                    />
                 </View>
 
                 {/* Bottom Spacing */}
-                <View style={{ height: 40 }} />
+                <View style={{ height: 32 }} />
             </ScrollView>
         </View>
     );
@@ -459,51 +437,116 @@ const styles = StyleSheet.create({
     scrollView: {
         flex: 1,
     },
+    scrollContent: {
+        paddingBottom: 20,
+    },
+    
+    // Header Styles
     header: {
-        paddingTop: Platform.OS === 'ios' ? 50 : 40,
-        paddingBottom: 25,
+        paddingTop: Platform.OS === 'ios' ? 56 : 44,
+        paddingBottom: 28,
         paddingHorizontal: 20,
-        borderBottomLeftRadius: 30,
-        borderBottomRightRadius: 30,
+        borderBottomLeftRadius: 28,
+        borderBottomRightRadius: 28,
+        overflow: 'hidden',
+    },
+    headerDecoration: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+    },
+    decorCircle: {
+        position: 'absolute',
+        borderRadius: 100,
+        backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    },
+    decorCircle1: {
+        width: 180,
+        height: 180,
+        top: -60,
+        right: -40,
+    },
+    decorCircle2: {
+        width: 100,
+        height: 100,
+        bottom: -30,
+        left: 20,
+    },
+    decorCircle3: {
+        width: 60,
+        height: 60,
+        top: 40,
+        left: -20,
     },
     headerContent: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
     },
+    headerLeft: {
+        flex: 1,
+    },
     backButton: {
-        marginBottom: 8,
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 12,
+        gap: 6,
     },
     backButtonText: {
         color: 'rgba(255,255,255,0.9)',
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: '600',
     },
     title: {
-        fontSize: 28,
-        fontWeight: 'bold',
+        fontSize: 26,
+        fontWeight: '800',
         color: '#FFFFFF',
-        marginBottom: 4,
+        letterSpacing: 0.3,
+        marginBottom: 8,
     },
-    subtitle: {
+    subtitleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+    },
+    syllabusTag: {
+        backgroundColor: 'rgba(255, 255, 255, 0.18)',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 6,
+    },
+    syllabusText: {
+        color: '#FFFFFF',
+        fontSize: 12,
+        fontWeight: '700',
+        letterSpacing: 0.5,
+    },
+    topicCount: {
+        color: 'rgba(255, 255, 255, 0.85)',
         fontSize: 14,
-        color: 'rgba(255,255,255,0.85)',
+        fontWeight: '500',
     },
     headerIcon: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
-        backgroundColor: 'rgba(255,255,255,0.15)',
+        width: 68,
+        height: 68,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255, 255, 255, 0.15)',
         justifyContent: 'center',
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.1)',
     },
+
+    // Tab Styles
     tabContainer: {
         flexDirection: 'row',
-        marginHorizontal: 20,
+        marginHorizontal: 16,
         marginTop: 16,
         marginBottom: 8,
         borderRadius: 16,
-        padding: 4,
+        padding: 5,
     },
     tab: {
         flex: 1,
@@ -511,19 +554,19 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     tabActive: {
-        elevation: 3,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+        elevation: 6,
     },
     tabGradient: {
-        paddingVertical: 12,
+        paddingVertical: 14,
         alignItems: 'center',
         borderRadius: 12,
     },
     tabInactive: {
-        paddingVertical: 12,
+        paddingVertical: 14,
         alignItems: 'center',
     },
     tabText: {
@@ -532,147 +575,55 @@ const styles = StyleSheet.create({
     },
     tabTextActive: {
         fontSize: 15,
-        fontWeight: 'bold',
+        fontWeight: '700',
         color: '#FFFFFF',
+        letterSpacing: 0.2,
     },
     tabSubtext: {
         fontSize: 11,
-        color: 'rgba(255, 255, 255, 0.8)',
+        color: 'rgba(255, 255, 255, 0.85)',
         marginTop: 2,
+        fontWeight: '500',
     },
     tabSubtextInactive: {
         fontSize: 11,
         marginTop: 2,
     },
-    featuresContainer: {
-        padding: 20,
-        paddingTop: 10,
+
+    // Section Styles
+    section: {
+        paddingHorizontal: 16,
+        paddingTop: 12,
     },
-    featureCard: {
-        marginBottom: 12,
-        borderColor: Colors.border.light,
-        borderWidth: 1,
-    },
-    featureContent: {
+    sectionHeader: {
         flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
-        padding: 4,
-        gap: 16,
-    },
-    featureInfo: {
-        flex: 1,
-    },
-    featureTitle: {
-        fontSize: 18,
-        fontWeight: '600',
         marginBottom: 4,
-    },
-    featureSubtitle: {
-        fontSize: 14,
-    },
-    examCard: {
-        marginTop: 8,
-        marginBottom: 12,
-    },
-    examContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 8,
-    },
-    examInfo: {
-        marginLeft: 20,
-        flex: 1,
-    },
-    examTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#FFFFFF',
-        marginBottom: 4,
-    },
-    examSubtitle: {
-        fontSize: 14,
-        color: 'rgba(255, 255, 255, 0.85)',
-    },
-    topicsContainer: {
-        paddingHorizontal: 20,
     },
     sectionTitle: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        marginBottom: 4,
+        fontSize: 20,
+        fontWeight: '800',
+        letterSpacing: 0.3,
     },
     sectionSubtitle: {
-        fontSize: 14,
+        fontSize: 13,
         marginBottom: 16,
     },
-    topicCard: {
-        marginBottom: 12,
-        borderColor: Colors.border.light,
-        borderWidth: 1,
-    },
-    topicContent: {
+    aiPoweredBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 4,
-        gap: 12,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 8,
+        gap: 4,
     },
-    topicNumber: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    topicInfo: {
-        flex: 1,
-    },
-    topicName: {
-        fontSize: 16,
-        fontWeight: '600',
-        marginBottom: 2,
-    },
-    topicDescription: {
-        fontSize: 13,
-        lineHeight: 18,
-        marginBottom: 6,
-    },
-    topicBadges: {
-        flexDirection: 'row',
-        gap: 8,
-    },
-    badge: {
-        paddingHorizontal: 8,
-        paddingVertical: 2,
-        borderRadius: 4,
-    },
-    badgeText: {
+    aiPoweredText: {
+        color: '#8B5CF6',
         fontSize: 11,
-        fontWeight: '600',
-    },
-    infoContainer: {
-        paddingHorizontal: 20,
-        marginTop: 8,
-    },
-    infoCard: {
-        flexDirection: 'row',
-        padding: 16,
-        borderRadius: 16,
-        alignItems: 'flex-start',
-        gap: 12,
-    },
-    infoContent: {
-        flex: 1,
-    },
-    infoTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        marginBottom: 4,
-    },
-    infoText: {
-        fontSize: 13,
-        lineHeight: 20,
+        fontWeight: '700',
+        letterSpacing: 0.3,
     },
 });
 
 export default ALevelPureMathScreen;
-

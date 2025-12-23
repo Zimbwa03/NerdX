@@ -515,7 +515,9 @@ const DashboardScreen: React.FC = () => {
                   <AnimatedCard
                     title="Pure Mathematics"
                     subtitle="Advanced calculus & algebra"
-                    imageSource={require('../../assets/images/a_level_pure_math_card.png')}
+                    iconName="function"
+                    iconLibrary="materialCommunity"
+                    iconColor="#FFFFFF"
                     onPress={() => navigateToALevelSubject('pure_mathematics', 'Pure Mathematics')}
                     glowColor={aLevelColors.pure_mathematics}
                     index={0}
@@ -524,7 +526,9 @@ const DashboardScreen: React.FC = () => {
                   <AnimatedCard
                     title="Chemistry"
                     subtitle="Organic & inorganic"
-                    imageSource={require('../../assets/images/a_level_pure_math_card.png')}
+                    iconName="flask-outline"
+                    iconLibrary="ionicons"
+                    iconColor="#FFFFFF"
                     onPress={() => navigateToALevelSubject('chemistry', 'Chemistry')}
                     glowColor={aLevelColors.chemistry}
                     index={1}
@@ -533,7 +537,9 @@ const DashboardScreen: React.FC = () => {
                   <AnimatedCard
                     title="Physics"
                     subtitle="Mechanics & quantum"
-                    imageSource={require('../../assets/images/a_level_pure_math_card.png')}
+                    iconName="atom"
+                    iconLibrary="ionicons"
+                    iconColor="#FFFFFF"
                     onPress={() => navigateToALevelSubject('physics', 'Physics')}
                     glowColor={aLevelColors.physics}
                     index={2}
@@ -542,7 +548,9 @@ const DashboardScreen: React.FC = () => {
                   <AnimatedCard
                     title="Biology"
                     subtitle="Cell biology & genetics"
-                    imageSource={require('../../assets/images/a_level_pure_math_card.png')}
+                    iconName="dna"
+                    iconLibrary="materialCommunity"
+                    iconColor="#FFFFFF"
                     onPress={() => navigateToALevelSubject('biology', 'Biology')}
                     glowColor={aLevelColors.biology}
                     index={3}

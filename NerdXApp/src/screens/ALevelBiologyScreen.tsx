@@ -1,5 +1,5 @@
 // A Level Biology Screen - ZIMSEC Syllabus (6030)
-// Professional UI with 24 topics organized by Lower/Upper Sixth
+// Premium Modern UI with glass-morphism and professional polish
 // Supports MCQ, Structured Questions, and Essay question types
 // Uses DeepSeek for AI-powered question generation
 import React, { useState } from 'react';
@@ -20,10 +20,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { Colors } from '../theme/colors';
 import { useThemedColors } from '../theme/useThemedStyles';
-import { Card } from '../components/Card';
-import { Icons, IconCircle } from '../components/Icons';
 import { 
     aLevelBiologyTopics, 
     ALevelBiologyTopic, 
@@ -33,17 +30,28 @@ import {
 } from '../data/aLevelBiology';
 import { quizApi } from '../services/api/quizApi';
 import LoadingProgress from '../components/LoadingProgress';
+import {
+    ALevelTopicCard,
+    ALevelFeatureCard,
+    ALevelExamCard,
+    ALevelInfoCard,
+} from '../components/ALevelTopicCard';
 
 const { width } = Dimensions.get('window');
 
-// Theme colors for Biology (Green/Emerald theme)
-const biologyColors = {
-    primary: ['#059669', '#10B981', '#34D399'], // Emerald gradient
-    secondary: ['#047857', '#059669'], // Darker emerald
-    lowerSixth: ['#10B981', '#059669'], // Green
-    upperSixth: ['#0891B2', '#06B6D4'], // Cyan for contrast
-    accent: '#34D399',
-    light: 'rgba(16, 185, 129, 0.1)',
+// Premium color palette for Biology
+const biologyTheme = {
+    primary: '#10B981',       // Emerald
+    secondary: '#34D399',     // Light emerald  
+    tertiary: '#059669',      // Deep emerald
+    accent: '#6EE7B7',        // Soft mint
+    gradient: {
+        header: ['#059669', '#10B981', '#34D399'] as [string, string, string],
+        lowerSixth: ['#10B981', '#059669'] as [string, string],
+        upperSixth: ['#0891B2', '#06B6D4'] as [string, string],
+    },
+    lowerSixthPrimary: '#10B981',
+    upperSixthPrimary: '#0891B2',
 };
 
 const ALevelBiologyScreen: React.FC = () => {
@@ -65,6 +73,10 @@ const ALevelBiologyScreen: React.FC = () => {
         topic => topic.difficulty === selectedLevel
     );
 
+    const currentPrimaryColor = selectedLevel === 'Lower Sixth' 
+        ? biologyTheme.lowerSixthPrimary 
+        : biologyTheme.upperSixthPrimary;
+
     const handleTopicPress = (topic: ALevelBiologyTopic) => {
         setSelectedTopic(topic);
         setQuestionTypeModalVisible(true);
@@ -78,7 +90,7 @@ const ALevelBiologyScreen: React.FC = () => {
         if (!user || (user.credits || 0) < 1) {
             Alert.alert(
                 'Insufficient Credits',
-                'You need at least 1 credit to start a quiz. Please buy credits first.',
+                'You need at least 1 credit to start a quiz. Please purchase credits first.',
                 [{ text: 'OK' }]
             );
             return;
@@ -88,8 +100,8 @@ const ALevelBiologyScreen: React.FC = () => {
         const typeName = typeInfo?.name || questionType;
 
         Alert.alert(
-            `Start ${typeName}`,
-            `Topic: ${selectedTopic.name}\n\n📚 ${selectedTopic.description}\n\n⏱ ${typeInfo?.timeGuide || ''}`,
+            `🧬 Start ${typeName}`,
+            `${selectedTopic.name}\n\n${selectedTopic.description}\n\n⏱ ${typeInfo?.timeGuide || ''}`,
             [
                 { text: 'Cancel', style: 'cancel' },
                 {
@@ -111,7 +123,7 @@ const ALevelBiologyScreen: React.FC = () => {
                 'medium',
                 'topical',
                 'Biology',
-                questionType // Pass question type to API
+                questionType
             );
 
             setIsGeneratingQuestion(false);
@@ -170,12 +182,12 @@ const ALevelBiologyScreen: React.FC = () => {
         }
 
         Alert.alert(
-            'Start Exam',
-            `Start A Level Biology ${selectedLevel} Exam?\n\nThis exam will include mixed MCQs, Structured Questions, and Essay prompts from ${selectedLevel} topics.`,
+            '📝 Start Exam',
+            `A Level Biology ${selectedLevel} Exam\n\nThis exam will include mixed MCQs, Structured Questions, and Essay prompts from ${selectedLevel} topics.`,
             [
                 { text: 'Cancel', style: 'cancel' },
                 {
-                    text: 'Start',
+                    text: 'Begin Exam',
                     onPress: async () => {
                         try {
                             setLoadingMessage('DeepSeek is preparing your A Level Biology exam...');
@@ -241,7 +253,7 @@ const ALevelBiologyScreen: React.FC = () => {
         return iconMap[topicId] || 'leaf';
     };
 
-    // Question Type Selection Modal
+    // Premium Question Type Selection Modal
     const renderQuestionTypeModal = () => (
         <RNModal
             visible={questionTypeModalVisible}
@@ -250,33 +262,65 @@ const ALevelBiologyScreen: React.FC = () => {
             onRequestClose={() => setQuestionTypeModalVisible(false)}
         >
             <View style={styles.modalOverlay}>
-                <View style={[styles.modalContent, { backgroundColor: themedColors.background.paper }]}>
+                <View style={[
+                    styles.modalContent, 
+                    { backgroundColor: isDarkMode ? '#1A1C2E' : '#FFFFFF' }
+                ]}>
                     {/* Modal Header */}
                     <View style={styles.modalHeader}>
-                        <Text style={[styles.modalTitle, { color: themedColors.text.primary }]}>
-                            Choose Question Type
-                        </Text>
+                        <View>
+                            <Text style={[
+                                styles.modalTitle, 
+                                { color: isDarkMode ? '#FFFFFF' : '#1A1A2E' }
+                            ]}>
+                                Choose Question Type
+                            </Text>
+                            <Text style={[
+                                styles.modalSubtitle,
+                                { color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(26,26,46,0.5)' }
+                            ]}>
+                                Select how you want to be tested
+                            </Text>
+                        </View>
                         <TouchableOpacity
                             onPress={() => setQuestionTypeModalVisible(false)}
-                            style={styles.closeButton}
+                            style={[
+                                styles.closeButton,
+                                { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' }
+                            ]}
                         >
-                            <Ionicons name="close" size={24} color={themedColors.text.secondary} />
+                            <Ionicons 
+                                name="close" 
+                                size={20} 
+                                color={isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.5)'} 
+                            />
                         </TouchableOpacity>
                     </View>
 
                     {/* Topic Info */}
                     {selectedTopic && (
-                        <View style={[styles.topicInfoBox, { backgroundColor: biologyColors.light }]}>
-                            <MaterialCommunityIcons
-                                name={getTopicIcon(selectedTopic.id) as any}
-                                size={24}
-                                color="#10B981"
-                            />
+                        <View style={[
+                            styles.topicInfoBox, 
+                            { backgroundColor: isDarkMode ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.08)' }
+                        ]}>
+                            <View style={[styles.topicInfoIcon, { backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
+                                <MaterialCommunityIcons
+                                    name={getTopicIcon(selectedTopic.id) as any}
+                                    size={22}
+                                    color="#10B981"
+                                />
+                            </View>
                             <View style={styles.topicInfoText}>
-                                <Text style={[styles.topicInfoTitle, { color: themedColors.text.primary }]}>
+                                <Text style={[
+                                    styles.topicInfoTitle, 
+                                    { color: isDarkMode ? '#FFFFFF' : '#1A1A2E' }
+                                ]}>
                                     {selectedTopic.name}
                                 </Text>
-                                <Text style={[styles.topicInfoLevel, { color: themedColors.text.secondary }]}>
+                                <Text style={[
+                                    styles.topicInfoLevel, 
+                                    { color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(26,26,46,0.5)' }
+                                ]}>
                                     {selectedTopic.difficulty} • {selectedTopic.paperRelevance}
                                 </Text>
                             </View>
@@ -288,33 +332,56 @@ const ALevelBiologyScreen: React.FC = () => {
                         {biologyQuestionTypes.map((type) => (
                             <TouchableOpacity
                                 key={type.id}
-                                style={[styles.questionTypeCard, { borderColor: type.color }]}
+                                style={[
+                                    styles.questionTypeCard, 
+                                    { 
+                                        backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+                                        borderColor: `${type.color}40`,
+                                    }
+                                ]}
                                 onPress={() => handleQuestionTypeSelect(type.id)}
+                                activeOpacity={0.8}
                             >
-                                <View style={[styles.questionTypeIcon, { backgroundColor: `${type.color}20` }]}>
+                                <LinearGradient
+                                    colors={[`${type.color}20`, `${type.color}08`]}
+                                    style={styles.questionTypeIcon}
+                                >
                                     <MaterialCommunityIcons
                                         name={type.icon as any}
-                                        size={28}
+                                        size={26}
                                         color={type.color}
                                     />
-                                </View>
+                                </LinearGradient>
                                 <View style={styles.questionTypeInfo}>
-                                    <Text style={[styles.questionTypeName, { color: themedColors.text.primary }]}>
+                                    <Text style={[
+                                        styles.questionTypeName, 
+                                        { color: isDarkMode ? '#FFFFFF' : '#1A1A2E' }
+                                    ]}>
                                         {type.name}
                                     </Text>
-                                    <Text style={[styles.questionTypeDesc, { color: themedColors.text.secondary }]}>
+                                    <Text style={[
+                                        styles.questionTypeDesc, 
+                                        { color: isDarkMode ? 'rgba(255,255,255,0.55)' : 'rgba(26,26,46,0.55)' }
+                                    ]}>
                                         {type.description}
                                     </Text>
                                     <View style={styles.questionTypeMeta}>
-                                        <Text style={[styles.questionTypeMarks, { color: type.color }]}>
-                                            {type.marks}
-                                        </Text>
-                                        <Text style={[styles.questionTypeTime, { color: themedColors.text.secondary }]}>
+                                        <View style={[styles.metaBadge, { backgroundColor: `${type.color}15` }]}>
+                                            <Text style={[styles.metaBadgeText, { color: type.color }]}>
+                                                {type.marks}
+                                            </Text>
+                                        </View>
+                                        <Text style={[
+                                            styles.questionTypeTime, 
+                                            { color: isDarkMode ? 'rgba(255,255,255,0.4)' : 'rgba(26,26,46,0.4)' }
+                                        ]}>
                                             {type.timeGuide}
                                         </Text>
                                     </View>
                                 </View>
-                                <Ionicons name="chevron-forward" size={24} color={type.color} />
+                                <View style={[styles.questionTypeArrow, { backgroundColor: `${type.color}12` }]}>
+                                    <Ionicons name="chevron-forward" size={18} color={type.color} />
+                                </View>
                             </TouchableOpacity>
                         ))}
                     </View>
@@ -324,7 +391,7 @@ const ALevelBiologyScreen: React.FC = () => {
     );
 
     return (
-        <View style={[styles.container, { backgroundColor: themedColors.background.default }]}>
+        <View style={[styles.container, { backgroundColor: isDarkMode ? '#0D0F1C' : '#F8F9FC' }]}>
             {/* Loading Overlay */}
             <LoadingProgress
                 visible={isGeneratingQuestion}
@@ -334,150 +401,165 @@ const ALevelBiologyScreen: React.FC = () => {
 
             <StatusBar barStyle="light-content" />
 
-            {/* Header with Green Gradient */}
+            {/* Premium Header */}
             <LinearGradient
-                colors={biologyColors.primary}
+                colors={biologyTheme.gradient.header}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.header}
             >
+                {/* Decorative background shapes */}
+                <View style={styles.headerDecoration}>
+                    <View style={[styles.decorCircle, styles.decorCircle1]} />
+                    <View style={[styles.decorCircle, styles.decorCircle2]} />
+                    <View style={[styles.decorCircle, styles.decorCircle3]} />
+                </View>
+
                 <View style={styles.headerContent}>
-                    <View style={{ flex: 1 }}>
+                    <View style={styles.headerLeft}>
                         <TouchableOpacity
                             onPress={() => navigation.goBack()}
                             style={styles.backButton}
+                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                         >
-                            <Text style={styles.backButtonText}>← Back</Text>
+                            <Ionicons name="arrow-back" size={22} color="rgba(255,255,255,0.9)" />
+                            <Text style={styles.backButtonText}>Back</Text>
                         </TouchableOpacity>
+                        
                         <Text style={styles.title}>A Level Biology</Text>
-                        <Text style={styles.subtitle}>ZIMSEC Syllabus 6030 • {topicCounts.total} Topics</Text>
+                        <View style={styles.subtitleRow}>
+                            <View style={styles.syllabusTag}>
+                                <Text style={styles.syllabusText}>ZIMSEC 6030</Text>
+                            </View>
+                            <Text style={styles.topicCount}>{topicCounts.total} Topics</Text>
+                        </View>
                     </View>
+                    
                     <View style={styles.headerIcon}>
-                        <MaterialCommunityIcons name="dna" size={48} color="rgba(255,255,255,0.9)" />
+                        <MaterialCommunityIcons name="dna" size={42} color="rgba(255,255,255,0.95)" />
                     </View>
                 </View>
             </LinearGradient>
 
-            {/* Level Tabs */}
-            <View style={[styles.tabContainer, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]}>
+            {/* Premium Level Tabs */}
+            <View style={[
+                styles.tabContainer,
+                { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)' }
+            ]}>
                 <TouchableOpacity
                     style={[styles.tab, selectedLevel === 'Lower Sixth' && styles.tabActive]}
                     onPress={() => setSelectedLevel('Lower Sixth')}
+                    activeOpacity={0.8}
                 >
                     {selectedLevel === 'Lower Sixth' ? (
-                        <LinearGradient colors={biologyColors.lowerSixth} style={styles.tabGradient}>
+                        <LinearGradient
+                            colors={biologyTheme.gradient.lowerSixth}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={styles.tabGradient}
+                        >
                             <Text style={styles.tabTextActive}>Lower Sixth</Text>
-                            <Text style={styles.tabSubtext}>Form 5 • {topicCounts.lowerSixth} Topics</Text>
+                            <Text style={styles.tabSubtext}>Form 5 • {topicCounts.lowerSixth}</Text>
                         </LinearGradient>
                     ) : (
                         <View style={styles.tabInactive}>
-                            <Text style={[styles.tabText, { color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }]}>Lower Sixth</Text>
-                            <Text style={[styles.tabSubtextInactive, { color: isDarkMode ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }]}>Form 5 • {topicCounts.lowerSixth} Topics</Text>
+                            <Text style={[styles.tabText, { color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)' }]}>
+                                Lower Sixth
+                            </Text>
+                            <Text style={[styles.tabSubtextInactive, { color: isDarkMode ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.35)' }]}>
+                                Form 5 • {topicCounts.lowerSixth}
+                            </Text>
                         </View>
                     )}
                 </TouchableOpacity>
+
                 <TouchableOpacity
                     style={[styles.tab, selectedLevel === 'Upper Sixth' && styles.tabActive]}
                     onPress={() => setSelectedLevel('Upper Sixth')}
+                    activeOpacity={0.8}
                 >
                     {selectedLevel === 'Upper Sixth' ? (
-                        <LinearGradient colors={biologyColors.upperSixth} style={styles.tabGradient}>
+                        <LinearGradient
+                            colors={biologyTheme.gradient.upperSixth}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={styles.tabGradient}
+                        >
                             <Text style={styles.tabTextActive}>Upper Sixth</Text>
-                            <Text style={styles.tabSubtext}>Form 6 • {topicCounts.upperSixth} Topics</Text>
+                            <Text style={styles.tabSubtext}>Form 6 • {topicCounts.upperSixth}</Text>
                         </LinearGradient>
                     ) : (
                         <View style={styles.tabInactive}>
-                            <Text style={[styles.tabText, { color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }]}>Upper Sixth</Text>
-                            <Text style={[styles.tabSubtextInactive, { color: isDarkMode ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }]}>Form 6 • {topicCounts.upperSixth} Topics</Text>
+                            <Text style={[styles.tabText, { color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)' }]}>
+                                Upper Sixth
+                            </Text>
+                            <Text style={[styles.tabSubtextInactive, { color: isDarkMode ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.35)' }]}>
+                                Form 6 • {topicCounts.upperSixth}
+                            </Text>
                         </View>
                     )}
                 </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-                {/* Feature Buttons */}
-                <View style={styles.featuresContainer}>
-                    {/* Biology Notes */}
-                    <Card variant="elevated" onPress={handleBiologyNotes} style={styles.featureCard}>
-                        <View style={styles.featureContent}>
-                            <IconCircle
-                                icon={<MaterialCommunityIcons name="book-open-page-variant" size={28} color="#10B981" />}
-                                size={56}
-                                backgroundColor={biologyColors.light}
-                            />
-                            <View style={styles.featureInfo}>
-                                <Text style={[styles.featureTitle, { color: themedColors.text.primary }]}>Biology Notes</Text>
-                                <Text style={[styles.featureSubtitle, { color: themedColors.text.secondary }]}>Comprehensive A Level notes with diagrams</Text>
-                            </View>
-                            {Icons.arrowRight(24, Colors.text.secondary)}
-                        </View>
-                    </Card>
+            <ScrollView 
+                style={styles.scrollView} 
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.scrollContent}
+            >
+                {/* Feature Cards Section */}
+                <View style={styles.section}>
+                    <ALevelFeatureCard
+                        title="Biology Notes"
+                        subtitle="Comprehensive A Level notes with diagrams"
+                        icon={<MaterialCommunityIcons name="book-open-page-variant" size={26} color="#10B981" />}
+                        iconBgColor="rgba(16, 185, 129, 0.12)"
+                        onPress={handleBiologyNotes}
+                        isDarkMode={isDarkMode}
+                    />
 
-                    {/* AI Biology Tutor */}
-                    <Card variant="elevated" onPress={handleAITutor} style={styles.featureCard}>
-                        <View style={styles.featureContent}>
-                            <IconCircle
-                                icon={<Ionicons name="school-outline" size={28} color="#0891B2" />}
-                                size={56}
-                                backgroundColor="rgba(8, 145, 178, 0.1)"
-                            />
-                            <View style={styles.featureInfo}>
-                                <Text style={[styles.featureTitle, { color: themedColors.text.primary }]}>AI Biology Tutor</Text>
-                                <Text style={[styles.featureSubtitle, { color: themedColors.text.secondary }]}>Interactive Socratic tutoring with DeepSeek</Text>
-                            </View>
-                            {Icons.arrowRight(24, Colors.text.secondary)}
-                        </View>
-                    </Card>
+                    <ALevelFeatureCard
+                        title="AI Biology Tutor"
+                        subtitle="Interactive Socratic tutoring powered by DeepSeek"
+                        icon={<Ionicons name="school-outline" size={26} color="#0891B2" />}
+                        iconBgColor="rgba(8, 145, 178, 0.12)"
+                        onPress={handleAITutor}
+                        isDarkMode={isDarkMode}
+                    />
 
-                    {/* Virtual Lab */}
-                    <Card variant="elevated" onPress={handleVirtualLab} style={styles.featureCard}>
-                        <View style={styles.featureContent}>
-                            <IconCircle
-                                icon={<MaterialCommunityIcons name="flask" size={28} color="#F59E0B" />}
-                                size={56}
-                                backgroundColor="rgba(245, 158, 11, 0.1)"
-                            />
-                            <View style={styles.featureInfo}>
-                                <Text style={[styles.featureTitle, { color: themedColors.text.primary }]}>Virtual Labs</Text>
-                                <Text style={[styles.featureSubtitle, { color: themedColors.text.secondary }]}>Interactive biology experiments</Text>
-                            </View>
-                            {Icons.arrowRight(24, Colors.text.secondary)}
-                        </View>
-                    </Card>
+                    <ALevelFeatureCard
+                        title="Virtual Labs"
+                        subtitle="Interactive biology experiments & simulations"
+                        icon={<MaterialCommunityIcons name="flask" size={26} color="#F59E0B" />}
+                        iconBgColor="rgba(245, 158, 11, 0.12)"
+                        onPress={handleVirtualLab}
+                        isDarkMode={isDarkMode}
+                    />
 
-                    {/* Start Exam */}
-                    <Card
-                        variant="gradient"
-                        gradientColors={selectedLevel === 'Lower Sixth'
-                            ? biologyColors.lowerSixth
-                            : biologyColors.upperSixth}
+                    {/* Premium Exam Card */}
+                    <ALevelExamCard
+                        title={`Start ${selectedLevel} Exam`}
+                        subtitle="MCQ + Structured + Essay from all topics"
+                        gradientColors={selectedLevel === 'Lower Sixth' 
+                            ? biologyTheme.gradient.lowerSixth 
+                            : biologyTheme.gradient.upperSixth}
+                        icon={<MaterialCommunityIcons name="file-document-edit-outline" size={28} color="#FFFFFF" />}
                         onPress={handleStartExam}
-                        style={styles.examCard}
-                    >
-                        <View style={styles.examContent}>
-                            <IconCircle
-                                icon={Icons.quiz(32, '#FFFFFF')}
-                                size={64}
-                                backgroundColor="rgba(255, 255, 255, 0.2)"
-                            />
-                            <View style={styles.examInfo}>
-                                <Text style={styles.examTitle}>Start {selectedLevel} Exam</Text>
-                                <Text style={styles.examSubtitle}>MCQ + Structured + Essay from all topics</Text>
-                            </View>
-                        </View>
-                    </Card>
+                    />
                 </View>
 
                 {/* Question Type Legend */}
                 <View style={styles.legendContainer}>
-                    <Text style={[styles.legendTitle, { color: themedColors.text.primary }]}>
-                        Tap any topic to choose:
+                    <Text style={[
+                        styles.legendTitle, 
+                        { color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(26,26,46,0.7)' }
+                    ]}>
+                        Tap any topic to choose question type:
                     </Text>
                     <View style={styles.legendItems}>
                         {biologyQuestionTypes.map((type) => (
-                            <View key={type.id} style={styles.legendItem}>
+                            <View key={type.id} style={[styles.legendItem, { backgroundColor: `${type.color}12` }]}>
                                 <View style={[styles.legendDot, { backgroundColor: type.color }]} />
-                                <Text style={[styles.legendText, { color: themedColors.text.secondary }]}>
+                                <Text style={[styles.legendText, { color: type.color }]}>
                                     {type.name}
                                 </Text>
                             </View>
@@ -485,98 +567,66 @@ const ALevelBiologyScreen: React.FC = () => {
                     </View>
                 </View>
 
-                {/* Topics List */}
-                <View style={styles.topicsContainer}>
-                    <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>
-                        {selectedLevel} Topics
-                    </Text>
-                    <Text style={[styles.sectionSubtitle, { color: themedColors.text.secondary }]}>
-                        Tap a topic to select question type • Powered by DeepSeek AI
+                {/* Topics Section */}
+                <View style={styles.section}>
+                    <View style={styles.sectionHeader}>
+                        <Text style={[styles.sectionTitle, { color: isDarkMode ? '#FFFFFF' : '#1A1A2E' }]}>
+                            {selectedLevel} Topics
+                        </Text>
+                        <View style={[
+                            styles.aiPoweredBadge, 
+                            { backgroundColor: isDarkMode ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.1)' }
+                        ]}>
+                            <MaterialCommunityIcons name="lightning-bolt" size={14} color="#10B981" />
+                            <Text style={[styles.aiPoweredText, { color: '#10B981' }]}>DeepSeek AI</Text>
+                        </View>
+                    </View>
+                    <Text style={[styles.sectionSubtitle, { color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(26,26,46,0.5)' }]}>
+                        Tap any topic to select question type
                     </Text>
 
                     {filteredTopics.map((topic, index) => (
-                        <Card
+                        <ALevelTopicCard
                             key={topic.id}
-                            variant="elevated"
+                            title={topic.name}
+                            description={topic.description}
+                            icon={getTopicIcon(topic.id)}
+                            primaryColor={currentPrimaryColor}
+                            badges={[
+                                { 
+                                    text: topic.paperRelevance, 
+                                    color: currentPrimaryColor,
+                                    icon: 'file-document-outline'
+                                },
+                                ...(topic.practicalComponent ? [{
+                                    text: 'Practical',
+                                    color: '#F59E0B',
+                                    icon: 'flask-outline'
+                                }] : [])
+                            ]}
+                            objectives={topic.learningObjectives.length}
                             onPress={() => handleTopicPress(topic)}
-                            style={styles.topicCard}
-                        >
-                            <View style={styles.topicContent}>
-                                <View style={[
-                                    styles.topicNumber,
-                                    {
-                                        backgroundColor: selectedLevel === 'Lower Sixth'
-                                            ? biologyColors.light
-                                            : 'rgba(8, 145, 178, 0.1)'
-                                    }
-                                ]}>
-                                    <MaterialCommunityIcons
-                                        name={getTopicIcon(topic.id) as any}
-                                        size={24}
-                                        color={selectedLevel === 'Lower Sixth' ? '#10B981' : '#0891B2'}
-                                    />
-                                </View>
-                                <View style={styles.topicInfo}>
-                                    <Text style={[styles.topicName, { color: themedColors.text.primary }]}>
-                                        {topic.name}
-                                    </Text>
-                                    <Text style={[styles.topicDescription, { color: themedColors.text.secondary }]} numberOfLines={2}>
-                                        {topic.description}
-                                    </Text>
-                                    <View style={styles.topicBadges}>
-                                        <View style={[styles.badge, { backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}>
-                                            <Text style={[styles.badgeText, { color: '#10B981' }]}>
-                                                {topic.paperRelevance}
-                                            </Text>
-                                        </View>
-                                        {topic.practicalComponent && (
-                                            <View style={[styles.badge, { backgroundColor: 'rgba(245, 158, 11, 0.1)' }]}>
-                                                <Text style={[styles.badgeText, { color: '#F59E0B' }]}>
-                                                    🧪 Practical
-                                                </Text>
-                                            </View>
-                                        )}
-                                        <View style={[styles.badge, { backgroundColor: 'rgba(59, 130, 246, 0.1)' }]}>
-                                            <Text style={[styles.badgeText, { color: '#3B82F6' }]}>
-                                                {topic.learningObjectives.length} objectives
-                                            </Text>
-                                        </View>
-                                    </View>
-                                </View>
-                                <Ionicons
-                                    name="chevron-forward"
-                                    size={24}
-                                    color={selectedLevel === 'Lower Sixth' ? '#10B981' : '#0891B2'}
-                                />
-                            </View>
-                        </Card>
+                            index={index}
+                            isDarkMode={isDarkMode}
+                        />
                     ))}
                 </View>
 
-                {/* Bottom Info Card */}
-                <View style={styles.infoContainer}>
-                    <LinearGradient
-                        colors={['rgba(16, 185, 129, 0.1)', 'rgba(8, 145, 178, 0.1)']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={styles.infoCard}
-                    >
-                        <MaterialCommunityIcons name="information-outline" size={24} color="#10B981" />
-                        <View style={styles.infoContent}>
-                            <Text style={[styles.infoTitle, { color: themedColors.text.primary }]}>
-                                ZIMSEC A Level Biology
-                            </Text>
-                            <Text style={[styles.infoText, { color: themedColors.text.secondary }]}>
-                                Syllabus Code: 6030{'\n'}
-                                Paper 1 (MCQ), Paper 2 (Structured), Paper 3 (Practical){'\n'}
-                                Questions generated using DeepSeek AI
-                            </Text>
-                        </View>
-                    </LinearGradient>
+                {/* Info Card */}
+                <View style={styles.section}>
+                    <ALevelInfoCard
+                        title="ZIMSEC A Level Biology"
+                        content={`Syllabus Code: 6030\nPaper 1 (MCQ), Paper 2 (Structured), Paper 3 (Practical)\nQuestions generated using DeepSeek AI`}
+                        gradientColors={isDarkMode 
+                            ? ['rgba(16, 185, 129, 0.08)', 'rgba(8, 145, 178, 0.05)']
+                            : ['rgba(16, 185, 129, 0.06)', 'rgba(8, 145, 178, 0.04)']}
+                        iconColor="#10B981"
+                        isDarkMode={isDarkMode}
+                    />
                 </View>
 
                 {/* Bottom Spacing */}
-                <View style={{ height: 40 }} />
+                <View style={{ height: 32 }} />
             </ScrollView>
 
             {/* Question Type Selection Modal */}
@@ -592,51 +642,116 @@ const styles = StyleSheet.create({
     scrollView: {
         flex: 1,
     },
+    scrollContent: {
+        paddingBottom: 20,
+    },
+    
+    // Header Styles
     header: {
-        paddingTop: Platform.OS === 'ios' ? 50 : 40,
-        paddingBottom: 25,
+        paddingTop: Platform.OS === 'ios' ? 56 : 44,
+        paddingBottom: 28,
         paddingHorizontal: 20,
-        borderBottomLeftRadius: 30,
-        borderBottomRightRadius: 30,
+        borderBottomLeftRadius: 28,
+        borderBottomRightRadius: 28,
+        overflow: 'hidden',
+    },
+    headerDecoration: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+    },
+    decorCircle: {
+        position: 'absolute',
+        borderRadius: 100,
+        backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    },
+    decorCircle1: {
+        width: 180,
+        height: 180,
+        top: -60,
+        right: -40,
+    },
+    decorCircle2: {
+        width: 100,
+        height: 100,
+        bottom: -30,
+        left: 20,
+    },
+    decorCircle3: {
+        width: 60,
+        height: 60,
+        top: 40,
+        left: -20,
     },
     headerContent: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
     },
+    headerLeft: {
+        flex: 1,
+    },
     backButton: {
-        marginBottom: 8,
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 12,
+        gap: 6,
     },
     backButtonText: {
         color: 'rgba(255,255,255,0.9)',
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: '600',
     },
     title: {
-        fontSize: 28,
-        fontWeight: 'bold',
+        fontSize: 26,
+        fontWeight: '800',
         color: '#FFFFFF',
-        marginBottom: 4,
+        letterSpacing: 0.3,
+        marginBottom: 8,
     },
-    subtitle: {
+    subtitleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+    },
+    syllabusTag: {
+        backgroundColor: 'rgba(255, 255, 255, 0.18)',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 6,
+    },
+    syllabusText: {
+        color: '#FFFFFF',
+        fontSize: 12,
+        fontWeight: '700',
+        letterSpacing: 0.5,
+    },
+    topicCount: {
+        color: 'rgba(255, 255, 255, 0.85)',
         fontSize: 14,
-        color: 'rgba(255,255,255,0.85)',
+        fontWeight: '500',
     },
     headerIcon: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
-        backgroundColor: 'rgba(255,255,255,0.15)',
+        width: 68,
+        height: 68,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255, 255, 255, 0.15)',
         justifyContent: 'center',
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.1)',
     },
+
+    // Tab Styles
     tabContainer: {
         flexDirection: 'row',
-        marginHorizontal: 20,
+        marginHorizontal: 16,
         marginTop: 16,
         marginBottom: 8,
         borderRadius: 16,
-        padding: 4,
+        padding: 5,
     },
     tab: {
         flex: 1,
@@ -644,19 +759,19 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     tabActive: {
-        elevation: 3,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+        elevation: 6,
     },
     tabGradient: {
-        paddingVertical: 12,
+        paddingVertical: 14,
         alignItems: 'center',
         borderRadius: 12,
     },
     tabInactive: {
-        paddingVertical: 12,
+        paddingVertical: 14,
         alignItems: 'center',
     },
     tabText: {
@@ -665,213 +780,141 @@ const styles = StyleSheet.create({
     },
     tabTextActive: {
         fontSize: 15,
-        fontWeight: 'bold',
+        fontWeight: '700',
         color: '#FFFFFF',
+        letterSpacing: 0.2,
     },
     tabSubtext: {
         fontSize: 11,
-        color: 'rgba(255, 255, 255, 0.8)',
+        color: 'rgba(255, 255, 255, 0.85)',
         marginTop: 2,
+        fontWeight: '500',
     },
     tabSubtextInactive: {
         fontSize: 11,
         marginTop: 2,
     },
-    featuresContainer: {
-        padding: 20,
-        paddingTop: 10,
-    },
-    featureCard: {
-        marginBottom: 12,
-        borderColor: Colors.border.light,
-        borderWidth: 1,
-    },
-    featureContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 4,
-        gap: 16,
-    },
-    featureInfo: {
-        flex: 1,
-    },
-    featureTitle: {
-        fontSize: 18,
-        fontWeight: '600',
-        marginBottom: 4,
-    },
-    featureSubtitle: {
-        fontSize: 14,
-    },
-    examCard: {
-        marginTop: 8,
-        marginBottom: 12,
-    },
-    examContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 8,
-    },
-    examInfo: {
-        marginLeft: 20,
-        flex: 1,
-    },
-    examTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#FFFFFF',
-        marginBottom: 4,
-    },
-    examSubtitle: {
-        fontSize: 14,
-        color: 'rgba(255, 255, 255, 0.85)',
-    },
+
+    // Legend Styles
     legendContainer: {
-        paddingHorizontal: 20,
-        marginBottom: 8,
+        paddingHorizontal: 16,
+        marginTop: 8,
+        marginBottom: 4,
     },
     legendTitle: {
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: '600',
-        marginBottom: 8,
+        marginBottom: 10,
     },
     legendItems: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 12,
+        gap: 8,
     },
     legendItem: {
         flexDirection: 'row',
         alignItems: 'center',
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 8,
         gap: 6,
     },
     legendDot: {
-        width: 10,
-        height: 10,
-        borderRadius: 5,
+        width: 8,
+        height: 8,
+        borderRadius: 4,
     },
     legendText: {
         fontSize: 12,
+        fontWeight: '600',
     },
-    topicsContainer: {
-        paddingHorizontal: 20,
+
+    // Section Styles
+    section: {
+        paddingHorizontal: 16,
+        paddingTop: 12,
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 4,
     },
     sectionTitle: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        marginBottom: 4,
+        fontSize: 20,
+        fontWeight: '800',
+        letterSpacing: 0.3,
     },
     sectionSubtitle: {
-        fontSize: 14,
+        fontSize: 13,
         marginBottom: 16,
     },
-    topicCard: {
-        marginBottom: 12,
-        borderColor: Colors.border.light,
-        borderWidth: 1,
-    },
-    topicContent: {
+    aiPoweredBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 4,
-        gap: 12,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 8,
+        gap: 4,
     },
-    topicNumber: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    topicInfo: {
-        flex: 1,
-    },
-    topicName: {
-        fontSize: 16,
-        fontWeight: '600',
-        marginBottom: 2,
-    },
-    topicDescription: {
-        fontSize: 13,
-        lineHeight: 18,
-        marginBottom: 6,
-    },
-    topicBadges: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 8,
-    },
-    badge: {
-        paddingHorizontal: 8,
-        paddingVertical: 2,
-        borderRadius: 4,
-    },
-    badgeText: {
+    aiPoweredText: {
         fontSize: 11,
-        fontWeight: '600',
+        fontWeight: '700',
+        letterSpacing: 0.3,
     },
-    infoContainer: {
-        paddingHorizontal: 20,
-        marginTop: 8,
-    },
-    infoCard: {
-        flexDirection: 'row',
-        padding: 16,
-        borderRadius: 16,
-        alignItems: 'flex-start',
-        gap: 12,
-    },
-    infoContent: {
-        flex: 1,
-    },
-    infoTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        marginBottom: 4,
-    },
-    infoText: {
-        fontSize: 13,
-        lineHeight: 20,
-    },
+
     // Modal Styles
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
         justifyContent: 'flex-end',
     },
     modalContent: {
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
-        padding: 20,
-        maxHeight: '80%',
+        borderTopLeftRadius: 28,
+        borderTopRightRadius: 28,
+        padding: 24,
+        maxHeight: '85%',
     },
     modalHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 16,
+        alignItems: 'flex-start',
+        marginBottom: 20,
     },
     modalTitle: {
         fontSize: 22,
-        fontWeight: 'bold',
+        fontWeight: '800',
+        letterSpacing: 0.3,
+    },
+    modalSubtitle: {
+        fontSize: 13,
+        marginTop: 4,
     },
     closeButton: {
-        padding: 4,
+        padding: 8,
+        borderRadius: 12,
     },
     topicInfoBox: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 12,
-        borderRadius: 12,
-        marginBottom: 16,
+        padding: 14,
+        borderRadius: 14,
+        marginBottom: 20,
         gap: 12,
+    },
+    topicInfoIcon: {
+        width: 44,
+        height: 44,
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     topicInfoText: {
         flex: 1,
     },
     topicInfoTitle: {
-        fontSize: 16,
-        fontWeight: '600',
+        fontSize: 15,
+        fontWeight: '700',
     },
     topicInfoLevel: {
         fontSize: 12,
@@ -885,14 +928,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 16,
         borderRadius: 16,
-        borderWidth: 2,
-        backgroundColor: 'transparent',
-        gap: 12,
+        borderWidth: 1.5,
+        gap: 14,
     },
     questionTypeIcon: {
-        width: 56,
-        height: 56,
-        borderRadius: 28,
+        width: 52,
+        height: 52,
+        borderRadius: 14,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -900,26 +942,41 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     questionTypeName: {
-        fontSize: 18,
-        fontWeight: '600',
+        fontSize: 16,
+        fontWeight: '700',
+        letterSpacing: 0.2,
     },
     questionTypeDesc: {
-        fontSize: 13,
-        marginTop: 2,
+        fontSize: 12.5,
+        marginTop: 3,
+        lineHeight: 17,
     },
     questionTypeMeta: {
         flexDirection: 'row',
-        marginTop: 6,
-        gap: 12,
+        alignItems: 'center',
+        marginTop: 8,
+        gap: 10,
     },
-    questionTypeMarks: {
-        fontSize: 12,
-        fontWeight: '600',
+    metaBadge: {
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: 6,
+    },
+    metaBadgeText: {
+        fontSize: 11,
+        fontWeight: '700',
     },
     questionTypeTime: {
-        fontSize: 12,
+        fontSize: 11,
+        fontWeight: '500',
+    },
+    questionTypeArrow: {
+        width: 32,
+        height: 32,
+        borderRadius: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
 });
 
 export default ALevelBiologyScreen;
-

@@ -13,6 +13,7 @@ import {
     Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons, MaterialIcons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
 import { Colors } from '../theme/colors';
 
 const { width } = Dimensions.get('window');
@@ -20,7 +21,10 @@ const { width } = Dimensions.get('window');
 interface AnimatedCardProps {
     title: string;
     subtitle: string;
-    imageSource: ImageSourcePropType;
+    imageSource?: ImageSourcePropType;
+    iconName?: string;
+    iconLibrary?: 'ionicons' | 'material' | 'materialCommunity' | 'fontAwesome5';
+    iconColor?: string;
     onPress: () => void;
     glowColor?: string;
     fullWidth?: boolean;
@@ -31,11 +35,35 @@ const AnimatedCard: React.FC<AnimatedCardProps> = ({
     title,
     subtitle,
     imageSource,
+    iconName,
+    iconLibrary = 'ionicons',
+    iconColor = '#FFFFFF',
     onPress,
     glowColor = Colors.primary.main,
     fullWidth = false,
     index = 0,
 }) => {
+    // Render icon component based on library
+    const renderIcon = () => {
+        if (!iconName) return null;
+        
+        const iconProps = {
+            name: iconName as any,
+            size: 64,
+            color: iconColor,
+        };
+
+        switch (iconLibrary) {
+            case 'material':
+                return <MaterialIcons {...iconProps} />;
+            case 'materialCommunity':
+                return <MaterialCommunityIcons {...iconProps} />;
+            case 'fontAwesome5':
+                return <FontAwesome5 {...iconProps} />;
+            default:
+                return <Ionicons {...iconProps} />;
+        }
+    };
     // Animation values
     const scaleAnim = useRef(new Animated.Value(1)).current;
     const entranceAnim = useRef(new Animated.Value(0)).current;
@@ -147,19 +175,31 @@ const AnimatedCard: React.FC<AnimatedCardProps> = ({
                     fullWidth && styles.fullWidthCard,
                 ]}
             >
-                {/* Card image */}
+                {/* Card image or icon */}
                 <View style={styles.imageContainer}>
-                    <Image
-                        source={imageSource}
-                        style={styles.cardImage}
-                        resizeMode="cover"
-                    />
-
-                    {/* Gradient overlay */}
-                    <LinearGradient
-                        colors={['transparent', 'rgba(10, 14, 33, 0.95)']}
-                        style={styles.imageGradient}
-                    />
+                    {imageSource ? (
+                        <>
+                            <Image
+                                source={imageSource}
+                                style={styles.cardImage}
+                                resizeMode="cover"
+                            />
+                            {/* Gradient overlay */}
+                            <LinearGradient
+                                colors={['transparent', 'rgba(10, 14, 33, 0.95)']}
+                                style={styles.imageGradient}
+                            />
+                        </>
+                    ) : iconName ? (
+                        <LinearGradient
+                            colors={[glowColor + '40', glowColor + '20', 'rgba(10, 14, 33, 0.95)']}
+                            style={styles.iconContainer}
+                        >
+                            <View style={styles.iconWrapper}>
+                                {renderIcon()}
+                            </View>
+                        </LinearGradient>
+                    ) : null}
 
                     {/* Shimmer effect overlay */}
                     <LinearGradient
@@ -217,6 +257,19 @@ const styles = StyleSheet.create({
     cardImage: {
         width: '100%',
         height: '100%',
+    },
+    iconContainer: {
+        width: '100%',
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    iconWrapper: {
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        borderRadius: 32,
+        padding: 20,
+        borderWidth: 2,
+        borderColor: 'rgba(255, 255, 255, 0.2)',
     },
     imageGradient: {
         position: 'absolute',

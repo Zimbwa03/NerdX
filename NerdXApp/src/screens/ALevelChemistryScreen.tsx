@@ -1,4 +1,6 @@
-// A Level Chemistry Screen - Professional UI with all topics
+// A Level Chemistry Screen - Premium Modern UI
+// Professional design with glass-morphism effects
+// Uses DeepSeek for AI-powered question generation
 import React, { useState } from 'react';
 import {
     View,
@@ -13,18 +15,43 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { Colors } from '../theme/colors';
 import { useThemedColors } from '../theme/useThemedStyles';
-import { Card } from '../components/Card';
-import { Icons, IconCircle } from '../components/Icons';
 import { aLevelChemistryTopics, ALevelChemistryTopic } from '../data/aLevelChemistry';
 import { quizApi } from '../services/api/quizApi';
 import LoadingProgress from '../components/LoadingProgress';
+import {
+    ALevelTopicCard,
+    ALevelFeatureCard,
+    ALevelExamCard,
+    ALevelInfoCard,
+} from '../components/ALevelTopicCard';
 
 const { width } = Dimensions.get('window');
+
+// Premium color palette for Chemistry
+const chemistryTheme = {
+    primary: '#00897B',       // Teal
+    secondary: '#26A69A',     // Light teal
+    tertiary: '#00695C',      // Deep teal
+    accent: '#4DB6AC',        // Soft mint
+    gradient: {
+        header: ['#00695C', '#00897B', '#26A69A'] as [string, string, string],
+        asLevel: ['#00897B', '#00695C'] as [string, string],
+        a2Level: ['#7B1FA2', '#6A1B9A'] as [string, string],
+    },
+    asLevelPrimary: '#00897B',
+    a2LevelPrimary: '#7B1FA2',
+    // Category colors
+    categories: {
+        'Physical Chemistry': '#7B1FA2',
+        'Inorganic Chemistry': '#0288D1',
+        'Organic Chemistry': '#388E3C',
+        'Analysis': '#F57C00',
+    } as { [key: string]: string },
+};
 
 const ALevelChemistryScreen: React.FC = () => {
     const navigation = useNavigation();
@@ -40,14 +67,27 @@ const ALevelChemistryScreen: React.FC = () => {
         topic => topic.difficulty === selectedLevel
     );
 
+    // Count topics per level
+    const asLevelCount = aLevelChemistryTopics.filter(t => t.difficulty === 'AS Level').length;
+    const a2LevelCount = aLevelChemistryTopics.filter(t => t.difficulty === 'A2 Level').length;
+
+    const currentPrimaryColor = selectedLevel === 'AS Level' 
+        ? chemistryTheme.asLevelPrimary 
+        : chemistryTheme.a2LevelPrimary;
+
     // Get category color
     const getCategoryColor = (category: string) => {
+        return chemistryTheme.categories[category] || '#00897B';
+    };
+
+    // Get icon for category
+    const getCategoryIcon = (category: string): string => {
         switch (category) {
-            case 'Physical Chemistry': return '#7B1FA2'; // Purple
-            case 'Inorganic Chemistry': return '#0288D1'; // Blue
-            case 'Organic Chemistry': return '#388E3C'; // Green
-            case 'Analysis': return '#F57C00'; // Orange
-            default: return '#00897B';
+            case 'Physical Chemistry': return 'thermometer-lines';
+            case 'Inorganic Chemistry': return 'grid';
+            case 'Organic Chemistry': return 'molecule';
+            case 'Analysis': return 'chart-bar';
+            default: return 'flask';
         }
     };
 
@@ -56,19 +96,19 @@ const ALevelChemistryScreen: React.FC = () => {
             if (!user || (user.credits || 0) < 1) {
                 Alert.alert(
                     'Insufficient Credits',
-                    'You need at least 1 credit to start a quiz. Please buy credits first.',
+                    'You need at least 1 credit to start a quiz. Please purchase credits first.',
                     [{ text: 'OK' }]
                 );
                 return;
             }
 
             Alert.alert(
-                'Start Quiz',
-                `Start ${topic.name} quiz?`,
+                '⚗️ Start Quiz',
+                `${topic.name}\n\n${topic.description}\n\n📁 Category: ${topic.category}`,
                 [
                     { text: 'Cancel', style: 'cancel' },
                     {
-                        text: 'Start',
+                        text: 'Start Quiz',
                         onPress: async () => {
                             try {
                                 setIsGeneratingQuestion(true);
@@ -113,6 +153,12 @@ const ALevelChemistryScreen: React.FC = () => {
         navigation.navigate('VirtualLab' as never);
     };
 
+    const handleAITutor = () => {
+        navigation.navigate('TeacherModeSetup' as never, {
+            preselectedSubject: 'A Level Chemistry',
+        } as never);
+    };
+
     const handleStartExam = async () => {
         try {
             if (!user || (user.credits || 0) < 1) {
@@ -125,12 +171,12 @@ const ALevelChemistryScreen: React.FC = () => {
             }
 
             Alert.alert(
-                'Start Exam',
-                `Start A Level Chemistry ${selectedLevel} Exam?`,
+                '📝 Start Exam',
+                `A Level Chemistry ${selectedLevel} Exam\n\nThis exam will include mixed questions from all ${selectedLevel} topics.`,
                 [
                     { text: 'Cancel', style: 'cancel' },
                     {
-                        text: 'Start',
+                        text: 'Begin Exam',
                         onPress: async () => {
                             try {
                                 setIsGeneratingQuestion(true);
@@ -167,201 +213,236 @@ const ALevelChemistryScreen: React.FC = () => {
     };
 
     return (
-        <View style={[styles.container, { backgroundColor: themedColors.background.default }]}>
+        <View style={[styles.container, { backgroundColor: isDarkMode ? '#0D0F1C' : '#F8F9FC' }]}>
             {/* Loading Overlay */}
             <LoadingProgress
                 visible={isGeneratingQuestion}
-                message="Generating your A Level Chemistry question..."
+                message="DeepSeek is generating your Chemistry question..."
                 estimatedTime={8}
             />
 
             <StatusBar barStyle="light-content" />
 
-            {/* Header */}
+            {/* Premium Header */}
             <LinearGradient
-                colors={['#00695C', '#00897B', '#26A69A']}
+                colors={chemistryTheme.gradient.header}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.header}
             >
+                {/* Decorative background shapes */}
+                <View style={styles.headerDecoration}>
+                    <View style={[styles.decorCircle, styles.decorCircle1]} />
+                    <View style={[styles.decorCircle, styles.decorCircle2]} />
+                    <View style={[styles.decorCircle, styles.decorCircle3]} />
+                </View>
+
                 <View style={styles.headerContent}>
-                    <View style={{ flex: 1 }}>
+                    <View style={styles.headerLeft}>
                         <TouchableOpacity
                             onPress={() => navigation.goBack()}
                             style={styles.backButton}
+                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                         >
-                            <Text style={styles.backButtonText}>← Back</Text>
+                            <Ionicons name="arrow-back" size={22} color="rgba(255,255,255,0.9)" />
+                            <Text style={styles.backButtonText}>Back</Text>
                         </TouchableOpacity>
+                        
                         <Text style={styles.title}>A Level Chemistry</Text>
-                        <Text style={styles.subtitle}>Master advanced chemistry concepts</Text>
+                        <View style={styles.subtitleRow}>
+                            <View style={styles.syllabusTag}>
+                                <Text style={styles.syllabusText}>CIE / ZIMSEC</Text>
+                            </View>
+                            <Text style={styles.topicCount}>{asLevelCount + a2LevelCount} Topics</Text>
+                        </View>
                     </View>
+                    
                     <View style={styles.headerIcon}>
-                        <Ionicons name="flask-outline" size={48} color="rgba(255,255,255,0.9)" />
+                        <Ionicons name="flask-outline" size={42} color="rgba(255,255,255,0.95)" />
                     </View>
                 </View>
             </LinearGradient>
 
-            {/* Level Tabs */}
-            <View style={styles.tabContainer}>
+            {/* Premium Level Tabs */}
+            <View style={[
+                styles.tabContainer,
+                { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)' }
+            ]}>
                 <TouchableOpacity
-                    style={[
-                        styles.tab,
-                        selectedLevel === 'AS Level' && styles.tabActive
-                    ]}
+                    style={[styles.tab, selectedLevel === 'AS Level' && styles.tabActive]}
                     onPress={() => setSelectedLevel('AS Level')}
+                    activeOpacity={0.8}
                 >
                     {selectedLevel === 'AS Level' ? (
                         <LinearGradient
-                            colors={['#00897B', '#00695C']}
+                            colors={chemistryTheme.gradient.asLevel}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
                             style={styles.tabGradient}
                         >
                             <Text style={styles.tabTextActive}>AS Level</Text>
-                            <Text style={styles.tabSubtext}>22 Topics</Text>
+                            <Text style={styles.tabSubtext}>{asLevelCount} Topics</Text>
                         </LinearGradient>
                     ) : (
                         <View style={styles.tabInactive}>
-                            <Text style={styles.tabText}>AS Level</Text>
-                            <Text style={styles.tabSubtextInactive}>22 Topics</Text>
+                            <Text style={[styles.tabText, { color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)' }]}>
+                                AS Level
+                            </Text>
+                            <Text style={[styles.tabSubtextInactive, { color: isDarkMode ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.35)' }]}>
+                                {asLevelCount} Topics
+                            </Text>
                         </View>
                     )}
                 </TouchableOpacity>
+
                 <TouchableOpacity
-                    style={[
-                        styles.tab,
-                        selectedLevel === 'A2 Level' && styles.tabActive
-                    ]}
+                    style={[styles.tab, selectedLevel === 'A2 Level' && styles.tabActive]}
                     onPress={() => setSelectedLevel('A2 Level')}
+                    activeOpacity={0.8}
                 >
                     {selectedLevel === 'A2 Level' ? (
                         <LinearGradient
-                            colors={['#7B1FA2', '#6A1B9A']}
+                            colors={chemistryTheme.gradient.a2Level}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
                             style={styles.tabGradient}
                         >
                             <Text style={styles.tabTextActive}>A2 Level</Text>
-                            <Text style={styles.tabSubtext}>13 Topics</Text>
+                            <Text style={styles.tabSubtext}>{a2LevelCount} Topics</Text>
                         </LinearGradient>
                     ) : (
                         <View style={styles.tabInactive}>
-                            <Text style={styles.tabText}>A2 Level</Text>
-                            <Text style={styles.tabSubtextInactive}>13 Topics</Text>
+                            <Text style={[styles.tabText, { color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)' }]}>
+                                A2 Level
+                            </Text>
+                            <Text style={[styles.tabSubtextInactive, { color: isDarkMode ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.35)' }]}>
+                                {a2LevelCount} Topics
+                            </Text>
                         </View>
                     )}
                 </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-                {/* Feature Buttons */}
-                <View style={styles.featuresContainer}>
-                    {/* Chemistry Notes */}
-                    <Card variant="elevated" onPress={handleChemistryNotes} style={styles.featureCard}>
-                        <View style={styles.featureContent}>
-                            <IconCircle
-                                icon={<Ionicons name="book-outline" size={28} color="#00897B" />}
-                                size={56}
-                                backgroundColor="rgba(0, 137, 123, 0.1)"
-                            />
-                            <View style={styles.featureInfo}>
-                                <Text style={styles.featureTitle}>Chemistry Notes</Text>
-                                <Text style={styles.featureSubtitle}>Comprehensive A Level notes</Text>
-                            </View>
-                            {Icons.arrowRight(24, Colors.text.secondary)}
-                        </View>
-                    </Card>
+            <ScrollView 
+                style={styles.scrollView} 
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.scrollContent}
+            >
+                {/* Feature Cards Section */}
+                <View style={styles.section}>
+                    <ALevelFeatureCard
+                        title="Chemistry Notes"
+                        subtitle="Comprehensive A Level notes with equations"
+                        icon={<MaterialCommunityIcons name="book-open-page-variant" size={26} color="#00897B" />}
+                        iconBgColor="rgba(0, 137, 123, 0.12)"
+                        onPress={handleChemistryNotes}
+                        isDarkMode={isDarkMode}
+                    />
 
-                    {/* Virtual Lab */}
-                    <Card variant="elevated" onPress={handleVirtualLab} style={styles.featureCard}>
-                        <View style={styles.featureContent}>
-                            <IconCircle
-                                icon={<Ionicons name="beaker-outline" size={28} color="#7B1FA2" />}
-                                size={56}
-                                backgroundColor="rgba(123, 31, 162, 0.1)"
-                            />
-                            <View style={styles.featureInfo}>
-                                <Text style={styles.featureTitle}>Virtual Labs</Text>
-                                <Text style={styles.featureSubtitle}>Interactive chemistry experiments</Text>
-                            </View>
-                            {Icons.arrowRight(24, Colors.text.secondary)}
-                        </View>
-                    </Card>
+                    <ALevelFeatureCard
+                        title="AI Chemistry Tutor"
+                        subtitle="Interactive Socratic tutoring powered by DeepSeek"
+                        icon={<Ionicons name="school-outline" size={26} color="#7B1FA2" />}
+                        iconBgColor="rgba(123, 31, 162, 0.12)"
+                        onPress={handleAITutor}
+                        isDarkMode={isDarkMode}
+                    />
 
-                    {/* Start Exam */}
-                    <Card
-                        variant="gradient"
-                        gradientColors={selectedLevel === 'AS Level'
-                            ? ['#00695C', '#00897B']
-                            : ['#7B1FA2', '#6A1B9A']}
+                    <ALevelFeatureCard
+                        title="Virtual Labs"
+                        subtitle="Interactive chemistry experiments & simulations"
+                        icon={<Ionicons name="beaker-outline" size={26} color="#0288D1" />}
+                        iconBgColor="rgba(2, 136, 209, 0.12)"
+                        onPress={handleVirtualLab}
+                        isDarkMode={isDarkMode}
+                    />
+
+                    {/* Premium Exam Card */}
+                    <ALevelExamCard
+                        title={`Start ${selectedLevel} Exam`}
+                        subtitle={`Mixed questions from all ${selectedLevel} topics`}
+                        gradientColors={selectedLevel === 'AS Level' 
+                            ? chemistryTheme.gradient.asLevel 
+                            : chemistryTheme.gradient.a2Level}
+                        icon={<MaterialCommunityIcons name="file-document-edit-outline" size={28} color="#FFFFFF" />}
                         onPress={handleStartExam}
-                        style={styles.examCard}
-                    >
-                        <View style={styles.examContent}>
-                            <IconCircle
-                                icon={Icons.quiz(32, '#FFFFFF')}
-                                size={64}
-                                backgroundColor="rgba(255, 255, 255, 0.2)"
-                            />
-                            <View style={styles.examInfo}>
-                                <Text style={styles.examTitle}>Start {selectedLevel} Exam</Text>
-                                <Text style={styles.examSubtitle}>Mixed questions from all {selectedLevel} topics</Text>
-                            </View>
-                        </View>
-                    </Card>
+                    />
                 </View>
 
-                {/* Topics List by Category */}
-                <View style={styles.topicsContainer}>
-                    <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>
-                        {selectedLevel} Topics
+                {/* Category Legend */}
+                <View style={styles.legendContainer}>
+                    <Text style={[
+                        styles.legendTitle, 
+                        { color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(26,26,46,0.7)' }
+                    ]}>
+                        Chemistry Categories:
                     </Text>
-                    <Text style={[styles.sectionSubtitle, { color: themedColors.text.secondary }]}>
-                        Tap a topic to practice MCQs
+                    <View style={styles.legendItems}>
+                        {Object.entries(chemistryTheme.categories).map(([category, color]) => (
+                            <View key={category} style={[styles.legendItem, { backgroundColor: `${color}12` }]}>
+                                <View style={[styles.legendDot, { backgroundColor: color }]} />
+                                <Text style={[styles.legendText, { color }]}>
+                                    {category}
+                                </Text>
+                            </View>
+                        ))}
+                    </View>
+                </View>
+
+                {/* Topics Section */}
+                <View style={styles.section}>
+                    <View style={styles.sectionHeader}>
+                        <Text style={[styles.sectionTitle, { color: isDarkMode ? '#FFFFFF' : '#1A1A2E' }]}>
+                            {selectedLevel} Topics
+                        </Text>
+                        <View style={[
+                            styles.aiPoweredBadge, 
+                            { backgroundColor: isDarkMode ? 'rgba(0, 137, 123, 0.15)' : 'rgba(0, 137, 123, 0.1)' }
+                        ]}>
+                            <MaterialCommunityIcons name="lightning-bolt" size={14} color="#00897B" />
+                            <Text style={[styles.aiPoweredText, { color: '#00897B' }]}>DeepSeek AI</Text>
+                        </View>
+                    </View>
+                    <Text style={[styles.sectionSubtitle, { color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(26,26,46,0.5)' }]}>
+                        Tap any topic to start practicing
                     </Text>
 
                     {filteredTopics.map((topic, index) => (
-                        <Card
+                        <ALevelTopicCard
                             key={topic.id}
-                            variant="elevated"
+                            title={topic.name}
+                            description={topic.description}
+                            icon={getCategoryIcon(topic.category)}
+                            primaryColor={getCategoryColor(topic.category)}
+                            badges={[
+                                { 
+                                    text: topic.category.replace(' Chemistry', ''), 
+                                    color: getCategoryColor(topic.category),
+                                    icon: 'tag-outline'
+                                },
+                            ]}
                             onPress={() => handleTopicPress(topic)}
-                            style={styles.topicCard}
-                        >
-                            <View style={styles.topicContent}>
-                                <View style={[
-                                    styles.topicBadge,
-                                    { backgroundColor: `${getCategoryColor(topic.category)}15` }
-                                ]}>
-                                    <Ionicons
-                                        name={
-                                            topic.category === 'Physical Chemistry' ? 'thermometer-outline' :
-                                                topic.category === 'Inorganic Chemistry' ? 'grid-outline' :
-                                                    topic.category === 'Organic Chemistry' ? 'leaf-outline' :
-                                                        'analytics-outline'
-                                        }
-                                        size={24}
-                                        color={getCategoryColor(topic.category)}
-                                    />
-                                </View>
-                                <View style={styles.topicInfo}>
-                                    <Text style={[styles.topicName, { color: themedColors.text.primary }]}>
-                                        {topic.name}
-                                    </Text>
-                                    <Text style={[styles.topicCategory, { color: getCategoryColor(topic.category) }]}>
-                                        {topic.category}
-                                    </Text>
-                                    <Text style={[styles.topicDescription, { color: themedColors.text.secondary }]}>
-                                        {topic.description}
-                                    </Text>
-                                </View>
-                                <Ionicons
-                                    name="chevron-forward"
-                                    size={24}
-                                    color={getCategoryColor(topic.category)}
-                                />
-                            </View>
-                        </Card>
+                            index={index}
+                            isDarkMode={isDarkMode}
+                        />
                     ))}
                 </View>
 
+                {/* Info Card */}
+                <View style={styles.section}>
+                    <ALevelInfoCard
+                        title="A Level Chemistry"
+                        content={`Physical, Inorganic, Organic & Analysis\nPaper 1 (MCQ), Paper 2 (Structured), Paper 3 (Practical)\nQuestions generated using DeepSeek AI`}
+                        gradientColors={isDarkMode 
+                            ? ['rgba(0, 137, 123, 0.08)', 'rgba(123, 31, 162, 0.05)']
+                            : ['rgba(0, 137, 123, 0.06)', 'rgba(123, 31, 162, 0.04)']}
+                        iconColor="#00897B"
+                        isDarkMode={isDarkMode}
+                    />
+                </View>
+
                 {/* Bottom Spacing */}
-                <View style={{ height: 40 }} />
+                <View style={{ height: 32 }} />
             </ScrollView>
         </View>
     );
@@ -374,52 +455,116 @@ const styles = StyleSheet.create({
     scrollView: {
         flex: 1,
     },
+    scrollContent: {
+        paddingBottom: 20,
+    },
+    
+    // Header Styles
     header: {
-        paddingTop: Platform.OS === 'ios' ? 50 : 40,
-        paddingBottom: 25,
+        paddingTop: Platform.OS === 'ios' ? 56 : 44,
+        paddingBottom: 28,
         paddingHorizontal: 20,
-        borderBottomLeftRadius: 30,
-        borderBottomRightRadius: 30,
+        borderBottomLeftRadius: 28,
+        borderBottomRightRadius: 28,
+        overflow: 'hidden',
+    },
+    headerDecoration: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+    },
+    decorCircle: {
+        position: 'absolute',
+        borderRadius: 100,
+        backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    },
+    decorCircle1: {
+        width: 180,
+        height: 180,
+        top: -60,
+        right: -40,
+    },
+    decorCircle2: {
+        width: 100,
+        height: 100,
+        bottom: -30,
+        left: 20,
+    },
+    decorCircle3: {
+        width: 60,
+        height: 60,
+        top: 40,
+        left: -20,
     },
     headerContent: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
     },
+    headerLeft: {
+        flex: 1,
+    },
     backButton: {
-        marginBottom: 8,
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 12,
+        gap: 6,
     },
     backButtonText: {
         color: 'rgba(255,255,255,0.9)',
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: '600',
     },
     title: {
-        fontSize: 28,
-        fontWeight: 'bold',
+        fontSize: 26,
+        fontWeight: '800',
         color: '#FFFFFF',
-        marginBottom: 4,
+        letterSpacing: 0.3,
+        marginBottom: 8,
     },
-    subtitle: {
+    subtitleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+    },
+    syllabusTag: {
+        backgroundColor: 'rgba(255, 255, 255, 0.18)',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 6,
+    },
+    syllabusText: {
+        color: '#FFFFFF',
+        fontSize: 12,
+        fontWeight: '700',
+        letterSpacing: 0.5,
+    },
+    topicCount: {
+        color: 'rgba(255, 255, 255, 0.85)',
         fontSize: 14,
-        color: 'rgba(255,255,255,0.85)',
+        fontWeight: '500',
     },
     headerIcon: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
-        backgroundColor: 'rgba(255,255,255,0.15)',
+        width: 68,
+        height: 68,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255, 255, 255, 0.15)',
         justifyContent: 'center',
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.1)',
     },
+
+    // Tab Styles
     tabContainer: {
         flexDirection: 'row',
-        marginHorizontal: 20,
+        marginHorizontal: 16,
         marginTop: 16,
         marginBottom: 8,
-        backgroundColor: 'rgba(0, 0, 0, 0.05)',
         borderRadius: 16,
-        padding: 4,
+        padding: 5,
     },
     tab: {
         flex: 1,
@@ -427,138 +572,108 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     tabActive: {
-        elevation: 3,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+        elevation: 6,
     },
     tabGradient: {
-        paddingVertical: 12,
+        paddingVertical: 14,
         alignItems: 'center',
         borderRadius: 12,
     },
     tabInactive: {
-        paddingVertical: 12,
+        paddingVertical: 14,
         alignItems: 'center',
     },
     tabText: {
         fontSize: 15,
         fontWeight: '600',
-        color: 'rgba(0, 0, 0, 0.5)',
     },
     tabTextActive: {
         fontSize: 15,
-        fontWeight: 'bold',
+        fontWeight: '700',
         color: '#FFFFFF',
+        letterSpacing: 0.2,
     },
     tabSubtext: {
         fontSize: 11,
-        color: 'rgba(255, 255, 255, 0.8)',
+        color: 'rgba(255, 255, 255, 0.85)',
         marginTop: 2,
+        fontWeight: '500',
     },
     tabSubtextInactive: {
         fontSize: 11,
-        color: 'rgba(0, 0, 0, 0.4)',
         marginTop: 2,
     },
-    featuresContainer: {
-        padding: 20,
-        paddingTop: 10,
-    },
-    featureCard: {
-        marginBottom: 12,
-        borderColor: Colors.border.light,
-        borderWidth: 1,
-    },
-    featureContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 4,
-        gap: 16,
-    },
-    featureInfo: {
-        flex: 1,
-    },
-    featureTitle: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: Colors.text.primary,
-        marginBottom: 4,
-    },
-    featureSubtitle: {
-        fontSize: 14,
-        color: Colors.text.secondary,
-    },
-    examCard: {
+
+    // Legend Styles
+    legendContainer: {
+        paddingHorizontal: 16,
         marginTop: 8,
-        marginBottom: 12,
-    },
-    examContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 8,
-    },
-    examInfo: {
-        marginLeft: 20,
-        flex: 1,
-    },
-    examTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#FFFFFF',
         marginBottom: 4,
     },
-    examSubtitle: {
-        fontSize: 14,
-        color: 'rgba(255, 255, 255, 0.85)',
+    legendTitle: {
+        fontSize: 13,
+        fontWeight: '600',
+        marginBottom: 10,
     },
-    topicsContainer: {
-        paddingHorizontal: 20,
+    legendItems: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    legendItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 8,
+        gap: 6,
+    },
+    legendDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+    },
+    legendText: {
+        fontSize: 11,
+        fontWeight: '600',
+    },
+
+    // Section Styles
+    section: {
+        paddingHorizontal: 16,
+        paddingTop: 12,
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 4,
     },
     sectionTitle: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        marginBottom: 4,
+        fontSize: 20,
+        fontWeight: '800',
+        letterSpacing: 0.3,
     },
     sectionSubtitle: {
-        fontSize: 14,
+        fontSize: 13,
         marginBottom: 16,
     },
-    topicCard: {
-        marginBottom: 12,
-        borderColor: Colors.border.light,
-        borderWidth: 1,
-    },
-    topicContent: {
+    aiPoweredBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 4,
-        gap: 12,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 8,
+        gap: 4,
     },
-    topicBadge: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    topicInfo: {
-        flex: 1,
-    },
-    topicName: {
-        fontSize: 16,
-        fontWeight: '600',
-        marginBottom: 2,
-    },
-    topicCategory: {
-        fontSize: 12,
-        fontWeight: '500',
-        marginBottom: 2,
-    },
-    topicDescription: {
-        fontSize: 12,
-        lineHeight: 16,
+    aiPoweredText: {
+        fontSize: 11,
+        fontWeight: '700',
+        letterSpacing: 0.3,
     },
 });
 
