@@ -524,7 +524,7 @@ const DashboardScreen: React.FC = () => {
                   <AnimatedCard
                     title="Chemistry"
                     subtitle="Organic & inorganic"
-                    imageSource={require('../../assets/images/a_level_chemistry_card.png')}
+                    imageSource={require('../../assets/images/a_level_pure_math_card.png')}
                     onPress={() => navigateToALevelSubject('chemistry', 'Chemistry')}
                     glowColor={aLevelColors.chemistry}
                     index={1}
@@ -533,7 +533,7 @@ const DashboardScreen: React.FC = () => {
                   <AnimatedCard
                     title="Physics"
                     subtitle="Mechanics & quantum"
-                    imageSource={require('../../assets/images/a_level_physics_card.png')}
+                    imageSource={require('../../assets/images/a_level_pure_math_card.png')}
                     onPress={() => navigateToALevelSubject('physics', 'Physics')}
                     glowColor={aLevelColors.physics}
                     index={2}
@@ -542,7 +542,7 @@ const DashboardScreen: React.FC = () => {
                   <AnimatedCard
                     title="Biology"
                     subtitle="Cell biology & genetics"
-                    imageSource={require('../../assets/images/a_level_biology_card.png')}
+                    imageSource={require('../../assets/images/a_level_pure_math_card.png')}
                     onPress={() => navigateToALevelSubject('biology', 'Biology')}
                     glowColor={aLevelColors.biology}
                     index={3}

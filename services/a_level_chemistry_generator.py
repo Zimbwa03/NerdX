@@ -238,29 +238,75 @@ class ALevelChemistryGenerator:
         self.deepseek_api_key = os.environ.get('DEEPSEEK_API_KEY')
         self.deepseek_url = "https://api.deepseek.com/v1/chat/completions"
     
+    def _get_topic_name(self, topic_id: str) -> Optional[str]:
+        """Map frontend topic IDs to display names used in constants."""
+        slug_map = {
+            'atomic_structure': 'Atomic Structure',
+            'atoms_molecules_stoichiometry': 'Atoms, Molecules and Stoichiometry',
+            'chemical_bonding': 'Chemical Bonding',
+            'states_of_matter': 'States of Matter',
+            'chemical_energetics_as': 'Chemical Energetics',
+            'electrochemistry_as': 'Electrochemistry',
+            'equilibria_as': 'Equilibria',
+            'reaction_kinetics_as': 'Reaction Kinetics',
+            'periodic_table_periodicity': 'The Periodic Table: Chemical Periodicity',
+            'group_2': 'Group 2 Elements',
+            'group_17': 'Group 17 Elements',
+            'nitrogen_sulfur': 'Nitrogen and Sulfur',
+            'intro_organic_as': 'Introduction to Organic Chemistry',
+            'hydrocarbons_as': 'Hydrocarbons',
+            'halogen_compounds_as': 'Halogen Compounds',
+            'hydroxy_compounds_as': 'Hydroxy Compounds',
+            'carbonyl_compounds': 'Carbonyl Compounds',
+            'carboxylic_acids_as': 'Carboxylic Acids and Derivatives',
+            'nitrogen_compounds_as': 'Nitrogen Compounds',
+            'polymerisation_as': 'Polymerisation',
+            'organic_synthesis_as': 'Organic Synthesis',
+            'analytical_techniques_as': 'Analytical Techniques',
+            'chemical_energetics_a2': 'Chemical Energetics (Advanced)',
+            'electrochemistry_a2': 'Electrochemistry (Advanced)',
+            'equilibria_a2': 'Equilibria (Advanced)',
+            'reaction_kinetics_a2': 'Reaction Kinetics (Advanced)',
+            'transition_elements': 'Chemistry of Transition Elements',
+            'benzene_aromatics': 'Benzene and Aromatic Compounds',
+            'phenols': 'Phenols',
+            'carbonyl_compounds_a2': 'Carbonyl Compounds (Advanced)',
+            'carboxylic_acids_a2': 'Carboxylic Acids and Derivatives (Advanced)',
+            'nitrogen_compounds_a2': 'Nitrogen Compounds (Advanced)',
+            'polymerisation_a2': 'Polymerisation (Advanced)',
+            'organic_synthesis_a2': 'Organic Synthesis (Advanced)',
+            'analytical_techniques_a2': 'Analytical Techniques (Advanced)',
+        }
+        
+        if topic_id in A_LEVEL_CHEMISTRY_ALL_TOPICS:
+            return topic_id
+        return slug_map.get(topic_id)
+    
     def generate_question(self, topic: str, difficulty: str = "medium", user_id: str = None) -> Optional[Dict]:
         """Generate an A Level Chemistry MCQ question"""
         try:
+            topic_name = self._get_topic_name(topic) or topic
+            
             # Validate topic
-            if topic not in A_LEVEL_CHEMISTRY_ALL_TOPICS:
+            if topic_name not in A_LEVEL_CHEMISTRY_ALL_TOPICS:
                 logger.error(f"Invalid A Level Chemistry topic: {topic}")
                 return None
             
-            topic_details = A_LEVEL_CHEMISTRY_TOPIC_DETAILS.get(topic, {})
+            topic_details = A_LEVEL_CHEMISTRY_TOPIC_DETAILS.get(topic_name, {})
             level = topic_details.get("level", "A Level")
             category = topic_details.get("category", "Chemistry")
             key_concepts = topic_details.get("key_concepts", [])
             key_formulas = topic_details.get("key_formulas", [])
             
             # Create detailed prompt for DeepSeek
-            prompt = self._create_question_prompt(topic, difficulty, level, category, key_concepts, key_formulas)
+            prompt = self._create_question_prompt(topic_name, difficulty, level, category, key_concepts, key_formulas)
             
             # Generate question using DeepSeek
             question_data = self._call_deepseek(prompt)
             
             if question_data:
                 question_data['subject'] = 'A Level Chemistry'
-                question_data['topic'] = topic
+                question_data['topic'] = topic_name
                 question_data['category'] = category
                 question_data['difficulty'] = difficulty
                 question_data['level'] = level

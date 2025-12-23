@@ -1,4 +1,33 @@
-<!-- fb38c015-fcaf-4918-a6ab-26a3d2c5b3d2 037a267c-2a73-4e20-96c1-d5e039e9053e -->
+---
+name: WhatsApp Bot Unblock & Compliance Plan
+overview: ""
+todos:
+  - id: 5817e585-4c7d-4dc9-bc17-799c018e3fa1
+    content: Copy all 15 message templates and submit to WhatsApp Business Manager for Meta approval
+    status: pending
+  - id: bde6898a-c2c1-4ff8-be32-d8d3094d09fc
+    content: Submit unblock appeal letter to Meta/WhatsApp Business Support with business documentation
+    status: pending
+  - id: cb9f2f22-6f37-43ab-84a5-a9126e7520ca
+    content: Complete Facebook Business Manager verification with business registration documents
+    status: pending
+  - id: efc01223-1ae0-45c7-81cb-fb5e24bbfd07
+    content: Ensure neuronet.co.zw has privacy policy, terms of service, and all business compliance pages
+    status: pending
+  - id: 41ab3d56-6db7-44bf-997c-0d42d979bc0f
+    content: Modify services/whatsapp_service.py to use approved message templates with variable substitution
+    status: pending
+  - id: 24248a12-d62f-4cb9-a4f7-ba78745b130c
+    content: Build content variation engine to prevent repetitive message patterns
+    status: pending
+  - id: 4e8c2d91-6f5d-441d-a029-7a9e645f74f3
+    content: Set up quality metrics monitoring (complaint rate, response rate, delivery rate)
+    status: pending
+  - id: 2149b0ca-2d8c-4fa1-8c94-eab34a5d2074
+    content: Execute gradual relaunch strategy starting with 100 users/day and scaling based on metrics
+    status: pending
+---
+
 # WhatsApp Bot Unblock & Compliance Plan
 
 ## Root Causes of Meta Block
@@ -878,14 +907,3 @@ Registration: 51491A0272025
 1. Gradual relaunch with monitoring
 2. Scale based on quality metrics
 3. Maintain 100% compliance
-
-### To-dos
-
-- [ ] Copy all 15 message templates and submit to WhatsApp Business Manager for Meta approval
-- [ ] Submit unblock appeal letter to Meta/WhatsApp Business Support with business documentation
-- [ ] Complete Facebook Business Manager verification with business registration documents
-- [ ] Ensure neuronet.co.zw has privacy policy, terms of service, and all business compliance pages
-- [ ] Modify services/whatsapp_service.py to use approved message templates with variable substitution
-- [ ] Build content variation engine to prevent repetitive message patterns
-- [ ] Set up quality metrics monitoring (complaint rate, response rate, delivery rate)
-- [ ] Execute gradual relaunch strategy starting with 100 users/day and scaling based on metrics

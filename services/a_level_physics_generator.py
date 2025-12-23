@@ -146,28 +146,64 @@ class ALevelPhysicsGenerator:
         self.deepseek_api_key = os.environ.get('DEEPSEEK_API_KEY')
         self.deepseek_url = "https://api.deepseek.com/v1/chat/completions"
     
+    def _get_topic_name(self, topic_id: str) -> Optional[str]:
+        """Map frontend topic IDs to display names used in constants."""
+        slug_map = {
+            'physical_quantities': 'Physical Quantities and Units',
+            'kinematics': 'Kinematics',
+            'dynamics': 'Dynamics',
+            'forces_pressure': 'Forces, Density, and Pressure',
+            'work_energy_power': 'Work, Energy, and Power',
+            'deformation_solids': 'Deformation of Solids',
+            'waves': 'Waves',
+            'superposition': 'Superposition',
+            'electricity': 'Electricity',
+            'dc_circuits': 'D.C. Circuits',
+            'particle_physics': 'Particle Physics',
+            'circular_motion': 'Motion in a Circle',
+            'gravitational_fields': 'Gravitational Fields',
+            'temperature': 'Temperature',
+            'ideal_gases': 'Ideal Gases',
+            'thermodynamics': 'Thermodynamics',
+            'oscillations': 'Oscillations',
+            'electric_fields': 'Electric Fields',
+            'capacitance': 'Capacitance',
+            'magnetic_fields': 'Magnetic Fields',
+            'alternating_currents': 'Alternating Currents',
+            'quantum_physics': 'Quantum Physics',
+            'nuclear_physics': 'Nuclear Physics',
+            'astronomy_cosmology': 'Astronomy and Cosmology',
+        }
+        
+        if topic_id in A_LEVEL_PHYSICS_ALL_TOPICS:
+            return topic_id
+        return slug_map.get(topic_id)
+    
     def generate_question(self, topic: str, difficulty: str = "medium", user_id: str = None) -> Optional[Dict]:
         """Generate an A Level Physics MCQ question"""
         try:
+            # Map slug IDs from mobile to syllabus display names
+            topic_name = self._get_topic_name(topic) or topic
+            
             # Validate topic
-            if topic not in A_LEVEL_PHYSICS_ALL_TOPICS:
+            if topic_name not in A_LEVEL_PHYSICS_ALL_TOPICS:
                 logger.error(f"Invalid A Level Physics topic: {topic}")
                 return None
             
-            topic_details = A_LEVEL_PHYSICS_TOPIC_DETAILS.get(topic, {})
+            topic_details = A_LEVEL_PHYSICS_TOPIC_DETAILS.get(topic_name, {})
             level = topic_details.get("level", "A Level")
             key_concepts = topic_details.get("key_concepts", [])
             key_formulas = topic_details.get("key_formulas", [])
             
             # Create detailed prompt for DeepSeek
-            prompt = self._create_question_prompt(topic, difficulty, level, key_concepts, key_formulas)
+            prompt = self._create_question_prompt(topic_name, difficulty, level, key_concepts, key_formulas)
             
             # Generate question using DeepSeek
             question_data = self._call_deepseek(prompt)
             
             if question_data:
                 question_data['subject'] = 'A Level Physics'
-                question_data['topic'] = topic
+                question_data['topic'] = topic_name
                 question_data['difficulty'] = difficulty
                 question_data['level'] = level
                 question_data['source'] = 'ai_generated_a_level'

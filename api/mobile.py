@@ -734,20 +734,61 @@ def generate_question():
         elif subject == 'a_level_physics':
             # A Level Physics - uses DeepSeek generator
             from services.a_level_physics_generator import a_level_physics_generator
-            question_data = a_level_physics_generator.generate_question(topic or 'Kinematics', difficulty, g.current_user_id)
+            from constants import A_LEVEL_PHYSICS_TOPICS, A_LEVEL_PHYSICS_ALL_TOPICS
+            import random
+            
+            selected_topic = topic or 'Kinematics'
+            if question_type == 'exam':
+                level = data.get('parent_subject') or 'AS Level'
+                level_topics = A_LEVEL_PHYSICS_TOPICS.get(level, A_LEVEL_PHYSICS_ALL_TOPICS)
+                selected_topic = random.choice(level_topics)
+            
+            question_data = a_level_physics_generator.generate_question(selected_topic, difficulty, g.current_user_id)
+        
+        elif subject == 'a_level_chemistry':
+            # A Level Chemistry - uses DeepSeek generator
+            from services.a_level_chemistry_generator import a_level_chemistry_generator
+            from constants import A_LEVEL_CHEMISTRY_TOPICS, A_LEVEL_CHEMISTRY_ALL_TOPICS
+            import random
+            
+            selected_topic = topic or 'Atomic Structure'
+            if question_type == 'exam':
+                level = data.get('parent_subject') or 'AS Level'
+                level_topics = A_LEVEL_CHEMISTRY_TOPICS.get(level, A_LEVEL_CHEMISTRY_ALL_TOPICS)
+                selected_topic = random.choice(level_topics)
+            
+            question_data = a_level_chemistry_generator.generate_question(selected_topic, difficulty, g.current_user_id)
         
         elif subject == 'a_level_pure_math':
             # A Level Pure Mathematics - uses DeepSeek generator
             from services.a_level_pure_math_generator import a_level_pure_math_generator
-            question_data = a_level_pure_math_generator.generate_question(topic or 'Polynomials', difficulty, g.current_user_id)
+            from constants import A_LEVEL_PURE_MATH_TOPICS, A_LEVEL_PURE_MATH_ALL_TOPICS
+            import random
+            
+            selected_topic = topic or 'Polynomials'
+            if question_type == 'exam':
+                level = data.get('parent_subject') or 'Lower Sixth'
+                level_topics = A_LEVEL_PURE_MATH_TOPICS.get(level, A_LEVEL_PURE_MATH_ALL_TOPICS)
+                selected_topic = random.choice(level_topics)
+            
+            question_data = a_level_pure_math_generator.generate_question(selected_topic, difficulty, g.current_user_id)
         
         elif subject == 'a_level_biology':
             # A Level Biology - uses DeepSeek generator with MCQ, Structured, Essay support
             from services.a_level_biology_generator import a_level_biology_generator
+            from constants import A_LEVEL_BIOLOGY_TOPICS, A_LEVEL_BIOLOGY_ALL_TOPICS
+            import random
             # question_type can be 'mcq', 'structured', or 'essay'
             bio_question_type = data.get('question_type', 'mcq')
+            
+            selected_topic = topic or 'Cell Structure'
+            if question_type == 'exam':
+                level = data.get('parent_subject') or 'Lower Sixth'
+                level_topics = A_LEVEL_BIOLOGY_TOPICS.get(level, A_LEVEL_BIOLOGY_ALL_TOPICS)
+                selected_topic = random.choice(level_topics)
+            
             question_data = a_level_biology_generator.generate_question(
-                topic or 'Cell Structure', 
+                selected_topic, 
                 difficulty, 
                 g.current_user_id, 
                 bio_question_type
