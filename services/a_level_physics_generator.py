@@ -145,6 +145,8 @@ class ALevelPhysicsGenerator:
     def __init__(self):
         self.deepseek_api_key = os.environ.get('DEEPSEEK_API_KEY')
         self.deepseek_url = "https://api.deepseek.com/v1/chat/completions"
+        self.timeout = 45  # Base timeout for physics questions
+        self.max_retries = 3  # Retry up to 3 times
     
     def _get_topic_name(self, topic_id: str) -> Optional[str]:
         """Map frontend topic IDs to display names used in constants."""
@@ -262,57 +264,82 @@ Generate the question now:"""
         return prompt
     
     def _call_deepseek(self, prompt: str) -> Optional[Dict]:
-        """Call DeepSeek API to generate question"""
-        try:
-            if not self.deepseek_api_key:
-                logger.error("DeepSeek API key not found")
-                return None
-            
-            headers = {
-                "Authorization": f"Bearer {self.deepseek_api_key}",
-                "Content-Type": "application/json"
-            }
-            
-            payload = {
-                "model": "deepseek-chat",
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": "You are an expert A Level Physics examiner. Generate high-quality MCQ questions suitable for Cambridge/ZIMSEC A Level Physics examinations. Always respond with valid JSON."
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
-                "temperature": 0.7,
-                "max_tokens": 1500
-            }
-            
-            response = requests.post(
-                self.deepseek_url,
-                headers=headers,
-                json=payload,
-                timeout=30
-            )
-            
-            if response.status_code != 200:
-                logger.error(f"DeepSeek API error: {response.status_code} - {response.text}")
-                return None
-            
-            result = response.json()
-            content = result.get('choices', [{}])[0].get('message', {}).get('content', '')
-            
-            # Parse JSON from response
-            question_data = self._parse_question_response(content)
-            return question_data
-            
-        except requests.Timeout:
-            logger.error("DeepSeek API timeout")
-            return None
-        except Exception as e:
-            logger.error(f"Error calling DeepSeek API: {e}")
-            return None
+        """Call DeepSeek API to generate question with retry logic"""
+        import time
+        
+        for attempt in range(self.max_retries):
+            timeout = None
+            try:
+                if not self.deepseek_api_key:
+                    logger.error("DeepSeek API key not found")
+                    return None
+                
+                headers = {
+                    "Authorization": f"Bearer {self.deepseek_api_key}",
+                    "Content-Type": "application/json"
+                }
+                
+                payload = {
+                    "model": "deepseek-chat",
+                    "messages": [
+                        {
+                            "role": "system",
+                            "content": "You are an expert A Level Physics examiner. Generate high-quality MCQ questions suitable for Cambridge/ZIMSEC A Level Physics examinations. Always respond with valid JSON."
+                        },
+                        {
+                            "role": "user",
+                            "content": prompt
+                        }
+                    ],
+                    "temperature": 0.7,
+                    "max_tokens": 1500
+                }
+                
+                # Increase timeout with each retry attempt
+                timeout = self.timeout + (attempt * 15)
+                logger.info(f"DeepSeek Physics attempt {attempt + 1}/{self.max_retries} (timeout: {timeout}s)")
+                
+                response = requests.post(
+                    self.deepseek_url,
+                    headers=headers,
+                    json=payload,
+                    timeout=timeout
+                )
+                
+                if response.status_code != 200:
+                    logger.error(f"DeepSeek API error: {response.status_code} - {response.text}")
+                    if attempt < self.max_retries - 1:
+                        time.sleep(2)  # Wait before retry
+                        continue
+                    return None
+                
+                result = response.json()
+                content = result.get('choices', [{}])[0].get('message', {}).get('content', '')
+                
+                # Parse JSON from response
+                question_data = self._parse_question_response(content)
+                if question_data:
+                    return question_data
+                else:
+                    logger.warning(f"Failed to parse response on attempt {attempt + 1}")
+                    if attempt < self.max_retries - 1:
+                        time.sleep(2)
+                        continue
+                    
+            except (requests.Timeout, requests.exceptions.ReadTimeout) as e:
+                timeout_str = f" (timeout: {timeout}s)" if timeout else ""
+                logger.warning(f"DeepSeek timeout on attempt {attempt + 1}/{self.max_retries}{timeout_str}")
+                if attempt < self.max_retries - 1:
+                    time.sleep(2)  # Wait before retry
+                    continue
+            except Exception as e:
+                logger.error(f"Error calling DeepSeek API on attempt {attempt + 1}: {e}")
+                if attempt < self.max_retries - 1:
+                    time.sleep(2)
+                    continue
+        
+        logger.error("All DeepSeek retry attempts failed for Physics question")
+        return None
     
     def _parse_question_response(self, content: str) -> Optional[Dict]:
         """Parse the JSON response from DeepSeek"""
