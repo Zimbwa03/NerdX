@@ -1,7 +1,7 @@
 """
 A Level Biology Question Generator
-Uses DeepSeek AI to generate MCQ, Structured, and Essay questions for ZIMSEC A Level syllabus (Code 6030)
-Supports three distinct question formats with comprehensive marking schemes
+Uses DeepSeek AI (primary) with Gemini AI (fallback) to generate MCQ, Structured, and Essay questions
+for ZIMSEC A Level syllabus (Code 6030). Supports three distinct question formats with comprehensive marking schemes.
 """
 
 import json
@@ -12,6 +12,16 @@ from typing import Dict, Optional, List
 from constants import A_LEVEL_BIOLOGY_TOPICS, A_LEVEL_BIOLOGY_ALL_TOPICS
 
 logger = logging.getLogger(__name__)
+
+# Try to import Gemini AI
+try:
+    import google.generativeai as genai
+    GENAI_AVAILABLE = True
+    logger.info("✅ google.generativeai loaded for A Level Biology Generator")
+except ImportError:
+    genai = None
+    GENAI_AVAILABLE = False
+    logger.warning("⚠️ google.generativeai not available, will use DeepSeek only")
 
 # A Level Biology topic details for comprehensive prompts
 A_LEVEL_BIOLOGY_TOPIC_DETAILS = {
@@ -171,18 +181,34 @@ A_LEVEL_BIOLOGY_TOPIC_DETAILS = {
 
 
 class ALevelBiologyGenerator:
-    """Generator for A Level Biology questions using DeepSeek AI - supports MCQ, Structured, and Essay"""
+    """Generator for A Level Biology questions using DeepSeek AI (primary) with Gemini fallback"""
     
     def __init__(self):
+        # DeepSeek configuration (primary)
         self.deepseek_api_key = os.environ.get('DEEPSEEK_API_KEY')
         self.deepseek_url = "https://api.deepseek.com/v1/chat/completions"
-        self.max_retries = 3
-        self.timeout = 60  # Longer timeout for essay questions
+        self.max_retries = 2  # 2 attempts for DeepSeek
+        self.timeout = 18  # Reduced to allow fallback within Render's 30s limit
+        
+        # Gemini configuration (fallback)
+        self.gemini_api_key = os.environ.get('GEMINI_API_KEY')
+        self._gemini_configured = False
+        
+        if self.gemini_api_key and GENAI_AVAILABLE:
+            try:
+                genai.configure(api_key=self.gemini_api_key)
+                self._gemini_configured = True
+                logger.info("✅ Gemini AI configured as FALLBACK provider for A Level Biology")
+            except Exception as e:
+                logger.error(f"Failed to configure Gemini: {e}")
+        
+        if self.deepseek_api_key:
+            logger.info("✅ DeepSeek AI configured as PRIMARY provider for A Level Biology")
     
     def generate_question(self, topic: str, difficulty: str = "medium", 
                          user_id: str = None, question_type: str = "mcq") -> Optional[Dict]:
         """
-        Generate an A Level Biology question
+        Generate an A Level Biology question using DeepSeek (primary) with Gemini fallback
         
         Args:
             topic: The topic identifier
@@ -213,8 +239,18 @@ class ALevelBiologyGenerator:
             else:
                 prompt = self._create_mcq_prompt(topic_name, difficulty, level, key_concepts, key_terms)
             
-            # Generate question using DeepSeek
+            # PRIMARY: Try DeepSeek first
+            ai_model = 'deepseek'
+            logger.info(f"🔷 Trying DeepSeek (primary) for A Level Biology {question_type} on {topic_name}")
             question_data = self._call_deepseek(prompt, question_type)
+            
+            # FALLBACK: If DeepSeek fails, try Gemini
+            if not question_data and self._gemini_configured:
+                logger.warning(f"DeepSeek failed, falling back to Gemini for {question_type} on {topic_name}")
+                question_data = self._call_gemini(prompt, question_type)
+                if question_data:
+                    ai_model = 'gemini'
+                    logger.info(f"✅ Gemini successfully generated {question_type} for {topic_name}")
             
             if question_data:
                 question_data['subject'] = 'A Level Biology'
@@ -224,9 +260,10 @@ class ALevelBiologyGenerator:
                 question_data['level'] = level
                 question_data['question_type'] = question_type
                 question_data['source'] = 'ai_generated_a_level_biology'
-                question_data['ai_model'] = 'deepseek'
+                question_data['ai_model'] = ai_model
                 return question_data
             
+            logger.error(f"All AI providers failed for A Level Biology {question_type} on {topic_name}")
             return None
             
         except Exception as e:
@@ -315,144 +352,74 @@ Generate the MCQ now:"""
     
     def _create_structured_prompt(self, topic: str, difficulty: str, level: str,
                                  key_concepts: List[str], key_terms: List[str]) -> str:
-        """Create prompt for structured questions (multi-part, 10-15 marks)"""
+        """Create concise prompt for structured questions (optimized for speed)"""
         
-        prompt = f"""You are an expert ZIMSEC A Level Biology examiner. Generate a structured question worth 12-15 marks.
+        concepts_str = ', '.join(key_concepts[:3]) if key_concepts else 'key concepts'
+        
+        prompt = f"""Generate A Level Biology structured question (12 marks) on {topic}.
 
-SUBJECT: A Level Biology (ZIMSEC Syllabus 6030)
-TOPIC: {topic}
-LEVEL: {level}
-DIFFICULTY: {difficulty}
+Level: {level} | Difficulty: {difficulty}
+Concepts: {concepts_str}
 
-KEY CONCEPTS: {', '.join(key_concepts) if key_concepts else 'General concepts'}
-KEY TERMS: {', '.join(key_terms) if key_terms else 'Scientific terminology'}
-
-Create a multi-part structured question that progressively tests deeper understanding.
-
-REQUIREMENTS:
-1. Include a stimulus (diagram description, table, graph, or scenario) if appropriate
-2. Part (a): 2-3 marks - Test recall or basic understanding
-3. Part (b): 3-4 marks - Test application or interpretation
-4. Part (c): 4-5 marks - Test analysis or extended explanation
-5. Part (d): 2-3 marks - Test evaluation or links to other topics (optional)
-6. Provide full marking scheme with expected answers
-7. Include examiner tips for common mistakes
-
-RESPONSE FORMAT (strict JSON):
+JSON format:
 {{
-    "stimulus": "Description of any diagram, table, or scenario (or null if not needed)",
-    "question": "Main question introduction/context",
+    "question": "Main context/stem",
     "parts": [
-        {{
-            "part": "a",
-            "question": "Part (a) question",
-            "marks": 3,
-            "expected_answer": "What the examiner expects to see",
-            "marking_scheme": ["Point 1 [1 mark]", "Point 2 [1 mark]", "Point 3 [1 mark]"]
-        }},
-        {{
-            "part": "b",
-            "question": "Part (b) question", 
-            "marks": 4,
-            "expected_answer": "Expected answer for part (b)",
-            "marking_scheme": ["Point 1 [1 mark]", "Point 2 [1 mark]", "etc."]
-        }},
-        {{
-            "part": "c",
-            "question": "Part (c) question",
-            "marks": 5,
-            "expected_answer": "Expected answer for part (c)",
-            "marking_scheme": ["Detailed marking points"]
-        }}
+        {{"part": "a", "question": "...", "marks": 3, "expected_answer": "..."}},
+        {{"part": "b", "question": "...", "marks": 4, "expected_answer": "..."}},
+        {{"part": "c", "question": "...", "marks": 5, "expected_answer": "..."}}
     ],
     "total_marks": 12,
-    "examiner_tips": ["Common mistakes to avoid", "Key points for full marks"],
-    "teaching_points": "What students should learn from this question"
+    "teaching_points": "Key learning"
 }}
 
-Generate the structured question now:"""
+Generate now:"""
         return prompt
     
     def _create_essay_prompt(self, topic: str, difficulty: str, level: str,
                             key_concepts: List[str], key_terms: List[str]) -> str:
-        """Create prompt for essay questions (20-25 marks)"""
+        """Create concise prompt for essay questions (optimized for speed)"""
         
-        prompt = f"""You are an expert ZIMSEC A Level Biology examiner. Generate an essay question worth 20-25 marks.
+        concepts_str = ', '.join(key_concepts[:4]) if key_concepts else 'main concepts'
+        terms_str = ', '.join(key_terms[:5]) if key_terms else 'key terms'
+        
+        prompt = f"""Generate A Level Biology essay question (25 marks) on {topic}.
 
-SUBJECT: A Level Biology (ZIMSEC Syllabus 6030)
-TOPIC: {topic}
-LEVEL: {level}
-DIFFICULTY: {difficulty}
+Level: {level} | Difficulty: {difficulty}
+Key concepts: {concepts_str}
+Required terms: {terms_str}
 
-KEY CONCEPTS TO COVER: {', '.join(key_concepts) if key_concepts else 'General concepts'}
-KEY TERMS EXPECTED: {', '.join(key_terms) if key_terms else 'Scientific terminology'}
-
-Create an essay question that tests comprehensive understanding and ability to construct a coherent argument.
-
-REQUIREMENTS:
-1. Clear, focused question that allows students to demonstrate depth of knowledge
-2. Question should require discussion of multiple aspects/concepts
-3. May include "Discuss", "Explain", "Compare and contrast", "Evaluate" command words
-4. Provide a detailed essay plan/outline showing expected structure
-5. Include marking criteria for different grade boundaries
-6. List key biological terms that MUST be included for high marks
-
-RESPONSE FORMAT (strict JSON):
+JSON format:
 {{
-    "question": "The full essay question",
-    "command_word": "Discuss/Explain/Compare/Evaluate etc.",
+    "question": "Full essay question (use Discuss/Explain/Compare)",
+    "command_word": "Discuss/Explain/Compare",
     "total_marks": 25,
-    "time_allocation": "35-40 minutes",
     "essay_plan": {{
-        "introduction": "What should be covered in introduction (2-3 marks)",
+        "introduction": "Key intro points",
         "main_body": [
-            {{
-                "section": "First main point",
-                "content": "What to discuss",
-                "marks": 5
-            }},
-            {{
-                "section": "Second main point", 
-                "content": "What to discuss",
-                "marks": 5
-            }},
-            {{
-                "section": "Third main point",
-                "content": "What to discuss",
-                "marks": 5
-            }},
-            {{
-                "section": "Fourth main point (if applicable)",
-                "content": "What to discuss", 
-                "marks": 5
-            }}
+            {{"section": "Point 1", "content": "...", "marks": 6}},
+            {{"section": "Point 2", "content": "...", "marks": 6}},
+            {{"section": "Point 3", "content": "...", "marks": 6}}
         ],
-        "conclusion": "How to conclude effectively (2-3 marks)"
+        "conclusion": "Conclusion guidance"
     }},
-    "must_include_terms": ["List of key terms that must appear in essay"],
-    "marking_criteria": {{
-        "A_grade": "Criteria for 20-25 marks",
-        "B_grade": "Criteria for 15-19 marks",
-        "C_grade": "Criteria for 10-14 marks",
-        "below_C": "Common reasons for lower marks"
-    }},
-    "model_answer_outline": "A brief outline of what an excellent answer would include",
-    "common_mistakes": ["Mistake 1", "Mistake 2", "Mistake 3"],
-    "teaching_points": "Key learning from this essay topic"
+    "must_include_terms": ["term1", "term2", "term3"],
+    "teaching_points": "Key learning"
 }}
 
-Generate the essay question now:"""
+Generate now:"""
         return prompt
     
     def _call_deepseek(self, prompt: str, question_type: str = "mcq") -> Optional[Dict]:
-        """Call DeepSeek API with retries"""
+        """Call DeepSeek API with retries - optimized for Render's 30s timeout"""
         
-        # Adjust tokens based on question type
+        # Reduced tokens for faster response (Render has 30s edge timeout)
+        # These are significantly reduced to ensure we get responses within timeout
         max_tokens = {
-            "mcq": 1500,
-            "structured": 2500,
-            "essay": 3500
-        }.get(question_type, 2000)
+            "mcq": 800,        # MCQ needs minimal tokens
+            "structured": 1200, # Reduced from 1500
+            "essay": 1500      # Reduced from 2000
+        }.get(question_type, 1000)
         
         for attempt in range(self.max_retries):
             try:
@@ -480,12 +447,13 @@ Respond with valid JSON only - no markdown or extra text."""
                             "content": prompt
                         }
                     ],
-                    "temperature": 0.7,
+                    "temperature": 0.6,  # Slightly lower for more focused responses
                     "max_tokens": max_tokens
                 }
                 
-                timeout = self.timeout + (attempt * 15)
-                logger.info(f"DeepSeek Biology {question_type} attempt {attempt + 1}/{self.max_retries}")
+                # Use consistent timeout that fits within Render's 30s limit
+                timeout = self.timeout
+                logger.info(f"DeepSeek Biology {question_type} attempt {attempt + 1}/{self.max_retries} (timeout: {timeout}s, max_tokens: {max_tokens})")
                 
                 response = requests.post(
                     self.deepseek_url,
@@ -495,25 +463,83 @@ Respond with valid JSON only - no markdown or extra text."""
                 )
                 
                 if response.status_code != 200:
-                    logger.error(f"DeepSeek API error: {response.status_code} - {response.text}")
+                    logger.error(f"DeepSeek API error: {response.status_code} - {response.text[:200]}")
                     continue
                 
                 result = response.json()
                 content = result.get('choices', [{}])[0].get('message', {}).get('content', '')
                 
+                if not content:
+                    logger.warning(f"Empty response from DeepSeek on attempt {attempt + 1}")
+                    continue
+                
                 question_data = self._parse_response(content, question_type)
                 if question_data:
+                    logger.info(f"Successfully generated {question_type} question on attempt {attempt + 1}")
                     return question_data
+                else:
+                    logger.warning(f"Failed to parse response on attempt {attempt + 1}")
                     
             except requests.Timeout:
-                logger.warning(f"DeepSeek timeout on attempt {attempt + 1}/{self.max_retries}")
+                logger.warning(f"DeepSeek timeout on attempt {attempt + 1}/{self.max_retries} after {self.timeout}s for {question_type}")
+                # Continue to next attempt (if any) or return None to trigger fallback
                 continue
             except Exception as e:
                 logger.error(f"Error calling DeepSeek API on attempt {attempt + 1}: {e}")
                 continue
         
-        logger.error("All DeepSeek retry attempts failed for Biology question")
+        logger.error(f"All {self.max_retries} DeepSeek attempts failed for Biology {question_type} question")
         return None
+    
+    def _call_gemini(self, prompt: str, question_type: str = "mcq") -> Optional[Dict]:
+        """Call Gemini API as fallback when DeepSeek fails"""
+        
+        if not self._gemini_configured or not GENAI_AVAILABLE:
+            logger.warning("Gemini not configured, cannot use as fallback")
+            return None
+        
+        try:
+            # Adjust max tokens based on question type
+            max_tokens = {
+                "mcq": 1200,
+                "structured": 1800,
+                "essay": 2200
+            }.get(question_type, 1500)
+            
+            # Use Gemini Flash for speed
+            model = genai.GenerativeModel('gemini-2.0-flash-exp')
+            
+            logger.info(f"Calling Gemini for Biology {question_type} (max_tokens: {max_tokens})")
+            
+            # Request JSON response
+            response = model.generate_content(
+                prompt,
+                generation_config=genai.types.GenerationConfig(
+                    response_mime_type="application/json",
+                    temperature=0.7,
+                    max_output_tokens=max_tokens
+                ),
+                request_options={'timeout': 20}  # 20 second timeout
+            )
+            
+            if response and hasattr(response, 'text') and response.text:
+                content = response.text.strip()
+                
+                # Parse the response using existing parser
+                question_data = self._parse_response(content, question_type)
+                if question_data:
+                    logger.info(f"✅ Gemini successfully generated {question_type} question")
+                    return question_data
+                else:
+                    logger.warning(f"Failed to parse Gemini response for {question_type}")
+            else:
+                logger.warning("Empty response from Gemini")
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error calling Gemini API: {e}")
+            return None
     
     def _parse_response(self, content: str, question_type: str) -> Optional[Dict]:
         """Parse JSON response from DeepSeek"""

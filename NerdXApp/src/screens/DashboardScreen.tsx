@@ -511,13 +511,11 @@ const DashboardScreen: React.FC = () => {
                 </>
               ) : (
                 <>
-                  {/* ✨ A Level Subject Cards */}
+                  {/* ✨ A Level Subject Cards with 3D Images */}
                   <AnimatedCard
                     title="Pure Mathematics"
                     subtitle="Advanced calculus & algebra"
-                    iconName="function"
-                    iconLibrary="materialCommunity"
-                    iconColor="#FFFFFF"
+                    imageSource={require('../../assets/images/alevel_math_card.png')}
                     onPress={() => navigateToALevelSubject('pure_mathematics', 'Pure Mathematics')}
                     glowColor={aLevelColors.pure_mathematics}
                     index={0}
@@ -526,9 +524,7 @@ const DashboardScreen: React.FC = () => {
                   <AnimatedCard
                     title="Chemistry"
                     subtitle="Organic & inorganic"
-                    iconName="flask-outline"
-                    iconLibrary="ionicons"
-                    iconColor="#FFFFFF"
+                    imageSource={require('../../assets/images/alevel_chemistry_card.png')}
                     onPress={() => navigateToALevelSubject('chemistry', 'Chemistry')}
                     glowColor={aLevelColors.chemistry}
                     index={1}
@@ -537,9 +533,7 @@ const DashboardScreen: React.FC = () => {
                   <AnimatedCard
                     title="Physics"
                     subtitle="Mechanics & quantum"
-                    iconName="atom"
-                    iconLibrary="ionicons"
-                    iconColor="#FFFFFF"
+                    imageSource={require('../../assets/images/alevel_physics_card.png')}
                     onPress={() => navigateToALevelSubject('physics', 'Physics')}
                     glowColor={aLevelColors.physics}
                     index={2}
@@ -548,9 +542,7 @@ const DashboardScreen: React.FC = () => {
                   <AnimatedCard
                     title="Biology"
                     subtitle="Cell biology & genetics"
-                    iconName="dna"
-                    iconLibrary="materialCommunity"
-                    iconColor="#FFFFFF"
+                    imageSource={require('../../assets/images/alevel_biology_card.png')}
                     onPress={() => navigateToALevelSubject('biology', 'Biology')}
                     glowColor={aLevelColors.biology}
                     index={3}
