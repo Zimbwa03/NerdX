@@ -863,6 +863,14 @@ def generate_question():
             correct_answer = question_data.get('answer', '') or question_data.get('correct_answer', '')
             solution = question_data.get('solution', '') or question_data.get('explanation', '')
         
+        # Optional graph/diagram attachment (e.g., A Level Pure Math matplotlib output)
+        question_image_url = question_data.get('question_image_url') or question_data.get('graph_image_url')
+        if not question_image_url and question_data.get('graph_image_path'):
+            try:
+                question_image_url = convert_local_path_to_public_url(question_data['graph_image_path'])
+            except Exception:
+                question_image_url = None
+        
         # For Mathematics, ensure it's treated as short_answer type (allows text input)
         question_type_mobile = question_data.get('question_type', '') or question_data.get('type', 'short_answer')
         if subject == 'mathematics' and not options:
@@ -895,6 +903,7 @@ def generate_question():
                 question_data.get('question_text', '') or
                 (question_data.get('stem', '') if (question_data.get('question_type') or '').lower() == 'structured' else '')
             ),
+            'question_image_url': question_image_url,
             'question_type': question_type_mobile,
             'options': options if isinstance(options, list) else [],
             'correct_answer': correct_answer,
@@ -943,6 +952,63 @@ def generate_question():
                 # rubric is needed for server-side marking in stateless mobile flow
                 'marking_rubric': question_data.get('marking_rubric', {})
             }
+        
+        # Handle A-Level Biology structured and essay questions
+        if subject == 'a_level_biology':
+            # Structured questions
+            if question_type_mobile == 'structured' or question_data.get('question_type') == 'structured':
+                parts = question_data.get('parts', [])
+                # Ensure each part has a label
+                for part in parts:
+                    if 'label' not in part:
+                        part['label'] = part.get('part', 'a')
+                question['structured_question'] = {
+                    'question_type': 'structured',
+                    'subject': question_data.get('subject', 'A Level Biology'),
+                    'topic': question_data.get('topic', topic_name if 'topic_name' in locals() else topic),
+                    'difficulty': question_data.get('difficulty', difficulty),
+                    'stem': question_data.get('stimulus') or question_data.get('question', ''),
+                    'parts': parts,
+                    'total_marks': question_data.get('total_marks', sum(p.get('marks', 0) for p in parts)),
+                    'marking_rubric': {}
+                }
+                question['allows_text_input'] = True  # Structured questions need text input
+            
+            # Essay questions
+            elif question_type_mobile == 'essay' or question_data.get('question_type') == 'essay':
+                question['question_type'] = 'essay'
+                question['allows_text_input'] = True  # Essay questions need text input
+                question['essay_data'] = {
+                    'command_word': question_data.get('command_word', 'Discuss'),
+                    'total_marks': question_data.get('total_marks', 25),
+                    'time_allocation': question_data.get('time_allocation', '35-40 minutes'),
+                    'essay_plan': question_data.get('essay_plan', {}),
+                    'must_include_terms': question_data.get('must_include_terms', []),
+                    'marking_criteria': question_data.get('marking_criteria', {}),
+                    'model_answer_outline': question_data.get('model_answer_outline', ''),
+                    'common_mistakes': question_data.get('common_mistakes', [])
+                }
+                # Solution should include essay plan and marking criteria
+                essay_solution_parts = []
+                if question_data.get('essay_plan'):
+                    essay_solution_parts.append("📋 ESSAY PLAN:")
+                    plan = question_data.get('essay_plan', {})
+                    if plan.get('introduction'):
+                        essay_solution_parts.append(f"Introduction: {plan['introduction']}")
+                    if plan.get('main_body'):
+                        for section in plan['main_body']:
+                            essay_solution_parts.append(f"{section.get('section', 'Section')} [{section.get('marks', 0)} marks]: {section.get('content', '')}")
+                    if plan.get('conclusion'):
+                        essay_solution_parts.append(f"Conclusion: {plan['conclusion']}")
+                if question_data.get('must_include_terms'):
+                    essay_solution_parts.append(f"\n🔑 Key Terms to Include: {', '.join(question_data['must_include_terms'])}")
+                if question_data.get('marking_criteria'):
+                    essay_solution_parts.append("\n📊 MARKING CRITERIA:")
+                    criteria = question_data.get('marking_criteria', {})
+                    for grade, desc in criteria.items():
+                        essay_solution_parts.append(f"{grade}: {desc}")
+                if essay_solution_parts:
+                    question['solution'] = '\n'.join(essay_solution_parts)
         
         return jsonify({
             'success': True,
@@ -1154,6 +1220,25 @@ def submit_answer():
             except Exception as se:
                 logger.error(f"Structured answer evaluation error: {se}", exc_info=True)
                 return jsonify({'success': False, 'message': 'Error evaluating structured answer'}), 500
+        elif subject == 'a_level_biology' and question_type == 'essay':
+            # A-Level Biology Essay marking - provide feedback based on essay plan and marking criteria
+            try:
+                # For essays, we provide constructive feedback rather than strict right/wrong
+                # Essays are evaluated based on content, structure, and use of key terms
+                feedback = '📝 Essay submitted! Review the marking criteria and model answer outline below.'
+                is_correct = True  # Essays are not strictly right/wrong, but we mark as "submitted" for progress tracking
+                detailed_solution = solution or 'Review the essay plan and marking criteria provided with the question.'
+                analysis_result = {
+                    'feedback': feedback,
+                    'encouragement': 'Well done on completing your essay! Compare your answer with the model answer outline and marking criteria.',
+                    'improvement_tips': 'Review the key terms that should be included and ensure your essay follows the suggested structure.'
+                }
+            except Exception as e:
+                logger.error(f"Essay answer evaluation error: {e}", exc_info=True)
+                feedback = 'Essay submitted successfully. Review the solution below.'
+                is_correct = True
+                detailed_solution = solution or 'No detailed feedback available.'
+                analysis_result = {}
         else:
             # For other subjects (Combined Science, English, etc.)
             # Handle MCQ answer validation: could be option letter (A/B/C/D) or full option text

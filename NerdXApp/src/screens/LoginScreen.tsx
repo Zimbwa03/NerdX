@@ -23,6 +23,7 @@ import { Icons, IconCircle, Icon } from '../components/Icons';
 import { Button } from '../components/Button';
 import { Colors } from '../theme/colors';
 import { Ionicons } from '@expo/vector-icons';
+import { useGoogleAuth } from '../hooks/useGoogleAuth';
 
 const { width, height } = Dimensions.get('window');
 
@@ -33,6 +34,7 @@ const LoginScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigation = useNavigation();
   const { login } = useAuth();
+  const { isReady: isGoogleReady, signIn: signInWithGoogle } = useGoogleAuth();
 
   const handleLogin = async () => {
     if (!identifier || !password) {
@@ -64,43 +66,27 @@ const LoginScreen: React.FC = () => {
   };
 
   const handleGoogleSignIn = async () => {
+    if (!isGoogleReady) {
+      Alert.alert(
+        'Google Sign-In unavailable',
+        'Google client IDs are missing. Please set EXPO_PUBLIC_GOOGLE_* env vars.'
+      );
+      return;
+    }
+
     setIsLoading(true);
     try {
-      Alert.alert(
-        'Google Sign-In',
-        'This feature will link with your Google account. Proceed?',
-        [
-          { text: 'Cancel', style: 'cancel', onPress: () => setIsLoading(false) },
-          {
-            text: 'Sign In',
-            onPress: async () => {
-              try {
-                const mockUserInfo = {
-                  email: 'google_user@gmail.com',
-                  name: 'Google User',
-                  given_name: 'Google',
-                  family_name: 'User',
-                  picture: 'https://via.placeholder.com/150'
-                };
+      const googleUser = await signInWithGoogle();
+      const response = await authApi.socialLogin('google', googleUser);
 
-                const response = await authApi.socialLogin('google', mockUserInfo);
-
-                if (response.success && response.token && response.user) {
-                  await login(response.user, response.token);
-                } else {
-                  Alert.alert('Sign In Failed', response.message || 'Could not sign in with Google');
-                }
-              } catch (error) {
-                Alert.alert('Error', 'An error occurred during Google Sign-In');
-              } finally {
-                setIsLoading(false);
-              }
-            }
-          }
-        ]
-      );
-    } catch (error) {
-      Alert.alert('Error', 'Google Sign-In failed');
+      if (response.success && response.token && response.user) {
+        await login(response.user, response.token);
+      } else {
+        Alert.alert('Sign In Failed', response.message || 'Could not sign in with Google');
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error?.message || 'Google Sign-In failed');
+    } finally {
       setIsLoading(false);
     }
   };

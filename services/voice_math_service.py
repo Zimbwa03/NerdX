@@ -115,7 +115,7 @@ class VoiceMathService:
         
     def transcribe_audio(self, audio_path: str) -> Optional[str]:
         """
-        Transcribe audio file to text using Whisper
+        Transcribe audio file to text using local Whisper with Gemini fallback
         
         Args:
             audio_path: Path to audio file (WAV, MP3, etc.)
@@ -123,27 +123,71 @@ class VoiceMathService:
         Returns:
             Transcribed text or None if failed
         """
-        if not WHISPER_AVAILABLE:
-            logger.error("Whisper not available")
-            return None
-            
-        model = get_whisper_model()
-        if model is None:
-            return None
-            
-        try:
-            logger.info(f"Transcribing audio: {audio_path}")
-            result = model.transcribe(
-                audio_path,
-                language="en",
-                fp16=False  # Use FP32 for CPU compatibility
-            )
-            text = result["text"].strip()
-            logger.info(f"Transcription result: {text}")
-            return text
-        except Exception as e:
-            logger.error(f"Transcription failed: {e}")
-            return None
+        # PRIMARY: Try local Whisper first (faster, no API costs)
+        if WHISPER_AVAILABLE:
+            model = get_whisper_model()
+            if model is not None:
+                try:
+                    logger.info(f"[Voice] Transcribing with local Whisper: {audio_path}")
+                    result = model.transcribe(
+                        audio_path,
+                        language="en",
+                        fp16=False  # Use FP32 for CPU compatibility
+                    )
+                    text = result["text"].strip()
+                    logger.info(f"[Voice] Local Whisper success: {text[:100]}...")
+                    return text
+                except Exception as e:
+                    logger.warning(f"[Voice] Local Whisper failed: {e}, trying Gemini fallback...")
+        else:
+            logger.info("[Voice] Local Whisper not available, using Gemini fallback")
+        
+        # FALLBACK: Use Gemini for audio transcription
+        gemini_api_key = os.environ.get('GEMINI_API_KEY')
+        if gemini_api_key:
+            try:
+                import google.generativeai as genai
+                import mimetypes
+                
+                genai.configure(api_key=gemini_api_key)
+                
+                logger.info(f"[Voice] Transcribing with Gemini: {audio_path}")
+                
+                # Gemini 1.5+ supports audio input natively
+                model = genai.GenerativeModel('gemini-2.0-flash-exp')
+                
+                # Upload audio file to Gemini
+                mime_type = mimetypes.guess_type(audio_path)[0] or 'audio/wav'
+                audio_file = genai.upload_file(audio_path, mime_type=mime_type)
+                
+                # Transcribe with clear instructions
+                response = model.generate_content([
+                    """Transcribe the following audio recording exactly as spoken.
+                    
+Rules:
+- Only output the transcribed text, nothing else
+- If the audio contains mathematical expressions, write them naturally (e.g., "x squared" stays as "x squared")
+- Preserve the exact words spoken
+- If the audio is unclear or empty, respond with just: [unclear]""",
+                    audio_file
+                ])
+                
+                if response and response.text:
+                    text = response.text.strip()
+                    # Check for unclear audio
+                    if text == "[unclear]" or not text:
+                        logger.warning("[Voice] Gemini could not understand audio")
+                        return None
+                    logger.info(f"[Voice] Gemini transcription success: {text[:100]}...")
+                    return text
+                    
+            except Exception as e:
+                logger.error(f"[Voice] Gemini transcription failed: {e}")
+        else:
+            logger.warning("[Voice] GEMINI_API_KEY not set, cannot use Gemini fallback")
+        
+        logger.error("[Voice] All transcription methods failed - neither local Whisper nor Gemini available")
+        return None
     
     def convert_to_math_notation(self, text: str) -> str:
         """
@@ -211,7 +255,7 @@ class VoiceMathService:
                 if not raw_text:
                     return {
                         'success': False,
-                        'error': 'Failed to transcribe audio',
+                        'error': 'Voice transcription is temporarily unavailable. Please type your question instead.',
                         'text': '',
                         'original_transcription': ''
                     }

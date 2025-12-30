@@ -325,22 +325,31 @@ DIFFICULTY: {difficulty} - {difficulty_guidance.get(difficulty, difficulty_guida
 KEY CONCEPTS: {', '.join(key_concepts) if key_concepts else 'General concepts for this topic'}
 KEY TERMS TO USE: {', '.join(key_terms) if key_terms else 'Scientific terminology as appropriate'}
 
+CRITICAL FORMATTING RULES - DO NOT USE LaTeX OR $ SYMBOLS:
+- Use Unicode subscripts for chemical formulas: CO₂, O₂, H₂O, ATP, NADH (NOT CO_2 or $CO_2$)
+- Use Unicode superscripts where needed: 10⁶, 10⁻⁹ (NOT 10^6 or $10^6$)
+- Write numbers clearly: 3.5 × 10⁶ cells/mm³ (NOT $3.5 \\times 10^6$)
+- Use proper symbols: μm for micrometers, μg for micrograms
+- Use → for arrows in processes, % for percentages
+- Examples: "ATP → ADP + Pᵢ", "glucose + O₂ → CO₂ + H₂O"
+
 REQUIREMENTS:
 1. Create ONE multiple choice question with exactly 4 options (A, B, C, D)
 2. The question must be at A Level standard (not O Level)
-3. Use correct biological terminology
-4. All distractors must be plausible (based on common misconceptions)
-5. Include context or scenarios where appropriate
-6. Provide a detailed explanation with teaching points
+3. Use correct biological terminology with PLAIN TEXT formatting
+4. Use PLAIN TEXT Unicode notation - NO LaTeX or $ symbols
+5. All distractors must be plausible (based on common misconceptions)
+6. Include context or scenarios where appropriate
+7. Provide a detailed explanation with teaching points
 
 RESPONSE FORMAT (strict JSON):
 {{
-    "question": "The full question text (may include scenario or data)",
+    "question": "The full question text (plain text, may include scenario or data)",
     "options": {{
-        "A": "First option",
-        "B": "Second option",
-        "C": "Third option",
-        "D": "Fourth option"
+        "A": "First option (plain text)",
+        "B": "Second option (plain text)",
+        "C": "Third option (plain text)",
+        "D": "Fourth option (plain text)"
     }},
     "correct_answer": "A",
     "explanation": "Why this is correct and why other options are wrong",
@@ -352,25 +361,73 @@ Generate the MCQ now:"""
     
     def _create_structured_prompt(self, topic: str, difficulty: str, level: str,
                                  key_concepts: List[str], key_terms: List[str]) -> str:
-        """Create concise prompt for structured questions (optimized for speed)"""
+        """Create prompt for structured questions (multi-part, short answers - 1 sentence each)"""
         
-        concepts_str = ', '.join(key_concepts[:3]) if key_concepts else 'key concepts'
-        
-        prompt = f"""Generate A Level Biology structured question (12 marks) on {topic}.
+        prompt = f"""You are an expert ZIMSEC A Level Biology examiner. Generate a structured question worth 8-12 marks with SHORT answers.
 
-Level: {level} | Difficulty: {difficulty}
-Concepts: {concepts_str}
+SUBJECT: A Level Biology (ZIMSEC Syllabus 6030)
+TOPIC: {topic}
+LEVEL: {level}
+DIFFICULTY: {difficulty}
 
-JSON format:
+KEY CONCEPTS: {', '.join(key_concepts) if key_concepts else 'General concepts'}
+KEY TERMS: {', '.join(key_terms) if key_terms else 'Scientific terminology'}
+
+CRITICAL FORMATTING RULES - DO NOT USE LaTeX OR $ SYMBOLS:
+- Use Unicode subscripts: CO₂, O₂, H₂O, ATP, NADH
+- Use Unicode superscripts: 10⁶, 10⁻⁹
+- Use proper symbols: μm, μg, →, %
+
+IMPORTANT: Structured questions require SHORT, CONCISE answers (typically 1 sentence or brief phrase).
+Each part should test a specific point that can be answered briefly but accurately.
+
+REQUIREMENTS:
+1. Include a stimulus (diagram description, table, graph, or scenario) if appropriate
+2. Part (a): 2-3 marks - Test recall or basic understanding (SHORT answer - 1 sentence max)
+3. Part (b): 3-4 marks - Test application or interpretation (SHORT answer - 1-2 sentences max)
+4. Part (c): 3-4 marks - Test analysis or brief explanation (SHORT answer - 1-2 sentences max)
+5. Keep total marks between 8-12 marks
+6. Each part should be answerable in 1 sentence or brief phrase
+7. Provide full marking scheme with expected SHORT answers
+8. Include examiner tips for common mistakes
+9. Use PLAIN TEXT Unicode notation - NO LaTeX
+
+RESPONSE FORMAT (strict JSON):
 {{
-    "question": "Main context/stem",
+    "stimulus": "Description of any diagram, table, or scenario (or null if not needed)",
+    "question": "Main question introduction/context",
     "parts": [
-        {{"part": "a", "question": "...", "marks": 3, "expected_answer": "..."}},
-        {{"part": "b", "question": "...", "marks": 4, "expected_answer": "..."}},
-        {{"part": "c", "question": "...", "marks": 5, "expected_answer": "..."}}
+        {{
+            "part": "a",
+            "label": "a",
+            "question": "Part (a) question (should require SHORT answer)",
+            "marks": 2,
+            "expected_answer": "Brief expected answer (1 sentence)",
+            "model_answer": "Brief model answer (1 sentence)",
+            "marking_scheme": ["Point 1 [1 mark]", "Point 2 [1 mark]"]
+        }},
+        {{
+            "part": "b",
+            "label": "b",
+            "question": "Part (b) question (should require SHORT answer)", 
+            "marks": 3,
+            "expected_answer": "Brief expected answer (1 sentence)",
+            "model_answer": "Brief model answer (1 sentence)",
+            "marking_scheme": ["Point 1 [1 mark]", "Point 2 [1 mark]", "Point 3 [1 mark]"]
+        }},
+        {{
+            "part": "c",
+            "label": "c",
+            "question": "Part (c) question (should require SHORT answer)",
+            "marks": 4,
+            "expected_answer": "Brief expected answer (1-2 sentences max)",
+            "model_answer": "Brief model answer (1-2 sentences max)",
+            "marking_scheme": ["Point 1 [1 mark]", "Point 2 [1 mark]", "Point 3 [1 mark]", "Point 4 [1 mark]"]
+        }}
     ],
-    "total_marks": 12,
-    "teaching_points": "Key learning"
+    "total_marks": 9,
+    "examiner_tips": ["Common mistakes to avoid", "Key points for full marks"],
+    "teaching_points": "What students should learn from this question"
 }}
 
 Generate now:"""
@@ -378,33 +435,76 @@ Generate now:"""
     
     def _create_essay_prompt(self, topic: str, difficulty: str, level: str,
                             key_concepts: List[str], key_terms: List[str]) -> str:
-        """Create concise prompt for essay questions (optimized for speed)"""
+        """Create prompt for essay questions (20-25 marks)"""
         
-        concepts_str = ', '.join(key_concepts[:4]) if key_concepts else 'main concepts'
-        terms_str = ', '.join(key_terms[:5]) if key_terms else 'key terms'
-        
-        prompt = f"""Generate A Level Biology essay question (25 marks) on {topic}.
+        prompt = f"""You are an expert ZIMSEC A Level Biology examiner. Generate an essay question worth 20-25 marks.
 
-Level: {level} | Difficulty: {difficulty}
-Key concepts: {concepts_str}
-Required terms: {terms_str}
+SUBJECT: A Level Biology (ZIMSEC Syllabus 6030)
+TOPIC: {topic}
+LEVEL: {level}
+DIFFICULTY: {difficulty}
 
-JSON format:
+KEY CONCEPTS TO COVER: {', '.join(key_concepts) if key_concepts else 'General concepts'}
+KEY TERMS EXPECTED: {', '.join(key_terms) if key_terms else 'Scientific terminology'}
+
+CRITICAL FORMATTING RULES - DO NOT USE LaTeX OR $ SYMBOLS:
+- Use Unicode subscripts: CO₂, O₂, H₂O, ATP, NADH
+- Use Unicode superscripts: 10⁶, 10⁻⁹
+- Use proper symbols: μm, μg, →, %
+
+Create an essay question that tests comprehensive understanding and ability to construct a coherent argument.
+
+REQUIREMENTS:
+1. Clear, focused question that allows students to demonstrate depth of knowledge
+2. Question should require discussion of multiple aspects/concepts
+3. May include "Discuss", "Explain", "Compare and contrast", "Evaluate" command words
+4. Provide a detailed essay plan/outline showing expected structure
+5. Include marking criteria for different grade boundaries
+6. List key biological terms that MUST be included for high marks
+7. Use PLAIN TEXT Unicode notation - NO LaTeX
+
+RESPONSE FORMAT (strict JSON):
 {{
-    "question": "Full essay question (use Discuss/Explain/Compare)",
-    "command_word": "Discuss/Explain/Compare",
+    "question": "The full essay question",
+    "command_word": "Discuss/Explain/Compare/Evaluate etc.",
     "total_marks": 25,
+    "time_allocation": "35-40 minutes",
     "essay_plan": {{
-        "introduction": "Key intro points",
+        "introduction": "What should be covered in introduction (2-3 marks)",
         "main_body": [
-            {{"section": "Point 1", "content": "...", "marks": 6}},
-            {{"section": "Point 2", "content": "...", "marks": 6}},
-            {{"section": "Point 3", "content": "...", "marks": 6}}
+            {{
+                "section": "First main point",
+                "content": "What to discuss",
+                "marks": 5
+            }},
+            {{
+                "section": "Second main point", 
+                "content": "What to discuss",
+                "marks": 5
+            }},
+            {{
+                "section": "Third main point",
+                "content": "What to discuss",
+                "marks": 5
+            }},
+            {{
+                "section": "Fourth main point (if applicable)",
+                "content": "What to discuss", 
+                "marks": 5
+            }}
         ],
-        "conclusion": "Conclusion guidance"
+        "conclusion": "How to conclude effectively (2-3 marks)"
     }},
-    "must_include_terms": ["term1", "term2", "term3"],
-    "teaching_points": "Key learning"
+    "must_include_terms": ["List of key terms that must appear in essay"],
+    "marking_criteria": {{
+        "A_grade": "Criteria for 20-25 marks",
+        "B_grade": "Criteria for 15-19 marks",
+        "C_grade": "Criteria for 10-14 marks",
+        "below_C": "Common reasons for lower marks"
+    }},
+    "model_answer_outline": "A brief outline of what an excellent answer would include",
+    "common_mistakes": ["Mistake 1", "Mistake 2", "Mistake 3"],
+    "teaching_points": "Key learning from this essay topic"
 }}
 
 Generate now:"""
@@ -440,6 +540,13 @@ Generate now:"""
                             "content": """You are an expert A Level Biology examiner for ZIMSEC examinations.
 You create rigorous, high-quality questions that test deep biological understanding.
 Always use correct biological terminology and provide detailed marking schemes.
+
+CRITICAL: Use PLAIN TEXT Unicode notation - NEVER use LaTeX or $ symbols:
+- Use subscripts: CO₂, O₂, H₂O, ATP (NOT CO_2 or $CO_2$)
+- Use superscripts: 10⁶, 10⁻⁹ (NOT 10^6)
+- Use μm, μg for micro units
+- Use → for arrows in reactions
+
 Respond with valid JSON only - no markdown or extra text."""
                         },
                         {
@@ -542,7 +649,7 @@ Respond with valid JSON only - no markdown or extra text."""
             return None
     
     def _parse_response(self, content: str, question_type: str) -> Optional[Dict]:
-        """Parse JSON response from DeepSeek"""
+        """Parse JSON response from DeepSeek with truncation recovery"""
         try:
             content = content.strip()
             
@@ -550,13 +657,30 @@ Respond with valid JSON only - no markdown or extra text."""
             if '```json' in content:
                 start = content.find('```json') + 7
                 end = content.find('```', start)
-                content = content[start:end].strip()
+                if end > start:
+                    content = content[start:end].strip()
+                else:
+                    content = content[start:].strip()
             elif '```' in content:
                 start = content.find('```') + 3
                 end = content.find('```', start)
-                content = content[start:end].strip()
+                if end > start:
+                    content = content[start:end].strip()
+                else:
+                    content = content[start:].strip()
             
-            question_data = json.loads(content)
+            # Try to parse JSON, with recovery for truncated responses
+            try:
+                question_data = json.loads(content)
+            except json.JSONDecodeError as e:
+                logger.warning(f"Initial JSON parse failed: {e}")
+                # Attempt to recover truncated JSON (only for MCQ)
+                if question_type == "mcq":
+                    question_data = self._recover_truncated_json(content)
+                    if not question_data:
+                        return None
+                else:
+                    return None
             
             # Validate based on question type
             if question_type == "mcq":
@@ -578,9 +702,65 @@ Respond with valid JSON only - no markdown or extra text."""
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse JSON: {e}")
             logger.error(f"Content preview: {content[:500]}...")
+            # Try to recover truncated JSON for MCQ
+            if question_type == "mcq":
+                recovered = self._recover_truncated_json(content)
+                if recovered:
+                    return recovered
             return None
         except Exception as e:
             logger.error(f"Error parsing response: {e}")
+            return None
+    
+    def _recover_truncated_json(self, content: str) -> Optional[Dict]:
+        """Attempt to recover data from a truncated JSON response (MCQ only)"""
+        try:
+            import re
+            
+            # Find where JSON starts
+            json_start = content.find('{')
+            if json_start == -1:
+                return None
+            
+            content = content[json_start:]
+            
+            # Extract question
+            question_match = re.search(r'"question"\s*:\s*"([^"]+)"', content)
+            question = question_match.group(1) if question_match else None
+            
+            if not question:
+                return None
+            
+            # Extract options
+            options = {}
+            for letter in ['A', 'B', 'C', 'D']:
+                opt_match = re.search(rf'"{letter}"\s*:\s*"([^"]+)"', content)
+                if opt_match:
+                    options[letter] = opt_match.group(1)
+            
+            # Extract correct answer
+            answer_match = re.search(r'"correct_answer"\s*:\s*"([ABCD])"', content)
+            correct_answer = answer_match.group(1) if answer_match else 'A'
+            
+            # Extract explanation if available
+            explanation_match = re.search(r'"explanation"\s*:\s*"([^"]+)"', content)
+            explanation = explanation_match.group(1) if explanation_match else "See the worked solution."
+            
+            # If we have enough data, construct a valid response
+            if question and len(options) >= 4:
+                logger.info("Successfully recovered truncated JSON response for Biology")
+                return {
+                    "question": question,
+                    "options": options,
+                    "correct_answer": correct_answer,
+                    "explanation": explanation,
+                    "teaching_points": "Review the key biological concepts for this topic."
+                }
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Failed to recover truncated JSON: {e}")
             return None
     
     def generate_exam_question(self, level: str = "Lower Sixth", 

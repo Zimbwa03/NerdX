@@ -404,6 +404,91 @@ class GraphService:
             logger.error(f"Error creating geometry diagram: {e}")
             return None
 
+    def generate_argand_diagram(self, points: Optional[List[Dict]] = None,
+                                highlight_region: Optional[str] = None,
+                                title: str = "Argand Diagram") -> Optional[str]:
+        """
+        Create a simple Argand diagram showing the complex plane with optional points
+        and highlighted quadrant/region for complex number questions.
+        """
+        try:
+            fig, ax = plt.subplots(figsize=(8, 8), dpi=150)
+
+            # Default bounds
+            x_min, x_max = -5, 5
+            y_min, y_max = -5, 5
+
+            # Expand bounds based on provided points
+            if points:
+                try:
+                    reals = [float(p.get('real', 0) or p.get('re', 0) or 0) for p in points]
+                    imags = [float(p.get('imag', 0) or p.get('im', 0) or 0) for p in points]
+                    if reals and imags:
+                        x_min = min(x_min, min(reals) - 1)
+                        x_max = max(x_max, max(reals) + 1)
+                        y_min = min(y_min, min(imags) - 1)
+                        y_max = max(y_max, max(imags) + 1)
+                except Exception:
+                    pass
+
+            # Draw axes through origin
+            ax.axhline(0, color='black', linewidth=1.2)
+            ax.axvline(0, color='black', linewidth=1.2)
+            ax.set_xlim(x_min, x_max)
+            ax.set_ylim(y_min, y_max)
+            ax.set_xlabel('Re(z)', fontsize=12, fontweight='bold')
+            ax.set_ylabel('Im(z)', fontsize=12, fontweight='bold')
+            ax.set_title(title, fontsize=14, fontweight='bold')
+
+            # Grid and ticks
+            ax.grid(True, which='both', linestyle='--', alpha=0.4)
+            ax.set_aspect('equal', adjustable='box')
+
+            # Highlight requested quadrant or region
+            if highlight_region:
+                region = highlight_region.strip().upper()
+                fill_kwargs = dict(color='lightgreen', alpha=0.25)
+                if region in ['I', 'Q1', 'QUADRANT I', 'QUADRANT 1']:
+                    ax.fill_between([0, x_max], 0, y_max, **fill_kwargs)
+                elif region in ['II', 'Q2', 'QUADRANT II', 'QUADRANT 2']:
+                    ax.fill_between([x_min, 0], 0, y_max, **fill_kwargs)
+                elif region in ['III', 'Q3', 'QUADRANT III', 'QUADRANT 3']:
+                    ax.fill_between([x_min, 0], y_min, 0, **fill_kwargs)
+                elif region in ['IV', 'Q4', 'QUADRANT IV', 'QUADRANT 4']:
+                    ax.fill_between([0, x_max], y_min, 0, **fill_kwargs)
+
+            # Plot complex points if provided
+            if points:
+                for idx, point in enumerate(points):
+                    try:
+                        re_val = float(point.get('real', point.get('re', 0)))
+                        im_val = float(point.get('imag', point.get('im', 0)))
+                        label = point.get('label') or point.get('name') or f"z{idx+1}"
+                        ax.scatter(re_val, im_val, s=80, color='crimson', edgecolor='darkred', zorder=5)
+                        ax.annotate(label, (re_val, im_val), textcoords="offset points",
+                                    xytext=(6, 6), ha='left', fontsize=10, fontweight='bold')
+                    except Exception as e:
+                        logger.debug(f"Skipping invalid Argand point {point}: {e}")
+
+            # Add watermark
+            self._add_educational_watermark(ax)
+
+            # Save diagram
+            filename = f"argand_{int(time.time())}.png"
+            filepath = os.path.join('static', 'graphs', filename)
+            os.makedirs(os.path.dirname(filepath), exist_ok=True)
+
+            plt.tight_layout()
+            plt.savefig(filepath, dpi=150, bbox_inches='tight', facecolor='white')
+            plt.close(fig)
+
+            logger.info(f"Generated Argand diagram: {filepath}")
+            return filepath
+
+        except Exception as e:
+            logger.error(f"Error generating Argand diagram: {e}")
+            return None
+
     def _add_educational_watermark(self, ax):
         """Add NerdX educational watermark for ZIMSEC graphs"""
         ax.text(0.02, 0.02, '🚀 NerdX Mathematics - ZIMSEC O-Level', transform=ax.transAxes,

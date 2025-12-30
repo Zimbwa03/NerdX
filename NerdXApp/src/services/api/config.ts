@@ -17,9 +17,10 @@ console.log('🏗️ Dev Mode:', __DEV__);
 const AUTH_TOKEN_KEY = '@auth_token';
 
 // Create axios instance with default config
+// Increased timeout to 60 seconds for AI-generated content
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 30000,
+  timeout: 60000,  // 60 seconds - AI question generation can take 20-30 seconds
   headers: {
     'Content-Type': 'application/json',
   },

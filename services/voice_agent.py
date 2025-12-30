@@ -75,8 +75,8 @@ logger = logging.getLogger(__name__)
 
 # Gemini API configuration
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
-# Use the Gemini 2.0 Flash model which supports the Live API
-GEMINI_MODEL = "gemini-2.0-flash-exp"
+# Use Gemini 2.5 native audio dialog model for Live API
+GEMINI_MODEL = "gemini-2.5-flash-native-audio-dialog"
 
 # NerdX System Instruction - Zimbabwe O-Level/A-Level Tutor
 NERDX_SYSTEM_INSTRUCTION = """

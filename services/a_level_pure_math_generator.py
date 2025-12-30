@@ -8,6 +8,7 @@ import json
 import logging
 import requests
 import os
+import re
 from typing import Dict, Optional, List
 from constants import A_LEVEL_PURE_MATH_TOPICS, A_LEVEL_PURE_MATH_ALL_TOPICS
 
@@ -172,6 +173,7 @@ class ALevelPureMathGenerator:
         self.deepseek_url = "https://api.deepseek.com/v1/chat/completions"
         self.max_retries = 2  # Reduced retries to prevent worker timeout
         self.timeout = 30  # Shorter timeout to prevent worker death
+        self.graph_service = None  # Lazy init to avoid heavy imports unless needed
     
     def generate_question(self, topic: str, difficulty: str = "medium", user_id: str = None, question_type: str = "mcq") -> Optional[Dict]:
         """
@@ -209,6 +211,8 @@ class ALevelPureMathGenerator:
             question_data = self._call_deepseek(prompt, question_type)
             
             if question_data:
+                # Optionally attach visualization using matplotlib for graph/shape topics
+                question_data = self._maybe_attach_visualization(question_data, topic_name)
                 question_data['subject'] = 'A Level Pure Mathematics'
                 question_data['topic'] = topic_name
                 question_data['topic_id'] = topic
@@ -311,28 +315,50 @@ KEY FORMULAS (use when appropriate):
 TYPICAL QUESTION TYPES FOR THIS TOPIC:
 {', '.join(question_types) if question_types else 'Various standard types'}
 
+CRITICAL MATH FORMATTING RULES - DO NOT USE LaTeX OR $ SYMBOLS:
+- Use Unicode superscripts: x², x³, x⁴, xⁿ (NOT x^2 or $x^2$)
+- Use Unicode subscripts: x₁, x₂, aₙ (NOT x_1 or $x_1$)
+- Write fractions as: (a+b)/(c+d) or a/b (NOT $\\frac{{a}}{{b}}$)
+- Use √ for square root: √(x+1) (NOT $\\sqrt{{}}$)
+- Use ∑ for summation: ∑ from r=1 to n (NOT $\\sum$)
+- Use π for pi, ∞ for infinity, ± for plus/minus
+- Use → for arrows, ⟹ for implies
+- Use ∫ for integrals: ∫(x²)dx (NOT $\\int$)
+- Write sin⁻¹(x) for inverse trig (NOT $\\sin^{{-1}}$)
+- Examples: "Find ∑(r=1 to n) of r²", "Solve x² + 3x - 4 = 0", "Evaluate √(16) + 3/4"
+
 REQUIREMENTS:
 1. Create ONE multiple choice question with exactly 4 options (A, B, C, D)
 2. The question MUST be at A Level standard - NOT O Level
-3. Include mathematical notation where appropriate (use standard notation like x², √, etc.)
+3. Use PLAIN TEXT Unicode math notation as described above - NO LaTeX
 4. All options must be plausible and based on common misconceptions
 5. For calculation questions, ensure workings are required (not just substitution)
 6. The correct answer must be mathematically rigorous
 7. Provide a DETAILED worked solution showing every step
 8. Include teaching points that help students understand the concept
+9. If a sketch/graph/diagram would help, add an optional "visualization" block with:
+   - "needed": true/false
+   - "type": "graph" | "shape" | "argand"
+   - "expression": function to plot (for graphs) OR "shape"/"region" details
+   - "points": optional list of Argand points with real/imag parts
 
 RESPONSE FORMAT (strict JSON only - keep explanation SHORT, max 3 sentences):
 {{
-    "question": "Question text with mathematical expressions",
+    "question": "Question text with plain text mathematical expressions",
     "options": {{
-        "A": "Option A",
-        "B": "Option B",
-        "C": "Option C",
-        "D": "Option D"
+        "A": "Option A with plain text math",
+        "B": "Option B with plain text math",
+        "C": "Option C with plain text math",
+        "D": "Option D with plain text math"
     }},
     "correct_answer": "A",
     "explanation": "Brief 2-3 sentence explanation of the answer",
-    "solution": "Key steps: Step 1... Step 2... Final answer"
+    "solution": "Key steps: Step 1... Step 2... Final answer",
+    "visualization": {{
+        "needed": false,
+        "type": "graph",
+        "expression": "y = x^2 - 4x + 3"
+    }}
 }}
 
 Generate ONE A Level Pure Mathematics MCQ (keep response under 500 words):"""
@@ -354,6 +380,15 @@ DIFFICULTY: {difficulty}
 KEY CONCEPTS: {', '.join(key_concepts) if key_concepts else 'General concepts'}
 KEY FORMULAS: {', '.join(key_formulas) if key_formulas else 'As applicable'}
 
+CRITICAL MATH FORMATTING RULES - DO NOT USE LaTeX OR $ SYMBOLS:
+- Use Unicode superscripts: x², x³, x⁴, xⁿ (NOT x^2 or $x^2$)
+- Use Unicode subscripts: x₁, x₂, aₙ (NOT x_1 or $x_1$)
+- Write fractions as: (a+b)/(c+d) or a/b (NOT $\\frac{{a}}{{b}}$)
+- Use √ for square root: √(x+1) (NOT $\\sqrt{{}}$)
+- Use ∑ for summation, π for pi, ∞ for infinity, ± for plus/minus
+- Use ∫ for integrals: ∫(x²)dx
+- Write sin⁻¹(x) for inverse trig
+
 Create a multi-part structured question (parts a, b, c) that builds up in difficulty.
 
 REQUIREMENTS:
@@ -363,6 +398,8 @@ REQUIREMENTS:
 4. Include clear mark allocations
 5. Provide complete worked solutions for each part
 6. Questions should flow logically
+7. Use PLAIN TEXT Unicode math notation - NO LaTeX
+8. If a diagram/graph (e.g., Argand, function sketch, shape) helps, include a "visualization" block describing what to plot
 
 RESPONSE FORMAT (strict JSON):
 {{
@@ -392,7 +429,12 @@ RESPONSE FORMAT (strict JSON):
     ],
     "total_marks": 12,
     "teaching_explanation": "Key learning points from this question",
-    "common_mistakes": ["List of common student errors to avoid"]
+    "common_mistakes": ["List of common student errors to avoid"],
+    "visualization": {{
+        "needed": false,
+        "type": "graph",
+        "expression": "y = x^2 - 4x + 3"
+    }}
 }}
 
 Generate the structured A Level Pure Mathematics question now:"""
@@ -419,8 +461,16 @@ Generate the structured A Level Pure Mathematics question now:"""
                         {
                             "role": "system",
                             "content": """You are an expert A Level Pure Mathematics examiner for ZIMSEC examinations. 
-Generate questions with clear solutions. Use proper mathematical notation.
-IMPORTANT: Keep explanations concise (2-3 sentences). Always respond with valid, complete JSON only."""
+Generate questions with clear solutions.
+
+CRITICAL: Use PLAIN TEXT Unicode math notation - NEVER use LaTeX or $ symbols:
+- Use x², x³, xⁿ for powers (NOT $x^2$ or x^2)
+- Use fractions as a/b or (a+b)/(c+d) (NOT $\\frac{a}{b}$)
+- Use √ for square roots (NOT $\\sqrt{}$)
+- Use ∑, π, ∞, ±, →, ⟹ for math symbols
+- Use sin⁻¹, cos⁻¹, tan⁻¹ for inverse trig
+
+Keep explanations concise (2-3 sentences). Always respond with valid, complete JSON only."""
                         },
                         {
                             "role": "user",
@@ -462,6 +512,128 @@ IMPORTANT: Keep explanations concise (2-3 sentences). Always respond with valid,
         
         logger.error("All DeepSeek retry attempts failed for Pure Math question")
         return None
+
+    def _maybe_attach_visualization(self, question_data: Dict, topic_name: str) -> Dict:
+        """
+        Use matplotlib (via GraphService) to generate a visual aid when the AI
+        indicates a sketch/graph is needed or when topic heuristics suggest it.
+        """
+        try:
+            viz_request = question_data.get('visualization') if isinstance(question_data, dict) else None
+            visual_type = None
+            expression = None
+            shape_params = None
+            argand_points = None
+            highlight_region = None
+
+            # AI-provided instructions take priority
+            if isinstance(viz_request, dict):
+                needs_visual = bool(viz_request.get('needed') or viz_request.get('need_graph') or viz_request.get('require_diagram'))
+                visual_type = viz_request.get('type') or viz_request.get('visual_type')
+                expression = viz_request.get('expression') or viz_request.get('function')
+                shape_params = viz_request.get('parameters') or viz_request.get('shape')
+                argand_points = viz_request.get('points')
+                highlight_region = viz_request.get('region') or viz_request.get('quadrant')
+            else:
+                needs_visual = False
+
+            # Heuristic detection for topics that often need sketches
+            graph_topics = {
+                'Rational Functions', 'Quadratic Functions', 'Functions', 'Coordinate Geometry',
+                'Trigonometry (Identities & Equations)', 'Further Trigonometry',
+                'Complex Numbers', 'Vectors in 3D', 'Differentiation', 'Applications of Differentiation',
+                'Integration', 'Further Integration Techniques', 'Numerical Methods'
+            }
+
+            question_text = (question_data.get('question') or '').lower()
+            needs_visual = needs_visual or any(
+                keyword in question_text for keyword in [
+                    'sketch', 'draw', 'graph', 'plot', 'diagram', 'locus', 'argand', 'quadrant'
+                ]
+            ) or topic_name in graph_topics
+
+            if not needs_visual:
+                return question_data
+
+            # Determine visualization type and expression/params
+            if not visual_type:
+                if 'argand' in question_text or 'complex' in topic_name.lower():
+                    visual_type = 'argand'
+                elif any(word in question_text for word in ['circle', 'triangle', 'rectangle', 'shape']):
+                    visual_type = 'shape'
+                else:
+                    visual_type = 'graph'
+
+            if not expression:
+                expression = self._extract_expression(question_data)
+
+            # Lazy init GraphService
+            if self.graph_service is None:
+                try:
+                    from services.graph_service import GraphService
+                    self.graph_service = GraphService()
+                except Exception as import_error:
+                    logger.error(f"Unable to load GraphService for visualization: {import_error}")
+                    return question_data
+
+            image_path = None
+
+            if visual_type in ['graph', 'function', 'function_graph']:
+                if expression:
+                    image_path = self.graph_service.create_advanced_function_graph(
+                        expression,
+                        title=f"{topic_name} graph"
+                    )
+            elif visual_type in ['shape', 'geometry', 'diagram']:
+                # Default to triangle if not specified
+                shape_type = 'triangle'
+                if isinstance(shape_params, dict):
+                    shape_type = shape_params.get('shape_type') or shape_params.get('type') or shape_type
+                elif 'circle' in question_text:
+                    shape_type = 'circle'
+                elif 'rectangle' in question_text:
+                    shape_type = 'rectangle'
+                image_path = self.graph_service.create_geometry_diagram(shape_type, shape_params or {})
+            elif visual_type in ['argand', 'complex', 'complex_plane']:
+                image_path = self.graph_service.generate_argand_diagram(
+                    points=argand_points if isinstance(argand_points, list) else None,
+                    highlight_region=highlight_region,
+                    title="Argand Diagram"
+                )
+
+            if image_path:
+                question_data['graph_image_path'] = image_path
+                question_data['graph_image_type'] = visual_type
+
+            return question_data
+
+        except Exception as viz_error:
+            logger.error(f"Error attaching visualization: {viz_error}")
+            return question_data
+
+    def _extract_expression(self, question_data: Dict) -> Optional[str]:
+        """Best-effort extraction of a plot-able expression from question text."""
+        try:
+            text_candidates = [
+                question_data.get('question', '') or '',
+                question_data.get('stem', '') or '',
+                question_data.get('solution', '') or ''
+            ]
+            patterns = [
+                r"y\s*=\s*([^\n;,]+)",
+                r"f\(x\)\s*=\s*([^\n;,]+)",
+                r"show\s+the\s+graph\s+of\s+([^\n;,]+)",
+                r"equation\s+of\s+the\s+curve\s*([^\n;,]+)"
+            ]
+            for text in text_candidates:
+                for pat in patterns:
+                    match = re.search(pat, text, re.IGNORECASE)
+                    if match:
+                        expr = match.group(1).strip()
+                        return expr.rstrip('.;, ')
+            return None
+        except Exception:
+            return None
     
     def _parse_question_response(self, content: str) -> Optional[Dict]:
         """Parse the JSON response from DeepSeek with truncation recovery"""
@@ -519,6 +691,9 @@ IMPORTANT: Keep explanations concise (2-3 sentences). Always respond with valid,
                 if not isinstance(question_data['parts'], list) or len(question_data['parts']) < 2:
                     logger.error("Structured question must have at least 2 parts")
                     return None
+            
+            # Normalize math formatting to plain text Unicode for app display
+            question_data = self._normalize_question_data(question_data)
             
             return question_data
             
@@ -581,6 +756,132 @@ IMPORTANT: Keep explanations concise (2-3 sentences). Always respond with valid,
         except Exception as e:
             logger.error(f"Failed to recover truncated JSON: {e}")
             return None
+    
+    def _normalize_question_data(self, question_data: Dict) -> Dict:
+        """Convert any LaTeX-like math to plain text Unicode for mobile display."""
+        def normalize(obj):
+            if isinstance(obj, str):
+                return self._normalize_math_text(obj)
+            if isinstance(obj, list):
+                return [normalize(item) for item in obj]
+            if isinstance(obj, dict):
+                return {k: normalize(v) for k, v in obj.items()}
+            return obj
+        
+        # Top-level string fields
+        for field in ["question", "explanation", "solution", "teaching_explanation"]:
+            if field in question_data:
+                question_data[field] = self._normalize_math_text(question_data[field])
+        
+        # Options
+        if "options" in question_data and isinstance(question_data["options"], dict):
+            question_data["options"] = {k: self._normalize_math_text(v) for k, v in question_data["options"].items()}
+        
+        # Structured parts
+        if "parts" in question_data and isinstance(question_data["parts"], list):
+            normalized_parts = []
+            for part in question_data["parts"]:
+                if not isinstance(part, dict):
+                    normalized_parts.append(part)
+                    continue
+                part_copy = part.copy()
+                for field in ["question", "solution", "mark_scheme", "marking_scheme", "expected_answer"]:
+                    if field in part_copy:
+                        part_copy[field] = normalize(part_copy[field])
+                normalized_parts.append(part_copy)
+            question_data["parts"] = normalized_parts
+        
+        # Common mistakes or other lists
+        if "common_mistakes" in question_data:
+            question_data["common_mistakes"] = normalize(question_data["common_mistakes"])
+        
+        return question_data
+    
+    def _normalize_math_text(self, text: str) -> str:
+        """Best-effort conversion of LaTeX-ish math to plain text Unicode."""
+        if not isinstance(text, str):
+            return text
+        
+        original = text
+        
+        # Remove surrounding $ or $$ markers
+        text = text.replace("$$", "")
+        text = text.replace("$", "")
+        
+        # Common replacements
+        replacements = {
+            r"\\times": "×",
+            r"\\cdot": "·",
+            r"\\pi": "π",
+            r"\\infty": "∞",
+            r"\\pm": "±",
+            r"\\to": "→",
+            r"\\rightarrow": "→",
+            r"\\Leftarrow": "⟸",
+            r"\\Rightarrow": "⟹",
+            r"\\left": "",
+            r"\\right": "",
+            r"\\,": " ",
+        }
+        for old, new in replacements.items():
+            text = text.replace(old, new)
+        
+        # Fractions: \frac{a}{b} -> (a)/(b)
+        def replace_frac(match):
+            num = match.group(1)
+            den = match.group(2)
+            return f"({num})/({den})"
+        while "\\frac" in text:
+            new_text = re.sub(r"\\frac\{([^{}]+)\}\{([^{}]+)\}", replace_frac, text)
+            if new_text == text:
+                break
+            text = new_text
+        
+        # Square roots: \sqrt{...} -> √(...)
+        text = re.sub(r"\\sqrt\{([^{}]+)\}", r"√(\1)", text)
+        
+        # Trig inverse: \sin^{-1}(x) -> sin⁻¹(x)
+        text = text.replace("\\sin^{-1}", "sin⁻¹")
+        text = text.replace("\\cos^{-1}", "cos⁻¹")
+        text = text.replace("\\tan^{-1}", "tan⁻¹")
+        
+        # Superscripts mapping
+        superscript_map = {
+            "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴",
+            "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹",
+            "+": "⁺", "-": "⁻", "n": "ⁿ", "k": "ᵏ", "m": "ᵐ"
+        }
+        def to_superscript(s: str) -> str:
+            return "".join(superscript_map.get(ch, ch) for ch in s)
+        
+        # ^{...} -> superscript
+        text = re.sub(r"\^\{([^{}]+)\}", lambda m: to_superscript(m.group(1)), text)
+        # ^digit -> superscript
+        text = re.sub(r"\^([0-9+\-nkm])", lambda m: to_superscript(m.group(1)), text)
+        
+        # Subscripts mapping
+        subscript_map = {
+            "0": "₀", "1": "₁", "2": "₂", "3": "₃", "4": "₄",
+            "5": "₅", "6": "₆", "7": "₇", "8": "₈", "9": "₉",
+            "+": "₊", "-": "₋", "n": "ₙ", "k": "ₖ", "m": "ₘ"
+        }
+        def to_subscript(s: str) -> str:
+            return "".join(subscript_map.get(ch, ch) for ch in s)
+        
+        # _{...} -> subscript
+        text = re.sub(r"_\{([^{}]+)\}", lambda m: to_subscript(m.group(1)), text)
+        # _digit -> subscript
+        text = re.sub(r"_([0-9+\-nkm])", lambda m: to_subscript(m.group(1)), text)
+        
+        # Clean remaining backslashes
+        text = text.replace("\\", "")
+        
+        # Collapse multiple spaces
+        text = re.sub(r"\s{2,}", " ", text).strip()
+        
+        if original != text:
+            logger.debug(f"Normalized math text: '{original}' -> '{text}'")
+        return text
     
     def _get_fallback_question(self, topic: str, difficulty: str) -> Dict:
         """Return a fallback question when AI generation fails"""

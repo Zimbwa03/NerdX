@@ -123,8 +123,9 @@ export const quizApi = {
     difficulty: string = 'medium',
     type: string = 'topical',
     parent_subject?: string,
-    questionType?: string,
-    questionFormat?: 'mcq' | 'structured'  // For O-Level Paper 2 style structured questions
+    questionType?: string,  // For A-Level Biology: 'mcq', 'structured', 'essay'
+    questionFormat?: 'mcq' | 'structured',  // For O-Level Paper 2 style structured questions
+    question_type?: string  // Alternative key for backend compatibility
   ): Promise<Question | null> => {
     try {
       const payload: any = {
@@ -145,7 +146,10 @@ export const quizApi = {
       if (questionFormat) {
         payload.question_format = questionFormat;
       }
-      const response = await api.post('/api/mobile/quiz/generate', payload);
+      // Use extended timeout for AI question generation (can take 30+ seconds)
+      const response = await api.post('/api/mobile/quiz/generate', payload, {
+        timeout: 90000,  // 90 seconds for AI generation
+      });
       return response.data.data || null;
     } catch (error: any) {
       console.error('Generate question error:', error);

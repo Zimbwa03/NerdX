@@ -43,7 +43,8 @@ const STORAGE_KEYS = {
 
 // PRODUCTION CDN (Hugging Face Hub with CloudFront)
 // Model hosted at: https://huggingface.co/ngoni2003/nerdx-phi3-mini
-const PRODUCTION_CDN_URL = 'https://huggingface.co/ngoni2003/nerdx-phi3-mini/resolve/main';
+const HUGGING_FACE_REPO = 'ngoni2003/nerdx-phi3-mini';
+const PRODUCTION_CDN_URL = `https://huggingface.co/${HUGGING_FACE_REPO}/resolve/main`;
 
 // LOCAL TESTING (Optional - for development only)
 // Uncomment and set to true if you want to test with a local server
@@ -53,19 +54,30 @@ const PRODUCTION_CDN_URL = 'https://huggingface.co/ngoni2003/nerdx-phi3-mini/res
 // Set to false for production (HTTPS), true only for local development
 const USE_LOCAL_SERVER = false;
 
-// Model file names (don't change these)
-const MODEL_FILE_NAME = 'phi3-mini-4k-instruct-cpu-int4-rtn-block-32-acc-level-4.onnx';
-const MODEL_DATA_FILE_NAME = 'phi3-mini-4k-instruct-cpu-int4-rtn-block-32-acc-level-4.onnx.data';
+// Hugging Face recommends hitting /resolve/main with ?download=1 to force the binary
+const HUGGING_FACE_DOWNLOAD_PARAM = '?download=1';
 
-// Construct the URL based on environment
-// For production, we use the Hugging Face CDN
+// Primary file names (match HF docs) with fallbacks to older naming
+const MODEL_FILE_NAMES = [
+    'phi-3-mini-4k-instruct-cpu-int4-rtn-block-32-acc-level-4.onnx',   // preferred
+    'phi3-mini-4k-instruct-cpu-int4-rtn-block-32-acc-level-4.onnx',    // fallback
+];
+
+const MODEL_DATA_FILE_NAMES = [
+    'phi-3-mini-4k-instruct-cpu-int4-rtn-block-32-acc-level-4.onnx.data', // preferred
+    'phi3-mini-4k-instruct-cpu-int4-rtn-block-32-acc-level-4.onnx.data',  // fallback
+];
+
+// Construct URLs based on environment
 const BASE_URL = PRODUCTION_CDN_URL;
-const PHI3_MODEL_URL = `${BASE_URL}/${MODEL_FILE_NAME}`;
-const PHI3_MODEL_DATA_URL = `${BASE_URL}/${MODEL_DATA_FILE_NAME}`;
+const buildUrls = (fileNames: string[]) => fileNames.map(name => `${BASE_URL}/${name}${HUGGING_FACE_DOWNLOAD_PARAM}`);
+const PHI3_MODEL_URLS = buildUrls(MODEL_FILE_NAMES);
+const PHI3_MODEL_DATA_URLS = buildUrls(MODEL_DATA_FILE_NAMES);
 
 // Model metadata
 const PHI3_MODEL_VERSION = '1.0.0';
 const PHI3_MODEL_SIZE = 2_720_000_000; // ~2.72 GB (both files combined)
+const PHI3_MODEL_MIN_SIZE = Math.floor(PHI3_MODEL_SIZE * 0.9); // fail fast on obvious partials
 
 class ModelDownloadService {
     private downloadJobId: number | null = null;
@@ -114,7 +126,18 @@ class ModelDownloadService {
 
             // Verify model info
             const modelInfo = await this.getModelInfo();
-            return modelInfo !== null && modelInfo.version === PHI3_MODEL_VERSION;
+            if (modelInfo === null || modelInfo.version !== PHI3_MODEL_VERSION) {
+                return false;
+            }
+
+            // Basic size sanity check to avoid false positives on partial downloads
+            const { totalSize } = await this.getLocalModelSizes();
+            if (totalSize < PHI3_MODEL_MIN_SIZE) {
+                console.warn(`Model files are too small: ${totalSize} bytes (expected >= ${PHI3_MODEL_MIN_SIZE})`);
+                return false;
+            }
+
+            return true;
         } catch (error) {
 
             console.error('Error checking model download status:', error);
@@ -225,8 +248,8 @@ class ModelDownloadService {
             // Download both files sequentially
             // File 1: Main ONNX model file (smaller, ~20MB)
             console.log('📥 Starting download of main model file...');
-            await this.downloadSingleFile(
-                PHI3_MODEL_URL,
+            await this.downloadWithFallbackUrls(
+                PHI3_MODEL_URLS,
                 modelPath,
                 0,      // Start progress at 0%
                 5       // This file is ~5% of total (small config file)
@@ -234,8 +257,8 @@ class ModelDownloadService {
 
             // File 2: ONNX Data file (larger, ~2.5GB)
             console.log('📥 Starting download of model data file...');
-            await this.downloadSingleFile(
-                PHI3_MODEL_DATA_URL,
+            await this.downloadWithFallbackUrls(
+                PHI3_MODEL_DATA_URLS,
                 modelDataPath,
                 5,      // Start progress at 5%
                 100     // End at 100%
@@ -253,6 +276,12 @@ class ModelDownloadService {
             const mainStat = await RNFS.stat(modelPath);
             const dataStat = await RNFS.stat(modelDataPath);
             const totalSize = parseInt(mainStat.size) + parseInt(dataStat.size);
+
+            if (totalSize < PHI3_MODEL_MIN_SIZE) {
+                throw new Error(
+                    `Downloaded model size too small: ${totalSize} bytes (expected >= ${PHI3_MODEL_MIN_SIZE})`
+                );
+            }
 
             // Save model info
             const modelInfo: ModelInfo = {
@@ -295,10 +324,7 @@ class ModelDownloadService {
             console.log('📥 Downloading main model file with ExpoFS...');
             this.notifyProgressListeners({ bytesWritten: 0, contentLength: PHI3_MODEL_SIZE, progress: 0 });
 
-            const mainDownload = await ExpoFileSystem.downloadAsync(
-                PHI3_MODEL_URL,
-                modelPath
-            );
+            const mainDownload = await this.downloadWithExpoFallback(PHI3_MODEL_URLS, modelPath);
 
             if (mainDownload.status !== 200) {
                 throw new Error(`Main file download failed with status: ${mainDownload.status}`);
@@ -308,10 +334,7 @@ class ModelDownloadService {
 
             // Download data file
             console.log('📥 Downloading model data file with ExpoFS...');
-            const dataDownload = await ExpoFileSystem.downloadAsync(
-                PHI3_MODEL_DATA_URL,
-                modelDataPath
-            );
+            const dataDownload = await this.downloadWithExpoFallback(PHI3_MODEL_DATA_URLS, modelDataPath);
 
             if (dataDownload.status !== 200) {
                 throw new Error(`Data file download failed with status: ${dataDownload.status}`);
@@ -325,6 +348,13 @@ class ModelDownloadService {
 
             if (!mainInfo.exists || !dataInfo.exists) {
                 throw new Error('Download verification failed: files missing');
+            }
+
+            const totalSize = (mainInfo.size || 0) + (dataInfo.size || 0);
+            if (totalSize < PHI3_MODEL_MIN_SIZE) {
+                throw new Error(
+                    `Downloaded model size too small: ${totalSize} bytes (expected >= ${PHI3_MODEL_MIN_SIZE})`
+                );
             }
 
             // Save model info
@@ -371,6 +401,9 @@ class ModelDownloadService {
                 cacheable: false,
                 progressInterval: 500,
                 progressDivider: 1,
+                // Timeouts help avoid silent stalls on long downloads
+                connectionTimeout: 15_000,
+                readTimeout: 60_000,
                 begin: (res: { contentLength: number; jobId: number }) => {
                     console.log(`Download started: ${url} `);
                     console.log(`Expected size: ${res.contentLength} bytes`);
@@ -404,6 +437,89 @@ class ModelDownloadService {
                     reject(error);
                 });
         });
+    }
+
+    // Try multiple Hugging Face URLs (preferred + fallback naming) before failing
+    private async downloadWithFallbackUrls(
+        urls: string[],
+        filePath: string,
+        progressStart: number,
+        progressEnd: number
+    ): Promise<void> {
+        let lastError: Error | null = null;
+
+        for (const url of urls) {
+            try {
+                await this.downloadSingleFile(url, filePath, progressStart, progressEnd);
+                return;
+            } catch (error: any) {
+                console.warn(`Download attempt failed for ${url}:`, error?.message || error);
+                lastError = error;
+                // Clean up the partial file for the next attempt
+                try {
+                    if (RNFS_AVAILABLE && RNFS) {
+                        if (await RNFS.exists(filePath)) {
+                            await RNFS.unlink(filePath);
+                        }
+                    } else {
+                        await ExpoFileSystem.deleteAsync(filePath, { idempotent: true });
+                    }
+                } catch (cleanupErr) {
+                    console.warn('Cleanup after failed attempt failed:', cleanupErr);
+                }
+            }
+        }
+
+        throw lastError || new Error('All download URLs failed');
+    }
+
+    // Expo-specific download with fallback URLs
+    private async downloadWithExpoFallback(urls: string[], destination: string) {
+        let lastError: Error | null = null;
+
+        for (const url of urls) {
+            try {
+                const result = await ExpoFileSystem.downloadAsync(url, destination);
+                if (result.status === 200) {
+                    return result;
+                }
+                lastError = new Error(`Status ${result.status} from ${url}`);
+            } catch (error: any) {
+                console.warn(`Expo download attempt failed for ${url}:`, error?.message || error);
+                lastError = error;
+            }
+
+            // Clean up partial downloads between attempts
+            try {
+                await ExpoFileSystem.deleteAsync(destination, { idempotent: true });
+            } catch (cleanupErr) {
+                console.warn('Cleanup after failed Expo attempt failed:', cleanupErr);
+            }
+        }
+
+        throw lastError || new Error('All Expo download URLs failed');
+    }
+
+    // Get the current local model sizes (main + data)
+    private async getLocalModelSizes(): Promise<{ mainSize: number; dataSize: number; totalSize: number }> {
+        const modelPath = this.getModelPath();
+        const modelDataPath = this.getModelDataPath();
+
+        if (RNFS_AVAILABLE && RNFS) {
+            const mainExists = await RNFS.exists(modelPath);
+            const dataExists = await RNFS.exists(modelDataPath);
+            const mainStat = mainExists ? await RNFS.stat(modelPath) : { size: 0 };
+            const dataStat = dataExists ? await RNFS.stat(modelDataPath) : { size: 0 };
+            const mainSize = parseInt(mainStat.size || 0);
+            const dataSize = parseInt(dataStat.size || 0);
+            return { mainSize, dataSize, totalSize: mainSize + dataSize };
+        }
+
+        const mainInfo = await ExpoFileSystem.getInfoAsync(modelPath);
+        const dataInfo = await ExpoFileSystem.getInfoAsync(modelDataPath);
+        const mainSize = mainInfo.exists ? mainInfo.size || 0 : 0;
+        const dataSize = dataInfo.exists ? dataInfo.size || 0 : 0;
+        return { mainSize, dataSize, totalSize: mainSize + dataSize };
     }
 
     // Clean up partial downloads

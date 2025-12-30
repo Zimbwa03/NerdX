@@ -26,6 +26,7 @@ import {
     ALevelBiologyTopic, 
     biologyQuestionTypes,
     BiologyQuestionType,
+    BiologyQuestionTypeInfo,
     topicCounts 
 } from '../data/aLevelBiology';
 import { quizApi } from '../services/api/quizApi';
@@ -67,6 +68,7 @@ const ALevelBiologyScreen: React.FC = () => {
     // Question type modal state
     const [questionTypeModalVisible, setQuestionTypeModalVisible] = useState(false);
     const [selectedTopic, setSelectedTopic] = useState<ALevelBiologyTopic | null>(null);
+    const [selectedQuestionType, setSelectedQuestionType] = useState<BiologyQuestionTypeInfo | null>(null);
 
     // Filter topics by selected level
     const filteredTopics = aLevelBiologyTopics.filter(
@@ -78,38 +80,37 @@ const ALevelBiologyScreen: React.FC = () => {
         : biologyTheme.upperSixthPrimary;
 
     const handleTopicPress = (topic: ALevelBiologyTopic) => {
+        // If a question type was previously chosen, go straight to quiz with that type.
+        if (selectedQuestionType) {
+            return navigation.navigate('Quiz' as never, {
+                subject: { id: 'biology', name: 'Biology' },
+                topic,
+                questionType: selectedQuestionType.id, // mcq | structured | essay
+                question_type: selectedQuestionType.id, // backend expects this key sometimes
+                questionFormat: selectedQuestionType.id === 'structured' ? 'structured' : 'mcq',
+            } as never);
+        }
+        // Otherwise prompt the user to choose the question type.
         setSelectedTopic(topic);
         setQuestionTypeModalVisible(true);
     };
 
     const handleQuestionTypeSelect = async (questionType: BiologyQuestionType) => {
         setQuestionTypeModalVisible(false);
-        
-        if (!selectedTopic) return;
-        
-        if (!user || (user.credits || 0) < 1) {
-            Alert.alert(
-                'Insufficient Credits',
-                'You need at least 1 credit to start a quiz. Please purchase credits first.',
-                [{ text: 'OK' }]
-            );
-            return;
-        }
-
-        const typeInfo = biologyQuestionTypes.find(t => t.id === questionType);
-        const typeName = typeInfo?.name || questionType;
-
-        Alert.alert(
-            `🧬 Start ${typeName}`,
-            `${selectedTopic.name}\n\n${selectedTopic.description}\n\n⏱ ${typeInfo?.timeGuide || ''}`,
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Start',
-                    onPress: () => startQuestion(selectedTopic, questionType),
-                },
-            ]
+        setSelectedQuestionType(
+            biologyQuestionTypes.find(t => t.id === questionType) || { id: questionType, name: questionType, description: '', icon: '', color: '#10B981', marks: '', timeGuide: '' }
         );
+        
+        // If a topic was already selected, launch immediately with that format.
+        if (selectedTopic) {
+            return navigation.navigate('Quiz' as never, {
+                subject: { id: 'biology', name: 'Biology' },
+                topic: selectedTopic,
+                questionType: questionType,
+                question_type: questionType,
+                questionFormat: questionType === 'structured' ? 'structured' : 'mcq',
+            } as never);
+        }
     };
 
     const startQuestion = async (topic: ALevelBiologyTopic, questionType: BiologyQuestionType) => {
@@ -123,7 +124,9 @@ const ALevelBiologyScreen: React.FC = () => {
                 'medium',
                 'topical',
                 'Biology',
-                questionType
+                questionType,  // Pass questionType (mcq, structured, essay)
+                undefined,     // questionFormat (not needed for A-Level Biology)
+                questionType   // Also pass as question_type for backend
             );
 
             setIsGeneratingQuestion(false);
@@ -508,14 +511,15 @@ const ALevelBiologyScreen: React.FC = () => {
             >
                 {/* Feature Cards Section */}
                 <View style={styles.section}>
-                    <ALevelFeatureCard
+                    {/* Notes temporarily hidden */}
+                    {/* <ALevelFeatureCard
                         title="Biology Notes"
                         subtitle="Comprehensive A Level notes with diagrams"
                         icon={<MaterialCommunityIcons name="book-open-page-variant" size={26} color="#10B981" />}
                         iconBgColor="rgba(16, 185, 129, 0.12)"
                         onPress={handleBiologyNotes}
                         isDarkMode={isDarkMode}
-                    />
+                    /> */}
 
                     <ALevelFeatureCard
                         title="AI Biology Tutor"
@@ -581,9 +585,9 @@ const ALevelBiologyScreen: React.FC = () => {
                             <Text style={[styles.aiPoweredText, { color: '#10B981' }]}>DeepSeek AI</Text>
                         </View>
                     </View>
-                    <Text style={[styles.sectionSubtitle, { color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(26,26,46,0.5)' }]}>
-                        Tap any topic to select question type
-                    </Text>
+                <Text style={[styles.sectionSubtitle, { color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(26,26,46,0.5)' }]}>
+                    Tap a topic to practice. Your last selected format applies automatically.
+                </Text>
 
                     {filteredTopics.map((topic, index) => (
                         <ALevelTopicCard

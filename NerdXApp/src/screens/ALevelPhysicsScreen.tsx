@@ -338,14 +338,15 @@ const ALevelPhysicsScreen: React.FC = () => {
             >
                 {/* Feature Cards Section */}
                 <View style={styles.section}>
-                    <ALevelFeatureCard
+                    {/* Notes temporarily hidden */}
+                    {/* <ALevelFeatureCard
                         title="Physics Notes"
                         subtitle="Comprehensive A Level notes with diagrams"
                         icon={<MaterialCommunityIcons name="book-open-page-variant" size={26} color="#1976D2" />}
                         iconBgColor="rgba(25, 118, 210, 0.12)"
                         onPress={handlePhysicsNotes}
                         isDarkMode={isDarkMode}
-                    />
+                    /> */}
 
                     <ALevelFeatureCard
                         title="AI Physics Tutor"
