@@ -13,13 +13,21 @@
       "android": {
         "buildType": "apk"
       },
-      "prebuildCommand": "npx expo prebuild --clean --platform android"
+      "prebuildCommand": "npx expo prebuild --clean --platform android",
+      "env": {
+        "EAS_SKIP_AUTO_FINGERPRINT": "1"
+      },
+      "node": "20.19.3"
     },
     "production": {
       "android": {
         "buildType": "apk"
       },
-      "prebuildCommand": "npx expo prebuild --clean --platform android"
+      "prebuildCommand": "npx expo prebuild --clean --platform android",
+      "env": {
+        "EAS_SKIP_AUTO_FINGERPRINT": "1"
+      },
+      "node": "20.19.3"
     }
   }
 }
