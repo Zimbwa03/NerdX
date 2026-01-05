@@ -4429,24 +4429,35 @@ def text_to_speech():
         
         if not text:
             return jsonify({'status': 'error', 'message': 'No text provided'}), 400
+        
+        # Clean and validate text
+        if not isinstance(text, str):
+            text = str(text)
+        
+        # Remove or replace problematic characters that might break TTS
+        text = text.strip()
+        if not text:
+            return jsonify({'status': 'error', 'message': 'Text is empty after cleaning'}), 400
             
         from services.voice_service import get_voice_service
         service = get_voice_service()
         
-        # Run async TTS in sync Flask
-        import asyncio
-        result = asyncio.run(service.text_to_speech(text, voice))
+        # Use the synchronous wrapper which properly handles event loops
+        result = service.text_to_speech_sync(text, voice)
         
-        if result['success']:
+        if result.get('success'):
             return jsonify({
                 'status': 'success',
                 'audio_url': f"/static/{result['audio_path']}"
             }), 200
         else:
-            return jsonify({'status': 'error', 'message': result.get('error')}), 500
+            error_msg = result.get('error', 'Unknown error occurred')
+            logger.error(f"TTS error: {error_msg}")
+            return jsonify({'status': 'error', 'message': error_msg}), 500
             
     except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+        logger.error(f"Voice speak endpoint error: {e}", exc_info=True)
+        return jsonify({'status': 'error', 'message': f'Failed to generate speech: {str(e)}'}), 500
 
 # ============================================================================
 # FLASHCARD GENERATION ENDPOINTS (AI-Powered Study Cards)

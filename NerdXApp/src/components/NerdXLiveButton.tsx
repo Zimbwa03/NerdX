@@ -3,10 +3,10 @@
  * A floating action button for real-time voice AI tutoring.
  * Uses Gemini Multimodal Live API via WebSocket for voice-to-voice interaction.
  * 
- * SIMPLIFIED VERSION: No animations, just basic functionality.
+ * OPTIMIZED VERSION: With jitter buffer and persistent audio player for smooth speech.
  */
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
     StyleSheet,
     View,
@@ -14,7 +14,7 @@ import {
     TouchableOpacity,
     Alert,
 } from 'react-native';
-import { Audio } from 'expo-av';
+import { Audio, AVPlaybackStatus } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 
 const BUTTON_SIZE = 60;
@@ -22,6 +22,11 @@ const BUTTON_SIZE = 60;
 // WebSocket server URL - Render production deployment
 // Using Render URL for both dev and production since voice agent is hosted there
 const WS_URL = 'wss://nerdx-voice.onrender.com/ws/nerdx-live';
+
+// ===== JITTER BUFFER CONFIGURATION =====
+// Buffer ~200-400ms of audio before starting playback to prevent stuttering
+const MIN_BUFFER_CHUNKS = 3; // Wait for 3 chunks before starting (adjust as needed)
+const PLAYBACK_CHECK_INTERVAL = 50; // Check queue every 50ms
 
 // Connection states for tap-to-talk mode
 // idle -> connecting -> ready -> recording -> processing -> ready
@@ -45,16 +50,47 @@ export const NerdXLiveButton: React.FC<NerdXLiveButtonProps> = ({
     const wsRef = useRef<WebSocket | null>(null);
     const recordingRef = useRef<Audio.Recording | null>(null);
     const soundRef = useRef<Audio.Sound | null>(null);
-    const audioQueueRef = useRef<string[]>([]);
+    
+    // ===== JITTER BUFFER REFS =====
+    const audioQueueRef = useRef<string[]>([]); // Queue of base64 audio chunks
     const isPlayingRef = useRef(false);
+    const hasStartedPlaybackRef = useRef(false); // Track if we've started initial playback
+    const playbackIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const isSpeakingRef = useRef(false); // Track if AI is currently speaking
 
-    // Audio playback queue
+    // Configure audio mode once for the session (DO NOT destroy speaker repeatedly)
+    const configureAudioMode = useCallback(async () => {
+        try {
+            await Audio.setAudioModeAsync({
+                allowsRecordingIOS: false,
+                playsInSilentModeIOS: true,
+                staysActiveInBackground: true,
+                shouldDuckAndroid: true,
+                playThroughEarpieceAndroid: false,
+            });
+            console.log('🔊 Audio mode configured for playback');
+        } catch (error) {
+            console.error('Error configuring audio mode:', error);
+        }
+    }, []);
+
+    // ===== SMOOTH AUDIO PLAYBACK WITH JITTER BUFFER =====
     const playNextAudio = useCallback(async () => {
+        // Don't start if already playing or queue is empty
         if (isPlayingRef.current || audioQueueRef.current.length === 0) {
             return;
         }
 
+        // JITTER BUFFER: Wait until we have enough chunks before FIRST playback
+        if (!hasStartedPlaybackRef.current && audioQueueRef.current.length < MIN_BUFFER_CHUNKS) {
+            console.log(`🔄 Buffering... ${audioQueueRef.current.length}/${MIN_BUFFER_CHUNKS} chunks`);
+            return;
+        }
+
+        // Mark that we've started playback (no more buffering wait for this turn)
+        hasStartedPlaybackRef.current = true;
         isPlayingRef.current = true;
+        
         const audioData = audioQueueRef.current.shift();
 
         if (!audioData) {
@@ -63,30 +99,68 @@ export const NerdXLiveButton: React.FC<NerdXLiveButtonProps> = ({
         }
 
         try {
-            // Backend now sends WAV audio (converted from PCM)
+            // Backend sends WAV audio (converted from PCM)
             const audioUri = `data:audio/wav;base64,${audioData}`;
 
+            // ===== FIX: Reuse existing sound object when possible =====
+            // Only unload if we need to load new audio (unavoidable with data URIs)
             if (soundRef.current) {
-                await soundRef.current.unloadAsync();
+                try {
+                    await soundRef.current.unloadAsync();
+                } catch (e) {
+                    // Ignore unload errors
+                }
             }
 
             const { sound } = await Audio.Sound.createAsync(
                 { uri: audioUri },
-                { shouldPlay: true }
+                { 
+                    shouldPlay: true,
+                    volume: 1.0,
+                    rate: 1.0,
+                    isMuted: false,
+                }
             );
             soundRef.current = sound;
 
-            sound.setOnPlaybackStatusUpdate((status) => {
+            // Set up completion listener
+            sound.setOnPlaybackStatusUpdate((status: AVPlaybackStatus) => {
                 if (status.isLoaded && status.didJustFinish) {
                     isPlayingRef.current = false;
+                    // Immediately try to play next chunk for smooth continuity
                     playNextAudio();
                 }
             });
         } catch (error) {
-            console.error('Error playing audio:', error);
+            console.error('Error playing audio chunk:', error);
             isPlayingRef.current = false;
+            // Try next chunk even on error
             playNextAudio();
         }
+    }, []);
+
+    // ===== PERIODIC PLAYBACK CHECK (smooths out timing) =====
+    const startPlaybackMonitor = useCallback(() => {
+        if (playbackIntervalRef.current) return;
+        
+        playbackIntervalRef.current = setInterval(() => {
+            if (audioQueueRef.current.length > 0 && !isPlayingRef.current) {
+                playNextAudio();
+            }
+        }, PLAYBACK_CHECK_INTERVAL);
+    }, [playNextAudio]);
+
+    const stopPlaybackMonitor = useCallback(() => {
+        if (playbackIntervalRef.current) {
+            clearInterval(playbackIntervalRef.current);
+            playbackIntervalRef.current = null;
+        }
+    }, []);
+
+    // Reset playback state for new AI turn
+    const resetPlaybackState = useCallback(() => {
+        hasStartedPlaybackRef.current = false;
+        isSpeakingRef.current = false;
     }, []);
 
     // Start recording (called when user taps to speak)
@@ -101,6 +175,16 @@ export const NerdXLiveButton: React.FC<NerdXLiveButtonProps> = ({
                 }
                 recordingRef.current = null;
             }
+
+            // Stop any playing audio when user starts speaking (barge-in)
+            if (soundRef.current) {
+                try {
+                    await soundRef.current.stopAsync();
+                } catch (e) {}
+            }
+            // Clear audio queue for barge-in
+            audioQueueRef.current = [];
+            resetPlaybackState();
 
             await Audio.setAudioModeAsync({
                 allowsRecordingIOS: true,
@@ -137,7 +221,7 @@ export const NerdXLiveButton: React.FC<NerdXLiveButtonProps> = ({
             console.error('Error starting recording:', error);
             Alert.alert('Microphone Error', 'Could not access microphone. Please try again.');
         }
-    }, []);
+    }, [resetPlaybackState]);
 
     // Stop recording and send audio (called when user taps again)
     const stopRecordingAndSend = useCallback(async () => {
@@ -221,19 +305,27 @@ export const NerdXLiveButton: React.FC<NerdXLiveButtonProps> = ({
         }
     }, []);
 
-    // End session
+    // End session - clean up everything
     const endSession = useCallback(async () => {
+        // Stop playback monitor
+        stopPlaybackMonitor();
+        
         await stopRecording();
 
+        // Clean up audio player
         if (soundRef.current) {
             try {
+                await soundRef.current.stopAsync();
                 await soundRef.current.unloadAsync();
             } catch (e) { }
             soundRef.current = null;
         }
 
+        // Clear all audio state
         audioQueueRef.current = [];
         isPlayingRef.current = false;
+        hasStartedPlaybackRef.current = false;
+        isSpeakingRef.current = false;
 
         if (wsRef.current) {
             try {
@@ -245,9 +337,9 @@ export const NerdXLiveButton: React.FC<NerdXLiveButtonProps> = ({
 
         setConnectionState('idle');
         onSessionEnd?.();
-    }, [onSessionEnd, stopRecording]);
+    }, [onSessionEnd, stopRecording, stopPlaybackMonitor]);
 
-    // WebSocket message handler
+    // WebSocket message handler with jitter buffer support
     const handleWebSocketMessage = useCallback((event: any) => {
         try {
             const data = JSON.parse(event.data);
@@ -256,25 +348,46 @@ export const NerdXLiveButton: React.FC<NerdXLiveButtonProps> = ({
                 case 'ready':
                     console.log('🎧 NerdX Live ready:', data.message);
                     setConnectionState('ready');
+                    // Configure audio mode for smooth playback
+                    configureAudioMode();
                     console.log('💡 Tap the button to start speaking');
                     break;
 
                 case 'audio':
                     if (data.data) {
-                        console.log('🔊 Received AI audio response');
+                        // Mark that AI is speaking
+                        if (!isSpeakingRef.current) {
+                            isSpeakingRef.current = true;
+                            console.log('🔊 AI started speaking, buffering audio...');
+                        }
+                        
+                        // Add to jitter buffer queue
                         audioQueueRef.current.push(data.data);
+                        console.log(`📥 Audio chunk queued (${audioQueueRef.current.length} in buffer)`);
+                        
+                        // Start playback monitor if not running
+                        startPlaybackMonitor();
+                        
+                        // Try to play (will wait for buffer to fill on first chunks)
                         playNextAudio();
                     }
                     break;
 
                 case 'turnComplete':
                     console.log('✅ AI turn complete - tap to speak again');
+                    // Reset for next turn but let remaining audio play
+                    resetPlaybackState();
                     setConnectionState('ready');
                     break;
 
                 case 'interrupted':
-                    console.log('🎤 Barge-in detected');
+                    console.log('🎤 Barge-in detected - clearing audio queue');
+                    // Clear queue and stop current playback on barge-in
                     audioQueueRef.current = [];
+                    resetPlaybackState();
+                    if (soundRef.current) {
+                        soundRef.current.stopAsync().catch(() => {});
+                    }
                     break;
 
                 case 'error':
@@ -286,7 +399,7 @@ export const NerdXLiveButton: React.FC<NerdXLiveButtonProps> = ({
         } catch (error) {
             console.error('Error parsing WebSocket message:', error);
         }
-    }, [playNextAudio, endSession]);
+    }, [playNextAudio, endSession, configureAudioMode, startPlaybackMonitor, resetPlaybackState]);
 
     // Connect to server
     const connect = useCallback(async () => {
@@ -301,6 +414,12 @@ export const NerdXLiveButton: React.FC<NerdXLiveButtonProps> = ({
                 setConnectionState('idle');
                 return;
             }
+
+            // Reset all playback state for fresh session
+            audioQueueRef.current = [];
+            isPlayingRef.current = false;
+            hasStartedPlaybackRef.current = false;
+            isSpeakingRef.current = false;
 
             const ws = new WebSocket(serverUrl);
             wsRef.current = ws;
@@ -331,6 +450,20 @@ export const NerdXLiveButton: React.FC<NerdXLiveButtonProps> = ({
             setConnectionState('error');
         }
     }, [connectionState, serverUrl, handleWebSocketMessage, endSession, onSessionStart]);
+
+    // Cleanup effect
+    useEffect(() => {
+        return () => {
+            // Clean up on unmount
+            stopPlaybackMonitor();
+            if (soundRef.current) {
+                soundRef.current.unloadAsync().catch(() => {});
+            }
+            if (wsRef.current) {
+                wsRef.current.close();
+            }
+        };
+    }, [stopPlaybackMonitor]);
 
     // Handle button press - tap-to-talk flow
     const handlePress = useCallback(() => {

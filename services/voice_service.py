@@ -9,6 +9,7 @@ import uuid
 import base64
 import requests
 import logging
+import re
 from typing import Dict, Optional
 
 logger = logging.getLogger(__name__)
@@ -102,6 +103,20 @@ class VoiceService:
             return {"success": False, "error": "Text-to-speech is not available"}
             
         try:
+            # Clean and validate text
+            if not isinstance(text, str):
+                text = str(text)
+            
+            # Remove or replace problematic characters
+            text = text.strip()
+            if not text:
+                return {"success": False, "error": "Text is empty after cleaning"}
+            
+            # Replace problematic characters that might break TTS
+            # Keep essential punctuation but remove control characters
+            text = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', text)  # Remove control characters
+            text = re.sub(r'\s+', ' ', text)  # Normalize whitespace
+            
             # Limit text length to prevent timeouts
             if len(text) > 2000:
                 text = text[:2000] + "..."
@@ -110,14 +125,21 @@ class VoiceService:
             filename = f"tts_{uuid.uuid4().hex[:8]}.mp3"
             output_path = os.path.join(self.media_dir, filename)
             
+            # Ensure directory exists
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+            
             # Generate audio using Edge-TTS (lightweight cloud service)
             communicate = edge_tts.Communicate(text, voice)
             await communicate.save(output_path)
             
+            # Verify file was created
+            if not os.path.exists(output_path) or os.path.getsize(output_path) == 0:
+                return {"success": False, "error": "Generated audio file is empty or missing"}
+            
             # Return relative path for API usage
             relative_path = os.path.join("media", "audio", filename).replace(os.sep, "/")
             
-            logger.info(f"[VoiceService] TTS generated: {filename}")
+            logger.info(f"[VoiceService] TTS generated: {filename} ({os.path.getsize(output_path)} bytes)")
             
             return {
                 "success": True,
@@ -125,21 +147,37 @@ class VoiceService:
                 "full_path": output_path
             }
         except Exception as e:
-            logger.error(f"[VoiceService] TTS error: {e}")
+            logger.error(f"[VoiceService] TTS error: {e}", exc_info=True)
             return {"success": False, "error": str(e)}
 
     def text_to_speech_sync(self, text: str, voice: str = "en-US-AriaNeural") -> Dict:
         """
         Synchronous wrapper for text_to_speech.
+        Properly handles event loop creation to avoid conflicts with existing loops.
         """
         try:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            result = loop.run_until_complete(self.text_to_speech(text, voice))
-            loop.close()
+            # Try to get existing event loop first
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    # If loop is running, we need to create a new one
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    result = loop.run_until_complete(self.text_to_speech(text, voice))
+                    loop.close()
+                else:
+                    # Use existing loop if not running
+                    result = loop.run_until_complete(self.text_to_speech(text, voice))
+            except RuntimeError:
+                # No event loop exists, create new one
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                result = loop.run_until_complete(self.text_to_speech(text, voice))
+                loop.close()
+            
             return result
         except Exception as e:
-            logger.error(f"[VoiceService] Sync TTS error: {e}")
+            logger.error(f"[VoiceService] Sync TTS error: {e}", exc_info=True)
             return {"success": False, "error": str(e)}
 
 

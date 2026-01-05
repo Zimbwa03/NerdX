@@ -212,21 +212,61 @@ const TeacherModeScreen: React.FC = () => {
 
   const playResponse = async (text: string) => {
     try {
+      // Stop and unload any existing sound
       if (sound) {
-        await sound.unloadAsync();
+        try {
+          await sound.stopAsync();
+          await sound.unloadAsync();
+        } catch (e) {
+          // Ignore errors when stopping/unloading
+        }
       }
+
+      // Configure audio mode for playback
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        staysActiveInBackground: false,
+        playsInSilentModeIOS: true,
+        shouldDuckAndroid: true,
+        playThroughEarpieceAndroid: false,
+      });
 
       // Get audio URL
       const audioUrl = await mathApi.speakText(text);
 
+      if (!audioUrl) {
+        throw new Error('No audio URL returned');
+      }
+
+      // Create and play the sound
       const { sound: newSound } = await Audio.Sound.createAsync(
         { uri: audioUrl },
-        { shouldPlay: true }
+        { 
+          shouldPlay: true,
+          isMuted: false,
+          volume: 1.0,
+          rate: 1.0,
+        }
       );
+
+      // Set up playback status listener
+      newSound.setOnPlaybackStatusUpdate((status) => {
+        if (status.isLoaded) {
+          if (status.didJustFinish) {
+            // Audio finished playing
+            newSound.unloadAsync().catch(console.error);
+          } else if (status.error) {
+            console.error('Playback error:', status.error);
+            Alert.alert('Playback Error', 'Failed to play audio. Please try again.');
+          }
+        }
+      });
+
       setSound(newSound);
-    } catch (error) {
+    } catch (error: any) {
       console.error('TTS Error', error);
-      Alert.alert('Error', 'Failed to play audio.');
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to play audio.';
+      Alert.alert('Error', errorMessage);
     }
   };
 
