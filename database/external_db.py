@@ -270,12 +270,37 @@ def make_supabase_request(method, table, data=None, select="*", filters=None, li
             response = requests.post(url, headers=headers, json=data, params=params, timeout=30)
         elif method == "PATCH":
             response = requests.patch(url, headers=headers, json=data, params=params, timeout=30)
+        elif method == "DELETE":
+            # For DELETE, we want to return representation to confirm deletion
+            headers["Prefer"] = "return=representation"
+            response = requests.delete(url, headers=headers, params=params, timeout=30)
 
         if response is None:
             logger.error(f"Unsupported HTTP method: {method}")
             return None
 
-        logger.debug(f"Response status: {response.status_code}")
+        logger.debug(f"Response status: {response.status_code} for {method} {table}")
+        
+        # For DELETE, check status code before raising
+        if method == "DELETE":
+            if response.status_code == 204:
+                # 204 No Content means successful deletion
+                logger.info(f"DELETE successful (204) for {table}")
+                return []
+            elif response.status_code == 200:
+                # 200 with representation
+                try:
+                    deleted_records = response.json()
+                    logger.info(f"DELETE successful (200) for {table}, deleted: {len(deleted_records) if isinstance(deleted_records, list) else 1} record(s)")
+                    return deleted_records
+                except:
+                    logger.info(f"DELETE successful (200) for {table}, empty response")
+                    return []
+            else:
+                # Unexpected status code
+                logger.warning(f"DELETE returned status {response.status_code} for {table}")
+                response.raise_for_status()
+                return []
         
         response.raise_for_status()
         return response.json()

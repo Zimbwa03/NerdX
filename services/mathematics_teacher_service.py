@@ -117,6 +117,27 @@ Your approach is based on these proven methods:
 - Adapt explanations to student's level.
 - **GRAPH GENERATION**: If a concept is best explained with a graph (like linear equations, quadratics, trig functions, etc.), include a special tag in your response: `[PLOT: function_expression]`. For example: `[PLOT: x^2 + 2x + 1]`. You can also specify a range: `[PLOT: sin(x), range=-2pi:2pi]`.
 
+### CRITICAL: LaTeX Formatting for Mathematical Expressions
+**ALL mathematical expressions, equations, formulas, and mathematical notation MUST be written in LaTeX format using inline math mode `$...$` or display math mode `$$...$$`.**
+
+Examples:
+- Simple expressions: `$x + 2 = 5$`, `$x^2 + 3x - 4$`
+- Fractions: `$\frac{a}{b}$`, `$\frac{x^2 + 1}{2x - 3}$`
+- Square roots: `$\sqrt{16}$`, `$\sqrt{x^2 + y^2}$`
+- Powers: `$x^2$`, `$2^{n+1}$`, `$e^{x}$`
+- Trigonometry: `$\sin(\theta)$`, `$\cos(2x)$`, `$\tan(45°)$`
+- Greek letters: `$\alpha$`, `$\beta$`, `$\theta$`, `$\pi$`
+- Equations: `$$x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$$`
+- Inequalities: `$x > 0$`, `$y \leq 5$`, `$a \neq b$`
+- Summation: `$\sum_{i=1}^{n} i$`
+- Integrals: `$\int_0^1 x^2 dx$`
+
+**Rules:**
+1. Wrap ALL math expressions in `$` for inline or `$$` for display (centered)
+2. Use proper LaTeX syntax: `\frac{num}{den}`, `\sqrt{}`, `^` for superscripts, `_` for subscripts
+3. Always use LaTeX - never write math in plain text (e.g., write `$x^2$` not `x squared` or `x^2`)
+4. This applies to ALL responses - explanations, examples, solutions, formulas, etc.
+
 ### Complete O-Level Mathematics Topics Coverage
 
 **NUMBER**:
@@ -332,6 +353,9 @@ Current conversation context will be provided with each message."""
             # Get AI response
             response_text = self._get_teaching_response(user_id, message, session_data)
             
+            # Ensure all math expressions are in LaTeX format
+            response_text = self._convert_math_to_latex(response_text)
+            
             # Add AI response to history
             conversation_history.append({
                 'role': 'assistant',
@@ -410,7 +434,9 @@ Current conversation context will be provided with each message."""
                     if response.status_code == 200:
                         data = response.json()
                         if 'choices' in data and len(data['choices']) > 0:
-                            return data['choices'][0]['message']['content'].strip()
+                            response_text = data['choices'][0]['message']['content'].strip()
+                            # Convert any plain math expressions to LaTeX
+                            return self._convert_math_to_latex(response_text)
                 except Exception as deepseek_error:
                     logger.error(f"DeepSeek error: {deepseek_error}")
             
@@ -419,7 +445,9 @@ Current conversation context will be provided with each message."""
                 try:
                     response = self.gemini_model.generate_content(full_prompt)
                     if response and response.text:
-                        return response.text.strip()
+                        response_text = response.text.strip()
+                        # Convert any plain math expressions to LaTeX
+                        return self._convert_math_to_latex(response_text)
                 except Exception as gemini_error:
                     logger.error(f"Gemini fallback error: {gemini_error}")
             
@@ -476,6 +504,57 @@ Current conversation context will be provided with each message."""
         """Fallback response when AI unavailable"""
         topic = session_data.get('topic', 'this topic')
         return f"I'm having trouble connecting to my AI teacher. However, {topic} is an important concept in Mathematics. Please try asking your question again, or type 'generate notes' to create study materials."
+    
+    def _convert_math_to_latex(self, text: str) -> str:
+        """Convert plain math expressions to LaTeX format. This is a safety net to catch any math expressions not already in LaTeX."""
+        import re
+        if not text:
+            return text
+        
+        result = text
+        
+        # Helper to check if position is inside a LaTeX block
+        def is_inside_latex(pos):
+            before = result[:pos]
+            dollar_count = len(re.findall(r'(?<!\\)\$', before))
+            return dollar_count % 2 == 1
+        
+        # Pattern 1: Fractions like x/y or (a)/(b) that aren't in LaTeX
+        def convert_fraction(match):
+            if not is_inside_latex(match.start()):
+                num = match.group(1)
+                den = match.group(2)
+                return f'$\\frac{{{num}}}{{{den}}}$'
+            return match.group(0)
+        result = re.sub(r'(?<!\$)(?<!\w)(\w+|\d+|\([^)]+\))\s*/\s*(\w+|\d+|\([^)]+\))(?!\w)(?!\$)', convert_fraction, result)
+        
+        # Pattern 2: Powers like x^2, x^3, 2^n
+        def convert_power(match):
+            if not is_inside_latex(match.start()):
+                base = match.group(1)
+                exp = match.group(2)
+                return f'${base}^{{{exp}}}$'
+            return match.group(0)
+        result = re.sub(r'(?<!\$)(?<!\w)([a-zA-Z]\w*|\([^)]+\)|\d+)\s*\^\s*([0-9]+|[a-zA-Z])(?!\w)(?!\$)', convert_power, result)
+        
+        # Pattern 3: Square roots like sqrt(x) or √x
+        def convert_sqrt(match):
+            if not is_inside_latex(match.start()):
+                content = match.group(1)
+                return f'$\\sqrt{{{content}}}$'
+            return match.group(0)
+        result = re.sub(r'(?<!\$)(?:sqrt|√)\s*\(([^)]+)\)(?!\$)', convert_sqrt, result)
+        
+        # Pattern 4: Simple equations like x = 5 or x + 2 = 7
+        def convert_equation(match):
+            if not is_inside_latex(match.start()):
+                left = match.group(1).strip()
+                right = match.group(2).strip()
+                return f'${left} = {right}$'
+            return match.group(0)
+        result = re.sub(r'(?<!\$)([a-zA-Z0-9\s()+\-×*/]+)\s*=\s*([a-zA-Z0-9\s()+\-×*/]+)(?!\$)', convert_equation, result)
+        
+        return result
     
     def _clean_whatsapp_formatting(self, text: str) -> str:
         """Clean formatting for WhatsApp"""

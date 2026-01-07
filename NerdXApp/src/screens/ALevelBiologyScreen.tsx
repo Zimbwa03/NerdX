@@ -21,11 +21,13 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
+import { useNotification } from '../context/NotificationContext';
 import { 
     aLevelBiologyTopics, 
     ALevelBiologyTopic, 
     biologyQuestionTypes,
     BiologyQuestionType,
+    BiologyQuestionTypeInfo,
     topicCounts 
 } from '../data/aLevelBiology';
 import { quizApi } from '../services/api/quizApi';
@@ -59,6 +61,7 @@ const ALevelBiologyScreen: React.FC = () => {
     const { user, updateUser } = useAuth();
     const { isDarkMode } = useTheme();
     const themedColors = useThemedColors();
+    const { showSuccess, showError, showWarning } = useNotification();
 
     const [selectedLevel, setSelectedLevel] = useState<'Lower Sixth' | 'Upper Sixth'>('Lower Sixth');
     const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
@@ -67,6 +70,7 @@ const ALevelBiologyScreen: React.FC = () => {
     // Question type modal state
     const [questionTypeModalVisible, setQuestionTypeModalVisible] = useState(false);
     const [selectedTopic, setSelectedTopic] = useState<ALevelBiologyTopic | null>(null);
+    const [selectedQuestionType, setSelectedQuestionType] = useState<BiologyQuestionTypeInfo | null>(null);
 
     // Filter topics by selected level
     const filteredTopics = aLevelBiologyTopics.filter(
@@ -77,43 +81,40 @@ const ALevelBiologyScreen: React.FC = () => {
         ? biologyTheme.lowerSixthPrimary 
         : biologyTheme.upperSixthPrimary;
 
-    const handleTopicPress = (topic: ALevelBiologyTopic) => {
+    const handleTopicPress = async (topic: ALevelBiologyTopic) => {
+        // If a question type was previously chosen, generate question first before navigating
+        if (selectedQuestionType) {
+            await startQuestion(topic, selectedQuestionType.id);
+            return;
+        }
+        // Otherwise prompt the user to choose the question type.
         setSelectedTopic(topic);
         setQuestionTypeModalVisible(true);
     };
 
     const handleQuestionTypeSelect = async (questionType: BiologyQuestionType) => {
         setQuestionTypeModalVisible(false);
+        const questionTypeInfo = biologyQuestionTypes.find(t => t.id === questionType) || { id: questionType, name: questionType, description: '', icon: '', color: '#10B981', marks: '', timeGuide: '' };
+        setSelectedQuestionType(questionTypeInfo);
         
-        if (!selectedTopic) return;
-        
-        if (!user || (user.credits || 0) < 1) {
-            Alert.alert(
-                'Insufficient Credits',
-                'You need at least 1 credit to start a quiz. Please purchase credits first.',
-                [{ text: 'OK' }]
-            );
-            return;
+        // If a topic was already selected, generate question first before navigating
+        if (selectedTopic) {
+            await startQuestion(selectedTopic, questionType);
         }
-
-        const typeInfo = biologyQuestionTypes.find(t => t.id === questionType);
-        const typeName = typeInfo?.name || questionType;
-
-        Alert.alert(
-            `🧬 Start ${typeName}`,
-            `${selectedTopic.name}\n\n${selectedTopic.description}\n\n⏱ ${typeInfo?.timeGuide || ''}`,
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Start',
-                    onPress: () => startQuestion(selectedTopic, questionType),
-                },
-            ]
-        );
     };
 
     const startQuestion = async (topic: ALevelBiologyTopic, questionType: BiologyQuestionType) => {
         try {
+            const currentCredits = user?.credits || 0;
+            if (currentCredits < 1) {
+                showError('❌ Insufficient credits! You need at least 1 credit. Please top up your credits.', 5000);
+                return;
+            }
+            
+            if (currentCredits <= 5 && currentCredits > 0) {
+                showWarning(`⚠️ Low credits! You have ${currentCredits} credits remaining.`, 4000);
+            }
+            
             setLoadingMessage(getLoadingMessage(questionType));
             setIsGeneratingQuestion(true);
 
@@ -123,24 +124,39 @@ const ALevelBiologyScreen: React.FC = () => {
                 'medium',
                 'topical',
                 'Biology',
-                questionType
+                questionType,  // Pass questionType (mcq, structured, essay)
+                undefined,     // questionFormat (not needed for A-Level Biology)
+                questionType   // Also pass as question_type for backend
             );
 
             setIsGeneratingQuestion(false);
 
             if (question) {
+                const newCredits = (user?.credits || 0) - 1;
+                updateUser({ credits: newCredits });
+                
+                showSuccess(`✅ ${questionType.toUpperCase()} question generated! ${newCredits} credits remaining.`, 3000);
+                
+                if (newCredits <= 3 && newCredits > 0) {
+                    setTimeout(() => {
+                        showWarning(`⚠️ Running low on credits! Only ${newCredits} credits left.`, 5000);
+                    }, 3500);
+                }
+                
                 navigation.navigate('Quiz' as never, {
                     question,
                     subject: { id: 'a_level_biology', name: 'A Level Biology' },
                     topic: { id: topic.id, name: topic.name },
                     questionType: questionType
                 } as never);
-                const newCredits = (user?.credits || 0) - 1;
-                updateUser({ credits: newCredits });
+            } else {
+                showError('❌ Failed to generate question. Please try again.', 4000);
             }
         } catch (error: any) {
             setIsGeneratingQuestion(false);
-            Alert.alert('Error', error.response?.data?.message || 'Failed to generate question');
+            const errorMessage = error.response?.data?.message || 'Failed to generate question';
+            showError(`❌ ${errorMessage}`, 5000);
+            Alert.alert('Error', errorMessage);
         }
     };
 
@@ -581,9 +597,9 @@ const ALevelBiologyScreen: React.FC = () => {
                             <Text style={[styles.aiPoweredText, { color: '#10B981' }]}>DeepSeek AI</Text>
                         </View>
                     </View>
-                    <Text style={[styles.sectionSubtitle, { color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(26,26,46,0.5)' }]}>
-                        Tap any topic to select question type
-                    </Text>
+                <Text style={[styles.sectionSubtitle, { color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(26,26,46,0.5)' }]}>
+                    Tap a topic to practice. Your last selected format applies automatically.
+                </Text>
 
                     {filteredTopics.map((topic, index) => (
                         <ALevelTopicCard

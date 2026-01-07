@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
+import { useNotification } from '../context/NotificationContext';
 import { Colors } from '../theme/colors';
 
 const { width } = Dimensions.get('window');
@@ -90,6 +91,126 @@ const SUBJECT_TOPICS: Record<string, string[]> = {
   ],
 };
 
+// A-Level Topics by Subject
+const A_LEVEL_TOPICS: Record<string, string[]> = {
+  Mathematics: [
+    'Polynomials',
+    'Rational Functions',
+    'Indices, Surds and Logarithms',
+    'Quadratic Functions',
+    'Functions',
+    'Coordinate Geometry',
+    'Sequences and Series',
+    'Binomial Theorem',
+    'Trigonometry (Identities & Equations)',
+    'Differentiation',
+    'Applications of Differentiation',
+    'Integration',
+    'Further Trigonometry',
+    'Hyperbolic Functions',
+    'Further Differentiation',
+    'Further Integration Techniques',
+    'Differential Equations',
+    'Complex Numbers',
+    'Matrices and Determinants',
+    'Vectors in 3D',
+    'Summation of Series',
+    'Numerical Methods',
+    'Proof and Mathematical Induction',
+    'Group Theory',
+  ],
+  Biology: [
+    'Cell Structure',
+    'Biological Molecules',
+    'Enzymes',
+    'Cell Membranes and Transport',
+    'The Cell Cycle and Mitosis',
+    'Nucleic Acids and Protein Synthesis',
+    'Transport in Plants',
+    'Transport in Mammals',
+    'Gas Exchange',
+    'Infectious Diseases',
+    'Immunity',
+    'Smoking and Health',
+    'Energy and Respiration',
+    'Photosynthesis',
+    'Homeostasis',
+    'Excretion',
+    'Coordination: Nervous System',
+    'Coordination: Hormones',
+    'Inherited Change',
+    'Selection and Evolution',
+    'Biodiversity and Classification',
+    'Genetic Technology',
+    'Ecology',
+    'Human Impact on Environment',
+    'Reproduction',
+  ],
+  Chemistry: [
+    'Atomic Structure',
+    'Atoms, Molecules and Stoichiometry',
+    'Chemical Bonding',
+    'States of Matter',
+    'Chemical Energetics',
+    'Electrochemistry',
+    'Equilibria',
+    'Reaction Kinetics',
+    'The Periodic Table: Chemical Periodicity',
+    'Group 2 Elements',
+    'Group 17 Elements',
+    'Nitrogen and Sulfur',
+    'Introduction to Organic Chemistry',
+    'Hydrocarbons',
+    'Halogen Compounds',
+    'Hydroxy Compounds',
+    'Carbonyl Compounds',
+    'Carboxylic Acids and Derivatives',
+    'Nitrogen Compounds',
+    'Polymerisation',
+    'Organic Synthesis',
+    'Analytical Techniques',
+    'Chemical Energetics (Advanced)',
+    'Electrochemistry (Advanced)',
+    'Equilibria (Advanced)',
+    'Reaction Kinetics (Advanced)',
+    'Chemistry of Transition Elements',
+    'Benzene and Aromatic Compounds',
+    'Phenols',
+    'Carbonyl Compounds (Advanced)',
+    'Carboxylic Acids and Derivatives (Advanced)',
+    'Nitrogen Compounds (Advanced)',
+    'Polymerisation (Advanced)',
+    'Organic Synthesis (Advanced)',
+    'Analytical Techniques (Advanced)',
+  ],
+  Physics: [
+    'Physical Quantities and Units',
+    'Kinematics',
+    'Dynamics',
+    'Forces, Density, and Pressure',
+    'Work, Energy, and Power',
+    'Deformation of Solids',
+    'Waves',
+    'Superposition',
+    'Electricity',
+    'D.C. Circuits',
+    'Particle Physics',
+    'Motion in a Circle',
+    'Gravitational Fields',
+    'Temperature',
+    'Ideal Gases',
+    'Thermodynamics',
+    'Oscillations',
+    'Electric Fields',
+    'Capacitance',
+    'Magnetic Fields',
+    'Alternating Currents',
+    'Quantum Physics',
+    'Nuclear Physics',
+    'Astronomy and Cosmology',
+  ],
+};
+
 const SUBJECT_COLORS: Record<string, string> = {
   Mathematics: '#667eea',
   Biology: '#4CAF50',
@@ -110,6 +231,7 @@ const TeacherModeSetupScreen: React.FC = () => {
   const { user } = useAuth();
   const { isDarkMode } = useTheme();
   const themedColors = useThemedColors();
+  const { showError } = useNotification();
   const { subject, preselectedSubject, preselectedTopic } = route.params as {
     subject?: any;
     preselectedSubject?: string;
@@ -124,7 +246,11 @@ const TeacherModeSetupScreen: React.FC = () => {
   const gradeLevels = ['Form 1-2', 'Form 3-4 (O-Level)', 'A-Level'];
 
   // Get topics for selected subject
-  const availableTopics = selectedSubject ? SUBJECT_TOPICS[selectedSubject] || [] : [];
+  const availableTopics = selectedSubject
+    ? (selectedGradeLevel === 'A-Level'
+        ? A_LEVEL_TOPICS[selectedSubject] || []
+        : SUBJECT_TOPICS[selectedSubject] || [])
+    : [];
   const subjectColor = selectedSubject ? SUBJECT_COLORS[selectedSubject] : Colors.secondary.main;
 
   const handleStart = () => {
@@ -133,7 +259,9 @@ const TeacherModeSetupScreen: React.FC = () => {
       return;
     }
 
-    if ((user?.credits || 0) < 3) {
+    const currentCredits = user?.credits || 0;
+    if (currentCredits < 3) {
+      showError('❌ Insufficient credits! Teacher Mode requires 3 credits. Please top up your credits.', 6000);
       Alert.alert(
         'Insufficient Credits',
         'Teacher Mode requires 3 credits to start. Please buy credits first.',

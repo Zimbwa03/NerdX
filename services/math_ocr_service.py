@@ -34,15 +34,28 @@ class MathOCRService:
         
         # Gemini API (fallback for vision)
         self.gemini_api_key = os.getenv('GEMINI_API_KEY')
+        self.gemini_model = None
         if GEMINI_AVAILABLE and self.gemini_api_key:
             try:
                 genai.configure(api_key=self.gemini_api_key)
-                self.gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+                # Use latest supported vision model name to avoid 404s
+                preferred_models = [
+                    'gemini-1.5-flash-latest',  # current recommended
+                    'gemini-1.5-flash',         # older name
+                    'gemini-pro-vision',        # legacy vision model
+                ]
+                for model_name in preferred_models:
+                    try:
+                        self.gemini_model = genai.GenerativeModel(model_name)
+                        logger.info(f"✅ Gemini vision model initialized: {model_name}")
+                        break
+                    except Exception as inner_e:
+                        logger.warning(f"Gemini model {model_name} init failed: {inner_e}")
+                if not self.gemini_model:
+                    logger.error("Failed to initialize any Gemini vision model")
             except Exception as e:
                 logger.error(f"Error initializing Gemini: {e}")
                 self.gemini_model = None
-        else:
-            self.gemini_model = None
         
         logger.info("✅ Math OCR Service initialized (lightweight cloud-based mode)")
     

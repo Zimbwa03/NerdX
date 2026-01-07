@@ -18,6 +18,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useCreditMonitor } from '../hooks/useCreditMonitor';
 import { creditsApi } from '../services/api/creditsApi';
 import { Icons, IconCircle } from '../components/Icons';
 import { Colors, getColors } from '../theme/colors';
@@ -26,12 +27,12 @@ import { Modal, ModalOptionCard } from '../components/Modal';
 import { gamificationService, UserProgress, Badge } from '../services/GamificationService';
 import { dktService, KnowledgeMap } from '../services/api/dktApi';
 import { KnowledgeMapWidget } from '../components/KnowledgeMapWidget';
-import OfflineIndicator from '../components/OfflineIndicator';
 
 // ✨ New animated components
 import MotivationalSlider from '../components/MotivationalSlider';
 import AnimatedCard from '../components/AnimatedCard';
 import FloatingParticles from '../components/FloatingParticles';
+// NerdX Live - removed floating toggle, using Dashboard button instead
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 48) / 2;
@@ -46,6 +47,7 @@ const DashboardScreen: React.FC = () => {
   const { user, logout, updateUser } = useAuth();
   const { theme, isDarkMode, toggleTheme } = useTheme();
   const themedColors = useThemedColors();
+  useCreditMonitor(); // Monitor credits and show warnings
   const [scienceModalVisible, setScienceModalVisible] = useState(false);
   const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
   const [knowledgeMap, setKnowledgeMap] = useState<KnowledgeMap | null>(null);
@@ -154,6 +156,10 @@ const DashboardScreen: React.FC = () => {
 
   const navigateToProgress = () => {
     navigation.navigate('Progress' as never);
+  };
+
+  const navigateToNerdXLive = () => {
+    navigation.navigate('NerdXLiveAudio' as never);
   };
 
   const navigateToProfile = () => {
@@ -354,8 +360,6 @@ const DashboardScreen: React.FC = () => {
               </View>
 
               <View style={styles.rightSection}>
-                <OfflineIndicator />
-
                 {/* Theme Toggle */}
                 <TouchableOpacity
                   onPress={toggleTheme}
@@ -511,11 +515,13 @@ const DashboardScreen: React.FC = () => {
                 </>
               ) : (
                 <>
-                  {/* ✨ A Level Subject Cards with 3D Images */}
+                  {/* ✨ A Level Subject Cards with Icons (temporarily using icons due to large PNG file sizes) */}
                   <AnimatedCard
                     title="Pure Mathematics"
                     subtitle="Advanced calculus & algebra"
-                    imageSource={require('../../assets/images/alevel_math_card.png')}
+                    iconName="calculator"
+                    iconLibrary="materialCommunity"
+                    iconColor="#FFFFFF"
                     onPress={() => navigateToALevelSubject('pure_mathematics', 'Pure Mathematics')}
                     glowColor={aLevelColors.pure_mathematics}
                     index={0}
@@ -524,7 +530,9 @@ const DashboardScreen: React.FC = () => {
                   <AnimatedCard
                     title="Chemistry"
                     subtitle="Organic & inorganic"
-                    imageSource={require('../../assets/images/alevel_chemistry_card.png')}
+                    iconName="flask"
+                    iconLibrary="materialCommunity"
+                    iconColor="#FFFFFF"
                     onPress={() => navigateToALevelSubject('chemistry', 'Chemistry')}
                     glowColor={aLevelColors.chemistry}
                     index={1}
@@ -533,7 +541,9 @@ const DashboardScreen: React.FC = () => {
                   <AnimatedCard
                     title="Physics"
                     subtitle="Mechanics & quantum"
-                    imageSource={require('../../assets/images/alevel_physics_card.png')}
+                    iconName="atom"
+                    iconLibrary="materialCommunity"
+                    iconColor="#FFFFFF"
                     onPress={() => navigateToALevelSubject('physics', 'Physics')}
                     glowColor={aLevelColors.physics}
                     index={2}
@@ -542,7 +552,9 @@ const DashboardScreen: React.FC = () => {
                   <AnimatedCard
                     title="Biology"
                     subtitle="Cell biology & genetics"
-                    imageSource={require('../../assets/images/alevel_biology_card.png')}
+                    iconName="dna"
+                    iconLibrary="materialCommunity"
+                    iconColor="#FFFFFF"
                     onPress={() => navigateToALevelSubject('biology', 'Biology')}
                     glowColor={aLevelColors.biology}
                     index={3}
@@ -552,13 +564,25 @@ const DashboardScreen: React.FC = () => {
 
               {/* Full Width Cards - Always visible */}
               <AnimatedCard
+                title="NerdX Live"
+                subtitle="Real-time voice AI tutoring"
+                iconName="sparkles"
+                iconLibrary="ionicons"
+                iconColor="#FFFFFF"
+                onPress={navigateToNerdXLive}
+                glowColor="#6C63FF"
+                fullWidth={true}
+                index={4}
+              />
+
+              <AnimatedCard
                 title="My Progress"
                 subtitle="Track your learning journey"
                 imageSource={require('../../assets/images/profile_card.png')}
                 onPress={navigateToProgress}
                 glowColor="#a18cd1"
                 fullWidth={true}
-                index={4}
+                index={5}
               />
 
               <AnimatedCard
@@ -568,7 +592,7 @@ const DashboardScreen: React.FC = () => {
                 onPress={navigateToCredits}
                 glowColor="#fbc2eb"
                 fullWidth={true}
-                index={5}
+                index={6}
               />
             </View>
 
@@ -609,6 +633,8 @@ const DashboardScreen: React.FC = () => {
           />
         </Modal>
       </ImageBackground>
+      
+      {/* NerdX Live - Now accessed via Dashboard button */}
     </View >
   );
 };

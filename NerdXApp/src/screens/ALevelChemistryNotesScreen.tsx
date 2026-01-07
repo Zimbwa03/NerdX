@@ -15,6 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { aLevelChemistryTopics, ALevelChemistryTopic } from '../data/aLevelChemistry';
+import { aLevelChemistryNotesApi } from '../services/api/aLevelChemistryNotesApi';
 
 const ALevelChemistryNotesScreen: React.FC = () => {
     const navigation = useNavigation();
@@ -37,11 +38,24 @@ const ALevelChemistryNotesScreen: React.FC = () => {
     };
 
     const handleTopicPress = (topic: ALevelChemistryTopic) => {
-        Alert.alert(
-            topic.name,
-            `Notes for ${topic.name} are being prepared.\n\nCategory: ${topic.category}\n\nLearning Objectives:\n• ${topic.learningObjectives.slice(0, 3).join('\n• ')}`,
-            [{ text: 'OK' }]
-        );
+        // Check if notes are available
+        const hasNotes = aLevelChemistryNotesApi.hasNotes(topic.name);
+        
+        if (hasNotes) {
+            // Navigate to detailed notes screen
+            navigation.navigate('TopicNotesDetail' as never, {
+                subject: 'A Level Chemistry',
+                topic: topic.name,
+                isALevel: true,
+                topicData: topic
+            } as never);
+        } else {
+            Alert.alert(
+                topic.name,
+                `Notes for ${topic.name} are being prepared.\n\nCategory: ${topic.category}\n\nLearning Objectives:\n• ${topic.learningObjectives.slice(0, 3).join('\n• ')}`,
+                [{ text: 'OK' }]
+            );
+        }
     };
 
     return (

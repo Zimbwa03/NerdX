@@ -172,9 +172,20 @@ export const projectApi = {
   deleteProject: async (projectId: number): Promise<boolean> => {
     try {
       const response = await api.delete(`/api/mobile/project/${projectId}`);
-      return response.data.success;
+      console.log('Delete project response:', response.data);
+      // Check both success field and status code
+      if (response.status === 200 && response.data.success === true) {
+        return true;
+      }
+      console.warn('Delete project returned non-success:', response.data);
+      return false;
     } catch (error: any) {
       console.error('Delete project error:', error);
+      // Log the full error for debugging
+      if (error.response) {
+        console.error('Error response:', error.response.data);
+        console.error('Error status:', error.response.status);
+      }
       throw error;
     }
   },

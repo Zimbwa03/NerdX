@@ -1,5 +1,5 @@
 // Quiz Screen Component - Professional UI/UX Design
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -16,10 +16,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import { quizApi, Question, AnswerResult, StructuredQuestion } from '../services/api/quizApi';
+import { mathApi } from '../services/api/mathApi';
 import { dktService } from '../services/api/dktApi';
 import { gamificationService } from '../services/GamificationService';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useNotification } from '../context/NotificationContext';
 import { database } from '../database';
 import Interaction from '../database/models/Interaction';
 import { sync as syncDatabase } from '../services/SyncService';
@@ -38,7 +40,8 @@ const QuizScreen: React.FC = () => {
   const { user, updateUser } = useAuth();
   const { isDarkMode } = useTheme();
   const themedColors = useThemedColors();
-  const { question: initialQuestion, subject, topic, isExamMode, year, paper, isReviewMode, reviewItems } = route.params as {
+  const { showSuccess, showError, showWarning, showInfo } = useNotification();
+  const { question: initialQuestion, subject, topic, isExamMode, year, paper, isReviewMode, reviewItems, questionType } = route.params as {
     question?: Question;
     subject: any;
     topic?: any;
@@ -47,9 +50,20 @@ const QuizScreen: React.FC = () => {
     paper?: string;
     isReviewMode?: boolean;
     reviewItems?: any[];
+    questionType?: string; // 'mcq', 'structured', or 'essay'
   };
 
-  const [question, setQuestion] = useState<Question | undefined>(initialQuestion);
+  const normalizeQuestion = useCallback((q: Question | undefined): Question | undefined => {
+    if (!q) return undefined;
+    const hasOptions = Array.isArray(q.options) && q.options.length > 0;
+    return {
+      ...q,
+      allows_text_input: q.allows_text_input ?? !hasOptions,
+      allows_image_upload: q.allows_image_upload ?? (subject?.id === 'mathematics'),
+    };
+  }, [subject?.id]);
+
+  const [question, setQuestion] = useState<Question | undefined>(normalizeQuestion(initialQuestion));
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
   const [textAnswer, setTextAnswer] = useState<string>('');
   const [answerImage, setAnswerImage] = useState<string | null>(null);
@@ -58,7 +72,23 @@ const QuizScreen: React.FC = () => {
   const [generatingQuestion, setGeneratingQuestion] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [questionCount, setQuestionCount] = useState(1);
-
+  
+  // Store the current question type to preserve it when generating next question
+  const [currentQuestionType, setCurrentQuestionType] = useState<string | undefined>(() => {
+    // Initialize from route params or detect from initial question
+    if (questionType) return questionType;
+    if (initialQuestion) {
+      if (initialQuestion.question_type === 'essay' || (initialQuestion as any).essay_data) {
+        return 'essay';
+      } else if (initialQuestion.question_type === 'structured' || initialQuestion.structured_question) {
+        return 'structured';
+      } else if (initialQuestion.question_type === 'multiple_choice' || (initialQuestion.options && initialQuestion.options.length > 0)) {
+        return 'mcq';
+      }
+    }
+    return undefined;
+  });
+  
   // Structured question state (Paper 2 style)
   const [structuredAnswers, setStructuredAnswers] = useState<Record<string, string>>({});
 
@@ -67,6 +97,11 @@ const QuizScreen: React.FC = () => {
   const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
   const [hintsUsed, setHintsUsed] = useState<number>(0);
+
+  // Voice/STT support (Wispr Flow) — enable for A Level sciences and math
+  const isMathSubject = subject?.id === 'mathematics' || subject?.id === 'a_level_pure_math';
+  const supportsVoiceToText = isMathSubject || ['a_level_physics', 'a_level_chemistry', 'a_level_biology'].includes(subject?.id);
+  const voiceInputMode: 'math' | 'general' = isMathSubject ? 'math' : 'general';
 
   // Initial fetch for exam mode OR review mode if no question provided
   useEffect(() => {
@@ -77,9 +112,21 @@ const QuizScreen: React.FC = () => {
           setGeneratingQuestion(true);
           const firstQuestion = await quizApi.getNextExamQuestion(1, year, paper);
           if (firstQuestion) {
-            setQuestion(firstQuestion);
+            const normalizedQ = normalizeQuestion(firstQuestion);
+            setQuestion(normalizedQ);
+            // Update question type state
+            if (normalizedQ) {
+              if (normalizedQ.question_type === 'essay' || (normalizedQ as any).essay_data) {
+                setCurrentQuestionType('essay');
+              } else if (normalizedQ.question_type === 'structured' || normalizedQ.structured_question) {
+                setCurrentQuestionType('structured');
+              } else {
+                setCurrentQuestionType('mcq');
+              }
+            }
           }
         } catch (error) {
+          showError('❌ Failed to start exam. Please try again.', 5000);
           Alert.alert('Error', 'Failed to start exam');
           navigation.goBack();
         } finally {
@@ -109,13 +156,38 @@ const QuizScreen: React.FC = () => {
             allows_image_upload: false,
             question_image_url: qData.image_url
           };
-          setQuestion(mappedQuestion);
+          const normalizedQ = normalizeQuestion(mappedQuestion);
+          setQuestion(normalizedQ);
+          // Update question type state
+          if (normalizedQ) {
+            const qType = qData.question_type || 'multiple_choice';
+            if (qType === 'essay') {
+              setCurrentQuestionType('essay');
+            } else if (qType === 'structured') {
+              setCurrentQuestionType('structured');
+            } else {
+              setCurrentQuestionType('mcq');
+            }
+          }
         }
       }
     };
 
     fetchFirstQuestion();
   }, [isExamMode, initialQuestion, year, paper, isReviewMode, reviewItems]);
+
+  // Update question type state when question changes
+  useEffect(() => {
+    if (question) {
+      if (question.question_type === 'essay' || (question as any).essay_data) {
+        setCurrentQuestionType('essay');
+      } else if (question.question_type === 'structured' || question.structured_question) {
+        setCurrentQuestionType('structured');
+      } else if (question.question_type === 'multiple_choice' || (question.options && question.options.length > 0)) {
+        setCurrentQuestionType('mcq');
+      }
+    }
+  }, [question]);
 
   // Determine gradient colors based on subject
   const getHeaderGradient = () => {
@@ -138,7 +210,7 @@ const QuizScreen: React.FC = () => {
     // For structured questions, combine all part answers
     const isStructured = question.question_type === 'structured' && question.structured_question;
     let answerToSubmit: string;
-
+    
     if (isStructured) {
       // Combine all structured answers into a formatted string
       const parts = question.structured_question?.parts || [];
@@ -147,16 +219,25 @@ const QuizScreen: React.FC = () => {
         return `${part.label}: ${answer}`;
       }).join('\n\n');
       answerToSubmit = answersFormatted;
-
+      
       // Check if at least one answer is filled
       const hasAnyAnswer = Object.values(structuredAnswers).some(a => a.trim().length > 0);
       if (!hasAnyAnswer) {
         Alert.alert('Error', 'Please answer at least one part of the question');
         return;
       }
+    } else if (question.question_type === 'essay') {
+      // Essay questions - use text answer
+      answerToSubmit = textAnswer;
+      
+      if (!answerToSubmit || answerToSubmit.trim().length < 10) {
+        Alert.alert('Error', 'Please write your essay answer (minimum 10 characters)');
+        return;
+      }
     } else {
+      // Regular text input or MCQ
       answerToSubmit = question.allows_text_input ? textAnswer : selectedAnswer;
-
+      
       if (!answerToSubmit && !answerImage) {
         Alert.alert('Error', 'Please enter your answer or upload an image');
         return;
@@ -179,6 +260,13 @@ const QuizScreen: React.FC = () => {
       );
       if (answerResult) {
         setResult(answerResult);
+        
+        // Show notification based on result
+        if (answerResult.correct) {
+          showSuccess(`🎉 Correct! You earned ${answerResult.points_earned} points!`, 3000);
+        } else {
+          showInfo(`💡 ${answerResult.feedback || 'Keep practicing!'}`, 4000);
+        }
 
         if (isReviewMode && reviewItems) {
           // Submit review completion
@@ -217,7 +305,9 @@ const QuizScreen: React.FC = () => {
         }
       }
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.message || 'Failed to submit answer');
+      const errorMessage = error.response?.data?.message || 'Failed to submit answer';
+      showError(`❌ ${errorMessage}`, 5000);
+      Alert.alert('Error', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -296,6 +386,22 @@ const QuizScreen: React.FC = () => {
     }
   };
 
+  const runOCR = async (uri: string) => {
+    try {
+      const scanResult: any = await mathApi.scanProblem(uri);
+      if (scanResult?.success) {
+        const recognized = scanResult.latex || scanResult.text || '';
+        if (recognized) {
+          setTextAnswer(prev => prev ? `${prev}\n${recognized}` : recognized);
+        }
+      } else {
+        Alert.alert('Scan Failed', 'Could not recognize the equation.');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to process the image for OCR.');
+    }
+  };
+
   const handleImageUpload = async () => {
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -311,12 +417,36 @@ const QuizScreen: React.FC = () => {
       });
 
       if (!result.canceled && result.assets[0]) {
-        setAnswerImage(result.assets[0].uri);
-        // TODO: Upload image to server and get URL
-        // For now, using local URI
+        const uri = result.assets[0].uri;
+        setAnswerImage(uri);
+        await runOCR(uri);
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to pick image');
+    }
+  };
+
+  const handleCameraCapture = async () => {
+    try {
+      const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+      if (!permissionResult.granted) {
+        Alert.alert('Permission Required', 'Please grant camera permissions to capture images');
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const uri = result.assets[0].uri;
+        setAnswerImage(uri);
+        await runOCR(uri);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to capture image');
     }
   };
 
@@ -351,10 +481,19 @@ const QuizScreen: React.FC = () => {
               topic_id: nextItem.topic,
               difficulty: 'medium',
               allows_text_input: !qData.options,
-              allows_image_upload: false,
+              allows_image_upload: subject?.id === 'mathematics',
               question_image_url: qData.image_url
             };
             setQuestionCount(nextIndex + 1);
+            // Update question type state
+            const qType = qData.question_type || 'multiple_choice';
+            if (qType === 'essay') {
+              setCurrentQuestionType('essay');
+            } else if (qType === 'structured') {
+              setCurrentQuestionType('structured');
+            } else {
+              setCurrentQuestionType('mcq');
+            }
           }
         } else {
           Alert.alert('Review Complete', 'You have completed your daily review!', [
@@ -363,19 +502,56 @@ const QuizScreen: React.FC = () => {
           return;
         }
       } else {
-        // Ensure we keep the same topic context for continuous practice
+        // Ensure we keep the same topic context AND question type for continuous practice
+        // Use stored question type (persists through submission) or detect from current question
+        let nextQuestionType: string | undefined = currentQuestionType;
+        
+        // If no stored type, try to detect from current question
+        if (!nextQuestionType && question) {
+          if (question.question_type === 'essay' || (question as any).essay_data) {
+            nextQuestionType = 'essay';
+          } else if (question.question_type === 'structured' || question.structured_question) {
+            nextQuestionType = 'structured';
+          } else if (question.question_type === 'multiple_choice' || (question.options && question.options.length > 0)) {
+            nextQuestionType = 'mcq';
+          }
+        }
+        
+        // Fall back to route param if still not detected
+        if (!nextQuestionType) {
+          nextQuestionType = questionType;
+        }
+        
+        console.log(`🔄 Generating next ${nextQuestionType || 'MCQ'} question for topic: ${topic?.id || 'general'}`);
+        
         newQuestion = await quizApi.generateQuestion(
           subject.id,
           topic?.id,
           'medium',  // difficulty
           topic ? 'topical' : 'exam',  // type
           topic?.parent_subject,  // parent_subject for Combined Science
-          undefined  // questionType
+          nextQuestionType,  // Preserve question type (mcq, structured, essay)
+          undefined,  // questionFormat
+          nextQuestionType   // Also pass as question_type for backend compatibility
         );
       }
 
       if (newQuestion) {
-        setQuestion(newQuestion);
+        const normalizedQ = normalizeQuestion(newQuestion);
+        setQuestion(normalizedQ);
+        
+        // Update stored question type based on the new question
+        if (normalizedQ) {
+          if (normalizedQ.question_type === 'essay' || (normalizedQ as any).essay_data) {
+            setCurrentQuestionType('essay');
+          } else if (normalizedQ.question_type === 'structured' || normalizedQ.structured_question) {
+            setCurrentQuestionType('structured');
+          } else if (normalizedQ.question_type === 'multiple_choice' || (normalizedQ.options && normalizedQ.options.length > 0)) {
+            setCurrentQuestionType('mcq');
+          }
+        }
+        
+        showSuccess('✅ Next question loaded!', 2000);
         setSelectedAnswer('');
         setTextAnswer('');
         setAnswerImage(null);
@@ -388,6 +564,16 @@ const QuizScreen: React.FC = () => {
         if (user) {
           const newCredits = (user.credits || 0) - 1;
           updateUser({ credits: newCredits });
+          
+          // Show credit deduction notification
+          showInfo(`💳 1 credit used. ${newCredits} credits remaining.`, 3000);
+          
+          // Check if credits are getting low
+          if (newCredits <= 3 && newCredits > 0) {
+            setTimeout(() => {
+              showWarning(`⚠️ Running low on credits! Only ${newCredits} credits left.`, 5000);
+            }, 3500);
+          }
         }
       } else {
         Alert.alert('Notice', 'No more questions available right now.');
@@ -402,6 +588,14 @@ const QuizScreen: React.FC = () => {
 
   const handleBack = () => {
     navigation.goBack();
+  };
+
+  const formatSolutionText = (text?: string) => {
+    if (!text) return '';
+    let formatted = text.replace(/;\s*/g, ';\n');
+    formatted = formatted.replace(/\. (?=[A-Z0-9])/g, '.\n');
+    formatted = formatted.replace(/Step\s*/gi, '\nStep ');
+    return formatted.trim();
   };
 
   return (
@@ -532,7 +726,7 @@ const QuizScreen: React.FC = () => {
                       Total: {question.structured_question.total_marks} marks
                     </Text>
                   </View>
-
+                  
                   {question.structured_question.parts.map((part, index) => (
                     <Card key={index} variant="elevated" style={styles.structuredPartCard}>
                       <View style={styles.structuredPartHeader}>
@@ -540,21 +734,42 @@ const QuizScreen: React.FC = () => {
                         <Text style={styles.structuredPartMarks}>[{part.marks}]</Text>
                       </View>
                       <Text style={styles.structuredPartQuestion}>{part.question}</Text>
-
+                      
                       {!result ? (
-                        <TextInput
-                          style={styles.structuredPartInput}
-                          value={structuredAnswers[part.label] || ''}
-                          onChangeText={(text) => setStructuredAnswers(prev => ({
-                            ...prev,
-                            [part.label]: text
-                          }))}
-                          placeholder={`Enter your answer for ${part.label}...`}
-                          placeholderTextColor={Colors.text.secondary}
-                          multiline
-                          numberOfLines={3}
-                          textAlignVertical="top"
-                        />
+                        <View style={styles.structuredInputRow}>
+                          <TextInput
+                            style={[styles.structuredPartInput, styles.structuredInputFlex]}
+                            value={structuredAnswers[part.label] || ''}
+                            onChangeText={(text) => {
+                              // Limit structured answers to short responses (1-2 sentences max, 200 chars)
+                              const maxLength = 200;
+                              const trimmed = text.length > maxLength ? text.substring(0, maxLength) : text;
+                              setStructuredAnswers(prev => ({
+                                ...prev,
+                                [part.label]: trimmed
+                              }));
+                            }}
+                            placeholder={`Brief answer for ${part.label} (1-2 sentences)...`}
+                            placeholderTextColor={Colors.text.secondary}
+                            multiline
+                            numberOfLines={2}
+                            maxLength={200}
+                            textAlignVertical="top"
+                          />
+                          {supportsVoiceToText && (
+                            <VoiceMathInput
+                              mode="general"
+                              onTranscription={(text) => {
+                                // For structured, keep answers short - replace rather than append
+                                setStructuredAnswers(prev => ({
+                                  ...prev,
+                                  [part.label]: text.substring(0, 200) // Limit to 200 chars
+                                }));
+                              }}
+                              disabled={!!result}
+                            />
+                          )}
+                        </View>
                       ) : (
                         <View style={styles.structuredPartAnswerDisplay}>
                           <Text style={styles.structuredPartAnswerLabel}>Your Answer:</Text>
@@ -574,33 +789,69 @@ const QuizScreen: React.FC = () => {
                 </View>
               )}
 
-              {/* Fallback for structured questions without parts object (e.g., A Level Biology before backend update) */}
-              {question.question_type === 'structured' && !question.structured_question && !result && (
+              {/* Essay Question Input - for A-Level Biology essays */}
+              {question.question_type === 'essay' && question.allows_text_input && !result && (
                 <View style={styles.answerInputContainer}>
-                  <Text style={styles.answerInputLabel}>Your Answer:</Text>
-                  <Text style={[styles.voiceHintText, { marginBottom: 8 }]}>
-                    📝 Write your complete answer below. Address all parts of the question.
-                  </Text>
+                  <View style={styles.essayHeader}>
+                    <Text style={styles.essayTitle}>📝 Essay Answer</Text>
+                    {question.essay_data && (
+                      <View style={styles.essayMeta}>
+                        <Text style={styles.essayMarks}>{question.essay_data.total_marks} marks</Text>
+                        <Text style={styles.essayTime}>{question.essay_data.time_allocation}</Text>
+                      </View>
+                    )}
+                  </View>
+                  {question.essay_data?.command_word && (
+                    <Text style={styles.essayCommandWord}>
+                      Command: {question.essay_data.command_word}
+                    </Text>
+                  )}
                   <View style={styles.answerInputRow}>
                     <TextInput
-                      style={[styles.answerInput, styles.answerInputFlex, { minHeight: 150 }]}
+                      style={[styles.essayInput, styles.answerInputFlex]}
                       value={textAnswer}
                       onChangeText={setTextAnswer}
-                      placeholder="Enter your complete answer here..."
+                      placeholder="Write your essay answer here... You can type or use voice input."
                       placeholderTextColor={Colors.text.secondary}
                       multiline
-                      numberOfLines={8}
+                      numberOfLines={12}
                       textAlignVertical="top"
                       editable={!result}
                     />
+                    {/* Voice input for essay */}
+                    {supportsVoiceToText && (
+                      <VoiceMathInput
+                        mode="general"
+                        onTranscription={(text) => {
+                          // Append to existing answer with proper spacing
+                          setTextAnswer(prev => prev ? `${prev}\n\n${text}` : text);
+                        }}
+                        disabled={!!result}
+                      />
+                    )}
                   </View>
+                  {question.essay_data?.must_include_terms && question.essay_data.must_include_terms.length > 0 && (
+                    <View style={styles.essayKeyTerms}>
+                      <Text style={styles.essayKeyTermsLabel}>🔑 Key Terms to Include:</Text>
+                      <Text style={styles.essayKeyTermsList}>
+                        {question.essay_data.must_include_terms.join(', ')}
+                      </Text>
+                    </View>
+                  )}
+                  {supportsVoiceToText && (
+                    <Text style={styles.voiceHintText}>
+                      🎤 Tip: Tap mic to dictate your essay. Speak naturally and pause between paragraphs.
+                    </Text>
+                  )}
                 </View>
               )}
 
-              {/* Text Input - for math and short answer questions */}
-              {question.allows_text_input && question.question_type !== 'structured' && !result && (
+              {/* Text Input - for math and short answer questions (not structured, not essay) */}
+              {question.allows_text_input && question.question_type !== 'structured' && question.question_type !== 'essay' && !result && (
                 <View style={styles.answerInputContainer}>
-                  <Text style={styles.answerInputLabel}>Your Answer:</Text>
+                  <Text style={styles.answerInputLabel}>
+                    {supportsVoiceToText ? 'Your Answer (type or speak, scan optional):' : 'Your Answer (type or scan):'}
+                  </Text>
                   <View style={styles.answerInputRow}>
                     <TextInput
                       style={[styles.answerInput, styles.answerInputFlex]}
@@ -611,9 +862,10 @@ const QuizScreen: React.FC = () => {
                       multiline
                       editable={!result}
                     />
-                    {/* Voice-to-Math button for Mathematics */}
-                    {subject?.id === 'mathematics' && (
+                    {/* Wispr Flow speech-to-text (math-aware for Pure Math) */}
+                    {supportsVoiceToText && (
                       <VoiceMathInput
+                        mode={voiceInputMode}
                         onTranscription={(text) => {
                           // Append to existing answer or set new
                           setTextAnswer(prev => prev ? `${prev} ${text}` : text);
@@ -622,9 +874,19 @@ const QuizScreen: React.FC = () => {
                       />
                     )}
                   </View>
-                  {subject?.id === 'mathematics' && (
+                  <View style={styles.scanButtonsRow}>
+                    <TouchableOpacity style={styles.scanButton} onPress={handleImageUpload}>
+                      <Text style={styles.scanButtonText}>📂 Upload & OCR</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.scanButton} onPress={handleCameraCapture}>
+                      <Text style={styles.scanButtonText}>📸 Camera OCR</Text>
+                    </TouchableOpacity>
+                  </View>
+                  {supportsVoiceToText && (
                     <Text style={styles.voiceHintText}>
-                      🎤 Tip: Tap mic to speak your answer (e.g., "2x squared plus 3")
+                      {voiceInputMode === 'math'
+                        ? '🎤 Tip: Speak math like "integral from zero to pi" — symbols auto-format.'
+                        : '🎤 Tip: Tap mic to dictate your answer with Wispr Flow speech-to-text.'}
                     </Text>
                   )}
                 </View>
@@ -639,8 +901,15 @@ const QuizScreen: React.FC = () => {
                     disabled={!!result}
                   >
                     <Text style={styles.imageUploadButtonText}>
-                      {answerImage ? '📷 Change Image' : '📷 Upload Answer Image'}
+                      {answerImage ? '📷 Change Image' : '📷 Upload/Scan Answer Image'}
                     </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.imageUploadButton, styles.secondaryImageButton]}
+                    onPress={handleCameraCapture}
+                    disabled={!!result}
+                  >
+                    <Text style={styles.imageUploadButtonText}>🎥 Capture with Camera</Text>
                   </TouchableOpacity>
                   {answerImage && (
                     <View style={styles.imagePreview}>
@@ -740,7 +1009,7 @@ const QuizScreen: React.FC = () => {
                   {result.solution && (
                     <View style={styles.solutionContainer}>
                       <Text style={styles.solutionTitle}>📚 Detailed Solution:</Text>
-                      <MathText>{result.solution}</MathText>
+                      <MathText>{formatSolutionText(result.solution)}</MathText>
                     </View>
                   )}
                   {result.hint && !result.correct && (
@@ -1052,6 +1321,56 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginBottom: 12,
   },
+  essayFeedbackContainer: {
+    marginTop: 16,
+    padding: 16,
+    backgroundColor: Colors.background.subtle,
+    borderRadius: 12,
+  },
+  essayCriteria: {
+    marginBottom: 16,
+  },
+  essayCriteriaTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.text.primary,
+    marginBottom: 12,
+  },
+  essayCriteriaItem: {
+    marginBottom: 10,
+    paddingLeft: 12,
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.primary.main,
+  },
+  essayCriteriaGrade: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Colors.primary.main,
+    marginBottom: 4,
+  },
+  essayCriteriaDesc: {
+    fontSize: 13,
+    color: Colors.text.secondary,
+    lineHeight: 20,
+  },
+  essayMistakes: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border.light,
+  },
+  essayMistakesTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: Colors.warning.main,
+    marginBottom: 8,
+  },
+  essayMistakeItem: {
+    fontSize: 13,
+    color: Colors.text.secondary,
+    lineHeight: 20,
+    marginBottom: 6,
+  },
   solutionContainer: {
     backgroundColor: Colors.background.subtle,
     borderRadius: 12,
@@ -1149,11 +1468,95 @@ const styles = StyleSheet.create({
   answerInputFlex: {
     flex: 1,
   },
+  essayInput: {
+    backgroundColor: Colors.background.paper,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+    padding: 16,
+    fontSize: 16,
+    color: Colors.text.primary,
+    minHeight: 200,
+    maxHeight: 400,
+    textAlignVertical: 'top',
+  },
+  essayHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  essayTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.text.primary,
+  },
+  essayMeta: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  essayMarks: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.primary.main,
+  },
+  essayTime: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: Colors.text.secondary,
+  },
+  essayCommandWord: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.warning.main,
+    marginBottom: 12,
+    fontStyle: 'italic',
+  },
+  essayKeyTerms: {
+    backgroundColor: Colors.background.subtle,
+    borderRadius: 10,
+    padding: 12,
+    marginTop: 12,
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.primary.main,
+  },
+  essayKeyTermsLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.text.primary,
+    marginBottom: 6,
+  },
+  essayKeyTermsList: {
+    fontSize: 13,
+    color: Colors.text.secondary,
+    lineHeight: 20,
+  },
   voiceHintText: {
     fontSize: 12,
     color: Colors.text.secondary,
     marginTop: 8,
     fontStyle: 'italic',
+  },
+  scanButtonsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 10,
+    flexWrap: 'wrap',
+  },
+  scanButton: {
+    flex: 1,
+    backgroundColor: Colors.background.paper,
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+    alignItems: 'center',
+  },
+  scanButtonText: {
+    color: Colors.text.primary,
+    fontWeight: '600',
+    fontSize: 14,
   },
   imageUploadContainer: {
     marginBottom: 20,
@@ -1166,6 +1569,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: Colors.border.light,
+  },
+  secondaryImageButton: {
+    backgroundColor: Colors.background.subtle,
   },
   imageUploadButtonText: {
     fontSize: 16,
@@ -1352,6 +1758,14 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginBottom: 12,
   },
+  structuredInputRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  structuredInputFlex: {
+    flex: 1,
+  },
   structuredPartInput: {
     backgroundColor: Colors.background.subtle,
     borderRadius: 8,
@@ -1360,7 +1774,8 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
     borderWidth: 1,
     borderColor: Colors.border.light,
-    minHeight: 80,
+    minHeight: 60,
+    maxHeight: 80,  // Limit height for short answers (1-2 sentences)
     textAlignVertical: 'top',
   },
   structuredPartAnswerDisplay: {

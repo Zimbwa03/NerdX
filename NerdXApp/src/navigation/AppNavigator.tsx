@@ -42,6 +42,11 @@ import ALevelPureMathNotesScreen from '../screens/ALevelPureMathNotesScreen';
 import ALevelBiologyScreen from '../screens/ALevelBiologyScreen';
 import ALevelBiologyNotesScreen from '../screens/ALevelBiologyNotesScreen';
 
+// NerdX Live Voice/Video Screens
+import NerdXLiveModeScreen from '../screens/NerdXLiveModeScreen';
+import NerdXLiveAudioScreen from '../screens/NerdXLiveAudioScreen';
+import NerdXLiveVideoScreen from '../screens/NerdXLiveVideoScreen';
+
 // Virtual Lab Simulation Screens
 import CellExplorerScreen from '../screens/virtualLab/CellExplorerScreen';
 import OsmosisScreen from '../screens/virtualLab/OsmosisScreen';
@@ -454,6 +459,28 @@ const AppNavigator: React.FC = () => {
             <Stack.Screen
               name="ALevelBiologyNotes"
               component={ALevelBiologyNotesScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            {/* NerdX Live Voice/Video Screens */}
+            <Stack.Screen
+              name="NerdXLiveMode"
+              component={NerdXLiveModeScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="NerdXLiveAudio"
+              component={NerdXLiveAudioScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="NerdXLiveVideo"
+              component={NerdXLiveVideoScreen}
               options={{
                 headerShown: false,
               }}

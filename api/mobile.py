@@ -863,6 +863,14 @@ def generate_question():
             correct_answer = question_data.get('answer', '') or question_data.get('correct_answer', '')
             solution = question_data.get('solution', '') or question_data.get('explanation', '')
         
+        # Optional graph/diagram attachment (e.g., A Level Pure Math matplotlib output)
+        question_image_url = question_data.get('question_image_url') or question_data.get('graph_image_url')
+        if not question_image_url and question_data.get('graph_image_path'):
+            try:
+                question_image_url = convert_local_path_to_public_url(question_data['graph_image_path'])
+            except Exception:
+                question_image_url = None
+        
         # For Mathematics, ensure it's treated as short_answer type (allows text input)
         question_type_mobile = question_data.get('question_type', '') or question_data.get('type', 'short_answer')
         if subject == 'mathematics' and not options:
@@ -887,47 +895,6 @@ def generate_question():
             except Exception:
                 pass
         
-        # Handle A Level Biology structured and essay questions
-        if subject == 'a_level_biology' and (question_data.get('question_type') or '').lower() in ['structured', 'essay']:
-            question_type_mobile = 'structured'
-            options = []
-            correct_answer = ''
-            # A Level Biology uses 'part' instead of 'label' and 'expected_answer' instead of 'model_answer'
-            # Normalize the parts array for mobile app compatibility
-            try:
-                raw_parts = question_data.get('parts', []) if isinstance(question_data.get('parts'), list) else []
-                normalized_parts = []
-                model_lines = []
-                for p in raw_parts:
-                    # Normalize part format: 'part' -> 'label', 'expected_answer' -> 'model_answer'
-                    label = p.get('label') or p.get('part', '')
-                    if isinstance(label, str) and not label.startswith('('):
-                        label = f"({label})"  # Format as (a), (b), etc.
-                    normalized_part = {
-                        'label': label,
-                        'question': p.get('question', ''),
-                        'marks': p.get('marks', 0),
-                        'model_answer': p.get('expected_answer') or p.get('model_answer', ''),
-                        'command_word': p.get('command_word', '')
-                    }
-                    normalized_parts.append(normalized_part)
-                    # Build solution from expected answers
-                    if normalized_part['model_answer']:
-                        model_lines.append(f"{label} [{p.get('marks', '')}]: {normalized_part['model_answer']}")
-                
-                # Store normalized parts for later use
-                question_data['_normalized_parts'] = normalized_parts
-                
-                if model_lines:
-                    solution = "MODEL ANSWERS:\n" + "\n".join(model_lines[:10])
-                
-                # Add teaching points if available
-                teaching_points = question_data.get('teaching_points', '')
-                if teaching_points:
-                    solution += f"\n\n📚 Key Learning Points:\n{teaching_points}"
-            except Exception as e:
-                logger.warning(f"Error normalizing A Level Biology parts: {e}")
-        
         # Format question for mobile
         question = {
             'id': str(uuid.uuid4()),
@@ -936,6 +903,7 @@ def generate_question():
                 question_data.get('question_text', '') or
                 (question_data.get('stem', '') if (question_data.get('question_type') or '').lower() == 'structured' else '')
             ),
+            'question_image_url': question_image_url,
             'question_type': question_type_mobile,
             'options': options if isinstance(options, list) else [],
             'correct_answer': correct_answer,
@@ -985,20 +953,62 @@ def generate_question():
                 'marking_rubric': question_data.get('marking_rubric', {})
             }
         
-        # Include structured payload for A Level Biology structured/essay questions
-        if subject == 'a_level_biology' and question_type_mobile == 'structured':
-            # Use normalized parts if available, otherwise use original parts
-            parts_to_use = question_data.get('_normalized_parts') or question_data.get('parts', [])
-            question['structured_question'] = {
-                'question_type': question_data.get('question_type', 'structured'),
-                'subject': 'A Level Biology',
-                'topic': question_data.get('topic', ''),
-                'difficulty': question_data.get('difficulty', difficulty),
-                'stem': question_data.get('question', ''),  # A Level Biology uses 'question' for stem
-                'parts': parts_to_use,
-                'total_marks': question_data.get('total_marks', 12),
-                'teaching_points': question_data.get('teaching_points', '')
-            }
+        # Handle A-Level Biology structured and essay questions
+        if subject == 'a_level_biology':
+            # Structured questions
+            if question_type_mobile == 'structured' or question_data.get('question_type') == 'structured':
+                parts = question_data.get('parts', [])
+                # Ensure each part has a label
+                for part in parts:
+                    if 'label' not in part:
+                        part['label'] = part.get('part', 'a')
+                question['structured_question'] = {
+                    'question_type': 'structured',
+                    'subject': question_data.get('subject', 'A Level Biology'),
+                    'topic': question_data.get('topic', topic_name if 'topic_name' in locals() else topic),
+                    'difficulty': question_data.get('difficulty', difficulty),
+                    'stem': question_data.get('stimulus') or question_data.get('question', ''),
+                    'parts': parts,
+                    'total_marks': question_data.get('total_marks', sum(p.get('marks', 0) for p in parts)),
+                    'marking_rubric': {}
+                }
+                question['allows_text_input'] = True  # Structured questions need text input
+            
+            # Essay questions
+            elif question_type_mobile == 'essay' or question_data.get('question_type') == 'essay':
+                question['question_type'] = 'essay'
+                question['allows_text_input'] = True  # Essay questions need text input
+                question['essay_data'] = {
+                    'command_word': question_data.get('command_word', 'Discuss'),
+                    'total_marks': question_data.get('total_marks', 25),
+                    'time_allocation': question_data.get('time_allocation', '35-40 minutes'),
+                    'essay_plan': question_data.get('essay_plan', {}),
+                    'must_include_terms': question_data.get('must_include_terms', []),
+                    'marking_criteria': question_data.get('marking_criteria', {}),
+                    'model_answer_outline': question_data.get('model_answer_outline', ''),
+                    'common_mistakes': question_data.get('common_mistakes', [])
+                }
+                # Solution should include essay plan and marking criteria
+                essay_solution_parts = []
+                if question_data.get('essay_plan'):
+                    essay_solution_parts.append("📋 ESSAY PLAN:")
+                    plan = question_data.get('essay_plan', {})
+                    if plan.get('introduction'):
+                        essay_solution_parts.append(f"Introduction: {plan['introduction']}")
+                    if plan.get('main_body'):
+                        for section in plan['main_body']:
+                            essay_solution_parts.append(f"{section.get('section', 'Section')} [{section.get('marks', 0)} marks]: {section.get('content', '')}")
+                    if plan.get('conclusion'):
+                        essay_solution_parts.append(f"Conclusion: {plan['conclusion']}")
+                if question_data.get('must_include_terms'):
+                    essay_solution_parts.append(f"\n🔑 Key Terms to Include: {', '.join(question_data['must_include_terms'])}")
+                if question_data.get('marking_criteria'):
+                    essay_solution_parts.append("\n📊 MARKING CRITERIA:")
+                    criteria = question_data.get('marking_criteria', {})
+                    for grade, desc in criteria.items():
+                        essay_solution_parts.append(f"{grade}: {desc}")
+                if essay_solution_parts:
+                    question['solution'] = '\n'.join(essay_solution_parts)
         
         return jsonify({
             'success': True,
@@ -1210,6 +1220,25 @@ def submit_answer():
             except Exception as se:
                 logger.error(f"Structured answer evaluation error: {se}", exc_info=True)
                 return jsonify({'success': False, 'message': 'Error evaluating structured answer'}), 500
+        elif subject == 'a_level_biology' and question_type == 'essay':
+            # A-Level Biology Essay marking - provide feedback based on essay plan and marking criteria
+            try:
+                # For essays, we provide constructive feedback rather than strict right/wrong
+                # Essays are evaluated based on content, structure, and use of key terms
+                feedback = '📝 Essay submitted! Review the marking criteria and model answer outline below.'
+                is_correct = True  # Essays are not strictly right/wrong, but we mark as "submitted" for progress tracking
+                detailed_solution = solution or 'Review the essay plan and marking criteria provided with the question.'
+                analysis_result = {
+                    'feedback': feedback,
+                    'encouragement': 'Well done on completing your essay! Compare your answer with the model answer outline and marking criteria.',
+                    'improvement_tips': 'Review the key terms that should be included and ensure your essay follows the suggested structure.'
+                }
+            except Exception as e:
+                logger.error(f"Essay answer evaluation error: {e}", exc_info=True)
+                feedback = 'Essay submitted successfully. Review the solution below.'
+                is_correct = True
+                detailed_solution = solution or 'No detailed feedback available.'
+                analysis_result = {}
         else:
             # For other subjects (Combined Science, English, etc.)
             # Handle MCQ answer validation: could be option letter (A/B/C/D) or full option text
@@ -4400,24 +4429,35 @@ def text_to_speech():
         
         if not text:
             return jsonify({'status': 'error', 'message': 'No text provided'}), 400
+        
+        # Clean and validate text
+        if not isinstance(text, str):
+            text = str(text)
+        
+        # Remove or replace problematic characters that might break TTS
+        text = text.strip()
+        if not text:
+            return jsonify({'status': 'error', 'message': 'Text is empty after cleaning'}), 400
             
         from services.voice_service import get_voice_service
         service = get_voice_service()
         
-        # Run async TTS in sync Flask
-        import asyncio
-        result = asyncio.run(service.text_to_speech(text, voice))
+        # Use the synchronous wrapper which properly handles event loops
+        result = service.text_to_speech_sync(text, voice)
         
-        if result['success']:
+        if result.get('success'):
             return jsonify({
                 'status': 'success',
                 'audio_url': f"/static/{result['audio_path']}"
             }), 200
         else:
-            return jsonify({'status': 'error', 'message': result.get('error')}), 500
+            error_msg = result.get('error', 'Unknown error occurred')
+            logger.error(f"TTS error: {error_msg}")
+            return jsonify({'status': 'error', 'message': error_msg}), 500
             
     except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+        logger.error(f"Voice speak endpoint error: {e}", exc_info=True)
+        return jsonify({'status': 'error', 'message': f'Failed to generate speech: {str(e)}'}), 500
 
 # ============================================================================
 # FLASHCARD GENERATION ENDPOINTS (AI-Powered Study Cards)

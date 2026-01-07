@@ -26,6 +26,7 @@ import { useAuth } from '../context/AuthContext';
 import { TypingIndicator } from '../components/TypingIndicator';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
+import { useNotification } from '../context/NotificationContext';
 import { Colors } from '../theme/colors';
 import { Audio } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
@@ -48,6 +49,7 @@ const TeacherModeScreen: React.FC = () => {
   const { user, updateUser } = useAuth();
   const { isDarkMode } = useTheme();
   const themedColors = useThemedColors();
+  const { showSuccess, showError, showWarning, showInfo } = useNotification();
   const { subject, gradeLevel, topic } = route.params as {
     subject: string;
     gradeLevel: string;
@@ -102,9 +104,17 @@ const TeacherModeScreen: React.FC = () => {
         if (user) {
           const newCredits = (user.credits || 0) - 3; // Teacher mode start costs 3 credits
           updateUser({ credits: newCredits });
+          showSuccess(`✅ Teacher Mode started! ${newCredits} credits remaining.`, 3000);
+          
+          if (newCredits <= 3 && newCredits > 0) {
+            setTimeout(() => {
+              showWarning(`⚠️ Running low on credits! Only ${newCredits} credits left.`, 5000);
+            }, 3500);
+          }
         }
       } else {
         console.error('Invalid session data:', sessionData);
+        showError('❌ Failed to start Teacher Mode session. Please try again.', 5000);
         Alert.alert(
           'Error',
           'Failed to start Teacher Mode session. Please try again.'
@@ -113,9 +123,11 @@ const TeacherModeScreen: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Teacher Mode error:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to start Teacher Mode session';
+      showError(`❌ ${errorMessage}`, 5000);
       Alert.alert(
         'Error',
-        error.response?.data?.message || error.message || 'Failed to start Teacher Mode session'
+        errorMessage
       );
       navigation.goBack();
     } finally {
@@ -212,21 +224,61 @@ const TeacherModeScreen: React.FC = () => {
 
   const playResponse = async (text: string) => {
     try {
+      // Stop and unload any existing sound
       if (sound) {
-        await sound.unloadAsync();
+        try {
+          await sound.stopAsync();
+          await sound.unloadAsync();
+        } catch (e) {
+          // Ignore errors when stopping/unloading
+        }
       }
+
+      // Configure audio mode for playback
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        staysActiveInBackground: false,
+        playsInSilentModeIOS: true,
+        shouldDuckAndroid: true,
+        playThroughEarpieceAndroid: false,
+      });
 
       // Get audio URL
       const audioUrl = await mathApi.speakText(text);
 
+      if (!audioUrl) {
+        throw new Error('No audio URL returned');
+      }
+
+      // Create and play the sound
       const { sound: newSound } = await Audio.Sound.createAsync(
         { uri: audioUrl },
-        { shouldPlay: true }
+        { 
+          shouldPlay: true,
+          isMuted: false,
+          volume: 1.0,
+          rate: 1.0,
+        }
       );
+
+      // Set up playback status listener
+      newSound.setOnPlaybackStatusUpdate((status) => {
+        if (status.isLoaded) {
+          if (status.didJustFinish) {
+            // Audio finished playing
+            newSound.unloadAsync().catch(console.error);
+          } else if (status.error) {
+            console.error('Playback error:', status.error);
+            Alert.alert('Playback Error', 'Failed to play audio. Please try again.');
+          }
+        }
+      });
+
       setSound(newSound);
-    } catch (error) {
+    } catch (error: any) {
       console.error('TTS Error', error);
-      Alert.alert('Error', 'Failed to play audio.');
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to play audio.';
+      Alert.alert('Error', errorMessage);
     }
   };
 

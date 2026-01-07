@@ -20,6 +20,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../services/api/authApi';
+import { useGoogleAuth } from '../hooks/useGoogleAuth';
 
 const { width, height } = Dimensions.get('window');
 
@@ -36,6 +37,7 @@ const RegisterScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigation = useNavigation();
   const { login } = useAuth();
+  const { isReady: isGoogleReady, signIn: signInWithGoogle } = useGoogleAuth();
 
   // Auto-format date of birth as DD/MM/YYYY
   const formatDateOfBirth = (text: string) => {
@@ -115,43 +117,27 @@ const RegisterScreen: React.FC = () => {
   };
 
   const handleGoogleSignIn = async () => {
+    if (!isGoogleReady) {
+      Alert.alert(
+        'Google Sign-Up unavailable',
+        'Google client IDs are missing. Please set EXPO_PUBLIC_GOOGLE_* env vars.'
+      );
+      return;
+    }
+
     setIsLoading(true);
     try {
-      Alert.alert(
-        'Google Sign-Up',
-        'Quickly create your account using Google. Proceed?',
-        [
-          { text: 'Cancel', style: 'cancel', onPress: () => setIsLoading(false) },
-          {
-            text: 'Continue',
-            onPress: async () => {
-              try {
-                const mockUserInfo = {
-                  email: 'google_user@gmail.com',
-                  name: 'Google User',
-                  given_name: 'Google',
-                  family_name: 'User',
-                  picture: 'https://via.placeholder.com/150'
-                };
+      const googleUser = await signInWithGoogle();
+      const response = await authApi.socialLogin('google', googleUser);
 
-                const response = await authApi.socialLogin('google', mockUserInfo);
-
-                if (response.success && response.token && response.user) {
-                  await login(response.user, response.token);
-                } else {
-                  Alert.alert('Sign Up Failed', response.message || 'Could not sign up with Google');
-                }
-              } catch (error) {
-                Alert.alert('Error', 'An error occurred during Google Sign-Up');
-              } finally {
-                setIsLoading(false);
-              }
-            }
-          }
-        ]
-      );
-    } catch (error) {
-      Alert.alert('Error', 'Google Sign-Up failed');
+      if (response.success && response.token && response.user) {
+        await login(response.user, response.token);
+      } else {
+        Alert.alert('Sign Up Failed', response.message || 'Could not sign up with Google');
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error?.message || 'Google Sign-Up failed');
+    } finally {
       setIsLoading(false);
     }
   };

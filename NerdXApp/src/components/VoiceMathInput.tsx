@@ -20,12 +20,30 @@ import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
 import api from '../services/api/config';
 
+type VoiceInputMode = 'math' | 'general';
+
 interface VoiceMathInputProps {
+    /**
+     * Called with the transcribed text (already formatted for math when mode==="math")
+     */
     onTranscription: (text: string) => void;
+    /**
+     * When true, disables tap/recording
+     */
     disabled?: boolean;
+    /**
+     * Selects the backend pipeline.
+     * math   -> /api/mobile/math/voice-to-text (Whisper + math formatting)
+     * general-> /api/mobile/voice/transcribe (generic Wispr Flow STT)
+     */
+    mode?: VoiceInputMode;
 }
 
-const VoiceMathInput: React.FC<VoiceMathInputProps> = ({ onTranscription, disabled = false }) => {
+const VoiceMathInput: React.FC<VoiceMathInputProps> = ({
+    onTranscription,
+    disabled = false,
+    mode = 'math',
+}) => {
     const { isDarkMode } = useTheme();
     const themedColors = useThemedColors();
     const [isRecording, setIsRecording] = useState(false);
@@ -124,19 +142,38 @@ const VoiceMathInput: React.FC<VoiceMathInputProps> = ({ onTranscription, disabl
                 name: 'voice_input.wav',
             } as any);
 
-            // Send to backend for processing
-            const response = await api.post('/api/mobile/math/voice-to-text', formData, {
+            // Send to backend for processing.
+            // - math mode: specialized math formatter (Whisper + math conversions)
+            // - general mode: lightweight Wispr Flow speech-to-text pipeline
+            const endpoint = mode === 'math'
+                ? '/api/mobile/math/voice-to-text'
+                : '/api/mobile/voice/transcribe';
+
+            const response = await api.post(endpoint, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
                 timeout: 30000, // 30 second timeout for processing
             });
 
-            if (response.data.success && response.data.data?.text) {
-                onTranscription(response.data.data.text);
-            } else {
+            if (mode === 'math') {
+                if (response.data.success && response.data.data?.text) {
+                    onTranscription(response.data.data.text);
+                    return;
+                }
                 Alert.alert('Error', response.data.message || 'Failed to transcribe audio');
+                return;
             }
+
+            // General/Wispr flow response shape { status: 'success', text: '...' }
+            const generalText = response.data.text || response.data.data?.text;
+            const isOk = response.data.status === 'success' || response.data.success;
+            if (isOk && generalText) {
+                onTranscription(generalText);
+                return;
+            }
+
+            Alert.alert('Error', response.data.message || 'Failed to transcribe audio');
 
         } catch (error: any) {
             console.error('Voice processing error:', error);

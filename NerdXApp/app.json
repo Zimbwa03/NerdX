@@ -2,6 +2,7 @@
   "expo": {
     "name": "NerdXApp",
     "slug": "nerdxapp",
+    "scheme": "com.Ngoni03.nerdxapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -12,7 +13,12 @@
       "backgroundColor": "#ffffff"
     },
     "assetBundlePatterns": [
-      "**/*"
+      "**/*",
+      "!assets/images/alevel_biology_card.png",
+      "!assets/images/alevel_chemistry_card.png",
+      "!assets/images/alevel_math_card.png",
+      "!assets/images/alevel_physics_card.png",
+      "!assets/images/alevel_*.png"
     ],
     "ios": {
       "supportsTablet": true,
@@ -24,6 +30,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.Ngoni03.nerdxapp",
+      "versionCode": 1,
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS",
@@ -54,16 +61,18 @@
         "expo-build-properties",
         {
           "android": {
-            "minSdkVersion": 24
+            "minSdkVersion": 24,
+            "enableProguardInReleaseBuilds": false,
+            "enableShrinkResourcesInReleaseBuilds": false
           }
         }
       ]
     ],
     "extra": {
       "eas": {
-        "projectId": "10b09e1c-bb91-462f-a44b-541668902670"
+        "projectId": "19c192c0-d5d8-409a-a1be-27c97f2ead8c"
       }
     },
-    "owner": "nerdx5"
+    "owner": "nerdx6"
   }
 }

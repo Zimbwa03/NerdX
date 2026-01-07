@@ -230,13 +230,21 @@ class MathQuestionGenerator:
 **Learning Objective:** {learning_obj}
 {variation_note}
 
+**CRITICAL MATH FORMATTING - DO NOT USE LaTeX OR $ SYMBOLS:**
+- Use Unicode superscripts: x², x³, xⁿ (NOT x^2 or $x^2$)
+- Use Unicode subscripts: x₁, x₂, aₙ (NOT x_1)
+- Write fractions as: (a+b)/(c+d) or a/b (NOT $\\frac{{a}}{{b}}$)
+- Use √ for square root: √(x+1) (NOT $\\sqrt{{}}$)
+- Use π for pi, ± for plus/minus, × for multiply
+- Examples: "x² + 3x - 4 = 0", "√(16) = 4", "3/4 + 1/2"
+
 **Specific Instructions:**
 {structured_prompt}
 
 Return your response in this EXACT JSON format:
 {{
-    "question": "Clear, focused question testing the concept",
-    "solution": "Complete step-by-step solution with working",
+    "question": "Clear, focused question testing the concept (plain text math)",
+    "solution": "Complete step-by-step solution with working (plain text math)",
     "answer": "Final answer only",
     "points": {points},
     "explanation": "Conceptual explanation of what is being tested",
@@ -250,9 +258,18 @@ Generate the question now:"""
             # Default prompt when structured prompts not available
             prompt = f"""Generate a high-quality {difficulty} level {subject} question about {topic} for ZIMSEC O-Level students.
 {variation_note}
+
+**CRITICAL MATH FORMATTING - DO NOT USE LaTeX OR $ SYMBOLS:**
+- Use Unicode superscripts: x², x³, xⁿ (NOT x^2 or $x^2$)
+- Use Unicode subscripts: x₁, x₂, aₙ (NOT x_1)
+- Write fractions as: (a+b)/(c+d) or a/b (NOT $\\frac{{a}}{{b}}$)
+- Use √ for square root: √(x+1) (NOT $\\sqrt{{}}$)
+- Use π for pi, ± for plus/minus, × for multiply
+- Examples: "x² + 3x - 4 = 0", "√(16) = 4", "3/4 + 1/2"
+
 Requirements:
 - Create a clear, specific question following ZIMSEC exam format
-- Use proper mathematical notation and terminology
+- Use PLAIN TEXT Unicode math notation - NO LaTeX
 - Include specific numbers and realistic scenarios
 - Appropriate for {difficulty} difficulty level: {difficulty_descriptions[difficulty]}
 - Focus specifically on {topic}
@@ -262,8 +279,8 @@ Requirements:
 
 Return your response in this EXACT JSON format:
 {{
-    "question": "Your generated question here",
-    "solution": "Complete step-by-step solution with clear working",
+    "question": "Your generated question here (plain text math)",
+    "solution": "Complete step-by-step solution with clear working (plain text math)",
     "answer": "Final answer only",
     "points": {points},
     "explanation": "Brief explanation of the concept being tested",

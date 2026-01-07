@@ -131,6 +131,18 @@ export const Icons = {
   error: (size = 24, color = '#D32F2F') => (
     <Icon key="error" name="close-circle" size={size} color={color} library="ionicons" />
   ),
+  checkCircle: (size = 24, color = '#4CAF50') => (
+    <Icon key="checkCircle" name="checkmark-circle" size={size} color={color} library="ionicons" />
+  ),
+  alertCircle: (size = 24, color = '#D32F2F') => (
+    <Icon key="alertCircle" name="alert-circle" size={size} color={color} library="ionicons" />
+  ),
+  alertTriangle: (size = 24, color = '#FF9800') => (
+    <Icon key="alertTriangle" name="warning" size={size} color={color} library="ionicons" />
+  ),
+  x: (size = 24, color = '#757575') => (
+    <Icon key="x" name="close" size={size} color={color} library="ionicons" />
+  ),
 
   // Payment & Credits
   payment: (size = 24, color = '#4CAF50') => (

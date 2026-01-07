@@ -236,22 +236,32 @@ KEY CONCEPTS TO COVER: {', '.join(key_concepts) if key_concepts else 'General co
 
 KEY FORMULAS (use when appropriate): {', '.join(key_formulas) if key_formulas else 'As applicable'}
 
+CRITICAL FORMATTING RULES - DO NOT USE LaTeX OR $ SYMBOLS:
+- Use Unicode superscripts: m², s⁻¹, m/s², kg·m/s (NOT $m^2$ or m^2)
+- Use Unicode subscripts: v₀, a₁, Fₙₑₜ (NOT v_0 or $v_0$)
+- Write fractions as: (a+b)/(c+d) or a/b (NOT $\\frac{{a}}{{b}}$)
+- Use √ for square root: √(2gh) (NOT $\\sqrt{{}}$)
+- Use proper symbols: Ω for ohms, μ for micro, ° for degrees
+- Use × for multiplication: 3.0 × 10⁸ m/s
+- Examples: "v² = u² + 2as", "F = mv²/r", "E = ½mv²"
+
 REQUIREMENTS:
 1. Create ONE multiple choice question with 4 options (A, B, C, D)
 2. The question should be clear, unambiguous, and at A Level standard
-3. All options must be plausible - avoid obviously wrong answers
-4. For calculation questions, include appropriate units
-5. The correct answer must be scientifically accurate
-6. Provide a detailed explanation that a student would find helpful
+3. Use PLAIN TEXT Unicode notation - NO LaTeX or $ symbols
+4. All options must be plausible - avoid obviously wrong answers
+5. For calculation questions, include appropriate units
+6. The correct answer must be scientifically accurate
+7. Provide a detailed explanation that a student would find helpful
 
 RESPONSE FORMAT (JSON):
 {{
-    "question": "The full question text here",
+    "question": "The full question text here (plain text math)",
     "options": {{
-        "A": "First option",
-        "B": "Second option",
-        "C": "Third option",
-        "D": "Fourth option"
+        "A": "First option (plain text)",
+        "B": "Second option (plain text)",
+        "C": "Third option (plain text)",
+        "D": "Fourth option (plain text)"
     }},
     "correct_answer": "A",
     "explanation": "Detailed explanation of why this is correct and why other options are wrong",
@@ -284,7 +294,15 @@ Generate the question now:"""
                     "messages": [
                         {
                             "role": "system",
-                            "content": "You are an expert A Level Physics examiner. Generate high-quality MCQ questions suitable for Cambridge/ZIMSEC A Level Physics examinations. Always respond with valid JSON."
+                            "content": """You are an expert A Level Physics examiner. Generate high-quality MCQ questions suitable for Cambridge/ZIMSEC A Level Physics examinations.
+
+CRITICAL: Use PLAIN TEXT Unicode notation - NEVER use LaTeX or $ symbols:
+- Use m², s⁻¹, kg·m/s for units (NOT $m^2$)
+- Use fractions as a/b (NOT $\\frac{a}{b}$)
+- Use √ for square roots, × for multiplication
+- Use v₀, v₁ for subscripts (NOT v_0)
+
+Always respond with valid JSON."""
                         },
                         {
                             "role": "user",
@@ -342,7 +360,7 @@ Generate the question now:"""
         return None
     
     def _parse_question_response(self, content: str) -> Optional[Dict]:
-        """Parse the JSON response from DeepSeek"""
+        """Parse the JSON response from DeepSeek with truncation recovery"""
         try:
             # Try to extract JSON from the response
             content = content.strip()
@@ -351,14 +369,27 @@ Generate the question now:"""
             if '```json' in content:
                 start = content.find('```json') + 7
                 end = content.find('```', start)
-                content = content[start:end].strip()
+                if end > start:
+                    content = content[start:end].strip()
+                else:
+                    content = content[start:].strip()
             elif '```' in content:
                 start = content.find('```') + 3
                 end = content.find('```', start)
-                content = content[start:end].strip()
+                if end > start:
+                    content = content[start:end].strip()
+                else:
+                    content = content[start:].strip()
             
-            # Parse JSON
-            question_data = json.loads(content)
+            # Try to parse JSON, with recovery for truncated responses
+            try:
+                question_data = json.loads(content)
+            except json.JSONDecodeError as e:
+                logger.warning(f"Initial JSON parse failed: {e}")
+                # Attempt to recover truncated JSON
+                question_data = self._recover_truncated_json(content)
+                if not question_data:
+                    return None
             
             # Validate required fields
             required_fields = ['question', 'options', 'correct_answer', 'explanation']
@@ -381,9 +412,66 @@ Generate the question now:"""
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse JSON response: {e}")
             logger.error(f"Content: {content[:500]}")
+            # Try to recover truncated JSON
+            recovered = self._recover_truncated_json(content)
+            if recovered:
+                return recovered
             return None
         except Exception as e:
             logger.error(f"Error parsing question response: {e}")
+            return None
+    
+    def _recover_truncated_json(self, content: str) -> Optional[Dict]:
+        """Attempt to recover data from a truncated JSON response"""
+        try:
+            import re
+            
+            # Find where JSON starts
+            json_start = content.find('{')
+            if json_start == -1:
+                return None
+            
+            content = content[json_start:]
+            
+            # Try to extract key fields even from incomplete JSON
+            # Extract question
+            question_match = re.search(r'"question"\s*:\s*"([^"]+)"', content)
+            question = question_match.group(1) if question_match else None
+            
+            if not question:
+                return None
+            
+            # Extract options
+            options = {}
+            for letter in ['A', 'B', 'C', 'D']:
+                opt_match = re.search(rf'"{letter}"\s*:\s*"([^"]+)"', content)
+                if opt_match:
+                    options[letter] = opt_match.group(1)
+            
+            # Extract correct answer
+            answer_match = re.search(r'"correct_answer"\s*:\s*"([ABCD])"', content)
+            correct_answer = answer_match.group(1) if answer_match else 'A'
+            
+            # Extract explanation if available
+            explanation_match = re.search(r'"explanation"\s*:\s*"([^"]+)"', content)
+            explanation = explanation_match.group(1) if explanation_match else "See the worked solution."
+            
+            # If we have enough data, construct a valid response
+            if question and len(options) >= 4:
+                logger.info("Successfully recovered truncated JSON response for Physics")
+                return {
+                    "question": question,
+                    "options": options,
+                    "correct_answer": correct_answer,
+                    "explanation": explanation,
+                    "solution": "Work through the problem step by step using the relevant physics principles.",
+                    "teaching_explanation": "Review the key concepts for this topic."
+                }
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Failed to recover truncated JSON: {e}")
             return None
 
 

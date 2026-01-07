@@ -78,12 +78,30 @@ const ProjectListScreen: React.FC = () => {
                     style: 'destructive',
                     onPress: async () => {
                         try {
-                            await projectApi.deleteProject(project.id);
-                            // Refresh the list
-                            loadProjects();
-                            Alert.alert('Success', 'Project deleted successfully');
-                        } catch (error) {
-                            Alert.alert('Error', 'Failed to delete project. Please try again.');
+                            // Optimistically remove from UI for better UX
+                            const projectId = project.id;
+                            setProjects(prevProjects => prevProjects.filter(p => p.id !== projectId));
+                            
+                            // Attempt deletion on server
+                            const success = await projectApi.deleteProject(project.id);
+                            
+                            if (success) {
+                                // Refresh to ensure we have the latest state
+                                await loadProjects();
+                                // Alert.alert('Success', 'Project deleted successfully');
+                            } else {
+                                // If deletion failed, restore the project in the list
+                                await loadProjects();
+                                Alert.alert('Error', 'Failed to delete project. Please try again.');
+                            }
+                        } catch (error: any) {
+                            console.error('Delete project error:', error);
+                            // Restore the project list in case of error
+                            await loadProjects();
+                            Alert.alert(
+                                'Error', 
+                                error?.response?.data?.message || 'Failed to delete project. Please try again.'
+                            );
                         }
                     }
                 }

@@ -772,10 +772,19 @@ Remember: You're their project partner! Be helpful, be thorough, and make learni
     def get_user_projects(self, user_id: str) -> List[Dict]:
         """Get all active projects for a user"""
         try:
-            projects = make_supabase_request("GET", "user_projects", filters={
-                "user_id": f"eq.{user_id}",
-                "completed": "eq.false"
-            })
+            # Use service role to ensure we get all projects (bypass RLS if needed)
+            # Filter by user_id and only non-completed projects
+            projects = make_supabase_request(
+                "GET", 
+                "user_projects", 
+                filters={
+                    "user_id": f"eq.{user_id}",
+                    "completed": "eq.false"
+                },
+                use_service_role=False  # Use regular auth - RLS should allow user to see their own projects
+            )
+            
+            logger.debug(f"Retrieved {len(projects) if projects else 0} projects for user {user_id}")
             
             # Parse project_data for each project
             results = []
@@ -895,25 +904,83 @@ Remember: You're their project partner! Be helpful, be thorough, and make learni
 
     def delete_project(self, user_id: str, project_id: int) -> bool:
         """Delete a project by ID after verifying user ownership"""
+        import time
         try:
-            # Verify user owns this project
+            # Verify user owns this project first
             project = self.get_project_details(user_id, project_id)
             if not project:
                 logger.warning(f"Project {project_id} not found or not owned by {user_id}")
                 return False
             
-            # Delete the project
+            logger.info(f"Attempting to delete project {project_id} for user {user_id}")
+            logger.info(f"Project exists: {project is not None}, ID: {project.get('id') if project else None}")
+            
+            # Delete the project using service role for proper permissions
+            # Try with both filters first
             result = make_supabase_request(
                 "DELETE", 
                 "user_projects", 
-                filters={"id": f"eq.{project_id}", "user_id": f"eq.{user_id}"}
+                filters={"id": f"eq.{project_id}", "user_id": f"eq.{user_id}"},
+                use_service_role=True
             )
             
-            logger.info(f"Deleted project {project_id} for user {user_id}")
+            # Check if DELETE request succeeded
+            if result is None:
+                logger.error(f"Delete request returned None for project {project_id} - request may have failed")
+                # Try with just ID filter as fallback
+                logger.info(f"Retrying DELETE with just ID filter...")
+                result = make_supabase_request(
+                    "DELETE", 
+                    "user_projects", 
+                    filters={"id": f"eq.{project_id}"},
+                    use_service_role=True
+                )
+                if result is None:
+                    logger.error(f"Delete request still failed for project {project_id}")
+                    return False
+            
+            logger.info(f"Delete request completed. Result type: {type(result)}, Result: {result}")
+            
+            # Small delay to allow database to process deletion
+            time.sleep(0.5)
+            
+            # Verify deletion succeeded by checking if project still exists
+            # Use service role to bypass any RLS that might hide the deletion
+            verify_projects = make_supabase_request(
+                "GET",
+                "user_projects",
+                filters={"id": f"eq.{project_id}", "user_id": f"eq.{user_id}"},
+                use_service_role=True
+            )
+            
+            if verify_projects and len(verify_projects) > 0:
+                logger.error(f"Project {project_id} still exists after deletion attempt. Remaining projects: {verify_projects}")
+                # Try one more time with direct deletion query
+                logger.info(f"Retrying deletion with more specific filter...")
+                result2 = make_supabase_request(
+                    "DELETE", 
+                    "user_projects", 
+                    filters={"id": f"eq.{project_id}"},
+                    use_service_role=True
+                )
+                if result2 is not None:
+                    time.sleep(0.5)
+                    verify_projects2 = make_supabase_request(
+                        "GET",
+                        "user_projects",
+                        filters={"id": f"eq.{project_id}"},
+                        use_service_role=True
+                    )
+                    if verify_projects2 and len(verify_projects2) > 0:
+                        logger.error(f"Project {project_id} STILL exists after retry. Database deletion may be failing.")
+                        return False
+                return False
+            
+            logger.info(f"Successfully deleted project {project_id} for user {user_id}")
             return True
             
         except Exception as e:
-            logger.error(f"Error deleting project {project_id}: {e}")
+            logger.error(f"Error deleting project {project_id}: {e}", exc_info=True)
             return False
 
     # ==================== Deep Research & Multimodal Features ====================
