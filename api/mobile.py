@@ -887,6 +887,47 @@ def generate_question():
             except Exception:
                 pass
         
+        # Handle A Level Biology structured and essay questions
+        if subject == 'a_level_biology' and (question_data.get('question_type') or '').lower() in ['structured', 'essay']:
+            question_type_mobile = 'structured'
+            options = []
+            correct_answer = ''
+            # A Level Biology uses 'part' instead of 'label' and 'expected_answer' instead of 'model_answer'
+            # Normalize the parts array for mobile app compatibility
+            try:
+                raw_parts = question_data.get('parts', []) if isinstance(question_data.get('parts'), list) else []
+                normalized_parts = []
+                model_lines = []
+                for p in raw_parts:
+                    # Normalize part format: 'part' -> 'label', 'expected_answer' -> 'model_answer'
+                    label = p.get('label') or p.get('part', '')
+                    if isinstance(label, str) and not label.startswith('('):
+                        label = f"({label})"  # Format as (a), (b), etc.
+                    normalized_part = {
+                        'label': label,
+                        'question': p.get('question', ''),
+                        'marks': p.get('marks', 0),
+                        'model_answer': p.get('expected_answer') or p.get('model_answer', ''),
+                        'command_word': p.get('command_word', '')
+                    }
+                    normalized_parts.append(normalized_part)
+                    # Build solution from expected answers
+                    if normalized_part['model_answer']:
+                        model_lines.append(f"{label} [{p.get('marks', '')}]: {normalized_part['model_answer']}")
+                
+                # Store normalized parts for later use
+                question_data['_normalized_parts'] = normalized_parts
+                
+                if model_lines:
+                    solution = "MODEL ANSWERS:\n" + "\n".join(model_lines[:10])
+                
+                # Add teaching points if available
+                teaching_points = question_data.get('teaching_points', '')
+                if teaching_points:
+                    solution += f"\n\n📚 Key Learning Points:\n{teaching_points}"
+            except Exception as e:
+                logger.warning(f"Error normalizing A Level Biology parts: {e}")
+        
         # Format question for mobile
         question = {
             'id': str(uuid.uuid4()),
@@ -942,6 +983,21 @@ def generate_question():
                 'total_marks': question_data.get('total_marks', 0),
                 # rubric is needed for server-side marking in stateless mobile flow
                 'marking_rubric': question_data.get('marking_rubric', {})
+            }
+        
+        # Include structured payload for A Level Biology structured/essay questions
+        if subject == 'a_level_biology' and question_type_mobile == 'structured':
+            # Use normalized parts if available, otherwise use original parts
+            parts_to_use = question_data.get('_normalized_parts') or question_data.get('parts', [])
+            question['structured_question'] = {
+                'question_type': question_data.get('question_type', 'structured'),
+                'subject': 'A Level Biology',
+                'topic': question_data.get('topic', ''),
+                'difficulty': question_data.get('difficulty', difficulty),
+                'stem': question_data.get('question', ''),  # A Level Biology uses 'question' for stem
+                'parts': parts_to_use,
+                'total_marks': question_data.get('total_marks', 12),
+                'teaching_points': question_data.get('teaching_points', '')
             }
         
         return jsonify({

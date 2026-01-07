@@ -145,7 +145,10 @@ export const quizApi = {
       if (questionFormat) {
         payload.question_format = questionFormat;
       }
-      const response = await api.post('/api/mobile/quiz/generate', payload);
+      // Use longer timeout for quiz generation (structured/essay questions can take 30+ seconds)
+      const response = await api.post('/api/mobile/quiz/generate', payload, {
+        timeout: 60000  // 60 second timeout for question generation
+      });
       return response.data.data || null;
     } catch (error: any) {
       console.error('Generate question error:', error);

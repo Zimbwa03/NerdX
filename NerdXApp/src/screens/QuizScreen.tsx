@@ -58,7 +58,7 @@ const QuizScreen: React.FC = () => {
   const [generatingQuestion, setGeneratingQuestion] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [questionCount, setQuestionCount] = useState(1);
-  
+
   // Structured question state (Paper 2 style)
   const [structuredAnswers, setStructuredAnswers] = useState<Record<string, string>>({});
 
@@ -138,7 +138,7 @@ const QuizScreen: React.FC = () => {
     // For structured questions, combine all part answers
     const isStructured = question.question_type === 'structured' && question.structured_question;
     let answerToSubmit: string;
-    
+
     if (isStructured) {
       // Combine all structured answers into a formatted string
       const parts = question.structured_question?.parts || [];
@@ -147,7 +147,7 @@ const QuizScreen: React.FC = () => {
         return `${part.label}: ${answer}`;
       }).join('\n\n');
       answerToSubmit = answersFormatted;
-      
+
       // Check if at least one answer is filled
       const hasAnyAnswer = Object.values(structuredAnswers).some(a => a.trim().length > 0);
       if (!hasAnyAnswer) {
@@ -156,7 +156,7 @@ const QuizScreen: React.FC = () => {
       }
     } else {
       answerToSubmit = question.allows_text_input ? textAnswer : selectedAnswer;
-      
+
       if (!answerToSubmit && !answerImage) {
         Alert.alert('Error', 'Please enter your answer or upload an image');
         return;
@@ -532,7 +532,7 @@ const QuizScreen: React.FC = () => {
                       Total: {question.structured_question.total_marks} marks
                     </Text>
                   </View>
-                  
+
                   {question.structured_question.parts.map((part, index) => (
                     <Card key={index} variant="elevated" style={styles.structuredPartCard}>
                       <View style={styles.structuredPartHeader}>
@@ -540,7 +540,7 @@ const QuizScreen: React.FC = () => {
                         <Text style={styles.structuredPartMarks}>[{part.marks}]</Text>
                       </View>
                       <Text style={styles.structuredPartQuestion}>{part.question}</Text>
-                      
+
                       {!result ? (
                         <TextInput
                           style={styles.structuredPartInput}
@@ -571,6 +571,29 @@ const QuizScreen: React.FC = () => {
                       )}
                     </Card>
                   ))}
+                </View>
+              )}
+
+              {/* Fallback for structured questions without parts object (e.g., A Level Biology before backend update) */}
+              {question.question_type === 'structured' && !question.structured_question && !result && (
+                <View style={styles.answerInputContainer}>
+                  <Text style={styles.answerInputLabel}>Your Answer:</Text>
+                  <Text style={[styles.voiceHintText, { marginBottom: 8 }]}>
+                    📝 Write your complete answer below. Address all parts of the question.
+                  </Text>
+                  <View style={styles.answerInputRow}>
+                    <TextInput
+                      style={[styles.answerInput, styles.answerInputFlex, { minHeight: 150 }]}
+                      value={textAnswer}
+                      onChangeText={setTextAnswer}
+                      placeholder="Enter your complete answer here..."
+                      placeholderTextColor={Colors.text.secondary}
+                      multiline
+                      numberOfLines={8}
+                      textAlignVertical="top"
+                      editable={!result}
+                    />
+                  </View>
                 </View>
               )}
 

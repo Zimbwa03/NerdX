@@ -332,6 +332,8 @@ REQUIREMENTS:
 4. All distractors must be plausible (based on common misconceptions)
 5. Include context or scenarios where appropriate
 6. Provide a detailed explanation with teaching points
+7. DO NOT reference any diagrams, images, graphs, tables, or figures - we cannot display visual content
+8. The question must be fully self-contained with all information in text form
 
 RESPONSE FORMAT (strict JSON):
 {{
@@ -361,9 +363,14 @@ Generate the MCQ now:"""
 Level: {level} | Difficulty: {difficulty}
 Concepts: {concepts_str}
 
+IMPORTANT RULES:
+- DO NOT reference any diagrams, images, graphs, tables, or figures
+- The question must be fully self-contained with all information in text form
+- Use real-world scenarios, experimental descriptions, or data presented in text
+
 JSON format:
 {{
-    "question": "Main context/stem",
+    "question": "Main context/stem (NO diagram references)",
     "parts": [
         {{"part": "a", "question": "...", "marks": 3, "expected_answer": "..."}},
         {{"part": "b", "question": "...", "marks": 4, "expected_answer": "..."}},
@@ -389,9 +396,14 @@ Level: {level} | Difficulty: {difficulty}
 Key concepts: {concepts_str}
 Required terms: {terms_str}
 
+IMPORTANT RULES:
+- DO NOT reference any diagrams, images, graphs, tables, or figures
+- The question must be fully self-contained with all information in text form
+- Focus on conceptual understanding, processes, and explanations
+
 JSON format:
 {{
-    "question": "Full essay question (use Discuss/Explain/Compare)",
+    "question": "Full essay question (use Discuss/Explain/Compare) - NO diagram references",
     "command_word": "Discuss/Explain/Compare",
     "total_marks": 25,
     "essay_plan": {{
