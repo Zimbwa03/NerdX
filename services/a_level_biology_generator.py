@@ -381,20 +381,28 @@ CRITICAL FORMATTING RULES - DO NOT USE LaTeX OR $ SYMBOLS:
 IMPORTANT: Structured questions require SHORT, CONCISE answers (typically 1 sentence or brief phrase).
 Each part should test a specific point that can be answered briefly but accurately.
 
+CRITICAL RESTRICTIONS:
+- DO NOT create questions that require diagrams or images
+- DO NOT ask "What part is labeled X?" or "Identify the structure labeled Y"
+- DO NOT ask questions that require visual identification from diagrams
+- Focus on KNOWLEDGE-BASED questions that test understanding, recall, and application
+- You may describe scenarios, processes, or concepts in text, but never require diagram interpretation
+
 REQUIREMENTS:
-1. Include a stimulus (diagram description, table, graph, or scenario) if appropriate
+1. Use text-based scenarios, data tables, or process descriptions (NO diagram references)
 2. Part (a): 2-3 marks - Test recall or basic understanding (SHORT answer - 1 sentence max)
 3. Part (b): 3-4 marks - Test application or interpretation (SHORT answer - 1-2 sentences max)
 4. Part (c): 3-4 marks - Test analysis or brief explanation (SHORT answer - 1-2 sentences max)
 5. Keep total marks between 8-12 marks
 6. Each part should be answerable in 1 sentence or brief phrase
-7. Provide full marking scheme with expected SHORT answers
-8. Include examiner tips for common mistakes
-9. Use PLAIN TEXT Unicode notation - NO LaTeX
+7. All questions must be answerable using knowledge only - NO visual diagram interpretation
+8. Provide full marking scheme with expected SHORT answers
+9. Include examiner tips for common mistakes
+10. Use PLAIN TEXT Unicode notation - NO LaTeX
 
 RESPONSE FORMAT (strict JSON):
 {{
-    "stimulus": "Description of any diagram, table, or scenario (or null if not needed)",
+    "stimulus": "Text description of scenario, data table, or process (NO diagram references - use text descriptions only)",
     "question": "Main question introduction/context",
     "parts": [
         {{

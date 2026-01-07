@@ -330,15 +330,14 @@ const ALevelChemistryScreen: React.FC = () => {
             >
                 {/* Feature Cards Section */}
                 <View style={styles.section}>
-                    {/* Notes temporarily hidden */}
-                    {/* <ALevelFeatureCard
+                    <ALevelFeatureCard
                         title="Chemistry Notes"
                         subtitle="Comprehensive A Level notes with equations"
                         icon={<MaterialCommunityIcons name="book-open-page-variant" size={26} color="#00897B" />}
                         iconBgColor="rgba(0, 137, 123, 0.12)"
                         onPress={handleChemistryNotes}
                         isDarkMode={isDarkMode}
-                    /> */}
+                    />
 
                     <ALevelFeatureCard
                         title="AI Chemistry Tutor"

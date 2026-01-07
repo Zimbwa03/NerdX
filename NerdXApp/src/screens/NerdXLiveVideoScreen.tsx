@@ -30,10 +30,11 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 // WebSocket server URL
 const WS_URL = 'wss://nerdx-voice.onrender.com/ws/nerdx-live-video';
 
-// Frame capture settings
-const FRAME_INTERVAL_MS = 500; // Capture frame every 500ms (2 FPS for efficiency)
-const FRAME_QUALITY = 0.5; // JPEG quality (0.1 - 1.0)
-const FRAME_WIDTH = 640; // Resize frame width
+// Real-time video streaming settings (like Gemini app)
+const FRAME_INTERVAL_MS = 100; // Capture frame every 100ms (10 FPS for smooth real-time video)
+const FRAME_QUALITY = 0.7; // JPEG quality - balanced for quality and speed
+const MAX_FRAME_SIZE = 512; // Max dimension for faster processing
+const FRAME_BUFFER_SIZE = 3; // Buffer frames to prevent gaps
 
 // Jitter buffer settings
 const MIN_BUFFER_CHUNKS = 2;
@@ -57,6 +58,8 @@ const NerdXLiveVideoScreen: React.FC = () => {
     const recordingRef = useRef<Audio.Recording | null>(null);
     const soundRef = useRef<Audio.Sound | null>(null);
     const frameIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const frameCaptureInProgressRef = useRef(false); // Prevent overlapping captures
+    const frameQueueRef = useRef<string[]>([]); // Queue frames for smooth streaming
     const audioQueueRef = useRef<string[]>([]);
     const isPlayingRef = useRef(false);
     const hasStartedPlaybackRef = useRef(false);
@@ -156,43 +159,77 @@ const NerdXLiveVideoScreen: React.FC = () => {
         }
     }, []);
 
-    // ===== VIDEO FRAME CAPTURE =====
+    // ===== REAL-TIME VIDEO FRAME CAPTURE (Continuous Streaming) =====
     const captureAndSendFrame = useCallback(async () => {
+        // Prevent overlapping captures
+        if (frameCaptureInProgressRef.current) {
+            return;
+        }
+
         if (!cameraRef.current || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
             return;
         }
 
+        frameCaptureInProgressRef.current = true;
+
         try {
-            // Capture photo as base64
+            // Capture frame with optimized settings for real-time streaming
             const photo = await cameraRef.current.takePictureAsync({
                 base64: true,
                 quality: FRAME_QUALITY,
-                skipProcessing: true,
+                skipProcessing: true, // Skip processing for speed
+                exif: false, // Don't include EXIF data
             });
 
-            if (photo?.base64 && wsRef.current?.readyState === WebSocket.OPEN) {
-                // Send video frame to server
-                wsRef.current.send(JSON.stringify({
-                    type: 'video',
-                    data: photo.base64,
-                    mimeType: 'image/jpeg',
-                }));
-                console.log('📹 Frame sent');
+            if (photo?.base64) {
+                // Add to queue for smooth streaming
+                frameQueueRef.current.push(photo.base64);
+                
+                // Keep queue size manageable
+                if (frameQueueRef.current.length > FRAME_BUFFER_SIZE) {
+                    frameQueueRef.current.shift(); // Remove oldest frame
+                }
+
+                // Send latest frame immediately for real-time processing
+                if (wsRef.current?.readyState === WebSocket.OPEN) {
+                    const frameToSend = frameQueueRef.current[frameQueueRef.current.length - 1];
+                    wsRef.current.send(JSON.stringify({
+                        type: 'video',
+                        data: frameToSend,
+                        mimeType: 'image/jpeg',
+                        timestamp: Date.now(), // Include timestamp for frame ordering
+                    }));
+                }
             }
-        } catch (error) {
-            // Silently handle frame capture errors (camera might be busy)
-            console.debug('Frame capture skipped');
+        } catch (error: any) {
+            // Handle errors gracefully - camera might be busy
+            if (error?.message?.includes('Camera is already taking a picture')) {
+                // Camera busy, skip this frame
+                console.debug('Camera busy, skipping frame');
+            } else {
+                console.debug('Frame capture error:', error?.message || error);
+            }
+        } finally {
+            frameCaptureInProgressRef.current = false;
         }
     }, []);
 
     const startFrameCapture = useCallback(() => {
         if (frameIntervalRef.current) return;
         
+        // Clear any existing queue
+        frameQueueRef.current = [];
+        frameCaptureInProgressRef.current = false;
+        
+        // Start continuous frame capture at 10 FPS for real-time video
         frameIntervalRef.current = setInterval(() => {
             captureAndSendFrame();
         }, FRAME_INTERVAL_MS);
         
-        console.log('📹 Frame capture started');
+        // Send first frame immediately
+        setTimeout(() => captureAndSendFrame(), 50);
+        
+        console.log(`📹 Real-time video streaming started (${1000/FRAME_INTERVAL_MS} FPS)`);
     }, [captureAndSendFrame]);
 
     const stopFrameCapture = useCallback(() => {
@@ -200,7 +237,9 @@ const NerdXLiveVideoScreen: React.FC = () => {
             clearInterval(frameIntervalRef.current);
             frameIntervalRef.current = null;
         }
-        console.log('📹 Frame capture stopped');
+        frameQueueRef.current = [];
+        frameCaptureInProgressRef.current = false;
+        console.log('📹 Real-time video streaming stopped');
     }, []);
 
     // ===== AUDIO RECORDING =====
@@ -295,7 +334,7 @@ const NerdXLiveVideoScreen: React.FC = () => {
                 case 'ready':
                     console.log('🎧 NerdX Live Video ready');
                     setConnectionState('ready');
-                    setStatusMessage('Ready! Show me what you\'re working on');
+                    setStatusMessage('📹 Real-time video active! Show me what you\'re working on');
                     configureAudioMode(false);
                     break;
 
@@ -350,8 +389,8 @@ const NerdXLiveVideoScreen: React.FC = () => {
 
             ws.onopen = () => {
                 console.log('🔗 WebSocket connected');
-                setStatusMessage('Connected! Starting video...');
-                // Start frame capture
+                setStatusMessage('Connected! Starting real-time video stream...');
+                // Start continuous frame capture for real-time video
                 startFrameCapture();
             };
 
@@ -514,11 +553,19 @@ const NerdXLiveVideoScreen: React.FC = () => {
                 {/* Instructions overlay */}
                 <View style={styles.instructionsContainer}>
                     <View style={styles.instructionBox}>
-                        <Ionicons name="eye-outline" size={20} color="#fff" />
+                        <Ionicons name="videocam" size={20} color="#fff" />
                         <Text style={styles.instructionText}>
-                            Point camera at your work
+                            {connectionState === 'active' || connectionState === 'ready'
+                                ? '📹 Real-time video streaming active'
+                                : 'Point camera at your work'}
                         </Text>
                     </View>
+                    {(connectionState === 'active' || connectionState === 'ready') && (
+                        <View style={styles.streamingIndicator}>
+                            <View style={styles.streamingDot} />
+                            <Text style={styles.streamingText}>LIVE</Text>
+                        </View>
+                    )}
                 </View>
 
                 {/* Gradient overlay at bottom */}
@@ -573,10 +620,12 @@ const NerdXLiveVideoScreen: React.FC = () => {
                     {/* Hint text */}
                     <Text style={styles.hintText}>
                         {connectionState === 'idle' 
-                            ? 'Tap to start video tutoring'
-                            : isRecording 
-                                ? 'Tap to send your question'
-                                : 'Tap mic to ask a question'}
+                            ? 'Tap to start real-time video tutoring'
+                            : connectionState === 'active' || connectionState === 'ready'
+                                ? '📹 AI can see your work in real-time. Tap mic to ask questions.'
+                                : isRecording 
+                                    ? 'Tap to send your question'
+                                    : 'Tap mic to ask a question'}
                     </Text>
                 </View>
             </CameraView>
@@ -687,6 +736,28 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 14,
         marginLeft: 8,
+    },
+    streamingIndicator: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(244, 67, 54, 0.8)',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 16,
+        marginTop: 8,
+    },
+    streamingDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: '#fff',
+        marginRight: 6,
+    },
+    streamingText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: '700',
+        letterSpacing: 1,
     },
     bottomGradient: {
         position: 'absolute',

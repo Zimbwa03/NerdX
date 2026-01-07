@@ -15,6 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Slider from '@react-native-community/slider';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
+import { useNotification } from '../context/NotificationContext';
 import { FlashcardPlayer, Flashcard } from './FlashcardPlayer';
 import { flashcardApi } from '../services/api/flashcardApi';
 import { TopicNotes } from '../services/api/scienceNotesApi';
@@ -34,6 +35,7 @@ const FlashcardSection: React.FC<FlashcardSectionProps> = ({
 }) => {
     const { isDarkMode } = useTheme();
     const themedColors = useThemedColors();
+    const { showSuccess, showError } = useNotification();
 
     const [cardCount, setCardCount] = useState(20);
     const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
@@ -85,7 +87,9 @@ const FlashcardSection: React.FC<FlashcardSectionProps> = ({
                 if (cards.length > 0) {
                     setFlashcards(cards);
                     setShowPlayer(true);
+                    showSuccess(`✅ Generated ${cards.length} flashcards!`, 3000);
                 } else {
+                    showError('❌ Failed to generate flashcards. Please try again.', 4000);
                     Alert.alert(
                         'Generation Failed',
                         'Could not generate flashcards. Please try again.',
@@ -107,7 +111,9 @@ const FlashcardSection: React.FC<FlashcardSectionProps> = ({
                     setFlashcards([firstCard]);
                     setGeneratedQuestions([firstCard.question]);
                     setShowPlayer(true);
+                    showSuccess('✅ Flashcard generation started!', 3000);
                 } else {
+                    showError('❌ Failed to generate flashcards. Please try again.', 4000);
                     Alert.alert(
                         'Generation Failed',
                         'Could not generate flashcards. Please try again.',
@@ -117,6 +123,7 @@ const FlashcardSection: React.FC<FlashcardSectionProps> = ({
             }
         } catch (error) {
             console.error('Flashcard generation error:', error);
+            showError('❌ Failed to connect to the server. Please check your connection.', 5000);
             Alert.alert(
                 'Error',
                 'Failed to connect to the server. Please check your connection.',

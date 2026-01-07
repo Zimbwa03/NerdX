@@ -4,9 +4,11 @@ import { StatusBar, View, StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
+import { NotificationProvider } from './src/context/NotificationContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import { NerdXLiveButton } from './src/components/NerdXLiveButton';
+import NotificationComponent from './src/components/NotificationComponent';
 
 // Inner component that uses theme and auth
 const AppContent: React.FC = () => {
@@ -22,6 +24,8 @@ const AppContent: React.FC = () => {
       <AppNavigator />
       {/* NerdX Live floating button - only available when logged in */}
       {isAuthenticated && <NerdXLiveButton />}
+      {/* Global notification component */}
+      <NotificationComponent />
     </View>
   );
 };
@@ -37,9 +41,11 @@ const App: React.FC = () => {
     <ErrorBoundary>
       <SafeAreaProvider>
         <ThemeProvider>
-          <AuthProvider>
-            <AppContent />
-          </AuthProvider>
+          <NotificationProvider>
+            <AuthProvider>
+              <AppContent />
+            </AuthProvider>
+          </NotificationProvider>
         </ThemeProvider>
       </SafeAreaProvider>
     </ErrorBoundary>

@@ -142,6 +142,10 @@ export const quizApi = {
       if (questionType) {
         payload.question_type = questionType;
       }
+      // Also set question_type if provided separately (for backend compatibility)
+      if (question_type && !questionType) {
+        payload.question_type = question_type;
+      }
       // For Combined Science structured questions (Paper 2 style)
       if (questionFormat) {
         payload.question_format = questionFormat;

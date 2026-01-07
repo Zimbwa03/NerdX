@@ -136,7 +136,11 @@ export const NerdXLiveToggle: React.FC<NerdXLiveToggleProps> = ({
             setMode('idle');
             onAudioMode?.();
             // Navigate to existing audio mode screen or trigger audio session
-            navigation.navigate('NerdXLiveAudio');
+            try {
+                navigation?.navigate('NerdXLiveAudio');
+            } catch (e) {
+                console.error('Navigation error:', e);
+            }
         }, 300);
     }, [slideAnim, expandAnim, onAudioMode, navigation]);
 
@@ -155,7 +159,11 @@ export const NerdXLiveToggle: React.FC<NerdXLiveToggleProps> = ({
             slideAnim.setValue(0);
             setMode('idle');
             onVideoMode?.();
-            navigation.navigate('NerdXLiveVideo');
+            try {
+                navigation?.navigate('NerdXLiveVideo');
+            } catch (e) {
+                console.error('Navigation error:', e);
+            }
         }, 300);
     }, [slideAnim, expandAnim, onVideoMode, navigation]);
 
@@ -191,7 +199,7 @@ export const NerdXLiveToggle: React.FC<NerdXLiveToggleProps> = ({
                         transform: isExpanded ? [] : [{ scale: pulseAnim }],
                     },
                 ]}
-                {...panResponder.panHandlers}
+                {...(isExpanded ? panResponder.panHandlers : {})}
             >
                 {/* Collapsed state - Main button */}
                 <Animated.View style={[styles.mainButton, { opacity: iconOpacity }]}>
@@ -285,8 +293,8 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 100,
         right: 16,
-        zIndex: 1000,
-        elevation: 1000,
+        zIndex: 9999,
+        elevation: 9999,
         alignItems: 'flex-end',
     },
     container: {
@@ -296,10 +304,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         shadowColor: '#6C63FF',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.4,
+        shadowOpacity: 0.6,
         shadowRadius: 12,
-        elevation: 10,
+        elevation: 15,
         overflow: 'hidden',
+        borderWidth: 2,
+        borderColor: '#fff',
     },
     mainButton: {
         position: 'absolute',

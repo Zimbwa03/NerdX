@@ -83,6 +83,8 @@ class ModelDownloadService {
     private downloadJobId: number | null = null;
     private progressListeners: Set<DownloadProgressListener> = new Set();
     private isPaused: boolean = false;
+    private progressPollInterval: NodeJS.Timeout | null = null;
+    private currentDownloadInfo: { filePath: string; progressStart: number; progressEnd: number; totalSize: number; mainFileSize: number } | null = null;
 
     // Get model storage path
     private getModelPath(): string {
@@ -305,7 +307,47 @@ class ModelDownloadService {
         }
     }
 
-    // Download using expo-file-system (fallback, basic progress)
+    // Poll file size for progress updates (ExpoFS doesn't provide progress callbacks)
+    private startProgressPolling(): void {
+        this.stopProgressPolling(); // Clear any existing polling
+        
+        this.progressPollInterval = setInterval(async () => {
+            if (!this.currentDownloadInfo) {
+                return;
+            }
+
+            try {
+                const fileInfo = await ExpoFileSystem.getInfoAsync(this.currentDownloadInfo.filePath);
+                if (fileInfo.exists && fileInfo.size !== undefined) {
+                    const currentSize = fileInfo.size;
+                    const fileProgress = Math.min(currentSize / this.currentDownloadInfo.totalSize, 1);
+                    const overallProgress = this.currentDownloadInfo.progressStart + 
+                        (fileProgress * (this.currentDownloadInfo.progressEnd - this.currentDownloadInfo.progressStart));
+                    
+                    const totalBytesWritten = this.currentDownloadInfo.mainFileSize + currentSize;
+
+                    const progress: DownloadProgress = {
+                        bytesWritten: totalBytesWritten,
+                        contentLength: PHI3_MODEL_SIZE,
+                        progress: Math.min(overallProgress, 100),
+                    };
+                    this.notifyProgressListeners(progress);
+                }
+            } catch (error) {
+                console.warn('Error polling file progress:', error);
+            }
+        }, 500); // Poll every 500ms for smooth progress updates
+    }
+
+    private stopProgressPolling(): void {
+        if (this.progressPollInterval) {
+            clearInterval(this.progressPollInterval);
+            this.progressPollInterval = null;
+        }
+        this.currentDownloadInfo = null;
+    }
+
+    // Download using expo-file-system (with progress polling)
     private async downloadWithExpoFS(): Promise<void> {
         console.log('📥 Using expo-file-system for download...');
 
@@ -324,33 +366,80 @@ class ModelDownloadService {
             console.log('📥 Downloading main model file with ExpoFS...');
             this.notifyProgressListeners({ bytesWritten: 0, contentLength: PHI3_MODEL_SIZE, progress: 0 });
 
+            // Try to get actual file size from server for accurate progress
+            let actualMainSize = await this.getFileSizeFromServer(PHI3_MODEL_URLS[0]);
+            if (!actualMainSize) {
+                // Fallback to estimate if we can't get the size
+                actualMainSize = PHI3_MODEL_SIZE * 0.05;
+            }
+
+            // Set up polling for main file
+            this.currentDownloadInfo = {
+                filePath: modelPath,
+                progressStart: 0,
+                progressEnd: 5,
+                totalSize: actualMainSize,
+                mainFileSize: 0,
+            };
+            this.startProgressPolling();
+
             const mainDownload = await this.downloadWithExpoFallback(PHI3_MODEL_URLS, modelPath);
 
             if (mainDownload.status !== 200) {
+                this.stopProgressPolling();
                 throw new Error(`Main file download failed with status: ${mainDownload.status}`);
             }
 
-            this.notifyProgressListeners({ bytesWritten: PHI3_MODEL_SIZE * 0.05, contentLength: PHI3_MODEL_SIZE, progress: 5 });
+            // Get actual main file size
+            const mainInfo = await ExpoFileSystem.getInfoAsync(modelPath);
+            const verifiedMainSize = mainInfo.size || actualMainSize;
+            
+            this.stopProgressPolling();
+            this.notifyProgressListeners({ 
+                bytesWritten: verifiedMainSize, 
+                contentLength: PHI3_MODEL_SIZE, 
+                progress: 5 
+            });
 
-            // Download data file
+            // Download data file (the large one, ~95% of total)
             console.log('📥 Downloading model data file with ExpoFS...');
+            
+            // Try to get actual data file size from server for accurate progress
+            let actualDataSize = await this.getFileSizeFromServer(PHI3_MODEL_DATA_URLS[0]);
+            if (!actualDataSize) {
+                // Fallback to estimate if we can't get the size
+                actualDataSize = PHI3_MODEL_SIZE - verifiedMainSize;
+            }
+            
+            // Set up polling for data file
+            this.currentDownloadInfo = {
+                filePath: modelDataPath,
+                progressStart: 5,
+                progressEnd: 100,
+                totalSize: actualDataSize,
+                mainFileSize: verifiedMainSize,
+            };
+            this.startProgressPolling();
+
             const dataDownload = await this.downloadWithExpoFallback(PHI3_MODEL_DATA_URLS, modelDataPath);
 
             if (dataDownload.status !== 200) {
+                this.stopProgressPolling();
                 throw new Error(`Data file download failed with status: ${dataDownload.status}`);
             }
 
+            this.stopProgressPolling();
             this.notifyProgressListeners({ bytesWritten: PHI3_MODEL_SIZE, contentLength: PHI3_MODEL_SIZE, progress: 100 });
 
-            // Verify files
-            const mainInfo = await ExpoFileSystem.getInfoAsync(modelPath);
+            // Verify files (reuse mainInfo from earlier, get fresh dataInfo)
+            const verifiedMainInfo = await ExpoFileSystem.getInfoAsync(modelPath);
             const dataInfo = await ExpoFileSystem.getInfoAsync(modelDataPath);
 
-            if (!mainInfo.exists || !dataInfo.exists) {
+            if (!verifiedMainInfo.exists || !dataInfo.exists) {
                 throw new Error('Download verification failed: files missing');
             }
 
-            const totalSize = (mainInfo.size || 0) + (dataInfo.size || 0);
+            const totalSize = (verifiedMainInfo.size || 0) + (dataInfo.size || 0);
             if (totalSize < PHI3_MODEL_MIN_SIZE) {
                 throw new Error(
                     `Downloaded model size too small: ${totalSize} bytes (expected >= ${PHI3_MODEL_MIN_SIZE})`
@@ -370,6 +459,7 @@ class ModelDownloadService {
             console.log('✅ Model files downloaded successfully with ExpoFS!');
 
         } catch (error) {
+            this.stopProgressPolling(); // Ensure polling stops on error
             console.error('ExpoFS download failed:', error);
             // Clean up
             try {
@@ -399,7 +489,7 @@ class ModelDownloadService {
                 background: true,
                 discretionary: false,
                 cacheable: false,
-                progressInterval: 500,
+                progressInterval: 250, // More frequent updates (every 250ms instead of 500ms)
                 progressDivider: 1,
                 // Timeouts help avoid silent stalls on long downloads
                 connectionTimeout: 15_000,
@@ -471,6 +561,22 @@ class ModelDownloadService {
         }
 
         throw lastError || new Error('All download URLs failed');
+    }
+
+    // Helper to get file size from server (for better progress tracking)
+    private async getFileSizeFromServer(url: string): Promise<number | null> {
+        try {
+            const response = await fetch(url, { method: 'HEAD' });
+            if (response.ok) {
+                const contentLength = response.headers.get('content-length');
+                if (contentLength) {
+                    return parseInt(contentLength, 10);
+                }
+            }
+        } catch (error) {
+            console.warn('Could not get file size from server:', error);
+        }
+        return null;
     }
 
     // Expo-specific download with fallback URLs
@@ -570,6 +676,7 @@ class ModelDownloadService {
 
     // Cancel download
     public async cancelDownload(): Promise<void> {
+        this.stopProgressPolling(); // Stop polling if active
         if (RNFS_AVAILABLE && RNFS && this.downloadJobId !== null) {
             await RNFS.stopDownload(this.downloadJobId);
             this.downloadJobId = null;

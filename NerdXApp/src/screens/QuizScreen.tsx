@@ -21,6 +21,7 @@ import { dktService } from '../services/api/dktApi';
 import { gamificationService } from '../services/GamificationService';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useNotification } from '../context/NotificationContext';
 import { database } from '../database';
 import Interaction from '../database/models/Interaction';
 import { sync as syncDatabase } from '../services/SyncService';
@@ -39,7 +40,8 @@ const QuizScreen: React.FC = () => {
   const { user, updateUser } = useAuth();
   const { isDarkMode } = useTheme();
   const themedColors = useThemedColors();
-  const { question: initialQuestion, subject, topic, isExamMode, year, paper, isReviewMode, reviewItems } = route.params as {
+  const { showSuccess, showError, showWarning, showInfo } = useNotification();
+  const { question: initialQuestion, subject, topic, isExamMode, year, paper, isReviewMode, reviewItems, questionType } = route.params as {
     question?: Question;
     subject: any;
     topic?: any;
@@ -48,6 +50,7 @@ const QuizScreen: React.FC = () => {
     paper?: string;
     isReviewMode?: boolean;
     reviewItems?: any[];
+    questionType?: string; // 'mcq', 'structured', or 'essay'
   };
 
   const normalizeQuestion = useCallback((q: Question | undefined): Question | undefined => {
@@ -69,6 +72,22 @@ const QuizScreen: React.FC = () => {
   const [generatingQuestion, setGeneratingQuestion] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [questionCount, setQuestionCount] = useState(1);
+  
+  // Store the current question type to preserve it when generating next question
+  const [currentQuestionType, setCurrentQuestionType] = useState<string | undefined>(() => {
+    // Initialize from route params or detect from initial question
+    if (questionType) return questionType;
+    if (initialQuestion) {
+      if (initialQuestion.question_type === 'essay' || (initialQuestion as any).essay_data) {
+        return 'essay';
+      } else if (initialQuestion.question_type === 'structured' || initialQuestion.structured_question) {
+        return 'structured';
+      } else if (initialQuestion.question_type === 'multiple_choice' || (initialQuestion.options && initialQuestion.options.length > 0)) {
+        return 'mcq';
+      }
+    }
+    return undefined;
+  });
   
   // Structured question state (Paper 2 style)
   const [structuredAnswers, setStructuredAnswers] = useState<Record<string, string>>({});
@@ -93,9 +112,21 @@ const QuizScreen: React.FC = () => {
           setGeneratingQuestion(true);
           const firstQuestion = await quizApi.getNextExamQuestion(1, year, paper);
           if (firstQuestion) {
-            setQuestion(normalizeQuestion(firstQuestion));
+            const normalizedQ = normalizeQuestion(firstQuestion);
+            setQuestion(normalizedQ);
+            // Update question type state
+            if (normalizedQ) {
+              if (normalizedQ.question_type === 'essay' || (normalizedQ as any).essay_data) {
+                setCurrentQuestionType('essay');
+              } else if (normalizedQ.question_type === 'structured' || normalizedQ.structured_question) {
+                setCurrentQuestionType('structured');
+              } else {
+                setCurrentQuestionType('mcq');
+              }
+            }
           }
         } catch (error) {
+          showError('❌ Failed to start exam. Please try again.', 5000);
           Alert.alert('Error', 'Failed to start exam');
           navigation.goBack();
         } finally {
@@ -125,13 +156,38 @@ const QuizScreen: React.FC = () => {
             allows_image_upload: false,
             question_image_url: qData.image_url
           };
-          setQuestion(normalizeQuestion(mappedQuestion));
+          const normalizedQ = normalizeQuestion(mappedQuestion);
+          setQuestion(normalizedQ);
+          // Update question type state
+          if (normalizedQ) {
+            const qType = qData.question_type || 'multiple_choice';
+            if (qType === 'essay') {
+              setCurrentQuestionType('essay');
+            } else if (qType === 'structured') {
+              setCurrentQuestionType('structured');
+            } else {
+              setCurrentQuestionType('mcq');
+            }
+          }
         }
       }
     };
 
     fetchFirstQuestion();
   }, [isExamMode, initialQuestion, year, paper, isReviewMode, reviewItems]);
+
+  // Update question type state when question changes
+  useEffect(() => {
+    if (question) {
+      if (question.question_type === 'essay' || (question as any).essay_data) {
+        setCurrentQuestionType('essay');
+      } else if (question.question_type === 'structured' || question.structured_question) {
+        setCurrentQuestionType('structured');
+      } else if (question.question_type === 'multiple_choice' || (question.options && question.options.length > 0)) {
+        setCurrentQuestionType('mcq');
+      }
+    }
+  }, [question]);
 
   // Determine gradient colors based on subject
   const getHeaderGradient = () => {
@@ -204,6 +260,13 @@ const QuizScreen: React.FC = () => {
       );
       if (answerResult) {
         setResult(answerResult);
+        
+        // Show notification based on result
+        if (answerResult.correct) {
+          showSuccess(`🎉 Correct! You earned ${answerResult.points_earned} points!`, 3000);
+        } else {
+          showInfo(`💡 ${answerResult.feedback || 'Keep practicing!'}`, 4000);
+        }
 
         if (isReviewMode && reviewItems) {
           // Submit review completion
@@ -242,7 +305,9 @@ const QuizScreen: React.FC = () => {
         }
       }
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.message || 'Failed to submit answer');
+      const errorMessage = error.response?.data?.message || 'Failed to submit answer';
+      showError(`❌ ${errorMessage}`, 5000);
+      Alert.alert('Error', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -420,6 +485,15 @@ const QuizScreen: React.FC = () => {
               question_image_url: qData.image_url
             };
             setQuestionCount(nextIndex + 1);
+            // Update question type state
+            const qType = qData.question_type || 'multiple_choice';
+            if (qType === 'essay') {
+              setCurrentQuestionType('essay');
+            } else if (qType === 'structured') {
+              setCurrentQuestionType('structured');
+            } else {
+              setCurrentQuestionType('mcq');
+            }
           }
         } else {
           Alert.alert('Review Complete', 'You have completed your daily review!', [
@@ -428,19 +502,56 @@ const QuizScreen: React.FC = () => {
           return;
         }
       } else {
-        // Ensure we keep the same topic context for continuous practice
+        // Ensure we keep the same topic context AND question type for continuous practice
+        // Use stored question type (persists through submission) or detect from current question
+        let nextQuestionType: string | undefined = currentQuestionType;
+        
+        // If no stored type, try to detect from current question
+        if (!nextQuestionType && question) {
+          if (question.question_type === 'essay' || (question as any).essay_data) {
+            nextQuestionType = 'essay';
+          } else if (question.question_type === 'structured' || question.structured_question) {
+            nextQuestionType = 'structured';
+          } else if (question.question_type === 'multiple_choice' || (question.options && question.options.length > 0)) {
+            nextQuestionType = 'mcq';
+          }
+        }
+        
+        // Fall back to route param if still not detected
+        if (!nextQuestionType) {
+          nextQuestionType = questionType;
+        }
+        
+        console.log(`🔄 Generating next ${nextQuestionType || 'MCQ'} question for topic: ${topic?.id || 'general'}`);
+        
         newQuestion = await quizApi.generateQuestion(
           subject.id,
           topic?.id,
           'medium',  // difficulty
           topic ? 'topical' : 'exam',  // type
           topic?.parent_subject,  // parent_subject for Combined Science
-          undefined  // questionType
+          nextQuestionType,  // Preserve question type (mcq, structured, essay)
+          undefined,  // questionFormat
+          nextQuestionType   // Also pass as question_type for backend compatibility
         );
       }
 
       if (newQuestion) {
-        setQuestion(normalizeQuestion(newQuestion));
+        const normalizedQ = normalizeQuestion(newQuestion);
+        setQuestion(normalizedQ);
+        
+        // Update stored question type based on the new question
+        if (normalizedQ) {
+          if (normalizedQ.question_type === 'essay' || (normalizedQ as any).essay_data) {
+            setCurrentQuestionType('essay');
+          } else if (normalizedQ.question_type === 'structured' || normalizedQ.structured_question) {
+            setCurrentQuestionType('structured');
+          } else if (normalizedQ.question_type === 'multiple_choice' || (normalizedQ.options && normalizedQ.options.length > 0)) {
+            setCurrentQuestionType('mcq');
+          }
+        }
+        
+        showSuccess('✅ Next question loaded!', 2000);
         setSelectedAnswer('');
         setTextAnswer('');
         setAnswerImage(null);
@@ -453,6 +564,16 @@ const QuizScreen: React.FC = () => {
         if (user) {
           const newCredits = (user.credits || 0) - 1;
           updateUser({ credits: newCredits });
+          
+          // Show credit deduction notification
+          showInfo(`💳 1 credit used. ${newCredits} credits remaining.`, 3000);
+          
+          // Check if credits are getting low
+          if (newCredits <= 3 && newCredits > 0) {
+            setTimeout(() => {
+              showWarning(`⚠️ Running low on credits! Only ${newCredits} credits left.`, 5000);
+            }, 3500);
+          }
         }
       } else {
         Alert.alert('Notice', 'No more questions available right now.');

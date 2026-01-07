@@ -334,15 +334,14 @@ const ALevelPureMathScreen: React.FC = () => {
             >
                 {/* Feature Cards Section */}
                 <View style={styles.section}>
-                    {/* Notes temporarily hidden */}
-                    {/* <ALevelFeatureCard
+                    <ALevelFeatureCard
                         title="Mathematics Notes"
                         subtitle="Comprehensive A Level notes with worked examples"
                         icon={<MaterialCommunityIcons name="book-open-page-variant" size={26} color="#8B5CF6" />}
                         iconBgColor="rgba(139, 92, 246, 0.12)"
                         onPress={handlePureMathNotes}
                         isDarkMode={isDarkMode}
-                    /> */}
+                    />
 
                     <ALevelFeatureCard
                         title="AI Math Tutor"

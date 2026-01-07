@@ -43,6 +43,7 @@ import ALevelBiologyScreen from '../screens/ALevelBiologyScreen';
 import ALevelBiologyNotesScreen from '../screens/ALevelBiologyNotesScreen';
 
 // NerdX Live Voice/Video Screens
+import NerdXLiveModeScreen from '../screens/NerdXLiveModeScreen';
 import NerdXLiveAudioScreen from '../screens/NerdXLiveAudioScreen';
 import NerdXLiveVideoScreen from '../screens/NerdXLiveVideoScreen';
 
@@ -463,6 +464,13 @@ const AppNavigator: React.FC = () => {
               }}
             />
             {/* NerdX Live Voice/Video Screens */}
+            <Stack.Screen
+              name="NerdXLiveMode"
+              component={NerdXLiveModeScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
             <Stack.Screen
               name="NerdXLiveAudio"
               component={NerdXLiveAudioScreen}

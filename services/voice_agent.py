@@ -120,15 +120,23 @@ def convert_m4a_to_pcm(m4a_base64: str) -> Optional[str]:
         except Exception:
             pass
         
+        logger.debug(f"🔄 Converting M4A to PCM: {len(m4a_base64)} chars input")
         m4a_bytes = base64.b64decode(m4a_base64)
+        logger.debug(f"📦 Decoded M4A: {len(m4a_bytes)} bytes")
+        
         audio = AudioSegment.from_file(io.BytesIO(m4a_bytes), format="m4a")
+        logger.debug(f"🎵 Loaded audio: {len(audio)}ms, {audio.frame_rate}Hz, {audio.channels}ch")
+        
         audio = audio.set_frame_rate(16000).set_channels(1).set_sample_width(2)
         pcm_bytes = audio.raw_data
-        return base64.b64encode(pcm_bytes).decode('utf-8')
+        pcm_base64 = base64.b64encode(pcm_bytes).decode('utf-8')
+        
+        logger.debug(f"✅ Converted to PCM: {len(pcm_bytes)} bytes, {len(pcm_base64)} chars base64")
+        return pcm_base64
         
     except Exception as e:
-        logger.error(f"Audio conversion failed: {e}")
-        return m4a_base64
+        logger.error(f"❌ Audio conversion failed: {e}", exc_info=True)
+        return None  # Don't send invalid audio to Gemini
 
 
 @asynccontextmanager
@@ -257,13 +265,26 @@ class TransparentGeminiPipe:
         Only converts format, then sends right away.
         """
         if not self.gemini_ws or not self.is_active:
+            logger.warning("⚠️ Cannot forward audio: WebSocket not ready or inactive")
             return
             
         try:
+            logger.info(f"🔄 Converting audio: {len(audio_base64)} chars base64")
             # Convert M4A to PCM (boundary conversion)
             pcm_base64 = convert_m4a_to_pcm(audio_base64)
             if not pcm_base64:
+                logger.error("❌ Audio conversion returned empty - cannot send to Gemini")
+                # Notify client of conversion failure
+                try:
+                    await self.client_ws.send_json({
+                        "type": "error",
+                        "message": "Audio conversion failed"
+                    })
+                except:
+                    pass
                 return
+            
+            logger.info(f"✅ Audio converted: {len(pcm_base64)} chars PCM base64")
             
             # Send immediately - no batching
             message = {
@@ -275,10 +296,10 @@ class TransparentGeminiPipe:
                 }
             }
             await self.gemini_ws.send(json.dumps(message))
-            logger.debug("📤 Audio forwarded to Gemini")
+            logger.info("📤 Audio forwarded to Gemini successfully")
             
         except Exception as e:
-            logger.error(f"Forward error: {e}")
+            logger.error(f"❌ Forward error: {e}", exc_info=True)
     
     async def receive_and_forward(self):
         """
@@ -286,12 +307,16 @@ class TransparentGeminiPipe:
         No batching, no buffering - pure pipe.
         """
         if not self.gemini_ws:
+            logger.warning("⚠️ Cannot receive: Gemini WebSocket not connected")
             return
             
         try:
+            logger.info("👂 Starting to listen for Gemini responses...")
             while self.is_active:
                 response = await self.gemini_ws.recv()
                 data = json.loads(response)
+                
+                logger.debug(f"📥 Received from Gemini: {list(data.keys())}")
                 
                 if "serverContent" in data:
                     content = data["serverContent"]
@@ -299,6 +324,7 @@ class TransparentGeminiPipe:
                     # Forward audio immediately
                     if "modelTurn" in content:
                         model_turn = content["modelTurn"]
+                        logger.info("🎤 Model turn received - processing audio response")
                         if "parts" in model_turn:
                             for part in model_turn["parts"]:
                                 if "inlineData" in part:
@@ -308,6 +334,7 @@ class TransparentGeminiPipe:
                                     if mime_type.startswith("audio/") and "pcm" in mime_type.lower():
                                         audio_b64 = inline_data.get("data", "")
                                         if audio_b64:
+                                            logger.info(f"🔄 Converting PCM to WAV: {len(audio_b64)} chars")
                                             # Convert PCM to WAV (boundary conversion)
                                             pcm_bytes = base64.b64decode(audio_b64)
                                             wav_bytes = convert_pcm_to_wav(pcm_bytes, sample_rate=24000)
@@ -318,20 +345,22 @@ class TransparentGeminiPipe:
                                                 "type": "audio",
                                                 "data": wav_b64
                                             })
-                                            logger.debug("📢 Audio forwarded to client")
+                                            logger.info(f"📢 Audio forwarded to client: {len(wav_b64)} chars WAV base64")
                     
                     # Forward control messages immediately
                     if content.get("turnComplete"):
                         await self.client_ws.send_json({"type": "turnComplete"})
-                        logger.info("✅ Turn complete")
+                        logger.info("✅ Turn complete - sent to client")
                         
                     if content.get("interrupted"):
                         await self.client_ws.send_json({"type": "interrupted"})
-                        logger.info("🎤 Interrupted")
+                        logger.info("🎤 Interrupted - sent to client")
+                else:
+                    logger.debug(f"📦 Other message from Gemini: {list(data.keys())}")
                         
         except Exception as e:
             if self.is_active:
-                logger.error(f"Receive error: {e}")
+                logger.error(f"❌ Receive error: {e}", exc_info=True)
     
     async def close(self):
         """Close session"""
@@ -414,20 +443,33 @@ class TransparentGeminiVideoPipe:
                         "parts": [{
                             "text": NERDX_SYSTEM_INSTRUCTION + """
 
-ADDITIONAL CONTEXT FOR VIDEO MODE:
-You can SEE what the student is showing you through their camera. This could be:
-- Handwritten math problems or equations
-- Textbook pages or worksheets
-- Diagrams or drawings
-- Science experiments or equipment
+ADDITIONAL CONTEXT FOR REAL-TIME VIDEO MODE:
+You are receiving CONTINUOUS VIDEO STREAM (10 frames per second) from the student's camera.
+This is REAL-TIME video, not static pictures - you can see movement, writing, and changes as they happen.
+
+What you might see:
+- Student writing math problems or equations in real-time
+- Textbook pages or worksheets they're reading
+- Diagrams or drawings they're creating
+- Science experiments or equipment they're using
+- Their hands writing, erasing, or pointing
+
+IMPORTANT - Real-time video understanding:
+1. You receive frames continuously - watch for CHANGES and MOVEMENT
+2. If you see them writing, acknowledge it immediately ("I see you're writing...")
+3. If they erase something, notice it ("I see you erased that - let's try a different approach")
+4. If they point at something, respond to what they're pointing at
+5. Track their progress as they work - don't just look at static images
+6. Respond to what's happening NOW, not just what you saw 5 seconds ago
 
 When you see their work:
-1. First acknowledge what you see ("I can see you're working on...")
-2. Point out any errors gently
-3. Guide them step-by-step
-4. Ask them to show you specific parts if needed
+1. Acknowledge what you see in real-time ("I can see you're working on...")
+2. Watch for mistakes as they happen and guide them immediately
+3. Notice when they're stuck and offer help
+4. Celebrate when they get something right
+5. Ask them to show specific parts if needed
 
-Be patient - the video may be slightly delayed. Speak naturally and describe what you're seeing to confirm understanding.
+This is REAL-TIME video - you can see them writing, erasing, and working. Use this to provide immediate, contextual help.
 """
                         }]
                     },
@@ -468,12 +510,17 @@ Be patient - the video may be slightly delayed. Speak naturally and describe wha
             logger.error(traceback.format_exc())
             return False
     
-    async def forward_video_frame(self, frame_base64: str, mime_type: str = "image/jpeg"):
-        """Forward video frame to Gemini IMMEDIATELY"""
+    async def forward_video_frame(self, frame_base64: str, mime_type: str = "image/jpeg", timestamp: int = None):
+        """
+        Forward video frame to Gemini IMMEDIATELY for real-time processing.
+        No batching - each frame is sent as it arrives for continuous video understanding.
+        """
         if not self.gemini_ws or not self.is_active:
             return
             
         try:
+            # Send frame immediately for real-time video processing
+            # Gemini processes frames continuously to understand the video stream
             message = {
                 "realtimeInput": {
                     "mediaChunks": [{
@@ -483,7 +530,7 @@ Be patient - the video may be slightly delayed. Speak naturally and describe wha
                 }
             }
             await self.gemini_ws.send(json.dumps(message))
-            logger.debug("📹 Video frame forwarded")
+            logger.debug(f"📹 Video frame forwarded (timestamp: {timestamp})")
             
         except Exception as e:
             logger.error(f"Video forward error: {e}")
@@ -607,11 +654,13 @@ async def websocket_nerdx_live_video(websocket: WebSocket):
             msg_type = data.get("type", "")
             
             if msg_type == "video":
-                # Forward video frame
+                # Forward video frame immediately for real-time processing
                 frame_data = data.get("data", "")
                 mime_type = data.get("mimeType", "image/jpeg")
+                timestamp = data.get("timestamp")
                 if frame_data:
-                    await pipe.forward_video_frame(frame_data, mime_type)
+                    # Send immediately - no batching for real-time video
+                    await pipe.forward_video_frame(frame_data, mime_type, timestamp)
                     
             elif msg_type == "audio":
                 # Forward audio
@@ -672,8 +721,11 @@ async def websocket_nerdx_live(websocket: WebSocket):
             if msg_type == "audio":
                 audio_data = data.get("data", "")
                 if audio_data:
+                    logger.info(f"📥 Received audio from client: {len(audio_data)} chars base64")
                     # Forward immediately
                     await pipe.forward_audio_to_gemini(audio_data)
+                else:
+                    logger.warning("⚠️ Received audio message with empty data")
                     
             elif msg_type == "end":
                 logger.info("📴 Client ended session")

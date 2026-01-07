@@ -19,6 +19,7 @@ import { useNavigation } from '@react-navigation/native';
 import { creditsApi, CreditPackage, PaymentStatus, CreditTransaction } from '../services/api/creditsApi';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useNotification } from '../context/NotificationContext';
 import { Icons, IconCircle } from '../components/Icons';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
@@ -35,6 +36,7 @@ const CreditsScreen: React.FC = () => {
   const { user, updateUser } = useAuth();
   const { isDarkMode } = useTheme();
   const themedColors = useThemedColors();
+  const { showSuccess, showError, showInfo } = useNotification();
   const [packages, setPackages] = useState<CreditPackage[]>([]);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState<string | null>(null);
@@ -113,6 +115,7 @@ const CreditsScreen: React.FC = () => {
             setCheckingPayment(false);
             setShowPaymentModal(false);
             setPaymentReference(null);
+            showSuccess(`🎉 Payment successful! ${status.credits} credits added to your account!`, 5000);
             Alert.alert(
               'Payment Successful!',
               `Your payment has been confirmed. ${status.credits} credits have been added to your account.`,
@@ -132,6 +135,7 @@ const CreditsScreen: React.FC = () => {
               paymentCheckInterval.current = null;
             }
             setCheckingPayment(false);
+            showError('❌ Payment failed. Please try again.', 5000);
             Alert.alert('Payment Failed', 'Your payment was not successful. Please try again.');
           }
         }

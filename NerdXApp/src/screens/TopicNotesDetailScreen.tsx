@@ -17,6 +17,7 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { scienceNotesApi, TopicNotes } from '../services/api/scienceNotesApi';
+import { aLevelChemistryNotesApi } from '../services/api/aLevelChemistryNotesApi';
 import { useAuth } from '../context/AuthContext';
 import { Colors } from '../theme/colors';
 import Markdown from 'react-native-markdown-display';
@@ -34,7 +35,7 @@ const TopicNotesDetailScreen: React.FC = () => {
     const { user } = useAuth();
     const { isDarkMode } = useTheme();
     const themedColors = useThemedColors();
-    const { subject, topic } = route.params as { subject: string; topic: string };
+    const { subject, topic, isALevel } = route.params as { subject: string; topic: string; isALevel?: boolean };
 
     const [notes, setNotes] = useState<TopicNotes | null>(null);
     const [loading, setLoading] = useState(true);
@@ -47,10 +48,18 @@ const TopicNotesDetailScreen: React.FC = () => {
     const loadNotes = async () => {
         try {
             setLoading(true);
-            const notesData = await scienceNotesApi.getTopicNotes(
-                subject as 'Biology' | 'Chemistry' | 'Physics',
-                topic
-            );
+            let notesData = null;
+
+            // Check if this is A Level Chemistry
+            if (isALevel && subject === 'A Level Chemistry') {
+                notesData = await aLevelChemistryNotesApi.getTopicNotes(topic);
+            } else {
+                // O Level science notes
+                notesData = await scienceNotesApi.getTopicNotes(
+                    subject as 'Biology' | 'Chemistry' | 'Physics',
+                    topic
+                );
+            }
 
             if (notesData) {
                 setNotes(notesData);
@@ -80,6 +89,9 @@ const TopicNotesDetailScreen: React.FC = () => {
     };
 
     const getSubjectColor = () => {
+        if (isALevel && subject === 'A Level Chemistry') {
+            return '#00897B'; // Teal for A Level Chemistry
+        }
         switch (subject) {
             case 'Biology':
                 return '#4CAF50';
@@ -179,7 +191,7 @@ const TopicNotesDetailScreen: React.FC = () => {
                     showsVerticalScrollIndicator={false}
                 >
                     {/* Video Player - Shows when topic has video lesson */}
-                    {notes.videoUrl && (
+                    {notes.videoUrl && notes.videoUrl.trim().length > 0 && (
                         <VideoStreamPlayer
                             videoUrl={notes.videoUrl}
                             topicTitle={topic}
@@ -188,12 +200,20 @@ const TopicNotesDetailScreen: React.FC = () => {
                     )}
 
                     {/* Audio Player - Shows when topic has audio podcast */}
-                    {notes.audioUrl && (
+                    {notes.audioUrl && notes.audioUrl.trim().length > 0 && (
                         <AudioStreamPlayer
                             audioUrl={notes.audioUrl}
                             topicTitle={topic}
                             accentColor={getSubjectColor()}
                         />
+                    )}
+
+                    {/* Fallback - Show something if no media */}
+                    {!notes.videoUrl && !notes.audioUrl && (
+                        <View style={{ backgroundColor: 'red', padding: 20, marginBottom: 16 }}>
+                            <Text style={{ color: 'white', fontWeight: 'bold' }}>NO MEDIA FOUND</Text>
+                            <Text style={{ color: 'white' }}>This topic has no video or audio content.</Text>
+                        </View>
                     )}
 
                     {/* Summary Card */}

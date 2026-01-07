@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
+import { useNotification } from '../context/NotificationContext';
 import { Colors } from '../theme/colors';
 
 const { width } = Dimensions.get('window');
@@ -230,6 +231,7 @@ const TeacherModeSetupScreen: React.FC = () => {
   const { user } = useAuth();
   const { isDarkMode } = useTheme();
   const themedColors = useThemedColors();
+  const { showError } = useNotification();
   const { subject, preselectedSubject, preselectedTopic } = route.params as {
     subject?: any;
     preselectedSubject?: string;
@@ -257,7 +259,9 @@ const TeacherModeSetupScreen: React.FC = () => {
       return;
     }
 
-    if ((user?.credits || 0) < 3) {
+    const currentCredits = user?.credits || 0;
+    if (currentCredits < 3) {
+      showError('❌ Insufficient credits! Teacher Mode requires 3 credits. Please top up your credits.', 6000);
       Alert.alert(
         'Insufficient Credits',
         'Teacher Mode requires 3 credits to start. Please buy credits first.',

@@ -4760,71 +4760,6 @@ Energy out = bonds formed (exothermic)
         ]
     },
 
-    "Acids, Bases and Salts": {
-        topic: "Acids, Bases and Salts",
-        subject: "Chemistry",
-        summary: "Acids and bases are important chemicals. Their reactions produce salts which have many uses.",
-        sections: [
-            {
-                title: "1. Properties of Acids and Bases",
-                content: `## Acids
-
-### Properties:
-- Sour taste
-- pH less than 7
-- Turn litmus red
-- Contain H⁺ ions
-
-### Common Acids:
-- HCl - Hydrochloric acid
-- H₂SO₄ - Sulfuric acid
-- HNO₃ - Nitric acid
-- CH₃COOH - Ethanoic acid (weak)
-
-### Reactions of Acids:
-
-**1. With Metals:**
-Acid + Metal → Salt + Hydrogen
-Mg + 2HCl → MgCl₂ + H₂
-
-**2. With Bases:**
-Acid + Base → Salt + Water
-HCl + NaOH → NaCl + H₂O
-
-**3. With Carbonates:**
-Acid + Carbonate → Salt + Water + CO₂
-2HCl + CaCO₃ → CaCl₂ + H₂O + CO₂
-
-## Bases and Alkalis
-
-### Bases:
-- Metal oxides and hydroxides
-- React with acids to form salts
-
-### Alkalis:
-- Soluble bases
-- pH greater than 7
-- Turn litmus blue
-- Contain OH⁻ ions
-- Examples: NaOH, KOH, Ca(OH)₂`,
-                diagrams: [],
-                subsections: []
-            }
-        ],
-        key_points: [
-            "Acids contain H⁺ ions, pH < 7",
-            "Alkalis contain OH⁻ ions, pH > 7",
-            "Neutral pH = 7",
-            "Neutralization: Acid + Base → Salt + Water",
-            "Name of salt from acid: HCl → chloride, H₂SO₄ → sulfate, HNO₃ → nitrate"
-        ],
-        exam_tips: [
-            "Know the reactions of acids with metals, bases, and carbonates",
-            "Use word equations and symbol equations",
-            "Describe how to prepare a pure, dry sample of a salt"
-        ]
-    },
-
     "Periodic Table": {
         topic: "Periodic Table",
         subject: "Chemistry",
@@ -6375,39 +6310,39 @@ $$\\text{(white)} \\hspace{3cm} \\text{(blue)}$$
         ]
     },
 
-    "Acids, Bases and Salts": {
-        topic: "Acids, Bases and Salts",
+    "Electrochemistry": {
+        topic: "Electrochemistry",
         subject: "Chemistry",
-        summary: "Acids produce hydrogen ions (H⁺) in water; bases neutralise acids; alkalis are soluble bases that produce hydroxide ions (OH⁻). Salts are ionic compounds formed from neutralisation reactions. This topic covers acid/base reactions, pH scale, salt preparation methods, indicators, and real-world applications including fertiliser production and soil treatment.",
+        summary: "Electrochemistry studies the relationship between chemical reactions and electricity. Electrolysis is the breakdown of ionic compounds using electricity, with reduction at the cathode and oxidation at the anode. Key applications include metal extraction (aluminium), metal purification (copper), electroplating, and the industrial electrolysis of brine to produce chlorine, sodium hydroxide, and hydrogen.",
         sections: [
             {
-                title: "1. Introduction to Acids, Bases and Salts",
-                content: `## Key Definitions
+                title: "1. Introduction to Electrochemistry",
+                content: `## What is Electrochemistry?
 
-| Term | Definition | Key Characteristics |
-|------|-----------|---------------------|
-| **Acid** | Produces H⁺ ions in water | Proton DONOR; turns blue litmus RED |
-| **Base** | Neutralises an acid | Proton ACCEPTOR; includes metal oxides/hydroxides |
-| **Alkali** | Soluble base producing OH⁻ ions | Turns red litmus BLUE |
-| **Salt** | Ionic compound from neutralisation | H⁺ replaced by metal/ammonium ion |
+**Electrochemistry** is the study of the relationship between **chemical reactions and electricity**.
+
+Two key processes:
+- **Electrolytic cells:** Use electricity to drive chemical reactions (electrolysis)
+- **Simple cells (batteries):** Use chemical reactions to generate electricity
 
 ---
 
-## Importance in Daily Life
+## Industrial Importance
 
-| Area | Examples |
-|------|----------|
-| **Food** | Citric acid in fruits; ethanoic acid in vinegar |
-| **Industry** | Limestone (CaCite₃) for cement and roads |
-| **Agriculture** | Ammonium nitrate fertiliser from neutralisation |
+| Application | Description |
+|-------------|-------------|
+| **Metal Extraction** | Producing reactive metals like aluminium from ores |
+| **Metal Purification** | Refining copper to high purity for wiring |
+| **Electroplating** | Coating objects with protective/decorative metal layer |
+| **Chemical Manufacturing** | Electrolysis of brine produces Cl₂, NaOH, H₂ |
 
-> **Key insight:** The behaviour of acids and bases is determined by the presence of H⁺ and OH⁻ ions respectively.`,
+> All these processes rely on substances that can conduct electricity through ion movement.`,
                 diagrams: [],
                 subsections: []
             },
             {
-                title: "2. Properties of Acids",
-                content: `## Key Acid Reactions
+                title: "2. Electrical Conductivity",
+                content: `## Key Reactions
 
 ### 1. Acid + Metal → Salt + Hydrogen
 
@@ -6858,8 +6793,6 @@ In a **titration**:
             "Know the 'big three' strong acids: HCl, H₂SO₄, HNO₃",
             "Know insoluble exceptions: AgCl, PbCl₂, BaSO₄, PbSO₄, CaSO₄, most carbonates",
             "For preparing soluble salts: use EXCESS of the INSOLUBLE reactant to ensure all acid reacts",
-            "Write ionic equations by removing spectator ions — only show ions that form the product"
-        ]
     },
 
     "Electrochemistry": {

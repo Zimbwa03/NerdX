@@ -22,26 +22,41 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 const WS_URL = 'wss://nerdx-voice.onrender.com/ws/nerdx-live';
 
-// Jitter buffer settings
-const MIN_BUFFER_CHUNKS = 3;
-const PLAYBACK_CHECK_INTERVAL = 50;
+// TURN-BASED AUDIO BUFFERING SYSTEM
+// Audio chunks are buffered until turnComplete, then played sequentially
+const MAX_BUFFER_SIZE = 50; // Maximum audio chunks to buffer per turn
+const PLAYBACK_TIMEOUT_MS = 10000; // Max time to wait for turnComplete after last chunk
+
+// Voice Activity Detection (VAD) - DISABLED for tap-to-speak mode
+// User manually controls when to send by tapping
+const MAX_RECORDING_DURATION_MS = 60000; // Maximum recording duration (60s - safety limit)
 
 type ConnectionState = 'idle' | 'connecting' | 'ready' | 'recording' | 'processing' | 'error';
 
+interface AudioTurn {
+    chunks: string[];
+    timestamp: number;
+    isComplete: boolean;
+}
+
 const NerdXLiveAudioScreen: React.FC = () => {
     const navigation = useNavigation();
-    
+
     // State
     const [connectionState, setConnectionState] = useState<ConnectionState>('idle');
-    
+
     // Refs
     const wsRef = useRef<WebSocket | null>(null);
     const recordingRef = useRef<Audio.Recording | null>(null);
     const soundRef = useRef<Audio.Sound | null>(null);
-    const audioQueueRef = useRef<string[]>([]);
+
+    // NEW: Turn-based audio buffering system
+    const currentAudioTurnRef = useRef<AudioTurn | null>(null);
     const isPlayingRef = useRef(false);
-    const hasStartedPlaybackRef = useRef(false);
-    const playbackIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const playbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    
+    // Recording refs (VAD disabled for tap-to-speak)
+    const recordingStartTimeRef = useRef<number>(0);
     
     // Animation
     const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -73,7 +88,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
 
     // Wave animation for processing
     useEffect(() => {
-        if (connectionState === 'processing' || (audioQueueRef.current.length > 0 && isPlayingRef.current)) {
+        if (connectionState === 'processing' || isPlayingRef.current) {
             const wave = Animated.loop(
                 Animated.timing(waveAnim, {
                     toValue: 1,
@@ -86,12 +101,9 @@ const NerdXLiveAudioScreen: React.FC = () => {
         }
     }, [connectionState, waveAnim]);
 
-    // Cleanup on unmount
-    useEffect(() => {
-        return () => {
-            endSession();
-        };
-    }, []);
+    // Refs to avoid circular dependency issues
+    const endSessionRef = useRef<() => Promise<void>>();
+    const stopRecordingAndSendRef = useRef<() => Promise<void>>();
 
     // Configure audio
     const configureAudioMode = useCallback(async (forRecording: boolean) => {
@@ -108,89 +120,171 @@ const NerdXLiveAudioScreen: React.FC = () => {
         }
     }, []);
 
-    // Audio playback with jitter buffer
-    const playNextAudio = useCallback(async () => {
-        if (isPlayingRef.current || audioQueueRef.current.length === 0) {
-            return;
+    // NEW: Audio Buffer Manager - Buffers chunks until turnComplete
+    const bufferAudioChunk = useCallback((audioData: string) => {
+        if (!currentAudioTurnRef.current) {
+            // Start new audio turn
+            currentAudioTurnRef.current = {
+                chunks: [],
+                timestamp: Date.now(),
+                isComplete: false
+            };
+            console.log('🎵 Started new audio turn buffering');
         }
 
-        if (!hasStartedPlaybackRef.current && audioQueueRef.current.length < MIN_BUFFER_CHUNKS) {
-            return;
+        // Add chunk to current turn
+        currentAudioTurnRef.current.chunks.push(audioData);
+
+        // Safety check: prevent buffer overflow
+        if (currentAudioTurnRef.current.chunks.length > MAX_BUFFER_SIZE) {
+            console.warn('⚠️ Audio buffer overflow - truncating turn');
+            currentAudioTurnRef.current.chunks = currentAudioTurnRef.current.chunks.slice(-MAX_BUFFER_SIZE);
         }
 
-        hasStartedPlaybackRef.current = true;
-        isPlayingRef.current = true;
-        
-        const audioData = audioQueueRef.current.shift();
-        if (!audioData) {
-            isPlayingRef.current = false;
-            return;
-        }
-
-        try {
-            const audioUri = `data:audio/wav;base64,${audioData}`;
-
-            if (soundRef.current) {
-                try {
-                    await soundRef.current.unloadAsync();
-                } catch (e) {}
-            }
-
-            await configureAudioMode(false);
-
-            const { sound } = await Audio.Sound.createAsync(
-                { uri: audioUri },
-                { shouldPlay: true, volume: 1.0 }
-            );
-            soundRef.current = sound;
-
-            sound.setOnPlaybackStatusUpdate((status: AVPlaybackStatus) => {
-                if (status.isLoaded && status.didJustFinish) {
-                    isPlayingRef.current = false;
-                    playNextAudio();
-                }
-            });
-        } catch (error) {
-            console.error('Playback error:', error);
-            isPlayingRef.current = false;
-            playNextAudio();
-        }
-    }, [configureAudioMode]);
-
-    const startPlaybackMonitor = useCallback(() => {
-        if (playbackIntervalRef.current) return;
-        playbackIntervalRef.current = setInterval(() => {
-            if (audioQueueRef.current.length > 0 && !isPlayingRef.current) {
-                playNextAudio();
-            }
-        }, PLAYBACK_CHECK_INTERVAL);
-    }, [playNextAudio]);
-
-    const stopPlaybackMonitor = useCallback(() => {
-        if (playbackIntervalRef.current) {
-            clearInterval(playbackIntervalRef.current);
-            playbackIntervalRef.current = null;
-        }
+        console.log(`📦 Buffered audio chunk ${currentAudioTurnRef.current.chunks.length}/${MAX_BUFFER_SIZE}`);
     }, []);
 
-    // Recording
-    const startRecording = useCallback(async () => {
-        try {
-            if (recordingRef.current) {
-                try {
-                    await recordingRef.current.stopAndUnloadAsync();
-                } catch (e) {}
-                recordingRef.current = null;
+    // NEW: Play Complete Audio Turn - Sequential chunk playback
+    const playCompleteAudioTurn = useCallback(async (audioTurn: AudioTurn) => {
+        if (isPlayingRef.current || audioTurn.chunks.length === 0) {
+            console.log('⏸️ Skipping playback - already playing or no chunks');
+            return;
+        }
+
+        isPlayingRef.current = true;
+        console.log(`🔊 Playing complete audio turn: ${audioTurn.chunks.length} chunks sequentially`);
+        console.log(`📐 First chunk size: ${audioTurn.chunks[0]?.length || 0} chars`);
+
+        await configureAudioMode(false);
+
+        // Play each chunk sequentially (each chunk is a complete WAV file)
+        for (let i = 0; i < audioTurn.chunks.length; i++) {
+            if (!isPlayingRef.current) {
+                console.log('⏹️ Playback interrupted');
+                break;
             }
 
-            // Stop playback on barge-in
+            const chunk = audioTurn.chunks[i];
+            const audioUri = `data:audio/wav;base64,${chunk}`;
+
+            try {
+                if (soundRef.current) {
+                    try {
+                        await soundRef.current.unloadAsync();
+                    } catch (e) {}
+                }
+
+                const { sound } = await Audio.Sound.createAsync(
+                    { uri: audioUri },
+                    { shouldPlay: true, volume: 1.0 }
+                );
+                soundRef.current = sound;
+
+                // Wait for this chunk to finish - with proper error handling
+                await new Promise<void>((resolve) => {
+                    let resolved = false;
+                    
+                    // Safety timeout per chunk (30s max)
+                    const timeout = setTimeout(() => {
+                        if (!resolved) {
+                            console.warn(`⏰ Chunk ${i + 1} timeout - moving to next`);
+                            resolved = true;
+                            resolve();
+                        }
+                    }, 30000);
+                    
+                    sound.setOnPlaybackStatusUpdate((status: AVPlaybackStatus) => {
+                        if (resolved) return;
+                        
+                        // Check for errors (status.isLoaded=false with error property)
+                        if (!status.isLoaded && 'error' in status) {
+                            console.error(`❌ Chunk ${i + 1} load error`);
+                            clearTimeout(timeout);
+                            resolved = true;
+                            resolve();
+                        } else if (status.isLoaded && status.didJustFinish) {
+                            console.log(`✅ Chunk ${i + 1}/${audioTurn.chunks.length} finished`);
+                            clearTimeout(timeout);
+                            resolved = true;
+                            resolve();
+                        }
+                    });
+                });
+            } catch (error) {
+                console.error(`❌ Error playing chunk ${i + 1}:`, error);
+                // Continue to next chunk on error
+            }
+        }
+
+        console.log('✅ Complete audio turn playback finished');
+        isPlayingRef.current = false;
+        setConnectionState('ready');
+    }, [configureAudioMode]);
+
+    // NEW: Complete Current Audio Turn (called when turnComplete received)
+    const completeAudioTurn = useCallback(async () => {
+        if (!currentAudioTurnRef.current || currentAudioTurnRef.current.isComplete) {
+            console.log('⏸️ No active audio turn to complete');
+            return;
+        }
+
+        // Clear any pending timeout
+        if (playbackTimeoutRef.current) {
+            clearTimeout(playbackTimeoutRef.current);
+            playbackTimeoutRef.current = null;
+        }
+
+        currentAudioTurnRef.current.isComplete = true;
+        const completedTurn = currentAudioTurnRef.current;
+
+        console.log(`✅ Completing audio turn: ${completedTurn.chunks.length} chunks`);
+
+        // Play the complete turn
+        await playCompleteAudioTurn(completedTurn);
+
+        // Reset for next turn
+        currentAudioTurnRef.current = null;
+    }, [playCompleteAudioTurn]);
+
+    // NEW: Handle Playback Timeout (safety fallback)
+    const startPlaybackTimeout = useCallback(() => {
+        if (playbackTimeoutRef.current) {
+            clearTimeout(playbackTimeoutRef.current);
+        }
+
+        playbackTimeoutRef.current = setTimeout(async () => {
+            console.warn('⏰ Playback timeout - forcing completion of current turn');
+            if (currentAudioTurnRef.current && !currentAudioTurnRef.current.isComplete) {
+                await completeAudioTurn();
+            }
+        }, PLAYBACK_TIMEOUT_MS);
+    }, [completeAudioTurn]);
+
+
+    // Recording - tap to start
+    const startRecording = useCallback(async () => {
+        // Don't start if already recording or if WebSocket is not connected
+        if (recordingRef.current || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+            console.log('⏸️ Skipping recording start - already recording or not connected');
+            return;
+        }
+
+        try {
+            // Stop playback on barge-in (user interrupts AI)
             if (soundRef.current) {
                 try {
                     await soundRef.current.stopAsync();
                 } catch (e) {}
             }
-            audioQueueRef.current = [];
-            hasStartedPlaybackRef.current = false;
+
+            // NEW: Clear current audio turn buffer
+            currentAudioTurnRef.current = null;
+
+            // Clear any pending timeout
+            if (playbackTimeoutRef.current) {
+                clearTimeout(playbackTimeoutRef.current);
+                playbackTimeoutRef.current = null;
+            }
 
             await configureAudioMode(true);
 
@@ -219,9 +313,21 @@ const NerdXLiveAudioScreen: React.FC = () => {
 
             recordingRef.current = recording;
             setConnectionState('recording');
+            
+            // Start safety check for maximum duration
+            recordingStartTimeRef.current = Date.now();
+            setTimeout(() => {
+                if (recordingRef.current) {
+                    console.log('⏱️ Maximum recording duration reached - auto-stopping');
+                    stopRecordingAndSendRef.current?.();
+                }
+            }, MAX_RECORDING_DURATION_MS);
+            
+            console.log('🎙️ Recording started - tap again to send');
         } catch (error) {
             console.error('Recording error:', error);
             Alert.alert('Microphone Error', 'Could not access microphone.');
+            setConnectionState('ready');
         }
     }, [configureAudioMode]);
 
@@ -245,27 +351,43 @@ const NerdXLiveAudioScreen: React.FC = () => {
                 const response = await fetch(uri);
                 const blob = await response.blob();
                 
+                console.log(`📤 Preparing to send audio: ${blob.size} bytes`);
+                
                 const reader = new FileReader();
                 reader.onloadend = () => {
                     const base64data = reader.result as string;
                     const base64 = base64data.split(',')[1] || base64data;
 
                     if (wsRef.current?.readyState === WebSocket.OPEN) {
+                        console.log(`📤 Sending audio to AI (${base64.length} chars base64)`);
                         wsRef.current.send(JSON.stringify({
                             type: 'audio',
                             data: base64,
                         }));
+                        console.log('✅ Audio sent, waiting for AI response...');
 
+                        // Timeout fallback - if no response in 20 seconds, return to ready
                         setTimeout(() => {
                             setConnectionState((current) => {
-                                if (current === 'processing') return 'ready';
+                                if (current === 'processing') {
+                                    console.log('⏰ No response from AI - returning to ready state');
+                                    return 'ready';
+                                }
                                 return current;
                             });
-                        }, 15000);
+                        }, 20000);
+                    } else {
+                        console.error('❌ WebSocket not open when trying to send audio');
+                        setConnectionState('ready');
                     }
+                };
+                reader.onerror = (error) => {
+                    console.error('❌ Error reading audio file:', error);
+                    setConnectionState('ready');
                 };
                 reader.readAsDataURL(blob);
             } else {
+                console.error('❌ No audio URI or WebSocket not open');
                 setConnectionState('ready');
             }
         } catch (error) {
@@ -274,7 +396,10 @@ const NerdXLiveAudioScreen: React.FC = () => {
         }
     }, []);
 
-    // WebSocket
+    // Update ref for circular dependency resolution
+    stopRecordingAndSendRef.current = stopRecordingAndSend;
+
+    // UPDATED: WebSocket Handler - Turn-Based Audio Buffering
     const handleWebSocketMessage = useCallback((event: any) => {
         try {
             const data = JSON.parse(event.data);
@@ -283,26 +408,61 @@ const NerdXLiveAudioScreen: React.FC = () => {
                 case 'ready':
                     setConnectionState('ready');
                     configureAudioMode(false);
+                    // Don't auto-start - wait for user to tap
                     break;
 
                 case 'audio':
                     if (data.data) {
-                        audioQueueRef.current.push(data.data);
-                        startPlaybackMonitor();
-                        playNextAudio();
+                        console.log('📥 Received AI audio chunk - buffering for turn completion');
+
+                        // NEW: Buffer audio chunk instead of playing immediately
+                        bufferAudioChunk(data.data);
+                        startPlaybackTimeout(); // Safety timeout
+
+                        // Update state to show AI is responding
+                        // Don't change state if we're recording (barge-in scenario)
+                        if (connectionState !== 'recording') {
+                            setConnectionState('processing');
+                        }
                     }
                     break;
 
                 case 'turnComplete':
-                    hasStartedPlaybackRef.current = false;
-                    setConnectionState('ready');
+                    console.log('✅ AI turn complete received!');
+                    console.log(`📊 Buffered chunks: ${currentAudioTurnRef.current?.chunks?.length || 0}`);
+
+                    // NEW: Complete the audio turn and play all buffered chunks
+                    completeAudioTurn();
+
+                    // Don't auto-start - wait for user to tap
                     break;
 
                 case 'interrupted':
-                    audioQueueRef.current = [];
-                    hasStartedPlaybackRef.current = false;
+                    // User interrupted AI (barge-in) - clear buffered audio
+                    console.log('🎤 User interrupted AI - clearing audio buffer');
+
+                    // NEW: Clear current audio turn buffer
+                    currentAudioTurnRef.current = null;
+
+                    // Clear any pending timeout
+                    if (playbackTimeoutRef.current) {
+                        clearTimeout(playbackTimeoutRef.current);
+                        playbackTimeoutRef.current = null;
+                    }
+
+                    // Stop any current playback
                     if (soundRef.current) {
                         soundRef.current.stopAsync().catch(() => {});
+                    }
+
+                    isPlayingRef.current = false;
+
+                    // Recording should already be active from when user started speaking
+                    // If not, start it
+                    if (!recordingRef.current) {
+                        setTimeout(() => {
+                            startRecording();
+                        }, 100);
                     }
                     break;
 
@@ -314,7 +474,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
         } catch (error) {
             console.error('Message error:', error);
         }
-    }, [playNextAudio, startPlaybackMonitor, configureAudioMode]);
+    }, [bufferAudioChunk, startPlaybackTimeout, completeAudioTurn, configureAudioMode, startRecording, connectionState]);
 
     const connect = useCallback(async () => {
         if (connectionState !== 'idle') return;
@@ -329,20 +489,39 @@ const NerdXLiveAudioScreen: React.FC = () => {
                 return;
             }
 
-            audioQueueRef.current = [];
+            // NEW: Initialize audio turn buffer
+            currentAudioTurnRef.current = null;
             isPlayingRef.current = false;
-            hasStartedPlaybackRef.current = false;
+
+            // Clear any pending timeout
+            if (playbackTimeoutRef.current) {
+                clearTimeout(playbackTimeoutRef.current);
+                playbackTimeoutRef.current = null;
+            }
 
             const ws = new WebSocket(WS_URL);
             wsRef.current = ws;
 
-            ws.onopen = () => console.log('🔗 Connected');
-            ws.onmessage = handleWebSocketMessage;
-            ws.onerror = () => {
+            ws.onopen = () => {
+                console.log('🔗 Connected - starting conversational flow');
+            };
+            ws.onmessage = (event: any) => {
+                // Log all incoming messages for debugging
+                try {
+                    const data = JSON.parse(event.data);
+                    console.log('📥 Received WebSocket message:', data.type, Object.keys(data));
+                } catch (e) {
+                    console.log('📥 Received WebSocket message (non-JSON):', event.data?.substring(0, 100));
+                }
+                handleWebSocketMessage(event);
+            };
+            ws.onerror = (error: any) => {
+                console.error('❌ WebSocket error:', error);
                 setConnectionState('error');
                 Alert.alert('Connection Error', 'Could not connect.');
             };
-            ws.onclose = () => {
+            ws.onclose = (event: any) => {
+                console.log('🔌 WebSocket closed:', event.code, event.reason);
                 if (connectionState !== 'idle') endSession();
             };
         } catch (error) {
@@ -351,7 +530,13 @@ const NerdXLiveAudioScreen: React.FC = () => {
     }, [connectionState, handleWebSocketMessage]);
 
     const endSession = useCallback(async () => {
-        stopPlaybackMonitor();
+        // NEW: Clear audio turn buffer and timeouts
+        currentAudioTurnRef.current = null;
+
+        if (playbackTimeoutRef.current) {
+            clearTimeout(playbackTimeoutRef.current);
+            playbackTimeoutRef.current = null;
+        }
 
         if (recordingRef.current) {
             try {
@@ -368,9 +553,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
             soundRef.current = null;
         }
 
-        audioQueueRef.current = [];
         isPlayingRef.current = false;
-        hasStartedPlaybackRef.current = false;
 
         if (wsRef.current) {
             try {
@@ -381,7 +564,17 @@ const NerdXLiveAudioScreen: React.FC = () => {
         }
 
         setConnectionState('idle');
-    }, [stopPlaybackMonitor]);
+    }, []);
+
+    // Update ref for cleanup effect
+    endSessionRef.current = endSession;
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            endSessionRef.current?.();
+        };
+    }, []);
 
     const handlePress = useCallback(() => {
         switch (connectionState) {
@@ -389,13 +582,20 @@ const NerdXLiveAudioScreen: React.FC = () => {
                 connect();
                 break;
             case 'ready':
+                // Tap to start recording
                 startRecording();
                 break;
             case 'recording':
+                // Tap to stop recording and send
                 stopRecordingAndSend();
                 break;
             case 'processing':
+                // Tap to cancel and return to ready
                 setConnectionState('ready');
+                break;
+            case 'error':
+                // Tap to retry connection
+                connect();
                 break;
             default:
                 endSession();
@@ -487,9 +687,9 @@ const NerdXLiveAudioScreen: React.FC = () => {
                             {connectionState === 'connecting' || connectionState === 'processing' ? (
                                 <Ionicons name="sync" size={48} color="#fff" />
                             ) : connectionState === 'recording' ? (
-                                <Ionicons name="stop" size={48} color="#fff" />
-                            ) : connectionState === 'ready' ? (
                                 <Ionicons name="mic" size={48} color="#fff" />
+                            ) : connectionState === 'ready' ? (
+                                <Ionicons name="mic-outline" size={48} color="#fff" />
                             ) : (
                                 <Ionicons name="chatbubble-ellipses" size={48} color="#fff" />
                             )}
@@ -499,12 +699,14 @@ const NerdXLiveAudioScreen: React.FC = () => {
                     {/* Hint */}
                     <Text style={styles.hintText}>
                         {connectionState === 'idle' 
-                            ? 'Start a voice conversation with your AI tutor'
+                            ? 'Tap to start your conversation'
                             : connectionState === 'ready'
-                                ? 'Ask any question about your studies'
+                                ? 'Tap the button to ask a question'
                                 : connectionState === 'recording'
-                                    ? 'Speak clearly, then tap to send'
-                                    : 'Wait for NerdX to respond...'}
+                                    ? 'Speak clearly, then tap again to send'
+                                    : connectionState === 'processing'
+                                        ? 'NerdX is thinking and will respond shortly...'
+                                        : 'Wait for NerdX to respond...'}
                     </Text>
                 </View>
 
@@ -602,6 +804,13 @@ const styles = StyleSheet.create({
         marginTop: 40,
         lineHeight: 20,
     },
+    manualSendHint: {
+        color: 'rgba(108, 99, 255, 0.8)',
+        fontSize: 12,
+        textAlign: 'center',
+        marginTop: 12,
+        fontStyle: 'italic',
+    },
     endButton: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -618,4 +827,3 @@ const styles = StyleSheet.create({
 });
 
 export default NerdXLiveAudioScreen;
-

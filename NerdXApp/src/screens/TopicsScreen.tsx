@@ -16,6 +16,7 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import { quizApi, Topic, Subject } from '../services/api/quizApi';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useNotification } from '../context/NotificationContext';
 import { Icons, IconCircle } from '../components/Icons';
 import { Card } from '../components/Card';
 import { Modal, ModalOptionCard } from '../components/Modal';
@@ -32,6 +33,7 @@ const TopicsScreen: React.FC = () => {
   const { user, updateUser } = useAuth();
   const { isDarkMode } = useTheme();
   const themedColors = useThemedColors();
+  const { showSuccess, showError, showWarning, showInfo } = useNotification();
   const { subject, parentSubject } = route.params as { subject: Subject; parentSubject?: string };
 
   // State for Combined Science Tabs
@@ -207,7 +209,15 @@ const TopicsScreen: React.FC = () => {
 
   const handleStartQuiz = async (topic?: Topic, questionType?: string, questionFormat?: 'mcq' | 'structured') => {
     try {
-      if (!user || (user.credits || 0) < 1) {
+      const currentCredits = user?.credits || 0;
+      
+      // Check for low credits warning
+      if (currentCredits <= 5 && currentCredits > 0) {
+        showWarning(`⚠️ Low credits! You have ${currentCredits} credits remaining. Consider topping up soon.`, 5000);
+      }
+      
+      if (currentCredits < 1) {
+        showError('❌ Insufficient credits! You need at least 1 credit to start a quiz. Please top up your credits.', 6000);
         Alert.alert(
           'Insufficient Credits',
           'You need at least 1 credit to start a quiz. Please buy credits first.',
@@ -244,14 +254,29 @@ const TopicsScreen: React.FC = () => {
                 setIsGeneratingQuestion(false);
 
                 if (question) {
-                  navigation.navigate('Quiz' as never, { question, subject, topic } as never);
                   // Update user credits
                   const newCredits = (user.credits || 0) - 1;
                   updateUser({ credits: newCredits });
+                  
+                  // Show success notification
+                  showSuccess(`✅ Question generated! ${newCredits} credits remaining.`, 3000);
+                  
+                  // Check if credits are getting low after deduction
+                  if (newCredits <= 3 && newCredits > 0) {
+                    setTimeout(() => {
+                      showWarning(`⚠️ Running low on credits! Only ${newCredits} credits left. Top up now to continue learning.`, 5000);
+                    }, 3500);
+                  }
+                  
+                  navigation.navigate('Quiz' as never, { question, subject, topic } as never);
+                } else {
+                  showError('❌ Failed to generate question. Please try again.', 4000);
                 }
               } catch (error: any) {
                 setIsGeneratingQuestion(false);
-                Alert.alert('Error', error.response?.data?.message || 'Failed to start quiz');
+                const errorMessage = error.response?.data?.message || 'Failed to start quiz';
+                showError(`❌ ${errorMessage}`, 5000);
+                Alert.alert('Error', errorMessage);
               }
             },
           },

@@ -21,6 +21,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
+import { useNotification } from '../context/NotificationContext';
 import { 
     aLevelBiologyTopics, 
     ALevelBiologyTopic, 
@@ -60,6 +61,7 @@ const ALevelBiologyScreen: React.FC = () => {
     const { user, updateUser } = useAuth();
     const { isDarkMode } = useTheme();
     const themedColors = useThemedColors();
+    const { showSuccess, showError, showWarning } = useNotification();
 
     const [selectedLevel, setSelectedLevel] = useState<'Lower Sixth' | 'Upper Sixth'>('Lower Sixth');
     const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
@@ -79,16 +81,11 @@ const ALevelBiologyScreen: React.FC = () => {
         ? biologyTheme.lowerSixthPrimary 
         : biologyTheme.upperSixthPrimary;
 
-    const handleTopicPress = (topic: ALevelBiologyTopic) => {
-        // If a question type was previously chosen, go straight to quiz with that type.
+    const handleTopicPress = async (topic: ALevelBiologyTopic) => {
+        // If a question type was previously chosen, generate question first before navigating
         if (selectedQuestionType) {
-            return navigation.navigate('Quiz' as never, {
-                subject: { id: 'biology', name: 'Biology' },
-                topic,
-                questionType: selectedQuestionType.id, // mcq | structured | essay
-                question_type: selectedQuestionType.id, // backend expects this key sometimes
-                questionFormat: selectedQuestionType.id === 'structured' ? 'structured' : 'mcq',
-            } as never);
+            await startQuestion(topic, selectedQuestionType.id);
+            return;
         }
         // Otherwise prompt the user to choose the question type.
         setSelectedTopic(topic);
@@ -97,24 +94,27 @@ const ALevelBiologyScreen: React.FC = () => {
 
     const handleQuestionTypeSelect = async (questionType: BiologyQuestionType) => {
         setQuestionTypeModalVisible(false);
-        setSelectedQuestionType(
-            biologyQuestionTypes.find(t => t.id === questionType) || { id: questionType, name: questionType, description: '', icon: '', color: '#10B981', marks: '', timeGuide: '' }
-        );
+        const questionTypeInfo = biologyQuestionTypes.find(t => t.id === questionType) || { id: questionType, name: questionType, description: '', icon: '', color: '#10B981', marks: '', timeGuide: '' };
+        setSelectedQuestionType(questionTypeInfo);
         
-        // If a topic was already selected, launch immediately with that format.
+        // If a topic was already selected, generate question first before navigating
         if (selectedTopic) {
-            return navigation.navigate('Quiz' as never, {
-                subject: { id: 'biology', name: 'Biology' },
-                topic: selectedTopic,
-                questionType: questionType,
-                question_type: questionType,
-                questionFormat: questionType === 'structured' ? 'structured' : 'mcq',
-            } as never);
+            await startQuestion(selectedTopic, questionType);
         }
     };
 
     const startQuestion = async (topic: ALevelBiologyTopic, questionType: BiologyQuestionType) => {
         try {
+            const currentCredits = user?.credits || 0;
+            if (currentCredits < 1) {
+                showError('❌ Insufficient credits! You need at least 1 credit. Please top up your credits.', 5000);
+                return;
+            }
+            
+            if (currentCredits <= 5 && currentCredits > 0) {
+                showWarning(`⚠️ Low credits! You have ${currentCredits} credits remaining.`, 4000);
+            }
+            
             setLoadingMessage(getLoadingMessage(questionType));
             setIsGeneratingQuestion(true);
 
@@ -132,18 +132,31 @@ const ALevelBiologyScreen: React.FC = () => {
             setIsGeneratingQuestion(false);
 
             if (question) {
+                const newCredits = (user?.credits || 0) - 1;
+                updateUser({ credits: newCredits });
+                
+                showSuccess(`✅ ${questionType.toUpperCase()} question generated! ${newCredits} credits remaining.`, 3000);
+                
+                if (newCredits <= 3 && newCredits > 0) {
+                    setTimeout(() => {
+                        showWarning(`⚠️ Running low on credits! Only ${newCredits} credits left.`, 5000);
+                    }, 3500);
+                }
+                
                 navigation.navigate('Quiz' as never, {
                     question,
                     subject: { id: 'a_level_biology', name: 'A Level Biology' },
                     topic: { id: topic.id, name: topic.name },
                     questionType: questionType
                 } as never);
-                const newCredits = (user?.credits || 0) - 1;
-                updateUser({ credits: newCredits });
+            } else {
+                showError('❌ Failed to generate question. Please try again.', 4000);
             }
         } catch (error: any) {
             setIsGeneratingQuestion(false);
-            Alert.alert('Error', error.response?.data?.message || 'Failed to generate question');
+            const errorMessage = error.response?.data?.message || 'Failed to generate question';
+            showError(`❌ ${errorMessage}`, 5000);
+            Alert.alert('Error', errorMessage);
         }
     };
 
@@ -511,15 +524,14 @@ const ALevelBiologyScreen: React.FC = () => {
             >
                 {/* Feature Cards Section */}
                 <View style={styles.section}>
-                    {/* Notes temporarily hidden */}
-                    {/* <ALevelFeatureCard
+                    <ALevelFeatureCard
                         title="Biology Notes"
                         subtitle="Comprehensive A Level notes with diagrams"
                         icon={<MaterialCommunityIcons name="book-open-page-variant" size={26} color="#10B981" />}
                         iconBgColor="rgba(16, 185, 129, 0.12)"
                         onPress={handleBiologyNotes}
                         isDarkMode={isDarkMode}
-                    /> */}
+                    />
 
                     <ALevelFeatureCard
                         title="AI Biology Tutor"
