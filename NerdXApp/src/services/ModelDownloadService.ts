@@ -4,17 +4,18 @@ import * as ExpoFileSystem from 'expo-file-system';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetworkService from './NetworkService';
 
-// Try to import react-native-fs for enhanced download features (background downloads, progress)
-let RNFS: any = null;
+// Import react-native-fs - may be null in Expo Go
+let RNFS: typeof import('react-native-fs') | null = null;
 let RNFS_AVAILABLE = false;
+
 try {
-    RNFS = require('react-native-fs').default;
-    if (RNFS && typeof RNFS.getFSInfo === 'function') {
-        RNFS_AVAILABLE = true;
+    RNFS = require('react-native-fs');
+    RNFS_AVAILABLE = RNFS !== null && typeof RNFS.getFSInfo === 'function';
+    if (RNFS_AVAILABLE) {
         console.log('✅ react-native-fs loaded successfully');
     }
-} catch (error) {
-    console.warn('react-native-fs not available - using expo-file-system fallback');
+} catch (e) {
+    console.warn('react-native-fs not available');
 }
 
 export interface DownloadProgress {
@@ -277,7 +278,8 @@ class ModelDownloadService {
             // Get combined file size
             const mainStat = await RNFS.stat(modelPath);
             const dataStat = await RNFS.stat(modelDataPath);
-            const totalSize = parseInt(mainStat.size) + parseInt(dataStat.size);
+            // RNFS size is already a number, no need for parseInt
+            const totalSize = Number(mainStat.size) + Number(dataStat.size);
 
             if (totalSize < PHI3_MODEL_MIN_SIZE) {
                 throw new Error(
@@ -310,7 +312,7 @@ class ModelDownloadService {
     // Poll file size for progress updates (ExpoFS doesn't provide progress callbacks)
     private startProgressPolling(): void {
         this.stopProgressPolling(); // Clear any existing polling
-        
+
         this.progressPollInterval = setInterval(async () => {
             if (!this.currentDownloadInfo) {
                 return;
@@ -321,9 +323,9 @@ class ModelDownloadService {
                 if (fileInfo.exists && fileInfo.size !== undefined) {
                     const currentSize = fileInfo.size;
                     const fileProgress = Math.min(currentSize / this.currentDownloadInfo.totalSize, 1);
-                    const overallProgress = this.currentDownloadInfo.progressStart + 
+                    const overallProgress = this.currentDownloadInfo.progressStart +
                         (fileProgress * (this.currentDownloadInfo.progressEnd - this.currentDownloadInfo.progressStart));
-                    
+
                     const totalBytesWritten = this.currentDownloadInfo.mainFileSize + currentSize;
 
                     const progress: DownloadProgress = {
@@ -392,25 +394,25 @@ class ModelDownloadService {
 
             // Get actual main file size
             const mainInfo = await ExpoFileSystem.getInfoAsync(modelPath);
-            const verifiedMainSize = mainInfo.size || actualMainSize;
-            
+            const verifiedMainSize = (mainInfo.exists && mainInfo.size) ? mainInfo.size : actualMainSize;
+
             this.stopProgressPolling();
-            this.notifyProgressListeners({ 
-                bytesWritten: verifiedMainSize, 
-                contentLength: PHI3_MODEL_SIZE, 
-                progress: 5 
+            this.notifyProgressListeners({
+                bytesWritten: verifiedMainSize,
+                contentLength: PHI3_MODEL_SIZE,
+                progress: 5
             });
 
             // Download data file (the large one, ~95% of total)
             console.log('📥 Downloading model data file with ExpoFS...');
-            
+
             // Try to get actual data file size from server for accurate progress
             let actualDataSize = await this.getFileSizeFromServer(PHI3_MODEL_DATA_URLS[0]);
             if (!actualDataSize) {
                 // Fallback to estimate if we can't get the size
                 actualDataSize = PHI3_MODEL_SIZE - verifiedMainSize;
             }
-            
+
             // Set up polling for data file
             this.currentDownloadInfo = {
                 filePath: modelDataPath,
@@ -439,7 +441,7 @@ class ModelDownloadService {
                 throw new Error('Download verification failed: files missing');
             }
 
-            const totalSize = (verifiedMainInfo.size || 0) + (dataInfo.size || 0);
+            const totalSize = (verifiedMainInfo.exists ? (verifiedMainInfo.size || 0) : 0) + (dataInfo.exists ? (dataInfo.size || 0) : 0);
             if (totalSize < PHI3_MODEL_MIN_SIZE) {
                 throw new Error(
                     `Downloaded model size too small: ${totalSize} bytes (expected >= ${PHI3_MODEL_MIN_SIZE})`
@@ -616,8 +618,8 @@ class ModelDownloadService {
             const dataExists = await RNFS.exists(modelDataPath);
             const mainStat = mainExists ? await RNFS.stat(modelPath) : { size: 0 };
             const dataStat = dataExists ? await RNFS.stat(modelDataPath) : { size: 0 };
-            const mainSize = parseInt(mainStat.size || 0);
-            const dataSize = parseInt(dataStat.size || 0);
+            const mainSize = Number(mainStat.size || 0);
+            const dataSize = Number(dataStat.size || 0);
             return { mainSize, dataSize, totalSize: mainSize + dataSize };
         }
 

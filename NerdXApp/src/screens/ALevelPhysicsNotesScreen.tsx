@@ -34,14 +34,13 @@ const ALevelPhysicsNotesScreen: React.FC = () => {
     );
 
     const handleTopicPress = (topic: ALevelPhysicsTopic) => {
-        // Navigate to notes detail screen (placeholder for now)
-        Alert.alert(
-            topic.name,
-            `Notes for ${topic.name} are being prepared.\n\nLearning Objectives:\n• ${topic.learningObjectives.slice(0, 3).join('\n• ')}`,
-            [{ text: 'OK' }]
-        );
-        // TODO: Navigate to actual notes detail when implemented
-        // navigation.navigate('ALevelPhysicsNotesDetail' as never, { topic } as never);
+        // Navigate to detailed notes screen
+        navigation.navigate('TopicNotesDetail' as never, {
+            topic: topic.name,
+            subject: 'A Level Physics',
+            isALevel: true,
+            topicData: topic
+        } as never);
     };
 
     return (
@@ -152,17 +151,6 @@ const ALevelPhysicsNotesScreen: React.FC = () => {
                                 </LinearGradient>
                             </TouchableOpacity>
                         ))}
-
-                        {/* Coming Soon Notice */}
-                        <View style={styles.comingSoon}>
-                            <Ionicons name="construct-outline" size={32} color="rgba(255,255,255,0.7)" />
-                            <Text style={styles.comingSoonText}>
-                                Detailed notes for each topic are being prepared
-                            </Text>
-                            <Text style={styles.comingSoonSubtext}>
-                                Check back soon for comprehensive A Level Physics content
-                            </Text>
-                        </View>
                     </View>
                 </ScrollView>
             </LinearGradient>

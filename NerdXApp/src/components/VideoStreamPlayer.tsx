@@ -1,5 +1,5 @@
 // Video Stream Player Component - Advanced streaming video player for topic video lessons
-// Uses expo-av for video playback with fullscreen, minimize, and advanced controls
+// Uses expo-video for video playback with fullscreen, minimize, and advanced controls
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
     View,
@@ -12,7 +12,8 @@ import {
     Modal,
     StatusBar,
 } from 'react-native';
-import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
+import { useVideoPlayer, VideoView } from 'expo-video';
+import { useEvent } from 'expo';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Slider from '@react-native-community/slider';
@@ -29,8 +30,18 @@ const VideoStreamPlayer: React.FC<VideoStreamPlayerProps> = ({
     topicTitle,
     accentColor = '#2196F3',
 }) => {
-    const videoRef = useRef<Video>(null);
-    const [status, setStatus] = useState<AVPlaybackStatus | null>(null);
+    const videoViewRef = useRef<any>(null);
+
+    // Create video player using the hook
+    const player = useVideoPlayer(videoUrl, (p) => {
+        p.loop = false;
+        p.muted = false;
+    });
+
+    // Subscribe to player events
+    const { isPlaying } = useEvent(player, 'playingChange', { isPlaying: player.playing });
+    const { status } = useEvent(player, 'statusChange', { status: player.status });
+
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
@@ -38,27 +49,41 @@ const VideoStreamPlayer: React.FC<VideoStreamPlayerProps> = ({
     const [showControls, setShowControls] = useState(true);
     const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
     const [isMuted, setIsMuted] = useState(false);
+    const [position, setPosition] = useState(0);
+    const [duration, setDuration] = useState(0);
 
     const controlsTimeout = useRef<NodeJS.Timeout | null>(null);
     const pulseAnim = useRef(new Animated.Value(1)).current;
 
-    // Derived state from playback status
-    const isPlaying = status?.isLoaded ? status.isPlaying : false;
-    const isBuffering = status?.isLoaded ? status.isBuffering : false;
-    const duration = status?.isLoaded ? (status.durationMillis || 0) : 0;
-    const position = status?.isLoaded ? (status.positionMillis || 0) : 0;
+    // Update loading and error states based on player status
+    useEffect(() => {
+        if (status === 'readyToPlay') {
+            setIsLoading(false);
+            setError(null);
+            setDuration(player.duration * 1000); // Convert to milliseconds
+        } else if (status === 'loading') {
+            setIsLoading(true);
+        } else if (status === 'error') {
+            setError('Video could not be loaded. Please check your internet connection and try again.');
+            setIsLoading(false);
+        }
+    }, [status, player.duration]);
 
-
+    // Update position periodically
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (player && isPlaying) {
+                setPosition(player.currentTime * 1000); // Convert to milliseconds
+            }
+        }, 500);
+        return () => clearInterval(interval);
+    }, [player, isPlaying]);
 
     // Cleanup on unmount
     useEffect(() => {
         return () => {
             if (controlsTimeout.current) {
                 clearTimeout(controlsTimeout.current);
-            }
-            // Unload video to free memory
-            if (videoRef.current) {
-                videoRef.current.unloadAsync().catch(() => { });
             }
             // Reset orientation to portrait when leaving
             ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => { });
@@ -108,60 +133,35 @@ const VideoStreamPlayer: React.FC<VideoStreamPlayerProps> = ({
         return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     };
 
-    const onPlaybackStatusUpdate = (playbackStatus: AVPlaybackStatus) => {
-        setStatus(playbackStatus);
-        if (playbackStatus.isLoaded) {
-            setIsLoading(false);
-            setError(null);
-
-            // Handle video finished - allow replay
-            if (playbackStatus.didJustFinish) {
-                setShowControls(true);
-            }
-        } else if ('error' in playbackStatus && playbackStatus.error) {
-            setError('Video could not be loaded. Please check your internet connection and try again.');
-            setIsLoading(false);
-        }
-    };
-
-    const handlePlayPause = async () => {
-        if (!videoRef.current) return;
-
-        try {
-            if (isPlaying) {
-                await videoRef.current.pauseAsync();
+    const handlePlayPause = () => {
+        if (isPlaying) {
+            player.pause();
+        } else {
+            // If video finished, replay from start
+            if (player.currentTime >= player.duration - 0.1) {
+                player.replay();
             } else {
-                // If video finished, replay from start
-                if (status?.isLoaded && status.positionMillis === status.durationMillis) {
-                    await videoRef.current.setPositionAsync(0);
-                }
-                await videoRef.current.playAsync();
+                player.play();
             }
-        } catch (err) {
-            console.warn('Video playback error:', err);
         }
         resetControlsTimer();
     };
 
-    const handleSeek = async (value: number) => {
-        if (videoRef.current) {
-            await videoRef.current.setPositionAsync(value);
-        }
+    const handleSeek = (value: number) => {
+        const seconds = value / 1000;
+        player.seekBy(seconds - player.currentTime);
+        setPosition(value);
     };
 
-    const handleRewind = async () => {
-        if (videoRef.current && status?.isLoaded) {
-            const newPosition = Math.max(0, position - 10000);
-            await videoRef.current.setPositionAsync(newPosition);
-        }
+    const handleRewind = () => {
+        player.seekBy(-10);
+        setPosition(Math.max(0, player.currentTime * 1000 - 10000));
         resetControlsTimer();
     };
 
-    const handleForward = async () => {
-        if (videoRef.current && status?.isLoaded && duration > 0) {
-            const newPosition = Math.min(duration, position + 10000);
-            await videoRef.current.setPositionAsync(newPosition);
-        }
+    const handleForward = () => {
+        player.seekBy(10);
+        setPosition(Math.min(duration, player.currentTime * 1000 + 10000));
         resetControlsTimer();
     };
 
@@ -169,18 +169,22 @@ const VideoStreamPlayer: React.FC<VideoStreamPlayerProps> = ({
         try {
             if (isFullscreen) {
                 // Exit fullscreen - lock to portrait
+                if (videoViewRef.current) {
+                    videoViewRef.current.exitFullscreen();
+                }
                 await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
                 setIsFullscreen(false);
             } else {
-                // Enter fullscreen - unlock to allow rotation (landscape preferred)
+                // Enter fullscreen
+                if (videoViewRef.current) {
+                    videoViewRef.current.enterFullscreen();
+                }
                 await ScreenOrientation.unlockAsync();
-                // Give a hint to rotate by setting landscape
                 await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
                 setIsFullscreen(true);
             }
         } catch (err) {
             console.warn('Screen orientation error:', err);
-            // Fallback: just toggle fullscreen state
             setIsFullscreen(!isFullscreen);
         }
         resetControlsTimer();
@@ -193,39 +197,27 @@ const VideoStreamPlayer: React.FC<VideoStreamPlayerProps> = ({
         setIsMinimized(!isMinimized);
     };
 
-    const handleMute = async () => {
-        if (videoRef.current) {
-            await videoRef.current.setIsMutedAsync(!isMuted);
-            setIsMuted(!isMuted);
-        }
+    const handleMute = () => {
+        player.muted = !isMuted;
+        setIsMuted(!isMuted);
         resetControlsTimer();
     };
 
-    const handleSpeedChange = async () => {
+    const handleSpeedChange = () => {
         const speeds = [0.5, 1.0, 1.5, 2.0];
         const currentIndex = speeds.indexOf(playbackSpeed);
         const nextIndex = (currentIndex + 1) % speeds.length;
         const newSpeed = speeds[nextIndex];
 
-        if (videoRef.current) {
-            await videoRef.current.setRateAsync(newSpeed, true);
-            setPlaybackSpeed(newSpeed);
-        }
+        player.playbackRate = newSpeed;
+        setPlaybackSpeed(newSpeed);
         resetControlsTimer();
     };
 
-    const handleRetry = async () => {
+    const handleRetry = () => {
         setError(null);
         setIsLoading(true);
-        try {
-            if (videoRef.current) {
-                await videoRef.current.unloadAsync();
-                await videoRef.current.loadAsync({ uri: videoUrl }, { shouldPlay: false });
-            }
-        } catch (err) {
-            setError('Failed to reload video. Please try again later.');
-            setIsLoading(false);
-        }
+        player.replace(videoUrl);
     };
 
     const handleVideoPress = () => {
@@ -244,14 +236,12 @@ const VideoStreamPlayer: React.FC<VideoStreamPlayerProps> = ({
                     },
                 ]}
             >
-                <Video
-                    ref={videoRef}
-                    source={{ uri: videoUrl }}
+                <VideoView
+                    ref={videoViewRef}
+                    player={player}
                     style={styles.minimizedVideo}
-                    resizeMode={ResizeMode.COVER}
-                    onPlaybackStatusUpdate={onPlaybackStatusUpdate}
-                    shouldPlay={isPlaying}
-                    isMuted={isMuted}
+                    contentFit="cover"
+                    nativeControls={false}
                 />
                 <View style={styles.minimizedOverlay}>
                     <TouchableOpacity onPress={handlePlayPause} style={styles.minimizedPlayButton}>
@@ -266,99 +256,6 @@ const VideoStreamPlayer: React.FC<VideoStreamPlayerProps> = ({
                     </TouchableOpacity>
                 </View>
             </View>
-        );
-    }
-
-    // Fullscreen modal
-    if (isFullscreen) {
-        return (
-            <Modal
-                visible={isFullscreen}
-                animationType="fade"
-                supportedOrientations={['landscape']}
-                onRequestClose={handleFullscreen}
-            >
-                <StatusBar hidden />
-                <View style={styles.fullscreenContainer}>
-                    <TouchableOpacity
-                        activeOpacity={1}
-                        style={styles.fullscreenTouchable}
-                        onPress={handleVideoPress}
-                    >
-                        <Video
-                            ref={videoRef}
-                            source={{ uri: videoUrl }}
-                            style={styles.fullscreenVideo}
-                            resizeMode={ResizeMode.CONTAIN}
-                            onPlaybackStatusUpdate={onPlaybackStatusUpdate}
-                            shouldPlay={isPlaying}
-                            isMuted={isMuted}
-                            rate={playbackSpeed}
-                        />
-
-                        {showControls && (
-                            <View style={styles.fullscreenControls}>
-                                {/* Top bar */}
-                                <View style={styles.fullscreenTopBar}>
-                                    <TouchableOpacity onPress={handleFullscreen} style={styles.fullscreenBackButton}>
-                                        <Ionicons name="arrow-back" size={24} color="#FFF" />
-                                    </TouchableOpacity>
-                                    <Text style={styles.fullscreenTitle} numberOfLines={1}>{topicTitle}</Text>
-                                    <View style={{ width: 40 }} />
-                                </View>
-
-                                {/* Center play button */}
-                                <View style={styles.fullscreenCenterControls}>
-                                    <TouchableOpacity onPress={handleRewind} style={styles.fullscreenSideButton}>
-                                        <Ionicons name="play-back" size={32} color="#FFF" />
-                                        <Text style={styles.skipLabel}>10</Text>
-                                    </TouchableOpacity>
-
-                                    <TouchableOpacity
-                                        onPress={handlePlayPause}
-                                        style={[styles.fullscreenPlayButton, { backgroundColor: accentColor }]}
-                                    >
-                                        {isBuffering ? (
-                                            <ActivityIndicator size="large" color="#FFF" />
-                                        ) : (
-                                            <Ionicons
-                                                name={isPlaying ? 'pause' : 'play'}
-                                                size={48}
-                                                color="#FFF"
-                                                style={isPlaying ? {} : { marginLeft: 5 }}
-                                            />
-                                        )}
-                                    </TouchableOpacity>
-
-                                    <TouchableOpacity onPress={handleForward} style={styles.fullscreenSideButton}>
-                                        <Ionicons name="play-forward" size={32} color="#FFF" />
-                                        <Text style={styles.skipLabel}>10</Text>
-                                    </TouchableOpacity>
-                                </View>
-
-                                {/* Bottom bar */}
-                                <View style={styles.fullscreenBottomBar}>
-                                    <Text style={styles.fullscreenTimeText}>{formatTime(position)}</Text>
-                                    <Slider
-                                        style={styles.fullscreenSlider}
-                                        minimumValue={0}
-                                        maximumValue={duration || 1}
-                                        value={position}
-                                        onSlidingComplete={handleSeek}
-                                        minimumTrackTintColor={accentColor}
-                                        maximumTrackTintColor="rgba(255,255,255,0.3)"
-                                        thumbTintColor={accentColor}
-                                    />
-                                    <Text style={styles.fullscreenTimeText}>{formatTime(duration)}</Text>
-                                    <TouchableOpacity onPress={handleSpeedChange} style={styles.speedButton}>
-                                        <Text style={styles.speedText}>{playbackSpeed}x</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                        )}
-                    </TouchableOpacity>
-                </View>
-            </Modal>
         );
     }
 
@@ -405,17 +302,15 @@ const VideoStreamPlayer: React.FC<VideoStreamPlayerProps> = ({
                     style={styles.videoWrapper}
                     onPress={handleVideoPress}
                 >
-                    <Video
-                        ref={videoRef}
-                        source={{ uri: videoUrl }}
+                    <VideoView
+                        ref={videoViewRef}
+                        player={player}
                         style={styles.video}
-                        resizeMode={ResizeMode.CONTAIN}
-                        onPlaybackStatusUpdate={onPlaybackStatusUpdate}
-                        onLoad={() => setIsLoading(false)}
-                        onError={(e) => setError('Unable to load video. Please check your connection.')}
-                        shouldPlay={false}
-                        isMuted={isMuted}
-                        rate={playbackSpeed}
+                        contentFit="contain"
+                        nativeControls={false}
+                        allowsFullscreen
+                        onFullscreenEnter={() => setIsFullscreen(true)}
+                        onFullscreenExit={() => setIsFullscreen(false)}
                     />
 
                     {/* Loading Overlay */}
@@ -423,13 +318,6 @@ const VideoStreamPlayer: React.FC<VideoStreamPlayerProps> = ({
                         <View style={styles.loadingOverlay}>
                             <ActivityIndicator size="large" color={accentColor} />
                             <Text style={styles.loadingText}>Loading video...</Text>
-                        </View>
-                    )}
-
-                    {/* Buffering Indicator */}
-                    {isBuffering && !isLoading && (
-                        <View style={styles.bufferingOverlay}>
-                            <ActivityIndicator size="small" color="#FFF" />
                         </View>
                     )}
 
@@ -487,7 +375,7 @@ const VideoStreamPlayer: React.FC<VideoStreamPlayerProps> = ({
                                 onPress={handlePlayPause}
                                 style={[styles.playButton, { backgroundColor: accentColor }]}
                             >
-                                {isBuffering ? (
+                                {status === 'loading' ? (
                                     <ActivityIndicator size="small" color="#FFF" />
                                 ) : (
                                     <Ionicons
@@ -621,12 +509,6 @@ const styles = StyleSheet.create({
         color: '#FFF',
         marginTop: 12,
         fontSize: 14,
-    },
-    bufferingOverlay: {
-        ...StyleSheet.absoluteFillObject,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.3)',
     },
     errorOverlay: {
         ...StyleSheet.absoluteFillObject,
@@ -774,99 +656,6 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0,0,0,0.5)',
         justifyContent: 'center',
         alignItems: 'center',
-    },
-    // Fullscreen styles
-    fullscreenContainer: {
-        flex: 1,
-        backgroundColor: '#000',
-    },
-    fullscreenTouchable: {
-        flex: 1,
-    },
-    fullscreenVideo: {
-        flex: 1,
-    },
-    fullscreenControls: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0,0,0,0.4)',
-        justifyContent: 'space-between',
-    },
-    fullscreenTopBar: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingTop: Platform.OS === 'ios' ? 20 : 16,
-        paddingBottom: 16,
-    },
-    fullscreenBackButton: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: 'rgba(0,0,0,0.3)',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    fullscreenTitle: {
-        color: '#FFF',
-        fontSize: 16,
-        fontWeight: '600',
-        flex: 1,
-        textAlign: 'center',
-        marginHorizontal: 16,
-    },
-    fullscreenCenterControls: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    fullscreenSideButton: {
-        alignItems: 'center',
-        marginHorizontal: 32,
-    },
-    skipLabel: {
-        color: '#FFF',
-        fontSize: 11,
-        fontWeight: '600',
-        marginTop: 2,
-    },
-    fullscreenPlayButton: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    fullscreenBottomBar: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingBottom: Platform.OS === 'ios' ? 30 : 16,
-        paddingTop: 16,
-    },
-    fullscreenSlider: {
-        flex: 1,
-        height: 40,
-        marginHorizontal: 12,
-    },
-    fullscreenTimeText: {
-        color: '#FFF',
-        fontSize: 13,
-        fontWeight: '500',
-        minWidth: 45,
-        textAlign: 'center',
-    },
-    speedButton: {
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 16,
-        backgroundColor: 'rgba(255,255,255,0.2)',
-        marginLeft: 8,
-    },
-    speedText: {
-        color: '#FFF',
-        fontSize: 13,
-        fontWeight: 'bold',
     },
 });
 

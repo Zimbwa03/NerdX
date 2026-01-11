@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "NerdXApp",
+    "name": "NerdX",
     "slug": "nerdxapp",
-    "scheme": "com.Ngoni03.nerdxapp",
+    "scheme": "nerdxapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -30,7 +30,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.Ngoni03.nerdxapp",
-      "versionCode": 1,
+      "versionCode": 2,
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS",
@@ -62,17 +62,20 @@
         {
           "android": {
             "minSdkVersion": 24,
+            "targetSdkVersion": 35,
+            "compileSdkVersion": 35,
             "enableProguardInReleaseBuilds": false,
             "enableShrinkResourcesInReleaseBuilds": false
           }
         }
-      ]
+      ],
+      "expo-video"
     ],
     "extra": {
       "eas": {
-        "projectId": "19c192c0-d5d8-409a-a1be-27c97f2ead8c"
+        "projectId": "3750f794-1170-411c-b0e2-a72b7b85b3af"
       }
     },
-    "owner": "nerdx6"
+    "owner": "nerdx7"
   }
 }

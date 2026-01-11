@@ -6792,7 +6792,8 @@ In a **titration**:
             "Acid + metal is REDOX, NOT neutralisation (electrons are transferred)",
             "Know the 'big three' strong acids: HCl, H₂SO₄, HNO₃",
             "Know insoluble exceptions: AgCl, PbCl₂, BaSO₄, PbSO₄, CaSO₄, most carbonates",
-            "For preparing soluble salts: use EXCESS of the INSOLUBLE reactant to ensure all acid reacts",
+            "For preparing soluble salts: use EXCESS of the INSOLUBLE reactant to ensure all acid reacts"
+        ]
     },
 
     "Electrochemistry": {

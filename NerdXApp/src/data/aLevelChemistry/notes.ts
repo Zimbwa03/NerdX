@@ -5,6 +5,8 @@ import { TopicNotes } from '../scienceNotes/types';
 export const aLevelChemistryNotes: Record<string, TopicNotes> = {
     "Atomic Structure": {
         topic: "Atomic Structure",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Atomic_Structure_Exam_Readiness_Fortress.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvQXRvbWljX1N0cnVjdHVyZV9FeGFtX1JlYWRpbmVzc19Gb3J0cmVzcy5tNGEiLCJpYXQiOjE3NjgwNDIxNzUsImV4cCI6NTI2ODUzODE3NX0.861Q22lP2pJyr-BEhQ6xKdQRr_GeDpVcNhfz8WH12tE",
+        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Atomic_Structure.mp4",
         subject: "A Level Chemistry",
         summary: "Atomic structure is fundamental to understanding chemistry. This comprehensive topic covers the evolving model of the atom, subatomic particles, isotopes, electron shells and orbitals, ionization energy trends, electron configuration rules, and how the periodic table reflects electron arrangements. Mastery of atomic structure is essential for understanding chemical bonding, periodicity, and all subsequent chemistry topics.",
         sections: [
@@ -337,6 +339,8 @@ Ultimately, an element's electron configuration is the key determinant of nearly
     },
     "Nitrogen Compounds": {
         topic: "Nitrogen Compounds",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/remaining%20/Nitrogen_Compounds.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvcmVtYWluaW5nIC9OaXRyb2dlbl9Db21wb3VuZHMubXA0IiwiaWF0IjoxNzY4MDYwMjgxLCJleHAiOjUyNjg1NTYyODF9.xAB_x3ynGFAsCMCw-Qb2nlxXJe71A683QIDKqVRbS2k",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/remaining%20/Audios/Nitrogen_From_Inertia_to_Explosives.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvcmVtYWluaW5nIC9BdWRpb3MvTml0cm9nZW5fRnJvbV9JbmVydGlhX3RvX0V4cGxvc2l2ZXMubTRhIiwiaWF0IjoxNzY4MDYwOTE1LCJleHAiOjUyNjg1NTY5MTV9.xyJPLR-9ddI5ruXQWlbf-A3JdGft80F9Nw-NpI3ftuk",
         subject: "A Level Chemistry",
         summary: "Nitrogen compounds are a vital and diverse class of organic molecules containing nitrogen atoms. This topic covers amines, amides, and nitriles - their structure, classification, physical properties, basicity, preparation methods, reactions, and interconversion pathways. Understanding the lone pair of electrons on nitrogen is key to predicting their chemical behavior.",
         sections: [
@@ -836,6 +840,8 @@ Simple, rapid chemical tests can be performed in the laboratory to identify the 
     },
     "Carboxylic Acids and Derivatives": {
         topic: "Carboxylic Acids and Derivatives",
+        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Carboxylic_Acids_and_Derivatives.mp4",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Carboxylic_Acids_and_Derivatives_Mastery_Blueprint.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvQ2FyYm94eWxpY19BY2lkc19hbmRfRGVyaXZhdGl2ZXNfTWFzdGVyeV9CbHVlcHJpbnQubTRhIiwiaWF0IjoxNzY4MDQyMTk1LCJleHAiOjUyNjg1MzgxOTV9.8wltCTwoXpdcJ24fUU0GsqwGt1V86aCxx6pPXUAukSk",
         subject: "A Level Chemistry",
         summary: "Carboxylic acids and their derivatives represent a major class of organic molecules with diverse properties and applications. This topic covers their structure, physical and chemical properties, methods of preparation, and key reactions. A strong emphasis is placed on understanding reaction mechanisms and the interconversion pathways between these compounds, which are essential skills for success in A Level examinations.",
         sections: [
@@ -1384,6 +1390,8 @@ This table provides a high-level comparison of the key features of the acyl deri
     },
     "Carbonyl Compounds": {
         topic: "Carbonyl Compounds",
+        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Carbonyl_Compounds.mp4",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Aldehyde_Versus_Ketone_Structure_and_Reactivity.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvQWxkZWh5ZGVfVmVyc3VzX0tldG9uZV9TdHJ1Y3R1cmVfYW5kX1JlYWN0aXZpdHkubTRhIiwiaWF0IjoxNzY4MDQyMTM0LCJleHAiOjUyNjg1MzgxMzR9.o2Kykt4FUceceamJLRpnYRD9QuPbk2SkXyxL0NwxEtc",
         subject: "A Level Chemistry",
         summary: "Carbonyl compounds represent a crucial homologous series in organic chemistry, characterised by the presence of the carbonyl functional group, C=O. Aldehydes and ketones are distinguished by the position of this carbonyl group within the carbon skeleton. Their inherent polarity and reactivity make them pivotal intermediates in a vast number of synthetic pathways, with nucleophilic addition being their characteristic reaction mechanism.",
         sections: [
@@ -1793,6 +1801,8 @@ This final section consolidates the key comparative points between aldehydes and
     },
     "Hydroxy Compounds": {
         topic: "Hydroxy Compounds",
+        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Hydroxy_Compounds.mp4",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Organic_Chemistry_Hydroxyl_Compounds_Explained.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvT3JnYW5pY19DaGVtaXN0cnlfSHlkcm94eWxfQ29tcG91bmRzX0V4cGxhaW5lZC5tNGEiLCJpYXQiOjE3NjgwNDI1NzAsImV4cCI6NTI2ODUzODU3MH0.brd3nzXIevwM0Wid573jZ_uA3cDXUba0jbe_ACnZUos",
         subject: "A Level Chemistry",
         summary: "Hydroxyl compounds are a fundamental class of organic molecules characterized by the presence of the -OH functional group. This topic covers alcohols (R-OH) and phenols (Ar-OH), their classification, physical properties, preparation methods, and key reactions. The structural distinction between aliphatic alcohols and aromatic phenols leads to significant differences in their reactivity, particularly in terms of acidity and electrophilic substitution.",
         sections: [
@@ -2157,6 +2167,8 @@ A thorough understanding of the structure, properties, and reactions of hydroxyl
     },
     "Atoms, Molecules and Stoichiometry": {
         topic: "Atoms, Molecules and Stoichiometry",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Atomic_Mass_Moles_and_Stoichiometry_Calculations.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvQXRvbWljX01hc3NfTW9sZXNfYW5kX1N0b2ljaGlvbWV0cnlfQ2FsY3VsYXRpb25zLm00YSIsImlhdCI6MTc2ODA0MjE1MCwiZXhwIjo1MjY4NTM4MTUwfQ.thO6_jCiGSuYiy2q_FpcqfPbah28Bt5SV9fbY0edkF0",
+        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Atoms_Molecules_and_Stoichiometry.mp4",
         subject: "A Level Chemistry",
         summary: "The mole concept serves as the fundamental cornerstone of quantitative chemistry, providing the essential bridge between the microscopic world of individual atoms, ions, and molecules and the macroscopic world of laboratory measurements. This topic covers the mole concept, relative masses, empirical and molecular formulae, chemical equations, stoichiometric calculations, reacting volumes of gases, solution concentrations, and titration calculations. Mastery of these concepts is essential for all quantitative chemistry.",
         sections: [
@@ -2609,6 +2621,8 @@ Mastery of the mole concept and stoichiometric calculations is not just a requir
     },
     "Chemical Bonding": {
         topic: "Chemical Bonding",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Chemical_Bonding_Structure_Properties_A-Level_Review.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvQ2hlbWljYWxfQm9uZGluZ19TdHJ1Y3R1cmVfUHJvcGVydGllc19BLUxldmVsX1Jldmlldy5tNGEiLCJpYXQiOjE3NjgwNDIyNjUsImV4cCI6NTI2ODUzODI2NX0.Prgt6HifVbeYdDjm_i7KOTIc5F9bOLQzu0WXAavPmrU",
+        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Chemical_Bonding.mp4",
         subject: "A Level Chemistry",
         summary: "Chemical bonding is the electrostatic attraction that holds particles—atoms, ions, or molecules—together. This process is fundamentally driven by the principle of achieving a lower, more stable potential energy state. This topic covers ionic bonding, covalent bonding (including dative bonds), metallic bonding, VSEPR theory for molecular shapes, intermolecular forces, and how bonding determines physical properties. Understanding bonding is essential for explaining structure, properties, and reactivity.",
         sections: [
@@ -3026,6 +3040,8 @@ Calculations using average bond energy data provide useful estimates but often d
     },
     "States of Matter": {
         topic: "States of Matter",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Ideal_Gas_Failure_and_Solid_Structure.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvSWRlYWxfR2FzX0ZhaWx1cmVfYW5kX1NvbGlkX1N0cnVjdHVyZS5tNGEiLCJpYXQiOjE3NjgwNDI0NDEsImV4cCI6NTI2ODUzODQ0MX0.0rv8BVZ4I83HKXL3pXsz0bufupIo87p7rDZmyeIEQxI",
+        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/States_of_Matter.mp4",
         subject: "A Level Chemistry",
         summary: "An understanding of the three states of matter—solid, liquid, and gas—is fundamental to the study of chemistry. The arrangement, movement, and energy of particles within a substance dictate its physical properties and behaviour. This topic covers the particle model for each state, changes of state and energy dynamics, the kinetic theory of matter, gas laws and behaviour, deviations from ideal gas behaviour, and the structures of different types of solids. Explaining macroscopic properties based on microscopic particle models is a cornerstone of physical chemistry.",
         sections: [
@@ -3371,6 +3387,8 @@ These solids, such as iodine or ice, consist of discrete, small molecules held i
     },
     "Electrochemistry": {
         topic: "Electrochemistry",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Redox_Agents_to_Hydrogen_Fuel_Carriers.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvUmVkb3hfQWdlbnRzX3RvX0h5ZHJvZ2VuX0Z1ZWxfQ2FycmllcnMubTRhIiwiaWF0IjoxNzY4MDQyNjI3LCJleHAiOjUyNjg1Mzg2Mjd9.oX1u2lEMfg9Ev2IWa8oqJB91rAWrTWS8XVd9CZrUl2U",
+        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Electrochemistry.mp4",
         subject: "A Level Chemistry",
         summary: "Electrochemistry is the branch of chemistry that explores the relationship between chemical reactions and electricity. It encompasses processes where chemical energy is converted into electrical energy (batteries and fuel cells) and where electrical energy is used to drive non-spontaneous chemical changes (electrolysis). This topic covers redox reactions, standard electrode potentials, electrochemical cells, electrolysis, Faraday's laws, and practical applications. A firm understanding of these concepts is crucial for advanced chemistry.",
         sections: [
@@ -3887,6 +3905,8 @@ Our exploration has journeyed from the fundamental definition of redox as electr
     },
     "Equilibria": {
         topic: "Equilibria",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Equilibrium_Constants_and_Le_Chatelier_s_Control.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvRXF1aWxpYnJpdW1fQ29uc3RhbnRzX2FuZF9MZV9DaGF0ZWxpZXJfc19Db250cm9sLm00YSIsImlhdCI6MTc2ODA0MjI5MywiZXhwIjo1MjY4NTM4MjkzfQ.kWzzGxMkkD51mksRkVKoaWBu3adyoGGeUCatmUP4pQg",
+        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Equilibria.mp4",
         subject: "A Level Chemistry",
         summary: "An understanding of dynamic equilibrium is fundamental to predicting the extent of chemical reactions. Many reactions are reversible and do not fully convert reactants into products. Instead, they reach a state of balance. This topic covers dynamic equilibrium, the equilibrium law and constant (Kc), Le Châtelier's Principle, industrial applications, acid-base equilibria, and pH calculations. The principles of chemical equilibrium play a central and unifying role throughout chemistry.",
         sections: [
@@ -4443,8 +4463,10 @@ Calculate the pH of a 0.10 mol dm⁻³ solution of chloroethanoic acid (ClCH₂C
             "Strong base pH: calculate pOH = -log[OH⁻], then pH = 14 - pOH"
         ]
     },
-    "Halogen Compounds": {
-        topic: "Halogen Compounds",
+    "Halogen Derivatives": {
+        topic: "Halogen Derivatives",
+        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Halogen_Derivatives.mp4",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Haloalkane_and_Haloarene_Reaction_Mechanisms.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvSGFsb2Fsa2FuZV9hbmRfSGFsb2FyZW5lX1JlYWN0aW9uX01lY2hhbmlzbXMubTRhIiwiaWF0IjoxNzY4MDQyMzA5LCJleHAiOjUyNjg1MzgzMDl9.NSrs97D3XQb4Y3lMLxWAbyPD_pkAEfyPCuGV7g6BHBU",
         subject: "A Level Chemistry",
         summary: "Halogen compounds are a class of organic molecules, with the most important categories being haloalkanes and haloarenes. They serve a pivotal role in synthetic organic chemistry. The carbon-halogen bond can be readily transformed, making them excellent intermediates for the synthesis of other functional groups. This topic covers classification of haloalkanes, nucleophilic substitution reactions, SN1 and SN2 mechanisms, elimination reactions, hydrolysis, haloarenes, preparation methods, uses, environmental impact, and identification tests.",
         sections: [
@@ -4876,6 +4898,7 @@ This systematic approach, from understanding structure and bonding to predicting
     },
     "Reaction Kinetics": {
         topic: "Reaction Kinetics",
+        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Reaction_Kinetics.mp4",
         subject: "A Level Chemistry",
         summary: "Reaction kinetics is the branch of physical chemistry dedicated to studying the rates of chemical reactions and the factors that influence them. Understanding kinetics enables chemists to control industrial processes for optimal efficiency and to unravel reaction mechanisms. It is crucial to distinguish kinetics from chemical energetics: while energetics predicts whether a reaction is thermodynamically feasible, kinetics reveals how fast that reaction will proceed. This topic covers measuring reaction rates, collision theory, activation energy, factors affecting reaction rates, and catalysis.",
         sections: [
@@ -5194,6 +5217,7110 @@ This final section consolidates the core principles of reaction kinetics into a 
             "For quenching in titration method: explain why it's necessary (to stop reaction at specific time)",
             "Initial rate is most important - it's when concentrations are highest and rate is fastest",
             "When drawing enthalpy profiles: label Ea clearly and show it's from reactants to peak, not to products"
+        ]
+    },
+    "Chemical Energetics": {
+        topic: "Chemical Energetics",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/A-Level_Chemical_Energetics_and_Activation_Energy.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvQS1MZXZlbF9DaGVtaWNhbF9FbmVyZ2V0aWNzX2FuZF9BY3RpdmF0aW9uX0VuZXJneS5tNGEiLCJpYXQiOjE3NjgwNDIxMDcsImV4cCI6NTI2ODUzODEwN30.e0jbUasU73MYoSAQFMvgttRpWoywUdn5IF3QPbiQ8oQ",
+        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Chemical_Energetics.mp4",
+        subject: "A Level Chemistry",
+        summary: "Chemical Energetics (Thermochemistry) is the study of energy changes in chemical reactions. This fundamental topic covers the concept of enthalpy, standard enthalpy changes (combustion, formation, neutralisation, atomisation), Hess's Law and its applications, bond energy calculations, and calorimetry experiments. Understanding energy changes is essential for predicting reaction feasibility and is closely linked to kinetics and equilibria.",
+        sections: [
+            {
+                title: "1. Introduction to Energy Changes in Chemistry",
+                content: `## Why Study Chemical Energetics?
+
+Chemical reactions involve the breaking and making of chemical bonds. Since energy is required to break bonds and energy is released when new bonds form, all chemical reactions involve energy changes. Understanding these energy changes is fundamental to chemistry because it allows us to:
+
+- Predict whether reactions will occur spontaneously
+- Calculate the energy released or absorbed in reactions
+- Design efficient industrial processes
+- Understand fuel combustion and energy production
+
+### Key Concepts
+
+**System and Surroundings:**
+- The **system** is the part of the universe we are studying (typically the reactants and products)
+- The **surroundings** are everything else (the container, air, water bath, etc.)
+- Energy can flow between system and surroundings
+
+**Exothermic Reactions:**
+- Energy is transferred FROM the system TO the surroundings
+- The surroundings get hotter
+- Products have LESS energy than reactants
+- ΔH is NEGATIVE (e.g., ΔH = -890 kJ mol⁻¹)
+- Examples: combustion, neutralisation, respiration
+
+**Endothermic Reactions:**
+- Energy is transferred FROM the surroundings TO the system
+- The surroundings get colder
+- Products have MORE energy than reactants
+- ΔH is POSITIVE (e.g., ΔH = +178 kJ mol⁻¹)
+- Examples: thermal decomposition, photosynthesis, dissolving ammonium nitrate`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. Enthalpy and Enthalpy Changes",
+                content: `## Understanding Enthalpy
+
+**Enthalpy (H)** is the total energy content of a chemical system at constant pressure. We cannot measure absolute enthalpy values, but we CAN measure **enthalpy changes (ΔH)** - the difference in enthalpy between products and reactants.
+
+### The Enthalpy Change Equation
+
+**ΔH = H(products) - H(reactants)**
+
+- If ΔH is negative: products have less energy than reactants → exothermic
+- If ΔH is positive: products have more energy than reactants → endothermic
+
+### Standard Conditions
+
+To compare enthalpy changes fairly, we use **standard conditions**:
+
+| Parameter | Standard Value |
+|-----------|----------------|
+| Temperature | 298 K (25°C) |
+| Pressure | 100 kPa (1 bar) |
+| Concentration | 1 mol dm⁻³ (for solutions) |
+| Physical states | Most stable form at 298 K and 100 kPa |
+
+The symbol **ΔH°** (with the plimsoll symbol °) indicates standard conditions.
+
+### Enthalpy Profile Diagrams
+
+These diagrams show the energy pathway during a reaction:
+
+**Exothermic Reaction:**
+- Reactants at higher energy level
+- Products at lower energy level
+- Arrow pointing DOWN from reactants to products
+- ΔH shown as negative value
+
+**Endothermic Reaction:**
+- Reactants at lower energy level
+- Products at higher energy level
+- Arrow pointing UP from reactants to products
+- ΔH shown as positive value`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. Standard Enthalpy Changes: Key Definitions",
+                content: `## Essential Definitions for A-Level
+
+Precise definitions of standard enthalpy changes are crucial for examination success.
+
+### Standard Enthalpy of Combustion (ΔH°c)
+
+**Definition:** The enthalpy change when ONE MOLE of a substance is completely burned in oxygen under standard conditions, with all reactants and products in their standard states.
+
+- Always exothermic (ΔH°c is always negative)
+- Products are typically CO₂(g) and H₂O(l)
+
+**Example:** CH₄(g) + 2O₂(g) → CO₂(g) + 2H₂O(l)     ΔH°c = -890 kJ mol⁻¹
+
+### Standard Enthalpy of Formation (ΔH°f)
+
+**Definition:** The enthalpy change when ONE MOLE of a compound is formed from its elements in their standard states under standard conditions.
+
+- Elements must be in their most stable forms (e.g., O₂(g), C(graphite))
+- ΔH°f of any element in its standard state = 0 (by definition)
+
+**Example:** C(graphite) + O₂(g) → CO₂(g)     ΔH°f = -394 kJ mol⁻¹
+
+### Standard Enthalpy of Neutralisation (ΔH°neut)
+
+**Definition:** The enthalpy change when an acid and base react to form ONE MOLE of water under standard conditions.
+
+- Usually about -57 kJ mol⁻¹ for strong acid + strong base
+- Less exothermic for weak acids/bases
+
+### Standard Enthalpy of Atomisation (ΔH°at)
+
+**Definition:** The enthalpy change when ONE MOLE of gaseous atoms is formed from an element in its standard state.
+
+- Always endothermic (ΔH°at is always positive)
+
+**Example:** ½Cl₂(g) → Cl(g)     ΔH°at = +121 kJ mol⁻¹`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. Hess's Law",
+                content: `## The Foundation of Thermochemical Calculations
+
+**Hess's Law** states that the total enthalpy change for a reaction is independent of the route taken, provided the initial and final conditions are the same.
+
+### Applying Hess's Law
+
+**Method 1: Using Enthalpies of Formation**
+
+ΔH°reaction = Σ(ΔH°f products) - Σ(ΔH°f reactants)
+
+**Example:** Calculate ΔH for: CH₄(g) + 2O₂(g) → CO₂(g) + 2H₂O(l)
+
+Given: ΔH°f [CH₄] = -75, ΔH°f [CO₂] = -394, ΔH°f [H₂O] = -286 kJ mol⁻¹
+
+ΔH°reaction = [(-394) + 2(-286)] - [(-75) + 0]
+            = -966 + 75 = **-891 kJ mol⁻¹**
+
+**Method 2: Using Enthalpies of Combustion**
+
+ΔH°reaction = Σ(ΔH°c reactants) - Σ(ΔH°c products)
+
+Note: Signs are REVERSED compared to formation data!`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Bond Energy Calculations",
+                content: `## Using Bond Energies to Estimate ΔH
+
+**Bond energy** is the energy required to break ONE MOLE of a specific covalent bond in gaseous molecules.
+
+### Key Principles
+
+- **Breaking bonds:** Requires energy → ENDOTHERMIC → positive value
+- **Making bonds:** Releases energy → EXOTHERMIC → negative value
+
+### The Bond Energy Equation
+
+**ΔH = Σ(bond energies broken) - Σ(bond energies formed)**
+
+### Worked Example
+
+Calculate ΔH for: CH₄(g) + 2O₂(g) → CO₂(g) + 2H₂O(g)
+
+| Bond | Energy (kJ mol⁻¹) |
+|------|-------------------|
+| C-H | 413 |
+| O=O | 498 |
+| C=O | 805 |
+| O-H | 464 |
+
+**Bonds Broken:** 4(C-H) + 2(O=O) = 1652 + 996 = 2648 kJ
+**Bonds Made:** 2(C=O) + 4(O-H) = 1610 + 1856 = 3466 kJ
+**ΔH = 2648 - 3466 = -818 kJ mol⁻¹**
+
+### Limitations
+
+Bond energies are **averages** - calculations give estimates, not precise values.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "6. Calorimetry",
+                content: `## Measuring Enthalpy Changes Experimentally
+
+### The Calorimetry Equation
+
+**q = mcΔT**
+
+Where:
+- q = energy transferred (J)
+- m = mass of substance being heated (g)
+- c = specific heat capacity (J g⁻¹ K⁻¹)
+- ΔT = temperature change (K or °C)
+
+**Specific heat capacity of water:** c = 4.18 J g⁻¹ K⁻¹
+
+### Calculating Molar Enthalpy Change
+
+**ΔH = -q / n**
+
+Where n = number of moles of limiting reactant
+
+### Sources of Error
+
+| Error | Improvement |
+|-------|-------------|
+| Heat loss to surroundings | Use insulation (lid, lagging) |
+| Incomplete combustion | Ensure excess oxygen |
+| Heat absorbed by container | Use low heat capacity container |`,
+                diagrams: [],
+                subsections: []
+            }
+        ],
+        key_points: [
+            "Exothermic reactions release energy (ΔH negative); endothermic reactions absorb energy (ΔH positive)",
+            "ΔH = H(products) - H(reactants); negative ΔH means products have less energy",
+            "Standard conditions: 298 K, 100 kPa, 1 mol dm⁻³ solutions, most stable physical states",
+            "ΔH°c (combustion): energy when 1 mol burns completely in O₂ - always negative",
+            "ΔH°f (formation): energy when 1 mol compound forms from elements - ΔH°f of elements = 0",
+            "ΔH°neut: about -57 kJ mol⁻¹ for strong acid + strong base",
+            "ΔH°at (atomisation): energy to form 1 mol gaseous atoms - always positive",
+            "Hess's Law: total ΔH is independent of route taken",
+            "Using formation data: ΔH = Σ(ΔH°f products) - Σ(ΔH°f reactants)",
+            "Using combustion data: ΔH = Σ(ΔH°c reactants) - Σ(ΔH°c products)",
+            "Bond energy: ΔH = Σ(bonds broken) - Σ(bonds formed)",
+            "Breaking bonds = endothermic; making bonds = exothermic",
+            "Calorimetry: q = mcΔT; ΔH = -q/n"
+        ],
+        exam_tips: [
+            "Learn definitions precisely - each word matters",
+            "When using Hess's Law, draw the cycle clearly with arrows",
+            "Formation uses 'products - reactants'; combustion is reversed",
+            "Always multiply ΔH values by stoichiometric coefficients",
+            "For bond energies, carefully count ALL bonds broken and formed",
+            "Bond energies give estimates because values are averages",
+            "In calorimetry, assume density = 1 g cm⁻³ for aqueous solutions",
+            "ΔH = -q/n: the negative sign accounts for sign convention",
+            "ΔH°f of elements in standard state = 0 by definition",
+            "State physical states (s), (l), (g), (aq) in thermochemical equations"
+        ]
+    },
+    "The Periodic Table: Chemical Periodicity": {
+        topic: "The Periodic Table: Chemical Periodicity",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/remaining%20/Periodic_Table__Chemical_Code.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvcmVtYWluaW5nIC9QZXJpb2RpY19UYWJsZV9fQ2hlbWljYWxfQ29kZS5tcDQiLCJpYXQiOjE3NjgwNjAyOTcsImV4cCI6NTI2ODU1NjI5N30.7gL2dQMXAXn9TZfWSrIJk7JGWjs0aGXAksxibgUlGjU",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/A-Level_Chemistry_Period_3_Mastery.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvQS1MZXZlbF9DaGVtaXN0cnlfUGVyaW9kXzNfTWFzdGVyeS5tNGEiLCJpYXQiOjE3NjgwNDIxMjEsImV4cCI6NTI2ODUzODEyMX0.h65YZ7OXb--8ADMR09lzJ28AS-0ItFYLgRr2gSJPAkQ",
+        subject: "A Level Chemistry",
+        summary: "Chemical Periodicity explores the repeating patterns in physical and chemical properties across periods and down groups. This topic covers trends in atomic radius, ionic radius, ionisation energy, electronegativity, and the properties of Period 3 elements and their compounds. Understanding periodicity is essential for predicting chemical behaviour.",
+        sections: [
+            {
+                title: "1. Introduction to Periodicity",
+                content: `## What is Periodicity?
+
+**Periodicity** refers to the repeating patterns of physical and chemical properties when elements are arranged by increasing atomic number. These patterns arise from the periodic repetition of electron configurations.
+
+### The Periodic Table Structure
+
+- **Periods**: Horizontal rows (1-7). Elements in a period have the same number of electron shells.
+- **Groups**: Vertical columns (1-18). Elements in a group have the same number of valence electrons.
+- **Blocks**: s-block (Groups 1-2), p-block (Groups 13-18), d-block (transition metals), f-block (lanthanides/actinides)
+
+### Key Periodic Properties
+
+The following properties show periodic trends:
+- Atomic radius
+- Ionic radius
+- First ionisation energy
+- Electronegativity
+- Melting point
+- Electrical conductivity`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. Trends in Atomic and Ionic Radius",
+                content: `## Atomic Radius
+
+**Definition:** The atomic radius is half the distance between the nuclei of two bonded atoms of the same element.
+
+### Trends Across a Period (Left to Right)
+
+**Atomic radius DECREASES** across a period.
+
+**Explanation:**
+- Nuclear charge increases (more protons)
+- Electrons are added to the SAME shell (same shielding)
+- Greater effective nuclear charge pulls electrons closer
+- Result: smaller atomic radius
+
+**Example:** Na (0.186 nm) → Mg (0.160 nm) → Al (0.143 nm) → Si (0.117 nm)
+
+### Trends Down a Group
+
+**Atomic radius INCREASES** down a group.
+
+**Explanation:**
+- Additional electron shells are added
+- Greater distance from nucleus to outer electrons
+- Increased shielding from inner shells
+- Result: larger atomic radius
+
+## Ionic Radius
+
+**Cations (positive ions):** SMALLER than parent atom
+- Electrons are removed
+- Fewer electrons, same nuclear charge
+- Greater effective nuclear charge on remaining electrons
+
+**Anions (negative ions):** LARGER than parent atom
+- Electrons are added
+- More electron-electron repulsion
+- Same nuclear charge pulls less effectively`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. First Ionisation Energy",
+                content: `## Definition and Trends
+
+**First Ionisation Energy:** The energy required to remove one mole of electrons from one mole of gaseous atoms to form one mole of gaseous 1+ ions.
+
+X(g) → X⁺(g) + e⁻
+
+### Trend Across a Period
+
+**First IE generally INCREASES** across a period.
+
+**Explanation:**
+- Increasing nuclear charge
+- Electrons in same shell (similar shielding)
+- Stronger attraction between nucleus and outer electrons
+- More energy needed to remove electron
+
+### Trend Down a Group
+
+**First IE DECREASES** down a group.
+
+**Explanation:**
+- Outer electrons further from nucleus
+- Increased shielding from inner shells
+- Weaker attraction to outer electrons
+- Less energy needed to remove electron
+
+### Anomalies in Period 3
+
+**Mg → Al (decrease):**
+- Al outer electron is in 3p subshell
+- 3p is higher energy and further from nucleus than 3s
+- 3p electron is easier to remove
+
+**P → S (decrease):**
+- S has paired electron in 3p orbital
+- Electron-electron repulsion makes one easier to remove
+- P has unpaired 3p electrons (more stable)`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. Electronegativity",
+                content: `## Definition and Trends
+
+**Electronegativity:** The ability of an atom to attract the bonding pair of electrons in a covalent bond towards itself.
+
+### Pauling Scale
+
+Electronegativity values range from 0.7 (Cs) to 4.0 (F). Fluorine is the most electronegative element.
+
+### Trend Across a Period
+
+**Electronegativity INCREASES** across a period.
+
+**Explanation:**
+- Increasing nuclear charge
+- Decreasing atomic radius
+- Bonding electrons are closer to nucleus
+- Stronger attraction to bonding electrons
+
+### Trend Down a Group
+
+**Electronegativity DECREASES** down a group.
+
+**Explanation:**
+- Increasing atomic radius
+- Bonding electrons further from nucleus
+- Increased shielding
+- Weaker attraction to bonding electrons
+
+### Noble Gases
+
+Electronegativity values are not usually assigned to noble gases because they rarely form bonds.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Period 3 Elements and Their Oxides",
+                content: `## Period 3 Oxides
+
+| Element | Oxide | Structure | Acid-Base Character |
+|---------|-------|-----------|---------------------|
+| Na | Na₂O | Ionic (giant ionic) | Strongly basic |
+| Mg | MgO | Ionic (giant ionic) | Basic |
+| Al | Al₂O₃ | Ionic/covalent (giant ionic) | Amphoteric |
+| Si | SiO₂ | Covalent (giant covalent) | Weakly acidic |
+| P | P₄O₁₀ | Covalent (molecular) | Acidic |
+| S | SO₂, SO₃ | Covalent (molecular) | Acidic |
+
+### Reactions with Water
+
+**Na₂O:** Na₂O + H₂O → 2NaOH (strongly alkaline, pH 14)
+**MgO:** MgO + H₂O → Mg(OH)₂ (weakly alkaline, pH 9)
+**Al₂O₃:** Does not react with water
+**SiO₂:** Does not react with water
+**P₄O₁₀:** P₄O₁₀ + 6H₂O → 4H₃PO₄ (acidic, pH 1)
+**SO₃:** SO₃ + H₂O → H₂SO₄ (strongly acidic, pH 0)
+
+### Trend Explanation
+
+- **Left side (metals):** Form ionic oxides with O²⁻ ions. These react with water to form hydroxides (basic).
+- **Right side (non-metals):** Form covalent oxides. These react with water to form acids.
+- **Aluminium:** Amphoteric - Al₂O₃ reacts with both acids and bases.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "6. Period 3 Chlorides",
+                content: `## Period 3 Chlorides
+
+| Element | Chloride | Structure | Reaction with Water |
+|---------|----------|-----------|---------------------|
+| Na | NaCl | Ionic | Dissolves (neutral) |
+| Mg | MgCl₂ | Ionic | Dissolves (slightly acidic) |
+| Al | Al₂Cl₆ | Covalent (dimer) | Vigorous hydrolysis (acidic) |
+| Si | SiCl₄ | Covalent | Vigorous hydrolysis (acidic) |
+| P | PCl₃, PCl₅ | Covalent | Vigorous hydrolysis (acidic) |
+
+### Hydrolysis Reactions
+
+**Ionic chlorides (NaCl, MgCl₂):**
+- Simply dissolve in water
+- NaCl → Na⁺(aq) + Cl⁻(aq) (neutral pH 7)
+- MgCl₂ → Mg²⁺(aq) + 2Cl⁻(aq) (slightly acidic due to hydrated Mg²⁺)
+
+**Covalent chlorides (AlCl₃, SiCl₄, PCl₅):**
+- React vigorously with water (hydrolysis)
+- Produce HCl gas (white fumes in moist air)
+- Solutions are acidic
+
+**Equations:**
+- AlCl₃ + 3H₂O → Al(OH)₃ + 3HCl
+- SiCl₄ + 4H₂O → Si(OH)₄ + 4HCl
+- PCl₅ + 4H₂O → H₃PO₄ + 5HCl`,
+                diagrams: [],
+                subsections: []
+            }
+        ],
+        key_points: [
+            "Periodicity: repeating patterns of properties across periods",
+            "Atomic radius DECREASES across a period (more protons, same shell, greater effective nuclear charge)",
+            "Atomic radius INCREASES down a group (more shells, greater distance, more shielding)",
+            "Cations are smaller than parent atoms; anions are larger",
+            "First IE generally INCREASES across a period; DECREASES down a group",
+            "IE anomalies: Mg→Al (3p higher energy than 3s); P→S (paired electron repulsion)",
+            "Electronegativity INCREASES across a period; DECREASES down a group",
+            "Fluorine is the most electronegative element (4.0)",
+            "Period 3 oxides: metals form basic oxides; non-metals form acidic oxides",
+            "Al₂O₃ is amphoteric (reacts with both acids and bases)",
+            "Ionic chlorides dissolve in water; covalent chlorides undergo hydrolysis producing HCl"
+        ],
+        exam_tips: [
+            "Always explain trends using nuclear charge, shielding, and distance from nucleus",
+            "For IE anomalies, mention specific subshell (3p vs 3s) or electron pairing",
+            "Remember Al₂O₃ is AMPHOTERIC - this is commonly tested",
+            "Covalent chlorides produce white fumes of HCl in moist air",
+            "Link structure (ionic vs covalent) to properties and reactions",
+            "Use equations to support explanations of oxide and chloride reactions"
+        ]
+    },
+    "Group 2 Elements": {
+        topic: "Group 2 Elements",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Mastering_Group_2_Chemistry_Trends_and_Size.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvTWFzdGVyaW5nX0dyb3VwXzJfQ2hlbWlzdHJ5X1RyZW5kc19hbmRfU2l6ZS5tNGEiLCJpYXQiOjE3NjgwNDI0NjEsImV4cCI6NTI2ODUzODQ2MX0.CJwziz3XSbEB_6KDLJRd-btjXxKK72xwEpZ61VNNlqE",
+        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Group_2_Elements.mp4",
+        subject: "A Level Chemistry",
+        summary: "The Group 2 elements (alkaline earth metals: Be, Mg, Ca, Sr, Ba, Ra) exhibit characteristic trends in physical and chemical properties. This comprehensive topic covers their electronic configurations, physical properties, reactions with oxygen, water, and acids, thermal decomposition of their compounds, solubility trends, and practical applications. Understanding these metals is essential for predicting chemical behaviour across the group.",
+        sections: [
+            {
+                title: "1. Introduction to Group 2 Elements",
+                content: `## The Alkaline Earth Metals
+
+The Group 2 elements are known as the **alkaline earth metals**. They are called 'alkaline' because their oxides and hydroxides form alkaline solutions in water, and 'earth' is an old alchemical term for oxides.
+
+### The Elements
+
+| Element | Symbol | Atomic Number | Electron Configuration |
+|---------|--------|---------------|------------------------|
+| Beryllium | Be | 4 | [He] 2s² |
+| Magnesium | Mg | 12 | [Ne] 3s² |
+| Calcium | Ca | 20 | [Ar] 4s² |
+| Strontium | Sr | 38 | [Kr] 5s² |
+| Barium | Ba | 56 | [Xe] 6s² |
+| Radium | Ra | 88 | [Rn] 7s² |
+
+### Key Characteristics
+
+- All have **two electrons in their outermost s orbital** (ns²)
+- All form **+2 ions** (M²⁺) by losing both valence electrons
+- All are **relatively reactive metals** that tarnish in air and react with water
+- They show a **gradual increase in reactivity** down the group
+- They are **good reducing agents** due to their tendency to lose electrons
+
+### Position in the Periodic Table
+
+Group 2 is part of the **s-block** of the periodic table. Elements in this group have their outermost electrons in s orbitals, which accounts for their metallic character and their tendency to form ionic compounds with a +2 oxidation state.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. Physical Properties and Trends",
+                content: `## Physical Properties of Group 2 Metals
+
+The physical properties of Group 2 metals can be understood in terms of their metallic bonding and atomic structure.
+
+### Summary of Physical Properties
+
+| Property | Be | Mg | Ca | Sr | Ba |
+|----------|----|----|----|----|-----|
+| Atomic radius (nm) | 0.112 | 0.160 | 0.197 | 0.215 | 0.222 |
+| Ionic radius M²⁺ (nm) | 0.031 | 0.065 | 0.099 | 0.113 | 0.135 |
+| 1st IE (kJ mol⁻¹) | 900 | 738 | 590 | 550 | 503 |
+| 2nd IE (kJ mol⁻¹) | 1757 | 1451 | 1145 | 1064 | 965 |
+| Melting point (°C) | 1287 | 650 | 839 | 769 | 729 |
+| Electronegativity | 1.57 | 1.31 | 1.00 | 0.95 | 0.89 |
+
+### Trend: Atomic and Ionic Radius INCREASES Down the Group
+
+**Explanation:**
+- Each successive element has an additional electron shell
+- The outermost electrons are further from the nucleus
+- There is increased shielding from inner electron shells
+- The effective nuclear charge experienced by outer electrons decreases
+
+**Consequence:** The metals become progressively softer and less dense down the group (though this trend is not perfectly regular due to variations in crystal structure).
+
+### Trend: Ionisation Energy DECREASES Down the Group
+
+**First Ionisation Energy:** M(g) → M⁺(g) + e⁻
+
+**Explanation:**
+- Atomic radius increases down the group
+- Outer electrons are further from the nucleus
+- Shielding by inner electrons increases
+- Less energy is needed to remove an outer electron
+
+**Consequence:** Reactivity INCREASES down the group because it becomes easier for the metals to lose their valence electrons and form M²⁺ ions.
+
+### Trend: Electronegativity DECREASES Down the Group
+
+**Explanation:**
+- Larger atomic radius means bonding electrons are further from the nucleus
+- Increased shielding reduces the attraction for bonding electrons
+- The metal's ability to attract electrons in a bond decreases
+
+### Metallic Bonding in Group 2
+
+Group 2 metals have metallic bonding: a lattice of positive ions (M²⁺) surrounded by a 'sea' of delocalised electrons. The strength of this bonding depends on:
+
+1. The charge density of the metal ion (charge/radius ratio)
+2. The number of delocalised electrons (2 per atom)
+
+Beryllium has the strongest metallic bonding due to its small ionic radius and high charge density, resulting in its high melting point.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. Reactions with Oxygen",
+                content: `## Reaction of Group 2 Metals with Oxygen
+
+All Group 2 metals react with oxygen to form metal oxides. The vigour of this reaction increases down the group.
+
+### General Equation
+
+**2M(s) + O₂(g) → 2MO(s)**
+
+Where M represents a Group 2 metal.
+
+### Specific Reactions
+
+**Magnesium:**
+2Mg(s) + O₂(g) → 2MgO(s)
+- Burns with an intensely bright white flame
+- White powder of magnesium oxide formed
+- Very exothermic reaction (ΔH = -602 kJ mol⁻¹)
+
+**Calcium:**
+2Ca(s) + O₂(g) → 2CaO(s)
+- Burns with a brick-red flame
+- White calcium oxide (quicklime) formed
+
+**Strontium:**
+2Sr(s) + O₂(g) → 2SrO(s)
+- Burns with a crimson-red flame
+- White strontium oxide formed
+
+**Barium:**
+2Ba(s) + O₂(g) → 2BaO(s)
+- Burns with a green flame
+- Barium oxide formed
+- Also forms barium peroxide (BaO₂) if excess oxygen is present
+
+### Trend in Reactivity
+
+**Reactivity with oxygen INCREASES down the group.**
+
+**Explanation:**
+- Ionisation energy decreases down the group
+- Less energy is required for M → M²⁺ + 2e⁻
+- Electron transfer to oxygen becomes more energetically favourable
+- The reaction proceeds more vigorously
+
+### Formation of Peroxides
+
+Barium can also form a peroxide when heated in excess oxygen:
+
+2Ba(s) + O₂(g) → 2BaO(s) (limited oxygen)
+Ba(s) + O₂(g) → BaO₂(s) (excess oxygen)
+
+Peroxides contain the O₂²⁻ ion and are more stable for larger cations.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. Reactions with Water",
+                content: `## Reaction of Group 2 Metals with Water
+
+Group 2 metals react with water to form metal hydroxides and hydrogen gas. The vigour of this reaction increases dramatically down the group.
+
+### General Equation
+
+**M(s) + 2H₂O(l) → M(OH)₂(aq) + H₂(g)**
+
+### Specific Reactions and Observations
+
+**Magnesium with Cold Water:**
+Mg(s) + 2H₂O(l) → Mg(OH)₂(aq) + H₂(g)
+- **Very slow reaction** with cold water
+- Few bubbles of hydrogen produced over several days
+- Thin layer of Mg(OH)₂ forms on surface and inhibits further reaction
+- Universal indicator shows slight increase in pH (weakly alkaline)
+
+**Magnesium with Steam:**
+Mg(s) + H₂O(g) → MgO(s) + H₂(g)
+- **Vigorous reaction** with steam
+- Burns brightly
+- White magnesium oxide powder formed
+- Hydrogen gas ignites with a 'squeaky pop'
+
+**Calcium with Cold Water:**
+Ca(s) + 2H₂O(l) → Ca(OH)₂(aq) + H₂(g)
+- **Moderate reaction** - steady stream of bubbles
+- Metal appears to effervesce and may float on hydrogen bubbles
+- Solution becomes milky white due to sparingly soluble Ca(OH)₂
+- Universal indicator turns purple (pH ~12, strongly alkaline)
+
+**Strontium with Cold Water:**
+Sr(s) + 2H₂O(l) → Sr(OH)₂(aq) + H₂(g)
+- **Faster and more vigorous** than calcium
+- Rapid evolution of hydrogen gas
+- Exothermic - solution warms up noticeably
+- Strongly alkaline solution
+
+**Barium with Cold Water:**
+Ba(s) + 2H₂O(l) → Ba(OH)₂(aq) + H₂(g)
+- **Very vigorous reaction** - can be explosive with large pieces
+- Rapid bubbling of hydrogen
+- Very exothermic
+- Solution is strongly alkaline (pH 13-14)
+
+### Trend Explanation
+
+**Reactivity with water INCREASES down the group.**
+
+**Factors contributing to this trend:**
+1. **Decreasing ionisation energy:** Less energy required for M → M²⁺ + 2e⁻
+2. **Decreasing electrode potential:** Group 2 metals become stronger reducing agents
+3. **Increasing atomic radius:** The metal-oxide bond at the surface is weaker, allowing water to react more easily
+
+### Hydroxide Solubility
+
+The solubility of Group 2 hydroxides **increases** down the group:
+- Mg(OH)₂: Very slightly soluble (Ksp = 1.8 × 10⁻¹¹)
+- Ca(OH)₂: Slightly soluble (limewater)
+- Sr(OH)₂: Moderately soluble
+- Ba(OH)₂: Readily soluble
+
+This trend affects the pH of the resulting solutions.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Reactions with Dilute Acids",
+                content: `## Reaction of Group 2 Metals with Dilute Acids
+
+All Group 2 metals react readily with dilute acids to form a salt and hydrogen gas. These are typical metal-acid reactions.
+
+### With Dilute Hydrochloric Acid
+
+**General Equation:**
+M(s) + 2HCl(aq) → MCl₂(aq) + H₂(g)
+
+**Examples:**
+- Mg(s) + 2HCl(aq) → MgCl₂(aq) + H₂(g)
+- Ca(s) + 2HCl(aq) → CaCl₂(aq) + H₂(g)
+- Ba(s) + 2HCl(aq) → BaCl₂(aq) + H₂(g)
+
+### With Dilute Sulfuric Acid
+
+**General Equation:**
+M(s) + H₂SO₄(aq) → MSO₄(aq) + H₂(g)
+
+**Examples:**
+- Mg(s) + H₂SO₄(aq) → MgSO₄(aq) + H₂(g)
+- Ca(s) + H₂SO₄(aq) → CaSO₄(s) + H₂(g) ← Note: CaSO₄ is sparingly soluble
+
+**Important Note:** The reaction of calcium, strontium, and barium with dilute sulfuric acid may be slow or incomplete because the sulfates formed are insoluble or sparingly soluble. The insoluble sulfate coats the metal surface and prevents further reaction.
+
+### Observations
+
+| Metal | Reaction with dilute HCl | Observations |
+|-------|-------------------------|--------------|
+| Mg | Vigorous | Rapid effervescence, metal dissolves quickly, solution warm |
+| Ca | Very vigorous | Very rapid bubbling, metal dissolves, solution hot |
+| Sr | Extremely vigorous | Violent reaction, considerable heat released |
+| Ba | Dangerously vigorous | May be explosive, extreme heat |
+
+### Ionic Equations
+
+The ionic equation for reaction with any dilute acid is:
+
+**M(s) + 2H⁺(aq) → M²⁺(aq) + H₂(g)**
+
+This shows that the Group 2 metal is acting as a **reducing agent**, donating electrons to hydrogen ions:
+
+- M → M²⁺ + 2e⁻ (oxidation - metal loses electrons)
+- 2H⁺ + 2e⁻ → H₂ (reduction - hydrogen ions gain electrons)`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "6. Thermal Decomposition of Group 2 Compounds",
+                content: `## Thermal Stability of Group 2 Carbonates and Nitrates
+
+Group 2 carbonates and nitrates undergo thermal decomposition when heated. The thermal stability of these compounds **increases down the group**.
+
+### Thermal Decomposition of Carbonates
+
+**General Equation:**
+MCO₃(s) → MO(s) + CO₂(g)
+
+**Examples:**
+- BeCO₃(s) → BeO(s) + CO₂(g) (decomposes at ~100°C)
+- MgCO₃(s) → MgO(s) + CO₂(g) (decomposes at ~540°C)
+- CaCO₃(s) → CaO(s) + CO₂(g) (decomposes at ~900°C)
+- SrCO₃(s) → SrO(s) + CO₂(g) (decomposes at ~1280°C)
+- BaCO₃(s) → BaO(s) + CO₂(g) (decomposes at ~1360°C)
+
+### Trend in Thermal Stability
+
+**Thermal stability INCREASES down the group** (higher temperatures required for decomposition).
+
+**Explanation using Polarisation:**
+1. The carbonate ion (CO₃²⁻) is a large anion with a diffuse electron cloud
+2. Small, highly charged cations (like Be²⁺ and Mg²⁺) have high **charge density**
+3. High charge density causes **polarisation** of the carbonate ion's electron cloud
+4. Polarisation weakens the C-O bonds, making decomposition easier
+5. Larger cations (Ca²⁺, Sr²⁺, Ba²⁺) have lower charge density
+6. Less polarisation means stronger C-O bonds and greater thermal stability
+
+### Thermal Decomposition of Nitrates
+
+**General Equations:**
+
+For Mg to Ba:
+**2M(NO₃)₂(s) → 2MO(s) + 4NO₂(g) + O₂(g)**
+
+**Examples:**
+- 2Mg(NO₃)₂(s) → 2MgO(s) + 4NO₂(g) + O₂(g)
+- 2Ca(NO₃)₂(s) → 2CaO(s) + 4NO₂(g) + O₂(g)
+
+**Observations during decomposition:**
+- Brown fumes of NO₂ gas evolved
+- Oxygen gas released (relights a glowing splint)
+- White residue of metal oxide remains
+
+### Trend in Nitrate Thermal Stability
+
+**Thermal stability of nitrates also INCREASES down the group**, for the same reason as carbonates - decreased polarisation of the nitrate ion by larger cations.
+
+### Thermal Decomposition of Hydroxides
+
+**General Equation:**
+M(OH)₂(s) → MO(s) + H₂O(g)
+
+Thermal stability of hydroxides also increases down the group.
+
+### Summary Table
+
+| Compound Type | Products of Decomposition | Stability Trend |
+|---------------|---------------------------|-----------------|
+| Carbonates (MCO₃) | MO + CO₂ | Increases down group |
+| Nitrates (M(NO₃)₂) | MO + NO₂ + O₂ | Increases down group |
+| Hydroxides (M(OH)₂) | MO + H₂O | Increases down group |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "7. Solubility Trends",
+                content: `## Solubility of Group 2 Compounds in Water
+
+Two important solubility trends exist for Group 2 compounds, which are frequently tested in examinations.
+
+### Trend 1: Hydroxide Solubility INCREASES Down the Group
+
+| Hydroxide | Solubility | Classification |
+|-----------|------------|----------------|
+| Mg(OH)₂ | 0.0064 g/100 mL | Very slightly soluble (Milk of Magnesia) |
+| Ca(OH)₂ | 0.17 g/100 mL | Slightly soluble (Limewater) |
+| Sr(OH)₂ | 0.80 g/100 mL | Moderately soluble |
+| Ba(OH)₂ | 5.6 g/100 mL | Soluble |
+
+**Explanation:**
+- Lattice enthalpy decreases faster than hydration enthalpy down the group
+- For larger cations, the energy released on hydration is sufficient to overcome the lattice enthalpy
+- Result: solubility increases
+
+### Trend 2: Sulfate Solubility DECREASES Down the Group
+
+| Sulfate | Solubility | Classification |
+|---------|------------|----------------|
+| MgSO₄ | 35.7 g/100 mL | Soluble (Epsom salt) |
+| CaSO₄ | 0.21 g/100 mL | Slightly soluble (Gypsum) |
+| SrSO₄ | 0.011 g/100 mL | Insoluble |
+| BaSO₄ | 0.00022 g/100 mL | Very insoluble |
+
+**Explanation:**
+- The sulfate ion (SO₄²⁻) is larger than the hydroxide ion (OH⁻)
+- For larger anions, the trend in hydration enthalpy is smaller
+- Lattice enthalpy dominates, and since it doesn't decrease as fast as hydration enthalpy increases, solubility decreases
+
+### Practical Applications
+
+**Barium Sulfate (BaSO₄) as a Contrast Medium:**
+- BaSO₄ is used for X-ray imaging of the digestive system ('barium meal')
+- Although barium compounds are toxic, BaSO₄ is safe because it is so insoluble
+- The compound is opaque to X-rays and outlines the digestive tract
+
+**Calcium Sulfate (CaSO₄) - Plaster of Paris:**
+- CaSO₄·½H₂O sets when water is added: CaSO₄·½H₂O + 1½H₂O → CaSO₄·2H₂O
+- Used for casts, moulds, and construction
+
+**Calcium Hydroxide (Ca(OH)₂) - Limewater:**
+- Used as a test for CO₂: Ca(OH)₂(aq) + CO₂(g) → CaCO₃(s) + H₂O(l)
+- Turns milky due to precipitate of calcium carbonate
+
+### Test for Sulfate Ions
+
+Add barium chloride solution (or barium nitrate) followed by dilute HCl:
+- **White precipitate** of BaSO₄ indicates sulfate ions present
+- BaCl₂(aq) + Na₂SO₄(aq) → BaSO₄(s) + 2NaCl(aq)
+- Ionic: Ba²⁺(aq) + SO₄²⁻(aq) → BaSO₄(s)
+- HCl is added to remove any carbonate ions which would also give a white precipitate`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "8. Uses of Group 2 Compounds",
+                content: `## Industrial and Everyday Applications
+
+Group 2 compounds have numerous practical applications due to their chemical properties.
+
+### Magnesium Compounds
+
+**Magnesium Oxide (MgO):**
+- Refractory material (high melting point ~2850°C)
+- Lining for furnaces and kilns
+- Antacid (neutralises stomach acid): MgO + 2HCl → MgCl₂ + H₂O
+
+**Magnesium Hydroxide (Mg(OH)₂) - Milk of Magnesia:**
+- Antacid and laxative
+- Treatment of indigestion: Mg(OH)₂ + 2HCl → MgCl₂ + 2H₂O
+
+**Magnesium Sulfate (MgSO₄·7H₂O) - Epsom Salt:**
+- Bath salts for muscle relaxation
+- Fertiliser (provides Mg for chlorophyll)
+
+### Calcium Compounds
+
+**Calcium Oxide (CaO) - Quicklime:**
+- Manufacturing of cement and morite
+- Steel production (removes impurities)
+- Neutralising acidic soils and lakes
+
+**Calcium Hydroxide (Ca(OH)₂) - Slaked Lime:**
+- Treating acidic soils in agriculture
+- Water treatment (raises pH)
+- Manufacturing of mortar
+- Test for CO₂ (limewater test)
+
+**Calcium Carbonate (CaCO₃) - Limestone, Chalk, Marble:**
+- Building material
+- Manufacturing of cement
+- Production of quicklime: CaCO₃ → CaO + CO₂
+- Antacid tablets (neutralises stomach acid)
+
+**Calcium Sulfate (CaSO₄) - Gypsum:**
+- Plaster of Paris for casts and moulds
+- Plasterboard for construction
+- Addition to cement to slow setting
+
+### Barium Compounds
+
+**Barium Sulfate (BaSO₄):**
+- X-ray contrast medium ('barium meal', 'barium enema')
+- Safe despite barium toxicity due to extreme insolubility
+- White pigment in paints
+
+### Flame Colours
+
+Group 2 metals and their compounds produce characteristic flame colours used in fireworks:
+| Element | Flame Colour |
+|---------|-------------|
+| Magnesium | Brilliant white |
+| Calcium | Brick red/orange |
+| Strontium | Crimson red |
+| Barium | Apple green |`,
+                diagrams: [],
+                subsections: []
+            }
+        ],
+        key_points: [
+            "Group 2 elements are called alkaline earth metals; all have ns² electron configuration and form M²⁺ ions",
+            "Atomic and ionic radius INCREASE down the group (more electron shells, more shielding)",
+            "Ionisation energy DECREASES down the group (larger atoms, easier to remove electrons)",
+            "Electronegativity DECREASES down the group (less attraction for bonding electrons)",
+            "Reactivity INCREASES down the group because ionisation energy decreases",
+            "All Group 2 metals burn in oxygen: 2M + O₂ → 2MO (increasing vigour down group)",
+            "Reaction with water: M + 2H₂O → M(OH)₂ + H₂ (Mg very slow; Ba very vigorous)",
+            "Mg reacts vigorously with steam: Mg + H₂O(g) → MgO + H₂",
+            "Hydroxide solubility INCREASES down group: Mg(OH)₂ almost insoluble; Ba(OH)₂ soluble",
+            "Sulfate solubility DECREASES down group: MgSO₄ soluble; BaSO₄ very insoluble",
+            "Thermal stability of carbonates/nitrates INCREASES down group due to decreasing polarisation",
+            "Carbonates decompose: MCO₃ → MO + CO₂; Nitrates: 2M(NO₃)₂ → 2MO + 4NO₂ + O₂",
+            "Polarisation explanation: smaller cations have higher charge density, distort anion electron clouds more",
+            "BaSO₄ used as X-ray contrast medium; safe due to extreme insolubility despite Ba toxicity",
+            "Flame colours: Mg (white), Ca (brick red), Sr (crimson), Ba (green)"
+        ],
+        exam_tips: [
+            "For reactivity trends, always link to ionisation energy changes and ease of forming M²⁺",
+            "Know the products and equations for reactions with oxygen, water, and acids",
+            "For thermal decomposition, explain using polarisation of anion by small, highly charged cation",
+            "Remember both solubility trends: hydroxides INCREASE, sulfates DECREASE down group",
+            "Include observations for reactions: flame colours, gas evolution, precipitates formed",
+            "When discussing Mg with water, distinguish between cold water (slow) and steam (vigorous)",
+            "For sulfuric acid reactions, note that insoluble sulfates may coat the metal and stop reaction",
+            "Use ionic equations to show Group 2 metals as reducing agents: M → M²⁺ + 2e⁻",
+            "Remember practical applications: BaSO₄ for X-rays, Ca(OH)₂ for limewater test, etc.",
+            "For comparison questions, use data tables with specific values (IE, atomic radius, etc.)",
+            "Beryllium is often anomalous - it has some covalent character due to very high charge density"
+        ]
+    },
+    "Group 17 Elements": {
+        topic: "Group 17 Elements",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Halogen_Group_17_Physical_and_Chemical_Trends.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvSGFsb2dlbl9Hcm91cF8xN19QaHlzaWNhbF9hbmRfQ2hlbWljYWxfVHJlbmRzLm00YSIsImlhdCI6MTc2ODA0MjMyNywiZXhwIjo1MjY4NTM4MzI3fQ.mNjtfDUPeAntlYP0g-jipNkfZcCJWezvyWrVYTVUXJ8",
+        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Group_17_Elements.mp4",
+        subject: "A Level Chemistry",
+        summary: "The Group 17 elements (halogens: F, Cl, Br, I, At) are highly reactive non-metals with characteristic properties. This comprehensive topic covers their electronic configurations, physical properties, trends in reactivity, displacement reactions, reactions of halide ions including tests for halides, disproportionation reactions of chlorine, and uses of halogens and their compounds.",
+        sections: [
+            {
+                title: "1. Introduction to the Halogens",
+                content: `## The Halogen Family
+
+The halogens are **Group 17** elements, named from the Greek words meaning 'salt-producing' because they form salts when they react with metals.
+
+### The Elements
+
+| Element | Symbol | Atomic Number | Electron Configuration | Physical State (25°C) |
+|---------|--------|---------------|------------------------|----------------------|
+| Fluorine | F | 9 | [He] 2s²2p⁵ | Pale yellow gas |
+| Chlorine | Cl | 17 | [Ne] 3s²3p⁵ | Yellow-green gas |
+| Bromine | Br | 35 | [Ar] 3d¹⁰4s²4p⁵ | Red-brown liquid |
+| Iodine | I | 53 | [Kr] 4d¹⁰5s²5p⁵ | Grey-black solid |
+| Astatine | At | 85 | [Xe] 4f¹⁴5d¹⁰6s²6p⁵ | Radioactive solid |
+
+### Key Characteristics
+
+- All have **seven valence electrons** (ns²np⁵)
+- All need to **gain one electron** to achieve a stable octet configuration
+- Strong tendency to form **halide ions (X⁻)** with a -1 charge
+- Exist as **diatomic molecules (X₂)** in their elemental form
+- All are **oxidising agents** - they readily gain electrons
+
+### Bonding in Halogen Molecules
+
+Halogen molecules are held together by:
+- **Single covalent bonds** within the X₂ molecule
+- **Van der Waals forces** (instantaneous dipole-induced dipole) between molecules
+
+The strength of intermolecular forces increases with molecular size, explaining the trend in physical states.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. Physical Properties and Trends",
+                content: `## Physical Properties of Halogens
+
+| Property | Fluorine | Chlorine | Bromine | Iodine |
+|----------|----------|----------|---------|--------|
+| Atomic radius (nm) | 0.071 | 0.099 | 0.114 | 0.133 |
+| Ionic radius X⁻ (nm) | 0.133 | 0.181 | 0.196 | 0.220 |
+| Melting point (°C) | -220 | -101 | -7 | 114 |
+| Boiling point (°C) | -188 | -35 | 59 | 184 |
+| Bond energy (kJ mol⁻¹) | 158 | 242 | 193 | 151 |
+| Electronegativity | 4.0 | 3.0 | 2.8 | 2.5 |
+| Colour | Pale yellow | Yellow-green | Red-brown | Purple/grey |
+
+### Trend: Physical State Changes
+
+**Melting and boiling points INCREASE down the group.**
+
+**Explanation:**
+- All halogens are simple molecular substances
+- Intermolecular forces are **van der Waals forces** (instantaneous dipole-induced dipole)
+- Larger molecules have more electrons
+- More electrons → stronger instantaneous dipoles → stronger van der Waals forces
+- More energy required to overcome these forces
+
+### Trend: Atomic and Ionic Radius INCREASES
+
+**Explanation:**
+- Each element has an additional electron shell
+- Outer electrons are further from the nucleus
+- Increased shielding from inner shells
+
+### Trend: Electronegativity DECREASES
+
+**Explanation:**
+- Fluorine is the most electronegative element (4.0)
+- Larger atoms have bonding pairs further from nucleus
+- Weaker attraction for bonding electrons
+
+### Anomalous Fluorine Bond Energy
+
+The F-F bond is weaker than expected because:
+- Fluorine atoms are very small
+- The lone pairs on adjacent F atoms experience strong repulsion
+- This destabilises the F-F bond
+
+The Cl-Cl bond is the strongest halogen-halogen bond.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. Reactivity Trends and Oxidising Power",
+                content: `## Oxidising Ability of Halogens
+
+All halogens are **oxidising agents** because they readily gain electrons:
+
+**X₂ + 2e⁻ → 2X⁻**
+
+### Trend: Oxidising Power DECREASES Down the Group
+
+**Fluorine > Chlorine > Bromine > Iodine**
+
+**Explanation:**
+1. All halogens need to attract one electron to form X⁻
+2. Smaller atoms attract electrons more strongly
+3. Less shielding in smaller atoms
+4. Fluorine has the highest electronegativity (4.0)
+5. Electron added is closer to nucleus in smaller atoms
+
+**Standard Electrode Potentials (E°):**
+| Half-reaction | E° (V) |
+|--------------|--------|
+| F₂ + 2e⁻ → 2F⁻ | +2.87 |
+| Cl₂ + 2e⁻ → 2Cl⁻ | +1.36 |
+| Br₂ + 2e⁻ → 2Br⁻ | +1.07 |
+| I₂ + 2e⁻ → 2I⁻ | +0.54 |
+
+Higher E° values indicate stronger oxidising ability.
+
+### Halide Ions as Reducing Agents
+
+The reverse trend applies to halide ions:
+
+**Reducing power INCREASES down the group: I⁻ > Br⁻ > Cl⁻ > F⁻**
+
+**Explanation:**
+- Larger halide ions lose electrons more easily
+- Outer electron is further from nucleus and more shielded
+- Iodide ions are the strongest reducing agents`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. Displacement Reactions",
+                content: `## Halogen Displacement Reactions
+
+A more reactive halogen will **oxidise and displace** a less reactive halide from solution. These reactions demonstrate the trend in oxidising power.
+
+### General Principle
+
+**More reactive halogen + less reactive halide → Displacement occurs**
+
+Halogen oxidising power: Cl₂ > Br₂ > I₂
+Therefore: Chlorine displaces bromides and iodides; Bromine displaces iodides
+
+### Reaction Equations and Observations
+
+**Chlorine with Bromide Ions:**
+Cl₂(aq) + 2Br⁻(aq) → 2Cl⁻(aq) + Br₂(aq)
+- Solution changes from colourless to **orange/brown**
+- Chlorine oxidises bromide ions to bromine
+
+**Chlorine with Iodide Ions:**
+Cl₂(aq) + 2I⁻(aq) → 2Cl⁻(aq) + I₂(aq)
+- Solution changes from colourless to **brown**
+- With excess chlorine, solution may appear **yellow** due to further oxidation
+
+**Bromine with Iodide Ions:**
+Br₂(aq) + 2I⁻(aq) → 2Br⁻(aq) + I₂(aq)
+- Solution changes from orange to **brown**
+- Bromine oxidises iodide ions to iodine
+
+### Using Organic Solvents to Identify Products
+
+Adding an organic solvent (cyclohexane or hexane) helps identify the halogen produced:
+
+| Halogen | Colour in Organic Layer |
+|---------|------------------------|
+| Chlorine | Pale green (almost colourless) |
+| Bromine | Orange |
+| Iodine | Purple/violet |
+
+The organic layer floats on top of the aqueous layer.
+
+### Summary Table of Displacement Reactions
+
+| | Cl⁻(aq) | Br⁻(aq) | I⁻(aq) |
+|---|---------|---------|--------|
+| **Cl₂** | No reaction | ✓ Orange | ✓ Brown |
+| **Br₂** | No reaction | No reaction | ✓ Brown |
+| **I₂** | No reaction | No reaction | No reaction |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Reactions of Halide Ions",
+                content: `## Testing for Halide Ions
+
+The standard test for halide ions uses silver nitrate solution followed by ammonia.
+
+### Silver Nitrate Test
+
+**Procedure:**
+1. Add dilute nitric acid (to remove carbonates/other ions that might interfere)
+2. Add silver nitrate solution (AgNO₃)
+3. Observe the precipitate colour
+4. Add dilute ammonia, then concentrated ammonia
+
+**Observations:**
+
+| Halide Ion | Precipitate | Colour | Solubility in dilute NH₃ | Solubility in conc. NH₃ |
+|------------|-------------|--------|--------------------------|-------------------------|
+| Cl⁻ | AgCl | White | Soluble ✓ | Soluble ✓ |
+| Br⁻ | AgBr | Cream | Slightly soluble | Soluble ✓ |
+| I⁻ | AgI | Yellow | Insoluble ✗ | Insoluble ✗ |
+
+**Ionic Equations:**
+- Ag⁺(aq) + Cl⁻(aq) → AgCl(s) (white precipitate)
+- Ag⁺(aq) + Br⁻(aq) → AgBr(s) (cream precipitate)
+- Ag⁺(aq) + I⁻(aq) → AgI(s) (yellow precipitate)
+
+**Dissolution in Ammonia:**
+AgCl(s) + 2NH₃(aq) → [Ag(NH₃)₂]⁺(aq) + Cl⁻(aq)
+
+AgCl forms a soluble diamminesilver(I) complex. AgBr partially dissolves; AgI is too insoluble to dissolve even in concentrated ammonia.
+
+### Reactions with Concentrated Sulfuric Acid
+
+When solid halide salts are warmed with concentrated H₂SO₄, different reactions occur:
+
+**Chloride (NaCl + H₂SO₄):**
+NaCl(s) + H₂SO₄(l) → NaHSO₄(s) + HCl(g)
+- Steamy white fumes of HCl
+- Cl⁻ is not a strong enough reducing agent to reduce H₂SO₄
+
+**Bromide (NaBr + H₂SO₄):**
+NaBr(s) + H₂SO₄(l) → NaHSO₄(s) + HBr(g) (initial acid-base reaction)
+2HBr + H₂SO₄ → Br₂ + SO₂ + 2H₂O (redox reaction)
+- Steamy fumes initially, then **orange/brown** fumes of Br₂
+- Br⁻ reduces H₂SO₄ to SO₂ (colourless, choking gas)
+
+**Iodide (NaI + H₂SO₄):**
+NaI(s) + H₂SO₄(l) → NaHSO₄(s) + HI(g) (initial reaction)
+2HI + H₂SO₄ → I₂ + SO₂ + 2H₂O (partial reduction)
+6HI + H₂SO₄ → 3I₂ + S + 4H₂O (further reduction)
+8HI + H₂SO₄ → 4I₂ + H₂S + 4H₂O (complete reduction)
+- **Purple/black** solid iodine
+- Mixture of gases: SO₂, H₂S (rotten egg smell)
+- Yellow solid sulfur may form
+- I⁻ is a strong enough reducing agent to reduce H₂SO₄ to S and H₂S`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "6. Disproportionation Reactions of Chlorine",
+                content: `## Disproportionation
+
+**Disproportionation** is a reaction in which the same element is simultaneously **oxidised and reduced**.
+
+### Chlorine in Cold Water
+
+Cl₂(aq) + H₂O(l) ⇌ HCl(aq) + HClO(aq)
+
+Or with ionic species:
+Cl₂(aq) + H₂O(l) ⇌ Cl⁻(aq) + ClO⁻(aq) + 2H⁺(aq)
+
+**Oxidation states:**
+- Cl₂: 0 (element)
+- Cl⁻: -1 (reduced)
+- ClO⁻: +1 (oxidised)
+
+The chlorine has been both oxidised (0 → +1) and reduced (0 → -1) in the same reaction.
+
+**Application - Water Treatment:**
+- Chlorine is added to water supplies to kill bacteria
+- HClO (hypochlorous acid/chloric(I) acid) is the active disinfectant
+- pH is controlled to maintain HClO in molecular form (most effective)
+
+### Chlorine in Cold Dilute Alkali
+
+Cl₂(aq) + 2NaOH(aq) → NaCl(aq) + NaClO(aq) + H₂O(l)
+
+Or ionically:
+Cl₂(aq) + 2OH⁻(aq) → Cl⁻(aq) + ClO⁻(aq) + H₂O(l)
+
+**Oxidation states:** Same as above (0 → -1 and 0 → +1)
+
+**Application - Bleach:**
+- Household bleach is a solution of NaCl and NaClO
+- The ClO⁻ ion is the active bleaching and disinfecting agent
+
+### Chlorine in Hot Concentrated Alkali
+
+When heated with concentrated alkali:
+
+3Cl₂(aq) + 6NaOH(aq) → 5NaCl(aq) + NaClO₃(aq) + 3H₂O(l)
+
+Or ionically:
+3Cl₂(aq) + 6OH⁻(aq) → 5Cl⁻(aq) + ClO₃⁻(aq) + 3H₂O(l)
+
+**Oxidation states:**
+- Cl₂: 0
+- Cl⁻: -1 (reduced - 5 atoms)
+- ClO₃⁻: +5 (oxidised - 1 atom)
+
+**Note:** In hot conditions, ClO⁻ disproportionates further to Cl⁻ and ClO₃⁻
+
+### Summary of Chlorine Disproportionation
+
+| Conditions | Products | Cl oxidation states |
+|------------|----------|---------------------|
+| Cold water | Cl⁻ + ClO⁻ | 0 → -1 and +1 |
+| Cold dilute NaOH | Cl⁻ + ClO⁻ | 0 → -1 and +1 |
+| Hot conc. NaOH | Cl⁻ + ClO₃⁻ | 0 → -1 and +5 |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "7. Uses of Halogens and Their Compounds",
+                content: `## Industrial and Everyday Applications
+
+### Chlorine (Cl₂)
+
+**Water Treatment:**
+- Kills bacteria and pathogens in drinking water
+- Controls algae in swimming pools
+- Forms HClO which acts as disinfectant
+
+**Manufacturing:**
+- Production of PVC (polyvinyl chloride) plastics
+- Manufacturing of chlorinated solvents
+- Production of bleach (NaClO)
+- Synthesis of pesticides and herbicides
+
+### Fluorine Compounds
+
+**Fluoride in Toothpaste:**
+- Sodium fluoride (NaF) strengthens tooth enamel
+- Reduces dental decay
+- Some water supplies are fluoridated
+
+**CFCs and HFCs (Refrigerants):**
+- CFCs (chlorofluorocarbons) were used as refrigerants
+- CFCs deplete the ozone layer - now banned
+- HFCs (hydrofluorocarbons) used as replacements
+- PTFE (Teflon) is a fluorine-containing polymer
+
+### Bromine Compounds
+
+**Flame Retardants:**
+- Brominated compounds used in plastics and textiles
+- Environmental concerns due to persistence
+
+**Silver Bromide (AgBr):**
+- Used in photographic film
+- Decomposes in light: 2AgBr → 2Ag + Br₂
+
+### Iodine Compounds
+
+**Antiseptic (Iodine Tincture):**
+- Iodine dissolved in alcohol used to disinfect wounds
+
+**Medical Imaging:**
+- Iodine compounds used as contrast agents in X-rays
+- Radioactive ¹³¹I used in thyroid treatment
+
+**Nutrition:**
+- Iodine essential for thyroid hormones
+- Added to table salt (iodised salt)
+
+### Environmental Concerns
+
+**Ozone Depletion:**
+- CFCs release Cl atoms in the stratosphere
+- Cl catalyses ozone destruction: Cl + O₃ → ClO + O₂
+- Montreal Protocol banned CFCs
+
+**Persistence:**
+- Many halogenated compounds are persistent organic pollutants (POPs)
+- Bioaccumulate in food chains`,
+                diagrams: [],
+                subsections: []
+            }
+        ],
+        key_points: [
+            "Halogens have 7 valence electrons (ns²np⁵) and form X⁻ ions by gaining one electron",
+            "All exist as diatomic molecules (X₂) in elemental form",
+            "Melting/boiling points INCREASE down group (stronger van der Waals forces)",
+            "Electronegativity DECREASES down group; F is most electronegative element (4.0)",
+            "Oxidising power DECREASES down group: F₂ > Cl₂ > Br₂ > I₂",
+            "Reducing power of halide ions INCREASES: I⁻ > Br⁻ > Cl⁻ > F⁻",
+            "Displacement: more reactive halogen oxidises less reactive halide",
+            "Silver nitrate test: Cl⁻ gives white AgCl, Br⁻ gives cream AgBr, I⁻ gives yellow AgI",
+            "AgCl dissolves in dilute NH₃; AgBr in conc. NH₃; AgI insoluble in both",
+            "With conc. H₂SO₄: HCl gas only; HBr reduces to SO₂; HI reduces to S/H₂S",
+            "Disproportionation: same element simultaneously oxidised and reduced",
+            "Cl₂ in cold water/alkali: Cl⁻ (−1) + ClO⁻ (+1); hot alkali: Cl⁻ + ClO₃⁻ (+5)",
+            "Chlorine used for water treatment; bleach (NaClO) is manufactured by Cl₂ + NaOH"
+        ],
+        exam_tips: [
+            "For displacement reactions, always state the colour change observed",
+            "Know how to use organic solvents (cyclohexane) to identify halogen products by colour",
+            "Remember the order of precipitate colours: white (Cl), cream (Br), yellow (I)",
+            "For concentrated H₂SO₄ reactions, explain using reducing power trend",
+            "Always include oxidation states when discussing disproportionation",
+            "For water treatment questions, mention that HClO is the active disinfectant",
+            "Know the difference between cold and hot alkali products with Cl₂",
+            "F-F bond is weaker than Cl-Cl due to lone pair repulsion in small F atoms",
+            "When comparing halogens, use electronegativity and atomic radius in explanations",
+            "For environmental questions, mention ozone depletion by CFCs"
+        ]
+    },
+    "Nitrogen and Sulfur": {
+        topic: "Nitrogen and Sulfur",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Nitrogen_and_Sulfur_A-Level_Chemistry_Review.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvTml0cm9nZW5fYW5kX1N1bGZ1cl9BLUxldmVsX0NoZW1pc3RyeV9SZXZpZXcubTRhIiwiaWF0IjoxNzY4MDQyNTA5LCJleHAiOjUyNjg1Mzg1MDl9.aq4ZbpzLbz9plGR8PJtoaWuZ6yeomkvXukhiXZRjFUw",
+        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Nitrogen_and_Sulfur.mp4",
+        subject: "A Level Chemistry",
+        summary: "This topic covers the chemistry of nitrogen and sulfur, two essential non-metals with significant environmental and industrial importance. Topics include the nitrogen cycle, properties of nitrogen oxides, ammonia production (Haber process), nitric acid manufacture, sulfur allotropes, sulfur dioxide, sulfuric acid production (Contact process), and environmental impacts of these compounds.",
+        sections: [
+            {
+                title: "1. The Nitrogen Cycle",
+                content: `## Nitrogen in the Environment
+
+Nitrogen is essential for life - it is a key component of amino acids, proteins, and nucleic acids (DNA/RNA). Although nitrogen gas (N₂) makes up 78% of the atmosphere, most organisms cannot use it directly due to the very strong N≡N triple bond.
+
+### The Nitrogen Cycle
+
+The nitrogen cycle describes how nitrogen moves through the environment:
+
+**1. Nitrogen Fixation** - Converting N₂ to usable forms:
+- **Lightning:** N₂ + O₂ → 2NO (extreme heat of lightning provides activation energy)
+- **Biological fixation:** Nitrogen-fixing bacteria in soil and root nodules of legumes convert N₂ to NH₃
+- **Industrial (Haber process):** N₂ + 3H₂ ⇌ 2NH₃
+
+**2. Nitrification** - Bacteria convert ammonia to nitrates:
+- NH₃ → NO₂⁻ → NO₃⁻ (nitrate)
+- Nitrates are the main nitrogen source absorbed by plants
+
+**3. Assimilation** - Plants absorb nitrates and convert them to organic compounds (proteins)
+
+**4. Ammonification** - Decomposers break down dead organisms, releasing NH₃
+
+**5. Denitrification** - Bacteria convert nitrates back to N₂, completing the cycle
+
+### Properties of Nitrogen
+
+| Property | Value/Description |
+|----------|-------------------|
+| Electron configuration | [He] 2s²2p³ |
+| Bond in N₂ | Triple bond (N≡N) |
+| Bond energy | 944 kJ mol⁻¹ (very strong) |
+| Physical state | Colourless, odourless gas |
+| Chemical reactivity | Very unreactive at room temperature |
+
+The strength of the N≡N triple bond explains why nitrogen is so unreactive and why nitrogen fixation requires either extreme conditions (lightning, high temperature/pressure) or biological catalysts (enzymes in bacteria).`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. Nitrogen Oxides",
+                content: `## Oxides of Nitrogen
+
+Nitrogen forms several oxides with different oxidation states. The most important for A-Level are:
+
+### Summary Table
+
+| Oxide | Formula | N Oxidation State | Properties |
+|-------|---------|-------------------|------------|
+| Dinitrogen oxide | N₂O | +1 | Colourless gas, 'laughing gas' |
+| Nitrogen monoxide | NO | +2 | Colourless gas, turns brown in air |
+| Nitrogen dioxide | NO₂ | +4 | Brown gas, pungent smell |
+| Dinitrogen tetroxide | N₂O₄ | +4 | Colourless, equilibrium with NO₂ |
+
+### Nitrogen Monoxide (NO)
+
+**Formation:**
+- In car engines at high temperatures: N₂ + O₂ → 2NO
+- Produced when lightning passes through air
+
+**Reactions:**
+- Rapidly oxidises in air: 2NO + O₂ → 2NO₂ (colourless → brown)
+- This is a rare example of a reaction that gets slower at higher temperatures
+
+### Nitrogen Dioxide (NO₂)
+
+**Properties:**
+- Brown gas with pungent, irritating odour
+- Toxic - causes respiratory problems
+
+**Equilibrium with N₂O₄:**
+2NO₂(g) ⇌ N₂O₄(g)     ΔH = -57 kJ mol⁻¹
+(brown)     (colourless)
+
+- At low temperatures: equilibrium shifts right → more N₂O₄ (paler)
+- At high temperatures: equilibrium shifts left → more NO₂ (darker brown)
+
+**Reaction with water:**
+3NO₂ + H₂O → 2HNO₃ + NO
+(This is a disproportionation reaction)
+
+### Environmental Impact of NOₓ
+
+**Acid Rain Formation:**
+- NO₂ dissolves in rainwater to form nitric acid
+- Damages buildings, forests, and aquatic ecosystems
+
+**Photochemical Smog:**
+- NO₂ + sunlight → NO + O
+- O + O₂ → O₃ (ground-level ozone - harmful)
+- Creates brown smog in cities
+
+**Catalytic Converters:**
+- Reduce NOₓ emissions from vehicles
+- 2NO + 2CO → N₂ + 2CO₂ (platinum/rhodium catalyst)`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. Ammonia and the Haber Process",
+                content: `## Industrial Production of Ammonia
+
+Ammonia (NH₃) is one of the most important industrial chemicals, used primarily for fertiliser production.
+
+### The Haber Process
+
+**Equation:**
+N₂(g) + 3H₂(g) ⇌ 2NH₃(g)     ΔH = -92 kJ mol⁻¹
+
+**Conditions:**
+| Parameter | Value | Justification |
+|-----------|-------|---------------|
+| Temperature | 400-450°C | Compromise: higher T increases rate but reduces yield |
+| Pressure | 150-300 atm | High pressure favours forward reaction (4 mol → 2 mol) |
+| Catalyst | Iron (with promoters) | Increases rate without affecting equilibrium position |
+
+### Compromise Conditions Explained
+
+**Temperature:**
+- The forward reaction is exothermic (ΔH = -92 kJ mol⁻¹)
+- Lower temperature would give higher equilibrium yield
+- BUT lower temperature means slower rate
+- Compromise: 400-450°C gives reasonable rate and acceptable yield (~15%)
+
+**Pressure:**
+- Forward reaction reduces moles of gas (4 → 2)
+- High pressure shifts equilibrium towards ammonia
+- Very high pressure increases yield significantly
+- BUT high pressure equipment is expensive and dangerous
+- Compromise: 150-300 atm
+
+**Catalyst:**
+- Iron catalyst speeds up the reaction
+- Does NOT change equilibrium position or yield
+- Allows a faster approach to equilibrium at lower temperature
+
+### Properties of Ammonia
+
+**Physical Properties:**
+- Colourless gas with pungent, characteristic smell
+- Very soluble in water (forms alkaline solution)
+- Lower boiling point than expected for its molecular mass due to hydrogen bonding
+
+**Chemical Properties:**
+- Acts as a weak base: NH₃ + H₂O ⇌ NH₄⁺ + OH⁻
+- Acts as a ligand in complex ions: [Cu(NH₃)₄]²⁺
+- Reduces hot copper(II) oxide: 3CuO + 2NH₃ → 3Cu + N₂ + 3H₂O
+
+### Uses of Ammonia
+- Manufacture of fertilisers (ammonium nitrate, ammonium sulfate)
+- Production of nitric acid
+- Manufacture of nylon
+- Cleaning products`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. Nitric Acid Production (Ostwald Process)",
+                content: `## Industrial Manufacture of Nitric Acid
+
+Nitric acid (HNO₃) is produced industrially by the Ostwald process, which converts ammonia to nitric acid in three stages.
+
+### Stage 1: Oxidation of Ammonia
+
+4NH₃(g) + 5O₂(g) → 4NO(g) + 6H₂O(g)
+
+**Conditions:**
+- Temperature: 900°C
+- Catalyst: Platinum-rhodium gauze
+
+This is a highly exothermic reaction that provides heat for the process.
+
+### Stage 2: Oxidation of Nitrogen Monoxide
+
+2NO(g) + O₂(g) → 2NO₂(g)
+
+- Occurs spontaneously when NO is cooled and mixed with air
+- The brown colour of NO₂ becomes visible
+
+### Stage 3: Reaction with Water
+
+3NO₂(g) + H₂O(l) → 2HNO₃(aq) + NO(g)
+
+- The NO produced is recycled back to Stage 2
+- This is a disproportionation reaction:
+  - N in NO₂: +4
+  - N in HNO₃: +5 (oxidised)
+  - N in NO: +2 (reduced)
+
+### Properties of Nitric Acid
+
+**As an Acid:**
+- Strong acid - fully dissociates: HNO₃ → H⁺ + NO₃⁻
+- Neutralises bases: HNO₃ + NaOH → NaNO₃ + H₂O
+
+**As an Oxidising Agent:**
+- Concentrated HNO₃ is a powerful oxidising agent
+- Oxidises most metals (except Au, Pt)
+- Produces NO₂ (brown gas) with concentrated acid
+- Produces NO (colourless, turns brown) with dilute acid
+
+**Reaction with Copper:**
+Cu + 4HNO₃(conc) → Cu(NO₃)₂ + 2NO₂ + 2H₂O
+3Cu + 8HNO₃(dilute) → 3Cu(NO₃)₂ + 2NO + 4H₂O
+
+### Uses of Nitric Acid
+- Manufacturing fertilisers (ammonium nitrate)
+- Production of explosives (TNT, nitroglycerin)
+- Making dyes
+- Metal processing`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Sulfur and its Oxides",
+                content: `## Chemistry of Sulfur
+
+### Sulfur Allotropes
+
+Sulfur exists in different allotropic forms:
+
+**Rhombic Sulfur (α-sulfur):**
+- Most stable form at room temperature
+- Yellow crystalline solid
+- Contains S₈ rings
+
+**Monoclinic Sulfur (β-sulfur):**
+- Stable above 96°C
+- Needle-like crystals
+- Also contains S₈ rings
+
+**Plastic Sulfur:**
+- Formed by quenching molten sulfur
+- Contains long chains of sulfur atoms
+- Elastic, rubbery solid
+
+### Sulfur Dioxide (SO₂)
+
+**Preparation:**
+- Burning sulfur: S + O₂ → SO₂
+- Burning sulfur-containing fuels
+- Roasting metal sulfide ores: 2ZnS + 3O₂ → 2ZnO + 2SO₂
+
+**Properties:**
+| Property | Description |
+|----------|-------------|
+| Appearance | Colourless gas |
+| Smell | Sharp, choking |
+| Solubility | Very soluble in water |
+| Oxidation state of S | +4 |
+
+**Reaction with Water:**
+SO₂ + H₂O ⇌ H₂SO₃ (sulfurous acid)
+- Weak diprotic acid
+- Solution is acidic (pH ~4)
+
+**Redox Chemistry:**
+- SO₂ can act as a reducing agent (S: +4 → +6)
+- Decolourises acidified potassium manganate(VII): 5SO₂ + 2MnO₄⁻ + 2H₂O → 5SO₄²⁻ + 2Mn²⁺ + 4H⁺
+
+### Sulfur Trioxide (SO₃)
+
+**Formation:**
+2SO₂ + O₂ ⇌ 2SO₃     ΔH = -196 kJ mol⁻¹
+(Occurs in Contact process with V₂O₅ catalyst)
+
+**Reaction with Water:**
+SO₃ + H₂O → H₂SO₄
+- Vigorous, highly exothermic reaction
+- In practice, SO₃ is absorbed in concentrated H₂SO₄ first`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "6. Sulfuric Acid and the Contact Process",
+                content: `## Industrial Production of Sulfuric Acid
+
+Sulfuric acid (H₂SO₄) is the world's most produced industrial chemical. It is manufactured by the Contact process.
+
+### The Contact Process - Three Stages
+
+**Stage 1: Production of Sulfur Dioxide**
+S(l) + O₂(g) → SO₂(g)
+Or from metal sulfide ores: 4FeS₂ + 11O₂ → 2Fe₂O₃ + 8SO₂
+
+**Stage 2: Oxidation to Sulfur Trioxide**
+2SO₂(g) + O₂(g) ⇌ 2SO₃(g)     ΔH = -196 kJ mol⁻¹
+
+**Conditions:**
+| Parameter | Value | Justification |
+|-----------|-------|---------------|
+| Temperature | 400-450°C | Compromise between rate and yield |
+| Pressure | 1-2 atm | Atmospheric pressure gives good yield (~99%) |
+| Catalyst | V₂O₅ (vanadium(V) oxide) | Speeds up reaction |
+
+**Why atmospheric pressure works:**
+- The yield at equilibrium is already very high (~99%) at atmospheric pressure
+- High pressure is not economically justified
+
+**Stage 3: Conversion to Sulfuric Acid**
+- SO₃ is absorbed in 98% H₂SO₄ to form oleum: SO₃ + H₂SO₄ → H₂S₂O₇
+- Oleum is then diluted: H₂S₂O₇ + H₂O → 2H₂SO₄
+
+Direct reaction of SO₃ with water is not used because it is too violent and produces a fine mist.
+
+### Properties of Sulfuric Acid
+
+**As an Acid (dilute):**
+- Strong diprotic acid: H₂SO₄ → 2H⁺ + SO₄²⁻
+- Typical acid reactions with metals, bases, carbonates
+
+**As a Dehydrating Agent (concentrated):**
+- Removes water from compounds
+- C₁₂H₂₂O₁₁ (sugar) → 12C + 11H₂O (dramatic demonstration)
+- Used to dry gases
+
+**As an Oxidising Agent (hot concentrated):**
+- Oxidises metals like copper: Cu + 2H₂SO₄ → CuSO₄ + SO₂ + 2H₂O
+
+### Uses of Sulfuric Acid
+- Fertiliser production (ammonium sulfate, superphosphates)
+- Manufacturing detergents
+- Production of other chemicals
+- Car batteries (lead-acid batteries)
+- Metal processing`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "7. Environmental Impact",
+                content: `## Environmental Issues
+
+### Acid Rain
+
+**Formation:**
+- SO₂ and NOₓ released from burning fossil fuels and industrial processes
+- These gases dissolve in rainwater to form acids:
+  - SO₂ + H₂O → H₂SO₃ (sulfurous acid)
+  - 2SO₂ + O₂ → 2SO₃; SO₃ + H₂O → H₂SO₄ (sulfuric acid)
+  - 3NO₂ + H₂O → 2HNO₃ + NO (nitric acid)
+
+**Effects:**
+| Environment | Damage |
+|-------------|--------|
+| Buildings/monuments | Limestone and marble eroded: CaCO₃ + H₂SO₄ → CaSO₄ + H₂O + CO₂ |
+| Forests | Tree damage, nutrient leaching from soil |
+| Lakes/rivers | Acidification kills fish and aquatic life |
+| Human health | Respiratory problems |
+
+### Reducing Emissions
+
+**Sulfur Dioxide:**
+- Flue gas desulfurisation (FGD) in power stations
+- CaO + SO₂ → CaSO₃ or Ca(OH)₂ + SO₂ → CaSO₃ + H₂O
+- Using low-sulfur fuels
+
+**Nitrogen Oxides:**
+- Catalytic converters in vehicles: 2NO + 2CO → N₂ + 2CO₂
+- Lower combustion temperatures reduce NOₓ formation
+
+### Eutrophication
+
+**Cause:**
+- Excess nitrates from fertilisers enter waterways
+
+**Effects:**
+1. Rapid algal growth (algal bloom)
+2. Algae block light, preventing photosynthesis in underwater plants
+3. Plants and algae die
+4. Bacteria decompose dead matter, using up oxygen
+5. Fish and aquatic organisms die due to lack of oxygen (hypoxia)
+
+### Climate Change Considerations
+
+- N₂O (nitrous oxide) is a potent greenhouse gas
+- ~300× more effective than CO₂ at trapping heat
+- Released from agricultural soils treated with nitrogen fertilisers`,
+                diagrams: [],
+                subsections: []
+            }
+        ],
+        key_points: [
+            "Nitrogen cycle: fixation → nitrification → assimilation → ammonification → denitrification",
+            "N≡N triple bond (944 kJ mol⁻¹) makes N₂ very unreactive - explains need for extreme conditions in fixation",
+            "NO is colourless; oxidises in air to brown NO₂; 2NO₂ ⇌ N₂O₄ equilibrium",
+            "Haber process: N₂ + 3H₂ ⇌ 2NH₃, 400-450°C, 150-300 atm, Fe catalyst, ~15% yield",
+            "Compromise conditions balance rate (favoured by high T) and yield (favoured by low T)",
+            "Ostwald process: NH₃ → NO → NO₂ → HNO₃ (Pt catalyst at 900°C for first step)",
+            "Sulfur exists as S₈ rings; rhombic (α) stable at room temp, monoclinic (β) above 96°C",
+            "Contact process: S → SO₂ → SO₃ → H₂SO₄, V₂O₅ catalyst, 400-450°C, atmospheric pressure",
+            "SO₃ absorbed in conc. H₂SO₄ (not water) to form oleum, then diluted",
+            "Conc. H₂SO₄ is both dehydrating agent and oxidising agent when hot",
+            "Acid rain: SO₂ and NOₓ dissolve in rainwater forming H₂SO₃/H₂SO₄ and HNO₃",
+            "Catalytic converters reduce NOₓ: 2NO + 2CO → N₂ + 2CO₂",
+            "Eutrophication: excess nitrates → algal bloom → oxygen depletion → fish death"
+        ],
+        exam_tips: [
+            "Know all equations for Haber and Contact processes with conditions",
+            "Explain compromise conditions in terms of rate vs yield trade-off",
+            "Remember catalyst speeds up reaction but doesn't change equilibrium position",
+            "For NOₓ equilibrium 2NO₂ ⇌ N₂O₄, predict colour changes with temperature",
+            "Know why SO₃ is absorbed in conc. H₂SO₄ not water (too violent, forms mist)",
+            "Distinguish between SO₂ as reducing agent and conc. H₂SO₄ as oxidising agent",
+            "For environmental questions, give specific equations for acid rain formation",
+            "Explain eutrophication step-by-step when describing nitrate pollution",
+            "Know the role of catalytic converters and the equation for NOₓ reduction",
+            "Remember N₂O is a greenhouse gas - link to climate change questions"
+        ]
+    },
+    "Introduction to Organic Chemistry": {
+        topic: "Introduction to Organic Chemistry",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Organic_Chemistry_Foundations_and_Reaction_Mechanisms.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvT3JnYW5pY19DaGVtaXN0cnlfRm91bmRhdGlvbnNfYW5kX1JlYWN0aW9uX01lY2hhbmlzbXMubTRhIiwiaWF0IjoxNzY4MDQyNTI1LCJleHAiOjUyNjg1Mzg1MjV9.l2Y1V2M-Pp4pEF7GrioclMSpOSD7yBq0oBnUMr3adBk",
+        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/An_Introduction_to_Organic_Chemistry.mp4",
+        subject: "A Level Chemistry",
+        summary: "This foundational topic introduces the principles of organic chemistry, the study of carbon compounds. It covers IUPAC nomenclature, functional groups, types of structural and stereoisomerism, sigma and pi bonding, hybridisation concepts, and the classification of organic reaction types. These fundamentals are essential for understanding all subsequent organic chemistry topics.",
+        sections: [
+            {
+                title: "1. What is Organic Chemistry?",
+                content: `## The Chemistry of Carbon
+
+**Organic chemistry** is the study of compounds containing carbon. Carbon is unique in its ability to form four covalent bonds and create long chains, branched structures, and rings, leading to millions of different compounds.
+
+### Why Carbon is Special
+
+| Property | Explanation |
+|----------|-------------|
+| Valency of 4 | Carbon can form 4 covalent bonds, allowing diverse structures |
+| Catenation | Carbon atoms can bond to each other, forming chains and rings |
+| Bond strength | C-C and C-H bonds are strong and stable |
+| Electronegativity | Carbon has intermediate electronegativity (2.5), allowing bonds with many elements |
+
+### Key Elements in Organic Compounds
+
+Most organic compounds contain:
+- **Carbon (C)** - always present
+- **Hydrogen (H)** - almost always present
+- **Oxygen (O)** - in alcohols, aldehydes, ketones, carboxylic acids, esters
+- **Nitrogen (N)** - in amines, amides, nitriles
+- **Halogens (F, Cl, Br, I)** - in halogenoalkanes
+- **Sulfur (S)** - in thiols, sulfides
+
+### Representing Organic Molecules
+
+| Representation | Example (Ethanol) | Shows |
+|----------------|-------------------|-------|
+| Molecular formula | C₂H₆O | Just the atoms present |
+| Empirical formula | C₂H₆O | Simplest whole number ratio |
+| Structural formula | CH₃CH₂OH | Arrangement of atoms |
+| Displayed formula | Full drawing | All bonds shown |
+| Skeletal formula | Zigzag line | C atoms at vertices, H omitted |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. IUPAC Nomenclature",
+                content: `## Systematic Naming of Organic Compounds
+
+The International Union of Pure and Applied Chemistry (IUPAC) provides standardised rules for naming organic compounds.
+
+### Step-by-Step Naming
+
+**Step 1: Identify the longest carbon chain (parent chain)**
+This gives the stem name:
+
+| Carbon atoms | Stem |
+|--------------|------|
+| 1 | meth- |
+| 2 | eth- |
+| 3 | prop- |
+| 4 | but- |
+| 5 | pent- |
+| 6 | hex- |
+| 7 | hept- |
+| 8 | oct- |
+| 9 | non- |
+| 10 | dec- |
+
+**Step 2: Identify the functional group**
+This gives the suffix:
+
+| Functional group | Suffix | Example |
+|------------------|--------|---------|
+| Alkane (C-C) | -ane | propane |
+| Alkene (C=C) | -ene | propene |
+| Alcohol (-OH) | -ol | propan-1-ol |
+| Aldehyde (-CHO) | -al | propanal |
+| Ketone (C=O) | -one | propanone |
+| Carboxylic acid (-COOH) | -oic acid | propanoic acid |
+| Ester (-COO-) | -oate | methyl propanoate |
+| Amine (-NH₂) | -amine | propylamine |
+| Nitrile (-CN) | -nitrile | propanenitrile |
+
+**Step 3: Number the carbon chain**
+- Number from the end that gives the lowest numbers to substituents/functional groups
+- The principal functional group gets the lowest possible number
+
+**Step 4: Name and number substituents (side chains)**
+- Use prefixes: methyl, ethyl, propyl, etc.
+- Multiple identical substituents: di-, tri-, tetra-
+- List alphabetically (ignoring di-, tri-, etc.)
+
+**Step 5: Combine the name**
+Numbers are separated by commas; numbers and letters by hyphens.
+
+### Examples
+
+- CH₃CH₂CH₂OH → **propan-1-ol** (3 carbons, alcohol at position 1)
+- CH₃CH(CH₃)CH₂CH₃ → **2-methylbutane** (4-carbon chain with methyl at C2)
+- CH₂=CHCH₃ → **propene** (double bond, 3 carbons)
+- CH₃CHClCH₃ → **2-chloropropane** (Cl at position 2)`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. Functional Groups",
+                content: `## Key Functional Groups
+
+A **functional group** is an atom or group of atoms that determines the characteristic chemical properties of a compound.
+
+### Summary of Functional Groups
+
+| Functional Group | Name | Structure | Example |
+|------------------|------|-----------|---------|
+| -OH | Hydroxyl (alcohol) | R-OH | Ethanol |
+| C=C | Alkene | R₂C=CR₂ | Ethene |
+| C≡C | Alkyne | RC≡CR | Ethyne |
+| -X (F, Cl, Br, I) | Halogen (halogenoalkane) | R-X | Chloromethane |
+| -CHO | Aldehyde | RCHO | Ethanal |
+| C=O | Carbonyl (ketone) | RCOR' | Propanone |
+| -COOH | Carboxyl (carboxylic acid) | RCOOH | Ethanoic acid |
+| -COO- | Ester | RCOOR' | Ethyl ethanoate |
+| -NH₂ | Primary amine | RNH₂ | Ethylamine |
+| -CONH₂ | Primary amide | RCONH₂ | Ethanamide |
+| -CN | Nitrile/cyano | RCN | Ethanenitrile |
+| -COCl | Acyl chloride | RCOCl | Ethanoyl chloride |
+
+### Homologous Series
+
+A **homologous series** is a family of compounds with:
+- The same functional group
+- The same general formula
+- Similar chemical properties
+- Gradual change in physical properties
+
+**Examples:**
+- Alkanes: CₙH₂ₙ₊₂ (methane, ethane, propane...)
+- Alkenes: CₙH₂ₙ (ethene, propene, butene...)
+- Alcohols: CₙH₂ₙ₊₁OH (methanol, ethanol, propan-1-ol...)
+
+### Primary, Secondary, and Tertiary Classification
+
+For alcohols and halogenoalkanes:
+
+| Classification | Definition | Example |
+|----------------|------------|---------|
+| Primary (1°) | Carbon bonded to OH/X is attached to 1 other carbon | CH₃CH₂OH |
+| Secondary (2°) | Carbon bonded to OH/X is attached to 2 other carbons | CH₃CHOHCH₃ |
+| Tertiary (3°) | Carbon bonded to OH/X is attached to 3 other carbons | (CH₃)₃COH |
+
+This classification is important for predicting reactivity and reaction mechanisms.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. Structural Isomerism",
+                content: `## Types of Isomerism
+
+**Isomers** are compounds with the same molecular formula but different arrangements of atoms. There are two main categories: structural isomerism and stereoisomerism.
+
+### Structural Isomerism
+
+Structural isomers have the same molecular formula but different structural formulas - atoms are bonded in different ways.
+
+**Type 1: Chain Isomerism**
+- Different arrangements of the carbon chain
+- Straight chain vs branched chain
+
+**Example (C₄H₁₀):**
+- Butane: CH₃CH₂CH₂CH₃ (straight chain)
+- 2-methylpropane: (CH₃)₃CH (branched)
+
+**Type 2: Position Isomerism**
+- Same carbon chain, functional group in different positions
+
+**Example (C₃H₇Cl):**
+- 1-chloropropane: CH₃CH₂CH₂Cl
+- 2-chloropropane: CH₃CHClCH₃
+
+**Example (C₃H₈O):**
+- Propan-1-ol: CH₃CH₂CH₂OH
+- Propan-2-ol: CH₃CHOHCH₃
+
+**Type 3: Functional Group Isomerism**
+- Same molecular formula, different functional groups
+
+**Example (C₂H₆O):**
+- Ethanol: CH₃CH₂OH (alcohol)
+- Methoxymethane: CH₃OCH₃ (ether)
+
+**Example (C₃H₆O):**
+- Propanal: CH₃CH₂CHO (aldehyde)
+- Propanone: CH₃COCH₃ (ketone)
+
+### Effects of Isomerism
+
+**Chain isomers:**
+- Different boiling points (branching reduces London forces)
+- Branched isomers have lower boiling points
+
+**Position isomers:**
+- Similar physical properties
+- May have different chemical reactivity (e.g., primary vs secondary alcohols)
+
+**Functional group isomers:**
+- Very different physical and chemical properties
+- Completely different reactions`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Stereoisomerism",
+                content: `## E/Z and Cis/Trans Isomerism
+
+**Stereoisomers** have the same structural formula but different arrangements of atoms in space.
+
+### Geometric Isomerism (E/Z Isomerism)
+
+Occurs when there is:
+1. A C=C double bond (restricted rotation)
+2. Two different groups attached to each carbon of the double bond
+
+**Naming Convention:**
+- **E (entgegen):** Higher priority groups on opposite sides
+- **Z (zusammen):** Higher priority groups on same side
+
+The priority is determined by atomic number - higher atomic number = higher priority.
+
+**Example: But-2-ene (C₄H₈)**
+
+- (Z)-but-2-ene: Both CH₃ groups on same side
+  - Also called cis-but-2-ene
+  
+- (E)-but-2-ene: CH₃ groups on opposite sides
+  - Also called trans-but-2-ene
+
+### Properties of Geometric Isomers
+
+| Property | Z-isomer (cis) | E-isomer (trans) |
+|----------|----------------|------------------|
+| Boiling point | Usually higher | Usually lower |
+| Melting point | Usually lower | Usually higher |
+| Dipole moment | Has net dipole | Often zero (cancels) |
+| Polarity | More polar | Less polar |
+
+**Explanation:**
+- The Z-isomer often has a net dipole moment due to asymmetry
+- E-isomers may have dipoles that cancel, reducing intermolecular forces
+
+### Why Geometric Isomers Exist
+
+The C=C double bond consists of:
+- 1 sigma (σ) bond - head-on overlap
+- 1 pi (π) bond - side-on overlap
+
+The π bond prevents rotation around the double bond. Breaking the π bond requires significant energy (~264 kJ mol⁻¹ for a typical alkene), so the groups are "locked" in position.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "6. Sigma and Pi Bonding",
+                content: `## Types of Covalent Bonds
+
+### Sigma (σ) Bonds
+
+**Formation:** Head-on (end-to-end) overlap of atomic orbitals
+
+**Characteristics:**
+- Electron density concentrated between the nuclei
+- Allow free rotation around the bond axis
+- Stronger than π bonds
+- All single bonds are sigma bonds
+
+**Types of orbital overlap:**
+- s-s overlap (e.g., H-H in H₂)
+- s-p overlap (e.g., C-H bonds)
+- p-p overlap (e.g., C-C single bond)
+
+### Pi (π) Bonds
+
+**Formation:** Side-on (lateral) overlap of p orbitals
+
+**Characteristics:**
+- Electron density above and below the bond axis
+- Do NOT allow free rotation (explains geometric isomerism)
+- Weaker than σ bonds
+- Found in double and triple bonds
+
+**In a C=C double bond:**
+- 1 σ bond + 1 π bond
+- Total bond strength is greater than a single C-C bond
+
+**In a C≡C triple bond:**
+- 1 σ bond + 2 π bonds
+- Even stronger overall
+
+### Hybridisation
+
+When carbon forms bonds, its orbitals hybridise (mix) to form equivalent orbitals.
+
+| Hybridisation | Bonds | Geometry | Bond Angle | Example |
+|---------------|-------|----------|------------|---------|
+| sp³ | 4 σ bonds | Tetrahedral | 109.5° | Methane CH₄ |
+| sp² | 3 σ + 1 π bond | Trigonal planar | 120° | Ethene C₂H₄ |
+| sp | 2 σ + 2 π bonds | Linear | 180° | Ethyne C₂H₂ |
+
+**sp³ Hybridisation (alkanes):**
+- 1 s orbital + 3 p orbitals → 4 equivalent sp³ orbitals
+- Tetrahedral arrangement
+- All bonds are σ bonds
+
+**sp² Hybridisation (alkenes):**
+- 1 s orbital + 2 p orbitals → 3 equivalent sp² orbitals
+- Unhybridised p orbital forms π bond
+- Trigonal planar geometry
+
+**sp Hybridisation (alkynes):**
+- 1 s orbital + 1 p orbital → 2 equivalent sp orbitals
+- Two unhybridised p orbitals form 2 π bonds
+- Linear geometry`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "7. Types of Organic Reactions",
+                content: `## Classification of Organic Reactions
+
+Organic reactions can be classified by the type of bond-breaking and bond-making processes involved.
+
+### By Reaction Type
+
+**1. Substitution**
+- One atom or group is replaced by another
+- Product has same degree of saturation as reactant
+- Example: CH₃Br + OH⁻ → CH₃OH + Br⁻
+
+**2. Addition**
+- Two molecules combine to form one product
+- Usually involves unsaturated compounds (C=C or C=O)
+- Example: CH₂=CH₂ + Br₂ → CH₂BrCH₂Br
+
+**3. Elimination**
+- A small molecule (usually H₂O or HX) is removed
+- Creates a double bond (increases unsaturation)
+- Example: CH₃CH₂OH → CH₂=CH₂ + H₂O
+
+**4. Oxidation/Reduction**
+- Oxidation: gain of oxygen, loss of hydrogen, or loss of electrons
+- Reduction: loss of oxygen, gain of hydrogen, or gain of electrons
+- Example: CH₃CH₂OH → CH₃CHO → CH₃COOH (oxidation)
+
+**5. Condensation**
+- Two molecules combine with elimination of a small molecule
+- Example: Esterification - alcohol + acid → ester + water
+
+**6. Hydrolysis**
+- Breaking bonds by reaction with water
+- Often addition of H and OH across a bond
+- Example: Ester + water → acid + alcohol
+
+### By Bond Breaking
+
+**Homolytic Fission:**
+- Bond breaks evenly - one electron to each atom
+- Forms free radicals (species with unpaired electrons)
+- Usually occurs with non-polar bonds or under UV light
+- X:X → X• + X•
+
+**Heterolytic Fission:**
+- Bond breaks unevenly - both electrons to one atom
+- Forms ions (cation and anion)
+- Usually occurs with polar bonds
+- X:Y → X⁺ + Y⁻ or X⁻ + Y⁺
+
+### Reagent Types
+
+| Type | Definition | Example |
+|------|------------|---------|
+| Nucleophile | Electron-pair donor, attacks δ+ carbon | OH⁻, NH₃, CN⁻ |
+| Electrophile | Electron-pair acceptor, attacks electron-rich areas | H⁺, NO₂⁺, Br⁺ |
+| Free radical | Species with unpaired electron | Cl•, CH₃• |`,
+                diagrams: [],
+                subsections: []
+            }
+        ],
+        key_points: [
+            "Carbon forms 4 covalent bonds and can catenate (form chains and rings)",
+            "IUPAC naming: longest chain (stem) + functional group (suffix) + substituents (prefix)",
+            "Functional group determines chemical properties; homologous series share same functional group",
+            "Primary/secondary/tertiary classification based on number of carbons attached to functional group carbon",
+            "Structural isomers: same molecular formula, different structural formulas (chain, position, functional group)",
+            "Stereoisomers: same structural formula, different spatial arrangements",
+            "E/Z isomerism requires restricted rotation (C=C) and different groups on each carbon of double bond",
+            "Sigma bonds: head-on overlap, allow rotation; Pi bonds: side-on overlap, prevent rotation",
+            "sp³ = tetrahedral (109.5°); sp² = trigonal planar (120°); sp = linear (180°)",
+            "Homolytic fission → radicals; Heterolytic fission → ions",
+            "Nucleophiles donate electron pairs; Electrophiles accept electron pairs"
+        ],
+        exam_tips: [
+            "Practice IUPAC naming - always identify longest chain first, then number for lowest locants",
+            "When drawing isomers, be systematic - vary chain length, position, then functional group",
+            "For E/Z naming, use Cahn-Ingold-Prelog priority rules (higher atomic number = higher priority)",
+            "Remember that C=C prevents rotation due to π bond - this explains geometric isomerism",
+            "Know bond angles for different hybridisations - these are commonly tested",
+            "For reaction classification, focus on what happens to the substrate (addition, substitution, elimination)",
+            "Distinguish clearly between homolytic (radicals) and heterolytic (ions) fission",
+            "Nucleophiles have lone pairs and are often negative or have δ- regions",
+            "Electrophiles are electron-deficient and are often positive or have δ+ regions"
+        ]
+    },
+    "Hydrocarbons": {
+        topic: "Hydrocarbons",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Hydrocarbon_Structure_Reactivity_and_Mechanisms.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvSHlkcm9jYXJib25fU3RydWN0dXJlX1JlYWN0aXZpdHlfYW5kX01lY2hhbmlzbXMubTRhIiwiaWF0IjoxNzY4MDQyNDE4LCJleHAiOjUyNjg1Mzg0MTh9.1qiVsdx1Ist7ublDnvrzDiBukHB0JPXy9ceZlfhMqmc",
+        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Hydrocarbons.mp4",
+        subject: "A Level Chemistry",
+        summary: "Hydrocarbons are compounds containing only carbon and hydrogen. This topic covers alkanes (saturated hydrocarbons) and alkenes (unsaturated hydrocarbons), their structures, physical properties, and characteristic reactions including free radical substitution of alkanes, electrophilic addition reactions of alkenes, and industrial processes such as cracking and polymerisation.",
+        sections: [
+            {
+                title: "1. Alkanes: Structure and Properties",
+                content: `## Saturated Hydrocarbons
+
+**Alkanes** are saturated hydrocarbons with the general formula **CₙH₂ₙ₊₂**. They contain only single C-C and C-H bonds.
+
+### Homologous Series
+
+| Name | Formula | Boiling Point (°C) |
+|------|---------|-------------------|
+| Methane | CH₄ | -162 |
+| Ethane | C₂H₆ | -89 |
+| Propane | C₃H₈ | -42 |
+| Butane | C₄H₁₀ | -1 |
+| Pentane | C₅H₁₂ | 36 |
+| Hexane | C₆H₁₄ | 69 |
+
+### Physical Properties
+
+**Boiling Point Trend:**
+- Increases with increasing chain length
+- Larger molecules have more electrons → stronger London (dispersion) forces
+- More energy required to overcome intermolecular forces
+
+**Effect of Branching:**
+- Branched isomers have LOWER boiling points than straight-chain isomers
+- Branched molecules are more spherical, reducing surface area contact
+- Fewer points of contact → weaker London forces
+
+### Bonding
+
+- All C-C and C-H bonds are **sigma (σ) bonds**
+- Carbon atoms are **sp³ hybridised** (tetrahedral, 109.5° bond angles)
+- Free rotation around C-C bonds (no geometric isomers)
+- Non-polar molecules (C and H have similar electronegativities)
+
+### Chemical Properties
+
+Alkanes are relatively **unreactive** because:
+- C-C bonds are strong (347 kJ mol⁻¹)
+- C-H bonds are strong (413 kJ mol⁻¹)
+- Bonds are non-polar, so not attacked by nucleophiles or electrophiles
+
+**Main reactions:**
+1. Combustion (oxidation with O₂)
+2. Free radical substitution (with halogens and UV light)`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. Combustion of Alkanes",
+                content: `## Burning Hydrocarbons
+
+Alkanes are used as fuels because combustion releases large amounts of energy.
+
+### Complete Combustion
+
+**General Equation:**
+CₙH₂ₙ₊₂ + (3n+1)/2 O₂ → nCO₂ + (n+1)H₂O
+
+**Example - Methane:**
+CH₄ + 2O₂ → CO₂ + 2H₂O     ΔH = -890 kJ mol⁻¹
+
+**Products:** Carbon dioxide and water
+**Flame:** Blue flame
+**Conditions:** Excess oxygen
+
+### Incomplete Combustion
+
+**Products:** Carbon monoxide (CO) and/or carbon (soot), plus water
+
+**With limited oxygen:**
+2CH₄ + 3O₂ → 2CO + 4H₂O (carbon monoxide)
+CH₄ + O₂ → C + 2H₂O (carbon/soot)
+
+**Flame:** Yellow/orange flame (due to incandescent carbon particles)
+**Problem:** Carbon monoxide is toxic - binds to haemoglobin
+
+### Environmental Issues
+
+**Carbon Dioxide (CO₂):**
+- Greenhouse gas
+- Absorbs infrared radiation
+- Contributes to global warming
+
+**Sulfur Dioxide (SO₂):**
+- Formed when sulfur-containing fuels burn
+- Causes acid rain
+
+**Nitrogen Oxides (NOₓ):**
+- Formed at high temperatures in engines
+- Contribute to acid rain and photochemical smog`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. Free Radical Substitution",
+                content: `## Halogenation of Alkanes
+
+Alkanes react with halogens (Cl₂, Br₂) in the presence of UV light via a **free radical substitution** mechanism.
+
+### Overall Reaction
+
+CH₄ + Cl₂ → CH₃Cl + HCl (chloromethane)
+
+Further substitution can occur:
+CH₃Cl → CH₂Cl₂ → CHCl₃ → CCl₄
+
+### Mechanism - Three Stages
+
+**Stage 1: Initiation**
+- UV light causes homolytic fission of Cl-Cl bond
+- Produces chlorine free radicals
+
+Cl₂ → Cl• + Cl•
+
+**Stage 2: Propagation**
+- Chain reactions that produce more radicals
+- Two propagation steps form a cycle
+
+Step 1: Cl• + CH₄ → HCl + CH₃•
+Step 2: CH₃• + Cl₂ → CH₃Cl + Cl•
+
+- The chlorine radical is regenerated, continuing the chain
+
+**Stage 3: Termination**
+- Two radicals combine, ending the chain
+- Removes radicals from the system
+
+Cl• + Cl• → Cl₂
+CH₃• + CH₃• → C₂H₆
+CH₃• + Cl• → CH₃Cl
+
+### Key Features
+
+**Why UV light is needed:**
+- Provides energy for homolytic fission of Cl-Cl bond
+- Cl-Cl bond energy is 242 kJ mol⁻¹
+
+**Why free radical mechanism:**
+- Non-polar bonds undergo homolytic fission
+- Forms radicals (species with unpaired electrons)
+- Chain reaction: one initiation step produces many product molecules
+
+**Product Distribution:**
+- Mixture of mono-, di-, tri-, and tetra-substituted products
+- Also produces some ethane (from CH₃• + CH₃•)
+- Difficult to control - major limitation
+
+### Bromine vs Chlorine
+
+| Halogen | Reactivity | Selectivity |
+|---------|------------|-------------|
+| Chlorine | More reactive | Less selective (mixture) |
+| Bromine | Less reactive | More selective |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. Alkenes: Structure and Properties",
+                content: `## Unsaturated Hydrocarbons
+
+**Alkenes** are unsaturated hydrocarbons containing a C=C double bond, with general formula **CₙH₂ₙ**.
+
+### Bonding in Alkenes
+
+The C=C double bond consists of:
+- 1 **sigma (σ) bond** - head-on overlap of sp² orbitals
+- 1 **pi (π) bond** - side-on overlap of p orbitals
+
+**Carbon hybridisation:** sp² (trigonal planar, 120° bond angles)
+
+### Key Properties
+
+**1. Restricted Rotation:**
+- The π bond prevents rotation around C=C
+- This leads to geometric (E/Z) isomerism
+
+**2. Electron-Rich Double Bond:**
+- The π bond creates a region of high electron density
+- This attracts electrophiles
+- Alkenes undergo electrophilic addition reactions
+
+**3. More Reactive than Alkanes:**
+- The π bond is weaker than a σ bond
+- π electrons are more accessible to attacking reagents
+
+### Shape Around the Double Bond
+
+- The two carbons of the double bond and the four atoms directly attached are all in the same plane
+- Bond angles around each sp² carbon are approximately 120°
+
+### Homologous Series
+
+| Name | Formula | Structure |
+|------|---------|-----------|
+| Ethene | C₂H₄ | CH₂=CH₂ |
+| Propene | C₃H₆ | CH₃CH=CH₂ |
+| But-1-ene | C₄H₈ | CH₃CH₂CH=CH₂ |
+| But-2-ene | C₄H₈ | CH₃CH=CHCH₃ |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Electrophilic Addition Reactions",
+                content: `## Addition Reactions of Alkenes
+
+Alkenes undergo **electrophilic addition** because the π bond is electron-rich and attracts electrophiles.
+
+### General Mechanism
+
+1. An electrophile is attracted to the electron-rich π bond
+2. The electrophile accepts a pair of electrons from the π bond
+3. A carbocation intermediate forms
+4. A nucleophile attacks the carbocation
+5. Product is formed (saturated compound)
+
+### Reaction with Hydrogen (Hydrogenation)
+
+**Equation:**
+CH₂=CH₂ + H₂ → CH₃CH₃
+
+**Conditions:** Nickel catalyst, 150°C
+**Product:** Alkane
+
+**Application:** Hardening of vegetable oils to make margarine
+
+### Reaction with Halogens (Halogenation)
+
+**Equation:**
+CH₂=CH₂ + Br₂ → CH₂BrCH₂Br
+
+**Conditions:** Room temperature (no catalyst needed)
+**Product:** Dihalogenoalkane
+
+**Test for Unsaturation:**
+- Bromine water (orange) decolourises immediately with alkenes
+- Alkanes do not react - bromine water stays orange
+
+### Reaction with Hydrogen Halides
+
+**Equation:**
+CH₂=CH₂ + HBr → CH₃CH₂Br
+
+**Conditions:** Room temperature, gas bubbled through
+**Product:** Halogenoalkane
+
+**Markovnikov's Rule:**
+With unsymmetrical alkenes, the hydrogen adds to the carbon with MORE hydrogens already attached.
+
+**Example - Propene + HBr:**
+CH₃CH=CH₂ + HBr → CH₃CHBrCH₃ (major product, 2-bromopropane)
+
+**Explanation:**
+- The more substituted carbocation is more stable
+- Alkyl groups stabilise the positive charge (inductive effect)
+
+### Reaction with Steam (Hydration)
+
+**Equation:**
+CH₂=CH₂ + H₂O → CH₃CH₂OH
+
+**Conditions:** 
+- Concentrated H₃PO₄ catalyst
+- 300°C, 60-70 atm
+- Or concentrated H₂SO₄ followed by hydrolysis
+
+**Product:** Alcohol
+
+**Application:** Industrial production of ethanol`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "6. Mechanism of Electrophilic Addition",
+                content: `## Detailed Mechanism: Br₂ + Alkene
+
+### Step 1: Polarisation of Bromine
+
+As Br₂ approaches the electron-rich C=C:
+- The π electrons repel the electrons in Br-Br
+- Br-Br becomes polarised: Br^δ+—Br^δ-
+- The δ+ bromine acts as the electrophile
+
+### Step 2: Formation of Carbocation
+
+- The π bond attacks the δ+ bromine
+- A new C-Br bond forms using the π electron pair
+- The Br-Br bond breaks heterolytically
+- Br⁻ leaves; a carbocation intermediate forms
+
+### Step 3: Nucleophilic Attack
+
+- The Br⁻ (or other nucleophile) attacks the positive carbon
+- A new C-Br bond forms
+- Product: 1,2-dibromoethane
+
+### Mechanism for HBr Addition
+
+**Step 1:** H-Br is already polar (Hδ+—Brδ-)
+**Step 2:** The π bond attacks Hδ+, forming C-H bond; Br⁻ leaves
+**Step 3:** Br⁻ attacks the carbocation
+
+### Carbocation Stability (Markovnikov's Rule)
+
+| Type | Structure | Stability |
+|------|-----------|-----------|
+| Primary (1°) | RCH₂⁺ | Least stable |
+| Secondary (2°) | R₂CH⁺ | More stable |
+| Tertiary (3°) | R₃C⁺ | Most stable |
+
+**Why more substituted = more stable:**
+- Alkyl groups push electron density towards the positive carbon (positive inductive effect)
+- This partially stabilises the positive charge
+- The more stable carbocation forms preferentially
+
+### Drawing the Mechanism
+
+When drawing exam answers:
+1. Show curly arrows from electron-rich to electron-poor regions
+2. Show the intermediate carbocation with a + charge
+3. Show the second curly arrow from nucleophile to carbocation
+4. Include lone pairs where relevant`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "7. Cracking and Polymerisation",
+                content: `## Industrial Processes
+
+### Cracking
+
+**Purpose:** Convert long-chain alkanes into shorter, more useful molecules
+
+**Why needed:**
+- Fractional distillation produces too much fuel oil and not enough petrol/gases
+- Cracking increases supply of petrol and alkenes (for plastics)
+
+**Types of Cracking:**
+
+| Type | Conditions | Products |
+|------|------------|----------|
+| Thermal | 400-900°C, high pressure | Mixture of alkanes + alkenes |
+| Catalytic | 450°C, zeolite catalyst, slight pressure | More branched alkanes + aromatic hydrocarbons |
+| Steam | 850°C with steam | More alkenes |
+
+**Example Equation:**
+C₁₀H₂₂ → C₈H₁₈ + C₂H₄
+(decane → octane + ethene)
+
+### Addition Polymerisation
+
+**Definition:** Many small unsaturated molecules (monomers) join to form a large molecule (polymer) with no other product.
+
+**Mechanism:**
+1. The C=C double bond in the monomer opens
+2. Each monomer forms bonds to the next
+3. A long chain with C-C single bonds results
+
+**General Equation:**
+nCH₂=CH₂ → (-CH₂-CH₂-)ₙ
+(ethene)     (poly(ethene))
+
+**Common Addition Polymers:**
+
+| Monomer | Polymer | Uses |
+|---------|---------|------|
+| Ethene (CH₂=CH₂) | Poly(ethene) / polyethylene | Bags, bottles, packaging |
+| Propene (CH₃CH=CH₂) | Poly(propene) / polypropylene | Ropes, carpets, containers |
+| Chloroethene (CH₂=CHCl) | Poly(chloroethene) / PVC | Pipes, window frames |
+| Tetrafluoroethene (CF₂=CF₂) | PTFE (Teflon) | Non-stick coatings |
+| Styrene (C₆H₅CH=CH₂) | Polystyrene | Packaging, insulation |
+
+### Repeating Unit
+
+To draw the repeating unit:
+1. "Open" the C=C double bond to show single bonds
+2. Show bonds extending from both ends
+3. Put in brackets with subscript n
+
+Example: Poly(propene)
+Monomer: CH₃CH=CH₂
+Repeating unit: -CH₂-CH(CH₃)-`,
+                diagrams: [],
+                subsections: []
+            }
+        ],
+        key_points: [
+            "Alkanes are saturated (CₙH₂ₙ₊₂); Alkenes are unsaturated (CₙH₂ₙ) with C=C",
+            "Alkane bp increases with chain length; branching lowers bp (reduced surface contact)",
+            "C=C consists of 1 σ bond (allows no rotation) + 1 π bond (electron-rich)",
+            "Alkanes are unreactive; main reactions: combustion and free radical substitution",
+            "Free radical substitution: initiation (UV→radicals), propagation (chain), termination (radicals combine)",
+            "Alkenes undergo electrophilic addition due to electron-rich π bond",
+            "Test for unsaturation: bromine water decolourises (orange→colourless)",
+            "Markovnikov's rule: H adds to C with more H's (most stable carbocation forms)",
+            "Carbocation stability: tertiary > secondary > primary",
+            "Cracking: breaks long chains into shorter alkanes + alkenes (for petrol and polymers)",
+            "Addition polymerisation: monomers join via opening of C=C; no byproduct"
+        ],
+        exam_tips: [
+            "For free radical mechanisms, show all three stages and use half-arrows for single electron movement",
+            "Know the propagation steps form a cycle - chlorine radical regenerated",
+            "For electrophilic addition, show curly arrows, carbocation intermediate, and final product",
+            "Apply Markovnikov's rule to predict major product with unsymmetrical alkenes",
+            "Explain carbocation stability using positive inductive effect of alkyl groups",
+            "For polymer questions: draw the repeating unit correctly (open the double bond)",
+            "Remember complete combustion gives CO₂ + H₂O; incomplete gives CO, C, or both",
+            "Bromine water test: immediate decolourisation = alkene present",
+            "Know conditions for all addition reactions (catalyst, temperature, etc.)"
+        ]
+    },
+
+
+    "Polymerisation": {
+        topic: "Polymerisation",
+        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Polymerisation.mp4",
+        subject: "A Level Chemistry",
+        summary: "Polymerisation is the process of joining many small monomer molecules to form large polymer chains. This comprehensive topic covers both addition polymerisation (using alkenes) and condensation polymerisation (forming polyesters and polyamides), the relationship between polymer structure and properties, biodegradability, recycling, and environmental considerations.",
+        sections: [
+            {
+                title: "1. Introduction to Polymers",
+                content: `## What are Polymers?
+
+**Polymers** are very large molecules (macromolecules) made by joining together many smaller molecules called **monomers**. The process of forming polymers is called **polymerisation**.
+
+### Key Terms
+
+| Term | Definition |
+|------|------------|
+| Monomer | Small molecule that can join with others to form a polymer |
+| Polymer | Large molecule made of many repeating monomer units |
+| Repeating unit | The structural unit that repeats throughout the polymer chain |
+| Degree of polymerisation | The number of monomer units in a polymer chain (n) |
+| Copolymer | Polymer made from two or more different monomers |
+
+### Types of Polymerisation
+
+**1. Addition Polymerisation:**
+- Monomers have C=C double bonds
+- Monomers add together without loss of atoms
+- No byproduct formed
+- Examples: poly(ethene), poly(propene), PVC
+
+**2. Condensation Polymerisation:**
+- Monomers have two functional groups
+- Monomers join with elimination of a small molecule (usually H₂O)
+- Byproduct formed
+- Examples: polyesters, polyamides (nylon), proteins
+
+### Natural vs Synthetic Polymers
+
+**Natural Polymers:**
+- Proteins (amino acid monomers)
+- Starch and cellulose (glucose monomers)
+- DNA (nucleotide monomers)
+- Natural rubber (isoprene monomers)
+
+**Synthetic Polymers:**
+- Plastics (poly(ethene), PVC, polystyrene)
+- Synthetic fibres (nylon, polyester)
+- Synthetic rubber`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. Addition Polymerisation",
+                content: `## Polymerisation of Alkenes
+
+In **addition polymerisation**, unsaturated monomers (alkenes) join together. The C=C double bond opens, and each carbon forms bonds to neighbouring monomers.
+
+### Mechanism
+
+1. The π bond in the C=C double bond breaks
+2. Each carbon now has an unpaired electron
+3. These electrons form new C-C single bonds with adjacent monomers
+4. A long chain of repeating units forms
+
+### General Equation
+
+nCH₂=CHX → (-CH₂-CHX-)ₙ
+
+Where X is H, CH₃, Cl, C₆H₅, etc.
+
+### Common Addition Polymers
+
+| Monomer | Monomer Structure | Polymer | Uses |
+|---------|-------------------|---------|------|
+| Ethene | CH₂=CH₂ | Poly(ethene) / Polyethylene | Bags, bottles, film |
+| Propene | CH₃CH=CH₂ | Poly(propene) / Polypropylene | Ropes, containers, carpets |
+| Chloroethene | CH₂=CHCl | Poly(chloroethene) / PVC | Pipes, cables, flooring |
+| Phenylethene (styrene) | C₆H₅CH=CH₂ | Polystyrene | Packaging, insulation |
+| Tetrafluoroethene | CF₂=CF₂ | PTFE (Teflon) | Non-stick coatings |
+| Methyl methacrylate | CH₂=C(CH₃)COOCH₃ | PMMA (Perspex) | Windows, displays |
+| Acrylonitrile | CH₂=CHCN | Polyacrylonitrile | Fibres, clothing |
+
+### Drawing Repeating Units
+
+**Rules for drawing the repeating unit:**
+1. Open the C=C double bond to show two half-bonds extending outward
+2. Show all atoms that were attached to the double-bonded carbons
+3. Enclose in brackets with subscript n
+4. The repeat unit typically contains 2 carbon atoms from one monomer
+
+**Example: Poly(propene)**
+- Monomer: CH₃CH=CH₂
+- Repeating unit: -CH₂-CH(CH₃)-
+- Full representation: [-CH₂-CH(CH₃)-]ₙ
+
+### Properties of Addition Polymers
+
+| Property | Explanation |
+|----------|-------------|
+| Generally non-polar | Made from hydrocarbons; weak intermolecular forces |
+| Chemically inert | Saturated C-C backbone is unreactive |
+| Not biodegradable | Microorganisms cannot break down C-C bonds |
+| Thermoplastic | Soften on heating (can be remoulded) |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. Condensation Polymerisation",
+                content: `## Polymers with Functional Groups
+
+In **condensation polymerisation**, monomers with two functional groups react, eliminating a small molecule (usually H₂O) at each linkage.
+
+### Requirements for Condensation Polymerisation
+
+Monomers must have **two functional groups** that can react:
+- One functional group at each end of the molecule
+- OR two different monomer types, each with two of the same functional group
+
+### Types of Condensation Polymers
+
+**1. Polyesters** - Ester linkages (-COO-)
+**2. Polyamides** - Amide linkages (-CONH-)
+
+---
+
+## Polyesters
+
+### Formation
+
+**From dicarboxylic acid + diol:**
+
+Dicarboxylic acid: HOOC-R-COOH
+Diol: HO-R'-OH
+
+→ Polyester: [-OOC-R-COO-R'-]ₙ + nH₂O
+
+### Example: PET (Polyethylene terephthalate)
+
+**Monomers:**
+- Benzene-1,4-dicarboxylic acid (terephthalic acid): HOOC-C₆H₄-COOH
+- Ethane-1,2-diol: HOCH₂CH₂OH
+
+**Product:** PET (used in bottles, clothing fibres)
+
+### Alternative: Hydroxycarboxylic Acid
+
+A single monomer with BOTH -OH and -COOH:
+HO-R-COOH → [-O-R-CO-]ₙ + nH₂O
+
+**Example:** Polylactic acid (PLA) from lactic acid
+- Biodegradable polyester
+- Used in biodegradable packaging
+
+---
+
+## Polyamides
+
+### Formation
+
+**From dicarboxylic acid (or diacyl chloride) + diamine:**
+
+Dicarboxylic acid: HOOC-R-COOH
+Diamine: H₂N-R'-NH₂
+
+→ Polyamide: [-OC-R-CONH-R'-NH-]ₙ + nH₂O
+
+### Example: Nylon-6,6
+
+**Monomers:**
+- Hexanedioic acid: HOOC-(CH₂)₄-COOH (6 carbons)
+- 1,6-diaminohexane: H₂N-(CH₂)₆-NH₂ (6 carbons)
+
+**Product:** Nylon-6,6 (6 carbons in each monomer)
+
+The amide link (-CONH-) is the same as the peptide bond in proteins.
+
+### Alternative: Amino Acid Polymerisation
+
+A single monomer with BOTH -NH₂ and -COOH (amino acid):
+H₂N-R-COOH → [-NH-R-CO-]ₙ + nH₂O
+
+**Example:** Nylon-6 from 6-aminohexanoic acid
+**Example:** Proteins from α-amino acids`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. Identifying Monomers from Polymers",
+                content: `## Working Backwards
+
+A key exam skill is identifying the monomer(s) from a given polymer structure.
+
+### For Addition Polymers
+
+**Steps:**
+1. Find the repeating unit (usually 2 carbons in the backbone)
+2. Convert the two C-C single bonds in the backbone to a C=C double bond
+3. Add any hydrogen atoms needed
+
+**Example:**
+Polymer: [-CH₂-CHCl-]ₙ
+Monomer: CH₂=CHCl (chloroethene)
+
+### For Condensation Polymers
+
+**Identifying Polyesters:**
+1. Look for ester linkages: -COO-
+2. Break the chain at the ester bonds
+3. Add -OH to the oxygen side (making the diol)
+4. Add -OH to the carbonyl side (making the dicarboxylic acid)
+
+**Identifying Polyamides:**
+1. Look for amide linkages: -CONH-
+2. Break the chain at the amide bonds
+3. Add -H to the nitrogen side (making the diamine)
+4. Add -OH to the carbonyl side (making the dicarboxylic acid)
+
+### Distinguishing Between Types
+
+| Feature | Addition Polymer | Condensation Polymer |
+|---------|------------------|----------------------|
+| Backbone | Only C atoms | C, O, N atoms |
+| Functional groups | None in chain | Ester or amide links |
+| Byproduct | None | H₂O (or HCl) |
+| Monomer type | Alkene (C=C) | Difunctional molecules |
+
+### Worked Example
+
+Given polymer section: -OCH₂CH₂OOC-C₆H₄-CO-
+
+**Analysis:**
+- Contains -COO- ester links → polyester
+- Break at ester: -OCH₂CH₂O- and -OC-C₆H₄-CO-
+- Monomers: HOCH₂CH₂OH (ethane-1,2-diol) + HOOC-C₆H₄-COOH (benzene-1,4-dicarboxylic acid)`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Polymer Properties and Structure",
+                content: `## Structure-Property Relationships
+
+The properties of a polymer depend on its molecular structure and the intermolecular forces between chains.
+
+### Factors Affecting Properties
+
+**1. Chain Length (Degree of Polymerisation)**
+- Longer chains → higher melting point
+- More points of contact → stronger intermolecular forces
+- Increased viscosity (molten) and tensile strength
+
+**2. Side Groups**
+- Bulky groups reduce chain packing → lower density
+- Polar groups increase intermolecular forces → higher melting point
+- Flexible groups can make polymer more pliable
+
+**3. Branching**
+- Branched chains cannot pack as closely
+- Reduces density and crystallinity
+- Results in softer, more flexible polymer
+- Example: LDPE (branched) vs HDPE (linear)
+
+**4. Cross-linking**
+- Covalent bonds between chains
+- Creates 3D network structure
+- Increases rigidity and prevents melting
+- Thermoset vs thermoplastic behaviour
+
+### Types of Polymers by Structure
+
+| Type | Structure | Heating Behaviour | Examples |
+|------|-----------|-------------------|----------|
+| Thermoplastic | Linear/branched chains, weak IMF | Softens, can remould | PE, PVC, nylon |
+| Thermoset | Cross-linked 3D network | Does not soften | Bakelite, epoxy |
+| Elastomer | Cross-linked but flexible | Stretches, returns | Rubber, silicone |
+
+### Intermolecular Forces in Polymers
+
+| Polymer Type | Main IMF | Properties |
+|--------------|----------|------------|
+| Poly(ethene) | London forces only | Flexible, low mp |
+| PVC | Dipole-dipole + London | Stronger, higher mp |
+| Nylon | Hydrogen bonding | Strong, high mp, fibres |
+| Kevlar | Extensive H-bonding | Very strong, bulletproof |
+
+### Crystallinity
+
+- Polymers can have crystalline (ordered) and amorphous (disordered) regions
+- Higher crystallinity → higher density, strength, and melting point
+- Linear chains pack better and are more crystalline
+- Branched polymers are more amorphous`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "6. Biodegradability and Environmental Issues",
+                content: `## The Problem with Polymers
+
+Most synthetic polymers are **not biodegradable**:
+- Microorganisms lack enzymes to break C-C backbone
+- Persist in environment for hundreds of years
+- Accumulate in landfills and oceans
+- Harm wildlife through ingestion and entanglement
+
+### Disposal Methods
+
+**1. Landfill**
+- Most common method
+- Polymers persist for centuries
+- Takes up valuable land space
+- Potential for leaching of additives
+
+**2. Incineration**
+- Burns polymer to release energy
+- Reduces volume significantly
+- Produces CO₂ (greenhouse gas)
+- May release toxic gases (HCl from PVC)
+
+**3. Recycling**
+- Mechanical recycling: melt and remould
+- Chemical recycling: break down to monomers
+- Reduces need for new raw materials
+- Not all polymers are easily recyclable
+
+### Biodegradable Polymers
+
+**Definition:** Polymers that can be broken down by microorganisms into water, CO₂, and biomass.
+
+**Types:**
+
+| Polymer | Source | Biodegradable? |
+|---------|--------|----------------|
+| Poly(ethene) | Petroleum | No |
+| PLA (polylactic acid) | Corn starch | Yes |
+| PHB (polyhydroxybutyrate) | Bacteria | Yes |
+| Starch-based polymers | Plants | Yes |
+| Modified cellulose | Plant fibres | Yes |
+
+### Why Condensation Polymers Can Be Biodegradable
+
+- Ester and amide linkages can be hydrolysed
+- Enzymes (esterases, proteases) can catalyse hydrolysis
+- Natural polyesters and polyamides (fats, proteins) are biodegradable
+- Some synthetic condensation polymers (PLA) are also biodegradable
+
+### Hydrolysis of Condensation Polymers
+
+**Polyesters:**
+[-O-R-CO-]ₙ + nH₂O → nHO-R-COOH (hydroxycarboxylic acid)
+
+**Polyamides:**
+[-NH-R-CO-]ₙ + nH₂O → nH₂N-R-COOH (amino acid)
+
+Conditions: Acid or base catalyst, heat, or enzyme catalysis.
+
+### Sustainable Polymers
+
+- Use renewable feedstocks (plant-based)
+- Design for biodegradability
+- Improve recycling infrastructure
+- Reduce single-use plastics
+- Develop new bio-based polymers`,
+                diagrams: [],
+                subsections: []
+            }
+        ],
+        key_points: [
+            "Addition polymerisation: alkene monomers join via opening of C=C; no byproduct",
+            "Condensation polymerisation: difunctional monomers join; small molecule (H₂O) eliminated",
+            "Polyesters: dicarboxylic acid + diol → ester linkage (-COO-) + H₂O",
+            "Polyamides: dicarboxylic acid + diamine → amide linkage (-CONH-) + H₂O",
+            "Single monomer with two different functional groups can also undergo condensation",
+            "To find monomer from addition polymer: convert backbone C-C to C=C",
+            "To find monomers from condensation polymer: break at ester/amide links, add H₂O",
+            "Polymer properties depend on: chain length, branching, side groups, cross-linking, IMF",
+            "Thermoplastics soften on heating (linear); thermosets do not (cross-linked)",
+            "Polyamides have H-bonding between chains → strong fibres",
+            "Most synthetic polymers are non-biodegradable (persist for centuries)",
+            "Condensation polymers can be hydrolysed → some are biodegradable",
+            "PLA (polylactic acid) is a biodegradable polyester from corn starch"
+        ],
+        exam_tips: [
+            "Always draw repeating units with half-bonds extending from both ends",
+            "For addition polymers: show 2 carbons per monomer with open double bond",
+            "For condensation: clearly identify the ester (-COO-) or amide (-CONH-) link",
+            "When identifying monomers, remember to add back the H₂O eliminated",
+            "Know the difference between thermoplastics (remould) and thermosets (don't)",
+            "Link stronger intermolecular forces to higher melting points",
+            "Nylon has hydrogen bonding between chains - explain using N-H and C=O groups",
+            "For environmental questions: explain why addition polymers are non-biodegradable",
+            "Know that hydrolysis of condensation polymers regenerates monomers",
+            "Be able to draw the formation of PET and nylon-6,6 from their monomers"
+        ]
+    },
+    "Organic Synthesis": {
+        topic: "Organic Synthesis",
+        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Organic_Synthesis.mp4",
+        subject: "A Level Chemistry",
+        summary: "Organic Synthesis involves converting one organic compound into another through a series of chemical reactions. This comprehensive topic covers functional group interconversions, multi-step synthesis planning, reaction conditions and reagents, retrosynthetic analysis, and practical considerations including yield calculations and purification techniques.",
+        sections: [
+            {
+                title: "1. Introduction to Organic Synthesis",
+                content: `## The Art of Making Molecules
+
+**Organic synthesis** is the process of constructing organic compounds through a series of chemical reactions. Synthetic chemists design routes to make target molecules from simple, available starting materials.
+
+### Key Concepts
+
+**Functional Group Interconversion (FGI):**
+Converting one functional group to another through chemical reactions.
+
+**Multi-step Synthesis:**
+A sequence of reactions to convert starting material to target product.
+
+**Retrosynthetic Analysis:**
+Working backwards from the target molecule to identify suitable starting materials and reactions.
+
+### Planning a Synthesis
+
+When planning a synthetic route, consider:
+1. What functional groups need to change?
+2. What reactions achieve these changes?
+3. What reagents and conditions are needed?
+4. What is the best order for the steps?
+5. Are there any protecting group strategies needed?
+
+### Reaction Types to Know
+
+| Type | Change | Example |
+|------|--------|---------|
+| Oxidation | Add O or remove H | Alcohol → aldehyde/ketone → acid |
+| Reduction | Remove O or add H | Ketone → alcohol |
+| Substitution | Replace one group with another | Halogenoalkane → alcohol |
+| Addition | Add across double bond | Alkene → dihalogenoalkane |
+| Elimination | Remove small molecule | Alcohol → alkene |
+| Hydrolysis | Break with water | Ester → acid + alcohol |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. Functional Group Interconversions",
+                content: `## Key Reactions for Synthesis
+
+### From Alkanes
+
+| Reaction | Reagent/Conditions | Product |
+|----------|-------------------|---------|
+| Free radical substitution | X₂, UV light | Halogenoalkane |
+| Combustion | O₂ (excess), heat | CO₂ + H₂O |
+
+### From Alkenes
+
+| Reaction | Reagent/Conditions | Product |
+|----------|-------------------|---------|
+| Hydrogenation | H₂, Ni catalyst, 150°C | Alkane |
+| Halogenation | Br₂ or Cl₂, room temp | Dihalogenoalkane |
+| Addition of HX | HBr, HCl, room temp | Halogenoalkane |
+| Hydration | H₂O, H₃PO₄ catalyst, 300°C | Alcohol |
+| Oxidation | Cold KMnO₄ | Diol |
+| Polymerisation | High pressure, catalyst | Poly(alkene) |
+
+### From Halogenoalkanes
+
+| Reaction | Reagent/Conditions | Product |
+|----------|-------------------|---------|
+| Nucleophilic substitution | NaOH(aq), heat | Alcohol |
+| Nucleophilic substitution | KCN in ethanol, heat | Nitrile |
+| Nucleophilic substitution | NH₃ in ethanol, heat, pressure | Amine |
+| Elimination | NaOH in ethanol, heat | Alkene |
+
+### From Alcohols
+
+| Reaction | Reagent/Conditions | Product |
+|----------|-------------------|---------|
+| Oxidation (1° alcohol) | K₂Cr₂O₇/H₂SO₄, distil | Aldehyde |
+| Oxidation (1° alcohol) | K₂Cr₂O₇/H₂SO₄, reflux | Carboxylic acid |
+| Oxidation (2° alcohol) | K₂Cr₂O₇/H₂SO₄, reflux | Ketone |
+| Dehydration | Conc. H₂SO₄ or Al₂O₃, heat | Alkene |
+| Substitution | HBr, NaBr + H₂SO₄, or PCl₅ | Halogenoalkane |
+| Esterification | Carboxylic acid, H₂SO₄ catalyst | Ester |
+
+### From Aldehydes/Ketones
+
+| Reaction | Reagent/Conditions | Product |
+|----------|-------------------|---------|
+| Reduction | NaBH₄ or LiAlH₄ | Alcohol |
+| Oxidation (aldehyde) | K₂Cr₂O₇/H₂SO₄ or Tollens' | Carboxylic acid |
+| Nucleophilic addition | HCN (+ catalyst) | Hydroxynitrile |
+
+### From Carboxylic Acids
+
+| Reaction | Reagent/Conditions | Product |
+|----------|-------------------|---------|
+| Reduction | LiAlH₄ | Primary alcohol |
+| Esterification | Alcohol, H₂SO₄ catalyst | Ester |
+| Formation of acyl chloride | SOCl₂ or PCl₅ | Acyl chloride |
+
+### From Nitriles
+
+| Reaction | Reagent/Conditions | Product |
+|----------|-------------------|---------|
+| Hydrolysis | Dilute acid or alkali, reflux | Carboxylic acid |
+| Reduction | LiAlH₄ or H₂/Ni | Primary amine |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. Multi-Step Synthesis Planning",
+                content: `## Building Complex Molecules
+
+Most synthetic targets require multiple reaction steps. Effective planning minimises the number of steps and maximises overall yield.
+
+### Example 1: Ethanol to Ethanoic Acid
+
+**Target:** CH₃COOH from CH₃CH₂OH
+
+**One-step route:**
+CH₃CH₂OH + [O] → CH₃COOH
+Reagent: K₂Cr₂O₇/H₂SO₄, reflux
+
+### Example 2: Ethene to Ethanenitrile
+
+**Target:** CH₃CN from CH₂=CH₂
+
+**Two-step route:**
+Step 1: CH₂=CH₂ + HBr → CH₃CH₂Br
+(Add HBr, room temperature)
+
+Step 2: CH₃CH₂Br + CN⁻ → CH₃CH₂CN + Br⁻
+(Heat with KCN in ethanol)
+
+Wait - this gives propanenitrile (3 carbons), not ethanenitrile (2 carbons)!
+
+**Corrected route for ethanenitrile:**
+Step 1: CH₂=CH₂ + HBr → CH₃CH₂Br
+Step 2: Use CH₃Br as starting material: CH₃Br + KCN → CH₃CN
+
+### Example 3: Propan-1-ol to Propylamine
+
+**Target:** CH₃CH₂CH₂NH₂ from CH₃CH₂CH₂OH
+
+**Route:**
+Step 1: CH₃CH₂CH₂OH + PCl₅ → CH₃CH₂CH₂Cl + POCl₃ + HCl
+(React with PCl₅)
+
+Step 2: CH₃CH₂CH₂Cl + 2NH₃ → CH₃CH₂CH₂NH₂ + NH₄Cl
+(Heat with excess ammonia in ethanol)
+
+### Example 4: Butane to Butanoic Acid
+
+**Target:** CH₃CH₂CH₂COOH from CH₃CH₂CH₂CH₃
+
+**Route:**
+Step 1: Free radical substitution
+CH₃CH₂CH₂CH₃ + Br₂ → CH₃CH₂CHBrCH₃ (and other isomers)
+(UV light - note: gives mixture)
+
+Step 2: Nucleophilic substitution
+CH₃CH₂CHBrCH₃ + OH⁻ → CH₃CH₂CH(OH)CH₃ (butan-2-ol)
+
+Step 3: Cannot easily oxidise 2° alcohol to carboxylic acid!
+
+**Better route using 1-bromobutane:**
+Step 1: CH₃CH₂CH₂CH₃ + Br₂ → CH₃CH₂CH₂CH₂Br (UV light)
+Step 2: CH₃CH₂CH₂CH₂Br + KCN → CH₃CH₂CH₂CH₂CN (heating)
+Step 3: CH₃CH₂CH₂CH₂CN + 2H₂O → CH₃CH₂CH₂CH₂COOH + NH₃ (acid hydrolysis)
+
+Note: This gives pentanoic acid (5 carbons). Nitrile route adds 1 carbon!`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. Retrosynthetic Analysis",
+                content: `## Working Backwards
+
+**Retrosynthetic analysis** is a technique where you work backwards from the target molecule to identify simpler precursors.
+
+### The Process
+
+1. Identify the target molecule and its functional groups
+2. Ask: "What reaction could produce this?"
+3. Identify the precursor needed for that reaction
+4. Repeat until you reach available starting materials
+5. Write the synthesis in the forward direction
+
+### Notation
+
+**⇒** (retrosynthetic arrow): means "can be made from"
+This is NOT a reaction arrow - it shows disconnection logic
+
+### Example: Retrosynthesis of Propan-2-ol
+
+**Target:** CH₃CH(OH)CH₃
+
+**Analysis:**
+1. Target has -OH group on secondary carbon
+2. Could come from:
+   - Reduction of ketone (propanone)
+   - Hydration of alkene (propene)
+   - Substitution of halogenoalkane (2-bromopropane)
+
+**Route 1: From propanone**
+CH₃COCH₃ ⇒ CH₃CH(OH)CH₃
+(Reduce with NaBH₄)
+
+**Route 2: From propene**
+CH₃CH=CH₂ ⇒ CH₃CH(OH)CH₃
+(Add H₂O, H₃PO₄ catalyst - Markovnikov addition)
+
+### Strategic Disconnections
+
+**Key bonds to break:**
+1. C-O bonds (to find alcohol/carbonyl precursors)
+2. C-N bonds (to find amine precursors)
+3. C-C bonds (to find ways to extend carbon chain)
+
+### Carbon Chain Extension
+
+To add carbons to a chain:
+
+**Using nitriles (+1 carbon):**
+R-Br + CN⁻ → R-CN → R-COOH (after hydrolysis)
+
+**Using Grignard reagents (+variable carbons):** (A2 level)
+RMgBr + R'CHO → R-CH(OH)-R'
+
+### Carbon Chain Shortening
+
+Less common, but possible:
+- Oxidative cleavage of diols
+- Decarboxylation reactions`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Reaction Conditions and Reagents",
+                content: `## Getting the Details Right
+
+In synthesis questions, you must specify correct reagents AND conditions.
+
+### Nucleophilic Substitution Summary
+
+| Starting Material | Nucleophile | Conditions | Product |
+|-------------------|-------------|------------|---------|
+| Halogenoalkane | OH⁻ | NaOH(aq), heat | Alcohol |
+| Halogenoalkane | CN⁻ | KCN in ethanol, heat | Nitrile |
+| Halogenoalkane | NH₃ | Excess NH₃, ethanol, heat, pressure | Amine |
+
+### Elimination vs Substitution
+
+| Condition | Reagent | Solvent | Favours |
+|-----------|---------|---------|---------|
+| Aqueous | NaOH | Water | Substitution (→ alcohol) |
+| Alcoholic | NaOH | Ethanol | Elimination (→ alkene) |
+
+### Oxidation Conditions
+
+| Starting Material | Oxidising Agent | Conditions | Product |
+|-------------------|-----------------|------------|---------|
+| 1° alcohol | K₂Cr₂O₇/H₂SO₄ | Distil | Aldehyde |
+| 1° alcohol | K₂Cr₂O₇/H₂SO₄ | Reflux | Carboxylic acid |
+| 2° alcohol | K₂Cr₂O₇/H₂SO₄ | Reflux | Ketone |
+| Aldehyde | K₂Cr₂O₇/H₂SO₄ | Warm | Carboxylic acid |
+| 3° alcohol | K₂Cr₂O₇/H₂SO₄ | Any | No reaction |
+
+### Reduction Conditions
+
+| Starting Material | Reducing Agent | Conditions | Product |
+|-------------------|----------------|------------|---------|
+| Aldehyde | NaBH₄ | In water/methanol | Primary alcohol |
+| Ketone | NaBH₄ | In water/methanol | Secondary alcohol |
+| Carboxylic acid | LiAlH₄ | Dry ether | Primary alcohol |
+| Nitrile | LiAlH₄ | Dry ether | Primary amine |
+
+### Heating Methods
+
+**Reflux:** Heat with condenser to prevent loss of volatile chemicals
+- Used for: oxidations, hydrolysis, substitutions
+
+**Distillation:** Heat and collect vapours to separate products
+- Used for: making aldehydes (remove before further oxidation)`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "6. Practical Considerations",
+                content: `## Real-World Synthesis
+
+### Percentage Yield
+
+**Theoretical yield:** Maximum amount of product calculated from stoichiometry
+
+**Actual yield:** Amount of product actually obtained
+
+**Percentage yield = (actual yield / theoretical yield) × 100%**
+
+### Why Yields Are Less Than 100%
+
+1. Incomplete reactions (equilibrium not reached)
+2. Side reactions forming by-products
+3. Losses during separation and purification
+4. Mechanical losses (transfer between containers)
+5. Impure starting materials
+
+### Multi-Step Yield Calculations
+
+For a synthesis with multiple steps:
+**Overall yield = yield₁ × yield₂ × yield₃ × ...**
+
+**Example:**
+3-step synthesis with 80%, 75%, 90% yields
+Overall yield = 0.80 × 0.75 × 0.90 = 0.54 = 54%
+
+### Atom Economy
+
+**Atom economy = (mass of desired product / total mass of reactants) × 100%**
+
+Higher atom economy is more sustainable:
+- Addition reactions have high atom economy (often 100%)
+- Substitution reactions have lower atom economy (leaving group is waste)
+
+### Purification Techniques
+
+| Technique | Used For |
+|-----------|----------|
+| Distillation | Separating liquids with different boiling points |
+| Recrystallisation | Purifying solids |
+| Solvent extraction | Separating using immiscible solvents |
+| Chromatography | Complex mixtures, checking purity |
+| Drying | Removing water (Na₂SO₄, MgSO₄) |
+
+### Safety Considerations
+
+- Many organic reagents are flammable
+- Some are toxic or carcinogenic
+- Use fume cupboards for volatile substances
+- Wear appropriate PPE
+- Handle concentrated acids carefully`,
+                diagrams: [],
+                subsections: []
+            }
+        ],
+        key_points: [
+            "Organic synthesis converts starting materials to target molecules via functional group interconversions",
+            "Know key reactions for each functional group with reagents AND conditions",
+            "Aqueous NaOH with halogenoalkanes → substitution (alcohol); alcoholic NaOH → elimination (alkene)",
+            "To make aldehyde from 1° alcohol: distil immediately; for carboxylic acid: reflux",
+            "Nitrile route adds 1 carbon to chain: R-Br → R-CN → R-COOH",
+            "Retrosynthetic analysis works backwards from target to identify precursors",
+            "Multi-step yields multiply: 80% × 75% × 90% = 54% overall",
+            "Atom economy measures efficiency: (desired product mass / total reactant mass) × 100%",
+            "Addition reactions have high atom economy; substitution has lower"
+        ],
+        exam_tips: [
+            "Always state reagents AND conditions - both are required for full marks",
+            "Know the difference between reflux (keep reactants) and distillation (separate product)",
+            "For elimination, specify 'alcoholic NaOH' or 'NaOH in ethanol and heat'",
+            "Memorise oxidation products: 1° alcohol → aldehyde → carboxylic acid; 2° → ketone",
+            "3° alcohols CANNOT be oxidised (no H on carbon bearing OH)",
+            "Nitrile hydrolysis gives COOH: R-CN + 2H₂O + HCl → R-COOH + NH₄Cl",
+            "When planning routes, consider adding or losing carbons",
+            "Show multi-step synthesis with separate equations for each step",
+            "Calculate percentage yields and atom economies accurately",
+            "Draw reaction schemes with arrows showing transformations"
+        ]
+    },
+    "Analytical Techniques": {
+        topic: "Analytical Techniques",
+        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Analytical_Techniques.mp4",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/remaining%20/Audios/Chemical_Detective_Work_Mass_Spec_NMR.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvcmVtYWluaW5nIC9BdWRpb3MvQ2hlbWljYWxfRGV0ZWN0aXZlX1dvcmtfTWFzc19TcGVjX05NUi5tNGEiLCJpYXQiOjE3NjgwNjA4NTQsImV4cCI6NTI2ODU1Njg1NH0.N7kcSYxs5MQoDFBnZeHRSDBRfKHut7c8MUVAG5Nb49c",
+        subject: "A Level Chemistry",
+        summary: "Analytical techniques are essential tools for determining the structure and identity of organic compounds. This comprehensive topic covers mass spectrometry (molecular mass and fragmentation), infrared spectroscopy (functional group identification), and proton NMR spectroscopy (carbon environment determination). Understanding how to interpret spectra is crucial for structure determination problems.",
+        sections: [
+            {
+                title: "1. Introduction to Spectroscopy",
+                content: `## Why Use Spectroscopy?
+
+Spectroscopic techniques allow chemists to determine the structure of unknown compounds by analysing how they interact with electromagnetic radiation or ionising particles.
+
+### Overview of Techniques
+
+| Technique | What It Measures | Information Provided |
+|-----------|-----------------|---------------------|
+| Mass Spectrometry (MS) | Mass-to-charge ratio (m/z) | Molecular mass, fragmentation pattern |
+| Infrared Spectroscopy (IR) | Absorption of IR radiation | Functional groups present |
+| ¹H NMR Spectroscopy | Proton environments | Number and type of H environments |
+| ¹³C NMR Spectroscopy | Carbon environments | Number and type of C environments |
+
+### The Electromagnetic Spectrum
+
+| Region | Energy | Effect on Molecules |
+|--------|--------|---------------------|
+| Radio waves (low energy) | Low | NMR - nuclear spin transitions |
+| Infrared | Medium | Vibrational transitions (bond stretching/bending) |
+| Visible/UV | Higher | Electronic transitions |
+| Mass spectrometry | High (ionisation) | Fragmentation of molecules |
+
+### Combining Techniques
+
+No single technique gives complete structural information. Chemists use multiple techniques together:
+1. **MS** - determine molecular mass
+2. **IR** - identify functional groups
+3. **NMR** - determine carbon skeleton and H environments
+4. **Combustion analysis** - determine empirical formula`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. Mass Spectrometry",
+                content: `## Determining Molecular Mass and Structure
+
+Mass spectrometry measures the mass-to-charge ratio (m/z) of ions produced from a sample.
+
+### How It Works
+
+1. **Ionisation:** Sample is vaporised and bombarded with high-energy electrons
+2. **Fragmentation:** Molecular ion may break into smaller fragment ions
+3. **Acceleration:** Ions are accelerated by an electric field
+4. **Deflection:** Ions are deflected by a magnetic field
+5. **Detection:** Detector measures m/z values and relative abundance
+
+### The Mass Spectrum
+
+**Molecular ion peak (M⁺):**
+- Formed by loss of one electron: M → M⁺ + e⁻
+- m/z value = relative molecular mass (Mr)
+- Usually the peak with highest m/z (excluding isotope peaks)
+
+**Base peak:**
+- Most abundant ion (tallest peak)
+- Set to 100% relative abundance
+- Often a stable fragment ion
+
+**Fragment peaks:**
+- Caused by bonds breaking in the molecular ion
+- Each peak represents a fragment with a specific m/z
+- Loss of common fragments gives characteristic patterns
+
+### Common Fragment Losses
+
+| Mass Lost | Fragment Lost | Indicates |
+|-----------|---------------|-----------|
+| 15 | CH₃• | Methyl group |
+| 17 | OH• | Hydroxyl group |
+| 18 | H₂O | Alcohol (dehydration) |
+| 29 | CHO• or C₂H₅• | Aldehyde or ethyl group |
+| 43 | CH₃CO• | Acetyl/ethanoyl group |
+| 45 | OCH₂CH₃• or CHO₂• | Ethoxy or carboxyl |
+
+### Example: Mass Spectrum of Butanone (CH₃COCH₂CH₃)
+
+- Mr = 72 → M⁺ at m/z = 72
+- Loss of CH₃ (15): 72 - 15 = 57 (COCH₂CH₃⁺)
+- Loss of C₂H₅ (29): 72 - 29 = 43 (CH₃CO⁺) - often base peak
+- Acylium ion CH₃CO⁺ is particularly stable
+
+### M+1 and M+2 Peaks
+
+**M+1 Peak:**
+- Due to ¹³C isotope (1.1% natural abundance)
+- Height indicates number of carbon atoms
+
+**M+2 Peak:**
+- Due to ³⁷Cl (≈33% natural abundance) or ⁸¹Br (≈50%)
+- Characteristic pattern for chlorine/bromine compounds
+
+| Halogen | M : M+2 Ratio |
+|---------|---------------|
+| 1 Cl | 3 : 1 |
+| 2 Cl | 9 : 6 : 1 (M : M+2 : M+4) |
+| 1 Br | 1 : 1 |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. Infrared Spectroscopy",
+                content: `## Identifying Functional Groups
+
+Infrared spectroscopy measures the absorption of infrared radiation by molecules, causing bonds to vibrate.
+
+### How It Works
+
+1. IR radiation is passed through the sample
+2. Certain frequencies are absorbed
+3. Absorbed frequencies correspond to bond vibrations
+4. A spectrum shows % transmittance vs wavenumber (cm⁻¹)
+
+**Wavenumber:** The number of waves per cm (unit: cm⁻¹)
+Lower wavenumber = lower energy = longer wavelength
+
+### Key Absorption Ranges
+
+| Bond | Functional Group | Wavenumber (cm⁻¹) | Appearance |
+|------|------------------|-------------------|------------|
+| O-H (alcohol) | Alcohol | 3230-3550 | Broad |
+| O-H (carboxylic acid) | Carboxylic acid | 2500-3300 | Very broad |
+| N-H | Amine/amide | 3300-3500 | Medium, may be 2 peaks |
+| C-H | Alkane, alkene, arene | 2850-3100 | Medium to strong |
+| C≡N | Nitrile | 2100-2260 | Medium, sharp |
+| C=O | Aldehyde, ketone, acid, ester, amide | 1680-1750 | Strong, sharp |
+| C=C | Alkene | 1620-1680 | Medium |
+| C-O | Alcohol, ester, ether | 1000-1300 | Strong |
+
+### Key Points for Identification
+
+**Alcohols:**
+- Broad O-H absorption around 3200-3500 cm⁻¹
+- Also C-O absorption around 1000-1300 cm⁻¹
+
+**Carboxylic Acids:**
+- Very broad O-H absorption from 2500-3300 cm⁻¹
+- Strong C=O absorption around 1710-1720 cm⁻¹
+
+**Aldehydes and Ketones:**
+- Strong C=O absorption: 1680-1750 cm⁻¹
+- Aldehydes: C-H absorption around 2700-2850 cm⁻¹ (two peaks)
+
+**Esters:**
+- C=O absorption around 1735-1750 cm⁻¹
+- C-O absorption around 1000-1300 cm⁻¹
+
+**Amines and Amides:**
+- N-H absorption around 3300-3500 cm⁻¹
+- Amides also have C=O around 1640-1680 cm⁻¹
+
+### The Fingerprint Region (below 1500 cm⁻¹)
+
+- Complex pattern unique to each molecule
+- Used to match against reference spectra
+- Not usually analysed in detail at A-Level`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. Proton NMR Spectroscopy (¹H NMR)",
+                content: `## Determining Hydrogen Environments
+
+Nuclear Magnetic Resonance (NMR) spectroscopy exploits the magnetic properties of atomic nuclei to determine molecular structure.
+
+### How It Works
+
+1. Sample placed in strong magnetic field
+2. Radio frequency radiation is applied
+3. Nuclei absorb energy and "flip" spin state (resonate)
+4. Different chemical environments absorb at different frequencies
+5. Spectrum shows chemical shift (δ) vs relative intensity
+
+### Key Features of ¹H NMR Spectrum
+
+**1. Number of Peaks (Signals)**
+- Each peak = chemically different hydrogen environment
+- Equivalent hydrogens give the same signal
+
+**2. Chemical Shift (δ, ppm)**
+- Position of peak relative to reference (TMS = 0 ppm)
+- Indicates chemical environment
+- Electronegative groups cause downfield shift (higher δ)
+
+**3. Integration (Peak Area)**
+- Area under peak proportional to number of hydrogen atoms
+- Gives ratio of H atoms in different environments
+
+**4. Splitting Pattern (Spin-Spin Coupling)**
+- Peaks may be split into multiplets
+- Caused by adjacent non-equivalent hydrogens
+- n+1 rule: n equivalent neighbours cause n+1 peaks
+
+### Chemical Shift Ranges
+
+| Environment | Chemical Shift (δ ppm) |
+|-------------|------------------------|
+| R-CH₃ (alkyl) | 0.7-1.6 |
+| R-CH₂-R | 1.2-1.8 |
+| R₃C-H | 1.6-2.0 |
+| R-CH₂-Cl/Br | 3.0-4.0 |
+| R-O-CH₂/CH₃ | 3.3-4.3 |
+| R-CHO | 9.0-10.0 |
+| R-COOH | 10.0-12.0 |
+| Ar-H (benzene ring) | 6.5-8.0 |
+| R₂C=CH₂ | 4.5-6.0 |
+
+### TMS as Reference
+
+**Tetramethylsilane (TMS): (CH₃)₄Si**
+- Produces single peak at δ = 0
+- All 12 hydrogen atoms are equivalent
+- Used as internal standard
+
+### Splitting Patterns (n+1 Rule)
+
+| Number of Adjacent H | Splitting Pattern | Ratio |
+|---------------------|-------------------|-------|
+| 0 | Singlet (s) | 1 |
+| 1 | Doublet (d) | 1:1 |
+| 2 | Triplet (t) | 1:2:1 |
+| 3 | Quartet (q) | 1:3:3:1 |
+| 4 | Quintet | 1:4:6:4:1 |
+
+### Example: Ethanol CH₃CH₂OH
+
+| Environment | δ (ppm) | Integration | Splitting |
+|-------------|---------|-------------|-----------|
+| CH₃- | ~1.2 | 3H | Triplet (2 neighbours) |
+| -CH₂- | ~3.7 | 2H | Quartet (3 neighbours) |
+| -OH | ~2-5 | 1H | Usually singlet (exchanges) |
+
+Note: The -OH peak often appears as a singlet because hydrogen bonding and exchange makes coupling with adjacent H atoms average out.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Carbon-13 NMR Spectroscopy (¹³C NMR)",
+                content: `## Determining Carbon Environments
+
+Carbon-13 NMR provides information about the carbon skeleton of a molecule.
+
+### Key Features
+
+**Number of Peaks:**
+- Each peak = chemically different carbon environment
+- Equivalent carbons give the same signal
+
+**Chemical Shift:**
+- Position indicates carbon environment
+- Range: 0-220 ppm (wider than ¹H NMR)
+- Electronegative groups cause downfield shift
+
+**No Integration or Splitting:**
+- Peak heights not quantitative (unlike ¹H NMR)
+- Usually shown as simple lines (decoupled spectrum)
+
+### Chemical Shift Ranges (¹³C NMR)
+
+| Environment | Chemical Shift (δ ppm) |
+|-------------|------------------------|
+| R-CH₃ | 5-40 |
+| R-CH₂-R | 20-50 |
+| R₃C-H | 25-55 |
+| C-Cl, C-Br | 35-80 |
+| C-O (alcohols, ethers) | 50-90 |
+| C=C (alkenes) | 100-150 |
+| Aromatic C | 110-165 |
+| C≡N | 110-125 |
+| C=O (aldehydes, ketones) | 190-220 |
+| C=O (acids, esters) | 160-185 |
+
+### Example: Butan-2-one (CH₃COCH₂CH₃)
+
+The molecule has 4 carbons but only 3 different environments → 3 peaks
+
+| Carbon | Environment | δ (ppm) |
+|--------|-------------|---------|
+| CH₃CO- | Adjacent to C=O | ~25-30 |
+| -COCH₂- | Adjacent to C=O | ~35-40 |
+| C=O | Carbonyl carbon | ~205-210 |
+| -CH₂CH₃ | CH₃ of ethyl group | ~5-10 |
+
+Wait - that's 4 different carbons. Let me reconsider:
+- CH₃-CO: ~29 ppm
+- C=O: ~206 ppm  
+- -CH₂-: ~36 ppm
+- -CH₃ (ethyl): ~8 ppm
+
+So 4 peaks for 4 different carbon environments.
+
+### DEPT (Distortionless Enhancement by Polarisation Transfer)
+
+DEPT distinguishes types of carbons:
+- DEPT-135: CH₃ and CH point up; CH₂ points down
+- Quaternary carbons (with no H) don't appear`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "6. Combining Techniques for Structure Determination",
+                content: `## Solving Structure Problems
+
+When asked to determine the structure of an unknown compound, use data from multiple techniques systematically.
+
+### Step-by-Step Approach
+
+**Step 1: Determine Molecular Formula**
+- Use mass spectrometry (M⁺ peak gives Mr)
+- Use combustion analysis for empirical formula
+- Calculate degree of unsaturation
+
+**Degree of Unsaturation (IHD):**
+IHD = (2C + 2 + N - H - X) / 2
+
+Where C, N, H, X are numbers of those atoms.
+- IHD = 1: one double bond OR one ring
+- IHD = 4: often indicates benzene ring
+
+**Step 2: Identify Functional Groups**
+- Use IR spectroscopy
+- Look for characteristic absorptions
+
+**Step 3: Analyse Carbon Skeleton**
+- Use ¹³C NMR: how many different carbon environments?
+- Use ¹H NMR: how many different hydrogen environments?
+
+**Step 4: Determine Connectivity**
+- Use ¹H NMR: integration gives H ratios
+- Use splitting patterns to identify neighbours
+- Consider chemical shifts for each environment
+
+**Step 5: Propose and Verify Structure**
+- Draw possible structures
+- Check all data is consistent
+- Use fragmentation pattern in MS to confirm
+
+### Worked Example
+
+**Unknown compound: C₄H₈O₂**
+
+**Data:**
+- Mr = 88 (MS shows M⁺ at 88)
+- IR: Strong absorption at 1740 cm⁻¹
+- ¹H NMR: 
+  - δ 1.1 (3H, triplet)
+  - δ 2.0 (3H, singlet)
+  - δ 4.1 (2H, quartet)
+
+**Analysis:**
+1. IHD = (2×4 + 2 - 8) / 2 = 1 → one double bond or ring
+2. IR at 1740 cm⁻¹ = C=O (ester range)
+3. ¹H NMR: 3H triplet + 2H quartet = ethyl group (-CH₂CH₃)
+4. 3H singlet at δ 2.0 = CH₃ next to C=O
+5. 2H quartet at δ 4.1 = -OCH₂- (next to oxygen)
+
+**Structure: Ethyl ethanoate (CH₃COOCH₂CH₃)**`,
+                diagrams: [],
+                subsections: []
+            }
+        ],
+        key_points: [
+            "Mass spectrometry: M⁺ peak gives molecular mass; fragmentation reveals structure",
+            "Common fragment losses: CH₃ (15), OH (17), H₂O (18), CHO (29), CH₃CO (43)",
+            "M+2 peaks indicate Cl (3:1 ratio with M⁺) or Br (1:1 ratio)",
+            "IR spectroscopy: broad O-H (alcohol 3200-3550; acid 2500-3300); strong C=O (1680-1750)",
+            "IR fingerprint region (<1500 cm⁻¹) is unique to each compound",
+            "¹H NMR: number of peaks = number of H environments; integration = H atom ratio",
+            "¹H NMR chemical shift: TMS = 0 ppm; R-CHO ~9-10 ppm; Ar-H ~6.5-8 ppm",
+            "Splitting (n+1 rule): n adjacent H gives n+1 peaks (doublet, triplet, quartet)",
+            "¹³C NMR: number of peaks = number of C environments; no splitting in decoupled spectra",
+            "Combine all techniques: MS for Mr, IR for functional groups, NMR for structure"
+        ],
+        exam_tips: [
+            "For MS: identify M⁺ peak first, then work out fragments by subtraction",
+            "Remember Cl and Br isotope patterns for halogenated compounds",
+            "In IR: distinguish alcohol OH (broad, 3200-3550) from carboxylic acid OH (very broad, 2500-3300)",
+            "Both acids and esters have C=O; acids also have very broad OH",
+            "In ¹H NMR: count peaks for environments, integrate for ratio, use splitting for neighbours",
+            "Triplet next to quartet usually indicates -CH₂CH₃ group",
+            "Singlet often = CH₃ group with no neighbouring H",
+            "Always check your structure is consistent with ALL the data",
+            "Calculate IHD to predict rings/double bonds before analysing spectra",
+            "In combined problems, IR usually identifies functional group first"
+        ]
+    },
+    "Chemical Energetics (Advanced)": {
+        topic: "Chemical Energetics (Advanced)",
+        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Lattice_Energy.mp4",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/remaining%20/Audios/Enthalpy_Entropy_and_Activation_Energy%20(1).m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvcmVtYWluaW5nIC9BdWRpb3MvRW50aGFscHlfRW50cm9weV9hbmRfQWN0aXZhdGlvbl9FbmVyZ3kgKDEpLm00YSIsImlhdCI6MTc2ODA2MDg5NywiZXhwIjo1MjY4NTU2ODk3fQ.I0QF2NQrh1eFJNOrBnU-HYltuNHoRSw6Z3HmcXvzsCg",
+        subject: "A Level Chemistry",
+        summary: "Advanced Chemical Energetics extends AS-level thermochemistry to include lattice enthalpy, Born-Haber cycles, enthalpy of solution and hydration, entropy and its changes, and Gibbs free energy. This topic provides a deeper understanding of why reactions occur spontaneously and the energy changes in ionic compound formation.",
+        sections: [
+            {
+                title: "1. Lattice Enthalpy",
+                content: `## The Energy of Ionic Crystal Formation
+
+**Lattice enthalpy of formation (ΔH°LE):** The enthalpy change when one mole of an ionic compound is formed from its gaseous ions under standard conditions.
+
+Na⁺(g) + Cl⁻(g) → NaCl(s)     ΔH°LE = -787 kJ mol⁻¹
+
+**Note:** This is always exothermic (negative) because forming a lattice releases energy.
+
+**Alternative Definition (Lattice Dissociation Enthalpy):**
+The enthalpy change when one mole of an ionic compound is completely dissociated into its gaseous ions.
+
+NaCl(s) → Na⁺(g) + Cl⁻(g)     ΔH = +787 kJ mol⁻¹
+
+This is always endothermic (positive) and equal in magnitude but opposite in sign.
+
+### Factors Affecting Lattice Enthalpy
+
+| Factor | Effect |
+|--------|--------|
+| Ionic charge | Higher charge → stronger attraction → more exothermic LE |
+| Ionic radius | Smaller ions → closer together → stronger attraction → more exothermic LE |
+
+**Example Comparison:**
+
+| Compound | Lattice Enthalpy (kJ mol⁻¹) |
+|----------|----------------------------|
+| NaCl | -787 |
+| NaBr | -747 |
+| MgO | -3850 |
+| MgCl₂ | -2523 |
+
+**Explanations:**
+- NaCl vs NaBr: Cl⁻ is smaller than Br⁻, so ions are closer in NaCl
+- NaCl vs MgO: Mg²⁺ and O²⁻ have double the charge; O²⁻ is smaller than Cl⁻
+- MgO has the most exothermic lattice enthalpy due to small, highly charged ions`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. Born-Haber Cycles",
+                content: `## Calculating Lattice Enthalpy
+
+A **Born-Haber cycle** is an application of Hess's Law used to calculate lattice enthalpies indirectly from measurable quantities.
+
+### Enthalpy Terms in Born-Haber Cycles
+
+| Term | Symbol | Definition |
+|------|--------|------------|
+| Enthalpy of formation | ΔH°f | Formation of compound from elements in standard states |
+| Enthalpy of atomisation | ΔH°at | Formation of 1 mol gaseous atoms from element in standard state |
+| First ionisation energy | IE₁ | Removal of 1st electron from gaseous atom |
+| Second ionisation energy | IE₂ | Removal of 2nd electron from gaseous M⁺ ion |
+| First electron affinity | EA₁ | Addition of 1st electron to gaseous atom |
+| Second electron affinity | EA₂ | Addition of 2nd electron to gaseous X⁻ ion |
+| Lattice enthalpy | ΔH°LE | Formation of ionic lattice from gaseous ions |
+
+### Constructing a Born-Haber Cycle for NaCl
+
+**Route 1 (Direct):**
+Na(s) + ½Cl₂(g) → NaCl(s)     ΔH°f = -411 kJ mol⁻¹
+
+**Route 2 (Indirect via gaseous ions):**
+1. Na(s) → Na(g)     ΔH°at = +107 kJ mol⁻¹
+2. ½Cl₂(g) → Cl(g)     ΔH°at = +122 kJ mol⁻¹
+3. Na(g) → Na⁺(g) + e⁻     IE₁ = +496 kJ mol⁻¹
+4. Cl(g) + e⁻ → Cl⁻(g)     EA₁ = -349 kJ mol⁻¹
+5. Na⁺(g) + Cl⁻(g) → NaCl(s)     ΔH°LE = ?
+
+### Applying Hess's Law
+
+ΔH°f = ΔH°at(Na) + ΔH°at(Cl) + IE₁ + EA₁ + ΔH°LE
+
+-411 = +107 + 122 + 496 + (-349) + ΔH°LE
+-411 = +376 + ΔH°LE
+ΔH°LE = -787 kJ mol⁻¹
+
+### Born-Haber Cycle for MgO
+
+More complex due to Mg²⁺ and O²⁻:
+- Two ionisation energies for Mg
+- Two electron affinities for O (EA₂ is endothermic!)
+
+Mg(s) → Mg(g)     ΔH°at
+Mg(g) → Mg⁺(g)     IE₁
+Mg⁺(g) → Mg²⁺(g)     IE₂
+½O₂(g) → O(g)     ΔH°at
+O(g) + e⁻ → O⁻(g)     EA₁ (exothermic)
+O⁻(g) + e⁻ → O²⁻(g)     EA₂ (endothermic, ~+798 kJ mol⁻¹)
+
+Despite EA₂ being endothermic, oxide formation is still feasible because the large exothermic lattice enthalpy compensates.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. Enthalpy of Solution and Hydration",
+                content: `## Dissolving Ionic Compounds
+
+### Enthalpy of Solution (ΔH°sol)
+
+**Definition:** The enthalpy change when one mole of a solute dissolves completely in a solvent to form a solution of infinite dilution.
+
+NaCl(s) + aq → Na⁺(aq) + Cl⁻(aq)     ΔH°sol = +4 kJ mol⁻¹
+
+### Enthalpy of Hydration (ΔH°hyd)
+
+**Definition:** The enthalpy change when one mole of gaseous ions is dissolved in water to form an infinitely dilute solution.
+
+Na⁺(g) + aq → Na⁺(aq)     ΔH°hyd = -406 kJ mol⁻¹
+Cl⁻(g) + aq → Cl⁻(aq)     ΔH°hyd = -363 kJ mol⁻¹
+
+Hydration enthalpy is always exothermic because ion-dipole bonds form between ions and water molecules.
+
+### Relationship Between These Enthalpies
+
+**ΔH°sol = -ΔH°LE (dissociation) + ΔH°hyd(cation) + ΔH°hyd(anion)**
+
+Or using lattice formation enthalpy:
+**ΔH°sol = ΔH°LE + Σ(ΔH°hyd)**
+
+### Energy Cycle for Dissolution
+
+**Step 1:** Break lattice (endothermic)
+MX(s) → M⁺(g) + X⁻(g)     -ΔH°LE(formation) = +ΔH°LE(dissociation)
+
+**Step 2:** Hydrate ions (exothermic)
+M⁺(g) + aq → M⁺(aq)     ΔH°hyd(cation)
+X⁻(g) + aq → X⁻(aq)     ΔH°hyd(anion)
+
+### Factors Affecting Hydration Enthalpy
+
+| Factor | Effect |
+|--------|--------|
+| Ionic charge | Higher charge → stronger ion-dipole attraction → more exothermic |
+| Ionic radius | Smaller ions → closer approach of water → more exothermic |
+
+**Example:** Mg²⁺ has more exothermic ΔH°hyd than Na⁺ (higher charge, smaller radius)
+
+### Why Some Salts Dissolve Endothermically
+
+If |ΔH°LE(dissociation)| > |Σ(ΔH°hyd)|, then ΔH°sol is positive (endothermic).
+
+**Example:** NaCl
+- Lattice dissociation: +787 kJ mol⁻¹
+- Hydration of Na⁺: -406 kJ mol⁻¹
+- Hydration of Cl⁻: -363 kJ mol⁻¹
+- Total hydration: -769 kJ mol⁻¹
+- ΔH°sol = +787 + (-769) = +18 kJ mol⁻¹
+
+Despite being endothermic, NaCl still dissolves because of entropy increase (see next section).`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. Entropy",
+                content: `## The Measure of Disorder
+
+**Entropy (S)** is a measure of the disorder or randomness of a system. The greater the disorder, the higher the entropy.
+
+### Units
+
+Entropy has units of **J K⁻¹ mol⁻¹** (note: joules, not kilojoules)
+
+### Standard Molar Entropy (S°)
+
+The entropy of one mole of a substance under standard conditions.
+
+**Key values:**
+- Perfectly ordered crystal at 0 K: S = 0 (Third Law of Thermodynamics)
+- All substances have positive entropy at temperatures above 0 K
+
+### Factors Affecting Entropy
+
+| Factor | Effect on Entropy |
+|--------|-------------------|
+| Physical state | Gas > Liquid > Solid |
+| Temperature | Higher T → higher S |
+| Number of particles | More particles → higher S |
+| Molecular complexity | More atoms → more ways to arrange energy → higher S |
+| Mixing | Mixed substances have higher S than pure substances |
+
+### Entropy Changes in Reactions (ΔS°)
+
+**ΔS°system = ΣS°(products) - ΣS°(reactants)**
+
+**Positive ΔS (increase in disorder):**
+- Solids → liquids → gases
+- Fewer moles → more moles of gas
+- Dissolution of solids in liquids
+
+**Negative ΔS (decrease in disorder):**
+- Gases → liquids → solids
+- More moles → fewer moles of gas
+- Precipitation reactions
+
+### Examples
+
+**CaCO₃(s) → CaO(s) + CO₂(g)**
+ΔS° = positive (solid produces a gas)
+
+**N₂(g) + 3H₂(g) → 2NH₃(g)**
+ΔS° = negative (4 mol gas → 2 mol gas)
+
+**NaCl(s) → Na⁺(aq) + Cl⁻(aq)**
+ΔS° = positive (dissolution increases disorder)`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Gibbs Free Energy",
+                content: `## Predicting Spontaneous Reactions
+
+**Gibbs Free Energy (G)** combines enthalpy and entropy to determine whether a reaction is thermodynamically feasible (spontaneous).
+
+### The Gibbs Equation
+
+**ΔG = ΔH - TΔS**
+
+Where:
+- ΔG = Gibbs free energy change (kJ mol⁻¹)
+- ΔH = enthalpy change (kJ mol⁻¹)
+- T = temperature (K)
+- ΔS = entropy change (kJ K⁻¹ mol⁻¹) - convert from J!
+
+### Spontaneity Criteria
+
+| ΔG Value | Reaction Feasibility |
+|----------|---------------------|
+| ΔG < 0 | Spontaneous (thermodynamically feasible) |
+| ΔG = 0 | At equilibrium |
+| ΔG > 0 | Non-spontaneous (not feasible) |
+
+### Effect of Temperature
+
+| ΔH | ΔS | ΔG | Spontaneity |
+|----|----|----|-------------|
+| - (exo) | + | Always - | Always spontaneous |
+| + (endo) | - | Always + | Never spontaneous |
+| - (exo) | - | Depends on T | Spontaneous at LOW T |
+| + (endo) | + | Depends on T | Spontaneous at HIGH T |
+
+### Worked Example
+
+**Thermal decomposition of CaCO₃:**
+CaCO₃(s) → CaO(s) + CO₂(g)
+
+Given: ΔH° = +178 kJ mol⁻¹, ΔS° = +165 J K⁻¹ mol⁻¹
+
+**At 298 K:**
+ΔG = +178 - (298 × 0.165) = +178 - 49.2 = **+128.8 kJ mol⁻¹**
+Not spontaneous at room temperature.
+
+**At what temperature does it become spontaneous?**
+When ΔG = 0: 0 = ΔH - TΔS
+T = ΔH/ΔS = 178/0.165 = **1079 K (806°C)**
+
+Above this temperature, decomposition is spontaneous.
+
+### Relationship to Equilibrium Constant
+
+**ΔG° = -RT ln K**
+
+Where R = 8.314 J K⁻¹ mol⁻¹
+
+If ΔG° < 0, K > 1 (products favoured)
+If ΔG° > 0, K < 1 (reactants favoured)`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "6. Applying Gibbs Free Energy",
+                content: `## Understanding Why Reactions Happen
+
+### Entropy-Driven Reactions
+
+Some endothermic reactions occur because the entropy increase is large enough to overcome the positive ΔH.
+
+**Example: Dissolution of NH₄NO₃**
+NH₄NO₃(s) + aq → NH₄⁺(aq) + NO₃⁻(aq)
+
+ΔH°sol = +26 kJ mol⁻¹ (endothermic - feels cold)
+ΔS° = +108 J K⁻¹ mol⁻¹
+
+At 298 K:
+ΔG = +26 - (298 × 0.108) = +26 - 32.2 = **-6.2 kJ mol⁻¹**
+
+The reaction is spontaneous despite being endothermic because TΔS > ΔH.
+
+### Enthalpy-Driven Reactions
+
+Some reactions with negative ΔS occur because ΔH is very exothermic.
+
+**Example: Combustion reactions**
+Generally have negative ΔS (gases combine to form fewer molecules of products), but ΔH is so negative that ΔG is still negative.
+
+### The Kelvin Temperature
+
+Always use temperature in Kelvin for Gibbs calculations:
+T(K) = T(°C) + 273
+
+### Common Mistakes
+
+| Mistake | Correction |
+|---------|------------|
+| Using ΔS in J without converting | Divide ΔS by 1000 to get kJ K⁻¹ mol⁻¹ |
+| Using °C for temperature | Convert to Kelvin |
+| Confusing spontaneous with fast | Spontaneous means feasible, not fast |
+| Forgetting -TΔS means high T helps if ΔS is positive | Check signs carefully |
+
+### Limitations
+
+**ΔG predicts thermodynamic feasibility, NOT rate:**
+- A reaction may be spontaneous (ΔG < 0) but occur too slowly to observe
+- Activation energy barriers can prevent spontaneous reactions
+- Example: Diamond → graphite has ΔG < 0 but doesn't occur at room temperature
+
+**Standard conditions assumed:**
+- ΔG° values are for standard conditions
+- Actual ΔG depends on concentrations/pressures`,
+                diagrams: [],
+                subsections: []
+            }
+        ],
+        key_points: [
+            "Lattice enthalpy of formation: energy released when gaseous ions form ionic lattice (always negative)",
+            "Higher ionic charge and smaller ionic radius → more exothermic lattice enthalpy",
+            "Born-Haber cycle: uses Hess's Law with atomisation, ionisation, electron affinity, and lattice enthalpy",
+            "EA₂ for O²⁻ is endothermic (+798 kJ mol⁻¹) but large lattice enthalpy compensates",
+            "ΔH°sol = ΔH°LE(dissociation) + ΣΔH°hyd; can be positive or negative",
+            "Hydration enthalpy always exothermic; more exothermic for smaller, higher charged ions",
+            "Entropy (S): measure of disorder; units J K⁻¹ mol⁻¹; gases > liquids > solids",
+            "ΔS°system = ΣS°(products) - ΣS°(reactants); positive when disorder increases",
+            "Gibbs free energy: ΔG = ΔH - TΔS; spontaneous if ΔG < 0",
+            "Temperature effect: high T favours reactions with positive ΔS",
+            "At equilibrium ΔG = 0; solve for T = ΔH/ΔS to find transition temperature",
+            "ΔG predicts feasibility not rate; activation energy determines rate"
+        ],
+        exam_tips: [
+            "In Born-Haber cycles, draw the cycle clearly with all steps labelled",
+            "Remember to halve atomisation enthalpy for diatomic elements like Cl₂",
+            "For MgO, include TWO ionisation energies and TWO electron affinities",
+            "When calculating ΔH°sol, keep track of signs very carefully",
+            "Convert ΔS from J K⁻¹ mol⁻¹ to kJ K⁻¹ mol⁻¹ before using in ΔG = ΔH - TΔS",
+            "Always use temperature in Kelvin for Gibbs calculations",
+            "Explain why endothermic dissolution occurs using entropy",
+            "Find transition temperature by setting ΔG = 0 and solving T = ΔH/ΔS",
+            "State that spontaneous doesn't mean fast - distinguish thermodynamics from kinetics",
+            "For comparison questions, link ionic charge and radius to lattice enthalpy"
+        ]
+    },
+    "Chemistry of Transition Elements": {
+        topic: "Chemistry of Transition Elements",
+        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Transition_Elements.mp4",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/remaining%20/Audios/Transition_Metals_and_the_D-Block_Paradox.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvcmVtYWluaW5nIC9BdWRpb3MvVHJhbnNpdGlvbl9NZXRhbHNfYW5kX3RoZV9ELUJsb2NrX1BhcmFkb3gubTRhIiwiaWF0IjoxNzY4MDYwOTk1LCJleHAiOjUyNjg1NTY5OTV9.zs5uWflKQlsOm7WkwtYPmTJZPVUNaFYOwr3JZuflTjs",
+        subject: "A Level Chemistry",
+        summary: "Transition elements are d-block metals with distinctive properties including variable oxidation states, coloured compounds, catalytic activity, and the ability to form complex ions. This comprehensive topic covers electronic configurations, complex ion formation, ligand exchange, colour theory, and the catalytic behaviour of transition metals.",
+        sections: [
+            {
+                title: "1. Introduction to Transition Elements",
+                content: `## What are Transition Elements?
+
+**Definition:** A transition element is a d-block element that forms at least one ion with a partially filled d sub-shell.
+
+### The d-Block Elements
+
+The first row of d-block elements (Period 4):
+Sc, Ti, V, Cr, Mn, Fe, Co, Ni, Cu, Zn
+
+**Note:** Scandium (Sc) and Zinc (Zn) are NOT transition elements:
+- Sc³⁺ has configuration [Ar] - empty 3d
+- Zn²⁺ has configuration [Ar]3d¹⁰ - full 3d
+
+### Electronic Configurations
+
+The 4s orbital fills before 3d, but 3d is lower in energy when filled.
+
+| Element | Atomic Configuration | Common Ion | Ion Configuration |
+|---------|---------------------|------------|-------------------|
+| Ti | [Ar]3d²4s² | Ti⁴⁺ | [Ar] |
+| V | [Ar]3d³4s² | V³⁺ | [Ar]3d² |
+| Cr | [Ar]3d⁵4s¹ * | Cr³⁺ | [Ar]3d³ |
+| Mn | [Ar]3d⁵4s² | Mn²⁺ | [Ar]3d⁵ |
+| Fe | [Ar]3d⁶4s² | Fe²⁺, Fe³⁺ | [Ar]3d⁶, [Ar]3d⁵ |
+| Co | [Ar]3d⁷4s² | Co²⁺ | [Ar]3d⁷ |
+| Ni | [Ar]3d⁸4s² | Ni²⁺ | [Ar]3d⁸ |
+| Cu | [Ar]3d¹⁰4s¹ * | Cu²⁺ | [Ar]3d⁹ |
+| Zn | [Ar]3d¹⁰4s² | Zn²⁺ | [Ar]3d¹⁰ |
+
+*Cr and Cu have anomalous configurations - half-filled and fully-filled d orbitals are more stable.
+
+**Key Point:** When forming ions, electrons are lost from 4s before 3d.
+
+### Characteristic Properties of Transition Elements
+
+| Property | Explanation |
+|----------|-------------|
+| Variable oxidation states | 3d and 4s electrons close in energy |
+| Coloured compounds | d-d electronic transitions |
+| Catalytic activity | Variable oxidation states; provide surface for reactions |
+| Complex ion formation | Small, highly charged ions with available d orbitals |
+| Paramagnetism | Unpaired d electrons |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. Complex Ions",
+                content: `## Coordination Chemistry
+
+A **complex ion** consists of a central metal ion surrounded by ligands, bonded by dative (coordinate) covalent bonds.
+
+### Key Terms
+
+| Term | Definition |
+|------|------------|
+| Ligand | Species with a lone pair that donates to the metal ion |
+| Coordination number | Number of dative bonds from ligands to metal ion |
+| Coordinate bond | Covalent bond where both electrons come from one atom |
+
+### Common Ligands
+
+**Monodentate ligands** (1 dative bond):
+| Ligand | Formula | Charge |
+|--------|---------|--------|
+| Water | H₂O | 0 |
+| Ammonia | NH₃ | 0 |
+| Chloride | Cl⁻ | -1 |
+| Cyanide | CN⁻ | -1 |
+| Hydroxide | OH⁻ | -1 |
+| Thiocyanate | SCN⁻ | -1 |
+
+**Bidentate ligands** (2 dative bonds):
+| Ligand | Name | Abbreviation |
+|--------|------|--------------|
+| NH₂CH₂CH₂NH₂ | Ethylenediamine | en |
+| ⁻OOC-COO⁻ | Ethanedioate (oxalate) | ox |
+
+**Polydentate ligands** (multiple dative bonds):
+- **EDTA⁴⁻** (6 dative bonds) - hexadentate
+
+### Common Complex Ions
+
+| Complex | Coordination Number | Shape | Colour |
+|---------|---------------------|-------|--------|
+| [Cu(H₂O)₆]²⁺ | 6 | Octahedral | Blue |
+| [Cu(NH₃)₄(H₂O)₂]²⁺ | 6 | Octahedral | Deep blue |
+| [CuCl₄]²⁻ | 4 | Tetrahedral | Green-yellow |
+| [Fe(H₂O)₆]²⁺ | 6 | Octahedral | Pale green |
+| [Fe(H₂O)₆]³⁺ | 6 | Octahedral | Yellow-brown |
+| [Ag(NH₃)₂]⁺ | 2 | Linear | Colourless |
+| [Fe(CN)₆]³⁻ | 6 | Octahedral | Yellow |
+| [Fe(CN)₆]⁴⁻ | 6 | Octahedral | Yellow |
+
+### Naming Complex Ions
+
+1. Number of ligands (di-, tri-, tetra-, penta-, hexa-)
+2. Ligand names (aqua, ammine, chloro, cyano, hydroxo)
+3. Metal name (if negative complex: -ate ending, use Latin root)
+4. Oxidation state in Roman numerals
+
+**Examples:**
+- [Cu(H₂O)₆]²⁺ → hexaaquacopper(II) ion
+- [CuCl₄]²⁻ → tetrachlorocuprate(II) ion
+- [Fe(CN)₆]³⁻ → hexacyanoferrate(III) ion`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. Ligand Exchange Reactions",
+                content: `## Swapping Ligands
+
+In **ligand exchange reactions**, one ligand replaces another around the central metal ion.
+
+### Factors Affecting Ligand Exchange
+
+1. **Relative strength of bonding** - stronger coordinating ligands replace weaker ones
+2. **Concentration** - excess of replacing ligand drives equilibrium
+3. **Chelate effect** - polydentate ligands form more stable complexes
+
+### Common Ligand Exchange Reactions
+
+**Copper(II) Complexes:**
+
+1. Aqua → ammine (partial):
+[Cu(H₂O)₆]²⁺ + 4NH₃ ⇌ [Cu(NH₃)₄(H₂O)₂]²⁺ + 4H₂O
+(Blue → Deep blue)
+
+2. Aqua → chloro:
+[Cu(H₂O)₆]²⁺ + 4Cl⁻ ⇌ [CuCl₄]²⁻ + 6H₂O
+(Blue → Yellow-green)
+
+Note the change in coordination number: 6 (octahedral) → 4 (tetrahedral)
+Reason: Cl⁻ is larger than H₂O, so fewer can fit around Cu²⁺
+
+**Cobalt(II) Complexes:**
+
+[Co(H₂O)₆]²⁺ + 4Cl⁻ ⇌ [CoCl₄]²⁻ + 6H₂O
+(Pink → Blue)
+
+This equilibrium is temperature-sensitive:
+- Heat favours [CoCl₄]²⁻ (blue)
+- Cool favours [Co(H₂O)₆]²⁺ (pink)
+
+**Iron(III) Complexes:**
+
+[Fe(H₂O)₆]³⁺ + SCN⁻ → [Fe(H₂O)₅(SCN)]²⁺ + H₂O
+(Yellow → Blood red)
+
+This is used as a test for Fe³⁺ ions.
+
+### The Chelate Effect
+
+Complexes with polydentate ligands are more stable than those with monodentate ligands.
+
+**Example:**
+[Cu(H₂O)₆]²⁺ + 3en ⇌ [Cu(en)₃]²⁺ + 6H₂O
+
+**Why are chelates more stable?**
+- Entropy increase: 4 species (1 + 3) → 7 species (1 + 6)
+- More positive ΔS, more negative ΔG
+- One end of polydentate ligand stays attached while replacing`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. Colour of Transition Metal Compounds",
+                content: `## Why Are They Coloured?
+
+Transition metal compounds are coloured due to **d-d electron transitions**.
+
+### Crystal Field Theory (Simplified)
+
+When ligands approach a transition metal ion:
+1. The ligands' electrons repel the d electrons
+2. The 5 d orbitals split into two energy levels
+3. d electrons can absorb visible light and jump to higher d orbitals
+4. The frequency of light absorbed depends on the energy gap
+
+### Factors Affecting Colour
+
+| Factor | Effect | Example |
+|--------|--------|---------|
+| Metal ion | Different d electron configurations | Fe²⁺ vs Cu²⁺ |
+| Oxidation state | Changes number of d electrons | Fe²⁺ (green) vs Fe³⁺ (yellow) |
+| Ligand | Changes energy gap between d orbitals | [Cu(H₂O)₆]²⁺ (blue) vs [Cu(NH₃)₄]²⁺ (deep blue) |
+| Coordination number | Changes geometry and energy levels | [CuCl₄]²⁻ vs [Cu(H₂O)₆]²⁺ |
+
+### The Spectrochemical Series
+
+Ligands arranged by increasing d orbital splitting:
+
+I⁻ < Br⁻ < Cl⁻ < F⁻ < OH⁻ < H₂O < NH₃ < en < CN⁻ < CO
+
+**Weak field ligands** (left): small splitting, absorb low energy light
+**Strong field ligands** (right): large splitting, absorb high energy light
+
+### Colour and Absorption
+
+The colour we see is **complementary** to the colour absorbed:
+
+| Colour Absorbed | Colour Observed |
+|-----------------|-----------------|
+| Violet | Yellow |
+| Blue | Orange |
+| Green | Red |
+| Yellow | Violet |
+| Red | Green |
+
+### Why Some Compounds Are Colourless
+
+Compounds are colourless if:
+1. **No d electrons:** Ti⁴⁺ [Ar], Sc³⁺ [Ar]
+2. **Full d shell:** Cu⁺ [Ar]3d¹⁰, Zn²⁺ [Ar]3d¹⁰
+3. **No ligands:** d orbitals not split (rare in compounds)
+
+Without partial d electrons, no d-d transitions are possible.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Variable Oxidation States",
+                content: `## Multiple Ion Forms
+
+A key feature of transition elements is their ability to form ions with different charges.
+
+### Why Variable Oxidation States?
+
+- The 3d and 4s energy levels are very close
+- Different numbers of electrons can be lost
+- Stability depends on the chemical environment
+
+### Common Oxidation States
+
+| Element | Common Oxidation States | Most Stable |
+|---------|-------------------------|-------------|
+| Ti | +3, +4 | +4 |
+| V | +2, +3, +4, +5 | +5 |
+| Cr | +2, +3, +6 | +3 |
+| Mn | +2, +3, +4, +6, +7 | +2 |
+| Fe | +2, +3 | +3 |
+| Co | +2, +3 | +2 |
+| Ni | +2 | +2 |
+| Cu | +1, +2 | +2 |
+
+### Identifying Oxidation States by Colour
+
+**Vanadium species:**
+| Oxidation State | Colour | Species |
+|-----------------|--------|---------|
+| +5 | Yellow | VO₂⁺ |
+| +4 | Blue | VO²⁺ |
+| +3 | Green | V³⁺ |
+| +2 | Violet | V²⁺ |
+
+**Chromium species:**
+| Oxidation State | Colour | Species |
+|-----------------|--------|---------|
+| +6 | Yellow/Orange | CrO₄²⁻/Cr₂O₇²⁻ |
+| +3 | Green | Cr³⁺ |
+| +2 | Blue | Cr²⁺ |
+
+**Manganese species:**
+| Oxidation State | Colour | Species |
+|-----------------|--------|---------|
+| +7 | Purple | MnO₄⁻ |
+| +6 | Green | MnO₄²⁻ |
+| +4 | Brown | MnO₂ |
+| +2 | Pale pink | Mn²⁺ |
+
+### Redox Reactions
+
+**Reducing V(V) to V(II):**
+Using zinc in acid:
+VO₂⁺ → VO²⁺ → V³⁺ → V²⁺
+(Yellow → Blue → Green → Violet)
+
+**Oxidation of Fe²⁺ to Fe³⁺:**
+Fe²⁺ + oxidising agent → Fe³⁺ + e⁻
+(Pale green → Yellow-brown)
+
+Common oxidising agents: MnO₄⁻, Cr₂O₇²⁻, H₂O₂`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "6. Catalysis by Transition Metals",
+                content: `## Transition Metals as Catalysts
+
+Transition metals and their compounds are widely used as catalysts in both industrial and biological processes.
+
+### Why Are They Good Catalysts?
+
+1. **Variable oxidation states:** Can gain/lose electrons easily
+2. **Provide surface:** For adsorption of reactant molecules
+3. **Form intermediates:** Can bind to substrates temporarily
+
+### Types of Catalysis
+
+**Heterogeneous Catalysis:**
+- Catalyst is in a different phase from reactants
+- Usually solid catalyst with gas/liquid reactants
+- Reaction occurs on the catalyst surface
+
+| Process | Catalyst | Reaction |
+|---------|----------|----------|
+| Haber process | Fe | N₂ + 3H₂ → 2NH₃ |
+| Contact process | V₂O₅ | 2SO₂ + O₂ → 2SO₃ |
+| Catalytic converter | Pt/Pd/Rh | 2NO + 2CO → N₂ + 2CO₂ |
+| Hydrogenation | Ni | C=C + H₂ → C-C |
+
+**Mechanism of Heterogeneous Catalysis:**
+1. **Adsorption:** Reactants bind to catalyst surface
+2. **Weakening:** Bonds in reactants are weakened
+3. **Reaction:** New bonds form between adsorbed species
+4. **Desorption:** Products leave surface
+
+**Homogeneous Catalysis:**
+- Catalyst is in the same phase as reactants
+- Often involves transition metal ions in solution
+
+**Example: Reaction of I⁻ with S₂O₈²⁻**
+
+Without catalyst: S₂O₈²⁻ + 2I⁻ → 2SO₄²⁻ + I₂ (very slow)
+
+With Fe³⁺ catalyst:
+Step 1: 2Fe³⁺ + 2I⁻ → 2Fe²⁺ + I₂
+Step 2: 2Fe²⁺ + S₂O₈²⁻ → 2Fe³⁺ + 2SO₄²⁻
+
+Fe³⁺ is regenerated - it acts as a catalyst through variable oxidation states.
+
+### Autocatalysis
+
+The reaction product acts as a catalyst for the reaction.
+
+**Example: Mn²⁺ in permanganate titrations**
+MnO₄⁻ + 8H⁺ + 5Fe²⁺ → Mn²⁺ + 5Fe³⁺ + 4H₂O
+
+The Mn²⁺ produced catalyses the reaction - starts slowly, speeds up.`,
+                diagrams: [],
+                subsections: []
+            }
+        ],
+        key_points: [
+            "Transition element: d-block element forming at least one ion with partially filled d sub-shell",
+            "Sc and Zn are NOT transition elements (Sc³⁺ has empty 3d; Zn²⁺ has full 3d)",
+            "When forming ions, electrons lost from 4s before 3d",
+            "Cr and Cu have anomalous configurations: [Ar]3d⁵4s¹ and [Ar]3d¹⁰4s¹",
+            "Complex ions: central metal ion surrounded by ligands via dative bonds",
+            "Coordination number = number of dative bonds to metal ion",
+            "Ligand exchange: stronger ligands or excess concentration drives substitution",
+            "Chelate effect: polydentate ligands form more stable complexes (entropy favourable)",
+            "Colour from d-d transitions; factors: metal, oxidation state, ligand, coordination number",
+            "No colour if d⁰ or d¹⁰ - no d-d transitions possible",
+            "Variable oxidation states due to close 3d and 4s energy levels",
+            "Transition metals as catalysts: variable oxidation states, provide surface, form intermediates"
+        ],
+        exam_tips: [
+            "Write electronic configurations correctly: 4s fills before 3d, but 4s electrons lost first",
+            "Remember anomalous configurations of Cr and Cu - half-filled/full d is stable",
+            "When naming complexes: prefix for number, ligand name, metal, oxidation state",
+            "For ligand exchange, note changes in coordination number and geometry",
+            "Explain chelate effect using entropy: more particles formed (ΔS positive)",
+            "Colour questions: state that light is absorbed for d-d transitions; colour seen is complementary",
+            "Know colours of common ions: Cu²⁺(aq) blue, Fe²⁺ green, Fe³⁺ yellow, MnO₄⁻ purple",
+            "For catalysis, explain how variable oxidation states allow catalyst to be regenerated",
+            "In titration questions, identify when autocatalysis occurs (reaction speeds up)"
+        ]
+    },
+    "Benzene and Aromatic Compounds": {
+        topic: "Benzene and Aromatic Compounds",
+        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Benzene_and_Aromatic_Compounds.mp4",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/remaining%20/Audios/The_Mystery_of_Benzene_s_Stability.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvcmVtYWluaW5nIC9BdWRpb3MvVGhlX015c3Rlcnlfb2ZfQmVuemVuZV9zX1N0YWJpbGl0eS5tNGEiLCJpYXQiOjE3NjgwNjA5NjksImV4cCI6NTI2ODU1Njk2OX0.mhsL4nlc-UhcaUZd7qwISv1wRkktwTuHGXQrqVLLywg",
+        subject: "A Level Chemistry",
+        summary: "Benzene is the simplest aromatic compound, with a unique delocalised ring structure that gives it exceptional stability. This topic covers the Kekulé and delocalised models of benzene structure, electrophilic substitution reactions (nitration, halogenation, Friedel-Crafts), and the directing effects of substituents on the benzene ring.",
+        sections: [
+            {
+                title: "1. Structure of Benzene",
+                content: `## The Benzene Molecule
+
+**Molecular formula:** C₆H₆
+**Empirical formula:** CH
+
+### The Kekulé Model (Historical)
+
+August Kekulé (1865) proposed benzene as a hexagonal ring with alternating single and double C-C bonds:
+
+**Problems with Kekulé's structure:**
+1. **Bond lengths:** Expected alternating long (C-C) and short (C=C) bonds, but all C-C bonds in benzene are the same length (0.140 nm)
+2. **Reactivity:** Expected to undergo addition reactions like alkenes, but benzene resists addition
+3. **Enthalpy of hydrogenation:** Expected -360 kJ mol⁻¹ (3 × cyclohexene), but actual value is only -208 kJ mol⁻¹
+
+### The Delocalised Model (Modern)
+
+**Structure:**
+- 6 carbon atoms in a flat hexagonal ring
+- Each carbon is sp² hybridised
+- Each carbon has one p orbital perpendicular to the ring
+- The 6 p electrons are delocalised above and below the ring
+
+**Evidence for Delocalisation:**
+| Property | Expected (Kekulé) | Observed |
+|----------|-------------------|----------|
+| C-C bond length | Alternating 0.154 nm and 0.134 nm | All 0.140 nm |
+| ΔH of hydrogenation | -360 kJ mol⁻¹ | -208 kJ mol⁻¹ |
+| Reactivity | Addition (like alkenes) | Substitution (preserves ring) |
+
+### Thermodynamic Stability
+
+**Delocalisation energy (resonance energy):**
+Expected ΔH (3 × cyclohexene) - Actual ΔH = 360 - 208 = **152 kJ mol⁻¹**
+
+This is the extra stability gained from electron delocalisation.
+
+### Representing Benzene
+
+Two ways to draw benzene:
+1. **Kekulé structure:** Alternating single and double bonds (for mechanisms)
+2. **Circle in hexagon:** Shows delocalisation (for general structure)`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. Electrophilic Substitution",
+                content: `## Why Substitution, Not Addition?
+
+Benzene undergoes **electrophilic substitution** rather than addition because:
+- Addition would destroy the stable delocalised π system
+- Substitution preserves the aromatic ring
+- The 152 kJ mol⁻¹ delocalisation energy is retained
+
+### General Mechanism
+
+**Step 1:** Electrophile attacks the delocalised electrons
+**Step 2:** Intermediate cation forms (ring still has delocalisation)
+**Step 3:** Hydrogen leaves, restoring full aromaticity
+
+### The Electrophile
+
+The benzene ring is electron-rich but requires a strong electrophile to react.
+Weak electrophiles (like Br₂ alone) do NOT react with benzene.
+A catalyst is needed to generate a stronger electrophile.
+
+### Types of Electrophilic Substitution
+
+| Reaction | Electrophile Generated | Product |
+|----------|------------------------|---------|
+| Nitration | NO₂⁺ | Nitrobenzene |
+| Halogenation | Br⁺ or Cl⁺ | Bromobenzene/Chlorobenzene |
+| Friedel-Crafts alkylation | R⁺ | Alkylbenzene |
+| Friedel-Crafts acylation | RCO⁺ | Acylbenzene (ketone) |
+
+### Key Point
+
+In all electrophilic substitution reactions:
+- A hydrogen on the ring is replaced by the electrophile
+- The aromatic ring is preserved
+- Catalysts/conditions are needed to generate strong electrophiles`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. Nitration of Benzene",
+                content: `## Making Nitrobenzene
+
+**Equation:**
+C₆H₆ + HNO₃ → C₆H₅NO₂ + H₂O
+
+**Reagents:** Concentrated nitric acid + concentrated sulfuric acid
+**Conditions:** 50°C (reflux, temperature must be controlled)
+
+### Generating the Electrophile
+
+The nitronium ion (NO₂⁺) is the electrophile:
+
+HNO₃ + H₂SO₄ → NO₂⁺ + HSO₄⁻ + H₂O
+
+H₂SO₄ acts as an acid, protonating HNO₃, which then loses water.
+
+### Mechanism
+
+**Step 1:** NO₂⁺ attacks the delocalised π electrons of benzene
+
+**Step 2:** A resonance-stabilised carbocation intermediate forms
+
+**Step 3:** A proton is lost, regenerating the aromatic ring
+- H₂SO₄ is regenerated (acts as catalyst)
+
+### Why Control Temperature?
+
+- Below 50°C: Reaction too slow
+- Above 50°C: Risk of di- and tri-nitration
+
+**Further Nitration:**
+With excess HNO₃/H₂SO₄ and higher temperature:
+Nitrobenzene → 1,3-dinitrobenzene → 1,3,5-trinitrobenzene
+
+### Uses of Nitrobenzene
+
+- Making aniline (C₆H₅NH₂) by reduction
+- Aniline is used for dyes and pharmaceuticals
+- Further converted to TNT (trinitrotoluene)`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. Halogenation of Benzene",
+                content: `## Making Halogenobenzenes
+
+**Equations:**
+C₆H₆ + Br₂ → C₆H₅Br + HBr (bromobenzene)
+C₆H₆ + Cl₂ → C₆H₅Cl + HCl (chlorobenzene)
+
+**Reagents:** Halogen + halogen carrier (Lewis acid catalyst)
+**Conditions:** Room temperature, anhydrous conditions
+
+### Halogen Carriers (Lewis Acid Catalysts)
+
+| Halogen | Catalyst |
+|---------|----------|
+| Br₂ | FeBr₃ or AlBr₃ |
+| Cl₂ | FeCl₃ or AlCl₃ |
+
+### Generating the Electrophile
+
+The catalyst polarises the halogen:
+
+Br₂ + FeBr₃ → Br⁺...FeBr₄⁻
+
+The Br⁺ (or polarised Brδ⁺) acts as the electrophile.
+
+### Mechanism
+
+**Step 1:** The polarised Br₂-FeBr₃ complex approaches the benzene ring
+- π electrons attack the Brδ⁺
+
+**Step 2:** Carbocation intermediate forms
+
+**Step 3:** H⁺ is lost to FeBr₄⁻:
+FeBr₄⁻ + H⁺ → FeBr₃ + HBr
+
+The catalyst is regenerated.
+
+### Why Is a Catalyst Needed?
+
+Unlike alkenes, benzene does NOT react with bromine water or pure bromine.
+
+**Comparison:**
+
+| Compound | Reaction with Br₂ |
+|----------|-------------------|
+| Cyclohexene | Immediate decolourisation (addition) |
+| Benzene | No reaction without catalyst |
+| Benzene + FeBr₃ | Substitution reaction |
+
+This difference demonstrates the stability of the aromatic ring.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Friedel-Crafts Reactions",
+                content: `## Adding Carbon Groups to Benzene
+
+Friedel-Crafts reactions attach carbon-containing groups to the benzene ring.
+
+### Friedel-Crafts Alkylation
+
+**Purpose:** Attach an alkyl group (R) to benzene
+
+**Equation:**
+C₆H₆ + RCl → C₆H₅R + HCl
+
+**Reagents:** Halogenoalkane + AlCl₃ catalyst
+**Conditions:** Reflux
+
+**Generating the Electrophile:**
+RCl + AlCl₃ → R⁺ + AlCl₄⁻
+
+The carbocation R⁺ is the electrophile.
+
+**Example:**
+C₆H₆ + CH₃Cl → C₆H₅CH₃ + HCl (methylbenzene/toluene)
+
+**Problem with Alkylation:**
+Multiple substitution can occur - the alkyl group activates the ring.
+
+### Friedel-Crafts Acylation
+
+**Purpose:** Attach an acyl group (RCO) to benzene
+
+**Equation:**
+C₆H₆ + RCOCl → C₆H₅COR + HCl
+
+**Reagents:** Acyl chloride + AlCl₃ catalyst
+**Conditions:** Reflux
+
+**Generating the Electrophile:**
+RCOCl + AlCl₃ → RCO⁺ + AlCl₄⁻
+
+The acylium cation (RCO⁺) is the electrophile.
+
+**Example:**
+C₆H₆ + CH₃COCl → C₆H₅COCH₃ + HCl (phenylethanone)
+
+**Advantages of Acylation:**
+- Only monosubstitution (C=O deactivates ring)
+- Product can be reduced to alkylbenzene if desired
+
+### Mechanism (Both)
+
+1. Electrophile generated with AlCl₃
+2. Electrophile attacks benzene π electrons
+3. Carbocation intermediate
+4. H⁺ released, regenerating AlCl₃`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "6. Directing Effects",
+                content: `## Substituted Benzenes
+
+When benzene already has a substituent, the position of the next substitution depends on the nature of the first substituent.
+
+### Activating and Deactivating Groups
+
+**Activating groups:** Make the ring MORE reactive than benzene
+- Push electrons INTO the ring (electron-donating)
+- Examples: -OH, -NH₂, -alkyl, -OR
+
+**Deactivating groups:** Make the ring LESS reactive than benzene
+- Pull electrons OUT of the ring (electron-withdrawing)
+- Examples: -NO₂, -CHO, -COOH, -halogen
+
+### Directing Positions
+
+| Group Type | Examples | Directs to |
+|------------|----------|------------|
+| Activating (except halogens) | -OH, -NH₂, -CH₃ | 2,4 (ortho/para) |
+| Halogens | -Cl, -Br | 2,4 (but deactivating) |
+| Deactivating | -NO₂, -COOH, -CHO | 3 (meta) |
+
+### Examples
+
+**Nitration of Methylbenzene:**
+- -CH₃ is activating and 2,4-directing
+- Products: 2-nitromethylbenzene + 4-nitromethylbenzene
+
+**Nitration of Nitrobenzene:**
+- -NO₂ is deactivating and 3-directing
+- Product: 1,3-dinitrobenzene
+
+### Explanation (Simplified)
+
+**2,4-Directors (electron-donating):**
+- Increase electron density at positions 2, 4, and 6
+- Electrophile attacks these positions preferentially
+
+**3-Directors (electron-withdrawing):**
+- Decrease electron density at positions 2, 4, and 6
+- Position 3 has relatively higher electron density
+
+### Practical Implications
+
+- To make a specific isomer, choose appropriate order of reactions
+- Some positions are more accessible than others
+- Multiple products may need separation`,
+                diagrams: [],
+                subsections: []
+            }
+        ],
+        key_points: [
+            "Benzene has 6 delocalised π electrons above and below the planar ring",
+            "All C-C bonds in benzene are equal length (0.140 nm) - between single and double",
+            "Delocalisation energy = 152 kJ mol⁻¹ (difference from expected hydrogenation enthalpy)",
+            "Benzene undergoes SUBSTITUTION not addition to preserve aromatic stability",
+            "Electrophilic substitution: electrophile attacks π electrons, H replaced, ring preserved",
+            "Nitration: HNO₃ + H₂SO₄ at 50°C; electrophile is NO₂⁺",
+            "Halogenation: Br₂/Cl₂ with FeBr₃/FeCl₃ catalyst; electrophile is Br⁺/Cl⁺",
+            "Friedel-Crafts alkylation: RCl + AlCl₃; adds alkyl group",
+            "Friedel-Crafts acylation: RCOCl + AlCl₃; adds acyl group (prevents multiple substitution)",
+            "Activating groups (-OH, -NH₂) direct to 2,4 positions; deactivating groups (-NO₂) direct to 3"
+        ],
+        exam_tips: [
+            "Know both models of benzene - Kekulé for mechanisms, delocalised for stability",
+            "Calculate delocalisation energy using hydrogenation enthalpy difference",
+            "Explain why benzene doesn't decolourise bromine water (unlike alkenes)",
+            "In mechanisms, show curly arrows from π electrons to electrophile",
+            "Temperature control is essential for nitration - explain why",
+            "Remember catalyst regeneration in mechanisms",
+            "Distinguish alkylation (multiple products) from acylation (single product)",
+            "Know directing effects: -OH, -NH₂ → 2,4; -NO₂, -COOH → 3",
+            "Halogens are unusual: deactivating but 2,4-directing"
+        ]
+    },
+    "Phenols": {
+        topic: "Phenols",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/remaining%20/The_Unexpected_Power_of_Phenols.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvcmVtYWluaW5nIC9UaGVfVW5leHBlY3RlZF9Qb3dlcl9vZl9QaGVub2xzLm1wNCIsImlhdCI6MTc2ODA2MDM1MiwiZXhwIjo1MjY4NTU2MzUyfQ.-GNKNLvWbgqTGVoDa7nAKM4oFDXo1I96ytpUKxlMe1M",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/remaining%20/Audios/Phenol_Structure_Makes_Drugs_and_Dioxin.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvcmVtYWluaW5nIC9BdWRpb3MvUGhlbm9sX1N0cnVjdHVyZV9NYWtlc19EcnVnc19hbmRfRGlveGluLm00YSIsImlhdCI6MTc2ODA2MDk0NiwiZXhwIjo1MjY4NTU2OTQ2fQ.sLhlopC7yN217-191dAhICvKoC9SGeIGOPjlY2ZIUSs",
+        subject: "A Level Chemistry",
+        summary: "Phenols are aromatic compounds with a hydroxyl group (-OH) attached directly to a benzene ring. They have distinct properties compared to alcohols due to the interaction between the -OH group and the aromatic ring, including weak acidity and enhanced reactivity towards electrophilic substitution.",
+        sections: [
+            {
+                title: "1. Structure and Bonding",
+                content: `## What are Phenols?
+
+**Phenol:** C₆H₅OH (hydroxybenzene)
+A phenol has an -OH group bonded directly to a benzene ring carbon.
+
+### Bonding in Phenol
+
+The oxygen atom in phenol has a lone pair that can interact with the benzene π system:
+- Delocalisation of the oxygen lone pair into the ring
+- This has two effects:
+  1. Makes the O-H bond weaker → more acidic than alcohols
+  2. Increases electron density of ring → more reactive than benzene
+
+### Comparison with Alcohols
+
+| Property | Phenol | Alcohol |
+|----------|--------|---------|
+| -OH attached to | Benzene ring (sp² carbon) | Alkyl carbon (sp³) |
+| O-H bond strength | Weaker | Stronger |
+| Acidity | Weak acid (pKa ≈ 10) | Very weak acid (pKa ≈ 16) |
+| Reaction with Na | Yes, H₂ evolved | Yes, H₂ evolved |
+| Reaction with NaOH | Yes, dissolves | No reaction |
+
+### Physical Properties
+
+- **Melting point:** 43°C (solid at room temperature)
+- **Slightly soluble in water:** Hydrogen bonding possible
+- **Solubility increases** in alkali (forms soluble sodium phenoxide)
+- **Characteristic "carbolic" smell**
+- **Antiseptic properties** (historically used in hospitals)`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. Acidity of Phenol",
+                content: `## Phenol as a Weak Acid
+
+Phenol is more acidic than alcohols but much weaker than carboxylic acids.
+
+### pKa Values
+
+| Compound | pKa Value |
+|----------|-----------|
+| Ethanol | ~16 |
+| Phenol | ~10 |
+| Ethanoic acid | ~4.8 |
+
+### Why Is Phenol More Acidic Than Alcohols?
+
+When phenol loses H⁺, the phenoxide ion (C₆H₅O⁻) is formed.
+
+**Stability of phenoxide ion:**
+- The negative charge on oxygen is delocalised into the benzene ring
+- This stabilises the conjugate base
+- More stable conjugate base → stronger acid
+
+**In alcohols:**
+- The negative charge on oxygen cannot be delocalised
+- Alkoxide ion is less stable
+- Less stable conjugate base → weaker acid
+
+### Why Is Phenol Weaker Than Carboxylic Acids?
+
+In carboxylate ions (RCOO⁻):
+- The negative charge is delocalised over TWO equivalent oxygen atoms
+- Even more stable than phenoxide
+- Therefore carboxylic acids are stronger
+
+### Reactions Showing Acidity
+
+**1. Reaction with Sodium:**
+C₆H₅OH + Na → C₆H₅O⁻Na⁺ + ½H₂
+(Like alcohols, but more vigorous)
+
+**2. Reaction with Sodium Hydroxide:**
+C₆H₅OH + NaOH → C₆H₅O⁻Na⁺ + H₂O
+(Alcohols do NOT react with NaOH)
+
+**3. NO Reaction with Sodium Carbonate or Bicarbonate:**
+- Phenol is too weak to displace CO₂ from carbonate
+- This distinguishes phenol from carboxylic acids`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. Reactions of Phenol",
+                content: `## Key Reactions
+
+### Reaction with Sodium
+
+**Equation:**
+2C₆H₅OH + 2Na → 2C₆H₅O⁻Na⁺ + H₂
+
+**Product:** Sodium phenoxide
+**Observation:** Effervescence (hydrogen gas released)
+
+### Reaction with Sodium Hydroxide
+
+**Equation:**
+C₆H₅OH + NaOH → C₆H₅O⁻Na⁺ + H₂O
+
+**Product:** Sodium phenoxide (soluble)
+**Observation:** Phenol dissolves
+
+This is a neutralisation reaction - phenol acts as an acid.
+
+### Reaction with Sodium Carbonate
+
+**No reaction** - phenol is too weak an acid to displace carbonic acid.
+
+**Comparison with carboxylic acids:**
+Carboxylic acids react: RCOOH + Na₂CO₃ → 2RCOO⁻Na⁺ + H₂O + CO₂
+
+This is a key test to distinguish phenols from carboxylic acids.
+
+### Esterification
+
+Phenol can form esters but NOT with carboxylic acids (reaction too slow).
+
+**With acyl chlorides:**
+C₆H₅OH + CH₃COCl → C₆H₅OCOCH₃ + HCl
+
+**Conditions:** Room temperature, no catalyst needed
+**Product:** Phenyl ethanoate (an ester)`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. Bromination of Phenol",
+                content: `## Electrophilic Substitution (Enhanced)
+
+The -OH group in phenol activates the benzene ring, making it much more reactive than benzene itself.
+
+### Reaction with Bromine Water
+
+**Equation:**
+C₆H₅OH + 3Br₂ → C₆H₂Br₃OH + 3HBr
+
+**Reagents:** Bromine water (no catalyst needed!)
+**Conditions:** Room temperature, aqueous
+**Product:** 2,4,6-tribromophenol (white precipitate)
+**Observation:** Orange bromine water is decolourised; white precipitate forms
+
+### Comparison with Benzene
+
+| Feature | Benzene | Phenol |
+|---------|---------|--------|
+| Reagent needed | Br₂ + FeBr₃ catalyst | Br₂(aq) only |
+| Conditions | Anhydrous, reflux | Room temperature, aqueous |
+| Product | Monosubstituted | Trisubstituted |
+| Substitution positions | One random | 2, 4, and 6 (all ortho/para) |
+
+### Why Is Phenol More Reactive?
+
+1. The oxygen lone pair is partially delocalised into the ring
+2. This increases electron density at positions 2, 4, and 6
+3. The ring is activated towards electrophilic attack
+4. All three ortho/para positions substitute (not just one)
+5. No catalyst is needed because the ring is so electron-rich
+
+### Test for Phenol
+
+The tribromophenol precipitate test is used to identify phenols:
+- Add bromine water to a solution
+- If a white precipitate and decolourisation occur → phenol present`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Coupling Reactions (Diazo Coupling)",
+                content: `## Making Azo Dyes
+
+Phenol can undergo coupling reactions with diazonium salts to form highly coloured azo compounds.
+
+### The Diazonium Salt
+
+Made from a primary aromatic amine:
+C₆H₅NH₂ + HNO₂ + HCl → C₆H₅N₂⁺Cl⁻ + 2H₂O
+
+**Conditions:** Below 5°C (diazonium salts decompose above 10°C)
+**Nitrous acid** (HNO₂) is made in situ: NaNO₂ + HCl → HNO₂ + NaCl
+
+### Coupling with Phenol
+
+**Equation:**
+C₆H₅N₂⁺ + C₆H₅O⁻ → C₆H₅-N=N-C₆H₄OH
+
+**Conditions:**
+- Alkaline solution (phenol as phenoxide ion)
+- Temperature below 10°C
+
+**Product:** An azo compound (orange/red colour)
+The -N=N- group is called the azo linkage.
+
+### Why Alkaline Conditions?
+
+In alkaline solution, phenol exists as the phenoxide ion (C₆H₅O⁻):
+- The negative charge makes the ring even more activated
+- The diazonium ion is a weak electrophile
+- Needs the extra activation to react
+
+### Uses of Azo Dyes
+
+- Textile dyes
+- Food colourings
+- pH indicators (methyl orange)
+- The azo group (-N=N-) is a chromophore (absorbs visible light)
+
+### Colour and Structure
+
+- Azo compounds are intensely coloured (yellow, orange, red)
+- Extended conjugation through the azo linkage
+- Different substituents change the colour`,
+                diagrams: [],
+                subsections: []
+            }
+        ],
+        key_points: [
+            "Phenol: -OH bonded directly to benzene ring; different from alcohols",
+            "Phenol is weakly acidic (pKa ≈ 10) - stronger than alcohols, weaker than carboxylic acids",
+            "Acidity explained: phenoxide ion stabilised by delocalisation of negative charge into ring",
+            "Phenol reacts with NaOH (alcohols don't); phenol does NOT react with Na₂CO₃ (carboxylic acids do)",
+            "Phenol reacts with Na to give sodium phenoxide + H₂",
+            "Phenol reacts with bromine water without catalyst → 2,4,6-tribromophenol (white ppt)",
+            "Benzene requires FeBr₃ catalyst for bromination; phenol doesn't",
+            "-OH group is activating and 2,4-directing (electron donation into ring)",
+            "Diazo coupling: phenol + diazonium salt → azo dye (in alkaline conditions, <10°C)",
+            "Azo compounds are intensely coloured due to extended conjugation"
+        ],
+        exam_tips: [
+            "Explain phenol's acidity using delocalisation of negative charge in phenoxide",
+            "Compare phenol with alcohols AND carboxylic acids in acidity questions",
+            "Remember phenol + NaOH works; phenol + Na₂CO₃ doesn't (vs carboxylic acids)",
+            "For bromination, emphasise: no catalyst needed, trisubstitution, positions 2,4,6",
+            "The tribromophenol test shows phenol is present (white precipitate)",
+            "In diazo coupling, specify conditions: alkaline, <10°C, phenoxide ion involved",
+            "Link colour of azo dyes to extended conjugation through -N=N- chromophore"
+        ]
+    },
+    "Equilibria (Advanced)": {
+        topic: "Equilibria (Advanced)",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/remaining%20/Advanced_Equilibria.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvcmVtYWluaW5nIC9BZHZhbmNlZF9FcXVpbGlicmlhLm1wNCIsImlhdCI6MTc2ODA2MDI0NCwiZXhwIjo1MjY4NTU2MjQ0fQ.9lHbVzoo1Maf_CMuy1NxKclUm4HORlrCviHqHphH_ow",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/remaining%20/Audios/Thermodynamics_Kinetics_and_the_Haber_Process.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvcmVtYWluaW5nIC9BdWRpb3MvVGhlcm1vZHluYW1pY3NfS2luZXRpY3NfYW5kX3RoZV9IYWJlcl9Qcm9jZXNzLm00YSIsImlhdCI6MTc2ODA2MDk4NCwiZXhwIjo1MjY4NTU2OTg0fQ.1wna9Ll15MkU4ojfir36MqFBAcz69ZJqEfMzH2uCl2w",
+        subject: "A Level Chemistry",
+        summary: "Advanced Equilibria builds on AS-level concepts to include quantitative treatment of equilibrium constants (Kc and Kp), the relationship between them, acid-base equilibria including pH calculations, buffer solutions, indicators, and solubility product (Ksp). Understanding these concepts is essential for predicting the extent of reactions.",
+        sections: [
+            {
+                title: "1. Equilibrium Constants Kc and Kp",
+                content: `## Quantitative Treatment of Equilibrium
+
+### The Equilibrium Constant Kc
+
+For a general reaction: aA + bB ⇌ cC + dD
+
+**Kc = [C]^c × [D]^d / [A]^a × [B]^b**
+
+Where [...] represents concentration in mol dm⁻³
+
+**Key Points:**
+- Kc has units that depend on the equation (may be no units if balanced)
+- Kc is only valid at a specific temperature
+- Pure solids and liquids are NOT included in the expression
+- Kc is constant at constant temperature regardless of concentrations
+
+### The Equilibrium Constant Kp
+
+For reactions involving gases, we use partial pressures.
+
+**Kp = (p_C)^c × (p_D)^d / (p_A)^a × (p_B)^b**
+
+Where p represents partial pressure.
+
+### Partial Pressure
+
+**Partial pressure = mole fraction × total pressure**
+
+**Mole fraction of A = n_A / total moles**
+
+### Relationship Between Kc and Kp
+
+**Kp = Kc × (RT)^Δn**
+
+Where:
+- R = 8.314 J K⁻¹ mol⁻¹
+- T = temperature in Kelvin
+- Δn = (sum of product moles) - (sum of reactant moles) of gas
+
+If Δn = 0, then Kp = Kc
+
+### Example: Haber Process
+
+N₂(g) + 3H₂(g) ⇌ 2NH₃(g)
+
+**Kp = (p_NH₃)² / (p_N₂)(p_H₂)³**
+
+Units: atm⁻² or Pa⁻² (since 2 - (1+3) = -2)`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. Effect of Conditions on K",
+                content: `## How Conditions Affect Equilibrium Constants
+
+### Temperature
+
+**Temperature is the ONLY factor that changes the value of K**
+
+| Change | Exothermic Reaction | Endothermic Reaction |
+|--------|---------------------|----------------------|
+| Increase T | K decreases | K increases |
+| Decrease T | K increases | K decreases |
+
+**Explanation:**
+- Increasing T favours the endothermic direction
+- This shifts equilibrium, changing the ratio of products to reactants
+
+### Pressure (for Kp)
+
+Changing total pressure does NOT change Kp (at constant T):
+- Partial pressures adjust
+- Position of equilibrium shifts
+- But Kp value remains constant
+
+### Concentration
+
+Changing concentration does NOT change Kc (at constant T):
+- Equilibrium position shifts
+- But the ratio (Kc) stays the same once equilibrium is re-established
+
+### Adding a Catalyst
+
+A catalyst does NOT change K:
+- Only speeds up approach to equilibrium
+- Does not change equilibrium position
+- Both forward and reverse reactions speed up equally
+
+### Interpreting K Values
+
+| K Value | Meaning |
+|---------|---------|
+| K >> 1 | Products strongly favoured; reaction goes essentially to completion |
+| K ≈ 1 | Significant amounts of both reactants and products |
+| K << 1 | Reactants strongly favoured; little reaction occurs |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. Acid-Base Equilibria and pH",
+                content: `## Quantitative Treatment of Acids and Bases
+
+### The Ionic Product of Water
+
+Water undergoes slight auto-ionisation:
+H₂O(l) ⇌ H⁺(aq) + OH⁻(aq)
+
+**Kw = [H⁺][OH⁻] = 1.0 × 10⁻¹⁴ mol² dm⁻⁶ at 25°C**
+
+At 25°C in pure water: [H⁺] = [OH⁻] = 1.0 × 10⁻⁷ mol dm⁻³
+
+### pH Definition
+
+**pH = -log₁₀[H⁺]**
+
+And conversely: **[H⁺] = 10^(-pH)**
+
+### pOH and pKw
+
+**pOH = -log₁₀[OH⁻]**
+**pKw = -log₁₀Kw = 14 at 25°C**
+**pH + pOH = 14**
+
+### Strong Acids
+
+Fully dissociate: HA → H⁺ + A⁻
+
+**[H⁺] = concentration of acid**
+
+Example: 0.1 mol dm⁻³ HCl → [H⁺] = 0.1 → pH = 1
+
+### Weak Acids
+
+Partially dissociate: HA ⇌ H⁺ + A⁻
+
+**Ka = [H⁺][A⁻] / [HA]** (acid dissociation constant)
+
+For weak acids where dissociation is small:
+- [HA]equilibrium ≈ [HA]initial
+- [H⁺] = [A⁻]
+
+**[H⁺] = √(Ka × [HA])**
+
+**pKa = -log₁₀Ka**
+Lower pKa = stronger acid
+
+### Strong Bases
+
+Fully dissociate: MOH → M⁺ + OH⁻
+
+**[OH⁻] = concentration of base**
+
+Then use Kw to find [H⁺]: [H⁺] = Kw / [OH⁻]`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. Buffer Solutions",
+                content: `## Resisting pH Changes
+
+A **buffer solution** resists changes in pH when small amounts of acid or base are added.
+
+### Composition of Buffers
+
+**Acidic Buffer:**
+- Weak acid + salt of that acid (conjugate base)
+- Example: CH₃COOH + CH₃COONa
+
+**Basic Buffer:**
+- Weak base + salt of that base (conjugate acid)
+- Example: NH₃ + NH₄Cl
+
+### How Buffers Work
+
+**Acidic buffer (CH₃COOH/CH₃COO⁻):**
+
+**If H⁺ is added:**
+- CH₃COO⁻ + H⁺ → CH₃COOH
+- The conjugate base neutralises the added acid
+
+**If OH⁻ is added:**
+- CH₃COOH + OH⁻ → CH₃COO⁻ + H₂O
+- The weak acid neutralises the added base
+
+### Buffer Calculations
+
+**Henderson-Hasselbalch Equation:**
+
+**pH = pKa + log₁₀([A⁻]/[HA])**
+
+Or equivalently:
+
+**[H⁺] = Ka × [HA]/[A⁻]**
+
+### Worked Example
+
+A buffer contains 0.1 mol dm⁻³ ethanoic acid (Ka = 1.8 × 10⁻⁵) and 0.15 mol dm⁻³ sodium ethanoate.
+
+[H⁺] = Ka × [HA]/[A⁻] = 1.8 × 10⁻⁵ × 0.1/0.15 = 1.2 × 10⁻⁵
+
+pH = -log(1.2 × 10⁻⁵) = **4.92**
+
+### Buffer Capacity
+
+- The ability of a buffer to resist pH change
+- Greatest when [HA] = [A⁻] (pH = pKa)
+- Higher concentrations give greater buffer capacity`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Indicators and Titrations",
+                content: `## Choosing the Right Indicator
+
+### What is an Indicator?
+
+A weak acid (HIn) where the acid and conjugate base have different colours.
+
+HIn ⇌ H⁺ + In⁻
+(Colour A)    (Colour B)
+
+The colour change occurs when [HIn] ≈ [In⁻], i.e., when pH ≈ pKin
+
+### Common Indicators
+
+| Indicator | pKin | pH Range | Colour Change |
+|-----------|------|----------|---------------|
+| Methyl orange | 3.7 | 3.1-4.4 | Red → Yellow |
+| Bromothymol blue | 7.0 | 6.0-7.6 | Yellow → Blue |
+| Phenolphthalein | 9.3 | 8.2-10.0 | Colourless → Pink |
+
+### Choosing an Indicator for Titrations
+
+| Titration Type | pH at Equivalence | Suitable Indicator |
+|----------------|-------------------|-------------------|
+| Strong acid + Strong base | 7 | Most indicators |
+| Strong acid + Weak base | <7 | Methyl orange |
+| Weak acid + Strong base | >7 | Phenolphthalein |
+| Weak acid + Weak base | ≈7 but gradual | NO suitable indicator |
+
+### pH Curves
+
+**Key points to identify:**
+1. Initial pH
+2. Buffer region (half-equivalence point: pH = pKa)
+3. Equivalence point (vertical section)
+4. Final pH
+
+**Features:**
+- Strong acid/strong base: vertical section at pH 7
+- Weak acid/strong base: vertical section at pH > 7
+- Strong acid/weak base: vertical section at pH < 7
+- Weak acid/weak base: no sharp vertical section`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "6. Solubility Product (Ksp)",
+                content: `## Equilibria of Sparingly Soluble Salts
+
+### What is Ksp?
+
+For a sparingly soluble ionic compound:
+AxBy(s) ⇌ xA^y+(aq) + yB^x-(aq)
+
+**Ksp = [A^y+]^x × [B^x-]^y**
+
+Note: The solid does not appear in the expression.
+
+### Example: Silver Chloride
+
+AgCl(s) ⇌ Ag⁺(aq) + Cl⁻(aq)
+
+**Ksp = [Ag⁺][Cl⁻] = 1.8 × 10⁻¹⁰ mol² dm⁻⁶ at 25°C**
+
+### Calculating Solubility from Ksp
+
+**For AgCl:** Let solubility = s mol dm⁻³
+
+AgCl dissolves to give s mol dm⁻³ Ag⁺ and s mol dm⁻³ Cl⁻
+
+Ksp = s × s = s²
+s = √Ksp = √(1.8 × 10⁻¹⁰) = 1.34 × 10⁻⁵ mol dm⁻³
+
+**For Mg(OH)₂:** Let solubility = s mol dm⁻³
+
+Mg(OH)₂(s) ⇌ Mg²⁺(aq) + 2OH⁻(aq)
+
+[Mg²⁺] = s, [OH⁻] = 2s
+
+Ksp = s × (2s)² = 4s³
+s = ³√(Ksp/4)
+
+### The Common Ion Effect
+
+Adding a common ion decreases solubility.
+
+**Example:** Adding NaCl to saturated AgCl solution
+- Increases [Cl⁻]
+- Shifts equilibrium left
+- More AgCl precipitates
+- Solubility of AgCl decreases
+
+### Predicting Precipitation
+
+**Calculate the ionic product Q = [A^y+]^x × [B^x-]^y**
+
+| Comparison | Result |
+|------------|--------|
+| Q > Ksp | Precipitation occurs |
+| Q = Ksp | Saturated (at equilibrium) |
+| Q < Ksp | Unsaturated (no precipitate) |`,
+                diagrams: [],
+                subsections: []
+            }
+        ],
+        key_points: [
+            "Kc = [products]^coefficients / [reactants]^coefficients; solids and liquids excluded",
+            "Kp uses partial pressures; partial pressure = mole fraction × total pressure",
+            "Kp = Kc × (RT)^Δn where Δn = moles gas products - moles gas reactants",
+            "Only temperature changes the VALUE of K; concentration and pressure change position only",
+            "Kw = [H⁺][OH⁻] = 10⁻¹⁴ at 25°C; pH = -log[H⁺]",
+            "Strong acids fully dissociate; weak acids have Ka; [H⁺] = √(Ka × [HA]) for weak acids",
+            "Buffer = weak acid + conjugate base; resists pH changes",
+            "Henderson-Hasselbalch: pH = pKa + log([A⁻]/[HA])",
+            "Choose indicator based on pH at equivalence point of titration",
+            "Ksp = product of ion concentrations raised to stoichiometric powers",
+            "Common ion effect: adding a common ion decreases solubility",
+            "Precipitation occurs when ionic product Q > Ksp"
+        ],
+        exam_tips: [
+            "Always write equilibrium expressions with products over reactants",
+            "Check units for Kc and Kp - they depend on the stoichiometry",
+            "For weak acid calculations, state assumption that [HA]eq ≈ [HA]initial",
+            "In buffer calculations, you can use moles instead of concentrations if volumes are equal",
+            "When using Henderson-Hasselbalch, check if you need moles or concentrations",
+            "For titrations, identify the equivalence pH before choosing indicator",
+            "In Ksp problems, carefully set up the relationship between s and ion concentrations",
+            "Remember that Ksp has different forms for different salt types (1:1, 1:2, etc.)",
+            "Common ion effect always reduces solubility - equilibrium shifts left"
+        ]
+    },
+
+    "Electrochemistry (Advanced)": {
+        topic: "Electrochemistry (Advanced)",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/remaining%20/Advanced_Electrochemistry.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvcmVtYWluaW5nIC9BZHZhbmNlZF9FbGVjdHJvY2hlbWlzdHJ5Lm1wNCIsImlhdCI6MTc2ODA2MDIzMSwiZXhwIjo1MjY4NTU2MjMxfQ.xRnv60BpFq-hvaWsMklthOMndCzbYK2RgijqInlPxf8",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/remaining%20/Audios/Electrode_Potentials_Control_Real_Chemistry.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvcmVtYWluaW5nIC9BdWRpb3MvRWxlY3Ryb2RlX1BvdGVudGlhbHNfQ29udHJvbF9SZWFsX0NoZW1pc3RyeS5tNGEiLCJpYXQiOjE3NjgwNjA4ODMsImV4cCI6NTI2ODU1Njg4M30.GFoucajVyLopG6IvbobXvDhkrLrv9BQOafqK4xCetD8",
+        subject: "A Level Chemistry",
+        summary: "Advanced Electrochemistry covers standard electrode potentials, electrochemical cells, the relationship between cell potential and Gibbs free energy, electrolysis calculations, and practical applications of electrochemical processes. Understanding these concepts is essential for predicting the feasibility of redox reactions and for industrial applications.",
+        sections: [
+            {
+                title: "1. Standard Electrode Potentials",
+                content: `## Measuring Reduction Potentials
+
+### Half-Cell Reactions
+
+Every redox reaction can be split into two half-reactions:
+- **Reduction half-reaction:** species gains electrons
+- **Oxidation half-reaction:** species loses electrons
+
+### Standard Conditions
+
+Standard electrode potentials are measured under:
+- Temperature: 298 K (25°C)
+- Pressure: 100 kPa (1 bar)
+- Concentration: 1 mol dm⁻³ for all aqueous species
+
+### The Standard Hydrogen Electrode (SHE)
+
+The reference electrode with a defined potential of 0.00 V:
+
+**Half-reaction:** 2H⁺(aq, 1M) + 2e⁻ ⇌ H₂(g, 1 bar)
+
+**E° = 0.00 V** (by definition)
+
+### Measuring E° Values
+
+Connect the half-cell to the SHE:
+- Measure the voltage (potential difference)
+- This gives the standard electrode potential
+
+### Interpreting E° Values
+
+| E° Value | Meaning |
+|----------|---------|
+| More positive | Stronger oxidising agent (species more easily reduced) |
+| More negative | Stronger reducing agent (species more easily oxidised) |
+
+**Examples:**
+| Half-reaction | E° / V |
+|---------------|--------|
+| F₂ + 2e⁻ → 2F⁻ | +2.87 |
+| Cl₂ + 2e⁻ → 2Cl⁻ | +1.36 |
+| Cu²⁺ + 2e⁻ → Cu | +0.34 |
+| 2H⁺ + 2e⁻ → H₂ | 0.00 |
+| Zn²⁺ + 2e⁻ → Zn | -0.76 |
+| Mg²⁺ + 2e⁻ → Mg | -2.37 |
+| Li⁺ + e⁻ → Li | -3.04 |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. Electrochemical Cells",
+                content: `## Combining Half-Cells
+
+### Cell Notation
+
+An electrochemical cell is written as:
+Negative electrode | electrolyte || electrolyte | Positive electrode
+
+**Example:** Zn(s) | Zn²⁺(aq) || Cu²⁺(aq) | Cu(s)
+
+| Symbol | Meaning |
+|--------|---------|
+| | | Phase boundary |
+| || | Salt bridge |
+
+### Calculating Cell EMF
+
+**E°cell = E°(positive electrode) - E°(negative electrode)**
+
+Or equivalently:
+**E°cell = E°(reduction) - E°(oxidation)**
+
+**Example: Daniell Cell**
+- Cu²⁺/Cu: E° = +0.34 V
+- Zn²⁺/Zn: E° = -0.76 V
+
+E°cell = +0.34 - (-0.76) = **+1.10 V**
+
+### Predicting Feasibility
+
+A reaction is thermodynamically feasible if **E°cell > 0**
+
+**The species with:
+- More positive E° acts as oxidising agent (gets reduced)
+- More negative E° acts as reducing agent (gets oxidised)
+
+### Limitations of E° Predictions
+
+E° values predict **thermodynamic feasibility**, not rate:
+1. Activation energy may be high (kinetically slow)
+2. Conditions may differ from standard
+3. Concentration effects (Nernst equation)`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. Relationship to Gibbs Free Energy",
+                content: `## Linking Thermodynamics and Electrochemistry
+
+### The Key Equation
+
+**ΔG° = -nFE°cell**
+
+Where:
+- ΔG° = standard Gibbs free energy change (J mol⁻¹)
+- n = number of moles of electrons transferred
+- F = Faraday constant = 96485 C mol⁻¹
+- E°cell = standard cell potential (V)
+
+### Interpretation
+
+| E°cell | ΔG° | Spontaneity |
+|--------|-----|-------------|
+| Positive | Negative | Spontaneous (feasible) |
+| Negative | Positive | Non-spontaneous |
+| Zero | Zero | At equilibrium |
+
+### Worked Example
+
+For the reaction: Zn + Cu²⁺ → Zn²⁺ + Cu
+
+- E°cell = +1.10 V
+- n = 2 (two electrons transferred)
+
+ΔG° = -nFE°
+ΔG° = -2 × 96485 × 1.10
+ΔG° = **-212 kJ mol⁻¹**
+
+The large negative value confirms this is highly feasible.
+
+### Relationship to K
+
+**E°cell = (RT/nF) × ln K**
+
+At 298 K: **E°cell = (0.0592/n) × log K**
+
+If E°cell > 0, then K > 1 (products favoured)`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. Electrolysis",
+                content: `## Using Electricity to Drive Reactions
+
+**Electrolysis:** Using electrical energy to cause non-spontaneous chemical reactions.
+
+### Key Components
+
+| Component | Function |
+|-----------|----------|
+| Electrolyte | Ionic compound (molten or aqueous) |
+| Cathode | Negative electrode - reduction occurs |
+| Anode | Positive electrode - oxidation occurs |
+| Power supply | Provides electrical energy |
+
+### Electrolysis of Molten Compounds
+
+**Example: Molten NaCl**
+
+At cathode (reduction):
+Na⁺ + e⁻ → Na
+
+At anode (oxidation):
+2Cl⁻ → Cl₂ + 2e⁻
+
+### Electrolysis of Aqueous Solutions
+
+Competition between ions and water:
+
+**At cathode:** Competition between metal ion and H₂O
+- If metal E° more negative than H₂O → H₂ produced
+- If metal E° more positive → metal deposited
+
+2H₂O + 2e⁻ → H₂ + 2OH⁻ (E° = -0.83 V)
+
+**At anode:** Competition between anion and H₂O/OH⁻
+- Halide ions (except F⁻) → halogen produced
+- Otherwise → O₂ produced
+
+2H₂O → O₂ + 4H⁺ + 4e⁻ (or 4OH⁻ → O₂ + 2H₂O + 4e⁻)
+
+### Electrolysis of Brine (NaCl solution)
+
+At cathode: 2H₂O + 2e⁻ → H₂ + 2OH⁻
+At anode: 2Cl⁻ → Cl₂ + 2e⁻
+
+Products: H₂, Cl₂, and NaOH solution`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Faraday's Laws and Calculations",
+                content: `## Quantitative Electrolysis
+
+### Faraday's First Law
+
+The mass of substance produced is proportional to the quantity of electricity passed.
+
+### Faraday's Second Law
+
+The mass of substance produced is proportional to its molar mass divided by the number of electrons transferred.
+
+### Key Equations
+
+**Charge = Current × Time**
+**Q = I × t**
+
+Where:
+- Q = charge (coulombs, C)
+- I = current (amperes, A)
+- t = time (seconds, s)
+
+**One Faraday (F) = 96485 C mol⁻¹**
+This is the charge on one mole of electrons.
+
+### Calculation Steps
+
+1. Calculate charge: Q = I × t
+2. Calculate moles of electrons: n(e⁻) = Q / F
+3. Use stoichiometry to find moles of product
+4. Calculate mass or volume of product
+
+### Worked Example
+
+How much copper is deposited when 2.0 A flows for 30 minutes?
+
+Cu²⁺ + 2e⁻ → Cu
+
+1. Q = I × t = 2.0 × (30 × 60) = 3600 C
+2. Moles of e⁻ = 3600 / 96485 = 0.0373 mol
+3. Moles of Cu = 0.0373 / 2 = 0.0187 mol
+4. Mass of Cu = 0.0187 × 64 = **1.20 g**
+
+### Efficiency
+
+**Efficiency = (actual yield / theoretical yield) × 100%**
+
+Reasons for less than 100%:
+- Side reactions
+- Incomplete electrode reactions
+- Electrical resistance`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "6. Applications and Batteries",
+                content: `## Practical Electrochemistry
+
+### Industrial Applications
+
+**1. Electrolytic Production of Aluminium (Hall-Héroult Process)**
+- Electrolyte: Al₂O₃ dissolved in cryolite (Na₃AlF₆)
+- Cathode: Reduction to Al
+- Anode: Oxidation of O²⁻ to O₂ (carbon anodes consumed)
+
+**2. Electroplating**
+- Object to be plated = cathode
+- Plating metal = anode
+- Electrolyte contains metal ions
+
+### Types of Batteries
+
+**Primary Cells (non-rechargeable):**
+- Reactants consumed irreversibly
+- Example: Zinc-carbon cell, alkaline cell
+
+**Secondary Cells (rechargeable):**
+- Can be recharged by reversing current
+- Example: Lead-acid battery, lithium-ion
+
+### Lead-Acid Battery
+
+Used in cars:
+- Anode: Pb → PbSO₄
+- Cathode: PbO₂ → PbSO₄
+- Electrolyte: H₂SO₄
+- E°cell ≈ 2.0 V per cell (6 cells = 12 V)
+
+### Fuel Cells
+
+**Hydrogen Fuel Cell:**
+- Anode: 2H₂ + 4OH⁻ → 4H₂O + 4e⁻
+- Cathode: O₂ + 2H₂O + 4e⁻ → 4OH⁻
+- Overall: 2H₂ + O₂ → 2H₂O
+
+**Advantages:**
+- High efficiency (no Carnot limit)
+- Clean emission (only water)
+- Renewable if H₂ from electrolysis
+
+**Disadvantages:**
+- H₂ storage challenges
+- Expensive catalysts (Pt)
+- Infrastructure needed`,
+                diagrams: [],
+                subsections: []
+            }
+        ],
+        key_points: [
+            "Standard electrode potential (E°): measured vs SHE (0.00 V) at 298 K, 1 bar, 1 mol dm⁻³",
+            "More positive E° = better oxidising agent; more negative E° = better reducing agent",
+            "E°cell = E°(reduction) - E°(oxidation); reaction feasible if E°cell > 0",
+            "ΔG° = -nFE°; positive E° gives negative ΔG° (spontaneous)",
+            "Electrolysis: cathode = reduction (negative); anode = oxidation (positive)",
+            "At cathode in aqueous: metal deposits if E° more positive than -0.83 V; else H₂",
+            "At anode: halides give halogen (except F⁻); otherwise O₂",
+            "Q = I × t; moles of e⁻ = Q/F; use stoichiometry for product",
+            "F = 96485 C mol⁻¹ (charge on 1 mol electrons)",
+            "Fuel cells: H₂ + ½O₂ → H₂O; high efficiency, clean, reversible"
+        ],
+        exam_tips: [
+            "Write reduction half-equations with electrons on the LEFT",
+            "The species with more positive E° is reduced; the other is oxidised",
+            "For E°cell, subtract the less positive value from the more positive",
+            "In ΔG = -nFE, check n by balancing electrons in the overall equation",
+            "For electrolysis, reduction at cathode, oxidation at anode - remember OILRIG",
+            "In aqueous electrolysis, consider competition with water",
+            "Q = It where t must be in seconds",
+            "Fuel cell questions: know advantages, disadvantages, and equations"
+        ]
+    },
+    "Reaction Kinetics (Advanced)": {
+        topic: "Reaction Kinetics (Advanced)",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/remaining%20/Reaction_Kinetics.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvcmVtYWluaW5nIC9SZWFjdGlvbl9LaW5ldGljcy5tcDQiLCJpYXQiOjE3NjgwNjAzMjMsImV4cCI6NTI2ODU1NjMyM30.z0eiXyG_k6GIovVq3cTXNcjps_rfioQ-SSDY50k2kQo",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Rate_Determining_Step_and_Activation_Energy.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvUmF0ZV9EZXRlcm1pbmluZ19TdGVwX2FuZF9BY3RpdmF0aW9uX0VuZXJneS5tNGEiLCJpYXQiOjE3NjgwNDI2MDQsImV4cCI6NTI2ODUzODYwNH0.qg5xn3SEjVEw4NDqAnUut6kKAjhuTq33T9KGNJ8Ihsg",
+        subject: "A Level Chemistry",
+        summary: "Advanced Reaction Kinetics explores quantitative aspects of reaction rates including rate equations, orders of reaction, rate constants, determining mechanisms from rate data, and the Arrhenius equation. Understanding these concepts is crucial for predicting how fast reactions occur and for designing industrial processes.",
+        sections: [
+            {
+                title: "1. Rate Equations",
+                content: `## Quantitative Treatment of Rates
+
+### Rate of Reaction
+
+**Rate = change in concentration / time**
+
+Units: mol dm⁻³ s⁻¹
+
+### The Rate Equation
+
+For a reaction: A + B → Products
+
+**Rate = k[A]^m[B]^n**
+
+Where:
+- k = rate constant
+- [A], [B] = concentrations of reactants
+- m, n = orders of reaction with respect to A and B
+
+### Order of Reaction
+
+The order with respect to a reactant is the power to which its concentration is raised in the rate equation.
+
+| Order | Meaning |
+|-------|---------|
+| 0 | Rate independent of concentration |
+| 1 | Rate directly proportional to concentration |
+| 2 | Rate proportional to concentration squared |
+
+### Overall Order
+
+**Overall order = m + n + ...**
+
+Sum of all individual orders.
+
+### The Rate Constant (k)
+
+- Characteristic of a particular reaction
+- Changes with temperature
+- Does NOT change with concentration
+- Units depend on overall order
+
+### Units of k
+
+| Overall Order | Units of k |
+|---------------|------------|
+| 0 | mol dm⁻³ s⁻¹ |
+| 1 | s⁻¹ |
+| 2 | mol⁻¹ dm³ s⁻¹ |
+| 3 | mol⁻² dm⁶ s⁻¹ |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. Determining Order from Data",
+                content: `## Experimental Methods
+
+### Initial Rates Method
+
+1. Measure initial rate for different initial concentrations
+2. Compare experiments where only ONE concentration changes
+3. Determine how rate changes when concentration changes
+
+**Example:**
+
+| Expt | [A] | [B] | Initial Rate |
+|------|-----|-----|--------------|
+| 1 | 0.1 | 0.1 | 2.0 × 10⁻³ |
+| 2 | 0.2 | 0.1 | 4.0 × 10⁻³ |
+| 3 | 0.1 | 0.2 | 8.0 × 10⁻³ |
+
+**Analysis:**
+- Expt 1 → 2: [A] doubles, rate doubles → order 1 in A
+- Expt 1 → 3: [B] doubles, rate × 4 → order 2 in B
+
+**Rate = k[A]¹[B]²**
+
+### Using Ratios
+
+If [A] is multiplied by factor x, and rate is multiplied by factor y:
+Order = log(y) / log(x)
+
+**Example:** If [A] × 3, rate × 9
+Order = log(9) / log(3) = 2/1 = 2
+
+### From Concentration-Time Graphs
+
+**Zero order:** Straight line (concentration vs time)
+**First order:** Curved, constant half-life
+**Second order:** Curved, half-life increases
+
+### Half-Life Method (First Order)
+
+For first order reactions:
+- Half-life is constant regardless of initial concentration
+- **t½ = ln(2)/k = 0.693/k**`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. Rate-Concentration Graphs",
+                content: `## Graphical Determination of Order
+
+### Rate vs Concentration Graphs
+
+| Graph Shape | Order |
+|-------------|-------|
+| Horizontal line (rate constant) | 0 |
+| Straight line through origin | 1 |
+| Curve (parabola through origin) | 2 |
+
+### Plotting log Graphs
+
+For Rate = k[A]^n:
+**log(Rate) = log(k) + n × log[A]**
+
+Plot log(Rate) vs log[A]:
+- Gradient = n (order)
+- y-intercept = log(k)
+
+### Concentration-Time Graphs
+
+**Zero Order:**
+- [A] vs t is linear
+- Rate = k (constant)
+- [A] = [A]₀ - kt
+
+**First Order:**
+- [A] vs t is exponential decay
+- Rate = k[A]
+- [A] = [A]₀ × e^(-kt)
+- ln[A] vs t is linear with gradient = -k
+
+**Second Order:**
+- 1/[A] vs t is linear
+- Rate = k[A]²
+- Gradient = k
+
+### Testing for First Order
+
+Plot ln[A] vs time:
+- If straight line → first order
+- Gradient = -k
+- Half-life = 0.693/k`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. Mechanisms and Rate-Determining Step",
+                content: `## Linking Rate Equations to Mechanisms
+
+### What is a Mechanism?
+
+The sequence of elementary steps by which a reaction occurs.
+
+### Elementary Steps
+
+Each step has its own molecularity:
+| Molecularity | Meaning |
+|--------------|---------|
+| Unimolecular | One molecule reacts |
+| Bimolecular | Two molecules collide |
+| Termolecular | Three molecules collide (rare) |
+
+### Rate-Determining Step (RDS)
+
+The **slowest step** in a mechanism controls the overall rate.
+
+**Key Rule:**
+The rate equation relates to the species involved UP TO AND INCLUDING the rate-determining step.
+
+### Deducing Mechanism from Rate Equation
+
+**Example:** For 2NO₂ + F₂ → 2NO₂F
+
+Rate = k[NO₂][F₂]
+
+This suggests the RDS involves one NO₂ and one F₂.
+
+**Possible mechanism:**
+Step 1 (slow): NO₂ + F₂ → NO₂F + F•
+Step 2 (fast): NO₂ + F• → NO₂F
+
+The rate equation matches Step 1 (the RDS).
+
+### Species Not in Rate Equation
+
+If a reactant doesn't appear in the rate equation:
+- It enters AFTER the RDS
+- Order = 0 with respect to this species
+
+### Catalysts in Rate Equations
+
+If a catalyst appears in the rate equation:
+- It's involved in the RDS
+- It's regenerated in a later step`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Effect of Temperature: Arrhenius Equation",
+                content: `## Temperature and Rate Constants
+
+### Arrhenius Equation
+
+**k = Ae^(-Ea/RT)**
+
+Where:
+- k = rate constant
+- A = pre-exponential factor (frequency factor)
+- Ea = activation energy (J mol⁻¹)
+- R = gas constant = 8.314 J K⁻¹ mol⁻¹
+- T = temperature (K)
+
+### Logarithmic Form
+
+**ln k = ln A - Ea/(RT)**
+
+Or: **ln k = -Ea/R × (1/T) + ln A**
+
+### Graphical Determination of Ea
+
+Plot **ln k** vs **1/T**:
+- Straight line
+- Gradient = -Ea/R
+- y-intercept = ln A
+
+**Ea = -gradient × R**
+
+### Effect of Temperature on k
+
+General rule: Rate approximately doubles for every 10°C rise.
+
+Quantitatively:
+**ln(k₂/k₁) = Ea/R × (1/T₁ - 1/T₂)**
+
+### Worked Example
+
+If Ea = 50 kJ mol⁻¹, by what factor does k increase from 300 K to 310 K?
+
+ln(k₂/k₁) = 50000/8.314 × (1/300 - 1/310)
+ln(k₂/k₁) = 6015 × (0.000108)
+ln(k₂/k₁) = 0.65
+k₂/k₁ = e^0.65 = **1.9**
+
+Rate almost doubles.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "6. Practical Considerations",
+                content: `## Measuring Rates Experimentally
+
+### Methods of Following Reactions
+
+| Property | Equipment | Example |
+|----------|-----------|---------|
+| Gas volume | Gas syringe | Decomposition reactions |
+| Mass loss | Balance | Reactions producing gas |
+| Colour intensity | Colorimeter | Coloured reactant/product |
+| Conductivity | Conductivity meter | Ionic reactions |
+| pH | pH meter | Acid/base reactions |
+| Titration (quenching) | Manual | Ester hydrolysis |
+
+### Clock Reactions
+
+Measure time for a visible change to occur:
+- Example: Iodine clock (appearance of blue colour)
+- Rate ∝ 1/time
+
+### Continuous vs Sampling
+
+**Continuous monitoring:**
+- Measure throughout reaction
+- More data points, easier to analyse
+
+**Sampling:**
+- Take samples at intervals
+- Quench to stop reaction
+- Analyse each sample
+
+### Sources of Error
+
+1. Temperature fluctuations
+2. Mixing time at start
+3. Human timing errors
+4. Instrument calibration
+5. Impurities in reagents`,
+                diagrams: [],
+                subsections: []
+            }
+        ],
+        key_points: [
+            "Rate equation: Rate = k[A]^m[B]^n; orders determined experimentally, not from equation",
+            "Order: 0 means rate independent; 1 means rate ∝ [A]; 2 means rate ∝ [A]²",
+            "Units of k depend on overall order: 0 → mol dm⁻³ s⁻¹; 1 → s⁻¹; 2 → mol⁻¹ dm³ s⁻¹",
+            "Initial rates method: compare experiments where only one concentration changes",
+            "First order: constant half-life; t½ = 0.693/k; ln[A] vs t is linear",
+            "Rate-determining step (RDS) = slowest step; determines rate equation",
+            "Only species up to and including RDS appear in rate equation",
+            "Arrhenius equation: k = Ae^(-Ea/RT); ln k = ln A - Ea/RT",
+            "Plot ln k vs 1/T: gradient = -Ea/R",
+            "Higher temperature → larger k → faster reaction"
+        ],
+        exam_tips: [
+            "Orders must be found experimentally - cannot be read from the stoichiometric equation",
+            "To find order: if doubling [A] doubles rate → order 1; quadruples → order 2",
+            "Check units of k match the overall order",
+            "For first order, half-life is constant - use t½ = 0.693/k",
+            "When deducing mechanism, the RDS must match the rate equation",
+            "If a reactant doesn't appear in rate equation, it enters after the RDS",
+            "For Arrhenius calculations, convert Ea to J mol⁻¹ and T to Kelvin",
+            "When plotting ln k vs 1/T, use Ea = -gradient × R"
+        ]
+    },
+    "Carbonyl Compounds (Advanced)": {
+        topic: "Carbonyl Compounds (Advanced)",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Aldehyde_Versus_Ketone_Structure_and_Reactivity.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvQWxkZWh5ZGVfVmVyc3VzX0tldG9uZV9TdHJ1Y3R1cmVfYW5kX1JlYWN0aXZpdHkubTRhIiwiaWF0IjoxNzY4MDQyMTM0LCJleHAiOjUyNjg1MzgxMzR9.o2Kykt4FUceceamJLRpnYRD9QuPbk2SkXyxL0NwxEtc",
+        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Carbonyl_Compounds.mp4",
+        subject: "A Level Chemistry",
+        summary: "Advanced Carbonyl Compounds covers the chemistry of aldehydes and ketones in greater depth, including nucleophilic addition reactions with various reagents, mechanisms, tests for carbonyl groups, reduction and oxidation reactions, and the chemistry of α-hydrogens. Understanding the reactivity of the C=O group is fundamental to organic synthesis.",
+        sections: [
+            {
+                title: "1. Structure and Properties of Carbonyls",
+                content: `## The Carbonyl Group
+
+The **carbonyl group** (C=O) is the functional group in aldehydes, ketones, carboxylic acids, and their derivatives.
+
+### Aldehydes vs Ketones
+
+| Feature | Aldehyde | Ketone |
+|---------|----------|--------|
+| Structure | R-CHO | R-CO-R' |
+| Position of C=O | At end of chain | Within chain |
+| Example | CH₃CHO (ethanal) | CH₃COCH₃ (propanone) |
+| Oxidation | Easily oxidised to acid | Not easily oxidised |
+
+### Bonding in C=O
+
+- Carbon is sp² hybridised
+- The C=O consists of one σ bond and one π bond
+- Oxygen is more electronegative than carbon
+- The C=O bond is **polar**: Cδ⁺=Oδ⁻
+
+### Reactivity
+
+Due to the polar C=O bond:
+1. The carbonyl carbon is electrophilic (δ⁺)
+2. Susceptible to attack by nucleophiles
+3. Characteristic reaction: **nucleophilic addition**
+
+### Physical Properties
+
+- Lower boiling point than alcohols (no O-H)
+- Higher than alkanes (polar C=O, dipole-dipole)
+- Small carbonyl compounds soluble in water (H-bonding with water)`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. Nucleophilic Addition Reactions",
+                content: `## Attack on the Carbonyl Carbon
+
+The carbonyl carbon (δ⁺) is attacked by nucleophiles, breaking the π bond.
+
+### General Mechanism
+
+1. Nucleophile attacks Cδ⁺
+2. π electrons move to oxygen (O becomes negative)
+3. Proton added to give final product
+
+### Reaction with HCN (Hydrogen Cyanide)
+
+**Products:** Hydroxynitriles (cyanohydrins)
+
+RCHO + HCN → RCH(OH)CN
+RCOR' + HCN → RR'C(OH)CN
+
+**Conditions:** HCN (or KCN + acid), cold
+
+**Mechanism:**
+1. CN⁻ attacks carbonyl carbon
+2. π electrons move to oxygen
+3. O⁻ picks up H⁺ from solution
+
+**Importance:**
+- Adds one carbon to the chain
+- -CN can be converted to -COOH or -CH₂NH₂
+
+**Note:** Hydroxynitriles from aldehydes have a chiral carbon:
+- Nucleophile can attack from either side
+- Produces racemic mixture (50:50)
+
+### Reaction with NaBH₄ (Sodium Borohydride)
+
+**Product:** Alcohols
+
+RCHO + 2[H] → RCH₂OH (1° alcohol)
+RCOR' + 2[H] → RCHOHR' (2° alcohol)
+
+**Reagent:** NaBH₄ in water/ethanol
+
+**Mechanism:**
+- Hydride ion (H⁻) acts as nucleophile
+- Attacks Cδ⁺ of carbonyl
+- Protonation gives alcohol`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. Further Addition Reactions",
+                content: `## Reactions with Nitrogen Nucleophiles
+
+### Reaction with 2,4-DNPH (Brady's Reagent)
+
+**2,4-dinitrophenylhydrazine** reacts with aldehydes and ketones:
+
+RCHO + 2,4-DNPH → 2,4-dinitrophenylhydrazone + H₂O
+
+**Observations:**
+- Orange/yellow precipitate forms
+- Used as TEST for carbonyl group
+
+**Uses:**
+1. Identify presence of aldehyde/ketone
+2. Determine melting point of derivative for identification
+3. Purify carbonyl compounds (recrystallise derivative)
+
+### Reaction with Grignard Reagents (A2 Extension)
+
+**Grignard reagent:** RMgX (organometallic)
+
+RCHO + R'MgBr → RR'CHOH (after hydrolysis)
+- Aldehyde → secondary alcohol
+
+RCOR' + R''MgBr → RR'R''COH (after hydrolysis)
+- Ketone → tertiary alcohol
+
+**Conditions:** Dry ether, then dilute acid
+
+**Importance:** Forms new C-C bonds (synthesis)
+
+### Comparison of Nucleophilic Additions
+
+| Nucleophile | Product | Carbon Change |
+|-------------|---------|---------------|
+| H⁻ (NaBH₄) | Alcohol | No change |
+| CN⁻ | Hydroxynitrile | +1 carbon |
+| RMgBr | Alcohol | +R carbons |
+| 2,4-DNPH | Hydrazone | No change |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. Oxidation and Reduction",
+                content: `## Redox Reactions of Carbonyl Compounds
+
+### Oxidation of Aldehydes
+
+Aldehydes are easily oxidised to carboxylic acids:
+
+RCHO + [O] → RCOOH
+
+**Reagents:**
+1. Acidified dichromate (K₂Cr₂O₇/H₂SO₄)
+2. Tollens' reagent (ammoniacal silver nitrate)
+3. Fehling's solution (alkaline Cu²⁺)
+
+### Tollens' Test
+
+**Reagent:** [Ag(NH₃)₂]⁺ (ammoniacal silver nitrate)
+
+RCHO + 2[Ag(NH₃)₂]⁺ + H₂O → RCOO⁻ + 2Ag + 4NH₃ + H⁺
+
+**Positive result:** Silver mirror forms on tube
+**Only aldehydes give this test** (not ketones)
+
+### Fehling's Test
+
+**Reagent:** Cu²⁺ in alkaline solution (blue)
+
+RCHO + 2Cu²⁺ + 5OH⁻ → RCOO⁻ + Cu₂O + 3H₂O
+
+**Positive result:** Blue solution → brick-red precipitate (Cu₂O)
+**Only aldehydes give this test** (not ketones)
+
+### Oxidation of Ketones
+
+**Ketones resist mild oxidation**
+- No hydrogen on carbonyl carbon
+- Strong oxidation breaks C-C bonds
+
+### Reduction
+
+Both aldehydes and ketones undergo reduction:
+
+C=O + 2[H] → C-OH
+
+**Reducing agents:**
+- NaBH₄ (mild)
+- LiAlH₄ (stronger)
+- H₂/Ni catalyst (heterogeneous)`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. The Iodoform Reaction",
+                content: `## A Characteristic Test
+
+The **iodoform reaction** is a specific test for compounds with the CH₃CO- group (methyl carbonyl).
+
+### Compounds That Give This Test
+
+1. Ethanal (CH₃CHO)
+2. Methyl ketones (CH₃COR)
+3. Alcohols that oxidise to these (CH₃CHOH-)
+
+### The Reaction
+
+CH₃COR + 3I₂ + 4NaOH → CHI₃ + RCOONa + 3NaI + 3H₂O
+
+**Products:**
+- Triiodomethane (iodoform, CHI₃) - yellow precipitate
+- Sodium carboxylate
+
+### Conditions
+
+- Warm with I₂ and NaOH (or NaOI)
+- Alternatively: warm with KI and NaClO
+
+### Observations
+
+**Positive test:**
+- Yellow precipitate of iodoform (CHI₃)
+- Characteristic antiseptic smell
+
+### Mechanism Overview
+
+1. Base removes H from CH₃
+2. Iodine substitutes all three H atoms
+3. CI₃⁻ is a good leaving group
+4. Nucleophilic attack by OH⁻
+5. CHI₃ eliminated
+
+### Uses
+
+- Test for CH₃CO- group
+- Test for CH₃CHOH- group (oxidised first)
+- Formerly used in synthesis`,
+                diagrams: [],
+                subsections: []
+            }
+        ],
+        key_points: [
+            "Carbonyl carbon is electrophilic (δ⁺) due to polar C=O bond",
+            "Characteristic reaction: nucleophilic addition to C=O",
+            "HCN adds to give hydroxynitriles; racemic mixture from aldehydes",
+            "NaBH₄ reduces aldehydes to 1° alcohols, ketones to 2° alcohols",
+            "2,4-DNPH gives orange precipitate with all aldehydes and ketones",
+            "Tollens' test (silver mirror) and Fehling's test (brick-red ppt) distinguish aldehydes from ketones",
+            "Ketones resist mild oxidation; aldehydes oxidise to carboxylic acids",
+            "Iodoform reaction: CH₃CO- compounds give yellow precipitate of CHI₃"
+        ],
+        exam_tips: [
+            "Draw mechanism for nucleophilic addition: nucleophile attacks Cδ⁺, π electrons to O",
+            "With HCN, explain racemic mixture: attack from either side of planar carbonyl",
+            "For identification: 2,4-DNPH confirms carbonyl; then use Tollens'/Fehling's to distinguish",
+            "Remember aldehydes oxidise easily, ketones don't (no H on carbonyl C)",
+            "Iodoform test: not just CH₃CO-, also CH₃CHOH- (oxidised first)",
+            "Grignard additions form new C-C bonds - useful in synthesis"
+        ]
+    },
+    "Carboxylic Acids and Derivatives (Advanced)": {
+        topic: "Carboxylic Acids and Derivatives (Advanced)",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Carboxylic_Acids_and_Derivatives_Mastery_Blueprint.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvQ2FyYm94eWxpY19BY2lkc19hbmRfRGVyaXZhdGl2ZXNfTWFzdGVyeV9CbHVlcHJpbnQubTRhIiwiaWF0IjoxNzY4MDQyMTk1LCJleHAiOjUyNjg1MzgxOTV9.8wltCTwoXpdcJ24fUU0GsqwGt1V86aCxx6pPXUAukSk",
+        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Carboxylic_Acids_and_Derivatives.mp4",
+        subject: "A Level Chemistry",
+        summary: "Advanced Carboxylic Acids and Derivatives covers the chemistry of acyl chlorides, acid anhydrides, esters, and amides. These derivatives undergo nucleophilic acyl substitution reactions, where a nucleophile replaces the leaving group attached to the carbonyl. Understanding these reactions is crucial for organic synthesis.",
+        sections: [
+            {
+                title: "1. Carboxylic Acid Derivatives",
+                content: `## The Acyl Group
+
+All carboxylic acid derivatives contain the **acyl group** (RCO-).
+
+### Types of Derivatives
+
+| Derivative | Structure | Leaving Group |
+|------------|-----------|---------------|
+| Acyl chloride | RCOCl | Cl⁻ |
+| Acid anhydride | (RCO)₂O | RCOO⁻ |
+| Ester | RCOOR' | R'O⁻ |
+| Amide | RCONH₂ | NH₂⁻ |
+| Carboxylic acid | RCOOH | OH⁻ |
+
+### Reactivity Order
+
+**Acyl chloride > Anhydride > Ester > Amide > Carboxylic acid**
+
+Based on:
+1. Leaving group ability (Cl⁻ is excellent)
+2. Stability of derivative
+3. Resonance effects
+
+### General Reaction Pattern
+
+All derivatives undergo **nucleophilic acyl substitution**:
+- Nucleophile attacks carbonyl C
+- Leaving group is displaced
+- Net result: substitution of one group for another`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. Acyl Chlorides",
+                content: `## Highly Reactive Derivatives
+
+**Acyl chlorides** (RCOCl) are the most reactive carboxylic acid derivatives.
+
+### Formation
+
+From carboxylic acid:
+RCOOH + SOCl₂ → RCOCl + SO₂ + HCl
+RCOOH + PCl₅ → RCOCl + POCl₃ + HCl
+
+### Reactions
+
+**1. With Water (Hydrolysis):**
+RCOCl + H₂O → RCOOH + HCl
+Vigorous reaction at room temperature; fumes of HCl
+
+**2. With Alcohols (Esterification):**
+RCOCl + R'OH → RCOOR' + HCl
+Fast, room temperature, no catalyst needed
+
+**3. With Ammonia (Amide formation):**
+RCOCl + 2NH₃ → RCONH₂ + NH₄Cl
+Fast reaction; excess ammonia neutralises HCl
+
+**4. With Amines:**
+RCOCl + R'NH₂ → RCONHR' + HCl
+N-substituted amide formed
+
+### Mechanism
+
+Nucleophilic acyl substitution:
+1. Nucleophile attacks Cδ⁺ of C=O
+2. Tetrahedral intermediate forms
+3. Cl⁻ leaves, C=O reforms
+
+### Why So Reactive?
+
+1. Cl is electron-withdrawing → makes C more δ⁺
+2. Cl⁻ is an excellent leaving group
+3. No resonance stabilisation with Cl`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. Acid Anhydrides",
+                content: `## Moderately Reactive
+
+**Acid anhydrides** ((RCO)₂O) react similarly to acyl chlorides but less vigorously.
+
+### Formation
+
+From acyl chloride + carboxylic acid:
+RCOCl + RCOO⁻Na⁺ → (RCO)₂O + NaCl
+
+Or by heating carboxylic acids with dehydrating agent
+
+### Reactions
+
+**1. With Water:**
+(RCO)₂O + H₂O → 2RCOOH
+Slower than acyl chloride
+
+**2. With Alcohols:**
+(RCO)₂O + R'OH → RCOOR' + RCOOH
+Product: ester + carboxylic acid
+
+**3. With Ammonia:**
+(RCO)₂O + 2NH₃ → RCONH₂ + RCOO⁻NH₄⁺
+Product: amide + ammonium carboxylate
+
+**4. With Amines:**
+(RCO)₂O + R'NH₂ → RCONHR' + RCOOH
+
+### Comparison with Acyl Chlorides
+
+| Feature | Acyl Chloride | Acid Anhydride |
+|---------|---------------|----------------|
+| Reactivity | Very high | High |
+| With water | Violent | Moderate |
+| Byproduct | HCl (corrosive) | RCOOH (recyclable) |
+| Cost | Higher | Lower |
+
+### Industrial Use
+
+Ethanoic anhydride is preferred for:
+- Aspirin manufacture
+- Cellulose acetate production
+- Safer than ethanoyl chloride`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. Esters",
+                content: `## Less Reactive Derivatives
+
+**Esters** (RCOOR') are relatively stable and require catalysis for reactions.
+
+### Formation Methods
+
+**1. From carboxylic acid + alcohol:**
+RCOOH + R'OH ⇌ RCOOR' + H₂O
+Conditions: Acid catalyst (H₂SO₄), reflux
+Reversible; use excess of one reactant or remove water
+
+**2. From acyl chloride + alcohol:**
+RCOCl + R'OH → RCOOR' + HCl
+Fast, irreversible, no catalyst
+
+**3. From acid anhydride + alcohol:**
+(RCO)₂O + R'OH → RCOOR' + RCOOH
+
+### Hydrolysis of Esters
+
+**Acid hydrolysis (reversible):**
+RCOOR' + H₂O ⇌ RCOOH + R'OH
+Conditions: Dilute acid, reflux
+
+**Base hydrolysis (irreversible) - Saponification:**
+RCOOR' + NaOH → RCOO⁻Na⁺ + R'OH
+Conditions: NaOH(aq), reflux
+Products: sodium carboxylate + alcohol
+
+### Transesterification
+
+Exchange of alkyl groups between esters and alcohols:
+RCOOR' + R''OH ⇌ RCOOR'' + R'OH
+
+**Application:** Biodiesel production
+- Vegetable oil + methanol → fatty acid methyl esters (FAME)
+
+### Uses of Esters
+
+- Flavourings and fragrances
+- Solvents
+- Plasticisers (in plastics)
+- Biodiesel fuel`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Comparison of Derivative Reactions",
+                content: `## Summary of Nucleophilic Acyl Substitution
+
+### With Water (Hydrolysis)
+
+| Derivative | Products | Conditions |
+|------------|----------|------------|
+| RCOCl | RCOOH + HCl | Room temp, vigorous |
+| (RCO)₂O | 2RCOOH | Warm, moderate |
+| RCOOR' | RCOOH + R'OH | Acid/reflux or base/reflux |
+| RCONH₂ | RCOOH + NH₃ | Strong acid or base, reflux |
+
+### With Alcohols
+
+| Derivative | Products | Conditions |
+|------------|----------|------------|
+| RCOCl | RCOOR' + HCl | Room temp, fast |
+| (RCO)₂O | RCOOR' + RCOOH | Warm |
+| RCOOH | RCOOR' + H₂O | Acid catalyst, reflux, reversible |
+
+### With Ammonia/Amines
+
+| Derivative | Products | Result |
+|------------|----------|--------|
+| RCOCl | RCONH₂ + HCl | Amide (primary if NH₃) |
+| (RCO)₂O | RCONH₂ + RCOOH | Amide |
+| RCOOR' | RCONH₂ + R'OH | Slow without catalyst |
+
+### Key Trends
+
+1. **Most reactive to least reactive:**
+   Acyl chloride > Anhydride > Ester > Amide
+
+2. **Best leaving groups:**
+   Cl⁻ > RCOO⁻ > RO⁻ > NH₂⁻
+
+3. **Conditions get harsher as reactivity decreases**`,
+                diagrams: [],
+                subsections: []
+            }
+        ],
+        key_points: [
+            "Carboxylic acid derivatives: acyl chloride, anhydride, ester, amide",
+            "Reactivity order: RCOCl > (RCO)₂O > RCOOR' > RCONH₂",
+            "All undergo nucleophilic acyl substitution: Nu attacks C=O, LG leaves",
+            "Acyl chlorides: most reactive; react vigorously with H₂O, alcohols, NH₃",
+            "Acid anhydrides: similar reactions but milder; byproduct is recyclable",
+            "Ester formation: acid + alcohol (reversible with catalyst) or acyl chloride + alcohol (fast)",
+            "Ester hydrolysis: acid catalysed (reversible) or base catalysed (saponification, irreversible)",
+            "Amides: least reactive; hydrolysis needs strong acid/base and heat"
+        ],
+        exam_tips: [
+            "Know how to form esters from all three routes and state conditions",
+            "Distinguish acid and base hydrolysis of esters - base is irreversible",
+            "For mechanism, show tetrahedral intermediate in nucleophilic acyl substitution",
+            "Reactivity order based on leaving group ability and resonance",
+            "Acid anhydrides are safer industrial alternative to acyl chlorides",
+            "Transesterification: biodiesel production from vegetable oil + methanol"
+        ]
+    },
+    "Polymerisation (Advanced)": {
+        topic: "Polymerisation (Advanced)",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/remaining%20/Polymerisation_(Advanced).mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvcmVtYWluaW5nIC9Qb2x5bWVyaXNhdGlvbl8oQWR2YW5jZWQpLm1wNCIsImlhdCI6MTc2ODA2MDMxMSwiZXhwIjo1MjY4NTU2MzExfQ.QB8RfXw1QEmVmjJMmU2lZIdgxTG55W5rLwCTVNuhDmU",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/remaining%20/Audios/Addition_and_Condensation_Polymerization_Explained.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvcmVtYWluaW5nIC9BdWRpb3MvQWRkaXRpb25fYW5kX0NvbmRlbnNhdGlvbl9Qb2x5bWVyaXphdGlvbl9FeHBsYWluZWQubTRhIiwiaWF0IjoxNzY4MDYwODQwLCJleHAiOjUyNjg1NTY4NDB9.n10-2QmW4uM25V8amQbsmwr5qdsJSOztFW9NYMXzEok",
+        subject: "A Level Chemistry",
+        summary: "Advanced Polymerisation covers the detailed mechanisms and types of polymers formed through addition and condensation polymerisation. This includes copolymers, thermoplastics vs thermosets, polymer degradation and recycling, and the relationship between polymer structure and properties.",
+        sections: [
+            {
+                title: "1. Types of Polymers",
+                content: `## Classification of Polymers
+
+### By Formation Mechanism
+
+**Addition Polymers:**
+- Formed from unsaturated monomers (C=C)
+- No small molecule lost
+- Product has same empirical formula as monomer
+
+**Condensation Polymers:**
+- Formed from monomers with two functional groups
+- Small molecule lost (usually H₂O)
+- Different empirical formula from monomers
+
+### By Thermal Behaviour
+
+**Thermoplastics:**
+- Soften when heated, harden when cooled
+- Weak intermolecular forces between chains
+- Can be remoulded and recycled
+- Examples: polyethene, PVC, polystyrene
+
+**Thermosets:**
+- Do not soften when heated (decompose instead)
+- Cross-linked covalent bonds between chains
+- Cannot be remoulded
+- Examples: melamine, epoxy resins
+
+### By Structure
+
+| Type | Description | Properties |
+|------|-------------|------------|
+| Linear | Long straight chains | Flexible, can be moulded |
+| Branched | Chains with side branches | Less dense, flexible |
+| Cross-linked | Chains bonded together | Rigid, strong, less flexible |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. Addition Polymerisation Revisited",
+                content: `## Mechanism and Variations
+
+### Free Radical Polymerisation
+
+**Initiation:**
+Initiator (e.g., benzoyl peroxide) decomposes:
+R-O-O-R → 2RO• (radicals)
+
+**Propagation:**
+RO• + CH₂=CHX → RO-CH₂-C•HX
+This radical adds to more monomers repeatedly
+
+**Termination:**
+Two radicals combine to end the chain
+
+### Ionic Polymerisation
+
+**Cationic:** Initiated by strong acids
+- Suitable for electron-rich monomers
+
+**Anionic:** Initiated by nucleophiles
+- Suitable for electron-poor monomers
+- "Living polymers" - controlled chain length
+
+### Ziegler-Natta Catalysts
+
+- Transition metal catalysts (Ti, Cr compounds)
+- Produces stereoregular polymers
+- Used for high-density polyethene (HDPE)
+- Better control of polymer structure
+
+### Common Addition Polymers
+
+| Monomer | Polymer | Uses |
+|---------|---------|------|
+| Ethene | Polyethene | Bags, bottles |
+| Propene | Polypropene | Rope, containers |
+| Chloroethene | PVC | Pipes, flooring |
+| Styrene | Polystyrene | Packaging |
+| Tetrafluoroethene | PTFE (Teflon) | Non-stick coatings |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. Condensation Polymerisation Revisited",
+                content: `## Polyesters and Polyamides
+
+### Polyesters
+
+Formed from dicarboxylic acid + diol:
+
+**Example: PET (Polyethylene terephthalate)**
+- Benzene-1,4-dicarboxylic acid + ethane-1,2-diol
+- Uses: Bottles, clothing fibres (polyester)
+
+**Mechanism:**
+1. -COOH reacts with -OH
+2. Ester link (-COO-) forms
+3. Water eliminated
+4. Repeat at both ends of each monomer
+
+### Polyamides
+
+Formed from dicarboxylic acid + diamine (or amino acids):
+
+**Example: Nylon-6,6**
+- Hexanedioic acid + hexane-1,6-diamine
+- Uses: Textiles, ropes, engineering plastics
+
+**Example: Kevlar**
+- Benzene-1,4-dicarboxylic acid + benzene-1,4-diamine
+- Very strong: used in bulletproof vests
+
+**Mechanism:**
+1. -COOH reacts with -NH₂
+2. Amide link (-CONH-) forms
+3. Water eliminated
+
+### Proteins as Polyamides
+
+Natural polyamides from α-amino acids:
+H₂N-CHR-COOH → polypeptide + nH₂O
+The -CONH- link is called a peptide bond.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. Polymer Properties and Structure",
+                content: `## Structure-Property Relationships
+
+### Factors Affecting Properties
+
+**1. Chain Length:**
+- Longer chains → higher mp/bp
+- More entanglement → stronger
+
+**2. Branching:**
+- More branches → less dense
+- Chains can't pack as closely
+- LDPE vs HDPE
+
+**3. Intermolecular Forces:**
+- H-bonding (polyamides) → higher mp, stronger
+- Polar groups → water absorption
+
+**4. Cross-linking:**
+- Covalent bonds between chains
+- Rigid, cannot be remoulded
+- Thermoset behaviour
+
+### Crystallinity
+
+**Crystalline regions:** Ordered, closely packed
+**Amorphous regions:** Disordered, randomly arranged
+
+More crystalline → higher mp, more rigid, less transparent
+
+### Plasticisers
+
+- Small molecules added to polymers
+- Increase chain separation
+- Make polymer more flexible
+- Example: PVC (rigid) + plasticiser = flexible PVC
+
+### Modifying Properties
+
+| Modification | Effect |
+|--------------|--------|
+| Cross-linking | Increases rigidity |
+| Plasticiser | Increases flexibility |
+| Filler | Reduces cost, may add strength |
+| Flame retardant | Reduces flammability |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Degradation and Environmental Impact",
+                content: `## Polymer Disposal
+
+### Problems with Polymers
+
+1. **Non-biodegradable:** Most synthetic polymers
+2. **Persist in environment:** Decades to centuries
+3. **Toxic combustion products:** HCl from PVC
+4. **Microplastics:** Environmental contamination
+
+### Degradation Methods
+
+**Photodegradation:**
+- UV light breaks C-C bonds
+- Leads to brittleness and fragmentation
+
+**Hydrolysis:**
+- Water attacks susceptible bonds
+- Polyesters and polyamides can hydrolyse
+- Accelerated by acid/base
+
+**Biodegradation:**
+- Microorganisms break down polymer
+- Natural polymers (cellulose, starch)
+- Some synthetic biodegradable polymers
+
+### Recycling
+
+**Mechanical recycling:**
+- Sort, wash, melt, remould
+- Only for thermoplastics
+- Quality may degrade
+
+**Chemical recycling:**
+- Depolymerise to monomers
+- Repolymerise to new plastic
+- More energy intensive
+
+**Energy recovery:**
+- Incineration for energy
+- CO₂ and possibly toxic gases released
+
+### Biodegradable Polymers
+
+**PLA (Polylactic acid):**
+- From lactic acid (renewable sources)
+- Compostable under industrial conditions
+
+**PHB (Polyhydroxybutyrate):**
+- Produced by bacteria
+- Biodegradable in soil/water`,
+                diagrams: [],
+                subsections: []
+            }
+        ],
+        key_points: [
+            "Addition polymers: from C=C monomers, no small molecule lost",
+            "Condensation polymers: from bifunctional monomers, water eliminated",
+            "Thermoplastics: soften on heating, can be recycled; thermosets: cannot be remoulded",
+            "Polyesters: diacid + diol; ester links (-COO-)",
+            "Polyamides: diacid + diamine; amide links (-CONH-)",
+            "Properties depend on chain length, branching, intermolecular forces, cross-linking",
+            "Plasticisers increase flexibility; cross-linking increases rigidity",
+            "Polyesters and polyamides can be hydrolysed; addition polymers more resistant",
+            "Biodegradable polymers: PLA, PHB; conventional plastics persist",
+            "Recycling: mechanical (remould) or chemical (depolymerise)"
+        ],
+        exam_tips: [
+            "Draw repeat units showing the link between monomers",
+            "Know difference between addition and condensation: loss of H₂O",
+            "Link structure to properties: H-bonding in nylon increases strength",
+            "Explain why polyesters/amides can hydrolyse (ester/amide links)",
+            "For environmental questions, discuss non-biodegradability, recycling options",
+            "Kevlar is strong due to H-bonding between aromatic amide chains"
+        ]
+    },
+    "Organic Synthesis (Advanced)": {
+        topic: "Organic Synthesis (Advanced)",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/remaining%20/The_Molecular_Architects.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvcmVtYWluaW5nIC9UaGVfTW9sZWN1bGFyX0FyY2hpdGVjdHMubXA0IiwiaWF0IjoxNzY4MDYwMzM2LCJleHAiOjUyNjg1NTYzMzZ9.5H7ISqp02pxZe1rSEj7JJ2j9SMFF5c0llANL5R24C7E",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/remaining%20/Audios/Understanding_Organic_Synthesis_Blueprints_and_Energy.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvcmVtYWluaW5nIC9BdWRpb3MvVW5kZXJzdGFuZGluZ19PcmdhbmljX1N5bnRoZXNpc19CbHVlcHJpbnRzX2FuZF9FbmVyZ3kubTRhIiwiaWF0IjoxNzY4MDYxMDA5LCJleHAiOjUyNjg1NTcwMDl9.oSE8gWVHb_zoRbuI-BJziR_ak3dqIxgUxC4wI9sPlzU",
+        subject: "A Level Chemistry",
+        summary: "Advanced Organic Synthesis brings together all organic reaction types to design multi-step synthetic routes. This includes retrosynthetic analysis, protecting groups, strategic bond disconnection, stereochemical considerations, and green chemistry principles. Mastery of this topic requires knowledge of all organic reactions and their conditions.",
+        sections: [
+            {
+                title: "1. Synthetic Strategy",
+                content: `## Planning Multi-Step Syntheses
+
+### Forward Synthesis
+
+Start from available materials and work towards target:
+1. Identify functional groups in target
+2. Work out how to introduce each one
+3. Plan the order of reactions
+
+### Retrosynthetic Analysis
+
+Work backwards from target to starting material:
+1. Identify key bonds to disconnect
+2. Find simpler precursors
+3. Continue until you reach available compounds
+
+**Notation:** Use ⟹ for retrosynthetic steps (double-headed arrow)
+
+### Synthons and Reagents
+
+| Synthon (theoretical) | Reagent (actual) |
+|-----------------------|------------------|
+| R⁺ | RBr |
+| R⁻ | RMgBr (Grignard) |
+| CN⁻ | KCN |
+| H⁻ | NaBH₄ or LiAlH₄ |
+
+### Strategic Considerations
+
+1. Minimise number of steps
+2. Maximise yield at each step
+3. Consider cost of reagents
+4. Consider safety and environmental impact
+5. Control stereochemistry where needed`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. Key Functional Group Interconversions",
+                content: `## Reaction Summary Chart
+
+### Carbon Chain Extension
+
+| Starting Material | Reagent | Product | Notes |
+|-------------------|---------|---------|-------|
+| Halogenoalkane | KCN | Nitrile (+1 C) | Nucleophilic substitution |
+| Aldehyde/ketone | HCN | Hydroxynitrile (+1 C) | Nucleophilic addition |
+| Aldehyde/ketone | RMgBr | Alcohol (+R) | Grignard reaction |
+
+### Carbon Chain Reduction
+
+No common A-level reactions reduce chain length, but oxidation can cleave alkenes.
+
+### Key Oxidation Reactions
+
+| From | To | Reagent |
+|------|----|---------|
+| 1° alcohol | Aldehyde | K₂Cr₂O₇/H₂SO₄, distil |
+| 1° alcohol | Carboxylic acid | K₂Cr₂O₇/H₂SO₄, reflux |
+| 2° alcohol | Ketone | K₂Cr₂O₇/H₂SO₄ |
+| Aldehyde | Carboxylic acid | K₂Cr₂O₇/H₂SO₄ or Tollens' |
+
+### Key Reduction Reactions
+
+| From | To | Reagent |
+|------|----|---------|
+| Nitrile | Primary amine | LiAlH₄ or H₂/Ni |
+| Aldehyde | 1° alcohol | NaBH₄ or LiAlH₄ |
+| Ketone | 2° alcohol | NaBH₄ or LiAlH₄ |
+| Carboxylic acid | 1° alcohol | LiAlH₄ (not NaBH₄) |
+| Nitrobenzene | Phenylamine | Sn/HCl or H₂/Ni |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. Worked Synthesis Examples",
+                content: `## Multi-Step Synthesis Problems
+
+### Example 1: Ethanol → Ethanoic Acid
+
+**Route:**
+CH₃CH₂OH → CH₃CHO → CH₃COOH
+
+**Steps:**
+1. Oxidise with K₂Cr₂O₇/H₂SO₄, distil to get aldehyde
+2. Continue oxidation (reflux) to get acid
+
+OR: Reflux directly to get acid in one step
+
+### Example 2: 1-Bromobutane → Butanoic Acid
+
+**Route:**
+CH₃CH₂CH₂CH₂Br → CH₃CH₂CH₂CH₂CN → CH₃CH₂CH₂CH₂COOH
+
+Wait - this gives pentanoic acid (5C, not 4C)!
+
+**Correct route (no chain extension):**
+CH₃CH₂CH₂CH₂Br → CH₃CH₂CH₂CH₂OH → CH₃CH₂CH₂CHO → CH₃CH₂CH₂COOH
+
+**Steps:**
+1. NaOH(aq), reflux → butan-1-ol
+2. K₂Cr₂O₇/H₂SO₄, reflux → butanoic acid
+
+### Example 3: Benzene → Phenylamine
+
+**Route:**
+C₆H₆ → C₆H₅NO₂ → C₆H₅NH₂
+
+**Steps:**
+1. HNO₃/H₂SO₄ at 50°C → nitrobenzene
+2. Sn/HCl, reflux → phenylamine
+
+### Tips for Synthesis Questions
+
+1. Count carbons in starting material and product
+2. Identify functional group changes
+3. Plan order to avoid unwanted reactions`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. Protecting Groups",
+                content: `## Selective Reactions
+
+**Problem:** A molecule may have two functional groups, but you only want one to react.
+
+**Solution:** Protect one group, react the other, then deprotect.
+
+### Alcohol Protection
+
+Alcohols are often protected as esters:
+
+**Protection:**
+R-OH + CH₃COCl → R-OCOCH₃ + HCl
+
+**Deprotection:**
+R-OCOCH₃ + H₂O (acid or base) → R-OH + CH₃COOH
+
+### Carbonyl Protection
+
+Aldehydes/ketones can be protected as acetals:
+
+**Protection:**
+RR'C=O + 2R''OH → RR'C(OR'')₂ + H₂O
+(Acid catalysis, remove water)
+
+**Deprotection:**
+RR'C(OR'')₂ + H₂O → RR'C=O + 2R''OH
+(Acid hydrolysis)
+
+### Amine Protection
+
+Amines can be protected as amides:
+
+**Protection:**
+RNH₂ + R'COCl → R'CONHR + HCl
+
+**Deprotection:**
+R'CONHR + H₂O (acid, reflux) → RNH₃⁺ + R'COO⁻
+
+### Why Protect?
+
+- Prevent unwanted nucleophilic attack
+- Prevent oxidation
+- Ensure reaction occurs at correct position`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Green Chemistry in Synthesis",
+                content: `## Sustainable Synthesis
+
+### Principles of Green Chemistry
+
+1. **Atom economy:** Maximise atoms from reactants in product
+2. **Prevent waste:** Better than treating it
+3. **Use safer reagents:** Avoid toxic or hazardous chemicals
+4. **Energy efficiency:** Minimise heating/cooling
+5. **Use renewable feedstocks:** Not petroleum-based
+6. **Avoid derivatives:** Reduce protection/deprotection
+
+### Atom Economy
+
+**Atom economy = (Mr of desired product / Mr of all reactants) × 100%**
+
+**High atom economy:**
+Addition reactions (100% if all atoms incorporated)
+
+**Low atom economy:**
+Substitution reactions (leave leaving groups)
+Reactions producing byproducts
+
+### Example Comparison
+
+**Making ethyl ethanoate:**
+
+1. Acyl chloride route:
+   CH₃COCl + C₂H₅OH → CH₃COOC₂H₅ + HCl
+   Atom economy = 88/114.5 × 100 = 77%
+
+2. Fischer esterification:
+   CH₃COOH + C₂H₅OH → CH₃COOC₂H₅ + H₂O
+   Atom economy = 88/106 × 100 = 83%
+
+Fischer route has higher atom economy but is reversible.
+
+### Catalysis
+
+- Use catalysts instead of stoichiometric reagents
+- Transition metal catalysis
+- Enzyme catalysis (biocatalysis)
+- Recyclable catalysts`,
+                diagrams: [],
+                subsections: []
+            }
+        ],
+        key_points: [
+            "Retrosynthetic analysis: work backwards from target, breaking key bonds",
+            "Know all functional group interconversions and conditions",
+            "CN⁻ nucleophile adds one carbon; Grignard adds R group",
+            "Oxidation: alcohol → aldehyde → carboxylic acid",
+            "Reduction: nitrile → amine; carbonyl → alcohol; nitro → amine",
+            "Protecting groups: block one functional group while reacting another",
+            "Green chemistry: maximise atom economy, minimise waste",
+            "Catalysts are preferred over stoichiometric reagents"
+        ],
+        exam_tips: [
+            "Always state reagents AND conditions for each step",
+            "Check carbon count - CN⁻ adds one carbon, Grignard adds the R group",
+            "Know alternatives: multiple routes may reach same product",
+            "Show mechanism if asked - especially for key steps",
+            "For green chemistry: compare atom economy of alternative routes",
+            "Protecting groups: explain why protection is needed for specific syntheses"
         ]
     }
 };

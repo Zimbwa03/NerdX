@@ -10,9 +10,16 @@ export {
     topicCounts
 } from './topics';
 
-export type { 
-    ALevelBiologyTopic, 
-    BiologyQuestionType, 
-    BiologyQuestionTypeInfo 
+// Notes exports
+export {
+    aLevelBiologyNotes,
+    getTopicNotes,
+    getAllTopicNames as getAllNoteTopicNames
+} from './notes';
+
+export type {
+    ALevelBiologyTopic,
+    BiologyQuestionType,
+    BiologyQuestionTypeInfo
 } from './topics';
 

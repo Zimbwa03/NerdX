@@ -6,3 +6,6 @@ export {
     getAllTopicNames,
 } from './topics';
 export type { ALevelPhysicsTopic } from './topics';
+
+// Export notes
+export { aLevelPhysicsNotes, getTopicNotes } from './notes';

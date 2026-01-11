@@ -1,6 +1,8 @@
 // Project Assistant API services - Database-backed
 import api from './config';
 import HybridAIService from '../HybridAIService';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 
 export interface Project {
   id: number;
@@ -117,10 +119,7 @@ export const projectApi = {
           try {
             const base64data = (reader.result as string).split(',')[1];
 
-            // Use expo-file-system to save the file
-            const FileSystem = require('expo-file-system');
-            const Sharing = require('expo-sharing');
-
+            // Use expo-file-system to save the file (already imported at top)
             const filename = `Project_${projectId}_${Date.now()}.pdf`;
             const fileUri = `${FileSystem.documentDirectory}${filename}`;
 

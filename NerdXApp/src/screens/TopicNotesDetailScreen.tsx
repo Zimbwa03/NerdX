@@ -18,6 +18,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { scienceNotesApi, TopicNotes } from '../services/api/scienceNotesApi';
 import { aLevelChemistryNotesApi } from '../services/api/aLevelChemistryNotesApi';
+import { aLevelPhysicsNotesApi } from '../services/api/aLevelPhysicsNotesApi';
+import { aLevelBiologyNotesApi } from '../services/api/aLevelBiologyNotesApi';
 import { useAuth } from '../context/AuthContext';
 import { Colors } from '../theme/colors';
 import Markdown from 'react-native-markdown-display';
@@ -53,7 +55,13 @@ const TopicNotesDetailScreen: React.FC = () => {
             // Check if this is A Level Chemistry
             if (isALevel && subject === 'A Level Chemistry') {
                 notesData = await aLevelChemistryNotesApi.getTopicNotes(topic);
-            } else {
+            } else if (isALevel && subject === 'A Level Physics') {
+                // A Level Physics
+                notesData = await aLevelPhysicsNotesApi.getTopicNotes(topic);
+            } else if (isALevel && subject === 'Biology') {
+                // A Level Biology (subject is passed as 'Biology' from the screen)
+                notesData = await aLevelBiologyNotesApi.getTopicNotes(topic);
+            } else if (!isALevel || subject === 'Biology' || subject === 'Chemistry' || subject === 'Physics') {
                 // O Level science notes
                 notesData = await scienceNotesApi.getTopicNotes(
                     subject as 'Biology' | 'Chemistry' | 'Physics',
@@ -62,6 +70,16 @@ const TopicNotesDetailScreen: React.FC = () => {
             }
 
             if (notesData) {
+                console.log('✅ Notes loaded for:', topic);
+                console.log('Subject:', subject);
+                console.log('Has videoUrl:', !!notesData.videoUrl);
+                console.log('Has audioUrl:', !!notesData.audioUrl);
+                if (notesData.videoUrl) {
+                    console.log('Video URL length:', notesData.videoUrl.length);
+                }
+                if (notesData.audioUrl) {
+                    console.log('Audio URL length:', notesData.audioUrl.length);
+                }
                 setNotes(notesData);
             } else {
                 Alert.alert(
@@ -91,6 +109,12 @@ const TopicNotesDetailScreen: React.FC = () => {
     const getSubjectColor = () => {
         if (isALevel && subject === 'A Level Chemistry') {
             return '#00897B'; // Teal for A Level Chemistry
+        }
+        if (isALevel && subject === 'A Level Physics') {
+            return '#1976D2'; // Blue for A Level Physics
+        }
+        if (isALevel && subject === 'Biology') {
+            return '#10B981'; // Green for A Level Biology
         }
         switch (subject) {
             case 'Biology':
@@ -159,6 +183,15 @@ const TopicNotesDetailScreen: React.FC = () => {
     if (!notes) {
         return null;
     }
+
+    // Debug: Check notes state at render time
+    console.log('🎬 Rendering with notes:', {
+        topic: notes.topic,
+        hasVideo: !!notes.videoUrl,
+        hasAudio: !!notes.audioUrl,
+        videoUrlPreview: notes.videoUrl?.substring(0, 50),
+        audioUrlPreview: notes.audioUrl?.substring(0, 50)
+    });
 
     return (
         <View style={[styles.container, { backgroundColor: themedColors.background.default }]}>

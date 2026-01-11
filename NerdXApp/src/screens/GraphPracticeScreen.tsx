@@ -11,7 +11,8 @@ import {
   Alert,
   Image,
 } from 'react-native';
-import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
+import { useVideoPlayer, VideoView } from 'expo-video';
+import { useEvent } from 'expo';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
@@ -49,7 +50,12 @@ const GraphPracticeScreen: React.FC = () => {
   const [videoLoading, setVideoLoading] = useState(false);
   const [videoError, setVideoError] = useState<string | null>(null);
   const [savingVideo, setSavingVideo] = useState(false);
-  const videoRef = useRef<Video>(null);
+
+  // Create video player when videoUrl changes
+  const videoPlayer = useVideoPlayer(videoUrl || '', (player) => {
+    player.loop = true;
+    player.play();
+  });
 
   const graphTypes = [
     { id: 'linear', name: 'Linear', icon: '📈' },
@@ -531,26 +537,11 @@ const GraphPracticeScreen: React.FC = () => {
 
               {!videoError && videoUrl && (
                 <>
-                  <Video
-                    ref={videoRef}
-                    source={{ uri: videoUrl }}
+                  <VideoView
+                    player={videoPlayer}
                     style={[styles.video, videoLoading && { opacity: 0 }]}
-                    useNativeControls
-                    resizeMode={ResizeMode.CONTAIN}
-                    isLooping
-                    shouldPlay={true}
-                    onLoadStart={() => setVideoLoading(true)}
-                    onLoad={() => setVideoLoading(false)}
-                    onError={(error) => {
-                      console.error('Video playback error:', error);
-                      setVideoLoading(false);
-                      setVideoError('Failed to load video. The animation server may be unavailable or the video format is not supported.');
-                    }}
-                    onPlaybackStatusUpdate={(status: AVPlaybackStatus) => {
-                      if (status.isLoaded && videoLoading) {
-                        setVideoLoading(false);
-                      }
-                    }}
+                    contentFit="contain"
+                    nativeControls
                   />
 
                   {/* Save Video Button */}

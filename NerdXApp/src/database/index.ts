@@ -43,3 +43,4 @@ try {
 }
 
 export { database, isWatermelonAvailable };
+
