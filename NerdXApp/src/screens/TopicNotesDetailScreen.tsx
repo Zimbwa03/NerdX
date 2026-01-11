@@ -358,8 +358,8 @@ const TopicNotesDetailScreen: React.FC = () => {
                         </View>
                     )}
 
-                    {/* AI Flashcards Section - All Science topics */}
-                    {(subject === 'Biology' || subject === 'Chemistry' || subject === 'Physics') && notes && (
+                    {/* AI Flashcards Section - All Science topics (O Level and A Level) */}
+                    {(subject.includes('Biology') || subject.includes('Chemistry') || subject.includes('Physics')) && notes && (
                         <FlashcardSection
                             subject={subject}
                             topic={topic}

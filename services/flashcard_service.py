@@ -121,7 +121,21 @@ class FlashcardService:
             logger.error(f"Error generating single flashcard: {e}")
             return self._generate_single_fallback(topic, index)
     
-        return f"""You are an expert ZIMSEC O-Level {subject} teacher creating educational flashcards for students.
+    def _create_batch_prompt(
+        self, 
+        subject: str, 
+        topic: str, 
+        notes_content: str, 
+        count: int
+    ) -> str:
+        """Create prompt for batch flashcard generation"""
+        # Truncate notes to avoid token limit
+        truncated_notes = notes_content[:8000] if len(notes_content) > 8000 else notes_content
+        
+        # Detect if A Level or O Level
+        level = "A-Level" if "A Level" in subject else "ZIMSEC O-Level"
+        
+        return f"""You are an expert {level} {subject} teacher creating educational flashcards for students.
 
 TOPIC: {topic}
 SUBJECT: {subject}
@@ -139,7 +153,7 @@ REQUIREMENTS:
 5. Distribute cards across ALL sections of the topic.
 6. Answers should be concise but complete (2-4 sentences max).
 7. Include a helpful hint for harder questions.
-8. Make flashcards engaging and relevant to ZIMSEC exams.
+8. Make flashcards engaging and relevant to exams.
 
 DIFFICULTY DISTRIBUTION:
 - 30% Easy: Definitions, simple facts
@@ -160,6 +174,7 @@ OUTPUT FORMAT (JSON array only, no other text):
 ]
 
 Generate {count} flashcards now:"""
+
 
     def _create_single_prompt(
         self, 
@@ -182,7 +197,10 @@ Generate {count} flashcards now:"""
         
         difficulty = "easy" if index % 5 < 2 else "medium" if index % 5 < 4 else "difficult"
         
-        return f"""You are an expert ZIMSEC O-Level {subject} teacher. Generate ONE unique flashcard.
+        # Detect if A Level or O Level
+        level = "A-Level" if "A Level" in subject else "ZIMSEC O-Level"
+        
+        return f"""You are an expert {level} {subject} teacher. Generate ONE unique flashcard.
 
 TOPIC: {topic}
 CARD NUMBER: {index + 1}

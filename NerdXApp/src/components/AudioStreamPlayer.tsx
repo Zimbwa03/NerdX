@@ -96,8 +96,11 @@ const AudioStreamPlayer: React.FC<AudioStreamPlayerProps> = ({
         try {
             setError(null);
             setIsLoading(true);
+            console.log('🎵 Audio: Starting to load audio...');
+            console.log('🎵 Audio URL:', audioUrl.substring(0, 100) + '...');
 
             // Configure audio mode for streaming
+            console.log('🎵 Audio: Setting audio mode...');
             await Audio.setAudioModeAsync({
                 allowsRecordingIOS: false,
                 staysActiveInBackground: false,
@@ -105,8 +108,10 @@ const AudioStreamPlayer: React.FC<AudioStreamPlayerProps> = ({
                 shouldDuckAndroid: true,
                 playThroughEarpieceAndroid: false,
             });
+            console.log('🎵 Audio: Audio mode set successfully');
 
             // Create and load the sound (streaming, not downloading)
+            console.log('🎵 Audio: Creating sound object...');
             const { sound: newSound } = await Audio.Sound.createAsync(
                 { uri: audioUrl },
                 {
@@ -117,11 +122,15 @@ const AudioStreamPlayer: React.FC<AudioStreamPlayerProps> = ({
                 },
                 onPlaybackStatusUpdate
             );
+            console.log('🎵 Audio: Sound created successfully!');
 
             setSound(newSound);
             setIsLoading(false);
-        } catch (err) {
-            console.error('Audio playback error:', err);
+        } catch (err: any) {
+            console.error('🎵 Audio playback error:', err);
+            console.error('🎵 Error name:', err?.name);
+            console.error('🎵 Error message:', err?.message);
+            console.error('🎵 Error stack:', err?.stack);
             setError('Unable to stream audio. Please check your internet connection.');
             setIsLoading(false);
         }

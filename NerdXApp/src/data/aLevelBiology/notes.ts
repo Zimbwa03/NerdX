@@ -6,6 +6,8 @@ import { TopicNotes } from '../scienceNotes/types';
 export const aLevelBiologyNotes: Record<string, TopicNotes> = {
     "Cell Structure": {
         topic: "Cell Structure",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/A%20Level/Ultrastructure_Mastery_From_Hooke_to_ATP.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9CaW9sb2d5IC9BIExldmVsL1VsdHJhc3RydWN0dXJlX01hc3RlcnlfRnJvbV9Ib29rZV90b19BVFAubTRhIiwiaWF0IjoxNzY4MTI4ODUyLCJleHAiOjUyNjg2MjQ4NTJ9.HIYO8ME41ipIQ_3InzDiNLIKe9u351TB7I4_7-bn2AU",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/A%20level/The_Cell__A_Living_City.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0Jpb2xvZ3kvQSBsZXZlbC9UaGVfQ2VsbF9fQV9MaXZpbmdfQ2l0eS5tcDQiLCJpYXQiOjE3NjgxMjkxNzIsImV4cCI6NTI2ODYyNTE3Mn0.T4_MTiUj9jz5DSVEGwPL5FxdwwFbDeIODznaW2oz4fE",
         subject: "A Level Biology",
         summary: "The cell is the fundamental structural and functional unit of all known living organisms. A comprehensive understanding of cell structure forms the bedrock for comprehending all other biological processes, from metabolism and transport to growth and heredity. This topic covers the ultrastructure of eukaryotic and prokaryotic cells, organelle structure-function relationships, the fluid mosaic model of membranes, microscopy techniques, and essential comparison tables for exam success.",
         sections: [
@@ -519,6 +521,8 @@ Be prepared to:
     },
     "Biological Molecules": {
         topic: "Biological Molecules",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/A%20Level/Biological_Molecules_Structure_Defines_Function.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9CaW9sb2d5IC9BIExldmVsL0Jpb2xvZ2ljYWxfTW9sZWN1bGVzX1N0cnVjdHVyZV9EZWZpbmVzX0Z1bmN0aW9uLm00YSIsImlhdCI6MTc2ODEyODY3OSwiZXhwIjo1MjY4NjI0Njc5fQ.6vmWFuM9qHiFRARYvVkWwr-8ixJAQ0WCNtIGZ2xOJEQ",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/A%20level/Biology_s_Blueprint.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0Jpb2xvZ3kvQSBsZXZlbC9CaW9sb2d5X3NfQmx1ZXByaW50Lm1wNCIsImlhdCI6MTc2ODEyOTA4NywiZXhwIjo1MjY4NjI1MDg3fQ.eYSb0PUeyifCvJjyhf2XJOsG2KfdTaO0kP6mf3tczZc",
         subject: "A Level Biology",
         summary: "Understanding biological molecules is fundamental to the study of biology, providing the foundational chemical basis for all life processes. The chemistry of life is dominated by macromoleculesâ€”polysaccharides, proteins, and nucleic acids. These giant molecules are polymers, constructed from many similar repeating chemical subunits called monomers. This comprehensive topic covers carbohydrates, lipids, proteins, water, inorganic ions, nucleic acids, biochemical tests, and essential exam techniques.",
         sections: [
@@ -904,6 +908,8 @@ Use these statements to self-assess your understanding:
     },
     "Enzymes": {
         topic: "Enzymes",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/A%20Level/Enzyme_Structure_Kinetics_and_Industrial_Uses.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9CaW9sb2d5IC9BIExldmVsL0VuenltZV9TdHJ1Y3R1cmVfS2luZXRpY3NfYW5kX0luZHVzdHJpYWxfVXNlcy5tNGEiLCJpYXQiOjE3NjgxMjg3MDEsImV4cCI6NTI2ODYyNDcwMX0.y56xPbFtDaLF-fJ3xwc7LLOzMcPmPQretNFJUtyd3oU",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/A%20level/Enzymes__Life_s_Tiny_Engines.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0Jpb2xvZ3kvQSBsZXZlbC9Fbnp5bWVzX19MaWZlX3NfVGlueV9FbmdpbmVzLm1wNCIsImlhdCI6MTc2ODEyOTA5NSwiZXhwIjo1MjY4NjI1MDk1fQ.jO987E4VdTbLc3vmkGR96rTefSVoawWuQ98N6ybExwQ",
         subject: "A Level Biology",
         summary: "All living organisms are defined by the complex web of biochemical reactions that constitute their metabolism. These reactions must occur at extraordinary speeds to sustain life. Enzymes are the strategic biological catalysts that fulfill this essential role, enabling the high-speed, highly specific chemical reactions required by cells. This comprehensive topic covers enzyme structure, mechanism of action, factors affecting enzyme activity, inhibition, cofactors, practical investigations, and essential exam terminology.",
         sections: [
@@ -1280,6 +1286,7 @@ Use these questions to test your understanding:
     },
     "Cell Membranes and Transport": {
         topic: "Cell Membranes and Transport",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/A%20Level/Fluid_Mosaic_and_Cellular_Transport_Mechanisms.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9CaW9sb2d5IC9BIExldmVsL0ZsdWlkX01vc2FpY19hbmRfQ2VsbHVsYXJfVHJhbnNwb3J0X01lY2hhbmlzbXMubTRhIiwiaWF0IjoxNzY4MTI4NzU0LCJleHAiOjM2ODA0NjI0NzU0fQ.SMQ6hKpBkyKGbkgR8XkYoWCbdieb4oyP-vUPb28mkig",
         subject: "A Level Biology",
         summary: "The cell membrane is a critical structure that defines the very boundary of life for an individual cell. Its primary role is to maintain cellular integrity by enclosing the contents of the cell, but its function extends far beyond simple containment. The membrane acts as a highly selective barrier, meticulously controlling the passage of substances between the cell's internal environment and the world outside. This sophisticated control of exchange is essential for energy production, waste removal, communication, and response to stimuli.",
         sections: [
@@ -1502,6 +1509,8 @@ For materials **too large** to pass through protein channels, cells use membrane
     },
     "The Cell Cycle and Mitosis": {
         topic: "The Cell Cycle and Mitosis",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/A%20Level/Mitosis_and_Cell_Cycle_Precision__Cancer.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9CaW9sb2d5IC9BIExldmVsL01pdG9zaXNfYW5kX0NlbGxfQ3ljbGVfUHJlY2lzaW9uX19DYW5jZXIubTRhIiwiaWF0IjoxNzY4MTI4Nzg2LCJleHAiOjUyNjg2MjQ3ODZ9.ur7AkIC5kSc7_ZFWOhFUpgogJWjdsz5LGie3mG_OytA",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/A%20level/The_Cell_Cycle.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0Jpb2xvZ3kvQSBsZXZlbC9UaGVfQ2VsbF9DeWNsZS5tcDQiLCJpYXQiOjE3NjgxMjkxODIsImV4cCI6NTI2ODYyNTE4Mn0.ynSCcLpJuLSjADT8C_VRYFq_lxkmmo2yonGbW3r9s64",
         subject: "A Level Biology",
         summary: "The cell cycle is the fundamental, highly regulated process by which all life perpetuates. It represents the life story of a cell, from its own creation to its eventual division into two new daughter cells. The mitotic cell cycle is the sequence of events a cell undergoes from its formation to its own division, resulting in two genetically identical daughter cells. This topic covers interphase, the four stages of mitosis, cytokinesis, biological significance, cancer, and practical microscopy skills.",
         sections: [
@@ -1810,6 +1819,8 @@ Use this to self-assess your understanding:
     },
     "Nucleic Acids and Protein Synthesis": {
         topic: "Nucleic Acids and Protein Synthesis",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/A%20Level/DNA_Structure_Replication_and_Protein_Synthesis.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9CaW9sb2d5IC9BIExldmVsL0ROQV9TdHJ1Y3R1cmVfUmVwbGljYXRpb25fYW5kX1Byb3RlaW5fU3ludGhlc2lzLm00YSIsImlhdCI6MTc2ODEyODY5MSwiZXhwIjo1MjY4NjI0NjkxfQ.bolqNx3Lm_W2uABMr3CPB2yWMGNUwVpx0y5AN2nZOW8",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/A%20level/The_Journey_of_a_Gene.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0Jpb2xvZ3kvQSBsZXZlbC9UaGVfSm91cm5leV9vZl9hX0dlbmUubXA0IiwiaWF0IjoxNzY4MTI5MTk4LCJleHAiOjUyNjg2MjUxOTh9.8V5xirvXGnL8Pho9MMSS5tULnprscrqoP6EVNawwIc8",
         subject: "A Level Biology",
         summary: "Nucleic acids and protein synthesis are foundational to all life. DNA is the fundamental molecule of heredity that carries genetic instructions for development, functioning, growth, and reproduction. The mechanisms of replication, transcription, and translation are essential biochemical processes through which genetic information is faithfully copied and translated into proteins that perform the vast majority of cellular functions, ultimately giving rise to the traits of an organism.",
         sections: [
@@ -2117,6 +2128,8 @@ Each cycle **doubles** the amount of target DNA. After ~30 cycles, there are **b
     },
     "Transport in Plants": {
         topic: "Transport in Plants",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/A%20Level/Plant_Transport_Physics_Xylem_Phloem.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9CaW9sb2d5IC9BIExldmVsL1BsYW50X1RyYW5zcG9ydF9QaHlzaWNzX1h5bGVtX1BobG9lbS5tNGEiLCJpYXQiOjE3NjgxMjg4MzQsImV4cCI6NTI2ODYyNDgzNH0.3q5riPJNZmEPxpVl7KboTn_Ehkw6NQk-eoyEnGkSQNo",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/A%20level/Transport__Life_s_Delivery.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0Jpb2xvZ3kvQSBsZXZlbC9UcmFuc3BvcnRfX0xpZmVfc19EZWxpdmVyeS5tcDQiLCJpYXQiOjE3NjgxMjkyMzYsImV4cCI6NTI2ODYyNTIzNn0._lsGwL8pCTQPWQmc8l1BfBLDfyAZGaKpFWD8vNdBhH0",
         subject: "A Level Biology",
         summary: "Plants rely on a vascular system (xylem and phloem) to transport water, minerals, and organic compounds over long distances. This topic covers tissue anatomy, the cohesion-tension theory of water transport, transpiration factors, and the mass flow hypothesis of translocation.",
         sections: [
@@ -2258,6 +2271,8 @@ Xylem → Osmosis into Mesophyll Cells → Evaporation into Air Spaces → Diffu
 
     "Transport in Mammals": {
         topic: "Transport in Mammals",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/A%20Level/Mammalian_Circulation_Double_Loop_and_Heart_Mechanics.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9CaW9sb2d5IC9BIExldmVsL01hbW1hbGlhbl9DaXJjdWxhdGlvbl9Eb3VibGVfTG9vcF9hbmRfSGVhcnRfTWVjaGFuaWNzLm00YSIsImlhdCI6MTc2ODEyODc3MywiZXhwIjo1MjY4NjI0NzczfQ.sb3TKXyKUvCP0m7HSdW40ugA9l517CrNzolf-Z2jYU4",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/A%20level/Transport_in_Mammals.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0Jpb2xvZ3kvQSBsZXZlbC9UcmFuc3BvcnRfaW5fTWFtbWFscy5tcDQiLCJpYXQiOjE3NjgxMjkyNDgsImV4cCI6NTI2ODYyNTI0OH0.OvMGb-5kRf5mWMevCRWRyRR1EmXv2gFEDEwb5y5d-ks",
         subject: "A Level Biology",
         summary: "The mammalian circulatory system bridges the diffusion gap in large organisms. These notes cover the structure and function of the heart (cardiac cycle), blood vessels (arteries, veins, capillaries), blood composition (erythrocytes, leucocytes), gas transport mechanisms (haemoglobin, Bohr effect), tissue fluid formation, and cardiovascular health.",
         sections: [
@@ -2407,6 +2422,8 @@ Xylem → Osmosis into Mesophyll Cells → Evaporation into Air Spaces → Diffu
     },
     "Gas Exchange": {
         topic: "Gas Exchange",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/A%20Level/Fick_s_Law_and_the_Lung_s_Design.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9CaW9sb2d5IC9BIExldmVsL0ZpY2tfc19MYXdfYW5kX3RoZV9MdW5nX3NfRGVzaWduLm00YSIsImlhdCI6MTc2ODEyODczOSwiZXhwIjo1MjY4NjI0NzM5fQ.XfMY8CyB9NCi8FRR-KKBHHYXv3mRnuLpIKhAxDWHcTI",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/A%20level/The_Vital_Exchange.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0Jpb2xvZ3kvQSBsZXZlbC9UaGVfVml0YWxfRXhjaGFuZ2UubXA0IiwiaWF0IjoxNzY4MTI5MjE0LCJleHAiOjUyNjg2MjUyMTR9.SNdQEZO14EHvh5DpU-AbnwzCiZICaiaEtsDlQhL_51A",
         subject: "A Level Biology",
         summary: "Gas exchange is the process by which organisms obtain oxygen and remove carbon dioxide. This topic covers the structure and function of mammalian lungs, the mechanism of ventilation, adaptations for efficient gas exchange, and comparisons with gas exchange in insects and fish. Understanding gas exchange surfaces is essential for understanding respiration and adaptations to different environments.",
         sections: [
@@ -2648,6 +2665,7 @@ From spirometer trace:
     },
     "Infectious Diseases": {
         topic: "Infectious Diseases",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/A%20level/Infectious_Diseases.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0Jpb2xvZ3kvQSBsZXZlbC9JbmZlY3Rpb3VzX0Rpc2Vhc2VzLm1wNCIsImlhdCI6MTc2ODEyOTEyNSwiZXhwIjo1MjY4NjI1MTI1fQ.in6z7AoomTPwf3KKwEoOImqHDk3AOe7oIV2zXhZ544Y",
         subject: "A Level Biology",
         summary: "Infectious diseases are caused by pathogens and transmitted via various routes. These notes cover pathogen types, key case studies (Malaria, Cholera, TB, HIV/AIDS), antibiotic resistance, public health strategies (vaccination, smallpox eradication), and epidemiological data analysis.",
         sections: [
@@ -2789,6 +2807,7 @@ Drugs that kill/inhibit bacteria without harming host (e.g., Penicillin targets 
     },
     "Immunity": {
         topic: "Immunity",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/A%20level/Immunity__Your_Body_s_Fortress.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0Jpb2xvZ3kvQSBsZXZlbC9JbW11bml0eV9fWW91cl9Cb2R5X3NfRm9ydHJlc3MubXA0IiwiaWF0IjoxNzY4MTI5MTEyLCJleHAiOjUyNjg2MjUxMTJ9.rRZcVvIf6jiC61l6W4k3A0nHXe65QddZT3QXg4C1uhk",
         subject: "A Level Biology",
         summary: "Immunity distinguishes 'self' from 'non-self' to protect against pathogens. These notes cover non-specific defences (phagocytosis), specific immunity (B & T lymphocytes, antibodies), vaccination principles, monoclonal antibody technology, and autoimmune diseases like Myasthenia Gravis.",
         sections: [
@@ -2955,6 +2974,7 @@ Inject ** antigens ** (dead / weakened pathogen) → stimulates primary immune r
     },
     "Smoking and Health": {
         topic: "Smoking and Health",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/A%20level/Smoking_and_Health.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0Jpb2xvZ3kvQSBsZXZlbC9TbW9raW5nX2FuZF9IZWFsdGgubXA0IiwiaWF0IjoxNzY4MTI5MTYwLCJleHAiOjUyNjg2MjUxNjB9.bZWfD6GfSt4SEM3Ys-R3byocxnbUvDctd7EgL7oZV00",
         subject: "A Level Biology",
         summary: "Smoking releases hazardous chemicals that damage respiratory and cardiovascular systems. These notes cover the three main components (tar, CO, nicotine), their specific physiological effects (emphysema, atherosclerosis, cancer), and the epidemiological link between smoking and lung cancer.",
         sections: [
@@ -4580,6 +4600,7 @@ Example: 4 phenotype classes → df = 3
     },
     "Selection and Evolution": {
         topic: "Selection and Evolution",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/A%20level/Natural_Selection.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0Jpb2xvZ3kvQSBsZXZlbC9OYXR1cmFsX1NlbGVjdGlvbi5tcDQiLCJpYXQiOjE3NjgxMjkxNDQsImV4cCI6NTI2ODYyNTE0NH0.vUYNv7_KfbaLLKvWzMidvSStwAeBdFzFe2i3HG-iidM",
         subject: "A Level Biology",
         summary: "Selection and Evolution represents a cornerstone of modern biology, unifying core concepts from genetics, ecology, and biochemistry. This fundamental theory provides the explanatory framework for the vast diversity of life on Earth. Understanding the mechanisms of evolutionary change, from variation to natural selection, and the evidence supporting it is essential for A Level Biology.",
         sections: [
@@ -5655,6 +5676,997 @@ Always state the **assumptions**:
             "Remember viruses are ACELLULARâ€”no membrane, no cytoplasm, no metabolismâ€”so not in any domain",
             "Random sampling rationale is 'to avoid bias and ensure representative samples'â€”NOT 'to make it fair'",
             "Know examples of endemic species and why their conservation is critical (irreversible loss)"
+        ]
+    },
+    "Human Impact on Environment": {
+        topic: "Human Impact on Environment",
+        subject: "A Level Biology",
+        summary: "Human activities have profound and often irreversible effects on ecosystems, biodiversity, and global biogeochemical cycles. This topic explores the mechanisms and consequences of pollution, deforestation, agriculture, and climate change, as well as conservation strategies to mitigate environmental damage. Understanding these impacts is essential for addressing the biodiversity crisis and ensuring sustainable development for future generations.",
+        sections: [
+            {
+                title: "1. Deforestation and Habitat Destruction",
+                content: `## The Global Crisis of Forest Loss
+
+**Deforestation is the permanent removal of forest cover, converting forested land to non-forest uses such as agriculture, urban development, or mining.**
+
+### 1.1 Causes of Deforestation
+
+| Cause | Description | Example Regions |
+|-------|-------------|-----------------|
+| **Agricultural expansion** | Clearing for crops and livestock | Amazon (soy, cattle), Southeast Asia (palm oil) |
+| **Logging** | Commercial timber extraction | Tropical rainforests, boreal forests |
+| **Infrastructure** | Roads, dams, urban development | Global |
+| **Mining** | Extraction of minerals and fossil fuels | Congo Basin, Amazon |
+| **Fuelwood collection** | Gathering wood for cooking and heating | Sub-Saharan Africa, South Asia |
+
+### 1.2 Consequences of Deforestation
+
+**Loss of Biodiversity:**
+- Tropical rainforests contain over 50% of Earth's species on just 6% of land area
+- Habitat fragmentation isolates populations, reducing genetic diversity
+- Endemic species face extinction when their only habitat is destroyed
+- Loss of keystone species causes ecosystem collapse
+
+**Climate Change Impacts:**
+- Trees are carbon sinks—their removal releases stored CO₂
+- Deforestation accounts for ~10-15% of global greenhouse gas emissions
+- Reduced transpiration alters local and regional rainfall patterns
+- Loss of albedo effect changes surface reflectivity
+
+**Soil Degradation:**
+- Tree roots stabilize soil; their removal leads to erosion
+- Nutrient cycling disrupted as leaf litter no longer decomposes
+- Soil compaction from heavy machinery
+- Increased surface runoff causing flooding downstream
+
+**Water Cycle Disruption:**
+- Reduced evapotranspiration decreases local rainfall
+- Watersheds lose their natural water storage capacity
+- Increased sedimentation in rivers affects aquatic ecosystems
+
+### 1.3 Case Study: Amazon Rainforest
+
+The Amazon is critical for global climate regulation:
+- Stores an estimated 150-200 billion tonnes of carbon
+- Produces ~20% of Earth's oxygen (though this is largely consumed by respiration)
+- Contains 10% of all known species
+- Deforestation rate: ~10,000 km² per year (2019-2021)
+
+**Tipping Point Concern:** Scientists warn that 20-25% deforestation could trigger irreversible conversion to savanna grassland.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. Pollution and Its Effects on Ecosystems",
+                content: `## Types of Environmental Pollution
+
+### 2.1 Water Pollution
+
+**Eutrophication—The Process:**
+
+1. **Nutrient input:** Excess nitrates and phosphates enter water bodies from:
+   - Agricultural fertilizer runoff
+   - Sewage discharge
+   - Livestock waste
+   - Detergents containing phosphates
+
+2. **Algal bloom:** Nutrients stimulate rapid growth of algae and cyanobacteria
+
+3. **Light blocking:** Dense surface algae prevent light reaching submerged plants
+
+4. **Death of plants:** Submerged plants cannot photosynthesize and die
+
+5. **Decomposition:** Aerobic bacteria decompose dead organic matter
+
+6. **Oxygen depletion:** Bacterial respiration uses dissolved oxygen
+
+7. **Death of aquatic life:** Fish and invertebrates suffocate in hypoxic conditions
+
+8. **Anaerobic conditions:** Anaerobic bacteria produce toxic hydrogen sulfide
+
+**Biochemical Oxygen Demand (BOD):**
+- Measure of dissolved oxygen consumed by microorganisms during decomposition
+- High BOD indicates high organic pollution
+- Clean water: BOD < 2 mg/L
+- Polluted water: BOD > 8 mg/L
+
+### 2.2 Air Pollution
+
+| Pollutant | Sources | Effects |
+|-----------|---------|---------|
+| **Carbon dioxide (CO₂)** | Fossil fuel combustion, deforestation | Greenhouse effect, climate change |
+| **Methane (CH₄)** | Livestock, rice paddies, landfills | Greenhouse effect (25× more potent than CO₂) |
+| **Sulfur dioxide (SO₂)** | Coal combustion, volcanic activity | Acid rain, respiratory disease |
+| **Nitrogen oxides (NOₓ)** | Vehicle emissions, power plants | Acid rain, smog, respiratory issues |
+| **Particulate matter** | Combustion, industrial processes | Respiratory and cardiovascular disease |
+| **CFCs** | Refrigerants, aerosols (now banned) | Ozone layer depletion |
+
+### 2.3 Acid Rain
+
+**Formation:**
+- SO₂ + H₂O → H₂SO₃ (sulfurous acid)
+- 2SO₂ + O₂ → 2SO₃; SO₃ + H₂O → H₂SO₄ (sulfuric acid)
+- NO₂ + H₂O → HNO₃ (nitric acid)
+
+**Effects:**
+- Lowers pH of lakes and rivers (fish die below pH 4.5)
+- Leaches essential minerals (Ca²⁺, Mg²⁺) from soil
+- Releases toxic aluminum ions that damage plant roots
+- Damages leaf cuticles, reducing photosynthesis
+- Corrodes buildings, statues, and infrastructure
+
+### 2.4 Bioaccumulation and Biomagnification
+
+**Bioaccumulation:** The gradual accumulation of substances (e.g., heavy metals, pesticides) within an organism's tissues over its lifetime.
+
+**Biomagnification:** The increasing concentration of persistent substances in organisms at successively higher trophic levels.
+
+**Example—DDT in Food Chains:**
+
+| Trophic Level | Organism | DDT Concentration (ppm) |
+|---------------|----------|------------------------|
+| Producer | Phytoplankton | 0.04 |
+| Primary consumer | Zooplankton | 0.23 |
+| Secondary consumer | Small fish | 2.07 |
+| Tertiary consumer | Large fish | 13.8 |
+| Top predator | Osprey (bird) | 25.0 |
+
+DDT caused eggshell thinning in birds of prey, nearly driving bald eagles and peregrine falcons to extinction.`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. Climate Change: Causes and Biological Consequences",
+                content: `## The Greenhouse Effect and Global Warming
+
+### 3.1 The Natural Greenhouse Effect
+
+The natural greenhouse effect is essential for life:
+- Without it, Earth's average temperature would be -18°C (not +15°C)
+- Greenhouse gases absorb and re-emit infrared radiation
+- This traps heat in the lower atmosphere
+
+**Key Greenhouse Gases:**
+
+| Gas | Pre-industrial Concentration | Current Concentration | Global Warming Potential (100-year) |
+|-----|------------------------------|---------------------|-------------------------------------|
+| CO₂ | 280 ppm | 420+ ppm | 1 (reference) |
+| CH₄ | 700 ppb | 1900+ ppb | 25-28 |
+| N₂O | 270 ppb | 335 ppb | 265-298 |
+| CFCs | 0 | Variable | 5,000-14,000 |
+
+### 3.2 Evidence for Climate Change
+
+**Temperature Records:**
+- Global mean temperature increased ~1.1°C since pre-industrial era
+- Rate of warming accelerating: +0.18°C per decade since 1981
+- 20 warmest years on record all occurred since 1998
+
+**Ice Core Data:**
+- Trapped air bubbles reveal historic CO₂ levels
+- Strong correlation between CO₂ and temperature over 800,000 years
+- Current CO₂ levels unprecedented in human history
+
+**Other Evidence:**
+- Sea level rise (~3.7 mm/year currently)
+- Retreating glaciers and ice sheets
+- Earlier spring events (flowering, migration)
+- Coral bleaching events increasing in frequency
+
+### 3.3 Biological Impacts of Climate Change
+
+**Changes in Distribution:**
+- Species ranges shifting poleward and to higher altitudes
+- ~6.1 km per decade shift toward poles observed
+- Marine species moving ~72 km per decade
+- Alpine species "trapped" at mountain peaks face extinction
+
+**Phenological Changes:**
+- Earlier spring flowering (average 2-3 days per decade earlier)
+- Mismatches between species interactions:
+  - Caterpillars emerging before bird nesting
+  - Flowers blooming before pollinators active
+- Extended growing seasons affecting agriculture
+
+**Coral Reef Bleaching:**
+1. Ocean temperatures rise above coral tolerance threshold
+2. Symbiotic zooxanthellae algae expelled from coral tissue
+3. Coral loses its color (bleaching) and primary food source
+4. Prolonged stress leads to coral death
+5. Loss of reef structure affects thousands of dependent species
+
+**Ocean Acidification:**
+- CO₂ + H₂O → H₂CO₃ (carbonic acid)
+- Ocean pH decreased from 8.2 to 8.1 (30% increase in H⁺)
+- Carbonate ions (CO₃²⁻) decrease, affecting shell formation
+- Impacts mollusks, corals, and plankton with calcium carbonate structures`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. Agriculture and Its Environmental Impact",
+                content: `## Intensive Agriculture and Sustainability
+
+### 4.1 Monoculture
+
+**Monoculture is the agricultural practice of growing a single crop over a large area year after year.**
+
+**Advantages:**
+- Economies of scale (mechanization, specialized equipment)
+- Simplified management and harvesting
+- Higher short-term yields
+
+**Environmental Problems:**
+
+| Issue | Explanation |
+|-------|-------------|
+| **Soil degradation** | Same nutrients depleted year after year |
+| **Pest vulnerability** | Uniform crop = ideal conditions for pest outbreaks |
+| **Pesticide dependence** | Increasing amounts needed as pests develop resistance |
+| **Pollinator decline** | Lack of habitat and food diversity for bees |
+| **Loss of genetic diversity** | Few crop varieties = vulnerability to disease |
+
+### 4.2 Fertilizers
+
+**Artificial (Inorganic) Fertilizers:**
+- Contain NPK (nitrogen, phosphorus, potassium) in precise ratios
+- Immediately available to plants
+- Can cause eutrophication through runoff
+- Energy-intensive to produce (Haber process for ammonia)
+
+**Organic Fertilizers:**
+- Derived from plant/animal matter (manure, compost)
+- Slow-release nutrients as organic matter decomposes
+- Improve soil structure and water retention
+- Support soil microorganism communities
+
+### 4.3 Pesticides
+
+**Types:**
+
+| Pesticide Type | Target |
+|----------------|--------|
+| Insecticides | Insects |
+| Herbicides | Weeds |
+| Fungicides | Fungi |
+| Rodenticides | Rodents |
+
+**Problems with Pesticides:**
+- Kill non-target species (especially broad-spectrum pesticides)
+- Biomagnification in food chains
+- Pest resistance develops over time
+- Pollinator decline (neonicotinoids and bees)
+- Contamination of water sources
+
+### 4.4 Biological Control
+
+**Biological control uses natural predators, parasites, or pathogens to control pest populations.**
+
+**Advantages:**
+- No chemical residues
+- Self-sustaining once established
+- Target-specific
+- Environmentally friendly
+
+**Disadvantages:**
+- Slow to take effect
+- May not completely eliminate pest
+- Control agent may become pest itself
+- Requires ecological understanding
+
+**Example:** Introduction of ladybirds to control aphids in greenhouses.
+
+### 4.5 Integrated Pest Management (IPM)
+
+IPM combines multiple strategies:
+1. Crop rotation to break pest cycles
+2. Resistant crop varieties
+3. Biological control agents
+4. Targeted pesticide use only when necessary
+5. Monitoring and threshold-based intervention
+6. Habitat management for natural enemies`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Conservation Strategies",
+                content: `## Protecting Biodiversity for Future Generations
+
+### 5.1 In Situ Conservation
+
+**In situ conservation protects species in their natural habitats.**
+
+**Protected Areas:**
+
+| Type | Description | Example |
+|------|-------------|---------|
+| **National Parks** | Large areas with minimal human activity | Yellowstone, Serengeti |
+| **Wildlife Reserves** | Managed for specific species conservation | Ol Pejeta (rhinos) |
+| **Marine Protected Areas** | Ocean regions with fishing restrictions | Great Barrier Reef Marine Park |
+| **Biosphere Reserves** | UNESCO-designated sustainable development zones | Galápagos |
+
+**Advantages:**
+- Maintains natural selection and evolution
+- Protects entire ecosystems and ecological interactions
+- Allows natural adaptation to environmental change
+- Lower cost than ex situ methods
+
+**Challenges:**
+- Requires large areas of land
+- Difficult to protect from poaching and encroachment
+- Climate change may make habitat unsuitable
+- Human-wildlife conflict at boundaries
+
+### 5.2 Ex Situ Conservation
+
+**Ex situ conservation protects species outside their natural habitats.**
+
+**Methods:**
+
+| Method | Purpose |
+|--------|---------|
+| **Zoos and aquariums** | Captive breeding, education, research |
+| **Seed banks** | Long-term storage of plant genetic material |
+| **Botanical gardens** | Living plant collections and breeding programs |
+| **Cryopreservation** | Freezing gametes, embryos, tissue samples |
+| **Gene banks** | Storage of genetic material for future use |
+
+**Advantages:**
+- Protection from poaching, disease, natural disasters
+- Controlled breeding to maximize genetic diversity
+- Research opportunities
+- Educational value
+- "Insurance policy" against extinction
+
+**Challenges:**
+- Limited population sizes (genetic drift, inbreeding)
+- Loss of natural behaviors
+- Expensive to maintain
+- Reintroduction difficulties
+
+### 5.3 International Cooperation
+
+**CITES (Convention on International Trade in Endangered Species):**
+- Regulates international wildlife trade
+- Three appendices based on threat level
+- Over 38,000 species protected
+- 183 countries signed
+
+**Convention on Biological Diversity (CBD):**
+- Signed at 1992 Earth Summit
+- Three objectives:
+  1. Conservation of biological diversity
+  2. Sustainable use of components
+  3. Fair sharing of genetic resource benefits
+- Aichi Biodiversity Targets (2010-2020)
+- Kunming-Montreal Framework (2022)
+
+### 5.4 Sustainable Development
+
+**Sustainable development meets present needs without compromising future generations' ability to meet their needs.**
+
+**Principles:**
+- Balance economic, social, and environmental needs
+- Intergenerational equity
+- Precautionary principle
+- Polluter pays principle
+
+**Examples:**
+- Sustainable forestry (FSC certification)
+- Sustainable fishing quotas
+- Renewable energy transition
+- Ecotourism supporting local communities`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "6. Human Population Growth and Resources",
+                content: `## The Relationship Between Population and Environment
+
+### 6.1 Human Population Growth
+
+**Historical Population Growth:**
+
+| Year | Global Population | Doubling Time |
+|------|------------------|---------------|
+| 1804 | 1 billion | - |
+| 1927 | 2 billion | 123 years |
+| 1960 | 3 billion | 33 years |
+| 1974 | 4 billion | 14 years |
+| 1987 | 5 billion | 13 years |
+| 1999 | 6 billion | 12 years |
+| 2011 | 7 billion | 12 years |
+| 2022 | 8 billion | 11 years |
+
+**Factors Affecting Population Growth:**
+- Birth rate and death rate (natural increase)
+- Migration patterns
+- Healthcare advances reducing infant mortality
+- Agricultural improvements increasing food supply
+- Economic development (demographic transition)
+
+### 6.2 Ecological Footprint
+
+**The ecological footprint measures human demand on Earth's ecosystems in terms of the biologically productive land area required to supply resources and absorb waste.**
+
+**Components:**
+- Carbon footprint (largest component—CO₂ absorption)
+- Cropland for food
+- Grazing land for livestock
+- Forest for timber and paper
+- Fishing grounds
+- Built-up land
+
+**Global Overshoot:**
+- Humanity currently uses ~1.7 Earths' worth of resources annually
+- Earth Overshoot Day: the date when we've used a year's worth of resources
+- In 2023, Earth Overshoot Day was August 2nd
+
+### 6.3 Carrying Capacity
+
+**Carrying capacity (K) is the maximum population size an environment can sustain indefinitely given available resources.**
+
+**For humans, carrying capacity depends on:**
+- Agricultural technology and efficiency
+- Energy availability and type
+- Consumption patterns and lifestyles
+- Waste management capabilities
+- Environmental degradation rates
+
+**Estimates of human carrying capacity range from 4-16 billion depending on assumptions about consumption levels and technology.**
+
+### 6.4 Environmental Impact Equation
+
+**I = P × A × T**
+
+Where:
+- **I** = Environmental Impact
+- **P** = Population
+- **A** = Affluence (consumption per person)
+- **T** = Technology (impact per unit consumption)
+
+This equation shows that environmental impact depends not only on population size but also on consumption patterns and technological efficiency.`,
+                diagrams: [],
+                subsections: []
+            }
+        ],
+        key_points: [
+            "Deforestation releases stored carbon, reduces biodiversity, causes soil erosion, and disrupts the water cycle",
+            "Eutrophication occurs when excess nitrates and phosphates cause algal blooms, leading to oxygen depletion and death of aquatic life",
+            "Bioaccumulation is uptake of substances by organisms; biomagnification is increasing concentration up food chains",
+            "The greenhouse effect: CO₂ and other gases absorb infrared radiation, trapping heat in the atmosphere",
+            "Evidence for climate change includes temperature records, ice cores, sea level rise, and phenological changes",
+            "Climate change causes species range shifts, phenological mismatches, coral bleaching, and ocean acidification",
+            "Monoculture depletes soil nutrients, increases pest vulnerability, and reduces biodiversity",
+            "Biological control uses natural predators; IPM combines multiple environmentally-friendly strategies",
+            "In situ conservation protects species in natural habitats; ex situ conservation protects outside natural habitats",
+            "Ecological footprint measures human demand on ecosystems; currently humanity uses ~1.7 Earths"
+        ],
+        exam_tips: [
+            "For eutrophication, write the FULL sequence: nutrients → algal bloom → light blocked → plants die → decomposition → oxygen depleted → fish die",
+            "Distinguish between bioaccumulation (individual) and biomagnification (food chain)—examiners test this distinction!",
+            "Remember CO₂ is the main greenhouse gas BY VOLUME but CH₄ is more potent per molecule (25-28× warming potential)",
+            "Always give SPECIFIC examples: DDT for biomagnification, Amazon for deforestation, coral reefs for climate change",
+            "In situ = 'in place' (natural habitat); ex situ = 'out of place' (zoos, seed banks)—know advantages of BOTH",
+            "For conservation questions, mention BOTH local (habitat protection) and international (CITES, CBD) strategies"
+        ]
+    },
+    "Reproduction": {
+        topic: "Reproduction",
+        subject: "A Level Biology",
+        summary: "Reproduction is the biological process by which organisms produce offspring, ensuring the continuity of species. This topic covers asexual and sexual reproduction, the structure and function of reproductive systems in flowering plants and mammals, gametogenesis, fertilization, pregnancy, birth, and the hormonal control of reproduction. Understanding these mechanisms is fundamental to appreciating the diversity of life and applications in medicine and agriculture.",
+        sections: [
+            {
+                title: "1. Asexual vs Sexual Reproduction",
+                content: `## Modes of Reproduction
+
+### 1.1 Asexual Reproduction
+
+**Asexual reproduction involves a single parent and produces offspring that are genetically identical clones.**
+
+**Characteristics:**
+- No gametes or fertilization
+- Offspring are clones (identical to parent)
+- Rapid reproduction
+- No genetic variation (except mutation)
+
+**Types of Asexual Reproduction:**
+
+| Type | Description | Examples |
+|------|-------------|----------|
+| **Binary fission** | Cell divides into two equal parts | Bacteria, Amoeba |
+| **Budding** | Outgrowth develops into new individual | Yeast, Hydra |
+| **Fragmentation** | Body breaks into pieces that regenerate | Starfish, planarians |
+| **Vegetative propagation** | New plant from vegetative parts | Runners (strawberry), tubers (potato) |
+| **Sporulation** | Spores develop into new organisms | Fungi, ferns |
+| **Parthenogenesis** | Unfertilized egg develops | Some insects, reptiles |
+
+**Advantages:**
+- Only one parent needed
+- Rapid population increase
+- No energy spent finding a mate
+- Successful genotype preserved
+- Colonization of new habitats
+
+**Disadvantages:**
+- No genetic variation (vulnerability to disease/environmental change)
+- Harmful mutations accumulate
+- No adaptation to changing conditions
+
+### 1.2 Sexual Reproduction
+
+**Sexual reproduction involves the fusion of two gametes (sex cells), usually from different parents, to form a zygote.**
+
+**Characteristics:**
+- Requires gamete production (meiosis)
+- Involves fertilization (fusion of gametes)
+- Offspring genetically different from parents
+- Introduces genetic variation
+
+**Advantages:**
+- Genetic variation through:
+  - Crossing over during meiosis
+  - Independent assortment of chromosomes
+  - Random fertilization
+- Adaptation to changing environments
+- Elimination of harmful alleles
+- Evolutionary potential
+
+**Disadvantages:**
+- Requires two parents (or hermaphroditism)
+- Energy for finding mates
+- Slower reproduction rate
+- Only 50% of genes passed to offspring`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "2. Reproductive System of Flowering Plants",
+                content: `## Structure and Function of Flowers
+
+### 2.1 Flower Structure
+
+**The flower is the reproductive organ of angiosperms (flowering plants).**
+
+| Structure | Function |
+|-----------|----------|
+| **Sepal** | Protects flower bud; usually green and photosynthetic |
+| **Petal** | Attracts pollinators; often brightly colored |
+| **Stamen (male)** | Produces pollen; consists of anther + filament |
+| **Anther** | Site of pollen grain (male gametophyte) production |
+| **Filament** | Supports the anther |
+| **Carpel/Pistil (female)** | Contains ovules; consists of stigma + style + ovary |
+| **Stigma** | Receives pollen; often sticky or feathery |
+| **Style** | Connects stigma to ovary; pollen tube grows through it |
+| **Ovary** | Contains ovules; develops into fruit after fertilization |
+| **Ovule** | Contains embryo sac; develops into seed after fertilization |
+
+### 2.2 Pollen Development (Microsporogenesis)
+
+**Location:** Pollen sacs within the anther
+
+**Process:**
+1. **Diploid pollen mother cells** (2n) undergo meiosis
+2. Produce four **haploid microspores** (n)
+3. Each microspore develops into a **pollen grain**
+4. Pollen grain contains:
+   - **Tube nucleus** (controls pollen tube growth)
+   - **Generative nucleus** (divides to form 2 sperm nuclei)
+
+**Pollen Grain Structure:**
+- Outer wall (exine) - tough, sculptured, species-specific
+- Inner wall (intine) - thin, flexible
+- Apertures (pores or furrows) for tube emergence
+
+### 2.3 Embryo Sac Development (Megasporogenesis)
+
+**Location:** Within the ovule in the ovary
+
+**Process:**
+1. **Diploid megaspore mother cell** (2n) undergoes meiosis
+2. Produces four haploid megaspores, but three degenerate
+3. Surviving megaspore undergoes three mitotic divisions
+4. Forms **embryo sac** with 8 nuclei (7 cells):
+
+| Cell(s) | Number | Function |
+|---------|--------|----------|
+| **Egg cell** | 1 | Fuses with sperm to form zygote |
+| **Synergids** | 2 | Guide pollen tube; degenerate after fertilization |
+| **Polar nuclei** | 2 | Fuse with sperm to form triploid endosperm nucleus |
+| **Antipodal cells** | 3 | Nutritive function; degenerate |
+
+### 2.4 Pollination
+
+**Pollination is the transfer of pollen from anther to stigma.**
+
+**Types:**
+- **Self-pollination:** Same flower or same plant
+- **Cross-pollination:** Different plant of same species
+
+**Pollination Adaptations:**
+
+| Feature | Wind-Pollinated | Insect-Pollinated |
+|---------|-----------------|-------------------|
+| **Petals** | Small/absent, dull | Large, brightly colored |
+| **Scent** | Absent | Often present |
+| **Nectar** | Absent | Present (reward) |
+| **Pollen** | Abundant, small, light, smooth | Less abundant, larger, sticky, spiky |
+| **Stigma** | Feathery, exposed | Sticky, inside flower |
+| **Anthers** | Exposed, pendulous | Inside flower |
+
+### 2.5 Double Fertilization
+
+**Double fertilization is unique to angiosperms.**
+
+**Process:**
+1. Pollen grain lands on compatible stigma
+2. Pollen tube grows down style (guided by chemotropism)
+3. Tube nucleus leads the way; generative nucleus divides → 2 sperm nuclei
+4. Pollen tube enters ovule through micropyle
+5. **First fertilization:** Sperm + egg cell → diploid zygote (2n)
+6. **Second fertilization:** Sperm + 2 polar nuclei → triploid endosperm nucleus (3n)
+
+**After Fertilization:**
+- Zygote → embryo (through mitosis)
+- Endosperm nucleus → endosperm (food store)
+- Ovule → seed
+- Ovary → fruit`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "3. Human Reproductive System",
+                content: `## Male and Female Reproductive Anatomy
+
+### 3.1 Male Reproductive System
+
+| Structure | Function |
+|-----------|----------|
+| **Testes** | Produce sperm (in seminiferous tubules) and testosterone (in Leydig cells) |
+| **Scrotum** | Holds testes outside body; maintains temperature 2-3°C below body temp |
+| **Epididymis** | Storage and maturation of sperm |
+| **Vas deferens** | Transports sperm from epididymis to urethra |
+| **Seminal vesicles** | Secrete fructose-rich fluid (60% of semen volume) |
+| **Prostate gland** | Secretes alkaline fluid to neutralize vaginal acidity |
+| **Bulbourethral glands** | Secrete mucus for lubrication |
+| **Urethra** | Passage for both semen and urine |
+| **Penis** | Deposits semen in female reproductive tract |
+
+### 3.2 Female Reproductive System
+
+| Structure | Function |
+|-----------|----------|
+| **Ovaries** | Produce eggs (oocytes) and hormones (estrogen, progesterone) |
+| **Fallopian tubes (oviducts)** | Site of fertilization; transport egg to uterus |
+| **Fimbriae** | Finger-like projections that catch released egg |
+| **Uterus (womb)** | Site of implantation and fetal development |
+| **Endometrium** | Inner lining of uterus; thickens each cycle |
+| **Cervix** | Narrow opening between vagina and uterus |
+| **Vagina** | Receives penis and sperm; birth canal |
+
+### 3.3 Spermatogenesis
+
+**Spermatogenesis is the production of sperm in the seminiferous tubules of the testes.**
+
+**Process (takes ~64 days):**
+
+| Stage | Cell Type | Chromosome Number | Process |
+|-------|-----------|-------------------|---------|
+| 1 | Spermatogonium | 2n (46) | Mitosis (maintains stem cells) |
+| 2 | Primary spermatocyte | 2n (46) | Meiosis I begins |
+| 3 | Secondary spermatocyte | n (23) | Meiosis I complete |
+| 4 | Spermatid | n (23) | Meiosis II complete |
+| 5 | Spermatozoon | n (23) | Differentiation (spermiogenesis) |
+
+**Spermiogenesis (maturation):**
+- Nucleus condenses
+- Acrosome forms (contains enzymes)
+- Mitochondria arrange around midpiece
+- Tail (flagellum) develops
+- Excess cytoplasm shed
+
+**Sperm Structure:**
+- Head: contains nucleus (DNA) and acrosome (digestive enzymes)
+- Midpiece: packed with mitochondria for ATP production
+- Tail: flagellum for propulsion
+
+### 3.4 Oogenesis
+
+**Oogenesis is the production of eggs (ova) in the ovaries.**
+
+| Stage | Timing | Event |
+|-------|--------|-------|
+| **Before birth** | Fetal development | Oogonia multiply by mitosis; begin meiosis I; arrest in prophase I as primary oocytes |
+| **Puberty to menopause** | Each menstrual cycle | Primary oocyte completes meiosis I → secondary oocyte + first polar body |
+| **At fertilization** | Upon sperm entry | Secondary oocyte completes meiosis II → ovum + second polar body |
+
+**Key Points:**
+- Females born with all oocytes they will ever have (~1-2 million at birth, ~400 mature in lifetime)
+- Meiosis I arrested until puberty (up to 50 years!)
+- Meiosis II completes only if fertilization occurs
+- Polar bodies have minimal cytoplasm and degenerate
+
+**Comparison of Gametogenesis:**
+
+| Feature | Spermatogenesis | Oogenesis |
+|---------|-----------------|-----------|
+| **Location** | Seminiferous tubules | Ovaries |
+| **Start** | Puberty | Fetal development |
+| **End** | Throughout life | Menopause (~50 years) |
+| **Products per meiosis** | 4 functional sperm | 1 functional egg + 3 polar bodies |
+| **Size of gamete** | Small (microscopic) | Large (visible) |
+| **Cytoplasm** | Minimal | Abundant (nutrients for embryo) |
+| **Duration** | ~64 days | Decades (meiosis I arrested) |`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "4. The Menstrual Cycle",
+                content: `## Hormonal Control of the Female Reproductive Cycle
+
+### 4.1 Phases of the Menstrual Cycle
+
+The menstrual cycle averages **28 days** and has four main phases:
+
+**1. Menstruation (Days 1-5):**
+- Endometrium breaks down and sheds
+- Low levels of estrogen and progesterone
+- FSH begins to rise
+
+**2. Follicular Phase (Days 1-13):**
+- FSH stimulates follicle development in ovary
+- Developing follicle secretes estrogen
+- Estrogen stimulates endometrium rebuilding
+- One dominant follicle matures (Graafian follicle)
+
+**3. Ovulation (Day 14):**
+- LH surge (triggered by high estrogen)
+- Mature follicle ruptures, releasing secondary oocyte
+- Egg travels along fallopian tube
+
+**4. Luteal Phase (Days 15-28):**
+- Empty follicle becomes corpus luteum
+- Corpus luteum secretes progesterone (and some estrogen)
+- Progesterone maintains thick, vascularized endometrium
+- If no fertilization: corpus luteum degenerates → progesterone drops → menstruation
+
+### 4.2 Hormones of the Menstrual Cycle
+
+| Hormone | Source | Main Actions |
+|---------|--------|--------------|
+| **FSH** | Anterior pituitary | Stimulates follicle development; stimulates estrogen secretion |
+| **LH** | Anterior pituitary | Triggers ovulation; stimulates corpus luteum formation |
+| **Estrogen** | Ovarian follicles | Rebuilds endometrium; positive feedback on LH (mid-cycle) |
+| **Progesterone** | Corpus luteum | Maintains endometrium; inhibits FSH and LH |
+
+### 4.3 Feedback Mechanisms
+
+**Negative Feedback (most of cycle):**
+- Estrogen and progesterone inhibit FSH and LH release
+- Prevents multiple follicle development
+
+**Positive Feedback (mid-cycle):**
+- High estrogen triggers LH surge
+- Causes ovulation
+- Only example of positive feedback in this system
+
+### 4.4 If Pregnancy Occurs
+
+1. Fertilized egg implants in endometrium (~Day 21)
+2. Developing embryo secretes **hCG (human chorionic gonadotropin)**
+3. hCG maintains corpus luteum → continues progesterone production
+4. Endometrium maintained → no menstruation
+5. After ~10 weeks, placenta takes over hormone production
+6. hCG in urine = basis of pregnancy tests`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "5. Fertilization, Pregnancy, and Birth",
+                content: `## From Conception to Delivery
+
+### 5.1 Fertilization
+
+**Fertilization is the fusion of sperm and egg nuclei to form a diploid zygote.**
+
+**Process:**
+
+1. **Capacitation:** Sperm undergo final maturation in female tract (6-8 hours)
+   - Membrane changes allow acrosome reaction
+   - Hyperactivated motility
+
+2. **Acrosome reaction:** At zona pellucida
+   - Acrosomal enzymes (hyaluronidase, acrosin) digest zona pellucida
+   - Sperm penetrates to egg membrane
+
+3. **Fusion:** Sperm and egg membranes fuse
+
+4. **Cortical reaction:** Prevents polyspermy
+   - Cortical granules release enzymes
+   - Zona pellucida hardens (zona reaction)
+   - No more sperm can enter
+
+5. **Completion of meiosis II:** Secondary oocyte completes division
+
+6. **Pronuclei formation:** Male and female pronuclei form
+
+7. **Syngamy:** Pronuclei fuse → diploid zygote (2n = 46)
+
+### 5.2 Early Embryo Development
+
+| Stage | Time After Fertilization | Description |
+|-------|-------------------------|-------------|
+| **Zygote** | 0-24 hours | Single diploid cell |
+| **Cleavage** | 24-72 hours | Rapid mitotic divisions; cells (blastomeres) get smaller |
+| **Morula** | Day 3-4 | Solid ball of 16-32 cells |
+| **Blastocyst** | Day 5-6 | Hollow ball; inner cell mass + trophoblast |
+| **Implantation** | Day 6-10 | Blastocyst embeds in endometrium |
+
+**Blastocyst Components:**
+- **Inner cell mass:** Becomes embryo proper
+- **Trophoblast:** Becomes placenta and embryonic membranes
+
+### 5.3 The Placenta
+
+**The placenta is a temporary organ that provides exchange between maternal and fetal blood.**
+
+**Functions:**
+1. **Gas exchange:** O₂ to fetus, CO₂ to mother
+2. **Nutrient transfer:** Glucose, amino acids, vitamins
+3. **Waste removal:** Urea and other metabolic wastes
+4. **Hormone production:** hCG, progesterone, estrogen, HPL
+5. **Antibody transfer:** IgG antibodies cross (passive immunity)
+6. **Barrier:** Prevents mixing of blood; blocks some pathogens
+
+**Structure:**
+- Fetal side: chorionic villi containing fetal capillaries
+- Maternal side: blood-filled spaces (intervillous spaces)
+- Diffusion distance: only 3-4 μm
+
+**Important Note:** Maternal and fetal blood do NOT mix directly.
+
+### 5.4 Pregnancy (Gestation)
+
+**Human gestation is approximately 40 weeks (280 days) from last menstrual period.**
+
+| Trimester | Weeks | Key Developments |
+|-----------|-------|------------------|
+| **First** | 1-12 | Organ formation (organogenesis); most sensitive to teratogens |
+| **Second** | 13-26 | Rapid growth; movement felt; sex distinguishable |
+| **Third** | 27-40 | Final growth; brain development; preparation for birth |
+
+### 5.5 Parturition (Birth)
+
+**Parturition is the process of giving birth.**
+
+**Hormonal Triggers:**
+- Decreased progesterone (relaxes uterine muscle inhibition)
+- Increased estrogen (sensitizes uterus to oxytocin)
+- Fetal cortisol production
+- Oxytocin release from posterior pituitary
+
+**Stages of Labor:**
+
+| Stage | Duration | Events |
+|-------|----------|--------|
+| **First (dilation)** | 6-12 hours | Cervix dilates to 10 cm; contractions intensify |
+| **Second (expulsion)** | 20-60 minutes | Baby delivered; mother pushes with contractions |
+| **Third (placental)** | 5-30 minutes | Placenta expelled |
+
+**Positive Feedback in Birth:**
+1. Baby's head presses on cervix
+2. Stretch receptors send signals to brain
+3. Posterior pituitary releases oxytocin
+4. Oxytocin causes uterine contractions
+5. Stronger contractions → more pressure → more oxytocin
+6. Cycle continues until baby delivered`,
+                diagrams: [],
+                subsections: []
+            },
+            {
+                title: "6. Hormonal Control and Fertility",
+                content: `## Regulating Reproduction
+
+### 6.1 Male Hormones
+
+| Hormone | Source | Functions |
+|---------|--------|-----------|
+| **GnRH** | Hypothalamus | Stimulates anterior pituitary to release FSH and LH |
+| **FSH** | Anterior pituitary | Stimulates Sertoli cells; supports spermatogenesis |
+| **LH** | Anterior pituitary | Stimulates Leydig cells to produce testosterone |
+| **Testosterone** | Leydig cells (testes) | Spermatogenesis; secondary sexual characteristics; libido |
+| **Inhibin** | Sertoli cells | Negative feedback on FSH secretion |
+
+**Negative Feedback:**
+- High testosterone inhibits GnRH and LH
+- High inhibin inhibits FSH
+- Maintains stable hormone levels
+
+### 6.2 Infertility and Its Causes
+
+**Infertility is the inability to conceive after 12 months of regular unprotected intercourse.**
+
+**Male Causes:**
+- Low sperm count (oligospermia)
+- Poor sperm motility (asthenospermia)
+- Abnormal sperm morphology (teratospermia)
+- Blocked vas deferens
+- Erectile dysfunction
+- Hormonal imbalances
+
+**Female Causes:**
+- Anovulation (no ovulation)
+- Blocked fallopian tubes
+- Endometriosis
+- Polycystic ovary syndrome (PCOS)
+- Premature ovarian failure
+- Uterine abnormalities
+
+### 6.3 Assisted Reproductive Technologies (ART)
+
+**In Vitro Fertilization (IVF):**
+
+1. **Ovarian stimulation:** FSH injections to stimulate multiple follicles
+2. **Egg retrieval:** Ultrasound-guided needle extracts eggs
+3. **Sperm collection and preparation:** Capacitation in lab
+4. **Fertilization:** Eggs and sperm combined in culture dish
+5. **Embryo culture:** Monitor for 3-5 days
+6. **Embryo transfer:** Best embryo(s) placed in uterus
+7. **Progesterone support:** Maintains endometrium
+
+**Intracytoplasmic Sperm Injection (ICSI):**
+- Single sperm injected directly into egg cytoplasm
+- Used when sperm count/motility very low
+
+### 6.4 Contraception
+
+**Methods of Preventing Pregnancy:**
+
+| Method | How It Works | Effectiveness |
+|--------|--------------|---------------|
+| **Barrier (condom)** | Prevents sperm reaching egg | ~85% typical use |
+| **Hormonal (pill)** | Prevents ovulation; thickens cervical mucus | >99% if used correctly |
+| **IUD (copper)** | Prevents implantation; toxic to sperm | >99% |
+| **IUS (hormonal)** | Thins endometrium; thickens mucus | >99% |
+| **Sterilization** | Blocks tubes (fallopian or vas deferens) | >99% |
+| **Natural (rhythm)** | Avoids fertile window | ~76% typical use |
+
+### 6.5 Hormonal Contraception
+
+**Combined Oral Contraceptive (COC):**
+- Contains synthetic estrogen + progesterone
+- Prevents ovulation (inhibits FSH and LH surge)
+- Thickens cervical mucus (blocks sperm)
+- Thins endometrium (reduces implantation chance)
+
+**Progesterone-Only Pill (Mini-pill):**
+- Contains only progesterone
+- Primarily works by thickening cervical mucus
+- May inhibit ovulation in some cycles
+- Safer for women who can't take estrogen`,
+                diagrams: [],
+                subsections: []
+            }
+        ],
+        key_points: [
+            "Asexual reproduction produces genetically identical offspring; sexual reproduction produces genetic variation through meiosis and fertilization",
+            "Flowers contain male (stamen) and female (carpel) reproductive organs; pollen develops in anthers, embryo sacs in ovules",
+            "Double fertilization in angiosperms: one sperm + egg → zygote (2n); one sperm + polar nuclei → endosperm (3n)",
+            "Spermatogenesis produces 4 functional sperm from each primary spermatocyte; oogenesis produces 1 functional egg + 3 polar bodies",
+            "The menstrual cycle is controlled by FSH, LH, estrogen, and progesterone through negative and positive feedback",
+            "Ovulation is triggered by the LH surge, caused by positive feedback from high estrogen levels",
+            "Fertilization involves capacitation, acrosome reaction, fusion, cortical reaction, and syngamy",
+            "The placenta allows exchange of gases, nutrients, and wastes between maternal and fetal blood without direct mixing",
+            "Birth (parturition) is triggered by oxytocin in a positive feedback loop: contractions → more oxytocin → stronger contractions",
+            "IVF involves ovarian stimulation, egg retrieval, in vitro fertilization, and embryo transfer"
+        ],
+        exam_tips: [
+            "Know the SEQUENCE of meiotic stages in gametogenesis—examiners often ask about chromosome numbers at each stage",
+            "For spermatogenesis: 1 primary spermatocyte → 4 sperm; for oogenesis: 1 primary oocyte → 1 egg + 3 polar bodies",
+            "Distinguish between the follicular phase (estrogen dominant) and luteal phase (progesterone dominant) of the menstrual cycle",
+            "The LH surge is caused by POSITIVE feedback from high estrogen—the only positive feedback in the cycle",
+            "Remember: maternal and fetal blood do NOT mix in the placenta—exchange occurs across the placental barrier",
+            "For birth, know that oxytocin-contraction is a POSITIVE feedback loop—cycle continues until baby delivered"
         ]
     }
 };

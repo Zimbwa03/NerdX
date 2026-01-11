@@ -4491,11 +4491,14 @@ def generate_flashcards():
                 'message': 'Subject and topic are required'
             }), 400
         
-        # Validate subject
-        if subject not in ['Biology', 'Chemistry', 'Physics', 'Mathematics']:
+        
+        # Validate subject - accept both O Level and A Level subjects
+        valid_subjects = ['Biology', 'Chemistry', 'Physics', 'Mathematics', 
+                          'A Level Biology', 'A Level Chemistry', 'A Level Physics']
+        if not any(s in subject for s in ['Biology', 'Chemistry', 'Physics', 'Mathematics']):
             return jsonify({
                 'success': False,
-                'message': 'Invalid subject. Must be Biology, Chemistry, Physics, or Mathematics'
+                'message': 'Invalid subject. Must contain Biology, Chemistry, Physics, or Mathematics'
             }), 400
         
         from services.flashcard_service import flashcard_service
