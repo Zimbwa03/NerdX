@@ -4375,6 +4375,81 @@ def scan_math_problem():
         logger.error(f"Scan math problem error: {e}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
+@mobile_bp.route('/math/scan-gemini', methods=['POST'])
+@require_auth
+def scan_math_gemini():
+    """Scan math problem from image using Gemini Vision API"""
+    try:
+        data = request.get_json()
+        image_base64 = data.get('image_base64')
+        prompt = data.get('prompt', 'Extract the mathematical equation from this image')
+        
+        if not image_base64:
+            return jsonify({'success': False, 'message': 'No image provided'}), 400
+        
+        import google.generativeai as genai
+        
+        # Configure Gemini
+        gemini_api_key = os.environ.get('GEMINI_API_KEY')
+        if not gemini_api_key:
+            return jsonify({'success': False, 'message': 'Gemini API key not configured'}), 500
+            
+        genai.configure(api_key=gemini_api_key)
+        
+        # Use Gemini Vision model
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        # Create image part for the API
+        import base64
+        image_data = base64.b64decode(image_base64)
+        
+        # Send to Gemini Vision
+        response = model.generate_content([
+            prompt,
+            {
+                'mime_type': 'image/jpeg',
+                'data': image_base64
+            }
+        ])
+        
+        # Parse response
+        if response and response.text:
+            response_text = response.text.strip()
+            
+            # Try to parse as JSON if it looks like JSON
+            try:
+                import json
+                if response_text.startswith('{'):
+                    result_data = json.loads(response_text)
+                    return jsonify({
+                        'success': True,
+                        'data': {
+                            'detected_text': result_data.get('detected_text', response_text),
+                            'latex': result_data.get('latex', response_text),
+                            'confidence': result_data.get('confidence', 0.9),
+                            'method': 'gemini-vision'
+                        }
+                    }), 200
+            except json.JSONDecodeError:
+                pass
+            
+            # Return raw text if not JSON
+            return jsonify({
+                'success': True,
+                'data': {
+                    'detected_text': response_text,
+                    'latex': response_text,
+                    'confidence': 0.85,
+                    'method': 'gemini-vision'
+                }
+            }), 200
+        else:
+            return jsonify({'success': False, 'message': 'No response from Gemini'}), 500
+            
+    except Exception as e:
+        logger.error(f"Gemini scan error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 # -----------------------------------------------------------------------------
 # Voice Feature Endpoints (Phase 5)
 # -----------------------------------------------------------------------------

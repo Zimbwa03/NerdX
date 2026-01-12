@@ -1,4 +1,4 @@
-// Quiz Screen Component - Professional UI/UX Design
+﻿// Quiz Screen Component - Professional UI/UX Design
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
@@ -72,7 +72,7 @@ const QuizScreen: React.FC = () => {
   const [generatingQuestion, setGeneratingQuestion] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [questionCount, setQuestionCount] = useState(1);
-  
+
   // Store the current question type to preserve it when generating next question
   const [currentQuestionType, setCurrentQuestionType] = useState<string | undefined>(() => {
     // Initialize from route params or detect from initial question
@@ -88,7 +88,7 @@ const QuizScreen: React.FC = () => {
     }
     return undefined;
   });
-  
+
   // Structured question state (Paper 2 style)
   const [structuredAnswers, setStructuredAnswers] = useState<Record<string, string>>({});
 
@@ -98,7 +98,7 @@ const QuizScreen: React.FC = () => {
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
   const [hintsUsed, setHintsUsed] = useState<number>(0);
 
-  // Voice/STT support (Wispr Flow) — enable for A Level sciences and math
+  // Voice/STT support (Wispr Flow) â€” enable for A Level sciences and math
   const isMathSubject = subject?.id === 'mathematics' || subject?.id === 'a_level_pure_math';
   const supportsVoiceToText = isMathSubject || ['a_level_physics', 'a_level_chemistry', 'a_level_biology'].includes(subject?.id);
   const voiceInputMode: 'math' | 'general' = isMathSubject ? 'math' : 'general';
@@ -126,7 +126,7 @@ const QuizScreen: React.FC = () => {
             }
           }
         } catch (error) {
-          showError('❌ Failed to start exam. Please try again.', 5000);
+          showError('âŒ Failed to start exam. Please try again.', 5000);
           Alert.alert('Error', 'Failed to start exam');
           navigation.goBack();
         } finally {
@@ -210,7 +210,7 @@ const QuizScreen: React.FC = () => {
     // For structured questions, combine all part answers
     const isStructured = question.question_type === 'structured' && question.structured_question;
     let answerToSubmit: string;
-    
+
     if (isStructured) {
       // Combine all structured answers into a formatted string
       const parts = question.structured_question?.parts || [];
@@ -219,7 +219,7 @@ const QuizScreen: React.FC = () => {
         return `${part.label}: ${answer}`;
       }).join('\n\n');
       answerToSubmit = answersFormatted;
-      
+
       // Check if at least one answer is filled
       const hasAnyAnswer = Object.values(structuredAnswers).some(a => a.trim().length > 0);
       if (!hasAnyAnswer) {
@@ -229,7 +229,7 @@ const QuizScreen: React.FC = () => {
     } else if (question.question_type === 'essay') {
       // Essay questions - use text answer
       answerToSubmit = textAnswer;
-      
+
       if (!answerToSubmit || answerToSubmit.trim().length < 10) {
         Alert.alert('Error', 'Please write your essay answer (minimum 10 characters)');
         return;
@@ -237,7 +237,7 @@ const QuizScreen: React.FC = () => {
     } else {
       // Regular text input or MCQ
       answerToSubmit = question.allows_text_input ? textAnswer : selectedAnswer;
-      
+
       if (!answerToSubmit && !answerImage) {
         Alert.alert('Error', 'Please enter your answer or upload an image');
         return;
@@ -260,12 +260,12 @@ const QuizScreen: React.FC = () => {
       );
       if (answerResult) {
         setResult(answerResult);
-        
+
         // Show notification based on result
         if (answerResult.correct) {
-          showSuccess(`🎉 Correct! You earned ${answerResult.points_earned} points!`, 3000);
+          showSuccess(`ðŸŽ‰ Correct! You earned ${answerResult.points_earned} points!`, 3000);
         } else {
-          showInfo(`💡 ${answerResult.feedback || 'Keep practicing!'}`, 4000);
+          showInfo(`ðŸ’¡ ${answerResult.feedback || 'Keep practicing!'}`, 4000);
         }
 
         if (isReviewMode && reviewItems) {
@@ -299,14 +299,14 @@ const QuizScreen: React.FC = () => {
           const scorePercent = answerResult.correct ? 100 : 0;
           await gamificationService.updateMastery(subjectKey, scorePercent);
 
-          console.log('✅ Gamification: Progress tracked successfully');
+          console.log('âœ… Gamification: Progress tracked successfully');
         } catch (gamError) {
           console.error('Failed to update gamification:', gamError);
         }
       }
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Failed to submit answer';
-      showError(`❌ ${errorMessage}`, 5000);
+      showError(`âŒ ${errorMessage}`, 5000);
       Alert.alert('Error', errorMessage);
     } finally {
       setLoading(false);
@@ -355,7 +355,7 @@ const QuizScreen: React.FC = () => {
               interaction.synced = false; // Mark as pending sync
             });
           });
-          console.log(`✅ Offline DKT: Logged interaction for ${skill_id}`);
+          console.log(`âœ… Offline DKT: Logged interaction for ${skill_id}`);
           // Trigger background sync if online
           syncDatabase();
         } catch (dbError) {
@@ -376,7 +376,7 @@ const QuizScreen: React.FC = () => {
           hints_used: hintsUsed,
           session_id: sessionId,
         });
-        console.log(`✅ DKT API: Logged interaction for ${skill_id}`);
+        console.log(`âœ… DKT API: Logged interaction for ${skill_id}`);
       } catch (apiError) {
         console.warn('DKT API logging failed (offline?):', apiError);
       }
@@ -505,7 +505,7 @@ const QuizScreen: React.FC = () => {
         // Ensure we keep the same topic context AND question type for continuous practice
         // Use stored question type (persists through submission) or detect from current question
         let nextQuestionType: string | undefined = currentQuestionType;
-        
+
         // If no stored type, try to detect from current question
         if (!nextQuestionType && question) {
           if (question.question_type === 'essay' || (question as any).essay_data) {
@@ -516,14 +516,14 @@ const QuizScreen: React.FC = () => {
             nextQuestionType = 'mcq';
           }
         }
-        
+
         // Fall back to route param if still not detected
         if (!nextQuestionType) {
           nextQuestionType = questionType;
         }
-        
-        console.log(`🔄 Generating next ${nextQuestionType || 'MCQ'} question for topic: ${topic?.id || 'general'}`);
-        
+
+        console.log(`ðŸ”„ Generating next ${nextQuestionType || 'MCQ'} question for topic: ${topic?.id || 'general'}`);
+
         newQuestion = await quizApi.generateQuestion(
           subject.id,
           topic?.id,
@@ -539,7 +539,7 @@ const QuizScreen: React.FC = () => {
       if (newQuestion) {
         const normalizedQ = normalizeQuestion(newQuestion);
         setQuestion(normalizedQ);
-        
+
         // Update stored question type based on the new question
         if (normalizedQ) {
           if (normalizedQ.question_type === 'essay' || (normalizedQ as any).essay_data) {
@@ -550,8 +550,8 @@ const QuizScreen: React.FC = () => {
             setCurrentQuestionType('mcq');
           }
         }
-        
-        showSuccess('✅ Next question loaded!', 2000);
+
+        showSuccess('âœ… Next question loaded!', 2000);
         setSelectedAnswer('');
         setTextAnswer('');
         setAnswerImage(null);
@@ -564,14 +564,14 @@ const QuizScreen: React.FC = () => {
         if (user) {
           const newCredits = (user.credits || 0) - 1;
           updateUser({ credits: newCredits });
-          
+
           // Show credit deduction notification
-          showInfo(`💳 1 credit used. ${newCredits} credits remaining.`, 3000);
-          
+          showInfo(`ðŸ’³ 1 credit used. ${newCredits} credits remaining.`, 3000);
+
           // Check if credits are getting low
           if (newCredits <= 3 && newCredits > 0) {
             setTimeout(() => {
-              showWarning(`⚠️ Running low on credits! Only ${newCredits} credits left.`, 5000);
+              showWarning(`âš ï¸ Running low on credits! Only ${newCredits} credits left.`, 5000);
             }, 3500);
           }
         }
@@ -597,6 +597,690 @@ const QuizScreen: React.FC = () => {
     formatted = formatted.replace(/Step\s*/gi, '\nStep ');
     return formatted.trim();
   };
+
+  // Dynamic styles based on theme
+  const styles = React.useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: themedColors.background.default,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    header: {
+      paddingTop: 35,
+      paddingBottom: 16,
+      paddingHorizontal: 20,
+      borderBottomLeftRadius: 30,
+      borderBottomRightRadius: 30,
+      shadowColor: themedColors.primary.dark,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 8,
+    },
+    headerContent: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    headerLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    headerText: {
+      flex: 1,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: Colors.text.white,
+      marginBottom: 4,
+    },
+    credits: {
+      fontSize: 14,
+      color: Colors.text.white,
+      opacity: 0.9,
+    },
+    contentContainer: {
+      padding: 16,
+      paddingTop: 8,
+    },
+    questionCard: {
+      marginBottom: 12,
+      backgroundColor: themedColors.background.paper,
+      borderColor: themedColors.border.light,
+      borderWidth: 1,
+    },
+    questionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 16,
+      gap: 12,
+    },
+    questionLabel: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: themedColors.text.primary,
+    },
+    questionText: {
+      fontSize: 18,
+      color: themedColors.text.primary,
+      lineHeight: 28,
+      fontWeight: '500',
+    },
+    questionTextContainer: {
+      marginTop: 4,
+    },
+    optionsContainer: {
+      marginBottom: 20,
+    },
+    optionCard: {
+      marginBottom: 12,
+      backgroundColor: themedColors.background.paper,
+      borderColor: themedColors.border.light,
+      borderWidth: 1,
+    },
+    optionCardSelected: {
+      borderWidth: 2,
+      borderColor: Colors.primary.main,
+      backgroundColor: 'rgba(124, 77, 255, 0.1)',
+    },
+    optionCardCorrect: {
+      borderWidth: 2,
+      borderColor: Colors.success.main,
+      backgroundColor: 'rgba(0, 230, 118, 0.1)',
+    },
+    optionCardWrong: {
+      borderWidth: 2,
+      borderColor: Colors.error.main,
+      backgroundColor: 'rgba(255, 23, 68, 0.1)',
+    },
+    optionContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 4,
+      gap: 16,
+    },
+    optionLabelCircle: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: themedColors.background.subtle,
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: themedColors.border.light,
+    },
+    optionLabelCircleSelected: {
+      backgroundColor: Colors.primary.main,
+      borderColor: Colors.primary.main,
+    },
+    optionLabelCircleCorrect: {
+      backgroundColor: Colors.success.main,
+      borderColor: Colors.success.main,
+    },
+    optionLabelCircleWrong: {
+      backgroundColor: Colors.error.main,
+      borderColor: Colors.error.main,
+    },
+    optionLabelText: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: themedColors.text.primary,
+    },
+    optionLabelTextSelected: {
+      color: Colors.text.white,
+    },
+    optionLabelTextCorrect: {
+      color: Colors.text.white,
+    },
+    optionLabelTextWrong: {
+      color: Colors.text.white,
+    },
+    optionText: {
+      flex: 1,
+      fontSize: 16,
+      color: themedColors.text.primary,
+      lineHeight: 24,
+    },
+    optionTextSelected: {
+      fontWeight: '600',
+    },
+    optionTextCorrect: {
+      color: Colors.success.dark,
+      fontWeight: '600',
+    },
+    optionTextWrong: {
+      color: Colors.error.dark,
+      fontWeight: '600',
+    },
+    optionIcon: {
+      marginLeft: 'auto',
+    },
+    resultCard: {
+      marginBottom: 20,
+    },
+    resultHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 12,
+      gap: 12,
+    },
+    resultLabelCorrect: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: Colors.success.main,
+    },
+    resultLabelIncorrect: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: Colors.error.main,
+    },
+    resultContent: {
+      padding: 4,
+    },
+    feedbackText: {
+      fontSize: 16,
+      color: themedColors.text.primary,
+      lineHeight: 24,
+      marginBottom: 12,
+    },
+    pointsBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      alignSelf: 'flex-start',
+      backgroundColor: Colors.primary.light + '30',
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 16,
+      gap: 4,
+    },
+    pointsText: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: Colors.primary.main,
+    },
+    essayFeedbackSection: {
+      marginTop: 12,
+      paddingTop: 12,
+      borderTopWidth: 1,
+      borderTopColor: themedColors.border.light,
+    },
+    essayFeedbackTitle: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: Colors.info.main,
+      marginBottom: 8,
+    },
+    essayStrengthsList: {
+      marginBottom: 12,
+    },
+    essayStrengthItem: {
+      fontSize: 13,
+      color: Colors.success.dark,
+      lineHeight: 20,
+      marginBottom: 4,
+    },
+    essayImprovementSection: {
+      paddingTop: 12,
+      borderTopWidth: 1,
+      borderTopColor: themedColors.border.light,
+    },
+    essayMistakesTitle: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: Colors.warning.main,
+      marginBottom: 8,
+    },
+    essayMistakeItem: {
+      fontSize: 13,
+      color: themedColors.text.secondary,
+      lineHeight: 20,
+      marginBottom: 6,
+    },
+    solutionContainer: {
+      backgroundColor: themedColors.background.subtle,
+      borderRadius: 12,
+      padding: 16,
+      marginTop: 12,
+      borderWidth: 1,
+      borderColor: themedColors.border.light,
+    },
+    solutionTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: themedColors.text.primary,
+      marginBottom: 8,
+    },
+    solutionText: {
+      fontSize: 15,
+      color: themedColors.text.secondary,
+      lineHeight: 22,
+    },
+    solutionImage: {
+      width: '100%',
+      height: 200,
+      borderRadius: 8,
+      marginBottom: 8,
+    },
+    hintContainer: {
+      backgroundColor: Colors.warning.light + '20',
+      borderRadius: 12,
+      padding: 16,
+      marginTop: 12,
+      borderWidth: 1,
+      borderColor: Colors.warning.light,
+    },
+    hintTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: Colors.warning.dark,
+      marginBottom: 8,
+    },
+    hintText: {
+      fontSize: 15,
+      color: themedColors.text.secondary,
+      lineHeight: 22,
+    },
+    explanationContainer: {
+      backgroundColor: Colors.info.light + '20',
+      borderRadius: 12,
+      padding: 16,
+      marginTop: 12,
+      borderWidth: 1,
+      borderColor: Colors.info.light,
+    },
+    explanationTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: Colors.info.dark,
+      marginBottom: 8,
+    },
+    explanationText: {
+      fontSize: 15,
+      color: themedColors.text.secondary,
+      lineHeight: 22,
+    },
+    buttonContainer: {
+      gap: 12,
+      marginBottom: 30,
+    },
+    nextButton: {
+      marginBottom: 8,
+    },
+    answerInputContainer: {
+      marginBottom: 20,
+    },
+    answerInputLabel: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: themedColors.text.primary,
+      marginBottom: 8,
+    },
+    answerInput: {
+      backgroundColor: themedColors.background.paper,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: themedColors.border.light,
+      padding: 16,
+      fontSize: 16,
+      color: themedColors.text.primary,
+      minHeight: 70,
+      textAlignVertical: 'top',
+    },
+    answerInputRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+    },
+    answerInputFlex: {
+      flex: 1,
+    },
+    essayInput: {
+      backgroundColor: themedColors.background.paper,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: themedColors.border.light,
+      padding: 16,
+      fontSize: 16,
+      color: themedColors.text.primary,
+      minHeight: 200,
+      maxHeight: 400,
+      textAlignVertical: 'top',
+    },
+    essayHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    essayTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: themedColors.text.primary,
+    },
+    essayMeta: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    essayMarks: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: Colors.primary.main,
+    },
+    essayTime: {
+      fontSize: 14,
+      fontWeight: '500',
+      color: themedColors.text.secondary,
+    },
+    essayCommandWord: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: Colors.warning.main,
+      marginBottom: 12,
+      fontStyle: 'italic',
+    },
+    essayKeyTerms: {
+      backgroundColor: themedColors.background.subtle,
+      borderRadius: 10,
+      padding: 12,
+      marginTop: 12,
+      borderLeftWidth: 3,
+      borderLeftColor: Colors.primary.main,
+    },
+    essayKeyTermsLabel: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: themedColors.text.primary,
+      marginBottom: 6,
+    },
+    essayKeyTermsList: {
+      fontSize: 13,
+      color: themedColors.text.secondary,
+      lineHeight: 20,
+    },
+    voiceHintText: {
+      fontSize: 12,
+      color: themedColors.text.secondary,
+      marginTop: 8,
+      fontStyle: 'italic',
+    },
+    scanButtonsRow: {
+      flexDirection: 'row',
+      gap: 10,
+      marginTop: 10,
+      flexWrap: 'wrap',
+    },
+    scanButton: {
+      flex: 1,
+      backgroundColor: themedColors.background.paper,
+      borderRadius: 10,
+      paddingVertical: 12,
+      paddingHorizontal: 10,
+      borderWidth: 1,
+      borderColor: themedColors.border.light,
+      alignItems: 'center',
+    },
+    scanButtonText: {
+      color: themedColors.text.primary,
+      fontWeight: '600',
+      fontSize: 14,
+    },
+    imageUploadContainer: {
+      marginBottom: 20,
+    },
+    imageUploadButton: {
+      backgroundColor: themedColors.background.paper,
+      borderRadius: 12,
+      padding: 16,
+      alignItems: 'center',
+      marginBottom: 12,
+      borderWidth: 1,
+      borderColor: themedColors.border.light,
+    },
+    secondaryImageButton: {
+      backgroundColor: themedColors.background.subtle,
+    },
+    imageUploadButtonText: {
+      fontSize: 16,
+      color: themedColors.text.primary,
+      fontWeight: '500',
+    },
+    imagePreview: {
+      position: 'relative',
+      width: '100%',
+      height: 200,
+      borderRadius: 12,
+      overflow: 'hidden',
+      borderWidth: 1,
+      borderColor: themedColors.border.light,
+    },
+    uploadedImage: {
+      width: '100%',
+      height: '100%',
+    },
+    removeImageButton: {
+      position: 'absolute',
+      top: 8,
+      right: 8,
+      backgroundColor: 'rgba(0,0,0,0.6)',
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 16,
+    },
+    removeImageText: {
+      color: '#FFF',
+      fontSize: 12,
+      fontWeight: 'bold',
+    },
+    hintButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 12,
+      backgroundColor: Colors.warning.light + '20',
+      borderRadius: 12,
+      marginBottom: 20,
+      borderWidth: 1,
+      borderColor: Colors.warning.light,
+    },
+    hintButtonText: {
+      fontSize: 16,
+      color: Colors.warning.dark,
+      fontWeight: '600',
+    },
+    hintCard: {
+      marginBottom: 20,
+      backgroundColor: themedColors.background.paper,
+      borderColor: Colors.warning.light,
+      borderWidth: 1,
+    },
+    hintHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 12,
+      gap: 12,
+    },
+    confidenceContainer: {
+      marginBottom: 24,
+      backgroundColor: themedColors.background.paper,
+      padding: 16,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: themedColors.border.light,
+    },
+    confidenceLabel: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: themedColors.text.primary,
+      marginBottom: 12,
+      textAlign: 'center',
+    },
+    confidenceButtons: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      gap: 8,
+    },
+    confidenceButton: {
+      flex: 1,
+      paddingVertical: 10,
+      paddingHorizontal: 4,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: themedColors.border.light,
+      alignItems: 'center',
+      backgroundColor: themedColors.background.subtle,
+    },
+    confidenceButtonSelected: {
+      borderWidth: 2,
+      backgroundColor: themedColors.background.paper,
+    },
+    confidenceButtonLow: {
+      borderColor: Colors.error.main,
+      backgroundColor: 'rgba(255, 23, 68, 0.1)',
+    },
+    confidenceButtonMedium: {
+      borderColor: Colors.warning.main,
+      backgroundColor: 'rgba(255, 145, 0, 0.1)',
+    },
+    confidenceButtonHigh: {
+      borderColor: Colors.success.main,
+      backgroundColor: 'rgba(0, 230, 118, 0.1)',
+    },
+    confidenceButtonText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: themedColors.text.secondary,
+    },
+    confidenceButtonTextSelected: {
+      color: themedColors.text.primary,
+      fontWeight: 'bold',
+    },
+    questionImageContainer: {
+      marginTop: 16,
+      borderRadius: 12,
+      overflow: 'hidden',
+      backgroundColor: themedColors.background.subtle,
+    },
+    questionImage: {
+      width: '100%',
+      height: 200,
+      resizeMode: 'contain',
+    },
+    structuredContainer: {
+      marginBottom: 20,
+    },
+    structuredHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 16,
+      paddingHorizontal: 4,
+    },
+    structuredTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: Colors.subjects.combinedScience,
+    },
+    structuredMarks: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: themedColors.text.secondary,
+      backgroundColor: themedColors.background.subtle,
+      paddingHorizontal: 12,
+      paddingVertical: 4,
+      borderRadius: 12,
+    },
+    structuredPartCard: {
+      marginBottom: 12,
+      backgroundColor: themedColors.background.paper,
+      borderColor: themedColors.border.light,
+      borderWidth: 1,
+      borderLeftWidth: 4,
+      borderLeftColor: Colors.subjects.science,
+    },
+    structuredPartHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    structuredPartLabel: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: Colors.subjects.combinedScience,
+    },
+    structuredPartMarks: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: Colors.primary.main,
+      backgroundColor: Colors.primary.light + '30',
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 8,
+    },
+    structuredPartQuestion: {
+      fontSize: 15,
+      color: themedColors.text.primary,
+      lineHeight: 22,
+      marginBottom: 12,
+    },
+    structuredInputRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: 8,
+    },
+    structuredInputFlex: {
+      flex: 1,
+    },
+    structuredPartInput: {
+      backgroundColor: themedColors.background.subtle,
+      borderRadius: 8,
+      padding: 12,
+      fontSize: 15,
+      color: themedColors.text.primary,
+      borderWidth: 1,
+      borderColor: themedColors.border.light,
+      minHeight: 60,
+      maxHeight: 80,
+      textAlignVertical: 'top',
+    },
+    structuredPartAnswerDisplay: {
+      backgroundColor: themedColors.background.subtle,
+      borderRadius: 8,
+      padding: 12,
+    },
+    structuredPartAnswerLabel: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: themedColors.text.secondary,
+      marginBottom: 4,
+    },
+    structuredPartAnswerText: {
+      fontSize: 14,
+      color: themedColors.text.primary,
+      lineHeight: 20,
+    },
+    structuredModelAnswer: {
+      marginTop: 12,
+      paddingTop: 12,
+      borderTopWidth: 1,
+      borderTopColor: themedColors.border.light,
+    },
+    structuredModelLabel: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: Colors.success.main,
+      marginBottom: 4,
+    },
+    structuredModelText: {
+      fontSize: 14,
+      color: Colors.success.dark,
+      lineHeight: 20,
+      fontStyle: 'italic',
+    },
+  }), [themedColors]);
 
   return (
     <View style={[styles.container, { backgroundColor: themedColors.background.default }]}>
@@ -721,12 +1405,12 @@ const QuizScreen: React.FC = () => {
               {question.question_type === 'structured' && question.structured_question && (
                 <View style={styles.structuredContainer}>
                   <View style={styles.structuredHeader}>
-                    <Text style={styles.structuredTitle}>📋 Structured Question</Text>
+                    <Text style={styles.structuredTitle}>ðŸ“‹ Structured Question</Text>
                     <Text style={styles.structuredMarks}>
                       Total: {question.structured_question.total_marks} marks
                     </Text>
                   </View>
-                  
+
                   {question.structured_question.parts.map((part, index) => (
                     <Card key={index} variant="elevated" style={styles.structuredPartCard}>
                       <View style={styles.structuredPartHeader}>
@@ -734,7 +1418,7 @@ const QuizScreen: React.FC = () => {
                         <Text style={styles.structuredPartMarks}>[{part.marks}]</Text>
                       </View>
                       <Text style={styles.structuredPartQuestion}>{part.question}</Text>
-                      
+
                       {!result ? (
                         <View style={styles.structuredInputRow}>
                           <TextInput
@@ -778,7 +1462,7 @@ const QuizScreen: React.FC = () => {
                           </Text>
                           {part.model_answer && (
                             <View style={styles.structuredModelAnswer}>
-                              <Text style={styles.structuredModelLabel}>✓ Model Answer:</Text>
+                              <Text style={styles.structuredModelLabel}>âœ“ Model Answer:</Text>
                               <Text style={styles.structuredModelText}>{part.model_answer}</Text>
                             </View>
                           )}
@@ -793,7 +1477,7 @@ const QuizScreen: React.FC = () => {
               {question.question_type === 'essay' && question.allows_text_input && !result && (
                 <View style={styles.answerInputContainer}>
                   <View style={styles.essayHeader}>
-                    <Text style={styles.essayTitle}>📝 Essay Answer</Text>
+                    <Text style={styles.essayTitle}>ðŸ“ Essay Answer</Text>
                     {question.essay_data && (
                       <View style={styles.essayMeta}>
                         <Text style={styles.essayMarks}>{question.essay_data.total_marks} marks</Text>
@@ -832,7 +1516,7 @@ const QuizScreen: React.FC = () => {
                   </View>
                   {question.essay_data?.must_include_terms && question.essay_data.must_include_terms.length > 0 && (
                     <View style={styles.essayKeyTerms}>
-                      <Text style={styles.essayKeyTermsLabel}>🔑 Key Terms to Include:</Text>
+                      <Text style={styles.essayKeyTermsLabel}>ðŸ”‘ Key Terms to Include:</Text>
                       <Text style={styles.essayKeyTermsList}>
                         {question.essay_data.must_include_terms.join(', ')}
                       </Text>
@@ -840,7 +1524,7 @@ const QuizScreen: React.FC = () => {
                   )}
                   {supportsVoiceToText && (
                     <Text style={styles.voiceHintText}>
-                      🎤 Tip: Tap mic to dictate your essay. Speak naturally and pause between paragraphs.
+                      ðŸŽ¤ Tip: Tap mic to dictate your essay. Speak naturally and pause between paragraphs.
                     </Text>
                   )}
                 </View>
@@ -874,19 +1558,11 @@ const QuizScreen: React.FC = () => {
                       />
                     )}
                   </View>
-                  <View style={styles.scanButtonsRow}>
-                    <TouchableOpacity style={styles.scanButton} onPress={handleImageUpload}>
-                      <Text style={styles.scanButtonText}>📂 Upload & OCR</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.scanButton} onPress={handleCameraCapture}>
-                      <Text style={styles.scanButtonText}>📸 Camera OCR</Text>
-                    </TouchableOpacity>
-                  </View>
                   {supportsVoiceToText && (
                     <Text style={styles.voiceHintText}>
                       {voiceInputMode === 'math'
-                        ? '🎤 Tip: Speak math like "integral from zero to pi" — symbols auto-format.'
-                        : '🎤 Tip: Tap mic to dictate your answer with Wispr Flow speech-to-text.'}
+                        ? 'ðŸŽ¤ Tip: Speak math like "integral from zero to pi" â€” symbols auto-format.'
+                        : 'ðŸŽ¤ Tip: Tap mic to dictate your answer with Wispr Flow speech-to-text.'}
                     </Text>
                   )}
                 </View>
@@ -901,7 +1577,7 @@ const QuizScreen: React.FC = () => {
                     disabled={!!result}
                   >
                     <Text style={styles.imageUploadButtonText}>
-                      {answerImage ? '📷 Change Image' : '📷 Upload/Scan Answer Image'}
+                      {answerImage ? 'ðŸ“· Change Image' : 'ðŸ“· Upload/Scan Answer Image'}
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -909,7 +1585,7 @@ const QuizScreen: React.FC = () => {
                     onPress={handleCameraCapture}
                     disabled={!!result}
                   >
-                    <Text style={styles.imageUploadButtonText}>🎥 Capture with Camera</Text>
+                    <Text style={styles.imageUploadButtonText}>ðŸŽ¥ Capture with Camera</Text>
                   </TouchableOpacity>
                   {answerImage && (
                     <View style={styles.imagePreview}>
@@ -924,7 +1600,7 @@ const QuizScreen: React.FC = () => {
                         style={styles.removeImageButton}
                         onPress={() => setAnswerImage(null)}
                       >
-                        <Text style={styles.removeImageText}>✕ Remove</Text>
+                        <Text style={styles.removeImageText}>âœ• Remove</Text>
                       </TouchableOpacity>
                     </View>
                   )}
@@ -941,7 +1617,7 @@ const QuizScreen: React.FC = () => {
                   }}
                 >
                   <Text style={styles.hintButtonText}>
-                    {showHint ? '💡 Hide Hint' : '💡 Show Hint'}
+                    {showHint ? 'ðŸ’¡ Hide Hint' : 'ðŸ’¡ Show Hint'}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -992,7 +1668,7 @@ const QuizScreen: React.FC = () => {
                   {/* Answer Images (for DB questions) */}
                   {question?.answer_image_urls && question.answer_image_urls.length > 0 && (
                     <View style={styles.solutionContainer}>
-                      <Text style={styles.solutionTitle}>📸 Solution Images:</Text>
+                      <Text style={styles.solutionTitle}>ðŸ“¸ Solution Images:</Text>
                       {question.answer_image_urls.map((url, index) => (
                         url ? (
                           <Image
@@ -1008,19 +1684,19 @@ const QuizScreen: React.FC = () => {
 
                   {result.solution && (
                     <View style={styles.solutionContainer}>
-                      <Text style={styles.solutionTitle}>📚 Detailed Solution:</Text>
+                      <Text style={styles.solutionTitle}>ðŸ“š Detailed Solution:</Text>
                       <MathText>{formatSolutionText(result.solution)}</MathText>
                     </View>
                   )}
                   {result.hint && !result.correct && (
                     <View style={styles.hintContainer}>
-                      <Text style={styles.hintTitle}>💡 Additional Hint:</Text>
+                      <Text style={styles.hintTitle}>ðŸ’¡ Additional Hint:</Text>
                       <MathText>{result.hint}</MathText>
                     </View>
                   )}
                   {question.explanation && (
                     <View style={styles.explanationContainer}>
-                      <Text style={styles.explanationTitle}>📖 Teaching Explanation:</Text>
+                      <Text style={styles.explanationTitle}>ðŸ“– Teaching Explanation:</Text>
                       <MathText>{question.explanation}</MathText>
                     </View>
                   )}
@@ -1109,709 +1785,5 @@ const QuizScreen: React.FC = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.default,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  header: {
-    paddingTop: 35,
-    paddingBottom: 16,
-    paddingHorizontal: 20,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    shadowColor: Colors.primary.dark,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  headerText: {
-    flex: 1,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: Colors.text.white,
-    marginBottom: 4,
-  },
-  credits: {
-    fontSize: 14,
-    color: Colors.text.white,
-    opacity: 0.9,
-  },
-  contentContainer: {
-    padding: 16,
-    paddingTop: 8,
-  },
-  questionCard: {
-    marginBottom: 12,
-    backgroundColor: Colors.background.paper,
-    borderColor: Colors.border.light,
-    borderWidth: 1,
-  },
-  questionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    gap: 12,
-  },
-  questionLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.text.primary,
-  },
-  questionText: {
-    fontSize: 18,
-    color: Colors.text.primary,
-    lineHeight: 28,
-    fontWeight: '500',
-  },
-  questionTextContainer: {
-    marginTop: 4,
-  },
-  optionsContainer: {
-    marginBottom: 20,
-  },
-  optionCard: {
-    marginBottom: 12,
-    backgroundColor: Colors.background.paper,
-    borderColor: Colors.border.light,
-    borderWidth: 1,
-  },
-  optionCardSelected: {
-    borderWidth: 2,
-    borderColor: Colors.primary.main,
-    backgroundColor: 'rgba(124, 77, 255, 0.1)', // Primary tint
-  },
-  optionCardCorrect: {
-    borderWidth: 2,
-    borderColor: Colors.success.main,
-    backgroundColor: 'rgba(0, 230, 118, 0.1)', // Success tint
-  },
-  optionCardWrong: {
-    borderWidth: 2,
-    borderColor: Colors.error.main,
-    backgroundColor: 'rgba(255, 23, 68, 0.1)', // Error tint
-  },
-  optionContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 4,
-    gap: 16,
-  },
-  optionLabelCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.background.subtle,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border.light,
-  },
-  optionLabelCircleSelected: {
-    backgroundColor: Colors.primary.main,
-    borderColor: Colors.primary.main,
-  },
-  optionLabelCircleCorrect: {
-    backgroundColor: Colors.success.main,
-    borderColor: Colors.success.main,
-  },
-  optionLabelCircleWrong: {
-    backgroundColor: Colors.error.main,
-    borderColor: Colors.error.main,
-  },
-  optionLabelText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: Colors.text.primary,
-  },
-  optionLabelTextSelected: {
-    color: Colors.text.white,
-  },
-  optionLabelTextCorrect: {
-    color: Colors.text.white,
-  },
-  optionLabelTextWrong: {
-    color: Colors.text.white,
-  },
-  optionText: {
-    flex: 1,
-    fontSize: 16,
-    color: Colors.text.primary,
-    lineHeight: 24,
-  },
-  optionTextSelected: {
-    color: Colors.primary.light,
-    fontWeight: '500',
-  },
-  optionTextCorrect: {
-    color: Colors.success.light,
-    fontWeight: '500',
-  },
-  optionTextWrong: {
-    color: Colors.error.light,
-    fontWeight: '500',
-  },
-  optionIcon: {
-    marginLeft: 'auto',
-  },
-  resultCard: {
-    marginBottom: 20,
-    backgroundColor: Colors.background.paper,
-    borderColor: Colors.border.light,
-    borderWidth: 1,
-  },
-  resultCardSuccess: {
-    backgroundColor: 'rgba(0, 230, 118, 0.05)',
-    borderWidth: 2,
-    borderColor: Colors.success.main,
-  },
-  resultCardError: {
-    backgroundColor: 'rgba(255, 23, 68, 0.05)',
-    borderWidth: 2,
-    borderColor: Colors.error.main,
-  },
-  resultHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    gap: 16,
-  },
-  resultInfo: {
-    flex: 1,
-  },
-  resultText: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: Colors.text.primary,
-    marginBottom: 4,
-  },
-  resultTextCorrect: {
-    color: Colors.success.main,
-    backgroundColor: 'transparent',
-  },
-  resultTextError: {
-    color: Colors.error.main,
-    backgroundColor: 'transparent',
-  },
-  pointsText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.success.light,
-  },
-  feedbackText: {
-    fontSize: 16,
-    color: Colors.text.primary,
-    lineHeight: 24,
-    marginBottom: 12,
-  },
-  essayFeedbackContainer: {
-    marginTop: 16,
-    padding: 16,
-    backgroundColor: Colors.background.subtle,
-    borderRadius: 12,
-  },
-  essayCriteria: {
-    marginBottom: 16,
-  },
-  essayCriteriaTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: Colors.text.primary,
-    marginBottom: 12,
-  },
-  essayCriteriaItem: {
-    marginBottom: 10,
-    paddingLeft: 12,
-    borderLeftWidth: 3,
-    borderLeftColor: Colors.primary.main,
-  },
-  essayCriteriaGrade: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: Colors.primary.main,
-    marginBottom: 4,
-  },
-  essayCriteriaDesc: {
-    fontSize: 13,
-    color: Colors.text.secondary,
-    lineHeight: 20,
-  },
-  essayMistakes: {
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border.light,
-  },
-  essayMistakesTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: Colors.warning.main,
-    marginBottom: 8,
-  },
-  essayMistakeItem: {
-    fontSize: 13,
-    color: Colors.text.secondary,
-    lineHeight: 20,
-    marginBottom: 6,
-  },
-  solutionContainer: {
-    backgroundColor: Colors.background.subtle,
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 12,
-    borderWidth: 1,
-    borderColor: Colors.border.light,
-  },
-  solutionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.text.primary,
-    marginBottom: 8,
-  },
-  solutionText: {
-    fontSize: 15,
-    color: Colors.text.secondary,
-    lineHeight: 22,
-  },
-  solutionImage: {
-    width: '100%',
-    height: 200,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  hintContainer: {
-    backgroundColor: Colors.warning.light + '20',
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 12,
-    borderWidth: 1,
-    borderColor: Colors.warning.light,
-  },
-  hintTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.warning.dark,
-    marginBottom: 8,
-  },
-  hintText: {
-    fontSize: 15,
-    color: Colors.text.secondary,
-    lineHeight: 22,
-  },
-  explanationContainer: {
-    backgroundColor: Colors.info.light + '20',
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 12,
-    borderWidth: 1,
-    borderColor: Colors.info.light,
-  },
-  explanationTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.info.dark,
-    marginBottom: 8,
-  },
-  explanationText: {
-    fontSize: 15,
-    color: Colors.text.secondary,
-    lineHeight: 22,
-  },
-  buttonContainer: {
-    gap: 12,
-    marginBottom: 30,
-  },
-  nextButton: {
-    marginBottom: 8,
-  },
-  answerInputContainer: {
-    marginBottom: 20,
-  },
-  answerInputLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.text.primary,
-    marginBottom: 8,
-  },
-  answerInput: {
-    backgroundColor: Colors.background.paper,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.border.light,
-    padding: 16,
-    fontSize: 16,
-    color: Colors.text.primary,
-    minHeight: 70,
-    textAlignVertical: 'top',
-  },
-  answerInputRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  answerInputFlex: {
-    flex: 1,
-  },
-  essayInput: {
-    backgroundColor: Colors.background.paper,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.border.light,
-    padding: 16,
-    fontSize: 16,
-    color: Colors.text.primary,
-    minHeight: 200,
-    maxHeight: 400,
-    textAlignVertical: 'top',
-  },
-  essayHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  essayTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: Colors.text.primary,
-  },
-  essayMeta: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  essayMarks: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.primary.main,
-  },
-  essayTime: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: Colors.text.secondary,
-  },
-  essayCommandWord: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.warning.main,
-    marginBottom: 12,
-    fontStyle: 'italic',
-  },
-  essayKeyTerms: {
-    backgroundColor: Colors.background.subtle,
-    borderRadius: 10,
-    padding: 12,
-    marginTop: 12,
-    borderLeftWidth: 3,
-    borderLeftColor: Colors.primary.main,
-  },
-  essayKeyTermsLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: Colors.text.primary,
-    marginBottom: 6,
-  },
-  essayKeyTermsList: {
-    fontSize: 13,
-    color: Colors.text.secondary,
-    lineHeight: 20,
-  },
-  voiceHintText: {
-    fontSize: 12,
-    color: Colors.text.secondary,
-    marginTop: 8,
-    fontStyle: 'italic',
-  },
-  scanButtonsRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 10,
-    flexWrap: 'wrap',
-  },
-  scanButton: {
-    flex: 1,
-    backgroundColor: Colors.background.paper,
-    borderRadius: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: Colors.border.light,
-    alignItems: 'center',
-  },
-  scanButtonText: {
-    color: Colors.text.primary,
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  imageUploadContainer: {
-    marginBottom: 20,
-  },
-  imageUploadButton: {
-    backgroundColor: Colors.background.paper,
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: Colors.border.light,
-  },
-  secondaryImageButton: {
-    backgroundColor: Colors.background.subtle,
-  },
-  imageUploadButtonText: {
-    fontSize: 16,
-    color: Colors.text.primary,
-    fontWeight: '500',
-  },
-  imagePreview: {
-    position: 'relative',
-    width: '100%',
-    height: 200,
-    borderRadius: 12,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: Colors.border.light,
-  },
-  uploadedImage: {
-    width: '100%',
-    height: '100%',
-  },
-  removeImageButton: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  removeImageText: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  hintButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 12,
-    backgroundColor: Colors.warning.light + '20',
-    borderRadius: 12,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: Colors.warning.light,
-  },
-  hintButtonText: {
-    fontSize: 16,
-    color: Colors.warning.dark,
-    fontWeight: '600',
-  },
-  hintCard: {
-    marginBottom: 20,
-    backgroundColor: Colors.background.paper,
-    borderColor: Colors.warning.light,
-    borderWidth: 1,
-  },
-  hintHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-    gap: 12,
-  },
-  confidenceContainer: {
-    marginBottom: 24,
-    backgroundColor: Colors.background.paper,
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.border.light,
-  },
-  confidenceLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.text.primary,
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  confidenceButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  confidenceButton: {
-    flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.border.light,
-    alignItems: 'center',
-    backgroundColor: Colors.background.subtle,
-  },
-  confidenceButtonSelected: {
-    borderWidth: 2,
-    backgroundColor: Colors.background.paper,
-  },
-  confidenceButtonLow: {
-    borderColor: Colors.error.main,
-    backgroundColor: 'rgba(255, 23, 68, 0.1)',
-  },
-  confidenceButtonMedium: {
-    borderColor: Colors.warning.main,
-    backgroundColor: 'rgba(255, 145, 0, 0.1)',
-  },
-  confidenceButtonHigh: {
-    borderColor: Colors.success.main,
-    backgroundColor: 'rgba(0, 230, 118, 0.1)',
-  },
-  confidenceButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.text.secondary,
-  },
-  confidenceButtonTextSelected: {
-    color: Colors.text.primary,
-    fontWeight: 'bold',
-  },
-  questionImageContainer: {
-    marginTop: 16,
-    borderRadius: 12,
-    overflow: 'hidden',
-    backgroundColor: Colors.background.subtle,
-  },
-  questionImage: {
-    width: '100%',
-    height: 200,
-    resizeMode: 'contain',
-  },
-  // Structured Question Styles (Paper 2)
-  structuredContainer: {
-    marginBottom: 20,
-  },
-  structuredHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-    paddingHorizontal: 4,
-  },
-  structuredTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: Colors.subjects.combinedScience,
-  },
-  structuredMarks: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.text.secondary,
-    backgroundColor: Colors.background.subtle,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  structuredPartCard: {
-    marginBottom: 12,
-    backgroundColor: Colors.background.paper,
-    borderColor: Colors.border.light,
-    borderWidth: 1,
-    borderLeftWidth: 4,
-    borderLeftColor: Colors.subjects.science,
-  },
-  structuredPartHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  structuredPartLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: Colors.subjects.combinedScience,
-  },
-  structuredPartMarks: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.primary.main,
-    backgroundColor: Colors.primary.light + '30',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  structuredPartQuestion: {
-    fontSize: 15,
-    color: Colors.text.primary,
-    lineHeight: 22,
-    marginBottom: 12,
-  },
-  structuredInputRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-  },
-  structuredInputFlex: {
-    flex: 1,
-  },
-  structuredPartInput: {
-    backgroundColor: Colors.background.subtle,
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 15,
-    color: Colors.text.primary,
-    borderWidth: 1,
-    borderColor: Colors.border.light,
-    minHeight: 60,
-    maxHeight: 80,  // Limit height for short answers (1-2 sentences)
-    textAlignVertical: 'top',
-  },
-  structuredPartAnswerDisplay: {
-    backgroundColor: Colors.background.subtle,
-    borderRadius: 8,
-    padding: 12,
-  },
-  structuredPartAnswerLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: Colors.text.secondary,
-    marginBottom: 4,
-  },
-  structuredPartAnswerText: {
-    fontSize: 14,
-    color: Colors.text.primary,
-    lineHeight: 20,
-  },
-  structuredModelAnswer: {
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border.light,
-  },
-  structuredModelLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: Colors.success.main,
-    marginBottom: 4,
-  },
-  structuredModelText: {
-    fontSize: 14,
-    color: Colors.success.dark,
-    lineHeight: 20,
-    fontStyle: 'italic',
-  },
-});
 
 export default QuizScreen;

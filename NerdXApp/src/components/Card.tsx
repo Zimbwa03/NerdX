@@ -1,7 +1,8 @@
-// Professional Card Component
+// Professional Card Component - Theme Aware
 import React from 'react';
 import { View, StyleSheet, ViewStyle, TouchableOpacity, TouchableOpacityProps } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useThemedColors } from '../theme/useThemedStyles';
 
 export interface CardProps extends TouchableOpacityProps {
   children: React.ReactNode;
@@ -15,32 +16,40 @@ export interface CardProps extends TouchableOpacityProps {
 /**
  * Professional Card Component
  * Provides consistent card styling with multiple variants
+ * Now theme-aware - automatically adapts to light/dark mode
  */
 export const Card: React.FC<CardProps> = ({
   children,
   style,
   variant = 'default',
-  gradientColors = ['#FFFFFF', '#F5F5F5'],
+  gradientColors,
   onPress,
   disabled = false,
   ...props
 }) => {
+  const colors = useThemedColors();
+
+  // Use themed colors for card background and borders
   const cardStyle = [
-    variant !== 'gradient' && styles.card, // Don't apply default background for gradient
+    variant !== 'gradient' && {
+      backgroundColor: colors.background.paper,
+      borderRadius: 16,
+      padding: 16,
+    },
     variant === 'elevated' && styles.elevated,
-    variant === 'outlined' && styles.outlined,
-    variant === 'gradient' && { 
-      borderRadius: 16, 
-      overflow: 'hidden',
-      backgroundColor: 'transparent', // Ensure no white background shows through
-    }, // Ensure gradient fills card
+    variant === 'outlined' && {
+      borderWidth: 1,
+      borderColor: colors.border.light,
+    },
+    variant === 'gradient' && styles.gradientContainer,
     style,
   ];
 
   if (variant === 'gradient') {
+    const finalGradientColors = gradientColors || colors.gradients.card;
     const GradientContent = (
       <LinearGradient
-        colors={gradientColors}
+        colors={[finalGradientColors[0], finalGradientColors[1]] as [string, string]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradient}
@@ -88,11 +97,6 @@ export const Card: React.FC<CardProps> = ({
 };
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-  },
   elevated: {
     shadowColor: '#000',
     shadowOffset: {
@@ -103,9 +107,10 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
-  outlined: {
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
+  gradientContainer: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: 'transparent',
   },
   gradient: {
     borderRadius: 16,

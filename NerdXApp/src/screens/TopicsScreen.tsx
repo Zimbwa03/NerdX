@@ -45,7 +45,7 @@ const TopicsScreen: React.FC = () => {
   const [pharmaModalVisible, setPharmaModalVisible] = useState(false);
   const [selectedPharmaTopic, setSelectedPharmaTopic] = useState<Topic | null>(null);
   const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
-  
+
   // Combined Science Question Type Modal (MCQ vs Structured)
   const [scienceQuestionTypeModalVisible, setScienceQuestionTypeModalVisible] = useState(false);
   const [selectedScienceTopic, setSelectedScienceTopic] = useState<Topic | null>(null);
@@ -210,12 +210,12 @@ const TopicsScreen: React.FC = () => {
   const handleStartQuiz = async (topic?: Topic, questionType?: string, questionFormat?: 'mcq' | 'structured') => {
     try {
       const currentCredits = user?.credits || 0;
-      
+
       // Check for low credits warning
       if (currentCredits <= 5 && currentCredits > 0) {
         showWarning(`⚠️ Low credits! You have ${currentCredits} credits remaining. Consider topping up soon.`, 5000);
       }
-      
+
       if (currentCredits < 1) {
         showError('❌ Insufficient credits! You need at least 1 credit to start a quiz. Please top up your credits.', 6000);
         Alert.alert(
@@ -227,7 +227,7 @@ const TopicsScreen: React.FC = () => {
       }
 
       const questionFormatLabel = questionFormat === 'structured' ? 'Structured (Paper 2)' : 'Multiple Choice (Paper 1)';
-      
+
       Alert.alert(
         'Start Quiz',
         `Start ${topic ? topic.name : 'Exam'} quiz for ${subject.name}?${questionFormat ? `\n\nFormat: ${questionFormatLabel}` : ''}`,
@@ -257,17 +257,17 @@ const TopicsScreen: React.FC = () => {
                   // Update user credits
                   const newCredits = (user.credits || 0) - 1;
                   updateUser({ credits: newCredits });
-                  
+
                   // Show success notification
                   showSuccess(`✅ Question generated! ${newCredits} credits remaining.`, 3000);
-                  
+
                   // Check if credits are getting low after deduction
                   if (newCredits <= 3 && newCredits > 0) {
                     setTimeout(() => {
                       showWarning(`⚠️ Running low on credits! Only ${newCredits} credits left. Top up now to continue learning.`, 5000);
                     }, 3500);
                   }
-                  
+
                   navigation.navigate('Quiz' as never, { question, subject, topic } as never);
                 } else {
                   showError('❌ Failed to generate question. Please try again.', 4000);
@@ -299,6 +299,221 @@ const TopicsScreen: React.FC = () => {
     if (subject.id === 'english') return [Colors.subjects.english, Colors.warning.dark];
     return Colors.gradients.primary;
   };
+
+  // Dynamic styles based on theme
+  const styles = React.useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: themedColors.background.default,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    centerContainer: {
+      padding: 20,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    loadingText: {
+      marginTop: 10,
+      color: themedColors.text.secondary,
+      fontSize: 16,
+    },
+    header: {
+      paddingTop: 50,
+      paddingBottom: 30,
+      paddingHorizontal: 20,
+      borderBottomLeftRadius: 30,
+      borderBottomRightRadius: 30,
+      shadowColor: themedColors.primary.dark,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 8,
+    },
+    headerContent: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: 'bold',
+      color: Colors.text.white,
+      marginBottom: 8,
+    },
+    subtitle: {
+      fontSize: 16,
+      color: Colors.text.white,
+      opacity: 0.9,
+    },
+    tabContainer: {
+      flexDirection: 'row',
+      paddingHorizontal: 20,
+      paddingVertical: 15,
+      gap: 10,
+    },
+    tab: {
+      flex: 1,
+      paddingVertical: 10,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: themedColors.border.medium,
+      backgroundColor: themedColors.background.paper,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    tabText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: themedColors.text.secondary,
+    },
+    activeTabText: {
+      color: Colors.text.white,
+      fontWeight: 'bold',
+    },
+    featuresContainer: {
+      padding: 20,
+      paddingTop: 10,
+    },
+    featureCard: {
+      marginBottom: 12,
+      backgroundColor: themedColors.background.paper,
+      borderColor: themedColors.border.light,
+      borderWidth: 1,
+    },
+    featureContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 4,
+      gap: 16,
+    },
+    featureInfo: {
+      flex: 1,
+    },
+    featureTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: themedColors.text.primary,
+      marginBottom: 4,
+    },
+    featureSubtitle: {
+      fontSize: 14,
+      color: themedColors.text.secondary,
+      lineHeight: 20,
+    },
+    examCard: {
+      marginBottom: 20,
+      marginTop: 8,
+    },
+    examContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 8,
+    },
+    examInfo: {
+      marginLeft: 20,
+      flex: 1,
+    },
+    examTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: Colors.text.white,
+      marginBottom: 4,
+    },
+    examSubtitle: {
+      fontSize: 14,
+      color: Colors.text.white,
+      opacity: 0.9,
+    },
+    topicsContainer: {
+      padding: 20,
+      paddingTop: 10,
+    },
+    sectionTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: themedColors.text.primary,
+      marginBottom: 16,
+      marginLeft: 4,
+    },
+    topicCard: {
+      marginBottom: 12,
+      backgroundColor: themedColors.background.paper,
+      borderColor: themedColors.border.light,
+      borderWidth: 1,
+    },
+    topicContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 4,
+      gap: 16,
+    },
+    topicInfo: {
+      flex: 1,
+    },
+    topicName: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: themedColors.text.primary,
+    },
+    topicSubtitle: {
+      fontSize: 12,
+      color: themedColors.text.secondary,
+      marginTop: 4,
+    },
+    noTopicsText: {
+      fontSize: 14,
+      color: themedColors.text.secondary,
+      textAlign: 'center',
+      marginTop: 20,
+    },
+    mathNotesSection: {
+      backgroundColor: themedColors.background.paper,
+      borderRadius: 16,
+      padding: 16,
+      marginBottom: 16,
+      borderWidth: 1,
+      borderColor: themedColors.border.light,
+    },
+    mathNotesSectionTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: themedColors.text.primary,
+      marginBottom: 4,
+    },
+    mathNotesSectionSubtitle: {
+      fontSize: 13,
+      color: themedColors.text.secondary,
+      marginBottom: 12,
+    },
+    mathTopicsScroll: {
+      marginTop: 8,
+    },
+    mathTopicChip: {
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderRadius: 20,
+      marginRight: 10,
+      borderWidth: 1,
+      borderColor: Colors.subjects.mathematics,
+    },
+    mathTopicChipText: {
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    backButton: {
+      fontSize: 16,
+      color: Colors.text.white,
+      opacity: 0.9,
+    },
+    modalDescription: {
+      fontSize: 16,
+      color: themedColors.text.primary,
+      marginBottom: 20,
+      textAlign: 'center',
+    },
+  }), [themedColors]);
 
   const renderTabs = () => {
     if (subject.id !== 'combined_science') return null;
@@ -401,24 +616,24 @@ const TopicsScreen: React.FC = () => {
                   {(topics && topics.length > 0
                     ? topics.map(t => t.name)
                     : [
-                        'Number Theory',
-                        'Sets',
-                        'Indices & Standard Form',
-                        'Algebra',
-                        'Inequalities',
-                        'Sequences & Series',
-                        'Matrices',
-                        'Vectors',
-                        'Geometry',
-                        'Mensuration',
-                        'Trigonometry',
-                        'Transformation Geometry',
-                        'Statistics',
-                        'Probability',
-                        'Graphs',
-                        'Variation',
-                        'Loci & Construction',
-                      ]
+                      'Number Theory',
+                      'Sets',
+                      'Indices & Standard Form',
+                      'Algebra',
+                      'Inequalities',
+                      'Sequences & Series',
+                      'Matrices',
+                      'Vectors',
+                      'Geometry',
+                      'Mensuration',
+                      'Trigonometry',
+                      'Transformation Geometry',
+                      'Statistics',
+                      'Probability',
+                      'Graphs',
+                      'Variation',
+                      'Loci & Construction',
+                    ]
                   ).map((topicName, index) => (
                     <TouchableOpacity
                       key={index}
@@ -462,6 +677,26 @@ const TopicsScreen: React.FC = () => {
                   <View style={styles.featureInfo}>
                     <Text style={styles.featureTitle}>Graph Practice</Text>
                     <Text style={styles.featureSubtitle}>Practice reading and analyzing graphs</Text>
+                  </View>
+                  {Icons.arrowRight(24, Colors.text.secondary)}
+                </View>
+              </Card>
+
+              {/* Scan & Solve - Offline Math Solver */}
+              <Card
+                variant="elevated"
+                onPress={() => navigation.navigate('MathSolver' as never)}
+                style={[styles.featureCard, { borderLeftColor: Colors.error.main, borderLeftWidth: 4 }]}
+              >
+                <View style={styles.featureContent}>
+                  <IconCircle
+                    icon={<Ionicons name="camera" size={28} color={Colors.error.main} />}
+                    size={56}
+                    backgroundColor="rgba(244, 67, 54, 0.1)"
+                  />
+                  <View style={styles.featureInfo}>
+                    <Text style={styles.featureTitle}>Scan & Solve</Text>
+                    <Text style={styles.featureSubtitle}>Snap a photo or type any math problem - works offline!</Text>
                   </View>
                   {Icons.arrowRight(24, Colors.text.secondary)}
                 </View>
@@ -743,219 +978,5 @@ const getTopicIconBg = (topic: Topic, subjectId: string): string => {
   }
   return Colors.iconBg.default;
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.default,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  centerContainer: {
-    padding: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 10,
-    color: Colors.text.secondary,
-    fontSize: 16,
-  },
-  header: {
-    paddingTop: 50,
-    paddingBottom: 30,
-    paddingHorizontal: 20,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    shadowColor: Colors.primary.dark,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: Colors.text.white,
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: Colors.text.white,
-    opacity: 0.9,
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    gap: 10,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.border.medium,
-    backgroundColor: Colors.background.paper,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tabText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.text.secondary,
-  },
-  activeTabText: {
-    color: Colors.text.white,
-    fontWeight: 'bold',
-  },
-  featuresContainer: {
-    padding: 20,
-    paddingTop: 10,
-  },
-  featureCard: {
-    marginBottom: 12,
-    backgroundColor: Colors.background.paper,
-    borderColor: Colors.border.light,
-    borderWidth: 1,
-  },
-  featureContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 4,
-    gap: 16,
-  },
-  featureInfo: {
-    flex: 1,
-  },
-  featureTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: Colors.text.primary,
-    marginBottom: 4,
-  },
-  featureSubtitle: {
-    fontSize: 14,
-    color: Colors.text.secondary,
-    lineHeight: 20,
-  },
-  examCard: {
-    marginBottom: 20,
-    marginTop: 8,
-  },
-  examContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 8,
-  },
-  examInfo: {
-    marginLeft: 20,
-    flex: 1,
-  },
-  examTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: Colors.text.white,
-    marginBottom: 4,
-  },
-  examSubtitle: {
-    fontSize: 14,
-    color: Colors.text.white,
-    opacity: 0.9,
-  },
-  topicsContainer: {
-    padding: 20,
-    paddingTop: 10,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: Colors.text.primary,
-    marginBottom: 16,
-    marginLeft: 4,
-  },
-  topicCard: {
-    marginBottom: 12,
-    backgroundColor: Colors.background.paper,
-    borderColor: Colors.border.light,
-    borderWidth: 1,
-  },
-  topicContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 4,
-    gap: 16,
-  },
-  topicInfo: {
-    flex: 1,
-  },
-  topicName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: Colors.text.primary,
-  },
-  topicSubtitle: {
-    fontSize: 12,
-    color: Colors.text.secondary,
-    marginTop: 4,
-  },
-  noTopicsText: {
-    fontSize: 14,
-    color: Colors.text.secondary,
-    textAlign: 'center',
-    marginTop: 20,
-  },
-  mathNotesSection: {
-    backgroundColor: Colors.background.paper,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: Colors.border.light,
-  },
-  mathNotesSectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: Colors.text.primary,
-    marginBottom: 4,
-  },
-  mathNotesSectionSubtitle: {
-    fontSize: 13,
-    color: Colors.text.secondary,
-    marginBottom: 12,
-  },
-  mathTopicsScroll: {
-    marginTop: 8,
-  },
-  mathTopicChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    marginRight: 10,
-    borderWidth: 1,
-    borderColor: Colors.subjects.mathematics,
-  },
-  mathTopicChipText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  backButton: {
-    fontSize: 16,
-    color: Colors.text.white,
-    opacity: 0.9,
-  },
-  modalDescription: {
-    fontSize: 16,
-    color: Colors.text.primary,
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-});
 
 export default TopicsScreen;

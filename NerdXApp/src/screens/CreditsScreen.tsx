@@ -206,282 +206,288 @@ const CreditsScreen: React.FC = () => {
   }
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: themedColors.background.default }]}
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary.main]} />
-      }
+    <ImageBackground
+      source={require('../../assets/images/default_background.png')}
+      style={{ flex: 1 }}
+      resizeMode="cover"
     >
-      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={themedColors.background.default} />
-      {/* Professional Header */}
-      <LinearGradient
-        colors={[Colors.success.main, Colors.success.dark]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.header}
+      <ScrollView
+        style={[styles.container, { backgroundColor: 'transparent' }]}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary.main]} />
+        }
       >
-        <View style={styles.headerContent}>
-          <View>
-            <Text style={styles.title}>Buy Credits</Text>
-            <Text style={styles.subtitle}>Top up your account</Text>
+        <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+        {/* Professional Header */}
+        <LinearGradient
+          colors={[Colors.success.main, Colors.success.dark]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.header}
+        >
+          <View style={styles.headerContent}>
+            <View>
+              <Text style={styles.title}>Buy Credits</Text>
+              <Text style={styles.subtitle}>Top up your account</Text>
+            </View>
+            {Icons.credits(32, '#FFFFFF')}
           </View>
-          {Icons.credits(32, '#FFFFFF')}
-        </View>
-      </LinearGradient>
+        </LinearGradient>
 
-      {/* Current Balance Card */}
-      <View style={styles.balanceContainer}>
-        <Card variant="gradient" gradientColors={[Colors.primary.main, Colors.primary.dark]}>
-          <View style={styles.balanceContent}>
-            <IconCircle
-              icon={Icons.wallet(28, '#FFFFFF')}
-              size={56}
-              backgroundColor="rgba(255, 255, 255, 0.2)"
-            />
-            <View style={styles.balanceInfo}>
-              <Text style={styles.balanceLabel}>Current Balance</Text>
-              <Text style={styles.balanceAmount}>{user?.credits || 0} Credits</Text>
+        {/* Current Balance Card */}
+        <View style={styles.balanceContainer}>
+          <Card variant="gradient" gradientColors={[Colors.primary.main, Colors.primary.dark]}>
+            <View style={styles.balanceContent}>
+              <IconCircle
+                icon={Icons.wallet(28, '#FFFFFF')}
+                size={56}
+                backgroundColor="rgba(255, 255, 255, 0.2)"
+              />
+              <View style={styles.balanceInfo}>
+                <Text style={styles.balanceLabel}>Current Balance</Text>
+                <Text style={styles.balanceAmount}>{user?.credits || 0} Credits</Text>
+              </View>
+            </View>
+          </Card>
+        </View>
+
+        {/* ✨ Analytics Dashboard */}
+        <View style={styles.analyticsContainer}>
+          <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>
+            📊 Spending Overview
+          </Text>
+
+          {/* Quick Stats */}
+          <View style={styles.statsRow}>
+            <View style={[styles.statCard, { backgroundColor: themedColors.background.paper }]}>
+              <Text style={[styles.statValue, { color: Colors.success.main }]}>
+                ${transactions.filter(t => t.transaction_type === 'purchase').reduce((sum, t) => sum + Math.abs(t.credits_change) * 0.1, 0).toFixed(2)}
+              </Text>
+              <Text style={[styles.statLabel, { color: themedColors.text.secondary }]}>
+                Total Spent
+              </Text>
+            </View>
+            <View style={[styles.statCard, { backgroundColor: themedColors.background.paper }]}>
+              <Text style={[styles.statValue, { color: Colors.info.main }]}>
+                {transactions.filter(t => t.transaction_type === 'usage').reduce((sum, t) => sum + Math.abs(t.credits_change), 0)}
+              </Text>
+              <Text style={[styles.statLabel, { color: themedColors.text.secondary }]}>
+                Credits Used
+              </Text>
             </View>
           </View>
-        </Card>
-      </View>
 
-      {/* ✨ Analytics Dashboard */}
-      <View style={styles.analyticsContainer}>
-        <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>
-          📊 Spending Overview
-        </Text>
-
-        {/* Quick Stats */}
-        <View style={styles.statsRow}>
-          <View style={[styles.statCard, { backgroundColor: themedColors.background.paper }]}>
-            <Text style={[styles.statValue, { color: Colors.success.main }]}>
-              ${transactions.filter(t => t.transaction_type === 'purchase').reduce((sum, t) => sum + Math.abs(t.credits_change) * 0.1, 0).toFixed(2)}
-            </Text>
-            <Text style={[styles.statLabel, { color: themedColors.text.secondary }]}>
-              Total Spent
-            </Text>
-          </View>
-          <View style={[styles.statCard, { backgroundColor: themedColors.background.paper }]}>
-            <Text style={[styles.statValue, { color: Colors.info.main }]}>
-              {transactions.filter(t => t.transaction_type === 'usage').reduce((sum, t) => sum + Math.abs(t.credits_change), 0)}
-            </Text>
-            <Text style={[styles.statLabel, { color: themedColors.text.secondary }]}>
-              Credits Used
-            </Text>
-          </View>
+          {/* Spending Chart */}
+          <SpendingChart
+            data={[
+              { month: 'Jul', amount: 10 },
+              { month: 'Aug', amount: 15 },
+              { month: 'Sep', amount: 8 },
+              { month: 'Oct', amount: 20 },
+              { month: 'Nov', amount: 12 },
+              { month: 'Dec', amount: 18 },
+            ]}
+          />
         </View>
 
-        {/* Spending Chart */}
-        <SpendingChart
-          data={[
-            { month: 'Jul', amount: 10 },
-            { month: 'Aug', amount: 15 },
-            { month: 'Sep', amount: 8 },
-            { month: 'Oct', amount: 20 },
-            { month: 'Nov', amount: 12 },
-            { month: 'Dec', amount: 18 },
-          ]}
-        />
-      </View>
+        {/* ✨ Premium Credit Packages */}
+        <View style={styles.packagesContainer}>
+          <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>
+            💎 Credit Packages
+          </Text>
 
-      {/* ✨ Premium Credit Packages */}
-      <View style={styles.packagesContainer}>
-        <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>
-          💎 Credit Packages
-        </Text>
+          {packages.map((packageItem, index) => {
+            const isBestValue = packageItem.credits >= 500;
+            const isPopular = packageItem.credits >= 200 && packageItem.credits < 500;
 
-        {packages.map((packageItem, index) => {
-          const isBestValue = packageItem.credits >= 500;
-          const isPopular = packageItem.credits >= 200 && packageItem.credits < 500;
+            return (
+              <PremiumPackageCard
+                key={packageItem.id}
+                package={packageItem}
+                onPress={() => handlePurchase(packageItem)}
+                isBestValue={isBestValue}
+                isPopular={isPopular}
+                index={index}
+              />
+            );
+          })}
+        </View>
 
-          return (
-            <PremiumPackageCard
-              key={packageItem.id}
-              package={packageItem}
-              onPress={() => handlePurchase(packageItem)}
-              isBestValue={isBestValue}
-              isPopular={isPopular}
-              index={index}
-            />
-          );
-        })}
-      </View>
+        {/* ✨ Transaction History */}
+        <View style={styles.transactionsContainer}>
+          <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>
+            📜 Transaction History
+          </Text>
 
-      {/* ✨ Transaction History */}
-      <View style={styles.transactionsContainer}>
-        <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>
-          📜 Transaction History
-        </Text>
-
-        {/* Filter Tabs */}
-        <View style={styles.tabsContainer}>
-          {(['all', 'purchase', 'usage'] as const).map((tab) => (
-            <TouchableOpacity
-              key={tab}
-              style={[
-                styles.tab,
-                activeTab === tab && { backgroundColor: Colors.primary.main },
-              ]}
-              onPress={() => setActiveTab(tab)}
-            >
-              <Text
+          {/* Filter Tabs */}
+          <View style={styles.tabsContainer}>
+            {(['all', 'purchase', 'usage'] as const).map((tab) => (
+              <TouchableOpacity
+                key={tab}
                 style={[
-                  styles.tabText,
-                  { color: activeTab === tab ? '#FFFFFF' : themedColors.text.secondary },
+                  styles.tab,
+                  activeTab === tab && { backgroundColor: Colors.primary.main },
                 ]}
+                onPress={() => setActiveTab(tab)}
               >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                <Text
+                  style={[
+                    styles.tabText,
+                    { color: activeTab === tab ? '#FFFFFF' : themedColors.text.secondary },
+                  ]}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Transaction List */}
+          {transactions
+            .filter(t => {
+              if (activeTab === 'all') return true;
+              return t.transaction_type.toLowerCase() === activeTab;
+            })
+            .slice(0, 10)
+            .map((transaction) => (
+              <TransactionHistoryCard
+                key={transaction.id}
+                transaction={transaction}
+              />
+            ))}
+
+          {transactions.length === 0 && (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyEmoji}>📋</Text>
+              <Text style={[styles.emptyText, { color: themedColors.text.secondary }]}>
+                No transactions yet
               </Text>
-            </TouchableOpacity>
-          ))}
+            </View>
+          )}
         </View>
 
-        {/* Transaction List */}
-        {transactions
-          .filter(t => {
-            if (activeTab === 'all') return true;
-            return t.transaction_type.toLowerCase() === activeTab;
-          })
-          .slice(0, 10)
-          .map((transaction) => (
-            <TransactionHistoryCard
-              key={transaction.id}
-              transaction={transaction}
-            />
-          ))}
+        {/* Refresh Button */}
+        <View style={styles.refreshContainer}>
+          <Button
+            title="Refresh Balance"
+            variant="outline"
+            icon="refresh"
+            iconPosition="left"
+            onPress={refreshCredits}
+            fullWidth
+          />
+        </View>
 
-        {transactions.length === 0 && (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyEmoji}>📋</Text>
-            <Text style={[styles.emptyText, { color: themedColors.text.secondary }]}>
-              No transactions yet
-            </Text>
-          </View>
-        )}
-      </View>
-
-      {/* Refresh Button */}
-      <View style={styles.refreshContainer}>
-        <Button
-          title="Refresh Balance"
-          variant="outline"
-          icon="refresh"
-          iconPosition="left"
-          onPress={refreshCredits}
-          fullWidth
-        />
-      </View>
-
-      {/* Payment Modal */}
-      <Modal
-        visible={showPaymentModal}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => {
-          if (!checkingPayment) {
-            setShowPaymentModal(false);
-          }
-        }}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Paynow USD EcoCash Payment</Text>
-            {selectedPackage && (
-              <View style={styles.packageInfo}>
-                <Text style={styles.packageInfoText}>
-                  Package: {selectedPackage.name}
-                </Text>
-                <Text style={styles.packageInfoText}>
-                  Credits: {selectedPackage.credits}
-                </Text>
-                <Text style={styles.packageInfoText}>
-                  Amount: ${selectedPackage.price} USD
-                </Text>
-              </View>
-            )}
-
-            {checkingPayment ? (
-              <View style={styles.checkingContainer}>
-                <ActivityIndicator size="large" color="#1976D2" />
-                <Text style={styles.checkingText}>
-                  Waiting for payment confirmation...
-                </Text>
-                {paymentReference && (
-                  <Text style={styles.referenceText}>
-                    Reference: {paymentReference}
+        {/* Payment Modal */}
+        <Modal
+          visible={showPaymentModal}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={() => {
+            if (!checkingPayment) {
+              setShowPaymentModal(false);
+            }
+          }}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Paynow USD EcoCash Payment</Text>
+              {selectedPackage && (
+                <View style={styles.packageInfo}>
+                  <Text style={styles.packageInfoText}>
+                    Package: {selectedPackage.name}
                   </Text>
-                )}
-                <Text style={styles.instructionText}>
-                  Please check your phone and enter your EcoCash PIN when prompted.
-                </Text>
-                <TouchableOpacity
-                  style={styles.cancelButton}
-                  onPress={() => {
-                    if (paymentCheckInterval.current) {
-                      clearInterval(paymentCheckInterval.current);
-                      paymentCheckInterval.current = null;
-                    }
-                    setCheckingPayment(false);
-                    setShowPaymentModal(false);
-                    setPaymentReference(null);
-                  }}
-                >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <>
-                <Text style={styles.inputLabel}>EcoCash Phone Number</Text>
-                <TextInput
-                  style={styles.input}
-                  value={phoneNumber}
-                  onChangeText={setPhoneNumber}
-                  placeholder="0771234567"
-                  keyboardType="phone-pad"
-                  maxLength={10}
-                />
+                  <Text style={styles.packageInfoText}>
+                    Credits: {selectedPackage.credits}
+                  </Text>
+                  <Text style={styles.packageInfoText}>
+                    Amount: ${selectedPackage.price} USD
+                  </Text>
+                </View>
+              )}
 
-                <Text style={styles.inputLabel}>Email Address</Text>
-                <TextInput
-                  style={styles.input}
-                  value={email}
-                  onChangeText={setEmail}
-                  placeholder="your@email.com"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
-
-                <View style={styles.modalButtons}>
+              {checkingPayment ? (
+                <View style={styles.checkingContainer}>
+                  <ActivityIndicator size="large" color="#1976D2" />
+                  <Text style={styles.checkingText}>
+                    Waiting for payment confirmation...
+                  </Text>
+                  {paymentReference && (
+                    <Text style={styles.referenceText}>
+                      Reference: {paymentReference}
+                    </Text>
+                  )}
+                  <Text style={styles.instructionText}>
+                    Please check your phone and enter your EcoCash PIN when prompted.
+                  </Text>
                   <TouchableOpacity
-                    style={styles.cancelModalButton}
-                    onPress={() => setShowPaymentModal(false)}
+                    style={styles.cancelButton}
+                    onPress={() => {
+                      if (paymentCheckInterval.current) {
+                        clearInterval(paymentCheckInterval.current);
+                        paymentCheckInterval.current = null;
+                      }
+                      setCheckingPayment(false);
+                      setShowPaymentModal(false);
+                      setPaymentReference(null);
+                    }}
                   >
-                    <Text style={styles.cancelModalButtonText}>Cancel</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.confirmButton,
-                      (!phoneNumber.trim() || !email.trim() || purchasing) &&
-                      styles.confirmButtonDisabled,
-                    ]}
-                    onPress={handleConfirmPurchase}
-                    disabled={!phoneNumber.trim() || !email.trim() || !!purchasing}
-                  >
-                    {purchasing ? (
-                      <ActivityIndicator color="#FFFFFF" />
-                    ) : (
-                      <Text style={styles.confirmButtonText}>Proceed to Payment</Text>
-                    )}
+                    <Text style={styles.cancelButtonText}>Cancel</Text>
                   </TouchableOpacity>
                 </View>
-              </>
-            )}
+              ) : (
+                <>
+                  <Text style={styles.inputLabel}>EcoCash Phone Number</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={phoneNumber}
+                    onChangeText={setPhoneNumber}
+                    placeholder="0771234567"
+                    keyboardType="phone-pad"
+                    maxLength={10}
+                  />
+
+                  <Text style={styles.inputLabel}>Email Address</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={email}
+                    onChangeText={setEmail}
+                    placeholder="your@email.com"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+
+                  <View style={styles.modalButtons}>
+                    <TouchableOpacity
+                      style={styles.cancelModalButton}
+                      onPress={() => setShowPaymentModal(false)}
+                    >
+                      <Text style={styles.cancelModalButtonText}>Cancel</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[
+                        styles.confirmButton,
+                        (!phoneNumber.trim() || !email.trim() || purchasing) &&
+                        styles.confirmButtonDisabled,
+                      ]}
+                      onPress={handleConfirmPurchase}
+                      disabled={!phoneNumber.trim() || !email.trim() || !!purchasing}
+                    >
+                      {purchasing ? (
+                        <ActivityIndicator color="#FFFFFF" />
+                      ) : (
+                        <Text style={styles.confirmButtonText}>Proceed to Payment</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                </>
+              )}
+            </View>
           </View>
-        </View>
-      </Modal>
-    </ScrollView>
+        </Modal>
+      </ScrollView>
+    </ImageBackground>
   );
 };
 

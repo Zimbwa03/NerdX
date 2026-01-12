@@ -478,86 +478,86 @@ const DashboardScreen: React.FC = () => {
                 <>
                   {/* ✨ O Level Subject Cards */}
                   <AnimatedCard
-                    title="Mathematics"
-                    subtitle="Master numbers & logic"
-                    imageSource={require('../../assets/images/math_card.png')}
+                    title="O Level Mathematics"
+                    subtitle="Build Strong Math Foundations"
+                    imageSource={require('../../assets/images/olevel_mathematics_card.png')}
                     onPress={() => navigateToSubject('mathematics')}
                     glowColor={Colors.subjects.mathematics}
                     index={0}
+                    hideText={true}
                   />
 
                   <AnimatedCard
-                    title="Science"
-                    subtitle="Explore the universe"
-                    imageSource={require('../../assets/images/science_card.png')}
+                    title="Sciences"
+                    subtitle="Explore the World Around You"
+                    imageSource={require('../../assets/images/olevel_sciences_card.png')}
                     onPress={handleSciencePress}
                     glowColor={Colors.subjects.science}
                     index={1}
+                    hideText={true}
                   />
 
                   <AnimatedCard
                     title="English"
-                    subtitle="Perfect your language"
-                    imageSource={require('../../assets/images/english_card.png')}
+                    subtitle="Read, Write & Communicate"
+                    imageSource={require('../../assets/images/olevel_english_card.png')}
                     onPress={() => navigateToSubject('english')}
                     glowColor={Colors.subjects.english}
                     index={2}
+                    hideText={true}
                   />
 
                   <AnimatedCard
                     title="Project Assistant"
-                    subtitle="AI-powered help"
-                    imageSource={require('../../assets/images/project_assistant_card.png')}
+                    subtitle="Plan, Research & Succeed"
+                    imageSource={require('../../assets/images/project_assistant_card_new.png')}
                     onPress={navigateToProjectList}
                     glowColor={Colors.primary.main}
                     index={3}
+                    hideText={true}
                   />
                 </>
               ) : (
                 <>
                   {/* ✨ A Level Subject Cards with Icons (temporarily using icons due to large PNG file sizes) */}
                   <AnimatedCard
-                    title="Pure Mathematics"
-                    subtitle="Advanced calculus & algebra"
-                    iconName="calculator"
-                    iconLibrary="materialCommunity"
-                    iconColor="#FFFFFF"
+                    title="A Level Pure Mathematics"
+                    subtitle="Build Logical & Analytical Skills"
+                    imageSource={require('../../assets/images/alevel_pure_math_card.png')}
                     onPress={() => navigateToALevelSubject('pure_mathematics', 'Pure Mathematics')}
                     glowColor={aLevelColors.pure_mathematics}
                     index={0}
+                    hideText={true}
                   />
 
                   <AnimatedCard
-                    title="Chemistry"
-                    subtitle="Organic & inorganic"
-                    iconName="flask"
-                    iconLibrary="materialCommunity"
-                    iconColor="#FFFFFF"
+                    title="A Level Chemistry"
+                    subtitle="Explore Matter & Reactions"
+                    imageSource={require('../../assets/images/alevel_chemistry_card.png')}
                     onPress={() => navigateToALevelSubject('chemistry', 'Chemistry')}
                     glowColor={aLevelColors.chemistry}
                     index={1}
+                    hideText={true}
                   />
 
                   <AnimatedCard
-                    title="Physics"
-                    subtitle="Mechanics & quantum"
-                    iconName="atom"
-                    iconLibrary="materialCommunity"
-                    iconColor="#FFFFFF"
+                    title="A Level Physics"
+                    subtitle="Understand the Laws of Nature"
+                    imageSource={require('../../assets/images/alevel_physics_card.png')}
                     onPress={() => navigateToALevelSubject('physics', 'Physics')}
                     glowColor={aLevelColors.physics}
                     index={2}
+                    hideText={true}
                   />
 
                   <AnimatedCard
-                    title="Biology"
+                    title="A Level Biology"
                     subtitle="Cell biology & genetics"
-                    iconName="dna"
-                    iconLibrary="materialCommunity"
-                    iconColor="#FFFFFF"
+                    imageSource={require('../../assets/images/alevel_biology_card.png')}
                     onPress={() => navigateToALevelSubject('biology', 'Biology')}
                     glowColor={aLevelColors.biology}
                     index={3}
+                    hideText={true}
                   />
                 </>
               )}
@@ -565,34 +565,35 @@ const DashboardScreen: React.FC = () => {
               {/* Full Width Cards - Always visible */}
               <AnimatedCard
                 title="NerdX Live"
-                subtitle="Real-time voice AI tutoring"
-                iconName="sparkles"
-                iconLibrary="ionicons"
-                iconColor="#FFFFFF"
+                subtitle="Real-time Speech-to-Speech Conversations"
+                imageSource={require('../../assets/images/nerdx_live_card.png')}
                 onPress={navigateToNerdXLive}
                 glowColor="#6C63FF"
                 fullWidth={true}
                 index={4}
+                hideText={true}
               />
 
               <AnimatedCard
                 title="My Progress"
-                subtitle="Track your learning journey"
-                imageSource={require('../../assets/images/profile_card.png')}
+                subtitle="Track Your Learning Journey"
+                imageSource={require('../../assets/images/my_progress_card.png')}
                 onPress={navigateToProgress}
                 glowColor="#a18cd1"
                 fullWidth={true}
                 index={5}
+                hideText={true}
               />
 
               <AnimatedCard
                 title="Credits & Store"
-                subtitle="Manage wallet & subscriptions"
-                imageSource={require('../../assets/images/credits_card.png')}
+                subtitle="Redeem Rewards & Boost Learning"
+                imageSource={require('../../assets/images/credits_card_new.png')}
                 onPress={navigateToCredits}
                 glowColor="#fbc2eb"
                 fullWidth={true}
                 index={6}
+                hideText={true}
               />
             </View>
 
@@ -633,7 +634,7 @@ const DashboardScreen: React.FC = () => {
           />
         </Modal>
       </ImageBackground>
-      
+
       {/* NerdX Live - Now accessed via Dashboard button */}
     </View >
   );

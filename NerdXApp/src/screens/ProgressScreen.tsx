@@ -186,268 +186,275 @@ const EnhancedProgressScreen: React.FC = () => {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: themedColors.background.default }]}>
-      <StatusBar
-        barStyle={isDarkMode ? "light-content" : "dark-content"}
-        backgroundColor={themedColors.background.default}
-      />
-      <ScrollView
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={themedColors.primary.main}
-          />
-        }
-      >
-        {/* Hero Section - Level & XP */}
-        <LinearGradient
-          colors={themedColors.gradients.primary}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.heroSection}
+    <ImageBackground
+      source={require('../../assets/images/default_background.png')}
+      style={{ flex: 1 }}
+      resizeMode="cover"
+    >
+      <View style={[styles.container, { backgroundColor: 'transparent' }]}>
+        <StatusBar
+          barStyle={isDarkMode ? "light-content" : "dark-content"}
+          backgroundColor="transparent"
+          translucent
+        />
+        <ScrollView
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={themedColors.primary.main}
+            />
+          }
         >
-          <View style={styles.heroContent}>
-            {/* Level Progress Ring */}
-            <View style={styles.levelRingContainer}>
-              <LevelProgressRing
-                level={levelInfo?.level || 1}
-                currentXP={levelInfo?.currentXP || 0}
-                xpForNextLevel={levelInfo?.xpForNextLevel || 100}
-                size={160}
+          {/* Hero Section - Level & XP */}
+          <LinearGradient
+            colors={themedColors.gradients.primary}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.heroSection}
+          >
+            <View style={styles.heroContent}>
+              {/* Level Progress Ring */}
+              <View style={styles.levelRingContainer}>
+                <LevelProgressRing
+                  level={levelInfo?.level || 1}
+                  currentXP={levelInfo?.currentXP || 0}
+                  xpForNextLevel={levelInfo?.xpForNextLevel || 100}
+                  size={160}
+                />
+              </View>
+
+              {/* Rank Badge */}
+              <View style={styles.rankBadge}>
+                <Text style={styles.rankIcon}>{levelInfo?.rankIcon || '🌱'}</Text>
+                <Text style={styles.rankName}>{levelInfo?.rank || 'Novice Explorer'}</Text>
+              </View>
+
+              {/* XP Progress Text */}
+              <Text style={styles.xpProgressText}>
+                {levelInfo?.currentXP?.toLocaleString() || 0} / {levelInfo?.xpForNextLevel?.toLocaleString() || 100} XP
+              </Text>
+              <Text style={styles.nextLevelText}>
+                {(levelInfo?.xpForNextLevel || 100) - (levelInfo?.currentXP || 0)} XP to Level {(levelInfo?.level || 1) + 1}
+              </Text>
+            </View>
+          </LinearGradient>
+
+          <View style={styles.mainContent}>
+            {/* Quick Stats Grid */}
+            <View style={styles.quickStatsGrid}>
+              <QuickStatCard
+                icon="🔥"
+                value={overallStats?.streak || 0}
+                label="Day Streak"
+                color={Colors.warning.main}
+              />
+              <QuickStatCard
+                icon="📊"
+                value={`${overallStats?.accuracy || 0}%`}
+                label="Accuracy"
+                color={Colors.success.main}
+              />
+              <QuickStatCard
+                icon="❓"
+                value={overallStats?.totalQuestions || 0}
+                label="Questions"
+                color={Colors.primary.main}
+              />
+              <QuickStatCard
+                icon="💎"
+                value={user?.credits || 0}
+                label="Credits"
+                color={Colors.secondary.main}
               />
             </View>
 
-            {/* Rank Badge */}
-            <View style={styles.rankBadge}>
-              <Text style={styles.rankIcon}>{levelInfo?.rankIcon || '🌱'}</Text>
-              <Text style={styles.rankName}>{levelInfo?.rank || 'Novice Explorer'}</Text>
-            </View>
+            {/* Daily Goals Widget */}
+            {dailyGoals.length > 0 && (
+              <DailyGoalsWidget goals={dailyGoals} />
+            )}
 
-            {/* XP Progress Text */}
-            <Text style={styles.xpProgressText}>
-              {levelInfo?.currentXP?.toLocaleString() || 0} / {levelInfo?.xpForNextLevel?.toLocaleString() || 100} XP
-            </Text>
-            <Text style={styles.nextLevelText}>
-              {(levelInfo?.xpForNextLevel || 100) - (levelInfo?.currentXP || 0)} XP to Level {(levelInfo?.level || 1) + 1}
-            </Text>
-          </View>
-        </LinearGradient>
-
-        <View style={styles.mainContent}>
-          {/* Quick Stats Grid */}
-          <View style={styles.quickStatsGrid}>
-            <QuickStatCard
-              icon="🔥"
-              value={overallStats?.streak || 0}
-              label="Day Streak"
-              color={Colors.warning.main}
+            {/* Streak Calendar */}
+            <StreakCalendar
+              streakHistory={streakHistory}
+              currentStreak={overallStats?.streak || 0}
             />
-            <QuickStatCard
-              icon="📊"
-              value={`${overallStats?.accuracy || 0}%`}
-              label="Accuracy"
-              color={Colors.success.main}
-            />
-            <QuickStatCard
-              icon="❓"
-              value={overallStats?.totalQuestions || 0}
-              label="Questions"
-              color={Colors.primary.main}
-            />
-            <QuickStatCard
-              icon="💎"
-              value={user?.credits || 0}
-              label="Credits"
-              color={Colors.secondary.main}
-            />
-          </View>
 
-          {/* Daily Goals Widget */}
-          {dailyGoals.length > 0 && (
-            <DailyGoalsWidget goals={dailyGoals} />
-          )}
-
-          {/* Streak Calendar */}
-          <StreakCalendar
-            streakHistory={streakHistory}
-            currentStreak={overallStats?.streak || 0}
-          />
-
-          {/* Subject Mastery Section */}
-          <View style={[styles.sectionContainer, { backgroundColor: themedColors.background.paper }]}>
-            <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>
-              📚 Subject Mastery
-            </Text>
-            {subjectMastery.map((subject) => (
-              <SubjectMasteryCard
-                key={subject.subject}
-                data={subject}
-                compact
-                onPress={() => {
-                  // Navigate to subject topics
-                  const subjectObj = {
-                    id: subject.subject,
-                    name: subject.displayName,
-                    icon: subject.icon,
-                    color: subject.color,
-                  };
-                  navigation.navigate('Topics' as never, { subject: subjectObj } as never);
-                }}
-              />
-            ))}
-          </View>
-
-          {/* Weekly Activity Chart */}
-          <WeeklyActivityChart data={formatWeeklyActivity()} />
-
-          {/* Achievement Gallery */}
-          <AchievementGallery
-            badges={badges}
-            title={`🏆 Achievements (${badges.filter(b => b.isUnlocked).length}/${badges.length})`}
-          />
-
-          {/* Knowledge Map Preview */}
-          {knowledgeMap && knowledgeMap.total_skills > 0 && (
+            {/* Subject Mastery Section */}
             <View style={[styles.sectionContainer, { backgroundColor: themedColors.background.paper }]}>
-              <View style={styles.sectionHeader}>
-                <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>
-                  📊 Skills Overview
+              <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>
+                📚 Subject Mastery
+              </Text>
+              {subjectMastery.map((subject) => (
+                <SubjectMasteryCard
+                  key={subject.subject}
+                  data={subject}
+                  compact
+                  onPress={() => {
+                    // Navigate to subject topics
+                    const subjectObj = {
+                      id: subject.subject,
+                      name: subject.displayName,
+                      icon: subject.icon,
+                      color: subject.color,
+                    };
+                    navigation.navigate('Topics' as never, { subject: subjectObj } as never);
+                  }}
+                />
+              ))}
+            </View>
+
+            {/* Weekly Activity Chart */}
+            <WeeklyActivityChart data={formatWeeklyActivity()} />
+
+            {/* Achievement Gallery */}
+            <AchievementGallery
+              badges={badges}
+              title={`🏆 Achievements (${badges.filter(b => b.isUnlocked).length}/${badges.length})`}
+            />
+
+            {/* Knowledge Map Preview */}
+            {knowledgeMap && knowledgeMap.total_skills > 0 && (
+              <View style={[styles.sectionContainer, { backgroundColor: themedColors.background.paper }]}>
+                <View style={styles.sectionHeader}>
+                  <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>
+                    📊 Skills Overview
+                  </Text>
+                  <TouchableOpacity style={styles.viewAllBtn}>
+                    <Text style={[styles.viewAllText, { color: Colors.primary.main }]}>
+                      View All →
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.skillsGrid}>
+                  <View style={[styles.skillStat, { backgroundColor: Colors.success.main + '15' }]}>
+                    <Text style={[styles.skillStatValue, { color: Colors.success.main }]}>
+                      {knowledgeMap.mastered_skills}
+                    </Text>
+                    <Text style={[styles.skillStatLabel, { color: themedColors.text.secondary }]}>
+                      Mastered
+                    </Text>
+                  </View>
+                  <View style={[styles.skillStat, { backgroundColor: Colors.primary.main + '15' }]}>
+                    <Text style={[styles.skillStatValue, { color: Colors.primary.main }]}>
+                      {knowledgeMap.learning_skills}
+                    </Text>
+                    <Text style={[styles.skillStatLabel, { color: themedColors.text.secondary }]}>
+                      Learning
+                    </Text>
+                  </View>
+                  <View style={[styles.skillStat, { backgroundColor: Colors.warning.main + '15' }]}>
+                    <Text style={[styles.skillStatValue, { color: Colors.warning.main }]}>
+                      {knowledgeMap.struggling_skills}
+                    </Text>
+                    <Text style={[styles.skillStatLabel, { color: themedColors.text.secondary }]}>
+                      Needs Work
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            )}
+
+            {/* Lifetime Stats */}
+            <View style={[styles.sectionContainer, { backgroundColor: themedColors.background.paper }]}>
+              <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>
+                📈 Lifetime Statistics
+              </Text>
+
+              <View style={styles.lifetimeStats}>
+                <View style={styles.lifetimeStat}>
+                  <IconCircle
+                    icon={<Icon name="school" size={20} color={Colors.primary.main} library="ionicons" />}
+                    size={40}
+                    backgroundColor={Colors.primary.main + '20'}
+                  />
+                  <View style={styles.lifetimeStatInfo}>
+                    <Text style={[styles.lifetimeStatValue, { color: themedColors.text.primary }]}>
+                      {overallStats?.totalQuizzes || 0}
+                    </Text>
+                    <Text style={[styles.lifetimeStatLabel, { color: themedColors.text.secondary }]}>
+                      Quizzes Completed
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.lifetimeStat}>
+                  <IconCircle
+                    icon={<Icon name="star" size={20} color={Colors.warning.main} library="ionicons" />}
+                    size={40}
+                    backgroundColor={Colors.warning.main + '20'}
+                  />
+                  <View style={styles.lifetimeStatInfo}>
+                    <Text style={[styles.lifetimeStatValue, { color: themedColors.text.primary }]}>
+                      {overallStats?.totalXP?.toLocaleString() || 0}
+                    </Text>
+                    <Text style={[styles.lifetimeStatLabel, { color: themedColors.text.secondary }]}>
+                      Total XP Earned
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.lifetimeStat}>
+                  <IconCircle
+                    icon={<Icon name="trophy" size={20} color={Colors.success.main} library="ionicons" />}
+                    size={40}
+                    backgroundColor={Colors.success.main + '20'}
+                  />
+                  <View style={styles.lifetimeStatInfo}>
+                    <Text style={[styles.lifetimeStatValue, { color: themedColors.text.primary }]}>
+                      {overallStats?.perfectScores || 0}
+                    </Text>
+                    <Text style={[styles.lifetimeStatLabel, { color: themedColors.text.secondary }]}>
+                      Perfect Scores
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.lifetimeStat}>
+                  <IconCircle
+                    icon={<Icon name="flame" size={20} color={Colors.error.main} library="ionicons" />}
+                    size={40}
+                    backgroundColor={Colors.error.main + '20'}
+                  />
+                  <View style={styles.lifetimeStatInfo}>
+                    <Text style={[styles.lifetimeStatValue, { color: themedColors.text.primary }]}>
+                      {overallStats?.longestStreak || 0}
+                    </Text>
+                    <Text style={[styles.lifetimeStatLabel, { color: themedColors.text.secondary }]}>
+                      Longest Streak
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            {/* Motivational Footer */}
+            <View style={styles.motivationalFooter}>
+              <LinearGradient
+                colors={[Colors.secondary.main, Colors.secondary.dark]}
+                style={styles.motivationalGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Text style={styles.motivationalEmoji}>🚀</Text>
+                <Text style={styles.motivationalText}>
+                  Keep learning! You're doing amazing!
                 </Text>
-                <TouchableOpacity style={styles.viewAllBtn}>
-                  <Text style={[styles.viewAllText, { color: Colors.primary.main }]}>
-                    View All →
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.skillsGrid}>
-                <View style={[styles.skillStat, { backgroundColor: Colors.success.main + '15' }]}>
-                  <Text style={[styles.skillStatValue, { color: Colors.success.main }]}>
-                    {knowledgeMap.mastered_skills}
-                  </Text>
-                  <Text style={[styles.skillStatLabel, { color: themedColors.text.secondary }]}>
-                    Mastered
-                  </Text>
-                </View>
-                <View style={[styles.skillStat, { backgroundColor: Colors.primary.main + '15' }]}>
-                  <Text style={[styles.skillStatValue, { color: Colors.primary.main }]}>
-                    {knowledgeMap.learning_skills}
-                  </Text>
-                  <Text style={[styles.skillStatLabel, { color: themedColors.text.secondary }]}>
-                    Learning
-                  </Text>
-                </View>
-                <View style={[styles.skillStat, { backgroundColor: Colors.warning.main + '15' }]}>
-                  <Text style={[styles.skillStatValue, { color: Colors.warning.main }]}>
-                    {knowledgeMap.struggling_skills}
-                  </Text>
-                  <Text style={[styles.skillStatLabel, { color: themedColors.text.secondary }]}>
-                    Needs Work
-                  </Text>
-                </View>
-              </View>
+                <Text style={styles.motivationalSubtext}>
+                  Every question brings you closer to mastery
+                </Text>
+              </LinearGradient>
             </View>
-          )}
 
-          {/* Lifetime Stats */}
-          <View style={[styles.sectionContainer, { backgroundColor: themedColors.background.paper }]}>
-            <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>
-              📈 Lifetime Statistics
-            </Text>
-
-            <View style={styles.lifetimeStats}>
-              <View style={styles.lifetimeStat}>
-                <IconCircle
-                  icon={<Icon name="school" size={20} color={Colors.primary.main} library="ionicons" />}
-                  size={40}
-                  backgroundColor={Colors.primary.main + '20'}
-                />
-                <View style={styles.lifetimeStatInfo}>
-                  <Text style={[styles.lifetimeStatValue, { color: themedColors.text.primary }]}>
-                    {overallStats?.totalQuizzes || 0}
-                  </Text>
-                  <Text style={[styles.lifetimeStatLabel, { color: themedColors.text.secondary }]}>
-                    Quizzes Completed
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.lifetimeStat}>
-                <IconCircle
-                  icon={<Icon name="star" size={20} color={Colors.warning.main} library="ionicons" />}
-                  size={40}
-                  backgroundColor={Colors.warning.main + '20'}
-                />
-                <View style={styles.lifetimeStatInfo}>
-                  <Text style={[styles.lifetimeStatValue, { color: themedColors.text.primary }]}>
-                    {overallStats?.totalXP?.toLocaleString() || 0}
-                  </Text>
-                  <Text style={[styles.lifetimeStatLabel, { color: themedColors.text.secondary }]}>
-                    Total XP Earned
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.lifetimeStat}>
-                <IconCircle
-                  icon={<Icon name="trophy" size={20} color={Colors.success.main} library="ionicons" />}
-                  size={40}
-                  backgroundColor={Colors.success.main + '20'}
-                />
-                <View style={styles.lifetimeStatInfo}>
-                  <Text style={[styles.lifetimeStatValue, { color: themedColors.text.primary }]}>
-                    {overallStats?.perfectScores || 0}
-                  </Text>
-                  <Text style={[styles.lifetimeStatLabel, { color: themedColors.text.secondary }]}>
-                    Perfect Scores
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.lifetimeStat}>
-                <IconCircle
-                  icon={<Icon name="flame" size={20} color={Colors.error.main} library="ionicons" />}
-                  size={40}
-                  backgroundColor={Colors.error.main + '20'}
-                />
-                <View style={styles.lifetimeStatInfo}>
-                  <Text style={[styles.lifetimeStatValue, { color: themedColors.text.primary }]}>
-                    {overallStats?.longestStreak || 0}
-                  </Text>
-                  <Text style={[styles.lifetimeStatLabel, { color: themedColors.text.secondary }]}>
-                    Longest Streak
-                  </Text>
-                </View>
-              </View>
-            </View>
+            {/* Bottom Spacing */}
+            <View style={styles.bottomSpacer} />
           </View>
-
-          {/* Motivational Footer */}
-          <View style={styles.motivationalFooter}>
-            <LinearGradient
-              colors={[Colors.secondary.main, Colors.secondary.dark]}
-              style={styles.motivationalGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
-              <Text style={styles.motivationalEmoji}>🚀</Text>
-              <Text style={styles.motivationalText}>
-                Keep learning! You're doing amazing!
-              </Text>
-              <Text style={styles.motivationalSubtext}>
-                Every question brings you closer to mastery
-              </Text>
-            </LinearGradient>
-          </View>
-
-          {/* Bottom Spacing */}
-          <View style={styles.bottomSpacer} />
-        </View>
-      </ScrollView>
-    </View>
+        </ScrollView>
+      </View>
+    </ImageBackground>
   );
 };
 

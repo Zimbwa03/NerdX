@@ -1,5 +1,5 @@
-// Modal Component - Professional Modal for selections
-import React from 'react';
+// Modal Component - Professional Modal for selections (Theme Aware)
+import React, { useMemo } from 'react';
 import {
     View,
     Text,
@@ -9,7 +9,7 @@ import {
     Pressable,
     Animated,
 } from 'react-native';
-import Colors from '../theme/colors';
+import { useThemedColors } from '../theme/useThemedStyles';
 
 interface ModalProps {
     visible: boolean;
@@ -19,6 +19,7 @@ interface ModalProps {
 }
 
 export const Modal: React.FC<ModalProps> = ({ visible, onClose, title, children }) => {
+    const colors = useThemedColors();
     const fadeAnim = React.useRef(new Animated.Value(0)).current;
 
     React.useEffect(() => {
@@ -36,6 +37,8 @@ export const Modal: React.FC<ModalProps> = ({ visible, onClose, title, children 
             }).start();
         }
     }, [visible]);
+
+    const styles = useMemo(() => createStyles(colors), [colors]);
 
     return (
         <RNModal
@@ -91,11 +94,15 @@ export const ModalOptionCard: React.FC<ModalOptionCardProps> = ({
     title,
     description,
     onPress,
-    color = Colors.primary.main,
+    color,
 }) => {
+    const colors = useThemedColors();
+    const accentColor = color || colors.primary.main;
+    const styles = useMemo(() => createStyles(colors), [colors]);
+
     return (
         <TouchableOpacity
-            style={[styles.optionCard, { borderLeftColor: color }]}
+            style={[styles.optionCard, { borderLeftColor: accentColor }]}
             onPress={onPress}
             activeOpacity={0.7}
         >
@@ -111,7 +118,7 @@ export const ModalOptionCard: React.FC<ModalOptionCardProps> = ({
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ReturnType<typeof useThemedColors>) => StyleSheet.create({
     overlay: {
         flex: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -123,7 +130,7 @@ const styles = StyleSheet.create({
         maxWidth: 400,
     },
     modalContent: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.background.paper,
         borderRadius: 16,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
@@ -137,24 +144,24 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 20,
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
+        borderBottomColor: colors.border.light,
     },
     modalTitle: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#1A1A1A',
+        color: colors.text.primary,
     },
     closeButton: {
         width: 32,
         height: 32,
         borderRadius: 16,
-        backgroundColor: '#F5F5F5',
+        backgroundColor: colors.background.subtle,
         justifyContent: 'center',
         alignItems: 'center',
     },
     closeButtonText: {
         fontSize: 20,
-        color: '#666666',
+        color: colors.text.secondary,
         fontWeight: '600',
     },
     modalBody: {
@@ -163,12 +170,12 @@ const styles = StyleSheet.create({
     optionCard: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.background.paper,
         borderRadius: 12,
         padding: 16,
         marginBottom: 12,
         borderWidth: 1,
-        borderColor: '#E0E0E0',
+        borderColor: colors.border.light,
         borderLeftWidth: 4,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
@@ -180,7 +187,7 @@ const styles = StyleSheet.create({
         width: 48,
         height: 48,
         borderRadius: 24,
-        backgroundColor: '#F5F5F5',
+        backgroundColor: colors.background.subtle,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
@@ -194,17 +201,17 @@ const styles = StyleSheet.create({
     optionTitle: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#1A1A1A',
+        color: colors.text.primary,
         marginBottom: 4,
     },
     optionDescription: {
         fontSize: 13,
-        color: '#666666',
+        color: colors.text.secondary,
         lineHeight: 18,
     },
     optionArrow: {
         fontSize: 20,
-        color: '#666666',
+        color: colors.text.secondary,
         marginLeft: 8,
     },
 });

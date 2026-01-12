@@ -17,7 +17,7 @@ import { mathNotesApi } from '../services/api/mathNotesApi';
 import { MathTopicNotes } from '../data/mathNotes/types';
 import { useAuth } from '../context/AuthContext';
 import { Colors } from '../theme/colors';
-import Markdown from 'react-native-markdown-display';
+import MathRenderer from '../components/MathRenderer';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
 import FlashcardSection from '../components/FlashcardSection';
@@ -67,21 +67,6 @@ const MathNotesDetailScreen: React.FC = () => {
         setExpandedSections(newExpanded);
     };
 
-    const markdownStyles = StyleSheet.create({
-        body: {
-            fontSize: 16,
-            color: themedColors.text.primary,
-            lineHeight: 24,
-        },
-        paragraph: {
-            marginBottom: 10,
-        },
-        strong: {
-            fontWeight: 'bold',
-            color: themedColors.secondary.main,
-        },
-    });
-
     if (loading) {
         return (
             <View style={styles.centerContainer}>
@@ -117,7 +102,7 @@ const MathNotesDetailScreen: React.FC = () => {
                         <Ionicons name="information-circle" size={24} color={Colors.subjects.mathematics} />
                         <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>Summary</Text>
                     </View>
-                    <Markdown style={markdownStyles}>{notes.summary}</Markdown>
+                    <MathRenderer content={notes.summary} fontSize={16} />
                 </View>
 
                 {/* Main Content Sections */}
@@ -141,7 +126,7 @@ const MathNotesDetailScreen: React.FC = () => {
 
                         {expandedSections.has(index) && (
                             <View style={styles.sectionBody}>
-                                <Markdown style={markdownStyles}>{section.content}</Markdown>
+                                <MathRenderer content={section.content} fontSize={16} />
 
                                 {section.worked_examples && section.worked_examples.map((ex, exIdx) => (
                                     <View key={exIdx} style={[styles.exampleBox, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F9F9F9' }]}>
@@ -149,7 +134,7 @@ const MathNotesDetailScreen: React.FC = () => {
                                             <Ionicons name="create-outline" size={20} color={Colors.secondary.main} />
                                             <Text style={[styles.exampleTitle, { color: Colors.secondary.main }]}>Worked Example</Text>
                                         </View>
-                                        <Markdown style={markdownStyles}>{ex.question}</Markdown>
+                                        <MathRenderer content={ex.question} fontSize={16} />
                                         <View style={styles.stepsContainer}>
                                             {ex.steps.map((step, sIdx) => (
                                                 <View key={sIdx} style={styles.stepRow}>
@@ -157,14 +142,14 @@ const MathNotesDetailScreen: React.FC = () => {
                                                         <Text style={styles.stepNumberText}>{sIdx + 1}</Text>
                                                     </View>
                                                     <View style={styles.stepContent}>
-                                                        <Markdown style={markdownStyles}>{step}</Markdown>
+                                                        <MathRenderer content={step} fontSize={15} />
                                                     </View>
                                                 </View>
                                             ))}
                                         </View>
                                         <View style={styles.answerBox}>
                                             <Text style={[styles.answerLabel, { color: themedColors.text.secondary }]}>Final Answer:</Text>
-                                            <Markdown style={markdownStyles}>{ex.final_answer}</Markdown>
+                                            <MathRenderer content={ex.final_answer} fontSize={16} />
                                         </View>
                                     </View>
                                 ))}

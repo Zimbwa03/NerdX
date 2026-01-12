@@ -73,6 +73,93 @@ const SubjectsScreen: React.FC = () => {
     }
   };
 
+  // Dynamic styles based on theme
+  const styles = React.useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: themedColors.background.default,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    centerContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: themedColors.background.default,
+    },
+    loadingText: {
+      marginTop: 10,
+      color: themedColors.text.secondary,
+      fontSize: 16,
+    },
+    header: {
+      paddingTop: 50,
+      paddingBottom: 30,
+      paddingHorizontal: 20,
+      borderBottomLeftRadius: 30,
+      borderBottomRightRadius: 30,
+      shadowColor: themedColors.primary.dark,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 8,
+    },
+    headerContent: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: 'bold',
+      color: '#FFFFFF',
+      marginBottom: 8,
+    },
+    subtitle: {
+      fontSize: 16,
+      color: '#FFFFFF',
+      opacity: 0.9,
+    },
+    subjectsContainer: {
+      padding: 20,
+      paddingTop: 10,
+    },
+    subjectCard: {
+      marginBottom: 16,
+      borderLeftWidth: 4,
+      backgroundColor: themedColors.background.paper,
+      borderColor: themedColors.border.light,
+      borderWidth: 1,
+    },
+    subjectContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 8,
+    },
+    subjectInfo: {
+      flex: 1,
+      marginLeft: 16,
+    },
+    subjectName: {
+      fontSize: 20,
+      fontWeight: '600',
+      color: themedColors.text.primary,
+      marginBottom: 6,
+    },
+    subjectDescription: {
+      fontSize: 14,
+      color: themedColors.text.secondary,
+      lineHeight: 20,
+    },
+    modalDescription: {
+      fontSize: 15,
+      color: themedColors.text.secondary,
+      marginBottom: 16,
+      lineHeight: 22,
+    },
+  }), [themedColors]);
+
   if (loading) {
     return (
       <View style={[styles.centerContainer, { backgroundColor: themedColors.background.default }]}>
@@ -185,16 +272,6 @@ const SubjectsScreen: React.FC = () => {
               color={Colors.subjects.mathematics}
             />
             <ModalOptionCard
-              icon="📸"
-              title="Scan & Solve"
-              description="Snap a photo of any math problem to solve it instantly"
-              onPress={() => {
-                setMathModalVisible(false);
-                navigation.navigate('MathSolver' as never);
-              }}
-              color={Colors.error.main}
-            />
-            <ModalOptionCard
               icon="👨‍🏫"
               title="AI Math Tutor"
               description="Get step-by-step help and explanations"
@@ -223,6 +300,16 @@ const SubjectsScreen: React.FC = () => {
                 navigation.navigate('FormulaSheet' as never);
               }}
               color={Colors.info.main}
+            />
+            <ModalOptionCard
+              icon="📸"
+              title="Scan & Solve"
+              description="Snap a photo or type any math problem - works offline!"
+              onPress={() => {
+                setMathModalVisible(false);
+                navigation.navigate('MathSolver' as never);
+              }}
+              color={Colors.error.main}
             />
             <ModalOptionCard
               icon="🎓"
@@ -260,90 +347,6 @@ const getSubjectIconBg = (subjectId: string): string => {
   return bgMap[subjectId] || Colors.iconBg.default;
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.default,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Colors.background.default,
-  },
-  loadingText: {
-    marginTop: 10,
-    color: Colors.text.secondary,
-    fontSize: 16,
-  },
-  header: {
-    paddingTop: 50,
-    paddingBottom: 30,
-    paddingHorizontal: 20,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    shadowColor: Colors.primary.dark,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    opacity: 0.9,
-  },
-  subjectsContainer: {
-    padding: 20,
-    paddingTop: 10,
-  },
-  subjectCard: {
-    marginBottom: 16,
-    borderLeftWidth: 4,
-    backgroundColor: Colors.background.paper,
-    borderColor: Colors.border.light,
-    borderWidth: 1,
-  },
-  subjectContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 8,
-  },
-  subjectInfo: {
-    flex: 1,
-    marginLeft: 16,
-  },
-  subjectName: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: Colors.text.primary,
-    marginBottom: 6,
-  },
-  subjectDescription: {
-    fontSize: 14,
-    color: Colors.text.secondary,
-    lineHeight: 20,
-  },
-  modalDescription: {
-    fontSize: 15,
-    color: '#666666',
-    marginBottom: 16,
-    lineHeight: 22,
-  },
-});
+
 
 export default SubjectsScreen;

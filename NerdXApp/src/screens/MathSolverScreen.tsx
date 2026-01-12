@@ -13,12 +13,12 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import Markdown from 'react-native-markdown-display';
 import { mathApi, MathSolution } from '../services/api/mathApi';
 import { Colors } from '../theme/colors';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
 import VoiceMathInput from '../components/VoiceMathInput';
+import MathText from '../components/MathText';
 
 const MathSolverScreen: React.FC = () => {
     const { isDarkMode } = useTheme();
@@ -66,14 +66,23 @@ const MathSolverScreen: React.FC = () => {
                     const scanResult = await mathApi.scanProblem(result.assets[0].uri);
                     if (scanResult.success) {
                         setProblem(scanResult.latex);
+
+                        // Show which OCR method was used
+                        const methodLabel = scanResult.method === 'offline-mlkit'
+                            ? '⚡ Scanned offline with ML Kit'
+                            : scanResult.method === 'gemini-vision'
+                                ? '☁️ Scanned with Gemini Vision'
+                                : '🔧 Scanned with Pix2Text';
+                        console.log(methodLabel);
+
                         // Auto-solve after scan
                         const solveResult = await mathApi.solveProblem(scanResult.latex);
                         setSolution(solveResult);
                     } else {
-                        Alert.alert('Scan Failed', 'Could not recognize equation.');
+                        Alert.alert('Scan Failed', 'Could not recognize equation. Try a clearer image.');
                     }
                 } catch (error) {
-                    Alert.alert('Error', 'Failed to process image.');
+                    Alert.alert('Error', 'Failed to process image. Make sure the math is clearly visible.');
                 } finally {
                     setLoading(false);
                 }
@@ -88,13 +97,6 @@ const MathSolverScreen: React.FC = () => {
         setSolution(null);
         setImageUri(null);
     };
-
-    const markdownStyles = StyleSheet.create({
-        body: {
-            color: themedColors.text.primary,
-            fontSize: 18,
-        },
-    });
 
     return (
         <View style={[styles.container, { backgroundColor: themedColors.background.default }]}>
@@ -174,11 +176,23 @@ const MathSolverScreen: React.FC = () => {
                 {solution && (
                     <View style={styles.solutionContainer}>
                         <View style={[styles.resultCard, { backgroundColor: isDarkMode ? 'rgba(76, 175, 80, 0.15)' : '#E8F5E9', borderLeftColor: themedColors.success.main }]}>
-                            <Text style={[styles.resultTitle, { color: themedColors.success.main }]}>Solution</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                                <Text style={[styles.resultTitle, { color: themedColors.success.main, marginBottom: 0 }]}>Solution</Text>
+                                <View style={{
+                                    backgroundColor: solution.solvedOffline ? '#4CAF50' : '#2196F3',
+                                    paddingHorizontal: 8,
+                                    paddingVertical: 4,
+                                    borderRadius: 12,
+                                }}>
+                                    <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '600' }}>
+                                        {solution.solvedOffline ? '⚡ Offline' : '☁️ Server'}
+                                    </Text>
+                                </View>
+                            </View>
                             <View style={styles.latexContainer}>
-                                <Markdown style={markdownStyles}>
-                                    {`$$ ${solution.latex_solutions.join(', ')} $$`}
-                                </Markdown>
+                                <MathText fontSize={22} style={{ fontWeight: 'bold', textAlign: 'center' }}>
+                                    {solution.latex_solutions.join(', ')}
+                                </MathText>
                             </View>
                         </View>
 
@@ -195,9 +209,9 @@ const MathSolverScreen: React.FC = () => {
 
                                 {step.latex && (
                                     <View style={[styles.stepLatex, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F7FA' }]}>
-                                        <Markdown style={markdownStyles}>
-                                            {`$$ ${step.latex} $$`}
-                                        </Markdown>
+                                        <MathText fontSize={18} style={{ textAlign: 'center' }}>
+                                            {step.latex}
+                                        </MathText>
                                     </View>
                                 )}
 
@@ -392,13 +406,6 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: Colors.text.secondary,
         lineHeight: 20,
-    },
-});
-
-const markdownStyles = StyleSheet.create({
-    body: {
-        color: Colors.text.primary,
-        fontSize: 18,
     },
 });
 
