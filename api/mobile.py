@@ -16,8 +16,89 @@ import os
 from database.external_db import (
     get_user_registration, create_user_registration, is_user_registered,
     get_user_stats, get_user_credits, add_credits, deduct_credits,
-    get_user_by_nerdx_id, add_xp, update_streak
+    get_user_by_nerdx_id, add_xp, update_streak,
+    claim_welcome_bonus, check_and_refresh_daily_credits, get_credit_breakdown
 )
+
+# ... (rest of imports)
+
+@mobile_bp.route('/auth/login', methods=['POST'])
+def login():
+    """Login user and return token"""
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'success': False, 'message': 'No data provided'}), 400
+        
+        user_identifier = data.get('identifier', '').strip() or data.get('email', '').strip() or data.get('phone_number', '').strip()
+        password = data.get('password', '')
+        
+        if not user_identifier or not password:
+            return jsonify({'success': False, 'message': 'Identifier and password are required'}), 400
+        
+        # Get user data
+        user_data = get_user_registration(user_identifier)
+        
+        if not user_data:
+            return jsonify({'success': False, 'message': 'User not found'}), 404
+        
+        # Verify password (assume users_registration has password_hash, or fetch from auth table)
+        # Note: In real implementation, password_hash would be stored securely. 
+        # Here we check if the user has a password set.
+        stored_hash = user_data.get('password_hash')
+        stored_salt = user_data.get('password_salt')
+        
+        if not stored_hash or not stored_salt:
+            # If no password set (e.g. social login only), this might fail
+            return jsonify({'success': False, 'message': 'Invalid credentials'}), 401
+            
+        if not verify_password(password, stored_hash, stored_salt):
+            return jsonify({'success': False, 'message': 'Invalid credentials'}), 401
+        
+        # Determine user ID (chat_id)
+        user_id = user_data.get('chat_id')
+        
+        # Generate token
+        token = generate_token(user_id)
+        
+        # CREDIT SYSTEM CHECKS
+        # 1. Check for welcome bonus
+        welcome_result = claim_welcome_bonus(user_id)
+        
+        # 2. Check for daily credits
+        daily_result = check_and_refresh_daily_credits(user_id)
+        
+        # 3. Get latest credit breakdown
+        credit_info = get_credit_breakdown(user_id)
+        
+        # Prepare notifications
+        notifications = {
+            "welcome_bonus": welcome_result.get("awarded", False),
+            "daily_refresh": daily_result.get("refreshed", False),
+            "daily_message": daily_result.get("message"),
+            "welcome_message": welcome_result.get("message")
+        }
+        
+        return jsonify({
+            'success': True,
+            'token': token,
+            'user': {
+                'id': user_id,
+                'nerdx_id': user_data.get('nerdx_id'),
+                'name': user_data.get('name'),
+                'surname': user_data.get('surname'),
+                'email': user_data.get('email'),
+                'credits': credit_info.get('total', 0),
+                'credit_breakdown': credit_info
+            },
+            'notifications': notifications,
+            'message': 'Login successful'
+        }), 200
+            
+    except Exception as e:
+        logger.error(f"Login error: {str(e)}", exc_info=True)
+        return jsonify({'success': False, 'message': f'Login failed: {str(e)}'}), 500
 from services.advanced_credit_service import advanced_credit_service
 from services.question_service import QuestionService
 from services.mathematics_service import MathematicsService
@@ -4628,6 +4709,38 @@ def text_to_speech():
     except Exception as e:
         logger.error(f"Voice speak endpoint error: {e}", exc_info=True)
         return jsonify({'status': 'error', 'message': f'Failed to generate speech: {str(e)}'}), 500
+
+# ============================================================================
+# CREDIT SYSTEM ENDPOINTS
+# ============================================================================
+
+@mobile_bp.route('/credits/info', methods=['GET'])
+@mobile_bp.route('/credits/balance', methods=['GET'])
+@require_auth
+def get_credit_info_endpoint():
+    """Get detailed credit info and breakdown"""
+    try:
+        user_id = g.current_user_id
+        
+        # Check daily refresh logic (idempotent)
+        daily_result = check_and_refresh_daily_credits(user_id)
+        
+        # Get full breakdown
+        breakdown = get_credit_breakdown(user_id)
+        
+        # Ensure total is top level for backward compatibility if needed
+        response_data = breakdown.copy()
+        response_data['balance'] = breakdown['total'] # Alias
+        
+        return jsonify({
+            'success': True,
+            'data': response_data,
+            'daily_refresh': daily_result
+        }), 200
+    except Exception as e:
+        logger.error(f"Credit info error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Failed to fetch credit info'}), 500
+
 
 # ============================================================================
 # FLASHCARD GENERATION ENDPOINTS (AI-Powered Study Cards)

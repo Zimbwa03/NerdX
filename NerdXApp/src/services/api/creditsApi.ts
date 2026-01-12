@@ -32,6 +32,16 @@ export const creditsApi = {
     }
   },
 
+  getCreditInfo: async (): Promise<any> => {
+    try {
+      const response = await api.get('/api/mobile/credits/info');
+      return response.data.data || null;
+    } catch (error: any) {
+      console.error('Get credit info error:', error);
+      return null;
+    }
+  },
+
   getPackages: async (): Promise<CreditPackage[]> => {
     try {
       const response = await api.get('/api/mobile/credits/packages');

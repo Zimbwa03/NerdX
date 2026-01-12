@@ -235,9 +235,13 @@ const CreditsScreen: React.FC = () => {
 
   const refreshCredits = async () => {
     try {
-      const balance = await creditsApi.getBalance();
-      if (user) {
-        updateUser({ credits: balance });
+      const info = await creditsApi.getCreditInfo();
+      if (user && info) {
+        // Update user context with full breakdown
+        updateUser({
+          credits: info.total,
+          credit_breakdown: info
+        });
       }
     } catch (error) {
       console.error('Failed to refresh credits:', error);
@@ -255,6 +259,7 @@ const CreditsScreen: React.FC = () => {
 
   // Calculate monthly spending from transactions
   const getMonthlySpending = () => {
+    // ... (keep existing implementation)
     const last6Months = new Array(6).fill(0).map((_, i) => {
       const d = new Date();
       d.setMonth(d.getMonth() - (5 - i));
@@ -282,6 +287,30 @@ const CreditsScreen: React.FC = () => {
       month: m.label,
       amount: parseFloat(m.amount.toFixed(2))
     }));
+  };
+
+  const getBreakdownText = () => {
+    const breakdown = user?.credit_breakdown;
+    if (!breakdown) return null;
+
+    return (
+      <View style={styles.breakdownContainer}>
+        <View style={styles.breakdownRow}>
+          <Text style={styles.breakdownLabel}>Purchased:</Text>
+          <Text style={styles.breakdownValue}>{breakdown.purchased_credits}</Text>
+        </View>
+        <View style={styles.breakdownRow}>
+          <Text style={styles.breakdownLabel}>Free/Daily:</Text>
+          <Text style={styles.breakdownValue}>{breakdown.free_credits}</Text>
+        </View>
+        {!breakdown.daily_credits_active && breakdown.purchased_credits > 0 && (
+          <Text style={styles.noteText}>Daily credits paused while you have purchased credits</Text>
+        )}
+        {breakdown.next_daily_reset && (
+          <Text style={styles.resetText}>Next reset: {breakdown.next_daily_reset}</Text>
+        )}
+      </View>
+    );
   };
 
   return (
@@ -326,6 +355,7 @@ const CreditsScreen: React.FC = () => {
               <View style={styles.balanceInfo}>
                 <Text style={styles.balanceLabel}>Current Balance</Text>
                 <Text style={styles.balanceAmount}>{user?.credits || 0} Credits</Text>
+                {getBreakdownText()}
               </View>
             </View>
           </Card>
@@ -888,6 +918,37 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
+  },
+  breakdownContainer: {
+    marginTop: 12,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    borderRadius: 8,
+    padding: 12,
+  },
+  breakdownRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  breakdownLabel: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 14,
+  },
+  breakdownValue: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  noteText: {
+    color: '#FCA5A5',
+    fontSize: 12,
+    marginTop: 8,
+    fontStyle: 'italic',
+  },
+  resetText: {
+    color: '#4ADE80',
+    fontSize: 12,
+    marginTop: 4,
   },
 });
 

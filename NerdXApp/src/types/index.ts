@@ -8,6 +8,14 @@ export interface User {
   email?: string;
   phone_number?: string;
   credits: number;
+  credit_breakdown?: {
+    total: number;
+    free_credits: number;
+    purchased_credits: number;
+    welcome_bonus_claimed: boolean;
+    daily_credits_active: boolean;
+    next_daily_reset: string;
+  };
 }
 
 export interface QuizQuestion {

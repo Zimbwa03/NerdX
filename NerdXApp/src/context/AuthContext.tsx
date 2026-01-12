@@ -7,9 +7,18 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (user: User, token: string) => Promise<void>;
+  login: (user: User, token: string, notifications?: any) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (user: Partial<User>) => void;
+  creditNotification: CreditNotificationData | null;
+  clearCreditNotification: () => void;
+}
+
+export interface CreditNotificationData {
+  type: 'welcome_bonus' | 'daily_refresh';
+  title: string;
+  message: string;
+  credits: number;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,6 +33,7 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [creditNotification, setCreditNotification] = useState<CreditNotificationData | null>(null);
 
   useEffect(() => {
     loadStoredAuth();
@@ -47,7 +57,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const login = async (userData: User, token: string) => {
+  const login = async (userData: User, token: string, notifications?: any) => {
     try {
       const { setAuthToken } = await import('../services/api/config');
       await Promise.all([
@@ -56,6 +66,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(userData)),
       ]);
       setUser(userData);
+
+      // Handle notifications
+      if (notifications) {
+        if (notifications.welcome_bonus) {
+          setCreditNotification({
+            type: 'welcome_bonus',
+            title: 'Welcome Bonus!',
+            message: notifications.welcome_message || 'Here are your exclusive starter credits.',
+            credits: 75
+          });
+        } else if (notifications.daily_refresh) {
+          setCreditNotification({
+            type: 'daily_refresh',
+            title: 'Daily Credits Refreshed',
+            message: notifications.daily_message || 'Your daily credits are ready.',
+            credits: 10
+          });
+        }
+      }
     } catch (error) {
       console.error('Failed to save auth data:', error);
       throw error;
@@ -71,6 +100,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         AsyncStorage.removeItem(USER_DATA_KEY),
       ]);
       setUser(null);
+      setCreditNotification(null);
     } catch (error) {
       console.error('Failed to clear auth data:', error);
       throw error;
@@ -87,6 +117,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const clearCreditNotification = () => {
+    setCreditNotification(null);
+  };
+
   const value: AuthContextType = {
     user,
     isLoading,
@@ -94,6 +128,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     logout,
     updateUser,
+    creditNotification,
+    clearCreditNotification,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

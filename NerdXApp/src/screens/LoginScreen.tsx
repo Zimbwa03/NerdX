@@ -50,7 +50,7 @@ const LoginScreen: React.FC = () => {
       });
 
       if (response.success && response.token && response.user) {
-        await login(response.user, response.token);
+        await login(response.user, response.token, response.notifications);
       } else {
         Alert.alert('Login Failed', response.message || 'Invalid credentials');
       }

@@ -9,6 +9,7 @@ import AppNavigator from './src/navigation/AppNavigator';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import { NerdXLiveButton } from './src/components/NerdXLiveButton';
 import NotificationComponent from './src/components/NotificationComponent';
+import { CreditNotification } from './src/components/CreditNotification';
 
 // Inner component that uses theme and auth
 const AppContent: React.FC = () => {
@@ -26,6 +27,8 @@ const AppContent: React.FC = () => {
       {isAuthenticated && <NerdXLiveButton />}
       {/* Global notification component */}
       <NotificationComponent />
+      {/* Credit System Notifications */}
+      <CreditNotification />
     </View>
   );
 };

@@ -22,6 +22,7 @@ export interface AuthResponse {
   token?: string;
   user?: any;
   message?: string;
+  notifications?: any;
 }
 
 import { User } from '../../types';
