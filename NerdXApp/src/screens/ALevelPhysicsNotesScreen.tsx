@@ -39,7 +39,8 @@ const ALevelPhysicsNotesScreen: React.FC = () => {
             topic: topic.name,
             subject: 'A Level Physics',
             isALevel: true,
-            topicData: topic
+            topicData: topic,
+            index: filteredTopics.indexOf(topic)
         } as never);
     };
 

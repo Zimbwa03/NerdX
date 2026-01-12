@@ -50,11 +50,12 @@ const ALevelBiologyNotesScreen: React.FC = () => {
 
     const handleViewDetailedNotes = (topic: ALevelBiologyTopic) => {
         // Navigate to detailed notes screen
-        navigation.navigate('TopicNotesDetail' as never, { 
+        navigation.navigate('TopicNotesDetail' as never, {
             topic: topic.name,
             subject: 'Biology',
             isALevel: true,
-            topicData: topic 
+            topicData: topic,
+            index: filteredTopics.indexOf(topic)
         } as never);
     };
 

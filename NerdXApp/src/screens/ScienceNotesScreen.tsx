@@ -55,6 +55,7 @@ const ScienceNotesScreen: React.FC = () => {
         navigation.navigate('TopicNotesDetail' as never, {
             subject: activeTab,
             topic: topic,
+            index: topics.indexOf(topic),
         } as never);
     };
 

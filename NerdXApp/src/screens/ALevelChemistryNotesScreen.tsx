@@ -40,14 +40,15 @@ const ALevelChemistryNotesScreen: React.FC = () => {
     const handleTopicPress = (topic: ALevelChemistryTopic) => {
         // Check if notes are available
         const hasNotes = aLevelChemistryNotesApi.hasNotes(topic.name);
-        
+
         if (hasNotes) {
             // Navigate to detailed notes screen
             navigation.navigate('TopicNotesDetail' as never, {
                 subject: 'A Level Chemistry',
                 topic: topic.name,
                 isALevel: true,
-                topicData: topic
+                topicData: topic,
+                index: filteredTopics.indexOf(topic)
             } as never);
         } else {
             Alert.alert(

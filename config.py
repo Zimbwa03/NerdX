@@ -39,30 +39,40 @@ class Config:
     CREDIT_COSTS = {
         # Combined Science
         'combined_science_topical': 1,      # Topical Questions
-        'combined_science_exam': 2,        # Combined Exam
+        'combined_science_exam': 3,        # Combined Exam (Increased to match complexity)
         
         # Mathematics
         'math_topical': 1,                 # Topical Questions
-        'math_exam': 2,                    # Math Exam
-        'math_graph_practice': 3,          # Graph Practices
+        'math_exam': 3,                    # Math Exam (Increased to match complexity)
+        'math_graph_practice': 3,          # Graph Practices (Complex generation)
         
         # English
         'english_topical': 1,              # Topical Questions
-        'english_comprehension': 3,        # Comprehension
-        'english_essay_writing': 3,        # Essay Writing
+        'english_comprehension': 3,        # Comprehension (Requires reading + generation)
+        'english_essay_writing': 4,        # Essay Writing (High complexity/token usage)
         
-        # Audio Features
-        'audio_feature': 10,               # Audio Feature
-        'voice_chat': 10,                  # Voice Chat
+        # A-Level (Premium Content)
+        'a_level_biology': 2,              # Advanced Science logic
+        'a_level_physics': 2,
+        'a_level_chemistry': 2,
+        'a_level_math': 2,
+        
+        'audio_feature': 0,                # Simple Audio Feature/TTS (FREE)
+        'voice_chat': 3,                  # Full Voice Chat (Per Minute)
+        'flashcard_audio': 3,             # Audio Flashcards
         
         # AI Teacher & Assistant - Hybrid Model
-        'teacher_mode_start': 3,           # Combined Science Teacher - Initial session
-        'teacher_mode_followup': 1,        # Combined Science Teacher - Follow-up questions
-        'teacher_mode_pdf': 1,             # Combined Science Teacher - PDF note generation
-        'project_assistant_start': 3,      # Project Assistant - Initial session
-        'project_assistant_followup': 1,   # Project Assistant - Follow-up questions
+        'teacher_mode_start': 3,           # Initial session setup (Persona + Context)
+        'teacher_mode_followup': 0,        # Follow-up questions (FREE)
+        'teacher_mode_pdf': 2,             # PDF note generation (Document creation value)
+        'project_assistant_start': 3,      # Project Assistant Init
+        'project_assistant_followup': 0,   # Project Assistant Chat (FREE)
         
-        # Legacy compatibility (keep lower costs for existing handlers)
+        # Vision/Tools
+        'ocr_solve': 3,                   # Image Analysis
+        'image_generation': 3,            # Diagram/Image Gen
+        
+        # Legacy compatibility (Mapped values)
         'math': 1,
         'science': 1,
         'english': 1,

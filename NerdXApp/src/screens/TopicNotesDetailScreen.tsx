@@ -37,7 +37,7 @@ const TopicNotesDetailScreen: React.FC = () => {
     const { user } = useAuth();
     const { isDarkMode } = useTheme();
     const themedColors = useThemedColors();
-    const { subject, topic, isALevel } = route.params as { subject: string; topic: string; isALevel?: boolean };
+    const { subject, topic, isALevel, index = 0 } = route.params as { subject: string; topic: string; isALevel?: boolean; index?: number };
 
     const [notes, setNotes] = useState<TopicNotes | null>(null);
     const [loading, setLoading] = useState(true);
@@ -225,20 +225,55 @@ const TopicNotesDetailScreen: React.FC = () => {
                 >
                     {/* Video Player - Shows when topic has video lesson */}
                     {notes.videoUrl && notes.videoUrl.trim().length > 0 && (
-                        <VideoStreamPlayer
-                            videoUrl={notes.videoUrl}
-                            topicTitle={topic}
-                            accentColor={getSubjectColor()}
-                        />
+                        (index >= 2 && (!user?.credit_breakdown?.purchased_credits || user.credit_breakdown.purchased_credits <= 0)) ? (
+                            <View style={styles.lockedMediaContainer}>
+                                <LinearGradient
+                                    colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.9)']}
+                                    style={styles.lockedMediaOverlay}
+                                >
+                                    <Ionicons name="lock-closed" size={48} color={Colors.warning.main} />
+                                    <Text style={styles.lockedTitle}>Premium Content</Text>
+                                    <Text style={styles.lockedSubtitle}>
+                                        Buy credits to unlock full video & audio lessons.
+                                    </Text>
+                                    <TouchableOpacity
+                                        style={styles.unlockButton}
+                                        onPress={() => navigation.navigate('Credits' as never)}
+                                    >
+                                        <Text style={styles.unlockButtonText}>Get Credits to Unlock</Text>
+                                    </TouchableOpacity>
+                                </LinearGradient>
+                            </View>
+                        ) : (
+                            <VideoStreamPlayer
+                                videoUrl={notes.videoUrl}
+                                topicTitle={topic}
+                                accentColor={getSubjectColor()}
+                            />
+                        )
                     )}
 
                     {/* Audio Player - Shows when topic has audio podcast */}
                     {notes.audioUrl && notes.audioUrl.trim().length > 0 && (
-                        <AudioStreamPlayer
-                            audioUrl={notes.audioUrl}
-                            topicTitle={topic}
-                            accentColor={getSubjectColor()}
-                        />
+                        (index >= 2 && (!user?.credit_breakdown?.purchased_credits || user.credit_breakdown.purchased_credits <= 0)) ? (
+                            <View style={[styles.lockedMediaContainer, { height: 100, marginTop: 12 }]}>
+                                <LinearGradient
+                                    colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.9)']}
+                                    style={styles.lockedMediaOverlay}
+                                >
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                                        <Ionicons name="lock-closed" size={24} color={Colors.warning.main} />
+                                        <Text style={[styles.lockedTitle, { fontSize: 16, marginBottom: 0 }]}>Audio Locked</Text>
+                                    </View>
+                                </LinearGradient>
+                            </View>
+                        ) : (
+                            <AudioStreamPlayer
+                                audioUrl={notes.audioUrl}
+                                topicTitle={topic}
+                                accentColor={getSubjectColor()}
+                            />
+                        )
                     )}
 
                     {/* Fallback - Show something if no media */}
@@ -601,6 +636,43 @@ const styles = StyleSheet.create({
         fontSize: 15,
         color: Colors.text.primary,
         lineHeight: 22,
+    },
+    lockedMediaContainer: {
+        borderRadius: 16,
+        overflow: 'hidden',
+        height: 220,
+        backgroundColor: '#000',
+        marginBottom: 16,
+    },
+    lockedMediaOverlay: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    lockedTitle: {
+        color: '#FFF',
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginTop: 12,
+        marginBottom: 8,
+    },
+    lockedSubtitle: {
+        color: 'rgba(255,255,255,0.8)',
+        fontSize: 14,
+        textAlign: 'center',
+        marginBottom: 20,
+    },
+    unlockButton: {
+        backgroundColor: Colors.warning.main,
+        paddingHorizontal: 24,
+        paddingVertical: 12,
+        borderRadius: 24,
+    },
+    unlockButtonText: {
+        color: '#000',
+        fontWeight: 'bold',
+        fontSize: 14,
     },
 });
 

@@ -17,8 +17,16 @@ import asyncio
 import logging
 import struct
 import io
+import time
 from typing import Optional
 from contextlib import asynccontextmanager
+
+# Add parent directory to sys.path to allow importing database modules
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from database.external_db import get_user_credits, deduct_credits, get_user_stats
+from config import Config
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -166,6 +174,73 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+class BillingManager:
+    """
+    Handles real-time credit deduction for voice sessions.
+    Charges user every minute.
+    """
+    def __init__(self, user_id: str):
+        self.user_id = user_id
+        self.cost_per_minute = 3  # 3 credits per minute
+        self.is_active = True
+        
+    async def verify_balance(self) -> bool:
+        """Check if user has enough credits to start"""
+        try:
+            # Run blocking DB call in thread
+            current_credits = await asyncio.to_thread(get_user_credits, self.user_id)
+            logger.info(f"💰 Checking balance for {self.user_id}: {current_credits} (Required: {self.cost_per_minute})")
+            return current_credits >= self.cost_per_minute
+        except Exception as e:
+            logger.error(f"❌ Balance check failed: {e}")
+            return False  # Fail safe
+
+    async def deduct_for_minute(self) -> bool:
+        """Deduct credits for the next minute of usage"""
+        try:
+            success = await asyncio.to_thread(
+                deduct_credits, 
+                self.user_id, 
+                self.cost_per_minute, 
+                'voice_chat', 
+                'Voice Chat (1 min)'
+            )
+            if success:
+                logger.info(f"💸 Deducted {self.cost_per_minute} credits from {self.user_id} for voice chat")
+            else:
+                logger.warning(f"⚠️ Failed to deduct credits for {self.user_id}")
+            return success
+        except Exception as e:
+            logger.error(f"❌ Deduction error: {e}")
+            return False
+
+async def run_billing_scheduler(billing: BillingManager, websocket: WebSocket):
+    """Run periodic billing every 60 seconds"""
+    try:
+        logger.info(f"⏱️ Starting billing scheduler for {billing.user_id}")
+        while True:
+            # Charge immediately for the upcoming minute (pre-paid for the minute)
+            if not await billing.deduct_for_minute():
+                logger.warning(f"🛑 Insufficient credits for {billing.user_id}, closing session.")
+                try:
+                    await websocket.send_json({
+                        "type": "error", 
+                        "message": "Session ended: Insufficient credits to continue (3 credits/min required)"
+                    })
+                    await websocket.close()
+                except:
+                    pass
+                break
+            
+            # Wait 60 seconds before next charge
+            await asyncio.sleep(60)
+            
+    except asyncio.CancelledError:
+        logger.info(f"Billing scheduler cancelled for {billing.user_id}")
+    except Exception as e:
+        logger.error(f"Billing scheduler error: {e}")
 
 
 class TransparentGeminiPipe:
@@ -616,20 +691,26 @@ This is REAL-TIME video - you can see them writing, erasing, and working. Use th
 
 
 @app.websocket("/ws/nerdx-live-video")
-async def websocket_nerdx_live_video(websocket: WebSocket):
+async def websocket_nerdx_live_video(websocket: WebSocket, user_id: str = "guest_video"):
     """
     WebSocket endpoint for VIDEO + AUDIO tutoring.
-    
-    Tutor can SEE what the student is showing (homework, equations, diagrams).
-    
-    Protocol:
-    - Client sends: {"type": "video", "data": "<base64 jpeg>", "mimeType": "image/jpeg"}
-    - Client sends: {"type": "audio", "data": "<base64 m4a audio>"}
-    - Server sends: {"type": "audio", "data": "<base64 wav audio>"}
-    - Server sends: {"type": "turnComplete"}
     """
     await websocket.accept()
-    logger.info("🎥 Video client connected")
+    logger.info(f"🎥 Video client connected: {user_id}")
+    
+    # --- Billing Check ---
+    billing = BillingManager(user_id)
+    if not await billing.verify_balance():
+        await websocket.send_json({
+            "type": "error", 
+            "message": "Insufficient credits to start video session (3 credits/min)"
+        })
+        await websocket.close()
+        return
+
+    # Start billing schedule
+    billing_task = asyncio.create_task(run_billing_scheduler(billing, websocket))
+    # ---------------------
     
     pipe = TransparentGeminiVideoPipe(websocket)
     
@@ -638,6 +719,7 @@ async def websocket_nerdx_live_video(websocket: WebSocket):
             "type": "error",
             "message": "Failed to connect to AI"
         })
+        billing_task.cancel()
         await websocket.close()
         return
     
@@ -677,23 +759,32 @@ async def websocket_nerdx_live_video(websocket: WebSocket):
     except Exception as e:
         logger.error(f"Video WebSocket error: {e}")
     finally:
+        billing_task.cancel()
         receive_task.cancel()
         await pipe.close()
 
 
 @app.websocket("/ws/nerdx-live")
-async def websocket_nerdx_live(websocket: WebSocket):
+async def websocket_nerdx_live(websocket: WebSocket, user_id: str = "guest_voice"):
     """
     WebSocket endpoint - TRANSPARENT PIPE to Gemini.
-    
-    Architecture:
-    - Client ←→ This Server ←→ Gemini
-    - Server ONLY converts formats at boundaries
-    - NO buffering, batching, or processing delays
-    - All jitter handling is client-side
     """
     await websocket.accept()
-    logger.info("🎧 Client connected")
+    logger.info(f"🎧 Client connected: {user_id}")
+    
+    # --- Billing Check ---
+    billing = BillingManager(user_id)
+    if not await billing.verify_balance():
+        await websocket.send_json({
+            "type": "error", 
+            "message": "Insufficient credits to start voice session (3 credits/min)"
+        })
+        await websocket.close()
+        return
+
+    # Start billing schedule
+    billing_task = asyncio.create_task(run_billing_scheduler(billing, websocket))
+    # ---------------------
     
     pipe = TransparentGeminiPipe(websocket)
     
@@ -702,6 +793,7 @@ async def websocket_nerdx_live(websocket: WebSocket):
             "type": "error",
             "message": "Failed to connect to AI"
         })
+        billing_task.cancel()
         await websocket.close()
         return
     
@@ -736,6 +828,7 @@ async def websocket_nerdx_live(websocket: WebSocket):
     except Exception as e:
         logger.error(f"WebSocket error: {e}")
     finally:
+        billing_task.cancel()
         receive_task.cancel()
         await pipe.close()
 
