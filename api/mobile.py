@@ -19,8 +19,33 @@ from database.external_db import (
     get_user_by_nerdx_id, add_xp, update_streak,
     claim_welcome_bonus, check_and_refresh_daily_credits, get_credit_breakdown
 )
+# Additional Services
+from services.advanced_credit_service import advanced_credit_service
+from services.question_service import QuestionService
+from services.mathematics_service import MathematicsService
+from services.math_ocr_service import MathOCRService
+from services.symbolic_solver_service import SymbolicSolverService
+from services.mathematics_teacher_service import mathematics_teacher_service
+from services.combined_science_generator import CombinedScienceGenerator
+from services.english_service import EnglishService
+from services.referral_service import ReferralService
+from services.paynow_service import PaynowService
+from services.graph_service import GraphService
+from services.image_service import ImageService
+from services.voice_service import get_voice_service
+from utils.url_utils import convert_local_path_to_public_url
+from config import Config
 
-# ... (rest of imports)
+logger = logging.getLogger(__name__)
+
+mobile_bp = Blueprint('mobile', __name__)
+
+# JWT Secret Key (should be in environment variable)
+JWT_SECRET = os.environ.get('JWT_SECRET', 'nerdx-mobile-secret-key-change-in-production')
+JWT_ALGORITHM = 'HS256'
+JWT_EXPIRATION_HOURS = 24 * 7  # 7 days
+
+
 
 @mobile_bp.route('/auth/login', methods=['POST'])
 def login():
@@ -99,33 +124,6 @@ def login():
     except Exception as e:
         logger.error(f"Login error: {str(e)}", exc_info=True)
         return jsonify({'success': False, 'message': f'Login failed: {str(e)}'}), 500
-from services.advanced_credit_service import advanced_credit_service
-from services.question_service import QuestionService
-from services.mathematics_service import MathematicsService
-from services.math_ocr_service import MathOCRService
-from services.symbolic_solver_service import SymbolicSolverService
-from services.mathematics_teacher_service import mathematics_teacher_service
-from services.combined_science_generator import CombinedScienceGenerator
-from services.english_service import EnglishService
-from services.referral_service import ReferralService
-from services.paynow_service import PaynowService
-from services.graph_service import GraphService
-from services.graph_service import GraphService
-from services.image_service import ImageService
-from services.voice_service import get_voice_service
-from utils.url_utils import convert_local_path_to_public_url
-from config import Config
-import os
-import uuid
-
-logger = logging.getLogger(__name__)
-
-mobile_bp = Blueprint('mobile', __name__)
-
-# JWT Secret Key (should be in environment variable)
-JWT_SECRET = os.environ.get('JWT_SECRET', 'nerdx-mobile-secret-key-change-in-production')
-JWT_ALGORITHM = 'HS256'
-JWT_EXPIRATION_HOURS = 24 * 7  # 7 days
 
 # Helper Functions
 def generate_token(user_id: str) -> str:
@@ -412,91 +410,7 @@ def social_login():
         logger.error(f"Social login error: {e}", exc_info=True)
         return jsonify({'success': False, 'message': 'Server error'}), 500
 
-@mobile_bp.route('/auth/login', methods=['POST'])
-def login():
-    """Login mobile user"""
-    try:
-        data = request.get_json()
-        
-        if not data:
-            return jsonify({'success': False, 'message': 'No data provided'}), 400
-        
-        email = data.get('email', '').strip().lower() if data.get('email') else None
-        phone_number = data.get('phone_number', '').strip() if data.get('phone_number') else None
-        password = data.get('password', '')
-        
-        if not password:
-            return jsonify({'success': False, 'message': 'Password is required'}), 400
-        
-        if not email and not phone_number:
-            return jsonify({'success': False, 'message': 'Email or phone number is required'}), 400
-        
-        user_identifier = phone_number or email
-        
-        # Check if user exists
-        if not is_user_registered(user_identifier):
-            return jsonify({'success': False, 'message': 'Invalid credentials'}), 401
-        
-        # Get user data including password hash
-        user_data = get_user_registration(user_identifier)
-        if not user_data:
-            return jsonify({'success': False, 'message': 'Invalid credentials'}), 401
-        
-        # Verify password
-        stored_hash = user_data.get('password_hash')
-        stored_salt = user_data.get('password_salt')
-        
-        if not stored_hash or not stored_salt:
-            # User exists but no password set (legacy WhatsApp user)
-            return jsonify({'success': False, 'message': 'Please set a password in your profile'}), 401
-        
-        # Verify password
-        if not verify_password(password, stored_hash, stored_salt):
-            return jsonify({'success': False, 'message': 'Invalid credentials'}), 401
-        
-        # Generate token
-        token = generate_token(user_identifier)
-        
-        # Get user data
-        user_data = get_user_registration(user_identifier)
-        credits = get_user_credits(user_identifier)
-        
-        # FIX: Ensure user stats exist for legacy users logging in for the first time
-        if credits == 0:
-             # Check if they actually have 0 or if stats are missing
-             # We can try to "initialize" them just in case
-             try:
-                 from database.external_db import make_supabase_request
-                 stats_check = make_supabase_request("GET", "user_stats", filters={"user_id": f"eq.{user_data.get('chat_id')}"})
-                 if not stats_check or len(stats_check) == 0:
-                     # Stats missing! Initialize them
-                     logger.info(f"Initializing missing stats for existing user {user_identifier}")
-                     # Give them the registration bonus since they never got it
-                     from config import Config
-                     add_credits(user_identifier, Config.REGISTRATION_BONUS, 'registration_bonus', 'Welcome conversion bonus')
-                     credits = Config.REGISTRATION_BONUS
-             except Exception as e:
-                 logger.warning(f"Failed to auto-fix user stats on login: {e}")
 
-        return jsonify({
-            'success': True,
-            'token': token,
-            'user': {
-                'id': user_data.get('chat_id'),
-                'nerdx_id': user_data.get('nerdx_id'),
-                'name': user_data.get('name'),
-                'surname': user_data.get('surname'),
-                'email': email,
-                'phone_number': phone_number,
-                'credits': credits,
-                'role': user_data.get('role', 'student'),
-                'level_title': user_data.get('level_title', 'Explorer')
-            }
-        }), 200
-        
-    except Exception as e:
-        logger.error(f"Login endpoint error: {e}")
-        return jsonify({'success': False, 'message': 'Server error'}), 500
 
 @mobile_bp.route('/auth/verify-otp', methods=['POST'])
 def verify_otp():
