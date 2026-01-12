@@ -1,6 +1,7 @@
 // Authentication API services
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { supabase } from '../supabase';
+import api from './config';
+import { User } from '../../types';
 
 export interface LoginData {
   identifier: string; // email or phone
@@ -20,12 +21,10 @@ export interface RegisterData {
 export interface AuthResponse {
   success: boolean;
   token?: string;
-  user?: any;
+  user?: User; // Updated to match User type directly
   message?: string;
   notifications?: any;
 }
-
-import { User } from '../../types';
 
 // Helper function to get auth token
 export const getAuthToken = async (): Promise<string | null> => {
@@ -38,139 +37,84 @@ export const getAuthToken = async (): Promise<string | null> => {
   }
 };
 
-const mapSupabaseUser = (sbUser: any): User => {
-  const metadata = sbUser.user_metadata || {};
-  return {
-    id: sbUser.id,
-    // formatted nerdx_id if available, else a short version of UUID
-    nerdx_id: metadata.nerdx_id || sbUser.id.substring(0, 8).toUpperCase(),
-    name: metadata.first_name || 'Explorer',
-    surname: metadata.last_name || '',
-    email: sbUser.email,
-    phone_number: sbUser.phone || metadata.phone,
-    credits: metadata.credits || 0,
-  };
-};
-
 export const authApi = {
   login: async (data: LoginData): Promise<AuthResponse> => {
     try {
-      const credentials: any = { password: data.password };
-      if (data.identifier.includes('@')) {
-        credentials.email = data.identifier;
-      } else {
-        credentials.phone = data.identifier;
+      const response = await api.post('/api/mobile/auth/login', data);
+
+      if (response.data.success && response.data.token) {
+        // Store token for axios interceptor (handled by useAuth usually, but good to ensure)
+        await AsyncStorage.setItem('@auth_token', response.data.token);
       }
 
-      const { data: sessionData, error } = await supabase.auth.signInWithPassword(credentials);
-
-      if (error) throw error;
-
-      if (sessionData.session?.access_token) {
-        // Store token for axios interceptor
-        await AsyncStorage.setItem('@auth_token', sessionData.session.access_token);
-      }
-
-      const appUser = sessionData.user ? mapSupabaseUser(sessionData.user) : undefined;
-
-      return {
-        success: true,
-        token: sessionData.session?.access_token,
-        user: appUser,
-      };
+      return response.data;
     } catch (error: any) {
-      console.error('Supabase Login Error:', error);
+      console.error('Login Error:', error.response?.data || error.message);
       return {
         success: false,
-        message: error.message || 'Login failed',
+        message: error.response?.data?.message || 'Login failed. Please check your connection.',
       };
     }
   },
 
   register: async (data: RegisterData): Promise<AuthResponse> => {
     try {
-      const credentials: any = {
-        password: data.password,
-        options: {
-          data: {
-            first_name: data.name,
-            last_name: data.surname,
-            phone: data.phone_number,
-            date_of_birth: data.date_of_birth,
-            referred_by: data.referred_by,
-            credits: 0, // Initialize credits
-          },
-        },
-      };
+      const response = await api.post('/api/mobile/auth/register', data);
 
-      if (data.email) {
-        credentials.email = data.email;
-      } else if (data.phone_number) {
-        credentials.phone = data.phone_number;
-      } else {
-        return { success: false, message: 'Email or Phone Number is required' };
+      if (response.data.success && response.data.token) {
+        await AsyncStorage.setItem('@auth_token', response.data.token);
       }
 
-      const { data: sessionData, error } = await supabase.auth.signUp(credentials);
-
-      if (error) throw error;
-
-      if (sessionData.session?.access_token) {
-        await AsyncStorage.setItem('@auth_token', sessionData.session.access_token);
-      }
-
-      const appUser = sessionData.user ? mapSupabaseUser(sessionData.user) : undefined;
-
-      return {
-        success: true,
-        token: sessionData.session?.access_token,
-        user: appUser,
-        message: !sessionData.session ? 'Please check your email to verify your account.' : undefined,
-      };
+      return response.data;
     } catch (error: any) {
-      console.error('Supabase Registration Error:', error);
+      console.error('Registration Error:', error.response?.data || error.message);
       return {
         success: false,
-        message: error.message || 'Registration failed',
+        message: error.response?.data?.message || 'Registration failed.',
       };
     }
   },
 
   verifyOTP: async (phoneNumber: string, otp: string): Promise<AuthResponse> => {
     try {
-      const { data, error } = await supabase.auth.verifyOtp({
-        phone: phoneNumber,
-        token: otp,
-        type: 'sms',
+      const response = await api.post('/api/mobile/auth/verify-otp', {
+        phone_number: phoneNumber,
+        otp
       });
 
-      if (error) throw error;
-
-      if (data.session?.access_token) {
-        await AsyncStorage.setItem('@auth_token', data.session.access_token);
+      if (response.data.success && response.data.token) {
+        await AsyncStorage.setItem('@auth_token', response.data.token);
       }
 
-      const appUser = data.user ? mapSupabaseUser(data.user) : undefined;
-
-      return {
-        success: true,
-        token: data.session?.access_token,
-        user: appUser,
-      };
+      return response.data;
     } catch (error: any) {
       return {
         success: false,
-        message: error.message || 'OTP verification failed',
+        message: error.response?.data?.message || 'OTP verification failed',
       };
     }
   },
 
   socialLogin: async (provider: string, userInfo: any): Promise<AuthResponse> => {
-    // Note: Proper social login usually requires the Supabase native flow or an ID token.
-    // For now, returning error as this requires more setup (Google Auth provider config in Supabase).
-    return {
-      success: false,
-      message: 'Social login requires additional Supabase configuration.',
-    };
+    try {
+      // Send the social user info to backend to create/sync account
+      const response = await api.post('/api/mobile/auth/social-login', {
+        provider,
+        user: userInfo
+      });
+
+      if (response.data.success && response.data.token) {
+        await AsyncStorage.setItem('@auth_token', response.data.token);
+      }
+
+      return response.data;
+    } catch (error: any) {
+      console.error('Social Login Error:', error.response?.data || error.message);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Social login failed.',
+      };
+    }
   },
 };
+
