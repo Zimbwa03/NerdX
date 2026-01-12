@@ -14,7 +14,7 @@ fi
 
 # Start the application with gunicorn
 exec gunicorn main:app \
-    --bind 0.0.0.0:8000 \
+    --bind 0.0.0.0:${PORT:-8000} \
     --workers 1 \
     --timeout 180 \
     --preload \
