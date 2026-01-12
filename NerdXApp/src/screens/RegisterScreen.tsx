@@ -94,14 +94,16 @@ const RegisterScreen: React.FC = () => {
       const response = await authApi.register(registerData);
 
       if (response.success && response.token && response.user) {
-        Alert.alert('Success', 'Account created successfully!', [
-          {
-            text: 'OK',
-            onPress: async () => {
-              await login(response.user, response.token);
-            },
-          },
-        ]);
+        // If there's an immediate message (unlikely for verified email flow, but possible if auto-confirm is on)
+        if (!response.message) {
+          await login(response.user, response.token);
+        } else {
+          // Navigate to new Verification Screen if verification is needed
+          navigation.navigate('EmailVerification' as never);
+        }
+      } else if (response.success && response.message) {
+        // Specifically for cases where user is created but no token (needs email verification)
+        navigation.navigate('EmailVerification' as never);
       } else {
         Alert.alert('Registration Failed', response.message || 'Failed to create account');
       }

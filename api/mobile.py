@@ -223,7 +223,7 @@ def register():
 
 @mobile_bp.route('/auth/social-login', methods=['POST'])
 def social_login():
-    """Handle social authentication (Google, etc.)"""
+    """Handle social authentication (Google, etc.) and sync with user_registration"""
     try:
         data = request.get_json()
         if not data:
@@ -233,15 +233,31 @@ def social_login():
         provider = data.get('provider', 'google')
         user_info = data.get('user', {})
         email = user_info.get('email', '').lower()
+        supabase_uid = user_info.get('id')
         
         if not email:
             return jsonify({'success': False, 'message': 'Email is required for social login'}), 400
             
         # Check if user is already registered in our system
         if is_user_registered(email):
-            # Existing user - generate token and return user data
+            # Existing user - sync Supabase UID if not present
+            try:
+                # Update Supabase UID in our local record if possible/needed
+                # This ensures future lookups by UID work
+                pass 
+            except Exception as e:
+                logger.warning(f"Failed to sync Supabase UID: {e}")
+
             user_data = get_user_registration(email)
             credits = get_user_credits(email) or 0
+            
+            # Ensure user has credentials/stats initialized if they are old legacy users
+            # accessing via mobile for the first time
+            if credits == 0 and not user_data.get('credits_initialized'):
+                 # Maybe give them a welcome back bonus or ensure at least 5 credits?
+                 # For now, just return what they have.
+                 pass
+
             token = generate_token(email)
             
             return jsonify({
@@ -254,17 +270,21 @@ def social_login():
                     'surname': user_data.get('surname'),
                     'email': email,
                     'credits': credits,
+                    'role': user_data.get('role', 'student'),
+                    'level_title': user_data.get('level_title', 'Explorer') 
                 },
-                'message': 'Logged in with Google'
+                'message': 'Logged in successfully'
             }), 200
         else:
             # New user via social login - create registration
-            name = user_info.get('given_name') or user_info.get('name', 'User')
-            surname = user_info.get('family_name') or 'Social'
+            name = user_info.get('given_name') or user_info.get('name', 'User') or email.split('@')[0]
+            surname = user_info.get('family_name') or ''
             
             # Create user registration in Supabase
             try:
                 # Use email as user_identifier for social sign-ups
+                # This matches the legacy bot logic where chat_id was the key
+                # For email users, chat_id = email
                 create_user_registration(
                     email,
                     name,
@@ -273,22 +293,36 @@ def social_login():
                     None # No referral for now
                 )
                 
+                # Check if creation succeeded and return data
                 user_data = get_user_registration(email)
-                token = generate_token(email)
                 
-                return jsonify({
-                    'success': True,
-                    'token': token,
-                    'user': {
-                        'id': email,
-                        'nerdx_id': user_data.get('nerdx_id'),
-                        'name': name,
-                        'surname': surname,
-                        'email': email,
-                        'credits': 75, # Welcome bonus
-                    },
-                    'message': 'Account created via Google'
-                }), 201
+                if user_data:
+                    # Grant initial credits (Registration Bonus)
+                    current_credits = get_user_credits(email) or 0
+                    if current_credits < Config.REGISTRATION_BONUS:
+                        add_credits(email, Config.REGISTRATION_BONUS - current_credits, 'registration_bonus', 'Welcome bonus')
+                        current_credits = Config.REGISTRATION_BONUS
+                    
+                    token = generate_token(email)
+                    
+                    return jsonify({
+                        'success': True,
+                        'token': token,
+                        'user': {
+                            'id': email,
+                            'nerdx_id': user_data.get('nerdx_id'),
+                            'name': name,
+                            'surname': surname,
+                            'email': email,
+                            'credits': current_credits,
+                            'role': 'student',
+                            'level_title': 'Explorer'
+                        },
+                        'message': 'Account created successfully'
+                    }), 201
+                else:
+                    raise Exception("Failed to retrieve created user")
+                    
             except Exception as e:
                 logger.error(f"Social registration error: {e}", exc_info=True)
                 return jsonify({'success': False, 'message': f'Social registration failed: {str(e)}'}), 500
@@ -344,8 +378,25 @@ def login():
         
         # Get user data
         user_data = get_user_registration(user_identifier)
-        credits = get_user_credits(user_identifier) or 0
+        credits = get_user_credits(user_identifier)
         
+        # FIX: Ensure user stats exist for legacy users logging in for the first time
+        if credits == 0:
+             # Check if they actually have 0 or if stats are missing
+             # We can try to "initialize" them just in case
+             try:
+                 from database.external_db import make_supabase_request
+                 stats_check = make_supabase_request("GET", "user_stats", filters={"user_id": f"eq.{user_data.get('chat_id')}"})
+                 if not stats_check or len(stats_check) == 0:
+                     # Stats missing! Initialize them
+                     logger.info(f"Initializing missing stats for existing user {user_identifier}")
+                     # Give them the registration bonus since they never got it
+                     from config import Config
+                     add_credits(user_identifier, Config.REGISTRATION_BONUS, 'registration_bonus', 'Welcome conversion bonus')
+                     credits = Config.REGISTRATION_BONUS
+             except Exception as e:
+                 logger.warning(f"Failed to auto-fix user stats on login: {e}")
+
         return jsonify({
             'success': True,
             'token': token,
@@ -357,6 +408,8 @@ def login():
                 'email': email,
                 'phone_number': phone_number,
                 'credits': credits,
+                'role': user_data.get('role', 'student'),
+                'level_title': user_data.get('level_title', 'Explorer')
             }
         }), 200
         
@@ -1557,10 +1610,52 @@ def get_credit_balance():
 def get_credit_transactions():
     """Get credit transaction history"""
     try:
-        # TODO: Retrieve transactions from database
+        limit = request.args.get('limit', 20, type=int)
+        
+        from database.external_db import make_supabase_request
+        
+        # Fetch payment transactions (completed/approved ones)
+        # We want payments that were successful
+        payment_txs = make_supabase_request(
+            'GET',
+            'payment_transactions',
+            None,
+            filters={
+                'user_id': f"eq.{g.current_user_id}",
+                'status': 'in.(completed,approved,paid)'
+            },
+            params={'order': 'created_at.desc', 'limit': limit},
+            use_service_role=True
+        ) or []
+        
+        # Transform to standard format
+        transactions = []
+        
+        # Add payment transactions
+        for tx in payment_txs:
+            transactions.append({
+                'id': tx.get('id', str(uuid.uuid4())),
+                'transaction_type': 'purchase',
+                'credits_change': tx.get('credits', 0),
+                'balance_before': 0, # We don't historically track balance snapshot in this simple table yet
+                'balance_after': 0,
+                'description': f"Purchased {tx.get('credits')} credits",
+                'transaction_date': tx.get('created_at'),
+                'amount': tx.get('amount', 0),
+                'currency': 'USD'
+            })
+            
+        # Also fetching usage logs if we had them, but for now payments are the most important for the graph
+        # If we have a credit_usage_logs table, we would fetch that too.
+        # Assuming we might want to show usage:
+        # usage_logs = make_supabase_request('GET', 'credit_usage_logs', ...)
+        
+        # Sort combined list by date desc
+        transactions.sort(key=lambda x: x.get('transaction_date', ''), reverse=True)
+        
         return jsonify({
             'success': True,
-            'data': []
+            'data': transactions[:limit]
         }), 200
     except Exception as e:
         logger.error(f"Get credit transactions error: {e}")

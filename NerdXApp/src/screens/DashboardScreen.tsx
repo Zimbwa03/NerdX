@@ -393,7 +393,9 @@ const DashboardScreen: React.FC = () => {
             <View style={styles.userRow}>
               <View style={styles.userNameSection}>
                 <Text style={styles.greeting}>Welcome back 👋</Text>
-                <Text style={styles.displayName}>{user?.name || 'Explorer'}</Text>
+                <Text style={styles.displayName}>
+                  {user?.name ? `${user.name} ${user.surname || ''}` : 'Student'}
+                </Text>
                 <View style={styles.compactIdBadge}>
                   <Text style={styles.compactId}>ID: {user?.nerdx_id || 'N/A'}</Text>
                 </View>

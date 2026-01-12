@@ -13,6 +13,7 @@ import {
   Modal,
   StatusBar,
   RefreshControl,
+  ImageBackground,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -101,8 +102,31 @@ const CreditsScreen: React.FC = () => {
   }, []);
 
   const startPaymentPolling = (reference: string) => {
+    // Clear any existing interval
+    if (paymentCheckInterval.current) {
+      clearInterval(paymentCheckInterval.current);
+    }
+
+    let attempts = 0;
+    const maxAttempts = 40; // Poll for about 2 minutes (40 * 3s)
+
     // Poll payment status every 3 seconds
     paymentCheckInterval.current = setInterval(async () => {
+      attempts++;
+      if (attempts > maxAttempts) {
+        if (paymentCheckInterval.current) {
+          clearInterval(paymentCheckInterval.current);
+          paymentCheckInterval.current = null;
+        }
+        setCheckingPayment(false);
+        Alert.alert(
+          'Payment Status',
+          'We haven\'t received a confirmation yet. If you completed the payment, your credits will be added automatically once confirmed.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+
       try {
         const status = await creditsApi.checkPaymentStatus(reference);
         if (status) {
@@ -116,17 +140,15 @@ const CreditsScreen: React.FC = () => {
             setShowPaymentModal(false);
             setPaymentReference(null);
             showSuccess(`🎉 Payment successful! ${status.credits} credits added to your account!`, 5000);
+
+            // Refresh data to show new balance and transaction
+            await loadData();
+            await refreshCredits();
+
             Alert.alert(
               'Payment Successful!',
               `Your payment has been confirmed. ${status.credits} credits have been added to your account.`,
-              [
-                {
-                  text: 'OK',
-                  onPress: () => {
-                    refreshCredits();
-                  },
-                },
-              ]
+              [{ text: 'Great!' }]
             );
           } else if (status.status === 'failed' || status.status === 'cancelled') {
             // Payment failed
@@ -141,6 +163,7 @@ const CreditsScreen: React.FC = () => {
         }
       } catch (error) {
         console.error('Payment status check error:', error);
+        // Continue polling even on error, might be temporary network blip
       }
     }, 3000);
   };
@@ -160,29 +183,54 @@ const CreditsScreen: React.FC = () => {
 
     try {
       setPurchasing(selectedPackage.id);
-      const result = await creditsApi.purchaseCredits(
-        selectedPackage.id,
-        phoneNumber.trim(),
-        email.trim()
-      );
 
-      if (result) {
-        setPaymentReference(result.reference);
-        setCheckingPayment(true);
-        Alert.alert(
-          'Payment Initiated',
-          `${result.instructions}\n\nPayment Reference: ${result.reference}\n\nPlease check your phone for the USSD prompt and enter your EcoCash PIN.`,
-          [{ text: 'OK' }]
+      try {
+        const result = await creditsApi.purchaseCredits(
+          selectedPackage.id,
+          phoneNumber.trim(),
+          email.trim()
         );
-        // Start polling for payment status
-        startPaymentPolling(result.reference);
+
+        if (result) {
+          handlePaymentInitiated(result);
+        }
+      } catch (apiError: any) {
+        // Handle specific error cases
+        console.error('Payment initiation error:', apiError);
+
+        // If it looks like a timeout but passing 504/500, it might have actually sent the push
+        // But we safely show the error message returned by API if available
+        const errorMessage = apiError.response?.data?.message || apiError.message || 'Failed to initiate purchase';
+
+        if (errorMessage.toLowerCase().includes('timeout') || !apiError.response) {
+          Alert.alert(
+            'Connection Issue',
+            'The request took too long, but the payment prompt might still appear on your phone. If it does, please complete the payment and we will detect it automatically.',
+            [{ text: 'OK' }]
+          );
+        } else {
+          Alert.alert('Error', errorMessage);
+        }
+        // Don't close modal on error so user can try again easily
       }
-    } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.message || 'Failed to initiate purchase');
-      setShowPaymentModal(false);
     } finally {
       setPurchasing(null);
     }
+  };
+
+  const handlePaymentInitiated = (result: any) => {
+    setPaymentReference(result.reference);
+    setCheckingPayment(true);
+
+    // Show instruction alert
+    Alert.alert(
+      'Payment Initiated',
+      `${result.instructions}\n\nPayment Reference: ${result.reference}\n\nPlease check your phone for the USSD prompt and enter your EcoCash PIN.`,
+      [{ text: 'I understand' }]
+    );
+
+    // Start polling for payment status
+    startPaymentPolling(result.reference);
   };
 
   const refreshCredits = async () => {
@@ -204,6 +252,37 @@ const CreditsScreen: React.FC = () => {
       </View>
     );
   }
+
+  // Calculate monthly spending from transactions
+  const getMonthlySpending = () => {
+    const last6Months = new Array(6).fill(0).map((_, i) => {
+      const d = new Date();
+      d.setMonth(d.getMonth() - (5 - i));
+      return {
+        date: d,
+        monthYear: `${d.getMonth()}-${d.getFullYear()}`,
+        label: d.toLocaleString('default', { month: 'short' }),
+        amount: 0
+      };
+    });
+
+    transactions.forEach(t => {
+      if (t.transaction_type === 'purchase' && t.transaction_date) {
+        const tDate = new Date(t.transaction_date);
+        const tMonthYear = `${tDate.getMonth()}-${tDate.getFullYear()}`;
+
+        const monthData = last6Months.find(m => m.monthYear === tMonthYear);
+        if (monthData) {
+          monthData.amount += t.amount || 0;
+        }
+      }
+    });
+
+    return last6Months.map(m => ({
+      month: m.label,
+      amount: parseFloat(m.amount.toFixed(2))
+    }));
+  };
 
   return (
     <ImageBackground
@@ -262,7 +341,7 @@ const CreditsScreen: React.FC = () => {
           <View style={styles.statsRow}>
             <View style={[styles.statCard, { backgroundColor: themedColors.background.paper }]}>
               <Text style={[styles.statValue, { color: Colors.success.main }]}>
-                ${transactions.filter(t => t.transaction_type === 'purchase').reduce((sum, t) => sum + Math.abs(t.credits_change) * 0.1, 0).toFixed(2)}
+                ${transactions.filter(t => t.transaction_type === 'purchase').reduce((sum, t) => sum + (t.amount || 0), 0).toFixed(2)}
               </Text>
               <Text style={[styles.statLabel, { color: themedColors.text.secondary }]}>
                 Total Spent
@@ -280,14 +359,7 @@ const CreditsScreen: React.FC = () => {
 
           {/* Spending Chart */}
           <SpendingChart
-            data={[
-              { month: 'Jul', amount: 10 },
-              { month: 'Aug', amount: 15 },
-              { month: 'Sep', amount: 8 },
-              { month: 'Oct', amount: 20 },
-              { month: 'Nov', amount: 12 },
-              { month: 'Dec', amount: 18 },
-            ]}
+            data={getMonthlySpending()}
           />
         </View>
 

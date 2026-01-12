@@ -24,6 +24,8 @@ export interface AuthResponse {
   message?: string;
 }
 
+import { User } from '../../types';
+
 // Helper function to get auth token
 export const getAuthToken = async (): Promise<string | null> => {
   try {
@@ -33,6 +35,20 @@ export const getAuthToken = async (): Promise<string | null> => {
     console.error('Error getting auth token:', error);
     return null;
   }
+};
+
+const mapSupabaseUser = (sbUser: any): User => {
+  const metadata = sbUser.user_metadata || {};
+  return {
+    id: sbUser.id,
+    // formatted nerdx_id if available, else a short version of UUID
+    nerdx_id: metadata.nerdx_id || sbUser.id.substring(0, 8).toUpperCase(),
+    name: metadata.first_name || 'Explorer',
+    surname: metadata.last_name || '',
+    email: sbUser.email,
+    phone_number: sbUser.phone || metadata.phone,
+    credits: metadata.credits || 0,
+  };
 };
 
 export const authApi = {
@@ -54,10 +70,12 @@ export const authApi = {
         await AsyncStorage.setItem('@auth_token', sessionData.session.access_token);
       }
 
+      const appUser = sessionData.user ? mapSupabaseUser(sessionData.user) : undefined;
+
       return {
         success: true,
         token: sessionData.session?.access_token,
-        user: sessionData.user,
+        user: appUser,
       };
     } catch (error: any) {
       console.error('Supabase Login Error:', error);
@@ -79,6 +97,7 @@ export const authApi = {
             phone: data.phone_number,
             date_of_birth: data.date_of_birth,
             referred_by: data.referred_by,
+            credits: 0, // Initialize credits
           },
         },
       };
@@ -99,10 +118,12 @@ export const authApi = {
         await AsyncStorage.setItem('@auth_token', sessionData.session.access_token);
       }
 
+      const appUser = sessionData.user ? mapSupabaseUser(sessionData.user) : undefined;
+
       return {
         success: true,
         token: sessionData.session?.access_token,
-        user: sessionData.user,
+        user: appUser,
         message: !sessionData.session ? 'Please check your email to verify your account.' : undefined,
       };
     } catch (error: any) {
@@ -128,10 +149,12 @@ export const authApi = {
         await AsyncStorage.setItem('@auth_token', data.session.access_token);
       }
 
+      const appUser = data.user ? mapSupabaseUser(data.user) : undefined;
+
       return {
         success: true,
         token: data.session?.access_token,
-        user: data.user,
+        user: appUser,
       };
     } catch (error: any) {
       return {

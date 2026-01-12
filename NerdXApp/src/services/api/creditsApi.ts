@@ -58,14 +58,23 @@ export const creditsApi = {
     email?: string
   ): Promise<PurchaseResult | null> => {
     try {
+      // Ensure we have valid inputs
+      if (!packageId) throw new Error('Package ID is required');
+
       const response = await api.post('/api/mobile/credits/purchase', {
         package_id: packageId,
         phone_number: phoneNumber,
         email: email,
+      }, {
+        timeout: 45000 // Increase timeout to 45s for payment requests
       });
       return response.data.data || null;
     } catch (error: any) {
       console.error('Purchase credits error:', error);
+      // Propagate the specific error message from server if available
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
       throw error;
     }
   },

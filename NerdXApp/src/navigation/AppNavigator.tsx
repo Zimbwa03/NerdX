@@ -118,6 +118,12 @@ const AppNavigator: React.FC = () => {
                 headerTintColor: '#FFFFFF',
               }}
             />
+            <Stack.Screen
+              name="EmailVerification"
+              component={require('../screens/EmailVerificationScreen').default}
+              options={{ headerShown: false }}
+            />
+
           </Stack.Group>
         ) : (
           // Main App Stack

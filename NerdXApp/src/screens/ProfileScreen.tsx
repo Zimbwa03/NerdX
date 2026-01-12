@@ -37,10 +37,10 @@ const ProfileScreen: React.FC = () => {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    surname: '',
-    email: '',
-    phone_number: '',
+    name: user?.name || '',
+    surname: user?.surname || '',
+    email: user?.email || '',
+    phone_number: user?.phone_number || '',
   });
 
   useEffect(() => {

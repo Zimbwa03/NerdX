@@ -757,35 +757,41 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
                 'last_activity': datetime.utcnow().isoformat()
             }
 
-            # Create user stats entry
+            # Create user stats entry - try-catch block for resilience
+            logger.info(f"Creating user stats for {chat_id} with {total_credits} credits")
             stats_result = make_supabase_request("POST", "user_stats", user_stats_data, use_service_role=True)
-            if stats_result:
-                logger.info(f"✅ User stats created for {chat_id} with {total_credits} credits")
+            
+            # If POST fails, it might be that stats already exist, so try PATCH
+            if not stats_result:
+                 logger.warning(f"POST new stats failed for {chat_id}, trying PATCH to initialize...")
+                 make_supabase_request("PATCH", "user_stats", {"credits": total_credits, "level": 1}, 
+                                      filters={"user_id": f"eq.{chat_id}"}, use_service_role=True)
 
-                # Record the registration credit transaction
-                if total_credits > 0:
-                    credit_transaction = {
-                        'user_id': chat_id,
-                        'action': 'new_user_registration',
-                        'credits_change': total_credits,
-                        'balance_before': 0,
-                        'balance_after': total_credits,
-                        'description': f'Welcome bonus: {total_credits} credits',
-                        'transaction_type': 'new_user_registration'
-                    }
+            logger.info(f"✅ User stats initialized for {chat_id}")
 
-                    try:
-                        make_supabase_request("POST", "credit_transactions", credit_transaction, use_service_role=True)
-                        logger.info(f"✅ Registration credit transaction recorded for {chat_id}")
-                    except Exception as e:
-                        logger.error(f"Failed to record registration transaction: {e}")
+            # Record the registration credit transaction
+            if total_credits > 0:
+                credit_transaction = {
+                    'user_id': chat_id,
+                    'action': 'new_user_registration',
+                    'credits_change': total_credits,
+                    'balance_before': 0,
+                    'balance_after': total_credits,
+                    'description': f'Welcome bonus: {total_credits} credits',
+                    'transaction_type': 'new_user_registration',
+                    'transaction_date': datetime.utcnow().isoformat()
+                }
 
-            else:
-                logger.warning(f"⚠️ Failed to create user stats for {chat_id}")
+                try:
+                    make_supabase_request("POST", "credit_transactions", credit_transaction, use_service_role=True)
+                    logger.info(f"✅ Registration credit transaction recorded for {chat_id}")
+                except Exception as e:
+                    logger.error(f"Failed to record registration transaction: {e}")
 
         except Exception as stats_error:
-            logger.error(f"❌ Error creating user stats: {stats_error}")
-            # Don't fail registration if stats creation fails
+            logger.error(f"❌ Error creating/initializing user stats: {stats_error}")
+            # Even if stats creation fails, we don't want to roll back the user registration
+            # The next login might try to fix it via get_or_create_user_stats
 
         # Handle referral bonus for the referrer (if applicable)
         if referred_by_nerdx_id:
