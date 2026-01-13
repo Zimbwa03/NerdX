@@ -222,50 +222,18 @@ def register():
         
         # Create user registration with password
         try:
-            # Create user in database first
+            # Create user in database with password and auth info
             create_user_registration(
                 user_identifier,
                 name,
                 surname,
                 date_of_birth or '2000-01-01',  # Default date if not provided
-                referred_by
+                referred_by,
+                password_hash=password_hash,
+                password_salt=salt,
+                email=email,
+                phone_number=phone_number
             )
-            
-            # Update user with password and contact info using Supabase
-            from database.external_db import make_supabase_request
-            import os
-            
-            update_data = {}
-            if password_hash:
-                update_data['password_hash'] = password_hash
-            if salt:
-                update_data['password_salt'] = salt
-            if email:
-                update_data['email'] = email
-            if phone_number:
-                update_data['phone_number'] = phone_number
-            
-            # Update user record with password and contact info
-            if update_data:
-                # Use PATCH to update existing record
-                supabase_url = os.getenv('SUPABASE_URL')
-                supabase_key = os.getenv('SUPABASE_SERVICE_ROLE_KEY')
-                
-                if supabase_url and supabase_key:
-                    import requests
-                    update_url = f"{supabase_url}/rest/v1/users_registration"
-                    headers = {
-                        'apikey': supabase_key,
-                        'Authorization': f'Bearer {supabase_key}',
-                        'Content-Type': 'application/json',
-                        'Prefer': 'return=representation'
-                    }
-                    
-                    # Update by chat_id
-                    params = {'chat_id': f'eq.{user_identifier}'}
-                    response = requests.patch(update_url, json=update_data, headers=headers, params=params)
-                    if response.status_code not in [200, 204]:
-                        logger.warning(f"Failed to update password: {response.status_code} - {response.text}")
             
             # Generate token
             token = generate_token(user_identifier)

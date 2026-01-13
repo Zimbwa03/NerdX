@@ -999,7 +999,7 @@ def get_user_registration(chat_id):
         logger.error(f"Error getting user registration: {e}")
         return None
 
-def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_nerdx_id=None):
+def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_nerdx_id=None, password_hash=None, password_salt=None, email=None, phone_number=None):
     """Create new user registration - MUST succeed in Supabase or fail completely"""
     try:
         logger.info(f"🔄 Creating user registration for {chat_id} with referral: {referred_by_nerdx_id}")
@@ -1054,6 +1054,16 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
             'referred_by_nerdx_id': referred_by_nerdx_id,
             'registration_date': datetime.utcnow().isoformat()
         }
+
+        # Add optional auth fields if provided
+        if password_hash:
+            registration_data['password_hash'] = password_hash
+        if password_salt:
+            registration_data['password_salt'] = password_salt
+        if email:
+            registration_data['email'] = email
+        if phone_number:
+            registration_data['phone_number'] = phone_number
 
         logger.info(f"📝 Registration data prepared: {registration_data}")
 
