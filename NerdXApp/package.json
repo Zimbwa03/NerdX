@@ -71,6 +71,7 @@
           "@nozbe/watermelondb",
           "react-native-fs",
           "onnxruntime-react-native",
+          "@react-native-ml-kit/text-recognition",
           "@nozbe/simdjson"
         ],
         "listUnknownPackages": false
