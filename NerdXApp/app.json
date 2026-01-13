@@ -69,7 +69,8 @@
           }
         }
       ],
-      "expo-video"
+      "expo-video",
+      "./plugins/withMavenRepositories"
     ],
     "extra": {
       "eas": {
