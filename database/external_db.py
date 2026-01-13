@@ -2037,3 +2037,31 @@ def get_project_chat_history(project_id, limit=50):
     except Exception as e:
         logger.error(f"Error getting chat history: {e}")
         return []
+
+def authenticate_supabase_user(email, password):
+    """
+    Authenticate a user directly with Supabase Auth REST API
+    Returns: User object if successful, None otherwise
+    """
+    try:
+        url = f"{SUPABASE_URL}/auth/v1/token?grant_type=password"
+        headers = {
+            "apikey": SUPABASE_ANON_KEY,
+            "Content-Type": "application/json"
+        }
+        data = {
+            "email": email,
+            "password": password
+        }
+        
+        response = requests.post(url, headers=headers, json=data)
+        
+        if response.status_code == 200:
+            return response.json()
+        else:
+            logger.warning(f"Supabase Auth failed for {email}: {response.status_code} {response.text}")
+            return None
+            
+    except Exception as e:
+        logger.error(f"Error checking Supabase Auth: {e}")
+        return None

@@ -17,7 +17,8 @@ from database.external_db import (
     get_user_registration, create_user_registration, is_user_registered,
     get_user_stats, get_user_credits, add_credits, deduct_credits,
     get_user_by_nerdx_id, add_xp, update_streak,
-    claim_welcome_bonus, check_and_refresh_daily_credits, get_credit_breakdown
+    claim_welcome_bonus, check_and_refresh_daily_credits, get_credit_breakdown,
+    authenticate_supabase_user
 )
 # Additional Services
 from services.advanced_credit_service import advanced_credit_service
@@ -56,7 +57,7 @@ def login():
         if not data:
             return jsonify({'success': False, 'message': 'No data provided'}), 400
         
-        user_identifier = data.get('identifier', '').strip() or data.get('email', '').strip() or data.get('phone_number', '').strip()
+        user_identifier = (data.get('identifier', '').strip() or data.get('email', '').strip() or data.get('phone_number', '').strip()).lower()
         password = data.get('password', '')
         
         if not user_identifier or not password:
@@ -66,7 +67,56 @@ def login():
         user_data = get_user_registration(user_identifier)
         
         if not user_data:
-            return jsonify({'success': False, 'message': 'User not found'}), 404
+            # Fallback: Check if user exists in Supabase Auth but not in our local table
+            # This handles users created via Dashboard or other means
+            logger.info(f"User {user_identifier} not found locally, checking Supabase Auth...")
+            supabase_user = authenticate_supabase_user(user_identifier, password)
+            
+            if supabase_user:
+                logger.info(f"User found in Supabase Auth! Backfilling local registration...")
+                try:
+                    # Extract user metadata
+                    # Supabase returns structure: {'user': {'id': '...', 'user_metadata': {...}, ...}, 'access_token': '...'}
+                    # OR just the user object depending on endpoint version, but usually it wraps it.
+                    # check_user_db_state.py output showed 'users' list item structure.
+                    # authenticate_supabase_user returns response.json() from /token endpoint.
+                    # Response is usually: { access_token, token_type, expires_in, refresh_token, user: { ... } }
+                    
+                    s_user = supabase_user.get('user', {})
+                    metadata = s_user.get('user_metadata', {})
+                    
+                    # Use metadata or fallbacks
+                    name = metadata.get('name') or metadata.get('first_name') or 'User'
+                    surname = metadata.get('surname') or metadata.get('last_name') or ''
+                    
+                    # Create local registration
+                    create_user_registration(
+                        chat_id=user_identifier,
+                        name=name,
+                        surname=surname,
+                        date_of_birth='2000-01-01', # Default
+                        email=user_identifier,
+                        password_hash=None, # We don't have the hash, rely on Supabase Auth for future logins too? 
+                        # actually, if we backfill, next time get_user_registration WILL return data.
+                        # But lines 74-82 check for password_hash.
+                        # If we leave it None, login will fail there.
+                        # We should either skip password check if we just authenticated via Supabase,
+                        # OR we need to handle this.
+                    )
+                    
+                    # fetch again
+                    user_data = get_user_registration(user_identifier)
+                    
+                    # If we just authenticated with Supabase, we don't need to check hash again below.
+                    # We can set a flag to skip verification
+                    g.skip_password_verification = True
+                    
+                except Exception as e:
+                    logger.error(f"Failed to backfill user from Supabase Auth: {e}")
+                    return jsonify({'success': False, 'message': 'Login failed during sync'}), 500
+            
+            if not user_data:
+                 return jsonify({'success': False, 'message': 'User not found'}), 404
         
         # Verify password (assume users_registration has password_hash, or fetch from auth table)
         # Note: In real implementation, password_hash would be stored securely. 
@@ -74,12 +124,28 @@ def login():
         stored_hash = user_data.get('password_hash')
         stored_salt = user_data.get('password_salt')
         
-        if not stored_hash or not stored_salt:
-            # If no password set (e.g. social login only), this might fail
-            return jsonify({'success': False, 'message': 'Invalid credentials'}), 401
-            
-        if not verify_password(password, stored_hash, stored_salt):
-            return jsonify({'success': False, 'message': 'Invalid credentials'}), 401
+        # If we verified via Supabase fallback, skip local hash check
+        if not getattr(g, 'skip_password_verification', False):
+            if not stored_hash or not stored_salt:
+                # If no password set (e.g. social login only), this might fail
+                # Try Supabase Auth as last resort if local hash missing
+                 logger.info(f"No local hash for {user_identifier}, trying Supabase Auth...")
+                 if authenticate_supabase_user(user_identifier, password):
+                     # Success!
+                     pass
+                 else:
+                     return jsonify({'success': False, 'message': 'Invalid credentials'}), 401
+                
+            elif not verify_password(password, stored_hash, stored_salt):
+                 # Password mismatch locally. 
+                 # Could be password changed in Supabase but not locally?
+                 # Try Supabase Auth to be sure? 
+                 # For now, strict on local if it exists to avoid desync, 
+                 # OR try Supabase if local fails? 
+                 # Let's trust local if it exists for performance, but fallback if failed?
+                 # No, that might be a security risk or inconsistent. 
+                 # Let's stick to: If local exists, use local. 
+                 return jsonify({'success': False, 'message': 'Invalid credentials'}), 401
         
         # Determine user ID (chat_id)
         user_id = user_data.get('chat_id')

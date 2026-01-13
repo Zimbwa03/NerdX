@@ -65,18 +65,19 @@
             "targetSdkVersion": 35,
             "compileSdkVersion": 35,
             "enableProguardInReleaseBuilds": false,
-            "enableShrinkResourcesInReleaseBuilds": false
+            "enableShrinkResourcesInReleaseBuilds": false,
+            "enableMinifyInReleaseBuilds": false
           }
         }
       ],
       "expo-video",
       "./plugins/withMavenRepositories"
     ],
+    "owner": "nerdx2",
     "extra": {
       "eas": {
-        "projectId": "3750f794-1170-411c-b0e2-a72b7b85b3af"
+        "projectId": "64c12ef5-abbd-4b71-8c9e-3e1ba2a0dcb2"
       }
-    },
-    "owner": "nerdx7"
+    }
   }
 }

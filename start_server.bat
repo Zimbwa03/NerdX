@@ -23,4 +23,4 @@ echo Press Ctrl+C to stop the server
 echo.
 
 REM Start the Flask server
-python app.py
+python main.py
