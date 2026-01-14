@@ -18,6 +18,7 @@ from database.external_db import (
     get_user_stats, get_user_credits, add_credits, deduct_credits,
     get_user_by_nerdx_id, add_xp, update_streak,
     claim_welcome_bonus, check_and_refresh_daily_credits, get_credit_breakdown,
+    make_supabase_request
     authenticate_supabase_user
 )
 # Additional Services
@@ -1588,7 +1589,7 @@ def generate_virtual_lab_knowledge_check():
              return jsonify({'success': False, 'message': f'Insufficient credits. Required: {cost}, Available: {current_credits}'}), 402
              
         # Deduct the credits
-        if not deduct_credits(user_id, cost):
+        if not deduct_credits(user_id, cost, 'virtual_lab_knowledge_check', 'Virtual Lab Knowledge Check'):
             return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
             
         logger.info(f"Deducted {cost} credits from {user_id} for Virtual Lab generation")
