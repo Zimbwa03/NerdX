@@ -494,97 +494,125 @@ const CreditsScreen: React.FC = () => {
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Paynow USD EcoCash Payment</Text>
-              {selectedPackage && (
-                <View style={styles.packageInfo}>
-                  <Text style={styles.packageInfoText}>
-                    Package: {selectedPackage.name}
-                  </Text>
-                  <Text style={styles.packageInfoText}>
-                    Credits: {selectedPackage.credits}
-                  </Text>
-                  <Text style={styles.packageInfoText}>
-                    Amount: ${selectedPackage.price} USD
-                  </Text>
-                </View>
-              )}
+              {/* ✨ Gold Ticket Header */}
+              <LinearGradient
+                colors={Colors.premium.goldDark ? [Colors.premium.gold, Colors.premium.goldDark] : ['#FFD700', '#FFA500']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.modalHeader}
+              >
+                <Text style={styles.ticketTitle}>🎫 GOLD TICKET</Text>
+                <Text style={styles.ticketSubtitle}>PREMIUM ACCESS</Text>
+              </LinearGradient>
 
-              {checkingPayment ? (
-                <View style={styles.checkingContainer}>
-                  <ActivityIndicator size="large" color="#1976D2" />
-                  <Text style={styles.checkingText}>
-                    Waiting for payment confirmation...
-                  </Text>
-                  {paymentReference && (
-                    <Text style={styles.referenceText}>
-                      Reference: {paymentReference}
+              <View style={styles.ticketBody}>
+                <Text style={styles.modalTitle}>Confirm Purchase</Text>
+                {selectedPackage && (
+                  <View style={styles.packageInfo}>
+                    <View style={styles.ticketRow}>
+                      <Text style={styles.ticketLabel}>PACKAGE</Text>
+                      <Text style={styles.ticketValue}>{selectedPackage.name}</Text>
+                    </View>
+                    <View style={styles.ticketDivider} />
+                    <View style={styles.ticketRow}>
+                      <Text style={styles.ticketLabel}>CREDITS</Text>
+                      <Text style={styles.ticketValueLarge}>{selectedPackage.credits}</Text>
+                    </View>
+                    <View style={styles.ticketDivider} />
+                    <View style={styles.ticketRow}>
+                      <Text style={styles.ticketLabel}>PRICE</Text>
+                      <Text style={styles.ticketPrice}>${selectedPackage.price.toFixed(2)}</Text>
+                    </View>
+                  </View>
+                )}
+
+                {checkingPayment ? (
+                  <View style={styles.checkingContainer}>
+                    <ActivityIndicator size="large" color={Colors.premium.gold} />
+                    <Text style={styles.checkingText}>
+                      Waiting for payment confirmation...
                     </Text>
-                  )}
-                  <Text style={styles.instructionText}>
-                    Please check your phone and enter your EcoCash PIN when prompted.
-                  </Text>
-                  <TouchableOpacity
-                    style={styles.cancelButton}
-                    onPress={() => {
-                      if (paymentCheckInterval.current) {
-                        clearInterval(paymentCheckInterval.current);
-                        paymentCheckInterval.current = null;
-                      }
-                      setCheckingPayment(false);
-                      setShowPaymentModal(false);
-                      setPaymentReference(null);
-                    }}
-                  >
-                    <Text style={styles.cancelButtonText}>Cancel</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <>
-                  <Text style={styles.inputLabel}>EcoCash Phone Number</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={phoneNumber}
-                    onChangeText={setPhoneNumber}
-                    placeholder="0771234567"
-                    keyboardType="phone-pad"
-                    maxLength={10}
-                  />
-
-                  <Text style={styles.inputLabel}>Email Address</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={email}
-                    onChangeText={setEmail}
-                    placeholder="your@email.com"
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                  />
-
-                  <View style={styles.modalButtons}>
+                    {paymentReference && (
+                      <Text style={styles.referenceText}>
+                        Ref: {paymentReference}
+                      </Text>
+                    )}
+                    <Text style={styles.instructionText}>
+                      Please check your phone and enter your EcoCash PIN.
+                    </Text>
                     <TouchableOpacity
-                      style={styles.cancelModalButton}
-                      onPress={() => setShowPaymentModal(false)}
+                      style={styles.cancelButton}
+                      onPress={() => {
+                        if (paymentCheckInterval.current) {
+                          clearInterval(paymentCheckInterval.current);
+                          paymentCheckInterval.current = null;
+                        }
+                        setCheckingPayment(false);
+                        setShowPaymentModal(false);
+                        setPaymentReference(null);
+                      }}
                     >
-                      <Text style={styles.cancelModalButtonText}>Cancel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[
-                        styles.confirmButton,
-                        (!phoneNumber.trim() || !email.trim() || purchasing) &&
-                        styles.confirmButtonDisabled,
-                      ]}
-                      onPress={handleConfirmPurchase}
-                      disabled={!phoneNumber.trim() || !email.trim() || !!purchasing}
-                    >
-                      {purchasing ? (
-                        <ActivityIndicator color="#FFFFFF" />
-                      ) : (
-                        <Text style={styles.confirmButtonText}>Proceed to Payment</Text>
-                      )}
+                      <Text style={styles.cancelButtonText}>Cancel</Text>
                     </TouchableOpacity>
                   </View>
-                </>
-              )}
+                ) : (
+                  <>
+                    <Text style={styles.inputLabel}>ECOCASH NUMBER</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={phoneNumber}
+                      onChangeText={setPhoneNumber}
+                      placeholder="077..."
+                      placeholderTextColor={Colors.text.disabled}
+                      keyboardType="phone-pad"
+                      maxLength={10}
+                    />
+
+                    <Text style={styles.inputLabel}>EMAIL ADDRESS</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={email}
+                      onChangeText={setEmail}
+                      placeholder="email@example.com"
+                      placeholderTextColor={Colors.text.disabled}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                    />
+
+                    <View style={styles.modalButtons}>
+                      <TouchableOpacity
+                        style={styles.cancelModalButton}
+                        onPress={() => setShowPaymentModal(false)}
+                      >
+                        <Text style={styles.cancelModalButtonText}>CANCEL</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[
+                          styles.confirmButton,
+                          (!phoneNumber.trim() || !email.trim() || purchasing) &&
+                          styles.confirmButtonDisabled,
+                        ]}
+                        onPress={handleConfirmPurchase}
+                        disabled={!phoneNumber.trim() || !email.trim() || !!purchasing}
+                      >
+                        <LinearGradient
+                          colors={Colors.premium.goldDark ? [Colors.premium.gold, Colors.premium.goldDark] : ['#FFD700', '#FFA500']}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={styles.confirmGradient}
+                        >
+                          {purchasing ? (
+                            <ActivityIndicator color={Colors.premium.text} />
+                          ) : (
+                            <Text style={styles.confirmButtonText}>PAY VIA ECOCASH</Text>
+                          )}
+                        </LinearGradient>
+                      </TouchableOpacity>
+                    </View>
+                  </>
+                )}
+              </View>
             </View>
           </View>
         </Modal>
@@ -739,54 +767,118 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: Colors.background.default,
+    backgroundColor: Colors.background.paper,
     borderRadius: 24,
-    padding: 24,
+    padding: 0, // Remove padding to let header flush
     width: '90%',
-    maxWidth: 400,
-    shadowColor: '#000',
+    maxWidth: 380,
+    shadowColor: Colors.premium?.gold || '#FFD700',
     shadowOffset: {
       width: 0,
-      height: 8,
+      height: 0,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 16,
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 20,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: Colors.premium?.gold || '#FFD700',
+  },
+  modalHeader: {
+    paddingVertical: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderBottomWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: Colors.premium?.text || '#000',
+  },
+  ticketTitle: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: Colors.premium?.text || '#2D2006',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+  },
+  ticketSubtitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: Colors.premium?.text || '#2D2006',
+    opacity: 0.7,
+    letterSpacing: 4,
+    marginTop: 4,
+  },
+  ticketBody: {
+    padding: 24,
   },
   modalTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '600',
     color: Colors.text.primary,
     marginBottom: 20,
     textAlign: 'center',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   packageInfo: {
-    backgroundColor: Colors.iconBg.default,
+    backgroundColor: Colors.background.default,
     borderRadius: 12,
     padding: 16,
-    marginBottom: 20,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
   },
-  packageInfoText: {
+  ticketRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  ticketLabel: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: Colors.text.secondary,
+    letterSpacing: 1,
+  },
+  ticketValue: {
     fontSize: 16,
-    color: Colors.text.primary,
-    marginBottom: 6,
-    fontWeight: '500',
-  },
-  inputLabel: {
-    fontSize: 14,
     fontWeight: '600',
     color: Colors.text.primary,
+  },
+  ticketValueLarge: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: Colors.premium?.gold || '#FFD700',
+  },
+  ticketPrice: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: Colors.success.main,
+  },
+  ticketDivider: {
+    height: 1,
+    backgroundColor: Colors.border.light,
+    marginVertical: 12,
+    borderStyle: 'dashed',
+    borderWidth: 0.5,
+  },
+  inputLabel: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: Colors.text.secondary,
     marginBottom: 8,
-    marginTop: 12,
+    marginTop: 0,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
   input: {
     borderWidth: 1,
     borderColor: Colors.border.light,
     borderRadius: 12,
-    padding: 14,
+    padding: 16,
     fontSize: 16,
-    marginBottom: 12,
+    marginBottom: 16,
     backgroundColor: Colors.background.default,
+    color: Colors.text.primary,
   },
   modalButtons: {
     flexDirection: 'row',
@@ -796,30 +888,36 @@ const styles = StyleSheet.create({
   },
   cancelModalButton: {
     flex: 1,
-    backgroundColor: Colors.iconBg.default,
+    backgroundColor: Colors.background.subtle,
     borderRadius: 12,
-    padding: 16,
+    justifyContent: 'center',
     alignItems: 'center',
+    paddingVertical: 14,
   },
   cancelModalButtonText: {
-    color: Colors.text.primary,
-    fontSize: 16,
-    fontWeight: '600',
+    color: Colors.text.secondary,
+    fontWeight: 'bold',
+    fontSize: 14,
   },
   confirmButton: {
-    flex: 1,
-    backgroundColor: Colors.primary.main,
+    flex: 2,
     borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
+    overflow: 'hidden',
   },
   confirmButtonDisabled: {
-    backgroundColor: Colors.border.medium,
+    opacity: 0.5,
+  },
+  confirmGradient: {
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   confirmButtonText: {
-    color: Colors.text.white,
-    fontSize: 16,
+    color: Colors.premium?.text || '#2D2006',
     fontWeight: 'bold',
+    fontSize: 14,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   checkingContainer: {
     alignItems: 'center',
@@ -851,15 +949,10 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     marginTop: 20,
-    backgroundColor: Colors.iconBg.default,
+    backgroundColor: Colors.background.subtle,
     borderRadius: 12,
     padding: 14,
     alignItems: 'center',
-  },
-  cancelButtonText: {
-    color: Colors.text.primary,
-    fontSize: 16,
-    fontWeight: '600',
   },
   // ✨ New advanced UI styles
   analyticsContainer: {

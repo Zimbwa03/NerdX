@@ -95,6 +95,17 @@ export const DarkColors = {
     error: ['#FF1744', '#C4001D'] as [string, string],
     dark: ['#1D1E33', '#0A0E21'] as [string, string], // Deep Space
     card: ['#2D2F45', '#1D1E33'] as [string, string],
+    gold: ['#FFD700', '#FDB931'] as [string, string], // Premium Gold
+  },
+
+  // Premium / Gold Theme
+  premium: {
+    gold: '#FFD700',
+    goldDark: '#BF9500',
+    goldLight: '#FFF7CC',
+    accent: '#FFA500',
+    text: '#2D2006', // Dark Brown for contrast on gold
+    cardBg: '#1A1100', // Very dark gold/brown
   }
 };
 
@@ -188,6 +199,17 @@ export const LightColors = {
     error: ['#F44336', '#D32F2F'] as [string, string],
     dark: ['#E0E0E0', '#BDBDBD'] as [string, string],
     card: ['#FFFFFF', '#F5F5F5'] as [string, string],
+    gold: ['#FFD700', '#FDB931'] as [string, string],
+  },
+
+  // Premium / Gold Theme for Light Mode
+  premium: {
+    gold: '#FFD700',
+    goldDark: '#BF9500',
+    goldLight: '#FFF7CC',
+    accent: '#FFA500',
+    text: '#2D2006',
+    cardBg: '#FFFDF5', // Light cream
   }
 };
 

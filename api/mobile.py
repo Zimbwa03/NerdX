@@ -1762,40 +1762,10 @@ def get_credit_transactions():
 def get_credit_packages():
     """Get available credit packages"""
     try:
-        packages = [
-            {
-                'id': '1',
-                'name': 'Pocket',
-                'credits': 50,
-                'price': 1.0,
-                'currency': 'USD',
-                'description': 'Perfect for trying out NerdX'
-            },
-            {
-                'id': '2',
-                'name': 'Mini',
-                'credits': 120,
-                'price': 2.0,
-                'currency': 'USD',
-                'description': 'Great for regular practice'
-            },
-            {
-                'id': '3',
-                'name': 'Quick',
-                'credits': 350,
-                'price': 5.0,
-                'currency': 'USD',
-                'description': 'Best value for serious learners'
-            },
-            {
-                'id': '4',
-                'name': 'Boost',
-                'credits': 750,
-                'price': 10.0,
-                'currency': 'USD',
-                'description': 'Maximum credits for power users'
-            }
-        ]
+        # Get packages from PaymentService to ensure consistency
+        from services.payment_service import PaymentService
+        payment_service_instance = PaymentService()
+        packages = payment_service_instance.get_credit_packages()
         
         return jsonify({
             'success': True,
