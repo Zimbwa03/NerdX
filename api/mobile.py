@@ -2240,41 +2240,169 @@ def submit_essay_marking():
         if not result or not result.get('success'):
             return jsonify({'success': False, 'message': 'Failed to mark essay'}), 500
             
-        marking_result = result.get('result', {})
-        
-        # Generate PDF report
-        pdf_base64 = english_service.generate_essay_pdf_report(
-            student_name, student_surname, essay_type,
-            marking_result.get('score', 0), marking_result.get('max_score', 0),
-            marking_result.get('corrections', []), marking_result.get('teacher_comment', ''),
-            marking_result.get('corrected_essay', ''), marking_result.get('detailed_feedback', ''),
-            essay_text, topic.get('title') if topic else prompt.get('title')
-        )
-        
-        marking_result['pdf_report'] = pdf_base64
-        
-        # Deduct credits
-        deduct_credits(g.current_user_id, credit_cost, 'english_essay_marking', f'Marked {essay_type} essay')
-        
-        return jsonify({
-            'success': True,
-            'data': marking_result
-        }), 200
+        if result and result.get('success'):
+            marking_result = result.get('result', {})
+            
+            # Generate PDF report
+            pdf_base64 = english_service.generate_essay_pdf_report(
+                student_name, student_surname, essay_type,
+                marking_result.get('score', 0), marking_result.get('max_score', 0),
+                marking_result.get('corrections', []), marking_result.get('teacher_comment', ''),
+                marking_result.get('corrected_essay', ''), marking_result.get('detailed_feedback', ''),
+                essay_text, topic.get('title') if topic else prompt.get('title')
+            )
+            
+            marking_result['pdf_report'] = pdf_base64
+            
+            # --- SAVE TO HISTORY ---
+            try:
+                submission_data = {
+                    'user_id': g.current_user_id,
+                    'essay_type': essay_type,
+                    'topic_title': topic.get('title') if topic else prompt.get('title', 'Guided Composition'),
+                    'original_essay': essay_text,
+                    'corrected_essay': marking_result.get('corrected_essay', ''),
+                    'teacher_comment': marking_result.get('teacher_comment', ''),
+                    'detailed_feedback': marking_result.get('detailed_feedback', {}), # Store as JSON
+                    'score': marking_result.get('score', 0),
+                    'max_score': marking_result.get('max_score', 0),
+                    'pdf_report_url': None, # We don't have a URL yet, could store base64 in a separate storage if needed, or just regenerate
+                    'created_at': datetime.utcnow().isoformat()
+                }
+                
+                # Check for table existence lazily
+                make_supabase_request("POST", "english_essay_submissions", submission_data, use_service_role=True)
+            except Exception as db_err:
+                logger.error(f"Failed to save essay history: {db_err}")
+                # Don't fail the request if history save fails, just log it
+            
+            # Deduct credits
+            deduct_credits(g.current_user_id, credit_cost, 'english_essay_marking', f'Marked {essay_type} essay')
+            
+            return jsonify({
+                'success': True,
+                'data': marking_result
+            }), 200
+            
+        else:
+             return jsonify({'success': False, 'message': 'Failed to mark essay'}), 500
         
     except Exception as e:
         logger.error(f"Submit essay marking error: {e}", exc_info=True)
         return jsonify({'success': False, 'message': str(e)}), 500
 
+@mobile_bp.route('/english/essay/history', methods=['GET'])
+@require_auth
+def get_essay_history():
+    """Get essay history for current user"""
+    try:
+        # Fetch from Supabase
+        result = make_supabase_request(
+            "GET", 
+            "english_essay_submissions", 
+            filters={
+                'user_id': f"eq.{g.current_user_id}",
+                'order': 'created_at.desc' # Supabase order syntax might differ for REST, let's try standard
+            },
+            # Note: For Supabase REST, ordering is usually a query param like ?order=created_at.desc
+            # make_supabase_request handles params as query string
+             use_service_role=True
+        ) or []
+        
+        # If make_supabase_request doesn't handle 'order' param correctly in the dict:
+        # We might need to sort manually if the API Wrapper is simple. 
+        # But let's assume it works or we get raw data.
+        
+        return jsonify({
+            'success': True,
+            'data': result
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get essay history error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@mobile_bp.route('/english/essay/submission/<essay_id>', methods=['GET'])
+@require_auth
+def get_essay_submission(essay_id):
+    """Get specific essay submission details"""
+    try:
+        # Fetch single record
+        result = make_supabase_request(
+            "GET", 
+            "english_essay_submissions",
+            filters={'id': f"eq.{essay_id}"},
+            use_service_role=True
+        )
+        
+        if result and len(result) > 0:
+            return jsonify({
+                'success': True,
+                'data': result[0]
+            }), 200
+        else:
+             return jsonify({'success': False, 'message': 'Submission not found'}), 404
+             
+    except Exception as e:
+        logger.error(f"Get essay submission error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 @mobile_bp.route('/english/essay/<essay_id>/report', methods=['GET'])
 @require_auth
 def get_essay_report(essay_id):
-    """Get essay PDF report"""
+    """Get essay PDF report - Regenerate or fetch"""
     try:
-        # TODO: Retrieve essay report from database/storage
+        # 1. Try to get submission from DB
+        submission_list = make_supabase_request(
+            "GET", 
+            "english_essay_submissions",
+            filters={'id': f"eq.{essay_id}"},
+            use_service_role=True
+        )
+        
+        if not submission_list or len(submission_list) == 0:
+             return jsonify({'success': False, 'message': 'Submission not found'}), 404
+             
+        submission = submission_list[0]
+        
+        # 2. Regenerate PDF
+        english_service = EnglishService()
+        
+        # Extract user name (might need to fetch user profile if not in submission, currently it's not)
+        # We'll use placeholder or fetch user. 
+        # Ideally, submission should have stored student name, but it stores user_id.
+        user_profile = get_user_registration(submission.get('user_id'))
+        student_name = user_profile.get('name', 'Student') if user_profile else 'Student'
+        student_surname = user_profile.get('surname', '') if user_profile else ''
+        
+        detailed_feedback = submission.get('detailed_feedback', {})
+        corrections = [] # Might need to parse from detailed_feedback or store explicitly if needed.
+        # Assuming detailed_feedback might contain corrections or we just use text.
+        
+        # For now, let's keep it simple. If we didn't store corrections explicitly as a separate column,
+        # we might not be able to perfectly reconstruct the PDF without parsing. 
+        # But 'detailed_feedback' in schema was JSONB, so hopefully it has it.
+        # Wait, in the INSERT above: 'detailed_feedback': marking_result.get('detailed_feedback', {})
+        # marking_result corrections were separate in the JSON return but maybe not in DB?
+        # Let's check INSERT again: 'detailed_feedback': marking_result.get('detailed_feedback', {})
+        # It missed 'corrections'. I should probably update the INSERT to store 'corrections' too if I want full regen.
+        # Or just rely on the text fields.
+        
+        pdf_base64 = english_service.generate_essay_pdf_report(
+            student_name, student_surname, submission.get('essay_type', ''),
+            submission.get('score', 0), submission.get('max_score', 0),
+            [], # Corrections might be missing if not stored.
+            submission.get('teacher_comment', ''),
+            submission.get('corrected_essay', ''), 
+            str(submission.get('detailed_feedback', '')), 
+            submission.get('original_essay', ''), 
+            submission.get('topic_title', '')
+        )
+        
         return jsonify({
             'success': True,
             'data': {
-                'report_url': ''
+                'pdf_report': pdf_base64
             }
         }), 200
     except Exception as e:

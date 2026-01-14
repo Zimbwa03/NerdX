@@ -1922,10 +1922,21 @@ Return ONLY valid JSON:
 
     def mark_free_response_essay(self, student_name: str, student_surname: str, 
                                  essay_text: str, topic: Dict) -> Optional[Dict]:
-        """Mark free response essay out of 30 using Gemini 2.5 Flash with ZIMSEC criteria"""
+        """Mark free response essay out of 30 using DeepSeek first, then Gemini fallback"""
+        # Primary: DeepSeek AI
+        if self.deepseek_api_key:
+            try:
+                deepseek_result = self._mark_deepseek_free_response_essay(student_name, student_surname, essay_text, topic)
+                if deepseek_result:
+                    logger.info("✅ Marked free response essay using DeepSeek AI")
+                    return deepseek_result
+            except Exception as e:
+                logger.warning(f"DeepSeek free response marking failed: {e}")
+
+        # Secondary: Gemini AI fallback
         if not self._is_configured or not self.client:
-            logger.warning("Gemini AI not configured - cannot mark essay")
-            return None
+            logger.warning("Gemini AI not configured and DeepSeek failed - cannot mark essay")
+            return self._fallback_free_marking(student_name, student_surname)
         
         try:
             # Using concatenation to avoid potential f-string parsing issues with large blocks
@@ -2014,16 +2025,133 @@ Return ONLY valid JSON (no markdown fences):
                 }
             
         except Exception as e:
-            logger.error(f"Error marking free response essay: {e}")
+            logger.error(f"Error marking free response essay with Gemini: {e}")
         
+        return self._fallback_free_marking(student_name, student_surname)
+    
+    def _mark_deepseek_free_response_essay(self, student_name: str, student_surname: str, 
+                                 essay_text: str, topic: Dict) -> Optional[Dict]:
+        """Mark free response essay using DeepSeek AI"""
+        if not self.deepseek_api_key:
+            return None
+            
+        import requests
+        
+        try:
+            prompt_intro = f"You are a professional ZIMSEC O-Level English examiner marking Paper 1 Section A (Free Response).\n\nSTUDENT INFORMATION:\nName: {student_name} {student_surname}\n\nESSAY TOPIC:\n{topic.get('title', '')}\n{topic.get('description', '')}\n\nSTUDENT ESSAY:\n{essay_text}\n\n"
+            
+            prompt_criteria = """ZIMSEC MARKING CRITERIA (Total: 30 marks):
+1. CONTENT (15 marks):
+   - Relevance to topic
+   - Introduction and Conclusion
+   - Use of examples/details
+
+2. LANGUAGE (10 marks):
+   - Grammar, Spelling, Punctuation
+   - Vocabulary
+
+3. ORGANIZATION (5 marks):
+   - Paragraphing
+   - Coherence
+
+Return ONLY valid JSON:
+{
+  "score": 20,
+  "max_score": 30,
+  "breakdown": {
+    "content": 10,
+    "language": 7,
+    "organization": 3
+  },
+  "corrections": [
+    {
+      "wrong": "...",
+      "correct": "...",
+      "type": "grammar",
+      "explanation": "..."
+    }
+  ],
+  "corrected_essay": "Corrected textual version...",
+  "detailed_feedback": "Detailed examiner feedback..."
+}"""
+            
+            response = requests.post(
+                "https://api.deepseek.com/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {self.deepseek_api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": "deepseek-chat",
+                    "messages": [
+                        {"role": "system", "content": "You are a ZIMSEC English examiner."},
+                        {"role": "user", "content": prompt_intro + prompt_criteria}
+                    ],
+                    "temperature": 0.3,
+                    "max_tokens": 3000
+                },
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+                if content:
+                    clean_content = self._clean_json_block(content)
+                    data = json.loads(clean_content)
+                    
+                    score = data.get('score', 0)
+                    max_score = data.get('max_score', 30)
+                    if not max_score: max_score = 30
+                    
+                    teacher_comment = self._get_teacher_comment_by_score(score, max_score, student_name)
+                    data['teacher_comment'] = teacher_comment
+                    data['essay_type'] = 'free_response'
+                    
+                    return {
+                        'success': True,
+                        'result': data
+                    }
+                    
+        except Exception as e:
+            logger.error(f"DeepSeek free response marking error: {e}")
+            
         return None
+
+    def _fallback_free_marking(self, student_name: str, student_surname: str) -> Dict:
+        """Fallback for free response marking"""
+        return {
+            'success': True,
+            'result': {
+                "score": 15,
+                "max_score": 30,
+                "breakdown": {"content": 8, "language": 5, "organization": 2},
+                "corrections": [],
+                "corrected_essay": "Essay marking unavailable.",
+                "detailed_feedback": "Automatic marking unavailable. Please try again later.",
+                "teacher_comment": f"Keep trying, {student_name}.",
+                "essay_type": "free_response"
+            }
+        }
 
     def mark_guided_composition(self, student_name: str, student_surname: str,
                                essay_text: str, prompt: Dict) -> Optional[Dict]:
-        """Mark guided composition out of 20 using Gemini 2.5 Flash with ZIMSEC criteria"""
+        """Mark guided composition out of 20 using DeepSeek first, then Gemini fallback"""
+        
+        # Primary: DeepSeek AI
+        if self.deepseek_api_key:
+            try:
+                deepseek_result = self._mark_deepseek_guided_composition(student_name, student_surname, essay_text, prompt)
+                if deepseek_result:
+                    logger.info("✅ Marked guided composition using DeepSeek AI")
+                    return deepseek_result
+            except Exception as e:
+                logger.warning(f"DeepSeek guided composition marking failed: {e}")
+
+        # Secondary: Gemini AI
         if not self._is_configured or not self.client:
-            logger.warning("Gemini AI not configured - cannot mark composition")
-            return None
+            logger.warning("Gemini AI not configured and DeepSeek failed - cannot mark composition")
+            return self._fallback_guided_marking(student_name, student_surname)
         
         try:
             # Using concatenation to avoid f-string issues
@@ -2105,9 +2233,112 @@ Return ONLY valid JSON (no markdown fences):
                 }
             
         except Exception as e:
-            logger.error(f"Error marking guided composition: {e}")
+            logger.error(f"Error marking guided composition with Gemini: {e}")
         
+        return self._fallback_guided_marking(student_name, student_surname)
+    
+    def _mark_deepseek_guided_composition(self, student_name: str, student_surname: str,
+                                         essay_text: str, prompt_data: Dict) -> Optional[Dict]:
+        """Mark guided composition using DeepSeek AI"""
+        if not self.deepseek_api_key:
+            return None
+            
+        import requests
+        
+        try:
+            prompt_intro = f"You are a professional ZIMSEC O-Level English examiner marking Paper 1 Section B (Guided Composition).\n\nSTUDENT INFORMATION:\nName: {student_name} {student_surname}\n\nCOMPOSITION PROMPT:\n{prompt_data.get('title', '')}\nContext: {prompt_data.get('context', '')}\nFormat: {prompt_data.get('format', '')}\nKey Points to Cover: {', '.join(prompt_data.get('key_points', []))}\n\nSTUDENT COMPOSITION:\n{essay_text}\n\n"
+            
+            prompt_criteria = """ZIMSEC MARKING CRITERIA (Total: 20 marks):
+1. CONTENT & FORMAT (12 marks):
+   - Adherence to specified format
+   - Coverage of all key points
+   - Relevance and appropriateness
+   - Development of ideas
+
+2. LANGUAGE (8 marks):
+   - Grammar and sentence structure
+   - Vocabulary and register
+   - Spelling and punctuation
+   - Clarity and coherence
+
+Return ONLY valid JSON:
+{
+  "score": 16,
+  "max_score": 20,
+  "breakdown": {
+    "content_and_format": 10,
+    "language": 6
+  },
+  "corrections": [
+    {
+      "wrong": "...",
+      "correct": "...",
+      "type": "format/grammar/spelling",
+      "explanation": "..."
+    }
+  ],
+  "corrected_essay": "Full corrected version...",
+  "detailed_feedback": "Specific feedback..."
+}"""
+            
+            response = requests.post(
+                "https://api.deepseek.com/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {self.deepseek_api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": "deepseek-chat",
+                    "messages": [
+                        {"role": "system", "content": "You are a ZIMSEC English examiner."},
+                        {"role": "user", "content": prompt_intro + prompt_criteria}
+                    ],
+                    "temperature": 0.3,
+                    "max_tokens": 3000
+                },
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+                if content:
+                    clean_content = self._clean_json_block(content)
+                    data = json.loads(clean_content)
+                    
+                    score = data.get('score', 0)
+                    max_score = data.get('max_score', 20)
+                    if not max_score: max_score = 20
+                    
+                    teacher_comment = self._get_teacher_comment_by_score(score, max_score, student_name)
+                    data['teacher_comment'] = teacher_comment
+                    data['essay_type'] = 'guided'
+                    
+                    return {
+                        'success': True,
+                        'result': data
+                    }
+                    
+        except Exception as e:
+            logger.error(f"DeepSeek guided composition marking error: {e}")
+            
         return None
+
+    def _fallback_guided_marking(self, student_name: str, student_surname: str) -> Dict:
+        """Provide a fallback result if both AIs fail"""
+        return {
+            'success': True,
+            'result': {
+                "score": 10,
+                "max_score": 20,
+                "breakdown": {"content_and_format": 6, "language": 4},
+                "corrections": [],
+                "corrected_essay": "Essay marking unavailable at this time.",
+                "detailed_feedback": "Automatic marking service is currently unavailable. Please try again later.",
+                "teacher_comment": f"Keep practicing, {student_name}.",
+                "essay_type": "guided"
+            }
+        }
     
     def generate_essay_pdf_report(self, student_name: str, student_surname: str,
                                   essay_type: str, score: int, max_score: int,

@@ -23,6 +23,7 @@ import {
   FreeResponseTopic,
   GuidedCompositionPrompt,
   EssayMarkingResult,
+  EssaySubmission,
 } from '../services/api/englishApi';
 import { useAuth } from '../context/AuthContext';
 import { Colors } from '../theme/colors';
@@ -62,6 +63,65 @@ const EnglishEssayScreen: React.FC = () => {
   // Results state
   const [submitted, setSubmitted] = useState(false);
   const [markingResult, setMarkingResult] = useState<EssayMarkingResult | null>(null);
+
+  // History state
+  const [viewingHistory, setViewingHistory] = useState(false);
+  const [history, setHistory] = useState<EssaySubmission[]>([]);
+  const [refreshingHistory, setRefreshingHistory] = useState(false);
+
+  // Fetch history
+  const fetchHistory = async () => {
+    setRefreshingHistory(true);
+    try {
+      const data = await englishApi.getEssayHistory();
+      setHistory(data);
+    } catch (error) {
+      console.error('Failed to load history', error);
+      Alert.alert('Error', 'Failed to load essay history');
+    } finally {
+      setRefreshingHistory(false);
+    }
+  };
+
+  // Toggle History View
+  const handleToggleHistory = () => {
+    if (!viewingHistory) {
+      fetchHistory();
+    }
+    setViewingHistory(!viewingHistory);
+    setEssayType(null); // Reset other views
+    setSubmitted(false);
+  };
+
+  // View specific history item
+  const handleViewHistoryItem = (submission: EssaySubmission) => {
+    setViewingHistory(false); // Hide list
+
+    // Restore state from submission
+    setEssayType(submission.essay_type);
+    setEssayText(submission.original_essay);
+    setStudentName('Student'); // We don't store names in history table yet, or user data
+    setStudentSurname('');
+
+    // Construct marking result
+    const result: EssayMarkingResult = {
+      essay_type: submission.essay_type,
+      score: submission.score,
+      max_score: submission.max_score,
+      // Default empty structures if missing, theoretically detailed_feedback has them
+      breakdown: submission.detailed_feedback?.breakdown || {},
+      corrections: submission.detailed_feedback?.corrections || [],
+      teacher_comment: submission.teacher_comment,
+      corrected_essay: submission.corrected_essay,
+      detailed_feedback: typeof submission.detailed_feedback === 'string'
+        ? submission.detailed_feedback
+        : submission.detailed_feedback?.detailed_feedback || JSON.stringify(submission.detailed_feedback),
+      pdf_report: '', // We don't have the PDF base64 here, would need to fetch generic report URL if needed
+    };
+
+    setMarkingResult(result);
+    setSubmitted(true);
+  };
 
   // Handle essay type selection
   const handleSelectEssayType = async (type: 'free_response' | 'guided') => {
@@ -217,82 +277,170 @@ const EnglishEssayScreen: React.FC = () => {
             <Text style={styles.creditText}>{user?.credits || 0}</Text>
           </View>
         </View>
+      </LinearGradient>
 
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          {/* Initial Selection Screen */}
-          {!essayType && (
-            <View style={[styles.welcomeCard, { backgroundColor: themedColors.background.paper }]}>
-              <View style={styles.glassCard}>
-                <View style={[styles.iconContainer, { backgroundColor: isDarkMode ? 'rgba(98, 0, 234, 0.2)' : 'rgba(98, 0, 234, 0.1)' }]}>
-                  <Ionicons name="create-outline" size={48} color={themedColors.primary.main} />
-                </View>
-                <Text style={[styles.welcomeTitle, { color: themedColors.text.primary }]}>Essay Writing</Text>
-                <Text style={[styles.welcomeText, { color: themedColors.text.secondary }]}>
-                  Choose your composition type and get professional marking with detailed feedback.
-                </Text>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Initial Selection Screen */}
+        {!essayType && !viewingHistory && !submitted && (
+          <View style={[styles.welcomeCard, { backgroundColor: themedColors.background.paper }]}>
+            <View style={styles.glassCard}>
+              <View style={[styles.iconContainer, { backgroundColor: isDarkMode ? 'rgba(98, 0, 234, 0.2)' : 'rgba(98, 0, 234, 0.1)' }]}>
+                <Ionicons name="create-outline" size={48} color={themedColors.primary.main} />
+              </View>
+              <Text style={[styles.welcomeTitle, { color: themedColors.text.primary }]}>Essay Writing</Text>
+              <Text style={[styles.welcomeText, { color: themedColors.text.secondary }]}>
+                Choose your composition type and get professional marking with detailed feedback.
+              </Text>
 
-                <TouchableOpacity
-                  style={[styles.typeButton, loading && styles.typeButtonDisabled]}
-                  onPress={() => handleSelectEssayType('free_response')}
-                  disabled={loading}
+              {/* History Button */}
+              <TouchableOpacity
+                style={[styles.typeButton, { marginBottom: 25, transform: [{ scale: 0.95 }] }]}
+                onPress={handleToggleHistory}
+                disabled={loading}
+              >
+                <LinearGradient
+                  colors={['#455A64', '#37474F']} // Slate/Grey for History
+                  style={styles.gradientButton}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
                 >
-                  <LinearGradient
-                    colors={loading ? ['#BDBDBD', '#9E9E9E'] : themedColors.gradients.primary}
-                    style={styles.gradientButton}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                  >
-                    {loading ? (
-                      <ActivityIndicator color="#FFF" />
-                    ) : (
-                      <>
-                        <Ionicons name="list-outline" size={24} color="#FFF" style={{ marginRight: 10 }} />
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.typeButtonTitle}>Free Response</Text>
-                          <Text style={styles.typeButtonSubtitle}>Choose from 7 topics • 30 marks</Text>
-                        </View>
-                        <Ionicons name="chevron-forward" size={24} color="#FFF" />
-                      </>
-                    )}
-                  </LinearGradient>
-                </TouchableOpacity>
+                  <Ionicons name="time-outline" size={24} color="#FFF" style={{ marginRight: 10 }} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.typeButtonTitle}>View Past Essays</Text>
+                    <Text style={styles.typeButtonSubtitle}>Review your previous submissions and feedback</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={24} color="#FFF" />
+                </LinearGradient>
+              </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={[styles.typeButton, loading && styles.typeButtonDisabled]}
-                  onPress={() => handleSelectEssayType('guided')}
-                  disabled={loading}
+              <TouchableOpacity
+                style={[styles.typeButton, loading && styles.typeButtonDisabled]}
+                onPress={() => handleSelectEssayType('free_response')}
+                disabled={loading}
+              >
+                <LinearGradient
+                  colors={loading ? ['#BDBDBD', '#9E9E9E'] : themedColors.gradients.primary}
+                  style={styles.gradientButton}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
                 >
-                  <LinearGradient
-                    colors={loading ? ['#BDBDBD', '#9E9E9E'] : themedColors.gradients.success}
-                    style={styles.gradientButton}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                  >
-                    {loading ? (
-                      <ActivityIndicator color="#FFF" />
-                    ) : (
-                      <>
-                        <Ionicons name="document-text-outline" size={24} color="#FFF" style={{ marginRight: 10 }} />
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.typeButtonTitle}>Guided Composition</Text>
-                          <Text style={styles.typeButtonSubtitle}>Letter, Speech, Report • 20 marks</Text>
-                        </View>
-                        <Ionicons name="chevron-forward" size={24} color="#FFF" />
-                      </>
-                    )}
-                  </LinearGradient>
-                </TouchableOpacity>
+                  {loading ? (
+                    <ActivityIndicator color="#FFF" />
+                  ) : (
+                    <>
+                      <Ionicons name="list-outline" size={24} color="#FFF" style={{ marginRight: 10 }} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.typeButtonTitle}>Free Response</Text>
+                        <Text style={styles.typeButtonSubtitle}>Choose from 7 topics • 30 marks</Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={24} color="#FFF" />
+                    </>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
 
-                <View style={[styles.infoBox, { backgroundColor: themedColors.background.subtle }]}>
-                  <Ionicons name="information-circle-outline" size={20} color={themedColors.primary.main} />
-                  <Text style={[styles.infoText, { color: themedColors.text.secondary }]}>Essay marking costs 3 credits</Text>
-                </View>
+              <TouchableOpacity
+                style={[styles.typeButton, loading && styles.typeButtonDisabled]}
+                onPress={() => handleSelectEssayType('guided')}
+                disabled={loading}
+              >
+                <LinearGradient
+                  colors={loading ? ['#BDBDBD', '#9E9E9E'] : themedColors.gradients.success}
+                  style={styles.gradientButton}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#FFF" />
+                  ) : (
+                    <>
+                      <Ionicons name="document-text-outline" size={24} color="#FFF" style={{ marginRight: 10 }} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.typeButtonTitle}>Guided Composition</Text>
+                        <Text style={styles.typeButtonSubtitle}>Letter, Speech, Report • 20 marks</Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={24} color="#FFF" />
+                    </>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+
+              <View style={[styles.infoBox, { backgroundColor: themedColors.background.subtle }]}>
+                <Ionicons name="information-circle-outline" size={20} color={themedColors.primary.main} />
+                <Text style={[styles.infoText, { color: themedColors.text.secondary }]}>Essay marking costs 3 credits</Text>
               </View>
             </View>
-          )}
+          </View>
 
-          {/* Free Response Topic Selection */}
-          {essayType === 'free_response' && !selectedTopic && (
+        )
+        }
+
+        {/* History View */}
+        {
+          viewingHistory && (
+            <View style={styles.contentContainer}>
+              <TouchableOpacity onPress={handleToggleHistory} style={styles.backToSelectionButton}>
+                <Ionicons name="arrow-back" size={20} color={themedColors.primary.main} />
+                <Text style={[styles.backToSelectionText, { color: themedColors.primary.main }]}>Back to Menu</Text>
+              </TouchableOpacity>
+
+              <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>Your Essay History</Text>
+
+              {refreshingHistory ? (
+                <ActivityIndicator size="large" color={themedColors.primary.main} style={{ marginTop: 20 }} />
+              ) : history.length === 0 ? (
+                <View style={[styles.infoBox, { marginTop: 20 }]}>
+                  <Text style={{ color: themedColors.text.secondary, textAlign: 'center' }}>No past essays found.</Text>
+                </View>
+              ) : (
+                history.map((item) => (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={[styles.topicCard, { backgroundColor: themedColors.background.paper }]}
+                    onPress={() => handleViewHistoryItem(item)}
+                  >
+                    <View style={styles.glassCard}>
+                      <View style={styles.topicHeader}>
+                        <View style={[styles.topicBadge, { backgroundColor: item.essay_type === 'guided' ? themedColors.success.light : themedColors.primary.light }]}>
+                          <Text style={[styles.topicBadgeText, { color: item.essay_type === 'guided' ? themedColors.success.dark : themedColors.primary.dark }]}>
+                            {item.essay_type.replace('_', ' ')}
+                          </Text>
+                        </View>
+                        <Text style={{ color: themedColors.text.secondary, fontSize: 12 }}>
+                          {new Date(item.created_at).toLocaleDateString()}
+                        </Text>
+                      </View>
+
+                      <Text style={[styles.topicTitle, { color: themedColors.text.primary }]}>
+                        {item.topic_title || 'Untitled Composition'}
+                      </Text>
+
+                      <View style={[styles.scoreCircle, {
+                        width: 50, height: 50, borderRadius: 25,
+                        backgroundColor: item.score >= (item.max_score / 2) ? themedColors.success.light + '40' : themedColors.error.light + '40',
+                        alignSelf: 'flex-start',
+                        marginTop: 10,
+                        justifyContent: 'center', alignItems: 'center'
+                      }]}>
+                        <Text style={{ fontWeight: 'bold', color: themedColors.text.primary }}>
+                          {item.score}/{item.max_score}
+                        </Text>
+                      </View>
+
+                      <Text style={{ color: themedColors.text.secondary, marginTop: 10, fontStyle: 'italic' }} numberOfLines={2}>
+                        "{item.teacher_comment}"
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                ))
+              )}
+            </View>
+          )
+        }
+
+        {/* Free Response Topic Selection */}
+        {
+          essayType === 'free_response' && !selectedTopic && (
             <View style={styles.contentContainer}>
               <TouchableOpacity onPress={handleReset} style={styles.backToSelectionButton}>
                 <Ionicons name="arrow-back" size={20} color={themedColors.primary.main} />
@@ -327,10 +475,12 @@ const EnglishEssayScreen: React.FC = () => {
                 </TouchableOpacity>
               ))}
             </View>
-          )}
+          )
+        }
 
-          {/* Guided Composition Display */}
-          {essayType === 'guided' && guidedPrompt && !selectedTopic && (
+        {/* Guided Composition Display */}
+        {
+          essayType === 'guided' && guidedPrompt && !selectedTopic && (
             <View style={styles.contentContainer}>
               <TouchableOpacity onPress={handleReset} style={styles.backToSelectionButton}>
                 <Ionicons name="arrow-back" size={20} color={themedColors.primary.main} />
@@ -382,10 +532,12 @@ const EnglishEssayScreen: React.FC = () => {
                 </View>
               </View>
             </View>
-          )}
+          )
+        }
 
-          {/* Essay Writing Screen */}
-          {(selectedTopic || (essayType === 'guided' && guidedPrompt)) && !submitted && (
+        {/* Essay Writing Screen */}
+        {
+          (selectedTopic || (essayType === 'guided' && guidedPrompt)) && !submitted && (
             <View style={styles.contentContainer}>
               <TouchableOpacity
                 onPress={() => setSelectedTopic(null)}
@@ -487,11 +639,19 @@ const EnglishEssayScreen: React.FC = () => {
                 </LinearGradient>
               </TouchableOpacity>
             </View>
-          )}
+          )
+        }
 
-          {/* Marking Results Screen */}
-          {submitted && markingResult && (
+        {/* Marking Results Screen */}
+        {
+          submitted && markingResult && (
             <View style={styles.contentContainer}>
+              <TouchableOpacity onPress={handleReset} style={styles.backToSelectionButton}>
+                <Ionicons name="arrow-back" size={20} color={themedColors.primary.main} />
+                <Text style={[styles.backToSelectionText, { color: themedColors.primary.main }]}>
+                  {viewingHistory ? 'Back to History' : 'Back to Menu'}
+                </Text>
+              </TouchableOpacity>
               {/* Score Card */}
               <View style={[styles.resultCard, { backgroundColor: themedColors.background.paper }]}>
                 <View style={styles.glassCard}>
@@ -611,12 +771,20 @@ const EnglishEssayScreen: React.FC = () => {
                 </LinearGradient>
               </TouchableOpacity>
             </View>
-          )}
-        </ScrollView>
-      </LinearGradient>
-    </View>
+          )
+        }
+      </ScrollView >
+
+    </View >
   );
 };
+
+// --- History List Component render helper (inside render) ---
+/* Since we are inside the component we can just inline it or put it in the main return */
+
+// Insert History View into main render logic
+// modifying the return structure to include viewingHistory check
+
 
 const styles = StyleSheet.create({
   container: {

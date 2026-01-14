@@ -97,6 +97,20 @@ export interface EssayResult {
   report_url?: string;
 }
 
+export interface EssaySubmission {
+  id: string;
+  user_id: string;
+  essay_type: 'free_response' | 'guided';
+  topic_title: string;
+  original_essay: string;
+  corrected_essay: string;
+  teacher_comment: string;
+  detailed_feedback: any;
+  score: number;
+  max_score: number;
+  created_at: string;
+}
+
 export const englishApi = {
   generateComprehension: async (): Promise<ComprehensionData | null> => {
     try {
@@ -176,6 +190,26 @@ export const englishApi = {
       return response.data.data || null;
     } catch (error: any) {
       console.error('Submit essay error:', error);
+      throw error;
+    }
+  },
+
+  getEssayHistory: async (): Promise<EssaySubmission[]> => {
+    try {
+      const response = await api.get('/api/mobile/english/essay/history');
+      return response.data.data || [];
+    } catch (error: any) {
+      console.error('Get essay history error:', error);
+      return [];
+    }
+  },
+
+  getEssaySubmission: async (essayId: string): Promise<EssaySubmission | null> => {
+    try {
+      const response = await api.get(`/api/mobile/english/essay/submission/${essayId}`);
+      return response.data.data || null;
+    } catch (error: any) {
+      console.error('Get essay submission error:', error);
       throw error;
     }
   },

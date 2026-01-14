@@ -94,23 +94,65 @@ def create_users_registration_table():
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
-        CREATE INDEX IF NOT EXISTS idx_users_registration_chat_id ON users_registration(chat_id);
-        CREATE INDEX IF NOT EXISTS idx_users_registration_nerdx_id ON users_registration(nerdx_id);
         CREATE INDEX IF NOT EXISTS idx_users_registration_referred_by ON users_registration(referred_by_nerdx_id);
 
         -- Enable Row Level Security
         ALTER TABLE users_registration ENABLE ROW LEVEL SECURITY;
 
-        -- Create policy to allow all operations (adjust as needed for production)
+        -- Create policy to allow all operations
         DROP POLICY IF EXISTS "Allow all operations on users_registration" ON users_registration;
         CREATE POLICY "Allow all operations on users_registration" ON users_registration
             FOR ALL USING (true) WITH CHECK (true);
         """)
 
+        headers = {
+            "apikey": SUPABASE_SERVICE_ROLE_KEY,
+            "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
+            "Content-Type": "application/json"
+        }
+
+        # Try to create table via direct request if possible (often not possible with REST unless RPC)
+        # So we just log the instruction as done above.
         return False
 
     except Exception as e:
         logger.error(f"Error creating users_registration table: {e}")
+        return False
+
+def create_essay_submissions_table():
+    """Create english_essay_submissions table"""
+    # SQL definition for the user to run manually if needed, or for documentation
+    sql = """
+    CREATE TABLE IF NOT EXISTS english_essay_submissions (
+        id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        essay_type TEXT NOT NULL, -- 'free_response' or 'guided'
+        topic_title TEXT,
+        original_essay TEXT,
+        corrected_essay TEXT,
+        teacher_comment TEXT,
+        detailed_feedback JSONB,
+        score INTEGER,
+        max_score INTEGER,
+        pdf_report_url TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_essay_submissions_user_id ON english_essay_submissions(user_id);
+    CREATE INDEX IF NOT EXISTS idx_essay_submissions_created_at ON english_essay_submissions(created_at);
+    """
+    
+    # We check if table exists by trying to select from it
+    try:
+        result = make_supabase_request("GET", "english_essay_submissions", limit=1, use_service_role=True)
+        if result is not None:
+            logger.info("english_essay_submissions table exists")
+            return True
+        else:
+            raise Exception("Table check returned None (404)")
+    except Exception:
+        logger.warning("english_essay_submissions table may not exist. Please run SQL in Supabase.")
+        logger.info(f"SQL:\n{sql}")
         return False
 
 def create_payment_transactions_table():
