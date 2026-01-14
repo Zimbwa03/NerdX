@@ -1720,7 +1720,7 @@ def get_credit_transactions():
                 'user_id': f"eq.{g.current_user_id}",
                 'status': 'in.(completed,approved,paid)'
             },
-            params={'order': 'created_at.desc', 'limit': limit},
+            limit=limit,
             use_service_role=True
         ) or []
         
@@ -1787,15 +1787,17 @@ def initiate_credit_purchase():
             return jsonify({'success': False, 'message': 'Package ID is required'}), 400
         
         # Get package details
-        packages = {
-            '1': {'credits': 50, 'price': 1.0},
-            '2': {'credits': 120, 'price': 2.0},
-            '3': {'credits': 350, 'price': 5.0},
-            '4': {'credits': 750, 'price': 10.0}
-        }
+        # Get available packages from PaymentService
+        from services.payment_service import PaymentService
+        payment_service_instance = PaymentService()
+        available_packages = payment_service_instance.get_credit_packages()
+        
+        # Convert list to dictionary for easy lookup
+        packages = {pkg['id']: pkg for pkg in available_packages}
         
         package = packages.get(package_id)
         if not package:
+            logger.warning(f"Invalid package ID requested: {package_id}. Available: {list(packages.keys())}")
             return jsonify({'success': False, 'message': 'Invalid package'}), 400
         
         # Get user data for payment
