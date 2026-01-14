@@ -341,7 +341,8 @@ KEY CONCEPTS TO COVER: {', '.join(key_concepts) if key_concepts else 'General co
 
 KEY FORMULAS (use when appropriate): {', '.join(key_formulas) if key_formulas else 'As applicable'}
 
-CRITICAL FORMATTING RULES - DO NOT USE LaTeX OR $ SYMBOLS:
+CRITICAL FORMATTING RULES - PLAIN TEXT ONLY:
+- ABSOLUTELY NO LaTeX delimiters like $ or \\( or \\).
 - Use Unicode subscripts for formulas: H₂O, CO₂, CH₃COOH, SO₄²⁻ (NOT H_2O or $H_2O$)
 - Use Unicode superscripts for charges/powers: Cu²⁺, Fe³⁺, 10⁻³ (NOT Cu^2+ or $Cu^{{2+}}$)
 - Write fractions as: a/b (NOT $\\frac{{a}}{{b}}$)
@@ -402,6 +403,7 @@ Generate the question now:"""
                             "content": """You are an expert A Level Chemistry examiner. Generate high-quality MCQ questions suitable for Cambridge/ZIMSEC A Level Chemistry examinations.
 
 CRITICAL: Use PLAIN TEXT Unicode notation - NEVER use LaTeX or $ symbols:
+- ABSOLUTELY NO delimiters like $.
 - Use subscripts: H₂O, CO₂, SO₄²⁻ (NOT H_2O or $H_2O$)
 - Use superscripts for charges: Cu²⁺, Fe³⁺ (NOT Cu^2+)
 - Use fractions as a/b (NOT $\\frac{a}{b}$)

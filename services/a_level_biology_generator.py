@@ -17,11 +17,11 @@ logger = logging.getLogger(__name__)
 try:
     import google.generativeai as genai
     GENAI_AVAILABLE = True
-    logger.info("✅ google.generativeai loaded for A Level Biology Generator")
+    logger.info("google.generativeai loaded for A Level Biology Generator")
 except ImportError:
     genai = None
     GENAI_AVAILABLE = False
-    logger.warning("⚠️ google.generativeai not available, will use DeepSeek only")
+    logger.warning("google.generativeai not available, will use DeepSeek only")
 
 # A Level Biology topic details for comprehensive prompts
 A_LEVEL_BIOLOGY_TOPIC_DETAILS = {
@@ -198,12 +198,12 @@ class ALevelBiologyGenerator:
             try:
                 genai.configure(api_key=self.gemini_api_key)
                 self._gemini_configured = True
-                logger.info("✅ Gemini AI configured as FALLBACK provider for A Level Biology")
+                logger.info("Gemini AI configured as FALLBACK provider for A Level Biology")
             except Exception as e:
                 logger.error(f"Failed to configure Gemini: {e}")
         
         if self.deepseek_api_key:
-            logger.info("✅ DeepSeek AI configured as PRIMARY provider for A Level Biology")
+            logger.info("DeepSeek AI configured as PRIMARY provider for A Level Biology")
     
     def generate_question(self, topic: str, difficulty: str = "medium", 
                          user_id: str = None, question_type: str = "mcq") -> Optional[Dict]:
@@ -241,7 +241,7 @@ class ALevelBiologyGenerator:
             
             # PRIMARY: Try DeepSeek first
             ai_model = 'deepseek'
-            logger.info(f"🔷 Trying DeepSeek (primary) for A Level Biology {question_type} on {topic_name}")
+            logger.info(f"Trying DeepSeek (primary) for A Level Biology {question_type} on {topic_name}")
             question_data = self._call_deepseek(prompt, question_type)
             
             # FALLBACK: If DeepSeek fails, try Gemini
@@ -250,7 +250,7 @@ class ALevelBiologyGenerator:
                 question_data = self._call_gemini(prompt, question_type)
                 if question_data:
                     ai_model = 'gemini'
-                    logger.info(f"✅ Gemini successfully generated {question_type} for {topic_name}")
+                    logger.info(f"Gemini successfully generated {question_type} for {topic_name}")
             
             if question_data:
                 question_data['subject'] = 'A Level Biology'
@@ -325,7 +325,8 @@ DIFFICULTY: {difficulty} - {difficulty_guidance.get(difficulty, difficulty_guida
 KEY CONCEPTS: {', '.join(key_concepts) if key_concepts else 'General concepts for this topic'}
 KEY TERMS TO USE: {', '.join(key_terms) if key_terms else 'Scientific terminology as appropriate'}
 
-CRITICAL FORMATTING RULES - DO NOT USE LaTeX OR $ SYMBOLS:
+CRITICAL FORMATTING RULES - PLAIN TEXT ONLY:
+- ABSOLUTELY NO LaTeX delimiters like $ or \\( or \\).
 - Use Unicode subscripts for chemical formulas: CO₂, O₂, H₂O, ATP, NADH (NOT CO_2 or $CO_2$)
 - Use Unicode superscripts where needed: 10⁶, 10⁻⁹ (NOT 10^6 or $10^6$)
 - Write numbers clearly: 3.5 × 10⁶ cells/mm³ (NOT $3.5 \\times 10^6$)
@@ -373,7 +374,8 @@ DIFFICULTY: {difficulty}
 KEY CONCEPTS: {', '.join(key_concepts) if key_concepts else 'General concepts'}
 KEY TERMS: {', '.join(key_terms) if key_terms else 'Scientific terminology'}
 
-CRITICAL FORMATTING RULES - DO NOT USE LaTeX OR $ SYMBOLS:
+CRITICAL FORMATTING RULES - PLAIN TEXT ONLY:
+- ABSOLUTELY NO LaTeX delimiters like $ or \\( or \\).
 - Use Unicode subscripts: CO₂, O₂, H₂O, ATP, NADH
 - Use Unicode superscripts: 10⁶, 10⁻⁹
 - Use proper symbols: μm, μg, →, %
@@ -455,7 +457,8 @@ DIFFICULTY: {difficulty}
 KEY CONCEPTS TO COVER: {', '.join(key_concepts) if key_concepts else 'General concepts'}
 KEY TERMS EXPECTED: {', '.join(key_terms) if key_terms else 'Scientific terminology'}
 
-CRITICAL FORMATTING RULES - DO NOT USE LaTeX OR $ SYMBOLS:
+CRITICAL FORMATTING RULES - PLAIN TEXT ONLY:
+- ABSOLUTELY NO LaTeX delimiters like $ or \\( or \\).
 - Use Unicode subscripts: CO₂, O₂, H₂O, ATP, NADH
 - Use Unicode superscripts: 10⁶, 10⁻⁹
 - Use proper symbols: μm, μg, →, %
@@ -550,6 +553,7 @@ You create rigorous, high-quality questions that test deep biological understand
 Always use correct biological terminology and provide detailed marking schemes.
 
 CRITICAL: Use PLAIN TEXT Unicode notation - NEVER use LaTeX or $ symbols:
+- ABSOLUTELY NO delimiters like $.
 - Use subscripts: CO₂, O₂, H₂O, ATP (NOT CO_2 or $CO_2$)
 - Use superscripts: 10⁶, 10⁻⁹ (NOT 10^6)
 - Use μm, μg for micro units
@@ -643,7 +647,7 @@ Respond with valid JSON only - no markdown or extra text."""
                 # Parse the response using existing parser
                 question_data = self._parse_response(content, question_type)
                 if question_data:
-                    logger.info(f"✅ Gemini successfully generated {question_type} question")
+                    logger.info(f"Gemini successfully generated {question_type} question")
                     return question_data
                 else:
                     logger.warning(f"Failed to parse Gemini response for {question_type}")

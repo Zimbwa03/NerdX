@@ -159,6 +159,26 @@ export const Icons = {
   chat: (size = 24, color = '#9C27B0') => (
     <Icon key="chat" name="chatbubbles" size={size} color={color} library="ionicons" />
   ),
+
+  // Input & Tools
+  camera: (size = 24, color = '#212121') => (
+    <Icon key="camera" name="camera" size={size} color={color} library="ionicons" />
+  ),
+  image: (size = 24, color = '#212121') => (
+    <Icon key="image" name="image" size={size} color={color} library="ionicons" />
+  ),
+  microphone: (size = 24, color = '#212121') => (
+    <Icon key="microphone" name="mic" size={size} color={color} library="ionicons" />
+  ),
+  key: (size = 24, color = '#FFC107') => (
+    <Icon key="key" name="key" size={size} color={color} library="ionicons" />
+  ),
+  clipboard: (size = 24, color = '#1976D2') => (
+    <Icon key="clipboard" name="clipboard" size={size} color={color} library="ionicons" />
+  ),
+  document: (size = 24, color = '#1976D2') => (
+    <Icon key="document" name="document-text" size={size} color={color} library="ionicons" />
+  ),
 };
 
 /**

@@ -19,20 +19,20 @@ logger = logging.getLogger(__name__)
 try:
     from services.math_prompts_master import get_random_prompt, get_prompt, get_all_topics
     PROMPTS_AVAILABLE = True
-    logger.info("✅ Structured math prompts loaded (2,520 prompts)")
+    logger.info("Structured math prompts loaded (2,520 prompts)")
 except ImportError:
     PROMPTS_AVAILABLE = False
-    logger.warning("⚠️ Structured prompts not available, using default prompts")
+    logger.warning("Structured prompts not available, using default prompts")
 
 # Try to import Gemini AI
 try:
     import google.generativeai as genai
     GENAI_AVAILABLE = True
-    logger.info("✅ google.generativeai loaded for Math Question Generator")
+    logger.info("google.generativeai loaded for Math Question Generator")
 except ImportError:
     genai = None
     GENAI_AVAILABLE = False
-    logger.warning("⚠️ google.generativeai not available, will use DeepSeek only")
+    logger.warning("google.generativeai not available, will use DeepSeek only")
 
 
 class MathQuestionGenerator:
@@ -51,12 +51,12 @@ class MathQuestionGenerator:
             try:
                 genai.configure(api_key=self.gemini_api_key)
                 self._gemini_configured = True
-                logger.info("✅ Gemini AI configured as PRIMARY provider for math questions")
+                logger.info("Gemini AI configured as PRIMARY provider for math questions")
             except Exception as e:
                 logger.error(f"Failed to configure Gemini: {e}")
         
         if self.deepseek_api_key:
-            logger.info("✅ DeepSeek AI configured as FALLBACK provider")
+            logger.info("DeepSeek AI configured as FALLBACK provider")
         
         # Legacy compatibility
         self.api_key = self.deepseek_api_key
@@ -87,20 +87,20 @@ class MathQuestionGenerator:
             
             # PRIMARY: Try Gemini AI first (faster and more reliable)
             if self._gemini_configured:
-                logger.info(f"🔷 Trying Gemini AI (primary) for {subject}/{topic}")
+                logger.info(f"Trying Gemini AI (primary) for {subject}/{topic}")
                 gemini_result = self._generate_with_gemini(subject, topic, difficulty, recent_topics)
                 if gemini_result:
                     # Validate and format response
                     question_data = self._validate_and_format_question(gemini_result, subject, topic, difficulty, user_id)
                     if question_data:
                         question_data['source'] = 'gemini_ai'
-                        logger.info(f"✅ Gemini AI generated question for {subject}/{topic}")
+                        logger.info(f"Gemini AI generated question for {subject}/{topic}")
                         return question_data
                 logger.warning("Gemini AI failed, falling back to DeepSeek")
             
             # FALLBACK: Try DeepSeek with reduced timeout
             if self.deepseek_api_key:
-                logger.info(f"🔶 Trying DeepSeek AI (fallback) for {subject}/{topic}")
+                logger.info(f"Trying DeepSeek AI (fallback) for {subject}/{topic}")
                 prompt = self._create_question_prompt(subject, topic, difficulty, recent_topics)
                 
                 # Single attempt with reduced timeout to prevent worker crash
@@ -110,7 +110,7 @@ class MathQuestionGenerator:
                         question_data = self._validate_and_format_question(response, subject, topic, difficulty, user_id)
                         if question_data:
                             question_data['source'] = 'deepseek_ai'
-                            logger.info(f"✅ DeepSeek AI generated question for {subject}/{topic}")
+                            logger.info(f"DeepSeek AI generated question for {subject}/{topic}")
                             return question_data
                 except requests.exceptions.Timeout:
                     logger.warning("DeepSeek API timeout (25s limit to prevent worker crash)")
@@ -230,7 +230,8 @@ class MathQuestionGenerator:
 **Learning Objective:** {learning_obj}
 {variation_note}
 
-**CRITICAL MATH FORMATTING - DO NOT USE LaTeX OR $ SYMBOLS:**
+**CRITICAL MATH FORMATTING - PLAIN TEXT ONLY:**
+- ABSOLUTELY NO LaTeX delimiters like $ or \\( or \\).
 - Use Unicode superscripts: x², x³, xⁿ (NOT x^2 or $x^2$)
 - Use Unicode subscripts: x₁, x₂, aₙ (NOT x_1)
 - Write fractions as: (a+b)/(c+d) or a/b (NOT $\\frac{{a}}{{b}}$)
@@ -259,7 +260,8 @@ Generate the question now:"""
             prompt = f"""Generate a high-quality {difficulty} level {subject} question about {topic} for ZIMSEC O-Level students.
 {variation_note}
 
-**CRITICAL MATH FORMATTING - DO NOT USE LaTeX OR $ SYMBOLS:**
+**CRITICAL MATH FORMATTING - PLAIN TEXT ONLY:**
+- ABSOLUTELY NO LaTeX delimiters like $ or \\( or \\).
 - Use Unicode superscripts: x², x³, xⁿ (NOT x^2 or $x^2$)
 - Use Unicode subscripts: x₁, x₂, aₙ (NOT x_1)
 - Write fractions as: (a+b)/(c+d) or a/b (NOT $\\frac{{a}}{{b}}$)
@@ -331,7 +333,7 @@ Generate the question now:"""
                     json_str = content[json_start:json_end]
                     try:
                         question_data = json.loads(json_str)
-                        logger.info(f"✅ Successfully generated question: {question_data.get('question', '')[:100]}...")
+                        logger.info(f"Successfully generated question: {question_data.get('question', '')[:100]}...")
                         return question_data
                     except json.JSONDecodeError as e:
                         logger.error(f"JSON parsing failed: {e}. Raw JSON: {json_str[:200]}...")
@@ -754,7 +756,7 @@ Generate the question now:"""
                 'source': 'fallback'
             })
 
-            logger.info(f"✅ Generated fallback question for {subject}/{topic}/{difficulty}")
+            logger.info(f"Generated fallback question for {subject}/{topic}/{difficulty}")
             return fallback
 
         except Exception as e:

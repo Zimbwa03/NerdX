@@ -557,6 +557,26 @@ Current conversation context will be provided with each message."""
         # Use a regex to avoid replacing single asterisks
         cleaned = re.sub(r'\*\*([^\*]+?)\*\*', r'*\1*', text)
         return cleaned
+
+    def _clean_research_text(self, text: str) -> str:
+        """Clean and format research text for mobile"""
+        import re
+        
+        if not text:
+            return ""
+            
+        # 1. Remove artifacts
+        text = text.replace('***', '')
+        text = text.replace('##', '') # Remove markdown headers hash
+        
+        # 2. Format citations: [1] -> (1)
+        # This makes them look less like broken links
+        text = re.sub(r'\[(\d+)\]', r'(\1)', text)
+        
+        # 3. Use standard formatted cleaning (convert ** to *)
+        text = self._clean_whatsapp_formatting(text)
+        
+        return text
     
     def _get_gemini_teaching_response(self, user_id: str, message_text: str, session_data: dict) -> str:
         """Get teaching response - uses Gemini as primary, DeepSeek as fallback"""
@@ -1125,7 +1145,7 @@ to the Zimbabwe curriculum and O-Level/A-Level science examinations."""
                 })
                 conversation_history.append({
                     'role': 'assistant',
-                    'content': f"🌐 **Search Results**\n\n{result['text']}"
+                    'content': f"🌐 **Search Results**\n\n{self._clean_research_text(result['text'])}"
                 })
                 session_data['conversation_history'] = conversation_history[-20:]
                 session_manager.set_data(user_id, 'science_teacher', session_data)

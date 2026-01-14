@@ -77,11 +77,6 @@ def login():
                 try:
                     # Extract user metadata
                     # Supabase returns structure: {'user': {'id': '...', 'user_metadata': {...}, ...}, 'access_token': '...'}
-                    # OR just the user object depending on endpoint version, but usually it wraps it.
-                    # check_user_db_state.py output showed 'users' list item structure.
-                    # authenticate_supabase_user returns response.json() from /token endpoint.
-                    # Response is usually: { access_token, token_type, expires_in, refresh_token, user: { ... } }
-                    
                     s_user = supabase_user.get('user', {})
                     metadata = s_user.get('user_metadata', {})
                     
@@ -96,12 +91,7 @@ def login():
                         surname=surname,
                         date_of_birth='2000-01-01', # Default
                         email=user_identifier,
-                        password_hash=None, # We don't have the hash, rely on Supabase Auth for future logins too? 
-                        # actually, if we backfill, next time get_user_registration WILL return data.
-                        # But lines 74-82 check for password_hash.
-                        # If we leave it None, login will fail there.
-                        # We should either skip password check if we just authenticated via Supabase,
-                        # OR we need to handle this.
+                        password_hash=None, # We don't have the hash, rely on Supabase Auth for future logins too
                     )
                     
                     # fetch again
@@ -114,9 +104,12 @@ def login():
                 except Exception as e:
                     logger.error(f"Failed to backfill user from Supabase Auth: {e}")
                     return jsonify({'success': False, 'message': 'Login failed during sync'}), 500
+            else:
+                logger.warning(f"Supabase Auth fallback failed for {user_identifier} - Login rejected")
             
             if not user_data:
-                 return jsonify({'success': False, 'message': 'User not found'}), 404
+                 # If we reached here, user not found locally AND Supabase Auth failed (invalid creds or doesn't exist)
+                 return jsonify({'success': False, 'message': 'Invalid credentials or user not found'}), 401
         
         # Verify password (assume users_registration has password_hash, or fetch from auth table)
         # Note: In real implementation, password_hash would be stored securely. 
@@ -2889,9 +2882,22 @@ def start_project_research(project_id):
         from services.project_assistant_service import ProjectAssistantService
         service = ProjectAssistantService()
         
+        # Check credits
+        credit_cost = advanced_credit_service.get_credit_cost('project_deep_research')
+        user_credits = get_user_credits(g.current_user_id) or 0
+        
+        if user_credits < credit_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {credit_cost}'
+            }), 400
+        
         result = service.start_deep_research(g.current_user_id, project_id, query)
         
         if result.get('success'):
+            # Deduct credits
+            deduct_credits(g.current_user_id, credit_cost, 'project_deep_research', f'Deep Research: {query[:50]}')
+            
             return jsonify({
                 'success': True,
                 'data': {
@@ -3027,9 +3033,22 @@ def project_web_search(project_id):
         from services.project_assistant_service import ProjectAssistantService
         service = ProjectAssistantService()
         
+        # Check credits
+        credit_cost = advanced_credit_service.get_credit_cost('project_web_search')
+        user_credits = get_user_credits(g.current_user_id) or 0
+        
+        if user_credits < credit_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {credit_cost}'
+            }), 400
+        
         result = service.search_with_grounding(g.current_user_id, project_id, query)
         
         if result.get('success'):
+            # Deduct credits
+            deduct_credits(g.current_user_id, credit_cost, 'project_web_search', f'Web Search: {query[:50]}')
+            
             return jsonify({
                 'success': True,
                 'data': {
@@ -4506,69 +4525,49 @@ def scan_math_gemini():
     try:
         data = request.get_json()
         image_base64 = data.get('image_base64')
-        prompt = data.get('prompt', 'Extract the mathematical equation from this image')
         
         if not image_base64:
             return jsonify({'success': False, 'message': 'No image provided'}), 400
-        
-        import google.generativeai as genai
-        
-        # Configure Gemini
-        gemini_api_key = os.environ.get('GEMINI_API_KEY')
-        if not gemini_api_key:
-            return jsonify({'success': False, 'message': 'Gemini API key not configured'}), 500
             
-        genai.configure(api_key=gemini_api_key)
-        
-        # Use Gemini Vision model
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        
-        # Create image part for the API
+        import tempfile
         import base64
-        image_data = base64.b64decode(image_base64)
+        import uuid
         
-        # Send to Gemini Vision
-        response = model.generate_content([
-            prompt,
-            {
-                'mime_type': 'image/jpeg',
-                'data': image_base64
-            }
-        ])
+        # Save base64 to temp file for MathOCRService
+        filename = f"gemini_scan_{uuid.uuid4().hex}.png"
+        temp_dir = tempfile.gettempdir()
+        temp_path = os.path.join(temp_dir, filename)
         
-        # Parse response
-        if response and response.text:
-            response_text = response.text.strip()
+        try:
+            image_data = base64.b64decode(image_base64)
+            with open(temp_path, 'wb') as f:
+                f.write(image_data)
+                
+            from services.math_ocr_service import math_ocr_service
+            # This calls the robust _ensure_initialized() internally
+            result = math_ocr_service.scan_equation(temp_path)
             
-            # Try to parse as JSON if it looks like JSON
-            try:
-                import json
-                if response_text.startswith('{'):
-                    result_data = json.loads(response_text)
-                    return jsonify({
-                        'success': True,
-                        'data': {
-                            'detected_text': result_data.get('detected_text', response_text),
-                            'latex': result_data.get('latex', response_text),
-                            'confidence': result_data.get('confidence', 0.9),
-                            'method': 'gemini-vision'
-                        }
-                    }), 200
-            except json.JSONDecodeError:
-                pass
-            
-            # Return raw text if not JSON
-            return jsonify({
-                'success': True,
-                'data': {
-                    'detected_text': response_text,
-                    'latex': response_text,
-                    'confidence': 0.85,
-                    'method': 'gemini-vision'
-                }
-            }), 200
-        else:
-            return jsonify({'success': False, 'message': 'No response from Gemini'}), 500
+            # Clean up
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
+                
+            if result.get('success'):
+                return jsonify({
+                    'success': True,
+                    'data': {
+                        'detected_text': result.get('plain_text', ''),
+                        'latex': result.get('latex', ''),
+                        'confidence': result.get('confidence', 0.9),
+                        'method': result.get('method', 'gemini-vision')
+                    }
+                }), 200
+            else:
+                return jsonify({'success': False, 'message': result.get('error', 'OCR failed')}), 500
+                
+        except Exception as e:
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
+            raise e
             
     except Exception as e:
         logger.error(f"Gemini scan error: {e}", exc_info=True)

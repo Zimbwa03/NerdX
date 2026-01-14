@@ -58,14 +58,7 @@ const ProjectAssistantSetupScreen: React.FC = () => {
       return;
     }
 
-    if ((user?.credits || 0) < 3) {
-      Alert.alert(
-        'Insufficient Credits',
-        'Starting a new project requires 3 credits. Please top up your credits to continue.',
-        [{ text: 'OK' }]
-      );
-      return;
-    }
+
 
     try {
       setLoading(true);
@@ -80,8 +73,8 @@ const ProjectAssistantSetupScreen: React.FC = () => {
       });
 
       if (newProject) {
-        // Deduct credits locally (backend handles it too, but good for UI sync)
-        updateUser({ credits: (user?.credits || 0) - 3 });
+        // No initial credit deduction
+        // updateUser({ credits: (user?.credits || 0) - 5 });
 
         navigation.replace('ProjectAssistant' as never, {
           projectId: newProject.id,
@@ -214,8 +207,7 @@ const ProjectAssistantSetupScreen: React.FC = () => {
             <Text style={styles.infoTitle}>About Project Assistant</Text>
           </View>
           <Text style={styles.infoText}>
-            • <Text style={styles.bold}>3 Credits</Text> to start a new project session{'\n'}
-            • <Text style={styles.bold}>1 Credit</Text> per follow-up question{'\n'}
+            • <Text style={styles.bold}>1 Credit</Text> per 10 AI responses{'\n'}
             • Get comprehensive research, writing help, and guidance for all project stages.
           </Text>
         </View>

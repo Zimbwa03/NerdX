@@ -61,7 +61,7 @@ const TeacherModeScreen: React.FC = () => {
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [generatingNotes, setGeneratingNotes] = useState(false);
+
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [sound, setSound] = useState<Audio.Sound | null>(null);
@@ -101,17 +101,18 @@ const TeacherModeScreen: React.FC = () => {
           },
         ]);
         // Update credits
-        if (user) {
-          const newCredits = (user.credits || 0) - 3; // Teacher mode start costs 3 credits
-          updateUser({ credits: newCredits });
-          showSuccess(`✅ Teacher Mode started! ${newCredits} credits remaining.`, 3000);
-          
-          if (newCredits <= 3 && newCredits > 0) {
-            setTimeout(() => {
-              showWarning(`⚠️ Running low on credits! Only ${newCredits} credits left.`, 5000);
-            }, 3500);
-          }
-        }
+        // No initial credit deduction
+        // if (user) {
+        //   const newCredits = (user.credits || 0) - 3; // Teacher mode start costs 3 credits
+        //   updateUser({ credits: newCredits });
+        //   showSuccess(`✅ Teacher Mode started! ${newCredits} credits remaining.`, 3000);
+
+        //   if (newCredits <= 3 && newCredits > 0) {
+        //     setTimeout(() => {
+        //       showWarning(`⚠️ Running low on credits! Only ${newCredits} credits left.`, 5000);
+        //     }, 3500);
+        //   }
+        // }
       } else {
         console.error('Invalid session data:', sessionData);
         showError('❌ Failed to start Teacher Mode session. Please try again.', 5000);
@@ -253,7 +254,7 @@ const TeacherModeScreen: React.FC = () => {
       // Create and play the sound
       const { sound: newSound } = await Audio.Sound.createAsync(
         { uri: audioUrl },
-        { 
+        {
           shouldPlay: true,
           isMuted: false,
           volume: 1.0,
@@ -356,10 +357,11 @@ const TeacherModeScreen: React.FC = () => {
 
         setMessages((prev) => [...prev, assistantMessage]);
         // Update credits (follow-up costs 1 credit)
-        if (user) {
-          const newCredits = (user.credits || 0) - 1;
-          updateUser({ credits: newCredits });
-        }
+        // Update credits (handled in batches on backend)
+        // if (user) {
+        //   const newCredits = (user.credits || 0) - 1;
+        //   updateUser({ credits: newCredits });
+        // }
       }
     } catch (error: any) {
       setMessages((prev) => prev.filter((msg) => msg.id !== 'researching'));
@@ -371,64 +373,21 @@ const TeacherModeScreen: React.FC = () => {
     }
   };
 
-  const handleGenerateNotes = async () => {
-    if (!session || generatingNotes) return;
 
-    Alert.alert(
-      'Generate Notes',
-      'Generate comprehensive PDF notes from this session? (Costs 1 credit)',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Generate',
-          onPress: async () => {
-            try {
-              setGeneratingNotes(true);
-              const notesData = await teacherApi.generateNotes(session.session_id);
-
-              if (notesData && notesData.pdf_url) {
-                // Download and Share PDF
-                const fileUri = (FileSystem as any).documentDirectory + `notes_${session.session_id}.pdf`;
-                const downloadRes = await FileSystem.downloadAsync(notesData.pdf_url, fileUri);
-
-                if (downloadRes.status === 200) {
-                  if (await Sharing.isAvailableAsync()) {
-                    await Sharing.shareAsync(downloadRes.uri);
-                  } else {
-                    Alert.alert('Success', 'Notes downloaded to ' + downloadRes.uri);
-                  }
-
-                  // Update credits
-                  if (user) {
-                    const newCredits = (user.credits || 0) - 1;
-                    updateUser({ credits: newCredits });
-                  }
-                } else {
-                  throw new Error('Failed to download PDF');
-                }
-              } else {
-                throw new Error('No PDF URL returned');
-              }
-            } catch (error: any) {
-              console.error('Note generation error:', error);
-              Alert.alert('Error', error.message || 'Failed to generate notes');
-            } finally {
-              setGeneratingNotes(false);
-            }
-          },
-        },
-      ]
-    );
-  };
 
   const quickQuestions: { [key: string]: string[] } = {
     Biology: ['Explain Photosynthesis', 'What is a Cell?', 'Define Osmosis', 'Functions of the Heart'],
     Chemistry: ['Periodic Table trends', 'What is a Mole?', 'Acids and Bases', 'Bonding types'],
     Physics: ['Newton\'s Laws', 'Ohm\'s Law', 'Types of Energy', 'Reflection vs Refraction'],
-    Mathematics: [
-      'Algebra Basics', 'Pythagoras Theorem', 'Calculus Intro', 'Trigonometry Rules',
+    'O Level Mathematics': [
+      'Algebra Basics', 'Pythagoras Theorem', 'Trigonometry Rules',
       'Matrices', 'Vectors', 'Circle Theorems', 'Probability', 'Statistics',
       'Sequences & Series', 'Mensuration', 'Transformations'
+    ],
+    'Pure Mathematics': [
+      'Differentiation', 'Integration', 'Trigonometry Identities',
+      'Complex Numbers', 'Vector Geometry', 'Sequences & Series',
+      'Binomial Expansion', 'Functions', 'Coordinate Geometry'
     ],
     'Combined Science': ['Scientific Method', 'Lab Safety', 'Units of Measurement'],
   };
@@ -625,7 +584,7 @@ const TeacherModeScreen: React.FC = () => {
     >
       <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={themedColors.background.default} />
       <LinearGradient
-        colors={themedColors.gradients.primary}
+        colors={themedColors?.gradients?.primary || ['#7C4DFF', '#3F1DCB']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.header}
@@ -678,7 +637,7 @@ const TeacherModeScreen: React.FC = () => {
               >
                 {message.role === 'user' ? (
                   <LinearGradient
-                    colors={themedColors.gradients.primary}
+                    colors={themedColors?.gradients?.primary || ['#7C4DFF', '#3F1DCB']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.userMessageGradient}
@@ -742,17 +701,7 @@ const TeacherModeScreen: React.FC = () => {
             </TouchableOpacity>
           ))}
         </ScrollView>
-        <TouchableOpacity
-          style={[styles.notesButton, { backgroundColor: themedColors.success.main }]}
-          onPress={handleGenerateNotes}
-          disabled={generatingNotes}
-        >
-          {generatingNotes ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            <Text style={styles.notesButtonText}>📄 Generate Notes</Text>
-          )}
-        </TouchableOpacity>
+
 
         {/* Mode Selection Popup */}
         {showModeMenu && (
@@ -841,45 +790,7 @@ const TeacherModeScreen: React.FC = () => {
           </TouchableOpacity>
 
           {/* Mode Indicator Chip (show when not in chat mode) */}
-          {activeMode !== 'chat' && (
-            <View style={[
-              styles.modeChip,
-              {
-                backgroundColor:
-                  activeMode === 'web_search' ? 'rgba(0,150,136,0.15)' :
-                    activeMode === 'deep_research' ? 'rgba(255,152,0,0.15)' :
-                      'rgba(33,150,243,0.15)'
-              }
-            ]}>
-              <Ionicons
-                name={
-                  activeMode === 'web_search' ? 'globe' :
-                    activeMode === 'deep_research' ? 'flask' :
-                      'document-attach'
-                }
-                size={14}
-                color={
-                  activeMode === 'web_search' ? themedColors.success.main :
-                    activeMode === 'deep_research' ? '#FF9800' :
-                      '#2196F3'
-                }
-              />
-              <Text style={[
-                styles.modeChipText,
-                {
-                  color:
-                    activeMode === 'web_search' ? themedColors.success.main :
-                      activeMode === 'deep_research' ? '#FF9800' :
-                        '#2196F3'
-                }
-              ]}>
-                {activeMode === 'web_search' ? 'Web' : activeMode === 'deep_research' ? 'Research' : 'Doc'}
-              </Text>
-              <TouchableOpacity onPress={() => setActiveMode('chat')}>
-                <Ionicons name="close-circle" size={16} color={themedColors.text.secondary} />
-              </TouchableOpacity>
-            </View>
-          )}
+
 
           {/* Text Input - Always visible */}
           <TextInput
@@ -919,7 +830,7 @@ const TeacherModeScreen: React.FC = () => {
                   (!inputText.trim() || sending) ? ['#E0E0E0', '#BDBDBD'] :
                     activeMode === 'web_search' ? ['#00897B', '#00695C'] :
                       activeMode === 'deep_research' ? ['#FF9800', '#F57C00'] :
-                        themedColors.gradients.primary
+                        (themedColors?.gradients?.primary || ['#7C4DFF', '#3F1DCB'])
                 }
                 style={{ borderRadius: 24, flex: 1, justifyContent: 'center', alignItems: 'center', width: '100%', height: '100%' }}
               >

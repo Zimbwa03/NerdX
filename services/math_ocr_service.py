@@ -14,6 +14,28 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+# Explicitly load .env file to ensure API keys are available
+try:
+    from dotenv import load_dotenv
+    # Try different paths for .env
+    env_paths = [
+        os.path.join(os.getcwd(), '.env'),
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env'),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '.env')
+    ]
+    env_loaded = False
+    for path in env_paths:
+        if os.path.exists(path):
+            load_dotenv(path)
+            logger.info(f"Loaded environment variables from {path}")
+            env_loaded = True
+            break
+            
+    if not env_loaded:
+        logger.warning("Could not find .env file in common locations")
+except ImportError:
+    logger.warning("python-dotenv not installed, assuming environment variables are set")
+
 # Try to import google generative ai for fallback
 try:
     import google.generativeai as genai
@@ -26,38 +48,53 @@ except ImportError:
 class MathOCRService:
     """Lightweight OCR service for mathematical equations using cloud vision APIs"""
     
-    def __init__(self):
-        """Initialize cloud-based OCR service - no heavy model loading"""
-        # DeepSeek API (primary)
-        self.deepseek_api_key = os.getenv('DEEPSEEK_API_KEY')
-        self.deepseek_api_url = 'https://api.deepseek.com/chat/completions'
-        
-        # Gemini API (fallback for vision)
-        self.gemini_api_key = os.getenv('GEMINI_API_KEY')
-        self.gemini_model = None
-        if GEMINI_AVAILABLE and self.gemini_api_key:
+    
+    def _ensure_initialized(self):
+        """Ensure keys are loaded and models initialized (lazy loading)"""
+        # Reload env if keys are missing
+        if not self.deepseek_api_key or not self.gemini_api_key:
+            try:
+                from dotenv import load_dotenv
+                # Try all common paths
+                env_paths = [
+                    os.path.join(os.getcwd(), '.env'),
+                    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env'),
+                    os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '.env')
+                ]
+                for path in env_paths:
+                    if os.path.exists(path):
+                        load_dotenv(path)
+                        break
+            except ImportError:
+                pass
+                
+            self.deepseek_api_key = os.getenv('DEEPSEEK_API_KEY')
+            self.gemini_api_key = os.getenv('GEMINI_API_KEY')
+
+        # Initialize Gemini if needed
+        if GEMINI_AVAILABLE and self.gemini_api_key and not self.gemini_model:
             try:
                 genai.configure(api_key=self.gemini_api_key)
-                # Use latest supported vision model name to avoid 404s
-                preferred_models = [
-                    'gemini-1.5-flash-latest',  # current recommended
-                    'gemini-1.5-flash',         # older name
-                    'gemini-pro-vision',        # legacy vision model
-                ]
+                preferred_models = ['gemini-1.5-flash-latest', 'gemini-1.5-flash', 'gemini-pro-vision']
                 for model_name in preferred_models:
                     try:
                         self.gemini_model = genai.GenerativeModel(model_name)
-                        logger.info(f"✅ Gemini vision model initialized: {model_name}")
+                        logger.info(f"Gemini vision model initialized (lazy): {model_name}")
                         break
-                    except Exception as inner_e:
-                        logger.warning(f"Gemini model {model_name} init failed: {inner_e}")
-                if not self.gemini_model:
-                    logger.error("Failed to initialize any Gemini vision model")
+                    except Exception:
+                        continue
             except Exception as e:
-                logger.error(f"Error initializing Gemini: {e}")
-                self.gemini_model = None
+                logger.error(f"Error initializing Gemini (lazy): {e}")
+
+    def __init__(self):
+        """Initialize cloud-based OCR service"""
+        self.deepseek_api_key = None
+        self.gemini_api_key = None
+        self.gemini_model = None
         
-        logger.info("✅ Math OCR Service initialized (lightweight cloud-based mode)")
+        self._ensure_initialized()
+        
+        logger.info("Math OCR Service initialized (lightweight cloud-based mode)")
     
     def _encode_image(self, image_path: str) -> Optional[str]:
         """Encode image to base64"""
@@ -90,6 +127,8 @@ class MathOCRService:
         Returns:
             Dict with LaTeX output and recognized text
         """
+        self._ensure_initialized()
+
         try:
             # Encode image
             image_base64 = self._encode_image(image_path)
@@ -106,12 +145,12 @@ class MathOCRService:
                     
                     prompt = """You are a mathematical equation OCR system. Look at this image and:
 1. Extract any mathematical equations, formulas, or expressions you see
-2. Convert them to LaTeX format
+2. Convert them to PLAIN TEXT Unicode format (avoid complex LaTeX if possible, use x², √, etc.)
 3. Also extract any plain text visible in the image
 
 Respond in this exact JSON format:
 {
-    "latex": "the equation in LaTeX format",
+    "latex": "the equation in clean plain text/Unicode format",
     "plain_text": "any plain text visible",
     "description": "brief description of what the math is about"
 }

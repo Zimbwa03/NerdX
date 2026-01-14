@@ -24,7 +24,7 @@ class StandaloneEnglishComprehensionGenerator:
 
         # Optimized settings for DeepSeek API V3.1 (Render-friendly)
         self.max_retries = 2  # Reduced to prevent worker timeouts
-        self.timeouts = [20, 35]  # Reduced timeouts for Render deployment
+        self.timeouts = [60, 90]  # Increased timeouts for long generation (Render allows up to 100s usually)
         self.retry_delay = 1  # Faster retry
 
     def generate_comprehension_passage(self, theme: str = "General") -> Optional[Dict]:
@@ -66,48 +66,38 @@ Return ONLY a JSON object:
             logger.error("DeepSeek API key not configured")
             return self._get_fallback_long_comprehension(theme)
 
-        prompt = f"""Generate a ZIMSEC O-Level English reading comprehension exercise on the theme: {theme}
+        prompt = f"""Generate a "VERY LONG" ZIMSEC O-Level English reading comprehension exercise on the theme: {theme}
 
 **ZIMSEC Format Requirements:**
-- Passage: 400-600 words (authentic ZIMSEC length for proper comprehension practice)
-- Zimbabwean context, characters, and cultural references where appropriate
-- Age-appropriate content for Form {form_level} students (15-17 years)
-- EXACTLY 10 comprehension questions following ZIMSEC patterns
-- Question types must include:
-  * 3-4 literal comprehension questions (direct from text)
-  * 3-4 inferential questions (reading between lines)
-  * 2-3 critical analysis questions (evaluation, opinion, comparison)
-- Varied question formats: short answer, explanation, analysis
-- Form {form_level} vocabulary and complexity level
-- Include Zimbabwean names, places, and cultural elements naturally
+- Passage: **800-1000 words** (Must be a long, detailed, multi-paragraph narrative or article).
+- Context: Authentic Zimbabwe setting, characters, and cultural references.
+- Level: Form {form_level} (Age 15-17).
+- Questions: **EXACTLY 10 QUESTIONS**. Number them 1-10 in your internal reasoning to ensure count.
 
-**ZIMSEC Question Patterns to Follow:**
-1. "According to the passage..." (literal)
-2. "What does the author mean by..." (inferential)  
-3. "Why do you think..." (critical thinking)
-4. "Give evidence from the passage..." (textual support)
-5. "In your own words, explain..." (comprehension + expression)
+**Question Distribution (Must sum to 10):**
+1. Literal (Direct Recall): 3 questions.
+2. Inferential (Reading between lines): 4 questions.
+3. Analysis/Critical (Evaluation/Opinion): 3 questions.
 
-Return ONLY a JSON object:
+**Return ONLY a JSON object with this EXACT structure:**
 {{
     "passage": {{
-        "title": "Engaging passage title with Zimbabwean context",
-        "text": "The complete 400-600 word reading passage with natural Zimbabwean elements",
-        "word_count": 500,
+        "title": "A Creative Title",
+        "text": "The full text of the passage... (Ensure this is VERY LONG, at least 800 words)",
+        "word_count": 850,
         "theme": "{theme}"
     }},
     "questions": [
         {{
-            "question": "Question text following ZIMSEC patterns",
-            "correct_answer": "Expected detailed answer with key points",
+            "question": "Question text...",
+            "correct_answer": "Complete answer...",
             "question_type": "literal/inferential/critical",
             "marks": 2,
-            "explanation": "Why this is the correct answer with textual evidence"
-        }}
+            "explanation": "Why this is correct..."
+        }},
+        ... (Total of 10 objects)
     ]
-}}
-
-Make the passage authentic, engaging, and educationally valuable for ZIMSEC O-Level students."""
+}}"""
 
         return self._call_deepseek_api(prompt, "long_comprehension_passage")
 

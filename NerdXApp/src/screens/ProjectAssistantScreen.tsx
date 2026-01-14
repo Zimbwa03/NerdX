@@ -54,6 +54,7 @@ const ProjectAssistantScreen: React.FC = () => {
   const [activeResearch, setActiveResearch] = useState<ResearchSession | null>(null);
   const [researchPolling, setResearchPolling] = useState(false);
   const [activeMode, setActiveMode] = useState<'chat' | 'web_search' | 'deep_research'>('chat');
+  const [showModeMenu, setShowModeMenu] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
@@ -172,12 +173,14 @@ const ProjectAssistantScreen: React.FC = () => {
         setMessages((prev) => [...prev, assistantMessage]);
 
         // Update credits if returned
+        // Update credits if returned (backend manages batch deduction)
         if (response.credits_remaining !== undefined) {
           updateUser({ credits: response.credits_remaining });
-        } else if (user) {
-          // Fallback local deduction
-          updateUser({ credits: (user.credits || 0) - 1 });
         }
+        // else if (user) {
+        //   // Fallback local deduction - DISABLED for batch model
+        //   updateUser({ credits: (user.credits || 0) - 1 });
+        // }
       }
     } catch (error: any) {
       setMessages((prev) => prev.filter((msg) => msg.id !== 'researching'));
@@ -517,62 +520,72 @@ const ProjectAssistantScreen: React.FC = () => {
       </ScrollView>
 
       <View style={[styles.inputContainer, { backgroundColor: themedColors.background.paper, borderTopColor: themedColors.border.light }]}>
-        {/* AI Tools Toolbar */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.toolbarContainer}
-          contentContainerStyle={styles.toolbarContent}
-        >
-          <TouchableOpacity
-            style={[styles.toolbarButton, { backgroundColor: isDarkMode ? 'rgba(103,80,164,0.15)' : '#EDE7F6' }]}
-            onPress={handleStartResearch}
-            disabled={sending || researchPolling}
-          >
-            <Ionicons name="flask-outline" size={18} color={themedColors.primary.main} />
-            <Text style={[styles.toolbarButtonText, { color: themedColors.primary.main }]}>
-              {researchPolling ? 'Researching...' : 'Deep Research'}
-            </Text>
-          </TouchableOpacity>
+        {/* Mode Selection Popup - Matching TeacherMode */}
+        {showModeMenu && (
+          <View style={[styles.modeMenuPopup, { backgroundColor: isDarkMode ? '#2A2A3E' : '#FFFFFF' }]}>
+            <TouchableOpacity
+              style={[styles.modeMenuItem, activeMode === 'chat' && styles.modeMenuItemActive]}
+              onPress={() => { setActiveMode('chat'); setShowModeMenu(false); }}
+            >
+              <Ionicons name="chatbubble-outline" size={20} color={activeMode === 'chat' ? themedColors.primary.main : themedColors.text.secondary} />
+              <Text style={[styles.modeMenuText, activeMode === 'chat' && { color: themedColors.primary.main, fontWeight: '600' }]}>Chat</Text>
+              <Text style={styles.modeMenuDesc}>Standard AI Assistant</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.toolbarButton, { backgroundColor: isDarkMode ? 'rgba(0,150,136,0.15)' : '#E0F2F1' }]}
-            onPress={handleWebSearch}
-            disabled={sending}
-          >
-            <Ionicons name="globe-outline" size={18} color={themedColors.success.main} />
-            <Text style={[styles.toolbarButtonText, { color: themedColors.success.main }]}>Web Search</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.modeMenuItem, activeMode === 'web_search' && styles.modeMenuItemActive]}
+              onPress={() => { setActiveMode('web_search'); setShowModeMenu(false); }}
+            >
+              <Ionicons name="globe-outline" size={20} color={activeMode === 'web_search' ? themedColors.success.main : themedColors.text.secondary} />
+              <Text style={[styles.modeMenuText, activeMode === 'web_search' && { color: themedColors.success.main, fontWeight: '600' }]}>Web Search</Text>
+              <Text style={styles.modeMenuDesc}>Search Google for Facts</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.toolbarButton, { backgroundColor: isDarkMode ? 'rgba(33,150,243,0.15)' : '#E3F2FD' }]}
-            onPress={handleDocumentUpload}
-            disabled={sending}
-          >
-            <Ionicons name="document-attach-outline" size={18} color="#2196F3" />
-            <Text style={[styles.toolbarButtonText, { color: '#2196F3' }]}>Upload PDF</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.toolbarButton, { backgroundColor: isDarkMode ? 'rgba(255,152,0,0.15)' : '#FFF3E0' }]}
-            onPress={handleGenerateDocument}
-            disabled={sending}
-          >
-            <Ionicons name="download-outline" size={18} color="#FF9800" />
-            <Text style={[styles.toolbarButtonText, { color: '#FF9800' }]}>Generate PDF</Text>
-          </TouchableOpacity>
-        </ScrollView>
+            <TouchableOpacity
+              style={[styles.modeMenuItem, activeMode === 'deep_research' && styles.modeMenuItemActive]}
+              onPress={() => { setActiveMode('deep_research'); setShowModeMenu(false); }}
+            >
+              <Ionicons name="flask-outline" size={20} color={activeMode === 'deep_research' ? '#FF9800' : themedColors.text.secondary} />
+              <Text style={[styles.modeMenuText, activeMode === 'deep_research' && { color: '#FF9800', fontWeight: '600' }]}>Deep Research</Text>
+              <Text style={styles.modeMenuDesc}>Comprehensive Analysis</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         <View style={[styles.inputWrapper, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F7FA' }]}>
+          {/* Mode Switcher Button */}
+          <TouchableOpacity
+            style={styles.modeButton}
+            onPress={() => setShowModeMenu(!showModeMenu)}
+          >
+            <Ionicons
+              name={
+                activeMode === 'web_search' ? 'globe' :
+                  activeMode === 'deep_research' ? 'flask' :
+                    'chatbubble-ellipses'
+              }
+              size={20}
+              color={
+                activeMode === 'web_search' ? themedColors.success.main :
+                  activeMode === 'deep_research' ? '#FF9800' :
+                    themedColors.primary.main
+              }
+            />
+          </TouchableOpacity>
+
           <TextInput
             style={[styles.textInput, { color: themedColors.text.primary }]}
             value={inputText}
             onChangeText={setInputText}
-            placeholder="Ask for help with your project..."
+            placeholder={
+              activeMode === 'web_search' ? "Search the web..." :
+                activeMode === 'deep_research' ? "Enter research topic..." :
+                  "Ask for help with your project..."
+            }
             placeholderTextColor={themedColors.text.secondary}
             multiline
             maxLength={1000}
-            editable={!sending}
+            editable={!sending && !researchPolling}
           />
           <TouchableOpacity
             style={[styles.sendButton, (!inputText.trim() || sending) && styles.sendButtonDisabled]}
@@ -583,7 +596,7 @@ const ProjectAssistantScreen: React.FC = () => {
               colors={(!inputText.trim() || sending) ? ['#E0E0E0', '#BDBDBD'] : themedColors.gradients.primary}
               style={styles.sendButtonGradient}
             >
-              <Ionicons name="send" size={20} color="#FFF" />
+              <Ionicons name={researchPolling ? "hourglass-outline" : "send"} size={20} color="#FFF" />
             </LinearGradient>
           </TouchableOpacity>
         </View>
@@ -797,8 +810,52 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   toolbarContainer: {
-    maxHeight: 44,
-    marginBottom: 12,
+    maxHeight: 0,
+    height: 0,
+    display: 'none', // Hide old toolbar
+  },
+  modeButton: {
+    padding: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modeMenuPopup: {
+    position: 'absolute',
+    bottom: 80,
+    left: 16,
+    width: 220,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 8,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+  },
+  modeMenuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 4,
+  },
+  modeMenuItemActive: {
+    backgroundColor: 'rgba(0,0,0,0.05)',
+  },
+  modeMenuText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#333',
+    marginLeft: 12,
+    flex: 1,
+  },
+  modeMenuDesc: {
+    fontSize: 10,
+    color: '#999',
+    marginLeft: 8,
   },
   toolbarContent: {
     flexDirection: 'row',

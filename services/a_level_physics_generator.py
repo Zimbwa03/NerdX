@@ -236,7 +236,8 @@ KEY CONCEPTS TO COVER: {', '.join(key_concepts) if key_concepts else 'General co
 
 KEY FORMULAS (use when appropriate): {', '.join(key_formulas) if key_formulas else 'As applicable'}
 
-CRITICAL FORMATTING RULES - DO NOT USE LaTeX OR $ SYMBOLS:
+CRITICAL FORMATTING RULES - PLAIN TEXT ONLY:
+- ABSOLUTELY NO LaTeX delimiters like $ or \\( or \\).
 - Use Unicode superscripts: m², s⁻¹, m/s², kg·m/s (NOT $m^2$ or m^2)
 - Use Unicode subscripts: v₀, a₁, Fₙₑₜ (NOT v_0 or $v_0$)
 - Write fractions as: (a+b)/(c+d) or a/b (NOT $\\frac{{a}}{{b}}$)
@@ -297,6 +298,7 @@ Generate the question now:"""
                             "content": """You are an expert A Level Physics examiner. Generate high-quality MCQ questions suitable for Cambridge/ZIMSEC A Level Physics examinations.
 
 CRITICAL: Use PLAIN TEXT Unicode notation - NEVER use LaTeX or $ symbols:
+- ABSOLUTELY NO delimiters like $.
 - Use m², s⁻¹, kg·m/s for units (NOT $m^2$)
 - Use fractions as a/b (NOT $\\frac{a}{b}$)
 - Use √ for square roots, × for multiplication

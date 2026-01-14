@@ -62,15 +62,21 @@ class Config:
         'flashcard_audio': 3,             # Audio Flashcards
         
         # AI Teacher & Assistant - Hybrid Model
-        'teacher_mode_start': 3,           # Initial session setup (Persona + Context)
-        'teacher_mode_followup': 0,        # Follow-up questions (FREE)
+        'teacher_mode_start': 0,           # Set to 0 (credits deducted per 10 messages)
+        'teacher_mode_followup': 0,        # Set to 0 (credits deducted per 10 messages)
         'teacher_mode_pdf': 2,             # PDF note generation (Document creation value)
-        'project_assistant_start': 3,      # Project Assistant Init
-        'project_assistant_followup': 0,   # Project Assistant Chat (FREE)
+        'project_assistant_start': 0,      # Set to 0 (credits deducted per 10 messages)
+        'project_assistant_followup': 0,   # Set to 0 (credits deducted per 10 messages)
         
         # Vision/Tools
         'ocr_solve': 3,                   # Image Analysis
         'image_generation': 3,            # Diagram/Image Gen
+        
+        # Project Assistant Research
+        'web_search': 2,                  # Project Web Search
+        'deep_research': 5,               # Project Deep Research
+        'project_web_search': 2,          # Explicit key for Web Search
+        'project_deep_research': 5,       # Explicit key for Deep Research
         
         # Legacy compatibility (Mapped values)
         'math': 1,

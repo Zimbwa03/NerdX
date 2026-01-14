@@ -23,7 +23,7 @@ const { width } = Dimensions.get('window');
 
 // O-Level Topics by Subject
 const SUBJECT_TOPICS: Record<string, string[]> = {
-  Mathematics: [
+  'O Level Mathematics': [
     'Real Numbers',
     'Fractions, Decimals & Percentages',
     'Ratio and Proportion',
@@ -93,7 +93,7 @@ const SUBJECT_TOPICS: Record<string, string[]> = {
 
 // A-Level Topics by Subject
 const A_LEVEL_TOPICS: Record<string, string[]> = {
-  Mathematics: [
+  'Pure Mathematics': [
     'Polynomials',
     'Rational Functions',
     'Indices, Surds and Logarithms',
@@ -212,14 +212,16 @@ const A_LEVEL_TOPICS: Record<string, string[]> = {
 };
 
 const SUBJECT_COLORS: Record<string, string> = {
-  Mathematics: '#667eea',
+  'O Level Mathematics': '#667eea',
+  'Pure Mathematics': '#5A67D8',
   Biology: '#4CAF50',
   Chemistry: '#FF9800',
   Physics: '#2196F3',
 };
 
 const SUBJECT_ICONS: Record<string, string> = {
-  Mathematics: '📐',
+  'O Level Mathematics': '📐',
+  'Pure Mathematics': '∫',
   Biology: '🧬',
   Chemistry: '⚗️',
   Physics: '⚛️',
@@ -242,14 +244,14 @@ const TeacherModeSetupScreen: React.FC = () => {
   const [selectedGradeLevel, setSelectedGradeLevel] = useState<string>('Form 3-4 (O-Level)');
   const [selectedTopic, setSelectedTopic] = useState<string>(preselectedTopic || '');
 
-  const subjects = ['Mathematics', 'Biology', 'Chemistry', 'Physics'];
+  const subjects = ['O Level Mathematics', 'Pure Mathematics', 'Biology', 'Chemistry', 'Physics'];
   const gradeLevels = ['Form 1-2', 'Form 3-4 (O-Level)', 'A-Level'];
 
   // Get topics for selected subject
   const availableTopics = selectedSubject
     ? (selectedGradeLevel === 'A-Level'
-        ? A_LEVEL_TOPICS[selectedSubject] || []
-        : SUBJECT_TOPICS[selectedSubject] || [])
+      ? A_LEVEL_TOPICS[selectedSubject] || []
+      : SUBJECT_TOPICS[selectedSubject] || [])
     : [];
   const subjectColor = selectedSubject ? SUBJECT_COLORS[selectedSubject] : Colors.secondary.main;
 
@@ -259,16 +261,17 @@ const TeacherModeSetupScreen: React.FC = () => {
       return;
     }
 
-    const currentCredits = user?.credits || 0;
-    if (currentCredits < 3) {
-      showError('❌ Insufficient credits! Teacher Mode requires 3 credits. Please top up your credits.', 6000);
-      Alert.alert(
-        'Insufficient Credits',
-        'Teacher Mode requires 3 credits to start. Please buy credits first.',
-        [{ text: 'OK' }]
-      );
-      return;
-    }
+    // Initial deduction removed - pay as you go
+    // const currentCredits = user?.credits || 0;
+    // if (currentCredits < 3) {
+    //   showError('❌ Insufficient credits! Teacher Mode requires 3 credits. Please top up your credits.', 6000);
+    //   Alert.alert(
+    //     'Insufficient Credits',
+    //     'Teacher Mode requires 3 credits to start. Please buy credits first.',
+    //     [{ text: 'OK' }]
+    //   );
+    //   return;
+    // }
 
     navigation.navigate('TeacherMode' as any, {
       subject: selectedSubject,
@@ -294,6 +297,14 @@ const TeacherModeSetupScreen: React.FC = () => {
           >
             <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
           </TouchableOpacity>
+          <View style={styles.headerButtons}>
+            <TouchableOpacity
+              style={styles.historyButton}
+              onPress={() => navigation.navigate('TeacherHistory' as never)}
+            >
+              <Ionicons name="time-outline" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
           <View style={styles.headerContent}>
             <View style={styles.avatarContainer}>
               <Text style={styles.avatarIcon}>
@@ -498,7 +509,7 @@ const TeacherModeSetupScreen: React.FC = () => {
           </View>
           <View style={styles.creditInfo}>
             <Text style={[styles.creditText, { color: themedColors.text.hint }]}>
-              💎 Session: 3 credits • Follow-ups: 1 credit each
+              💎 <Text style={{ fontWeight: 'bold' }}>1 Credit</Text> per 10 AI responses (Start for Free)
             </Text>
           </View>
         </View>
@@ -549,6 +560,20 @@ const styles = StyleSheet.create({
   },
   backButton: {
     marginBottom: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerButtons: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    zIndex: 10,
+  },
+  historyButton: {
     width: 40,
     height: 40,
     borderRadius: 20,

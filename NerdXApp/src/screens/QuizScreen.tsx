@@ -263,9 +263,9 @@ const QuizScreen: React.FC = () => {
 
         // Show notification based on result
         if (answerResult.correct) {
-          showSuccess(`ðŸŽ‰ Correct! You earned ${answerResult.points_earned} points!`, 3000);
+          showSuccess(`Correct! You earned ${answerResult.points_earned} points!`, 3000);
         } else {
-          showInfo(`ðŸ’¡ ${answerResult.feedback || 'Keep practicing!'}`, 4000);
+          showInfo(`${answerResult.feedback || 'Keep practicing!'}`, 4000);
         }
 
         if (isReviewMode && reviewItems) {
@@ -566,7 +566,7 @@ const QuizScreen: React.FC = () => {
           updateUser({ credits: newCredits });
 
           // Show credit deduction notification
-          showInfo(`ðŸ’³ 1 credit used. ${newCredits} credits remaining.`, 3000);
+          showInfo(`1 credit used. ${newCredits} credits remaining.`, 3000);
 
           // Check if credits are getting low
           if (newCredits <= 3 && newCredits > 0) {
@@ -1405,7 +1405,10 @@ const QuizScreen: React.FC = () => {
               {question.question_type === 'structured' && question.structured_question && (
                 <View style={styles.structuredContainer}>
                   <View style={styles.structuredHeader}>
-                    <Text style={styles.structuredTitle}>ðŸ“‹ Structured Question</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      {Icons.clipboard(24, Colors.subjects.combinedScience)}
+                      <Text style={styles.structuredTitle}>Structured Question</Text>
+                    </View>
                     <Text style={styles.structuredMarks}>
                       Total: {question.structured_question.total_marks} marks
                     </Text>
@@ -1516,16 +1519,22 @@ const QuizScreen: React.FC = () => {
                   </View>
                   {question.essay_data?.must_include_terms && question.essay_data.must_include_terms.length > 0 && (
                     <View style={styles.essayKeyTerms}>
-                      <Text style={styles.essayKeyTermsLabel}>ðŸ”‘ Key Terms to Include:</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                        {Icons.key(16, themedColors.text.primary)}
+                        <Text style={[styles.essayKeyTermsLabel, { marginBottom: 0 }]}>Key Terms to Include:</Text>
+                      </View>
                       <Text style={styles.essayKeyTermsList}>
                         {question.essay_data.must_include_terms.join(', ')}
                       </Text>
                     </View>
                   )}
                   {supportsVoiceToText && (
-                    <Text style={styles.voiceHintText}>
-                      ðŸŽ¤ Tip: Tap mic to dictate your essay. Speak naturally and pause between paragraphs.
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
+                      {Icons.microphone(14, themedColors.text.secondary)}
+                      <Text style={[styles.voiceHintText, { marginTop: 0 }]}>
+                        Tip: Tap mic to dictate your essay. Speak naturally and pause between paragraphs.
+                      </Text>
+                    </View>
                   )}
                 </View>
               )}
@@ -1559,11 +1568,14 @@ const QuizScreen: React.FC = () => {
                     )}
                   </View>
                   {supportsVoiceToText && (
-                    <Text style={styles.voiceHintText}>
-                      {voiceInputMode === 'math'
-                        ? 'ðŸŽ¤ Tip: Speak math like "integral from zero to pi" â€” symbols auto-format.'
-                        : 'ðŸŽ¤ Tip: Tap mic to dictate your answer with Wispr Flow speech-to-text.'}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
+                      {Icons.microphone(14, themedColors.text.secondary)}
+                      <Text style={[styles.voiceHintText, { marginTop: 0 }]}>
+                        {voiceInputMode === 'math'
+                          ? 'Tip: Speak math like "integral from zero to pi" â€” symbols auto-format.'
+                          : 'Tip: Tap mic to dictate your answer with Wispr Flow speech-to-text.'}
+                      </Text>
+                    </View>
                   )}
                 </View>
               )}
@@ -1576,16 +1588,22 @@ const QuizScreen: React.FC = () => {
                     onPress={handleImageUpload}
                     disabled={!!result}
                   >
-                    <Text style={styles.imageUploadButtonText}>
-                      {answerImage ? 'ðŸ“· Change Image' : 'ðŸ“· Upload/Scan Answer Image'}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      {answerImage ? Icons.refresh(20, themedColors.text.primary) : Icons.image(20, themedColors.text.primary)}
+                      <Text style={styles.imageUploadButtonText}>
+                        {answerImage ? 'Change Image' : 'Upload/Scan Answer Image'}
+                      </Text>
+                    </View>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.imageUploadButton, styles.secondaryImageButton]}
                     onPress={handleCameraCapture}
                     disabled={!!result}
                   >
-                    <Text style={styles.imageUploadButtonText}>ðŸŽ¥ Capture with Camera</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      {Icons.camera(20, themedColors.text.primary)}
+                      <Text style={styles.imageUploadButtonText}>Capture with Camera</Text>
+                    </View>
                   </TouchableOpacity>
                   {answerImage && (
                     <View style={styles.imagePreview}>

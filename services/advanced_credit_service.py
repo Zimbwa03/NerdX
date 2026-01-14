@@ -48,17 +48,17 @@ class AdvancedCreditService:
             credits = status['credits']
             
             if credits == 0:
-                return "💳 **Your Credits: 0** ❌"
+                return "Credits: 0"
             elif credits <= 5:
-                return f"💳 **Your Credits: {credits}** ⚠️ (Very Low!)"
+                return f"Credits: {credits} (Very Low!)"
             elif credits <= self.low_credit_threshold:
-                return f"💳 **Your Credits: {credits}** ⚠️ (Low)"
+                return f"Credits: {credits} (Low)"
             else:
-                return f"💳 **Your Credits: {credits}** ✅"
+                return f"Credits: {credits}"
                 
         except Exception as e:
             logger.error(f"Error formatting credit display: {e}")
-            return "💳 **Your Credits: Error**"
+            return "Credits: Error"
     
     def get_credit_cost_for_action(self, action: str, difficulty: Optional[str] = None) -> int:
         """Get credit cost for a specific action"""
@@ -89,13 +89,13 @@ class AdvancedCreditService:
                         'success': True,
                         'deducted': required_credits,
                         'new_balance': new_balance,
-                        'message': f"✅ Credits deducted: {required_credits}. New balance: {new_balance}"
+                    'message': f"Credits deducted: {required_credits}. New balance: {new_balance}"
                     }
                 else:
                     return {
                         'success': False,
                         'error': 'Failed to deduct credits',
-                        'message': '❌ Error processing transaction'
+                        'message': 'Error processing transaction'
                     }
             else:
                 return {
@@ -104,7 +104,7 @@ class AdvancedCreditService:
                     'current_credits': current_credits,
                     'required_credits': required_credits,
                     'shortage': required_credits - current_credits,
-                    'message': f"❌ Insufficient credits. You need {required_credits} but have {current_credits}"
+                    'message': f"Insufficient credits. You need {required_credits} but have {current_credits}"
                 }
                 
         except Exception as e:
@@ -206,22 +206,22 @@ class AdvancedCreditService:
             current_credits = get_user_credits(referrer_id)
             new_balance = current_credits + self.referral_bonus
             
-            message = f"""🎉 **GREAT NEWS!**
+            message = f"""**GREAT NEWS!**
 
-Hey there! 👋
+Hey there!
 
-✨ **{new_user_name}** just registered using your referral link!
+**{new_user_name}** just registered using your referral link!
 
-🎁 **Your Reward:**
-+{self.referral_bonus} Credits Added! 💳
-💳 **New Balance**: {new_balance} credits
+**Your Reward:**
++{self.referral_bonus} Credits Added!
+New Balance: {new_balance} credits
 
-🔥 Keep sharing to earn more credits!
+Keep sharing to earn more credits!
 
-✅ Continue"""
+Continue"""
             
             # Send with continue button to not disrupt flow
-            buttons = [{"text": "✅ Continue", "callback_data": "continue_current"}]
+            buttons = [{"text": "Continue", "callback_data": "continue_current"}]
             self.whatsapp_service.send_interactive_message(referrer_id, message, buttons)
             
         except Exception as e:
@@ -277,23 +277,23 @@ Hey there! 👋
             else:
                 shortage = required_credits - current_credits
                 
-                message = f"""⚠️ **Insufficient Credits**
+                message = f"""**Insufficient Credits**
 
-💳 **Your Balance**: {current_credits} credits
-💰 **Required**: {required_credits} credits
-📈 **Need**: {shortage} more credits
+Your Balance: {current_credits} credits
+Required: {required_credits} credits
+Need: {shortage} more credits
 
-🛒 **Quick Options:**
-💰 Buy Credits Now
-👥 Refer Friends (+{self.referral_bonus} credits each)
-📞 Contact Support
-⬅️ Back to Menu"""
+**Quick Options:**
+Buy Credits Now
+Refer Friends (+{self.referral_bonus} credits each)
+Contact Support
+Back to Menu"""
                 
                 buttons = [
-                    {"text": "💰 Buy Credits Now", "callback_data": "buy_credits"},
-                    {"text": f"👥 Refer Friends (+{self.referral_bonus} credits)", "callback_data": "refer_friends"},
-                    {"text": "📞 Contact Support", "callback_data": "contact_support"},
-                    {"text": "⬅️ Back to Menu", "callback_data": "back_to_menu"}
+                    {"text": "Buy Credits Now", "callback_data": "buy_credits"},
+                    {"text": f"Refer Friends (+{self.referral_bonus} credits)", "callback_data": "refer_friends"},
+                    {"text": "Contact Support", "callback_data": "contact_support"},
+                    {"text": "Back to Menu", "callback_data": "back_to_menu"}
                 ]
                 
                 return {
@@ -348,23 +348,23 @@ Hey there! 👋
             action_name = action_names.get(action, action.title())
             required_credits = self.get_credit_cost(action, difficulty)
             
-            message = f"""✅ **Transaction Completed**
+            message = f"""**Transaction Completed**
 
-📚 **Service**: {action_name}
-💰 **Cost**: {required_credits} credits
-💳 **New Balance**: {current_credits} credits
+**Service**: {action_name}
+**Cost**: {required_credits} credits
+**New Balance**: {current_credits} credits
 
-🎯 **Ready to learn!**"""
+**Ready to learn!**"""
             
             # Add low credit warning if applicable
             if status['is_low']:
-                message += f"\n\n⚠️ **Low Credit Warning**: You have {current_credits} credits remaining. Consider buying more soon!"
+                message += f"\n\n**Low Credit Warning**: You have {current_credits} credits remaining. Consider buying more soon!"
             
             return message
             
         except Exception as e:
             logger.error(f"Error processing successful transaction: {e}")
-            return "✅ Transaction completed successfully!"
+            return "Transaction completed successfully!"
     
     def award_achievement_credits(self, user_id: str, action: str, correct: bool = False, streak: int = 0) -> int:
         """Award bonus credits for achievements and update XP/streak"""
@@ -423,32 +423,31 @@ Hey there! 👋
             current_credits = status['credits']
             packages = self.get_credit_packages()
             
-            # Artistic header with gradients and visual appeal
-            message = f"""✨ 𝗖𝗥𝗘𝗗𝗜𝗧 𝗦𝗧𝗢𝗥𝗘 ✨
-╔═══════════════════╗
-║ 💎 PREMIUM PLANS 💎 ║
-╚═══════════════════╝
+            # Clean header
+            message = f"""**CREDIT STORE**
 
-💳 𝗬𝗼𝘂𝗿 𝗕𝗮𝗹𝗮𝗻𝗰𝗲: **{current_credits} credits**
+**PREMIUM PLANS**
 
-🎯 𝗖𝗵𝗼𝗼𝘀𝗲 𝗬𝗼𝘂𝗿 𝗣𝗼𝘄𝗲𝗿:"""
+**Your Balance:** {current_credits} credits
+
+**Choose Your Power:**"""
             
             buttons = []
             for package in packages:
                 # Fallback for missing icon field
-                icon = package.get('icon', '💎')
+                icon = package.get('icon', '')
                 name = package.get('name', 'Package')
                 price = package.get('price', 0)
                 credits = package.get('credits', 0)
                 package_id = package.get('id', 'unknown')
                 
                 # Compact button text to prevent truncation
-                button_text = f"{icon} {credits}cr • ${price:.2f}"
+                button_text = f"{credits}cr • ${price:.2f}"
                 callback_data = f"select_package_{package_id}"
                 buttons.append({"text": button_text, "callback_data": callback_data})
             
-            # Add artistic back button
-            buttons.append({"text": "⬅️ 𝗕𝗮𝗰𝗸 𝘁𝗼 𝗠𝗲𝗻𝘂", "callback_data": "back_to_menu"})
+            # Add back button
+            buttons.append({"text": "Back to Menu", "callback_data": "back_to_menu"})
             
             return message, buttons
             

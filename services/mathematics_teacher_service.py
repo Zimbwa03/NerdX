@@ -245,18 +245,20 @@ Current conversation context will be provided with each message."""
     def start_session(self, user_id: str, subject: str, grade_level: str, topic: Optional[str] = None) -> Dict:
         """Start a new mathematics teaching session"""
         try:
-            # Check and deduct credits (3 credits to start)
-            credit_result = advanced_credit_service.check_and_deduct_credits(
-                user_id, 'teacher_mode_start'
-            )
-            
-            if not credit_result.get('success'):
+            # Check credit status (require > 0 credits to start, even if start is free)
+            credit_status = advanced_credit_service.get_user_credit_status(user_id)
+            if credit_status['credits'] <= 0:
                 return {
                     'success': False,
-                    'message': credit_result.get('message', 'Insufficient credits'),
+                    'message': "You need credits to start Teacher Mode (credits deducted during chat).",
                     'session_id': None,
                     'initial_message': None
                 }
+            
+            # Start is free/deferred
+            # credit_result = advanced_credit_service.check_and_deduct_credits(
+            #     user_id, 'teacher_mode_start'
+            # )
             
             # Create session ID
             session_id = f"math_teacher_{user_id}_{datetime.now().timestamp()}"
@@ -331,15 +333,12 @@ Current conversation context will be provided with each message."""
             if any(keyword in message_lower for keyword in ['generate notes', 'save notes', 'create notes', 'make notes']):
                 return self.generate_notes(session_id, user_id)
             
-            # Deduct 1 credit for follow-up
-            credit_result = advanced_credit_service.check_and_deduct_credits(
-                user_id, 'teacher_mode_followup'
-            )
-            
-            if not credit_result.get('success'):
-                return {
+            # Check credit status for batch billing
+            credit_status = advanced_credit_service.get_user_credit_status(user_id)
+            if credit_status['credits'] <= 0:
+                 return {
                     'success': False,
-                    'response': credit_result.get('message', 'Insufficient credits'),
+                    'response': "💰 **Insufficient Credits**\n\nYou need credits to continue Teacher Mode. Credits are deducted (1 credit) for every 10 AI responses.\n\nPlease top up to continue learning!",
                     'session_ended': False
                 }
             
@@ -362,6 +361,18 @@ Current conversation context will be provided with each message."""
                 'content': response_text
             })
             
+            # Increment message counter for billing
+            messages_since_charge = session_data.get('messages_since_charge', 0) + 1
+            credits_deducted = 0
+            
+            if messages_since_charge >= 10:
+                # Deduct 1 credit
+                if deduct_credits(user_id, 1, 'teacher_mode_batch', 'Teacher Mode (10 messages)'):
+                    credits_deducted = 1
+                    messages_since_charge = 0
+            
+            session_data['messages_since_charge'] = messages_since_charge
+
             # Keep last 20 messages
             session_data['conversation_history'] = conversation_history[-20:]
             session_manager.set_data(user_id, 'math_teacher', session_data)
@@ -376,6 +387,12 @@ Current conversation context will be provided with each message."""
             
             # Clean formatting
             clean_response = self._clean_whatsapp_formatting(response_text)
+            
+            # Append credit info if deducted
+            if credits_deducted > 0:
+                # Get fresh credit status
+                credit_status = advanced_credit_service.get_user_credit_status(user_id)
+                clean_response += f"\n\nCard: *Credits:* {credit_status['credits']} (Deducted 1 credit for 10 messages)"
             
             return {
                 'success': True,

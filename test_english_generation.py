@@ -48,12 +48,44 @@ def test_generation():
     # 3. Test Comprehension (Brief check)
     print("\n--- Testing English Comprehension Generation (DeepSeek) ---")
     try:
+        # Test 1: Standard Verification
+        print("Testing Standard Generation...")
         result = standalone_english_comprehension_generator.generate_comprehension_passage("Technology")
         if result and result.get('success'):
-            print("DeepSeek Generation SUCCESS")
-            print(str(result)[:200] + "...")
+            print("DeepSeek Standard Generation SUCCESS")
         else:
-            print("DeepSeek Generation FAILED")
+            print("DeepSeek Standard Generation FAILED")
+
+        # Test 2: Long Passage Verification
+        print("\nTesting LONG Passage Generation (10 Questions)...")
+        long_result = standalone_english_comprehension_generator.generate_long_comprehension_passage("Traditional Culture vs Modernity")
+        
+        if long_result and 'passage' in long_result and 'questions' in long_result:
+            questions = long_result['questions']
+            text = long_result['passage'].get('text', '')
+            word_count = len(text.split())
+            
+            print(f"DeepSeek LONG Generation SUCCESS")
+            print(f"Passage Length: {len(text)} chars (~{word_count} words)")
+            print(f"Question Count: {len(questions)}")
+            
+            if len(questions) == 10:
+                 print("✅ Question count is EXACTLY 10")
+            else:
+                 print(f"⚠️ Question count is {len(questions)} (Expected 10)")
+                 
+            if word_count > 600:
+                print("✅ Passage length is satisfactory (> 600 words)")
+            else:
+                print(f"⚠️ Passage length might be short ({word_count} words)")
+
+            print("\nSample Questions:")
+            for i, q in enumerate(questions[:3]):
+                print(f"{i+1}. {q.get('question')}")
+                
+        else:
+            print("DeepSeek LONG Generation FAILED - Invalid Response Structure")
+
     except Exception as e:
         print(f"DeepSeek Generation ERROR: {e}")
 

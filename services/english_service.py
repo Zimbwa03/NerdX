@@ -1493,6 +1493,21 @@ Return ONLY valid JSON:
         else:
             return "U"
 
+    def _get_grade_from_percentage(self, percentage: int) -> str:
+        """Convert percentage to ZIMSEC grade"""
+        if percentage >= 75:
+            return "A"
+        elif percentage >= 65:
+            return "B"
+        elif percentage >= 50:
+            return "C"
+        elif percentage >= 45:
+            return "D"
+        elif percentage >= 40:
+            return "E"
+        else:
+            return "U"
+
     def generate_long_comprehension_passage(self, theme: str, form_level: int = 4) -> Optional[Dict]:
         """Generate long comprehensive passage with Gemini first, DeepSeek fallback"""
         # Primary: Gemini AI generation
@@ -1981,6 +1996,12 @@ Return ONLY valid JSON (no markdown fences):
                 # Add teacher comment based on score
                 score = data.get('score', 0)
                 max_score = data.get('max_score', 30)
+                
+                # Ensure max_score is valid to prevent division by zero
+                if not max_score or max_score <= 0:
+                    max_score = 30
+                    data['max_score'] = max_score
+                    
                 teacher_comment = self._get_teacher_comment_by_score(score, max_score, student_name)
                 
                 data['teacher_comment'] = teacher_comment
@@ -2066,6 +2087,12 @@ Return ONLY valid JSON (no markdown fences):
                 # Add teacher comment based on score
                 score = data.get('score', 0)
                 max_score = data.get('max_score', 20)
+                
+                # Ensure max_score is valid to prevent division by zero
+                if not max_score or max_score <= 0:
+                    max_score = 20
+                    data['max_score'] = max_score
+                    
                 teacher_comment = self._get_teacher_comment_by_score(score, max_score, student_name)
                 
                 data['teacher_comment'] = teacher_comment
@@ -2161,9 +2188,14 @@ Return ONLY valid JSON (no markdown fences):
             # Score Section
             elements.append(Paragraph("MARKING RESULTS", heading_style))
             
+            # Ensure safe calculation
+            percentage = 0
+            if max_score > 0:
+                percentage = int((score / max_score) * 100)
+            
             score_data = [
-                ['Total Score:', f'{score} / {max_score}', f'{int((score/max_score)*100)}%'],
-                ['Grade:', self._get_grade_from_score(int((score/max_score)*100)), '']
+                ['Total Score:', f'{score} / {max_score}', f'{percentage}%'],
+                ['Grade:', self._get_grade_from_percentage(percentage), '']
             ]
             
             score_table = Table(score_data, colWidths=[2*inch, 1.5*inch, 1.5*inch])

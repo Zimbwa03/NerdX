@@ -2038,9 +2038,10 @@ def get_project_chat_history(project_id, limit=50):
         logger.error(f"Error getting chat history: {e}")
         return []
 
-def authenticate_supabase_user(email, password):
+def authenticate_supabase_user(identifier, password):
     """
     Authenticate a user directly with Supabase Auth REST API
+    Handles both email and phone number authentication.
     Returns: User object if successful, None otherwise
     """
     try:
@@ -2049,17 +2050,30 @@ def authenticate_supabase_user(email, password):
             "apikey": SUPABASE_ANON_KEY,
             "Content-Type": "application/json"
         }
-        data = {
-            "email": email,
-            "password": password
-        }
+        
+        # Determine if identifier is email or phone
+        data = {}
+        if '@' in identifier:
+            data = {
+                "email": identifier,
+                "password": password
+            }
+        else:
+            # Assume phone number
+            data = {
+                "phone": identifier,
+                "password": password
+            }
+            
+        logger.info(f"Attempting Supabase Auth for {identifier}...")
         
         response = requests.post(url, headers=headers, json=data)
         
         if response.status_code == 200:
+            logger.info(f"✅ Supabase Auth successful for {identifier}")
             return response.json()
         else:
-            logger.warning(f"Supabase Auth failed for {email}: {response.status_code} {response.text}")
+            logger.warning(f"Supabase Auth failed for {identifier}: {response.status_code} {response.text}")
             return None
             
     except Exception as e:

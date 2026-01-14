@@ -59,33 +59,15 @@ class MathematicsService:
         buttons = []
 
         # Create buttons for each ZIMSEC mathematics topic
-        topic_emojis = {
-            "Real Numbers": "🔢",
-            "Sets": "🎯", 
-            "Financial Mathematics": "💰",
-            "Measures and Mensuration": "📏",
-            "Graphs": "📊",
-            "Variation": "📈",
-            "Algebra": "📐",
-            "Geometry": "📐", 
-            "Statistics": "📊",
-            "Trigonometry": "📐",
-            "Vectors": "➡️",
-            "Matrices": "🔲",
-            "Transformation": "🔄",
-            "Probability": "🎲"
-        }
-
         for topic in self.mathematics_topics:
-            emoji = topic_emojis.get(topic, "📚")
             topic_encoded = topic.lower().replace(' ', '_')
             buttons.append({
-                "text": f"{emoji} {topic}", 
+                "text": f"{topic}", 
                 "callback_data": f"math_topic_{topic_encoded}"
             })
 
         # Add back to main menu (removed exam practice button as requested)
-        buttons.append({"text": "🏠 Back to Main Menu", "callback_data": "main_menu"})
+        buttons.append({"text": "Back to Main Menu", "callback_data": "main_menu"})
         return buttons
 
     def get_difficulty_menu_buttons(self, topic: str) -> List[Dict]:
@@ -93,10 +75,10 @@ class MathematicsService:
         topic_encoded = topic.lower().replace(' ', '_')
 
         return [
-            {"text": "🟢 Easy", "callback_data": f"math_question_{topic_encoded}_easy"},
-            {"text": "🟡 Medium", "callback_data": f"math_question_{topic_encoded}_medium"},
-            {"text": "🔴 Difficult", "callback_data": f"math_question_{topic_encoded}_difficult"},
-            {"text": "🔙 Back to Topics", "callback_data": "mathematics_mcq"}
+            {"text": "Easy", "callback_data": f"math_question_{topic_encoded}_easy"},
+            {"text": "Medium", "callback_data": f"math_question_{topic_encoded}_medium"},
+            {"text": "Difficult", "callback_data": f"math_question_{topic_encoded}_difficult"},
+            {"text": "Back to Topics", "callback_data": "mathematics_mcq"}
         ]
 
 
@@ -111,26 +93,26 @@ class MathematicsService:
                 
                 stats_text = f"""
 📊 **Your Current Stats:**
-💳 **Credits:** {credits}
-⭐ **Level:** {stats.get('level', 1)} (XP: {stats.get('xp_points', 0)})
-🔥 **Streak:** {stats.get('streak', 0)} days
+**Credits:** {credits}
+**Level:** {stats.get('level', 1)} (XP: {stats.get('xp_points', 0)})
+**Streak:** {stats.get('streak', 0)} days
 
 """
             
-            return f"""🧮 **ZIMSEC Mathematics Hub**
+            return f"""**ZIMSEC Mathematics Hub**
 
 👋 Welcome **{user_name}**! Master O-Level Mathematics with AI-powered questions.
-{stats_text}📚 **Available Topics ({len(self.mathematics_topics)}):**
+{stats_text}**Available Topics ({len(self.mathematics_topics)}):**
 Real Numbers • Sets • Financial Mathematics 
 Algebra • Geometry • Statistics • Trigonometry 
 Probability • Graphs • Variation • Vectors • Matrices
 
-🎯 **Difficulty Levels:**
-🟢 Easy - Basic concepts
-🟡 Medium - Applied problems  
-🔴 Difficult - Complex reasoning
+**Difficulty Levels:**
+Easy - Basic concepts
+Medium - Applied problems  
+Difficult - Complex reasoning
 
-💡 **Authentic ZIMSEC-style problems with step-by-step solutions!**
+**Authentic ZIMSEC-style problems with step-by-step solutions!**
 
 Choose your topic to begin:"""
         except Exception as e:
@@ -169,43 +151,24 @@ Choose your topic to begin:"""
 
 """
             
-            topic_emojis = {
-                "Real Numbers": "🔢",
-                "Sets": "🎯", 
-                "Financial Mathematics": "💰",
-                "Measures and Mensuration": "📏",
-                "Graphs": "📊",
-                "Variation": "📈",
-                "Algebra": "📐",
-                "Geometry": "📐", 
-                "Statistics": "📊",
-                "Trigonometry": "📐",
-                "Vectors": "➡️",
-                "Matrices": "🔲",
-                "Transformation": "🔄",
-                "Probability": "🎲"
-            }
-
-            emoji = topic_emojis.get(topic, "📚")
-
-            return f"""{emoji} **{topic}** {emoji}
+            return f"""**{topic}**
 
 👋 Ready for **{topic}**, **{user_name}**!
-{stats_text}🎯 **Choose Your Challenge Level:**
+{stats_text}**Choose Your Challenge Level:**
 
-🟢 Easy - {self.difficulty_descriptions['easy']}
+Easy - {self.difficulty_descriptions['easy']}
    • Foundation concepts
    • {self.difficulty_points['easy']} XP points
 
-🟡 Medium - {self.difficulty_descriptions['medium']}
+Medium - {self.difficulty_descriptions['medium']}
    • Problem-solving skills
    • {self.difficulty_points['medium']} XP points
 
-🔴 Difficult - {self.difficulty_descriptions['difficult']}
+Difficult - {self.difficulty_descriptions['difficult']}
    • Critical thinking
    • {self.difficulty_points['difficult']} XP points
 
-💡 Authentic ZIMSEC-style problems with step-by-step solutions!
+Authentic ZIMSEC-style problems with step-by-step solutions!
 
 Select your difficulty:"""
         except Exception as e:

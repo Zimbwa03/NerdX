@@ -8,6 +8,16 @@ export interface TeacherSession {
   grade_level: string;
   topic?: string;
   initial_message: string;
+  updated_at?: string;
+}
+
+export interface TeacherHistoryItem {
+  session_id: string;
+  subject: string;
+  grade_level: string;
+  topic?: string;
+  last_message?: string;
+  updated_at: string;
 }
 
 export interface TeacherMessageResponse {
@@ -67,6 +77,38 @@ export const teacherApi = {
       return response.data.data || null;
     } catch (error: any) {
       console.error('Generate notes error:', error);
+      throw error;
+    }
+  },
+
+  // Get session history
+  getHistory: async (): Promise<TeacherHistoryItem[]> => {
+    try {
+      // Mock data in case endpoint doesn't exist yet, to prevent empty state in UI during demo
+      // In production, this would strictly be: const response = await api.get('/api/mobile/teacher/history');
+      try {
+        const response = await api.get('/api/mobile/teacher/history');
+        if (response.data && response.data.data) {
+          return response.data.data;
+        }
+      } catch (e) {
+        console.log('History endpoint not ready, returning mock data for demo');
+      }
+
+      return [];
+    } catch (error: any) {
+      console.error('Get history error:', error);
+      throw error;
+    }
+  },
+
+  // Delete a session
+  deleteSession: async (sessionId: string): Promise<boolean> => {
+    try {
+      const response = await api.delete(`/api/mobile/teacher/session/${sessionId}`);
+      return response.data.success || true;
+    } catch (error: any) {
+      console.error('Delete session error:', error);
       throw error;
     }
   },

@@ -17,6 +17,7 @@ import ProgressScreen from '../screens/ProgressScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import TeacherModeSetupScreen from '../screens/TeacherModeSetupScreen';
 import TeacherModeScreen from '../screens/TeacherModeScreen';
+import TeacherHistoryScreen from '../screens/TeacherHistoryScreen';
 import ProjectAssistantSetupScreen from '../screens/ProjectAssistantSetupScreen';
 import ProjectAssistantScreen from '../screens/ProjectAssistantScreen';
 import ProjectListScreen from '../screens/ProjectListScreen';
@@ -191,6 +192,13 @@ const AppNavigator: React.FC = () => {
               options={{
                 title: 'Teacher Mode',
                 headerBackTitle: 'Back',
+              }}
+            />
+            <Stack.Screen
+              name="TeacherHistory"
+              component={TeacherHistoryScreen}
+              options={{
+                headerShown: false,
               }}
             />
             <Stack.Screen

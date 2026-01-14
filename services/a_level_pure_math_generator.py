@@ -315,7 +315,8 @@ KEY FORMULAS (use when appropriate):
 TYPICAL QUESTION TYPES FOR THIS TOPIC:
 {', '.join(question_types) if question_types else 'Various standard types'}
 
-CRITICAL MATH FORMATTING RULES - DO NOT USE LaTeX OR $ SYMBOLS:
+CRITICAL MATH FORMATTING RULES - PLAIN TEXT ONLY:
+- ABSOLUTELY NO LaTeX delimiters like $ or \\( or \\).
 - Use Unicode superscripts: x², x³, x⁴, xⁿ (NOT x^2 or $x^2$)
 - Use Unicode subscripts: x₁, x₂, aₙ (NOT x_1 or $x_1$)
 - Write fractions as: (a+b)/(c+d) or a/b (NOT $\\frac{{a}}{{b}}$)
@@ -380,7 +381,8 @@ DIFFICULTY: {difficulty}
 KEY CONCEPTS: {', '.join(key_concepts) if key_concepts else 'General concepts'}
 KEY FORMULAS: {', '.join(key_formulas) if key_formulas else 'As applicable'}
 
-CRITICAL MATH FORMATTING RULES - DO NOT USE LaTeX OR $ SYMBOLS:
+CRITICAL MATH FORMATTING RULES - PLAIN TEXT ONLY:
+- ABSOLUTELY NO LaTeX delimiters like $ or \\( or \\).
 - Use Unicode superscripts: x², x³, x⁴, xⁿ (NOT x^2 or $x^2$)
 - Use Unicode subscripts: x₁, x₂, aₙ (NOT x_1 or $x_1$)
 - Write fractions as: (a+b)/(c+d) or a/b (NOT $\\frac{{a}}{{b}}$)
@@ -464,6 +466,7 @@ Generate the structured A Level Pure Mathematics question now:"""
 Generate questions with clear solutions.
 
 CRITICAL: Use PLAIN TEXT Unicode math notation - NEVER use LaTeX or $ symbols:
+- ABSOLUTELY NO delimiters like $.
 - Use x², x³, xⁿ for powers (NOT $x^2$ or x^2)
 - Use fractions as a/b or (a+b)/(c+d) (NOT $\\frac{a}{b}$)
 - Use √ for square roots (NOT $\\sqrt{}$)

@@ -4,7 +4,7 @@
  * Works completely offline - no network required!
  */
 
-import TextRecognition, { TextRecognitionResult } from '@react-native-ml-kit/text-recognition';
+// import TextRecognition, { TextRecognitionResult } from '@react-native-ml-kit/text-recognition';
 
 export interface OCRResult {
     success: boolean;
@@ -22,56 +22,19 @@ class OfflineOCRService {
     /**
      * Recognize text from an image using on-device ML Kit
      * This works completely offline!
+     * 
+     * NOTE: Offline OCR module disabled due to build issues. 
+     * Prioritizing Online Gemini OCR.
      */
     async recognizeText(imageUri: string): Promise<OCRResult> {
-        try {
-            console.log('Starting offline OCR with ML Kit...');
+        console.log('Offline OCR currently disabled. Skipping to Online OCR...');
 
-            // Use ML Kit for on-device text recognition
-            const result: TextRecognitionResult = await TextRecognition.recognize(imageUri);
-
-            if (result && result.text) {
-                // Process the recognized text
-                const processedText = this.processMathText(result.text);
-
-                // Extract blocks for detailed info
-                const blocks = result.blocks?.map(block => ({
-                    text: block.text,
-                    boundingBox: block.frame ? {
-                        x: (block.frame as any).left || (block.frame as any).x || 0,
-                        y: (block.frame as any).top || (block.frame as any).y || 0,
-                        width: (block.frame as any).width || 0,
-                        height: (block.frame as any).height || 0,
-                    } : undefined,
-                })) || [];
-
-                console.log('ML Kit recognized:', processedText);
-
-                return {
-                    success: true,
-                    text: processedText,
-                    latex: this.convertToLatex(processedText),
-                    confidence: 0.85,
-                    method: 'offline-mlkit',
-                    blocks,
-                };
-            }
-
-            return {
-                success: false,
-                text: '',
-                confidence: 0,
-                method: 'failed',
-            };
-        } catch (error) {
-            console.error('Offline OCR error:', error);
-            return {
-                success: false,
-                text: '',
-                confidence: 0,
-                method: 'failed',
-            };
-        }
+        return {
+            success: false,
+            text: '',
+            confidence: 0,
+            method: 'failed',
+        };
     }
 
     /**
@@ -134,12 +97,7 @@ class OfflineOCRService {
      * Check if ML Kit is available
      */
     async isAvailable(): Promise<boolean> {
-        try {
-            // Try a simple recognition to check if available
-            return true;
-        } catch {
-            return false;
-        }
+        return false;
     }
 }
 

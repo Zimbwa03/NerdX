@@ -11,6 +11,7 @@ import {
     RefreshControl,
     StatusBar,
     Image,
+    TextInput,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -27,8 +28,10 @@ const ProjectListScreen: React.FC = () => {
     const { isDarkMode } = useTheme();
     const themedColors = useThemedColors();
     const [projects, setProjects] = useState<Project[]>([]);
+    const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
 
     useFocusEffect(
         React.useCallback(() => {
@@ -41,6 +44,7 @@ const ProjectListScreen: React.FC = () => {
             setLoading(true);
             const projectList = await projectApi.listProjects();
             setProjects(projectList);
+            setFilteredProjects(projectList);
         } catch (error: any) {
             console.error('Failed to load projects:', error);
             // Don't show alert on initial load to avoid annoyance if offline
@@ -53,6 +57,21 @@ const ProjectListScreen: React.FC = () => {
     const handleRefresh = () => {
         setRefreshing(true);
         loadProjects();
+    };
+
+    const handleSearch = (text: string) => {
+        setSearchQuery(text);
+        if (text.trim() === '') {
+            setFilteredProjects(projects);
+        } else {
+            const lowerText = text.toLowerCase();
+            const filtered = projects.filter(
+                (p) =>
+                    p.title.toLowerCase().includes(lowerText) ||
+                    p.subject.toLowerCase().includes(lowerText)
+            );
+            setFilteredProjects(filtered);
+        }
     };
 
     const handleProjectPress = (project: Project) => {
@@ -80,11 +99,16 @@ const ProjectListScreen: React.FC = () => {
                         try {
                             // Optimistically remove from UI for better UX
                             const projectId = project.id;
-                            setProjects(prevProjects => prevProjects.filter(p => p.id !== projectId));
-                            
+                            const newProjects = projects.filter(p => p.id !== projectId);
+                            setProjects(newProjects);
+                            setFilteredProjects(newProjects.filter(p =>
+                                p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                p.subject.toLowerCase().includes(searchQuery.toLowerCase())
+                            ));
+
                             // Attempt deletion on server
                             const success = await projectApi.deleteProject(project.id);
-                            
+
                             if (success) {
                                 // Refresh to ensure we have the latest state
                                 await loadProjects();
@@ -99,7 +123,7 @@ const ProjectListScreen: React.FC = () => {
                             // Restore the project list in case of error
                             await loadProjects();
                             Alert.alert(
-                                'Error', 
+                                'Error',
                                 error?.response?.data?.message || 'Failed to delete project. Please try again.'
                             );
                         }
@@ -149,6 +173,23 @@ const ProjectListScreen: React.FC = () => {
                         <Ionicons name="person-circle-outline" size={32} color="#FFF" />
                     </TouchableOpacity>
                 </View>
+
+                {/* Search Bar */}
+                <View style={styles.searchContainer}>
+                    <Ionicons name="search" size={20} color="rgba(255,255,255,0.7)" style={styles.searchIcon} />
+                    <TextInput
+                        style={styles.searchInput}
+                        placeholder="Search projects..."
+                        placeholderTextColor="rgba(255,255,255,0.6)"
+                        value={searchQuery}
+                        onChangeText={handleSearch}
+                    />
+                    {searchQuery.length > 0 && (
+                        <TouchableOpacity onPress={() => handleSearch('')}>
+                            <Ionicons name="close-circle" size={18} color="rgba(255,255,255,0.7)" />
+                        </TouchableOpacity>
+                    )}
+                </View>
             </LinearGradient>
 
             <ScrollView
@@ -178,7 +219,7 @@ const ProjectListScreen: React.FC = () => {
                         </TouchableOpacity>
                     </View>
                 ) : (
-                    projects.map((project) => (
+                    filteredProjects.map((project) => (
                         <TouchableOpacity
                             key={project.id}
                             style={[styles.projectCard, { backgroundColor: themedColors.background.paper, borderColor: themedColors.border.light }]}
@@ -276,6 +317,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        marginBottom: 16,
     },
     headerTitle: {
         fontSize: 28,
@@ -456,6 +498,26 @@ const styles = StyleSheet.create({
         borderRadius: 28,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+
+    searchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        height: 44,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.2)',
+        marginTop: 8,
+    },
+    searchIcon: {
+        marginRight: 8,
+    },
+    searchInput: {
+        flex: 1,
+        color: '#FFF',
+        fontSize: 16,
     },
 });
 

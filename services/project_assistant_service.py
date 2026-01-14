@@ -400,28 +400,17 @@ Remember: You're their project partner! Be helpful, be thorough, and make learni
             conversation_history = project_data.get('conversation_history', [])
             is_new_session = len(conversation_history) == 0
             
-            # Check and deduct credits
-            if is_new_session:
-                # Starting new project session - costs 3 credits
-                credit_result = advanced_credit_service.check_and_deduct_credits(
-                    user_id, 'project_assistant_start'
-                )
-            else:
-                # Follow-up question - costs 1 credit
-                credit_result = advanced_credit_service.check_and_deduct_credits(
-                    user_id, 'project_assistant_followup'
-                )
-            
-            # Handle insufficient credits
-            if not credit_result.get('success'):
-                project_title = project_data.get('project_title', 'your project')
-                insufficient_msg = f"""💰 *Need More Credits!* 💰
+            # Check credit status but don't deduct yet (deduction happens in batches)
+            credit_status = advanced_credit_service.get_user_credit_status(user_id)
+            if credit_status['credits'] <= 0:
+                 project_title = project_data.get('project_title', 'your project')
+                 insufficient_msg = f"""💰 *Need More Credits!* 💰
 
 📚 *Project Assistant*
 📝 Project: {project_title}
 
 💳 *Credit Status:*
-{credit_result.get('message', 'Insufficient credits')}
+You have 0 credits. Credits are deducted (1 credit) for every 10 AI responses.
 
 🎯 *Project Assistant Benefits:*
 • Comprehensive research assistance
@@ -433,14 +422,14 @@ Remember: You're their project partner! Be helpful, be thorough, and make learni
 
 💎 *Get More Credits:*"""
                 
-                buttons = [
+                 buttons = [
                     {"text": "💰 Buy Credits", "callback_data": "credit_store"},
                     {"text": "👥 Invite Friends (+5 each)", "callback_data": "share_to_friend"},
                     {"text": "🏠 Main Menu", "callback_data": "main_menu"}
-                ]
+                 ]
                 
-                self.whatsapp_service.send_interactive_message(user_id, insufficient_msg, buttons)
-                return
+                 self.whatsapp_service.send_interactive_message(user_id, insufficient_msg, buttons)
+                 return
             
             # Add user message to conversation history
             conversation_history.append({
@@ -458,6 +447,19 @@ Remember: You're their project partner! Be helpful, be thorough, and make learni
                 'content': ai_response,
                 'timestamp': datetime.now().isoformat()
             })
+            
+            # Increment message counter for billing
+            messages_since_charge = project_data.get('messages_since_charge', 0) + 1
+            credits_deducted = 0
+            
+            if messages_since_charge >= 10:
+                # Deduct 1 credit
+                if deduct_credits(user_id, 1, 'project_assistant_batch', 'Project Assistant (10 messages)'):
+                    credits_deducted = 1
+                    messages_since_charge = 0
+            
+            # Update project data
+            project_data['messages_since_charge'] = messages_since_charge
             
             # Keep last 50 messages to avoid memory issues
             if len(conversation_history) > 50:
@@ -478,8 +480,13 @@ Remember: You're their project partner! Be helpful, be thorough, and make learni
             
             # Get current credits and show credit status
             current_credits = get_user_credits(user_id)
-            credits_used = 3 if is_new_session else 1
-            clean_response += f"\n\n💳 *Credits:* {current_credits} (Used: {credits_used})"
+            
+            if credits_deducted > 0:
+                clean_response += f"\n\n💳 *Credits:* {current_credits} (Deducted 1 credit for 10 messages)"
+            else:
+                remaining_msgs = 10 - messages_since_charge
+                # Optional: Show progress to next charge? Or keep it clean.
+                # clean_response += f"\n\n💳 *Credits:* {current_credits} ({remaining_msgs} msgs until next charge)"
             
             # Send AI response to user
             self.whatsapp_service.send_message(user_id, clean_response)
@@ -609,6 +616,26 @@ Remember: You're their project partner! Be helpful, be thorough, and make learni
         text = re.sub(r'\n{3,}', '\n\n', text)
         
         return text.strip()
+    
+    def _clean_research_text(self, text: str) -> str:
+        """Clean and format research text for mobile"""
+        import re
+        
+        if not text:
+            return ""
+            
+        # 1. Remove artifacts
+        text = text.replace('***', '')
+        text = text.replace('##', '') # Remove markdown headers hash
+        
+        # 2. Format citations: [1] -> (1)
+        # This makes them look less like broken links
+        text = re.sub(r'\[(\d+)\]', r'(\1)', text)
+        
+        # 3. Use standard cleaner for bold/italic
+        text = self._clean_markdown(text)
+        
+        return text
     
     def _clean_whatsapp_formatting(self, text: str) -> str:
         """Clean response for WhatsApp display"""
@@ -1091,7 +1118,8 @@ Focus on providing actionable, educational content suitable for a secondary scho
                     conversation_history = project_data.get('conversation_history', [])
                     conversation_history.append({
                         'role': 'assistant',
-                        'content': f"🔬 **Deep Research Complete**\n\n{result['result']}",
+                        'role': 'assistant',
+                        'content': f"🔬 **Deep Research Complete**\n\n{self._clean_research_text(result['result'])}",
                         'timestamp': datetime.now().isoformat(),
                         'type': 'deep_research',
                         'interaction_id': interaction_id
@@ -1312,7 +1340,8 @@ Please provide accurate, current information with sources where possible. Focus 
                 })
                 conversation_history.append({
                     'role': 'assistant',
-                    'content': f"🌐 **Web Search Results**\n\n{result['text']}",
+                    'role': 'assistant',
+                    'content': f"🌐 **Web Search Results**\n\n{self._clean_research_text(result['text'])}",
                     'timestamp': datetime.now().isoformat(),
                     'type': 'web_search'
                 })

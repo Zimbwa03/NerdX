@@ -521,7 +521,7 @@ const DashboardScreen: React.FC = () => {
                 </>
               ) : (
                 <>
-                  {/* ✨ A Level Subject Cards with Icons (temporarily using icons due to large PNG file sizes) */}
+                  {/* ✨ A Level Subject Cards */}
                   <AnimatedCard
                     title="A Level Pure Mathematics"
                     subtitle="Build Logical & Analytical Skills"
