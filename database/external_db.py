@@ -1067,9 +1067,16 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
 
         logger.info(f"📝 Registration data prepared: {registration_data}")
 
+        # --- NEW: Create Supabase Auth User (if email/password provided) ---
+        if email and password_hash: # Note: We need original password, but here we only have hash.
+            # ERROR: create_user_registration receives password_hash, not plain password.
+            # api/mobile.py calls this. Let's check api/mobile.py first.
+            pass 
+            
         # Execute Supabase registration - using SERVICE_ROLE_KEY for write operation
         logger.info("🔄 Attempting Supabase user registration...")
         result = make_supabase_request("POST", "users_registration", registration_data, use_service_role=True)
+
 
         # Validate result
         if not result:
@@ -2135,4 +2142,35 @@ def get_user_by_email_admin(email):
             
     except Exception as e:
         logger.error(f"Error in admin user lookup: {e}")
+        return None
+
+def register_supabase_auth_user(email, password, data=None):
+    """
+    Register a new user in Supabase Auth via REST API.
+    """
+    try:
+        url = f"{SUPABASE_URL}/auth/v1/signup"
+        headers = {
+            "apikey": SUPABASE_ANON_KEY,
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "email": email,
+            "password": password,
+            "data": data or {}
+        }
+        
+        logger.info(f"Attempting Supabase Auth Sign-Up for {email}...")
+        response = requests.post(url, headers=headers, json=payload)
+        
+        if response.status_code == 200:
+            logger.info(f"✅ Supabase Auth Sign-Up successful for {email}")
+            return response.json()
+        else:
+            logger.error(f"Supabase Auth Sign-Up failed: {response.status_code} {response.text}")
+            return None
+            
+    except Exception as e:
+        logger.error(f"Error registering Supabase Auth user: {e}")
         return None

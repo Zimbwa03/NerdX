@@ -317,13 +317,33 @@ def register():
         
         # Create user registration with password
         try:
-            # Create user in database with password and auth info
+            # 1. Register in Supabase Auth (if email provided)
+            # This triggers the "Confirm your mail" email from Supabase
+            if email:
+                from database.external_db import register_supabase_auth_user
+                
+                # Metadata to store in Supabase Auth user object
+                metadata = {
+                    'name': name,
+                    'surname': surname,
+                    'nerdx_id': nerdx_id,
+                    'chat_id': user_identifier
+                }
+                
+                auth_user = register_supabase_auth_user(email, password, metadata)
+                
+                if not auth_user:
+                    # If failed, it might be that user already exists in Auth but not locally?
+                    # or some other error. For now, strict failure.
+                    return jsonify({'success': False, 'message': 'Registration failed. Email might be invalid or already in use.'}), 400
+
+            # 2. Create user in database with password and auth info
             create_user_registration(
-                user_identifier,
-                name,
-                surname,
-                date_of_birth or '2000-01-01',  # Default date if not provided
-                referred_by,
+                chat_id=user_identifier,
+                name=name,
+                surname=surname,
+                date_of_birth=date_of_birth or '2000-01-01',
+                referred_by_nerdx_id=referred_by,
                 password_hash=password_hash,
                 password_salt=salt,
                 email=email,
