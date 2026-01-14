@@ -18,6 +18,36 @@ class ImageService:
             logger.warning("DEEPSEEK_API_KEY not configured - image processing features will be limited")
             self.client = None
     
+    def process_image(self, image_file) -> Optional[Dict]:
+        """Process an uploaded image file directly"""
+        try:
+            # Read file bytes
+            image_bytes = image_file.read()
+            # Reset pointer for safety if needed elsewhere (though flask usually consumes it)
+            image_file.seek(0)
+            
+            if not image_bytes:
+                return None
+                
+            base64_image = base64.b64encode(image_bytes).decode('utf-8')
+            
+            # Use same prompt logic as solve_math_image
+            raw_result = self._solve_with_deepseek(base64_image)
+            
+            if not raw_result:
+                return None
+                
+            # Map keys to match what the /graph/upload route expects
+            return {
+                'text': raw_result.get('problem_identified', ''),
+                'solution': f"{raw_result.get('solution_steps', '')}\n\nFinal Answer: {raw_result.get('final_answer', '')}",
+                'analysis': raw_result.get('notes', '')
+            }
+            
+        except Exception as e:
+            logger.error(f"Error processing image file: {e}")
+            return None
+
     def solve_math_image(self, image_url: str) -> Optional[Dict]:
         """Solve mathematical problems from images using DeepSeek Vision API"""
         try:
@@ -27,12 +57,20 @@ class ImageService:
                 return None
             
             base64_image = base64.b64encode(image_data).decode('utf-8')
-            
+            return self._solve_with_deepseek(base64_image)
+                
+        except Exception as e:
+            logger.error(f"Error solving math image: {e}")
+            return None
+
+    def _solve_with_deepseek(self, base64_image: str) -> Optional[Dict]:
+        """Internal helper to call DeepSeek Vision"""
+        try:
             prompt = """
-You are an expert mathematics tutor. Analyze this image containing a mathematical problem and provide a complete solution.
+You are an expert mathematics tutor. Analyze this image containing a mathematical problem or graph and provide a complete solution.
 
 Please:
-1. Identify and transcribe the mathematical problem from the image
+1. Identify and transcribe the mathematical problem or graph features from the image
 2. Solve the problem step by step with clear explanations
 3. Provide the final answer
 4. If the image is unclear or doesn't contain a math problem, explain what you see
@@ -117,7 +155,7 @@ Format your response as JSON:
                 return None
                 
         except Exception as e:
-            logger.error(f"Error solving math image: {e}")
+            logger.error(f"Error calling DeepSeek API: {e}")
             return None
     
     def _download_image(self, image_url: str) -> Optional[bytes]:

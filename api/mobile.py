@@ -1525,7 +1525,7 @@ def start_session():
 @require_auth
 def generate_virtual_lab_knowledge_check():
     """
-    Generate Virtual Lab knowledge-check questions using DeepSeek (no credit deduction).
+    Generate Virtual Lab knowledge-check questions using DeepSeek (Costs 2 credits).
 
     Payload:
       - simulation_id (optional, for analytics/debug)
@@ -1575,6 +1575,24 @@ def generate_virtual_lab_knowledge_check():
 
         science_gen = CombinedScienceGenerator()
         questions = []
+        
+        # --- NEW: Deduct Credits ---
+        # Cost: 2 credits per generation
+        from database.external_db import deduct_credits, get_user_credits
+        cost = 2
+        
+        user_id = g.current_user_id
+        current_credits = get_user_credits(user_id)
+        
+        if current_credits < cost:
+             return jsonify({'success': False, 'message': f'Insufficient credits. Required: {cost}, Available: {current_credits}'}), 402
+             
+        # Deduct the credits
+        if not deduct_credits(user_id, cost):
+            return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
+            
+        logger.info(f"Deducted {cost} credits from {user_id} for Virtual Lab generation")
+        # ---------------------------
 
         def _options_to_list(opts):
             if isinstance(opts, dict):

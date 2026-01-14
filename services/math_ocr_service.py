@@ -127,8 +127,6 @@ class MathOCRService:
         Returns:
             Dict with LaTeX output and recognized text
         """
-        self._ensure_initialized()
-
         try:
             # Encode image
             image_base64 = self._encode_image(image_path)
@@ -137,12 +135,12 @@ class MathOCRService:
             
             mime_type = self._get_mime_type(image_path)
             
-            # Try Gemini Vision first (better for math OCR)
-            if self.gemini_model:
-                try:
-                    import PIL.Image
-                    image = PIL.Image.open(image_path)
-                    
+            # Use Gemini Interactions Service (New SDK)
+            try:
+                from services.gemini_interactions_service import get_gemini_interactions_service
+                interactions_service = get_gemini_interactions_service()
+                
+                if interactions_service.is_available():
                     prompt = """You are a mathematical equation OCR system. Look at this image and:
 1. Extract any mathematical equations, formulas, or expressions you see
 2. Convert them to PLAIN TEXT Unicode format (avoid complex LaTeX if possible, use x², √, etc.)
@@ -157,27 +155,37 @@ Respond in this exact JSON format:
 
 If no math is visible, set latex to empty string."""
 
-                    response = self.gemini_model.generate_content([prompt, image])
+                    result = interactions_service.analyze_image(
+                        image_data=image_base64,
+                        mime_type=mime_type,
+                        prompt=prompt,
+                        model='flash'
+                    )
                     
-                    if response and response.text:
+                    if result.get('success') and result.get('text'):
+                        response_text = result['text']
+                        
                         # Try to parse JSON response
                         import json
                         try:
-                            result_text = response.text.strip()
-                            # Remove markdown code blocks if present
-                            if result_text.startswith('```'):
-                                result_text = result_text.split('\n', 1)[1]
-                            if result_text.endswith('```'):
-                                result_text = result_text.rsplit('```', 1)[0]
-                            result_text = result_text.strip()
+                            # Clean up markdown
+                            if response_text.startswith('```'):
+                                response_text = response_text.split('\n', 1)[1]
+                            if response_text.endswith('```'):
+                                response_text = response_text.rsplit('```', 1)[0]
+                            response_text = response_text.strip()
                             
-                            if result_text.startswith('{'):
-                                result = json.loads(result_text)
+                            if '{' in response_text:
+                                start_idx = response_text.find('{')
+                                end_idx = response_text.rfind('}') + 1
+                                json_str = response_text[start_idx:end_idx]
+                                
+                                data = json.loads(json_str)
                                 return {
                                     "success": True,
-                                    "latex": result.get('latex', ''),
-                                    "plain_text": result.get('plain_text', ''),
-                                    "description": result.get('description', ''),
+                                    "latex": data.get('latex', ''),
+                                    "plain_text": data.get('plain_text', ''),
+                                    "description": data.get('description', ''),
                                     "confidence": 0.90,
                                     "method": "gemini_vision",
                                     "cost": 0.0
@@ -185,20 +193,40 @@ If no math is visible, set latex to empty string."""
                         except json.JSONDecodeError:
                             pass
                         
-                        # If JSON parsing failed, return raw text
+                        # Fallback for non-JSON response
                         return {
                             "success": True,
-                            "latex": response.text.strip(),
-                            "plain_text": response.text.strip(),
-                            "confidence": 0.85,
+                            "latex": response_text,
+                            "plain_text": response_text,
+                            "confidence": 0.80,
                             "method": "gemini_vision",
                             "cost": 0.0
                         }
-                        
+            except Exception as e:
+                logger.error(f"Gemini Interactions error in MathOCR: {e}")
+
+            # Legacy Fallback (Old SDK) - kept just in case, but updated models
+            self._ensure_initialized()
+            if self.gemini_model:
+                try:
+                    import PIL.Image
+                    image = PIL.Image.open(image_path)
+                    
+                    prompt = "Extract math equations from this image. Return JSON with 'latex', 'plain_text', 'description'."
+                    response = self.gemini_model.generate_content([prompt, image])
+                    
+                    if response and response.text:
+                        return {
+                            "success": True,
+                            "latex": response.text,
+                            "plain_text": response.text,
+                            "confidence": 0.85,
+                            "method": "gemini_vision_legacy"
+                        }
                 except Exception as e:
-                    logger.error(f"Gemini vision error: {e}")
+                    logger.error(f"Legacy Gemini error: {e}")
             
-            # Fallback: Return helpful message
+            # Final Fallback
             return {
                 "success": False,
                 "error": "OCR service temporarily unavailable. Please try typing the equation instead.",

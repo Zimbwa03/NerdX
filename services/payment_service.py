@@ -19,38 +19,38 @@ class PaymentService:
         self.packages = [
             {
                 'id': 'pocket',
-                'name': 'POCKET PACKAGE',
-                'price': 1.00,
-                'credits': 50,
-                'description': 'Perfect for quick help',
-                'best_for': '1-2 study sessions',
+                'name': 'STARTER PACKAGE',
+                'price': 2.50,
+                'credits': 200,
+                'description': 'High value entry point',
+                'best_for': '2-3 days of intensive use',
                 'icon': '🟤'
             },
             {
                 'id': 'mini',
-                'name': 'MINI PACKAGE', 
-                'price': 2.00,
-                'credits': 120,
-                'description': 'Extended trial value',
-                'best_for': 'Week of light studying',
+                'name': 'STANDARD PACKAGE', 
+                'price': 5.00,
+                'credits': 420,
+                'description': 'Solid upgrade with bonus',
+                'best_for': 'Weekly revision & practice',
                 'icon': '🟢'
             },
             {
                 'id': 'quick',
-                'name': 'QUICK PACKAGE',
-                'price': 5.00,
-                'credits': 350,
-                'description': 'Most popular choice',
-                'best_for': 'Regular study routine',
+                'name': 'PRO PACKAGE',
+                'price': 10.00,
+                'credits': 890,
+                'description': 'Serious student choice',
+                'best_for': 'Monthly master class',
                 'icon': '🔵'
             },
             {
                 'id': 'boost',
-                'name': 'BOOST PACKAGE',
-                'price': 10.00,
-                'credits': 750,
-                'description': 'Maximum value',
-                'best_for': 'Intensive study periods',
+                'name': 'PREMIUM PACKAGE',
+                'price': 15.00,
+                'credits': 1440,
+                'description': 'Maximum value per dollar',
+                'best_for': 'Term-long learning',
                 'icon': '🟡'
             }
         ]
