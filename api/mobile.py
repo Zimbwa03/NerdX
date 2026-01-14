@@ -105,10 +105,46 @@ def login():
                     logger.error(f"Failed to backfill user from Supabase Auth: {e}")
                     return jsonify({'success': False, 'message': 'Login failed during sync'}), 500
             else:
-                logger.warning(f"Supabase Auth fallback failed for {user_identifier} - Login rejected")
-            
+                logger.warning(f"Supabase Auth fallback failed for {user_identifier} - Login rejected. Checking Admin API for OAuth user...")
+                
+                # Check if user exists via Admin API (e.g. Google/OAuth user)
+                from database.external_db import get_user_by_email_admin
+                
+                # Only check for email identifiers
+                if '@' in user_identifier:
+                    admin_user = get_user_by_email_admin(user_identifier)
+                    
+                    if admin_user:
+                        logger.info(f"User found via Admin API (likely OAuth)! Backfilling local registration...")
+                        try:
+                            s_user = admin_user.get('user', {})
+                            metadata = s_user.get('user_metadata', {})
+                            
+                            name = metadata.get('name') or metadata.get('first_name') or 'User'
+                            surname = metadata.get('surname') or metadata.get('last_name') or ''
+                            
+                            create_user_registration(
+                                chat_id=user_identifier,
+                                name=name,
+                                surname=surname,
+                                date_of_birth='2000-01-01',
+                                email=user_identifier,
+                                password_hash=None
+                            )
+                            
+                            # Refetch
+                            user_data = get_user_registration(user_identifier)
+                            
+                            # We found the user, but since they are OAuth, we CANNOT log them in with the provided password.
+                            # So we do NOT clear skip_password_verification. 
+                            # They will hit the "Invalid credentials" block below, which is CORRECT.
+                            # BUT, they won't get "User not found" (404), they get 401.
+                            
+                        except Exception as e:
+                            logger.error(f"Failed to backfill OAuth user: {e}")
+
             if not user_data:
-                 # If we reached here, user not found locally AND Supabase Auth failed (invalid creds or doesn't exist)
+                 # If we reached here, user not found locally AND Supabase Auth failed AND Admin lookup failed
                  return jsonify({'success': False, 'message': 'Invalid credentials or user not found'}), 401
         
         # Verify password (assume users_registration has password_hash, or fetch from auth table)

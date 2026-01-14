@@ -2079,3 +2079,60 @@ def authenticate_supabase_user(identifier, password):
     except Exception as e:
         logger.error(f"Error checking Supabase Auth: {e}")
         return None
+
+def get_user_by_email_admin(email):
+    """
+    Look up a user by email using Supabase Admin API.
+    Useful for finding users who signed up with Google/OAuth (no password).
+    Returns: User object if found, None otherwise
+    """
+    try:
+        if not SUPABASE_SERVICE_ROLE_KEY:
+            logger.error("Supabase Service Role Key missing - cannot use Admin API")
+            return None
+            
+        # Supabase Admin List Users endpoint doesn't support direct filtering by email in all versions/wrappers.
+        # However, the /admin/users endpoint returns a list. We might need to filter manually if no search param.
+        # UPDATE: GoTrue /admin/users usually supports usage of query params or we have to fetch and filter.
+        # But `test_admin_auth.py` showed we can list users.
+        # A more direct way specifically for *finding* might be `GET /admin/users/{id}` but we don't have ID.
+        # We will try to rely on listing (with page/limit if needed) or just basic listing if user base is small, 
+        # BUT this is risky for large user/bases.
+        # Better approach: Try to create a dummy user with that email. 
+        # If it fails with "User already registered", we know they exist! 
+        # BUT that doesn't give us their ID/metadata to backfill.
+        
+        # Best effort: Use the list endpoint and filter.
+        url = f"{SUPABASE_URL}/auth/v1/admin/users"
+        headers = {
+            "apikey": SUPABASE_SERVICE_ROLE_KEY,
+            "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
+            "Content-Type": "application/json"
+        }
+        
+        logger.info(f"Admin lookup for: {email}")
+        
+        # Attempt to find user
+        response = requests.get(url, headers=headers, params={"page": 1, "per_page": 100}) # Fetch first 100
+        
+        if response.status_code == 200:
+            users = response.json().get('users', [])
+            for user in users:
+                if user.get('email', '').lower() == email.lower():
+                    logger.info(f"✅ Found user in Admin list: {email}")
+                    # Wrap it in a structure similar to authenticate_supabase_user for consistency if needed,
+                    # or just return the user object. 
+                    # authenticate_supabase_user returns: {'access_token':..., 'user': {...}}
+                    # We will just return a structure containing 'user' so api/mobile.py can parse it same way.
+                    return {'user': user}
+                    
+            logger.info(f"User {email} not found in first 100 admin users")
+            return None
+            
+        else:
+            logger.error(f"Admin API failed: {response.status_code} {response.text}")
+            return None
+            
+    except Exception as e:
+        logger.error(f"Error in admin user lookup: {e}")
+        return None
