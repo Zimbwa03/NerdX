@@ -649,6 +649,19 @@ const GraphPracticeScreen: React.FC = () => {
                 >
                   <Text style={styles.submitButtonText}>Submit Answer</Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.modeButton, { marginTop: 10, padding: 15, backgroundColor: 'transparent', borderWidth: 1, borderColor: themedColors.border.light }]}
+                  onPress={() => {
+                    if (mode === 'generate') {
+                      handleGenerate();
+                    } else {
+                      resetView();
+                    }
+                  }}
+                >
+                  <Text style={[styles.submitButtonText, { color: themedColors.text.primary }]}>Skip / Next</Text>
+                </TouchableOpacity>
               </View>
             )}
 

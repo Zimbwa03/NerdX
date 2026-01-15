@@ -10,3 +10,10 @@ export {
 
 export type { ALevelPureMathTopic } from './topics';
 
+// Export comprehensive notes
+export {
+    aLevelPureMathNotes,
+    getALevelPureMathNotes,
+    getAvailableALevelPureMathTopics
+} from './notes';
+

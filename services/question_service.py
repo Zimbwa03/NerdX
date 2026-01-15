@@ -225,6 +225,12 @@ class QuestionService:
                 question_data['subject'] = subject
                 question_data['topic'] = topic
                 question_data['difficulty'] = difficulty
+                
+                # Add image upload and text input flags for math subjects
+                if subject in ['Mathematics', 'a_level_pure_math']:
+                    question_data['allows_text_input'] = True
+                    question_data['allows_image_upload'] = True
+                    
                 return question_data
             
             return None

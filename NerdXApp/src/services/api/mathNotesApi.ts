@@ -5,6 +5,7 @@
 
 import api from './config';
 import { getMathTopicNotes, getMathTopics, MathTopicNotes } from '../../data/mathNotes';
+import { getALevelPureMathNotes } from '../../data/aLevelPureMath';
 
 export const mathNotesApi = {
     /**
@@ -25,6 +26,7 @@ export const mathNotesApi = {
 
     /**
      * Get notes for a specific topic
+     * Now checks both O-Level and A-Level Pure Math notes
      */
     getTopicNotes: async (topic: string, gradeLevel: string = 'O-Level'): Promise<MathTopicNotes | null> => {
         try {
@@ -39,10 +41,18 @@ export const mathNotesApi = {
                 notes.subject = 'Mathematics';
                 return notes;
             }
-            return getMathTopicNotes(topic);
+            // Fallback to local notes
+            return getMathTopicNotes(topic) || getALevelPureMathNotes(topic);
         } catch (error) {
             console.log('Generating math notes from server failed, using local fallback', error);
-            return getMathTopicNotes(topic);
+            // First try O-Level notes, then A-Level Pure Math notes
+            const oLevelNotes = getMathTopicNotes(topic);
+            if (oLevelNotes) return oLevelNotes;
+
+            // Check A-Level Pure Math notes
+            const aLevelNotes = getALevelPureMathNotes(topic);
+            return aLevelNotes;
         }
     }
 };
+

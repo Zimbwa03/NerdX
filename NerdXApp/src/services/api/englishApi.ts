@@ -80,6 +80,7 @@ export interface EssayMarkingResult {
   corrected_essay: string;
   detailed_feedback: string;
   pdf_report: string; // Base64-encoded PDF
+  credits_deducted?: number;
 }
 
 export interface EssayPrompt {

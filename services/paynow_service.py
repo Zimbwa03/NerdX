@@ -126,14 +126,14 @@ class PaynowService:
                 
                 return {
                     'success': True,
-                    'poll_url': poll_url,
-                    'redirect_url': poll_url,  # Use poll_url as redirect for mobile
-                    'hash': getattr(response, 'hash', ''),
-                    'reference': reference,
+                    'poll_url': str(poll_url),
+                    'redirect_url': str(poll_url),  # Use poll_url as redirect for mobile
+                    'hash': str(getattr(response, 'hash', '')),
+                    'reference': str(reference),
                     'amount': amount,
-                    'phone_number': phone_number,
+                    'phone_number': str(phone_number),
                     'status': 'INITIATED',
-                    'instructions': instructions
+                    'instructions': str(instructions)
                 }
             else:
                 error_detail = str(getattr(response, 'error', 'Unknown error'))

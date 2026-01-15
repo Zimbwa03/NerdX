@@ -175,6 +175,26 @@ const CombinedScienceExamScreen: React.FC = () => {
     setCurrentAnswer(answer);
   };
 
+  const handleSkipQuestion = async () => {
+    // Save empty answer
+    setAnswers({ ...answers, [currentQuestionIndex]: '' });
+
+    if (currentQuestionIndex < questions.length - 1) {
+      const nextIndex = currentQuestionIndex + 1;
+      setCurrentQuestionIndex(nextIndex);
+      setCurrentAnswer(answers[nextIndex] || '');
+
+      // Load next question if it's a placeholder
+      const nextQuestion = questions[nextIndex];
+      if (nextQuestion && nextQuestion.question_text === 'Loading question...' && nextQuestion.subject) {
+        await loadQuestion(nextIndex, nextQuestion.subject);
+      }
+    } else {
+      // Last question - submit exam with empty answer
+      handleSubmitExam('');
+    }
+  };
+
   const handleNextQuestion = async () => {
     // Save current answer
     setAnswers({ ...answers, [currentQuestionIndex]: currentAnswer });
@@ -202,9 +222,10 @@ const CombinedScienceExamScreen: React.FC = () => {
     }
   };
 
-  const handleSubmitExam = async () => {
-    // Save last answer
-    const finalAnswers = { ...answers, [currentQuestionIndex]: currentAnswer };
+  const handleSubmitExam = async (lastAnswerOverride?: string) => {
+    // Save last answer - use override if provided (for skipping), otherwise current selection
+    const answerToSave = typeof lastAnswerOverride === 'string' ? lastAnswerOverride : currentAnswer;
+    const finalAnswers = { ...answers, [currentQuestionIndex]: answerToSave };
     setAnswers(finalAnswers);
 
     try {
@@ -497,6 +518,13 @@ const CombinedScienceExamScreen: React.FC = () => {
                   disabled={currentQuestionIndex === 0}
                   icon="arrow-back"
                   iconPosition="left"
+                />
+                <Button
+                  title="Skip"
+                  variant="outline"
+                  onPress={handleSkipQuestion}
+                  disabled={loading}
+                  style={{ borderColor: themedColors.text.disabled }}
                 />
                 <Button
                   title={currentQuestionIndex === questions.length - 1 ? 'Submit Exam' : 'Next'}

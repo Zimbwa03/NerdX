@@ -322,24 +322,49 @@ const EnglishComprehensionScreen: React.FC = () => {
               )}
 
               {!submitted && (
-                <TouchableOpacity
-                  style={[styles.actionButton, loading && styles.generateButtonDisabled]}
-                  onPress={handleSubmit}
-                  disabled={loading}
-                >
-                  <LinearGradient
-                    colors={loading ? ['#BDBDBD', '#9E9E9E'] : themedColors.gradients.success}
-                    style={styles.gradientButton}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
+                <>
+                  <TouchableOpacity
+                    style={[styles.actionButton, loading && styles.generateButtonDisabled]}
+                    onPress={handleSubmit}
+                    disabled={loading}
                   >
-                    {loading ? (
-                      <ActivityIndicator color="#FFF" />
-                    ) : (
-                      <Text style={styles.actionButtonText}>Submit All Answers</Text>
-                    )}
-                  </LinearGradient>
-                </TouchableOpacity>
+                    <LinearGradient
+                      colors={loading ? ['#BDBDBD', '#9E9E9E'] : themedColors.gradients.success}
+                      style={styles.gradientButton}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                    >
+                      {loading ? (
+                        <ActivityIndicator color="#FFF" />
+                      ) : (
+                        <Text style={styles.actionButtonText}>Submit All Answers</Text>
+                      )}
+                    </LinearGradient>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.actionButton, { marginTop: 0, marginBottom: 20, backgroundColor: 'transparent', elevation: 0, shadowOpacity: 0 }]}
+                    onPress={() => {
+                      setComprehension(null);
+                      setAnswers({});
+                      setSummaryAnswer('');
+                      setSubmitted(false);
+                      setGradingResult(null);
+                      setSummaryResult(null);
+                      setActiveTab('questions');
+                    }}
+                    disabled={loading}
+                  >
+                    <LinearGradient
+                      colors={['transparent', 'transparent']}
+                      style={[styles.gradientButton, { borderWidth: 1, borderColor: themedColors.primary.main, borderRadius: 12 }]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                    >
+                      <Text style={[styles.actionButtonText, { color: themedColors.primary.main }]}>Skip / New Practice</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </>
               )}
 
               {submitted && gradingResult && (

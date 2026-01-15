@@ -236,10 +236,11 @@ const QuizScreen: React.FC = () => {
       }
     } else {
       // Regular text input or MCQ
-      answerToSubmit = question.allows_text_input ? textAnswer : selectedAnswer;
+      // Priority: Use text answer if provided, otherwise use selected MCQ option
+      answerToSubmit = textAnswer?.trim() || selectedAnswer || '';
 
       if (!answerToSubmit && !answerImage) {
-        Alert.alert('Error', 'Please enter your answer or upload an image');
+        Alert.alert('Error', 'Please select an answer, enter your solution, or upload an image');
         return;
       }
     }
@@ -1753,17 +1754,30 @@ const QuizScreen: React.FC = () => {
               {/* Action Buttons */}
               <View style={styles.buttonContainer}>
                 {!result ? (
-                  <Button
-                    title="Submit Answer"
-                    variant="primary"
-                    size="large"
-                    fullWidth
-                    onPress={handleSubmit}
-                    disabled={(!selectedAnswer && !textAnswer && !answerImage) || loading}
-                    loading={loading}
-                    icon="checkmark-circle"
-                    iconPosition="left"
-                  />
+                  <>
+                    <Button
+                      title="Submit Answer"
+                      variant="primary"
+                      size="large"
+                      fullWidth
+                      onPress={handleSubmit}
+                      disabled={(!selectedAnswer && !textAnswer && !answerImage) || loading}
+                      loading={loading}
+                      icon="checkmark-circle"
+                      iconPosition="left"
+                    />
+                    <Button
+                      title="Skip / Next"
+                      variant="outline"
+                      size="large"
+                      fullWidth
+                      onPress={handleNext}
+                      disabled={loading || generatingQuestion}
+                      icon="arrow-forward"
+                      iconPosition="right"
+                      style={{ marginTop: 10 }}
+                    />
+                  </>
                 ) : (
                   <>
                     <Button

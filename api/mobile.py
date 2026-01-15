@@ -2282,7 +2282,8 @@ def submit_essay_marking():
             
             return jsonify({
                 'success': True,
-                'data': marking_result
+                'data': marking_result,
+                'credits_deducted': credit_cost
             }), 200
             
         else:

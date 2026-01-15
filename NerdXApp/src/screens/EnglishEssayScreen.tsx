@@ -190,15 +190,17 @@ const EnglishEssayScreen: React.FC = () => {
         setMarkingResult(result);
         setSubmitted(true);
 
+        const deduction = result.credits_deducted || 3;
+
         // Update credits
         if (user) {
-          const newCredits = (user.credits || 0) - 3;
+          const newCredits = (user.credits || 0) - deduction;
           updateUser({ credits: newCredits });
         }
 
         Alert.alert(
           'Marking Complete!',
-          `Score: ${result.score}/${result.max_score}\n\n${result.teacher_comment}`,
+          `Score: ${result.score}/${result.max_score}\n\n${result.teacher_comment}\n\n(-${deduction} credits)`,
           [{ text: 'View Feedback' }]
         );
       }

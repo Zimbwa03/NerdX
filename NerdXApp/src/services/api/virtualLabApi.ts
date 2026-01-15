@@ -24,7 +24,9 @@ export const virtualLabApi = {
   generateKnowledgeCheck: async (
     payload: GenerateKnowledgeCheckPayload
   ): Promise<VirtualLabKnowledgeCheckQuestion[]> => {
-    const response = await api.post('/api/mobile/virtual-lab/knowledge-check', payload);
+    const response = await api.post('/api/mobile/virtual-lab/knowledge-check', payload, {
+      timeout: 120000, // Increase timeout to 120s for AI generation
+    });
     return response.data.data || [];
   },
 };
