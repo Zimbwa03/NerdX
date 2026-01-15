@@ -14,12 +14,15 @@ import {
   StatusBar,
   Image,
   Modal,
+  Keyboard,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
+import * as ImagePicker from 'expo-image-picker';
+import { Audio } from 'expo-av';
 import { projectApi, ProjectDetails, ResearchSession, ResearchStatus } from '../services/api/projectApi';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -53,12 +56,29 @@ const ProjectAssistantScreen: React.FC = () => {
   const [showToolbar, setShowToolbar] = useState(false);
   const [activeResearch, setActiveResearch] = useState<ResearchSession | null>(null);
   const [researchPolling, setResearchPolling] = useState(false);
-  const [activeMode, setActiveMode] = useState<'chat' | 'web_search' | 'deep_research'>('chat');
+  const [activeMode, setActiveMode] = useState<'chat' | 'web_search' | 'deep_research' | 'scan_image' | 'voice_record'>('chat');
   const [showModeMenu, setShowModeMenu] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     initializeProject();
+
+    // Keyboard listeners for Android
+    const keyboardDidShow = Keyboard.addListener('keyboardDidShow', () => {
+      setKeyboardVisible(true);
+      setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
+    });
+    const keyboardDidHide = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardVisible(false);
+    });
+
+    return () => {
+      keyboardDidShow.remove();
+      keyboardDidHide.remove();
+    };
   }, []);
 
   useEffect(() => {
@@ -409,6 +429,157 @@ const ProjectAssistantScreen: React.FC = () => {
     }
   };
 
+  // ==================== Image Scan Handler ====================
+  const handleImageScan = async () => {
+    if (!project) return;
+
+    try {
+      // Request permission
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Please allow access to your photo library to scan images.');
+        return;
+      }
+
+      // Pick image
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: false,
+        quality: 0.8,
+        base64: true,
+      });
+
+      if (result.canceled || !result.assets?.[0]) return;
+
+      const image = result.assets[0];
+      setSending(true);
+      setActiveMode('chat'); // Switch back to chat after scanning
+
+      // Show analyzing message with image preview
+      setMessages((prev) => [...prev, {
+        id: 'scanning-image',
+        role: 'assistant',
+        content: `📷 **Analyzing Image...**\n\nProcessing your image with AI vision...`,
+        timestamp: new Date(),
+      }]);
+
+      // Send to API for analysis
+      const base64Data = image.base64 || await FileSystem.readAsStringAsync(image.uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      const analysis = await projectApi.analyzeDocument(
+        project.id,
+        base64Data,
+        image.mimeType || 'image/jpeg'
+      );
+
+      setMessages((prev) => prev.filter((msg) => msg.id !== 'scanning-image'));
+
+      if (analysis?.analysis) {
+        setMessages((prev) => [...prev, {
+          id: `image-${Date.now()}`,
+          role: 'assistant',
+          content: `📷 **Image Analysis**\n\n${analysis.analysis}`,
+          timestamp: new Date(),
+        }]);
+      } else {
+        throw new Error('No analysis returned');
+      }
+    } catch (error: any) {
+      setMessages((prev) => prev.filter((msg) => msg.id !== 'scanning-image'));
+      Alert.alert('Error', error.message || 'Failed to analyze image');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  // ==================== Voice Recording Handler ====================
+  const handleVoiceRecord = async () => {
+    if (!project) return;
+
+    try {
+      // Request audio recording permission
+      const { status } = await Audio.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Please allow microphone access for voice recording.');
+        return;
+      }
+
+      // Configure audio mode
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
+
+      if (isRecording && recording) {
+        // Stop recording
+        setIsRecording(false);
+        setSending(true);
+
+        setMessages((prev) => [...prev, {
+          id: 'transcribing',
+          role: 'assistant',
+          content: '🎤 **Processing Audio...**\n\nTranscribing your voice recording...',
+          timestamp: new Date(),
+        }]);
+
+        await recording.stopAndUnloadAsync();
+        const uri = recording.getURI();
+        setRecording(null);
+
+        if (uri) {
+          // Read audio file as base64
+          const base64Audio = await FileSystem.readAsStringAsync(uri, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+
+          // Send to backend for transcription
+          try {
+            const result = await projectApi.transcribeAudio(project.id, base64Audio, 'audio/m4a');
+
+            setMessages((prev) => prev.filter((msg) => msg.id !== 'transcribing'));
+
+            if (result?.transcription) {
+              // Add transcribed text to input or send as message
+              setInputText(result.transcription);
+              setActiveMode('chat');
+
+              setMessages((prev) => [...prev, {
+                id: `voice-${Date.now()}`,
+                role: 'assistant',
+                content: `🎤 **Voice Transcribed:**\n\n"${result.transcription}"\n\n*You can edit or send this message.*`,
+                timestamp: new Date(),
+              }]);
+            }
+          } catch (error: any) {
+            setMessages((prev) => prev.filter((msg) => msg.id !== 'transcribing'));
+            Alert.alert('Transcription Error', error.message || 'Failed to transcribe audio');
+          }
+        }
+        setSending(false);
+      } else {
+        // Start recording
+        const { recording: newRecording } = await Audio.Recording.createAsync(
+          Audio.RecordingOptionsPresets.HIGH_QUALITY
+        );
+        setRecording(newRecording);
+        setIsRecording(true);
+        setActiveMode('voice_record');
+
+        Alert.alert(
+          '🎤 Recording Started',
+          'Tap the microphone icon in the mode menu again to stop recording and transcribe.',
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error: any) {
+      setIsRecording(false);
+      setRecording(null);
+      Alert.alert('Error', error.message || 'Failed to start voice recording');
+    }
+  };
+
   if (loading) {
     return (
       <View style={[styles.centerContainer, { backgroundColor: themedColors.background.default }]}>
@@ -421,8 +592,8 @@ const ProjectAssistantScreen: React.FC = () => {
   return (
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: themedColors.background.default }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 20}
     >
       <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={themedColors.background.default} />
       <LinearGradient
@@ -549,6 +720,24 @@ const ProjectAssistantScreen: React.FC = () => {
               <Text style={[styles.modeMenuText, activeMode === 'deep_research' && { color: '#FF9800', fontWeight: '600' }]}>Deep Research</Text>
               <Text style={styles.modeMenuDesc}>Comprehensive Analysis</Text>
             </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.modeMenuItem, activeMode === 'scan_image' && styles.modeMenuItemActive]}
+              onPress={() => { setShowModeMenu(false); handleImageScan(); }}
+            >
+              <Ionicons name="camera-outline" size={20} color={activeMode === 'scan_image' ? '#E91E63' : themedColors.text.secondary} />
+              <Text style={[styles.modeMenuText, activeMode === 'scan_image' && { color: '#E91E63', fontWeight: '600' }]}>Scan Image</Text>
+              <Text style={styles.modeMenuDesc}>AI Vision Analysis</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.modeMenuItem, activeMode === 'voice_record' && styles.modeMenuItemActive]}
+              onPress={() => { setShowModeMenu(false); handleVoiceRecord(); }}
+            >
+              <Ionicons name="mic-outline" size={20} color={activeMode === 'voice_record' ? '#9C27B0' : themedColors.text.secondary} />
+              <Text style={[styles.modeMenuText, activeMode === 'voice_record' && { color: '#9C27B0', fontWeight: '600' }]}>Voice Record</Text>
+              <Text style={styles.modeMenuDesc}>Speech to Text</Text>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -562,13 +751,17 @@ const ProjectAssistantScreen: React.FC = () => {
               name={
                 activeMode === 'web_search' ? 'globe' :
                   activeMode === 'deep_research' ? 'flask' :
-                    'chatbubble-ellipses'
+                    activeMode === 'scan_image' ? 'camera' :
+                      activeMode === 'voice_record' ? 'mic' :
+                        'chatbubble-ellipses'
               }
               size={20}
               color={
                 activeMode === 'web_search' ? themedColors.success.main :
                   activeMode === 'deep_research' ? '#FF9800' :
-                    themedColors.primary.main
+                    activeMode === 'scan_image' ? '#E91E63' :
+                      activeMode === 'voice_record' ? '#9C27B0' :
+                        themedColors.primary.main
               }
             />
           </TouchableOpacity>
@@ -580,7 +773,8 @@ const ProjectAssistantScreen: React.FC = () => {
             placeholder={
               activeMode === 'web_search' ? "Search the web..." :
                 activeMode === 'deep_research' ? "Enter research topic..." :
-                  "Ask for help with your project..."
+                  activeMode === 'scan_image' ? "Describe what to analyze..." :
+                    "Ask for help with your project..."
             }
             placeholderTextColor={themedColors.text.secondary}
             multiline

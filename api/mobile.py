@@ -3301,6 +3301,93 @@ def project_web_search(project_id):
         return jsonify({'success': False, 'message': str(e)}), 500
 
 
+@mobile_bp.route('/project/<int:project_id>/transcribe', methods=['POST'])
+@require_auth
+def transcribe_project_audio(project_id):
+    """Transcribe audio to text using Gemini multimodal"""
+    try:
+        data = request.get_json()
+        audio_data = data.get('audio')  # Base64-encoded audio
+        mime_type = data.get('mime_type', 'audio/m4a')
+        
+        if not audio_data:
+            return jsonify({'success': False, 'message': 'Audio data is required'}), 400
+        
+        # Check credits
+        credit_cost = advanced_credit_service.get_credit_cost('project_chat')
+        user_credits = get_user_credits(g.current_user_id) or 0
+        
+        if user_credits < credit_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {credit_cost}'
+            }), 400
+        
+        # Use Gemini multimodal for transcription
+        try:
+            import google.generativeai as genai
+            import base64
+            import os
+            
+            # Configure Gemini
+            api_key = os.environ.get('GEMINI_API_KEY') or os.environ.get('GOOGLE_API_KEY')
+            if not api_key:
+                raise Exception("Gemini API key not configured")
+            
+            genai.configure(api_key=api_key)
+            
+            # Use Gemini 2.0 Flash for audio transcription
+            model = genai.GenerativeModel('gemini-2.0-flash')
+            
+            # Decode audio and create content
+            audio_bytes = base64.b64decode(audio_data)
+            
+            # Create audio part for Gemini
+            audio_part = {
+                'inline_data': {
+                    'mime_type': mime_type,
+                    'data': audio_data
+                }
+            }
+            
+            # Transcription prompt
+            prompt = """Please transcribe the following audio accurately. 
+            Return ONLY the transcribed text, nothing else. 
+            If the audio is unclear, do your best to transcribe what you can hear."""
+            
+            # Generate transcription
+            response = model.generate_content([prompt, audio_part])
+            
+            transcription = response.text.strip() if response.text else ""
+            
+            if not transcription:
+                raise Exception("No transcription generated")
+            
+            # Deduct credits
+            deduct_credits(g.current_user_id, credit_cost, 'project_transcribe', 'Audio transcription')
+            
+            logger.info(f"🎤 Audio transcribed for user {g.current_user_id}: {transcription[:50]}...")
+            
+            return jsonify({
+                'success': True,
+                'data': {
+                    'transcription': transcription,
+                    'language': 'auto-detected'
+                }
+            }), 200
+            
+        except Exception as gemini_error:
+            logger.error(f"Gemini transcription error: {gemini_error}")
+            return jsonify({
+                'success': False,
+                'message': f'Transcription failed: {str(gemini_error)}'
+            }), 500
+            
+    except Exception as e:
+        logger.error(f"Transcribe audio error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
 # ============================================================================
 # GRAPH PRACTICE ENDPOINTS
 # ============================================================================

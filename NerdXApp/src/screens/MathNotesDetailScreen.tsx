@@ -20,7 +20,6 @@ import { Colors } from '../theme/colors';
 import MathRenderer from '../components/MathRenderer';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
-import FlashcardSection from '../components/FlashcardSection';
 
 const { width } = Dimensions.get('window');
 
@@ -186,15 +185,6 @@ const MathNotesDetailScreen: React.FC = () => {
                     ))}
                 </View>
 
-                {/* Flashcards Integration */}
-                <View style={styles.flashcardContainer}>
-                    <FlashcardSection
-                        subject="Mathematics"
-                        topic={notes.topic}
-                        notes={JSON.stringify(notes)}
-                    />
-                </View>
-
                 <View style={{ height: 40 }} />
             </ScrollView>
         </View>
@@ -228,7 +218,6 @@ const styles = StyleSheet.create({
     answerLabel: { fontWeight: 'bold', marginRight: 8, fontSize: 14 },
     pointRow: { flexDirection: 'row', marginBottom: 8, paddingLeft: 10 },
     pointText: { fontSize: 15, flex: 1 },
-    flashcardContainer: { marginTop: 10 },
 });
 
 export default MathNotesDetailScreen;

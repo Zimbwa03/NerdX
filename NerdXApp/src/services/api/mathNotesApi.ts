@@ -1,58 +1,57 @@
 /**
  * Math Notes API Service
- * Handles fetching math notes from the backend with a local fallback.
+ * Uses local notes directly for offline access - no server calls needed.
  */
 
-import api from './config';
 import { getMathTopicNotes, getMathTopics, MathTopicNotes } from '../../data/mathNotes';
 import { getALevelPureMathNotes } from '../../data/aLevelPureMath';
+import { getOLevelMathNotes, getAvailableOLevelMathTopics } from '../../data/oLevelMath/notes';
 
 export const mathNotesApi = {
     /**
      * Get available topics for Mathematics
+     * Uses local data directly - works offline
      */
-    getTopics: async (): Promise<string[]> => {
-        try {
-            const response = await api.get('/api/mobile/math/notes/topics');
-            if (response.data.success) {
-                return response.data.data.topics;
-            }
-            return getMathTopics();
-        } catch (error) {
-            console.log('Fetching math topics from server failed, using local fallback');
+    getTopics: async (gradeLevel: string = 'O-Level'): Promise<string[]> => {
+        if (gradeLevel === 'A-Level' || gradeLevel === 'A Level') {
             return getMathTopics();
         }
+        // For O-Level, combine topics from both sources
+        const oldTopics = getMathTopics();
+        const newTopics = getAvailableOLevelMathTopics();
+        // Return unique topics
+        return [...new Set([...newTopics, ...oldTopics])];
     },
 
     /**
      * Get notes for a specific topic
-     * Now checks both O-Level and A-Level Pure Math notes
+     * Uses local data directly - works offline
+     * Checks O-Level, A-Level Pure Math notes
      */
     getTopicNotes: async (topic: string, gradeLevel: string = 'O-Level'): Promise<MathTopicNotes | null> => {
-        try {
-            const response = await api.post('/api/mobile/math/notes/generate', {
-                topic,
-                grade_level: gradeLevel
-            });
-
-            if (response.data.success) {
-                // Ensure the subject is set correctly for the frontend
-                const notes = response.data.data;
-                notes.subject = 'Mathematics';
-                return notes;
-            }
-            // Fallback to local notes
-            return getMathTopicNotes(topic) || getALevelPureMathNotes(topic);
-        } catch (error) {
-            console.log('Generating math notes from server failed, using local fallback', error);
-            // First try O-Level notes, then A-Level Pure Math notes
-            const oLevelNotes = getMathTopicNotes(topic);
-            if (oLevelNotes) return oLevelNotes;
-
-            // Check A-Level Pure Math notes
+        // For A-Level, check A-Level Pure Math notes first
+        if (gradeLevel === 'A-Level' || gradeLevel === 'A Level') {
             const aLevelNotes = getALevelPureMathNotes(topic);
-            return aLevelNotes;
+            if (aLevelNotes) {
+                return aLevelNotes;
+            }
         }
+
+        // Try comprehensive O-Level notes first (new file with detailed notes)
+        const comprehensiveNotes = getOLevelMathNotes(topic);
+        if (comprehensiveNotes) {
+            return comprehensiveNotes;
+        }
+
+        // Try older O-Level notes
+        const oLevelNotes = getMathTopicNotes(topic);
+        if (oLevelNotes) {
+            return oLevelNotes;
+        }
+
+        // Fallback: check A-Level notes if O-Level not found
+        const aLevelNotes = getALevelPureMathNotes(topic);
+        return aLevelNotes;
     }
 };
 

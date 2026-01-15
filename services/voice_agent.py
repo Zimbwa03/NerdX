@@ -52,12 +52,25 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Gemini API configuration
+# ============================================================================
+# VERTEX AI / GEMINI CONFIGURATION
+# ============================================================================
+
+# Prefer Vertex AI (better quality, your service account has access)
+USE_VERTEX_AI = os.getenv('GOOGLE_GENAI_USE_VERTEXAI', 'True').lower() == 'true'
+GOOGLE_CLOUD_PROJECT = os.getenv('GOOGLE_CLOUD_PROJECT', 'gen-lang-client-0303273462')
+GOOGLE_CLOUD_LOCATION = os.getenv('GOOGLE_CLOUD_LOCATION', 'us-central1')
+GOOGLE_APPLICATION_CREDENTIALS = os.getenv('GOOGLE_APPLICATION_CREDENTIALS', 'credentials/vertex_ai_service_account.json')
+
+# Gemini API fallback
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
-# Gemini Live API model - try multiple options
-# gemini-2.0-flash-live-001 is for real-time voice/video
-# gemini-2.0-flash-exp is experimental multimodal
-GEMINI_MODEL = os.getenv('GEMINI_LIVE_MODEL', 'gemini-2.0-flash-exp')
+
+# Model selection - Gemini 2.5 Flash is best for real-time audio
+# gemini-2.5-flash supports native audio processing
+GEMINI_MODEL = os.getenv('GEMINI_LIVE_MODEL', 'gemini-2.5-flash-preview-native-audio-dialog')
+
+# Fallback model if native audio dialog is not available
+GEMINI_MODEL_FALLBACK = 'gemini-2.0-flash-exp'
 
 # NerdX System Instruction
 NERDX_SYSTEM_INSTRUCTION = """
@@ -150,11 +163,29 @@ def convert_m4a_to_pcm(m4a_base64: str) -> Optional[str]:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan handler"""
-    logger.info("🚀 NerdX Live Voice Agent starting (TRANSPARENT PIPE mode)...")
-    if not GEMINI_API_KEY:
-        logger.error("❌ GEMINI_API_KEY not set!")
+    logger.info("🚀 NerdX Live Voice Agent starting (VERTEX AI + TRANSPARENT PIPE mode)...")
+    logger.info(f"📍 Vertex AI Enabled: {USE_VERTEX_AI}")
+    logger.info(f"📍 Project: {GOOGLE_CLOUD_PROJECT}")
+    logger.info(f"📍 Location: {GOOGLE_CLOUD_LOCATION}")
+    logger.info(f"📍 Model: {GEMINI_MODEL}")
+    
+    if USE_VERTEX_AI:
+        creds_path = GOOGLE_APPLICATION_CREDENTIALS
+        if os.path.exists(creds_path):
+            logger.info(f"✅ Vertex AI credentials found: {creds_path}")
+        else:
+            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            full_path = os.path.join(base_dir, creds_path)
+            if os.path.exists(full_path):
+                logger.info(f"✅ Vertex AI credentials found: {full_path}")
+            else:
+                logger.warning(f"⚠️ Vertex AI credentials not found at {creds_path} or {full_path}")
+    
+    if GEMINI_API_KEY:
+        logger.info("✅ Gemini API key configured (fallback)")
     else:
-        logger.info("✅ Gemini API key configured")
+        logger.warning("⚠️ No Gemini API key (fallback unavailable)")
+    
     yield
     logger.info("👋 NerdX Live shutting down...")
 
@@ -162,8 +193,8 @@ async def lifespan(app: FastAPI):
 # Create FastAPI app
 app = FastAPI(
     title="NerdX Live Voice Agent",
-    description="Transparent pipe to Gemini Live API - minimal latency",
-    version="2.0.0",
+    description="Vertex AI Live API with transparent pipe - minimal latency, HD voice",
+    version="3.0.0",
     lifespan=lifespan
 )
 
@@ -246,18 +277,180 @@ async def run_billing_scheduler(billing: BillingManager, websocket: WebSocket):
 class TransparentGeminiPipe:
     """
     TRANSPARENT PIPE: Forwards messages with zero buffering.
-    Only converts audio formats at the boundary - no processing in between.
+    Supports both Vertex AI (preferred) and regular Gemini API.
     """
     
     def __init__(self, client_ws: WebSocket):
         self.client_ws = client_ws
         self.gemini_ws: Optional[any] = None
         self.is_active = False
-        
+        self.using_vertex_ai = False
+    
+    async def _get_vertex_ai_token(self) -> Optional[str]:
+        """Get OAuth2 access token for Vertex AI using service account."""
+        try:
+            from google.oauth2 import service_account
+            from google.auth.transport import requests as google_requests
+            
+            # Check for credentials file
+            creds_path = GOOGLE_APPLICATION_CREDENTIALS
+            if not os.path.exists(creds_path):
+                # Try relative to script directory
+                base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                creds_path = os.path.join(base_dir, GOOGLE_APPLICATION_CREDENTIALS)
+            
+            if not os.path.exists(creds_path):
+                logger.warning(f"Service account file not found: {creds_path}")
+                return None
+            
+            # Load service account credentials
+            credentials = service_account.Credentials.from_service_account_file(
+                creds_path,
+                scopes=['https://www.googleapis.com/auth/cloud-platform']
+            )
+            
+            # Refresh to get access token
+            credentials.refresh(google_requests.Request())
+            
+            logger.info(f"✅ Got Vertex AI access token (expires: {credentials.expiry})")
+            return credentials.token
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to get Vertex AI token: {e}")
+            return None
+    
     async def connect_to_gemini(self) -> bool:
-        """Connect to Gemini Live API"""
+        """Connect to Gemini Live API - tries Vertex AI first, then regular API."""
+        
+        # Try Vertex AI first (better quality, service account auth)
+        if USE_VERTEX_AI:
+            connected = await self._connect_vertex_ai()
+            if connected:
+                self.using_vertex_ai = True
+                return True
+            logger.warning("⚠️ Vertex AI connection failed, falling back to regular Gemini API")
+        
+        # Fallback to regular Gemini API
+        if GEMINI_API_KEY:
+            connected = await self._connect_gemini_api()
+            if connected:
+                return True
+        
+        logger.error("❌ All connection methods failed")
+        return False
+    
+    async def _connect_vertex_ai(self) -> bool:
+        """Connect to Vertex AI Gemini Live API with OAuth2."""
+        try:
+            import websockets
+            
+            # Get access token
+            token = await asyncio.to_thread(self._get_vertex_ai_token_sync)
+            if not token:
+                return False
+            
+            # Vertex AI WebSocket endpoint
+            # Format: wss://{LOCATION}-aiplatform.googleapis.com/ws/google.cloud.aiplatform.v1beta1.LlmBidiService/BidiGenerateContent
+            vertex_url = (
+                f"wss://{GOOGLE_CLOUD_LOCATION}-aiplatform.googleapis.com/ws/"
+                f"google.cloud.aiplatform.v1beta1.LlmBidiService/BidiGenerateContent"
+            )
+            
+            logger.info(f"🔗 Connecting to Vertex AI Live API (project: {GOOGLE_CLOUD_PROJECT})...")
+            logger.info(f"🔗 Location: {GOOGLE_CLOUD_LOCATION}, Model: {GEMINI_MODEL}")
+            
+            self.gemini_ws = await websockets.connect(
+                vertex_url,
+                additional_headers={
+                    "Authorization": f"Bearer {token}",
+                    "Content-Type": "application/json",
+                    "x-goog-user-project": GOOGLE_CLOUD_PROJECT,
+                },
+                ping_interval=30,
+                ping_timeout=10,
+            )
+            
+            # Send setup message for Vertex AI
+            setup_message = {
+                "setup": {
+                    "model": f"projects/{GOOGLE_CLOUD_PROJECT}/locations/{GOOGLE_CLOUD_LOCATION}/publishers/google/models/{GEMINI_MODEL}",
+                    "generationConfig": {
+                        "responseModalities": ["AUDIO"],
+                        "speechConfig": {
+                            "voiceConfig": {
+                                "prebuiltVoiceConfig": {
+                                    "voiceName": "Aoede"  # Natural HD voice
+                                }
+                            }
+                        }
+                    },
+                    "systemInstruction": {
+                        "parts": [{"text": NERDX_SYSTEM_INSTRUCTION}]
+                    },
+                    "tools": []
+                }
+            }
+            
+            logger.info(f"📤 Sending Vertex AI setup...")
+            await self.gemini_ws.send(json.dumps(setup_message))
+            
+            # Wait for setup response
+            setup_response = await asyncio.wait_for(
+                self.gemini_ws.recv(),
+                timeout=30.0
+            )
+            setup_data = json.loads(setup_response)
+            
+            logger.info(f"📥 Vertex AI setup response: {json.dumps(setup_data)[:500]}")
+            
+            if "setupComplete" in setup_data:
+                logger.info("✅ Vertex AI Live session established successfully")
+                self.is_active = True
+                return True
+            elif "error" in setup_data:
+                error_info = setup_data.get("error", {})
+                error_msg = error_info.get("message", str(setup_data))
+                logger.error(f"❌ Vertex AI setup error: {error_msg}")
+                return False
+            else:
+                logger.error(f"❌ Unexpected Vertex AI response: {setup_data}")
+                return False
+                
+        except asyncio.TimeoutError:
+            logger.error("❌ Timeout waiting for Vertex AI setup")
+            return False
+        except Exception as e:
+            logger.error(f"❌ Vertex AI connection error: {type(e).__name__}: {e}")
+            return False
+    
+    def _get_vertex_ai_token_sync(self) -> Optional[str]:
+        """Synchronous version for use with asyncio.to_thread."""
+        try:
+            from google.oauth2 import service_account
+            from google.auth.transport import requests as google_requests
+            
+            creds_path = GOOGLE_APPLICATION_CREDENTIALS
+            if not os.path.exists(creds_path):
+                base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                creds_path = os.path.join(base_dir, GOOGLE_APPLICATION_CREDENTIALS)
+            
+            if not os.path.exists(creds_path):
+                return None
+            
+            credentials = service_account.Credentials.from_service_account_file(
+                creds_path,
+                scopes=['https://www.googleapis.com/auth/cloud-platform']
+            )
+            credentials.refresh(google_requests.Request())
+            return credentials.token
+        except Exception as e:
+            logger.error(f"Token error: {e}")
+            return None
+    
+    async def _connect_gemini_api(self) -> bool:
+        """Connect to regular Gemini API (fallback)."""
         if not GEMINI_API_KEY:
-            logger.error("❌ GEMINI_API_KEY not set in environment!")
+            logger.error("❌ GEMINI_API_KEY not set!")
             return False
             
         try:
@@ -269,8 +462,9 @@ class TransparentGeminiPipe:
                 f"?key={GEMINI_API_KEY}"
             )
             
-            logger.info(f"🔗 Connecting to Gemini Live API (model: {GEMINI_MODEL})...")
-            logger.info(f"🔗 URL: wss://generativelanguage.googleapis.com/ws/...")
+            # Use fallback model for regular API
+            model_name = GEMINI_MODEL_FALLBACK
+            logger.info(f"🔗 Connecting to Gemini API (model: {model_name})...")
             
             self.gemini_ws = await websockets.connect(
                 gemini_url,
@@ -282,7 +476,7 @@ class TransparentGeminiPipe:
             # Send setup message
             setup_message = {
                 "setup": {
-                    "model": f"models/{GEMINI_MODEL}",
+                    "model": f"models/{model_name}",
                     "generationConfig": {
                         "responseModalities": ["AUDIO"],
                         "speechConfig": {
@@ -300,38 +494,35 @@ class TransparentGeminiPipe:
                 }
             }
             
-            logger.info(f"📤 Sending setup message for model: models/{GEMINI_MODEL}")
+            logger.info(f"📤 Sending Gemini API setup...")
             await self.gemini_ws.send(json.dumps(setup_message))
             
-            # Wait for setup response with timeout
             setup_response = await asyncio.wait_for(
                 self.gemini_ws.recv(),
                 timeout=30.0
             )
             setup_data = json.loads(setup_response)
             
-            logger.info(f"📥 Setup response: {json.dumps(setup_data)[:500]}")
+            logger.info(f"📥 Gemini API setup response: {json.dumps(setup_data)[:500]}")
             
             if "setupComplete" in setup_data:
-                logger.info("✅ Gemini Live session established successfully")
+                logger.info("✅ Gemini API session established")
                 self.is_active = True
                 return True
             elif "error" in setup_data:
                 error_info = setup_data.get("error", {})
                 error_msg = error_info.get("message", str(setup_data))
-                logger.error(f"❌ Gemini setup error: {error_msg}")
+                logger.error(f"❌ Gemini API setup error: {error_msg}")
                 return False
             else:
-                logger.error(f"❌ Unexpected setup response: {setup_data}")
+                logger.error(f"❌ Unexpected response: {setup_data}")
                 return False
                 
         except asyncio.TimeoutError:
-            logger.error("❌ Timeout waiting for Gemini setup response")
+            logger.error("❌ Timeout waiting for Gemini API setup")
             return False
         except Exception as e:
-            logger.error(f"❌ Connection error: {type(e).__name__}: {e}")
-            import traceback
-            logger.error(traceback.format_exc())
+            logger.error(f"❌ Gemini API connection error: {type(e).__name__}: {e}")
             return False
     
     async def forward_audio_to_gemini(self, audio_base64: str):

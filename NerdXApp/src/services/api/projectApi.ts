@@ -276,6 +276,24 @@ export const projectApi = {
       throw error;
     }
   },
+
+  // Transcribe audio using Vertex AI Speech-to-Text
+  transcribeAudio: async (
+    projectId: number,
+    audioBase64: string,
+    mimeType: string = 'audio/m4a'
+  ): Promise<TranscriptionResult | null> => {
+    try {
+      const response = await api.post(`/api/mobile/project/${projectId}/transcribe`, {
+        audio: audioBase64,
+        mime_type: mimeType,
+      });
+      return response.data.data || null;
+    } catch (error: any) {
+      console.error('Transcribe audio error:', error);
+      throw error;
+    }
+  },
 };
 
 // ==================== Additional Interfaces ====================
@@ -306,4 +324,10 @@ export interface Attachment {
 export interface WebSearchResult {
   response: string;
   interaction_id?: string;
+}
+
+export interface TranscriptionResult {
+  transcription: string;
+  language?: string;
+  confidence?: number;
 }

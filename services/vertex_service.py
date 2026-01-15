@@ -26,7 +26,7 @@ class VertexService:
     
     def __init__(self):
         """Initialize the Vertex AI service."""
-        self.project_id = os.environ.get('GOOGLE_CLOUD_PROJECT')
+        self.project_id = os.environ.get('GOOGLE_CLOUD_PROJECT', 'gen-lang-client-0303273462')
         self.location = os.environ.get('GOOGLE_CLOUD_LOCATION', 'global')
         self.client = None
         self._initialized = False
@@ -36,7 +36,7 @@ class VertexService:
             self._init_client()
     
     def _init_client(self):
-        """Lazy initialization of the Google GenAI client."""
+        """Lazy initialization of the Google GenAI client with proper credentials."""
         try:
             from google import genai
             from google.genai.types import HttpOptions
@@ -44,9 +44,33 @@ class VertexService:
             # Set environment variable to use Vertex AI
             os.environ['GOOGLE_GENAI_USE_VERTEXAI'] = 'True'
             
-            self.client = genai.Client(http_options=HttpOptions(api_version="v1"))
+            # Check for service account credentials
+            credentials_path = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
+            service_account_json = os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON')
+            
+            if credentials_path and os.path.exists(credentials_path):
+                logger.info(f"Using credentials file: {credentials_path}")
+                # Credentials file exists, google-genai will use it automatically
+                self.client = genai.Client(http_options=HttpOptions(api_version="v1"))
+            elif service_account_json:
+                # Service account JSON provided as environment variable
+                import tempfile
+                logger.info("Using inline service account JSON from environment")
+                
+                # Write JSON to temp file for google-genai to use
+                with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+                    f.write(service_account_json)
+                    temp_creds_path = f.name
+                
+                os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = temp_creds_path
+                self.client = genai.Client(http_options=HttpOptions(api_version="v1"))
+            else:
+                # Try default credentials (ADC)
+                logger.info("Using Application Default Credentials")
+                self.client = genai.Client(http_options=HttpOptions(api_version="v1"))
+            
             self._initialized = True
-            logger.info("✅ Vertex AI client initialized successfully")
+            logger.info(f"✅ Vertex AI client initialized successfully (project: {self.project_id})")
         except ImportError as e:
             logger.error(f"❌ Failed to import google-genai SDK. Install with: pip install google-genai. Error: {e}")
             self._initialized = False

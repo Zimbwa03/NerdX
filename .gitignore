@@ -92,6 +92,7 @@ temp/
 # Secrets and credentials
 credentials.json
 service-account*.json
+credentials/
 *.pem
 *.key
 *.crt
