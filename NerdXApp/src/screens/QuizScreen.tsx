@@ -98,6 +98,14 @@ const QuizScreen: React.FC = () => {
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
   const [hintsUsed, setHintsUsed] = useState<number>(0);
 
+  // Vertex AI Image Mixing state
+  const [mixImagesEnabled, setMixImagesEnabled] = useState<boolean>(false);
+  const [showMixImagesPrompt, setShowMixImagesPrompt] = useState<boolean>(false);
+
+  // Check if subject supports image questions (Science subjects only)
+  const supportsImageQuestions = ['combined_science', 'a_level_biology', 'a_level_chemistry', 'a_level_physics'].includes(subject?.id || '');
+
+
   // Voice/STT support (Wispr Flow) â€” enable for A Level sciences and math
   const isMathSubject = subject?.id === 'mathematics' || subject?.id === 'a_level_pure_math';
   const supportsVoiceToText = isMathSubject || ['a_level_physics', 'a_level_chemistry', 'a_level_biology'].includes(subject?.id);
@@ -188,6 +196,34 @@ const QuizScreen: React.FC = () => {
       }
     }
   }, [question]);
+
+  // Show image mixing prompt for science subjects on first load
+  useEffect(() => {
+    if (supportsImageQuestions && questionCount === 1 && !isExamMode && !isReviewMode) {
+      // Show alert to ask user if they want to enable image questions
+      Alert.alert(
+        '🖼️ Visual Learning Mode',
+        'Enable image-based questions? Every 6th question will include a scientific diagram.\n\n⚠️ Image questions cost 4 credits (vs 1 for text questions).',
+        [
+          {
+            text: 'No Thanks',
+            style: 'cancel',
+            onPress: () => setMixImagesEnabled(false),
+          },
+          {
+            text: 'Enable Images',
+            style: 'default',
+            onPress: () => {
+              setMixImagesEnabled(true);
+              showSuccess('🖼️ Visual questions enabled! Every 6th question will have a diagram.', 4000);
+            },
+          },
+        ],
+        { cancelable: true }
+      );
+    }
+  }, [supportsImageQuestions, questionCount, isExamMode, isReviewMode]);
+
 
   // Determine gradient colors based on subject
   const getHeaderGradient = () => {
@@ -533,7 +569,9 @@ const QuizScreen: React.FC = () => {
           topic?.parent_subject,  // parent_subject for Combined Science
           nextQuestionType,  // Preserve question type (mcq, structured, essay)
           undefined,  // questionFormat
-          nextQuestionType   // Also pass as question_type for backend compatibility
+          nextQuestionType,  // Also pass as question_type for backend compatibility
+          mixImagesEnabled,  // Enable Vertex AI image questions
+          questionCount + 1   // Pass the next question number
         );
       }
 

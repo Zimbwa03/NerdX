@@ -35,6 +35,7 @@ from services.paynow_service import PaynowService
 from services.graph_service import GraphService
 from services.image_service import ImageService
 from services.voice_service import get_voice_service
+from services.vertex_service import vertex_service, get_image_question_credit_cost, get_text_question_credit_cost
 from utils.url_utils import convert_local_path_to_public_url
 from config import Config
 
@@ -764,7 +765,7 @@ def get_topics():
 @mobile_bp.route('/quiz/generate', methods=['POST'])
 @require_auth
 def generate_question():
-    """Generate a quiz question"""
+    """Generate a quiz question. Supports mixed image questions via Vertex AI."""
     try:
         data = request.get_json()
         subject = data.get('subject', '')
@@ -773,158 +774,215 @@ def generate_question():
         question_type = data.get('type', 'topical')  # 'topical' or 'exam'
         question_format = (data.get('question_format') or 'mcq').lower()  # 'mcq' or 'structured'
         
+        # NEW: Image mixing parameters
+        mix_images = data.get('mix_images', False)  # Enable visual questions
+        question_count = data.get('question_count', 1)  # Current question number in session
+        
         if not subject:
             return jsonify({'success': False, 'message': 'Subject is required'}), 400
         
-        # Check credits
-        credit_action = f"{subject}_topical" if question_type == 'topical' else f"{subject}_exam"
-        credit_cost = advanced_credit_service.get_credit_cost(credit_action)
+        # CREDIT CALCULATION: Image questions cost more (scale 1-5)
+        # Text question: 1 credit (default)
+        # Image question: 4 credits (when mix_images enabled and it's image turn)
+        is_image_question = False
+        if mix_images and vertex_service.is_available():
+            # Every 6th question is an image question (indices 5, 11, 17, ...)
+            # Can be adjusted: every 5th, every 4th, etc.
+            is_image_question = (question_count % 6 == 5) or (question_count == 6)
+        
+        if is_image_question:
+            credit_cost = get_image_question_credit_cost()  # 4 credits
+        else:
+            # Standard text question credit cost
+            credit_action = f"{subject}_topical" if question_type == 'topical' else f"{subject}_exam"
+            credit_cost = advanced_credit_service.get_credit_cost(credit_action) or get_text_question_credit_cost()  # Usually 1 credit
         
         user_credits = get_user_credits(g.current_user_id) or 0
         if user_credits < credit_cost:
             return jsonify({
                 'success': False,
-                'message': f'Insufficient credits. Required: {credit_cost}, Available: {user_credits}'
+                'message': f'Insufficient credits. Required: {credit_cost}, Available: {user_credits}',
+                'credit_cost': credit_cost,
+                'is_image_question': is_image_question
             }), 400
         
         # Generate question based on subject
         question_data = None
         
-        if subject == 'mathematics':
-            from services.math_question_generator import MathQuestionGenerator
-            from services.math_solver import MathSolver
-            math_generator = MathQuestionGenerator()
+        # IMAGE QUESTION PATH: Use Vertex AI for visual science questions
+        if is_image_question and subject in ['combined_science', 'a_level_biology', 'a_level_chemistry', 'a_level_physics']:
+            logger.info(f"🖼️ Generating IMAGE question for {subject}/{topic} (question #{question_count})")
             
-            # For exam mode, select random topic if no topic specified
-            if question_type == 'exam' and not topic:
-                from constants import TOPICS
-                import random
-                math_topics = TOPICS.get('Mathematics', [])
-                if math_topics:
-                    topic = random.choice(math_topics)
-                    topic = topic.lower().replace(' ', '_')
-            
-            question_data = math_generator.generate_question('Mathematics', topic or 'Algebra', difficulty, g.current_user_id)
-            
-            # Generate hint for math questions if not already present
-            if question_data and not question_data.get('hint_level_1'):
-                math_solver = MathSolver()
-                hint = math_solver.get_hint(question_data.get('question', ''), difficulty)
-                if hint:
-                    question_data['hint_level_1'] = hint
-                    
-        elif subject == 'combined_science':
-            # Combined Science needs parent_subject (Biology/Chemistry/Physics) and topic (subtopic)
-            parent_subject = data.get('parent_subject', 'Biology')  # Default to Biology if not specified
-            
-            # Handle exam mode - randomly select from all topics across Biology, Chemistry, Physics
-            if question_type == 'exam':
-                from constants import TOPICS
-                import random
-                
-                # Randomly select a subject (Biology, Chemistry, or Physics)
-                science_subjects = ['Biology', 'Chemistry', 'Physics']
-                parent_subject = random.choice(science_subjects)
-                
-                # Randomly select a topic from the chosen subject
-                if parent_subject in TOPICS and len(TOPICS[parent_subject]) > 0:
-                    topic = random.choice(TOPICS[parent_subject])
-                else:
-                    topic = 'Cell Structure and Organisation'
-                    parent_subject = 'Biology'
-            
-            # If topic is Biology/Chemistry/Physics itself, use default subtopic
-            elif topic and topic.lower() in ['biology', 'chemistry', 'physics']:
-                parent_subject = topic.capitalize()
-                # Use first subtopic as default
-                from constants import TOPICS
-                if parent_subject in TOPICS and len(TOPICS[parent_subject]) > 0:
-                    topic = TOPICS[parent_subject][0]
-            
-            science_gen = CombinedScienceGenerator()
-            if question_format == 'structured':
-                question_data = science_gen.generate_structured_question(parent_subject, topic or 'Cell Structure and Organisation', difficulty, g.current_user_id)
+            # Determine parent subject for Combined Science
+            parent_subject = data.get('parent_subject', 'Biology')
+            if subject == 'combined_science':
+                actual_subject = parent_subject
+            elif subject == 'a_level_biology':
+                actual_subject = 'Biology'
+            elif subject == 'a_level_chemistry':
+                actual_subject = 'Chemistry'
+            elif subject == 'a_level_physics':
+                actual_subject = 'Physics'
             else:
-                question_data = science_gen.generate_topical_question(parent_subject, topic or 'Cell Structure and Organisation', difficulty, g.current_user_id)
-        elif subject == 'english':
-            english_service = EnglishService()
-            # English service uses different method - get grammar or vocabulary question
-            topic_lower = (topic or '').lower()
-            if 'vocabulary' in topic_lower or topic_lower in ['vocab', 'vocabulary_building']:
-                question_result = english_service.generate_vocabulary_question()
-            elif 'grammar' in topic_lower or topic_lower in ['grammar_and_language', 'grammar_usage_and_vocabulary']:
-                question_result = english_service.generate_grammar_question()
-            else:
-                # Default to grammar if topic not specified
-                question_result = english_service.generate_grammar_question()
+                actual_subject = 'Biology'
             
-            if question_result and question_result.get('success'):
-                question_data = question_result.get('question_data', {})
-            else:
-                question_data = None
-        
-        elif subject == 'a_level_physics':
-            # A Level Physics - uses DeepSeek generator
-            from services.a_level_physics_generator import a_level_physics_generator
-            from constants import A_LEVEL_PHYSICS_TOPICS, A_LEVEL_PHYSICS_ALL_TOPICS
-            import random
+            # Determine level
+            level = 'O-Level' if subject == 'combined_science' else 'A-Level'
             
-            selected_topic = topic or 'Kinematics'
-            if question_type == 'exam':
-                level = data.get('parent_subject') or 'AS Level'
-                level_topics = A_LEVEL_PHYSICS_TOPICS.get(level, A_LEVEL_PHYSICS_ALL_TOPICS)
-                selected_topic = random.choice(level_topics)
-            
-            question_data = a_level_physics_generator.generate_question(selected_topic, difficulty, g.current_user_id)
-        
-        elif subject == 'a_level_chemistry':
-            # A Level Chemistry - uses DeepSeek generator
-            from services.a_level_chemistry_generator import a_level_chemistry_generator
-            from constants import A_LEVEL_CHEMISTRY_TOPICS, A_LEVEL_CHEMISTRY_ALL_TOPICS
-            import random
-            
-            selected_topic = topic or 'Atomic Structure'
-            if question_type == 'exam':
-                level = data.get('parent_subject') or 'AS Level'
-                level_topics = A_LEVEL_CHEMISTRY_TOPICS.get(level, A_LEVEL_CHEMISTRY_ALL_TOPICS)
-                selected_topic = random.choice(level_topics)
-            
-            question_data = a_level_chemistry_generator.generate_question(selected_topic, difficulty, g.current_user_id)
-        
-        elif subject == 'a_level_pure_math':
-            # A Level Pure Mathematics - uses DeepSeek generator
-            from services.a_level_pure_math_generator import a_level_pure_math_generator
-            from constants import A_LEVEL_PURE_MATH_TOPICS, A_LEVEL_PURE_MATH_ALL_TOPICS
-            import random
-            
-            selected_topic = topic or 'Polynomials'
-            if question_type == 'exam':
-                level = data.get('parent_subject') or 'Lower Sixth'
-                level_topics = A_LEVEL_PURE_MATH_TOPICS.get(level, A_LEVEL_PURE_MATH_ALL_TOPICS)
-                selected_topic = random.choice(level_topics)
-            
-            question_data = a_level_pure_math_generator.generate_question(selected_topic, difficulty, g.current_user_id)
-        
-        elif subject == 'a_level_biology':
-            # A Level Biology - uses DeepSeek generator with MCQ, Structured, Essay support
-            from services.a_level_biology_generator import a_level_biology_generator
-            from constants import A_LEVEL_BIOLOGY_TOPICS, A_LEVEL_BIOLOGY_ALL_TOPICS
-            import random
-            # question_type can be 'mcq', 'structured', or 'essay'
-            bio_question_type = data.get('question_type', 'mcq')
-            
-            selected_topic = topic or 'Cell Structure'
-            if question_type == 'exam':
-                level = data.get('parent_subject') or 'Lower Sixth'
-                level_topics = A_LEVEL_BIOLOGY_TOPICS.get(level, A_LEVEL_BIOLOGY_ALL_TOPICS)
-                selected_topic = random.choice(level_topics)
-            
-            question_data = a_level_biology_generator.generate_question(
-                selected_topic, 
-                difficulty, 
-                g.current_user_id, 
-                bio_question_type
+            # Generate image question using Vertex AI
+            question_data = vertex_service.generate_image_question(
+                subject=actual_subject,
+                topic=topic or 'General',
+                level=level,
+                difficulty=difficulty
             )
+            
+            if question_data:
+                question_data['is_visual_question'] = True
+                question_data['credit_cost'] = credit_cost
+                logger.info(f"✅ Image question generated successfully")
+            else:
+                logger.warning(f"⚠️ Image question generation failed, falling back to text question")
+                is_image_question = False  # Fall back to text
+                credit_cost = get_text_question_credit_cost()
+        
+        # STANDARD TEXT QUESTION PATH (or fallback)
+        if not question_data:
+            if subject == 'mathematics':
+                from services.math_question_generator import MathQuestionGenerator
+                from services.math_solver import MathSolver
+                math_generator = MathQuestionGenerator()
+                
+                # For exam mode, select random topic if no topic specified
+                if question_type == 'exam' and not topic:
+                    from constants import TOPICS
+                    import random
+                    math_topics = TOPICS.get('Mathematics', [])
+                    if math_topics:
+                        topic = random.choice(math_topics)
+                        topic = topic.lower().replace(' ', '_')
+                
+                question_data = math_generator.generate_question('Mathematics', topic or 'Algebra', difficulty, g.current_user_id)
+                
+                # Generate hint for math questions if not already present
+                if question_data and not question_data.get('hint_level_1'):
+                    math_solver = MathSolver()
+                    hint = math_solver.get_hint(question_data.get('question', ''), difficulty)
+                    if hint:
+                        question_data['hint_level_1'] = hint
+                        
+            elif subject == 'combined_science':
+                # Combined Science needs parent_subject (Biology/Chemistry/Physics) and topic (subtopic)
+                parent_subject = data.get('parent_subject', 'Biology')  # Default to Biology if not specified
+                
+                # Handle exam mode - randomly select from all topics across Biology, Chemistry, Physics
+                if question_type == 'exam':
+                    from constants import TOPICS
+                    import random
+                    
+                    # Randomly select a subject (Biology, Chemistry, or Physics)
+                    science_subjects = ['Biology', 'Chemistry', 'Physics']
+                    parent_subject = random.choice(science_subjects)
+                    
+                    # Randomly select a topic from the chosen subject
+                    if parent_subject in TOPICS and len(TOPICS[parent_subject]) > 0:
+                        topic = random.choice(TOPICS[parent_subject])
+                    else:
+                        topic = 'Cell Structure and Organisation'
+                        parent_subject = 'Biology'
+                
+                # If topic is Biology/Chemistry/Physics itself, use default subtopic
+                elif topic and topic.lower() in ['biology', 'chemistry', 'physics']:
+                    parent_subject = topic.capitalize()
+                    # Use first subtopic as default
+                    from constants import TOPICS
+                    if parent_subject in TOPICS and len(TOPICS[parent_subject]) > 0:
+                        topic = TOPICS[parent_subject][0]
+                
+                science_gen = CombinedScienceGenerator()
+                if question_format == 'structured':
+                    question_data = science_gen.generate_structured_question(parent_subject, topic or 'Cell Structure and Organisation', difficulty, g.current_user_id)
+                else:
+                    question_data = science_gen.generate_topical_question(parent_subject, topic or 'Cell Structure and Organisation', difficulty, g.current_user_id)
+            elif subject == 'english':
+                english_service = EnglishService()
+                # English service uses different method - get grammar or vocabulary question
+                topic_lower = (topic or '').lower()
+                if 'vocabulary' in topic_lower or topic_lower in ['vocab', 'vocabulary_building']:
+                    question_result = english_service.generate_vocabulary_question()
+                elif 'grammar' in topic_lower or topic_lower in ['grammar_and_language', 'grammar_usage_and_vocabulary']:
+                    question_result = english_service.generate_grammar_question()
+                else:
+                    # Default to grammar if topic not specified
+                    question_result = english_service.generate_grammar_question()
+                
+                if question_result and question_result.get('success'):
+                    question_data = question_result.get('question_data', {})
+                else:
+                    question_data = None
+            
+            elif subject == 'a_level_physics':
+                # A Level Physics - uses DeepSeek generator
+                from services.a_level_physics_generator import a_level_physics_generator
+                from constants import A_LEVEL_PHYSICS_TOPICS, A_LEVEL_PHYSICS_ALL_TOPICS
+                import random
+                
+                selected_topic = topic or 'Kinematics'
+                if question_type == 'exam':
+                    level = data.get('parent_subject') or 'AS Level'
+                    level_topics = A_LEVEL_PHYSICS_TOPICS.get(level, A_LEVEL_PHYSICS_ALL_TOPICS)
+                    selected_topic = random.choice(level_topics)
+                
+                question_data = a_level_physics_generator.generate_question(selected_topic, difficulty, g.current_user_id)
+            
+            elif subject == 'a_level_chemistry':
+                # A Level Chemistry - uses DeepSeek generator
+                from services.a_level_chemistry_generator import a_level_chemistry_generator
+                from constants import A_LEVEL_CHEMISTRY_TOPICS, A_LEVEL_CHEMISTRY_ALL_TOPICS
+                import random
+                
+                selected_topic = topic or 'Atomic Structure'
+                if question_type == 'exam':
+                    level = data.get('parent_subject') or 'AS Level'
+                    level_topics = A_LEVEL_CHEMISTRY_TOPICS.get(level, A_LEVEL_CHEMISTRY_ALL_TOPICS)
+                    selected_topic = random.choice(level_topics)
+                
+                question_data = a_level_chemistry_generator.generate_question(selected_topic, difficulty, g.current_user_id)
+            
+            elif subject == 'a_level_pure_math':
+                # A Level Pure Mathematics - uses DeepSeek generator
+                from services.a_level_pure_math_generator import a_level_pure_math_generator
+                from constants import A_LEVEL_PURE_MATH_TOPICS, A_LEVEL_PURE_MATH_ALL_TOPICS
+                import random
+                
+                selected_topic = topic or 'Polynomials'
+                if question_type == 'exam':
+                    level = data.get('parent_subject') or 'Lower Sixth'
+                    level_topics = A_LEVEL_PURE_MATH_TOPICS.get(level, A_LEVEL_PURE_MATH_ALL_TOPICS)
+                    selected_topic = random.choice(level_topics)
+                
+                question_data = a_level_pure_math_generator.generate_question(selected_topic, difficulty, g.current_user_id)
+            
+            elif subject == 'a_level_biology':
+                # A Level Biology - uses DeepSeek generator with MCQ, Structured, Essay support
+                from services.a_level_biology_generator import a_level_biology_generator
+                from constants import A_LEVEL_BIOLOGY_TOPICS, A_LEVEL_BIOLOGY_ALL_TOPICS
+                import random
+                # question_type can be 'mcq', 'structured', or 'essay'
+                bio_question_type = data.get('question_type', 'mcq')
+                
+                selected_topic = topic or 'Cell Structure'
+                if question_type == 'exam':
+                    level = data.get('parent_subject') or 'Lower Sixth'
+                    level_topics = A_LEVEL_BIOLOGY_TOPICS.get(level, A_LEVEL_BIOLOGY_ALL_TOPICS)
+                    selected_topic = random.choice(level_topics)
+                
+                question_data = a_level_biology_generator.generate_question(
+                    selected_topic, 
+                    difficulty, 
+                    g.current_user_id, 
+                    bio_question_type
+                )
 
         
         if not question_data:

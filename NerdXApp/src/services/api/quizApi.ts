@@ -125,7 +125,9 @@ export const quizApi = {
     parent_subject?: string,
     questionType?: string,  // For A-Level Biology: 'mcq', 'structured', 'essay'
     questionFormat?: 'mcq' | 'structured',  // For O-Level Paper 2 style structured questions
-    question_type?: string  // Alternative key for backend compatibility
+    question_type?: string,  // Alternative key for backend compatibility
+    mixImages?: boolean,  // NEW: Enable visual questions with Vertex AI
+    questionCount?: number  // NEW: Current question number in session
   ): Promise<Question | null> => {
     try {
       const payload: any = {
@@ -149,6 +151,13 @@ export const quizApi = {
       // For Combined Science structured questions (Paper 2 style)
       if (questionFormat) {
         payload.question_format = questionFormat;
+      }
+      // NEW: Image mixing parameters for Vertex AI visual questions
+      if (mixImages !== undefined) {
+        payload.mix_images = mixImages;
+      }
+      if (questionCount !== undefined) {
+        payload.question_count = questionCount;
       }
       // Use extended timeout for AI question generation (can take 30+ seconds)
       const response = await api.post('/api/mobile/quiz/generate', payload, {
