@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
     StyleSheet,
     View,
@@ -54,10 +55,10 @@ const NerdXLiveAudioScreen: React.FC = () => {
     const currentAudioTurnRef = useRef<AudioTurn | null>(null);
     const isPlayingRef = useRef(false);
     const playbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-    
+
     // Recording refs (VAD disabled for tap-to-speak)
     const recordingStartTimeRef = useRef<number>(0);
-    
+
     // Animation
     const pulseAnim = useRef(new Animated.Value(1)).current;
     const waveAnim = useRef(new Animated.Value(0)).current;
@@ -171,7 +172,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
                 if (soundRef.current) {
                     try {
                         await soundRef.current.unloadAsync();
-                    } catch (e) {}
+                    } catch (e) { }
                 }
 
                 const { sound } = await Audio.Sound.createAsync(
@@ -183,7 +184,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
                 // Wait for this chunk to finish - with proper error handling
                 await new Promise<void>((resolve) => {
                     let resolved = false;
-                    
+
                     // Safety timeout per chunk (30s max)
                     const timeout = setTimeout(() => {
                         if (!resolved) {
@@ -192,10 +193,10 @@ const NerdXLiveAudioScreen: React.FC = () => {
                             resolve();
                         }
                     }, 30000);
-                    
+
                     sound.setOnPlaybackStatusUpdate((status: AVPlaybackStatus) => {
                         if (resolved) return;
-                        
+
                         // Check for errors (status.isLoaded=false with error property)
                         if (!status.isLoaded && 'error' in status) {
                             console.error(`❌ Chunk ${i + 1} load error`);
@@ -274,7 +275,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
             if (soundRef.current) {
                 try {
                     await soundRef.current.stopAsync();
-                } catch (e) {}
+                } catch (e) { }
             }
 
             // NEW: Clear current audio turn buffer
@@ -313,7 +314,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
 
             recordingRef.current = recording;
             setConnectionState('recording');
-            
+
             // Start safety check for maximum duration
             recordingStartTimeRef.current = Date.now();
             setTimeout(() => {
@@ -322,7 +323,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
                     stopRecordingAndSendRef.current?.();
                 }
             }, MAX_RECORDING_DURATION_MS);
-            
+
             console.log('🎙️ Recording started - tap again to send');
         } catch (error) {
             console.error('Recording error:', error);
@@ -336,7 +337,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
 
         try {
             const uri = recordingRef.current.getURI();
-            
+
             try {
                 await recordingRef.current.stopAndUnloadAsync();
             } catch (e: any) {
@@ -350,9 +351,9 @@ const NerdXLiveAudioScreen: React.FC = () => {
             if (uri && wsRef.current?.readyState === WebSocket.OPEN) {
                 const response = await fetch(uri);
                 const blob = await response.blob();
-                
+
                 console.log(`📤 Preparing to send audio: ${blob.size} bytes`);
-                
+
                 const reader = new FileReader();
                 reader.onloadend = () => {
                     const base64data = reader.result as string;
@@ -452,7 +453,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
 
                     // Stop any current playback
                     if (soundRef.current) {
-                        soundRef.current.stopAsync().catch(() => {});
+                        soundRef.current.stopAsync().catch(() => { });
                     }
 
                     isPlayingRef.current = false;
@@ -499,7 +500,22 @@ const NerdXLiveAudioScreen: React.FC = () => {
                 playbackTimeoutRef.current = null;
             }
 
-            const ws = new WebSocket(WS_URL);
+            // Get user ID from storage to ensure credit check works for the correct user
+            let wsUrl = WS_URL;
+            try {
+                const userData = await AsyncStorage.getItem('@user_data');
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    if (user && user.id) {
+                        console.log('👤 Connecting as user:', user.id);
+                        wsUrl = `${WS_URL}?user_id=${user.id}`;
+                    }
+                }
+            } catch (error) {
+                console.error('Error getting user data:', error);
+            }
+
+            const ws = new WebSocket(wsUrl);
             wsRef.current = ws;
 
             ws.onopen = () => {
@@ -541,7 +557,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
         if (recordingRef.current) {
             try {
                 await recordingRef.current.stopAndUnloadAsync();
-            } catch (e) {}
+            } catch (e) { }
             recordingRef.current = null;
         }
 
@@ -549,7 +565,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
             try {
                 await soundRef.current.stopAsync();
                 await soundRef.current.unloadAsync();
-            } catch (e) {}
+            } catch (e) { }
             soundRef.current = null;
         }
 
@@ -559,7 +575,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
             try {
                 wsRef.current.send(JSON.stringify({ type: 'end' }));
                 wsRef.current.close();
-            } catch (e) {}
+            } catch (e) { }
             wsRef.current = null;
         }
 
@@ -628,7 +644,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="light-content" />
-            
+
             <LinearGradient
                 colors={['#1a1a2e', '#16213e', '#0f3460']}
                 style={styles.gradient}
@@ -644,9 +660,9 @@ const NerdXLiveAudioScreen: React.FC = () => {
                     >
                         <Ionicons name="arrow-back" size={24} color="#fff" />
                     </TouchableOpacity>
-                    
+
                     <Text style={styles.title}>NerdX Live</Text>
-                    
+
                     <View style={styles.placeholder} />
                 </View>
 
@@ -698,7 +714,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
 
                     {/* Hint */}
                     <Text style={styles.hintText}>
-                        {connectionState === 'idle' 
+                        {connectionState === 'idle'
                             ? 'Tap to start your conversation'
                             : connectionState === 'ready'
                                 ? 'Tap the button to ask a question'

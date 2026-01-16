@@ -786,9 +786,10 @@ def generate_question():
         # Image question: 4 credits (when mix_images enabled and it's image turn)
         is_image_question = False
         if mix_images and vertex_service.is_available():
-            # Every 6th question is an image question (indices 5, 11, 17, ...)
-            # Can be adjusted: every 5th, every 4th, etc.
-            is_image_question = (question_count % 6 == 5) or (question_count == 6)
+            # Every 6th question is an image question (questions 6, 12, 18, ...)
+            # Uses modulo 6 == 0 to trigger on 6th questions
+            is_image_question = (question_count > 0 and question_count % 6 == 0)
+            logger.info(f"🖼️ Image check: question #{question_count}, mix_images={mix_images}, is_image={is_image_question}")
         
         if is_image_question:
             credit_cost = get_image_question_credit_cost()  # 4 credits
@@ -1209,6 +1210,109 @@ def generate_question():
         logger.error(f"Generate question error: {e}", exc_info=True)
         error_message = str(e) if str(e) else 'Server error'
         return jsonify({'success': False, 'message': f'Failed to generate question: {error_message}'}), 500
+
+@mobile_bp.route('/quiz/generate-stream', methods=['POST'])
+@require_auth
+def generate_question_stream():
+    """
+    Generate a math question with real-time thinking updates (SSE).
+    Uses DeepSeek Reasoner (V3.2 CoT) for step-by-step reasoning.
+    Only for Mathematics subjects.
+    """
+    from flask import Response
+    
+    try:
+        data = request.get_json()
+        subject = data.get('subject', 'mathematics')
+        topic = data.get('topic', 'Algebra')
+        difficulty = data.get('difficulty', 'medium')
+        
+        # Only allow streaming for mathematics subjects
+        if subject not in ['mathematics', 'a_level_pure_mathematics', 'a_level_statistics']:
+            return jsonify({
+                'success': False,
+                'message': 'Streaming only available for Mathematics subjects'
+            }), 400
+        
+        # Check credits
+        credit_cost = 1  # Same as regular question
+        user_credits = get_user_credits(g.current_user_id) or 0
+        
+        if user_credits < credit_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {credit_cost}, Available: {user_credits}'
+            }), 400
+        
+        user_id = g.current_user_id
+        
+        def generate():
+            """SSE generator for streaming thinking updates."""
+            try:
+                from services.math_question_generator import MathQuestionGenerator
+                math_generator = MathQuestionGenerator()
+                
+                # Stream thinking updates and final question
+                for event in math_generator.generate_question_stream(
+                    'Mathematics' if subject == 'mathematics' else 'A Level Pure Mathematics',
+                    topic,
+                    difficulty,
+                    user_id
+                ):
+                    event_type = event.get('type', 'unknown')
+                    
+                    if event_type == 'thinking':
+                        # Send thinking update
+                        yield f"data: {json.dumps({'type': 'thinking', 'content': event.get('content', ''), 'stage': event.get('stage', 1), 'total_stages': event.get('total_stages', 4)})}\n\n"
+                    
+                    elif event_type == 'question':
+                        # Deduct credits on successful generation
+                        deduct_credits(user_id, credit_cost, 'math_quiz', f'Math question: {topic}')
+                        
+                        # Format question for mobile
+                        question_data = event.get('data', {})
+                        question = {
+                            'id': str(uuid.uuid4()),
+                            'question_text': question_data.get('question', ''),
+                            'question_type': 'short_answer',
+                            'options': [],
+                            'correct_answer': question_data.get('answer', ''),
+                            'solution': question_data.get('solution', ''),
+                            'hint': question_data.get('hint_level_1', ''),
+                            'explanation': question_data.get('explanation', ''),
+                            'points': question_data.get('points', 20),
+                            'topic': topic,
+                            'difficulty': difficulty,
+                            'allows_text_input': True,
+                            'allows_image_upload': True,
+                            'source': 'deepseek_reasoner'
+                        }
+                        
+                        yield f"data: {json.dumps({'type': 'question', 'data': question})}\n\n"
+                    
+                    elif event_type == 'error':
+                        yield f"data: {json.dumps({'type': 'error', 'message': event.get('message', 'Unknown error')})}\n\n"
+                
+                # Send done signal
+                yield f"data: {json.dumps({'type': 'done'})}\n\n"
+                
+            except Exception as e:
+                logger.error(f"SSE streaming error: {e}")
+                yield f"data: {json.dumps({'type': 'error', 'message': 'Streaming error occurred'})}\n\n"
+        
+        return Response(
+            generate(),
+            mimetype='text/event-stream',
+            headers={
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+                'X-Accel-Buffering': 'no'
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Generate stream error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
 
 @mobile_bp.route('/quiz/exam/next', methods=['POST'])
 @require_auth

@@ -12,13 +12,15 @@ import uuid
 from typing import Optional, Dict, List
 
 import requests
+
+# Try to import google-genai SDK (Vertex AI)
 try:
-    import google.generativeai as genai
-    from google.generativeai import types
+    from google import genai
+    from google.genai.types import HttpOptions
     GENAI_AVAILABLE = True
 except ImportError:
     genai = None
-    types = None
+    HttpOptions = None
     GENAI_AVAILABLE = False
 
 from config import Config
@@ -32,23 +34,58 @@ class EnglishService:
         self._is_configured = False
         self.deepseek_api_key = Config.DEEPSEEK_API_KEY
         self.deepseek_api_url = 'https://api.deepseek.com/chat/completions'
+        
+        # Vertex AI configuration (preferred - higher rate limits)
+        self.project_id = os.environ.get('GOOGLE_CLOUD_PROJECT', 'gen-lang-client-0303273462')
+        self.use_vertex_ai = os.environ.get('GOOGLE_GENAI_USE_VERTEXAI', 'True').lower() == 'true'
 
-        # Initialize AI - DeepSeek is now the primary provider
+        # Initialize AI client
+        if GENAI_AVAILABLE:
+            self._init_gemini_client()
+        else:
+            logger.info("google-genai SDK not available - using DeepSeek only")
+    
+    def _init_gemini_client(self):
+        """Initialize Gemini client with Vertex AI or API key."""
         try:
-            # Keep Gemini as fallback only
-            if GENAI_AVAILABLE:
-                api_key = os.getenv('GEMINI_API_KEY')
-                if api_key and genai:
-                    genai.configure(api_key=api_key)
-                    self.client = genai
+            # Try Vertex AI first (higher rate limits)
+            if self.use_vertex_ai:
+                os.environ['GOOGLE_GENAI_USE_VERTEXAI'] = 'True'
+                credentials_path = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
+                service_account_json = os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON')
+                
+                if credentials_path and os.path.exists(credentials_path):
+                    self.client = genai.Client(http_options=HttpOptions(api_version="v1"))
                     self._is_configured = True
-                    logger.info("Enhanced ZIMSEC English Service initialized with DeepSeek AI (primary) + Gemini (fallback)")
+                    logger.info(f"English Service: Gemini via Vertex AI configured (project: {self.project_id})")
+                    return
+                elif service_account_json:
+                    import tempfile
+                    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+                        f.write(service_account_json)
+                        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = f.name
+                    self.client = genai.Client(http_options=HttpOptions(api_version="v1"))
+                    self._is_configured = True
+                    logger.info("English Service: Gemini via Vertex AI configured (inline credentials)")
+                    return
                 else:
-                    logger.info("GEMINI_API_KEY not found - using DeepSeek only")
-            else:
-                logger.info("Google Generative AI not available - using DeepSeek only")
+                    # Try ADC
+                    try:
+                        self.client = genai.Client(http_options=HttpOptions(api_version="v1"))
+                        self._is_configured = True
+                        logger.info("English Service: Gemini via Vertex AI configured (ADC)")
+                        return
+                    except Exception:
+                        logger.warning("Vertex AI ADC failed, trying API key...")
+            
+            # Fallback to API key
+            api_key = os.getenv('GEMINI_API_KEY')
+            if api_key:
+                self.client = genai.Client(api_key=api_key)
+                self._is_configured = True
+                logger.info("English Service: Gemini configured with API key (fallback)")
         except Exception as e:
-            logger.error(f"Error initializing English service: {e}")
+            logger.error(f"Error initializing English service Gemini client: {e}")
 
     def _get_fallback_grammar_question(self) -> Dict:
         """Provide fallback grammar question when AI service fails"""
@@ -348,21 +385,21 @@ Additional Instructions:
 """
 
             try:
-                model = self.client.GenerativeModel('gemini-2.0-flash-exp')
-                response = model.generate_content(
-                    prompt,
-                    generation_config=self.client.types.GenerationConfig(
-                        response_mime_type="application/json",
-                        temperature=0.6,
-                        max_output_tokens=1500
-                    ),
+                response = self.client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=prompt,
+                    config={
+                        "response_mime_type": "application/json",
+                        "temperature": 0.6,
+                        "max_output_tokens": 1500
+                    }
                 )
-                logger.info("Gemini API (gemini-2.0-flash-exp) call completed successfully for grammar")
+                logger.info("Gemini API (gemini-2.5-flash) call completed successfully for grammar")
             except Exception as api_error:
                 logger.error(f"Gemini API call failed: {api_error}")
                 return None
 
-            if not response or not getattr(response, 'text', None):
+            if not response or not response.text:
                 logger.warning("Empty response from Gemini AI for grammar question")
                 return None
 
@@ -653,21 +690,21 @@ Return ONLY valid JSON (no markdown fences or commentary):
 """
             
             try:
-                model = self.client.GenerativeModel('gemini-2.0-flash-exp')
-                response = model.generate_content(
-                    prompt,
-                    generation_config=self.client.types.GenerationConfig(
-                        response_mime_type="application/json",
-                        temperature=0.7,
-                        max_output_tokens=1800
-                    ),
+                response = self.client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=prompt,
+                    config={
+                        "response_mime_type": "application/json",
+                        "temperature": 0.7,
+                        "max_output_tokens": 1800
+                    }
                 )
-                logger.info("Gemini API (gemini-2.0-flash-exp) call completed successfully for vocabulary")
+                logger.info("Gemini API (gemini-2.5-flash) call completed successfully for vocabulary")
             except Exception as api_error:
                 logger.error(f"Gemini API call failed: {api_error}")
                 return None
             
-            if response and hasattr(response, 'text') and response.text and response.text.strip():
+            if response and response.text and response.text.strip():
                 try:
                     # Clean and parse response
                     cleaned_text = self._clean_json_block(response.text.strip())

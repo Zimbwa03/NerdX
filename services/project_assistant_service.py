@@ -19,13 +19,20 @@ logger = logging.getLogger(__name__)
 # Import requests for DeepSeek API
 import requests
 
-# Import Google Gemini AI (fallback only)
+# Import Google GenAI SDK for Vertex AI (primary for conversational text)
 try:
-    import google.generativeai as genai
+    from google import genai
+    from google.genai.types import HttpOptions
     GENAI_AVAILABLE = True
 except ImportError:
     genai = None
+    HttpOptions = None
     GENAI_AVAILABLE = False
+
+# Vertex AI configuration
+GOOGLE_CLOUD_PROJECT = os.getenv('GOOGLE_CLOUD_PROJECT', 'gen-lang-client-0303273462')
+USE_VERTEX_AI = os.getenv('GOOGLE_GENAI_USE_VERTEXAI', 'True').lower() == 'true'
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
 # Import Gemini Interactions API Service for Deep Research
 try:
@@ -45,23 +52,15 @@ class ProjectAssistantService:
     def __init__(self):
         self.whatsapp_service = WhatsAppService()
         
-        # Initialize DeepSeek AI as primary provider
+        # Initialize DeepSeek AI as FALLBACK provider
         self.deepseek_api_key = os.getenv('DEEPSEEK_API_KEY')
         self.deepseek_api_url = 'https://api.deepseek.com/chat/completions'
         self._is_deepseek_configured = bool(self.deepseek_api_key)
         
-        # Initialize Gemini AI as fallback
-        self.gemini_model = None
+        # Initialize Gemini via Vertex AI as PRIMARY provider
+        self.gemini_client = None
         self._is_gemini_configured = False
-        try:
-            if GENAI_AVAILABLE:
-                api_key = os.getenv('GEMINI_API_KEY')
-                if api_key and genai:
-                    genai.configure(api_key=api_key)
-                    self.gemini_model = genai.GenerativeModel('gemini-2.0-flash-exp')
-                    self._is_gemini_configured = True
-        except Exception as e:
-            logger.error(f"Error initializing Gemini fallback: {e}")
+        self._init_gemini_client()
         
         # Initialize Gemini Interactions Service for Deep Research
         self.interactions_service = None
@@ -75,12 +74,55 @@ class ProjectAssistantService:
             except Exception as e:
                 logger.error(f"Error initializing Interactions API: {e}")
         
-        if self._is_deepseek_configured:
-            logger.info("✅ Project Assistant initialized with DeepSeek AI (primary)")
-        elif self._is_gemini_configured:
-            logger.warning("DeepSeek not available - using Gemini as primary")
+        if self._is_gemini_configured:
+            logger.info("✅ Project Assistant initialized with Gemini via Vertex AI (primary)")
+        elif self._is_deepseek_configured:
+            logger.warning("Gemini not available - using DeepSeek as primary")
         else:
             logger.warning("No AI services available")
+    
+    def _init_gemini_client(self):
+        """Initialize Gemini client with Vertex AI or API key."""
+        if not GENAI_AVAILABLE:
+            return
+        try:
+            # Try Vertex AI first (higher rate limits)
+            if USE_VERTEX_AI:
+                os.environ['GOOGLE_GENAI_USE_VERTEXAI'] = 'True'
+                credentials_path = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
+                service_account_json = os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON')
+                
+                if credentials_path and os.path.exists(credentials_path):
+                    self.gemini_client = genai.Client(http_options=HttpOptions(api_version="v1"))
+                    self._is_gemini_configured = True
+                    logger.info(f"Project Assistant: Gemini via Vertex AI configured (project: {GOOGLE_CLOUD_PROJECT})")
+                    return
+                elif service_account_json:
+                    import tempfile
+                    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+                        f.write(service_account_json)
+                        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = f.name
+                    self.gemini_client = genai.Client(http_options=HttpOptions(api_version="v1"))
+                    self._is_gemini_configured = True
+                    logger.info("Project Assistant: Gemini via Vertex AI configured (inline credentials)")
+                    return
+                else:
+                    # Try ADC
+                    try:
+                        self.gemini_client = genai.Client(http_options=HttpOptions(api_version="v1"))
+                        self._is_gemini_configured = True
+                        logger.info("Project Assistant: Gemini via Vertex AI configured (ADC)")
+                        return
+                    except Exception:
+                        logger.warning("Vertex AI ADC failed, trying API key...")
+            
+            # Fallback to API key
+            if GEMINI_API_KEY:
+                self.gemini_client = genai.Client(api_key=GEMINI_API_KEY)
+                self._is_gemini_configured = True
+                logger.info("Project Assistant: Gemini configured with API key (fallback)")
+        except Exception as e:
+            logger.error(f"Failed to initialize Gemini client: {e}")
     
     # System prompt that makes DeepSeek AI a comprehensive, engaging research assistant
     TEACHER_SYSTEM_PROMPT = """You are NerdX AI — a brilliant, friendly, and enthusiastic research assistant for ZIMSEC School-Based Projects. You're like having a genius best friend who loves helping with projects!
@@ -529,14 +571,18 @@ You have 0 credits. Credits are deducted (1 credit) for every 10 AI responses.
 
 **Your Response (as the teacher):"""
             
-            # Try Gemini FIRST (primary)
-            if self._is_gemini_configured and self.gemini_model:
+            # Try Gemini FIRST (primary via Vertex AI)
+            if self._is_gemini_configured and self.gemini_client:
                 try:
-                    response = self.gemini_model.generate_content(full_prompt)
+                    response = self.gemini_client.models.generate_content(
+                        model="gemini-2.5-flash",
+                        contents=full_prompt,
+                        config={"temperature": 0.7, "max_output_tokens": 2000}
+                    )
                     if response and response.text:
                         ai_text = response.text.strip()
                         ai_text = self._clean_markdown(ai_text)
-                        logger.info(f"✅ Gemini AI generated response for {user_id} (length: {len(ai_text)})")
+                        logger.info(f"✅ Gemini via Vertex AI generated response for {user_id} (length: {len(ai_text)})")
                         return ai_text
                 except Exception as gemini_error:
                     logger.error(f"Gemini API error for {user_id}: {gemini_error}", exc_info=True)

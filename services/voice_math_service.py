@@ -142,49 +142,71 @@ class VoiceMathService:
         else:
             logger.info("[Voice] Local Whisper not available, using Gemini fallback")
         
-        # FALLBACK: Use Gemini for audio transcription
-        gemini_api_key = os.environ.get('GEMINI_API_KEY')
-        if gemini_api_key:
-            try:
-                import google.generativeai as genai
-                import mimetypes
-                
-                genai.configure(api_key=gemini_api_key)
-                
+        # FALLBACK: Use Gemini via Vertex AI for audio transcription
+        try:
+            from google import genai
+            from google.genai.types import HttpOptions
+            
+            # Create client with Vertex AI or API key
+            use_vertex_ai = os.environ.get('GOOGLE_GENAI_USE_VERTEXAI', 'True').lower() == 'true'
+            gemini_api_key = os.environ.get('GEMINI_API_KEY')
+            credentials_path = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
+            
+            client = None
+            if use_vertex_ai and credentials_path and os.path.exists(credentials_path):
+                os.environ['GOOGLE_GENAI_USE_VERTEXAI'] = 'True'
+                client = genai.Client(http_options=HttpOptions(api_version="v1"))
+                logger.info("[Voice] Using Vertex AI for transcription")
+            elif gemini_api_key:
+                client = genai.Client(api_key=gemini_api_key)
+                logger.info("[Voice] Using Gemini API key for transcription")
+            
+            if client:
                 logger.info(f"[Voice] Transcribing with Gemini: {audio_path}")
                 
-                # Gemini 1.5+ supports audio input natively
-                model = genai.GenerativeModel('gemini-2.0-flash-exp')
+                # Read and encode the audio file
+                import base64
+                with open(audio_path, 'rb') as f:
+                    audio_data = f.read()
+                audio_b64 = base64.b64encode(audio_data).decode('utf-8')
                 
-                # Upload audio file to Gemini
-                mime_type = mimetypes.guess_type(audio_path)[0] or 'audio/wav'
-                audio_file = genai.upload_file(audio_path, mime_type=mime_type)
+                # Determine mime type
+                ext = os.path.splitext(audio_path)[1].lower()
+                mime_map = {'.wav': 'audio/wav', '.mp3': 'audio/mpeg', '.m4a': 'audio/mp4', '.ogg': 'audio/ogg'}
+                mime_type = mime_map.get(ext, 'audio/wav')
                 
-                # Transcribe with clear instructions
-                response = model.generate_content([
-                    """Transcribe the following audio recording exactly as spoken.
+                # Transcribe with Gemini
+                response = client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=[
+                        {
+                            "role": "user",
+                            "parts": [
+                                {"text": """Transcribe the following audio recording exactly as spoken.
                     
 Rules:
 - Only output the transcribed text, nothing else
 - If the audio contains mathematical expressions, write them naturally (e.g., "x squared" stays as "x squared")
 - Preserve the exact words spoken
-- If the audio is unclear or empty, respond with just: [unclear]""",
-                    audio_file
-                ])
+- If the audio is unclear or empty, respond with just: [unclear]"""},
+                                {"inline_data": {"mime_type": mime_type, "data": audio_b64}}
+                            ]
+                        }
+                    ]
+                )
                 
                 if response and response.text:
                     text = response.text.strip()
-                    # Check for unclear audio
                     if text == "[unclear]" or not text:
                         logger.warning("[Voice] Gemini could not understand audio")
                         return None
                     logger.info(f"[Voice] Gemini transcription success: {text[:100]}...")
                     return text
                     
-            except Exception as e:
-                logger.error(f"[Voice] Gemini transcription failed: {e}")
-        else:
-            logger.warning("[Voice] GEMINI_API_KEY not set, cannot use Gemini fallback")
+        except ImportError:
+            logger.warning("[Voice] google-genai SDK not available for fallback")
+        except Exception as e:
+            logger.error(f"[Voice] Gemini transcription failed: {e}")
         
         logger.error("[Voice] All transcription methods failed - neither local Whisper nor Gemini available")
         return None

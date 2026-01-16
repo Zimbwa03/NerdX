@@ -1,33 +1,64 @@
 import os
 import subprocess
+import sys
 import uuid
 import shutil
+import logging
 from typing import Dict, Optional
+
+logger = logging.getLogger(__name__)
 
 class ManimService:
     """
     Service to manage Manim animation rendering.
     Runs Manim in a subprocess to ensure stability and isolation.
+    Cross-platform compatible: Works on Windows (dev) and Linux (production/Render).
     """
     
     def __init__(self):
         self.base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         self.media_dir = os.path.join(self.base_dir, "static", "media")
         self.templates_file = os.path.join(self.base_dir, "services", "manim_templates.py")
+        self.is_windows = sys.platform == 'win32'
         
         # Ensure media directory exists
         os.makedirs(self.media_dir, exist_ok=True)
         
+        # Setup LaTeX paths for Windows if needed
+        self._setup_latex_path()
+        
+    def _setup_latex_path(self):
+        """Add LaTeX to PATH if on Windows and not already available"""
+        if not self.is_windows:
+            # On Linux, LaTeX is installed system-wide via apt-get (Dockerfile)
+            return
+            
+        # Windows: Try common LaTeX installation paths
+        possible_latex_paths = [
+            os.path.expandvars(r"%LOCALAPPDATA%\Programs\MiKTeX\miktex\bin\x64"),
+            r"C:\Program Files\MiKTeX\miktex\bin\x64",
+            r"C:\texlive\2024\bin\windows",
+            r"C:\texlive\2023\bin\win64",
+        ]
+        
+        current_path = os.environ.get("PATH", "")
+        for latex_path in possible_latex_paths:
+            if os.path.exists(latex_path) and latex_path not in current_path:
+                os.environ["PATH"] = latex_path + os.pathsep + current_path
+                logger.info(f"Added LaTeX path: {latex_path}")
+                break
+        
     def check_dependencies(self) -> Dict[str, bool]:
         """Check if ffmpeg and latex are available"""
-        # Add MikTeX to PATH for this check if needed
-        miktex_path = r"C:\Users\GWENJE\AppData\Local\Programs\MiKTeX\miktex\bin\x64"
-        if os.path.exists(miktex_path) and miktex_path not in os.environ["PATH"]:
-            os.environ["PATH"] += os.pathsep + miktex_path
-            
+        ffmpeg_available = shutil.which("ffmpeg") is not None
+        latex_available = shutil.which("latex") is not None or shutil.which("pdflatex") is not None
+        
+        logger.info(f"Manim dependencies - FFmpeg: {ffmpeg_available}, LaTeX: {latex_available}, Platform: {'Windows' if self.is_windows else 'Linux'}")
+        
         return {
-            "ffmpeg": shutil.which("ffmpeg") is not None,
-            "latex": shutil.which("latex") is not None or shutil.which("pdflatex") is not None
+            "ffmpeg": ffmpeg_available,
+            "latex": latex_available,
+            "platform": "windows" if self.is_windows else "linux"
         }
 
     def render_quadratic(self, a: float, b: float, c: float, quality: str = "l") -> Dict:
@@ -45,13 +76,20 @@ class ManimService:
         """
         Internal method to run manim subprocess
         """
+        # Check dependencies first
+        deps = self.check_dependencies()
+        if not deps["ffmpeg"]:
+            return {
+                "success": False,
+                "error": "FFmpeg is not installed. Cannot render video animations.",
+                "platform": deps.get("platform", "unknown")
+            }
+        
         # Generate unique ID for this render
         render_id = str(uuid.uuid4())[:8]
         output_filename = f"{scene_name}_{render_id}"
         
         # Construct command
-        # python -m manim -q{quality} -o {output_filename} {templates_file} {scene_name} --media_dir {media_dir}
-        import sys
         cmd = [
             sys.executable, "-m", "manim",
             f"-q{quality}",
@@ -61,31 +99,28 @@ class ManimService:
             scene_name
         ]
         
+        logger.info(f"Running Manim command: {' '.join(cmd)}")
+        
         # Prepare environment
         env = os.environ.copy()
         env.update(env_vars)
         
-        # Add MikTeX to PATH if not present
-        miktex_path = r"C:\Users\GWENJE\AppData\Local\Programs\MiKTeX\miktex\bin\x64"
-        if os.path.exists(miktex_path) and miktex_path not in os.environ["PATH"]:
-            env["PATH"] = miktex_path + os.pathsep + env.get("PATH", "")
-            
-        # Add project root to PATH to find latex.bat/pdflatex.bat wrappers
+        # Add project root to PATH for any wrapper scripts
         env["PATH"] = self.base_dir + os.pathsep + env.get("PATH", "")
         
         try:
-            # Run Manim
+            # Run Manim with timeout (60 seconds should be enough for simple graphs)
             result = subprocess.run(
                 cmd,
                 env=env,
                 capture_output=True,
                 text=True,
-                check=True
+                check=True,
+                timeout=120  # 2 minute timeout
             )
             
             # Find the output file
             # Manim structure: media_dir/videos/manim_templates/quality/output_filename.mp4
-            # Note: 'manim_templates' is the module name
             quality_map = {'l': '480p15', 'm': '720p30', 'h': '1080p60'}
             quality_dir = quality_map.get(quality, '480p15')
             
@@ -99,8 +134,9 @@ class ManimService:
             
             # Verify file exists
             if os.path.exists(video_path):
-                # Return relative path for API
-                relative_path = os.path.relpath(video_path, self.base_dir)
+                # Return relative path for API (use forward slashes for URLs)
+                relative_path = os.path.relpath(video_path, self.base_dir).replace("\\", "/")
+                logger.info(f"Manim render success: {relative_path}")
                 return {
                     "success": True,
                     "video_path": relative_path,
@@ -108,19 +144,29 @@ class ManimService:
                     "logs": result.stdout
                 }
             else:
+                logger.error(f"Video file not found: {video_path}")
                 return {
                     "success": False,
                     "error": "Video file not found after rendering",
                     "logs": result.stdout + "\n" + result.stderr
                 }
                 
+        except subprocess.TimeoutExpired:
+            logger.error("Manim rendering timed out")
+            return {
+                "success": False,
+                "error": "Animation rendering timed out (>120s)"
+            }
         except subprocess.CalledProcessError as e:
+            logger.error(f"Manim rendering failed: {e.stderr}")
             return {
                 "success": False,
                 "error": "Manim rendering failed",
-                "logs": e.stdout + "\n" + e.stderr
+                "logs": (e.stdout or "") + "\n" + (e.stderr or ""),
+                "platform": "windows" if self.is_windows else "linux"
             }
         except Exception as e:
+            logger.error(f"Manim exception: {str(e)}")
             return {
                 "success": False,
                 "error": str(e)

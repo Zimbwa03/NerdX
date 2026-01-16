@@ -24,15 +24,17 @@ except ImportError:
     PROMPTS_AVAILABLE = False
     logger.warning("Structured prompts not available, using default prompts")
 
-# Try to import Gemini AI
+# Try to import google-genai SDK (Vertex AI)
 try:
-    import google.generativeai as genai
+    from google import genai
+    from google.genai.types import HttpOptions
     GENAI_AVAILABLE = True
-    logger.info("google.generativeai loaded for Math Question Generator")
+    logger.info("google-genai SDK loaded for Math Question Generator")
 except ImportError:
     genai = None
+    HttpOptions = None
     GENAI_AVAILABLE = False
-    logger.warning("google.generativeai not available, will use DeepSeek only")
+    logger.warning("google-genai SDK not available, will use DeepSeek only")
 
 
 class MathQuestionGenerator:
@@ -43,17 +45,15 @@ class MathQuestionGenerator:
         self.deepseek_api_key = os.environ.get('DEEPSEEK_API_KEY')
         self.deepseek_api_url = 'https://api.deepseek.com/chat/completions'
         
-        # Gemini configuration (primary - faster and more reliable)
+        # Vertex AI / Gemini configuration (primary - higher rate limits)
+        self.project_id = os.environ.get('GOOGLE_CLOUD_PROJECT', 'gen-lang-client-0303273462')
+        self.use_vertex_ai = os.environ.get('GOOGLE_GENAI_USE_VERTEXAI', 'True').lower() == 'true'
         self.gemini_api_key = os.environ.get('GEMINI_API_KEY')
         self._gemini_configured = False
+        self._gemini_client = None
         
-        if self.gemini_api_key and GENAI_AVAILABLE:
-            try:
-                genai.configure(api_key=self.gemini_api_key)
-                self._gemini_configured = True
-                logger.info("Gemini AI configured as PRIMARY provider for math questions")
-            except Exception as e:
-                logger.error(f"Failed to configure Gemini: {e}")
+        if GENAI_AVAILABLE:
+            self._init_gemini_client()
         
         if self.deepseek_api_key:
             logger.info("DeepSeek AI configured as FALLBACK provider")
@@ -66,6 +66,48 @@ class MathQuestionGenerator:
         self.max_retries = 2  # Reduced retries for faster fallback
         self.base_timeout = 25  # Reduced timeout to prevent worker kills
         self.retry_delay = 1   # Minimal delay between retries
+    
+    def _init_gemini_client(self):
+        """Initialize Gemini client with Vertex AI or API key."""
+        try:
+            # Try Vertex AI first (higher rate limits)
+            if self.use_vertex_ai:
+                os.environ['GOOGLE_GENAI_USE_VERTEXAI'] = 'True'
+                credentials_path = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
+                service_account_json = os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON')
+                
+                if credentials_path and os.path.exists(credentials_path):
+                    self._gemini_client = genai.Client(http_options=HttpOptions(api_version="v1"))
+                    self._gemini_configured = True
+                    logger.info(f"Gemini via Vertex AI configured as PRIMARY provider (project: {self.project_id})")
+                    return
+                elif service_account_json:
+                    import tempfile
+                    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+                        f.write(service_account_json)
+                        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = f.name
+                    self._gemini_client = genai.Client(http_options=HttpOptions(api_version="v1"))
+                    self._gemini_configured = True
+                    logger.info(f"Gemini via Vertex AI configured (inline credentials)")
+                    return
+                else:
+                    # Try ADC
+                    try:
+                        self._gemini_client = genai.Client(http_options=HttpOptions(api_version="v1"))
+                        self._gemini_configured = True
+                        logger.info("Gemini via Vertex AI configured (ADC)")
+                        return
+                    except Exception:
+                        logger.warning("Vertex AI ADC failed, trying API key...")
+            
+            # Fallback to API key
+            if self.gemini_api_key:
+                self._gemini_client = genai.Client(api_key=self.gemini_api_key)
+                self._gemini_configured = True
+                logger.info("Gemini AI configured with API key as PRIMARY provider")
+        except Exception as e:
+            logger.error(f"Failed to configure Gemini: {e}")
+            self._gemini_configured = False
 
     def generate_question(self, subject: str, topic: str, difficulty: str = 'medium', user_id: str = None) -> Optional[Dict]:
         """
@@ -127,31 +169,28 @@ class MathQuestionGenerator:
 
     def _generate_with_gemini(self, subject: str, topic: str, difficulty: str, recent_topics: set = None) -> Optional[Dict]:
         """
-        Generate a math question using Gemini AI.
+        Generate a math question using Gemini AI via Vertex AI.
         Returns parsed question data or None on failure.
         """
-        if not self._gemini_configured or not GENAI_AVAILABLE:
+        if not self._gemini_configured or not self._gemini_client:
             return None
         
         try:
             # Build the prompt
             prompt = self._create_question_prompt(subject, topic, difficulty, recent_topics)
             
-            # Use Gemini Flash for speed
-            model = genai.GenerativeModel('gemini-2.0-flash-exp')
-            
-            # Request JSON response
-            response = model.generate_content(
-                prompt,
-                generation_config=genai.types.GenerationConfig(
-                    response_mime_type="application/json",
-                    temperature=0.8,
-                    max_output_tokens=2000
-                ),
-                request_options={'timeout': 20}  # 20 second timeout
+            # Use Gemini Flash for speed via the new SDK
+            response = self._gemini_client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt,
+                config={
+                    "response_mime_type": "application/json",
+                    "temperature": 0.8,
+                    "max_output_tokens": 2000
+                }
             )
             
-            if response and hasattr(response, 'text') and response.text:
+            if response and response.text:
                 # Parse JSON response
                 text = response.text.strip()
                 
@@ -302,7 +341,7 @@ Generate the question now:"""
         }
 
         data = {
-            'model': 'deepseek-chat',
+            'model': 'deepseek-chat',  # Fast mode for non-streaming
             'messages': [{'role': 'user', 'content': prompt}],
             'max_tokens': 2500,  # Increased for detailed solutions
             'temperature': 0.85  # Increased for more creative variation and diversity
@@ -357,6 +396,134 @@ Generate the question now:"""
         except Exception as e:
             logger.error(f"An unexpected error occurred during AI API request: {e}")
             return None
+
+    def generate_question_stream(self, subject: str, topic: str, difficulty: str = 'medium', user_id: str = None):
+        """
+        Generate a math question using deepseek-reasoner with streaming.
+        Yields thinking updates for real-time UI, then final question.
+        
+        Uses DeepSeek Reasoner (V3.2 CoT) for step-by-step thinking.
+        
+        Yields:
+            dict: Either {'type': 'thinking', 'content': '...'} or {'type': 'question', 'data': {...}}
+        """
+        if not self.api_key:
+            yield {'type': 'error', 'message': 'DeepSeek API key not configured'}
+            return
+            
+        # Build the prompt
+        prompt = self._build_prompt(subject, topic, difficulty)
+        
+        headers = {
+            'Authorization': f'Bearer {self.api_key}',
+            'Content-Type': 'application/json'
+        }
+
+        # Use deepseek-reasoner for Chain-of-Thought reasoning
+        data = {
+            'model': 'deepseek-reasoner',  # V3.2 with CoT thinking
+            'messages': [{'role': 'user', 'content': prompt}],
+            'max_tokens': 3000,
+            'temperature': 0.7,
+            'stream': True  # Enable streaming
+        }
+
+        try:
+            # Yield initial thinking status
+            yield {'type': 'thinking', 'content': '🧠 Analyzing topic...', 'stage': 1}
+            
+            response = requests.post(
+                self.api_url,
+                headers=headers,
+                json=data,
+                timeout=60,
+                stream=True
+            )
+            
+            if response.status_code != 200:
+                logger.error(f"DeepSeek Reasoner error: {response.status_code}")
+                yield {'type': 'error', 'message': 'AI service temporarily unavailable'}
+                return
+            
+            # Process streaming response
+            full_content = ""
+            reasoning_content = ""
+            stage = 1
+            thinking_messages = [
+                '📐 Setting up problem...',
+                '✨ Crafting solution steps...',
+                '🔢 Calculating values...',
+                '✅ Finalizing question...'
+            ]
+            
+            for line in response.iter_lines():
+                if line:
+                    line_str = line.decode('utf-8')
+                    if line_str.startswith('data: '):
+                        data_str = line_str[6:]
+                        if data_str == '[DONE]':
+                            break
+                        try:
+                            chunk = json.loads(data_str)
+                            
+                            # Check for reasoning_content (CoT thinking)
+                            if 'choices' in chunk and len(chunk['choices']) > 0:
+                                delta = chunk['choices'][0].get('delta', {})
+                                
+                                # Extract reasoning content (thinking process)
+                                if 'reasoning_content' in delta:
+                                    reasoning_content += delta['reasoning_content']
+                                    # Update thinking stage based on content length
+                                    new_stage = min(len(reasoning_content) // 200 + 1, len(thinking_messages))
+                                    if new_stage > stage:
+                                        stage = new_stage
+                                        yield {
+                                            'type': 'thinking', 
+                                            'content': thinking_messages[stage - 1],
+                                            'stage': stage,
+                                            'total_stages': len(thinking_messages)
+                                        }
+                                
+                                # Extract actual content
+                                if 'content' in delta:
+                                    full_content += delta['content']
+                                    
+                        except json.JSONDecodeError:
+                            continue
+            
+            # Parse the final content
+            if full_content:
+                json_start = full_content.find('{')
+                json_end = full_content.rfind('}') + 1
+                
+                if json_start >= 0 and json_end > json_start:
+                    json_str = full_content[json_start:json_end]
+                    try:
+                        question_data = json.loads(json_str)
+                        formatted = self._validate_and_format_question(
+                            question_data, subject, topic, difficulty, user_id
+                        )
+                        if formatted:
+                            formatted['source'] = 'deepseek_reasoner'
+                            yield {'type': 'question', 'data': formatted}
+                            return
+                    except json.JSONDecodeError as e:
+                        logger.error(f"Failed to parse reasoner response: {e}")
+            
+            # Fallback to regular generation if streaming fails
+            logger.warning("Streaming failed, falling back to regular generation")
+            question = self.generate_question(subject, topic, difficulty, user_id)
+            if question:
+                yield {'type': 'question', 'data': question}
+            else:
+                yield {'type': 'error', 'message': 'Failed to generate question'}
+                
+        except requests.exceptions.Timeout:
+            logger.warning("DeepSeek Reasoner request timed out")
+            yield {'type': 'error', 'message': 'Request timed out, please try again'}
+        except Exception as e:
+            logger.error(f"Error in streaming generation: {e}")
+            yield {'type': 'error', 'message': 'An error occurred'}
 
     def _validate_and_format_question(self, question_data: Dict, subject: str, topic: str, difficulty: str, user_id: str = None) -> Dict:
         """Validate and format the question response"""

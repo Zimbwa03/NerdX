@@ -1,23 +1,86 @@
 """
 Gemini Image Generator for Project Assistant
-Uses Google Gemini 2.5 Flash Image model for generating visual aids
+Uses Google Gemini via Vertex AI for generating visual aids
 """
 
 import logging
 import os
 import base64
-import requests
 from typing import Optional
 
 logger = logging.getLogger(__name__)
 
+# Try to import google-genai SDK (Vertex AI)
+try:
+    from google import genai
+    from google.genai.types import HttpOptions
+    GENAI_AVAILABLE = True
+except ImportError:
+    genai = None
+    HttpOptions = None
+    GENAI_AVAILABLE = False
+
 
 class GeminiImageGenerator:
-    """Handles image generation using Gemini 2.5 Flash Image API"""
+    """Handles image generation using Gemini via Vertex AI"""
     
     def __init__(self):
+        self.client = None
+        self._is_configured = False
+        
+        # Vertex AI configuration (preferred - higher rate limits)
+        self.project_id = os.environ.get('GOOGLE_CLOUD_PROJECT', 'gen-lang-client-0303273462')
+        self.use_vertex_ai = os.environ.get('GOOGLE_GENAI_USE_VERTEXAI', 'True').lower() == 'true'
+        
+        # Fallback API key
         self.api_key = os.environ.get('GEMINI_API_KEY')
-        self.api_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent"
+        
+        if GENAI_AVAILABLE:
+            self._init_client()
+        else:
+            logger.warning("google-genai SDK not available for image generation")
+    
+    def _init_client(self):
+        """Initialize Gemini client with Vertex AI or API key."""
+        try:
+            # Try Vertex AI first (higher rate limits)
+            if self.use_vertex_ai:
+                os.environ['GOOGLE_GENAI_USE_VERTEXAI'] = 'True'
+                credentials_path = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
+                service_account_json = os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON')
+                
+                if credentials_path and os.path.exists(credentials_path):
+                    self.client = genai.Client(http_options=HttpOptions(api_version="v1"))
+                    self._is_configured = True
+                    logger.info(f"GeminiImageGenerator: Configured via Vertex AI (project: {self.project_id})")
+                    return
+                elif service_account_json:
+                    import tempfile
+                    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+                        f.write(service_account_json)
+                        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = f.name
+                    self.client = genai.Client(http_options=HttpOptions(api_version="v1"))
+                    self._is_configured = True
+                    logger.info("GeminiImageGenerator: Configured via Vertex AI (inline credentials)")
+                    return
+                else:
+                    # Try ADC
+                    try:
+                        self.client = genai.Client(http_options=HttpOptions(api_version="v1"))
+                        self._is_configured = True
+                        logger.info("GeminiImageGenerator: Configured via Vertex AI (ADC)")
+                        return
+                    except Exception:
+                        logger.warning("Vertex AI ADC failed, trying API key...")
+            
+            # Fallback to API key
+            if self.api_key:
+                self.client = genai.Client(api_key=self.api_key)
+                self._is_configured = True
+                logger.info("GeminiImageGenerator: Configured with API key (fallback)")
+        except Exception as e:
+            logger.error(f"Error initializing GeminiImageGenerator: {e}")
+            self._is_configured = False
     
     def generate(self, prompt: str, aspect_ratio: str = "16:9") -> Optional[str]:
         """
@@ -31,55 +94,37 @@ class GeminiImageGenerator:
             URL or base64 data URL of the generated image, or None if failed
         """
         try:
-            if not self.api_key:
-                logger.error("GEMINI_API_KEY not found")
+            if not self._is_configured or not self.client:
+                logger.error("GeminiImageGenerator not configured")
                 return None
             
-            headers = {
-                "x-goog-api-key": self.api_key,
-                "Content-Type": "application/json"
-            }
-            
-            payload = {
-                "contents": [{
-                    "parts": [{"text": prompt}]
-                }],
-                "generationConfig": {
-                    "responseModalities": ["IMAGE"],
-                    "imageConfig": {
-                        "aspectRatio": aspect_ratio
+            # Use Gemini model for image generation
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt,
+                config={
+                    "response_modalities": ["IMAGE"],
+                    "image_config": {
+                        "aspect_ratio": aspect_ratio
                     }
                 }
-            }
-            
-            response = requests.post(
-                self.api_url,
-                headers=headers,
-                json=payload,
-                timeout=30
             )
             
-            if response.status_code == 200:
-                data = response.json()
-                
-                # Extract image data from response
-                if 'candidates' in data and len(data['candidates']) > 0:
-                    parts = data['candidates'][0].get('content', {}).get('parts', [])
-                    
-                    for part in parts:
-                        if 'inlineData' in part:
-                            mime_type = part['inlineData'].get('mimeType', 'image/png')
-                            image_data = part['inlineData'].get('data', '')
-                            
-                            # Return as data URL for WhatsApp
-                            data_url = f"data:{mime_type};base64,{image_data}"
-                            return data_url
-                
-                logger.error(f"No image found in Gemini response: {data}")
-                return None
-            else:
-                logger.error(f"Gemini API error: {response.status_code} - {response.text}")
-                return None
+            # Extract image data from response
+            if response and response.candidates:
+                for candidate in response.candidates:
+                    if hasattr(candidate, 'content') and candidate.content:
+                        for part in candidate.content.parts:
+                            if hasattr(part, 'inline_data') and part.inline_data:
+                                mime_type = part.inline_data.mime_type or 'image/png'
+                                image_data = base64.b64encode(part.inline_data.data).decode('utf-8')
+                                
+                                # Return as data URL
+                                data_url = f"data:{mime_type};base64,{image_data}"
+                                return data_url
+            
+            logger.error(f"No image found in Gemini response")
+            return None
                 
         except Exception as e:
             logger.error(f"Error generating image with Gemini: {e}", exc_info=True)
@@ -121,3 +166,4 @@ class GeminiImageGenerator:
         prompt += "Suitable for a ZIMSEC school project presentation."
         
         return self.generate(prompt, aspect_ratio="9:16")
+

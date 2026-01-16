@@ -19,6 +19,7 @@ import {
     SafeAreaView,
     StatusBar,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Camera, CameraView } from 'expo-camera';
 import { Audio, AVPlaybackStatus } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
@@ -44,14 +45,14 @@ type ConnectionState = 'idle' | 'connecting' | 'ready' | 'active' | 'error';
 
 const NerdXLiveVideoScreen: React.FC = () => {
     const navigation = useNavigation();
-    
+
     // State
     const [connectionState, setConnectionState] = useState<ConnectionState>('idle');
     const [hasPermission, setHasPermission] = useState<boolean | null>(null);
     const [isFrontCamera, setIsFrontCamera] = useState(false);
     const [isRecording, setIsRecording] = useState(false);
     const [statusMessage, setStatusMessage] = useState('Tap to start');
-    
+
     // Refs
     const cameraRef = useRef<CameraView>(null);
     const wsRef = useRef<WebSocket | null>(null);
@@ -72,7 +73,7 @@ const NerdXLiveVideoScreen: React.FC = () => {
             const { status: audioStatus } = await Audio.requestPermissionsAsync();
             setHasPermission(cameraStatus === 'granted' && audioStatus === 'granted');
         })();
-        
+
         return () => {
             endSession();
         };
@@ -105,7 +106,7 @@ const NerdXLiveVideoScreen: React.FC = () => {
 
         hasStartedPlaybackRef.current = true;
         isPlayingRef.current = true;
-        
+
         const audioData = audioQueueRef.current.shift();
         if (!audioData) {
             isPlayingRef.current = false;
@@ -118,7 +119,7 @@ const NerdXLiveVideoScreen: React.FC = () => {
             if (soundRef.current) {
                 try {
                     await soundRef.current.unloadAsync();
-                } catch (e) {}
+                } catch (e) { }
             }
 
             // Ensure playback mode
@@ -184,7 +185,7 @@ const NerdXLiveVideoScreen: React.FC = () => {
             if (photo?.base64) {
                 // Add to queue for smooth streaming
                 frameQueueRef.current.push(photo.base64);
-                
+
                 // Keep queue size manageable
                 if (frameQueueRef.current.length > FRAME_BUFFER_SIZE) {
                     frameQueueRef.current.shift(); // Remove oldest frame
@@ -216,20 +217,20 @@ const NerdXLiveVideoScreen: React.FC = () => {
 
     const startFrameCapture = useCallback(() => {
         if (frameIntervalRef.current) return;
-        
+
         // Clear any existing queue
         frameQueueRef.current = [];
         frameCaptureInProgressRef.current = false;
-        
+
         // Start continuous frame capture at 10 FPS for real-time video
         frameIntervalRef.current = setInterval(() => {
             captureAndSendFrame();
         }, FRAME_INTERVAL_MS);
-        
+
         // Send first frame immediately
         setTimeout(() => captureAndSendFrame(), 50);
-        
-        console.log(`📹 Real-time video streaming started (${1000/FRAME_INTERVAL_MS} FPS)`);
+
+        console.log(`📹 Real-time video streaming started (${1000 / FRAME_INTERVAL_MS} FPS)`);
     }, [captureAndSendFrame]);
 
     const stopFrameCapture = useCallback(() => {
@@ -248,7 +249,7 @@ const NerdXLiveVideoScreen: React.FC = () => {
             if (recordingRef.current) {
                 try {
                     await recordingRef.current.stopAndUnloadAsync();
-                } catch (e) {}
+                } catch (e) { }
                 recordingRef.current = null;
             }
 
@@ -290,7 +291,7 @@ const NerdXLiveVideoScreen: React.FC = () => {
 
         try {
             const uri = recordingRef.current.getURI();
-            
+
             try {
                 await recordingRef.current.stopAndUnloadAsync();
             } catch (e: any) {
@@ -304,7 +305,7 @@ const NerdXLiveVideoScreen: React.FC = () => {
             if (uri && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
                 const response = await fetch(uri);
                 const blob = await response.blob();
-                
+
                 const reader = new FileReader();
                 reader.onloadend = () => {
                     const base64data = reader.result as string;
@@ -356,7 +357,7 @@ const NerdXLiveVideoScreen: React.FC = () => {
                     audioQueueRef.current = [];
                     hasStartedPlaybackRef.current = false;
                     if (soundRef.current) {
-                        soundRef.current.stopAsync().catch(() => {});
+                        soundRef.current.stopAsync().catch(() => { });
                     }
                     break;
 
@@ -384,7 +385,22 @@ const NerdXLiveVideoScreen: React.FC = () => {
             isPlayingRef.current = false;
             hasStartedPlaybackRef.current = false;
 
-            const ws = new WebSocket(WS_URL);
+            // Get user ID from storage to ensure credit check works for the correct user
+            let wsUrl = WS_URL;
+            try {
+                const userData = await AsyncStorage.getItem('@user_data');
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    if (user && user.id) {
+                        console.log('👤 Connecting VIDEO as user:', user.id);
+                        wsUrl = `${WS_URL}?user_id=${user.id}`;
+                    }
+                }
+            } catch (error) {
+                console.error('Error getting user data:', error);
+            }
+
+            const ws = new WebSocket(wsUrl);
             wsRef.current = ws;
 
             ws.onopen = () => {
@@ -425,7 +441,7 @@ const NerdXLiveVideoScreen: React.FC = () => {
         if (recordingRef.current) {
             try {
                 await recordingRef.current.stopAndUnloadAsync();
-            } catch (e) {}
+            } catch (e) { }
             recordingRef.current = null;
         }
         setIsRecording(false);
@@ -434,7 +450,7 @@ const NerdXLiveVideoScreen: React.FC = () => {
             try {
                 await soundRef.current.stopAsync();
                 await soundRef.current.unloadAsync();
-            } catch (e) {}
+            } catch (e) { }
             soundRef.current = null;
         }
 
@@ -446,7 +462,7 @@ const NerdXLiveVideoScreen: React.FC = () => {
             try {
                 wsRef.current.send(JSON.stringify({ type: 'end' }));
                 wsRef.current.close();
-            } catch (e) {}
+            } catch (e) { }
             wsRef.current = null;
         }
 
@@ -507,7 +523,7 @@ const NerdXLiveVideoScreen: React.FC = () => {
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="light-content" />
-            
+
             {/* Camera View */}
             <CameraView
                 ref={cameraRef}
@@ -531,13 +547,13 @@ const NerdXLiveVideoScreen: React.FC = () => {
                     >
                         <Ionicons name="arrow-back" size={24} color="#fff" />
                     </TouchableOpacity>
-                    
+
                     <View style={styles.titleContainer}>
                         <Text style={styles.title}>NerdX Live</Text>
                         <View style={[
                             styles.statusDot,
-                            connectionState === 'active' || connectionState === 'ready' 
-                                ? styles.statusDotActive 
+                            connectionState === 'active' || connectionState === 'ready'
+                                ? styles.statusDotActive
                                 : styles.statusDotInactive
                         ]} />
                     </View>
@@ -619,11 +635,11 @@ const NerdXLiveVideoScreen: React.FC = () => {
 
                     {/* Hint text */}
                     <Text style={styles.hintText}>
-                        {connectionState === 'idle' 
+                        {connectionState === 'idle'
                             ? 'Tap to start real-time video tutoring'
                             : connectionState === 'active' || connectionState === 'ready'
                                 ? '📹 AI can see your work in real-time. Tap mic to ask questions.'
-                                : isRecording 
+                                : isRecording
                                     ? 'Tap to send your question'
                                     : 'Tap mic to ask a question'}
                     </Text>

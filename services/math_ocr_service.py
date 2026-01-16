@@ -36,23 +36,17 @@ try:
 except ImportError:
     logger.warning("python-dotenv not installed, assuming environment variables are set")
 
-# Try to import google generative ai for fallback
-try:
-    import google.generativeai as genai
-    GEMINI_AVAILABLE = True
-except ImportError:
-    genai = None
-    GEMINI_AVAILABLE = False
+# Note: This service primarily uses GeminiInteractionsService (already migrated to Vertex AI)
+# Legacy google.generativeai fallback removed - all OCR now goes through the main Gemini Interactions service
 
 
 class MathOCRService:
     """Lightweight OCR service for mathematical equations using cloud vision APIs"""
     
-    
     def _ensure_initialized(self):
-        """Ensure keys are loaded and models initialized (lazy loading)"""
+        """Ensure keys are loaded (lazy loading)"""
         # Reload env if keys are missing
-        if not self.deepseek_api_key or not self.gemini_api_key:
+        if not self.deepseek_api_key:
             try:
                 from dotenv import load_dotenv
                 # Try all common paths
@@ -69,32 +63,14 @@ class MathOCRService:
                 pass
                 
             self.deepseek_api_key = os.getenv('DEEPSEEK_API_KEY')
-            self.gemini_api_key = os.getenv('GEMINI_API_KEY')
-
-        # Initialize Gemini if needed
-        if GEMINI_AVAILABLE and self.gemini_api_key and not self.gemini_model:
-            try:
-                genai.configure(api_key=self.gemini_api_key)
-                preferred_models = ['gemini-1.5-flash-latest', 'gemini-1.5-flash', 'gemini-pro-vision']
-                for model_name in preferred_models:
-                    try:
-                        self.gemini_model = genai.GenerativeModel(model_name)
-                        logger.info(f"Gemini vision model initialized (lazy): {model_name}")
-                        break
-                    except Exception:
-                        continue
-            except Exception as e:
-                logger.error(f"Error initializing Gemini (lazy): {e}")
 
     def __init__(self):
         """Initialize cloud-based OCR service"""
         self.deepseek_api_key = None
-        self.gemini_api_key = None
-        self.gemini_model = None
         
         self._ensure_initialized()
         
-        logger.info("Math OCR Service initialized (lightweight cloud-based mode)")
+        logger.info("Math OCR Service initialized (uses GeminiInteractionsService via Vertex AI)")
     
     def _encode_image(self, image_path: str) -> Optional[str]:
         """Encode image to base64"""
@@ -205,26 +181,8 @@ If no math is visible, set latex to empty string."""
             except Exception as e:
                 logger.error(f"Gemini Interactions error in MathOCR: {e}")
 
-            # Legacy Fallback (Old SDK) - kept just in case, but updated models
-            self._ensure_initialized()
-            if self.gemini_model:
-                try:
-                    import PIL.Image
-                    image = PIL.Image.open(image_path)
-                    
-                    prompt = "Extract math equations from this image. Return JSON with 'latex', 'plain_text', 'description'."
-                    response = self.gemini_model.generate_content([prompt, image])
-                    
-                    if response and response.text:
-                        return {
-                            "success": True,
-                            "latex": response.text,
-                            "plain_text": response.text,
-                            "confidence": 0.85,
-                            "method": "gemini_vision_legacy"
-                        }
-                except Exception as e:
-                    logger.error(f"Legacy Gemini error: {e}")
+            # Note: Legacy fallback removed - all OCR goes through GeminiInteractionsService
+            # which now uses Vertex AI for higher rate limits
             
             # Final Fallback
             return {

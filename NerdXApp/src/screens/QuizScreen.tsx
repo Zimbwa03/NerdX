@@ -33,6 +33,7 @@ import { useThemedColors } from '../theme/useThemedStyles';
 import LoadingProgress from '../components/LoadingProgress';
 import MathText from '../components/MathText';
 import VoiceMathInput from '../components/VoiceMathInput';
+import AIThinkingOverlay from '../components/AIThinkingOverlay';
 
 const QuizScreen: React.FC = () => {
   const route = useRoute();
@@ -101,6 +102,14 @@ const QuizScreen: React.FC = () => {
   // Vertex AI Image Mixing state
   const [mixImagesEnabled, setMixImagesEnabled] = useState<boolean>(false);
   const [showMixImagesPrompt, setShowMixImagesPrompt] = useState<boolean>(false);
+
+  /* Thinking UI State */
+  const [showThinking, setShowThinking] = useState(false);
+  const [thinkingContent, setThinkingContent] = useState('');
+  const [thinkingStage, setThinkingStage] = useState(1);
+  const [totalThinkingStages, setTotalThinkingStages] = useState(4);
+
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   // Check if subject supports image questions (Science subjects only)
   const supportsImageQuestions = ['combined_science', 'a_level_biology', 'a_level_chemistry', 'a_level_physics'].includes(subject?.id || '');
@@ -561,18 +570,67 @@ const QuizScreen: React.FC = () => {
 
         console.log(`ðŸ”„ Generating next ${nextQuestionType || 'MCQ'} question for topic: ${topic?.id || 'general'}`);
 
-        newQuestion = await quizApi.generateQuestion(
-          subject.id,
-          topic?.id,
-          'medium',  // difficulty
-          topic ? 'topical' : 'exam',  // type
-          topic?.parent_subject,  // parent_subject for Combined Science
-          nextQuestionType,  // Preserve question type (mcq, structured, essay)
-          undefined,  // questionFormat
-          nextQuestionType,  // Also pass as question_type for backend compatibility
-          mixImagesEnabled,  // Enable Vertex AI image questions
-          questionCount + 1   // Pass the next question number
-        );
+        // Use streaming for Mathematics (DeepSeek Reasoner)
+        if (subject?.id === 'mathematics' ||
+          subject?.id === 'a_level_pure_mathematics' ||
+          subject?.id === 'a_level_statistics') {
+
+          setShowThinking(true);
+          setThinkingContent('🧠 Analyzing request...');
+          setThinkingStage(1);
+
+          try {
+            newQuestion = await quizApi.generateQuestionStream(
+              subject.id,
+              topic?.id || '',
+              'medium',
+              (content, stage, total) => {
+                setThinkingContent(content);
+                setThinkingStage(stage);
+                setTotalThinkingStages(total);
+              }
+            );
+          } catch (err) {
+            console.error('Streaming failed, falling back to standard generation:', err);
+            setShowThinking(false);
+            // Fallback to standard generation
+            newQuestion = await quizApi.generateQuestion(
+              subject.id,
+              topic?.id,
+              'medium',
+              topic ? 'topical' : 'exam',
+              topic?.parent_subject,
+              nextQuestionType,
+              undefined,
+              nextQuestionType,
+              mixImagesEnabled,
+              questionCount + 1
+            );
+          }
+
+          // Add small delay to show completion
+          if (newQuestion) {
+            setThinkingContent('✅ Finalizing question...');
+            setThinkingStage(4);
+            await new Promise(resolve => setTimeout(resolve, 800));
+          }
+
+          setShowThinking(false);
+        } else {
+          // Standard generation for other subjects
+          newQuestion = await quizApi.generateQuestion(
+            subject.id,
+            topic?.id,
+            'medium',  // difficulty
+            topic ? 'topical' : 'exam',  // type
+            topic?.parent_subject,  // parent_subject for Combined Science
+            nextQuestionType,  // Preserve question type (mcq, structured, essay)
+            undefined,  // questionFormat
+            nextQuestionType,  // Also pass as question_type for backend compatibility
+            mixImagesEnabled,  // Enable Vertex AI image questions
+            questionCount + 1   // Pass the next question number
+          );
+        }
       }
 
       if (newQuestion) {
@@ -1851,6 +1909,12 @@ const QuizScreen: React.FC = () => {
         visible={generatingQuestion}
         message={isExamMode ? 'Loading exam question...' : 'Generating your question...'}
         estimatedTime={12}
+      />
+      <AIThinkingOverlay
+        visible={showThinking}
+        thinkingContent={thinkingContent}
+        currentStage={thinkingStage}
+        totalStages={totalThinkingStages}
       />
     </View>
   );

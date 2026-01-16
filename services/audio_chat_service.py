@@ -35,20 +35,24 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-# Import Google Gemini AI for audio generation
+# Import Google GenAI SDK for audio generation (Vertex AI)
 try:
-    import google.generativeai as genai
-    from google.generativeai import types
+    from google import genai
+    from google.genai.types import HttpOptions
     GENAI_AVAILABLE = True
 except ImportError:
     genai = None
-    types = None
+    HttpOptions = None
     GENAI_AVAILABLE = False
 
 # Environment variables
 DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY')
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')
+
+# Vertex AI configuration
+GOOGLE_CLOUD_PROJECT = os.getenv('GOOGLE_CLOUD_PROJECT', 'gen-lang-client-0303273462')
+USE_VERTEX_AI = os.getenv('GOOGLE_GENAI_USE_VERTEXAI', 'True').lower() == 'true'
 
 # Task storage (in production, use Redis or database)
 audio_tasks = {}
@@ -63,14 +67,45 @@ class AudioChatService:
 
         # Initialize Gemini AI client for audio generation
         self.gemini_client = None
-        if GEMINI_API_KEY and genai:
-            try:
-                genai.configure(api_key=GEMINI_API_KEY)
-                # Use the genai module directly, not a Client class
-                self.gemini_client = genai
-                logger.info("Gemini AI client initialized for audio generation")
-            except Exception as e:
-                logger.error(f"Failed to initialize Gemini AI client: {e}")
+        if GENAI_AVAILABLE:
+            self._init_gemini_client()
+
+    def _init_gemini_client(self):
+        """Initialize Gemini client with Vertex AI or API key."""
+        try:
+            # Try Vertex AI first (higher rate limits)
+            if USE_VERTEX_AI:
+                os.environ['GOOGLE_GENAI_USE_VERTEXAI'] = 'True'
+                credentials_path = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
+                service_account_json = os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON')
+                
+                if credentials_path and os.path.exists(credentials_path):
+                    self.gemini_client = genai.Client(http_options=HttpOptions(api_version="v1"))
+                    logger.info(f"AudioChatService: Gemini via Vertex AI configured (project: {GOOGLE_CLOUD_PROJECT})")
+                    return
+                elif service_account_json:
+                    import tempfile
+                    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+                        f.write(service_account_json)
+                        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = f.name
+                    self.gemini_client = genai.Client(http_options=HttpOptions(api_version="v1"))
+                    logger.info("AudioChatService: Gemini via Vertex AI configured (inline credentials)")
+                    return
+                else:
+                    # Try ADC
+                    try:
+                        self.gemini_client = genai.Client(http_options=HttpOptions(api_version="v1"))
+                        logger.info("AudioChatService: Gemini via Vertex AI configured (ADC)")
+                        return
+                    except Exception:
+                        logger.warning("Vertex AI ADC failed, trying API key...")
+            
+            # Fallback to API key
+            if GEMINI_API_KEY:
+                self.gemini_client = genai.Client(api_key=GEMINI_API_KEY)
+                logger.info("Gemini AI client initialized for audio generation (API key fallback)")
+        except Exception as e:
+            logger.error(f"Failed to initialize Gemini AI client: {e}")
 
         # Gemini TTS voice configurations (using valid voice names)
         self.gemini_voices = {
@@ -343,16 +378,16 @@ class AudioChatService:
                             response = self.gemini_client.models.generate_content(
                                 model="gemini-2.5-flash-preview-tts",
                                 contents=text,
-                                config=types.GenerateContentConfig(
-                                    response_modalities=["AUDIO"],
-                                    speech_config=types.SpeechConfig(
-                                        voice_config=types.VoiceConfig(
-                                            prebuilt_voice_config=types.PrebuiltVoiceConfig(
-                                                voice_name=voice_name
-                                            )
-                                        )
-                                    )
-                                )
+                                config={
+                                    "response_modalities": ["AUDIO"],
+                                    "speech_config": {
+                                        "voice_config": {
+                                            "prebuilt_voice_config": {
+                                                "voice_name": voice_name
+                                            }
+                                        }
+                                    }
+                                }
                             )
                             result_queue.put(response)
                         except Exception as e:

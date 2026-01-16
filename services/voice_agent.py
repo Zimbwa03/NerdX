@@ -661,19 +661,133 @@ class TransparentGeminiVideoPipe:
     """
     TRANSPARENT PIPE for Video + Audio.
     Handles both video frames and audio - tutor can SEE what student is working on.
+    Supports both Vertex AI (preferred) and regular Gemini API.
     """
     
     def __init__(self, client_ws: WebSocket):
         self.client_ws = client_ws
         self.gemini_ws: Optional[any] = None
         self.is_active = False
+        self.using_vertex_ai = False
         
     async def connect_to_gemini(self) -> bool:
-        """Connect to Gemini Live API with video support"""
-        if not GEMINI_API_KEY:
-            logger.error("❌ GEMINI_API_KEY not set in environment!")
-            return False
+        """Connect to Gemini Live API with video support.
+        Tries Vertex AI first, then falls back to regular Gemini API.
+        """
+        # Try Vertex AI first (higher rate limits)
+        if USE_VERTEX_AI:
+            connected = await self._connect_vertex_ai_video()
+            if connected:
+                self.using_vertex_ai = True
+                return True
+            logger.warning("⚠️ Vertex AI video connection failed, falling back to regular Gemini API")
+        
+        # Fallback to regular Gemini API
+        if GEMINI_API_KEY:
+            connected = await self._connect_gemini_api_video()
+            if connected:
+                return True
+        
+        logger.error("❌ All video connection methods failed")
+        return False
+    
+    async def _connect_vertex_ai_video(self) -> bool:
+        """Connect to Vertex AI Gemini Live API with OAuth2 for video."""
+        try:
+            import websockets
             
+            # Get access token
+            token = await asyncio.to_thread(self._get_vertex_ai_token_sync)
+            if not token:
+                logger.warning("Failed to get Vertex AI token for video")
+                return False
+            
+            # Vertex AI WebSocket endpoint
+            vertex_url = (
+                f"wss://{GOOGLE_CLOUD_LOCATION}-aiplatform.googleapis.com/ws/"
+                f"google.cloud.aiplatform.v1beta1.LlmBidiService/BidiGenerateContent"
+            )
+            
+            logger.info(f"🔗 Connecting to Vertex AI VIDEO (project: {GOOGLE_CLOUD_PROJECT})...")
+            
+            self.gemini_ws = await websockets.connect(
+                vertex_url,
+                additional_headers={
+                    "Authorization": f"Bearer {token}",
+                    "Content-Type": "application/json",
+                    "x-goog-user-project": GOOGLE_CLOUD_PROJECT,
+                },
+                ping_interval=30,
+                ping_timeout=10,
+            )
+            
+            # Send setup message for Vertex AI video
+            setup_message = self._build_video_setup_message(
+                model_path=f"projects/{GOOGLE_CLOUD_PROJECT}/locations/{GOOGLE_CLOUD_LOCATION}/publishers/google/models/{GEMINI_MODEL}"
+            )
+            
+            logger.info(f"📤 Sending Vertex AI VIDEO setup...")
+            await self.gemini_ws.send(json.dumps(setup_message))
+            
+            setup_response = await asyncio.wait_for(self.gemini_ws.recv(), timeout=30.0)
+            setup_data = json.loads(setup_response)
+            
+            logger.info(f"📥 Vertex AI video setup response: {json.dumps(setup_data)[:500]}")
+            
+            if "setupComplete" in setup_data:
+                logger.info("✅ Vertex AI Video session established")
+                self.is_active = True
+                return True
+            elif "error" in setup_data:
+                error_info = setup_data.get("error", {})
+                error_msg = error_info.get("message", str(setup_data))
+                logger.error(f"❌ Vertex AI video setup error: {error_msg}")
+                return False
+            else:
+                logger.error(f"❌ Unexpected Vertex AI video response: {setup_data}")
+                return False
+                
+        except asyncio.TimeoutError:
+            logger.error("❌ Timeout waiting for Vertex AI video setup")
+            return False
+        except Exception as e:
+            logger.error(f"❌ Vertex AI video connection error: {type(e).__name__}: {e}")
+            return False
+    
+    def _get_vertex_ai_token_sync(self) -> Optional[str]:
+        """Synchronous version for use with asyncio.to_thread."""
+        try:
+            from google.oauth2 import service_account
+            from google.auth.transport import requests as google_requests
+            
+            creds_path = GOOGLE_APPLICATION_CREDENTIALS
+            if not os.path.exists(creds_path):
+                base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                creds_path = os.path.join(base_dir, GOOGLE_APPLICATION_CREDENTIALS)
+            
+            if not os.path.exists(creds_path):
+                # Try inline credentials
+                service_account_json = os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON')
+                if service_account_json:
+                    import tempfile
+                    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+                        f.write(service_account_json)
+                        creds_path = f.name
+                else:
+                    return None
+            
+            credentials = service_account.Credentials.from_service_account_file(
+                creds_path,
+                scopes=['https://www.googleapis.com/auth/cloud-platform']
+            )
+            credentials.refresh(google_requests.Request())
+            return credentials.token
+        except Exception as e:
+            logger.error(f"Video token error: {e}")
+            return None
+    
+    async def _connect_gemini_api_video(self) -> bool:
+        """Connect to regular Gemini API for video (fallback)."""
         try:
             import websockets
             
@@ -683,7 +797,7 @@ class TransparentGeminiVideoPipe:
                 f"?key={GEMINI_API_KEY}"
             )
             
-            logger.info(f"🔗 Connecting to Gemini Live API VIDEO (model: {GEMINI_MODEL})...")
+            logger.info(f"🔗 Connecting to Gemini API VIDEO (model: {GEMINI_MODEL})...")
             self.gemini_ws = await websockets.connect(
                 gemini_url,
                 additional_headers={"Content-Type": "application/json"},
@@ -692,22 +806,56 @@ class TransparentGeminiVideoPipe:
             )
             
             # Setup with video + audio capabilities
-            setup_message = {
-                "setup": {
-                    "model": f"models/{GEMINI_MODEL}",
-                    "generationConfig": {
-                        "responseModalities": ["AUDIO"],
-                        "speechConfig": {
-                            "voiceConfig": {
-                                "prebuiltVoiceConfig": {
-                                    "voiceName": "Aoede"
-                                }
+            setup_message = self._build_video_setup_message(model_path=f"models/{GEMINI_MODEL}")
+            
+            logger.info(f"📤 Sending Gemini API VIDEO setup...")
+            await self.gemini_ws.send(json.dumps(setup_message))
+            
+            setup_response = await asyncio.wait_for(self.gemini_ws.recv(), timeout=30.0)
+            setup_data = json.loads(setup_response)
+            
+            logger.info(f"📥 Video setup response: {json.dumps(setup_data)[:500]}")
+            
+            if "setupComplete" in setup_data:
+                logger.info("✅ Gemini Video session established")
+                self.is_active = True
+                return True
+            elif "error" in setup_data:
+                error_info = setup_data.get("error", {})
+                error_msg = error_info.get("message", str(setup_data))
+                logger.error(f"❌ Gemini video setup error: {error_msg}")
+                return False
+            else:
+                logger.error(f"❌ Unexpected video setup response: {setup_data}")
+                return False
+                
+        except asyncio.TimeoutError:
+            logger.error("❌ Timeout waiting for Gemini video setup")
+            return False
+        except Exception as e:
+            logger.error(f"❌ Video connection error: {type(e).__name__}: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return False
+    
+    def _build_video_setup_message(self, model_path: str) -> dict:
+        """Build the setup message for video mode."""
+        return {
+            "setup": {
+                "model": model_path,
+                "generationConfig": {
+                    "responseModalities": ["AUDIO"],
+                    "speechConfig": {
+                        "voiceConfig": {
+                            "prebuiltVoiceConfig": {
+                                "voiceName": "Aoede"
                             }
                         }
-                    },
-                    "systemInstruction": {
-                        "parts": [{
-                            "text": NERDX_SYSTEM_INSTRUCTION + """
+                    }
+                },
+                "systemInstruction": {
+                    "parts": [{
+                        "text": NERDX_SYSTEM_INSTRUCTION + """
 
 ADDITIONAL CONTEXT FOR REAL-TIME VIDEO MODE:
 You are receiving CONTINUOUS VIDEO STREAM (10 frames per second) from the student's camera.
@@ -737,44 +885,11 @@ When you see their work:
 
 This is REAL-TIME video - you can see them writing, erasing, and working. Use this to provide immediate, contextual help.
 """
-                        }]
-                    },
-                    "tools": []
-                }
+                    }]
+                },
+                "tools": []
             }
-            
-            logger.info(f"📤 Sending VIDEO setup for model: models/{GEMINI_MODEL}")
-            await self.gemini_ws.send(json.dumps(setup_message))
-            
-            setup_response = await asyncio.wait_for(
-                self.gemini_ws.recv(),
-                timeout=30.0
-            )
-            setup_data = json.loads(setup_response)
-            
-            logger.info(f"📥 Video setup response: {json.dumps(setup_data)[:500]}")
-            
-            if "setupComplete" in setup_data:
-                logger.info("✅ Gemini Video session established")
-                self.is_active = True
-                return True
-            elif "error" in setup_data:
-                error_info = setup_data.get("error", {})
-                error_msg = error_info.get("message", str(setup_data))
-                logger.error(f"❌ Gemini video setup error: {error_msg}")
-                return False
-            else:
-                logger.error(f"❌ Unexpected video setup response: {setup_data}")
-                return False
-                
-        except asyncio.TimeoutError:
-            logger.error("❌ Timeout waiting for Gemini video setup")
-            return False
-        except Exception as e:
-            logger.error(f"❌ Video connection error: {type(e).__name__}: {e}")
-            import traceback
-            logger.error(traceback.format_exc())
-            return False
+        }
     
     async def forward_video_frame(self, frame_base64: str, mime_type: str = "image/jpeg", timestamp: int = None):
         """

@@ -646,7 +646,7 @@ Mark strictly but fairly like ZIMSEC. Determine is_correct=true if percentage >=
         }
     
     def _create_olevel_prompt(self, subject: str, topic: str, difficulty: str) -> str:
-        """Create O-Level appropriate prompt for DeepSeek AI"""
+        """Create O-Level appropriate prompt for DeepSeek AI with rich diversity"""
         
         # Get learning objectives for this topic
         objectives = self.learning_objectives.get(subject, {}).get(topic, [
@@ -657,59 +657,131 @@ Mark strictly but fairly like ZIMSEC. Determine is_correct=true if percentage >=
         
         # Difficulty-appropriate language
         difficulty_guidance = {
-            'easy': "Basic recall and understanding level. Simple, direct questions.",
-            'medium': "Application and analysis level. Require some thinking and connection of ideas.",
-            'difficult': "Evaluation and synthesis level. Multi-step problems requiring deeper understanding."
+            'easy': "Basic recall and understanding level. Simple, direct questions testing definitions and key facts.",
+            'medium': "Application and analysis level. Require some thinking, connecting ideas, and explaining processes.",
+            'difficult': "Evaluation and synthesis level. Multi-step problems requiring deeper understanding and comparisons."
         }
         
-        # Randomly vary question style for variety
+        # Rich variety of question styles for diversity (10 types)
         question_style = random.choice([
-            'direct_knowledge',      # 50% direct knowledge
-            'direct_knowledge',
-            'direct_knowledge',
-            'application',           # 30% application
-            'application',
-            'situational'            # 20% situational/context
+            'definition',           # What is X? Define Y
+            'process',              # Describe how X works/happens
+            'comparison',           # Compare/contrast X and Y  
+            'cause_effect',         # What causes X? What is the effect of Y?
+            'identification',       # Which structure/organ does X?
+            'function',             # What is the function of X?
+            'application',          # Apply concept to scenario
+            'calculation',          # Simple calculations (Physics/Chemistry)
+            'diagram_based',        # Based on a diagram description
+            'real_world'            # Local/real-world application with Zimbabwean context
         ])
         
+        # Expanded list of diverse Zimbabwean names for real_world questions
+        zim_names = {
+            'male': ['Tanaka', 'Kudakwashe', 'Tatenda', 'Tafadzwa', 'Panashe', 'Takudzwa', 
+                     'Munashe', 'Tinotenda', 'Farai', 'Simba', 'Tendai', 'Blessing', 'Gift',
+                     'Knowledge', 'Liberty', 'Prince', 'Brian', 'Tapiwa', 'Munyaradzi', 'Ngoni'],
+            'female': ['Nyasha', 'Rudo', 'Tamara', 'Chiedza', 'Rutendo', 'Tariro', 'Rumbidzai',
+                       'Vimbai', 'Patience', 'Faith', 'Grace', 'Memory', 'Mercy', 'Hope',
+                       'Tsitsi', 'Rufaro', 'Anesu', 'Makanaka', 'Chenai', 'Ruvarashe']
+        }
+        
+        zim_locations = ['Harare', 'Bulawayo', 'Marondera', 'Mutare', 'Gweru', 'Kwekwe', 
+                         'Masvingo', 'Chinhoyi', 'Kadoma', 'Victoria Falls', 'Hwange',
+                         'Kariba', 'Nyanga', 'Chipinge', 'Zvishavane']
+        
+        zim_schools = ['Goromonzi High', 'Churchill Boys', 'Girls High', 'Prince Edward',
+                       'Peterhouse', 'St Georges College', 'Arundel School', 'Ellis Robins',
+                       'Oriel Girls', 'Roosevelt Girls', 'Queen Elizabeth Girls', 'Falcon College']
+        
+        # Style-specific guidance
         style_guidance = {
-            'direct_knowledge': """Generate a DIRECT KNOWLEDGE question like ZIMSEC/Cambridge style:
-- Ask about definitions, concepts, processes, or principles
-- Examples: "What is...", "Which statement correctly describes...", "Define...", "Name the..."
-- NO story or situation context - ask directly about the science concept
-- Focus on testing understanding of facts and concepts""",
-            'application': """Generate an APPLICATION question:
-- Test how well students can apply scientific concepts to scenarios
-- Examples: "Calculate...", "Predict what happens when...", "Explain why..."
-- Brief context is OK, but focus on testing the scientific principle""",
-            'situational': """Generate a SITUATIONAL question with local context:
-- Use brief Zimbabwean names/places naturally
-- Apply science concept to a real-world situation
-- Keep the situation brief (one sentence), focus on the science"""
+            'definition': f"""Generate a DEFINITION question:
+- Ask for the definition of key scientific terms related to {topic}
+- Examples: "What is meant by...?", "Define the term...", "Which statement best describes...?"
+- Focus on testing understanding of proper scientific terminology
+- The correct answer should precisely match ZIMSEC/Cambridge definitions""",
+
+            'process': f"""Generate a PROCESS EXPLANATION question:
+- Ask about how a biological/chemical/physical process works
+- Examples: "Describe the process of...", "What happens during...", "Which sequence correctly shows..."
+- Test understanding of steps, stages, or mechanisms in {topic}
+- Options should include common misconceptions about process order""",
+
+            'comparison': f"""Generate a COMPARISON question:
+- Ask students to compare or contrast two related concepts
+- Examples: "What is a difference between X and Y?", "Which correctly compares...", "How are X and Y similar?"
+- Focus on key distinguishing features that students often confuse
+- Make sure the comparison is relevant to {topic}""",
+
+            'cause_effect': f"""Generate a CAUSE AND EFFECT question:
+- Ask about what causes something or the effects of a process
+- Examples: "What causes...?", "What is the result of...?", "Which factor leads to...?"
+- Test understanding of scientific relationships in {topic}
+- Include plausible-sounding but scientifically incorrect distractors""",
+
+            'identification': f"""Generate an IDENTIFICATION question:
+- Ask students to identify structures, substances, or organisms
+- Examples: "Which organ is responsible for...?", "What type of substance is...?", "Which part of the cell..."
+- Focus on recognition of key components related to {topic}
+- Test whether students can correctly identify from descriptions""",
+
+            'function': f"""Generate a FUNCTION question:
+- Ask about the function or role of a structure, organ, or substance
+- Examples: "What is the function of...?", "Which describes the role of...?", "Why is X important for..."
+- Focus on understanding PURPOSE rather than just identification
+- Test functional knowledge related to {topic}""",
+
+            'application': f"""Generate an APPLICATION question:
+- Apply scientific concepts to a specific scenario or problem
+- Test how well students can use their knowledge practically
+- The scenario should be brief (1-2 sentences) and focused
+- Ensure the science principle is clearly applicable""",
+
+            'calculation': f"""Generate a CALCULATION or DATA question:
+- Include simple numerical problems or data interpretation
+- Examples: "Calculate the...", "From the data, what is...?", "If X = 10, then Y = ..."
+- Keep calculations appropriate for O-Level (no complex formulas)
+- Provide all necessary values in the question""",
+
+            'diagram_based': f"""Generate a DIAGRAM INTERPRETATION question:
+- Describe a simple diagram, graph, or table in the question
+- Ask students to interpret or analyze the visual information
+- Examples: "The diagram shows... What does X represent?", "From the graph, which..."
+- Keep the diagram description clear and concise""",
+
+            'real_world': f"""Generate a REAL-WORLD APPLICATION question with Zimbabwean context:
+- Use a brief local scenario (1 sentence only) with a Zimbabwean name: {random.choice(list(zim_names['male'] + zim_names['female']))}
+- Location: {random.choice(zim_locations)}
+- Examples: "[Name] in [Location] observes that..."
+- Keep the scenario brief - focus on testing the scientific principle in {topic}
+- The science should be applicable to everyday life in Zimbabwe"""
         }
         
         prompt = f"""Generate a ZIMSEC O-Level Combined Science question for {subject} - {topic}.
 
-**STUDENT LEVEL:** O-Level students (ages 15-17). Keep content age-appropriate.
+**STUDENT LEVEL:** O-Level students (ages 15-17 in Zimbabwe). Keep content age-appropriate.
 
 **QUESTION STYLE:** {question_style.upper()}
-{style_guidance.get(question_style, style_guidance['direct_knowledge'])}
+{style_guidance.get(question_style, style_guidance['definition'])}
 
 **Learning Objectives:**
 {chr(10).join(f"• {obj}" for obj in objectives)}
 
 **Question Requirements:**
 - Subject: {subject}
-- Topic: {topic}
+- Topic: {topic}  
 - Difficulty: {difficulty} ({difficulty_guidance.get(difficulty, 'Standard level')})
 - Format: Multiple choice (4 options A, B, C, D)
 - Use clear, simple language suitable for teenagers
 - One option must be clearly correct
+- Distractors should be plausible but scientifically incorrect
 
 **IMPORTANT - Avoid:**
 - Overly complex laboratory procedures
 - University-level content
 - Ambiguous options where multiple could be correct
+- Using the same name repeatedly (vary names for context questions)
 
 Return ONLY a valid JSON object:
 {{
@@ -733,6 +805,7 @@ CRITICAL: The 'explanation' and 'teaching_explanation' MUST be completely differ
 Generate an educational {question_style.replace('_', ' ')} question now!"""
 
         return prompt
+
     
     def _call_deepseek_api(self, prompt: str, generation_type: str) -> Optional[Dict]:
         """Call DeepSeek API with O-Level appropriate settings"""

@@ -45,30 +45,83 @@ class GeminiInteractionsService:
     DEEP_RESEARCH_AGENT = 'deep-research-pro-preview-12-2025'
     
     def __init__(self):
-        """Initialize the Gemini Interactions Service"""
+        """Initialize the Gemini Interactions Service with Vertex AI authentication"""
         self.client = None
         self.is_configured = False
         self._interaction_cache = {}  # Cache for interaction IDs
         
-        # Get API key from environment
-        self.api_key = os.environ.get('GEMINI_API_KEY') or os.environ.get('GOOGLE_API_KEY')
+        # Vertex AI configuration (preferred - higher rate limits)
+        self.project_id = os.environ.get('GOOGLE_CLOUD_PROJECT', 'gen-lang-client-0303273462')
+        self.location = os.environ.get('GOOGLE_CLOUD_LOCATION', 'global')
+        self.use_vertex_ai = os.environ.get('GOOGLE_GENAI_USE_VERTEXAI', 'True').lower() == 'true'
         
-        if not self.api_key:
-            logger.warning("⚠️ GEMINI_API_KEY not found. Interactions API features will be disabled.")
-            return
+        # Fallback API key (only used if Vertex AI is explicitly disabled)
+        self.api_key = os.environ.get('GEMINI_API_KEY') or os.environ.get('GOOGLE_API_KEY')
             
         if not GENAI_SDK_AVAILABLE:
             logger.warning("⚠️ google-genai SDK not installed. Run: pip install google-genai>=1.55.0")
             return
         
+        # Try Vertex AI first (higher rate limits, production-ready)
+        if self.use_vertex_ai:
+            if self._init_vertex_ai_client():
+                return
+            logger.warning("⚠️ Vertex AI init failed, falling back to API key...")
+        
+        # Fallback to API key if Vertex AI disabled or failed
+        if self.api_key:
+            try:
+                self.client = genai.Client(api_key=self.api_key)
+                self.is_configured = True
+                logger.info("✅ GeminiInteractionsService initialized with API key (fallback)")
+            except Exception as e:
+                logger.error(f"❌ Failed to initialize GeminiInteractionsService: {e}")
+                self.is_configured = False
+        else:
+            logger.warning("⚠️ No Vertex AI credentials or API key found. Service disabled.")
+    
+    def _init_vertex_ai_client(self) -> bool:
+        """Initialize the Google GenAI client with Vertex AI credentials."""
         try:
-            # Initialize the client with API key
-            self.client = genai.Client(api_key=self.api_key)
+            from google.genai.types import HttpOptions
+            
+            # Set environment variable to use Vertex AI
+            os.environ['GOOGLE_GENAI_USE_VERTEXAI'] = 'True'
+            
+            # Check for service account credentials
+            credentials_path = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
+            service_account_json = os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON')
+            
+            if credentials_path and os.path.exists(credentials_path):
+                logger.info(f"Using Vertex AI credentials file: {credentials_path}")
+                self.client = genai.Client(http_options=HttpOptions(api_version="v1"))
+            elif service_account_json:
+                # Service account JSON provided as environment variable
+                import tempfile
+                logger.info("Using inline service account JSON from environment")
+                
+                # Write JSON to temp file for google-genai to use
+                with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+                    f.write(service_account_json)
+                    temp_creds_path = f.name
+                
+                os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = temp_creds_path
+                self.client = genai.Client(http_options=HttpOptions(api_version="v1"))
+            else:
+                # Try Application Default Credentials (ADC)
+                logger.info("Using Application Default Credentials for Vertex AI")
+                self.client = genai.Client(http_options=HttpOptions(api_version="v1"))
+            
             self.is_configured = True
-            logger.info("✅ GeminiInteractionsService initialized successfully")
+            logger.info(f"✅ GeminiInteractionsService initialized with Vertex AI (project: {self.project_id})")
+            return True
+            
+        except ImportError as e:
+            logger.error(f"❌ Failed to import google-genai types: {e}")
+            return False
         except Exception as e:
-            logger.error(f"❌ Failed to initialize GeminiInteractionsService: {e}")
-            self.is_configured = False
+            logger.error(f"❌ Failed to initialize Vertex AI client: {e}")
+            return False
     
     # =========================================================================
     # BASIC INTERACTIONS

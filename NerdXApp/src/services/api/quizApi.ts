@@ -170,6 +170,84 @@ export const quizApi = {
     }
   },
 
+  // NEW: Streamed question generation (for Mathematics with DeepSeek Reasoner)
+  generateQuestionStream: async (
+    subject: string,
+    topic: string,
+    difficulty: string = 'medium',
+    onThinkingUpdate: (content: string, stage: number, totalStages: number) => void
+  ): Promise<Question | null> => {
+    return new Promise((resolve, reject) => {
+      // Use EventSource for SSE (needs to be polyfilled or use fetch with reader)
+      // Since EventSource doesn't support POST bodies easily without custom implementations,
+      // we'll use fetch with ReadableStream directly
+
+      const generate = async () => {
+        try {
+          // Get auth token from storage/config
+          const token = api.defaults.headers.common['Authorization'];
+
+          const response = await fetch(`${api.defaults.baseURL}/api/mobile/quiz/generate-stream`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': token as string,
+            },
+            body: JSON.stringify({
+              subject,
+              topic,
+              difficulty
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error(`Server error: ${response.status}`);
+          }
+
+          if (!response.body) {
+            throw new Error('Response body is unavailable');
+          }
+
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n\n');
+
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                try {
+                  const data = JSON.parse(line.substring(6));
+
+                  if (data.type === 'thinking') {
+                    onThinkingUpdate(data.content, data.stage, data.totalStages);
+                  } else if (data.type === 'question') {
+                    resolve(data.data);
+                    return;
+                  } else if (data.type === 'error') {
+                    reject(new Error(data.message));
+                    return;
+                  }
+                } catch (e) {
+                  // Ignore parse errors for partial chunks
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Stream generation error:', error);
+          reject(error);
+        }
+      };
+
+      generate();
+    });
+  },
+
   submitAnswer: async (
     questionId: string,
     answer: string,
