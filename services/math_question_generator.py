@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Mathematics Question Generator using Gemini AI (primary) and DeepSeek AI (fallback)
+Mathematics Question Generator using DeepSeek AI (primary) and Gemini AI (fallback)
 Generates ZIMSEC-style mathematics questions with step-by-step solutions
 """
 
@@ -38,7 +38,7 @@ except ImportError:
 
 
 class MathQuestionGenerator:
-    """Gemini AI (primary) + DeepSeek AI (fallback) mathematics question generator"""
+    """DeepSeek AI (primary) + Gemini AI (fallback) mathematics question generator"""
 
     def __init__(self):
         # DeepSeek configuration (fallback)
@@ -56,7 +56,7 @@ class MathQuestionGenerator:
             self._init_gemini_client()
         
         if self.deepseek_api_key:
-            logger.info("DeepSeek AI configured as FALLBACK provider")
+            logger.info("DeepSeek AI configured as PRIMARY provider")
         
         # Legacy compatibility
         self.api_key = self.deepseek_api_key
@@ -111,8 +111,8 @@ class MathQuestionGenerator:
 
     def generate_question(self, subject: str, topic: str, difficulty: str = 'medium', user_id: str = None) -> Optional[Dict]:
         """
-        Generate a question using Gemini AI (primary) with DeepSeek fallback.
-        Uses reduced timeouts to prevent Gunicorn worker crashes.
+        Generate a question using DeepSeek AI (primary) with Gemini fallback.
+        DeepSeek excels at step-by-step mathematical reasoning.
         """
         try:
             # Get recent AI topics for this user to avoid repetition
@@ -127,27 +127,14 @@ class MathQuestionGenerator:
                     logger.info("Question history service not available, continuing without anti-repetition")
                     recent_topics = set()
             
-            # PRIMARY: Try Gemini AI first (faster and more reliable)
-            if self._gemini_configured:
-                logger.info(f"Trying Gemini AI (primary) for {subject}/{topic}")
-                gemini_result = self._generate_with_gemini(subject, topic, difficulty, recent_topics)
-                if gemini_result:
-                    # Validate and format response
-                    question_data = self._validate_and_format_question(gemini_result, subject, topic, difficulty, user_id)
-                    if question_data:
-                        question_data['source'] = 'gemini_ai'
-                        logger.info(f"Gemini AI generated question for {subject}/{topic}")
-                        return question_data
-                logger.warning("Gemini AI failed, falling back to DeepSeek")
-            
-            # FALLBACK: Try DeepSeek with reduced timeout
+            # PRIMARY: Try DeepSeek AI first (better for step-by-step math reasoning)
             if self.deepseek_api_key:
-                logger.info(f"Trying DeepSeek AI (fallback) for {subject}/{topic}")
+                logger.info(f"Trying DeepSeek AI (primary) for {subject}/{topic}")
                 prompt = self._create_question_prompt(subject, topic, difficulty, recent_topics)
                 
-                # Single attempt with reduced timeout to prevent worker crash
+                # Single attempt with reasonable timeout
                 try:
-                    response = self._send_api_request(prompt, timeout=25)
+                    response = self._send_api_request(prompt, timeout=30)
                     if response:
                         question_data = self._validate_and_format_question(response, subject, topic, difficulty, user_id)
                         if question_data:
@@ -155,9 +142,23 @@ class MathQuestionGenerator:
                             logger.info(f"DeepSeek AI generated question for {subject}/{topic}")
                             return question_data
                 except requests.exceptions.Timeout:
-                    logger.warning("DeepSeek API timeout (25s limit to prevent worker crash)")
+                    logger.warning("DeepSeek API timeout (30s limit)")
                 except Exception as e:
                     logger.warning(f"DeepSeek API error: {e}")
+                logger.warning("DeepSeek AI failed, falling back to Gemini")
+            
+            # FALLBACK: Try Gemini AI if DeepSeek fails
+            if self._gemini_configured:
+                logger.info(f"Trying Gemini AI (fallback) for {subject}/{topic}")
+                gemini_result = self._generate_with_gemini(subject, topic, difficulty, recent_topics)
+                if gemini_result:
+                    # Validate and format response
+                    question_data = self._validate_and_format_question(gemini_result, subject, topic, difficulty, user_id)
+                    if question_data:
+                        question_data['source'] = 'gemini_ai'
+                        logger.info(f"Gemini AI (fallback) generated question for {subject}/{topic}")
+                        return question_data
+                logger.warning("Gemini AI fallback also failed")
 
             # FINAL FALLBACK: Use local fallback questions
             logger.warning(f"All AI providers failed for {subject}/{topic}, using local fallback questions")

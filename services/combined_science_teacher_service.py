@@ -88,32 +88,78 @@ class CombinedScienceTeacherService:
             # Try Vertex AI first (higher rate limits)
             if USE_VERTEX_AI:
                 os.environ['GOOGLE_GENAI_USE_VERTEXAI'] = 'True'
-                credentials_path = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
+                
+                # Check for credentials in common locations (Env Var, Local, Render Secrets)
+                possible_paths = [
+                    os.environ.get('GOOGLE_APPLICATION_CREDENTIALS'),
+                    'google_credentials.json',
+                    'credentials.json',
+                    '/etc/secrets/google_credentials.json',  # Common for Render Secret Files
+                    '/etc/secrets/credentials.json'
+                ]
+                
+                credentials_path = None
+                for path in possible_paths:
+                    if path and os.path.exists(path):
+                        credentials_path = path
+                        break
+                
                 service_account_json = os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON')
                 
-                if credentials_path and os.path.exists(credentials_path):
+                # CRITICAL FIX: Ensure GOOGLE_CLOUD_PROJECT isn't set to the full JSON string
+                # If service_account_json is provided, extract project_id from it
+                if service_account_json:
+                    try:
+                        creds_data = json.loads(service_account_json)
+                        if 'project_id' in creds_data:
+                            project_id = creds_data['project_id']
+                            # Override env var to be just the ID, not the JSON or garbage
+                            os.environ['GOOGLE_CLOUD_PROJECT'] = project_id
+                            logger.info(f"✅ Extracted project_id '{project_id}' from service account JSON")
+                    except json.JSONDecodeError:
+                        logger.warning("GOOGLE_SERVICE_ACCOUNT_JSON is not valid JSON, cannot extract project_id")
+
+                # Also sanitize GOOGLE_CLOUD_PROJECT if it looks suspicious (contains newlines or braces)
+                current_project = os.environ.get('GOOGLE_CLOUD_PROJECT', '')
+                if current_project and ('{' in current_project or '\n' in current_project):
+                    logger.warning("GOOGLE_CLOUD_PROJECT contained invalid characters (likely JSON). parsing...")
+                    try:
+                        # Try to parse it as JSON just in case they put the JSON in the PROJECT var
+                        proj_data = json.loads(current_project)
+                        if 'project_id' in proj_data:
+                            os.environ['GOOGLE_CLOUD_PROJECT'] = proj_data['project_id']
+                            logger.info(f"✅ Fixed GOOGLE_CLOUD_PROJECT from JSON blob to '{proj_data['project_id']}'")
+                    except:
+                        # Just strip whitespace and hope?
+                        logger.warning("Could not parse GOOGLE_CLOUD_PROJECT as JSON. It may be invalid.")
+
+                
+                if credentials_path:
+                    # Set the env var to the found path so the library finds it
+                    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
                     self.gemini_client = genai.Client(http_options=HttpOptions(api_version="v1"))
                     self._is_gemini_configured = True
-                    logger.info(f"Teacher Service: Gemini via Vertex AI configured (project: {GOOGLE_CLOUD_PROJECT})")
+                    logger.info(f"Teacher Service: Gemini via Vertex AI configured (File: {credentials_path})")
                     return
                 elif service_account_json:
                     import tempfile
                     with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
                         f.write(service_account_json)
-                        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = f.name
+                        # Use absolute path for safety
+                        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = os.path.abspath(f.name)
                     self.gemini_client = genai.Client(http_options=HttpOptions(api_version="v1"))
                     self._is_gemini_configured = True
-                    logger.info("Teacher Service: Gemini via Vertex AI configured (inline credentials)")
+                    logger.info("Teacher Service: Gemini via Vertex AI configured (Inline JSON)")
                     return
                 else:
-                    # Try ADC
+                    # Try ADC as last resort
                     try:
                         self.gemini_client = genai.Client(http_options=HttpOptions(api_version="v1"))
                         self._is_gemini_configured = True
                         logger.info("Teacher Service: Gemini via Vertex AI configured (ADC)")
                         return
-                    except Exception:
-                        logger.warning("Vertex AI ADC failed, trying API key...")
+                    except Exception as adc_error:
+                        logger.warning(f"Vertex AI ADC init failed: {adc_error}")
             
             # Fallback to API key
             if GEMINI_API_KEY:
