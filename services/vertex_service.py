@@ -167,6 +167,212 @@ class VertexService:
             logger.error(f"❌ Text generation failed: {e}")
             return {'success': False, 'error': str(e)}
     
+    def analyze_image(
+        self, 
+        image_base64: str, 
+        mime_type: str = "image/png", 
+        prompt: str = None
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Analyze an image using Vertex AI Gemini multimodal model.
+        
+        Args:
+            image_base64: Base64-encoded image data
+            mime_type: MIME type of the image (image/png, image/jpeg, etc.)
+            prompt: Custom prompt for analysis (default: extract math/text)
+        
+        Returns:
+            Dict with 'success', 'text', 'latex', 'confidence' or 'error'
+        """
+        if not self.is_available():
+            return {'success': False, 'error': 'Vertex AI service not available'}
+        
+        try:
+            from google.genai.types import Part, Content
+            
+            logger.info(f"🔍 Analyzing image with Gemini Vision...")
+            
+            # Default prompt for math OCR
+            if not prompt:
+                prompt = """Analyze this image and extract any mathematical equations, expressions, text, or handwritten content.
+
+Please respond in this exact JSON format:
+{
+    "detected_text": "the exact text/math expression you see",
+    "latex": "the LaTeX representation if it's math, or the plain text otherwise",
+    "confidence": 0.95,
+    "content_type": "math" or "text" or "diagram"
+}
+
+If you see handwritten math, interpret it as accurately as possible. Convert fractions, exponents, roots, and special symbols to proper LaTeX notation.
+Only respond with the JSON, no other text."""
+
+            # Create the image part
+            image_part = Part.from_bytes(
+                data=base64.b64decode(image_base64),
+                mime_type=mime_type
+            )
+            
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=[image_part, prompt],
+            )
+            
+            if response and response.text:
+                # Try to parse JSON response
+                result_data = self._parse_json_response(response.text)
+                
+                if result_data:
+                    logger.info(f"✅ Image analyzed successfully")
+                    return {
+                        'success': True,
+                        'text': result_data.get('detected_text', ''),
+                        'latex': result_data.get('latex', result_data.get('detected_text', '')),
+                        'confidence': result_data.get('confidence', 0.9),
+                        'content_type': result_data.get('content_type', 'text'),
+                        'raw_response': response.text
+                    }
+                else:
+                    # Return raw text if JSON parsing fails
+                    logger.info(f"✅ Image analyzed (raw text)")
+                    return {
+                        'success': True,
+                        'text': response.text,
+                        'latex': response.text,
+                        'confidence': 0.8,
+                        'content_type': 'text'
+                    }
+            else:
+                return {'success': False, 'error': 'No response from model'}
+                
+        except Exception as e:
+            logger.error(f"❌ Image analysis failed: {e}")
+            return {'success': False, 'error': str(e)}
+    
+    def transcribe_audio(
+        self, 
+        audio_base64: str, 
+        mime_type: str = "audio/mp4"
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Transcribe audio to text using Vertex AI Gemini multimodal model.
+        
+        Args:
+            audio_base64: Base64-encoded audio data
+            mime_type: MIME type of the audio (audio/mp4, audio/wav, audio/mp3, etc.)
+        
+        Returns:
+            Dict with 'success', 'text', 'language' or 'error'
+        """
+        if not self.is_available():
+            return {'success': False, 'error': 'Vertex AI service not available'}
+        
+        try:
+            from google.genai.types import Part
+            
+            logger.info(f"🎤 Transcribing audio with Gemini...")
+            
+            # Create the audio part
+            audio_part = Part.from_bytes(
+                data=base64.b64decode(audio_base64),
+                mime_type=mime_type
+            )
+            
+            transcription_prompt = """Transcribe this audio to text. 
+If the speech contains mathematical expressions, write them in a clear format.
+Only return the transcribed text, nothing else."""
+            
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=[audio_part, transcription_prompt],
+            )
+            
+            if response and response.text:
+                transcribed_text = response.text.strip()
+                logger.info(f"✅ Audio transcribed: {transcribed_text[:50]}...")
+                return {
+                    'success': True,
+                    'text': transcribed_text,
+                    'language': 'en'  # Default to English
+                }
+            else:
+                return {'success': False, 'error': 'No transcription generated'}
+                
+        except Exception as e:
+            logger.error(f"❌ Audio transcription failed: {e}")
+            return {'success': False, 'error': str(e)}
+    
+    def analyze_document(
+        self, 
+        document_base64: str, 
+        mime_type: str = "application/pdf",
+        prompt: str = None
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Analyze a document (PDF or text file) using Vertex AI Gemini multimodal model.
+        
+        Supported MIME types: application/pdf, text/plain
+        Max file size: 50 MB
+        
+        Args:
+            document_base64: Base64-encoded document data
+            mime_type: MIME type of the document (application/pdf or text/plain)
+            prompt: Custom prompt for analysis (default: summarize and extract key points)
+        
+        Returns:
+            Dict with 'success', 'analysis', 'summary' or 'error'
+        """
+        if not self.is_available():
+            return {'success': False, 'error': 'Vertex AI service not available'}
+        
+        try:
+            from google.genai.types import Part
+            
+            logger.info(f"📄 Analyzing document with Gemini ({mime_type})...")
+            
+            # Default prompt for document analysis
+            if not prompt:
+                prompt = """You are a professional document analysis specialist. Please analyze this document and provide:
+
+1. **Summary**: A concise summary of the main content (2-3 paragraphs)
+2. **Key Points**: List the most important points, facts, or findings
+3. **Topics Covered**: Main topics or subjects discussed
+4. **Relevant Information**: Any data, statistics, or notable quotes
+
+If this is an educational document, also identify:
+- Subject/topic area
+- Difficulty level
+- Key concepts students should understand
+
+Format your response clearly with headers and bullet points for easy reading."""
+
+            # Create the document part
+            document_part = Part.from_bytes(
+                data=base64.b64decode(document_base64),
+                mime_type=mime_type
+            )
+            
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=[document_part, prompt],
+            )
+            
+            if response and response.text:
+                analysis_text = response.text.strip()
+                logger.info(f"✅ Document analyzed successfully ({len(analysis_text)} chars)")
+                return {
+                    'success': True,
+                    'analysis': analysis_text,
+                    'summary': analysis_text[:500] + ('...' if len(analysis_text) > 500 else ''),
+                    'mime_type': mime_type
+                }
+            else:
+                return {'success': False, 'error': 'No analysis generated'}
+                
+        except Exception as e:
+            logger.error(f"❌ Document analysis failed: {e}")
+            return {'success': False, 'error': str(e)}
+    
     def generate_image_question(
         self,
         subject: str,

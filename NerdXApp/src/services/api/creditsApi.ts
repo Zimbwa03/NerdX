@@ -64,6 +64,7 @@ export const creditsApi = {
 
   purchaseCredits: async (
     packageId: string,
+    paymentMethod: 'ecocash' | 'visa_mastercard' = 'ecocash',
     phoneNumber?: string,
     email?: string
   ): Promise<PurchaseResult | null> => {
@@ -73,6 +74,7 @@ export const creditsApi = {
 
       const response = await api.post('/api/mobile/credits/purchase', {
         package_id: packageId,
+        payment_method: paymentMethod,
         phone_number: phoneNumber,
         email: email,
       }, {
@@ -100,12 +102,16 @@ export const creditsApi = {
   },
 };
 
+export type PaymentMethod = 'ecocash' | 'visa_mastercard';
+
 export interface PurchaseResult {
   reference: string;
   poll_url: string;
   instructions: string;
   amount: number;
   credits: number;
+  payment_method: PaymentMethod;
+  redirect_url?: string; // Only for visa_mastercard payments
 }
 
 export interface PaymentStatus {

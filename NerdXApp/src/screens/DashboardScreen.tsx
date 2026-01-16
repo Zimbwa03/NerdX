@@ -141,6 +141,10 @@ const DashboardScreen: React.FC = () => {
     navigation.navigate('Topics' as never, { subject } as never);
   };
 
+  const navigateToVirtualLab = () => {
+    navigation.navigate('VirtualLab' as never);
+  };
+
   const startDailyReview = () => {
     if (dailyReview && dailyReview.reviews.length > 0) {
       navigation.navigate('Quiz' as never, {
@@ -564,6 +568,27 @@ const DashboardScreen: React.FC = () => {
                 </>
               )}
 
+              {/* ✨ Teacher Mode & Virtual Labs - Side by Side */}
+              <AnimatedCard
+                title="Teacher Mode"
+                subtitle="Interactive AI Teaching"
+                imageSource={require('../../assets/images/teacher_mode_card.png')}
+                onPress={handleTeacherMode}
+                glowColor={Colors.subjects.science}
+                index={4}
+                hideText={true}
+              />
+
+              <AnimatedCard
+                title="Virtual Labs"
+                subtitle="Interactive Science Simulations"
+                imageSource={require('../../assets/images/virtual_labs_card.png')}
+                onPress={navigateToVirtualLab}
+                glowColor={Colors.subjects.physics}
+                index={5}
+                hideText={true}
+              />
+
               {/* Full Width Cards - Always visible */}
               <AnimatedCard
                 title="NerdX Live"
@@ -572,7 +597,7 @@ const DashboardScreen: React.FC = () => {
                 onPress={navigateToNerdXLive}
                 glowColor="#6C63FF"
                 fullWidth={true}
-                index={4}
+                index={6}
                 hideText={true}
               />
 
@@ -583,7 +608,7 @@ const DashboardScreen: React.FC = () => {
                 onPress={navigateToProgress}
                 glowColor="#a18cd1"
                 fullWidth={true}
-                index={5}
+                index={7}
                 hideText={true}
               />
 
@@ -594,9 +619,11 @@ const DashboardScreen: React.FC = () => {
                 onPress={navigateToCredits}
                 glowColor="#fbc2eb"
                 fullWidth={true}
-                index={6}
+                index={8}
                 hideText={true}
               />
+
+
             </View>
 
             {/* Logout Button */}

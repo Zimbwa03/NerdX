@@ -25,6 +25,7 @@ export interface TeacherMessageResponse {
   session_id: string;
   session_ended?: boolean;
   graph_url?: string;
+  video_url?: string;
 }
 
 export interface TeacherNotes {

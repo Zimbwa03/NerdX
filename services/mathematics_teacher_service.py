@@ -378,9 +378,9 @@ Current conversation context will be provided with each message."""
             session_manager.set_data(user_id, 'math_teacher', session_data)
             
             # Check for graph triggers [PLOT: expression]
-            graph_url = None
+            media_urls = {'graph_url': None, 'video_url': None}
             if '[PLOT:' in response_text:
-                graph_url = self._handle_graph_trigger(response_text)
+                media_urls = self._handle_media_triggers(response_text)
                 # Remove the trigger tag from the text shown to user
                 import re
                 response_text = re.sub(r'\[PLOT:.*?\]', '', response_text).strip()
@@ -397,7 +397,8 @@ Current conversation context will be provided with each message."""
             return {
                 'success': True,
                 'response': clean_response,
-                'graph_url': graph_url,
+                'graph_url': media_urls.get('graph_url'),
+                'video_url': media_urls.get('video_url'),
                 'session_id': session_id,
                 'session_ended': False
             }
@@ -475,13 +476,14 @@ Current conversation context will be provided with each message."""
             return self._get_fallback_response(message, session_data)
     
     
-    def _handle_graph_trigger(self, text: str) -> Optional[str]:
-        """Extract function from [PLOT: ...] and generate graph"""
+    def _handle_media_triggers(self, text: str) -> Dict[str, Optional[str]]:
+        """Extract function from [PLOT: ...] and generate graph AND video if possible"""
+        media_urls = {'graph_url': None, 'video_url': None}
         try:
             import re
             match = re.search(r'\[PLOT:\s*(.*?)\s*\]', text)
             if not match:
-                return None
+                return media_urls
             
             trigger_content = match.group(1)
             
@@ -504,18 +506,60 @@ Current conversation context will be provided with each message."""
                     except:
                         pass
             
+            # 1. Generate Static Graph
             from services.graph_service import GraphService
             graph_service = GraphService()
-            # The generate_function_graph returns a relative path like static/graphs/hash.png
-            # We need to ensure it's accessible via URL
             relative_path = graph_service.generate_function_graph(expression, x_range)
             if relative_path:
-                # prepend server URL if needed, or rely on frontend to handle static paths
-                return f"/{relative_path}"
-            return None
+                media_urls['graph_url'] = f"/{relative_path}"
+            
+            # 2. Generate Manim Video (Linear/Quadratic)
+            try:
+                from services.manim_service import get_manim_service
+                import sympy
+                from sympy.abc import x
+                
+                # Parse expression using sympy to check type and coefficients
+                # Replace common non-python syntax
+                clean_expr = expression.replace('^', '**')
+                expr = sympy.sympify(clean_expr)
+                poly = sympy.Poly(expr, x)
+                
+                manim = get_manim_service()
+                video_result = None
+                
+                if poly.degree() == 1:
+                    # Linear: mx + c
+                    coeffs = poly.all_coeffs()
+                    m = float(coeffs[0])
+                    c = float(coeffs[1]) if len(coeffs) > 1 else 0.0
+                    video_result = manim.render_linear(m, c)
+                    
+                elif poly.degree() == 2:
+                    # Quadratic: ax^2 + bx + c
+                    coeffs = poly.all_coeffs()
+                    a = float(coeffs[0])
+                    b = float(coeffs[1]) if len(coeffs) > 1 else 0.0
+                    c = float(coeffs[2]) if len(coeffs) > 2 else 0.0
+                    video_result = manim.render_quadratic(a, b, c)
+                
+                if video_result and video_result.get('success'):
+                    # Manim service returns relative path like "static/media/..."
+                    # We need to prepend slash for URL
+                    v_path = video_result.get('video_path')
+                    if v_path:
+                        media_urls['video_url'] = f"/{v_path}"
+                        
+            except ImportError:
+                logger.warning("SymPy or Manim not available, skipping video generation")
+            except Exception as e:
+                logger.warning(f"Failed to generate video for {expression}: {e}")
+                
+            return media_urls
+            
         except Exception as e:
-            logger.error(f"Error handling graph trigger: {e}")
-            return None
+            logger.error(f"Error handling media triggers: {e}")
+            return media_urls
 
     def _get_fallback_response(self, message: str, session_data: dict) -> str:
         """Fallback response when AI unavailable"""

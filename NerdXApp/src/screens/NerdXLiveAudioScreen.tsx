@@ -1,7 +1,9 @@
 /**
  * NerdXLiveAudioScreen.tsx
- * Full-screen audio-only tutoring interface.
- * Uses the existing NerdXLiveButton logic in a dedicated screen.
+ * Premium "Out of the World" voice tutoring interface
+ * 
+ * Design: Dark minimal gradient, aurora glow, Audio Aura animation,
+ * glass morphism controls, captions overlay
  */
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
@@ -14,23 +16,57 @@ import {
     Alert,
     SafeAreaView,
     StatusBar,
-    Animated,
+    Dimensions,
+    Platform,
 } from 'react-native';
+import Animated, {
+    useSharedValue,
+    useAnimatedStyle,
+    withSpring,
+    withTiming,
+    withRepeat,
+    withSequence,
+    Easing,
+    FadeIn,
+    SlideInDown,
+} from 'react-native-reanimated';
 import { Audio, AVPlaybackStatus } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
+import AudioAura, { AuraState } from '../components/AudioAura';
 
+// Try to import haptics (graceful fallback if not installed)
+let Haptics: any = null;
+try {
+    Haptics = require('expo-haptics');
+} catch (e) {
+    console.log('expo-haptics not available, haptic feedback disabled');
+}
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const WS_URL = 'wss://nerdx-voice.onrender.com/ws/nerdx-live';
 
-// TURN-BASED AUDIO BUFFERING SYSTEM
-// Audio chunks are buffered until turnComplete, then played sequentially
-const MAX_BUFFER_SIZE = 50; // Maximum audio chunks to buffer per turn
-const PLAYBACK_TIMEOUT_MS = 10000; // Max time to wait for turnComplete after last chunk
+// Color tokens (from design spec)
+const COLORS = {
+    bg0: '#050608',
+    bg1: '#0B0E14',
+    glowBlue: '#3B82F6',
+    glowCyan: '#06B6D4',
+    iceWhite: '#DCEBFF',
+    accentOrange: '#FF9F1C',
+    dangerRed: '#FF3B30',
+    glass: 'rgba(255, 255, 255, 0.08)',
+    glassBorder: 'rgba(255, 255, 255, 0.12)',
+    textPrimary: '#FFFFFF',
+    textSecondary: 'rgba(255, 255, 255, 0.6)',
+    userChip: 'rgba(255, 255, 255, 0.15)',
+    nerdxChip: 'rgba(59, 130, 246, 0.3)',
+};
 
-// Voice Activity Detection (VAD) - DISABLED for tap-to-speak mode
-// User manually controls when to send by tapping
-const MAX_RECORDING_DURATION_MS = 60000; // Maximum recording duration (60s - safety limit)
+// Audio settings
+const MAX_BUFFER_SIZE = 50;
+const MAX_RECORDING_DURATION_MS = 60000;
 
 type ConnectionState = 'idle' | 'connecting' | 'ready' | 'recording' | 'processing' | 'error';
 
@@ -40,71 +76,89 @@ interface AudioTurn {
     isComplete: boolean;
 }
 
+interface CaptionLine {
+    id: string;
+    speaker: 'user' | 'nerdx';
+    text: string;
+    isPartial: boolean;
+}
+
 const NerdXLiveAudioScreen: React.FC = () => {
     const navigation = useNavigation();
 
     // State
     const [connectionState, setConnectionState] = useState<ConnectionState>('idle');
+    const [captionsEnabled, setCaptionsEnabled] = useState(false);
+    const [captions, setCaptions] = useState<CaptionLine[]>([]);
+    const [amplitude, setAmplitude] = useState(0);
 
     // Refs
     const wsRef = useRef<WebSocket | null>(null);
     const recordingRef = useRef<Audio.Recording | null>(null);
     const soundRef = useRef<Audio.Sound | null>(null);
-
-    // NEW: Turn-based audio buffering system
     const currentAudioTurnRef = useRef<AudioTurn | null>(null);
     const isPlayingRef = useRef(false);
     const playbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-    // Recording refs (VAD disabled for tap-to-speak)
     const recordingStartTimeRef = useRef<number>(0);
-
-    // Animation
-    const pulseAnim = useRef(new Animated.Value(1)).current;
-    const waveAnim = useRef(new Animated.Value(0)).current;
-
-    // Pulse animation
-    useEffect(() => {
-        if (connectionState === 'recording') {
-            const pulse = Animated.loop(
-                Animated.sequence([
-                    Animated.timing(pulseAnim, {
-                        toValue: 1.2,
-                        duration: 500,
-                        useNativeDriver: true,
-                    }),
-                    Animated.timing(pulseAnim, {
-                        toValue: 1,
-                        duration: 500,
-                        useNativeDriver: true,
-                    }),
-                ])
-            );
-            pulse.start();
-            return () => pulse.stop();
-        } else {
-            pulseAnim.setValue(1);
-        }
-    }, [connectionState, pulseAnim]);
-
-    // Wave animation for processing
-    useEffect(() => {
-        if (connectionState === 'processing' || isPlayingRef.current) {
-            const wave = Animated.loop(
-                Animated.timing(waveAnim, {
-                    toValue: 1,
-                    duration: 1500,
-                    useNativeDriver: true,
-                })
-            );
-            wave.start();
-            return () => wave.stop();
-        }
-    }, [connectionState, waveAnim]);
-
-    // Refs to avoid circular dependency issues
     const endSessionRef = useRef<() => Promise<void>>();
     const stopRecordingAndSendRef = useRef<() => Promise<void>>();
+
+    // Animations
+    const controlsScale = useSharedValue(1);
+    const captionsTranslateY = useSharedValue(SCREEN_HEIGHT);
+
+    // Get aura state from connection state
+    const getAuraState = (): AuraState => {
+        switch (connectionState) {
+            case 'recording':
+                return 'listening';
+            case 'processing':
+                return 'thinking';
+            case 'ready':
+                return isPlayingRef.current ? 'speaking' : 'idle';
+            default:
+                return 'idle';
+        }
+    };
+
+    // Haptic feedback (graceful fallback)
+    const triggerHaptic = (type: 'light' | 'medium' | 'heavy' = 'light') => {
+        if (Platform.OS === 'web' || !Haptics) return;
+
+        try {
+            switch (type) {
+                case 'light':
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    break;
+                case 'medium':
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    break;
+                case 'heavy':
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                    break;
+            }
+        } catch (e) {
+            // Haptics not available
+        }
+    };
+
+    // Button press animation
+    const handleButtonPressIn = () => {
+        controlsScale.value = withSpring(0.97, { damping: 15, stiffness: 300 });
+        triggerHaptic('light');
+    };
+
+    const handleButtonPressOut = () => {
+        controlsScale.value = withSpring(1, { damping: 15, stiffness: 300 });
+    };
+
+    // Captions toggle animation
+    useEffect(() => {
+        captionsTranslateY.value = withSpring(
+            captionsEnabled ? 0 : SCREEN_HEIGHT * 0.4,
+            { damping: 20, stiffness: 150 }
+        );
+    }, [captionsEnabled]);
 
     // Configure audio
     const configureAudioMode = useCallback(async (forRecording: boolean) => {
@@ -121,58 +175,38 @@ const NerdXLiveAudioScreen: React.FC = () => {
         }
     }, []);
 
-    // NEW: Audio Buffer Manager - Buffers chunks until turnComplete
+    // Audio buffer management
     const bufferAudioChunk = useCallback((audioData: string) => {
         if (!currentAudioTurnRef.current) {
-            // Start new audio turn
             currentAudioTurnRef.current = {
                 chunks: [],
                 timestamp: Date.now(),
                 isComplete: false
             };
-            console.log('🎵 Started new audio turn buffering');
         }
-
-        // Add chunk to current turn
         currentAudioTurnRef.current.chunks.push(audioData);
-
-        // Safety check: prevent buffer overflow
         if (currentAudioTurnRef.current.chunks.length > MAX_BUFFER_SIZE) {
-            console.warn('⚠️ Audio buffer overflow - truncating turn');
             currentAudioTurnRef.current.chunks = currentAudioTurnRef.current.chunks.slice(-MAX_BUFFER_SIZE);
         }
-
-        console.log(`📦 Buffered audio chunk ${currentAudioTurnRef.current.chunks.length}/${MAX_BUFFER_SIZE}`);
     }, []);
 
-    // NEW: Play Complete Audio Turn - Sequential chunk playback
+    // Play complete audio turn
     const playCompleteAudioTurn = useCallback(async (audioTurn: AudioTurn) => {
-        if (isPlayingRef.current || audioTurn.chunks.length === 0) {
-            console.log('⏸️ Skipping playback - already playing or no chunks');
-            return;
-        }
+        if (isPlayingRef.current || audioTurn.chunks.length === 0) return;
 
         isPlayingRef.current = true;
-        console.log(`🔊 Playing complete audio turn: ${audioTurn.chunks.length} chunks sequentially`);
-        console.log(`📐 First chunk size: ${audioTurn.chunks[0]?.length || 0} chars`);
-
+        setAmplitude(0.6); // Simulate speaking amplitude
         await configureAudioMode(false);
 
-        // Play each chunk sequentially (each chunk is a complete WAV file)
         for (let i = 0; i < audioTurn.chunks.length; i++) {
-            if (!isPlayingRef.current) {
-                console.log('⏹️ Playback interrupted');
-                break;
-            }
+            if (!isPlayingRef.current) break;
 
             const chunk = audioTurn.chunks[i];
             const audioUri = `data:audio/wav;base64,${chunk}`;
 
             try {
                 if (soundRef.current) {
-                    try {
-                        await soundRef.current.unloadAsync();
-                    } catch (e) { }
+                    try { await soundRef.current.unloadAsync(); } catch (e) { }
                 }
 
                 const { sound } = await Audio.Sound.createAsync(
@@ -181,30 +215,19 @@ const NerdXLiveAudioScreen: React.FC = () => {
                 );
                 soundRef.current = sound;
 
-                // Wait for this chunk to finish - with proper error handling
                 await new Promise<void>((resolve) => {
                     let resolved = false;
-
-                    // Safety timeout per chunk (30s max)
                     const timeout = setTimeout(() => {
-                        if (!resolved) {
-                            console.warn(`⏰ Chunk ${i + 1} timeout - moving to next`);
-                            resolved = true;
-                            resolve();
-                        }
+                        if (!resolved) { resolved = true; resolve(); }
                     }, 30000);
 
                     sound.setOnPlaybackStatusUpdate((status: AVPlaybackStatus) => {
                         if (resolved) return;
-
-                        // Check for errors (status.isLoaded=false with error property)
                         if (!status.isLoaded && 'error' in status) {
-                            console.error(`❌ Chunk ${i + 1} load error`);
                             clearTimeout(timeout);
                             resolved = true;
                             resolve();
                         } else if (status.isLoaded && status.didJustFinish) {
-                            console.log(`✅ Chunk ${i + 1}/${audioTurn.chunks.length} finished`);
                             clearTimeout(timeout);
                             resolved = true;
                             resolve();
@@ -212,24 +235,19 @@ const NerdXLiveAudioScreen: React.FC = () => {
                     });
                 });
             } catch (error) {
-                console.error(`❌ Error playing chunk ${i + 1}:`, error);
-                // Continue to next chunk on error
+                console.error(`Error playing chunk ${i + 1}:`, error);
             }
         }
 
-        console.log('✅ Complete audio turn playback finished');
         isPlayingRef.current = false;
+        setAmplitude(0);
         setConnectionState('ready');
     }, [configureAudioMode]);
 
-    // NEW: Complete Current Audio Turn (called when turnComplete received)
+    // Complete audio turn
     const completeAudioTurn = useCallback(async () => {
-        if (!currentAudioTurnRef.current || currentAudioTurnRef.current.isComplete) {
-            console.log('⏸️ No active audio turn to complete');
-            return;
-        }
+        if (!currentAudioTurnRef.current || currentAudioTurnRef.current.isComplete) return;
 
-        // Clear any pending timeout
         if (playbackTimeoutRef.current) {
             clearTimeout(playbackTimeoutRef.current);
             playbackTimeoutRef.current = null;
@@ -237,57 +255,36 @@ const NerdXLiveAudioScreen: React.FC = () => {
 
         currentAudioTurnRef.current.isComplete = true;
         const completedTurn = currentAudioTurnRef.current;
-
-        console.log(`✅ Completing audio turn: ${completedTurn.chunks.length} chunks`);
-
-        // Play the complete turn
         await playCompleteAudioTurn(completedTurn);
-
-        // Reset for next turn
         currentAudioTurnRef.current = null;
     }, [playCompleteAudioTurn]);
 
-    // NEW: Handle Playback Timeout (safety fallback)
+    // Playback timeout
     const startPlaybackTimeout = useCallback(() => {
-        if (playbackTimeoutRef.current) {
-            clearTimeout(playbackTimeoutRef.current);
-        }
-
+        if (playbackTimeoutRef.current) clearTimeout(playbackTimeoutRef.current);
         playbackTimeoutRef.current = setTimeout(async () => {
-            console.warn('⏰ Playback timeout - forcing completion of current turn');
             if (currentAudioTurnRef.current && !currentAudioTurnRef.current.isComplete) {
                 await completeAudioTurn();
             }
-        }, PLAYBACK_TIMEOUT_MS);
+        }, 10000);
     }, [completeAudioTurn]);
 
-
-    // Recording - tap to start
+    // Recording functions
     const startRecording = useCallback(async () => {
-        // Don't start if already recording or if WebSocket is not connected
-        if (recordingRef.current || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-            console.log('⏸️ Skipping recording start - already recording or not connected');
-            return;
-        }
+        if (recordingRef.current || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
 
         try {
-            // Stop playback on barge-in (user interrupts AI)
             if (soundRef.current) {
-                try {
-                    await soundRef.current.stopAsync();
-                } catch (e) { }
+                try { await soundRef.current.stopAsync(); } catch (e) { }
             }
-
-            // NEW: Clear current audio turn buffer
             currentAudioTurnRef.current = null;
-
-            // Clear any pending timeout
             if (playbackTimeoutRef.current) {
                 clearTimeout(playbackTimeoutRef.current);
                 playbackTimeoutRef.current = null;
             }
 
             await configureAudioMode(true);
+            triggerHaptic('medium');
 
             const { recording } = await Audio.Recording.createAsync({
                 android: {
@@ -314,45 +311,48 @@ const NerdXLiveAudioScreen: React.FC = () => {
 
             recordingRef.current = recording;
             setConnectionState('recording');
+            setAmplitude(0.4); // Simulate listening amplitude
 
-            // Start safety check for maximum duration
             recordingStartTimeRef.current = Date.now();
             setTimeout(() => {
                 if (recordingRef.current) {
-                    console.log('⏱️ Maximum recording duration reached - auto-stopping');
                     stopRecordingAndSendRef.current?.();
                 }
             }, MAX_RECORDING_DURATION_MS);
-
-            console.log('🎙️ Recording started - tap again to send');
         } catch (error) {
             console.error('Recording error:', error);
             Alert.alert('Microphone Error', 'Could not access microphone.');
             setConnectionState('ready');
         }
-    }, [configureAudioMode]);
+    }, [configureAudioMode, triggerHaptic]);
 
     const stopRecordingAndSend = useCallback(async () => {
         if (!recordingRef.current) return;
 
         try {
             const uri = recordingRef.current.getURI();
+            triggerHaptic('light');
 
-            try {
-                await recordingRef.current.stopAndUnloadAsync();
-            } catch (e: any) {
-                if (!e?.message?.includes('already been unloaded')) {
-                    console.warn('Stop warning:', e);
-                }
+            try { await recordingRef.current.stopAndUnloadAsync(); } catch (e: any) {
+                if (!e?.message?.includes('already been unloaded')) console.warn('Stop warning:', e);
             }
             recordingRef.current = null;
             setConnectionState('processing');
+            setAmplitude(0.2);
 
             if (uri && wsRef.current?.readyState === WebSocket.OPEN) {
                 const response = await fetch(uri);
                 const blob = await response.blob();
 
-                console.log(`📤 Preparing to send audio: ${blob.size} bytes`);
+                // Add to captions
+                if (captionsEnabled) {
+                    setCaptions(prev => [...prev, {
+                        id: Date.now().toString(),
+                        speaker: 'user',
+                        text: '(Speaking...)',
+                        isPartial: true
+                    }]);
+                }
 
                 const reader = new FileReader();
                 reader.onloadend = () => {
@@ -360,47 +360,32 @@ const NerdXLiveAudioScreen: React.FC = () => {
                     const base64 = base64data.split(',')[1] || base64data;
 
                     if (wsRef.current?.readyState === WebSocket.OPEN) {
-                        console.log(`📤 Sending audio to AI (${base64.length} chars base64)`);
-                        wsRef.current.send(JSON.stringify({
-                            type: 'audio',
-                            data: base64,
-                        }));
-                        console.log('✅ Audio sent, waiting for AI response...');
+                        wsRef.current.send(JSON.stringify({ type: 'audio', data: base64 }));
 
-                        // Timeout fallback - if no response in 20 seconds, return to ready
                         setTimeout(() => {
                             setConnectionState((current) => {
-                                if (current === 'processing') {
-                                    console.log('⏰ No response from AI - returning to ready state');
-                                    return 'ready';
-                                }
+                                if (current === 'processing') return 'ready';
                                 return current;
                             });
                         }, 20000);
                     } else {
-                        console.error('❌ WebSocket not open when trying to send audio');
                         setConnectionState('ready');
                     }
                 };
-                reader.onerror = (error) => {
-                    console.error('❌ Error reading audio file:', error);
-                    setConnectionState('ready');
-                };
+                reader.onerror = () => setConnectionState('ready');
                 reader.readAsDataURL(blob);
             } else {
-                console.error('❌ No audio URI or WebSocket not open');
                 setConnectionState('ready');
             }
         } catch (error) {
             console.error('Stop recording error:', error);
             setConnectionState('ready');
         }
-    }, []);
+    }, [captionsEnabled, triggerHaptic]);
 
-    // Update ref for circular dependency resolution
     stopRecordingAndSendRef.current = stopRecordingAndSend;
 
-    // UPDATED: WebSocket Handler - Turn-Based Audio Buffering
+    // WebSocket message handler
     const handleWebSocketMessage = useCallback((event: any) => {
         try {
             const data = JSON.parse(event.data);
@@ -409,19 +394,12 @@ const NerdXLiveAudioScreen: React.FC = () => {
                 case 'ready':
                     setConnectionState('ready');
                     configureAudioMode(false);
-                    // Don't auto-start - wait for user to tap
                     break;
 
                 case 'audio':
                     if (data.data) {
-                        console.log('📥 Received AI audio chunk - buffering for turn completion');
-
-                        // NEW: Buffer audio chunk instead of playing immediately
                         bufferAudioChunk(data.data);
-                        startPlaybackTimeout(); // Safety timeout
-
-                        // Update state to show AI is responding
-                        // Don't change state if we're recording (barge-in scenario)
+                        startPlaybackTimeout();
                         if (connectionState !== 'recording') {
                             setConnectionState('processing');
                         }
@@ -429,42 +407,27 @@ const NerdXLiveAudioScreen: React.FC = () => {
                     break;
 
                 case 'turnComplete':
-                    console.log('✅ AI turn complete received!');
-                    console.log(`📊 Buffered chunks: ${currentAudioTurnRef.current?.chunks?.length || 0}`);
-
-                    // NEW: Complete the audio turn and play all buffered chunks
                     completeAudioTurn();
-
-                    // Don't auto-start - wait for user to tap
                     break;
 
                 case 'interrupted':
-                    // User interrupted AI (barge-in) - clear buffered audio
-                    console.log('🎤 User interrupted AI - clearing audio buffer');
-
-                    // NEW: Clear current audio turn buffer
                     currentAudioTurnRef.current = null;
-
-                    // Clear any pending timeout
                     if (playbackTimeoutRef.current) {
                         clearTimeout(playbackTimeoutRef.current);
                         playbackTimeoutRef.current = null;
                     }
-
-                    // Stop any current playback
                     if (soundRef.current) {
                         soundRef.current.stopAsync().catch(() => { });
                     }
-
                     isPlayingRef.current = false;
-
-                    // Recording should already be active from when user started speaking
-                    // If not, start it
+                    setAmplitude(0);
                     if (!recordingRef.current) {
-                        setTimeout(() => {
-                            startRecording();
-                        }, 100);
+                        setTimeout(() => startRecording(), 100);
                     }
+                    break;
+
+                case 'goAway':
+                    Alert.alert('Session Ending', data.message || 'Please reconnect soon.');
                     break;
 
                 case 'error':
@@ -477,10 +440,12 @@ const NerdXLiveAudioScreen: React.FC = () => {
         }
     }, [bufferAudioChunk, startPlaybackTimeout, completeAudioTurn, configureAudioMode, startRecording, connectionState]);
 
+    // Connect
     const connect = useCallback(async () => {
         if (connectionState !== 'idle') return;
 
         setConnectionState('connecting');
+        triggerHaptic('medium');
 
         try {
             const { granted } = await Audio.requestPermissionsAsync();
@@ -490,74 +455,49 @@ const NerdXLiveAudioScreen: React.FC = () => {
                 return;
             }
 
-            // NEW: Initialize audio turn buffer
             currentAudioTurnRef.current = null;
             isPlayingRef.current = false;
-
-            // Clear any pending timeout
             if (playbackTimeoutRef.current) {
                 clearTimeout(playbackTimeoutRef.current);
                 playbackTimeoutRef.current = null;
             }
 
-            // Get user ID from storage to ensure credit check works for the correct user
             let wsUrl = WS_URL;
             try {
                 const userData = await AsyncStorage.getItem('@user_data');
                 if (userData) {
                     const user = JSON.parse(userData);
-                    if (user && user.id) {
-                        console.log('👤 Connecting as user:', user.id);
-                        wsUrl = `${WS_URL}?user_id=${user.id}`;
-                    }
+                    if (user?.id) wsUrl = `${WS_URL}?user_id=${user.id}`;
                 }
-            } catch (error) {
-                console.error('Error getting user data:', error);
-            }
+            } catch (error) { }
 
             const ws = new WebSocket(wsUrl);
             wsRef.current = ws;
 
-            ws.onopen = () => {
-                console.log('🔗 Connected - starting conversational flow');
-            };
-            ws.onmessage = (event: any) => {
-                // Log all incoming messages for debugging
-                try {
-                    const data = JSON.parse(event.data);
-                    console.log('📥 Received WebSocket message:', data.type, Object.keys(data));
-                } catch (e) {
-                    console.log('📥 Received WebSocket message (non-JSON):', event.data?.substring(0, 100));
-                }
-                handleWebSocketMessage(event);
-            };
-            ws.onerror = (error: any) => {
-                console.error('❌ WebSocket error:', error);
+            ws.onopen = () => console.log('🔗 Connected');
+            ws.onmessage = handleWebSocketMessage;
+            ws.onerror = () => {
                 setConnectionState('error');
                 Alert.alert('Connection Error', 'Could not connect.');
             };
-            ws.onclose = (event: any) => {
-                console.log('🔌 WebSocket closed:', event.code, event.reason);
+            ws.onclose = () => {
                 if (connectionState !== 'idle') endSession();
             };
         } catch (error) {
             setConnectionState('error');
         }
-    }, [connectionState, handleWebSocketMessage]);
+    }, [connectionState, handleWebSocketMessage, triggerHaptic]);
 
+    // End session
     const endSession = useCallback(async () => {
-        // NEW: Clear audio turn buffer and timeouts
         currentAudioTurnRef.current = null;
-
         if (playbackTimeoutRef.current) {
             clearTimeout(playbackTimeoutRef.current);
             playbackTimeoutRef.current = null;
         }
 
         if (recordingRef.current) {
-            try {
-                await recordingRef.current.stopAndUnloadAsync();
-            } catch (e) { }
+            try { await recordingRef.current.stopAndUnloadAsync(); } catch (e) { }
             recordingRef.current = null;
         }
 
@@ -570,6 +510,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
         }
 
         isPlayingRef.current = false;
+        setAmplitude(0);
 
         if (wsRef.current) {
             try {
@@ -580,38 +521,30 @@ const NerdXLiveAudioScreen: React.FC = () => {
         }
 
         setConnectionState('idle');
+        setCaptions([]);
     }, []);
 
-    // Update ref for cleanup effect
     endSessionRef.current = endSession;
 
-    // Cleanup on unmount
     useEffect(() => {
-        return () => {
-            endSessionRef.current?.();
-        };
+        return () => { endSessionRef.current?.(); };
     }, []);
 
+    // Handle main button press
     const handlePress = useCallback(() => {
         switch (connectionState) {
             case 'idle':
+            case 'error':
                 connect();
                 break;
             case 'ready':
-                // Tap to start recording
                 startRecording();
                 break;
             case 'recording':
-                // Tap to stop recording and send
                 stopRecordingAndSend();
                 break;
             case 'processing':
-                // Tap to cancel and return to ready
                 setConnectionState('ready');
-                break;
-            case 'error':
-                // Tap to retry connection
-                connect();
                 break;
             default:
                 endSession();
@@ -623,34 +556,44 @@ const NerdXLiveAudioScreen: React.FC = () => {
         switch (connectionState) {
             case 'connecting': return 'Connecting...';
             case 'ready': return 'Tap to speak';
-            case 'recording': return 'Listening... tap to send';
+            case 'recording': return 'Listening...';
             case 'processing': return 'NerdX is thinking...';
-            case 'error': return 'Error - tap to retry';
+            case 'error': return 'Tap to retry';
             default: return 'Tap to start';
         }
     };
 
-    const getButtonColor = () => {
-        switch (connectionState) {
-            case 'connecting':
-            case 'processing': return '#FF9800';
-            case 'ready': return '#4CAF50';
-            case 'recording': return '#F44336';
-            case 'error': return '#9E9E9E';
-            default: return '#6C63FF';
-        }
-    };
+    // Animated styles
+    const controlsAnimatedStyle = useAnimatedStyle(() => ({
+        transform: [{ scale: controlsScale.value }],
+    }));
+
+    const captionsAnimatedStyle = useAnimatedStyle(() => ({
+        transform: [{ translateY: captionsTranslateY.value }],
+    }));
 
     return (
-        <SafeAreaView style={styles.container}>
-            <StatusBar barStyle="light-content" />
+        <View style={styles.container}>
+            <StatusBar barStyle="light-content" backgroundColor={COLORS.bg0} />
 
-            <LinearGradient
-                colors={['#1a1a2e', '#16213e', '#0f3460']}
-                style={styles.gradient}
-            >
+            {/* Background with aurora glow */}
+            <View style={styles.background}>
+                {/* Aurora glow at bottom */}
+                <View style={styles.auroraContainer}>
+                    <View style={[styles.auroraGlow, { backgroundColor: COLORS.glowBlue }]} />
+                    <View style={[styles.auroraGlowSecondary, { backgroundColor: COLORS.glowCyan }]} />
+                </View>
+
+                {/* Subtle vignette */}
+                <View style={styles.vignette} />
+            </View>
+
+            <SafeAreaView style={styles.safeArea}>
                 {/* Header */}
-                <View style={styles.header}>
+                <Animated.View
+                    entering={FadeIn.duration(600).delay(200)}
+                    style={styles.header}
+                >
                     <TouchableOpacity
                         style={styles.backButton}
                         onPress={() => {
@@ -658,98 +601,195 @@ const NerdXLiveAudioScreen: React.FC = () => {
                             navigation.goBack();
                         }}
                     >
-                        <Ionicons name="arrow-back" size={24} color="#fff" />
+                        <Ionicons name="chevron-back" size={24} color={COLORS.textPrimary} />
                     </TouchableOpacity>
 
-                    <Text style={styles.title}>NerdX Live</Text>
-
-                    <View style={styles.placeholder} />
-                </View>
-
-                {/* Main content */}
-                <View style={styles.content}>
-                    {/* Wave visualization */}
-                    <View style={styles.waveContainer}>
-                        {[...Array(5)].map((_, i) => (
-                            <Animated.View
-                                key={i}
-                                style={[
-                                    styles.waveLine,
-                                    {
-                                        height: 40 + Math.sin(i) * 20,
-                                        opacity: connectionState === 'processing' || isPlayingRef.current ? 0.8 : 0.3,
-                                        transform: [{
-                                            scaleY: waveAnim.interpolate({
-                                                inputRange: [0, 0.5, 1],
-                                                outputRange: [1, 1.5 + i * 0.2, 1],
-                                            })
-                                        }]
-                                    }
-                                ]}
-                            />
-                        ))}
+                    {/* Center: Live indicator */}
+                    <View style={styles.liveIndicator}>
+                        <Ionicons name="radio-outline" size={16} color={COLORS.textPrimary} />
+                        <Text style={styles.liveText}>Live</Text>
+                        {connectionState !== 'idle' && (
+                            <View style={styles.liveDot} />
+                        )}
                     </View>
 
-                    {/* Status text */}
-                    <Text style={styles.statusText}>{getStatusText()}</Text>
-
-                    {/* Main button */}
-                    <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-                        <TouchableOpacity
-                            style={[styles.mainButton, { backgroundColor: getButtonColor() }]}
-                            onPress={handlePress}
-                            activeOpacity={0.8}
-                        >
-                            {connectionState === 'connecting' || connectionState === 'processing' ? (
-                                <Ionicons name="sync" size={48} color="#fff" />
-                            ) : connectionState === 'recording' ? (
-                                <Ionicons name="mic" size={48} color="#fff" />
-                            ) : connectionState === 'ready' ? (
-                                <Ionicons name="mic-outline" size={48} color="#fff" />
-                            ) : (
-                                <Ionicons name="chatbubble-ellipses" size={48} color="#fff" />
-                            )}
-                        </TouchableOpacity>
-                    </Animated.View>
-
-                    {/* Hint */}
-                    <Text style={styles.hintText}>
-                        {connectionState === 'idle'
-                            ? 'Tap to start your conversation'
-                            : connectionState === 'ready'
-                                ? 'Tap the button to ask a question'
-                                : connectionState === 'recording'
-                                    ? 'Speak clearly, then tap again to send'
-                                    : connectionState === 'processing'
-                                        ? 'NerdX is thinking and will respond shortly...'
-                                        : 'Wait for NerdX to respond...'}
-                    </Text>
-                </View>
-
-                {/* End button */}
-                {connectionState !== 'idle' && (
+                    {/* Captions toggle */}
                     <TouchableOpacity
-                        style={styles.endButton}
+                        style={[
+                            styles.captionsButton,
+                            captionsEnabled && styles.captionsButtonActive
+                        ]}
                         onPress={() => {
-                            endSession();
-                            navigation.goBack();
+                            triggerHaptic('light');
+                            setCaptionsEnabled(!captionsEnabled);
                         }}
                     >
-                        <Ionicons name="close-circle" size={24} color="#F44336" />
-                        <Text style={styles.endButtonText}>End Session</Text>
+                        <Ionicons
+                            name="text"
+                            size={18}
+                            color={captionsEnabled ? COLORS.glowBlue : COLORS.textSecondary}
+                        />
                     </TouchableOpacity>
+                </Animated.View>
+
+                {/* Audio Aura */}
+                <View style={styles.auraContainer}>
+                    <AudioAura
+                        state={getAuraState()}
+                        amplitude={amplitude}
+                    />
+                </View>
+
+                {/* Status text */}
+                <Animated.Text
+                    entering={FadeIn.duration(400).delay(400)}
+                    style={styles.statusText}
+                >
+                    {getStatusText()}
+                </Animated.Text>
+
+                {/* Captions overlay */}
+                {captionsEnabled && (
+                    <Animated.View style={[styles.captionsOverlay, captionsAnimatedStyle]}>
+                        <BlurView intensity={40} tint="dark" style={styles.captionsBlur}>
+                            <View style={styles.captionsContent}>
+                                {captions.length === 0 ? (
+                                    <Text style={styles.captionsPlaceholder}>
+                                        Captions will appear here...
+                                    </Text>
+                                ) : (
+                                    captions.slice(-6).map((line) => (
+                                        <View key={line.id} style={styles.captionLine}>
+                                            <View style={[
+                                                styles.speakerChip,
+                                                line.speaker === 'nerdx' ? styles.nerdxChip : styles.userChip
+                                            ]}>
+                                                <Text style={styles.speakerText}>
+                                                    {line.speaker === 'nerdx' ? 'NerdX' : 'You'}
+                                                </Text>
+                                            </View>
+                                            <Text style={styles.captionText}>
+                                                {line.text}
+                                                {line.isPartial && <Text style={styles.cursor}>▍</Text>}
+                                            </Text>
+                                        </View>
+                                    ))
+                                )}
+                            </View>
+                        </BlurView>
+                    </Animated.View>
                 )}
-            </LinearGradient>
-        </SafeAreaView>
+
+                {/* Bottom controls */}
+                <Animated.View
+                    entering={SlideInDown.duration(500).delay(300)}
+                    style={styles.controlsContainer}
+                >
+                    <Animated.View style={[styles.controlsPill, controlsAnimatedStyle]}>
+                        <BlurView intensity={30} tint="dark" style={styles.controlsBlur}>
+                            {/* Video button (placeholder) */}
+                            <TouchableOpacity
+                                style={styles.controlButton}
+                                onPressIn={handleButtonPressIn}
+                                onPressOut={handleButtonPressOut}
+                                disabled={true}
+                            >
+                                <Ionicons name="videocam-outline" size={24} color={COLORS.textSecondary} />
+                            </TouchableOpacity>
+
+                            {/* Hold/Pause button (placeholder) */}
+                            <TouchableOpacity
+                                style={styles.controlButton}
+                                onPressIn={handleButtonPressIn}
+                                onPressOut={handleButtonPressOut}
+                                disabled={true}
+                            >
+                                <Ionicons name="pause-outline" size={24} color={COLORS.textSecondary} />
+                            </TouchableOpacity>
+
+                            {/* Main Mic button */}
+                            <TouchableOpacity
+                                style={[
+                                    styles.micButton,
+                                    connectionState === 'recording' && styles.micButtonActive,
+                                ]}
+                                onPressIn={handleButtonPressIn}
+                                onPressOut={handleButtonPressOut}
+                                onPress={handlePress}
+                                activeOpacity={0.9}
+                            >
+                                {connectionState === 'connecting' || connectionState === 'processing' ? (
+                                    <Ionicons name="sync" size={28} color={COLORS.textPrimary} />
+                                ) : connectionState === 'recording' ? (
+                                    <View style={styles.stopIcon} />
+                                ) : connectionState === 'idle' ? (
+                                    <Ionicons name="play" size={28} color={COLORS.textPrimary} />
+                                ) : (
+                                    <Ionicons name="mic" size={28} color={COLORS.textPrimary} />
+                                )}
+                            </TouchableOpacity>
+
+                            {/* End button */}
+                            <TouchableOpacity
+                                style={[styles.controlButton, styles.endButton]}
+                                onPressIn={handleButtonPressIn}
+                                onPressOut={handleButtonPressOut}
+                                onPress={() => {
+                                    triggerHaptic('heavy');
+                                    endSession();
+                                    navigation.goBack();
+                                }}
+                            >
+                                <Ionicons name="close" size={24} color={COLORS.textPrimary} />
+                            </TouchableOpacity>
+                        </BlurView>
+                    </Animated.View>
+                </Animated.View>
+            </SafeAreaView>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#1a1a2e',
+        backgroundColor: COLORS.bg0,
     },
-    gradient: {
+    background: {
+        ...StyleSheet.absoluteFillObject,
+    },
+    auroraContainer: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: SCREEN_HEIGHT * 0.4,
+        alignItems: 'center',
+    },
+    auroraGlow: {
+        position: 'absolute',
+        bottom: -100,
+        width: SCREEN_WIDTH * 1.5,
+        height: SCREEN_WIDTH * 0.8,
+        borderRadius: SCREEN_WIDTH,
+        opacity: 0.15,
+    },
+    auroraGlowSecondary: {
+        position: 'absolute',
+        bottom: -50,
+        width: SCREEN_WIDTH,
+        height: SCREEN_WIDTH * 0.5,
+        borderRadius: SCREEN_WIDTH,
+        opacity: 0.1,
+    },
+    vignette: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'transparent',
+        borderWidth: 80,
+        borderColor: 'rgba(0, 0, 0, 0.3)',
+        borderRadius: 0,
+    },
+    safeArea: {
         flex: 1,
     },
     header: {
@@ -757,88 +797,166 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 16,
-        paddingTop: 16,
+        paddingTop: 8,
+        paddingBottom: 16,
     },
     backButton: {
         width: 44,
         height: 44,
         borderRadius: 22,
-        backgroundColor: 'rgba(255,255,255,0.1)',
-        justifyContent: 'center',
+        backgroundColor: COLORS.glass,
         alignItems: 'center',
-    },
-    title: {
-        color: '#fff',
-        fontSize: 20,
-        fontWeight: '700',
-    },
-    placeholder: {
-        width: 44,
-    },
-    content: {
-        flex: 1,
         justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 40,
     },
-    waveContainer: {
+    liveIndicator: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-        height: 80,
-        marginBottom: 40,
+        gap: 6,
     },
-    waveLine: {
-        width: 4,
-        backgroundColor: '#6C63FF',
-        borderRadius: 2,
-        marginHorizontal: 6,
-    },
-    statusText: {
-        color: '#fff',
-        fontSize: 24,
-        fontWeight: '600',
-        marginBottom: 40,
-        textAlign: 'center',
-    },
-    mainButton: {
-        width: 120,
-        height: 120,
-        borderRadius: 60,
-        justifyContent: 'center',
-        alignItems: 'center',
-        shadowColor: '#6C63FF',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.5,
-        shadowRadius: 16,
-        elevation: 12,
-    },
-    hintText: {
-        color: 'rgba(255,255,255,0.6)',
-        fontSize: 14,
-        textAlign: 'center',
-        marginTop: 40,
-        lineHeight: 20,
-    },
-    manualSendHint: {
-        color: 'rgba(108, 99, 255, 0.8)',
-        fontSize: 12,
-        textAlign: 'center',
-        marginTop: 12,
-        fontStyle: 'italic',
-    },
-    endButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 16,
-        marginBottom: 20,
-    },
-    endButtonText: {
-        color: '#F44336',
+    liveText: {
+        color: COLORS.textPrimary,
         fontSize: 16,
         fontWeight: '600',
-        marginLeft: 8,
+    },
+    liveDot: {
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+        backgroundColor: COLORS.accentOrange,
+        marginLeft: 4,
+    },
+    captionsButton: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: COLORS.glass,
+        borderWidth: 1,
+        borderColor: COLORS.glassBorder,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    captionsButtonActive: {
+        borderColor: COLORS.glowBlue,
+    },
+    auraContainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: -SCREEN_HEIGHT * 0.05,
+    },
+    statusText: {
+        color: COLORS.textSecondary,
+        fontSize: 18,
+        fontWeight: '500',
+        textAlign: 'center',
+        marginBottom: 20,
+    },
+    captionsOverlay: {
+        position: 'absolute',
+        bottom: 120,
+        left: 16,
+        right: 16,
+        maxHeight: SCREEN_HEIGHT * 0.25,
+        borderRadius: 20,
+        overflow: 'hidden',
+    },
+    captionsBlur: {
+        flex: 1,
+        borderRadius: 20,
+        overflow: 'hidden',
+    },
+    captionsContent: {
+        padding: 16,
+    },
+    captionsPlaceholder: {
+        color: COLORS.textSecondary,
+        fontSize: 14,
+        textAlign: 'center',
+    },
+    captionLine: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        marginBottom: 8,
+        gap: 8,
+    },
+    speakerChip: {
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 8,
+    },
+    userChip: {
+        backgroundColor: COLORS.userChip,
+    },
+    nerdxChip: {
+        backgroundColor: COLORS.nerdxChip,
+    },
+    speakerText: {
+        color: COLORS.textPrimary,
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    captionText: {
+        flex: 1,
+        color: COLORS.textPrimary,
+        fontSize: 14,
+        lineHeight: 20,
+    },
+    cursor: {
+        color: COLORS.glowBlue,
+    },
+    controlsContainer: {
+        paddingHorizontal: 24,
+        paddingBottom: 24,
+    },
+    controlsPill: {
+        borderRadius: 36,
+        overflow: 'hidden',
+    },
+    controlsBlur: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 18,
+        height: 72,
+        paddingHorizontal: 20,
+        borderRadius: 36,
+        borderWidth: 1,
+        borderColor: COLORS.glassBorder,
+    },
+    controlButton: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: COLORS.glass,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    micButton: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        backgroundColor: COLORS.glowBlue,
+        alignItems: 'center',
+        justifyContent: 'center',
+        // Glow effect
+        shadowColor: COLORS.glowBlue,
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.6,
+        shadowRadius: 12,
+        elevation: 8,
+    },
+    micButtonActive: {
+        backgroundColor: COLORS.dangerRed,
+        shadowColor: COLORS.dangerRed,
+    },
+    stopIcon: {
+        width: 18,
+        height: 18,
+        borderRadius: 4,
+        backgroundColor: COLORS.textPrimary,
+    },
+    endButton: {
+        backgroundColor: COLORS.dangerRed,
     },
 });
 

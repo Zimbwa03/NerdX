@@ -72,25 +72,160 @@ GEMINI_MODEL = os.getenv('GEMINI_LIVE_MODEL', 'gemini-2.5-flash-preview-native-a
 # Fallback model if native audio dialog is not available
 GEMINI_MODEL_FALLBACK = 'gemini-2.0-flash-exp'
 
-# NerdX System Instruction
+# NerdX System Instruction - Optimized for Gemini Live API (Native Audio)
+# Following Google's best practices for system instructions
 NERDX_SYSTEM_INSTRUCTION = """
-You are NerdX, a friendly, encouraging O-Level and A-Level tutor in Zimbabwe.
+## AGENT IDENTITY & PERSONA
 
-1. Language: Speak English by default. If the student speaks Shona or struggles with English, switch to Shona immediately to help them understand better.
+**Name:** NerdX AI Tutor
+**Role:** Voice-based academic tutor for O-Level and A-Level students
+**Primary Users:** Secondary school students (O-Level & A-Level)
+**Subjects Covered:** Mathematics, English, Biology, Chemistry, Physics, Combined Science, and related subjects
+**Education Standards:** ZIMSEC-aligned, Cambridge-friendly explanations
 
-2. Tone: Be patient, energetic, and supportive. Celebrate small wins. Use phrases like "Well done!", "Great thinking!", "You're getting it!".
+You are NerdX AI Tutor, a calm, confident, and highly skilled academic tutor.
+You explain complex ideas clearly, step-by-step, and in a student-friendly way.
+Your goal is not just to give answers — your goal is to teach, build understanding, and improve exam performance.
 
-3. Method: Don't lecture. Ask guiding questions to help students discover answers themselves. When they make mistakes, gently redirect with hints rather than giving the answer.
+---
 
-4. Safety: If asked about non-educational topics (relationships, violence, inappropriate content), gently steer back to schoolwork. Say something like "Let's get back to your studies - what subject are you working on?"
+## VOICE, TONE & LANGUAGE RULES
 
-5. Expertise: You specialize in ZIMSEC curriculum subjects including:
-   - Mathematics (O-Level and A-Level)
-   - Combined Science (Biology, Chemistry, Physics)
-   - English Language and Literature
-   - History, Geography, and other humanities
+* Speak in clear, natural English
+* Sound fresh, encouraging, and human, never robotic
+* Neutral African/Zimbabwean-friendly tone (no slang, no forced accent)
+* Confident but warm — like a great teacher sitting next to the student
+* Never sound judgmental, rushed, or dismissive
+* If the student speaks Shona or struggles with English, switch to Shona immediately to help them understand better
 
-6. Interaction Style: Keep responses conversational and brief. Ask one question at a time. Wait for the student to respond before continuing.
+**Default Output Language:** English
+**Speech Style:** Conversational, calm, educational
+**Response Length (Voice):** Short explanations first, then ask if the student wants more depth
+
+---
+
+## CORE TEACHING PHILOSOPHY
+
+You follow the principle: "Understand first, memorize later."
+
+You:
+* Break concepts into simple building blocks
+* Use examples, analogies, and real-life applications
+* Adjust difficulty based on student responses
+* Encourage curiosity and questions
+* Never just dump answers without explanation unless explicitly asked
+
+---
+
+## ACADEMIC LEVEL HANDLING
+
+### O-Level Students
+* Use simpler language
+* Explain terms before using them
+* Show clear worked examples
+* Focus on fundamentals and exam-style questions
+
+### A-Level Students
+* Use precise academic language
+* Introduce deeper reasoning and theory
+* Show derivations, mechanisms, and cause–effect relationships
+* Link concepts across topics
+
+If the level is unclear, ask once: "Is this O-Level or A-Level?"
+
+---
+
+## CONVERSATIONAL FLOW (LOOP-BASED)
+
+### 1. Greeting (One-time per session)
+Warmly greet the student and introduce yourself as NerdX AI Tutor.
+Example: "Hi, I'm NerdX, your AI tutor. What subject would you like to study today?"
+
+### 2. Topic Discovery
+Ask what subject, topic, and level (O or A Level). Keep it brief.
+
+### 3. Teaching Loop (Main Loop – may repeat indefinitely)
+In this loop, the student may:
+* Ask for explanations
+* Ask questions
+* Request revision
+* Say they don't understand
+* Ask exam-style questions
+
+You must:
+* Explain step-by-step
+* Pause naturally
+* Ask short check-in questions like: "Does that make sense so far?"
+
+### 4. Handling Confusion
+If the student says "I don't understand", "Explain again", or "I'm lost":
+* Re-explain more simply
+* Use a different example
+* Slow down your explanation
+* Never blame the student
+
+### 5. Revision Mode
+If the student asks for revision:
+* Summarize key points
+* Highlight common exam mistakes
+* Provide short practice questions (spoken)
+
+---
+
+## SUBJECT-SPECIFIC RULES
+
+### Mathematics
+* Define symbols clearly
+* Show steps one at a time
+* Explain WHY each step is done
+
+### Sciences (Biology, Chemistry, Physics)
+* Start with definitions
+* Explain processes in logical order
+* Link structure → function → application
+* Mention exam keywords naturally
+
+### English
+* Explain grammar rules clearly
+* Use examples in sentences
+* For essays: structure first, then content
+
+---
+
+## EXAM & ACCURACY GUARDRAILS
+
+* Do NOT guess answers
+* If unsure, say: "Let me explain what is known clearly."
+* Correct mistakes gently
+* Avoid misinformation at all costs
+* Stay aligned with secondary school syllabi (ZIMSEC, Cambridge)
+
+---
+
+## VOICE & REAL-TIME BEHAVIOR (CRITICAL)
+
+* Keep responses short enough for audio
+* Stop speaking immediately if interrupted
+* Never talk over the student
+* Always wait for user input before continuing
+* Send audio in natural chunks, not long monologues
+
+---
+
+## GENERAL GUARDRAILS
+
+* Never discourage a student
+* Never shame or mock
+* Never use complex jargon without explanation
+* Stay focused on education
+* If asked about non-educational topics (relationships, violence, inappropriate content), gently steer back to schoolwork: "Let's get back to your studies - what subject are you working on?"
+
+---
+
+## STARTING COMMAND (MANDATORY)
+
+When the session begins, greet the student and ask what they want to study.
+Example: "Hi! I'm NerdX, your AI tutor for O-Level and A-Level subjects. What subject would you like help with today?"
 """
 
 
@@ -214,12 +349,28 @@ class BillingManager:
     """
     def __init__(self, user_id: str):
         self.user_id = user_id
-        self.cost_per_minute = 3  # 3 credits per minute
+        # Dynamic cost - getting it in the loop or init? 
+        # Standardize on init but refreshes could be better. For now simple.
+        # Avoid circular import at module level by importing inside methods or using a safe import
+        try:
+            from services.advanced_credit_service import advanced_credit_service
+            self.cost_per_minute = advanced_credit_service.get_credit_cost('voice_chat', 'medium') # Default to medium/standard
+        except Exception as e:
+            logger.warning(f"Using fallback cost due to import error: {e}")
+            self.cost_per_minute = 3  # Fallback
+            
         self.is_active = True
         
     async def verify_balance(self) -> bool:
         """Check if user has enough credits to start"""
         try:
+            # Refresh cost in case it changed
+            try:
+                from services.advanced_credit_service import advanced_credit_service
+                self.cost_per_minute = advanced_credit_service.get_credit_cost('voice_chat', 'medium')
+            except:
+                pass
+
             # Run blocking DB call in thread
             current_credits = await asyncio.to_thread(get_user_credits, self.user_id)
             logger.info(f"💰 Checking balance for {self.user_id}: {current_credits} (Required: {self.cost_per_minute})")
@@ -231,6 +382,10 @@ class BillingManager:
     async def deduct_for_minute(self) -> bool:
         """Deduct credits for the next minute of usage"""
         try:
+            # Use atomic deduction via external_db directly (as advanced_credit_service wrappers might be sync)
+            # But the plan urged to use advanced_credit_service or external_db. 
+            # external_db.deduct_credits is now atomic so it's safe.
+            
             success = await asyncio.to_thread(
                 deduct_credits, 
                 self.user_id, 
@@ -278,13 +433,17 @@ class TransparentGeminiPipe:
     """
     TRANSPARENT PIPE: Forwards messages with zero buffering.
     Supports both Vertex AI (preferred) and regular Gemini API.
+    Includes session resumption and goAway handling per Gemini Live API docs.
     """
     
-    def __init__(self, client_ws: WebSocket):
+    def __init__(self, client_ws: WebSocket, session_handle: str = None):
         self.client_ws = client_ws
         self.gemini_ws: Optional[any] = None
         self.is_active = False
         self.using_vertex_ai = False
+        # Session resumption support
+        self.session_handle = session_handle  # For resuming previous sessions
+        self.session_id = None  # Returned by server during session
     
     async def _get_vertex_ai_token(self) -> Optional[str]:
         """Get OAuth2 access token for Vertex AI using service account."""
@@ -371,11 +530,14 @@ class TransparentGeminiPipe:
             )
             
             # Send setup message for Vertex AI
+            # Per docs: Enable context window compression for longer tutoring sessions
+            # and session resumption for mobile disconnects
             setup_message = {
                 "setup": {
                     "model": f"projects/{GOOGLE_CLOUD_PROJECT}/locations/{GOOGLE_CLOUD_LOCATION}/publishers/google/models/{GEMINI_MODEL}",
                     "generationConfig": {
                         "responseModalities": ["AUDIO"],
+                        "mediaResolution": "medium",  # Per Vertex AI docs
                         "speechConfig": {
                             "voiceConfig": {
                                 "prebuiltVoiceConfig": {
@@ -384,12 +546,29 @@ class TransparentGeminiPipe:
                             }
                         }
                     },
+                    # Context window compression for longer sessions (beyond 15 min default)
+                    # Audio is ~25 tokens/sec, so 128k tokens = ~85 min without compression
+                    # With compression, sessions can be unlimited
+                    "contextWindowCompression": {
+                        "triggerTokens": 100000,  # Start compression at 100k tokens
+                        "slidingWindow": {
+                            "targetTokens": 50000  # Compress down to 50k tokens
+                        }
+                    },
+                    # Session resumption for handling mobile disconnects
+                    "sessionResumption": {
+                        "handle": self.session_handle if hasattr(self, 'session_handle') and self.session_handle else None
+                    },
                     "systemInstruction": {
                         "parts": [{"text": NERDX_SYSTEM_INSTRUCTION}]
                     },
                     "tools": []
                 }
             }
+            
+            # Remove None values (session handle if not resuming)
+            if setup_message["setup"]["sessionResumption"]["handle"] is None:
+                del setup_message["setup"]["sessionResumption"]["handle"]
             
             logger.info(f"📤 Sending Vertex AI setup...")
             await self.gemini_ws.send(json.dumps(setup_message))
@@ -479,6 +658,7 @@ class TransparentGeminiPipe:
                     "model": f"models/{model_name}",
                     "generationConfig": {
                         "responseModalities": ["AUDIO"],
+                        "mediaResolution": "medium",  # Per Vertex AI docs
                         "speechConfig": {
                             "voiceConfig": {
                                 "prebuiltVoiceConfig": {
@@ -621,7 +801,34 @@ class TransparentGeminiPipe:
                     if content.get("interrupted"):
                         await self.client_ws.send_json({"type": "interrupted"})
                         logger.info("🎤 Interrupted - sent to client")
-                else:
+                
+                # Handle goAway notification (session about to end)
+                if "goAway" in data:
+                    go_away = data["goAway"]
+                    time_left = go_away.get("timeLeft", "unknown")
+                    logger.warning(f"⏳ GoAway received - session ending in {time_left}")
+                    # Notify client to reconnect soon
+                    await self.client_ws.send_json({
+                        "type": "goAway",
+                        "timeLeft": time_left,
+                        "message": "Session ending soon. Please reconnect."
+                    })
+                
+                # Handle session resumption updates
+                if "sessionResumptionUpdate" in data:
+                    update = data["sessionResumptionUpdate"]
+                    if update.get("resumable") and update.get("newHandle"):
+                        self.session_handle = update["newHandle"]
+                        self.session_id = update.get("sessionId")
+                        logger.info(f"📦 Session handle updated: {self.session_handle[:20]}...")
+                        # Send handle to client for reconnection
+                        await self.client_ws.send_json({
+                            "type": "sessionUpdate",
+                            "handle": self.session_handle,
+                            "sessionId": self.session_id
+                        })
+                
+                if "serverContent" not in data and "goAway" not in data and "sessionResumptionUpdate" not in data:
                     logger.debug(f"📦 Other message from Gemini: {list(data.keys())}")
                         
         except Exception as e:
@@ -662,13 +869,17 @@ class TransparentGeminiVideoPipe:
     TRANSPARENT PIPE for Video + Audio.
     Handles both video frames and audio - tutor can SEE what student is working on.
     Supports both Vertex AI (preferred) and regular Gemini API.
+    Includes session resumption and context window compression per Gemini Live API docs.
     """
     
-    def __init__(self, client_ws: WebSocket):
+    def __init__(self, client_ws: WebSocket, session_handle: str = None):
         self.client_ws = client_ws
         self.gemini_ws: Optional[any] = None
         self.is_active = False
         self.using_vertex_ai = False
+        # Session resumption support
+        self.session_handle = session_handle
+        self.session_id = None
         
     async def connect_to_gemini(self) -> bool:
         """Connect to Gemini Live API with video support.
@@ -845,6 +1056,7 @@ class TransparentGeminiVideoPipe:
                 "model": model_path,
                 "generationConfig": {
                     "responseModalities": ["AUDIO"],
+                    "mediaResolution": "medium",  # Per Vertex AI docs: low/medium/high - medium balances token usage and detail
                     "speechConfig": {
                         "voiceConfig": {
                             "prebuiltVoiceConfig": {
@@ -858,7 +1070,7 @@ class TransparentGeminiVideoPipe:
                         "text": NERDX_SYSTEM_INSTRUCTION + """
 
 ADDITIONAL CONTEXT FOR REAL-TIME VIDEO MODE:
-You are receiving CONTINUOUS VIDEO STREAM (10 frames per second) from the student's camera.
+You are receiving CONTINUOUS VIDEO STREAM (1 frame per second) from the student's camera.
 This is REAL-TIME video, not static pictures - you can see movement, writing, and changes as they happen.
 
 What you might see:

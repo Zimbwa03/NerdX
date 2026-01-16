@@ -34,6 +34,7 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  image_url?: string; // User-sent images
 }
 
 const ProjectAssistantScreen: React.FC = () => {
@@ -56,7 +57,7 @@ const ProjectAssistantScreen: React.FC = () => {
   const [showToolbar, setShowToolbar] = useState(false);
   const [activeResearch, setActiveResearch] = useState<ResearchSession | null>(null);
   const [researchPolling, setResearchPolling] = useState(false);
-  const [activeMode, setActiveMode] = useState<'chat' | 'web_search' | 'deep_research' | 'scan_image' | 'voice_record'>('chat');
+  const [activeMode, setActiveMode] = useState<'chat'>('chat');
   const [showModeMenu, setShowModeMenu] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -133,9 +134,7 @@ const ProjectAssistantScreen: React.FC = () => {
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: activeMode === 'chat' ? query :
-        activeMode === 'web_search' ? `🌐 Search: ${query}` :
-          `🔬 Research: ${query}`,
+      content: query,
       timestamp: new Date(),
     };
 
@@ -146,40 +145,10 @@ const ProjectAssistantScreen: React.FC = () => {
     try {
       let response: any = null;
 
-      // Route to different API based on active mode
-      if (activeMode === 'web_search') {
-        // Use Web Search with Google grounding
-        const result = await projectApi.searchWeb(project.id, query);
-        if (result?.response) {
-          response = { response: `🌐 **Search Results**\n\n${result.response}` };
-        }
-      } else if (activeMode === 'deep_research') {
-        // Use Deep Research - show searching indicator
-        setMessages((prev) => [...prev, {
-          id: 'researching',
-          role: 'assistant',
-          content: '🔬 **Performing Deep Research...**\n\nThis may take a moment as I analyze multiple sources...',
-          timestamp: new Date(),
-        }]);
-
-        const session = await projectApi.startResearch(project.id, query);
-
-        if (session?.interaction_id) {
-          setActiveResearch(session);
-          setResearchPolling(true);
-          pollResearchStatus(session.interaction_id);
-          // Don't add response here - it will be added when polling completes
-          setSending(false);
-          return;
-        } else {
-          setMessages((prev) => prev.filter((msg) => msg.id !== 'researching'));
-        }
-      } else {
-        // Regular chat with AI
-        const chatResponse = await projectApi.sendMessage(project.id, query);
-        if (chatResponse) {
-          response = chatResponse;
-        }
+      // Regular chat with AI
+      const chatResponse = await projectApi.sendMessage(project.id, query);
+      if (chatResponse) {
+        response = chatResponse;
       }
 
       if (response) {
@@ -691,96 +660,65 @@ const ProjectAssistantScreen: React.FC = () => {
       </ScrollView>
 
       <View style={[styles.inputContainer, { backgroundColor: themedColors.background.paper, borderTopColor: themedColors.border.light }]}>
-        {/* Mode Selection Popup - Matching TeacherMode */}
+        {/* Media Selection Popup */}
         {showModeMenu && (
           <View style={[styles.modeMenuPopup, { backgroundColor: isDarkMode ? '#2A2A3E' : '#FFFFFF' }]}>
             <TouchableOpacity
-              style={[styles.modeMenuItem, activeMode === 'chat' && styles.modeMenuItemActive]}
-              onPress={() => { setActiveMode('chat'); setShowModeMenu(false); }}
+              style={styles.modeMenuItem}
+              onPress={() => { setShowModeMenu(false); handleDocumentUpload(); }}
             >
-              <Ionicons name="chatbubble-outline" size={20} color={activeMode === 'chat' ? themedColors.primary.main : themedColors.text.secondary} />
-              <Text style={[styles.modeMenuText, activeMode === 'chat' && { color: themedColors.primary.main, fontWeight: '600' }]}>Chat</Text>
-              <Text style={styles.modeMenuDesc}>Standard AI Assistant</Text>
+              <Ionicons name="document-attach-outline" size={20} color="#2196F3" />
+              <Text style={[styles.modeMenuText, { color: '#2196F3' }]}>Upload Document</Text>
+              <Text style={styles.modeMenuDesc}>Analyze PDFs and study materials</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.modeMenuItem, activeMode === 'web_search' && styles.modeMenuItemActive]}
-              onPress={() => { setActiveMode('web_search'); setShowModeMenu(false); }}
-            >
-              <Ionicons name="globe-outline" size={20} color={activeMode === 'web_search' ? themedColors.success.main : themedColors.text.secondary} />
-              <Text style={[styles.modeMenuText, activeMode === 'web_search' && { color: themedColors.success.main, fontWeight: '600' }]}>Web Search</Text>
-              <Text style={styles.modeMenuDesc}>Search Google for Facts</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.modeMenuItem, activeMode === 'deep_research' && styles.modeMenuItemActive]}
-              onPress={() => { setActiveMode('deep_research'); setShowModeMenu(false); }}
-            >
-              <Ionicons name="flask-outline" size={20} color={activeMode === 'deep_research' ? '#FF9800' : themedColors.text.secondary} />
-              <Text style={[styles.modeMenuText, activeMode === 'deep_research' && { color: '#FF9800', fontWeight: '600' }]}>Deep Research</Text>
-              <Text style={styles.modeMenuDesc}>Comprehensive Analysis</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.modeMenuItem, activeMode === 'scan_image' && styles.modeMenuItemActive]}
+              style={styles.modeMenuItem}
               onPress={() => { setShowModeMenu(false); handleImageScan(); }}
             >
-              <Ionicons name="camera-outline" size={20} color={activeMode === 'scan_image' ? '#E91E63' : themedColors.text.secondary} />
-              <Text style={[styles.modeMenuText, activeMode === 'scan_image' && { color: '#E91E63', fontWeight: '600' }]}>Scan Image</Text>
+              <Ionicons name="image-outline" size={20} color={themedColors.primary.main} />
+              <Text style={[styles.modeMenuText, { color: themedColors.primary.main }]}>Scan Image</Text>
               <Text style={styles.modeMenuDesc}>AI Vision Analysis</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.modeMenuItem, activeMode === 'voice_record' && styles.modeMenuItemActive]}
-              onPress={() => { setShowModeMenu(false); handleVoiceRecord(); }}
-            >
-              <Ionicons name="mic-outline" size={20} color={activeMode === 'voice_record' ? '#9C27B0' : themedColors.text.secondary} />
-              <Text style={[styles.modeMenuText, activeMode === 'voice_record' && { color: '#9C27B0', fontWeight: '600' }]}>Voice Record</Text>
-              <Text style={styles.modeMenuDesc}>Speech to Text</Text>
             </TouchableOpacity>
           </View>
         )}
 
         <View style={[styles.inputWrapper, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F7FA' }]}>
-          {/* Mode Switcher Button */}
+          {/* Add Media Button (+ icon) */}
           <TouchableOpacity
             style={styles.modeButton}
             onPress={() => setShowModeMenu(!showModeMenu)}
           >
-            <Ionicons
-              name={
-                activeMode === 'web_search' ? 'globe' :
-                  activeMode === 'deep_research' ? 'flask' :
-                    activeMode === 'scan_image' ? 'camera' :
-                      activeMode === 'voice_record' ? 'mic' :
-                        'chatbubble-ellipses'
-              }
-              size={20}
-              color={
-                activeMode === 'web_search' ? themedColors.success.main :
-                  activeMode === 'deep_research' ? '#FF9800' :
-                    activeMode === 'scan_image' ? '#E91E63' :
-                      activeMode === 'voice_record' ? '#9C27B0' :
-                        themedColors.primary.main
-              }
-            />
+            <Ionicons name="add" size={24} color={themedColors.primary.main} />
           </TouchableOpacity>
 
           <TextInput
             style={[styles.textInput, { color: themedColors.text.primary }]}
             value={inputText}
             onChangeText={setInputText}
-            placeholder={
-              activeMode === 'web_search' ? "Search the web..." :
-                activeMode === 'deep_research' ? "Enter research topic..." :
-                  activeMode === 'scan_image' ? "Describe what to analyze..." :
-                    "Ask for help with your project..."
-            }
+            placeholder="Ask for help with your project..."
             placeholderTextColor={themedColors.text.secondary}
             multiline
             maxLength={1000}
-            editable={!sending && !researchPolling}
+            editable={!sending && !researchPolling && !isRecording}
           />
+
+          {/* Inline Mic Button */}
+          <TouchableOpacity
+            style={[
+              styles.micButton,
+              isRecording && { backgroundColor: themedColors.error?.light || '#FFCDD2' }
+            ]}
+            onPress={() => handleVoiceRecord()}
+            disabled={sending}
+          >
+            <Ionicons
+              name={isRecording ? "stop" : "mic-outline"}
+              size={20}
+              color={isRecording ? themedColors.error.main : themedColors.text.secondary}
+            />
+          </TouchableOpacity>
+
           <TouchableOpacity
             style={[styles.sendButton, (!inputText.trim() || sending) && styles.sendButtonDisabled]}
             onPress={handleSend}
@@ -790,12 +728,12 @@ const ProjectAssistantScreen: React.FC = () => {
               colors={(!inputText.trim() || sending) ? ['#E0E0E0', '#BDBDBD'] : themedColors.gradients.primary}
               style={styles.sendButtonGradient}
             >
-              <Ionicons name={researchPolling ? "hourglass-outline" : "send"} size={20} color="#FFF" />
+              <Ionicons name="send" size={20} color="#FFF" />
             </LinearGradient>
           </TouchableOpacity>
         </View>
         <Text style={[styles.creditsText, { color: themedColors.text.secondary }]}>
-          Credits: {user?.credits || 0} {researchPolling && '• 🔬 Research in progress...'}
+          Credits: {user?.credits || 0}
         </Text>
       </View>
     </KeyboardAvoidingView>
@@ -1050,6 +988,14 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#999',
     marginLeft: 8,
+  },
+  micButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 4,
   },
   toolbarContent: {
     flexDirection: 'row',

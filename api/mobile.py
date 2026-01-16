@@ -13,6 +13,7 @@ from flask import Blueprint, request, jsonify, g
 from werkzeug.utils import secure_filename
 import uuid
 import os
+import base64
 from database.external_db import (
     get_user_registration, create_user_registration, is_user_registered,
     get_user_stats, get_user_credits, add_credits, deduct_credits,
@@ -1235,7 +1236,7 @@ def generate_question_stream():
             }), 400
         
         # Check credits
-        credit_cost = 1  # Same as regular question
+        credit_cost = advanced_credit_service.get_credit_cost('math_quiz', difficulty) or 1
         user_credits = get_user_credits(g.current_user_id) or 0
         
         if user_credits < credit_cost:
@@ -1941,13 +1942,18 @@ def get_credit_packages():
 @mobile_bp.route('/credits/purchase', methods=['POST'])
 @require_auth
 def initiate_credit_purchase():
-    """Initiate credit purchase"""
+    """Initiate credit purchase - supports EcoCash and Visa/Mastercard via Paynow"""
     try:
         data = request.get_json()
         package_id = data.get('package_id')
+        payment_method = data.get('payment_method', 'ecocash')  # Default to ecocash for backward compatibility
         
         if not package_id:
             return jsonify({'success': False, 'message': 'Package ID is required'}), 400
+        
+        # Validate payment method
+        if payment_method not in ['ecocash', 'visa_mastercard']:
+            return jsonify({'success': False, 'message': 'Invalid payment method. Use "ecocash" or "visa_mastercard"'}), 400
         
         # Get package details
         # Get available packages from PaymentService
@@ -1968,14 +1974,24 @@ def initiate_credit_purchase():
         if not user_data:
             return jsonify({'success': False, 'message': 'User not found'}), 404
         
-        phone_number = data.get('phone_number', user_data.get('phone_number', ''))
         email = data.get('email', user_data.get('email', ''))
         
-        if not phone_number or not email:
-            return jsonify({
-                'success': False,
-                'message': 'Phone number and email are required for Paynow payment'
-            }), 400
+        # Validate required fields based on payment method
+        if payment_method == 'ecocash':
+            phone_number = data.get('phone_number', user_data.get('phone_number', ''))
+            if not phone_number or not email:
+                return jsonify({
+                    'success': False,
+                    'message': 'Phone number and email are required for EcoCash payment'
+                }), 400
+        else:
+            # Visa/Mastercard only needs email
+            if not email:
+                return jsonify({
+                    'success': False,
+                    'message': 'Email is required for card payment'
+                }), 400
+            phone_number = data.get('phone_number', '')  # Optional for card payments
         
         # Initiate payment via Paynow
         paynow_service = PaynowService()
@@ -1989,7 +2005,7 @@ def initiate_credit_purchase():
             'package_id': package_id,
             'amount': package['price'],
             'credits': package['credits'],
-            'payment_method': 'paynow',
+            'payment_method': 'paynow_' + payment_method,  # paynow_ecocash or paynow_visa_mastercard
             'status': 'pending',
             'phone_number': phone_number,
             'email': email,
@@ -2001,14 +2017,24 @@ def initiate_credit_purchase():
         except Exception as e:
             logger.warning(f"Failed to store payment transaction: {e}")
         
-        # Create Paynow payment
-        payment_result = paynow_service.create_usd_ecocash_payment(
-            amount=package['price'],
-            phone_number=phone_number,
-            email=email,
-            reference=reference,
-            description=f"NerdX {package_id} - {package['credits']} credits"
-        )
+        # Create payment based on selected method
+        if payment_method == 'ecocash':
+            # Use existing EcoCash mobile payment
+            payment_result = paynow_service.create_usd_ecocash_payment(
+                amount=package['price'],
+                phone_number=phone_number,
+                email=email,
+                reference=reference,
+                description=f"NerdX {package_id} - {package['credits']} credits"
+            )
+        else:
+            # Use Visa/Mastercard web checkout
+            payment_result = paynow_service.create_visa_mastercard_payment(
+                amount=package['price'],
+                email=email,
+                reference=reference,
+                description=f"NerdX {package_id} - {package['credits']} credits"
+            )
         
         if not payment_result.get('success'):
             return jsonify({
@@ -2028,15 +2054,23 @@ def initiate_credit_purchase():
         except Exception as e:
             logger.warning(f"Failed to update payment transaction: {e}")
         
+        # Build response based on payment method
+        response_data = {
+            'reference': reference,
+            'poll_url': payment_result.get('poll_url', ''),
+            'instructions': payment_result.get('instructions', ''),
+            'amount': package['price'],
+            'credits': package['credits'],
+            'payment_method': payment_method
+        }
+        
+        # Include redirect_url for card payments
+        if payment_method == 'visa_mastercard':
+            response_data['redirect_url'] = payment_result.get('redirect_url', '')
+        
         return jsonify({
             'success': True,
-            'data': {
-                'reference': reference,
-                'poll_url': payment_result.get('poll_url', ''),
-                'instructions': payment_result.get('instructions', 'Check your phone for USSD prompt'),
-                'amount': package['price'],
-                'credits': package['credits']
-            }
+            'data': response_data
         }), 200
         
     except Exception as e:
@@ -2844,6 +2878,17 @@ def send_teacher_message():
         # Deduct credits
         deduct_credits(g.current_user_id, credit_cost, 'teacher_mode_followup', 'Teacher Mode conversation')
         
+        # Check for media triggers (Graph & Video) - Only for Math for now
+        media_urls = {'graph_url': None, 'video_url': None}
+        if is_mathematics and '[PLOT:' in response_text:
+            try:
+                media_urls = teacher_service._handle_media_triggers(response_text)
+                # Remove the trigger tag from the text shown to user
+                import re
+                response_text = re.sub(r'\[PLOT:.*?\]', '', response_text).strip()
+            except Exception as e:
+                logger.error(f"Error checking media triggers: {e}")
+        
         # Clean formatting (both services should have this method)
         if hasattr(teacher_service, '_clean_whatsapp_formatting'):
             clean_response = teacher_service._clean_whatsapp_formatting(response_text)
@@ -2854,7 +2899,9 @@ def send_teacher_message():
             'success': True,
             'data': {
                 'response': clean_response,
-                'session_id': session_id
+                'session_id': session_id,
+                'graph_url': media_urls.get('graph_url'),
+                'video_url': media_urls.get('video_url')
             }
         }), 200
         
@@ -4847,7 +4894,7 @@ def animate_quadratic():
         result = service.render_quadratic(a, b, c, quality)
         
         if result['success']:
-            video_path = f"/static/{result['video_path'].replace(os.sep, '/')}"
+            video_path = f"/{result['video_path'].replace(os.sep, '/')}"
             return jsonify({
                 'success': True,
                 'data': {
@@ -4880,7 +4927,7 @@ def animate_linear():
         result = service.render_linear(m, c, quality)
         
         if result['success']:
-            video_path = f"/static/{result['video_path'].replace(os.sep, '/')}"
+            video_path = f"/{result['video_path'].replace(os.sep, '/')}"
             return jsonify({
                 'success': True,
                 'data': {
@@ -5274,3 +5321,180 @@ def get_math_topics():
             'topics': list(MATHEMATICS_TOPICS.keys()) if isinstance(MATHEMATICS_TOPICS, dict) else MATHEMATICS_TOPICS
         }
     }), 200
+
+
+# ============================================================================
+# Image OCR / Analysis Endpoints (Vertex AI Gemini Vision)
+# ============================================================================
+
+@mobile_bp.route('/math/scan-gemini', methods=['POST'])
+def scan_math_gemini():
+    """
+    Scan an image and extract math equations/text using Gemini Vision.
+    Used by Teacher Mode's "Scan Image" feature.
+    """
+    try:
+        data = request.get_json()
+        image_base64 = data.get('image_base64')
+        prompt = data.get('prompt')
+        
+        if not image_base64:
+            return jsonify({'success': False, 'message': 'image_base64 is required'}), 400
+        
+        # Use VertexService for image analysis
+        result = vertex_service.analyze_image(
+            image_base64=image_base64,
+            mime_type=data.get('mime_type', 'image/png'),
+            prompt=prompt
+        )
+        
+        if result and result.get('success'):
+            return jsonify({
+                'success': True,
+                'data': {
+                    'detected_text': result.get('text', ''),
+                    'latex': result.get('latex', ''),
+                    'confidence': result.get('confidence', 0.9),
+                    'content_type': result.get('content_type', 'text')
+                }
+            }), 200
+        else:
+            error_msg = result.get('error', 'Image analysis failed') if result else 'Image analysis failed'
+            logger.error(f"Gemini scan failed: {error_msg}")
+            return jsonify({'success': False, 'message': error_msg}), 500
+            
+    except Exception as e:
+        logger.error(f"Math scan Gemini error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+# ============================================================================
+# Voice / Audio Transcription Endpoints (Vertex AI Gemini)
+# ============================================================================
+
+@mobile_bp.route('/voice/transcribe', methods=['POST'])
+def transcribe_voice():
+    """
+    Transcribe audio to text using Gemini multimodal.
+    Used by Teacher Mode's "Audio Record" feature.
+    """
+    try:
+        # Check if it's a file upload or JSON with base64
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            # Handle file upload
+            if 'audio' not in request.files:
+                return jsonify({'success': False, 'message': 'No audio file provided'}), 400
+            
+            audio_file = request.files['audio']
+            audio_data = audio_file.read()
+            audio_base64 = base64.b64encode(audio_data).decode('utf-8')
+            
+            # Determine MIME type from filename
+            filename = audio_file.filename or 'audio.m4a'
+            if filename.endswith('.m4a'):
+                mime_type = 'audio/mp4'
+            elif filename.endswith('.wav'):
+                mime_type = 'audio/wav'
+            elif filename.endswith('.mp3'):
+                mime_type = 'audio/mp3'
+            elif filename.endswith('.webm'):
+                mime_type = 'audio/webm'
+            else:
+                mime_type = 'audio/mp4'  # Default
+        else:
+            # Handle JSON with base64
+            data = request.get_json()
+            audio_base64 = data.get('audio_base64')
+            mime_type = data.get('mime_type', 'audio/mp4')
+            
+            if not audio_base64:
+                return jsonify({'success': False, 'message': 'audio_base64 is required'}), 400
+        
+        # Use VertexService for audio transcription
+        result = vertex_service.transcribe_audio(
+            audio_base64=audio_base64,
+            mime_type=mime_type
+        )
+        
+        if result and result.get('success'):
+            return jsonify({
+                'success': True,
+                'text': result.get('text', ''),
+                'language': result.get('language', 'en')
+            }), 200
+        else:
+            error_msg = result.get('error', 'Transcription failed') if result else 'Transcription failed'
+            logger.error(f"Voice transcribe failed: {error_msg}")
+            return jsonify({'success': False, 'message': error_msg}), 500
+            
+    except Exception as e:
+        logger.error(f"Voice transcribe error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+# ============================================================================
+# Document Analysis Endpoints (Vertex AI Gemini)
+# ============================================================================
+
+@mobile_bp.route('/document/analyze', methods=['POST'])
+def analyze_document():
+    """
+    Analyze a document (PDF or text) using Gemini multimodal.
+    Supports: application/pdf, text/plain
+    Max file size: 50 MB
+    """
+    try:
+        # Check if it's a file upload or JSON with base64
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            # Handle file upload
+            if 'document' not in request.files:
+                return jsonify({'success': False, 'message': 'No document file provided'}), 400
+            
+            doc_file = request.files['document']
+            doc_data = doc_file.read()
+            doc_base64 = base64.b64encode(doc_data).decode('utf-8')
+            
+            # Determine MIME type from filename
+            filename = doc_file.filename or 'document.pdf'
+            if filename.endswith('.pdf'):
+                mime_type = 'application/pdf'
+            elif filename.endswith('.txt'):
+                mime_type = 'text/plain'
+            else:
+                mime_type = 'application/pdf'  # Default
+            
+            prompt = request.form.get('prompt')
+        else:
+            # Handle JSON with base64
+            data = request.get_json()
+            doc_base64 = data.get('document_base64')
+            mime_type = data.get('mime_type', 'application/pdf')
+            prompt = data.get('prompt')
+            
+            if not doc_base64:
+                return jsonify({'success': False, 'message': 'document_base64 is required'}), 400
+        
+        # Use VertexService for document analysis
+        result = vertex_service.analyze_document(
+            document_base64=doc_base64,
+            mime_type=mime_type,
+            prompt=prompt
+        )
+        
+        if result and result.get('success'):
+            return jsonify({
+                'success': True,
+                'data': {
+                    'analysis': result.get('analysis', ''),
+                    'summary': result.get('summary', ''),
+                    'mime_type': result.get('mime_type', mime_type)
+                }
+            }), 200
+        else:
+            error_msg = result.get('error', 'Document analysis failed') if result else 'Document analysis failed'
+            logger.error(f"Document analyze failed: {error_msg}")
+            return jsonify({'success': False, 'message': error_msg}), 500
+            
+    except Exception as e:
+        logger.error(f"Document analyze error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500

@@ -79,17 +79,23 @@ class AdvancedCreditService:
             current_credits = get_user_credits(user_id)
             required_credits = self.get_credit_cost(action, difficulty)
             
+            # Logic: verify locally first to save an RPC call if obviously insufficient
             if current_credits >= required_credits:
                 # Deduct credits with proper transaction details
                 transaction_type = f"{action}_usage"
                 description = f"Used {action} feature"
+                
+                # Use updated external_db.deduct_credits (atomic RPC preferred)
                 if deduct_credits(user_id, required_credits, transaction_type, description):
+                    # We fetch the new balance again or trust the change?
+                    # Ideally deduct_credits returns the new balance but currently returns bool
+                    # For UI responsiveness, we calculate locally. Sync happens via DB next fetch.
                     new_balance = current_credits - required_credits
                     return {
                         'success': True,
                         'deducted': required_credits,
                         'new_balance': new_balance,
-                    'message': f"Credits deducted: {required_credits}. New balance: {new_balance}"
+                        'message': f"Credits deducted: {required_credits}. New balance: {new_balance}"
                     }
                 else:
                     return {

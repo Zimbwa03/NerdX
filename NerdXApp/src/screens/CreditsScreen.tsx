@@ -1,5 +1,5 @@
 // Credits Screen Component - Advanced UI ✨
-// Features: Transaction history, Analytics, Premium packages
+// Features: Transaction history, Analytics, Premium packages, Multi-payment methods
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
@@ -14,10 +14,11 @@ import {
   StatusBar,
   RefreshControl,
   ImageBackground,
+  Linking,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
-import { creditsApi, CreditPackage, PaymentStatus, CreditTransaction } from '../services/api/creditsApi';
+import { creditsApi, CreditPackage, PaymentStatus, CreditTransaction, PaymentMethod } from '../services/api/creditsApi';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useNotification } from '../context/NotificationContext';
@@ -52,6 +53,11 @@ const CreditsScreen: React.FC = () => {
   // ✨ New state for advanced features
   const [transactions, setTransactions] = useState<CreditTransaction[]>([]);
   const [transactionsLoading, setTransactionsLoading] = useState(false);
+
+  // 💳 Payment method selection
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('ecocash');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successCredits, setSuccessCredits] = useState(0);
   const [activeTab, setActiveTab] = useState<'all' | 'purchase' | 'usage'>('all');
   const [refreshing, setRefreshing] = useState(false);
 
@@ -139,17 +145,15 @@ const CreditsScreen: React.FC = () => {
             setCheckingPayment(false);
             setShowPaymentModal(false);
             setPaymentReference(null);
+
+            // Show celebration modal!
+            setSuccessCredits(status.credits);
+            setShowSuccessModal(true);
             showSuccess(`🎉 Payment successful! ${status.credits} credits added to your account!`, 5000);
 
             // Refresh data to show new balance and transaction
             await loadData();
             await refreshCredits();
-
-            Alert.alert(
-              'Payment Successful!',
-              `Your payment has been confirmed. ${status.credits} credits have been added to your account.`,
-              [{ text: 'Great!' }]
-            );
           } else if (status.status === 'failed' || status.status === 'cancelled') {
             // Payment failed
             if (paymentCheckInterval.current) {
@@ -176,9 +180,17 @@ const CreditsScreen: React.FC = () => {
   const handleConfirmPurchase = async () => {
     if (!selectedPackage) return;
 
-    if (!phoneNumber.trim() || !email.trim()) {
-      Alert.alert('Error', 'Please enter both phone number and email');
-      return;
+    // Validate based on payment method
+    if (paymentMethod === 'ecocash') {
+      if (!phoneNumber.trim() || !email.trim()) {
+        Alert.alert('Error', 'Please enter both phone number and email for EcoCash payment');
+        return;
+      }
+    } else {
+      if (!email.trim()) {
+        Alert.alert('Error', 'Please enter your email address for card payment');
+        return;
+      }
     }
 
     try {
@@ -187,7 +199,8 @@ const CreditsScreen: React.FC = () => {
       try {
         const result = await creditsApi.purchaseCredits(
           selectedPackage.id,
-          phoneNumber.trim(),
+          paymentMethod,
+          paymentMethod === 'ecocash' ? phoneNumber.trim() : undefined,
           email.trim()
         );
 
@@ -222,12 +235,30 @@ const CreditsScreen: React.FC = () => {
     setPaymentReference(result.reference);
     setCheckingPayment(true);
 
-    // Show instruction alert
-    Alert.alert(
-      'Payment Initiated',
-      `${result.instructions}\n\nPayment Reference: ${result.reference}\n\nPlease check your phone for the USSD prompt and enter your EcoCash PIN.`,
-      [{ text: 'I understand' }]
-    );
+    // Handle based on payment method
+    if (result.payment_method === 'visa_mastercard' && result.redirect_url) {
+      // Open Paynow payment page in browser for card payment
+      Alert.alert(
+        'Complete Card Payment',
+        `You will be redirected to Paynow's secure payment page to enter your card details.\n\nPayment Reference: ${result.reference}`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Open Payment Page',
+            onPress: () => {
+              Linking.openURL(result.redirect_url);
+            }
+          }
+        ]
+      );
+    } else {
+      // EcoCash USSD prompt
+      Alert.alert(
+        'Payment Initiated',
+        `${result.instructions}\n\nPayment Reference: ${result.reference}\n\nPlease check your phone for the USSD prompt and enter your EcoCash PIN.`,
+        [{ text: 'I understand' }]
+      );
+    }
 
     // Start polling for payment status
     startPaymentPolling(result.reference);
@@ -508,7 +539,7 @@ const CreditsScreen: React.FC = () => {
               <View style={styles.ticketBody}>
                 <Text style={styles.modalTitle}>Confirm Purchase</Text>
                 {selectedPackage && (
-                  <View style={styles.packageInfo}>
+                  <View style={styles.ticketPackageInfo}>
                     <View style={styles.ticketRow}>
                       <Text style={styles.ticketLabel}>PACKAGE</Text>
                       <Text style={styles.ticketValue}>{selectedPackage.name}</Text>
@@ -538,7 +569,9 @@ const CreditsScreen: React.FC = () => {
                       </Text>
                     )}
                     <Text style={styles.instructionText}>
-                      Please check your phone and enter your EcoCash PIN.
+                      {paymentMethod === 'ecocash'
+                        ? 'Please check your phone and enter your EcoCash PIN.'
+                        : 'Complete your payment on the Paynow payment page.'}
                     </Text>
                     <TouchableOpacity
                       style={styles.cancelButton}
@@ -557,16 +590,52 @@ const CreditsScreen: React.FC = () => {
                   </View>
                 ) : (
                   <>
-                    <Text style={styles.inputLabel}>ECOCASH NUMBER</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={phoneNumber}
-                      onChangeText={setPhoneNumber}
-                      placeholder="077..."
-                      placeholderTextColor={Colors.text.disabled}
-                      keyboardType="phone-pad"
-                      maxLength={10}
-                    />
+                    {/* 💳 Payment Method Selector */}
+                    <Text style={styles.inputLabel}>PAYMENT METHOD</Text>
+                    <View style={styles.paymentMethodSelector}>
+                      <TouchableOpacity
+                        style={[
+                          styles.paymentMethodOption,
+                          paymentMethod === 'ecocash' && styles.paymentMethodSelected,
+                        ]}
+                        onPress={() => setPaymentMethod('ecocash')}
+                      >
+                        <Text style={styles.paymentMethodIcon}>📱</Text>
+                        <Text style={[
+                          styles.paymentMethodText,
+                          paymentMethod === 'ecocash' && styles.paymentMethodTextSelected,
+                        ]}>EcoCash</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[
+                          styles.paymentMethodOption,
+                          paymentMethod === 'visa_mastercard' && styles.paymentMethodSelected,
+                        ]}
+                        onPress={() => setPaymentMethod('visa_mastercard')}
+                      >
+                        <Text style={styles.paymentMethodIcon}>💳</Text>
+                        <Text style={[
+                          styles.paymentMethodText,
+                          paymentMethod === 'visa_mastercard' && styles.paymentMethodTextSelected,
+                        ]}>Visa/Mastercard</Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    {/* Show phone number field only for EcoCash */}
+                    {paymentMethod === 'ecocash' && (
+                      <>
+                        <Text style={styles.inputLabel}>ECOCASH NUMBER</Text>
+                        <TextInput
+                          style={styles.input}
+                          value={phoneNumber}
+                          onChangeText={setPhoneNumber}
+                          placeholder="077..."
+                          placeholderTextColor={Colors.text.disabled}
+                          keyboardType="phone-pad"
+                          maxLength={10}
+                        />
+                      </>
+                    )}
 
                     <Text style={styles.inputLabel}>EMAIL ADDRESS</Text>
                     <TextInput
@@ -590,28 +659,86 @@ const CreditsScreen: React.FC = () => {
                       <TouchableOpacity
                         style={[
                           styles.confirmButton,
-                          (!phoneNumber.trim() || !email.trim() || purchasing) &&
+                          ((paymentMethod === 'ecocash' && !phoneNumber.trim()) || !email.trim() || purchasing) &&
                           styles.confirmButtonDisabled,
                         ]}
                         onPress={handleConfirmPurchase}
-                        disabled={!phoneNumber.trim() || !email.trim() || !!purchasing}
+                        disabled={(paymentMethod === 'ecocash' && !phoneNumber.trim()) || !email.trim() || !!purchasing}
                       >
                         <LinearGradient
-                          colors={Colors.premium.goldDark ? [Colors.premium.gold, Colors.premium.goldDark] : ['#FFD700', '#FFA500']}
+                          colors={paymentMethod === 'visa_mastercard'
+                            ? ['#1A237E', '#3949AB']
+                            : (Colors.premium.goldDark ? [Colors.premium.gold, Colors.premium.goldDark] : ['#FFD700', '#FFA500'])}
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 0 }}
                           style={styles.confirmGradient}
                         >
                           {purchasing ? (
-                            <ActivityIndicator color={Colors.premium.text} />
+                            <ActivityIndicator color={paymentMethod === 'visa_mastercard' ? '#FFFFFF' : Colors.premium.text} />
                           ) : (
-                            <Text style={styles.confirmButtonText}>PAY VIA ECOCASH</Text>
+                            <Text style={[
+                              styles.confirmButtonText,
+                              paymentMethod === 'visa_mastercard' && { color: '#FFFFFF' }
+                            ]}>
+                              {paymentMethod === 'ecocash' ? 'PAY VIA ECOCASH' : 'PAY WITH CARD'}
+                            </Text>
                           )}
                         </LinearGradient>
                       </TouchableOpacity>
                     </View>
                   </>
                 )}
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* 🎉 Celebration Success Modal */}
+        <Modal
+          visible={showSuccessModal}
+          animationType="fade"
+          transparent={true}
+          onRequestClose={() => setShowSuccessModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalContent, styles.successModalContent]}>
+              <LinearGradient
+                colors={['#10B981', '#059669']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.successHeader}
+              >
+                <Text style={styles.successEmoji}>🎉</Text>
+                <Text style={styles.successTitle}>CONGRATULATIONS!</Text>
+                <Text style={styles.successSubtitle}>Payment Successful</Text>
+              </LinearGradient>
+
+              <View style={styles.successBody}>
+                <Text style={styles.successMessage}>
+                  You're amazing! Your credits have been added to your account.
+                </Text>
+                <View style={styles.successCreditsBox}>
+                  <Text style={styles.successCreditsLabel}>CREDITS ADDED</Text>
+                  <Text style={styles.successCreditsValue}>+{successCredits}</Text>
+                </View>
+                <Text style={styles.successMotivation}>
+                  🚀 Keep learning, keep growing! Your dedication to education is inspiring.
+                  Let's achieve greatness together!
+                </Text>
+
+                <TouchableOpacity
+                  style={styles.successButton}
+                  onPress={() => setShowSuccessModal(false)}
+                >
+                  <LinearGradient
+                    colors={['#10B981', '#059669']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.successButtonGradient}
+                  >
+                    <Text style={styles.successButtonText}>📚 START LEARNING</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
               </View>
             </View>
           </View>
@@ -819,7 +946,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
-  packageInfo: {
+  ticketPackageInfo: {
     backgroundColor: Colors.background.default,
     borderRadius: 12,
     padding: 16,
@@ -954,6 +1081,11 @@ const styles = StyleSheet.create({
     padding: 14,
     alignItems: 'center',
   },
+  cancelButtonText: {
+    color: Colors.text.secondary,
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
   // ✨ New advanced UI styles
   analyticsContainer: {
     padding: 20,
@@ -1042,6 +1174,117 @@ const styles = StyleSheet.create({
     color: '#4ADE80',
     fontSize: 12,
     marginTop: 4,
+  },
+  // 💳 Payment Method Selector Styles
+  paymentMethodSelector: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  paymentMethodOption: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+    backgroundColor: Colors.iconBg.default,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  paymentMethodSelected: {
+    borderColor: Colors.primary.main,
+    backgroundColor: Colors.primary.main + '20',
+  },
+  paymentMethodIcon: {
+    fontSize: 20,
+    marginRight: 8,
+  },
+  paymentMethodText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.text.secondary,
+  },
+  paymentMethodTextSelected: {
+    color: Colors.primary.main,
+  },
+  // 🎉 Success Modal Styles
+  successModalContent: {
+    maxWidth: 340,
+  },
+  successHeader: {
+    paddingVertical: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+  },
+  successEmoji: {
+    fontSize: 60,
+    marginBottom: 12,
+  },
+  successTitle: {
+    fontSize: 28,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: 2,
+  },
+  successSubtitle: {
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.9)',
+    marginTop: 4,
+  },
+  successBody: {
+    padding: 24,
+    alignItems: 'center',
+  },
+  successMessage: {
+    fontSize: 16,
+    color: Colors.text.secondary,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  successCreditsBox: {
+    backgroundColor: '#10B981' + '20',
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  successCreditsLabel: {
+    fontSize: 12,
+    color: '#10B981',
+    fontWeight: '600',
+    letterSpacing: 1,
+  },
+  successCreditsValue: {
+    fontSize: 36,
+    fontWeight: '900',
+    color: '#10B981',
+  },
+  successMotivation: {
+    fontSize: 14,
+    color: Colors.text.secondary,
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 22,
+  },
+  successButton: {
+    width: '100%',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  successButtonGradient: {
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  successButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    letterSpacing: 1,
   },
 });
 

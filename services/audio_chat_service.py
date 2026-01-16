@@ -739,9 +739,10 @@ Type 'end audio' to exit audio chat mode."""
                 return
 
             # Check and deduct credits using advanced credit service
+            # Note: Fetch cost dynamically
             credit_result = advanced_credit_service.check_and_deduct_credits(
                 user_id, 
-                'audio_feature',  # 10 credits as per config
+                'audio_feature',
                 None
             )
 

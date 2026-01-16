@@ -24,6 +24,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
 import { Colors } from '../theme/colors';
 import VoiceMathInput from '../components/VoiceMathInput';
+import ZoomableImageModal from '../components/ZoomableImageModal';
 
 type Mode = 'generate' | 'custom' | 'upload' | 'linear';
 
@@ -50,6 +51,10 @@ const GraphPracticeScreen: React.FC = () => {
   const [videoLoading, setVideoLoading] = useState(false);
   const [videoError, setVideoError] = useState<string | null>(null);
   const [savingVideo, setSavingVideo] = useState(false);
+
+  // Zoom Modal State
+  const [zoomVisible, setZoomVisible] = useState(false);
+  const [zoomImage, setZoomImage] = useState<string | null>(null);
 
   // Create video player when videoUrl changes
   const videoPlayer = useVideoPlayer(videoUrl || '', (player) => {
@@ -497,7 +502,14 @@ const GraphPracticeScreen: React.FC = () => {
       {graphData && (
         <View style={styles.graphSection}>
           {graphData.graph_url && (
-            <View style={[styles.imageContainer, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F5F5' }]}>
+            <TouchableOpacity
+              style={[styles.imageContainer, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F5F5' }]}
+              onPress={() => {
+                setZoomImage(graphData.graph_url);
+                setZoomVisible(true);
+              }}
+              activeOpacity={0.9}
+            >
               <Image
                 source={{ uri: graphData.graph_url }}
                 style={styles.graphImage}
@@ -506,7 +518,10 @@ const GraphPracticeScreen: React.FC = () => {
                   console.warn('Failed to load graph image:', error.nativeEvent.error);
                 }}
               />
-            </View>
+              <View style={styles.magnifyIconContainer}>
+                <Text style={{ fontSize: 20 }}>🔍</Text>
+              </View>
+            </TouchableOpacity>
           )}
 
           {(videoUrl || videoError || videoLoading) && (
@@ -707,6 +722,12 @@ const GraphPracticeScreen: React.FC = () => {
           </View>
         </View>
       )}
+      {/* Zoom Modal */}
+      <ZoomableImageModal
+        visible={zoomVisible}
+        imageUrl={zoomImage}
+        onClose={() => setZoomVisible(false)}
+      />
     </ScrollView>
   );
 };
@@ -869,10 +890,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     alignItems: 'center',
   },
-  graphImage: {
-    width: '100%',
-    height: 300,
-  },
+  // graphImage: { ... } - Duplicate removed/merged
   questionContainer: {
     backgroundColor: '#FFFFFF',
   },
@@ -1024,6 +1042,37 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  graphSection: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  imageContainer: {
+    width: '100%',
+    height: 300,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    marginBottom: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  magnifyIconContainer: {
+    position: 'absolute',
+    bottom: 10,
+    right: 10,
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    padding: 8,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+    elevation: 2,
+  },
+  graphImage: {
+    width: '100%',
+    height: '100%',
   },
 });
 

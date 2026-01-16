@@ -534,8 +534,56 @@ def deduct_credits(user_id: str, amount: int, transaction_type: str, description
     """
     Deduct credits from user account with transaction logging.
     Priority: Purchased Credits -> Free/Daily Credits
+    Uses 'deduct_credits_atomic' RPC if available for atomic operations.
     """
     try:
+        # 1. Try RPC atomic deduction first
+        rpc_payload = {
+            "p_user_id": user_id,
+            "p_amount": amount,
+            "p_transaction_type": transaction_type,
+            "p_description": description
+        }
+        
+        # Use RPC endpoint
+        # Start with service role for write access
+        api_key = SUPABASE_SERVICE_ROLE_KEY
+        headers = {
+            "apikey": api_key,
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        rpc_url = f"{SUPABASE_URL}/rest/v1/rpc/deduct_credits_atomic"
+        
+        try:
+            rpc_response = requests.post(rpc_url, headers=headers, json=rpc_payload, timeout=10)
+            
+            if rpc_response.status_code == 200:
+                result = rpc_response.json()
+                # Parse boolean result or json object
+                if isinstance(result, bool):
+                     if result:
+                         logger.info(f"✅ RPC Credit deduction successful for {user_id} (-{amount})")
+                         return True
+                     else:
+                         # RPC returned false (insufficient credits)
+                         return False
+                elif isinstance(result, dict):
+                    if result.get('success'):
+                        logger.info(f"✅ RPC Credit deduction successful for {user_id} (-{amount}). New bal: {result.get('new_balance')}")
+                        return True
+                    else:
+                        logger.warning(f"RPC deduction failed for {user_id}: {result.get('message')}")
+                        return False
+            else:
+                logger.warning(f"RPC call failed (Status {rpc_response.status_code}), falling back to legacy method: {rpc_response.text}")
+        except Exception as rpc_error:
+            logger.warning(f"RPC connection failed ({rpc_error}), falling back to legacy method")
+
+        # 2. Legacy Fallback (Subject to Race Conditions but keeps system running)
+        logger.info("Using legacy deduction method (non-atomic)")
+        
         # Get current credits from users_registration table
         result = make_supabase_request("GET", "users_registration", 
                                       select="credits,purchased_credits", 
@@ -641,7 +689,7 @@ def add_credits(user_id, amount, transaction_type="purchase", description="Credi
                 "user_id": user_id,
                 "action": transaction_type,  # Required field for credit_transactions table
                 "transaction_type": transaction_type,
-                "credits_change": -amount,  # Negative because it's an addition
+                "credits_change": amount,  # Positive because it's an addition
                 "balance_before": current_credits,
                 "balance_after": new_credits,
                 "description": description,

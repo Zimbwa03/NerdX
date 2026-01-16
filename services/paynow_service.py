@@ -152,6 +152,90 @@ class PaynowService:
                 'message': 'Payment system error. Please contact support.'
             }
     
+    def create_visa_mastercard_payment(self, 
+                                       amount: float,
+                                       email: str,
+                                       reference: str,
+                                       description: str = "NerdX Credit Purchase") -> Dict:
+        """
+        Create Visa/Mastercard payment via Paynow web checkout
+        
+        Uses send() method which returns a redirect URL to Paynow's hosted payment page
+        where users can enter their card details securely.
+        
+        Args:
+            amount: Payment amount in USD
+            email: Customer email address (required)
+            reference: Unique payment reference
+            description: Payment description
+            
+        Returns:
+            Dict with payment status and redirect URL for card entry
+        """
+        try:
+            if not self.is_available():
+                return {
+                    'success': False,
+                    'error': 'Paynow service not available',
+                    'message': 'Payment service temporarily unavailable'
+                }
+            
+            # Validate email
+            if not email or '@' not in email:
+                return {
+                    'success': False,
+                    'error': 'Invalid email',
+                    'message': 'Please provide a valid email address'
+                }
+            
+            # Create payment object
+            payment = self.paynow_client.create_payment(reference, email)
+            payment.add(description, amount)
+            
+            logger.info(f"💳 Creating Visa/Mastercard payment: {reference} - ${amount:.2f} for {email}")
+            
+            # Use send() for web checkout (not send_mobile)
+            # This returns a redirect URL to Paynow's hosted payment page
+            response = self.paynow_client.send(payment)
+            
+            # Debug response
+            logger.info(f"🔍 Paynow card payment response: success={response.success}")
+            
+            if response.success:
+                # Get redirect URL for card payment page
+                redirect_url = getattr(response, 'redirect_url', '')
+                poll_url = getattr(response, 'poll_url', '')
+                
+                logger.info(f"✅ Visa/Mastercard payment initiated: {redirect_url}")
+                
+                return {
+                    'success': True,
+                    'payment_method': 'visa_mastercard',
+                    'poll_url': str(poll_url),
+                    'redirect_url': str(redirect_url),
+                    'hash': str(getattr(response, 'hash', '')),
+                    'reference': str(reference),
+                    'amount': amount,
+                    'status': 'INITIATED',
+                    'instructions': f'Please complete your payment on the Paynow secure payment page. You will be redirected to enter your card details.'
+                }
+            else:
+                error_detail = str(getattr(response, 'error', 'Unknown error'))
+                logger.error(f"❌ Visa/Mastercard payment failed: {error_detail}")
+                return {
+                    'success': False,
+                    'error': error_detail,
+                    'message': f'Failed to initiate card payment: {error_detail}'
+                }
+                
+        except Exception as e:
+            logger.error(f"🚨 Visa/Mastercard payment creation error: {e}")
+            return {
+                'success': False,
+                'error': str(e),
+                'message': 'Payment system error. Please contact support.'
+            }
+    
     def check_payment_status(self, poll_url: str) -> Dict:
         """
         Check payment status using poll URL

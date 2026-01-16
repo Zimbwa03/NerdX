@@ -13,6 +13,7 @@ import {
   Platform,
   ScrollView,
   StatusBar,
+  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -35,12 +36,17 @@ import { Dimensions } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
+import { VideoStreamPlayer } from '../components/VideoStreamPlayer';
+import ZoomableImageModal from '../components/ZoomableImageModal';
+
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
   graph_url?: string;
+  video_url?: string;
+  image_url?: string; // User-sent images
 }
 
 const TeacherModeScreen: React.FC = () => {
@@ -65,8 +71,14 @@ const TeacherModeScreen: React.FC = () => {
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [sound, setSound] = useState<Audio.Sound | null>(null);
-  const [activeMode, setActiveMode] = useState<'chat' | 'web_search' | 'deep_research' | 'document'>('chat');
+  const [activeMode, setActiveMode] = useState<'chat'>('chat');
   const [showModeMenu, setShowModeMenu] = useState(false);
+  const [pendingImage, setPendingImage] = useState<{ uri: string, base64?: string } | null>(null);
+
+  // Zoom Modal State
+  const [zoomVisible, setZoomVisible] = useState(false);
+  const [zoomImage, setZoomImage] = useState<string | null>(null);
+
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
@@ -198,22 +210,47 @@ const TeacherModeScreen: React.FC = () => {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         quality: 0.8,
+        base64: true,
       });
 
       if (!result.canceled && result.assets[0].uri) {
+        const imageUri = result.assets[0].uri;
+        const imageBase64 = result.assets[0].base64;
+
+        // Add image as user message in chat
+        const userImageMessage: Message = {
+          id: Date.now().toString(),
+          role: 'user',
+          content: '📷 Sent an image for analysis',
+          timestamp: new Date(),
+          image_url: imageUri,
+        };
+        setMessages((prev) => [...prev, userImageMessage]);
+
         setSending(true);
         try {
-          // Scan the image
-          const scanResult = await mathApi.scanProblem(result.assets[0].uri);
-          if (scanResult.success) {
-            // Add the LaTeX/Text to input
-            const newText = inputText ? `${inputText}\n\n${scanResult.latex}` : scanResult.latex;
-            setInputText(newText);
-          } else {
-            Alert.alert('Scan Failed', 'Could not recognize equation.');
-          }
+          // Analyze with Gemini Vision
+          const scanResult = await mathApi.scanProblem(imageUri);
+
+          // Create AI response message
+          const aiMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            role: 'assistant',
+            content: scanResult.success
+              ? `📝 **I found the following in your image:**\n\n${scanResult.latex}\n\nFeel free to ask me to explain or solve this!`
+              : 'I couldn\'t clearly recognize the content in this image. Could you try taking a clearer photo?',
+            timestamp: new Date(),
+          };
+          setMessages((prev) => [...prev, aiMessage]);
+
         } catch (error) {
-          Alert.alert('Error', 'Failed to scan image.');
+          const errorMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            role: 'assistant',
+            content: '❌ Sorry, I had trouble analyzing this image. Please try again with a clearer photo.',
+            timestamp: new Date(),
+          };
+          setMessages((prev) => [...prev, errorMessage]);
         } finally {
           setSending(false);
         }
@@ -297,10 +334,7 @@ const TeacherModeScreen: React.FC = () => {
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: activeMode === 'chat' ? inputText.trim() :
-        activeMode === 'web_search' ? `🌐 Search: ${inputText.trim()}` :
-          activeMode === 'deep_research' ? `🔬 Research: ${inputText.trim()}` :
-            `📄 Document: ${inputText.trim()}`,
+      content: inputText.trim(),
       timestamp: new Date(),
     };
 
@@ -312,32 +346,8 @@ const TeacherModeScreen: React.FC = () => {
     try {
       let response: any;
 
-      // Route to different API based on active mode
-      if (activeMode === 'web_search') {
-        // Use Web Search with Google grounding
-        const result = await teacherApi.searchWeb(query);
-        if (result?.response) {
-          response = { response: `🌐 **Search Results**\n\n${result.response}` };
-        }
-      } else if (activeMode === 'deep_research') {
-        // Use Deep Research API endpoint
-        setMessages((prev) => [...prev, {
-          id: 'researching',
-          role: 'assistant',
-          content: '🔬 **Performing Deep Research...**\n\nThis may take a moment as I analyze multiple sources...',
-          timestamp: new Date(),
-        }]);
-
-        const result = await teacherApi.deepResearch(query);
-        setMessages((prev) => prev.filter((msg) => msg.id !== 'researching'));
-
-        if (result?.response) {
-          response = { response: `📊 **Research Complete**\n\n${result.response}` };
-        }
-      } else {
-        // Regular chat with Gemini
-        response = await teacherApi.sendMessage(session.session_id, query);
-      }
+      // Regular chat with Gemini
+      response = await teacherApi.sendMessage(session.session_id, query);
 
       if (response) {
         if (response.session_ended) {
@@ -353,6 +363,7 @@ const TeacherModeScreen: React.FC = () => {
           content: response.response,
           timestamp: new Date(),
           graph_url: response.graph_url,
+          video_url: response.video_url,
         };
 
         setMessages((prev) => [...prev, assistantMessage]);
@@ -642,6 +653,13 @@ const TeacherModeScreen: React.FC = () => {
                     end={{ x: 1, y: 1 }}
                     style={styles.userMessageGradient}
                   >
+                    {message.image_url && (
+                      <Image
+                        source={{ uri: message.image_url }}
+                        style={{ width: '100%', height: 150, borderRadius: 12, marginBottom: 8 }}
+                        resizeMode="cover"
+                      />
+                    )}
                     <Text style={styles.userMessageText}>{message.content}</Text>
                   </LinearGradient>
                 ) : (
@@ -651,12 +669,29 @@ const TeacherModeScreen: React.FC = () => {
                     </Markdown>
                     {message.graph_url && (
                       <View style={styles.graphContainer}>
-                        <Image
-                          source={{ uri: `http://localhost:5000${message.graph_url}` }}
-                          style={styles.graphImage}
-                          resizeMode="contain"
-                        />
+                        <TouchableOpacity
+                          activeOpacity={0.9}
+                          onPress={() => {
+                            setZoomImage(`http://localhost:5000${message.graph_url}`);
+                            setZoomVisible(true);
+                          }}
+                        >
+                          <Image
+                            source={{ uri: `http://localhost:5000${message.graph_url}` }}
+                            style={styles.graphImage}
+                            resizeMode="contain"
+                          />
+                        </TouchableOpacity>
                         <Text style={styles.graphCaption}>Mathematical Graph</Text>
+                      </View>
+                    )}
+                    {message.video_url && (
+                      <View style={{ marginTop: 12, height: 220, width: '100%', borderRadius: 12, overflow: 'hidden' }}>
+                        <VideoStreamPlayer
+                          videoUrl={`http://localhost:5000${message.video_url}`}
+                          topicTitle="Explanation"
+                          accentColor={themedColors.primary.main}
+                        />
                       </View>
                     )}
                   </View>
@@ -703,118 +738,78 @@ const TeacherModeScreen: React.FC = () => {
         </ScrollView>
 
 
-        {/* Mode Selection Popup */}
+        {/* Media Selection Popup */}
         {showModeMenu && (
           <View style={[styles.modeMenuPopup, { backgroundColor: isDarkMode ? '#2A2A3E' : '#FFFFFF' }]}>
             <TouchableOpacity
-              style={[styles.modeMenuItem, activeMode === 'chat' && styles.modeMenuItemActive]}
-              onPress={() => { setActiveMode('chat'); setShowModeMenu(false); }}
-            >
-              <Ionicons name="chatbubble-outline" size={20} color={activeMode === 'chat' ? themedColors.primary.main : themedColors.text.secondary} />
-              <Text style={[styles.modeMenuText, activeMode === 'chat' && { color: themedColors.primary.main, fontWeight: '600' }]}>Chat</Text>
-              <Text style={styles.modeMenuDesc}>Ask questions normally</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.modeMenuItem, activeMode === 'web_search' && styles.modeMenuItemActive]}
-              onPress={() => { setActiveMode('web_search'); setShowModeMenu(false); }}
-            >
-              <Ionicons name="globe-outline" size={20} color={activeMode === 'web_search' ? themedColors.success.main : themedColors.text.secondary} />
-              <Text style={[styles.modeMenuText, activeMode === 'web_search' && { color: themedColors.success.main, fontWeight: '600' }]}>Web Search</Text>
-              <Text style={styles.modeMenuDesc}>Search with Google grounding</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.modeMenuItem, activeMode === 'deep_research' && styles.modeMenuItemActive]}
-              onPress={() => { setActiveMode('deep_research'); setShowModeMenu(false); }}
-            >
-              <Ionicons name="flask-outline" size={20} color={activeMode === 'deep_research' ? '#FF9800' : themedColors.text.secondary} />
-              <Text style={[styles.modeMenuText, activeMode === 'deep_research' && { color: '#FF9800', fontWeight: '600' }]}>Deep Research</Text>
-              <Text style={styles.modeMenuDesc}>Comprehensive AI research</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.modeMenuItem, activeMode === 'document' && styles.modeMenuItemActive]}
+              style={styles.modeMenuItem}
               onPress={() => { handleDocumentUpload(); setShowModeMenu(false); }}
             >
               <Ionicons name="document-attach-outline" size={20} color="#2196F3" />
-              <Text style={[styles.modeMenuText, { color: '#2196F3' }]}>Upload PDF</Text>
-              <Text style={styles.modeMenuDesc}>Analyze study materials</Text>
+              <Text style={[styles.modeMenuText, { color: '#2196F3' }]}>Upload Document</Text>
+              <Text style={styles.modeMenuDesc}>Analyze PDFs and study materials</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.modeMenuItem}
               onPress={() => { handleImagePick(); setShowModeMenu(false); }}
             >
-              <Ionicons name="camera-outline" size={20} color={themedColors.text.secondary} />
-              <Text style={styles.modeMenuText}>Scan Image</Text>
+              <Ionicons name="image-outline" size={20} color={themedColors.primary.main} />
+              <Text style={[styles.modeMenuText, { color: themedColors.primary.main }]}>Scan Image</Text>
               <Text style={styles.modeMenuDesc}>Take a photo of a problem</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.modeMenuItem}
-              onPress={() => { isRecording ? stopRecording() : startRecording(); setShowModeMenu(false); }}
-            >
-              <Ionicons name="mic-outline" size={20} color={isRecording ? themedColors.error.main : themedColors.text.secondary} />
-              <Text style={[styles.modeMenuText, isRecording && { color: themedColors.error.main }]}>
-                {isRecording ? 'Stop Recording' : 'Voice Input'}
-              </Text>
-              <Text style={styles.modeMenuDesc}>Speak your question</Text>
             </TouchableOpacity>
           </View>
         )}
 
         {/* Input Row - Always visible */}
         <View style={styles.inputRow}>
-          {/* Mode Toggle Button */}
+          {/* Add Media Button (+ icon) */}
           <TouchableOpacity
             style={[styles.modeToggleButton, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : '#F0F0F0' }]}
             onPress={() => setShowModeMenu(!showModeMenu)}
             disabled={sending}
           >
-            <Ionicons
-              name={
-                activeMode === 'chat' ? 'chatbubble-outline' :
-                  activeMode === 'web_search' ? 'globe-outline' :
-                    activeMode === 'deep_research' ? 'flask-outline' :
-                      'document-attach-outline'
-              }
-              size={22}
-              color={
-                activeMode === 'web_search' ? themedColors.success.main :
-                  activeMode === 'deep_research' ? '#FF9800' :
-                    activeMode === 'document' ? '#2196F3' :
-                      themedColors.primary.main
-              }
-            />
+            <Ionicons name="add" size={24} color={themedColors.primary.main} />
           </TouchableOpacity>
 
-          {/* Mode Indicator Chip (show when not in chat mode) */}
-
-
-          {/* Text Input - Always visible */}
-          <TextInput
-            style={[
-              styles.textInput,
-              {
-                backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F7FA',
-                borderColor: themedColors.border.light,
-                color: themedColors.text.primary,
-                flex: 1
-              }
-            ]}
-            value={inputText}
-            onChangeText={setInputText}
-            placeholder={
-              activeMode === 'web_search' ? 'Search the web...' :
-                activeMode === 'deep_research' ? 'Enter research topic...' :
-                  'Ask a question...'
+          {/* Input Container with TextInput and Mic */}
+          <View style={[
+            styles.inputWrapper,
+            {
+              backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F7FA',
+              borderColor: themedColors.border.light,
             }
-            placeholderTextColor={themedColors.text.disabled}
-            multiline
-            maxLength={500}
-            editable={!sending}
-          />
+          ]}>
+            <TextInput
+              style={[
+                styles.textInputInline,
+                { color: themedColors.text.primary }
+              ]}
+              value={inputText}
+              onChangeText={setInputText}
+              placeholder="Ask a question..."
+              placeholderTextColor={themedColors.text.disabled}
+              multiline
+              maxLength={500}
+              editable={!sending && !isRecording}
+            />
+
+            {/* Inline Mic Button */}
+            <TouchableOpacity
+              style={[
+                styles.micButton,
+                isRecording && { backgroundColor: themedColors.error.light || '#FFCDD2' }
+              ]}
+              onPress={() => isRecording ? stopRecording() : startRecording()}
+              disabled={sending}
+            >
+              <Ionicons
+                name={isRecording ? "stop" : "mic-outline"}
+                size={20}
+                color={isRecording ? themedColors.error.main : themedColors.text.secondary}
+              />
+            </TouchableOpacity>
+          </View>
 
           {/* Send Button */}
           <TouchableOpacity
@@ -828,9 +823,7 @@ const TeacherModeScreen: React.FC = () => {
               <LinearGradient
                 colors={
                   (!inputText.trim() || sending) ? ['#E0E0E0', '#BDBDBD'] :
-                    activeMode === 'web_search' ? ['#00897B', '#00695C'] :
-                      activeMode === 'deep_research' ? ['#FF9800', '#F57C00'] :
-                        (themedColors?.gradients?.primary || ['#7C4DFF', '#3F1DCB'])
+                    (themedColors?.gradients?.primary || ['#7C4DFF', '#3F1DCB'])
                 }
                 style={{ borderRadius: 24, flex: 1, justifyContent: 'center', alignItems: 'center', width: '100%', height: '100%' }}
               >
@@ -840,6 +833,13 @@ const TeacherModeScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Zoom Modal */}
+      <ZoomableImageModal
+        visible={zoomVisible}
+        imageUrl={zoomImage}
+        onClose={() => setZoomVisible(false)}
+      />
     </KeyboardAvoidingView>
   );
 };
@@ -1017,6 +1017,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: Colors.background.subtle,
     color: Colors.text.primary,
+  },
+  inputWrapper: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 24,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginRight: 10,
+  },
+  textInputInline: {
+    flex: 1,
+    fontSize: 16,
+    maxHeight: 80,
+    paddingVertical: 6,
+  },
+  micButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 4,
   },
   sendButton: {
     backgroundColor: Colors.primary.main,
