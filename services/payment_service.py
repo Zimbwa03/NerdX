@@ -689,7 +689,8 @@ class PaymentService:
             current_status = payment.get('status', 'unknown')
             
             # Extract poll_url from admin_notes if not directly available
-            poll_url = payment.get('paynow_poll_url')
+            # Mobile API stores this as `poll_url`; older flows may store it elsewhere.
+            poll_url = payment.get('poll_url') or payment.get('paynow_poll_url')
             if not poll_url:
                 admin_notes = payment.get('admin_notes', '')
                 if 'Poll URL:' in admin_notes:
@@ -777,6 +778,56 @@ class PaymentService:
                 return {'success': False, 'message': 'Payment not found'}
             
             payment = result[0]
+            current_status = (payment.get('status') or '').lower()
+            already_credited = False
+            try:
+                credits_added = int(payment.get('credits_added') or 0)
+                credits_expected = int(payment.get('credits') or 0)
+                already_credited = credits_expected > 0 and credits_added >= credits_expected
+            except Exception:
+                # If columns/types don't match expectations, fall back to status checks below.
+                already_credited = False
+
+            # Idempotency: if already approved/credited, do nothing.
+            if current_status in ['approved', 'completed'] or already_credited:
+                return {
+                    'success': True,
+                    'message': 'Payment already approved',
+                    'credits_added': 0,
+                    'user_id': payment.get('user_id')
+                }
+
+            # Acquire a lightweight "lock" by moving status to `crediting`.
+            # This prevents duplicate credit additions if webhook + polling happen concurrently.
+            lock_result = make_supabase_request(
+                "PATCH",
+                "payment_transactions",
+                {"status": "crediting", "approved_at": datetime.now().isoformat()},
+                filters={
+                    "reference_code": f"eq.{reference_code}",
+                    # Allow transitions from common non-terminal states only.
+                    "status": "in.(pending,paid,initiated,processing,unknown)"
+                }
+            )
+
+            # If we couldn't acquire the lock, re-check current state and return safely.
+            if not lock_result:
+                refreshed = make_supabase_request(
+                    "GET",
+                    "payment_transactions",
+                    filters={"reference_code": f"eq.{reference_code}"}
+                )
+                if refreshed and len(refreshed) > 0:
+                    refreshed_status = (refreshed[0].get('status') or '').lower()
+                    if refreshed_status in ['approved', 'completed', 'crediting']:
+                        return {
+                            'success': True,
+                            'message': 'Payment approval already in progress or completed',
+                            'credits_added': 0,
+                            'user_id': refreshed[0].get('user_id')
+                        }
+                return {'success': False, 'message': 'Failed to lock payment for approval'}
+
             user_id = payment['user_id']
             credits = payment['credits']
             package_id = payment.get('package_id', 'unknown')
@@ -786,18 +837,26 @@ class PaymentService:
             
             if credit_result:
                 # Update payment status to approved
-                update_data = {
+                # Try full update (includes `credits_added`), then fall back to minimal fields
+                # to avoid leaving the transaction in a non-terminal state.
+                update_data_full = {
                     'status': 'approved',
                     'approved_at': datetime.now().isoformat(),
                     'credits_added': credits
                 }
-                
-                make_supabase_request(
-                    "PATCH", 
-                    "payment_transactions", 
-                    update_data,
+                updated = make_supabase_request(
+                    "PATCH",
+                    "payment_transactions",
+                    update_data_full,
                     filters={"reference_code": f"eq.{reference_code}"}
                 )
+                if not updated:
+                    make_supabase_request(
+                        "PATCH",
+                        "payment_transactions",
+                        {'status': 'approved', 'approved_at': datetime.now().isoformat()},
+                        filters={"reference_code": f"eq.{reference_code}"}
+                    )
                 
                 logger.info(f"Paynow payment approved: {reference_code} - {credits} credits added to {user_id}")
                 

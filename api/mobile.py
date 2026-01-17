@@ -2132,6 +2132,7 @@ def check_payment_status(reference):
     """Check payment status"""
     try:
         from database.external_db import make_supabase_request
+        from services.payment_service import payment_service
         
         # Get payment transaction from database
         result = make_supabase_request(
@@ -2150,17 +2151,26 @@ def check_payment_status(reference):
         poll_url = transaction.get('poll_url', '')
         
         # If payment is still pending and we have poll_url, check with Paynow
-        if status == 'pending' and poll_url:
+        if status in ['pending', 'paid', 'initiated', 'processing', 'unknown'] and poll_url:
             paynow_service = PaynowService()
             if paynow_service.is_available():
                 try:
                     paynow_status = paynow_service.check_payment_status(poll_url)
                     if paynow_status.get('success') and paynow_status.get('paid'):
-                        # Payment confirmed - webhook should handle this, but update status
-                        status = 'completed'
+                        # Payment confirmed. Do NOT rely solely on webhook arrival:
+                        # finalize the top-up immediately (idempotent + concurrency-safe).
+                        approval = payment_service.approve_paynow_payment(reference)
+                        if approval.get('success'):
+                            status = 'approved'
+                        else:
+                            # At least reflect that Paynow says it is paid.
+                            status = 'paid'
                 except Exception as e:
                     logger.warning(f"Failed to check Paynow status: {e}")
         
+        # Always return the latest balance so the app can update instantly.
+        current_balance = get_user_credits(g.current_user_id) or 0
+
         return jsonify({
             'success': True,
             'data': {
@@ -2168,7 +2178,8 @@ def check_payment_status(reference):
                 'status': status,  # 'pending', 'completed', 'failed', 'cancelled'
                 'amount': transaction.get('amount', 0),
                 'credits': transaction.get('credits', 0),
-                'paid': status == 'completed' or status == 'approved'
+                'paid': status in ['approved', 'completed', 'paid'],
+                'credits_balance': current_balance
             }
         }), 200
     except Exception as e:
