@@ -687,14 +687,18 @@ const NerdXLiveAudioScreen: React.FC = () => {
                 >
                     <Animated.View style={[styles.controlsPill, controlsAnimatedStyle]}>
                         <BlurView intensity={30} tint="dark" style={styles.controlsBlur}>
-                            {/* Video button (placeholder) */}
+                            {/* Video button - navigates to video mode */}
                             <TouchableOpacity
                                 style={styles.controlButton}
                                 onPressIn={handleButtonPressIn}
                                 onPressOut={handleButtonPressOut}
-                                disabled={true}
+                                onPress={() => {
+                                    triggerHaptic('medium');
+                                    endSession();
+                                    (navigation as any).replace('NerdXLiveVideo');
+                                }}
                             >
-                                <Ionicons name="videocam-outline" size={24} color={COLORS.textSecondary} />
+                                <Ionicons name="videocam-outline" size={24} color={COLORS.textPrimary} />
                             </TouchableOpacity>
 
                             {/* Hold/Pause button (placeholder) */}

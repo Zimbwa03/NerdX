@@ -5327,10 +5327,10 @@ def get_math_topics():
 # Image OCR / Analysis Endpoints (Vertex AI Gemini Vision)
 # ============================================================================
 
-@mobile_bp.route('/math/scan-gemini', methods=['POST'])
-def scan_math_gemini():
+@mobile_bp.route('/image/analyze-gemini', methods=['POST'])
+def scan_image_vertex():
     """
-    Scan an image and extract math equations/text using Gemini Vision.
+    Scan an image and extract math equations/text using Gemini Vision via Vertex AI.
     Used by Teacher Mode's "Scan Image" feature.
     """
     try:
@@ -5372,8 +5372,8 @@ def scan_math_gemini():
 # Voice / Audio Transcription Endpoints (Vertex AI Gemini)
 # ============================================================================
 
-@mobile_bp.route('/voice/transcribe', methods=['POST'])
-def transcribe_voice():
+@mobile_bp.route('/voice/transcribe-vertex', methods=['POST'])
+def transcribe_voice_vertex():
     """
     Transcribe audio to text using Gemini multimodal.
     Used by Teacher Mode's "Audio Record" feature.
