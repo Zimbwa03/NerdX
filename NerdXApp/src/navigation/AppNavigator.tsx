@@ -48,6 +48,11 @@ import NerdXLiveModeScreen from '../screens/NerdXLiveModeScreen';
 import NerdXLiveAudioScreen from '../screens/NerdXLiveAudioScreen';
 import NerdXLiveVideoScreen from '../screens/NerdXLiveVideoScreen';
 
+// CBT Exam Screens
+import ExamSessionScreen from '../screens/ExamSessionScreen';
+import ExamResultsScreen from '../screens/ExamResultsScreen';
+import ExamReviewScreen from '../screens/ExamReviewScreen';
+
 // Virtual Lab Simulation Screens
 import CellExplorerScreen from '../screens/virtualLab/CellExplorerScreen';
 import OsmosisScreen from '../screens/virtualLab/OsmosisScreen';
@@ -122,6 +127,11 @@ const AppNavigator: React.FC = () => {
             <Stack.Screen
               name="EmailVerification"
               component={require('../screens/EmailVerificationScreen').default}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="ForgotPassword"
+              component={require('../screens/ForgotPasswordScreen').default}
               options={{ headerShown: false }}
             />
 
@@ -495,6 +505,30 @@ const AppNavigator: React.FC = () => {
             <Stack.Screen
               name="NerdXLiveVideo"
               component={NerdXLiveVideoScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            {/* CBT Exam Screens */}
+            <Stack.Screen
+              name="ExamSession"
+              component={ExamSessionScreen}
+              options={{
+                headerShown: false,
+                gestureEnabled: false, // Prevent swipe back during exam
+              }}
+            />
+            <Stack.Screen
+              name="ExamResults"
+              component={ExamResultsScreen}
+              options={{
+                headerShown: false,
+                gestureEnabled: false, // Prevent going back to exam
+              }}
+            />
+            <Stack.Screen
+              name="ExamReview"
+              component={ExamReviewScreen}
               options={{
                 headerShown: false,
               }}

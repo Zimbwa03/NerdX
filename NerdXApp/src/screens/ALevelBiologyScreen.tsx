@@ -22,16 +22,18 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
 import { useNotification } from '../context/NotificationContext';
-import { 
-    aLevelBiologyTopics, 
-    ALevelBiologyTopic, 
+import {
+    aLevelBiologyTopics,
+    ALevelBiologyTopic,
     biologyQuestionTypes,
     BiologyQuestionType,
     BiologyQuestionTypeInfo,
-    topicCounts 
+    topicCounts
 } from '../data/aLevelBiology';
 import { quizApi } from '../services/api/quizApi';
 import LoadingProgress from '../components/LoadingProgress';
+import ExamSetupModal from '../components/ExamSetupModal';
+import { ExamConfig, TimeInfo, examApi } from '../services/api/examApi';
 import {
     ALevelTopicCard,
     ALevelFeatureCard,
@@ -66,19 +68,22 @@ const ALevelBiologyScreen: React.FC = () => {
     const [selectedLevel, setSelectedLevel] = useState<'Lower Sixth' | 'Upper Sixth'>('Lower Sixth');
     const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
     const [loadingMessage, setLoadingMessage] = useState('');
-    
+
     // Question type modal state
     const [questionTypeModalVisible, setQuestionTypeModalVisible] = useState(false);
     const [selectedTopic, setSelectedTopic] = useState<ALevelBiologyTopic | null>(null);
     const [selectedQuestionType, setSelectedQuestionType] = useState<BiologyQuestionTypeInfo | null>(null);
+
+    // Exam setup modal state
+    const [examSetupModalVisible, setExamSetupModalVisible] = useState(false);
 
     // Filter topics by selected level
     const filteredTopics = aLevelBiologyTopics.filter(
         topic => topic.difficulty === selectedLevel
     );
 
-    const currentPrimaryColor = selectedLevel === 'Lower Sixth' 
-        ? biologyTheme.lowerSixthPrimary 
+    const currentPrimaryColor = selectedLevel === 'Lower Sixth'
+        ? biologyTheme.lowerSixthPrimary
         : biologyTheme.upperSixthPrimary;
 
     const handleTopicPress = async (topic: ALevelBiologyTopic) => {
@@ -96,7 +101,7 @@ const ALevelBiologyScreen: React.FC = () => {
         setQuestionTypeModalVisible(false);
         const questionTypeInfo = biologyQuestionTypes.find(t => t.id === questionType) || { id: questionType, name: questionType, description: '', icon: '', color: '#10B981', marks: '', timeGuide: '' };
         setSelectedQuestionType(questionTypeInfo);
-        
+
         // If a topic was already selected, generate question first before navigating
         if (selectedTopic) {
             await startQuestion(selectedTopic, questionType);
@@ -110,11 +115,11 @@ const ALevelBiologyScreen: React.FC = () => {
                 showError('❌ Insufficient credits! You need at least 1 credit. Please top up your credits.', 5000);
                 return;
             }
-            
+
             if (currentCredits <= 5 && currentCredits > 0) {
                 showWarning(`⚠️ Low credits! You have ${currentCredits} credits remaining.`, 4000);
             }
-            
+
             setLoadingMessage(getLoadingMessage(questionType));
             setIsGeneratingQuestion(true);
 
@@ -134,15 +139,15 @@ const ALevelBiologyScreen: React.FC = () => {
             if (question) {
                 const newCredits = (user?.credits || 0) - 1;
                 updateUser({ credits: newCredits });
-                
+
                 showSuccess(`✅ ${questionType.toUpperCase()} question generated! ${newCredits} credits remaining.`, 3000);
-                
+
                 if (newCredits <= 3 && newCredits > 0) {
                     setTimeout(() => {
                         showWarning(`⚠️ Running low on credits! Only ${newCredits} credits left.`, 5000);
                     }, 3500);
                 }
-                
+
                 navigation.navigate('Quiz' as never, {
                     question,
                     subject: { id: 'a_level_biology', name: 'A Level Biology' },
@@ -187,54 +192,26 @@ const ALevelBiologyScreen: React.FC = () => {
         navigation.navigate('VirtualLab' as never);
     };
 
-    const handleStartExam = async () => {
-        if (!user || (user.credits || 0) < 1) {
-            Alert.alert(
-                'Insufficient Credits',
-                'You need at least 1 credit to start an exam.',
-                [{ text: 'OK' }]
-            );
-            return;
+    const handleStartExam = () => {
+        // Open the exam setup modal
+        setExamSetupModalVisible(true);
+    };
+
+    // Handle exam modal start
+    const handleExamStart = async (config: ExamConfig, timeInfo: TimeInfo) => {
+        setExamSetupModalVisible(false);
+        try {
+            const session = await examApi.createSession(config);
+            if (session) {
+                navigation.navigate('ExamSession' as never, {
+                    sessionId: session.session_id,
+                    timeInfo,
+                    config,
+                } as never);
+            }
+        } catch (error: any) {
+            Alert.alert('Error', error.response?.data?.message || 'Failed to start exam');
         }
-
-        Alert.alert(
-            '📝 Start Exam',
-            `A Level Biology ${selectedLevel} Exam\n\nThis exam will include mixed MCQs, Structured Questions, and Essay prompts from ${selectedLevel} topics.`,
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Begin Exam',
-                    onPress: async () => {
-                        try {
-                            setLoadingMessage('DeepSeek is preparing your A Level Biology exam...');
-                            setIsGeneratingQuestion(true);
-
-                            const question = await quizApi.generateQuestion(
-                                'a_level_biology',
-                                undefined,
-                                'medium',
-                                'exam',
-                                selectedLevel
-                            );
-
-                            setIsGeneratingQuestion(false);
-
-                            if (question) {
-                                navigation.navigate('Quiz' as never, {
-                                    question,
-                                    subject: { id: 'a_level_biology', name: 'A Level Biology' }
-                                } as never);
-                                const newCredits = (user.credits || 0) - 1;
-                                updateUser({ credits: newCredits });
-                            }
-                        } catch (error: any) {
-                            setIsGeneratingQuestion(false);
-                            Alert.alert('Error', error.response?.data?.message || 'Failed to start exam');
-                        }
-                    },
-                },
-            ]
-        );
     };
 
     // Get icon for topic
@@ -279,14 +256,14 @@ const ALevelBiologyScreen: React.FC = () => {
         >
             <View style={styles.modalOverlay}>
                 <View style={[
-                    styles.modalContent, 
+                    styles.modalContent,
                     { backgroundColor: isDarkMode ? '#1A1C2E' : '#FFFFFF' }
                 ]}>
                     {/* Modal Header */}
                     <View style={styles.modalHeader}>
                         <View>
                             <Text style={[
-                                styles.modalTitle, 
+                                styles.modalTitle,
                                 { color: isDarkMode ? '#FFFFFF' : '#1A1A2E' }
                             ]}>
                                 Choose Question Type
@@ -305,10 +282,10 @@ const ALevelBiologyScreen: React.FC = () => {
                                 { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' }
                             ]}
                         >
-                            <Ionicons 
-                                name="close" 
-                                size={20} 
-                                color={isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.5)'} 
+                            <Ionicons
+                                name="close"
+                                size={20}
+                                color={isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.5)'}
                             />
                         </TouchableOpacity>
                     </View>
@@ -316,7 +293,7 @@ const ALevelBiologyScreen: React.FC = () => {
                     {/* Topic Info */}
                     {selectedTopic && (
                         <View style={[
-                            styles.topicInfoBox, 
+                            styles.topicInfoBox,
                             { backgroundColor: isDarkMode ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.08)' }
                         ]}>
                             <View style={[styles.topicInfoIcon, { backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
@@ -328,13 +305,13 @@ const ALevelBiologyScreen: React.FC = () => {
                             </View>
                             <View style={styles.topicInfoText}>
                                 <Text style={[
-                                    styles.topicInfoTitle, 
+                                    styles.topicInfoTitle,
                                     { color: isDarkMode ? '#FFFFFF' : '#1A1A2E' }
                                 ]}>
                                     {selectedTopic.name}
                                 </Text>
                                 <Text style={[
-                                    styles.topicInfoLevel, 
+                                    styles.topicInfoLevel,
                                     { color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(26,26,46,0.5)' }
                                 ]}>
                                     {selectedTopic.difficulty} • {selectedTopic.paperRelevance}
@@ -349,8 +326,8 @@ const ALevelBiologyScreen: React.FC = () => {
                             <TouchableOpacity
                                 key={type.id}
                                 style={[
-                                    styles.questionTypeCard, 
-                                    { 
+                                    styles.questionTypeCard,
+                                    {
                                         backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
                                         borderColor: `${type.color}40`,
                                     }
@@ -370,13 +347,13 @@ const ALevelBiologyScreen: React.FC = () => {
                                 </LinearGradient>
                                 <View style={styles.questionTypeInfo}>
                                     <Text style={[
-                                        styles.questionTypeName, 
+                                        styles.questionTypeName,
                                         { color: isDarkMode ? '#FFFFFF' : '#1A1A2E' }
                                     ]}>
                                         {type.name}
                                     </Text>
                                     <Text style={[
-                                        styles.questionTypeDesc, 
+                                        styles.questionTypeDesc,
                                         { color: isDarkMode ? 'rgba(255,255,255,0.55)' : 'rgba(26,26,46,0.55)' }
                                     ]}>
                                         {type.description}
@@ -388,7 +365,7 @@ const ALevelBiologyScreen: React.FC = () => {
                                             </Text>
                                         </View>
                                         <Text style={[
-                                            styles.questionTypeTime, 
+                                            styles.questionTypeTime,
                                             { color: isDarkMode ? 'rgba(255,255,255,0.4)' : 'rgba(26,26,46,0.4)' }
                                         ]}>
                                             {type.timeGuide}
@@ -441,7 +418,7 @@ const ALevelBiologyScreen: React.FC = () => {
                             <Ionicons name="arrow-back" size={22} color="rgba(255,255,255,0.9)" />
                             <Text style={styles.backButtonText}>Back</Text>
                         </TouchableOpacity>
-                        
+
                         <Text style={styles.title}>A Level Biology</Text>
                         <View style={styles.subtitleRow}>
                             <View style={styles.syllabusTag}>
@@ -450,7 +427,7 @@ const ALevelBiologyScreen: React.FC = () => {
                             <Text style={styles.topicCount}>{topicCounts.total} Topics</Text>
                         </View>
                     </View>
-                    
+
                     <View style={styles.headerIcon}>
                         <MaterialCommunityIcons name="dna" size={42} color="rgba(255,255,255,0.95)" />
                     </View>
@@ -517,8 +494,8 @@ const ALevelBiologyScreen: React.FC = () => {
                 </TouchableOpacity>
             </View>
 
-            <ScrollView 
-                style={styles.scrollView} 
+            <ScrollView
+                style={styles.scrollView}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
             >
@@ -555,8 +532,8 @@ const ALevelBiologyScreen: React.FC = () => {
                     <ALevelExamCard
                         title={`Start ${selectedLevel} Exam`}
                         subtitle="MCQ + Structured + Essay from all topics"
-                        gradientColors={selectedLevel === 'Lower Sixth' 
-                            ? biologyTheme.gradient.lowerSixth 
+                        gradientColors={selectedLevel === 'Lower Sixth'
+                            ? biologyTheme.gradient.lowerSixth
                             : biologyTheme.gradient.upperSixth}
                         icon={<MaterialCommunityIcons name="file-document-edit-outline" size={28} color="#FFFFFF" />}
                         onPress={handleStartExam}
@@ -566,7 +543,7 @@ const ALevelBiologyScreen: React.FC = () => {
                 {/* Question Type Legend */}
                 <View style={styles.legendContainer}>
                     <Text style={[
-                        styles.legendTitle, 
+                        styles.legendTitle,
                         { color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(26,26,46,0.7)' }
                     ]}>
                         Tap any topic to choose question type:
@@ -590,16 +567,16 @@ const ALevelBiologyScreen: React.FC = () => {
                             {selectedLevel} Topics
                         </Text>
                         <View style={[
-                            styles.aiPoweredBadge, 
+                            styles.aiPoweredBadge,
                             { backgroundColor: isDarkMode ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.1)' }
                         ]}>
                             <MaterialCommunityIcons name="lightning-bolt" size={14} color="#10B981" />
                             <Text style={[styles.aiPoweredText, { color: '#10B981' }]}>DeepSeek AI</Text>
                         </View>
                     </View>
-                <Text style={[styles.sectionSubtitle, { color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(26,26,46,0.5)' }]}>
-                    Tap a topic to practice. Your last selected format applies automatically.
-                </Text>
+                    <Text style={[styles.sectionSubtitle, { color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(26,26,46,0.5)' }]}>
+                        Tap a topic to practice. Your last selected format applies automatically.
+                    </Text>
 
                     {filteredTopics.map((topic, index) => (
                         <ALevelTopicCard
@@ -609,8 +586,8 @@ const ALevelBiologyScreen: React.FC = () => {
                             icon={getTopicIcon(topic.id)}
                             primaryColor={currentPrimaryColor}
                             badges={[
-                                { 
-                                    text: topic.paperRelevance, 
+                                {
+                                    text: topic.paperRelevance,
                                     color: currentPrimaryColor,
                                     icon: 'file-document-outline'
                                 },
@@ -633,7 +610,7 @@ const ALevelBiologyScreen: React.FC = () => {
                     <ALevelInfoCard
                         title="ZIMSEC A Level Biology"
                         content={`Syllabus Code: 6030\nPaper 1 (MCQ), Paper 2 (Structured), Paper 3 (Practical)\nQuestions generated using DeepSeek AI`}
-                        gradientColors={isDarkMode 
+                        gradientColors={isDarkMode
                             ? ['rgba(16, 185, 129, 0.08)', 'rgba(8, 145, 178, 0.05)']
                             : ['rgba(16, 185, 129, 0.06)', 'rgba(8, 145, 178, 0.04)']}
                         iconColor="#10B981"
@@ -647,6 +624,16 @@ const ALevelBiologyScreen: React.FC = () => {
 
             {/* Question Type Selection Modal */}
             {renderQuestionTypeModal()}
+
+            {/* Exam Setup Modal */}
+            <ExamSetupModal
+                visible={examSetupModalVisible}
+                onClose={() => setExamSetupModalVisible(false)}
+                onStartExam={handleExamStart}
+                initialSubject="a_level_biology"
+                userCredits={user?.credits || 0}
+                availableTopics={filteredTopics.map(t => t.name)}
+            />
         </View>
     );
 };
@@ -661,7 +648,7 @@ const styles = StyleSheet.create({
     scrollContent: {
         paddingBottom: 20,
     },
-    
+
     // Header Styles
     header: {
         paddingTop: Platform.OS === 'ios' ? 56 : 44,

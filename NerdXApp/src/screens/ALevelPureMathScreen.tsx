@@ -22,6 +22,8 @@ import { useThemedColors } from '../theme/useThemedStyles';
 import { aLevelPureMathTopics, ALevelPureMathTopic, topicCounts } from '../data/aLevelPureMath';
 import { quizApi } from '../services/api/quizApi';
 import LoadingProgress from '../components/LoadingProgress';
+import ExamSetupModal from '../components/ExamSetupModal';
+import { ExamConfig, TimeInfo, examApi } from '../services/api/examApi';
 import {
     ALevelTopicCard,
     ALevelFeatureCard,
@@ -54,14 +56,15 @@ const ALevelPureMathScreen: React.FC = () => {
 
     const [selectedLevel, setSelectedLevel] = useState<'Lower Sixth' | 'Upper Sixth'>('Lower Sixth');
     const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
+    const [examSetupModalVisible, setExamSetupModalVisible] = useState(false);
 
     // Filter topics by selected level
     const filteredTopics = aLevelPureMathTopics.filter(
         topic => topic.difficulty === selectedLevel
     );
 
-    const currentPrimaryColor = selectedLevel === 'Lower Sixth' 
-        ? pureMathTheme.lowerSixthPrimary 
+    const currentPrimaryColor = selectedLevel === 'Lower Sixth'
+        ? pureMathTheme.lowerSixthPrimary
         : pureMathTheme.upperSixthPrimary;
 
     const handleTopicPress = async (topic: ALevelPureMathTopic) => {
@@ -132,56 +135,25 @@ const ALevelPureMathScreen: React.FC = () => {
         } as never);
     };
 
-    const handleStartExam = async () => {
+    const handleStartExam = () => {
+        // Open the exam setup modal
+        setExamSetupModalVisible(true);
+    };
+
+    // Handle exam modal start
+    const handleExamStart = async (config: ExamConfig, timeInfo: TimeInfo) => {
+        setExamSetupModalVisible(false);
         try {
-            if (!user || (user.credits || 0) < 1) {
-                Alert.alert(
-                    'Insufficient Credits',
-                    'You need at least 1 credit to start an exam.',
-                    [{ text: 'OK' }]
-                );
-                return;
+            const session = await examApi.createSession(config);
+            if (session) {
+                navigation.navigate('ExamSession' as never, {
+                    sessionId: session.session_id,
+                    timeInfo,
+                    config,
+                } as never);
             }
-
-            Alert.alert(
-                '📝 Start Exam',
-                `A Level Pure Mathematics ${selectedLevel} Exam\n\nThis will test you on mixed topics from ${selectedLevel}.`,
-                [
-                    { text: 'Cancel', style: 'cancel' },
-                    {
-                        text: 'Begin Exam',
-                        onPress: async () => {
-                            try {
-                                setIsGeneratingQuestion(true);
-
-                                const question = await quizApi.generateQuestion(
-                                    'a_level_pure_math',
-                                    undefined,
-                                    'medium',
-                                    'exam',
-                                    selectedLevel
-                                );
-
-                                setIsGeneratingQuestion(false);
-
-                                if (question) {
-                                    navigation.navigate('Quiz' as never, {
-                                        question,
-                                        subject: { id: 'a_level_pure_math', name: 'A Level Pure Mathematics' }
-                                    } as never);
-                                    const newCredits = (user.credits || 0) - 1;
-                                    updateUser({ credits: newCredits });
-                                }
-                            } catch (error: any) {
-                                setIsGeneratingQuestion(false);
-                                Alert.alert('Error', error.response?.data?.message || 'Failed to start exam');
-                            }
-                        },
-                    },
-                ]
-            );
-        } catch (error) {
-            Alert.alert('Error', 'Failed to start exam');
+        } catch (error: any) {
+            Alert.alert('Error', error.response?.data?.message || 'Failed to start exam');
         }
     };
 
@@ -251,7 +223,7 @@ const ALevelPureMathScreen: React.FC = () => {
                             <Ionicons name="arrow-back" size={22} color="rgba(255,255,255,0.9)" />
                             <Text style={styles.backButtonText}>Back</Text>
                         </TouchableOpacity>
-                        
+
                         <Text style={styles.title}>Pure Mathematics</Text>
                         <View style={styles.subtitleRow}>
                             <View style={styles.syllabusTag}>
@@ -260,7 +232,7 @@ const ALevelPureMathScreen: React.FC = () => {
                             <Text style={styles.topicCount}>{topicCounts.total} Topics</Text>
                         </View>
                     </View>
-                    
+
                     <View style={styles.headerIcon}>
                         <MaterialCommunityIcons name="math-integral-box" size={42} color="rgba(255,255,255,0.95)" />
                     </View>
@@ -327,8 +299,8 @@ const ALevelPureMathScreen: React.FC = () => {
                 </TouchableOpacity>
             </View>
 
-            <ScrollView 
-                style={styles.scrollView} 
+            <ScrollView
+                style={styles.scrollView}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
             >
@@ -365,8 +337,8 @@ const ALevelPureMathScreen: React.FC = () => {
                     <ALevelExamCard
                         title={`Start ${selectedLevel} Exam`}
                         subtitle={`Mixed questions from all ${selectedLevel} topics`}
-                        gradientColors={selectedLevel === 'Lower Sixth' 
-                            ? pureMathTheme.gradient.lowerSixth 
+                        gradientColors={selectedLevel === 'Lower Sixth'
+                            ? pureMathTheme.gradient.lowerSixth
                             : pureMathTheme.gradient.upperSixth}
                         icon={<MaterialCommunityIcons name="file-document-edit-outline" size={28} color="#FFFFFF" />}
                         onPress={handleStartExam}
@@ -396,8 +368,8 @@ const ALevelPureMathScreen: React.FC = () => {
                             icon={getTopicIcon(topic.id)}
                             primaryColor={currentPrimaryColor}
                             badges={[
-                                { 
-                                    text: topic.paperRelevance, 
+                                {
+                                    text: topic.paperRelevance,
                                     color: currentPrimaryColor,
                                     icon: 'file-document-outline'
                                 },
@@ -415,7 +387,7 @@ const ALevelPureMathScreen: React.FC = () => {
                     <ALevelInfoCard
                         title="ZIMSEC A Level Pure Mathematics"
                         content={`Syllabus Code: 6042\nPaper 1 & 2 • 3 hours each • 120 marks\nQuestions generated using DeepSeek AI`}
-                        gradientColors={isDarkMode 
+                        gradientColors={isDarkMode
                             ? ['rgba(139, 92, 246, 0.08)', 'rgba(236, 72, 153, 0.05)']
                             : ['rgba(139, 92, 246, 0.06)', 'rgba(236, 72, 153, 0.04)']}
                         iconColor="#8B5CF6"
@@ -426,6 +398,16 @@ const ALevelPureMathScreen: React.FC = () => {
                 {/* Bottom Spacing */}
                 <View style={{ height: 32 }} />
             </ScrollView>
+
+            {/* Exam Setup Modal */}
+            <ExamSetupModal
+                visible={examSetupModalVisible}
+                onClose={() => setExamSetupModalVisible(false)}
+                onStartExam={handleExamStart}
+                initialSubject="pure_math"
+                userCredits={user?.credits || 0}
+                availableTopics={filteredTopics.map(t => t.name)}
+            />
         </View>
     );
 };
@@ -440,7 +422,7 @@ const styles = StyleSheet.create({
     scrollContent: {
         paddingBottom: 20,
     },
-    
+
     // Header Styles
     header: {
         paddingTop: Platform.OS === 'ios' ? 56 : 44,

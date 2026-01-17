@@ -23,6 +23,7 @@ import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
 import { teacherApi, TeacherSession, Attachment } from '../services/api/teacherApi';
 import { mathApi } from '../services/api/mathApi';
+import { API_BASE_URL } from '../services/api/config';
 import { useAuth } from '../context/AuthContext';
 import { TypingIndicator } from '../components/TypingIndicator';
 import { useTheme } from '../context/ThemeContext';
@@ -672,12 +673,12 @@ const TeacherModeScreen: React.FC = () => {
                         <TouchableOpacity
                           activeOpacity={0.9}
                           onPress={() => {
-                            setZoomImage(`http://localhost:5000${message.graph_url}`);
+                            setZoomImage(`${API_BASE_URL}${message.graph_url}`);
                             setZoomVisible(true);
                           }}
                         >
                           <Image
-                            source={{ uri: `http://localhost:5000${message.graph_url}` }}
+                            source={{ uri: `${API_BASE_URL}${message.graph_url}` }}
                             style={styles.graphImage}
                             resizeMode="contain"
                           />
@@ -688,7 +689,7 @@ const TeacherModeScreen: React.FC = () => {
                     {message.video_url && (
                       <View style={{ marginTop: 12, height: 220, width: '100%', borderRadius: 12, overflow: 'hidden' }}>
                         <VideoStreamPlayer
-                          videoUrl={`http://localhost:5000${message.video_url}`}
+                          videoUrl={`${API_BASE_URL}${message.video_url}`}
                           topicTitle="Explanation"
                           accentColor={themedColors.primary.main}
                         />
@@ -738,25 +739,51 @@ const TeacherModeScreen: React.FC = () => {
         </ScrollView>
 
 
-        {/* Media Selection Popup */}
+        {/* Media Selection Popup - Premium Glass Design */}
         {showModeMenu && (
-          <View style={[styles.modeMenuPopup, { backgroundColor: isDarkMode ? '#2A2A3E' : '#FFFFFF' }]}>
+          <View style={[
+            styles.modeMenuPopup,
+            {
+              backgroundColor: isDarkMode ? 'rgba(30, 30, 50, 0.98)' : '#FFFFFF',
+              borderColor: isDarkMode ? 'rgba(139, 92, 246, 0.3)' : 'rgba(0, 0, 0, 0.08)',
+            }
+          ]}>
+            {/* Header */}
+            <Text style={[
+              styles.modeMenuHeader,
+              { color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666' }
+            ]}>Add Content</Text>
+
             <TouchableOpacity
-              style={styles.modeMenuItem}
+              style={[
+                styles.modeMenuItem,
+                { backgroundColor: isDarkMode ? 'rgba(33, 150, 243, 0.15)' : 'rgba(33, 150, 243, 0.08)' }
+              ]}
               onPress={() => { handleDocumentUpload(); setShowModeMenu(false); }}
             >
-              <Ionicons name="document-attach-outline" size={20} color="#2196F3" />
-              <Text style={[styles.modeMenuText, { color: '#2196F3' }]}>Upload Document</Text>
-              <Text style={styles.modeMenuDesc}>Analyze PDFs and study materials</Text>
+              <View style={[styles.modeMenuIcon, { backgroundColor: isDarkMode ? 'rgba(33, 150, 243, 0.25)' : 'rgba(33, 150, 243, 0.15)' }]}>
+                <Ionicons name="document-attach-outline" size={22} color="#2196F3" />
+              </View>
+              <View style={styles.modeMenuTextContainer}>
+                <Text style={[styles.modeMenuText, { color: isDarkMode ? '#64B5F6' : '#1976D2' }]}>Upload Document</Text>
+                <Text style={[styles.modeMenuDesc, { color: isDarkMode ? 'rgba(255, 255, 255, 0.5)' : '#888' }]}>Analyze PDFs and study materials</Text>
+              </View>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.modeMenuItem}
+              style={[
+                styles.modeMenuItem,
+                { backgroundColor: isDarkMode ? 'rgba(139, 92, 246, 0.15)' : 'rgba(139, 92, 246, 0.08)' }
+              ]}
               onPress={() => { handleImagePick(); setShowModeMenu(false); }}
             >
-              <Ionicons name="image-outline" size={20} color={themedColors.primary.main} />
-              <Text style={[styles.modeMenuText, { color: themedColors.primary.main }]}>Scan Image</Text>
-              <Text style={styles.modeMenuDesc}>Take a photo of a problem</Text>
+              <View style={[styles.modeMenuIcon, { backgroundColor: isDarkMode ? 'rgba(139, 92, 246, 0.25)' : 'rgba(139, 92, 246, 0.15)' }]}>
+                <Ionicons name="image-outline" size={22} color={themedColors.primary.main} />
+              </View>
+              <View style={styles.modeMenuTextContainer}>
+                <Text style={[styles.modeMenuText, { color: isDarkMode ? '#B794F6' : '#7C3AED' }]}>Scan Image</Text>
+                <Text style={[styles.modeMenuDesc, { color: isDarkMode ? 'rgba(255, 255, 255, 0.5)' : '#888' }]}>Take a photo of a problem</Text>
+              </View>
             </TouchableOpacity>
           </View>
         )}
@@ -1147,21 +1174,38 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 14,
-    borderRadius: 10,
-    gap: 12,
+    borderRadius: 14,
+    marginBottom: 8,
+  },
+  modeMenuIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modeMenuTextContainer: {
+    flex: 1,
+    marginLeft: 14,
+  },
+  modeMenuHeader: {
+    fontSize: 12,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 12,
+    marginLeft: 4,
   },
   modeMenuItemActive: {
     backgroundColor: 'rgba(103,80,164,0.1)',
   },
   modeMenuText: {
     fontSize: 15,
-    fontWeight: '500' as const,
-    color: '#666',
-    flex: 1,
+    fontWeight: '600' as const,
   },
   modeMenuDesc: {
     fontSize: 12,
-    color: '#999',
+    marginTop: 2,
   },
   modeChip: {
     flexDirection: 'row',
@@ -1253,16 +1297,18 @@ const markdownStyles = StyleSheet.create({
   },
   modeMenuPopup: {
     position: 'absolute',
-    bottom: 75,
-    left: 12,
-    right: 12,
-    borderRadius: 16,
-    padding: 8,
-    elevation: 8,
+    bottom: 80,
+    left: 16,
+    right: 16,
+    maxWidth: 320,
+    borderRadius: 20,
+    padding: 16,
+    elevation: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    borderWidth: 1,
     zIndex: 100,
   },
   modeMenuItem: {

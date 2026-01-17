@@ -1,12 +1,12 @@
 // Professional Card Component - Theme Aware
 import React from 'react';
-import { View, StyleSheet, ViewStyle, TouchableOpacity, TouchableOpacityProps } from 'react-native';
+import { View, StyleSheet, ViewStyle, StyleProp, TouchableOpacity, TouchableOpacityProps } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useThemedColors } from '../theme/useThemedStyles';
 
 export interface CardProps extends TouchableOpacityProps {
   children: React.ReactNode;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   variant?: 'default' | 'elevated' | 'outlined' | 'gradient';
   gradientColors?: string[];
   onPress?: () => void;

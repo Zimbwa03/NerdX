@@ -413,7 +413,7 @@ Generate the question now:"""
             return
             
         # Build the prompt
-        prompt = self._build_prompt(subject, topic, difficulty)
+        prompt = self._create_question_prompt(subject, topic, difficulty)
         
         headers = {
             'Authorization': f'Bearer {self.api_key}',

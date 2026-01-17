@@ -760,7 +760,7 @@ def sync_user_credits(user_id: str = None) -> dict:
 # NEW CREDIT SYSTEM FUNCTIONS (Welcome Bonus + Daily Credits)
 # ============================================================
 
-WELCOME_BONUS_CREDITS = 75
+WELCOME_BONUS_CREDITS = 150  # First-time user welcome bonus
 DAILY_FREE_CREDITS = 10
 
 def get_credit_breakdown(user_id: str) -> dict:
@@ -1184,9 +1184,10 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
 
         # Create or update user_stats entry for the new user
         try:
-            # All new users get 75 credits (no bonus for being referred)
-            # Only the REFERRER gets +5 credits (handled separately below)
-            total_credits = 75
+            # New users start with 0 credits in user_stats.
+            # The welcome bonus (150 credits) is awarded via claim_welcome_bonus() 
+            # during first login - this prevents duplication.
+            total_credits = 0
 
             user_stats_data = {
                 'user_id': chat_id,
@@ -1203,7 +1204,7 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
             }
 
             # Create user stats entry - try-catch block for resilience
-            logger.info(f"Creating user stats for {chat_id} with {total_credits} credits")
+            logger.info(f"Creating user stats for {chat_id} (credits will be added via welcome bonus)")
             stats_result = make_supabase_request("POST", "user_stats", user_stats_data, use_service_role=True)
             
             # If POST fails, it might be that stats already exist, so try PATCH

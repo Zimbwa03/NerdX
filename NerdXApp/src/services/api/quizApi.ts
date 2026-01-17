@@ -184,14 +184,19 @@ export const quizApi = {
 
       const generate = async () => {
         try {
-          // Get auth token from storage/config
-          const token = api.defaults.headers.common['Authorization'];
+          // Get auth token from AsyncStorage (same source as axios interceptor)
+          const { getAuthToken, API_BASE_URL } = await import('./config');
+          const token = await getAuthToken();
 
-          const response = await fetch(`${api.defaults.baseURL}/api/mobile/quiz/generate-stream`, {
+          if (!token) {
+            throw new Error('Authentication required - please log in again');
+          }
+
+          const response = await fetch(`${API_BASE_URL}/api/mobile/quiz/generate-stream`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': token as string,
+              'Authorization': `Bearer ${token}`,
             },
             body: JSON.stringify({
               subject,

@@ -59,8 +59,22 @@ const GraphPracticeScreen: React.FC = () => {
   // Create video player when videoUrl changes
   const videoPlayer = useVideoPlayer(videoUrl || '', (player) => {
     player.loop = true;
-    player.play();
+    if (videoUrl) {
+      player.play();
+    }
   });
+
+  // Track video player status for error handling
+  const { isPlaying } = useEvent(videoPlayer, 'playingChange', { isPlaying: videoPlayer.playing });
+  const { status } = useEvent(videoPlayer, 'statusChange', { status: videoPlayer.status });
+
+  // Handle video player errors
+  React.useEffect(() => {
+    if (status === 'error' && videoUrl) {
+      console.warn('Video player error detected');
+      setVideoError('Animation failed to load. The Manim server may not be available.');
+    }
+  }, [status, videoUrl]);
 
   const graphTypes = [
     { id: 'linear', name: 'Linear', icon: '📈' },
@@ -552,9 +566,16 @@ const GraphPracticeScreen: React.FC = () => {
 
               {!videoError && videoUrl && (
                 <>
+                  {/* Show loading overlay while video loads */}
+                  {status !== 'readyToPlay' && !videoError && (
+                    <View style={[styles.videoLoadingContainer, { position: 'absolute', zIndex: 1 }]}>
+                      <ActivityIndicator size="large" color={themedColors.primary.main} />
+                      <Text style={[styles.videoLoadingText, { color: themedColors.text.secondary }]}>Loading animation...</Text>
+                    </View>
+                  )}
                   <VideoView
                     player={videoPlayer}
-                    style={[styles.video, videoLoading && { opacity: 0 }]}
+                    style={[styles.video, status !== 'readyToPlay' && { opacity: 0.3 }]}
                     contentFit="contain"
                     nativeControls
                   />

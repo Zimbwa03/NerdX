@@ -22,6 +22,8 @@ import { useThemedColors } from '../theme/useThemedStyles';
 import { aLevelPhysicsTopics, ALevelPhysicsTopic } from '../data/aLevelPhysics';
 import { quizApi } from '../services/api/quizApi';
 import LoadingProgress from '../components/LoadingProgress';
+import ExamSetupModal from '../components/ExamSetupModal';
+import { ExamConfig, TimeInfo, examApi } from '../services/api/examApi';
 import {
     ALevelTopicCard,
     ALevelFeatureCard,
@@ -54,6 +56,7 @@ const ALevelPhysicsScreen: React.FC = () => {
 
     const [selectedLevel, setSelectedLevel] = useState<'AS Level' | 'A2 Level'>('AS Level');
     const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
+    const [examSetupModalVisible, setExamSetupModalVisible] = useState(false);
 
     // Filter topics by selected level
     const filteredTopics = aLevelPhysicsTopics.filter(
@@ -64,8 +67,8 @@ const ALevelPhysicsScreen: React.FC = () => {
     const asLevelCount = aLevelPhysicsTopics.filter(t => t.difficulty === 'AS Level').length;
     const a2LevelCount = aLevelPhysicsTopics.filter(t => t.difficulty === 'A2 Level').length;
 
-    const currentPrimaryColor = selectedLevel === 'AS Level' 
-        ? physicsTheme.asLevelPrimary 
+    const currentPrimaryColor = selectedLevel === 'AS Level'
+        ? physicsTheme.asLevelPrimary
         : physicsTheme.a2LevelPrimary;
 
     // Get icon for topic
@@ -167,56 +170,23 @@ const ALevelPhysicsScreen: React.FC = () => {
         } as never);
     };
 
-    const handleStartExam = async () => {
+    const handleStartExam = () => {
+        setExamSetupModalVisible(true);
+    };
+
+    const handleExamStart = async (config: ExamConfig, timeInfo: TimeInfo) => {
+        setExamSetupModalVisible(false);
         try {
-            if (!user || (user.credits || 0) < 1) {
-                Alert.alert(
-                    'Insufficient Credits',
-                    'You need at least 1 credit to start an exam.',
-                    [{ text: 'OK' }]
-                );
-                return;
+            const session = await examApi.createSession(config);
+            if (session) {
+                navigation.navigate('ExamSession' as never, {
+                    sessionId: session.session_id,
+                    timeInfo,
+                    config,
+                } as never);
             }
-
-            Alert.alert(
-                '📝 Start Exam',
-                `A Level Physics ${selectedLevel} Exam\n\nThis exam will include mixed questions from all ${selectedLevel} topics.`,
-                [
-                    { text: 'Cancel', style: 'cancel' },
-                    {
-                        text: 'Begin Exam',
-                        onPress: async () => {
-                            try {
-                                setIsGeneratingQuestion(true);
-
-                                const question = await quizApi.generateQuestion(
-                                    'a_level_physics',
-                                    undefined,
-                                    'medium',
-                                    'exam',
-                                    selectedLevel
-                                );
-
-                                setIsGeneratingQuestion(false);
-
-                                if (question) {
-                                    navigation.navigate('Quiz' as never, {
-                                        question,
-                                        subject: { id: 'a_level_physics', name: 'A Level Physics' }
-                                    } as never);
-                                    const newCredits = (user.credits || 0) - 1;
-                                    updateUser({ credits: newCredits });
-                                }
-                            } catch (error: any) {
-                                setIsGeneratingQuestion(false);
-                                Alert.alert('Error', error.response?.data?.message || 'Failed to start exam');
-                            }
-                        },
-                    },
-                ]
-            );
-        } catch (error) {
-            Alert.alert('Error', 'Failed to start exam');
+        } catch (error: any) {
+            Alert.alert('Error', error.response?.data?.message || 'Failed to start exam');
         }
     };
 
@@ -255,7 +225,7 @@ const ALevelPhysicsScreen: React.FC = () => {
                             <Ionicons name="arrow-back" size={22} color="rgba(255,255,255,0.9)" />
                             <Text style={styles.backButtonText}>Back</Text>
                         </TouchableOpacity>
-                        
+
                         <Text style={styles.title}>A Level Physics</Text>
                         <View style={styles.subtitleRow}>
                             <View style={styles.syllabusTag}>
@@ -264,7 +234,7 @@ const ALevelPhysicsScreen: React.FC = () => {
                             <Text style={styles.topicCount}>{asLevelCount + a2LevelCount} Topics</Text>
                         </View>
                     </View>
-                    
+
                     <View style={styles.headerIcon}>
                         <Ionicons name="planet-outline" size={42} color="rgba(255,255,255,0.95)" />
                     </View>
@@ -331,8 +301,8 @@ const ALevelPhysicsScreen: React.FC = () => {
                 </TouchableOpacity>
             </View>
 
-            <ScrollView 
-                style={styles.scrollView} 
+            <ScrollView
+                style={styles.scrollView}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
             >
@@ -369,8 +339,8 @@ const ALevelPhysicsScreen: React.FC = () => {
                     <ALevelExamCard
                         title={`Start ${selectedLevel} Exam`}
                         subtitle={`Mixed questions from all ${selectedLevel} topics`}
-                        gradientColors={selectedLevel === 'AS Level' 
-                            ? physicsTheme.gradient.asLevel 
+                        gradientColors={selectedLevel === 'AS Level'
+                            ? physicsTheme.gradient.asLevel
                             : physicsTheme.gradient.a2Level}
                         icon={<MaterialCommunityIcons name="file-document-edit-outline" size={28} color="#FFFFFF" />}
                         onPress={handleStartExam}
@@ -384,7 +354,7 @@ const ALevelPhysicsScreen: React.FC = () => {
                             {selectedLevel} Topics
                         </Text>
                         <View style={[
-                            styles.aiPoweredBadge, 
+                            styles.aiPoweredBadge,
                             { backgroundColor: isDarkMode ? 'rgba(25, 118, 210, 0.15)' : 'rgba(25, 118, 210, 0.1)' }
                         ]}>
                             <MaterialCommunityIcons name="lightning-bolt" size={14} color="#1976D2" />
@@ -397,7 +367,7 @@ const ALevelPhysicsScreen: React.FC = () => {
 
                     {filteredTopics.map((topic, index) => {
                         const globalIndex = selectedLevel === 'AS Level' ? index + 1 : index + asLevelCount + 1;
-                        
+
                         return (
                             <ALevelTopicCard
                                 key={topic.id}
@@ -406,8 +376,8 @@ const ALevelPhysicsScreen: React.FC = () => {
                                 icon={getTopicIcon(topic.id, index)}
                                 primaryColor={currentPrimaryColor}
                                 badges={[
-                                    { 
-                                        text: `Topic ${globalIndex}`, 
+                                    {
+                                        text: `Topic ${globalIndex}`,
                                         color: currentPrimaryColor,
                                         icon: 'numeric'
                                     },
@@ -425,7 +395,7 @@ const ALevelPhysicsScreen: React.FC = () => {
                     <ALevelInfoCard
                         title="A Level Physics"
                         content={`Mechanics, Waves, Electricity, Fields & Modern Physics\nPaper 1 (MCQ), Paper 2 (Structured), Paper 3 (Practical)\nQuestions generated using DeepSeek AI`}
-                        gradientColors={isDarkMode 
+                        gradientColors={isDarkMode
                             ? ['rgba(25, 118, 210, 0.08)', 'rgba(123, 31, 162, 0.05)']
                             : ['rgba(25, 118, 210, 0.06)', 'rgba(123, 31, 162, 0.04)']}
                         iconColor="#1976D2"
@@ -436,6 +406,15 @@ const ALevelPhysicsScreen: React.FC = () => {
                 {/* Bottom Spacing */}
                 <View style={{ height: 32 }} />
             </ScrollView>
+
+            <ExamSetupModal
+                visible={examSetupModalVisible}
+                onClose={() => setExamSetupModalVisible(false)}
+                onStartExam={handleExamStart}
+                initialSubject="a_level_physics"
+                userCredits={user?.credits || 0}
+                availableTopics={filteredTopics.map(t => t.name)}
+            />
         </View>
     );
 };
@@ -450,7 +429,7 @@ const styles = StyleSheet.create({
     scrollContent: {
         paddingBottom: 20,
     },
-    
+
     // Header Styles
     header: {
         paddingTop: Platform.OS === 'ios' ? 56 : 44,

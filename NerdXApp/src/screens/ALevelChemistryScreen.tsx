@@ -22,6 +22,8 @@ import { useThemedColors } from '../theme/useThemedStyles';
 import { aLevelChemistryTopics, ALevelChemistryTopic } from '../data/aLevelChemistry';
 import { quizApi } from '../services/api/quizApi';
 import LoadingProgress from '../components/LoadingProgress';
+import ExamSetupModal from '../components/ExamSetupModal';
+import { ExamConfig, TimeInfo, examApi } from '../services/api/examApi';
 import {
     ALevelTopicCard,
     ALevelFeatureCard,
@@ -61,6 +63,7 @@ const ALevelChemistryScreen: React.FC = () => {
 
     const [selectedLevel, setSelectedLevel] = useState<'AS Level' | 'A2 Level'>('AS Level');
     const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
+    const [examSetupModalVisible, setExamSetupModalVisible] = useState(false);
 
     // Filter topics by selected level
     const filteredTopics = aLevelChemistryTopics.filter(
@@ -71,8 +74,8 @@ const ALevelChemistryScreen: React.FC = () => {
     const asLevelCount = aLevelChemistryTopics.filter(t => t.difficulty === 'AS Level').length;
     const a2LevelCount = aLevelChemistryTopics.filter(t => t.difficulty === 'A2 Level').length;
 
-    const currentPrimaryColor = selectedLevel === 'AS Level' 
-        ? chemistryTheme.asLevelPrimary 
+    const currentPrimaryColor = selectedLevel === 'AS Level'
+        ? chemistryTheme.asLevelPrimary
         : chemistryTheme.a2LevelPrimary;
 
     // Get category color
@@ -159,56 +162,23 @@ const ALevelChemistryScreen: React.FC = () => {
         } as never);
     };
 
-    const handleStartExam = async () => {
+    const handleStartExam = () => {
+        setExamSetupModalVisible(true);
+    };
+
+    const handleExamStart = async (config: ExamConfig, timeInfo: TimeInfo) => {
+        setExamSetupModalVisible(false);
         try {
-            if (!user || (user.credits || 0) < 1) {
-                Alert.alert(
-                    'Insufficient Credits',
-                    'You need at least 1 credit to start an exam.',
-                    [{ text: 'OK' }]
-                );
-                return;
+            const session = await examApi.createSession(config);
+            if (session) {
+                navigation.navigate('ExamSession' as never, {
+                    sessionId: session.session_id,
+                    timeInfo,
+                    config,
+                } as never);
             }
-
-            Alert.alert(
-                '📝 Start Exam',
-                `A Level Chemistry ${selectedLevel} Exam\n\nThis exam will include mixed questions from all ${selectedLevel} topics.`,
-                [
-                    { text: 'Cancel', style: 'cancel' },
-                    {
-                        text: 'Begin Exam',
-                        onPress: async () => {
-                            try {
-                                setIsGeneratingQuestion(true);
-
-                                const question = await quizApi.generateQuestion(
-                                    'a_level_chemistry',
-                                    undefined,
-                                    'medium',
-                                    'exam',
-                                    selectedLevel
-                                );
-
-                                setIsGeneratingQuestion(false);
-
-                                if (question) {
-                                    navigation.navigate('Quiz' as never, {
-                                        question,
-                                        subject: { id: 'a_level_chemistry', name: 'A Level Chemistry' }
-                                    } as never);
-                                    const newCredits = (user.credits || 0) - 1;
-                                    updateUser({ credits: newCredits });
-                                }
-                            } catch (error: any) {
-                                setIsGeneratingQuestion(false);
-                                Alert.alert('Error', error.response?.data?.message || 'Failed to start exam');
-                            }
-                        },
-                    },
-                ]
-            );
-        } catch (error) {
-            Alert.alert('Error', 'Failed to start exam');
+        } catch (error: any) {
+            Alert.alert('Error', error.response?.data?.message || 'Failed to start exam');
         }
     };
 
@@ -247,7 +217,7 @@ const ALevelChemistryScreen: React.FC = () => {
                             <Ionicons name="arrow-back" size={22} color="rgba(255,255,255,0.9)" />
                             <Text style={styles.backButtonText}>Back</Text>
                         </TouchableOpacity>
-                        
+
                         <Text style={styles.title}>A Level Chemistry</Text>
                         <View style={styles.subtitleRow}>
                             <View style={styles.syllabusTag}>
@@ -256,7 +226,7 @@ const ALevelChemistryScreen: React.FC = () => {
                             <Text style={styles.topicCount}>{asLevelCount + a2LevelCount} Topics</Text>
                         </View>
                     </View>
-                    
+
                     <View style={styles.headerIcon}>
                         <Ionicons name="flask-outline" size={42} color="rgba(255,255,255,0.95)" />
                     </View>
@@ -323,8 +293,8 @@ const ALevelChemistryScreen: React.FC = () => {
                 </TouchableOpacity>
             </View>
 
-            <ScrollView 
-                style={styles.scrollView} 
+            <ScrollView
+                style={styles.scrollView}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
             >
@@ -361,8 +331,8 @@ const ALevelChemistryScreen: React.FC = () => {
                     <ALevelExamCard
                         title={`Start ${selectedLevel} Exam`}
                         subtitle={`Mixed questions from all ${selectedLevel} topics`}
-                        gradientColors={selectedLevel === 'AS Level' 
-                            ? chemistryTheme.gradient.asLevel 
+                        gradientColors={selectedLevel === 'AS Level'
+                            ? chemistryTheme.gradient.asLevel
                             : chemistryTheme.gradient.a2Level}
                         icon={<MaterialCommunityIcons name="file-document-edit-outline" size={28} color="#FFFFFF" />}
                         onPress={handleStartExam}
@@ -372,7 +342,7 @@ const ALevelChemistryScreen: React.FC = () => {
                 {/* Category Legend */}
                 <View style={styles.legendContainer}>
                     <Text style={[
-                        styles.legendTitle, 
+                        styles.legendTitle,
                         { color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(26,26,46,0.7)' }
                     ]}>
                         Chemistry Categories:
@@ -396,7 +366,7 @@ const ALevelChemistryScreen: React.FC = () => {
                             {selectedLevel} Topics
                         </Text>
                         <View style={[
-                            styles.aiPoweredBadge, 
+                            styles.aiPoweredBadge,
                             { backgroundColor: isDarkMode ? 'rgba(0, 137, 123, 0.15)' : 'rgba(0, 137, 123, 0.1)' }
                         ]}>
                             <MaterialCommunityIcons name="lightning-bolt" size={14} color="#00897B" />
@@ -415,8 +385,8 @@ const ALevelChemistryScreen: React.FC = () => {
                             icon={getCategoryIcon(topic.category)}
                             primaryColor={getCategoryColor(topic.category)}
                             badges={[
-                                { 
-                                    text: topic.category.replace(' Chemistry', ''), 
+                                {
+                                    text: topic.category.replace(' Chemistry', ''),
                                     color: getCategoryColor(topic.category),
                                     icon: 'tag-outline'
                                 },
@@ -433,7 +403,7 @@ const ALevelChemistryScreen: React.FC = () => {
                     <ALevelInfoCard
                         title="A Level Chemistry"
                         content={`Physical, Inorganic, Organic & Analysis\nPaper 1 (MCQ), Paper 2 (Structured), Paper 3 (Practical)\nQuestions generated using DeepSeek AI`}
-                        gradientColors={isDarkMode 
+                        gradientColors={isDarkMode
                             ? ['rgba(0, 137, 123, 0.08)', 'rgba(123, 31, 162, 0.05)']
                             : ['rgba(0, 137, 123, 0.06)', 'rgba(123, 31, 162, 0.04)']}
                         iconColor="#00897B"
@@ -444,6 +414,15 @@ const ALevelChemistryScreen: React.FC = () => {
                 {/* Bottom Spacing */}
                 <View style={{ height: 32 }} />
             </ScrollView>
+
+            <ExamSetupModal
+                visible={examSetupModalVisible}
+                onClose={() => setExamSetupModalVisible(false)}
+                onStartExam={handleExamStart}
+                initialSubject="a_level_chemistry"
+                userCredits={user?.credits || 0}
+                availableTopics={filteredTopics.map(t => t.name)}
+            />
         </View>
     );
 };
@@ -458,7 +437,7 @@ const styles = StyleSheet.create({
     scrollContent: {
         paddingBottom: 20,
     },
-    
+
     // Header Styles
     header: {
         paddingTop: Platform.OS === 'ios' ? 56 : 44,

@@ -23,6 +23,8 @@ import { Modal, ModalOptionCard } from '../components/Modal';
 import { Colors, getColors } from '../theme/colors';
 import { useThemedColors } from '../theme/useThemedStyles';
 import LoadingProgress from '../components/LoadingProgress';
+import ExamSetupModal from '../components/ExamSetupModal';
+import { ExamConfig, TimeInfo, examApi } from '../services/api/examApi';
 import { Ionicons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
@@ -49,6 +51,9 @@ const TopicsScreen: React.FC = () => {
   // Combined Science Question Type Modal (MCQ vs Structured)
   const [scienceQuestionTypeModalVisible, setScienceQuestionTypeModalVisible] = useState(false);
   const [selectedScienceTopic, setSelectedScienceTopic] = useState<Topic | null>(null);
+
+  // Exam Setup Modal state
+  const [examSetupModalVisible, setExamSetupModalVisible] = useState(false);
 
   useEffect(() => {
     if (subject.id === 'combined_science') {
@@ -205,6 +210,24 @@ const TopicsScreen: React.FC = () => {
       preselectedSubject: 'Mathematics',
       preselectedTopic: topicName
     } as never);
+  };
+
+  // Handle exam modal start
+  const handleExamStart = async (config: ExamConfig, timeInfo: TimeInfo) => {
+    setExamSetupModalVisible(false);
+    try {
+      // Navigate to exam session with config
+      const session = await examApi.createSession(config);
+      if (session) {
+        navigation.navigate('ExamSession' as never, {
+          sessionId: session.session_id,
+          timeInfo,
+          config,
+        } as never);
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.message || 'Failed to start exam');
+    }
   };
 
   const handleStartQuiz = async (topic?: Topic, questionType?: string, questionFormat?: 'mcq' | 'structured') => {
@@ -824,10 +847,15 @@ const TopicsScreen: React.FC = () => {
               variant="gradient"
               gradientColors={getHeaderGradient()}
               onPress={() => {
-                if (subject.id === 'combined_science') {
-                  // For combined science, maybe we want a subject specific exam?
-                  // Or just the general one. Let's keep general for now, or pass the activeTab
-                  handleStartQuiz(); // This will use activeTab as parent_subject
+                if (subject.id === 'mathematics') {
+                  // For Mathematics, open the exam setup modal
+                  setExamSetupModalVisible(true);
+                } else if (subject.id === 'combined_science') {
+                  // For Combined Science (Biology/Chemistry/Physics), open exam modal
+                  setExamSetupModalVisible(true);
+                } else if (subject.id === 'english') {
+                  // For English, open exam setup modal
+                  setExamSetupModalVisible(true);
                 } else {
                   handleStartQuiz();
                 }
@@ -944,6 +972,16 @@ const TopicsScreen: React.FC = () => {
           color={Colors.subjects.combinedScience}
         />
       </Modal>
+
+      {/* Exam Setup Modal for Mathematics and Combined Science */}
+      <ExamSetupModal
+        visible={examSetupModalVisible}
+        onClose={() => setExamSetupModalVisible(false)}
+        onStartExam={handleExamStart}
+        initialSubject={subject.id === 'combined_science' ? activeTab.toLowerCase() : subject.id}
+        userCredits={user?.credits || 0}
+        availableTopics={topics.map(t => t.name)}
+      />
     </View>
   );
 };

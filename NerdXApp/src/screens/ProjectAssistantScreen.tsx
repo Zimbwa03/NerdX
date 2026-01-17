@@ -660,25 +660,51 @@ const ProjectAssistantScreen: React.FC = () => {
       </ScrollView>
 
       <View style={[styles.inputContainer, { backgroundColor: themedColors.background.paper, borderTopColor: themedColors.border.light }]}>
-        {/* Media Selection Popup */}
+        {/* Media Selection Popup - Premium Glass Design */}
         {showModeMenu && (
-          <View style={[styles.modeMenuPopup, { backgroundColor: isDarkMode ? '#2A2A3E' : '#FFFFFF' }]}>
+          <View style={[
+            styles.modeMenuPopup,
+            {
+              backgroundColor: isDarkMode ? 'rgba(30, 30, 50, 0.98)' : '#FFFFFF',
+              borderColor: isDarkMode ? 'rgba(139, 92, 246, 0.3)' : 'rgba(0, 0, 0, 0.08)',
+            }
+          ]}>
+            {/* Header */}
+            <Text style={[
+              styles.modeMenuHeader,
+              { color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666' }
+            ]}>Add Content</Text>
+
             <TouchableOpacity
-              style={styles.modeMenuItem}
+              style={[
+                styles.modeMenuItem,
+                { backgroundColor: isDarkMode ? 'rgba(33, 150, 243, 0.15)' : 'rgba(33, 150, 243, 0.08)' }
+              ]}
               onPress={() => { setShowModeMenu(false); handleDocumentUpload(); }}
             >
-              <Ionicons name="document-attach-outline" size={20} color="#2196F3" />
-              <Text style={[styles.modeMenuText, { color: '#2196F3' }]}>Upload Document</Text>
-              <Text style={styles.modeMenuDesc}>Analyze PDFs and study materials</Text>
+              <View style={[styles.modeMenuIcon, { backgroundColor: isDarkMode ? 'rgba(33, 150, 243, 0.25)' : 'rgba(33, 150, 243, 0.15)' }]}>
+                <Ionicons name="document-attach-outline" size={22} color="#2196F3" />
+              </View>
+              <View style={styles.modeMenuTextContainer}>
+                <Text style={[styles.modeMenuText, { color: isDarkMode ? '#64B5F6' : '#1976D2' }]}>Upload Document</Text>
+                <Text style={[styles.modeMenuDesc, { color: isDarkMode ? 'rgba(255, 255, 255, 0.5)' : '#888' }]}>Analyze PDFs and study materials</Text>
+              </View>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.modeMenuItem}
+              style={[
+                styles.modeMenuItem,
+                { backgroundColor: isDarkMode ? 'rgba(139, 92, 246, 0.15)' : 'rgba(139, 92, 246, 0.08)' }
+              ]}
               onPress={() => { setShowModeMenu(false); handleImageScan(); }}
             >
-              <Ionicons name="image-outline" size={20} color={themedColors.primary.main} />
-              <Text style={[styles.modeMenuText, { color: themedColors.primary.main }]}>Scan Image</Text>
-              <Text style={styles.modeMenuDesc}>AI Vision Analysis</Text>
+              <View style={[styles.modeMenuIcon, { backgroundColor: isDarkMode ? 'rgba(139, 92, 246, 0.25)' : 'rgba(139, 92, 246, 0.15)' }]}>
+                <Ionicons name="image-outline" size={22} color={themedColors.primary.main} />
+              </View>
+              <View style={styles.modeMenuTextContainer}>
+                <Text style={[styles.modeMenuText, { color: isDarkMode ? '#B794F6' : '#7C3AED' }]}>Scan Image</Text>
+                <Text style={[styles.modeMenuDesc, { color: isDarkMode ? 'rgba(255, 255, 255, 0.5)' : '#888' }]}>AI Vision Analysis</Text>
+              </View>
             </TouchableOpacity>
           </View>
         )}
@@ -953,41 +979,59 @@ const styles = StyleSheet.create({
   },
   modeMenuPopup: {
     position: 'absolute',
-    bottom: 80,
+    bottom: 85,
     left: 16,
-    width: 220,
+    right: 16,
+    maxWidth: 320,
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 8,
-    elevation: 8,
+    borderRadius: 20,
+    padding: 16,
+    elevation: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+  },
+  modeMenuHeader: {
+    fontSize: 12,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 12,
+    marginLeft: 4,
   },
   modeMenuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
+    padding: 14,
+    borderRadius: 14,
+    marginBottom: 8,
+  },
+  modeMenuIcon: {
+    width: 44,
+    height: 44,
     borderRadius: 12,
-    marginBottom: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modeMenuTextContainer: {
+    flex: 1,
+    marginLeft: 14,
   },
   modeMenuItemActive: {
-    backgroundColor: 'rgba(0,0,0,0.05)',
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
   },
   modeMenuText: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 15,
+    fontWeight: '600',
     color: '#333',
-    marginLeft: 12,
-    flex: 1,
   },
   modeMenuDesc: {
-    fontSize: 10,
-    color: '#999',
-    marginLeft: 8,
+    fontSize: 12,
+    color: '#888',
+    marginTop: 2,
   },
   micButton: {
     width: 36,

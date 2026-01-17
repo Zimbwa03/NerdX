@@ -136,7 +136,18 @@ class PaynowService:
                     'instructions': str(instructions)
                 }
             else:
-                error_detail = str(getattr(response, 'error', 'Unknown error'))
+                # Get error detail - handle case where error might be a type instead of string
+                raw_error = getattr(response, 'error', None)
+                if raw_error is None:
+                    error_detail = 'Unknown error'
+                elif isinstance(raw_error, str):
+                    error_detail = raw_error
+                elif isinstance(raw_error, type):
+                    # Bug in paynow lib: error is a type, try to get from response data
+                    error_detail = getattr(response, 'data', {}).get('error', 'Payment failed - please try again')
+                else:
+                    error_detail = str(raw_error)
+                
                 logger.error(f"❌ Paynow payment failed: {error_detail}")
                 return {
                     'success': False,
@@ -220,7 +231,17 @@ class PaynowService:
                     'instructions': f'Please complete your payment on the Paynow secure payment page. You will be redirected to enter your card details.'
                 }
             else:
-                error_detail = str(getattr(response, 'error', 'Unknown error'))
+                # Get error detail - handle case where error might be a type instead of string
+                raw_error = getattr(response, 'error', None)
+                if raw_error is None:
+                    error_detail = 'Unknown error'
+                elif isinstance(raw_error, str):
+                    error_detail = raw_error
+                elif isinstance(raw_error, type):
+                    error_detail = getattr(response, 'data', {}).get('error', 'Card payment failed - please try again')
+                else:
+                    error_detail = str(raw_error)
+                    
                 logger.error(f"❌ Visa/Mastercard payment failed: {error_detail}")
                 return {
                     'success': False,

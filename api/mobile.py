@@ -37,6 +37,7 @@ from services.graph_service import GraphService
 from services.image_service import ImageService
 from services.voice_service import get_voice_service
 from services.vertex_service import vertex_service, get_image_question_credit_cost, get_text_question_credit_cost
+from services.exam_session_service import exam_session_service
 from utils.url_utils import convert_local_path_to_public_url
 from config import Config
 
@@ -5498,3 +5499,381 @@ def analyze_document():
     except Exception as e:
         logger.error(f"Document analyze error: {e}", exc_info=True)
         return jsonify({'success': False, 'message': str(e)}), 500
+
+# ============================================================================
+# CBT EXAM SESSION ENDPOINTS
+# ============================================================================
+
+@mobile_bp.route('/exam/create', methods=['POST'])
+@require_auth
+def create_exam_session():
+    """
+    Create a new CBT exam session.
+    
+    Request body:
+    {
+        "subject": "mathematics",
+        "level": "O_LEVEL",
+        "question_mode": "MCQ_ONLY",
+        "difficulty": "standard",
+        "total_questions": 10,
+        "paper_style": "ZIMSEC",
+        "topics": ["Algebra", "Trigonometry"]  // optional
+    }
+    """
+    try:
+        data = request.get_json()
+        
+        subject = data.get('subject', 'mathematics')
+        level = data.get('level', 'O_LEVEL')
+        question_mode = data.get('question_mode', 'MCQ_ONLY')
+        difficulty = data.get('difficulty', 'standard')
+        total_questions = data.get('total_questions', 10)
+        paper_style = data.get('paper_style', 'ZIMSEC')
+        topics = data.get('topics', [])  # Optional topic filter
+        
+        if not subject:
+            return jsonify({'success': False, 'message': 'Subject is required'}), 400
+        
+        # Validate question count
+        valid_counts = [5, 10, 15, 20, 25, 30, 40, 50, 60, 75, 100]
+        if total_questions not in valid_counts:
+            total_questions = min(valid_counts, key=lambda x: abs(x - total_questions))
+        
+        # Get user info
+        user_data = get_user_registration(g.current_user_id)
+        username = user_data.get('name', 'Student') if user_data else 'Student'
+        
+        # Calculate credit cost based on subject, level, and question mode
+        # O-Level Mathematics MCQ: 0.5 credits per question (1 credit = 2 questions)
+        # All other combinations: 1 credit per question
+        import math
+        if subject.lower() == 'mathematics' and level == 'O_LEVEL' and question_mode == 'MCQ_ONLY':
+            credit_cost = math.ceil(total_questions * 0.5)
+        elif question_mode == 'MIXED':
+            # Mixed: half MCQ (0.5 each), half structured (1 each)
+            mcq_count = total_questions // 2
+            structured_count = total_questions - mcq_count
+            if subject.lower() == 'mathematics' and level == 'O_LEVEL':
+                credit_cost = math.ceil(mcq_count * 0.5) + structured_count
+            else:
+                credit_cost = total_questions
+        else:
+            credit_cost = total_questions
+        
+        # Check credits
+        user_credits = get_user_credits(g.current_user_id) or 0
+        
+        if user_credits < credit_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {credit_cost}, Available: {user_credits}'
+            }), 400
+        
+        # Create session
+        result = exam_session_service.create_session(
+            user_id=g.current_user_id,
+            username=username,
+            subject=subject,
+            level=level,
+            question_mode=question_mode,
+            difficulty=difficulty,
+            total_questions=total_questions,
+            paper_style=paper_style,
+            topics=topics,
+        )
+        
+        # Add credit cost to response for frontend display
+        result['credit_cost'] = credit_cost
+        
+        logger.info(f"Created exam session for {g.current_user_id}: {result.get('session_id')} (cost: {credit_cost} credits)")
+        
+        return jsonify({
+            'success': True,
+            'data': result
+        }), 201
+        
+    except Exception as e:
+        logger.error(f"Create exam session error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/exam/next', methods=['POST'])
+@require_auth
+def get_exam_next_question():
+    """
+    Generate and return the next question for an exam session.
+    One question at a time using DeepSeek.
+    
+    Request body:
+    {
+        "session_id": "uuid",
+        "question_index": 0  // optional, defaults to current index
+    }
+    """
+    try:
+        data = request.get_json()
+        session_id = data.get('session_id')
+        question_index = data.get('question_index')
+        
+        if not session_id:
+            return jsonify({'success': False, 'message': 'session_id is required'}), 400
+        
+        # Verify session belongs to user
+        session = exam_session_service.get_session(session_id)
+        if not session:
+            return jsonify({'success': False, 'message': 'Session not found'}), 404
+        
+        if session.get('user_id') != g.current_user_id:
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+        
+        if session.get('status') != 'active':
+            return jsonify({'success': False, 'message': 'Session is not active'}), 400
+        
+        # Deduct credit for this question
+        user_credits = get_user_credits(g.current_user_id) or 0
+        if user_credits < 1:
+            return jsonify({
+                'success': False,
+                'message': 'Insufficient credits for next question'
+            }), 400
+        
+        deduct_credits(g.current_user_id, 1, 'exam_question', f'Exam question #{question_index or session.get("current_index", 0) + 1}')
+        
+        # Generate next question
+        question = exam_session_service.generate_next_question(session_id, question_index)
+        
+        if not question:
+            return jsonify({'success': False, 'message': 'Failed to generate question'}), 500
+        
+        # Calculate remaining time
+        state = exam_session_service.get_session_state(session_id)
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'question': question,
+                'question_index': question.get('question_index', session.get('current_index', 0)),
+                'total_questions': session.get('total_questions'),
+                'remaining_seconds': state.get('remaining_seconds') if state else None,
+                'prompt': question.get('prompt_to_student', ''),
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get exam next question error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/exam/submit', methods=['POST'])
+@require_auth
+def submit_exam_answer():
+    """
+    Submit answer for a single question and get immediate feedback.
+    
+    Request body:
+    {
+        "session_id": "uuid",
+        "question_id": "uuid",
+        "answer": "A" or "structured text answer",
+        "time_spent_seconds": 45,
+        "is_flagged": false
+    }
+    """
+    try:
+        data = request.get_json()
+        session_id = data.get('session_id')
+        question_id = data.get('question_id')
+        answer = data.get('answer', '')
+        time_spent = data.get('time_spent_seconds', 0)
+        is_flagged = data.get('is_flagged', False)
+        
+        if not session_id or not question_id:
+            return jsonify({'success': False, 'message': 'session_id and question_id are required'}), 400
+        
+        # Verify session belongs to user
+        session = exam_session_service.get_session(session_id)
+        if not session:
+            return jsonify({'success': False, 'message': 'Session not found'}), 404
+        
+        if session.get('user_id') != g.current_user_id:
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+        
+        # Submit answer
+        result = exam_session_service.submit_answer(
+            session_id=session_id,
+            question_id=question_id,
+            answer=answer,
+            time_spent_seconds=time_spent,
+            is_flagged=is_flagged,
+        )
+        
+        if 'error' in result:
+            return jsonify({'success': False, 'message': result['error']}), 400
+        
+        return jsonify({
+            'success': True,
+            'data': result
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Submit exam answer error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/exam/complete', methods=['POST'])
+@require_auth
+def complete_exam():
+    """
+    Complete the exam and get final results.
+    
+    Request body:
+    {
+        "session_id": "uuid"
+    }
+    """
+    try:
+        data = request.get_json()
+        session_id = data.get('session_id')
+        
+        if not session_id:
+            return jsonify({'success': False, 'message': 'session_id is required'}), 400
+        
+        # Verify session belongs to user
+        session = exam_session_service.get_session(session_id)
+        if not session:
+            return jsonify({'success': False, 'message': 'Session not found'}), 404
+        
+        if session.get('user_id') != g.current_user_id:
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+        
+        # Complete exam
+        results = exam_session_service.complete_exam(session_id)
+        
+        if 'error' in results:
+            return jsonify({'success': False, 'message': results['error']}), 400
+        
+        # Award XP based on performance
+        percentage = results.get('score', {}).get('percentage', 0)
+        xp_earned = int(percentage * 2)  # Up to 200 XP for 100%
+        if xp_earned > 0:
+            add_xp(g.current_user_id, xp_earned)
+            results['xp_earned'] = xp_earned
+        
+        # Update streak
+        update_streak(g.current_user_id)
+        
+        logger.info(f"Exam {session_id} completed: {results.get('score', {}).get('grade')}")
+        
+        return jsonify({
+            'success': True,
+            'data': results
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Complete exam error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/exam/state/<session_id>', methods=['GET'])
+@require_auth
+def get_exam_state(session_id):
+    """
+    Get current exam session state for resume capability.
+    """
+    try:
+        # Verify session belongs to user
+        session = exam_session_service.get_session(session_id)
+        if not session:
+            return jsonify({'success': False, 'message': 'Session not found'}), 404
+        
+        if session.get('user_id') != g.current_user_id:
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+        
+        state = exam_session_service.get_session_state(session_id)
+        
+        if not state:
+            return jsonify({'success': False, 'message': 'Session state not found'}), 404
+        
+        return jsonify({
+            'success': True,
+            'data': state
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get exam state error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/exam/review/<session_id>', methods=['GET'])
+@require_auth
+def get_exam_review(session_id):
+    """
+    Get detailed question-by-question review after exam completion.
+    """
+    try:
+        # Verify session belongs to user
+        session = exam_session_service.get_session(session_id)
+        if not session:
+            return jsonify({'success': False, 'message': 'Session not found'}), 404
+        
+        if session.get('user_id') != g.current_user_id:
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+        
+        if session.get('status') != 'submitted':
+            return jsonify({'success': False, 'message': 'Exam must be completed before review'}), 400
+        
+        review = exam_session_service.get_exam_review(session_id)
+        
+        if not review:
+            return jsonify({'success': False, 'message': 'Review not available'}), 404
+        
+        return jsonify({
+            'success': True,
+            'data': review
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get exam review error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/exam/calculate-time', methods=['POST'])
+@require_auth
+def calculate_exam_time():
+    """
+    Calculate estimated exam time without creating a session.
+    Used for live time updates in the setup UI.
+    
+    Request body:
+    {
+        "subject": "mathematics",
+        "question_count": 20,
+        "question_mode": "MCQ_ONLY",
+        "difficulty": "standard"
+    }
+    """
+    try:
+        data = request.get_json()
+        
+        subject = data.get('subject', 'mathematics')
+        question_count = data.get('question_count', 10)
+        question_mode = data.get('question_mode', 'MCQ_ONLY')
+        difficulty = data.get('difficulty', 'standard')
+        
+        time_info = exam_session_service.calculate_exam_time(
+            subject=subject,
+            question_count=question_count,
+            question_mode=question_mode,
+            difficulty=difficulty,
+        )
+        
+        return jsonify({
+            'success': True,
+            'data': time_info
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Calculate exam time error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
