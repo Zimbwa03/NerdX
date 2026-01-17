@@ -24,6 +24,8 @@ class PaynowService:
     - Test mode support with simulation numbers
     """
     
+    MERCHANT_EMAIL = "neezykidngoni@gmail.com"
+
     def __init__(self):
         """Initialize Paynow service with credentials"""
         # Get Paynow credentials from environment
@@ -39,6 +41,8 @@ class PaynowService:
         
         # Test mode configuration
         self.test_mode = os.environ.get('PAYNOW_TEST_MODE', 'true').lower() == 'true'
+        if self.test_mode:
+            logger.info(f"🧪 PAYNOW TEST MODE ACTIVE - Using Merchant Email: {self.MERCHANT_EMAIL}")
         
         # Initialize Paynow client
         if self.integration_id and self.integration_key:
@@ -92,30 +96,26 @@ class PaynowService:
                     'message': 'Please provide a valid EcoCash number (e.g., 0771234567)'
                 }
             
+            # Determine Auth Email (Merchant Email during Test Mode)
+            auth_email = email
+            if self.test_mode:
+                auth_email = self.MERCHANT_EMAIL
+                logger.info(f"🧪 TEST MODE: Overriding user email {email} with merchant email {auth_email}")
+            
             # Create payment object according to documentation
-            payment = self.paynow_client.create_payment(reference, email)
+            payment = self.paynow_client.create_payment(reference, auth_email)
             payment.add(description, amount)
             
-            logger.info(f"💰 Creating Paynow payment: {reference} - ${amount:.2f} to {phone_number}")
+            logger.info(f"💰 Creating Paynow payment: {reference} - ${amount:.2f} to {phone_number} (Auth: {auth_email})")
             
             # Send mobile payment request (documentation: send_mobile(payment, phone, method))
             response = self.paynow_client.send_mobile(payment, phone_number, 'ecocash')
             
             # Debug response details
             logger.info(f"🔍 Paynow response debug: success={response.success}")
-            logger.info(f"🔍 Response object type: {type(response)}")
-            logger.info(f"🔍 Response attributes: {dir(response)}")
             
             if hasattr(response, 'error'):
                 logger.info(f"🔍 Response error: {response.error} (type: {type(response.error)})")
-            if hasattr(response, 'data'):
-                logger.info(f"🔍 Response data: {response.data}")
-            if hasattr(response, 'poll_url'):
-                logger.info(f"🔍 Response poll_url: {response.poll_url}")
-            if hasattr(response, 'redirect_url'):
-                logger.info(f"🔍 Response redirect_url: {response.redirect_url}")
-            if hasattr(response, 'instructions'):
-                logger.info(f"🔍 Response instructions: {response.instructions}")
             
             if response.success:
                 logger.info(f"✅ Paynow payment initiated successfully: {response.poll_url}")
@@ -147,6 +147,10 @@ class PaynowService:
                     error_detail = getattr(response, 'data', {}).get('error', 'Payment failed - please try again')
                 else:
                     error_detail = str(raw_error)
+                
+                if "ACTIVE 'ecocash' payment method" in error_detail:
+                    logger.critical("🚨 PAYNOW CONFIG ERROR: EcoCash is not enabled for this Integration ID!")
+                    logger.critical("👉 ACTION REQUIRED: Go to Paynow Dashboard > Integration > Edit and check 'EcoCash'")
                 
                 logger.error(f"❌ Paynow payment failed: {error_detail}")
                 return {
@@ -199,11 +203,17 @@ class PaynowService:
                     'message': 'Please provide a valid email address'
                 }
             
+            # Determine Auth Email (Merchant Email during Test Mode)
+            auth_email = email
+            if self.test_mode:
+                auth_email = self.MERCHANT_EMAIL
+                logger.info(f"🧪 TEST MODE: Overriding user email {email} with merchant email {auth_email}")
+            
             # Create payment object
-            payment = self.paynow_client.create_payment(reference, email)
+            payment = self.paynow_client.create_payment(reference, auth_email)
             payment.add(description, amount)
             
-            logger.info(f"💳 Creating Visa/Mastercard payment: {reference} - ${amount:.2f} for {email}")
+            logger.info(f"💳 Creating Visa/Mastercard payment: {reference} - ${amount:.2f} for {email} (Auth: {auth_email})")
             
             # Use send() for web checkout (not send_mobile)
             # This returns a redirect URL to Paynow's hosted payment page

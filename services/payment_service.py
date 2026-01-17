@@ -13,8 +13,8 @@ class PaymentService:
     
     def __init__(self):
         self.ecocash_number = "+263 785494594"  # Fixed payment number
-        if not os.getenv('ECOCASH_API_KEY'):
-            logger.warning("EcoCash API key not configured - payment features will be limited")
+        # if not os.getenv('ECOCASH_API_KEY'):
+        #     logger.warning("EcoCash API key not configured - payment features will be limited")
         
         self.packages = [
             {
@@ -635,6 +635,23 @@ class PaymentService:
                     if poll_url:
                         self._start_payment_monitoring(reference_code, poll_url, user_id)
                     
+                    message = f"💳 **PAYNOW USD ECOCASH PAYMENT**\n\n" \
+                              f"📱 **Payment initiated to {phone_number}**\n" \
+                              f"💰 **Amount**: ${package['price']:.2f} USD\n" \
+                              f"📞 **EcoCash Number**: {phone_number}\n" \
+                              f"🔢 **Reference**: {reference_code}\n\n" \
+                              f"{payment_result['instructions']}\n\n" \
+                              f"⏰ **Status will be updated automatically once payment is confirmed.**"
+
+                    # Add Test Mode Information if active
+                    if os.environ.get('PAYNOW_TEST_MODE', 'true').lower() == 'true':
+                         message += "\n\n🧪 **TEST MODE ACTIVE**\n" \
+                                   "Use these numbers to simulate results:\n" \
+                                   "✅ Success: 0771111111\n" \
+                                   "⏱️ Delayed: 0772222222\n" \
+                                   "❌ Cancel: 0773333333\n" \
+                                   "🚫 No Funds: 0774444444"
+
                     return {
                         'success': True,
                         'payment_type': 'paynow',
@@ -642,13 +659,7 @@ class PaymentService:
                         'instructions': payment_result['instructions'],
                         'poll_url': payment_result['poll_url'],
                         'status': 'initiated',
-                        'message': f"💳 **PAYNOW USD ECOCASH PAYMENT**\n\n"
-                                  f"📱 **Payment initiated to {phone_number}**\n"
-                                  f"💰 **Amount**: ${package['price']:.2f} USD\n"
-                                  f"📞 **EcoCash Number**: {phone_number}\n"
-                                  f"🔢 **Reference**: {reference_code}\n\n"
-                                  f"{payment_result['instructions']}\n\n"
-                                  f"⏰ **Status will be updated automatically once payment is confirmed.**",
+                        'message': message,
                         'package': package
                     }
                 else:

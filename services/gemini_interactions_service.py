@@ -127,6 +127,37 @@ class GeminiInteractionsService:
     # BASIC INTERACTIONS
     # =========================================================================
     
+    def _sanitize_base64(self, data: str) -> str:
+        """Remove newlines and whitespace from base64 data to prevent URL errors"""
+        if not data:
+            return data
+        # Remove all whitespace including newlines, carriage returns, tabs
+        return ''.join(data.split())
+    
+    def _sanitize_input_content(self, input_content: Union[str, List[Dict]]) -> Union[str, List[Dict]]:
+        """Sanitize input content to remove problematic characters"""
+        if isinstance(input_content, str):
+            # For simple strings, just strip
+            return input_content.strip()
+        
+        if isinstance(input_content, list):
+            sanitized = []
+            for item in input_content:
+                if isinstance(item, dict):
+                    sanitized_item = item.copy()
+                    # Sanitize base64 data fields
+                    if 'data' in sanitized_item and sanitized_item.get('type') in ['image', 'audio', 'video', 'document']:
+                        sanitized_item['data'] = self._sanitize_base64(sanitized_item['data'])
+                    # Strip text fields
+                    if 'text' in sanitized_item:
+                        sanitized_item['text'] = sanitized_item['text'].strip() if sanitized_item['text'] else ''
+                    sanitized.append(sanitized_item)
+                else:
+                    sanitized.append(item)
+            return sanitized
+        
+        return input_content
+    
     def create_interaction(
         self,
         input_content: Union[str, List[Dict]],
@@ -163,10 +194,13 @@ class GeminiInteractionsService:
             # Get model name
             model_name = self.MODELS.get(model, self.MODELS['flash'])
             
+            # Sanitize input content to prevent newline/whitespace issues
+            sanitized_content = self._sanitize_input_content(input_content)
+            
             # Build request parameters
             params = {
                 'model': model_name,
-                'input': input_content,
+                'input': sanitized_content,
                 'generation_config': {
                     'temperature': temperature,
                     'max_output_tokens': max_tokens

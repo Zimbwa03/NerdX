@@ -60,7 +60,14 @@ const GraphPracticeScreen: React.FC = () => {
   const videoPlayer = useVideoPlayer(videoUrl || '', (player) => {
     player.loop = true;
     if (videoUrl) {
-      player.play();
+      // Small delay before playing to allow video to buffer
+      setTimeout(() => {
+        try {
+          player.play();
+        } catch (e) {
+          console.warn('Video play failed:', e);
+        }
+      }, 500);
     }
   });
 
@@ -68,13 +75,19 @@ const GraphPracticeScreen: React.FC = () => {
   const { isPlaying } = useEvent(videoPlayer, 'playingChange', { isPlaying: videoPlayer.playing });
   const { status } = useEvent(videoPlayer, 'statusChange', { status: videoPlayer.status });
 
-  // Handle video player errors
+  // Handle video player errors - only trigger once per video URL
+  const [errorShown, setErrorShown] = React.useState(false);
   React.useEffect(() => {
-    if (status === 'error' && videoUrl) {
-      console.warn('Video player error detected');
+    if (status === 'error' && videoUrl && !errorShown) {
+      console.warn('Video player error detected for:', videoUrl);
       setVideoError('Animation failed to load. The Manim server may not be available.');
+      setErrorShown(true);
+    } else if (status === 'readyToPlay') {
+      // Clear error if video becomes ready
+      setVideoError(null);
+      setErrorShown(false);
     }
-  }, [status, videoUrl]);
+  }, [status, videoUrl, errorShown]);
 
   const graphTypes = [
     { id: 'linear', name: 'Linear', icon: '📈' },
@@ -135,19 +148,35 @@ const GraphPracticeScreen: React.FC = () => {
               : '/' + animResult.video_path;
             const fullVideoUrl = baseUrl + videoPath;
 
-            // Validate the video URL is accessible before setting
-            try {
-              const response = await fetch(fullVideoUrl, { method: 'HEAD' });
-              if (response.ok) {
-                setVideoUrl(fullVideoUrl);
-              } else {
-                console.warn('Video URL not accessible:', response.status);
-                setVideoError('Animation video is not available. The server may still be generating it.');
+            // Validate the video URL with retry logic (server may still be writing file)
+            const validateVideoUrl = async (url: string, retries: number = 2): Promise<boolean> => {
+              for (let attempt = 0; attempt < retries; attempt++) {
+                try {
+                  // Wait a bit before each attempt (let server finish writing)
+                  if (attempt > 0) {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                  }
+                  const response = await fetch(url, { method: 'HEAD' });
+                  if (response.ok) {
+                    return true;
+                  }
+                  console.warn(`Video URL validation attempt ${attempt + 1}/${retries} failed:`, response.status);
+                } catch (e) {
+                  console.warn(`Video URL fetch attempt ${attempt + 1}/${retries} error:`, e);
+                }
               }
-            } catch (fetchError) {
-              console.warn('Could not validate video URL:', fetchError);
-              // Still try to set the URL - the Video component will handle the error
+              return false;
+            };
+
+            const isAccessible = await validateVideoUrl(fullVideoUrl);
+            if (isAccessible) {
+              // Reset error state and set URL
+              setErrorShown(false);
+              setVideoError(null);
               setVideoUrl(fullVideoUrl);
+            } else {
+              console.warn('Video URL not accessible after retries');
+              setVideoError('Animation video is not available. The server may still be generating it.');
             }
           } else {
             console.log('Animation not available for this graph type');

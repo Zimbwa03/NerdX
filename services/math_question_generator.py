@@ -38,7 +38,7 @@ except ImportError:
 
 
 class MathQuestionGenerator:
-    """DeepSeek AI (primary) + Gemini AI (fallback) mathematics question generator"""
+    """DeepSeek AI mathematics question generator (Gemini fallback disabled for Graph Practice)"""
 
     def __init__(self):
         # DeepSeek configuration (fallback)
@@ -52,8 +52,10 @@ class MathQuestionGenerator:
         self._gemini_configured = False
         self._gemini_client = None
         
-        if GENAI_AVAILABLE:
-            self._init_gemini_client()
+        # Gemini initialization disabled - using DeepSeek only for Graph Practice
+        # To re-enable Gemini fallback, uncomment the following lines:
+        # if GENAI_AVAILABLE:
+        #     self._init_gemini_client()
         
         if self.deepseek_api_key:
             logger.info("DeepSeek AI configured as PRIMARY provider")
@@ -145,20 +147,20 @@ class MathQuestionGenerator:
                     logger.warning("DeepSeek API timeout (30s limit)")
                 except Exception as e:
                     logger.warning(f"DeepSeek API error: {e}")
-                logger.warning("DeepSeek AI failed, falling back to Gemini")
+                logger.warning("DeepSeek AI failed, using local fallback")
             
-            # FALLBACK: Try Gemini AI if DeepSeek fails
-            if self._gemini_configured:
-                logger.info(f"Trying Gemini AI (fallback) for {subject}/{topic}")
-                gemini_result = self._generate_with_gemini(subject, topic, difficulty, recent_topics)
-                if gemini_result:
-                    # Validate and format response
-                    question_data = self._validate_and_format_question(gemini_result, subject, topic, difficulty, user_id)
-                    if question_data:
-                        question_data['source'] = 'gemini_ai'
-                        logger.info(f"Gemini AI (fallback) generated question for {subject}/{topic}")
-                        return question_data
-                logger.warning("Gemini AI fallback also failed")
+            # GEMINI FALLBACK DISABLED - Using DeepSeek only
+            # To re-enable Gemini fallback, uncomment the following block:
+            # if self._gemini_configured:
+            #     logger.info(f"Trying Gemini AI (fallback) for {subject}/{topic}")
+            #     gemini_result = self._generate_with_gemini(subject, topic, difficulty, recent_topics)
+            #     if gemini_result:
+            #         question_data = self._validate_and_format_question(gemini_result, subject, topic, difficulty, user_id)
+            #         if question_data:
+            #             question_data['source'] = 'gemini_ai'
+            #             logger.info(f"Gemini AI (fallback) generated question for {subject}/{topic}")
+            #             return question_data
+            #     logger.warning("Gemini AI fallback also failed")
 
             # FINAL FALLBACK: Use local fallback questions
             logger.warning(f"All AI providers failed for {subject}/{topic}, using local fallback questions")
@@ -224,6 +226,97 @@ class MathQuestionGenerator:
         Now calls the main generate_question which uses Gemini as primary.
         """
         return self.generate_question(subject, topic, difficulty)
+
+    def generate_graph_question(self, equation: str, graph_type: str, difficulty: str = 'medium', user_id: str = None) -> Optional[Dict]:
+        """
+        Generate a question specifically about the displayed graph equation.
+        Ensures the question is directly related to the graph shown to the student.
+        """
+        if not self.deepseek_api_key:
+            logger.warning("DeepSeek API key not configured, using fallback graph question")
+            return self._generate_fallback_graph_question(equation, graph_type, difficulty)
+        
+        try:
+            prompt = self._create_graph_question_prompt(equation, graph_type, difficulty)
+            logger.info(f"Generating graph question for equation: {equation}")
+            
+            response = self._send_api_request(prompt, timeout=30)
+            if response:
+                question_data = self._validate_and_format_question(
+                    response, 'Mathematics', f'Graph - {graph_type.title()}', difficulty, user_id
+                )
+                if question_data:
+                    question_data['source'] = 'deepseek_ai'
+                    question_data['equation'] = equation
+                    logger.info(f"DeepSeek AI generated graph question for {equation}")
+                    return question_data
+                    
+        except requests.exceptions.Timeout:
+            logger.warning("DeepSeek API timeout for graph question")
+        except Exception as e:
+            logger.warning(f"DeepSeek API error for graph question: {e}")
+        
+        logger.warning(f"AI failed, using fallback graph question for {equation}")
+        return self._generate_fallback_graph_question(equation, graph_type, difficulty)
+    
+    def _create_graph_question_prompt(self, equation: str, graph_type: str, difficulty: str) -> str:
+        """Create a prompt for graph-specific questions about the given equation."""
+        graph_contexts = {
+            'linear': "Focus on: gradient/slope, y-intercept, x-intercept, rate of change.",
+            'quadratic': "Focus on: vertex, axis of symmetry, roots, maximum/minimum.",
+            'exponential': "Focus on: growth/decay rate, asymptotes, initial value.",
+            'trigonometric': "Focus on: amplitude, period, phase shift."
+        }
+        context = graph_contexts.get(graph_type.lower(), "Focus on key graph features.")
+        points = {'easy': 10, 'medium': 20, 'difficult': 30}.get(difficulty, 20)
+        
+        return f"""Generate a ZIMSEC O-Level question about this SPECIFIC equation:
+
+**Equation:** {equation}
+**Graph Type:** {graph_type.title()}
+**Difficulty:** {difficulty}
+{context}
+
+CRITICAL: The question MUST be about {equation} - ask students to calculate specific values.
+Use PLAIN TEXT math (x², √, π) - NO LaTeX.
+
+Return JSON:
+{{
+    "question": "Question about {equation}",
+    "solution": "Step-by-step solution for {equation}",
+    "answer": "Final answer",
+    "points": {points},
+    "explanation": "Concept explanation"
+}}"""
+
+    def _generate_fallback_graph_question(self, equation: str, graph_type: str, difficulty: str) -> Dict:
+        """Generate fallback question when AI fails."""
+        if graph_type.lower() == 'linear':
+            return {
+                'question': f"The graph shows {equation}. Find the gradient of this line.",
+                'solution': f"For y = mx + c, the gradient is m. In {equation}, identify the x coefficient.",
+                'answer': "Read gradient from equation",
+                'points': 10 if difficulty == 'easy' else 20,
+                'equation': equation,
+                'source': 'fallback'
+            }
+        elif graph_type.lower() == 'quadratic':
+            return {
+                'question': f"For {equation}, state whether the parabola opens up or down.",
+                'solution': f"If coefficient of x² is positive, opens up. If negative, opens down.",
+                'answer': "Check x² coefficient sign",
+                'points': 10 if difficulty == 'easy' else 20,
+                'equation': equation,
+                'source': 'fallback'
+            }
+        return {
+            'question': f"Find the y-intercept of {equation}.",
+            'solution': f"Set x = 0 in {equation} and solve for y.",
+            'answer': "Calculate y when x=0",
+            'points': 10,
+            'equation': equation,
+            'source': 'fallback'
+        }
 
     def _create_question_prompt(self, subject: str, topic: str, difficulty: str, recent_topics: set = None) -> str:
         """Create optimized prompt using structured prompts when available"""

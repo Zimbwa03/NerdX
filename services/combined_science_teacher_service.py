@@ -1117,9 +1117,6 @@ and provide educational guidance. Explain scientific concepts clearly."""
             dict with analysis
         """
         try:
-            if not self._is_interactions_configured:
-                return {'success': False, 'error': 'Image analysis not available'}
-            
             session_data = session_manager.get_data(user_id, 'science_teacher') or {}
             subject = session_data.get('subject', 'Science')
             grade_level = session_data.get('grade_level', 'O-Level')
@@ -1134,16 +1131,52 @@ Please provide:
 4. Related topics they should study
 5. Any exam tips related to this content"""
             
-            result = self.interactions_service.analyze_image(
-                image_data=image_data,
-                mime_type=mime_type,
-                prompt=prompt
-            )
+            # Try interactions service first if available
+            if self._is_interactions_configured and self.interactions_service:
+                try:
+                    result = self.interactions_service.analyze_image(
+                        image_data=image_data,
+                        mime_type=mime_type,
+                        prompt=prompt
+                    )
+                    
+                    if result.get('success'):
+                        logger.info(f"🔬 Analyzed science image for {user_id} via Interactions API")
+                        return result
+                except Exception as e:
+                    logger.warning(f"Interactions API failed, trying Gemini directly: {e}")
             
-            if result.get('success'):
-                logger.info(f"🔬 Analyzed science image for {user_id}")
+            # Fallback: Use Gemini client directly with base64 image
+            if self._is_gemini_configured and self.gemini_client:
+                try:
+                    import base64
+                    
+                    # Create image part for Gemini
+                    image_part = {
+                        "inline_data": {
+                            "mime_type": mime_type,
+                            "data": image_data
+                        }
+                    }
+                    
+                    # Send to Gemini with image and text prompt
+                    response = self.gemini_client.models.generate_content(
+                        model="gemini-2.5-flash",
+                        contents=[
+                            {"role": "user", "parts": [image_part, {"text": prompt}]}
+                        ],
+                        config={"temperature": 0.7, "max_output_tokens": 2000}
+                    )
+                    
+                    if response and response.text:
+                        logger.info(f"🔬 Analyzed science image for {user_id} via Gemini direct")
+                        return {'success': True, 'text': response.text.strip()}
+                        
+                except Exception as gemini_error:
+                    logger.error(f"Gemini image analysis error: {gemini_error}")
+                    return {'success': False, 'error': f'Image analysis failed: {str(gemini_error)}'}
             
-            return result
+            return {'success': False, 'error': 'Image analysis not available - no AI services configured'}
             
         except Exception as e:
             logger.error(f"Error analyzing science image: {e}")
@@ -1165,9 +1198,6 @@ Please provide:
             dict with analysis and study points
         """
         try:
-            if not self._is_interactions_configured:
-                return {'success': False, 'error': 'Document analysis not available'}
-            
             session_data = session_manager.get_data(user_id, 'science_teacher') or {}
             subject = session_data.get('subject', 'Science')
             grade_level = session_data.get('grade_level', 'O-Level')
@@ -1184,16 +1214,52 @@ Please provide:
 
 Be comprehensive but accessible for a secondary school student."""
             
-            result = self.interactions_service.analyze_document(
-                document_data=document_data,
-                mime_type=mime_type,
-                prompt=prompt
-            )
+            # Try interactions service first if available
+            if self._is_interactions_configured and self.interactions_service:
+                try:
+                    result = self.interactions_service.analyze_document(
+                        document_data=document_data,
+                        mime_type=mime_type,
+                        prompt=prompt
+                    )
+                    
+                    if result.get('success'):
+                        logger.info(f"📄 Analyzed study document for {user_id} via Interactions API")
+                        return result
+                except Exception as e:
+                    logger.warning(f"Interactions API failed for document, trying Gemini directly: {e}")
             
-            if result.get('success'):
-                logger.info(f"📄 Analyzed study document for {user_id}")
+            # Fallback: Use Gemini client directly with base64 document
+            if self._is_gemini_configured and self.gemini_client:
+                try:
+                    import base64
+                    
+                    # Create document part for Gemini
+                    doc_part = {
+                        "inline_data": {
+                            "mime_type": mime_type,
+                            "data": document_data
+                        }
+                    }
+                    
+                    # Send to Gemini with document and text prompt
+                    response = self.gemini_client.models.generate_content(
+                        model="gemini-2.5-flash",
+                        contents=[
+                            {"role": "user", "parts": [doc_part, {"text": prompt}]}
+                        ],
+                        config={"temperature": 0.7, "max_output_tokens": 3000}
+                    )
+                    
+                    if response and response.text:
+                        logger.info(f"📄 Analyzed study document for {user_id} via Gemini direct")
+                        return {'success': True, 'text': response.text.strip()}
+                        
+                except Exception as gemini_error:
+                    logger.error(f"Gemini document analysis error: {gemini_error}")
+                    return {'success': False, 'error': f'Document analysis failed: {str(gemini_error)}'}
             
-            return result
+            return {'success': False, 'error': 'Document analysis not available - no AI services configured'}
             
         except Exception as e:
             logger.error(f"Error analyzing study document: {e}")

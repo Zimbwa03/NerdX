@@ -2,6 +2,7 @@
 Mobile API Blueprint for NerdX Mobile Application
 Provides REST API endpoints for React Native mobile app
 """
+import json
 import logging
 import jwt
 import hashlib
@@ -1996,39 +1997,43 @@ def initiate_credit_purchase():
         
         # Initiate payment via Paynow
         paynow_service = PaynowService()
-        reference = f"MOBILE_{uuid.uuid4().hex[:8].upper()}"
         
-        # Store payment transaction in database before initiating
-        from database.external_db import make_supabase_request
-        payment_transaction = {
-            'user_id': g.current_user_id,
-            'reference_code': reference,
-            'package_id': package_id,
-            'amount': package['price'],
-            'credits': package['credits'],
-            'payment_method': 'paynow_' + payment_method,  # paynow_ecocash or paynow_visa_mastercard
-            'status': 'pending',
-            'phone_number': phone_number,
-            'email': email,
-            'created_at': datetime.utcnow().isoformat()
-        }
-        
-        try:
-            make_supabase_request('POST', 'payment_transactions', payment_transaction, use_service_role=True)
-        except Exception as e:
-            logger.warning(f"Failed to store payment transaction: {e}")
-        
-        # Create payment based on selected method
         if payment_method == 'ecocash':
-            # Use existing EcoCash mobile payment
-            payment_result = paynow_service.create_usd_ecocash_payment(
-                amount=package['price'],
-                phone_number=phone_number,
-                email=email,
-                reference=reference,
-                description=f"NerdX {package_id} - {package['credits']} credits"
+            # Use PaymentService wrapper which handles DB save and Fallback to Manual automatically
+            # This solves the issue where Paynow configuration errors cause the app to crash/fail
+            payment_result = payment_service_instance.create_paynow_payment(
+                 user_id=g.current_user_id,
+                 package_id=package_id,
+                 phone_number=phone_number,
+                 email=email
             )
+            # Reference is generated inside create_paynow_payment
+            reference = payment_result.get('reference_code')
+            
         else:
+            # Visa/Mastercard web checkout (keep existing manual flow for now)
+            reference = f"MOBILE_{uuid.uuid4().hex[:8].upper()}"
+            
+            # Store payment transaction in database before initiating
+            from database.external_db import make_supabase_request
+            payment_transaction = {
+                'user_id': g.current_user_id,
+                'reference_code': reference,
+                'package_id': package_id,
+                'amount': package['price'],
+                'credits': package['credits'],
+                'payment_method': 'paynow_' + payment_method,
+                'status': 'pending',
+                'phone_number': phone_number,
+                'email': email,
+                'created_at': datetime.utcnow().isoformat()
+            }
+            
+            try:
+                make_supabase_request('POST', 'payment_transactions', payment_transaction, use_service_role=True)
+            except Exception as e:
+                logger.warning(f"Failed to store payment transaction: {e}")
+
             # Use Visa/Mastercard web checkout
             payment_result = paynow_service.create_visa_mastercard_payment(
                 amount=package['price'],
@@ -3612,12 +3617,13 @@ def generate_graph():
             base_url = os.environ.get('RENDER_EXTERNAL_URL', 'https://nerdx.onrender.com')
             graph_url = f"{base_url.rstrip('/')}/static/graphs/{filename}"
         
-        # Generate AI question about the graph using DeepSeek
+        
+        # Generate AI question about the graph using DeepSeek with equation context
         try:
-            topic_name = f"Graph - {graph_type.title()}"
-            question_data = question_generator.generate_question(
-                'Mathematics',
-                topic_name,
+            # Use the new equation-specific question generator for consistency
+            question_data = question_generator.generate_graph_question(
+                equation,
+                graph_type,
                 'medium',
                 g.current_user_id
             )
@@ -3625,9 +3631,9 @@ def generate_graph():
             solution = question_data.get('solution', f"The graph of {equation} shows key features including intercepts, slope, and behavior.")
         except Exception as ai_error:
             logger.warning(f"AI question generation failed, using fallback: {ai_error}")
-            # Fallback to basic question
-            question = f"Analyze the graph of {equation}. What are the key features of this graph?"
-            solution = f"The graph of {equation} shows [analysis based on graph type]. Key features include intercepts, slope, and behavior."
+            # Fallback to basic question about the equation
+            question = f"For the graph of {equation}, find the y-intercept."
+            solution = f"To find the y-intercept, set x = 0 in {equation} and calculate the value of y."
         
         # Deduct credits
         deduct_credits(g.current_user_id, credit_cost, 'math_graph_practice', f'Generated {graph_type} graph')
@@ -5076,18 +5082,37 @@ def transcribe_audio():
         # Cleanup
         if os.path.exists(temp_path):
             os.remove(temp_path)
-            
+        
+        # Handle result - check if it's a hard error vs soft error with fallback
         if 'error' in result:
-            return jsonify({'status': 'error', 'message': result['error']}), 500
+            # If there's also text, return success with the text (graceful degradation)
+            if result.get('text'):
+                return jsonify({
+                    'status': 'success',
+                    'text': result['text'],
+                    'language': result.get('language', 'en')
+                }), 200
+            else:
+                # Return the error message to the user (not a 500, just a message)
+                return jsonify({
+                    'status': 'error', 
+                    'message': result.get('error', 'Voice transcription is temporarily unavailable. Please type your message instead.'),
+                    'text': ''
+                }), 200  # Return 200 so frontend can handle gracefully
             
         return jsonify({
             'status': 'success',
-            'text': result['text'],
-            'language': result['language']
+            'text': result.get('text', ''),
+            'language': result.get('language', 'en')
         }), 200
         
     except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+        logger.error(f"Voice transcribe error: {e}", exc_info=True)
+        return jsonify({
+            'status': 'error', 
+            'message': 'Voice transcription failed. Please type your message instead.',
+            'text': ''
+        }), 200  # Return 200 so frontend can handle gracefully
 
 @mobile_bp.route('/voice/speak', methods=['POST'])
 @require_auth

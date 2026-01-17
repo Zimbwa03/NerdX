@@ -48,11 +48,24 @@ const ExamSessionScreen: React.FC = () => {
     const { isDarkMode } = useTheme();
     const themedColors = useThemedColors();
 
-    // Route params
-    const { examConfig, timeInfo } = route.params as {
-        examConfig: ExamConfig;
-        timeInfo: TimeInfo;
-    };
+    // Route params with safe defaults
+    const params = route.params as {
+        examConfig?: ExamConfig;
+        timeInfo?: TimeInfo;
+    } | undefined;
+
+    const examConfig = params?.examConfig;
+    const timeInfo = params?.timeInfo;
+
+    // Guard against undefined params - navigate back with error
+    useEffect(() => {
+        if (!examConfig || !timeInfo) {
+            console.error('ExamSessionScreen: Missing examConfig or timeInfo');
+            Alert.alert('Error', 'Invalid exam configuration. Please try again.', [
+                { text: 'OK', onPress: () => navigation.goBack() }
+            ]);
+        }
+    }, [examConfig, timeInfo]);
 
     // Session state
     const [session, setSession] = useState<ExamSession | null>(null);
@@ -62,8 +75,9 @@ const ExamSessionScreen: React.FC = () => {
     // Question state
     const [currentQuestion, setCurrentQuestion] = useState<ExamQuestion | null>(null);
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [totalQuestions, setTotalQuestions] = useState(examConfig.total_questions);
+    const [totalQuestions, setTotalQuestions] = useState(examConfig?.total_questions || 0);
     const [loadingQuestion, setLoadingQuestion] = useState(false);
+    const [loadingProgress, setLoadingProgress] = useState(0); // 0-100 percentage
 
     // Answer state
     const [selectedAnswer, setSelectedAnswer] = useState<string>('');
@@ -72,7 +86,7 @@ const ExamSessionScreen: React.FC = () => {
     const [flaggedQuestions, setFlaggedQuestions] = useState<Set<number>>(new Set());
 
     // Timer state
-    const [remainingSeconds, setRemainingSeconds] = useState(timeInfo.total_seconds);
+    const [remainingSeconds, setRemainingSeconds] = useState(timeInfo?.total_seconds || 0);
     const [timerPaused, setTimerPaused] = useState(false);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const questionStartTime = useRef<number>(Date.now());
@@ -140,15 +154,36 @@ const ExamSessionScreen: React.FC = () => {
     };
 
     const createSession = async () => {
+        if (!examConfig) {
+            console.error('createSession: examConfig is undefined');
+            return;
+        }
         try {
             setSessionCreating(true);
+            setLoadingProgress(0);
+
+            // Simulate progress while API call is in flight
+            const progressInterval = setInterval(() => {
+                setLoadingProgress(prev => {
+                    // Slow down as we approach 90% - wait for actual completion
+                    if (prev < 30) return prev + 8;
+                    if (prev < 60) return prev + 5;
+                    if (prev < 85) return prev + 2;
+                    return Math.min(prev + 0.5, 90); // Cap at 90% until actually done
+                });
+            }, 200);
+
             const result = await examApi.createSession(examConfig);
 
+            clearInterval(progressInterval);
+
             if (result) {
+                setLoadingProgress(95);
                 setSession(result);
                 setRemainingSeconds(result.total_time_seconds);
                 // Load first question
                 await loadNextQuestion(result.session_id, 0);
+                setLoadingProgress(100);
             } else {
                 Alert.alert('Error', 'Failed to create exam session');
                 navigation.goBack();
@@ -458,14 +493,44 @@ const ExamSessionScreen: React.FC = () => {
         }
     };
 
-    // Loading state
+    // Loading state with progress
     if (sessionCreating || step === 'loading') {
         return (
             <View style={[styles.loadingContainer, { backgroundColor: themedColors.background.default }]}>
                 <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-                <ActivityIndicator size="large" color={themedColors.primary.main} />
+
+                {/* Loading Icon */}
+                <View style={styles.loadingIconContainer}>
+                    <ActivityIndicator size="large" color={themedColors.primary.main} />
+                </View>
+
                 <Text style={[styles.loadingText, { color: themedColors.text.primary }]}>
                     {sessionCreating ? 'Setting up exam...' : 'Loading question...'}
+                </Text>
+
+                {/* Progress Bar */}
+                {sessionCreating && (
+                    <View style={styles.progressContainer}>
+                        <View style={[styles.progressBarBackground, { backgroundColor: themedColors.border.main }]}>
+                            <View
+                                style={[
+                                    styles.progressBarFill,
+                                    {
+                                        backgroundColor: themedColors.primary.main,
+                                        width: `${Math.round(loadingProgress)}%`
+                                    }
+                                ]}
+                            />
+                        </View>
+                        <Text style={[styles.progressText, { color: themedColors.text.secondary }]}>
+                            {Math.round(loadingProgress)}%
+                        </Text>
+                    </View>
+                )}
+
+                {/* Motivational hint */}
+                <Text style={[styles.loadingHint, { color: themedColors.text.disabled }]}>
+                    Preparing your personalized questions...
                 </Text>
             </View>
         );
@@ -701,7 +766,42 @@ const styles = StyleSheet.create({
     },
     loadingText: {
         marginTop: 16,
-        fontSize: 16,
+        fontSize: 18,
+        fontWeight: '600',
+    },
+    loadingIconContainer: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    progressContainer: {
+        width: '70%',
+        alignItems: 'center',
+        marginTop: 24,
+    },
+    progressBarBackground: {
+        width: '100%',
+        height: 8,
+        borderRadius: 4,
+        overflow: 'hidden',
+    },
+    progressBarFill: {
+        height: '100%',
+        borderRadius: 4,
+    },
+    progressText: {
+        marginTop: 8,
+        fontSize: 14,
+        fontWeight: '500',
+    },
+    loadingHint: {
+        marginTop: 16,
+        fontSize: 13,
+        textAlign: 'center',
     },
     header: {
         paddingTop: 50,
