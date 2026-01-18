@@ -24,7 +24,7 @@ import { Colors, getColors } from '../theme/colors';
 import { useThemedColors } from '../theme/useThemedStyles';
 import LoadingProgress from '../components/LoadingProgress';
 import ExamSetupModal from '../components/ExamSetupModal';
-import { ExamConfig, TimeInfo, examApi } from '../services/api/examApi';
+import { ExamConfig, TimeInfo } from '../services/api/examApi';
 import { Ionicons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
@@ -215,19 +215,11 @@ const TopicsScreen: React.FC = () => {
   // Handle exam modal start
   const handleExamStart = async (config: ExamConfig, timeInfo: TimeInfo) => {
     setExamSetupModalVisible(false);
-    try {
-      // Navigate to exam session with config
-      const session = await examApi.createSession(config);
-      if (session) {
-        navigation.navigate('ExamSession' as never, {
-          sessionId: session.session_id,
-          timeInfo,
-          config,
-        } as never);
-      }
-    } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.message || 'Failed to start exam');
-    }
+    // IMPORTANT: `ExamSessionScreen` creates the session. We only pass the config + time info.
+    navigation.navigate('ExamSession' as never, {
+      examConfig: config,
+      timeInfo,
+    } as never);
   };
 
   const handleStartQuiz = async (topic?: Topic, questionType?: string, questionFormat?: 'mcq' | 'structured') => {

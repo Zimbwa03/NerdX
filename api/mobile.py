@@ -6523,11 +6523,23 @@ def complete_exam():
         percentage = results.get('score', {}).get('percentage', 0)
         xp_earned = int(percentage * 2)  # Up to 200 XP for 100%
         if xp_earned > 0:
-            add_xp(g.current_user_id, xp_earned)
+            # XP is non-critical: don't block exam completion if XP logging fails
+            try:
+                add_xp(
+                    g.current_user_id,
+                    xp_earned,
+                    'cbt_exam_complete',
+                    f'Completed CBT exam ({percentage:.1f}%)'
+                )
+            except Exception as xp_error:
+                logger.warning(f"Failed to add XP for CBT exam (non-critical): {xp_error}")
             results['xp_earned'] = xp_earned
         
         # Update streak
-        update_streak(g.current_user_id)
+        try:
+            update_streak(g.current_user_id)
+        except Exception as streak_error:
+            logger.warning(f"Failed to update streak after CBT exam (non-critical): {streak_error}")
         
         logger.info(f"Exam {session_id} completed: {results.get('score', {}).get('grade')}")
         

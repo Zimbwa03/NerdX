@@ -33,7 +33,7 @@ import {
 import { quizApi } from '../services/api/quizApi';
 import LoadingProgress from '../components/LoadingProgress';
 import ExamSetupModal from '../components/ExamSetupModal';
-import { ExamConfig, TimeInfo, examApi } from '../services/api/examApi';
+import { ExamConfig, TimeInfo } from '../services/api/examApi';
 import {
     ALevelTopicCard,
     ALevelFeatureCard,
@@ -200,18 +200,11 @@ const ALevelBiologyScreen: React.FC = () => {
     // Handle exam modal start
     const handleExamStart = async (config: ExamConfig, timeInfo: TimeInfo) => {
         setExamSetupModalVisible(false);
-        try {
-            const session = await examApi.createSession(config);
-            if (session) {
-                navigation.navigate('ExamSession' as never, {
-                    sessionId: session.session_id,
-                    timeInfo,
-                    config,
-                } as never);
-            }
-        } catch (error: any) {
-            Alert.alert('Error', error.response?.data?.message || 'Failed to start exam');
-        }
+        // `ExamSessionScreen` creates the session; just pass config/time.
+        navigation.navigate('ExamSession' as never, {
+            examConfig: config,
+            timeInfo,
+        } as never);
     };
 
     // Get icon for topic

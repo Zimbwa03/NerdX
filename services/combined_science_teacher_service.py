@@ -522,103 +522,6 @@ Current conversation context will be provided with each message."""
         
         return prompt
 
-### Visualizations (Graphs & Animations)
-When a concept is best explained with a **graph** (e.g., distance–time, velocity–time, energy profiles, population curves, rate graphs, etc.), include a special tag in your response:
-
-`[PLOT: function_expression]`
-
-Examples:
-- `[PLOT: 2x + 3]`
-- `[PLOT: sin(x), range=-2pi:2pi]`
-- `[PLOT: exp(x), range=-3:3]`
-
-Keep the rest of your explanation normal; the app will automatically generate and attach a graph image + animation for the student.
-
-### Science Diagrams (Animated Visuals)
-When explaining a concept that benefits from a **visual diagram**, include a special tag to generate an animated diagram:
-
-`[DIAGRAM: diagram_type]`
-
-**Biology Diagrams:**
-- `[DIAGRAM: animal_cell]` - Animal cell structure with organelles
-- `[DIAGRAM: plant_cell]` - Plant cell structure with cell wall, chloroplasts, vacuole
-- `[DIAGRAM: dna]` - DNA double helix structure
-- `[DIAGRAM: photosynthesis]` - Photosynthesis process with inputs/outputs
-- `[DIAGRAM: respiration]` - Aerobic respiration in mitochondria
-- `[DIAGRAM: neuron]` - Neuron structure (axon, dendrites, myelin)
-- `[DIAGRAM: heart]` - Heart structure with 4 chambers and blood flow
-- `[DIAGRAM: mitosis]` - Mitosis cell division stages
-
-**Chemistry Diagrams:**
-- `[DIAGRAM: atom_structure]` - Atomic structure with shells
-- `[DIAGRAM: ionic_bond]` - Ionic bonding (electron transfer)
-- `[DIAGRAM: covalent_bond]` - Covalent bonding (electron sharing)
-- `[DIAGRAM: electrolysis]` - Electrolysis setup and ion movement
-- `[DIAGRAM: energy_profile]` - Reaction energy profile (exothermic/endothermic)
-- `[DIAGRAM: periodic_table]` - Periodic table trends
-
-**Physics Diagrams:**
-- `[DIAGRAM: ray_diagram]` - Light ray diagrams for lenses/mirrors
-- `[DIAGRAM: circuit]` - Electric circuit with components
-- `[DIAGRAM: wave]` - Wave properties (amplitude, wavelength, frequency)
-- `[DIAGRAM: force_diagram]` - Force diagrams with vectors
-- `[DIAGRAM: magnetic_field]` - Magnetic field lines
-
-Use these tags when visual explanation would significantly enhance understanding. The app will automatically generate and attach an animated video for the student.
-
-### Personalized Notes (PDF)
-Whenever the student requests "Generate notes" or "Save this lesson as notes," create VERY DETAILED, comprehensive notes for the topic in JSON format with this structure:
-
-{
-  "title": "Topic title here",
-  "subject": "Biology/Chemistry/Physics",
-  "grade_level": "Form 2/O-Level/A-Level",
-  "learning_objectives": [
-    "Detailed objective 1 with context",
-    "Detailed objective 2 with context",
-    "Detailed objective 3 with context",
-    "Detailed objective 4 with context"
-  ],
-  "key_concepts": {
-    "concept1": "Comprehensive definition with detailed explanation and examples",
-    "concept2": "Comprehensive definition with detailed explanation and examples",
-    "concept3": "Comprehensive definition with detailed explanation and examples",
-    "concept4": "Comprehensive definition with detailed explanation and examples",
-    "concept5": "Comprehensive definition with detailed explanation and examples"
-  },
-  "detailed_explanation": "VERY COMPREHENSIVE, LONG, step-by-step explanation of the topic. Include:
-  - Introduction with background context (2-3 paragraphs)
-  - Detailed breakdown of each component (multiple paragraphs per component)
-  - Step-by-step processes with explanations (be thorough)
-  - Multiple examples with full explanations
-  - Diagrams described in words
-  - Common misconceptions addressed
-  - Connections to related topics
-  - At least 500-800 words of detailed, well-structured content covering everything about the topic",
-  "real_world_applications": [
-    "Detailed application 1 with full explanation of how it works in real life",
-    "Detailed application 2 with full explanation of how it works in real life",
-    "Detailed application 3 with full explanation of how it works in real life",
-    "Detailed application 4 with full explanation of how it works in real life"
-  ],
-  "summary": "Comprehensive summary of all key takeaways (3-4 paragraphs)",
-  "revision_schedule": {
-    "day_3": "Detailed review plan for day 3 with specific topics to revisit",
-    "day_7": "Detailed practice plan for day 7 with specific exercises and concepts"
-  },
-  "references": [
-    "ZIMSEC Syllabus - Specific section",
-    "Relevant textbook chapters",
-    "Scientific sources"
-  ]
-}
-
-CRITICAL: Make the notes VERY DETAILED with LONG, WELL-STRUCTURED TEXT. The "detailed_explanation" field should be comprehensive (500-800 words minimum), covering EVERYTHING about the topic in depth. Break down information thoroughly with multiple paragraphs. Students should be able to learn the entire topic from these notes alone.
-
-When a student says "generate notes", "save notes", "create notes", or similar, respond ONLY with valid JSON in the above format, nothing else.
-
-Current conversation context will be provided with each message."""
-
     def show_main_menu(self, user_id: str):
         """Display the Combined Science main menu with Teacher/Practice options"""
         try:
@@ -1538,7 +1441,7 @@ Please provide:
                             'success': True,
                             'text': result.get('text', result.get('latex', ''))
                         }
-                except Exception as e:
+            except Exception as e:
                 logger.warning(f"Vertex AI image analysis failed, trying fallback: {e}")
             
             # FALLBACK: Use Gemini client directly with base64 image
@@ -1626,7 +1529,7 @@ Be comprehensive but accessible for a secondary school student."""
                             'success': True,
                             'text': result.get('analysis', '')
                         }
-                except Exception as e:
+            except Exception as e:
                 logger.warning(f"Vertex AI document analysis failed, trying fallback: {e}")
             
             # FALLBACK: Use Gemini client directly with base64 document

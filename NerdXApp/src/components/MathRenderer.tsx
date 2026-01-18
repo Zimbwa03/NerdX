@@ -12,6 +12,7 @@ interface MathRendererProps {
     content: string;
     fontSize?: number;
     style?: object;
+    minHeight?: number; // Allow custom minHeight for compact inline rendering
 }
 
 // Minimal KaTeX CSS (inlined for offline support)
@@ -47,7 +48,8 @@ const KATEX_CSS = `
 const MathRenderer: React.FC<MathRendererProps> = ({
     content,
     fontSize = 16,
-    style
+    style,
+    minHeight = 100
 }) => {
     const { isDarkMode } = useTheme();
 
@@ -165,7 +167,7 @@ const MathRenderer: React.FC<MathRendererProps> = ({
 </html>`;
     }, [content, fontSize, textColor, accentColor, bgColor, isDarkMode]);
 
-    const [webViewHeight, setWebViewHeight] = React.useState(100);
+    const [webViewHeight, setWebViewHeight] = React.useState(minHeight);
 
     const handleMessage = (event: any) => {
         try {
@@ -181,10 +183,10 @@ const MathRenderer: React.FC<MathRendererProps> = ({
     if (!content) return null;
 
     return (
-        <View style={[styles.container, { minHeight: webViewHeight }, style]}>
+        <View style={[styles.container, { minHeight: Math.max(webViewHeight, minHeight) }, style]}>
             <WebView
                 source={{ html: htmlContent }}
-                style={[styles.webview, { height: webViewHeight }]}
+                style={[styles.webview, { height: Math.max(webViewHeight, minHeight) }]}
                 scrollEnabled={false}
                 showsVerticalScrollIndicator={false}
                 showsHorizontalScrollIndicator={false}

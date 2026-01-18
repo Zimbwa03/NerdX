@@ -9,6 +9,7 @@ import {
     Dimensions,
     ScrollView,
     ActivityIndicator,
+    Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Slider from '@react-native-community/slider';
@@ -119,6 +120,11 @@ const ExamSetupModal: React.FC<ExamSetupModalProps> = ({
     // Handle start exam
     const handleStartExam = async () => {
         if (!timeInfo) return;
+        if (!allTopics && selectedTopics.length === 0) {
+            // Avoid sending an empty topics list (many backends treat this as invalid)
+            Alert.alert('Select Topics', 'Please select at least 1 topic, or switch back to "All Topics".');
+            return;
+        }
 
         setStarting(true);
         try {
@@ -129,7 +135,8 @@ const ExamSetupModal: React.FC<ExamSetupModalProps> = ({
                 difficulty,
                 total_questions: questionCount,
                 paper_style: 'ZIMSEC',
-                topics: allTopics ? [] : selectedTopics,
+                // Omit `topics` entirely when "All Topics" is selected to avoid 400 validations.
+                topics: allTopics ? undefined : selectedTopics,
             };
 
             onStartExam(config, timeInfo);

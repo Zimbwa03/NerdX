@@ -24,6 +24,7 @@ import { Colors } from '../theme/colors';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { useAuth } from '../context/AuthContext';
+import MathRenderer from '../components/MathRenderer';
 import {
     examApi,
     ExamSession,
@@ -51,16 +52,20 @@ const ExamSessionScreen: React.FC = () => {
     // Route params with safe defaults
     const params = route.params as {
         examConfig?: ExamConfig;
+        // Back-compat: older callers used `config`
+        config?: ExamConfig;
         timeInfo?: TimeInfo;
+        // Back-compat: some callers may pass a pre-created session id (unused here)
+        sessionId?: string;
     } | undefined;
 
-    const examConfig = params?.examConfig;
+    const examConfig = params?.examConfig ?? params?.config;
     const timeInfo = params?.timeInfo;
 
-    // Guard against undefined params - navigate back with error
+    // Guard against missing config - navigate back with error
     useEffect(() => {
-        if (!examConfig || !timeInfo) {
-            console.error('ExamSessionScreen: Missing examConfig or timeInfo');
+        if (!examConfig) {
+            console.error('ExamSessionScreen: Missing examConfig');
             Alert.alert('Error', 'Invalid exam configuration. Please try again.', [
                 { text: 'OK', onPress: () => navigation.goBack() }
             ]);
@@ -99,11 +104,15 @@ const ExamSessionScreen: React.FC = () => {
     const [warned5min, setWarned5min] = useState(false);
     const [warned1min, setWarned1min] = useState(false);
 
-    // Initialize session on mount
+    // Keep totalQuestions in sync if config arrives after mount
     useEffect(() => {
-        createSession();
+        if (examConfig?.total_questions) {
+            setTotalQuestions(examConfig.total_questions);
+        }
+    }, [examConfig?.total_questions]);
 
-        // Prevent back navigation during exam
+    // Prevent back navigation during exam
+    useEffect(() => {
         const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
             confirmExit();
             return true;
@@ -114,6 +123,15 @@ const ExamSessionScreen: React.FC = () => {
             if (timerRef.current) clearInterval(timerRef.current);
         };
     }, []);
+
+    // Initialize session once config is available
+    const hasInitializedRef = useRef(false);
+    useEffect(() => {
+        if (!examConfig) return;
+        if (hasInitializedRef.current) return;
+        hasInitializedRef.current = true;
+        createSession();
+    }, [examConfig]);
 
     // Start timer when session is active
     useEffect(() => {
@@ -190,7 +208,12 @@ const ExamSessionScreen: React.FC = () => {
             }
         } catch (error: any) {
             console.error('Create session error:', error);
-            Alert.alert('Error', error.message || 'Failed to create exam session');
+            const backendMessage =
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                error?.message ||
+                'Failed to create exam session';
+            Alert.alert('Error', backendMessage);
             navigation.goBack();
         } finally {
             setSessionCreating(false);
@@ -410,6 +433,59 @@ const ExamSessionScreen: React.FC = () => {
         return '#FFFFFF';
     };
 
+    // Check if subject is mathematics-related (needs LaTeX rendering)
+    const isMathSubject = () => {
+        const subject = examConfig?.subject?.toLowerCase() || '';
+        return subject.includes('math') || 
+               subject === 'mathematics' || 
+               subject === 'pure_math' ||
+               subject === 'a_level_pure_math';
+    };
+
+    // Convert ASCII math notation to LaTeX format if needed
+    const convertToLatex = (text: string): string => {
+        if (!text || !isMathSubject()) return text;
+        
+        // If already wrapped in $...$, return as-is (already LaTeX formatted)
+        if (text.includes('$')) return text;
+        
+        let processed = text;
+        
+        // Convert multiplication: "2 x 3" or "2x3" -> "2 \times 3"
+        // Match: digit/letter, optional space, 'x' (lowercase), optional space, digit/letter
+        processed = processed.replace(/(\d+|\w+)\s*x\s*(\d+|\w+)/gi, '$1 \\times $2');
+        
+        // Handle exponents: "2^3" -> "2^{3}" or "a^b" -> "a^{b}"
+        // Match superscripts: base^exponent
+        processed = processed.replace(/(\w+)\^(\d+|\w+)/g, (match, base, exp) => {
+            // If exponent is multi-character, wrap in braces
+            if (exp.length > 1 || /[a-zA-Z]/.test(exp)) {
+                return `${base}^{${exp}}`;
+            }
+            return `${base}^{${exp}}`;
+        });
+        
+        // Handle expressions in parentheses: "(2^3 x 3^2)" -> properly formatted
+        // This handles cases like the question stem which might have parentheses
+        
+        // If the text contains math operators or exponents, wrap in $...$
+        const hasMathNotation = /[\^_\×\÷\+\-\=\(\)]/.test(processed) || 
+                                 /(\d+\s*[x×]\s*\d+)/.test(processed) ||
+                                 /\w+\^\w+/.test(processed);
+        
+        // For standalone math expressions (like options), wrap in $...$
+        // But preserve regular text that might contain some numbers
+        if (hasMathNotation && !processed.includes('$')) {
+            // Check if it's primarily a math expression
+            const mathPattern = /^[\s\w\d\^_×÷\+\-\=\(\)\\]+$/;
+            if (mathPattern.test(processed.trim()) || processed.includes('^') || processed.includes('\\times')) {
+                return `$${processed}$`;
+            }
+        }
+        
+        return processed;
+    };
+
     // Render question based on type
     const renderQuestion = () => {
         if (!currentQuestion) return null;
@@ -444,9 +520,20 @@ const ExamSessionScreen: React.FC = () => {
                                         {option.label}
                                     </Text>
                                 </View>
-                                <Text style={[styles.optionText, { color: themedColors.text.primary }]}>
-                                    {option.text}
-                                </Text>
+                                {isMathSubject() ? (
+                                    <View style={{ flex: 1, minHeight: 0 }}>
+                                        <MathRenderer 
+                                            content={convertToLatex(option.text)} 
+                                            fontSize={15}
+                                            minHeight={30}
+                                            style={{ flex: 1, minHeight: 0 }}
+                                        />
+                                    </View>
+                                ) : (
+                                    <Text style={[styles.optionText, { color: themedColors.text.primary }]}>
+                                        {option.text}
+                                    </Text>
+                                )}
                             </TouchableOpacity>
                         );
                     })}
@@ -622,9 +709,17 @@ const ExamSessionScreen: React.FC = () => {
                         </Text>
                     )}
 
-                    <Text style={[styles.questionStem, { color: themedColors.text.primary }]}>
-                        {currentQuestion?.stem}
-                    </Text>
+                    {isMathSubject() && currentQuestion?.stem ? (
+                        <MathRenderer 
+                            content={convertToLatex(currentQuestion.stem)} 
+                            fontSize={16}
+                            style={styles.questionStem}
+                        />
+                    ) : (
+                        <Text style={[styles.questionStem, { color: themedColors.text.primary }]}>
+                            {currentQuestion?.stem}
+                        </Text>
+                    )}
                 </Card>
 
                 {/* Options / Answer Input */}
@@ -892,9 +987,11 @@ const styles = StyleSheet.create({
     optionCard: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 16,
+        paddingVertical: 12,
+        paddingHorizontal: 16,
         borderRadius: 12,
         gap: 12,
+        minHeight: 0,
     },
     optionLabel: {
         width: 36,
