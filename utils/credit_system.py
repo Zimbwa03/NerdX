@@ -2,7 +2,6 @@ import logging
 from typing import Dict, Optional, List
 from config import Config
 from utils.credit_units import format_credits
-from database.external_db import get_user_credits, deduct_credits, add_credits
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +14,7 @@ class CreditSystem:
     def check_sufficient_credits(self, user_id: str, action: str, difficulty: Optional[str] = None) -> Dict:
         """Check if user has sufficient credits for an action"""
         try:
+            from database.external_db import get_user_credits
             current_credits = get_user_credits(user_id)
             required_credits = self.get_credit_cost(action, difficulty)
             
@@ -62,6 +62,7 @@ class CreditSystem:
     def deduct_credits_for_action(self, user_id: str, action: str, difficulty: Optional[str] = None) -> bool:
         """Deduct credit units for a specific action"""
         try:
+            from database.external_db import deduct_credits
             required_credits = self.get_credit_cost(action, difficulty)
             return deduct_credits(
                 user_id,
@@ -149,6 +150,7 @@ class CreditSystem:
     def award_bonus_credits(self, user_id: str, amount: int, reason: str) -> bool:
         """Award bonus credits to user"""
         try:
+            from database.external_db import add_credits
             return add_credits(user_id, amount, reason)
         except Exception as e:
             logger.error(f"Error awarding bonus credits: {e}")
@@ -173,6 +175,7 @@ class CreditSystem:
     def format_credit_balance_message(self, user_id: str) -> str:
         """Format credit balance message"""
         try:
+            from database.external_db import get_user_credits
             credits = get_user_credits(user_id)
             
             if credits == 0:
