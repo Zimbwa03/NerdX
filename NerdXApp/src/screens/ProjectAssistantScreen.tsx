@@ -38,7 +38,7 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
-  image_url?: string; // User-sent images
+  image_url?: string; // User or assistant images
 }
 
 const ProjectAssistantScreen: React.FC = () => {
@@ -111,6 +111,7 @@ const ProjectAssistantScreen: React.FC = () => {
             role: msg.role,
             content: msg.content,
             timestamp: new Date(msg.timestamp),
+            image_url: (msg as any).image_url,
           }));
           setMessages(loadedMessages);
         } else {
@@ -163,6 +164,7 @@ const ProjectAssistantScreen: React.FC = () => {
           role: 'assistant',
           content: response.response,
           timestamp: new Date(),
+          image_url: response.image_url,
         };
 
         setMessages((prev) => [...prev, assistantMessage]);
@@ -736,6 +738,17 @@ const ProjectAssistantScreen: React.FC = () => {
                 <View style={styles.assistantContentContainer}>
                   <Text style={[styles.assistantMessageText, { color: themedColors.text.primary }]}>{message.content}</Text>
                 </View>
+
+                {/* Assistant-generated (or user) image */}
+                {message.image_url && (
+                  <View style={styles.imageContainer}>
+                    <Image
+                      source={{ uri: message.image_url }}
+                      style={styles.messageImage}
+                      resizeMode="contain"
+                    />
+                  </View>
+                )}
                 
                 {/* Interaction Buttons Row (ChatGPT style) */}
                 <View style={styles.interactionButtonsRow}>
@@ -1060,6 +1073,16 @@ const styles = StyleSheet.create({
   },
   assistantContentContainer: {
     paddingVertical: 12,
+  },
+  imageContainer: {
+    paddingHorizontal: 0,
+    paddingBottom: 12,
+  },
+  messageImage: {
+    width: '100%',
+    height: 240,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.05)',
   },
   avatarContainer: {
     marginRight: 8,

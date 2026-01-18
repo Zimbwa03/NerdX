@@ -3373,6 +3373,14 @@ def delete_teacher_session(session_id):
     """Delete a specific teacher mode session"""
     try:
         from utils.session_manager import session_manager
+
+        # Client may show locally-created placeholder sessions (e.g. "mock-2").
+        # Treat deletes as idempotent to avoid surfacing unnecessary 404s in the app UI.
+        if isinstance(session_id, str) and session_id.startswith("mock-"):
+            return jsonify({
+                'success': True,
+                'message': 'Session deleted successfully'
+            }), 200
         
         # Try to find and delete the session
         deleted = False
@@ -3398,10 +3406,11 @@ def delete_teacher_session(session_id):
                 'message': 'Session deleted successfully'
             }), 200
         else:
+            # Idempotent delete: if it doesn't exist, consider it already deleted.
             return jsonify({
-                'success': False,
-                'message': 'Session not found'
-            }), 404
+                'success': True,
+                'message': 'Session deleted successfully'
+            }), 200
             
     except Exception as e:
         logger.error(f"Delete teacher session error: {e}", exc_info=True)
@@ -4740,7 +4749,7 @@ def project_document(project_id):
 def generate_project_export(project_id):
     """Generate a PDF submission pack for the project"""
     try:
-        user_id = request.user_id
+        user_id = g.current_user_id
         data = request.get_json() or {}
         file_type = data.get('file_type', 'pdf')
         
@@ -4775,7 +4784,7 @@ def generate_project_export(project_id):
 def preview_project_export(project_id):
     """Preview what sections are missing before export"""
     try:
-        user_id = request.user_id
+        user_id = g.current_user_id
         
         from services.project_export_service import project_export_service
         checklist = project_export_service.get_submission_checklist(project_id, user_id)
@@ -4798,7 +4807,7 @@ def preview_project_export(project_id):
 def get_submission_checklist(project_id):
     """Get detailed submission checklist with completion status"""
     try:
-        user_id = request.user_id
+        user_id = g.current_user_id
         
         from services.project_export_service import project_export_service
         checklist = project_export_service.get_submission_checklist(project_id, user_id)
@@ -4821,7 +4830,7 @@ def get_submission_checklist(project_id):
 def download_export(export_id):
     """Download a generated export file"""
     try:
-        user_id = request.user_id
+        user_id = g.current_user_id
         
         # Get export record
         from database.external_db import make_supabase_request
@@ -4856,7 +4865,7 @@ def download_export(export_id):
 def get_project_sections(project_id):
     """Get all sections for a project"""
     try:
-        user_id = request.user_id
+        user_id = g.current_user_id
         
         # Verify project ownership
         from database.external_db import make_supabase_request
@@ -4888,7 +4897,7 @@ def get_project_sections(project_id):
 def save_project_section(project_id):
     """Save or update a project section"""
     try:
-        user_id = request.user_id
+        user_id = g.current_user_id
         data = request.get_json()
         
         stage_number = data.get('stage_number')
@@ -4956,7 +4965,7 @@ def save_project_section(project_id):
 def add_project_evidence(project_id):
     """Add evidence to a project"""
     try:
-        user_id = request.user_id
+        user_id = g.current_user_id
         data = request.get_json()
         
         stage_number = data.get('stage_number')
@@ -5002,7 +5011,7 @@ def add_project_evidence(project_id):
 def add_project_reference(project_id):
     """Add a reference to a project"""
     try:
-        user_id = request.user_id
+        user_id = g.current_user_id
         data = request.get_json()
         
         citation_text = data.get('citation_text', '')
@@ -5044,7 +5053,7 @@ def add_project_reference(project_id):
 def add_logbook_entry(project_id):
     """Add a logbook entry to a project"""
     try:
-        user_id = request.user_id
+        user_id = g.current_user_id
         data = request.get_json()
         
         entry_date = data.get('entry_date', datetime.now().strftime('%Y-%m-%d'))
@@ -5094,7 +5103,7 @@ def add_logbook_entry(project_id):
 def get_project_logbook(project_id):
     """Get all logbook entries for a project"""
     try:
-        user_id = request.user_id
+        user_id = g.current_user_id
         
         # Verify project ownership
         from database.external_db import make_supabase_request
@@ -5667,35 +5676,77 @@ def scan_math_problem():
         image_file = request.files['image']
         if image_file.filename == '':
             return jsonify({'success': False, 'message': 'No selected file'}), 400
-            
-        from services.math_ocr_service import math_ocr_service
-        
-        # Save temp file
-        filename = secure_filename(image_file.filename)
-        # Use a temp directory
-        temp_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'temp')
-        os.makedirs(temp_dir, exist_ok=True)
-        
-        temp_path = os.path.join(temp_dir, f"scan_{uuid.uuid4().hex}_{filename}")
-        image_file.save(temp_path)
-        
-        # Scan
-        result = math_ocr_service.scan_equation(temp_path)
-        
-        # Cleanup
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
-            
-        if result['success']:
-            return jsonify({
-                'success': True,
-                'data': result
-            }), 200
-        else:
-            return jsonify({'success': False, 'message': result.get('error')}), 500
+
+        # Prefer Vertex Gemini Vision directly to avoid temp-file + parsing issues.
+        from services.vertex_service import vertex_service
+        if not vertex_service.is_available():
+            return jsonify({'success': False, 'message': 'OCR service not available'}), 503
+
+        filename = secure_filename(image_file.filename) or "image"
+        mime_type = getattr(image_file, "mimetype", None) or "image/png"
+        if not mime_type.startswith("image/"):
+            # Fallback based on extension if mimetype is missing/wrong
+            lowered = filename.lower()
+            if lowered.endswith(".jpg") or lowered.endswith(".jpeg"):
+                mime_type = "image/jpeg"
+            elif lowered.endswith(".webp"):
+                mime_type = "image/webp"
+            else:
+                mime_type = "image/png"
+
+        image_bytes = image_file.read()
+        if not image_bytes:
+            return jsonify({'success': False, 'message': 'Empty image'}), 400
+
+        image_base64 = base64.b64encode(image_bytes).decode("utf-8")
+
+        prompt = """Analyze this image and extract any mathematical equations, expressions, or text.
+
+Return ONLY valid JSON in this exact format:
+{
+  "detected_text": "the exact math/text you see",
+  "latex": "LaTeX for the math (or same as detected_text if not math)",
+  "confidence": 0.95,
+  "content_type": "math" 
+}
+
+If you cannot read the content clearly, still return JSON with empty strings and confidence < 0.5."""
+
+        result = vertex_service.analyze_image(
+            image_base64=image_base64,
+            mime_type=mime_type,
+            prompt=prompt
+        )
+
+        if not result or not result.get('success'):
+            return jsonify({'success': False, 'message': (result or {}).get('error', 'OCR failed')}), 500
+
+        detected_text = (result.get('text') or '').strip()
+        latex = (result.get('latex') or '').strip()
+        confidence = float(result.get('confidence') or 0.0)
+
+        data = {
+            'detected_text': detected_text,
+            'plain_text': detected_text,  # backward compatibility
+            'latex': latex,
+            'confidence': confidence,
+            'content_type': result.get('content_type', 'text'),
+            'method': 'vertex_gemini_vision',
+            'description': ''
+        }
+        if not detected_text and not latex:
+            data['warning'] = 'Could not clearly recognize the content in this image'
+            data['tips'] = [
+                'Crop tightly around the equation/text',
+                'Ensure good lighting (no glare/shadows)',
+                'Hold the camera steady and focus',
+                'Increase contrast (dark ink on light paper)',
+            ]
+
+        return jsonify({'success': True, 'data': data}), 200
             
     except Exception as e:
-        logger.error(f"Scan math problem error: {e}")
+        logger.error(f"Scan math problem error: {e}", exc_info=True)
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @mobile_bp.route('/math/scan-gemini', methods=['POST'])
@@ -5703,51 +5754,68 @@ def scan_math_problem():
 def scan_math_gemini():
     """Scan math problem from image using Gemini Vision API"""
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True) or {}
         image_base64 = data.get('image_base64')
         
         if not image_base64:
             return jsonify({'success': False, 'message': 'No image provided'}), 400
-            
-        import tempfile
-        import base64
-        import uuid
-        
-        # Save base64 to temp file for MathOCRService
-        filename = f"gemini_scan_{uuid.uuid4().hex}.png"
-        temp_dir = tempfile.gettempdir()
-        temp_path = os.path.join(temp_dir, filename)
-        
-        try:
-            image_data = base64.b64decode(image_base64)
-            with open(temp_path, 'wb') as f:
-                f.write(image_data)
-                
-            from services.math_ocr_service import math_ocr_service
-            # This calls the robust _ensure_initialized() internally
-            result = math_ocr_service.scan_equation(temp_path)
-            
-            # Clean up
-            if os.path.exists(temp_path):
-                os.unlink(temp_path)
-                
-            if result.get('success'):
-                return jsonify({
-                    'success': True,
-                    'data': {
-                        'detected_text': result.get('plain_text', ''),
-                        'latex': result.get('latex', ''),
-                        'confidence': result.get('confidence', 0.9),
-                        'method': result.get('method', 'gemini-vision')
-                    }
-                }), 200
-            else:
-                return jsonify({'success': False, 'message': result.get('error', 'OCR failed')}), 500
-                
-        except Exception as e:
-            if os.path.exists(temp_path):
-                os.unlink(temp_path)
-            raise e
+
+        # Handle data URLs: "data:image/png;base64,...."
+        if isinstance(image_base64, str) and image_base64.startswith("data:") and "," in image_base64:
+            image_base64 = image_base64.split(",", 1)[1]
+
+        from services.vertex_service import vertex_service
+        if not vertex_service.is_available():
+            return jsonify({'success': False, 'message': 'OCR service not available'}), 503
+
+        mime_type = data.get('mime_type') or 'image/png'
+        if not isinstance(mime_type, str) or not mime_type.startswith("image/"):
+            mime_type = 'image/png'
+
+        prompt = """Analyze this image and extract any mathematical equations, expressions, or text.
+
+Return ONLY valid JSON in this exact format:
+{
+  "detected_text": "the exact math/text you see",
+  "latex": "LaTeX for the math (or same as detected_text if not math)",
+  "confidence": 0.95,
+  "content_type": "math"
+}
+
+If you cannot read the content clearly, still return JSON with empty strings and confidence < 0.5."""
+
+        result = vertex_service.analyze_image(
+            image_base64=image_base64,
+            mime_type=mime_type,
+            prompt=prompt
+        )
+
+        if not result or not result.get('success'):
+            return jsonify({'success': False, 'message': (result or {}).get('error', 'OCR failed')}), 500
+
+        detected_text = (result.get('text') or '').strip()
+        latex = (result.get('latex') or '').strip()
+        confidence = float(result.get('confidence') or 0.0)
+
+        response_data = {
+            'detected_text': detected_text,
+            'plain_text': detected_text,  # backward compatibility
+            'latex': latex,
+            'confidence': confidence,
+            'content_type': result.get('content_type', 'text'),
+            'method': 'vertex_gemini_vision',
+            'description': ''
+        }
+        if not detected_text and not latex:
+            response_data['warning'] = 'Could not clearly recognize the content in this image'
+            response_data['tips'] = [
+                'Crop tightly around the equation/text',
+                'Ensure good lighting (no glare/shadows)',
+                'Hold the camera steady and focus',
+                'Increase contrast (dark ink on light paper)',
+            ]
+
+        return jsonify({'success': True, 'data': response_data}), 200
             
     except Exception as e:
         logger.error(f"Gemini scan error: {e}", exc_info=True)

@@ -114,9 +114,9 @@ export const mathApi = {
             };
         }
 
-        // STEP 3: Try Gemini Vision OCR (online)
+        // STEP 3: Try NerdX Cloud OCR (Vertex-backed)
         try {
-            console.log('Attempting online OCR with Gemini Vision...');
+            console.log('Attempting online OCR with NerdX Cloud OCR...');
 
             // Convert image to base64
             const response = await fetch(imageUri);
@@ -134,59 +134,19 @@ export const mathApi = {
 
             const apiResponse = await api.post('/api/mobile/math/scan-gemini', {
                 image_base64: base64,
-                prompt: `Analyze this image and extract any mathematical equations, expressions, or handwritten math content.
-                
-Please respond in this exact JSON format:
-{
-    "detected_text": "the exact math expression you see",
-    "latex": "the LaTeX representation",
-    "confidence": 0.95
-}
-
-If you see handwritten math, interpret it as accurately as possible. Convert fractions, exponents, roots, and special symbols to proper notation.
-Only respond with the JSON, no other text.`
             });
 
             if (apiResponse.data?.data) {
-                console.log('Gemini Vision OCR successful');
+                console.log('NerdX Cloud OCR successful');
                 return {
                     success: true,
                     latex: apiResponse.data.data.latex || apiResponse.data.data.detected_text || '',
                     confidence: apiResponse.data.data.confidence || 0.9,
-                    method: 'gemini-vision'
+                    method: apiResponse.data.data.method || 'vertex-vision'
                 };
             }
-        } catch (geminiError) {
-            console.error('Gemini OCR failed:', geminiError);
-        }
-
-        // STEP 4: Fallback to Pix2Text on server (if available)
-        try {
-            console.log('Falling back to Pix2Text server OCR...');
-            const formData = new FormData();
-
-            const filename = imageUri.split('/').pop() || 'scan.jpg';
-            const match = /\.(\w+)$/.exec(filename);
-            const type = match ? `image/${match[1]}` : 'image/jpeg';
-
-            formData.append('image', {
-                uri: Platform.OS === 'ios' ? imageUri.replace('file://', '') : imageUri,
-                name: filename,
-                type,
-            } as any);
-
-            const response = await api.post('/api/mobile/math/scan', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            });
-
-            if (response.data?.data) {
-                console.log('Pix2Text OCR successful');
-                return response.data.data;
-            }
-        } catch (pix2textError) {
-            console.error('Pix2Text OCR also failed:', pix2textError);
+        } catch (cloudOcrError) {
+            console.error('Cloud OCR failed:', cloudOcrError);
         }
 
         // All methods failed

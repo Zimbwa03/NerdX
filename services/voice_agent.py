@@ -660,7 +660,6 @@ class TransparentGeminiPipe:
                         "model": f"projects/{GOOGLE_CLOUD_PROJECT}/locations/{GOOGLE_CLOUD_LOCATION}/publishers/google/models/{model_name}",
                         "generationConfig": {
                             "responseModalities": ["AUDIO"],
-                            "mediaResolution": "medium",  # Per Vertex AI docs
                             "speechConfig": {
                                 "voiceConfig": {
                                     "prebuiltVoiceConfig": {"voiceName": "Aoede"}  # Natural HD voice
@@ -773,7 +772,6 @@ class TransparentGeminiPipe:
                     "model": f"models/{model_name}",
                     "generationConfig": {
                         "responseModalities": ["AUDIO"],
-                        "mediaResolution": "medium",  # Per Vertex AI docs
                         "speechConfig": {
                             "voiceConfig": {
                                 "prebuiltVoiceConfig": {
@@ -1177,7 +1175,6 @@ class TransparentGeminiVideoPipe:
                 "model": model_path,
                 "generationConfig": {
                     "responseModalities": ["AUDIO"],
-                    "mediaResolution": "medium",  # Per Vertex AI docs: low/medium/high - medium balances token usage and detail
                     "speechConfig": {
                         "voiceConfig": {
                             "prebuiltVoiceConfig": {

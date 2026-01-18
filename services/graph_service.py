@@ -514,6 +514,14 @@ class GraphService:
         elif clean.lower().startswith('f(x)='):
             clean = clean[5:].strip()
 
+        # Strip UI/metadata annotations accidentally appended to expressions
+        # Examples seen in logs:
+        # - "2*x,$range = -5$:5"
+        # - "y=x^2, range=-10..10"
+        import re
+        clean = re.sub(r',\s*\$?range\b.*$', '', clean, flags=re.IGNORECASE).strip()
+        clean = re.sub(r'\$range\b.*$', '', clean, flags=re.IGNORECASE).strip()
+
         # CRITICAL FIX: Convert Unicode superscripts to standard notation
         # This fixes the "invalid character '²' (U+00B2)" error
         superscript_map = {
@@ -540,7 +548,6 @@ class GraphService:
             clean = clean.replace(old, new)
 
         # Handle implicit multiplication (e.g., "3x" -> "3*x")
-        import re
         clean = re.sub(r'(\d+)([a-zA-Z])', r'\1*\2', clean)
         
         # FIX: Handle bare trigonometric functions without arguments
@@ -721,30 +728,55 @@ class GraphService:
             clean_expr = self._clean_expression(expression)
 
             try:
-                # Use sympy to safely evaluate the expression
-                x = symbols('x')
-                logger.info(f"Cleaned expression: '{clean_expr}'")
-                expr_sympy = sympify(clean_expr)
-                logger.info(f"Sympy expression: {expr_sympy}")
-                func = lambdify(x, expr_sympy, 'numpy')
+                # Heuristic: if the expression looks like a "relationship label" (e.g. y_vs_x),
+                # don't try to sympify/lambdify it as math. Plot a sensible default curve instead.
+                axis_x_label = "x"
+                axis_y_label = "y"
+                is_relationship = (
+                    isinstance(clean_expr, str)
+                    and ("_vs_" in clean_expr or " vs " in clean_expr.lower())
+                    and not any(op in clean_expr for op in ["+", "-", "*", "/", "(", ")", "**", "^", "="])
+                )
 
-                # Calculate y values
-                y_vals = func(x_vals)
+                if is_relationship:
+                    parts = clean_expr.lower().split("_vs_") if "_vs_" in clean_expr.lower() else [clean_expr.lower()]
+                    if len(parts) == 2:
+                        axis_y_label = parts[0].replace("_", " ").strip().title()
+                        axis_x_label = parts[1].replace("_", " ").strip().title()
+                    # Saturating curve is a good default for many science relationships (e.g. rate vs intensity)
+                    y_vals = 10.0 * (1.0 - np.exp(-0.35 * (x_vals - x_vals.min())))
+                    ax.plot(x_vals, y_vals, 'b-', linewidth=3, label=f'{axis_y_label} vs {axis_x_label}', alpha=0.85)
+                else:
+                    # Use sympy to safely evaluate the expression
+                    x = symbols('x')
+                    logger.info(f"Cleaned expression: '{clean_expr}'")
+                    expr_sympy = sympify(clean_expr)
+                    logger.info(f"Sympy expression: {expr_sympy}")
+                    func = lambdify(x, expr_sympy, 'numpy')
 
-                # Handle complex numbers and infinite values
-                if np.iscomplexobj(y_vals):
-                    y_vals = np.real(y_vals)
+                    # Calculate y values
+                    y_vals = func(x_vals)
 
-                # Remove infinite and NaN values
-                mask = np.isfinite(y_vals)
-                x_clean = x_vals[mask]
-                y_clean = y_vals[mask]
+                    # Handle complex numbers and infinite values
+                    if np.iscomplexobj(y_vals):
+                        y_vals = np.real(y_vals)
 
-                # Plot the function
-                ax.plot(x_clean, y_clean, 'b-', linewidth=3, label=f'f(x) = {expression}', alpha=0.8)
+                    # Remove infinite and NaN values
+                    try:
+                        mask = np.isfinite(y_vals)
+                    except TypeError:
+                        # Non-numeric output (e.g. sympy symbols) – treat as non-plottable
+                        raise ValueError("Non-numeric function output; cannot plot")
+                    x_clean = x_vals[mask]
+                    y_clean = y_vals[mask]
+
+                    # Plot the function
+                    ax.plot(x_clean, y_clean, 'b-', linewidth=3, label=f'f(x) = {expression}', alpha=0.8)
 
             except Exception as eval_error:
-                logger.error(f"Error evaluating expression '{expression}': {eval_error}")
+                # This commonly happens when users pass a descriptive label instead of a math function.
+                # Keep logs clean: warn (not error) and render a friendly message.
+                logger.warning(f"Graph expression not plottable '{expression}': {eval_error}")
                 # Fallback: show error message on graph
                 ax.text(0.5, 0.5, f"Error: Cannot plot '{expression}'", 
                        transform=ax.transAxes, fontsize=16, ha='center', va='center',
@@ -767,7 +799,9 @@ class GraphService:
             ax.axvline(x=0, color='k', linewidth=1.5, alpha=0.7)
 
             # Add legend
-            ax.legend(fontsize=12, loc='upper right')
+            handles, labels = ax.get_legend_handles_labels()
+            if labels:
+                ax.legend(fontsize=12, loc='upper right')
 
             # Add NerdX educational watermark
             self._add_educational_watermark(ax)
@@ -819,30 +853,51 @@ class GraphService:
 
             # Clean and evaluate the expression
             clean_expr = self._clean_expression(expression)
+            axis_x_label = "x"
+            axis_y_label = "y"
 
             try:
                 # Use sympy to safely evaluate the expression
                 from sympy import lambdify
                 x = symbols('x')
-                expr_sympy = sympify(clean_expr)
-                func = lambdify(x, expr_sympy, 'numpy')
+                expr_sympy = None
+
+                # Heuristic: descriptive "relationship" strings like "y_vs_x" should not be lambdified.
+                is_relationship = (
+                    isinstance(clean_expr, str)
+                    and ("_vs_" in clean_expr.lower() or " vs " in clean_expr.lower())
+                    and not any(op in clean_expr for op in ["+", "-", "*", "/", "(", ")", "**", "^", "="])
+                )
 
                 # Generate x values (single source of truth for both Matplotlib & Manim)
                 if x_range and isinstance(x_range, (tuple, list)) and len(x_range) == 2:
                     x_min, x_max = float(x_range[0]), float(x_range[1])
                 else:
-                    x_min, x_max = -10.0, 10.0
+                    x_min, x_max = (0.0, 10.0) if is_relationship else (-10.0, 10.0)
                 x_vals = np.linspace(x_min, x_max, 1000)
 
                 # Calculate y values
-                y_vals = func(x_vals)
+                if is_relationship:
+                    parts = clean_expr.lower().split("_vs_") if "_vs_" in clean_expr.lower() else [clean_expr.lower()]
+                    if len(parts) == 2:
+                        axis_y_label = parts[0].replace("_", " ").strip().title()
+                        axis_x_label = parts[1].replace("_", " ").strip().title()
+                    # Default science-style saturating curve
+                    y_vals = 10.0 * (1.0 - np.exp(-0.35 * (x_vals - x_min)))
+                else:
+                    expr_sympy = sympify(clean_expr)
+                    func = lambdify(x, expr_sympy, 'numpy')
+                    y_vals = func(x_vals)
 
                 # Handle complex numbers and infinite values
                 if np.iscomplexobj(y_vals):
                     y_vals = np.real(y_vals)
 
                 # Remove infinite and NaN values
-                mask = np.isfinite(y_vals)
+                try:
+                    mask = np.isfinite(y_vals)
+                except TypeError:
+                    raise ValueError("Non-numeric function output; cannot plot")
                 x_clean = x_vals[mask]
                 y_clean = y_vals[mask]
 
@@ -872,7 +927,8 @@ class GraphService:
                     y_max += 2
 
                 # Plot the function
-                ax.plot(x_clean, y_clean, 'b-', linewidth=3, label=f'f(x) = {expression}', alpha=0.85)
+                plot_label = (f"{axis_y_label} vs {axis_x_label}") if is_relationship else (f"f(x) = {expression}")
+                ax.plot(x_clean, y_clean, 'b-', linewidth=3, label=plot_label, alpha=0.85)
 
                 # Build a shared graph spec for deterministic Manim animations
                 graph_spec = {
@@ -882,9 +938,14 @@ class GraphService:
                     "y_range": {"min": y_min, "max": y_max, "step": 1},
                     "coefficients": None,
                 }
+                if is_relationship:
+                    graph_spec["graph_type"] = "relationship"
+                    graph_spec["axis_labels"] = {"x": axis_x_label, "y": axis_y_label}
 
                 # Try extract linear/quadratic coefficients for animation accuracy
                 try:
+                    if expr_sympy is None:
+                        raise ValueError("relationship graph: no polynomial coefficients")
                     poly = Poly(expr_sympy, x)
                     deg = int(poly.degree())
                     if deg == 1:
@@ -916,7 +977,7 @@ class GraphService:
                         pass
 
             except Exception as eval_error:
-                logger.error(f"Error evaluating expression '{expression}': {eval_error}")
+                logger.warning(f"Graph expression not plottable '{expression}': {eval_error}")
                 # Fallback: show error message on graph
                 ax.text(0.5, 0.5, f"Error: Cannot plot '{expression}'", 
                        transform=ax.transAxes, fontsize=16, ha='center', va='center',
@@ -932,8 +993,10 @@ class GraphService:
             # Customize the graph for ZIMSEC standards
             ax.set_xlim(graph_spec["x_range"]["min"], graph_spec["x_range"]["max"])
             ax.set_ylim(graph_spec["y_range"]["min"], graph_spec["y_range"]["max"])
-            ax.set_xlabel('x', fontsize=14, fontweight='bold')
-            ax.set_ylabel('y', fontsize=14, fontweight='bold')
+            # Use nicer labels for relationship graphs when available
+            axis_labels = (graph_spec or {}).get("axis_labels") or {}
+            ax.set_xlabel(axis_labels.get("x", axis_x_label), fontsize=14, fontweight='bold')
+            ax.set_ylabel(axis_labels.get("y", axis_y_label), fontsize=14, fontweight='bold')
             ax.set_title(title, fontsize=16, fontweight='bold', pad=20)
 
             # Add enhanced grid
@@ -946,7 +1009,9 @@ class GraphService:
             ax.axvline(x=0, color='k', linewidth=1.5, alpha=0.7)
 
             # Add legend
-            ax.legend(fontsize=12, loc='upper right')
+            handles, labels = ax.get_legend_handles_labels()
+            if labels:
+                ax.legend(fontsize=12, loc='upper right')
 
             # Add NerdX educational watermark with user name
             watermark_text = f"NerdX ZIMSEC Education • {user_name} • Graph Practice"

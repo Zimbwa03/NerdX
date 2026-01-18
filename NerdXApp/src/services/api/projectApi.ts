@@ -24,6 +24,7 @@ export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: string;
+  image_url?: string;
 }
 
 export interface CreateProjectRequest {
@@ -39,6 +40,7 @@ export interface ChatResponse {
   response: string;
   project_id: number;
   credits_remaining?: number;
+  image_url?: string;
 }
 
 export const projectApi = {

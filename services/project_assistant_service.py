@@ -35,6 +35,9 @@ GOOGLE_CLOUD_PROJECT = os.getenv('GOOGLE_CLOUD_PROJECT', 'gen-lang-client-030327
 USE_VERTEX_AI = os.getenv('GOOGLE_GENAI_USE_VERTEXAI', 'True').lower() == 'true'
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
+from utils.url_utils import convert_local_path_to_public_url
+from services.vertex_service import vertex_service
+
 # Import Gemini Interactions API Service for Deep Research
 try:
     from services.gemini_interactions_service import get_gemini_interactions_service
@@ -1977,6 +1980,75 @@ You have 0 credits. Credits are deducted (1 credit) for every 10 AI responses.
             logger.error(f"Error getting project details {project_id}: {e}")
             return None
 
+    # -------------------- Image generation helpers (Vertex Imagen) --------------------
+
+    def _is_image_generation_request(self, message: str) -> bool:
+        """Lightweight intent check for image generation requests (flyer/poster/etc.)."""
+        if not message:
+            return False
+        m = message.lower()
+        wants_generate = any(k in m for k in ["generate", "create", "make", "design", "draw"])
+        mentions_visual = any(k in m for k in ["image", "picture", "poster", "flyer", "infographic", "banner", "logo", "cover", "background"])
+        return wants_generate and mentions_visual
+
+    def _extract_vertex_prompt_pack(self, ai_text: str) -> Dict[str, str]:
+        """
+        Extract prompts from a 'Vertex Image Prompt Pack' section.
+        Returns a mapping like {'variation_1': '...', 'variation_2': '...'}.
+        """
+        if not ai_text:
+            return {}
+
+        text = ai_text.replace("\r\n", "\n")
+        # Prefer the section after the header if present.
+        if "Vertex Image Prompt Pack" in text:
+            text = text.split("Vertex Image Prompt Pack", 1)[1]
+
+        import re
+        prompts: Dict[str, str] = {}
+
+        # Capture blocks like "Variation 2: ...\n<prompt lines>\nVariation 3: ..."
+        pattern = re.compile(r"(Variation\s*([123]))\s*:\s*(.*?)(?=(?:\n\s*Variation\s*[123]\s*:)|\Z)", re.IGNORECASE | re.DOTALL)
+        for match in pattern.finditer(text):
+            var_num = match.group(2)
+            body = (match.group(3) or "").strip()
+            # Remove leading bullets and excessive whitespace
+            body = re.sub(r"^\s*[•\-]\s*", "", body, flags=re.MULTILINE).strip()
+            if body:
+                prompts[f"variation_{var_num}"] = body
+
+        return prompts
+
+    def _extract_design_blueprint(self, ai_text: str) -> str:
+        """Extract the 'Design Blueprint' section (without the Vertex prompt pack)."""
+        if not ai_text:
+            return ""
+        text = ai_text.replace("\r\n", "\n")
+        if "Design Blueprint" not in text:
+            # If the model didn't format sections, just return the whole text.
+            return ai_text.strip()
+        after = text.split("Design Blueprint", 1)[1]
+        # Stop before prompt pack if present
+        if "Vertex Image Prompt Pack" in after:
+            after = after.split("Vertex Image Prompt Pack", 1)[0]
+        return ("Design Blueprint\n" + after).strip()
+
+    def _save_generated_image(self, user_id: str, project_id: int, image_bytes: bytes) -> Optional[str]:
+        """Save generated image to /static and return public URL."""
+        try:
+            if not image_bytes:
+                return None
+            safe_user = (user_id or "user").replace("@", "_at_").replace(".", "_")
+            filename = f"project_{project_id}_{safe_user}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}.png"
+            rel_path = os.path.join("static", "project_images", filename)
+            os.makedirs(os.path.dirname(rel_path), exist_ok=True)
+            with open(rel_path, "wb") as f:
+                f.write(image_bytes)
+            return convert_local_path_to_public_url(rel_path)
+        except Exception as e:
+            logger.error(f"Failed to save generated image: {e}", exc_info=True)
+            return None
+
     def process_mobile_message(self, user_id: str, project_id: int, message: str) -> Dict:
         """Process a chat message from mobile app"""
         try:
@@ -2003,15 +2075,60 @@ You have 0 credits. Credits are deducted (1 credit) for every 10 AI responses.
                 'timestamp': datetime.now().isoformat()
             })
 
-            # 4. Get AI Response
+            # 4. Get AI Response (and optionally generate an image)
+            wants_image = self._is_image_generation_request(message)
             ai_response = self._get_ai_response(user_id, message, project_data)
+            image_url = None
+
+            if wants_image and vertex_service.is_available():
+                # Use the model's prompt pack (already embedded in assistant guidance) to generate an actual image.
+                prompt_pack = self._extract_vertex_prompt_pack(ai_response)
+                # Prefer Variation 2 for flyers; fallback to any prompt.
+                chosen_prompt = (
+                    prompt_pack.get("variation_2")
+                    or prompt_pack.get("variation_1")
+                    or prompt_pack.get("variation_3")
+                )
+
+                if chosen_prompt:
+                    # Extra credits for image generation (separate from chat credit)
+                    image_credit_check = advanced_credit_service.check_and_deduct_credits(user_id, "image_solve")
+                    if image_credit_check.get("success"):
+                        img_result = vertex_service.generate_image(chosen_prompt, size="1K")
+                        if img_result and img_result.get("success"):
+                            image_url = self._save_generated_image(user_id, project_id, img_result.get("image_bytes"))
+                        else:
+                            logger.error(f"Vertex image generation failed: {(img_result or {}).get('error')}")
+                    else:
+                        # If credits are insufficient, keep text-only guidance (but don't show raw prompt pack)
+                        ai_response = (
+                            self._extract_design_blueprint(ai_response)
+                            + "\n\n⚠️ Image generation needs more credits.\n"
+                            + (image_credit_check.get("message") or "Insufficient credits.")
+                        ).strip()
+                # Hide prompt pack from user-facing response even when we did generate
+                if "Vertex Image Prompt Pack" in ai_response:
+                    ai_response = self._extract_design_blueprint(ai_response)
+
+                if image_url:
+                    ai_response = (
+                        f"{ai_response}\n\n✅ I generated an image for you and attached it here.\n"
+                        "If you want changes, tell me:\n"
+                        "1) size (A4/A3/social)\n"
+                        "2) colors\n"
+                        "3) mood/style (modern, academic, bold)\n"
+                        "4) what text you will add (I will leave safe blank space)"
+                    ).strip()
 
             # 5. Add AI response to history
-            conversation_history.append({
+            assistant_entry = {
                 'role': 'assistant',
                 'content': ai_response,
                 'timestamp': datetime.now().isoformat()
-            })
+            }
+            if image_url:
+                assistant_entry['image_url'] = image_url
+            conversation_history.append(assistant_entry)
 
             # Keep history manageable
             if len(conversation_history) > 50:
@@ -2024,11 +2141,14 @@ You have 0 credits. Credits are deducted (1 credit) for every 10 AI responses.
             # Update database with specific project_id to ensure correct project is updated
             self._save_project_to_database(user_id, project_data, project_id=project_id)
 
-            return {
+            response_payload = {
                 'response': ai_response,
                 'project_id': project_id,
                 'credits_remaining': get_user_credits(user_id)
             }
+            if image_url:
+                response_payload['image_url'] = image_url
+            return response_payload
 
         except Exception as e:
             logger.error(f"Error processing mobile message: {e}")

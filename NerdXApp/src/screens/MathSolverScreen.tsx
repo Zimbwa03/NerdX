@@ -70,9 +70,9 @@ const MathSolverScreen: React.FC = () => {
                         // Show which OCR method was used
                         const methodLabel = scanResult.method === 'offline-mlkit'
                             ? '⚡ Scanned offline with ML Kit'
-                            : scanResult.method === 'gemini-vision'
-                                ? '☁️ Scanned with Gemini Vision'
-                                : '🔧 Scanned with Pix2Text';
+                            : scanResult.method === 'vertex_gemini_vision' || scanResult.method === 'vertex-vision'
+                                ? '☁️ Scanned online (NerdX Cloud OCR)'
+                                : '☁️ Scanned online';
                         console.log(methodLabel);
 
                         // Auto-solve after scan
