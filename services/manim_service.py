@@ -61,16 +61,81 @@ class ManimService:
             "platform": "windows" if self.is_windows else "linux"
         }
 
-    def render_quadratic(self, a: float, b: float, c: float, quality: str = "l") -> Dict:
+    def render_quadratic(
+        self,
+        a: float,
+        b: float,
+        c: float,
+        quality: str = "l",
+        x_range: Optional[Dict] = None,
+        y_range: Optional[Dict] = None,
+    ) -> Dict:
         """
         Render a quadratic equation animation.
         quality: 'l' (low, 480p), 'm' (medium, 720p), 'h' (high, 1080p)
         """
-        return self._render_scene("QuadraticScene", {"MANIM_A": str(a), "MANIM_B": str(b), "MANIM_C": str(c)}, quality)
+        import hashlib
+        key_src = f"quad:{a},{b},{c}|x:{x_range}|y:{y_range}|q:{quality}"
+        render_key = hashlib.sha1(key_src.encode("utf-8")).hexdigest()[:16]
+        env = {"MANIM_A": str(a), "MANIM_B": str(b), "MANIM_C": str(c), "MANIM_RENDER_KEY": f"quad_{render_key}"}
+        env.update(self._ranges_to_env(x_range, y_range))
+        return self._render_scene("QuadraticScene", env, quality)
 
-    def render_linear(self, m: float, c: float, quality: str = "l") -> Dict:
+    def render_linear(
+        self,
+        m: float,
+        c: float,
+        quality: str = "l",
+        x_range: Optional[Dict] = None,
+        y_range: Optional[Dict] = None,
+    ) -> Dict:
         """Render a linear equation animation"""
-        return self._render_scene("LinearScene", {"MANIM_M": str(m), "MANIM_C": str(c)}, quality)
+        import hashlib
+        key_src = f"lin:{m},{c}|x:{x_range}|y:{y_range}|q:{quality}"
+        render_key = hashlib.sha1(key_src.encode("utf-8")).hexdigest()[:16]
+        env = {"MANIM_M": str(m), "MANIM_C": str(c), "MANIM_RENDER_KEY": f"lin_{render_key}"}
+        env.update(self._ranges_to_env(x_range, y_range))
+        return self._render_scene("LinearScene", env, quality)
+
+    def render_expression(
+        self,
+        expression: str,
+        quality: str = "l",
+        x_range: Optional[Dict] = None,
+        y_range: Optional[Dict] = None,
+    ) -> Dict:
+        """
+        Render an animation for an arbitrary 2D function y = f(x) using SymPy -> lambdify inside Manim.
+        This is used for trig/exponential graphs to avoid coefficient-specific drift.
+        """
+        import hashlib
+        key_src = f"expr:{expression}|x:{x_range}|y:{y_range}|q:{quality}"
+        render_key = hashlib.sha1(key_src.encode("utf-8")).hexdigest()[:16]
+        env = {"MANIM_EXPR": str(expression), "MANIM_RENDER_KEY": f"expr_{render_key}"}
+        env.update(self._ranges_to_env(x_range, y_range))
+        return self._render_scene("ExpressionScene", env, quality)
+
+    def _ranges_to_env(self, x_range: Optional[Dict], y_range: Optional[Dict]) -> Dict[str, str]:
+        """
+        Convert a graph spec range dict into env vars for `manim_templates.py`.
+        Expected shape:
+          x_range: {min: number, max: number, step?: number}
+          y_range: {min: number, max: number, step?: number}
+        """
+        env: Dict[str, str] = {}
+        try:
+            if isinstance(x_range, dict):
+                env["MANIM_X_MIN"] = str(x_range.get("min"))
+                env["MANIM_X_MAX"] = str(x_range.get("max"))
+                env["MANIM_X_STEP"] = str(x_range.get("step", 1))
+            if isinstance(y_range, dict):
+                env["MANIM_Y_MIN"] = str(y_range.get("min"))
+                env["MANIM_Y_MAX"] = str(y_range.get("max"))
+                env["MANIM_Y_STEP"] = str(y_range.get("step", 1))
+        except Exception:
+            # Best-effort only; templates have safe defaults.
+            return {}
+        return env
 
     def _render_scene(self, scene_name: str, env_vars: Dict[str, str], quality: str) -> Dict:
         """
@@ -85,8 +150,13 @@ class ManimService:
                 "platform": deps.get("platform", "unknown")
             }
         
-        # Generate unique ID for this render
-        render_id = str(uuid.uuid4())[:8]
+        # Generate deterministic ID (for caching) if provided, else random
+        render_key = env_vars.get("MANIM_RENDER_KEY")
+        if render_key:
+            safe_key = "".join(ch for ch in render_key if ch.isalnum() or ch in ("-", "_"))[:32]
+            render_id = safe_key or str(uuid.uuid4())[:8]
+        else:
+            render_id = str(uuid.uuid4())[:8]
         output_filename = f"{scene_name}_{render_id}"
         
         # Construct command
@@ -109,7 +179,30 @@ class ManimService:
         env["PATH"] = self.base_dir + os.pathsep + env.get("PATH", "")
         
         try:
-            # Run Manim with timeout (60 seconds should be enough for simple graphs)
+            # Find the output file path before running Manim (enables caching)
+            # Manim structure: media_dir/videos/manim_templates/quality/output_filename.mp4
+            quality_map = {'l': '480p15', 'm': '720p30', 'h': '1080p60'}
+            quality_dir = quality_map.get(quality, '480p15')
+            video_path = os.path.join(
+                self.media_dir,
+                "videos",
+                "manim_templates",
+                quality_dir,
+                f"{output_filename}.mp4"
+            )
+
+            # Cache hit: return immediately if already rendered
+            if os.path.exists(video_path):
+                relative_path = os.path.relpath(video_path, self.base_dir).replace("\\", "/")
+                logger.info(f"Manim cache hit: {relative_path}")
+                return {
+                    "success": True,
+                    "video_path": relative_path,
+                    "render_id": render_id,
+                    "logs": "cache_hit"
+                }
+
+            # Run Manim with timeout
             result = subprocess.run(
                 cmd,
                 env=env,
@@ -117,19 +210,6 @@ class ManimService:
                 text=True,
                 check=True,
                 timeout=120  # 2 minute timeout
-            )
-            
-            # Find the output file
-            # Manim structure: media_dir/videos/manim_templates/quality/output_filename.mp4
-            quality_map = {'l': '480p15', 'm': '720p30', 'h': '1080p60'}
-            quality_dir = quality_map.get(quality, '480p15')
-            
-            video_path = os.path.join(
-                self.media_dir,
-                "videos",
-                "manim_templates",
-                quality_dir,
-                f"{output_filename}.mp4"
             )
             
             # Verify file exists

@@ -14,6 +14,7 @@ import {
   ScrollView,
   StatusBar,
   Image,
+  Clipboard,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -75,6 +76,7 @@ const TeacherModeScreen: React.FC = () => {
   const [activeMode, setActiveMode] = useState<'chat'>('chat');
   const [showModeMenu, setShowModeMenu] = useState(false);
   const [pendingImage, setPendingImage] = useState<{ uri: string, base64?: string } | null>(null);
+  const [showQuickAskButtons, setShowQuickAskButtons] = useState(true); // Hide after first message or when typing
 
   // Zoom Modal State
   const [zoomVisible, setZoomVisible] = useState(false);
@@ -342,6 +344,7 @@ const TeacherModeScreen: React.FC = () => {
     setMessages((prev) => [...prev, userMessage]);
     const query = inputText.trim();
     setInputText('');
+    setShowQuickAskButtons(false); // Hide buttons after sending first message
     setSending(true);
 
     try {
@@ -408,6 +411,7 @@ const TeacherModeScreen: React.FC = () => {
 
   const handleQuickAsk = (question: string) => {
     setInputText(question);
+    setShowQuickAskButtons(false); // Hide buttons when user selects a quick ask
   };
 
   // ==================== Multimodal Handlers ====================
@@ -628,95 +632,126 @@ const TeacherModeScreen: React.FC = () => {
         style={[styles.messagesContainer, { backgroundColor: themedColors.background.default }]}
         contentContainerStyle={styles.messagesContent}
         renderItem={({ item: message }) => (
-          <View
-            style={[
-              styles.messageRow,
-              message.role === 'user' ? styles.userMessageRow : styles.assistantMessageRow,
-            ]}
-          >
-            {message.role === 'assistant' && (
-              <View style={[styles.assistantAvatarSmall, { backgroundColor: themedColors.primary.light }]}>
-                <Text style={styles.assistantAvatarSmallText}>👨‍🏫</Text>
-              </View>
-            )}
-            <View style={{ maxWidth: '80%' }}>
-              <View
-                style={[
-                  styles.messageBubble,
-                  message.role === 'user' ? styles.userMessage : [styles.assistantMessage, { backgroundColor: themedColors.background.paper, borderColor: themedColors.border.light }],
-                  { maxWidth: '100%' }
-                ]}
-              >
-                {message.role === 'user' ? (
-                  <LinearGradient
-                    colors={themedColors?.gradients?.primary || ['#7C4DFF', '#3F1DCB']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.userMessageGradient}
-                  >
-                    {message.image_url && (
-                      <Image
-                        source={{ uri: message.image_url }}
-                        style={{ width: '100%', height: 150, borderRadius: 12, marginBottom: 8 }}
-                        resizeMode="cover"
-                      />
-                    )}
-                    <Text style={styles.userMessageText}>{message.content}</Text>
-                  </LinearGradient>
-                ) : (
-                  <View style={styles.markdownContainer}>
-                    <Markdown style={markdownStyles}>
-                      {message.content}
-                    </Markdown>
-                    {message.graph_url && (
-                      <View style={styles.graphContainer}>
-                        <TouchableOpacity
-                          activeOpacity={0.9}
-                          onPress={() => {
-                            setZoomImage(`${API_BASE_URL}${message.graph_url}`);
-                            setZoomVisible(true);
-                          }}
-                        >
-                          <Image
-                            source={{ uri: `${API_BASE_URL}${message.graph_url}` }}
-                            style={styles.graphImage}
-                            resizeMode="contain"
-                          />
-                        </TouchableOpacity>
-                        <Text style={styles.graphCaption}>Mathematical Graph</Text>
-                      </View>
-                    )}
-                    {message.video_url && (
-                      <View style={{ marginTop: 12, height: 220, width: '100%', borderRadius: 12, overflow: 'hidden' }}>
-                        <VideoStreamPlayer
-                          videoUrl={`${API_BASE_URL}${message.video_url}`}
-                          topicTitle="Explanation"
-                          accentColor={themedColors.primary.main}
-                        />
-                      </View>
-                    )}
-                  </View>
-                )}
-              </View>
-              {message.role === 'assistant' && (
-                <TouchableOpacity
-                  style={styles.speakerButton}
-                  onPress={() => playResponse(message.content)}
+          message.role === 'user' ? (
+            // User Message - Bubble on Right (ChatGPT style)
+            <View style={styles.userMessageRow}>
+              <View style={styles.userMessageBubble}>
+                <LinearGradient
+                  colors={themedColors?.gradients?.primary || ['#7C4DFF', '#3F1DCB']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.userMessageGradient}
                 >
-                  <Ionicons name="volume-high-outline" size={20} color={themedColors.text.secondary} />
-                </TouchableOpacity>
-              )}
+                  {message.image_url && (
+                    <Image
+                      source={{ uri: message.image_url }}
+                      style={{ width: '100%', height: 150, borderRadius: 12, marginBottom: 8 }}
+                      resizeMode="cover"
+                    />
+                  )}
+                  <Text style={styles.userMessageText}>{message.content}</Text>
+                </LinearGradient>
+              </View>
             </View>
-          </View>
+          ) : (
+            // Assistant Message - Full Width, Structured (ChatGPT style)
+            <View style={styles.assistantMessageRow}>
+              <View style={styles.assistantMessageFullWidth}>
+                <View style={styles.markdownContainer}>
+                  <Markdown style={markdownStyles}>
+                    {message.content}
+                  </Markdown>
+                  {message.graph_url && (
+                    <View style={styles.graphContainer}>
+                      <TouchableOpacity
+                        activeOpacity={0.9}
+                        onPress={() => {
+                          setZoomImage(`${API_BASE_URL}${message.graph_url}`);
+                          setZoomVisible(true);
+                        }}
+                      >
+                        <Image
+                          source={{ uri: `${API_BASE_URL}${message.graph_url}` }}
+                          style={styles.graphImage}
+                          resizeMode="contain"
+                        />
+                      </TouchableOpacity>
+                      <Text style={styles.graphCaption}>Mathematical Graph</Text>
+                    </View>
+                  )}
+                  {message.video_url && (
+                    <View style={{ marginTop: 12, height: 220, width: '100%', borderRadius: 12, overflow: 'hidden' }}>
+                      <VideoStreamPlayer
+                        videoUrl={`${API_BASE_URL}${message.video_url}`}
+                        topicTitle="Explanation"
+                        accentColor={themedColors.primary.main}
+                      />
+                    </View>
+                  )}
+                </View>
+                
+                {/* Interaction Buttons Row (ChatGPT style) */}
+                <View style={styles.interactionButtonsRow}>
+                  <TouchableOpacity
+                    style={styles.interactionButton}
+                    onPress={() => {
+                      Clipboard.setString(message.content);
+                      showSuccess('Copied to clipboard');
+                    }}
+                  >
+                    <Ionicons name="copy-outline" size={18} color={themedColors.text.secondary} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.interactionButton}
+                    onPress={() => showInfo('Feedback recorded')}
+                  >
+                    <Ionicons name="thumbs-up-outline" size={18} color={themedColors.text.secondary} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.interactionButton}
+                    onPress={() => showInfo('Feedback recorded')}
+                  >
+                    <Ionicons name="thumbs-down-outline" size={18} color={themedColors.text.secondary} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.interactionButton}
+                    onPress={() => playResponse(message.content)}
+                  >
+                    <Ionicons name="volume-high-outline" size={18} color={themedColors.text.secondary} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.interactionButton}
+                    onPress={async () => {
+                      try {
+                        await Sharing.shareAsync({
+                          message: message.content,
+                          title: 'Share Response',
+                        });
+                      } catch (error) {
+                        showError('Unable to share');
+                      }
+                    }}
+                  >
+                    <Ionicons name="share-outline" size={18} color={themedColors.text.secondary} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.interactionButton}
+                    onPress={() => showInfo('More options')}
+                  >
+                    <Ionicons name="ellipsis-horizontal-outline" size={18} color={themedColors.text.secondary} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          )
         )}
         ListFooterComponent={
           sending ? (
-            <View style={[styles.messageRow, styles.assistantMessageRow]}>
-              <View style={[styles.assistantAvatarSmall, { backgroundColor: themedColors.primary.light }]}>
-                <Text style={styles.assistantAvatarSmallText}>👨‍🏫</Text>
-              </View>
-              <View style={[styles.messageBubble, styles.assistantMessage, { backgroundColor: themedColors.background.paper, borderColor: themedColors.border.light }]}>
-                <TypingIndicator />
+            <View style={styles.assistantMessageRow}>
+              <View style={styles.assistantMessageFullWidth}>
+                <View style={styles.markdownContainer}>
+                  <TypingIndicator />
+                </View>
               </View>
             </View>
           ) : null
@@ -724,19 +759,21 @@ const TeacherModeScreen: React.FC = () => {
       />
 
       <View style={[styles.inputContainer, { backgroundColor: themedColors.background.paper, borderTopColor: themedColors.border.light }]}>
-        {/* Quick Ask Buttons */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.quickAskContainer}>
-          {currentSubjectQuestions.map((q, index) => (
-            <TouchableOpacity
-              key={index}
-              style={[styles.quickAskButton, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F7FA', borderColor: themedColors.primary.main }]}
-              onPress={() => handleQuickAsk(q)}
-              disabled={sending}
-            >
-              <Text style={[styles.quickAskText, { color: themedColors.primary.main }]}>{q}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+        {/* Quick Ask Buttons - Only show initially */}
+        {showQuickAskButtons && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.quickAskContainer}>
+            {currentSubjectQuestions.map((q, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[styles.quickAskButton, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F7FA', borderColor: themedColors.primary.main }]}
+                onPress={() => handleQuickAsk(q)}
+                disabled={sending}
+              >
+                <Text style={[styles.quickAskText, { color: themedColors.primary.main }]}>{q}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
 
 
         {/* Media Selection Popup - Premium Glass Design */}
@@ -813,7 +850,12 @@ const TeacherModeScreen: React.FC = () => {
                 { color: themedColors.text.primary }
               ]}
               value={inputText}
-              onChangeText={setInputText}
+              onChangeText={(text) => {
+                setInputText(text);
+                if (text.trim().length > 0) {
+                  setShowQuickAskButtons(false); // Hide buttons when user starts typing
+                }
+              }}
               placeholder="Ask a question..."
               placeholderTextColor={themedColors.text.disabled}
               multiline
@@ -960,10 +1002,24 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   userMessageRow: {
+    flexDirection: 'row',
     justifyContent: 'flex-end',
+    marginBottom: 16,
+    paddingHorizontal: 16,
   },
   assistantMessageRow: {
-    justifyContent: 'flex-start',
+    width: '100%',
+    marginBottom: 16,
+  },
+  userMessageBubble: {
+    maxWidth: '80%',
+    borderRadius: 20,
+    borderBottomRightRadius: 4,
+    overflow: 'hidden',
+  },
+  assistantMessageFullWidth: {
+    width: '100%',
+    paddingHorizontal: 16,
   },
   assistantAvatarSmall: {
     width: 32,
@@ -982,15 +1038,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
   },
-  userMessage: {
-    borderBottomRightRadius: 4,
-  },
-  assistantMessage: {
-    backgroundColor: Colors.background.paper,
-    borderBottomLeftRadius: 4,
-    borderWidth: 1,
-    borderColor: Colors.border.light,
-  },
   userMessageGradient: {
     padding: 12,
     paddingHorizontal: 16,
@@ -1001,8 +1048,21 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   markdownContainer: {
-    padding: 12,
-    paddingHorizontal: 16,
+    padding: 0,
+    paddingVertical: 12,
+  },
+  interactionButtonsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingTop: 8,
+    paddingBottom: 4,
+    gap: 8,
+  },
+  interactionButton: {
+    padding: 6,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   inputContainer: {
     backgroundColor: Colors.background.paper,

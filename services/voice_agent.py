@@ -18,6 +18,7 @@ import logging
 import struct
 import io
 import time
+import tempfile
 from typing import Optional
 from contextlib import asynccontextmanager
 
@@ -56,14 +57,115 @@ logger = logging.getLogger(__name__)
 # VERTEX AI / GEMINI CONFIGURATION
 # ============================================================================
 
-# Prefer Vertex AI (better quality, your service account has access)
-USE_VERTEX_AI = os.getenv('GOOGLE_GENAI_USE_VERTEXAI', 'True').lower() == 'true'
-GOOGLE_CLOUD_PROJECT = os.getenv('GOOGLE_CLOUD_PROJECT', 'gen-lang-client-0303273462')
-GOOGLE_CLOUD_LOCATION = os.getenv('GOOGLE_CLOUD_LOCATION', 'us-central1')
-GOOGLE_APPLICATION_CREDENTIALS = os.getenv('GOOGLE_APPLICATION_CREDENTIALS', 'credentials/vertex_ai_service_account.json')
+def _looks_like_json(s: Optional[str]) -> bool:
+    if not s:
+        return False
+    s = s.strip()
+    return s.startswith("{") and s.endswith("}")
 
-# Gemini API fallback
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+
+def _parse_json_safely(raw: str) -> Optional[dict]:
+    try:
+        return json.loads(raw)
+    except Exception:
+        return None
+
+
+def _write_service_account_json_to_temp(service_account_json: str) -> Optional[str]:
+    """
+    Persist service account JSON from env into a temp file and return its path.
+    This is required for google-auth / service_account_file loading.
+    """
+    try:
+        f = tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False)
+        with f:
+            f.write(service_account_json)
+        return f.name
+    except Exception as e:
+        logger.error(f"❌ Failed to write service account JSON to temp file: {e}")
+        return None
+
+
+def _init_vertex_env() -> dict:
+    """
+    Normalize Vertex/Gemini Live configuration from environment variables.
+
+    Common misconfiguration we handle:
+    - `GOOGLE_CLOUD_PROJECT` accidentally contains the full service-account JSON.
+    - `GOOGLE_CLOUD_LOCATION` set to 'global' (invalid for Vertex WS endpoint).
+    - Credentials provided inline (env) instead of file path.
+
+    Returns a small, safe-to-log context dict (no secrets).
+    """
+    global USE_VERTEX_AI, GOOGLE_CLOUD_PROJECT, GOOGLE_CLOUD_LOCATION, GOOGLE_APPLICATION_CREDENTIALS, GEMINI_API_KEY
+
+    # Defaults
+    USE_VERTEX_AI = os.getenv("GOOGLE_GENAI_USE_VERTEXAI", "True").lower() == "true"
+    GOOGLE_CLOUD_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT", "gen-lang-client-0303273462")
+    GOOGLE_CLOUD_LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
+    GOOGLE_APPLICATION_CREDENTIALS = os.getenv(
+        "GOOGLE_APPLICATION_CREDENTIALS", "credentials/vertex_ai_service_account.json"
+    )
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+    # Candidate env vars that may contain service account JSON
+    sa_json_raw = (
+        os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
+        or os.getenv("VERTEX_AI_SERVICE_ACCOUNT_JSON")
+        or os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
+    )
+
+    # Some deploy setups accidentally put the full JSON in GOOGLE_CLOUD_PROJECT.
+    project_was_json = False
+    project_json = None
+    if _looks_like_json(GOOGLE_CLOUD_PROJECT):
+        project_json = _parse_json_safely(GOOGLE_CLOUD_PROJECT)
+        if isinstance(project_json, dict) and project_json.get("type") == "service_account":
+            project_was_json = True
+            sa_json_raw = sa_json_raw or GOOGLE_CLOUD_PROJECT
+            GOOGLE_CLOUD_PROJECT = project_json.get("project_id") or GOOGLE_CLOUD_PROJECT
+
+    # If we have service account JSON, set project and credentials path reliably.
+    creds_source = "file"
+    client_email = None
+    if sa_json_raw and _looks_like_json(sa_json_raw):
+        sa = _parse_json_safely(sa_json_raw) or {}
+        if isinstance(sa, dict) and sa.get("type") == "service_account":
+            client_email = sa.get("client_email")
+            project_id = sa.get("project_id")
+            if project_id:
+                GOOGLE_CLOUD_PROJECT = project_id
+                os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
+
+            # If a credentials file path is set and exists, keep it; otherwise write temp.
+            creds_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+            if not (creds_path and os.path.exists(creds_path)):
+                temp_path = _write_service_account_json_to_temp(sa_json_raw)
+                if temp_path:
+                    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = temp_path
+                    GOOGLE_APPLICATION_CREDENTIALS = temp_path
+                    creds_source = "env_json"
+                    USE_VERTEX_AI = True  # If creds exist, prefer Vertex
+
+    # Vertex WS endpoint requires a real region, NOT "global"
+    if GOOGLE_CLOUD_LOCATION.strip().lower() == "global":
+        GOOGLE_CLOUD_LOCATION = "us-central1"
+        os.environ["GOOGLE_CLOUD_LOCATION"] = GOOGLE_CLOUD_LOCATION
+
+    return {
+        "use_vertex_ai": USE_VERTEX_AI,
+        "project_id": GOOGLE_CLOUD_PROJECT if not project_was_json else "(derived from service account JSON)",
+        "location": GOOGLE_CLOUD_LOCATION,
+        "credentials_source": creds_source,
+        "credentials_path_set": bool(os.getenv("GOOGLE_APPLICATION_CREDENTIALS")),
+        "credentials_path_exists": bool(os.getenv("GOOGLE_APPLICATION_CREDENTIALS") and os.path.exists(os.getenv("GOOGLE_APPLICATION_CREDENTIALS"))),
+        "client_email": client_email,
+        "has_gemini_api_key": bool(GEMINI_API_KEY),
+    }
+
+
+# Initialize config once at import time (lifespan will re-run for safety)
+_VERTEX_CTX = _init_vertex_env()
 
 # Model selection - Gemini 2.5 Flash is best for real-time audio
 # gemini-2.5-flash supports native audio processing
@@ -298,23 +400,23 @@ def convert_m4a_to_pcm(m4a_base64: str) -> Optional[str]:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan handler"""
+    # Re-normalize in case env vars were injected after import (common on some platforms)
+    global _VERTEX_CTX
+    _VERTEX_CTX = _init_vertex_env()
     logger.info("🚀 NerdX Live Voice Agent starting (VERTEX AI + TRANSPARENT PIPE mode)...")
-    logger.info(f"📍 Vertex AI Enabled: {USE_VERTEX_AI}")
+    logger.info(f"📍 Vertex AI Enabled: {_VERTEX_CTX.get('use_vertex_ai')}")
     logger.info(f"📍 Project: {GOOGLE_CLOUD_PROJECT}")
     logger.info(f"📍 Location: {GOOGLE_CLOUD_LOCATION}")
     logger.info(f"📍 Model: {GEMINI_MODEL}")
+    if _VERTEX_CTX.get("client_email"):
+        logger.info(f"📍 Vertex SA: {_VERTEX_CTX.get('client_email')}")
     
     if USE_VERTEX_AI:
-        creds_path = GOOGLE_APPLICATION_CREDENTIALS
-        if os.path.exists(creds_path):
-            logger.info(f"✅ Vertex AI credentials found: {creds_path}")
+        creds_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS") or GOOGLE_APPLICATION_CREDENTIALS
+        if creds_path and os.path.exists(creds_path):
+            logger.info(f"✅ Vertex AI credentials ready ({_VERTEX_CTX.get('credentials_source')}): {creds_path}")
         else:
-            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            full_path = os.path.join(base_dir, creds_path)
-            if os.path.exists(full_path):
-                logger.info(f"✅ Vertex AI credentials found: {full_path}")
-            else:
-                logger.warning(f"⚠️ Vertex AI credentials not found at {creds_path} or {full_path}")
+            logger.warning("⚠️ Vertex AI enabled but credentials file not found; Live API will fail until credentials are provided")
     
     if GEMINI_API_KEY:
         logger.info("✅ Gemini API key configured (fallback)")
@@ -441,6 +543,7 @@ class TransparentGeminiPipe:
         self.gemini_ws: Optional[any] = None
         self.is_active = False
         self.using_vertex_ai = False
+        self.last_error: Optional[str] = None
         # Session resumption support
         self.session_handle = session_handle  # For resuming previous sessions
         self.session_id = None  # Returned by server during session
@@ -452,11 +555,7 @@ class TransparentGeminiPipe:
             from google.auth.transport import requests as google_requests
             
             # Check for credentials file
-            creds_path = GOOGLE_APPLICATION_CREDENTIALS
-            if not os.path.exists(creds_path):
-                # Try relative to script directory
-                base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-                creds_path = os.path.join(base_dir, GOOGLE_APPLICATION_CREDENTIALS)
+            creds_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS") or GOOGLE_APPLICATION_CREDENTIALS
             
             if not os.path.exists(creds_path):
                 logger.warning(f"Service account file not found: {creds_path}")
@@ -487,6 +586,8 @@ class TransparentGeminiPipe:
             if connected:
                 self.using_vertex_ai = True
                 return True
+            if not self.last_error:
+                self.last_error = "Vertex AI connection failed"
             logger.warning("⚠️ Vertex AI connection failed, falling back to regular Gemini API")
         
         # Fallback to regular Gemini API
@@ -494,6 +595,8 @@ class TransparentGeminiPipe:
             connected = await self._connect_gemini_api()
             if connected:
                 return True
+        elif not self.last_error:
+            self.last_error = "GEMINI_API_KEY not configured (no fallback available)"
         
         logger.error("❌ All connection methods failed")
         return False
@@ -506,6 +609,8 @@ class TransparentGeminiPipe:
             # Get access token
             token = await asyncio.to_thread(self._get_vertex_ai_token_sync)
             if not token:
+                if not self.last_error:
+                    self.last_error = "Vertex credentials not available (token fetch failed)"
                 return False
             
             # Vertex AI WebSocket endpoint
@@ -529,76 +634,88 @@ class TransparentGeminiPipe:
                 ping_timeout=10,
             )
             
-            # Send setup message for Vertex AI
-            # Per docs: Enable context window compression for longer tutoring sessions
-            # and session resumption for mobile disconnects
-            setup_message = {
-                "setup": {
-                    "model": f"projects/{GOOGLE_CLOUD_PROJECT}/locations/{GOOGLE_CLOUD_LOCATION}/publishers/google/models/{GEMINI_MODEL}",
-                    "generationConfig": {
-                        "responseModalities": ["AUDIO"],
-                        "mediaResolution": "medium",  # Per Vertex AI docs
-                        "speechConfig": {
-                            "voiceConfig": {
-                                "prebuiltVoiceConfig": {
-                                    "voiceName": "Aoede"  # Natural HD voice
+            def _is_model_related_error(msg: str) -> bool:
+                m = (msg or "").lower()
+                return (
+                    "model" in m
+                    and ("not found" in m or "invalid" in m or "unknown" in m or "resource" in m)
+                )
+
+            # Try a small set of models (some preview names differ by platform/region).
+            model_candidates = []
+            for m in [
+                GEMINI_MODEL,
+                os.getenv("GEMINI_LIVE_MODEL_FALLBACK"),
+                "gemini-2.0-flash-live-001",
+            ]:
+                if m and m not in model_candidates:
+                    model_candidates.append(m)
+
+            for model_name in model_candidates:
+                # Send setup message for Vertex AI
+                # Per docs: Enable context window compression for longer tutoring sessions
+                # and session resumption for mobile disconnects
+                setup_message = {
+                    "setup": {
+                        "model": f"projects/{GOOGLE_CLOUD_PROJECT}/locations/{GOOGLE_CLOUD_LOCATION}/publishers/google/models/{model_name}",
+                        "generationConfig": {
+                            "responseModalities": ["AUDIO"],
+                            "mediaResolution": "medium",  # Per Vertex AI docs
+                            "speechConfig": {
+                                "voiceConfig": {
+                                    "prebuiltVoiceConfig": {"voiceName": "Aoede"}  # Natural HD voice
                                 }
-                            }
-                        }
-                    },
-                    # Context window compression for longer sessions (beyond 15 min default)
-                    # Audio is ~25 tokens/sec, so 128k tokens = ~85 min without compression
-                    # With compression, sessions can be unlimited
-                    "contextWindowCompression": {
-                        "triggerTokens": 100000,  # Start compression at 100k tokens
-                        "slidingWindow": {
-                            "targetTokens": 50000  # Compress down to 50k tokens
-                        }
-                    },
-                    # Session resumption for handling mobile disconnects
-                    "sessionResumption": {
-                        "handle": self.session_handle if hasattr(self, 'session_handle') and self.session_handle else None
-                    },
-                    "systemInstruction": {
-                        "parts": [{"text": NERDX_SYSTEM_INSTRUCTION}]
-                    },
-                    "tools": []
+                            },
+                        },
+                        # Context window compression for longer sessions (beyond 15 min default)
+                        "contextWindowCompression": {
+                            "triggerTokens": 100000,
+                            "slidingWindow": {"targetTokens": 50000},
+                        },
+                        # Session resumption for handling mobile disconnects
+                        "sessionResumption": {
+                            "handle": self.session_handle if self.session_handle else None
+                        },
+                        "systemInstruction": {"parts": [{"text": NERDX_SYSTEM_INSTRUCTION}]},
+                        "tools": [],
+                    }
                 }
-            }
-            
-            # Remove None values (session handle if not resuming)
-            if setup_message["setup"]["sessionResumption"]["handle"] is None:
-                del setup_message["setup"]["sessionResumption"]["handle"]
-            
-            logger.info(f"📤 Sending Vertex AI setup...")
-            await self.gemini_ws.send(json.dumps(setup_message))
-            
-            # Wait for setup response
-            setup_response = await asyncio.wait_for(
-                self.gemini_ws.recv(),
-                timeout=30.0
-            )
-            setup_data = json.loads(setup_response)
-            
-            logger.info(f"📥 Vertex AI setup response: {json.dumps(setup_data)[:500]}")
-            
-            if "setupComplete" in setup_data:
-                logger.info("✅ Vertex AI Live session established successfully")
-                self.is_active = True
-                return True
-            elif "error" in setup_data:
-                error_info = setup_data.get("error", {})
-                error_msg = error_info.get("message", str(setup_data))
-                logger.error(f"❌ Vertex AI setup error: {error_msg}")
-                return False
-            else:
-                logger.error(f"❌ Unexpected Vertex AI response: {setup_data}")
+
+                # Remove None values (session handle if not resuming)
+                if setup_message["setup"]["sessionResumption"]["handle"] is None:
+                    del setup_message["setup"]["sessionResumption"]["handle"]
+
+                logger.info(f"📤 Sending Vertex AI setup (model: {model_name})...")
+                await self.gemini_ws.send(json.dumps(setup_message))
+
+                setup_response = await asyncio.wait_for(self.gemini_ws.recv(), timeout=30.0)
+                setup_data = json.loads(setup_response)
+
+                logger.info(f"📥 Vertex AI setup response: {json.dumps(setup_data)[:500]}")
+
+                if "setupComplete" in setup_data:
+                    logger.info(f"✅ Vertex AI Live session established successfully (model: {model_name})")
+                    self.is_active = True
+                    return True
+
+                if "error" in setup_data:
+                    error_info = setup_data.get("error", {})
+                    error_msg = error_info.get("message", str(setup_data))
+                    logger.error(f"❌ Vertex AI setup error (model: {model_name}): {error_msg}")
+                    if _is_model_related_error(error_msg) and model_name != model_candidates[-1]:
+                        logger.warning("↩️ Retrying with fallback Vertex Live model...")
+                        continue
+                    return False
+
+                logger.error(f"❌ Unexpected Vertex AI response (model: {model_name}): {setup_data}")
                 return False
                 
         except asyncio.TimeoutError:
+            self.last_error = "Timeout waiting for Vertex AI setup"
             logger.error("❌ Timeout waiting for Vertex AI setup")
             return False
         except Exception as e:
+            self.last_error = f"Vertex AI connection error: {type(e).__name__}: {e}"
             logger.error(f"❌ Vertex AI connection error: {type(e).__name__}: {e}")
             return False
     
@@ -608,10 +725,7 @@ class TransparentGeminiPipe:
             from google.oauth2 import service_account
             from google.auth.transport import requests as google_requests
             
-            creds_path = GOOGLE_APPLICATION_CREDENTIALS
-            if not os.path.exists(creds_path):
-                base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-                creds_path = os.path.join(base_dir, GOOGLE_APPLICATION_CREDENTIALS)
+            creds_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS") or GOOGLE_APPLICATION_CREDENTIALS
             
             if not os.path.exists(creds_path):
                 return None
@@ -629,6 +743,7 @@ class TransparentGeminiPipe:
     async def _connect_gemini_api(self) -> bool:
         """Connect to regular Gemini API (fallback)."""
         if not GEMINI_API_KEY:
+            self.last_error = "GEMINI_API_KEY not set"
             logger.error("❌ GEMINI_API_KEY not set!")
             return False
             
@@ -699,9 +814,11 @@ class TransparentGeminiPipe:
                 return False
                 
         except asyncio.TimeoutError:
+            self.last_error = "Timeout waiting for Gemini API setup"
             logger.error("❌ Timeout waiting for Gemini API setup")
             return False
         except Exception as e:
+            self.last_error = f"Gemini API connection error: {type(e).__name__}: {e}"
             logger.error(f"❌ Gemini API connection error: {type(e).__name__}: {e}")
             return False
     
@@ -854,7 +971,13 @@ async def root():
         "mode": "TRANSPARENT_PIPE",
         "status": "running",
         "model": GEMINI_MODEL,
-        "api_configured": bool(GEMINI_API_KEY)
+        "vertex_enabled": bool(USE_VERTEX_AI),
+        "project_id": GOOGLE_CLOUD_PROJECT,
+        "location": GOOGLE_CLOUD_LOCATION,
+        # Avoid leaking filesystem paths in a public endpoint.
+        "credentials_ready": bool(os.getenv("GOOGLE_APPLICATION_CREDENTIALS") and os.path.exists(os.getenv("GOOGLE_APPLICATION_CREDENTIALS"))),
+        "credentials_source": (_VERTEX_CTX.get("credentials_source") if isinstance(_VERTEX_CTX, dict) else None),
+        "fallback_api_key_configured": bool(GEMINI_API_KEY),
     }
 
 
@@ -877,6 +1000,7 @@ class TransparentGeminiVideoPipe:
         self.gemini_ws: Optional[any] = None
         self.is_active = False
         self.using_vertex_ai = False
+        self.last_error: Optional[str] = None
         # Session resumption support
         self.session_handle = session_handle
         self.session_id = None
@@ -891,6 +1015,8 @@ class TransparentGeminiVideoPipe:
             if connected:
                 self.using_vertex_ai = True
                 return True
+            if not self.last_error:
+                self.last_error = "Vertex AI video connection failed"
             logger.warning("⚠️ Vertex AI video connection failed, falling back to regular Gemini API")
         
         # Fallback to regular Gemini API
@@ -898,6 +1024,8 @@ class TransparentGeminiVideoPipe:
             connected = await self._connect_gemini_api_video()
             if connected:
                 return True
+        elif not self.last_error:
+            self.last_error = "GEMINI_API_KEY not configured (no video fallback available)"
         
         logger.error("❌ All video connection methods failed")
         return False
@@ -910,6 +1038,8 @@ class TransparentGeminiVideoPipe:
             # Get access token
             token = await asyncio.to_thread(self._get_vertex_ai_token_sync)
             if not token:
+                if not self.last_error:
+                    self.last_error = "Vertex credentials not available (video token fetch failed)"
                 logger.warning("Failed to get Vertex AI token for video")
                 return False
             
@@ -959,9 +1089,11 @@ class TransparentGeminiVideoPipe:
                 return False
                 
         except asyncio.TimeoutError:
+            self.last_error = "Timeout waiting for Vertex AI video setup"
             logger.error("❌ Timeout waiting for Vertex AI video setup")
             return False
         except Exception as e:
+            self.last_error = f"Vertex AI video connection error: {type(e).__name__}: {e}"
             logger.error(f"❌ Vertex AI video connection error: {type(e).__name__}: {e}")
             return False
     
@@ -971,21 +1103,10 @@ class TransparentGeminiVideoPipe:
             from google.oauth2 import service_account
             from google.auth.transport import requests as google_requests
             
-            creds_path = GOOGLE_APPLICATION_CREDENTIALS
-            if not os.path.exists(creds_path):
-                base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-                creds_path = os.path.join(base_dir, GOOGLE_APPLICATION_CREDENTIALS)
+            creds_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS") or GOOGLE_APPLICATION_CREDENTIALS
             
             if not os.path.exists(creds_path):
-                # Try inline credentials
-                service_account_json = os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON')
-                if service_account_json:
-                    import tempfile
-                    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-                        f.write(service_account_json)
-                        creds_path = f.name
-                else:
-                    return None
+                return None
             
             credentials = service_account.Credentials.from_service_account_file(
                 creds_path,
@@ -1235,7 +1356,7 @@ async def websocket_nerdx_live_video(websocket: WebSocket, user_id: str = "guest
     if not await pipe.connect_to_gemini():
         await websocket.send_json({
             "type": "error",
-            "message": "Failed to connect to AI"
+            "message": pipe.last_error or "Failed to connect to AI"
         })
         billing_task.cancel()
         await websocket.close()
@@ -1309,7 +1430,7 @@ async def websocket_nerdx_live(websocket: WebSocket, user_id: str = "guest_voice
     if not await pipe.connect_to_gemini():
         await websocket.send_json({
             "type": "error",
-            "message": "Failed to connect to AI"
+            "message": pipe.last_error or "Failed to connect to AI"
         })
         billing_task.cancel()
         await websocket.close()

@@ -47,6 +47,20 @@ GEMINI_API_KEY=your-gemini-api-key
 GOOGLE_AI_API_KEY=your-google-ai-key
 ```
 
+#### **Vertex AI (Gemini Live) - NerdX Live Audio/Video**
+If you want **NerdX Live Audio/Video** to connect to Vertex AI via Gemini Live API, add:
+
+```bash
+GOOGLE_GENAI_USE_VERTEXAI=true
+GOOGLE_CLOUD_PROJECT=your-gcp-project-id
+GOOGLE_CLOUD_LOCATION=us-central1
+GOOGLE_SERVICE_ACCOUNT_JSON={"type":"service_account","project_id":"...","private_key_id":"...","private_key":"-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----\\n","client_email":"...","client_id":"...","auth_uri":"...","token_uri":"...","auth_provider_x509_cert_url":"...","client_x509_cert_url":"...","universe_domain":"googleapis.com"}
+```
+
+Notes:
+- `GOOGLE_CLOUD_LOCATION` **must NOT be** `global` for the Vertex Live WebSocket endpoint.
+- Do **not** paste the service account JSON into `GOOGLE_CLOUD_PROJECT` (it must be the project id).
+
 #### **Image Hosting (IMGBB)**
 ```bash
 IMGBB_API_KEY=your-imgbb-api-key

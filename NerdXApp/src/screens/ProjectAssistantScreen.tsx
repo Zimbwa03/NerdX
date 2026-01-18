@@ -15,6 +15,7 @@ import {
   Image,
   Modal,
   Keyboard,
+  Clipboard,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -23,7 +24,10 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import { Audio } from 'expo-av';
+import * as Sharing from 'expo-sharing';
 import { projectApi, ProjectDetails, ResearchSession, ResearchStatus } from '../services/api/projectApi';
+import { mathApi } from '../services/api/mathApi';
+import { useNotification } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
@@ -43,6 +47,7 @@ const ProjectAssistantScreen: React.FC = () => {
   const { user, updateUser } = useAuth();
   const { isDarkMode } = useTheme();
   const themedColors = useThemedColors();
+  const { showSuccess, showError, showWarning, showInfo } = useNotification();
   const params = route.params as {
     projectId: number;
     projectTitle: string;
@@ -62,6 +67,7 @@ const ProjectAssistantScreen: React.FC = () => {
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
   const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
@@ -348,6 +354,72 @@ const ProjectAssistantScreen: React.FC = () => {
     );
   };
 
+  // Download Submission Pack
+  const handleDownloadSubmissionPack = async () => {
+    if (!project) return;
+
+    try {
+      setSending(true);
+      
+      // Show generating message
+      Alert.alert(
+        '📥 Generating Submission Pack',
+        'Creating your ZIMSEC project document. This may take a moment...',
+        [{ text: 'OK' }]
+      );
+
+      const fileUri = await projectApi.downloadSubmissionPack(project.id);
+      
+      if (fileUri) {
+        Alert.alert(
+          '✅ Submission Pack Ready',
+          'Your ZIMSEC project document has been generated and is ready for download.',
+          [{ text: 'Great!' }]
+        );
+      } else {
+        throw new Error('Failed to generate submission pack');
+      }
+    } catch (error: any) {
+      console.error('Download submission pack error:', error);
+      Alert.alert(
+        '❌ Download Failed',
+        error.message || 'Failed to generate submission pack. Please try again.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setSending(false);
+    }
+  };
+
+  // View Submission Checklist
+  const handleViewChecklist = async () => {
+    if (!project) return;
+
+    try {
+      const checklist = await projectApi.getSubmissionChecklist(project.id);
+      
+      if (checklist) {
+        const completionText = `Overall Completion: ${checklist.overall_completion}%\n\n` +
+          `📄 Sections: ${Object.values(checklist.stages).reduce((acc, s) => acc + s.completed, 0)} completed\n` +
+          `📷 Evidence: ${checklist.evidence_count} items\n` +
+          `📚 References: ${checklist.references_count} citations\n` +
+          `📓 Logbook: ${checklist.logbook_entries_count} entries`;
+        
+        Alert.alert(
+          '📋 Submission Checklist',
+          completionText,
+          [
+            { text: 'Download Pack', onPress: handleDownloadSubmissionPack },
+            { text: 'Close' }
+          ]
+        );
+      }
+    } catch (error: any) {
+      console.error('Get checklist error:', error);
+      Alert.alert('Error', 'Failed to load checklist');
+    }
+  };
+
   const handleDocumentUpload = async () => {
     if (!project) return;
 
@@ -549,6 +621,54 @@ const ProjectAssistantScreen: React.FC = () => {
     }
   };
 
+  const playResponse = async (text: string) => {
+    try {
+      // Stop and unload any existing sound
+      if (sound) {
+        try {
+          await sound.stopAsync();
+          await sound.unloadAsync();
+        } catch (e) {
+          // Ignore errors when stopping/unloading
+        }
+      }
+
+      // Configure audio mode for playback
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        staysActiveInBackground: false,
+        playsInSilentModeIOS: true,
+        shouldDuckAndroid: true,
+        playThroughEarpieceAndroid: false,
+      });
+
+      // Get audio URL
+      const audioUrl = await mathApi.speakText(text);
+
+      if (!audioUrl) {
+        throw new Error('No audio URL returned');
+      }
+
+      // Create and play the sound
+      const { sound: newSound } = await Audio.Sound.createAsync(
+        { uri: audioUrl },
+        { shouldPlay: true }
+      );
+
+      setSound(newSound);
+
+      // Wait for playback to finish
+      newSound.setOnPlaybackStatusUpdate((status) => {
+        if (status.isLoaded && status.didJustFinish) {
+          newSound.unloadAsync();
+          setSound(null);
+        }
+      });
+    } catch (error: any) {
+      showError('Unable to play audio');
+    }
+  };
+
   if (loading) {
     return (
       <View style={[styles.centerContainer, { backgroundColor: themedColors.background.default }]}>
@@ -597,63 +717,88 @@ const ProjectAssistantScreen: React.FC = () => {
         </View>
 
         {messages.map((message, index) => (
-          <View
-            key={message.id}
-            style={[
-              styles.messageWrapper,
-              message.role === 'user' ? styles.userMessageWrapper : styles.assistantMessageWrapper,
-            ]}
-          >
-            {message.role === 'assistant' && (
-              <View style={styles.avatarContainer}>
-                <LinearGradient
-                  colors={themedColors.gradients.primary}
-                  style={styles.avatarGradient}
-                >
-                  <Ionicons name="school" size={16} color="#FFF" />
-                </LinearGradient>
-              </View>
-            )}
-
-            <View
-              style={[
-                styles.messageBubble,
-                message.role === 'user' ? styles.userBubble : [styles.assistantBubble, { backgroundColor: themedColors.background.paper, borderColor: themedColors.border.light }],
-                message.role === 'user' ? { borderBottomRightRadius: 4 } : { borderBottomLeftRadius: 4 }
-              ]}
-            >
-              {message.role === 'user' ? (
+          message.role === 'user' ? (
+            // User Message - Bubble on Right (ChatGPT style)
+            <View key={message.id} style={styles.userMessageRow}>
+              <View style={styles.userMessageBubble}>
                 <LinearGradient
                   colors={themedColors.gradients.primary}
                   style={styles.userBubbleGradient}
                 >
                   <Text style={styles.userMessageText}>{message.content}</Text>
                 </LinearGradient>
-              ) : (
-                <Text style={[styles.assistantMessageText, { color: themedColors.text.primary }]}>{message.content}</Text>
-              )}
-              <Text style={[
-                styles.timestamp,
-                message.role === 'user' ? styles.userTimestamp : [styles.assistantTimestamp, { color: themedColors.text.secondary }]
-              ]}>
-                {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </Text>
+              </View>
             </View>
-          </View>
+          ) : (
+            // Assistant Message - Full Width, Structured (ChatGPT style)
+            <View key={message.id} style={styles.assistantMessageRow}>
+              <View style={styles.assistantMessageFullWidth}>
+                <View style={styles.assistantContentContainer}>
+                  <Text style={[styles.assistantMessageText, { color: themedColors.text.primary }]}>{message.content}</Text>
+                </View>
+                
+                {/* Interaction Buttons Row (ChatGPT style) */}
+                <View style={styles.interactionButtonsRow}>
+                  <TouchableOpacity
+                    style={styles.interactionButton}
+                    onPress={() => {
+                      Clipboard.setString(message.content);
+                      showSuccess('Copied to clipboard');
+                    }}
+                  >
+                    <Ionicons name="copy-outline" size={18} color={themedColors.text.secondary} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.interactionButton}
+                    onPress={() => showInfo('Feedback recorded')}
+                  >
+                    <Ionicons name="thumbs-up-outline" size={18} color={themedColors.text.secondary} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.interactionButton}
+                    onPress={() => showInfo('Feedback recorded')}
+                  >
+                    <Ionicons name="thumbs-down-outline" size={18} color={themedColors.text.secondary} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.interactionButton}
+                    onPress={() => playResponse(message.content)}
+                  >
+                    <Ionicons name="volume-high-outline" size={18} color={themedColors.text.secondary} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.interactionButton}
+                    onPress={async () => {
+                      try {
+                        await Sharing.shareAsync({
+                          message: message.content,
+                          title: 'Share Response',
+                        });
+                      } catch (error) {
+                        showError('Unable to share');
+                      }
+                    }}
+                  >
+                    <Ionicons name="share-outline" size={18} color={themedColors.text.secondary} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.interactionButton}
+                    onPress={() => showInfo('More options')}
+                  >
+                    <Ionicons name="ellipsis-horizontal-outline" size={18} color={themedColors.text.secondary} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          )
         ))}
 
         {sending && (
-          <View style={styles.typingContainer}>
-            <View style={styles.avatarContainer}>
-              <LinearGradient
-                colors={themedColors.gradients.primary}
-                style={styles.avatarGradient}
-              >
-                <Ionicons name="school" size={16} color="#FFF" />
-              </LinearGradient>
-            </View>
-            <View style={[styles.typingBubble, { backgroundColor: themedColors.background.paper, borderColor: themedColors.border.light }]}>
-              <ActivityIndicator size="small" color={themedColors.primary.main} />
+          <View style={styles.assistantMessageRow}>
+            <View style={styles.assistantMessageFullWidth}>
+              <View style={styles.assistantContentContainer}>
+                <ActivityIndicator size="small" color={themedColors.primary.main} />
+              </View>
             </View>
           </View>
         )}
@@ -704,6 +849,47 @@ const ProjectAssistantScreen: React.FC = () => {
               <View style={styles.modeMenuTextContainer}>
                 <Text style={[styles.modeMenuText, { color: isDarkMode ? '#B794F6' : '#7C3AED' }]}>Scan Image</Text>
                 <Text style={[styles.modeMenuDesc, { color: isDarkMode ? 'rgba(255, 255, 255, 0.5)' : '#888' }]}>AI Vision Analysis</Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Divider */}
+            <View style={{ height: 1, backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)', marginVertical: 8 }} />
+
+            {/* Submission Pack Section */}
+            <Text style={[
+              styles.modeMenuHeader,
+              { color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666', marginTop: 4 }
+            ]}>Export</Text>
+
+            <TouchableOpacity
+              style={[
+                styles.modeMenuItem,
+                { backgroundColor: isDarkMode ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.08)' }
+              ]}
+              onPress={() => { setShowModeMenu(false); handleViewChecklist(); }}
+            >
+              <View style={[styles.modeMenuIcon, { backgroundColor: isDarkMode ? 'rgba(16, 185, 129, 0.25)' : 'rgba(16, 185, 129, 0.15)' }]}>
+                <Ionicons name="checkmark-done-outline" size={22} color="#10B981" />
+              </View>
+              <View style={styles.modeMenuTextContainer}>
+                <Text style={[styles.modeMenuText, { color: isDarkMode ? '#6EE7B7' : '#059669' }]}>Submission Checklist</Text>
+                <Text style={[styles.modeMenuDesc, { color: isDarkMode ? 'rgba(255, 255, 255, 0.5)' : '#888' }]}>View project completion status</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.modeMenuItem,
+                { backgroundColor: isDarkMode ? 'rgba(245, 158, 11, 0.15)' : 'rgba(245, 158, 11, 0.08)' }
+              ]}
+              onPress={() => { setShowModeMenu(false); handleDownloadSubmissionPack(); }}
+            >
+              <View style={[styles.modeMenuIcon, { backgroundColor: isDarkMode ? 'rgba(245, 158, 11, 0.25)' : 'rgba(245, 158, 11, 0.15)' }]}>
+                <Ionicons name="download-outline" size={22} color="#F59E0B" />
+              </View>
+              <View style={styles.modeMenuTextContainer}>
+                <Text style={[styles.modeMenuText, { color: isDarkMode ? '#FCD34D' : '#D97706' }]}>Download Submission Pack</Text>
+                <Text style={[styles.modeMenuDesc, { color: isDarkMode ? 'rgba(255, 255, 255, 0.5)' : '#888' }]}>Generate PDF for ZIMSEC submission</Text>
               </View>
             </TouchableOpacity>
           </View>
@@ -852,6 +1038,29 @@ const styles = StyleSheet.create({
   assistantMessageWrapper: {
     justifyContent: 'flex-start',
   },
+  userMessageRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginBottom: 16,
+    paddingHorizontal: 0,
+  },
+  userMessageBubble: {
+    maxWidth: '80%',
+    borderRadius: 20,
+    borderBottomRightRadius: 4,
+    overflow: 'hidden',
+  },
+  assistantMessageRow: {
+    width: '100%',
+    marginBottom: 16,
+  },
+  assistantMessageFullWidth: {
+    width: '100%',
+    paddingHorizontal: 0,
+  },
+  assistantContentContainer: {
+    paddingVertical: 12,
+  },
   avatarContainer: {
     marginRight: 8,
     marginBottom: 4,
@@ -886,6 +1095,19 @@ const styles = StyleSheet.create({
     padding: 12,
     borderWidth: 1,
     borderColor: '#F0F0F0',
+  },
+  interactionButtonsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingTop: 8,
+    paddingBottom: 4,
+    gap: 8,
+  },
+  interactionButton: {
+    padding: 6,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   userMessageText: {
     color: '#FFFFFF',

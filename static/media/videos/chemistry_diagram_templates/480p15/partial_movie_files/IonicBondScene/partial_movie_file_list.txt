@@ -1,0 +1,9 @@
+# This file is used internally by FFMPEG.
+file 'file:C:/Users/GWENJE/Desktop/Nerdx 1/NerdX/static/media/videos/chemistry_diagram_templates/480p15/partial_movie_files/IonicBondScene/1185818338_60436354_223132457.mp4'
+file 'file:C:/Users/GWENJE/Desktop/Nerdx 1/NerdX/static/media/videos/chemistry_diagram_templates/480p15/partial_movie_files/IonicBondScene/624642324_2782858038_3792985071.mp4'
+file 'file:C:/Users/GWENJE/Desktop/Nerdx 1/NerdX/static/media/videos/chemistry_diagram_templates/480p15/partial_movie_files/IonicBondScene/624642324_2264974853_3262978861.mp4'
+file 'file:C:/Users/GWENJE/Desktop/Nerdx 1/NerdX/static/media/videos/chemistry_diagram_templates/480p15/partial_movie_files/IonicBondScene/624642324_1153581759_716580396.mp4'
+file 'file:C:/Users/GWENJE/Desktop/Nerdx 1/NerdX/static/media/videos/chemistry_diagram_templates/480p15/partial_movie_files/IonicBondScene/624642324_1949588752_3697110517.mp4'
+file 'file:C:/Users/GWENJE/Desktop/Nerdx 1/NerdX/static/media/videos/chemistry_diagram_templates/480p15/partial_movie_files/IonicBondScene/624642324_1738572371_2539103513.mp4'
+file 'file:C:/Users/GWENJE/Desktop/Nerdx 1/NerdX/static/media/videos/chemistry_diagram_templates/480p15/partial_movie_files/IonicBondScene/624642324_664375366_3427750826.mp4'
+file 'file:C:/Users/GWENJE/Desktop/Nerdx 1/NerdX/static/media/videos/chemistry_diagram_templates/480p15/partial_movie_files/IonicBondScene/624642324_2844360058_4287168348.mp4'

@@ -10,6 +10,7 @@ try {
     const { Database } = require('@nozbe/watermelondb');
     const SQLiteAdapter = require('@nozbe/watermelondb/adapters/sqlite').default;
     const { schema } = require('./schema');
+    const { migrations } = require('./migrations');
     const User = require('./models/User').default;
     const Question = require('./models/Question').default;
     const Interaction = require('./models/Interaction').default;
@@ -18,6 +19,7 @@ try {
     // Create the adapter to the underlying database:
     const adapter = new SQLiteAdapter({
         schema,
+        migrations,  // Add migrations for schema updates
         onSetUpError: (error: any) => {
             console.error('Database failed to load', error);
         }

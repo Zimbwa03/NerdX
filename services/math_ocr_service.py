@@ -111,12 +111,11 @@ class MathOCRService:
             
             mime_type = self._get_mime_type(image_path)
             
-            # Use Gemini Interactions Service (New SDK)
+            # Use Vertex Service (standard Gemini Vision API via Vertex AI)
             try:
-                from services.gemini_interactions_service import get_gemini_interactions_service
-                interactions_service = get_gemini_interactions_service()
+                from services.vertex_service import vertex_service
                 
-                if interactions_service.is_available():
+                if vertex_service.is_available():
                     prompt = """You are a mathematical equation OCR system. Look at this image and:
 1. Extract any mathematical equations, formulas, or expressions you see
 2. Convert them to PLAIN TEXT Unicode format (avoid complex LaTeX if possible, use x², √, etc.)
@@ -131,58 +130,58 @@ Respond in this exact JSON format:
 
 If no math is visible, set latex to empty string."""
 
-                    result = interactions_service.analyze_image(
-                        image_data=image_base64,
+                    result = vertex_service.analyze_image(
+                        image_base64=image_base64,
                         mime_type=mime_type,
-                        prompt=prompt,
-                        model='flash'
+                        prompt=prompt
                     )
                     
-                    if result.get('success') and result.get('text'):
-                        response_text = result['text']
+                    if result.get('success'):
+                        # Try to parse JSON from response text or latex
+                        response_text = result.get('text', '') or result.get('latex', '')
                         
-                        # Try to parse JSON response
-                        import json
-                        try:
-                            # Clean up markdown
-                            if response_text.startswith('```'):
-                                response_text = response_text.split('\n', 1)[1]
-                            if response_text.endswith('```'):
-                                response_text = response_text.rsplit('```', 1)[0]
-                            response_text = response_text.strip()
-                            
-                            if '{' in response_text:
-                                start_idx = response_text.find('{')
-                                end_idx = response_text.rfind('}') + 1
-                                json_str = response_text[start_idx:end_idx]
+                        if response_text:
+                            import json
+                            try:
+                                # Clean up markdown
+                                if response_text.startswith('```'):
+                                    response_text = response_text.split('\n', 1)[1]
+                                if response_text.endswith('```'):
+                                    response_text = response_text.rsplit('```', 1)[0]
+                                response_text = response_text.strip()
                                 
-                                data = json.loads(json_str)
-                                return {
-                                    "success": True,
-                                    "latex": data.get('latex', ''),
-                                    "plain_text": data.get('plain_text', ''),
-                                    "description": data.get('description', ''),
-                                    "confidence": 0.90,
-                                    "method": "gemini_vision",
-                                    "cost": 0.0
-                                }
-                        except json.JSONDecodeError:
-                            pass
-                        
-                        # Fallback for non-JSON response
-                        return {
-                            "success": True,
-                            "latex": response_text,
-                            "plain_text": response_text,
-                            "confidence": 0.80,
-                            "method": "gemini_vision",
-                            "cost": 0.0
-                        }
+                                if '{' in response_text:
+                                    start_idx = response_text.find('{')
+                                    end_idx = response_text.rfind('}') + 1
+                                    json_str = response_text[start_idx:end_idx]
+                                    
+                                    data = json.loads(json_str)
+                                    return {
+                                        "success": True,
+                                        "latex": data.get('latex', ''),
+                                        "plain_text": data.get('plain_text', ''),
+                                        "description": data.get('description', ''),
+                                        "confidence": result.get('confidence', 0.90),
+                                        "method": "gemini_vision_vertex",
+                                        "cost": 0.0
+                                    }
+                            except json.JSONDecodeError:
+                                pass
+                            
+                            # Fallback for non-JSON response - use latex/text directly
+                            return {
+                                "success": True,
+                                "latex": result.get('latex', response_text),
+                                "plain_text": result.get('text', response_text),
+                                "description": "",
+                                "confidence": result.get('confidence', 0.80),
+                                "method": "gemini_vision_vertex",
+                                "cost": 0.0
+                            }
             except Exception as e:
-                logger.error(f"Gemini Interactions error in MathOCR: {e}")
+                logger.error(f"Vertex AI Vision error in MathOCR: {e}", exc_info=True)
 
-            # Note: Legacy fallback removed - all OCR goes through GeminiInteractionsService
-            # which now uses Vertex AI for higher rate limits
+            # Note: Using Vertex AI Gemini Vision API for reliable OCR
             
             # Final Fallback
             return {

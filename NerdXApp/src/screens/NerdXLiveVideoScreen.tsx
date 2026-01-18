@@ -39,6 +39,7 @@ import { Audio, AVPlaybackStatus } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { BlurView } from 'expo-blur';
+import { WS_URL as APP_WS_BASE_URL } from '../config';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -51,7 +52,8 @@ try {
 }
 
 // WebSocket server URL
-const WS_URL = 'wss://nerdx-voice.onrender.com/ws/nerdx-live-video';
+// Use the same backend host as the rest of the app (Render hybrid server).
+const WS_URL = `${APP_WS_BASE_URL}/ws/nerdx-live-video`;
 
 // Video streaming settings (per Vertex AI Live API documentation)
 const FRAME_INTERVAL_MS = 1000; // 1 FPS

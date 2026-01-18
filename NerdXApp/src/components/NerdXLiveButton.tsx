@@ -16,12 +16,13 @@ import {
 } from 'react-native';
 import { Audio, AVPlaybackStatus } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
+import { WS_URL as APP_WS_BASE_URL } from '../config';
 
 const BUTTON_SIZE = 60;
 
 // WebSocket server URL - Render production deployment
 // Using Render URL for both dev and production since voice agent is hosted there
-const WS_URL = 'wss://nerdx-voice.onrender.com/ws/nerdx-live';
+const WS_URL = `${APP_WS_BASE_URL}/ws/nerdx-live`;
 
 // ===== JITTER BUFFER CONFIGURATION =====
 // Buffer ~200-400ms of audio before starting playback to prevent stuttering

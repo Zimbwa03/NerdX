@@ -35,6 +35,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { BlurView } from 'expo-blur';
 import AudioAura, { AuraState } from '../components/AudioAura';
+import { WS_URL as APP_WS_BASE_URL } from '../config';
 
 // Try to import haptics (graceful fallback if not installed)
 let Haptics: any = null;
@@ -45,7 +46,9 @@ try {
 }
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const WS_URL = 'wss://nerdx-voice.onrender.com/ws/nerdx-live';
+// Use the same backend host as the rest of the app (Render hybrid server).
+// `APP_WS_BASE_URL` should be like: wss://nerdx.onrender.com
+const WS_URL = `${APP_WS_BASE_URL}/ws/nerdx-live`;
 
 // Color tokens (from design spec)
 const COLORS = {

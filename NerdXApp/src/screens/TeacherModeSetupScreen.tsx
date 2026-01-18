@@ -45,6 +45,22 @@ const SUBJECT_TOPICS: Record<string, string[]> = {
     'Coordinate Geometry',
     'Functions and Graphs',
   ],
+  English: [
+    'Parts of Speech',
+    'Sentence Structure',
+    'Tenses',
+    'Active and Passive Voice',
+    'Direct and Indirect Speech',
+    'Punctuation',
+    'Comprehension Skills',
+    'Summary Writing',
+    'Essay Writing',
+    'Vocabulary and Word Meaning',
+    'Figures of Speech',
+    'Formal Letter Writing',
+    'Informal Letter Writing',
+    'Report Writing',
+  ],
   Biology: [
     'Cell Structure and Organisation',
     'Movement of Substances',
@@ -118,6 +134,16 @@ const A_LEVEL_TOPICS: Record<string, string[]> = {
     'Numerical Methods',
     'Proof and Mathematical Induction',
     'Group Theory',
+  ],
+  English: [
+    'Advanced Grammar and Usage',
+    'Argumentative Writing',
+    'Analytical Essay Writing',
+    'Comprehension and Inference',
+    'Summary Techniques',
+    'Vocabulary Building',
+    'Literary Devices',
+    'Critical Reading',
   ],
   Biology: [
     'Cell Structure',
@@ -214,6 +240,7 @@ const A_LEVEL_TOPICS: Record<string, string[]> = {
 const SUBJECT_COLORS: Record<string, string> = {
   'O Level Mathematics': '#667eea',
   'Pure Mathematics': '#5A67D8',
+  English: '#8B5CF6',
   Biology: '#4CAF50',
   Chemistry: '#FF9800',
   Physics: '#2196F3',
@@ -222,6 +249,7 @@ const SUBJECT_COLORS: Record<string, string> = {
 const SUBJECT_ICONS: Record<string, string> = {
   'O Level Mathematics': '📐',
   'Pure Mathematics': '∫',
+  English: '📚',
   Biology: '🧬',
   Chemistry: '⚗️',
   Physics: '⚛️',
@@ -244,7 +272,7 @@ const TeacherModeSetupScreen: React.FC = () => {
   const [selectedGradeLevel, setSelectedGradeLevel] = useState<string>('Form 3-4 (O-Level)');
   const [selectedTopic, setSelectedTopic] = useState<string>(preselectedTopic || '');
 
-  const subjects = ['O Level Mathematics', 'Pure Mathematics', 'Biology', 'Chemistry', 'Physics'];
+  const subjects = ['O Level Mathematics', 'Pure Mathematics', 'English', 'Biology', 'Chemistry', 'Physics'];
   const gradeLevels = ['Form 1-2', 'Form 3-4 (O-Level)', 'A-Level'];
 
   // Get topics for selected subject

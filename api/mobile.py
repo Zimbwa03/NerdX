@@ -693,18 +693,66 @@ def get_subjects():
 @mobile_bp.route('/quiz/topics', methods=['GET'])
 @require_auth
 def get_topics():
-    """Get topics for a subject"""
+    """Get topics for a subject (supports O-Level and A-Level)"""
     try:
         subject = request.args.get('subject', '')
         parent_subject = request.args.get('parent_subject', '')  # For Combined Science: Biology/Chemistry/Physics
         
         # Get topics from constants or database
-        from constants import TOPICS
+        from constants import (
+            TOPICS, 
+            A_LEVEL_PHYSICS_ALL_TOPICS, 
+            A_LEVEL_CHEMISTRY_ALL_TOPICS, 
+            A_LEVEL_BIOLOGY_ALL_TOPICS, 
+            A_LEVEL_PURE_MATH_ALL_TOPICS,
+            A_LEVEL_PHYSICS_TOPICS,
+            A_LEVEL_CHEMISTRY_TOPICS,
+            A_LEVEL_BIOLOGY_TOPICS,
+            A_LEVEL_PURE_MATH_TOPICS
+        )
         
         topics = []
         
+        # Handle A-Level subjects
+        if subject == 'a_level_physics' or subject == 'A-Level Physics':
+            # Return all A-Level Physics topics
+            for topic in A_LEVEL_PHYSICS_ALL_TOPICS:
+                topics.append({
+                    'id': topic.lower().replace(' ', '_').replace(',', '').replace('.', ''),
+                    'name': topic,
+                    'subject': 'a_level_physics',
+                    'level': 'AS Level' if topic in A_LEVEL_PHYSICS_TOPICS.get('AS Level', []) else 'A2 Level'
+                })
+        elif subject == 'a_level_chemistry' or subject == 'A-Level Chemistry':
+            # Return all A-Level Chemistry topics
+            for topic in A_LEVEL_CHEMISTRY_ALL_TOPICS:
+                topics.append({
+                    'id': topic.lower().replace(' ', '_').replace(',', '').replace('.', ''),
+                    'name': topic,
+                    'subject': 'a_level_chemistry',
+                    'level': 'AS Level' if topic in A_LEVEL_CHEMISTRY_TOPICS.get('AS Level', []) else 'A2 Level'
+                })
+        elif subject == 'a_level_biology' or subject == 'A-Level Biology':
+            # Return all A-Level Biology topics
+            for topic in A_LEVEL_BIOLOGY_ALL_TOPICS:
+                topics.append({
+                    'id': topic.lower().replace(' ', '_').replace(',', '').replace('.', ''),
+                    'name': topic,
+                    'subject': 'a_level_biology',
+                    'level': 'Lower Sixth' if topic in A_LEVEL_BIOLOGY_TOPICS.get('Lower Sixth', []) else 'Upper Sixth'
+                })
+        elif subject == 'a_level_pure_math' or subject == 'A-Level Pure Mathematics' or subject == 'Pure Mathematics':
+            # Return all A-Level Pure Mathematics topics
+            for topic in A_LEVEL_PURE_MATH_ALL_TOPICS:
+                topics.append({
+                    'id': topic.lower().replace(' ', '_').replace(',', '').replace('.', ''),
+                    'name': topic,
+                    'subject': 'a_level_pure_math',
+                    'level': 'Lower Sixth' if topic in A_LEVEL_PURE_MATH_TOPICS.get('Lower Sixth', []) else 'Upper Sixth'
+                })
+        
         # Handle Combined Science two-level structure
-        if subject == 'combined_science':
+        elif subject == 'combined_science':
             if parent_subject:
                 # Return subtopics for Biology/Chemistry/Physics
                 if parent_subject in TOPICS:
@@ -2764,9 +2812,16 @@ def start_teacher_mode():
         session_id = str(uuid.uuid4())
         from utils.session_manager import session_manager
         
-        # Determine which service to use based on subject
-        is_mathematics = subject.lower() == 'mathematics' or subject.lower() == 'math'
-        session_key = 'math_teacher' if is_mathematics else 'science_teacher'
+        # Determine which service to use based on subject (mobile sends "O Level Mathematics", "Pure Mathematics", etc.)
+        subj_lower = (subject or '').lower()
+        is_mathematics = ('math' in subj_lower) or ('pure mathematics' in subj_lower)
+        is_english = 'english' in subj_lower
+        if is_mathematics:
+            session_key = 'math_teacher'
+        elif is_english:
+            session_key = 'english_teacher'
+        else:
+            session_key = 'science_teacher'
         
         session_manager.set_data(g.current_user_id, session_key, {
             'active': True,
@@ -2784,7 +2839,12 @@ def start_teacher_mode():
         # Get appropriate initial message based on subject
         if is_mathematics:
             subject_emoji = '📐'
-            initial_message = f"{subject_emoji} Welcome to Mathematics Teacher Mode!\n\nI'm your AI Mathematics tutor. I use proven teaching methods including:\n\n• **Socratic Method** - Guiding you through questions\n• **Worked Examples** - Step-by-step solutions\n• **Progressive Difficulty** - Building from basics\n• **Real-World Applications** - Making math meaningful\n\nHow can I help you learn today?"
+            initial_message = f"{subject_emoji} Welcome to {subject} Teacher Mode!\n\nI'm your AI {subject} tutor. I use proven teaching methods including:\n\n• **Socratic Method** - Guiding you through questions\n• **Worked Examples** - Step-by-step solutions\n• **Progressive Difficulty** - Building from basics\n• **Real-World Applications** - Making math meaningful\n\nHow can I help you learn today?"
+            if topic:
+                initial_message += f"\n\n📖 We'll be focusing on: **{topic}**"
+        elif is_english:
+            subject_emoji = '📚'
+            initial_message = f"{subject_emoji} Welcome to English Teacher Mode!\n\nI'm your English teacher. We can work on grammar, comprehension, summaries, and essay writing.\n\nHow can I help you today?"
             if topic:
                 initial_message += f"\n\n📖 We'll be focusing on: **{topic}**"
         else:
@@ -2824,14 +2884,23 @@ def send_teacher_message():
         
         from utils.session_manager import session_manager
         
-        # Try to find active session (Math or Science)
+        # Try to find active session (Math / English / Science)
         math_session = session_manager.get_data(g.current_user_id, 'math_teacher')
+        english_session = session_manager.get_data(g.current_user_id, 'english_teacher')
         science_session = session_manager.get_data(g.current_user_id, 'science_teacher')
         
-        # Determine which session is active
-        is_mathematics = math_session and math_session.get('active')
-        session_key = 'math_teacher' if is_mathematics else 'science_teacher'
-        session_data = math_session if is_mathematics else science_session
+        # Determine which session is active (priority: math -> english -> science)
+        is_mathematics = bool(math_session and math_session.get('active'))
+        is_english = bool(english_session and english_session.get('active'))
+        if is_mathematics:
+            session_key = 'math_teacher'
+            session_data = math_session
+        elif is_english:
+            session_key = 'english_teacher'
+            session_data = english_session
+        else:
+            session_key = 'science_teacher'
+            session_data = science_session
         
         # Check if user wants to exit
         exit_commands = ['exit', 'quit', 'back', 'main menu', 'leave']
@@ -2863,12 +2932,16 @@ def send_teacher_message():
         conversation_history.append({'role': 'user', 'content': message})
         
         if is_mathematics:
-            # Use Mathematics Teacher Service
+            # Use Mathematics Teacher Service (covers O Level Mathematics + Pure Mathematics)
             from services.mathematics_teacher_service import MathematicsTeacherService
             teacher_service = MathematicsTeacherService()
             response_text = teacher_service._get_teaching_response(g.current_user_id, message, session_data)
+        elif is_english:
+            from services.english_teacher_service import EnglishTeacherService
+            teacher_service = EnglishTeacherService()
+            response_text = teacher_service._get_teaching_response(g.current_user_id, message, session_data)
         else:
-            # Use Combined Science Teacher Service
+            # Use Combined Science Teacher Service (Biology, Chemistry, Physics)
             from services.combined_science_teacher_service import CombinedScienceTeacherService
             teacher_service = CombinedScienceTeacherService()
             response_text = teacher_service._get_gemini_teaching_response(
@@ -2879,21 +2952,52 @@ def send_teacher_message():
         
         # Update session
         session_data['conversation_history'] = conversation_history[-20:]  # Keep last 20
+        session_data['updated_at'] = datetime.utcnow().isoformat()  # Update timestamp
         session_manager.set_data(g.current_user_id, session_key, session_data)
         
         # Deduct credits
         deduct_credits(g.current_user_id, credit_cost, 'teacher_mode_followup', 'Teacher Mode conversation')
         
-        # Check for media triggers (Graph & Video) - Only for Math for now
+        # Check for media triggers (Graph & Video & Diagrams) - works for ALL subjects/topics
         media_urls = {'graph_url': None, 'video_url': None}
-        if is_mathematics and '[PLOT:' in response_text:
+        
+        # Handle [PLOT: ...] for mathematical graphs
+        if '[PLOT:' in response_text:
             try:
-                media_urls = teacher_service._handle_media_triggers(response_text)
-                # Remove the trigger tag from the text shown to user
-                import re
-                response_text = re.sub(r'\[PLOT:.*?\]', '', response_text).strip()
+                # Get user display name for watermarking
+                user_data = get_user_registration(g.current_user_id)
+                user_name = user_data.get('name', 'Student') if user_data else 'Student'
+
+                from services.teacher_visualization_service import handle_teacher_plot_trigger
+
+                vis = handle_teacher_plot_trigger(
+                    response_text=response_text,
+                    user_id=g.current_user_id,
+                    user_name=user_name,
+                    title=f"{session_data.get('subject', 'Teacher Mode')} • {session_data.get('topic', 'Lesson')}".strip(" •"),
+                )
+                response_text = vis.get('clean_text') or response_text
+                media_urls['graph_url'] = vis.get('graph_url')
+                media_urls['video_url'] = vis.get('video_url')
             except Exception as e:
-                logger.error(f"Error checking media triggers: {e}")
+                logger.error(f"Error checking PLOT media triggers: {e}", exc_info=True)
+        
+        # Handle [DIAGRAM: ...] for Biology/Chemistry/Physics diagrams
+        if '[DIAGRAM:' in response_text:
+            try:
+                from services.teacher_visualization_service import handle_teacher_diagram_trigger
+
+                diagram_vis = handle_teacher_diagram_trigger(
+                    response_text=response_text,
+                    user_id=g.current_user_id,
+                    subject_hint=session_data.get('subject', ''),
+                )
+                response_text = diagram_vis.get('clean_text') or response_text
+                # Diagram video takes precedence if no graph video
+                if diagram_vis.get('video_url') and not media_urls.get('video_url'):
+                    media_urls['video_url'] = diagram_vis.get('video_url')
+            except Exception as e:
+                logger.error(f"Error checking DIAGRAM media triggers: {e}", exc_info=True)
         
         # Clean formatting (both services should have this method)
         if hasattr(teacher_service, '_clean_whatsapp_formatting'):
@@ -2935,43 +3039,63 @@ def generate_teacher_notes():
                 'message': f'Insufficient credits. Required: {credit_cost}'
             }), 400
         
-        # Get session data
+        # Get session data (Math / English / Science)
         from utils.session_manager import session_manager
-        session_data = session_manager.get_data(g.current_user_id, 'science_teacher')
-        
+        math_session = session_manager.get_data(g.current_user_id, 'math_teacher')
+        english_session = session_manager.get_data(g.current_user_id, 'english_teacher')
+        science_session = session_manager.get_data(g.current_user_id, 'science_teacher')
+
+        session_data = None
+        session_key = None
+        if math_session and math_session.get('active'):
+            session_data = math_session
+            session_key = 'math_teacher'
+        elif english_session and english_session.get('active'):
+            session_data = english_session
+            session_key = 'english_teacher'
+        elif science_session and science_session.get('active'):
+            session_data = science_session
+            session_key = 'science_teacher'
+
         if not session_data:
             return jsonify({'success': False, 'message': 'No active session'}), 400
-        
-        # Generate notes using the service's generate_notes method
-        from services.combined_science_teacher_service import CombinedScienceTeacherService
-        teacher_service = CombinedScienceTeacherService()
-        
-        # Call the generate_notes method which handles PDF generation
-        # For mobile, we'll get the notes data directly
-        conversation_history = session_data.get('conversation_history', [])
+
         subject = session_data.get('subject', '')
         topic = session_data.get('topic', '')
-        
-        # Generate notes JSON using Gemini
-        notes_prompt = f"Generate comprehensive notes in JSON format for {topic} in {subject}. Use the conversation history as context."
-        notes_response = teacher_service._get_gemini_teaching_response(
-            g.current_user_id, notes_prompt, session_data
-        )
-        
-        # Try to parse JSON from response
-        import json as json_lib
-        try:
-            # Extract JSON from response if it's wrapped in markdown
-            if '```json' in notes_response:
-                json_start = notes_response.find('```json') + 7
-                json_end = notes_response.find('```', json_start)
-                notes_json = notes_response[json_start:json_end].strip()
-                notes_data = json_lib.loads(notes_json)
-            else:
-                notes_data = json_lib.loads(notes_response)
-        except:
-            # If JSON parsing fails, return text response
-            notes_data = {'content': notes_response}
+
+        # Generate notes JSON (best-effort per service)
+        notes_data = None
+        if session_key == 'math_teacher':
+            from services.mathematics_teacher_service import MathematicsTeacherService
+            teacher_service = MathematicsTeacherService()
+            notes_result = teacher_service.generate_notes(session_id, g.current_user_id) or {}
+            notes_data = notes_result.get('notes') or notes_result
+        elif session_key == 'english_teacher':
+            from services.english_teacher_service import EnglishTeacherService
+            teacher_service = EnglishTeacherService()
+            notes_data = teacher_service.generate_notes(session_id, g.current_user_id)
+        else:
+            from services.combined_science_teacher_service import CombinedScienceTeacherService
+            teacher_service = CombinedScienceTeacherService()
+            notes_prompt = f"Generate comprehensive notes in JSON format for {topic} in {subject}. Use the conversation history as context."
+            notes_response = teacher_service._get_gemini_teaching_response(
+                g.current_user_id, notes_prompt, session_data
+            )
+
+            # Try to parse JSON from response
+            import json as json_lib
+            try:
+                # Extract JSON from response if it's wrapped in markdown
+                if '```json' in notes_response:
+                    json_start = notes_response.find('```json') + 7
+                    json_end = notes_response.find('```', json_start)
+                    notes_json = notes_response[json_start:json_end].strip()
+                    notes_data = json_lib.loads(notes_json)
+                else:
+                    notes_data = json_lib.loads(notes_response)
+            except Exception:
+                # If JSON parsing fails, return text response
+                notes_data = {'content': notes_response}
         
         # Deduct credits
         deduct_credits(g.current_user_id, credit_cost, 'teacher_mode_pdf', 'Generated Teacher Mode PDF notes')
@@ -3098,15 +3222,39 @@ def teacher_analyze_image():
 @mobile_bp.route('/teacher/analyze-document', methods=['POST'])
 @require_auth
 def teacher_analyze_document():
-    """Analyze a study document (textbook pages, past papers)"""
+    """Analyze a study document (textbook pages, past papers) using Vertex AI"""
     try:
-        data = request.get_json()
-        document_data = data.get('document')  # Base64-encoded
-        mime_type = data.get('mime_type', 'application/pdf')
-        prompt = data.get('prompt')
-        
-        if not document_data:
-            return jsonify({'success': False, 'message': 'Document data is required'}), 400
+        # Check if it's a file upload or JSON with base64
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            # Handle file upload
+            if 'document' not in request.files:
+                return jsonify({'success': False, 'message': 'No document file provided'}), 400
+            
+            doc_file = request.files['document']
+            doc_data = doc_file.read()
+            document_data = base64.b64encode(doc_data).decode('utf-8')
+            
+            # Determine MIME type from filename
+            filename = doc_file.filename or 'document.pdf'
+            if filename.endswith('.pdf'):
+                mime_type = 'application/pdf'
+            elif filename.endswith('.txt'):
+                mime_type = 'text/plain'
+            elif filename.endswith(('.png', '.jpg', '.jpeg')):
+                mime_type = 'image/png'  # Images treated as documents for analysis
+            else:
+                mime_type = 'application/pdf'  # Default
+            
+            prompt = request.form.get('prompt')
+        else:
+            # Handle JSON with base64
+            data = request.get_json()
+            document_data = data.get('document') or data.get('document_base64')  # Support both property names
+            mime_type = data.get('mime_type', 'application/pdf')
+            prompt = data.get('prompt')
+            
+            if not document_data:
+                return jsonify({'success': False, 'message': 'Document data is required (use "document" or "document_base64")'}), 400
         
         from services.combined_science_teacher_service import CombinedScienceTeacherService
         teacher_service = CombinedScienceTeacherService()
@@ -3165,6 +3313,99 @@ def teacher_web_search():
     except Exception as e:
         logger.error(f"Teacher web search error: {e}", exc_info=True)
         return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/teacher/history', methods=['GET'])
+@require_auth
+def get_teacher_history():
+    """Get all teacher mode session history for the user"""
+    try:
+        from utils.session_manager import session_manager
+        from database.external_db import make_supabase_request
+        
+        # Get all teacher sessions from database
+        # We need to query Supabase for stored sessions
+        # For now, get from session_manager (active sessions)
+        # TODO: Store sessions in Supabase for persistence
+        
+        history_items = []
+        
+        # Check all three session types
+        for session_type in ['math_teacher', 'english_teacher', 'science_teacher']:
+            session_data = session_manager.get_data(g.current_user_id, session_type)
+            if session_data and session_data.get('session_id') and not session_data.get('deleted', False):
+                conversation_history = session_data.get('conversation_history', [])
+                last_message = ''
+                if conversation_history:
+                    # Get last assistant message or user message
+                    for msg in reversed(conversation_history):
+                        if msg.get('role') == 'assistant':
+                            last_message = msg.get('content', '')[:100]
+                            break
+                    if not last_message and conversation_history:
+                        last_message = conversation_history[-1].get('content', '')[:100]
+                
+                history_items.append({
+                    'session_id': session_data.get('session_id'),
+                    'subject': session_data.get('subject', 'Unknown'),
+                    'grade_level': session_data.get('grade_level', ''),
+                    'topic': session_data.get('topic'),
+                    'last_message': last_message,
+                    'updated_at': session_data.get('updated_at') or session_data.get('started_at') or datetime.utcnow().isoformat()
+                })
+        
+        # Sort by updated_at descending
+        history_items.sort(key=lambda x: x.get('updated_at', ''), reverse=True)
+        
+        return jsonify({
+            'success': True,
+            'data': history_items
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get teacher history error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+@mobile_bp.route('/teacher/session/<session_id>', methods=['DELETE'])
+@require_auth
+def delete_teacher_session(session_id):
+    """Delete a specific teacher mode session"""
+    try:
+        from utils.session_manager import session_manager
+        
+        # Try to find and delete the session
+        deleted = False
+        
+        # Check all three session types
+        for session_type in ['math_teacher', 'english_teacher', 'science_teacher']:
+            session_data = session_manager.get_data(g.current_user_id, session_type)
+            if session_data and session_data.get('session_id') == session_id:
+                # Clear this specific session by setting it to inactive
+                session_data['active'] = False
+                session_data['deleted'] = True
+                session_manager.set_data(g.current_user_id, session_type, session_data)
+                # Also clear from database
+                from database.session_db import clear_user_session
+                clear_user_session(g.current_user_id)
+                deleted = True
+                logger.info(f"Deleted teacher session {session_id} for user {g.current_user_id}")
+                break
+        
+        if deleted:
+            return jsonify({
+                'success': True,
+                'message': 'Session deleted successfully'
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Session not found'
+            }), 404
+            
+    except Exception as e:
+        logger.error(f"Delete teacher session error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
 
 
 @mobile_bp.route('/teacher/deep-research', methods=['POST'])
@@ -3335,15 +3576,39 @@ def check_project_research_status(project_id, interaction_id):
 @mobile_bp.route('/project/<int:project_id>/analyze-document', methods=['POST'])
 @require_auth
 def analyze_project_document(project_id):
-    """Analyze a PDF or document for a project"""
+    """Analyze a PDF or document for a project using Vertex AI"""
     try:
-        data = request.get_json()
-        document_data = data.get('document')  # Base64-encoded document
-        mime_type = data.get('mime_type', 'application/pdf')
-        prompt = data.get('prompt')  # Optional custom prompt
-        
-        if not document_data:
-            return jsonify({'success': False, 'message': 'Document data is required'}), 400
+        # Check if it's a file upload or JSON with base64
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            # Handle file upload
+            if 'document' not in request.files:
+                return jsonify({'success': False, 'message': 'No document file provided'}), 400
+            
+            doc_file = request.files['document']
+            doc_data = doc_file.read()
+            document_data = base64.b64encode(doc_data).decode('utf-8')
+            
+            # Determine MIME type from filename
+            filename = doc_file.filename or 'document.pdf'
+            if filename.endswith('.pdf'):
+                mime_type = 'application/pdf'
+            elif filename.endswith('.txt'):
+                mime_type = 'text/plain'
+            elif filename.endswith(('.png', '.jpg', '.jpeg')):
+                mime_type = 'image/png'  # Images treated as documents for analysis
+            else:
+                mime_type = 'application/pdf'  # Default
+            
+            prompt = request.form.get('prompt')
+        else:
+            # Handle JSON with base64
+            data = request.get_json()
+            document_data = data.get('document') or data.get('document_base64')  # Support both property names
+            mime_type = data.get('mime_type', 'application/pdf')
+            prompt = data.get('prompt')
+            
+            if not document_data:
+                return jsonify({'success': False, 'message': 'Document data is required (use "document" or "document_base64")'}), 400
         
         from services.project_assistant_service import ProjectAssistantService
         service = ProjectAssistantService()
@@ -3356,7 +3621,7 @@ def analyze_project_document(project_id):
             return jsonify({
                 'success': True,
                 'data': {
-                    'analysis': result.get('text'),
+                    'analysis': result.get('text') or result.get('analysis', ''),
                     'interaction_id': result.get('interaction_id')
                 }
             }), 200
@@ -3644,7 +3909,9 @@ def generate_graph():
                 'graph_url': graph_url,
                 'equation': equation,
                 'question': question,
-                'solution': solution
+                'solution': solution,
+                # Deterministic spec for consistent Matplotlib image + Manim animation + question
+                'graph_spec': graph_result.get('graph_spec')
             }
         }), 200
         
@@ -3716,7 +3983,8 @@ def generate_custom_graph():
                 'graph_url': graph_url,
                 'equation': equation,
                 'question': f"Graph of {equation}",
-                'solution': f"This is the graph of {equation}. Analyze its key features."
+                'solution': f"This is the graph of {equation}. Analyze its key features.",
+                'graph_spec': graph_result.get('graph_spec')
             }
         }), 200
         
@@ -4463,6 +4731,398 @@ def project_document(project_id):
         return jsonify({'success': False, 'message': str(e)}), 500
 
 
+# ============================================================================
+# PROJECT EXPORT ENDPOINTS (Download Submission Pack)
+# ============================================================================
+
+@mobile_bp.route('/project/<int:project_id>/export/generate', methods=['POST'])
+@require_auth
+def generate_project_export(project_id):
+    """Generate a PDF submission pack for the project"""
+    try:
+        user_id = request.user_id
+        data = request.get_json() or {}
+        file_type = data.get('file_type', 'pdf')
+        
+        from services.project_export_service import project_export_service
+        
+        if file_type == 'pdf':
+            result = project_export_service.generate_pdf(project_id, user_id)
+        else:
+            return jsonify({'success': False, 'message': f'Unsupported file type: {file_type}'}), 400
+        
+        if result.get('success'):
+            return jsonify({
+                'success': True,
+                'export_id': result.get('export_id'),
+                'filename': result.get('filename'),
+                'download_url': result.get('download_url'),
+                'message': 'Submission pack generated successfully'
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'message': result.get('error', 'Failed to generate export')
+            }), 500
+            
+    except Exception as e:
+        logger.error(f"Generate export error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/project/<int:project_id>/export/preview', methods=['GET'])
+@require_auth
+def preview_project_export(project_id):
+    """Preview what sections are missing before export"""
+    try:
+        user_id = request.user_id
+        
+        from services.project_export_service import project_export_service
+        checklist = project_export_service.get_submission_checklist(project_id, user_id)
+        
+        if 'error' in checklist:
+            return jsonify({'success': False, 'message': checklist['error']}), 404
+        
+        return jsonify({
+            'success': True,
+            'checklist': checklist
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Export preview error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/project/<int:project_id>/export/checklist', methods=['GET'])
+@require_auth
+def get_submission_checklist(project_id):
+    """Get detailed submission checklist with completion status"""
+    try:
+        user_id = request.user_id
+        
+        from services.project_export_service import project_export_service
+        checklist = project_export_service.get_submission_checklist(project_id, user_id)
+        
+        if 'error' in checklist:
+            return jsonify({'success': False, 'message': checklist['error']}), 404
+        
+        return jsonify({
+            'success': True,
+            'data': checklist
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Submission checklist error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/exports/<int:export_id>/download', methods=['GET'])
+@require_auth
+def download_export(export_id):
+    """Download a generated export file"""
+    try:
+        user_id = request.user_id
+        
+        # Get export record
+        from database.external_db import make_supabase_request
+        exports = make_supabase_request("GET", "project_exports", filters={
+            "id": f"eq.{export_id}",
+            "user_id": f"eq.{user_id}"
+        })
+        
+        if not exports:
+            return jsonify({'success': False, 'message': 'Export not found'}), 404
+        
+        export_record = exports[0]
+        file_path = export_record.get('file_path')
+        
+        if file_path and os.path.exists(file_path):
+            filename = os.path.basename(file_path)
+            return send_file(
+                file_path,
+                as_attachment=True,
+                download_name=filename
+            )
+        else:
+            return jsonify({'success': False, 'message': 'Export file not found'}), 404
+            
+    except Exception as e:
+        logger.error(f"Download export error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/project/<int:project_id>/sections', methods=['GET'])
+@require_auth
+def get_project_sections(project_id):
+    """Get all sections for a project"""
+    try:
+        user_id = request.user_id
+        
+        # Verify project ownership
+        from database.external_db import make_supabase_request
+        projects = make_supabase_request("GET", "user_projects", filters={
+            "id": f"eq.{project_id}",
+            "user_id": f"eq.{user_id}"
+        })
+        
+        if not projects:
+            return jsonify({'success': False, 'message': 'Project not found'}), 404
+        
+        # Get sections
+        sections = make_supabase_request("GET", "project_sections", filters={
+            "project_id": f"eq.{project_id}"
+        }) or []
+        
+        return jsonify({
+            'success': True,
+            'sections': sections
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get sections error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/project/<int:project_id>/sections', methods=['POST'])
+@require_auth
+def save_project_section(project_id):
+    """Save or update a project section"""
+    try:
+        user_id = request.user_id
+        data = request.get_json()
+        
+        stage_number = data.get('stage_number')
+        section_key = data.get('section_key')
+        section_title = data.get('section_title')
+        content = data.get('content', '')
+        
+        if not all([stage_number, section_key, section_title]):
+            return jsonify({'success': False, 'message': 'stage_number, section_key, and section_title are required'}), 400
+        
+        # Verify project ownership
+        from database.external_db import make_supabase_request
+        projects = make_supabase_request("GET", "user_projects", filters={
+            "id": f"eq.{project_id}",
+            "user_id": f"eq.{user_id}"
+        })
+        
+        if not projects:
+            return jsonify({'success': False, 'message': 'Project not found'}), 404
+        
+        # Check if section exists
+        existing = make_supabase_request("GET", "project_sections", filters={
+            "project_id": f"eq.{project_id}",
+            "stage_number": f"eq.{stage_number}",
+            "section_key": f"eq.{section_key}"
+        })
+        
+        import json
+        content_json = json.dumps({'content': content})
+        
+        if existing:
+            # Update existing section
+            result = make_supabase_request("PATCH", "project_sections", 
+                data={
+                    'content_json': content_json,
+                    'last_updated': datetime.now().isoformat()
+                },
+                filters={
+                    "id": f"eq.{existing[0]['id']}"
+                },
+                use_service_role=True
+            )
+        else:
+            # Create new section
+            result = make_supabase_request("POST", "project_sections", {
+                'project_id': project_id,
+                'stage_number': stage_number,
+                'section_key': section_key,
+                'section_title': section_title,
+                'content_json': content_json
+            }, use_service_role=True)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Section saved successfully'
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Save section error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/project/<int:project_id>/evidence', methods=['POST'])
+@require_auth
+def add_project_evidence(project_id):
+    """Add evidence to a project"""
+    try:
+        user_id = request.user_id
+        data = request.get_json()
+        
+        stage_number = data.get('stage_number')
+        evidence_type = data.get('evidence_type', 'other')
+        description = data.get('description', '')
+        file_url = data.get('file_url', '')
+        
+        if not stage_number:
+            return jsonify({'success': False, 'message': 'stage_number is required'}), 400
+        
+        # Verify project ownership
+        from database.external_db import make_supabase_request
+        projects = make_supabase_request("GET", "user_projects", filters={
+            "id": f"eq.{project_id}",
+            "user_id": f"eq.{user_id}"
+        })
+        
+        if not projects:
+            return jsonify({'success': False, 'message': 'Project not found'}), 404
+        
+        # Add evidence
+        result = make_supabase_request("POST", "project_evidence", {
+            'project_id': project_id,
+            'stage_number': stage_number,
+            'evidence_type': evidence_type,
+            'description': description,
+            'file_url_or_path': file_url
+        }, use_service_role=True)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Evidence added successfully',
+            'evidence_id': result[0]['id'] if result else None
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Add evidence error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/project/<int:project_id>/references', methods=['POST'])
+@require_auth
+def add_project_reference(project_id):
+    """Add a reference to a project"""
+    try:
+        user_id = request.user_id
+        data = request.get_json()
+        
+        citation_text = data.get('citation_text', '')
+        link = data.get('link', '')
+        
+        if not citation_text:
+            return jsonify({'success': False, 'message': 'citation_text is required'}), 400
+        
+        # Verify project ownership
+        from database.external_db import make_supabase_request
+        projects = make_supabase_request("GET", "user_projects", filters={
+            "id": f"eq.{project_id}",
+            "user_id": f"eq.{user_id}"
+        })
+        
+        if not projects:
+            return jsonify({'success': False, 'message': 'Project not found'}), 404
+        
+        # Add reference
+        result = make_supabase_request("POST", "project_references", {
+            'project_id': project_id,
+            'citation_text': citation_text,
+            'link_optional': link
+        }, use_service_role=True)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Reference added successfully',
+            'reference_id': result[0]['id'] if result else None
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Add reference error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/project/<int:project_id>/logbook', methods=['POST'])
+@require_auth
+def add_logbook_entry(project_id):
+    """Add a logbook entry to a project"""
+    try:
+        user_id = request.user_id
+        data = request.get_json()
+        
+        entry_date = data.get('entry_date', datetime.now().strftime('%Y-%m-%d'))
+        stage_number = data.get('stage_number')
+        activities = data.get('activities', '')
+        challenges = data.get('challenges', '')
+        next_steps = data.get('next_steps', '')
+        evidence_note = data.get('evidence_note', '')
+        
+        if not activities:
+            return jsonify({'success': False, 'message': 'activities is required'}), 400
+        
+        # Verify project ownership
+        from database.external_db import make_supabase_request
+        projects = make_supabase_request("GET", "user_projects", filters={
+            "id": f"eq.{project_id}",
+            "user_id": f"eq.{user_id}"
+        })
+        
+        if not projects:
+            return jsonify({'success': False, 'message': 'Project not found'}), 404
+        
+        # Add logbook entry
+        result = make_supabase_request("POST", "project_logbook", {
+            'project_id': project_id,
+            'entry_date': entry_date,
+            'stage_number': stage_number,
+            'activities_text': activities,
+            'challenges': challenges,
+            'next_steps': next_steps,
+            'evidence_note': evidence_note
+        }, use_service_role=True)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Logbook entry added successfully',
+            'entry_id': result[0]['id'] if result else None
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Add logbook entry error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/project/<int:project_id>/logbook', methods=['GET'])
+@require_auth
+def get_project_logbook(project_id):
+    """Get all logbook entries for a project"""
+    try:
+        user_id = request.user_id
+        
+        # Verify project ownership
+        from database.external_db import make_supabase_request
+        projects = make_supabase_request("GET", "user_projects", filters={
+            "id": f"eq.{project_id}",
+            "user_id": f"eq.{user_id}"
+        })
+        
+        if not projects:
+            return jsonify({'success': False, 'message': 'Project not found'}), 404
+        
+        # Get logbook entries
+        entries = make_supabase_request("GET", "project_logbook", filters={
+            "project_id": f"eq.{project_id}"
+        }) or []
+        
+        # Sort by date
+        entries.sort(key=lambda x: x.get('entry_date', ''))
+        
+        return jsonify({
+            'success': True,
+            'entries': entries
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get logbook error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 
 # ============================================================================
 # SYMPY SYMBOLIC SOLVER ENDPOINTS (Free Alternative to Wolfram Alpha)
@@ -4894,11 +5554,13 @@ def animate_quadratic():
         b = float(data.get('b', 0))
         c = float(data.get('c', 0))
         quality = data.get('quality', 'l')  # Default to low for speed
+        x_range = data.get('x_range')
+        y_range = data.get('y_range')
         
         from services.manim_service import get_manim_service
         service = get_manim_service()
         
-        result = service.render_quadratic(a, b, c, quality)
+        result = service.render_quadratic(a, b, c, quality, x_range=x_range, y_range=y_range)
         
         if result['success']:
             video_path = f"/{result['video_path'].replace(os.sep, '/')}"
@@ -4927,11 +5589,13 @@ def animate_linear():
         m = float(data.get('m', 1))
         c = float(data.get('c', 0))
         quality = data.get('quality', 'l')
+        x_range = data.get('x_range')
+        y_range = data.get('y_range')
         
         from services.manim_service import get_manim_service
         service = get_manim_service()
         
-        result = service.render_linear(m, c, quality)
+        result = service.render_linear(m, c, quality, x_range=x_range, y_range=y_range)
         
         if result['success']:
             video_path = f"/{result['video_path'].replace(os.sep, '/')}"
@@ -4949,6 +5613,43 @@ def animate_linear():
                 'logs': result.get('logs')
             }), 500
             
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@mobile_bp.route('/math/animate/expression', methods=['POST'])
+def animate_expression():
+    """Generate animation for an arbitrary function y = f(x) (used for trig/exponential)."""
+    try:
+        data = request.get_json()
+        expression = (data.get('expression') or data.get('clean_expression') or '').strip()
+        if not expression:
+            return jsonify({'success': False, 'message': 'expression is required'}), 400
+
+        quality = data.get('quality', 'l')
+        x_range = data.get('x_range')
+        y_range = data.get('y_range')
+
+        from services.manim_service import get_manim_service
+        service = get_manim_service()
+
+        result = service.render_expression(expression, quality=quality, x_range=x_range, y_range=y_range)
+
+        if result['success']:
+            video_path = f"/{result['video_path'].replace(os.sep, '/')}"
+            return jsonify({
+                'success': True,
+                'data': {
+                    'video_path': video_path,
+                    'render_id': result['render_id']
+                }
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'message': result.get('error'),
+                'logs': result.get('logs')
+            }), 500
+
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
@@ -5059,52 +5760,92 @@ def scan_math_gemini():
 @mobile_bp.route('/voice/transcribe', methods=['POST'])
 @require_auth
 def transcribe_audio():
-    """Transcribe uploaded audio file"""
+    """Transcribe uploaded audio file using Vertex AI (primary) or fallback"""
     try:
-        if 'audio' not in request.files:
-            return jsonify({'status': 'error', 'message': 'No audio file provided'}), 400
+        # Check if it's a file upload or JSON with base64
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            if 'audio' not in request.files:
+                return jsonify({'status': 'error', 'message': 'No audio file provided'}), 400
+                
+            audio_file = request.files['audio']
+            if audio_file.filename == '':
+                return jsonify({'status': 'error', 'message': 'No selected file'}), 400
             
-        audio_file = request.files['audio']
-        if audio_file.filename == '':
-            return jsonify({'status': 'error', 'message': 'No selected file'}), 400
+            # Read audio file as base64
+            audio_data = audio_file.read()
+            audio_base64 = base64.b64encode(audio_data).decode('utf-8')
             
-        from services.voice_service import get_voice_service
-        service = get_voice_service()
+            # Determine MIME type from filename
+            filename = audio_file.filename or 'audio.m4a'
+            if filename.endswith('.m4a'):
+                mime_type = 'audio/mp4'
+            elif filename.endswith('.wav'):
+                mime_type = 'audio/wav'
+            elif filename.endswith('.mp3'):
+                mime_type = 'audio/mp3'
+            elif filename.endswith('.webm'):
+                mime_type = 'audio/webm'
+            else:
+                mime_type = 'audio/mp4'  # Default
+        else:
+            # Handle JSON with base64 (for mobile apps)
+            data = request.get_json()
+            audio_base64 = data.get('audio_base64')
+            mime_type = data.get('mime_type', 'audio/mp4')
+            
+            if not audio_base64:
+                return jsonify({'status': 'error', 'message': 'audio_base64 is required'}), 400
         
-        # Save temp file
-        filename = secure_filename(audio_file.filename)
-        temp_path = os.path.join(service.media_dir, f"temp_{uuid.uuid4().hex}_{filename}")
-        audio_file.save(temp_path)
+        # PRIMARY: Try Vertex AI Gemini multimodal for transcription
+        if vertex_service.is_available():
+            try:
+                result = vertex_service.transcribe_audio(
+                    audio_base64=audio_base64,
+                    mime_type=mime_type
+                )
+                
+                if result and result.get('success'):
+                    return jsonify({
+                        'status': 'success',
+                        'text': result.get('text', ''),
+                        'language': result.get('language', 'en')
+                    }), 200
+            except Exception as e:
+                logger.warning(f"Vertex AI transcription failed, trying fallback: {e}")
         
-        # Transcribe
-        result = service.transcribe_audio(temp_path)
-        
-        # Cleanup
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
-        
-        # Handle result - check if it's a hard error vs soft error with fallback
-        if 'error' in result:
-            # If there's also text, return success with the text (graceful degradation)
+        # FALLBACK: Try voice_service (OpenAI Whisper or other)
+        try:
+            # Save to temp file for voice_service
+            import tempfile
+            temp_dir = tempfile.gettempdir()
+            temp_path = os.path.join(temp_dir, f"temp_{uuid.uuid4().hex}.m4a")
+            
+            with open(temp_path, 'wb') as f:
+                f.write(base64.b64decode(audio_base64))
+            
+            from services.voice_service import get_voice_service
+            service = get_voice_service()
+            result = service.transcribe_audio(temp_path)
+            
+            # Cleanup
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+            
             if result.get('text'):
                 return jsonify({
                     'status': 'success',
-                    'text': result['text'],
+                    'text': result.get('text', ''),
                     'language': result.get('language', 'en')
                 }), 200
-            else:
-                # Return the error message to the user (not a 500, just a message)
-                return jsonify({
-                    'status': 'error', 
-                    'message': result.get('error', 'Voice transcription is temporarily unavailable. Please type your message instead.'),
-                    'text': ''
-                }), 200  # Return 200 so frontend can handle gracefully
-            
+        except Exception as e:
+            logger.error(f"Fallback transcription error: {e}")
+        
+        # Final fallback - return error gracefully
         return jsonify({
-            'status': 'success',
-            'text': result.get('text', ''),
-            'language': result.get('language', 'en')
-        }), 200
+            'status': 'error', 
+            'message': 'Voice transcription is temporarily unavailable. Please type your message instead.',
+            'text': ''
+        }), 200  # Return 200 so frontend can handle gracefully
         
     except Exception as e:
         logger.error(f"Voice transcribe error: {e}", exc_info=True)

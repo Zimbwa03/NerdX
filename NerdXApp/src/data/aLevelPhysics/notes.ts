@@ -938,6 +938,7 @@ At t = 3: s = 27 + 9 = **36 m**`,
     },
     "Dynamics": {
         topic: "Dynamics",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/A%20level/remaining/Dynamics__Science_of_Motion.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL1BoeXNpY3MvQSBsZXZlbC9yZW1haW5pbmcvRHluYW1pY3NfX1NjaWVuY2Vfb2ZfTW90aW9uLm1wNCIsImlhdCI6MTc2ODY3ODUzMSwiZXhwIjo1MjY5MTc0NTMxfQ.0KVCXwgoKEqkoU3ad0oBIk6lUYAAmkvB0QAL6LpBfqE",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/F_equals_ma_and_Free_Body_Diagrams.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9QaHlzaWNzL0EgbGV2ZWwvRl9lcXVhbHNfbWFfYW5kX0ZyZWVfQm9keV9EaWFncmFtcy5tNGEiLCJpYXQiOjE3NjgwNzUxNDksImV4cCI6NTI2ODU3MTE0OX0.uRH_VILVNT63h9dSmjsJG9K8dMimaFbfNggHb0VpK4I",
         subject: "A Level Physics",
         summary: "Dynamics is the study of motion and the forces that cause it. This topic covers Newton's three laws of motion in depth, momentum, impulse, conservation of momentum, and the analysis of various types of collisions. Understanding dynamics is essential for analysing real-world situations from car crashes and sports to rocket propulsion and particle physics.",
@@ -3268,6 +3269,7 @@ Energy per unit volume = ½σε = ½ × (400 × 10⁶) × 0.002 = **400,000 J m�
     },
     "Waves": {
         topic: "Waves",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/A%20level/remaining/The_Explainer__Waves.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL1BoeXNpY3MvQSBsZXZlbC9yZW1haW5pbmcvVGhlX0V4cGxhaW5lcl9fV2F2ZXMubXA0IiwiaWF0IjoxNzY4Njc4NjUzLCJleHAiOjUyNjkxNzQ2NTN9.p4Dw9_cghaq2u1DdL4NiFdRdH6Uw8MRxE8WktPg12E0",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/A-Level_Waves_Core_Physics_Study_Guide.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9QaHlzaWNzL0EgbGV2ZWwvQS1MZXZlbF9XYXZlc19Db3JlX1BoeXNpY3NfU3R1ZHlfR3VpZGUubTRhIiwiaWF0IjoxNzY4MDc1MDk0LCJleHAiOjUyNjg1NzEwOTR9.lyLZgK6HcSmseCwx99KT_zfCQeQt9eQ2ABfY6LlYTDM",
         subject: "A Level Physics",
         summary: "Waves transfer energy without transferring matter. This topic covers wave properties and terminology, the wave equation, transverse and longitudinal waves, polarisation, the electromagnetic spectrum, and the inverse square law for intensity. Understanding waves is fundamental to many areas of physics.",
@@ -4044,6 +4046,7 @@ f₅ = 5f₁ = 5 × 256 = **1280 Hz**`,
     },
     "Electricity": {
         topic: "Electricity",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/A%20level/remaining/Electricity__The_Journey_of_a_Charge.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL1BoeXNpY3MvQSBsZXZlbC9yZW1haW5pbmcvRWxlY3RyaWNpdHlfX1RoZV9Kb3VybmV5X29mX2FfQ2hhcmdlLm1wNCIsImlhdCI6MTc2ODY3ODU2NSwiZXhwIjo1MjY5MTc0NTY1fQ.ci-HGtTKJJ1cuoDb9n_CnCyuVsyVL4ovhKV891hJPWQ",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/A-Level_Electricity_Definitions_and_Equations.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9QaHlzaWNzL0EgbGV2ZWwvQS1MZXZlbF9FbGVjdHJpY2l0eV9EZWZpbml0aW9uc19hbmRfRXF1YXRpb25zLm00YSIsImlhdCI6MTc2ODA3NDk2OSwiZXhwIjo1MjY4NTcwOTY5fQ.Zcym-KaYgwlUmCGWBnX-o_DWNMleEQp7gR2RtTeYSTk",
         subject: "A Level Physics",
         summary: "Electricity covers the fundamentals of electric current, potential difference, resistance, and electrical power. This topic includes charge flow, the drift velocity equation, Ohm's law, I-V characteristics for different components, resistivity as a material property, and power/energy calculations. Understanding these concepts is essential for circuit analysis.",
@@ -6640,6 +6643,7 @@ v = **2.65 × 10⁷ m s⁻¹**`,
     },
     "Capacitance": {
         topic: "Capacitance",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/remaning/Capacitance_Dielectrics_and_Power_Smoothing.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9QaHlzaWNzL0EgbGV2ZWwvcmVtYW5pbmcvQ2FwYWNpdGFuY2VfRGllbGVjdHJpY3NfYW5kX1Bvd2VyX1Ntb290aGluZy5tNGEiLCJpYXQiOjE3Njg2NzcxNTYsImV4cCI6NTI2OTE3MzE1Nn0.qkRX5srzle72cQsWpMF1Mko5KrNjKOKhOYVXtF5yMSU",
         subject: "A Level Physics",
         summary: "Capacitors store electrical energy by separating charges. This topic covers capacitance, parallel plate capacitors, energy storage, and the charging/discharging of capacitors through resistors.",
         sections: [
@@ -6779,6 +6783,8 @@ When a capacitor discharges through a resistor R:
     },
     "Magnetic Fields": {
         topic: "Magnetic Fields",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/A%20level/remaining/Understanding_Magnetic_Fields.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL1BoeXNpY3MvQSBsZXZlbC9yZW1haW5pbmcvVW5kZXJzdGFuZGluZ19NYWduZXRpY19GaWVsZHMubXA0IiwiaWF0IjoxNzY4Njc4NjY5LCJleHAiOjUyNjkxNzQ2Njl9.r-ZLorxpZU6ct3RvTRxGlo58qSHveJqFC-FDzCUKYyY",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/remaning/The_Foundational_Physics_of_Magnetic_Fields.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9QaHlzaWNzL0EgbGV2ZWwvcmVtYW5pbmcvVGhlX0ZvdW5kYXRpb25hbF9QaHlzaWNzX29mX01hZ25ldGljX0ZpZWxkcy5tNGEiLCJpYXQiOjE3Njg2NzcyMzAsImV4cCI6NTI2OTE3MzIzMH0.LauDlOgED9TMRQrOnQjEoNtJ7lqs_pfLwrZkYliW-pc",
         subject: "A Level Physics",
         summary: "Magnetic fields arise from moving charges and currents. This topic covers magnetic flux density, forces on conductors and moving charges, electromagnetic induction, and transformers.",
         sections: [
@@ -6903,6 +6909,8 @@ Real transformers are not 100% efficient due to:
     },
     "Alternating Currents": {
         topic: "Alternating Currents",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/A%20level/remaining/Alternating_Currents.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL1BoeXNpY3MvQSBsZXZlbC9yZW1haW5pbmcvQWx0ZXJuYXRpbmdfQ3VycmVudHMubXA0IiwiaWF0IjoxNzY4Njc4NTAyLCJleHAiOjUyNjkxNzQ1MDJ9.-uQRhtT2HsHu63HK-5hvrVpzGorDIkT0WzORhLeQWjU",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/remaning/AC_Power_Decoded_Root_Mean_Square_and_DC_Conversion.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9QaHlzaWNzL0EgbGV2ZWwvcmVtYW5pbmcvQUNfUG93ZXJfRGVjb2RlZF9Sb290X01lYW5fU3F1YXJlX2FuZF9EQ19Db252ZXJzaW9uLm00YSIsImlhdCI6MTc2ODY3NzEzNywiZXhwIjo1MjY5MTczMTM3fQ.vvJvnl1HbbH0RZIo4cbMMhalXmJxvpzrxQMpyplmk3I",
         subject: "A Level Physics",
         summary: "Alternating current (AC) varies sinusoidally with time. This topic covers the properties of AC, RMS values, power in AC circuits, and rectification.",
         sections: [
@@ -7022,6 +7030,8 @@ Therefore, P_avg = ½ I₀V₀.`,
     },
     "Quantum Physics": {
         topic: "Quantum Physics",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/A%20level/remaining/Physics_of_Medical_Imaging.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL1BoeXNpY3MvQSBsZXZlbC9yZW1haW5pbmcvUGh5c2ljc19vZl9NZWRpY2FsX0ltYWdpbmcubXA0IiwiaWF0IjoxNzY4Njc4NjI3LCJleHAiOjUyNjkxNzQ2Mjd9.fWPBCAgEM6p18xqTvccdivkF_fBDHZzkxo8R9ztcoVI",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/remaning/How_Quantum_Physics_Ended_Continuity.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9QaHlzaWNzL0EgbGV2ZWwvcmVtYW5pbmcvSG93X1F1YW50dW1fUGh5c2ljc19FbmRlZF9Db250aW51aXR5Lm00YSIsImlhdCI6MTc2ODY3NzE4MywiZXhwIjo1MjY5MTczMTgzfQ.u_Ly2f1kpqxd5lHWlHQjO7w19_1oYFLfOVFif3ysgNU",
         subject: "A Level Physics",
         summary: "Quantum physics reveals that light and matter have both wave and particle properties. This topic covers photons, the photoelectric effect, wave-particle duality, and energy levels in atoms.",
         sections: [
@@ -7144,6 +7154,8 @@ Frequency f = E/h = 3.04×10⁻¹⁹ / 6.63×10⁻³⁴ = 4.59×10¹⁴ Hz.`,
     },
     "Nuclear Physics": {
         topic: "Nuclear Physics",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/A%20level/remaining/Nuclear_Physics.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL1BoeXNpY3MvQSBsZXZlbC9yZW1haW5pbmcvTnVjbGVhcl9QaHlzaWNzLm1wNCIsImlhdCI6MTc2ODY3ODYwNSwiZXhwIjo1MjY5MTc0NjA1fQ.NMj7CKZ-BhsdMRqHjVzf8tUO5bWxPv9AAfx5F1rd_wk",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/remaning/Mass_Defect_Quarks_and_Atomic_Energy.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9QaHlzaWNzL0EgbGV2ZWwvcmVtYW5pbmcvTWFzc19EZWZlY3RfUXVhcmtzX2FuZF9BdG9taWNfRW5lcmd5Lm00YSIsImlhdCI6MTc2ODY3NzIwNCwiZXhwIjo1MjY5MTczMjA0fQ.uNrl8UiN93i6ngyR4td8SOvB8IZWIGs4xViojX7PA_s",
         subject: "A Level Physics",
         summary: "Nuclear physics explores the structure and properties of atomic nuclei, including radioactive decay, nuclear reactions, and nuclear energy. This topic covers nuclear structure, radioactivity, decay equations, fission, and fusion.",
         sections: [
@@ -7293,6 +7305,8 @@ Two light nuclei join to form a heavier nucleus.
     },
     "Astronomy and Cosmology": {
         topic: "Astronomy and Cosmology",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/A%20level/remaining/Astronomy_and_Cosmology.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL1BoeXNpY3MvQSBsZXZlbC9yZW1haW5pbmcvQXN0cm9ub215X2FuZF9Db3Ntb2xvZ3kubXA0IiwiaWF0IjoxNzY4Njc4NTE1LCJleHAiOjUyNjkxNzQ1MTV9.hVqAnv8PzG4zdo-H3sKcxFbnwPvIBFkRxdgCtw8isqo",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/remaning/Sizing_Stars_and_Proving_Expansion.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9QaHlzaWNzL0EgbGV2ZWwvcmVtYW5pbmcvU2l6aW5nX1N0YXJzX2FuZF9Qcm92aW5nX0V4cGFuc2lvbi5tNGEiLCJpYXQiOjE3Njg2NzcyMTYsImV4cCI6NTI2OTE3MzIxNn0.UeLpHeqNGvMz3K-r8hlETya8YUC-Mv5UTpzy_JP90OM",
         subject: "A Level Physics",
         summary: "Astronomy and cosmology explore the universe from stars to galaxies and the Big Bang. This topic covers stellar evolution, the Hertzsprung-Russell diagram, Hubble's law, and the expanding universe.",
         sections: [

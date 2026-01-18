@@ -1,0 +1,4 @@
+# This file is used internally by FFMPEG.
+file 'file:C:/Users/GWENJE/Desktop/Nerdx 1/NerdX/static/media/videos/manim_templates/480p15/partial_movie_files/ExpressionScene/1185818338_1215390629_223132457.mp4'
+file 'file:C:/Users/GWENJE/Desktop/Nerdx 1/NerdX/static/media/videos/manim_templates/480p15/partial_movie_files/ExpressionScene/624642324_159314341_2985328869.mp4'
+file 'file:C:/Users/GWENJE/Desktop/Nerdx 1/NerdX/static/media/videos/manim_templates/480p15/partial_movie_files/ExpressionScene/624642324_2844360058_553288440.mp4'

@@ -29,10 +29,8 @@ const ProjectAssistantSetupScreen: React.FC = () => {
   const themedColors = useThemedColors();
   const [loading, setLoading] = useState(false);
 
-  const [projectTitle, setProjectTitle] = useState('');
   const [subject, setSubject] = useState('');
-  const [studentName, setStudentName] = useState(user?.name || '');
-  const [studentSurname, setStudentSurname] = useState('');
+  const [level, setLevel] = useState(''); // O-Level or A-Level
   const [school, setSchool] = useState('');
   const [formLevel, setFormLevel] = useState('');
 
@@ -51,23 +49,20 @@ const ProjectAssistantSetupScreen: React.FC = () => {
   ];
 
   const formLevels = ['Form 3', 'Form 4', 'Form 5', 'Form 6 Lower', 'Form 6 Upper'];
+  const levels = ['O-Level', 'A-Level'];
 
   const handleStart = async () => {
-    if (!projectTitle.trim() || !subject || !studentName.trim() || !studentSurname.trim() || !school.trim() || !formLevel) {
+    if (!subject || !level || !school.trim() || !formLevel) {
       Alert.alert('Missing Information', 'Please fill in all required fields to start your project.');
       return;
     }
-
-
 
     try {
       setLoading(true);
 
       const newProject = await projectApi.createProject({
-        title: projectTitle.trim(),
         subject,
-        student_name: studentName.trim(),
-        student_surname: studentSurname.trim(),
+        level, // O-Level or A-Level
         school: school.trim(),
         form: formLevel,
       });
@@ -78,7 +73,7 @@ const ProjectAssistantSetupScreen: React.FC = () => {
 
         navigation.replace('ProjectAssistant' as never, {
           projectId: newProject.id,
-          projectTitle: newProject.title,
+          projectTitle: newProject.project_title || 'Untitled Project',
           subject: newProject.subject,
         } as never);
       }
@@ -111,61 +106,24 @@ const ProjectAssistantSetupScreen: React.FC = () => {
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Student Details</Text>
+          <Text style={styles.sectionTitle}>Project Details</Text>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>First Name *</Text>
-            <TextInput
-              style={styles.input}
-              value={studentName}
-              onChangeText={setStudentName}
-              placeholder="Enter your first name"
-              placeholderTextColor="#9E9E9E"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Surname *</Text>
-            <TextInput
-              style={styles.input}
-              value={studentSurname}
-              onChangeText={setStudentSurname}
-              placeholder="Enter your surname"
-              placeholderTextColor="#9E9E9E"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>School *</Text>
-            <TextInput
-              style={styles.input}
-              value={school}
-              onChangeText={setSchool}
-              placeholder="e.g., Harare High School"
-              placeholderTextColor="#9E9E9E"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Form Level *</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsScroll}>
-              {formLevels.map((level) => (
+            <Text style={styles.label}>Level *</Text>
+            <View style={styles.subjectsContainer}>
+              {levels.map((lev) => (
                 <TouchableOpacity
-                  key={level}
-                  style={[styles.chip, formLevel === level && styles.chipSelected]}
-                  onPress={() => setFormLevel(level)}
+                  key={lev}
+                  style={[styles.chip, level === lev && styles.chipSelected]}
+                  onPress={() => setLevel(lev)}
                 >
-                  <Text style={[styles.chipText, formLevel === level && styles.chipTextSelected]}>
-                    {level}
+                  <Text style={[styles.chipText, level === lev && styles.chipTextSelected]}>
+                    {lev}
                   </Text>
                 </TouchableOpacity>
               ))}
-            </ScrollView>
+            </View>
           </View>
-        </View>
-
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Project Details</Text>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Subject *</Text>
@@ -183,21 +141,37 @@ const ProjectAssistantSetupScreen: React.FC = () => {
               ))}
             </View>
           </View>
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>School Information</Text>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Project Title *</Text>
+            <Text style={styles.label}>School *</Text>
             <TextInput
-              style={[styles.input, styles.textArea]}
-              value={projectTitle}
-              onChangeText={setProjectTitle}
-              placeholder="e.g., Solar Water Heater for Rural Areas"
+              style={styles.input}
+              value={school}
+              onChangeText={setSchool}
+              placeholder="e.g., Harare High School"
               placeholderTextColor="#9E9E9E"
-              multiline
-              maxLength={200}
             />
-            <Text style={styles.helperText}>
-              Give your project a descriptive title. You can change this later.
-            </Text>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Form Level *</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsScroll}>
+              {formLevels.map((form) => (
+                <TouchableOpacity
+                  key={form}
+                  style={[styles.chip, formLevel === form && styles.chipSelected]}
+                  onPress={() => setFormLevel(form)}
+                >
+                  <Text style={[styles.chipText, formLevel === form && styles.chipTextSelected]}>
+                    {form}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
         </View>
 
@@ -208,20 +182,21 @@ const ProjectAssistantSetupScreen: React.FC = () => {
           </View>
           <Text style={styles.infoText}>
             • <Text style={styles.bold}>1 Credit</Text> per 10 AI responses{'\n'}
-            • Get comprehensive research, writing help, and guidance for all project stages.
+            • Get comprehensive research, writing help, and guidance for all 6 project stages.{'\n'}
+            • Your project title will be developed together in the chat - no need to decide now!
           </Text>
         </View>
 
         <TouchableOpacity
           style={[
             styles.startButton,
-            (!projectTitle.trim() || !subject || !studentName.trim() || !studentSurname.trim() || !school.trim() || !formLevel) && styles.startButtonDisabled,
+            (!subject || !level || !school.trim() || !formLevel) && styles.startButtonDisabled,
           ]}
           onPress={handleStart}
-          disabled={loading || !projectTitle.trim() || !subject || !studentName.trim() || !studentSurname.trim() || !school.trim() || !formLevel}
+          disabled={loading || !subject || !level || !school.trim() || !formLevel}
         >
           <LinearGradient
-            colors={(!projectTitle.trim() || !subject) ? ['#BDBDBD', '#9E9E9E'] : ['#6A1B9A', '#8E24AA']}
+            colors={(!subject || !level) ? ['#BDBDBD', '#9E9E9E'] : ['#6A1B9A', '#8E24AA']}
             style={styles.startButtonGradient}
           >
             {loading ? (

@@ -30,6 +30,7 @@ export const chemistryNotes: Record<string, TopicNotes> = {
         topic: "States of Matter",
         subject: "Chemistry",
         summary: "The Kinetic Particle Theory explains the physical properties of matter and how it behaves during changes of state. The core principle is that everything is made of particles, and the physical form that matter takes—solid, liquid, or gas—depends entirely on how these particles are arranged and how they move. This topic is foundational for understanding chemical reactions and industrial processes.",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/remaing/States_of_Matter.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9yZW1haW5nL1N0YXRlc19vZl9NYXR0ZXIubXA0IiwiaWF0IjoxNzY4NjgyOTI1LCJleHAiOjUyNjkxNzg5MjV9.qs8CJOAKmOrgfsMIK_8xq2jdqJ3hCVdo-BCe0mDqjj0",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/Kinetic_Theory_States_of_Matter_Explained.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0tpbmV0aWNfVGhlb3J5X1N0YXRlc19vZl9NYXR0ZXJfRXhwbGFpbmVkLm00YSIsImlhdCI6MTc2NTQ3MDI0MiwiZXhwIjo1MjY1OTY2MjQyfQ._HXh5bEmEzGe8jd34j8GoO4I9HOK40iIswemyI5O5sM",
         sections: [
             {
@@ -401,9 +402,9 @@ When a substance is cooled:
     "Atoms, Elements and Compounds": {
         topic: "Atoms, Elements and Compounds",
         videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Building_Blocks_of_Reality.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9CdWlsZGluZ19CbG9ja3Nfb2ZfUmVhbGl0eS5tcDQiLCJpYXQiOjE3NjU4Njk4NzYsImV4cCI6NTI2NjM2NTg3Nn0.lvGS0nLBqFV_MXHnh_Tj26xDY-axr4SkYLZa7juyhRk",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/remaining/The_Massive_Illusion_of_Solid_Matter.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL3JlbWFpbmluZy9UaGVfTWFzc2l2ZV9JbGx1c2lvbl9vZl9Tb2xpZF9NYXR0ZXIubTRhIiwiaWF0IjoxNzY4NjgyMDI4LCJleHAiOjUyNjkxNzgwMjh9.Dkta8Q1xiPKNcbmpwY5HrwjdK60owrMWIRd0euVr0fQ",
         subject: "Chemistry",
         summary: "All physical substances in the universe are composed of atoms, elements, and compounds. Understanding atomic structure explains why elements behave the way they do and how they interact to form compounds. This topic covers subatomic particles, proton and nucleon numbers, electron arrangement, the difference between elements, compounds, and mixtures, and the formation of molecules and ions through bonding.",
-        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Building_Blocks_of_Reality.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9CdWlsZGluZ19CbG9ja3Nfb2ZfUmVhbGl0eS5tcDQiLCJpYXQiOjE3NjU4Njk4NzYsImV4cCI6NTI2NjM2NTg3Nn0.lvGS0nLBqFV_MXHnh_Tj26xDY-axr4SkYLZa7juyhRk",
         sections: [
             {
                 title: "1. Introduction: The Building Blocks of Matter",
@@ -796,8 +797,6 @@ Chemists use **dot-and-cross diagrams** to show electron arrangement in bonding:
         videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Understanding_Chemical_Bonding.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9VbmRlcnN0YW5kaW5nX0NoZW1pY2FsX0JvbmRpbmcubXA0IiwiaWF0IjoxNzY1ODcwMjEzLCJleHAiOjUyNjYzNjYyMTN9.ikscsYUmSpPCPsXvL8HgrHph9tubLOI3EBFLs9WpPTg",
         subject: "Chemistry",
         summary: "Chemical bonding is the force of attraction that holds atoms together. Atoms bond to achieve a stable electron arrangement (full outer shell like noble gases). The three main types are ionic (electron transfer between metal and non-metal), covalent (electron sharing between non-metals), and metallic (sea of delocalised electrons). Each type results in distinct structures and properties.",
-        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/Ionic_Covalent_and_Metallic_Bonding_Explained.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0lvbmljX0NvdmFsZW50X2FuZF9NZXRhbGxpY19Cb25kaW5nX0V4cGxhaW5lZC5tNGEiLCJpYXQiOjE3NjU0NzAyMjAsImV4cCI6NTI2NTk2NjIyMH0.g9uIb2Bt8YQojNsXSBHaUuqpBVZ60o-9Y6sXIDdIbb8",
-        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Understanding_Chemical_Bonding.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9VbmRlcnN0YW5kaW5nX0NoZW1pY2FsX0JvbmRpbmcubXA0IiwiaWF0IjoxNzY1ODcwMjEzLCJleHAiOjUyNjYzNjYyMTN9.ikscsYUmSpPCPsXvL8HgrHph9tubLOI3EBFLs9WpPTg",
         sections: [
             {
                 title: "1. Introduction to Chemical Bonding",
@@ -1248,9 +1247,9 @@ Understanding HOW atoms are bonded explains WHY substances behave as they do and
     "Stoichiometry": {
         topic: "Stoichiometry",
         videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Stoichiometry__The_Recipe.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9TdG9pY2hpb21ldHJ5X19UaGVfUmVjaXBlLm1wNCIsImlhdCI6MTc2NTg3MDE2MSwiZXhwIjo1MjY2MzY2MTYxfQ.6ttVeW0TsinpTrk_HIIo8UR6AFyVbvJYj3X7WNxWBlA",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/remaining/Weighing_Invisible_Atoms_with_Stoichiometry.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL3JlbWFpbmluZy9XZWlnaGluZ19JbnZpc2libGVfQXRvbXNfd2l0aF9TdG9pY2hpb21ldHJ5Lm00YSIsImlhdCI6MTc2ODY4MjA0MiwiZXhwIjo1MjY5MTc4MDQyfQ.fTyjNm6NgyurV_2kCHvQPAMon0AK8_QOG-zM9atljls",
         subject: "Chemistry",
         summary: "Stoichiometry is the area of chemistry that involves using relationships between reactants and products in chemical reactions to determine quantitative data. From balanced equations, we can determine mole ratios and convert between moles, masses, volumes, and concentrations. Stoichiometry is the 'recipe' aspect of chemistry, essential for predicting outcomes and optimizing reactions.",
-        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Stoichiometry__The_Recipe.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9TdG9pY2hpb21ldHJ5X19UaGVfUmVjaXBlLm1wNCIsImlhdCI6MTc2NTg3MDE2MSwiZXhwIjo1MjY2MzY2MTYxfQ.6ttVeW0TsinpTrk_HIIo8UR6AFyVbvJYj3X7WNxWBlA",
         sections: [
             {
                 title: "1. Introduction to Stoichiometry",
@@ -1717,6 +1716,7 @@ Stoichiometry ensures:
 
     "Chemical Reactions": {
         topic: "Chemical Reactions",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/remaing/Chem_Reactions__Engine_of_Change.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9yZW1haW5nL0NoZW1fUmVhY3Rpb25zX19FbmdpbmVfb2ZfQ2hhbmdlLm1wNCIsImlhdCI6MTc2ODY4Mjg5OCwiZXhwIjo1MjY5MTc4ODk4fQ.kJKpuVqtD7vJxt_qi_X6ze2bxvuNsoVM_wQIm9bEkOY",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/Measuring_and_Controlling_Chemical_Reaction_Rates.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL01lYXN1cmluZ19hbmRfQ29udHJvbGxpbmdfQ2hlbWljYWxfUmVhY3Rpb25fUmF0ZXMubTRhIiwiaWF0IjoxNzY1NDcxMDA2LCJleHAiOjUyNjU5NjcwMDZ9.om3jfafEvzF08-sylkgXd4Onr7T2fK_M2aRgLlnmf1E",
         subject: "Chemistry",
         summary: "A chemical reaction is a process that leads to the transformation of one set of chemical substances to another. These processes are fundamental to chemistry, converting reactants into products. Understanding reaction types, energy changes, reaction rates, and reversibility is essential for predicting outcomes and controlling reactions in both laboratory and industrial settings.",
@@ -2234,9 +2234,9 @@ $$4\\text{Fe} + 3\\text{O}_2 + 2x\\text{H}_2\\text{O} \\rightarrow 2\\text{Fe}_2
     "The Periodic Table": {
         topic: "The Periodic Table",
         videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Periodic_Table__Chaos_to_Order.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9QZXJpb2RpY19UYWJsZV9fQ2hhb3NfdG9fT3JkZXIubXA0IiwiaWF0IjoxNzY1ODcwMTI1LCJleHAiOjUyNjYzNjYxMjV9.q8Cy-SpEI50mjSdJmABup2QDX_KoDiXc7axR0ge_i4E",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/remaining/The_Ingredients_List_For_The_Universe.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL3JlbWFpbmluZy9UaGVfSW5ncmVkaWVudHNfTGlzdF9Gb3JfVGhlX1VuaXZlcnNlLm00YSIsImlhdCI6MTc2ODY4MjAxNiwiZXhwIjo1MjY5MTc4MDE2fQ.EOQA5c7KYgsIIKdXJ_tjSfeGXmBXUjWOjfnRz02l1jE",
         subject: "Chemistry",
         summary: "The Periodic Table is a systematic classification of elements arranged by increasing proton number. Elements with similar properties are in the same vertical groups. This topic covers the structure, Group I (Alkali Metals), Group VII (Halogens), Group 0 (Noble Gases), Transition Elements, and trends across periods.",
-        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Periodic_Table__Chaos_to_Order.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9QZXJpb2RpY19UYWJsZV9fQ2hhb3NfdG9fT3JkZXIubXA0IiwiaWF0IjoxNzY1ODcwMTI1LCJleHAiOjUyNjYzNjYxMjV9.q8Cy-SpEI50mjSdJmABup2QDX_KoDiXc7axR0ge_i4E",
         sections: [
             {
                 title: "1. Structure of the Periodic Table",
@@ -2473,8 +2473,6 @@ Outer electrons increase: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
         videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Chemical_Energetics%20(1).mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9DaGVtaWNhbF9FbmVyZ2V0aWNzICgxKS5tcDQiLCJpYXQiOjE3NjU4Njk4OTAsImV4cCI6NTI2NjM2NTg5MH0.y347fd66JwJX0L3JmRTViWAitgWDl3V--aDjDbHfSuI",
         subject: "Chemistry",
         summary: "Chemical reactions involve energy transfer. Exothermic reactions release heat (temperature rises), while endothermic reactions absorb heat (temperature falls). The overall energy change depends on bond breaking (endothermic) versus bond forming (exothermic). This topic also covers fuels, electrochemical cells, and equilibrium.",
-        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/Bond_Breaking_and_Forming_Energy_Payoff.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0JvbmRfQnJlYWtpbmdfYW5kX0Zvcm1pbmdfRW5lcmd5X1BheW9mZi5tNGEiLCJpYXQiOjE3NjU0NzAxMjgsImV4cCI6NTI2NTk2NjEyOH0.58DuvE1w_aCjNQUjwGxpQjlhTuaB4l65S_MuKXqHMq4",
-        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Chemical_Energetics%20(1).mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9DaGVtaWNhbF9FbmVyZ2V0aWNzICgxKS5tcDQiLCJpYXQiOjE3NjU4Njk4OTAsImV4cCI6NTI2NjM2NTg5MH0.y347fd66JwJX0L3JmRTViWAitgWDl3V--aDjDbHfSuI",
         sections: [
             {
                 title: "1. Exothermic and Endothermic Reactions",
@@ -2689,8 +2687,6 @@ N₂ + 3H₂ ⇌ 2NH₃ (Exothermic)
         videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Electrochemistry.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9FbGVjdHJvY2hlbWlzdHJ5Lm1wNCIsImlhdCI6MTc2NTg2OTkxOCwiZXhwIjo1MjY2MzY1OTE4fQ.fKL2xNYiSCTg8yeJ960tiBoHiGfeJdo8B-MuwBRxplA",
         subject: "Chemistry",
         summary: "Electrochemistry covers the relationship between electricity and chemical reactions. Electrolysis uses electricity to decompose ionic compounds. Electrochemical cells use chemical reactions to generate electricity. Key concepts include conductors, electrolytes, and predicting products at electrodes.",
-        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/Electrolysis_and_the_Four_Conductors.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0VsZWN0cm9seXNpc19hbmRfdGhlX0ZvdXJfQ29uZHVjdG9ycy5tNGEiLCJpYXQiOjE3NjU0NzAxNjEsImV4cCI6NTI2NTk2NjE2MX0.sxl-oyxt64GLw0rRgQhgPKFb_16ofMBqV9PYg7oomKI",
-        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Electrochemistry.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9FbGVjdHJvY2hlbWlzdHJ5Lm1wNCIsImlhdCI6MTc2NTg2OTkxOCwiZXhwIjo1MjY2MzY1OTE4fQ.fKL2xNYiSCTg8yeJ960tiBoHiGfeJdo8B-MuwBRxplA",
         sections: [
             {
                 title: "1. Conductors, Insulators, and Electrolytes",
@@ -2926,9 +2922,8 @@ Clean energy technology
     "Redox Reactions": {
         topic: "Redox Reactions",
         videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Redox_Reactions__The_Electron_Exchange.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9SZWRveF9SZWFjdGlvbnNfX1RoZV9FbGVjdHJvbl9FeGNoYW5nZS5tcDQiLCJpYXQiOjE3NjU4NzAxNDcsImV4cCI6NTI2NjM2NjE0N30.Zaw3oQ0C30mOMfsM2eDgvmwh5o8AUS3rWU4Xt1tU9z4",
-        subject: "Chemistry",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/Oxidation_Reduction_The_Universal_Chemistry_Rule%20(1).m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL094aWRhdGlvbl9SZWR1Y3Rpb25fVGhlX1VuaXZlcnNhbF9DaGVtaXN0cnlfUnVsZSAoMSkubTRhIiwiaWF0IjoxNzY1NDcxMDM0LCJleHAiOjUyNjU5NjcwMzR9.TvxrOLfAF5O_sdTDXsakebHvskCt1myAMthONa4svx0",
-        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Redox_Reactions__The_Electron_Exchange.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9SZWRveF9SZWFjdGlvbnNfX1RoZV9FbGVjdHJvbl9FeGNoYW5nZS5tcDQiLCJpYXQiOjE3NjU4NzAxNDcsImV4cCI6NTI2NjM2NjE0N30.Zaw3oQ0C30mOMfsM2eDgvmwh5o8AUS3rWU4Xt1tU9z4",
+        subject: "Chemistry",
         summary: "Redox reactions involve simultaneous oxidation and reduction. Oxidation is loss of electrons (or gain of oxygen); Reduction is gain of electrons (or loss of oxygen). Remember OIL RIG. Oxidation states help track electron movement, and tests can identify oxidising/reducing agents.",
         sections: [
             {
@@ -3109,9 +3104,9 @@ Light reduces silver ions to silver metal
     "Acids, Bases and Salts": {
         topic: "Acids, Bases and Salts",
         videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Acids,_Bases,_&_Salts.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9BY2lkcyxfQmFzZXMsXyZfU2FsdHMubXA0IiwiaWF0IjoxNzY1ODY5ODYxLCJleHAiOjUyNjYzNjU4NjF9.NXMIYW7xDXx8atobAjJE_SvDq9tkNeNEkIDhENlLEOM",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/remaining/Acids,_Bases,_and_the_Proton_War.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL3JlbWFpbmluZy9BY2lkcyxfQmFzZXMsX2FuZF90aGVfUHJvdG9uX1dhci5tNGEiLCJpYXQiOjE3Njg2ODE5NzAsImV4cCI6MzY4MDUxNzc5NzB9.Q45LF7kOFcX4kxIo9Tc6OwQtu60aisYI-dXJ9vvZuYQ",
         subject: "Chemistry",
         summary: "Acids release H⁺ ions in water; alkalis release OH⁻ ions. The pH scale measures acidity (0-14). Acids react with metals, bases, and carbonates to form salts. Salts can be prepared by titration, excess solid method, or precipitation depending on solubility.",
-        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Acids,_Bases,_&_Salts.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9BY2lkcyxfQmFzZXMsXyZfU2FsdHMubXA0IiwiaWF0IjoxNzY1ODY5ODYxLCJleHAiOjUyNjYzNjU4NjF9.NXMIYW7xDXx8atobAjJE_SvDq9tkNeNEkIDhENlLEOM",
         sections: [
             {
                 title: "1. Acids and Alkalis",
@@ -3325,9 +3320,9 @@ Examples: H₂O, CO, N₂O`,
     "Metals": {
         topic: "Metals",
         videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/The_Explainer__Metals.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9UaGVfRXhwbGFpbmVyX19NZXRhbHMubXA0IiwiaWF0IjoxNzY1ODcwMTk3LCJleHAiOjUyNjYzNjYxOTd9.G3HP5FrivaW4Cz2M3F9tMUvEEQvNznsVC0G0eegYwU8",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/remaining/From_Electron_Seas_to_Blast_Furnaces.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL3JlbWFpbmluZy9Gcm9tX0VsZWN0cm9uX1NlYXNfdG9fQmxhc3RfRnVybmFjZXMubTRhIiwiaWF0IjoxNzY4NjgyMDAyLCJleHAiOjUyNjkxNzgwMDJ9.7lD4jWZEEsRel4FVO39x_mX-ZNdCilalkC1Yhxkz96I",
         subject: "Chemistry",
         summary: "Metals have characteristic properties due to metallic bonding (delocalised electrons). The Reactivity Series ranks metals by their tendency to form ions. Extraction method depends on reactivity: electrolysis for reactive metals, carbon reduction for less reactive. Alloys are harder than pure metals due to disrupted layers.",
-        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/The_Explainer__Metals.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9UaGVfRXhwbGFpbmVyX19NZXRhbHMubXA0IiwiaWF0IjoxNzY1ODcwMTk3LCJleHAiOjUyNjYzNjYxOTd9.G3HP5FrivaW4Cz2M3F9tMUvEEQvNznsVC0G0eegYwU8",
         sections: [
             {
                 title: "1. General Properties of Metals",
@@ -3545,6 +3540,7 @@ Iron rusts ONLY when **Oxygen AND Water** both present
         topic: "Non-metals",
         subject: "Chemistry",
         summary: "Non-metals include essential elements like hydrogen, nitrogen, sulfur, and carbon. Key industrial processes include the Haber Process (ammonia from N₂ + H₂), Contact Process (sulfuric acid from sulfur), and the Limestone Cycle. Understanding environmental impacts like acid rain and eutrophication is crucial.",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/remaing/Non-metals__Unsung_Heroes.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9yZW1haW5nL05vbi1tZXRhbHNfX1Vuc3VuZ19IZXJvZXMubXA0IiwiaWF0IjoxNzY4NjgyOTA5LCJleHAiOjUyNjkxNzg5MDl9.eoA3FUOn6m_8tuhMX_AkZfJ4Com0wk2YTaU5GCof2ds",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/Why_Non-Metals_Rule_the_World.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL1doeV9Ob24tTWV0YWxzX1J1bGVfdGhlX1dvcmxkLm00YSIsImlhdCI6MTc2NTQ3MTA5NCwiZXhwIjo1MjY1OTY3MDk0fQ.gyP9bkFB1aeunr7wuMTdikPOTBY7Qh_RSqI6I4tq2kI",
         sections: [
             {
@@ -3733,8 +3729,6 @@ $$Ca(OH)_2 + CO_2 \\rightarrow CaCO_3 + H_2O$$
         videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/The_Chemistry_of_Our_Environment.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9UaGVfQ2hlbWlzdHJ5X29mX091cl9FbnZpcm9ubWVudC5tcDQiLCJpYXQiOjE3NjU4NzAxODEsImV4cCI6NTI2NjM2NjE4MX0.jKlQDvHi6oPM0-MbHkYfrbhkoPNa-ZtOzBCQVXWHaCA",
         subject: "Chemistry",
         summary: "Environmental chemistry covers water treatment, air composition, pollution, and climate change. Key topics include the water treatment process, fractional distillation of air, acid rain formation, the greenhouse effect, and ozone layer depletion by CFCs.",
-        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/Proving_Water_Identity_and_Purity.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL1Byb3ZpbmdfV2F0ZXJfSWRlbnRpdHlfYW5kX1B1cml0eS5tNGEiLCJpYXQiOjE3NjU0NzEwNzMsImV4cCI6NTI2NTk2NzA3M30.6DzLpihrabU9gIwrwYr9bppQlg2nZlWqNaCADVwNirY",
-        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/The_Chemistry_of_Our_Environment.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9UaGVfQ2hlbWlzdHJ5X29mX091cl9FbnZpcm9ubWVudC5tcDQiLCJpYXQiOjE3NjU4NzAxODEsImV4cCI6NTI2NjM2NjE4MX0.jKlQDvHi6oPM0-MbHkYfrbhkoPNa-ZtOzBCQVXWHaCA",
         sections: [
             {
                 title: "1. Water (H₂O)",
@@ -3908,8 +3902,6 @@ Limestone neutralizes SO₂ → produces gypsum`,
         videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Organic_Chemistry.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9PcmdhbmljX0NoZW1pc3RyeS5tcDQiLCJpYXQiOjE3NjU4NzAxMDQsImV4cCI6NTI2NjM2NjEwNH0.aLnvV2qklP8es74z5MAa2365hLQOHA-MLIAu0cdqu2Q",
         subject: "Chemistry",
         summary: "Organic chemistry is the study of carbon compounds. Carbon's unique properties (tetravalency, catenation) allow millions of compounds. Key topics include crude oil fractionation, alkanes (saturated), alkenes (unsaturated), combustion, addition reactions, alcohols, and polymers.",
-        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/How_Carbon_Builds_Life_and_Plastic.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0hvd19DYXJib25fQnVpbGRzX0xpZmVfYW5kX1BsYXN0aWMubTRhIiwiaWF0IjoxNzY1NDcwMTgxLCJleHAiOjUyNjU5NjYxODF9.1YqEZUZcHLpPBF-7BVuPje_OfMv65EU_FQNFpF0h8nc",
-        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Organic_Chemistry.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9PcmdhbmljX0NoZW1pc3RyeS5tcDQiLCJpYXQiOjE3NjU4NzAxMDQsImV4cCI6NTI2NjM2NjEwNH0.aLnvV2qklP8es74z5MAa2365hLQOHA-MLIAu0cdqu2Q",
         sections: [
             {
                 title: "1. Introduction and Crude Oil",
@@ -4119,8 +4111,6 @@ $$n(CH_2=CH_2) \\rightarrow -(CH_2-CH_2)_n-$$
         videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Experimental_Techniques.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9FeHBlcmltZW50YWxfVGVjaG5pcXVlcy5tcDQiLCJpYXQiOjE3NjU4Njk5NDIsImV4cCI6NTI2NjM2NTk0Mn0.DhWSK0NLkKVbLPnSefOYZ-YvW6FCxnnr-bC9QQTX72w",
         subject: "Chemistry",
         summary: "Experimental chemistry covers laboratory apparatus, measuring techniques, purity testing using melting/boiling points, separation methods (filtration, crystallisation, distillation, chromatography), and qualitative analysis including tests for cations, anions, and gases.",
-        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/Chemical_Separation_Purity_and_Identification_Techniques.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0NoZW1pY2FsX1NlcGFyYXRpb25fUHVyaXR5X2FuZF9JZGVudGlmaWNhdGlvbl9UZWNobmlxdWVzLm00YSIsImlhdCI6MTc2NTQ3MDE0NiwiZXhwIjo1MjY1OTY2MTQ2fQ.geDywo9wENvXFpqYZ1yCGYjNsjMCvouczL2eLQ6QlR4",
-        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Experimental_Techniques.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9FeHBlcmltZW50YWxfVGVjaG5pcXVlcy5tcDQiLCJpYXQiOjE3NjU4Njk5NDIsImV4cCI6NTI2NjM2NTk0Mn0.DhWSK0NLkKVbLPnSefOYZ-YvW6FCxnnr-bC9QQTX72w",
         sections: [
             {
                 title: "1. Laboratory Apparatus and Measurement",
@@ -4291,6 +4281,7 @@ Removes carbonates which also form white precipitates (false positive)`,
 
     "Particulate Nature of Matter": {
         topic: "Particulate Nature of Matter",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/remaing/The_Particulate_Nature_of_Matter.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9yZW1haW5nL1RoZV9QYXJ0aWN1bGF0ZV9OYXR1cmVfb2ZfTWF0dGVyLm1wNCIsImlhdCI6MTc2ODY4Mjk0MiwiZXhwIjo1MjY5MTc4OTQyfQ.dJcjAECqaGJ_OrSGYTHbAr_pT841-ed1DRjYHm6FdWw",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/Kinetic_Theory_States_of_Matter_Explained.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0tpbmV0aWNfVGhlb3J5X1N0YXRlc19vZl9NYXR0ZXJfRXhwbGFpbmVkLm00YSIsImlhdCI6MTc2NTQ3MDI0MiwiZXhwIjo1MjY1OTY2MjQyfQ._HXh5bEmEzGe8jd34j8GoO4I9HOK40iIswemyI5O5sM",
         subject: "Chemistry",
         summary: "All matter is made of tiny particles. This topic covers the three states of matter, particle arrangement, changes of state, and the kinetic theory.",
@@ -4386,6 +4377,7 @@ Random movement of particles in a fluid caused by collisions with invisible mole
     "Formulae and Stoichiometry": {
         topic: "Formulae and Stoichiometry",
         videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Stoichiometry__The_Recipe.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9TdG9pY2hpb21ldHJ5X19UaGVfUmVjaXBlLm1wNCIsImlhdCI6MTc2NTg3MDE2MSwiZXhwIjo1MjY2MzY2MTYxfQ.6ttVeW0TsinpTrk_HIIo8UR6AFyVbvJYj3X7WNxWBlA",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/remaining/Counting_Atoms_by_Weighing_Them.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL3JlbWFpbmluZy9Db3VudGluZ19BdG9tc19ieV9XZWlnaGluZ19UaGVtLm00YSIsImlhdCI6MTc2ODY4MTk4OCwiZXhwIjo1MjY5MTc3OTg4fQ.yC55Oarmb98YkgqO5-b5AUkJlN-a5g_f6ErsnlR5Wbw",
         subject: "Chemistry",
         summary: "Chemical formulae represent compounds. Stoichiometry is the calculation of quantities in chemical reactions.",
         sections: [
@@ -4614,6 +4606,7 @@ Energy out = bonds formed (exothermic)
     "Periodic Table": {
         topic: "Periodic Table",
         videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Periodic_Table__Chaos_to_Order.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9TY2llbmNlL0NoZW1pc3RyeS9QZXJpb2RpY19UYWJsZV9fQ2hhb3NfdG9fT3JkZXIubXA0IiwiaWF0IjoxNzY1ODcwMTI1LCJleHAiOjUyNjYzNjYxMjV9.q8Cy-SpEI50mjSdJmABup2QDX_KoDiXc7axR0ge_i4E",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/remaining/The_Ingredients_List_For_The_Universe.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL3JlbWFpbmluZy9UaGVfSW5ncmVkaWVudHNfTGlzdF9Gb3JfVGhlX1VuaXZlcnNlLm00YSIsImlhdCI6MTc2ODY4MjAxNiwiZXhwIjo1MjY5MTc4MDE2fQ.EOQA5c7KYgsIIKdXJ_tjSfeGXmBXUjWOjfnRz02l1jE",
         subject: "Chemistry",
         summary: "The periodic table organizes elements by atomic number and properties. Elements in the same group have similar chemical properties.",
         sections: [

@@ -30,6 +30,7 @@ bcrypt
 # AI and Machine Learning
 google-generativeai>=0.8.0
 google-genai>=1.55.0  # Required for Interactions API
+google-cloud-speech>=2.22.0  # Google Cloud Speech-to-Text API (recommended for audio transcription)
 openai>=1.0.0
 sympy>=1.12
 
@@ -59,6 +60,7 @@ pypdf>=4.0.0
 PyPDF2
 reportlab>=4.0.0
 python-docx
+weasyprint>=61.0  # HTML to PDF conversion for project exports
 
 # Audio and Speech
 speechrecognition>=3.10.0

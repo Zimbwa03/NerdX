@@ -793,13 +793,21 @@ class GraphService:
             plt.close('all')
             return None
 
-    def create_graph(self, user_id: str, expression: str, title: str, user_name: str) -> Dict:
+    def create_graph(
+        self,
+        user_id: str,
+        expression: str,
+        title: str,
+        user_name: str,
+        x_range: Optional[Tuple[float, float]] = None,
+    ) -> Dict:
         """Create a matplotlib graph from mathematical expression and return result dict"""
         try:
             import matplotlib.pyplot as plt
             import numpy as np
             import os
             from datetime import datetime
+            from sympy import symbols, sympify, Poly
 
             # Generate unique filename with user info
             timestamp = int(datetime.now().timestamp())
@@ -809,18 +817,22 @@ class GraphService:
             # Create figure with educational styling
             fig, ax = plt.subplots(figsize=(12, 8), dpi=150)
 
-            # Generate x values
-            x_vals = np.linspace(-10, 10, 1000)
-
             # Clean and evaluate the expression
             clean_expr = self._clean_expression(expression)
 
             try:
                 # Use sympy to safely evaluate the expression
-                from sympy import symbols, sympify, lambdify
+                from sympy import lambdify
                 x = symbols('x')
                 expr_sympy = sympify(clean_expr)
                 func = lambdify(x, expr_sympy, 'numpy')
+
+                # Generate x values (single source of truth for both Matplotlib & Manim)
+                if x_range and isinstance(x_range, (tuple, list)) and len(x_range) == 2:
+                    x_min, x_max = float(x_range[0]), float(x_range[1])
+                else:
+                    x_min, x_max = -10.0, 10.0
+                x_vals = np.linspace(x_min, x_max, 1000)
 
                 # Calculate y values
                 y_vals = func(x_vals)
@@ -834,8 +846,74 @@ class GraphService:
                 x_clean = x_vals[mask]
                 y_clean = y_vals[mask]
 
+                # Compute a sensible y-range from the data (avoid prompt drift + ensure consistency)
+                # Use percentiles to avoid extreme spikes (e.g., tan asymptotes).
+                if len(y_clean) > 10:
+                    y_lo = float(np.percentile(y_clean, 1))
+                    y_hi = float(np.percentile(y_clean, 99))
+                else:
+                    y_lo = float(np.min(y_clean)) if len(y_clean) else -10.0
+                    y_hi = float(np.max(y_clean)) if len(y_clean) else 10.0
+
+                # Add padding and ensure origin is visible
+                pad = max(1.0, 0.1 * (y_hi - y_lo) if (y_hi - y_lo) > 0 else 2.0)
+                y_min = min(y_lo - pad, 0.0)
+                y_max = max(y_hi + pad, 0.0)
+
+                # Clamp to keep graphs readable (educational standard)
+                y_min = max(y_min, -50.0)
+                y_max = min(y_max, 50.0)
+
+                # Round to "nice" integers
+                y_min = float(np.floor(y_min))
+                y_max = float(np.ceil(y_max))
+                if y_max - y_min < 4:
+                    y_min -= 2
+                    y_max += 2
+
                 # Plot the function
-                ax.plot(x_clean, y_clean, 'b-', linewidth=3, label=f'f(x) = {expression}', alpha=0.8)
+                ax.plot(x_clean, y_clean, 'b-', linewidth=3, label=f'f(x) = {expression}', alpha=0.85)
+
+                # Build a shared graph spec for deterministic Manim animations
+                graph_spec = {
+                    "equation": expression,
+                    "clean_expression": clean_expr,
+                    "x_range": {"min": x_min, "max": x_max, "step": 1},
+                    "y_range": {"min": y_min, "max": y_max, "step": 1},
+                    "coefficients": None,
+                }
+
+                # Try extract linear/quadratic coefficients for animation accuracy
+                try:
+                    poly = Poly(expr_sympy, x)
+                    deg = int(poly.degree())
+                    if deg == 1:
+                        coeffs = poly.all_coeffs()  # [m, c]
+                        m = float(coeffs[0]) if len(coeffs) >= 1 else 0.0
+                        c0 = float(coeffs[1]) if len(coeffs) >= 2 else 0.0
+                        graph_spec["coefficients"] = {"m": m, "c": c0}
+                        graph_spec["graph_type"] = "linear"
+                    elif deg == 2:
+                        a = float(poly.all_coeffs()[0]) if len(poly.all_coeffs()) >= 1 else 0.0
+                        b = float(poly.all_coeffs()[1]) if len(poly.all_coeffs()) >= 2 else 0.0
+                        c0 = float(poly.all_coeffs()[2]) if len(poly.all_coeffs()) >= 3 else 0.0
+                        graph_spec["coefficients"] = {"a": a, "b": b, "c": c0}
+                        graph_spec["graph_type"] = "quadratic"
+                except Exception:
+                    # If not a polynomial or extraction fails, keep coefficients None
+                    pass
+
+                # If not classified as polynomial, try classify for animation routing
+                if "graph_type" not in graph_spec:
+                    try:
+                        sym_s = str(expr_sympy)
+                        if any(tok in sym_s for tok in ["sin(", "cos(", "tan(", "asin(", "acos(", "atan("]):
+                            graph_spec["graph_type"] = "trigonometric"
+                        elif "exp(" in sym_s or "**x" in sym_s or "Pow(" in sym_s:
+                            # Best-effort exponential detection; actual rendering uses clean_expression anyway.
+                            graph_spec["graph_type"] = "exponential"
+                    except Exception:
+                        pass
 
             except Exception as eval_error:
                 logger.error(f"Error evaluating expression '{expression}': {eval_error}")
@@ -843,10 +921,17 @@ class GraphService:
                 ax.text(0.5, 0.5, f"Error: Cannot plot '{expression}'", 
                        transform=ax.transAxes, fontsize=16, ha='center', va='center',
                        bbox=dict(boxstyle="round,pad=0.3", facecolor="yellow", alpha=0.7))
+                graph_spec = {
+                    "equation": expression,
+                    "clean_expression": clean_expr,
+                    "x_range": {"min": -10.0, "max": 10.0, "step": 1},
+                    "y_range": {"min": -10.0, "max": 10.0, "step": 1},
+                    "coefficients": None,
+                }
 
             # Customize the graph for ZIMSEC standards
-            ax.set_xlim(-10, 10)
-            ax.set_ylim(-10, 10)
+            ax.set_xlim(graph_spec["x_range"]["min"], graph_spec["x_range"]["max"])
+            ax.set_ylim(graph_spec["y_range"]["min"], graph_spec["y_range"]["max"])
             ax.set_xlabel('x', fontsize=14, fontweight='bold')
             ax.set_ylabel('y', fontsize=14, fontweight='bold')
             ax.set_title(title, fontsize=16, fontweight='bold', pad=20)
@@ -887,7 +972,8 @@ class GraphService:
                 'image_path': filepath,
                 'expression': expression,
                 'title': title,
-                'user_name': user_name
+                'user_name': user_name,
+                'graph_spec': graph_spec
             }
 
         except Exception as e:

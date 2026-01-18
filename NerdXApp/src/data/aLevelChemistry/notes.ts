@@ -4899,6 +4899,7 @@ This systematic approach, from understanding structure and bonding to predicting
     "Reaction Kinetics": {
         topic: "Reaction Kinetics",
         videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Reaction_Kinetics.mp4",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/remaining%20/Audios/remaining%20/The_Invisible_Speed_Limits_of_Chemistry.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvcmVtYWluaW5nIC9BdWRpb3MvcmVtYWluaW5nIC9UaGVfSW52aXNpYmxlX1NwZWVkX0xpbWl0c19vZl9DaGVtaXN0cnkubTRhIiwiaWF0IjoxNzY4NjgyNDM5LCJleHAiOjUyNjkxNzg0Mzl9.2IZEOZQh8qnCZvXMMZq4NmoyiXs73QRkqXm6W-0OaT8",
         subject: "A Level Chemistry",
         summary: "Reaction kinetics is the branch of physical chemistry dedicated to studying the rates of chemical reactions and the factors that influence them. Understanding kinetics enables chemists to control industrial processes for optimal efficiency and to unravel reaction mechanisms. It is crucial to distinguish kinetics from chemical energetics: while energetics predicts whether a reaction is thermodynamically feasible, kinetics reveals how fast that reaction will proceed. This topic covers measuring reaction rates, collision theory, activation energy, factors affecting reaction rates, and catalysis.",
         sections: [
@@ -7848,6 +7849,7 @@ Repeating unit: -CH₂-CH(CH₃)-`,
     "Polymerisation": {
         topic: "Polymerisation",
         videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Polymerisation.mp4",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/remaining%20/Audios/remaining%20/From_Sandwich_Bags_to_Bulletproof_Vests.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvcmVtYWluaW5nIC9BdWRpb3MvcmVtYWluaW5nIC9Gcm9tX1NhbmR3aWNoX0JhZ3NfdG9fQnVsbGV0cHJvb2ZfVmVzdHMubTRhIiwiaWF0IjoxNzY4NjgyNDgyLCJleHAiOjUyNjkxNzg0ODJ9.BrrLvqPDVeTYdV86H2Z_wXiuye8U6kTy6HcJY9jjxPI",
         subject: "A Level Chemistry",
         summary: "Polymerisation is the process of joining many small monomer molecules to form large polymer chains. This comprehensive topic covers both addition polymerisation (using alkenes) and condensation polymerisation (forming polyesters and polyamides), the relationship between polymer structure and properties, biodegradability, recycling, and environmental considerations.",
         sections: [

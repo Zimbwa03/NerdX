@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb'
 
 export const schema = appSchema({
-    version: 1,
+    version: 2,  // Bumped version for schema changes
     tables: [
         tableSchema({
             name: 'users',
@@ -64,12 +64,13 @@ export const schema = appSchema({
             name: 'projects',
             columns: [
                 { name: 'remote_id', type: 'string', isIndexed: true },
-                { name: 'title', type: 'string' },
+                { name: 'title', type: 'string', isOptional: true },  // Optional - developed in chat
                 { name: 'subject', type: 'string' },
-                { name: 'student_name', type: 'string' },
-                { name: 'student_surname', type: 'string' },
-                { name: 'school', type: 'string' },
-                { name: 'form', type: 'string' },
+                { name: 'student_name', type: 'string', isOptional: true },  // Optional - from user profile
+                { name: 'student_surname', type: 'string', isOptional: true },  // Optional - from user profile
+                { name: 'school', type: 'string', isOptional: true },
+                { name: 'form', type: 'string', isOptional: true },
+                { name: 'level', type: 'string', isOptional: true },  // O-Level or A-Level
                 { name: 'current_stage', type: 'string' },
                 { name: 'completed', type: 'boolean' },
                 { name: 'project_data', type: 'string' }, // JSON stringified

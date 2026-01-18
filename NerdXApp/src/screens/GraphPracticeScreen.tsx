@@ -19,6 +19,7 @@ import * as MediaLibrary from 'expo-media-library';
 import * as Sharing from 'expo-sharing';
 import { useNavigation } from '@react-navigation/native';
 import { graphApi, GraphData } from '../services/api/graphApi';
+import { API_BASE_URL } from '../services/api/config';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
@@ -128,21 +129,37 @@ const GraphPracticeScreen: React.FC = () => {
       }
 
       // Generate Animation (Manim) if supported
-      if (graphType === 'quadratic' || graphType === 'linear') {
+      const spec = data?.graph_spec;
+      const specType = spec?.graph_type || graphType;
+      const coeffs = spec?.coefficients;
+      const xRange = spec?.x_range;
+      const yRange = spec?.y_range;
+
+      // Animate using the same deterministic graph_spec the server used for the Matplotlib image.
+      if (
+        (specType === 'quadratic' || specType === 'linear') ||
+        (specType === 'trigonometric' || specType === 'exponential')
+      ) {
         try {
           setVideoLoading(true);
           let animResult = null;
-          if (graphType === 'quadratic') {
-            // Default values for demo: y = x^2
-            animResult = await graphApi.generateQuadraticAnimation(1, 0, 0);
-          } else if (graphType === 'linear') {
-            // Default values for demo: y = x
-            animResult = await graphApi.generateLinearAnimation(1, 0);
+          if (specType === 'quadratic' && coeffs) {
+            const a = coeffs.a ?? 1;
+            const b = coeffs.b ?? 0;
+            const c = coeffs.c ?? 0;
+            animResult = await graphApi.generateQuadraticAnimation(a, b, c, xRange, yRange);
+          } else if (specType === 'linear' && coeffs) {
+            const m = coeffs.m ?? 1;
+            const c = coeffs.c ?? 0;
+            animResult = await graphApi.generateLinearAnimation(m, c, xRange, yRange);
+          } else if (spec?.clean_expression) {
+            // Trig/exponential (and any non-polynomial) uses expression-based animation
+            animResult = await graphApi.generateExpressionAnimation(spec.clean_expression, xRange, yRange);
           }
 
           if (animResult && animResult.video_path) {
             // Construct full URL - backend returns "/static/..."
-            const baseUrl = 'https://nerdx.onrender.com';
+            const baseUrl = API_BASE_URL;
             const videoPath = animResult.video_path.startsWith('/')
               ? animResult.video_path
               : '/' + animResult.video_path;

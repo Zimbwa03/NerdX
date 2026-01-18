@@ -9,6 +9,29 @@ export interface GraphData {
   constraints?: string[];
   objective?: string;
   corner_points?: Array<[number, number]>;
+  graph_spec?: GraphSpec;
+}
+
+export interface GraphRange {
+  min: number;
+  max: number;
+  step?: number;
+}
+
+export interface GraphSpec {
+  equation: string;
+  clean_expression?: string;
+  graph_type?: 'linear' | 'quadratic' | string;
+  x_range?: GraphRange;
+  y_range?: GraphRange;
+  coefficients?: {
+    // linear
+    m?: number;
+    c?: number;
+    // quadratic
+    a?: number;
+    b?: number;
+  };
 }
 
 export const graphApi = {
@@ -82,9 +105,15 @@ export const graphApi = {
   },
 
   // Manim Animations
-  generateQuadraticAnimation: async (a: number, b: number, c: number): Promise<{ video_path: string } | null> => {
+  generateQuadraticAnimation: async (
+    a: number,
+    b: number,
+    c: number,
+    x_range?: GraphRange,
+    y_range?: GraphRange
+  ): Promise<{ video_path: string } | null> => {
     try {
-      const response = await api.post('/api/mobile/math/animate/quadratic', { a, b, c });
+      const response = await api.post('/api/mobile/math/animate/quadratic', { a, b, c, x_range, y_range });
       return response.data.data;
     } catch (error) {
       console.error('Quadratic animation error:', error);
@@ -92,12 +121,31 @@ export const graphApi = {
     }
   },
 
-  generateLinearAnimation: async (m: number, c: number): Promise<{ video_path: string } | null> => {
+  generateLinearAnimation: async (
+    m: number,
+    c: number,
+    x_range?: GraphRange,
+    y_range?: GraphRange
+  ): Promise<{ video_path: string } | null> => {
     try {
-      const response = await api.post('/api/mobile/math/animate/linear', { m, c });
+      const response = await api.post('/api/mobile/math/animate/linear', { m, c, x_range, y_range });
       return response.data.data;
     } catch (error) {
       console.error('Linear animation error:', error);
+      return null;
+    }
+  },
+
+  generateExpressionAnimation: async (
+    expression: string,
+    x_range?: GraphRange,
+    y_range?: GraphRange
+  ): Promise<{ video_path: string } | null> => {
+    try {
+      const response = await api.post('/api/mobile/math/animate/expression', { expression, x_range, y_range });
+      return response.data.data;
+    } catch (error) {
+      console.error('Expression animation error:', error);
       return null;
     }
   },

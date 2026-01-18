@@ -255,7 +255,8 @@ Only respond with the JSON, no other text."""
         mime_type: str = "audio/mp4"
     ) -> Optional[Dict[str, Any]]:
         """
-        Transcribe audio to text using Vertex AI Gemini multimodal model.
+        Transcribe audio to text using Google Cloud Speech-to-Text API (recommended).
+        Falls back to Gemini multimodal if Speech-to-Text API is not available.
         
         Args:
             audio_base64: Base64-encoded audio data
@@ -267,10 +268,76 @@ Only respond with the JSON, no other text."""
         if not self.is_available():
             return {'success': False, 'error': 'Vertex AI service not available'}
         
+        # PRIMARY: Try Google Cloud Speech-to-Text API (recommended by Vertex AI docs)
+        try:
+            from google.cloud import speech_v1
+            from google.cloud.speech_v1 import types as speech_types
+            import io
+            
+            logger.info(f"🎤 Transcribing audio with Google Cloud Speech-to-Text API...")
+            
+            # Initialize Speech-to-Text client
+            client = speech_v1.SpeechClient()
+            
+            # Decode audio data
+            audio_data = base64.b64decode(audio_base64)
+            
+            # Map MIME types to Speech-to-Text encoding
+            # Use ENCODING_UNSPECIFIED for compressed formats (API will auto-detect)
+            encoding_map = {
+                'audio/wav': speech_v1.RecognitionConfig.AudioEncoding.LINEAR16,
+                'audio/mp3': speech_v1.RecognitionConfig.AudioEncoding.ENCODING_UNSPECIFIED,
+                'audio/mp4': speech_v1.RecognitionConfig.AudioEncoding.ENCODING_UNSPECIFIED,
+                'audio/webm': speech_v1.RecognitionConfig.AudioEncoding.WEBM_OPUS,
+                'audio/ogg': speech_v1.RecognitionConfig.AudioEncoding.OGG_OPUS,
+            }
+            
+            # Get encoding (use ENCODING_UNSPECIFIED for unknown - API will auto-detect)
+            encoding = encoding_map.get(mime_type, speech_v1.RecognitionConfig.AudioEncoding.ENCODING_UNSPECIFIED)
+            
+            # Configure recognition
+            # For compressed formats (MP3, MP4), use ENCODING_UNSPECIFIED and let API detect
+            config = speech_v1.RecognitionConfig(
+                encoding=encoding,
+                sample_rate_hertz=16000,  # Optional for compressed formats, required for LINEAR16
+                language_code='en-US',  # Can be made configurable
+                enable_automatic_punctuation=True,
+                model='latest_long',  # Best for longer audio (> 60 seconds)
+            )
+            
+            # Create audio object
+            audio = speech_v1.RecognitionAudio(content=audio_data)
+            
+            # Perform transcription
+            response = client.recognize(config=config, audio=audio)
+            
+            # Extract transcript
+            transcript_texts = []
+            for result in response.results:
+                if result.alternatives:
+                    transcript_texts.append(result.alternatives[0].transcript)
+            
+            if transcript_texts:
+                transcribed_text = ' '.join(transcript_texts).strip()
+                logger.info(f"✅ Audio transcribed with Speech-to-Text API: {transcribed_text[:50]}...")
+                return {
+                    'success': True,
+                    'text': transcribed_text,
+                    'language': 'en-US'
+                }
+            else:
+                logger.warning("Speech-to-Text API returned no results, trying Gemini fallback...")
+                
+        except ImportError:
+            logger.warning("google-cloud-speech not installed, using Gemini fallback. Install with: pip install google-cloud-speech")
+        except Exception as e:
+            logger.warning(f"Speech-to-Text API failed, trying Gemini fallback: {e}")
+        
+        # FALLBACK: Use Gemini multimodal (works but not recommended for production)
         try:
             from google.genai.types import Part
             
-            logger.info(f"🎤 Transcribing audio with Gemini...")
+            logger.info(f"🎤 Transcribing audio with Gemini multimodal (fallback)...")
             
             # Create the audio part
             audio_part = Part.from_bytes(
@@ -289,7 +356,7 @@ Only return the transcribed text, nothing else."""
             
             if response and response.text:
                 transcribed_text = response.text.strip()
-                logger.info(f"✅ Audio transcribed: {transcribed_text[:50]}...")
+                logger.info(f"✅ Audio transcribed with Gemini: {transcribed_text[:50]}...")
                 return {
                     'success': True,
                     'text': transcribed_text,
