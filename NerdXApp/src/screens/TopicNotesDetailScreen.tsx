@@ -18,8 +18,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { scienceNotesApi, TopicNotes } from '../services/api/scienceNotesApi';
 import { aLevelChemistryNotesApi } from '../services/api/aLevelChemistryNotesApi';
-import { aLevelPhysicsNotesApi } from '../services/api/aLevelPhysicsNotesApi';
-import { aLevelBiologyNotesApi } from '../services/api/aLevelBiologyNotesApi';
 import { useAuth } from '../context/AuthContext';
 import { Colors } from '../theme/colors';
 import Markdown from 'react-native-markdown-display';
@@ -37,7 +35,7 @@ const TopicNotesDetailScreen: React.FC = () => {
     const { user } = useAuth();
     const { isDarkMode } = useTheme();
     const themedColors = useThemedColors();
-    const { subject, topic, isALevel, index = 0 } = route.params as { subject: string; topic: string; isALevel?: boolean; index?: number };
+    const { subject, topic, isALevel } = route.params as { subject: string; topic: string; isALevel?: boolean };
 
     const [notes, setNotes] = useState<TopicNotes | null>(null);
     const [loading, setLoading] = useState(true);
@@ -55,13 +53,7 @@ const TopicNotesDetailScreen: React.FC = () => {
             // Check if this is A Level Chemistry
             if (isALevel && subject === 'A Level Chemistry') {
                 notesData = await aLevelChemistryNotesApi.getTopicNotes(topic);
-            } else if (isALevel && subject === 'A Level Physics') {
-                // A Level Physics
-                notesData = await aLevelPhysicsNotesApi.getTopicNotes(topic);
-            } else if (isALevel && subject === 'Biology') {
-                // A Level Biology (subject is passed as 'Biology' from the screen)
-                notesData = await aLevelBiologyNotesApi.getTopicNotes(topic);
-            } else if (!isALevel || subject === 'Biology' || subject === 'Chemistry' || subject === 'Physics') {
+            } else {
                 // O Level science notes
                 notesData = await scienceNotesApi.getTopicNotes(
                     subject as 'Biology' | 'Chemistry' | 'Physics',
@@ -70,16 +62,6 @@ const TopicNotesDetailScreen: React.FC = () => {
             }
 
             if (notesData) {
-                console.log('✅ Notes loaded for:', topic);
-                console.log('Subject:', subject);
-                console.log('Has videoUrl:', !!notesData.videoUrl);
-                console.log('Has audioUrl:', !!notesData.audioUrl);
-                if (notesData.videoUrl) {
-                    console.log('Video URL length:', notesData.videoUrl.length);
-                }
-                if (notesData.audioUrl) {
-                    console.log('Audio URL length:', notesData.audioUrl.length);
-                }
                 setNotes(notesData);
             } else {
                 Alert.alert(
@@ -109,12 +91,6 @@ const TopicNotesDetailScreen: React.FC = () => {
     const getSubjectColor = () => {
         if (isALevel && subject === 'A Level Chemistry') {
             return '#00897B'; // Teal for A Level Chemistry
-        }
-        if (isALevel && subject === 'A Level Physics') {
-            return '#1976D2'; // Blue for A Level Physics
-        }
-        if (isALevel && subject === 'Biology') {
-            return '#10B981'; // Green for A Level Biology
         }
         switch (subject) {
             case 'Biology':
@@ -184,15 +160,6 @@ const TopicNotesDetailScreen: React.FC = () => {
         return null;
     }
 
-    // Debug: Check notes state at render time
-    console.log('🎬 Rendering with notes:', {
-        topic: notes.topic,
-        hasVideo: !!notes.videoUrl,
-        hasAudio: !!notes.audioUrl,
-        videoUrlPreview: notes.videoUrl?.substring(0, 50),
-        audioUrlPreview: notes.audioUrl?.substring(0, 50)
-    });
-
     return (
         <View style={[styles.container, { backgroundColor: themedColors.background.default }]}>
             <LinearGradient
@@ -225,55 +192,20 @@ const TopicNotesDetailScreen: React.FC = () => {
                 >
                     {/* Video Player - Shows when topic has video lesson */}
                     {notes.videoUrl && notes.videoUrl.trim().length > 0 && (
-                        (index >= 2 && (!user?.credit_breakdown?.purchased_credits || user.credit_breakdown.purchased_credits <= 0)) ? (
-                            <View style={styles.lockedMediaContainer}>
-                                <LinearGradient
-                                    colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.9)']}
-                                    style={styles.lockedMediaOverlay}
-                                >
-                                    <Ionicons name="lock-closed" size={48} color={Colors.warning.main} />
-                                    <Text style={styles.lockedTitle}>Premium Content</Text>
-                                    <Text style={styles.lockedSubtitle}>
-                                        Buy credits to unlock full video & audio lessons.
-                                    </Text>
-                                    <TouchableOpacity
-                                        style={styles.unlockButton}
-                                        onPress={() => navigation.navigate('Credits' as never)}
-                                    >
-                                        <Text style={styles.unlockButtonText}>Get Credits to Unlock</Text>
-                                    </TouchableOpacity>
-                                </LinearGradient>
-                            </View>
-                        ) : (
-                            <VideoStreamPlayer
-                                videoUrl={notes.videoUrl}
-                                topicTitle={topic}
-                                accentColor={getSubjectColor()}
-                            />
-                        )
+                        <VideoStreamPlayer
+                            videoUrl={notes.videoUrl}
+                            topicTitle={topic}
+                            accentColor={getSubjectColor()}
+                        />
                     )}
 
                     {/* Audio Player - Shows when topic has audio podcast */}
                     {notes.audioUrl && notes.audioUrl.trim().length > 0 && (
-                        (index >= 2 && (!user?.credit_breakdown?.purchased_credits || user.credit_breakdown.purchased_credits <= 0)) ? (
-                            <View style={[styles.lockedMediaContainer, { height: 100, marginTop: 12 }]}>
-                                <LinearGradient
-                                    colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.9)']}
-                                    style={styles.lockedMediaOverlay}
-                                >
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                                        <Ionicons name="lock-closed" size={24} color={Colors.warning.main} />
-                                        <Text style={[styles.lockedTitle, { fontSize: 16, marginBottom: 0 }]}>Audio Locked</Text>
-                                    </View>
-                                </LinearGradient>
-                            </View>
-                        ) : (
-                            <AudioStreamPlayer
-                                audioUrl={notes.audioUrl}
-                                topicTitle={topic}
-                                accentColor={getSubjectColor()}
-                            />
-                        )
+                        <AudioStreamPlayer
+                            audioUrl={notes.audioUrl}
+                            topicTitle={topic}
+                            accentColor={getSubjectColor()}
+                        />
                     )}
 
                     {/* Fallback - Show something if no media */}
@@ -393,8 +325,8 @@ const TopicNotesDetailScreen: React.FC = () => {
                         </View>
                     )}
 
-                    {/* AI Flashcards Section - All Science topics (O Level and A Level) */}
-                    {(subject.includes('Biology') || subject.includes('Chemistry') || subject.includes('Physics')) && notes && (
+                    {/* AI Flashcards Section - All Science topics */}
+                    {(subject === 'Biology' || subject === 'Chemistry' || subject === 'Physics') && notes && (
                         <FlashcardSection
                             subject={subject}
                             topic={topic}
@@ -636,43 +568,6 @@ const styles = StyleSheet.create({
         fontSize: 15,
         color: Colors.text.primary,
         lineHeight: 22,
-    },
-    lockedMediaContainer: {
-        borderRadius: 16,
-        overflow: 'hidden',
-        height: 220,
-        backgroundColor: '#000',
-        marginBottom: 16,
-    },
-    lockedMediaOverlay: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20,
-    },
-    lockedTitle: {
-        color: '#FFF',
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginTop: 12,
-        marginBottom: 8,
-    },
-    lockedSubtitle: {
-        color: 'rgba(255,255,255,0.8)',
-        fontSize: 14,
-        textAlign: 'center',
-        marginBottom: 20,
-    },
-    unlockButton: {
-        backgroundColor: Colors.warning.main,
-        paddingHorizontal: 24,
-        paddingVertical: 12,
-        borderRadius: 24,
-    },
-    unlockButtonText: {
-        color: '#000',
-        fontWeight: 'bold',
-        fontSize: 14,
     },
 });
 
