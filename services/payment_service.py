@@ -139,6 +139,7 @@ class PaymentService:
         reference_code = self.generate_payment_reference(user_id, package_id)
         
         # Save payment intent to pending_payments table
+        # Schema: id, user_id, amount, payment_method, reference_code, created_at
         payment_data = {
             'user_id': user_id,
             'transaction_reference': reference_code,
@@ -509,14 +510,14 @@ class PaymentService:
             result = make_supabase_request(
                 "GET", 
                 "pending_payments", 
-                filters={"transaction_reference": f"eq.{reference_code}"}
+                filters={"reference_code": f"eq.{reference_code}"}
             )
             
             if result and len(result) > 0:
                 payment = result[0]
                 package = self.get_package_by_id(payment.get('package_type', 'unknown'))
                 package_name = package['name'] if package else 'Unknown Package'
-                amount = payment.get('amount_expected', 0)
+                amount = payment.get('amount', 0)
                 timestamp = datetime.now().strftime("%H:%M on %d/%m/%Y")
             else:
                 package_name = 'Unknown Package'

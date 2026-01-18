@@ -2184,6 +2184,8 @@ def get_credit_packages():
 def initiate_credit_purchase():
     """Initiate credit purchase - supports EcoCash and Visa/Mastercard via Paynow"""
     try:
+        from database.external_db import make_supabase_request
+        
         data = request.get_json()
         package_id = data.get('package_id')
         payment_method = data.get('payment_method', 'ecocash')  # Default to ecocash for backward compatibility
@@ -2253,7 +2255,7 @@ def initiate_credit_purchase():
             reference = f"MOBILE_{uuid.uuid4().hex[:8].upper()}"
             
             # Store payment transaction in database before initiating
-            from database.external_db import make_supabase_request
+            # from database.external_db import make_supabase_request  <-- Removed, already imported at top
             payment_transaction = {
                 'user_id': g.current_user_id,
                 'reference_code': reference,
