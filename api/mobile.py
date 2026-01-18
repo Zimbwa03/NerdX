@@ -19,7 +19,7 @@ from database.external_db import (
     get_user_registration, create_user_registration, is_user_registered,
     get_user_stats, get_user_credits, add_credits, deduct_credits,
     get_user_by_nerdx_id, add_xp, update_streak,
-    claim_welcome_bonus, check_and_refresh_daily_credits, get_credit_breakdown,
+    claim_welcome_bonus, get_credit_breakdown,
     make_supabase_request,
     authenticate_supabase_user
 )
@@ -40,11 +40,118 @@ from services.voice_service import get_voice_service
 from services.vertex_service import vertex_service, get_image_question_credit_cost, get_text_question_credit_cost
 from services.exam_session_service import exam_session_service
 from utils.url_utils import convert_local_path_to_public_url
+from utils.credit_units import format_credits, units_to_credits
 from config import Config
 
 logger = logging.getLogger(__name__)
 
 mobile_bp = Blueprint('mobile', __name__)
+
+
+def _credits_display(units: int) -> float:
+    """Convert credit units to display credits for API responses."""
+    return units_to_credits(units or 0)
+
+
+def _credits_text(units: int) -> str:
+    """Format credit units for messages."""
+    return format_credits(units or 0)
+
+
+FREE_VIRTUAL_LAB_SIMULATIONS = {
+    "biology": {"cell-explorer", "osmosis-adventure", "food-test-lab"},
+    "chemistry": {"atom-builder", "equation-balancer", "titration-master"},
+    "physics": {"circuit-builder", "projectile-motion", "motion-grapher"},
+}
+
+
+def _get_quiz_credit_action(
+    subject: str,
+    question_type: str,
+    question_format: str,
+    bio_question_type: str
+) -> str:
+    subject_key = (subject or '').lower()
+    qt = (question_type or 'topical').lower()
+    qf = (question_format or 'mcq').lower()
+    bio_qt = (bio_question_type or 'mcq').lower()
+
+    if subject_key == 'mathematics':
+        return 'math_topical' if qt == 'topical' else 'math_exam'
+    if subject_key == 'combined_science':
+        if qt == 'exam':
+            return 'combined_science_exam'
+        return 'combined_science_topical_structured' if qf == 'structured' else 'combined_science_topical_mcq'
+    if subject_key == 'english':
+        return 'english_topical'
+
+    # A-Level subjects
+    if subject_key == 'a_level_pure_math':
+        return 'a_level_pure_math_topical' if qt == 'topical' else 'a_level_pure_math_exam'
+    if subject_key == 'a_level_chemistry':
+        return 'a_level_chemistry_topical' if qt == 'topical' else 'a_level_chemistry_exam'
+    if subject_key == 'a_level_physics':
+        return 'a_level_physics_topical' if qt == 'topical' else 'a_level_physics_exam'
+    if subject_key == 'a_level_biology':
+        bio_key = bio_qt if bio_qt in ['mcq', 'structured', 'essay'] else 'mcq'
+        return f"a_level_biology_{qt}_{bio_key}"
+
+    return f"{subject}_topical" if qt == 'topical' else f"{subject}_exam"
+
+
+def _get_exam_session_cost_units(
+    subject: str,
+    level: str,
+    question_mode: str,
+    total_questions: int
+) -> int:
+    subject_key = (subject or '').lower().replace(' ', '_').replace('-', '_')
+    level_key = (level or '').upper()
+    is_a_level = level_key == 'A_LEVEL' or 'a_level' in subject_key
+
+    if is_a_level and 'biology' in subject_key:
+        mcq_cost = 3
+        structured_cost = 5
+    elif is_a_level:
+        mcq_cost = 5
+        structured_cost = 5
+    else:
+        if 'math' in subject_key:
+            mcq_cost = 5
+            structured_cost = 5
+        elif any(key in subject_key for key in ['biology', 'chemistry', 'physics', 'combined_science']):
+            mcq_cost = 5
+            structured_cost = 5
+        else:
+            mcq_cost = 10
+            structured_cost = 10
+
+    if question_mode == 'MCQ_ONLY':
+        return mcq_cost * total_questions
+    if question_mode == 'STRUCTURED_ONLY':
+        return structured_cost * total_questions
+    if question_mode == 'MIXED':
+        mcq_count = total_questions // 2
+        structured_count = total_questions - mcq_count
+        return (mcq_cost * mcq_count) + (structured_cost * structured_count)
+    return mcq_cost * total_questions
+
+
+def _get_exam_question_cost_units(subject: str, level: str, question_type: str) -> int:
+    subject_key = (subject or '').lower().replace(' ', '_').replace('-', '_')
+    level_key = (level or '').upper()
+    is_a_level = level_key == 'A_LEVEL' or 'a_level' in subject_key
+    q_type = (question_type or 'MCQ').upper()
+
+    if is_a_level and 'biology' in subject_key:
+        return 3 if q_type == 'MCQ' else 5
+    if is_a_level:
+        return 5
+    if 'math' in subject_key:
+        return 5
+    if any(key in subject_key for key in ['biology', 'chemistry', 'physics', 'combined_science']):
+        return 5
+    return 10
 
 # JWT Secret Key (should be in environment variable)
 JWT_SECRET = os.environ.get('JWT_SECRET', 'nerdx-mobile-secret-key-change-in-production')
@@ -188,20 +295,21 @@ def login():
         token = generate_token(user_id)
         
         # CREDIT SYSTEM CHECKS
-        # 1. Check for welcome bonus
+        # 1. Check for welcome bonus (one-time 150 credits)
         welcome_result = claim_welcome_bonus(user_id)
         
-        # 2. Check for daily credits
-        daily_result = check_and_refresh_daily_credits(user_id)
-        
-        # 3. Get latest credit breakdown
+        # 2. Get latest credit breakdown
         credit_info = get_credit_breakdown(user_id)
+        credit_info_display = {
+            **credit_info,
+            "total": _credits_display(credit_info.get("total", 0)),
+            "free_credits": _credits_display(credit_info.get("free_credits", 0)),
+            "purchased_credits": _credits_display(credit_info.get("purchased_credits", 0)),
+        }
         
         # Prepare notifications
         notifications = {
             "welcome_bonus": welcome_result.get("awarded", False),
-            "daily_refresh": daily_result.get("refreshed", False),
-            "daily_message": daily_result.get("message"),
             "welcome_message": welcome_result.get("message")
         }
         
@@ -214,8 +322,8 @@ def login():
                 'name': user_data.get('name'),
                 'surname': user_data.get('surname'),
                 'email': user_data.get('email'),
-                'credits': credit_info.get('total', 0),
-                'credit_breakdown': credit_info
+                'credits': _credits_display(credit_info.get('total', 0)),
+                'credit_breakdown': credit_info_display
             },
             'notifications': notifications,
             'message': 'Login successful'
@@ -444,7 +552,7 @@ def register():
                     'surname': surname,
                     'email': email,
                     'phone_number': phone_number,
-                    'credits': Config.REGISTRATION_BONUS,
+                    'credits': _credits_display(Config.REGISTRATION_BONUS),
                 },
                 'message': 'Registration successful'
             }), 201
@@ -505,7 +613,7 @@ def social_login():
                     'name': user_data.get('name'),
                     'surname': user_data.get('surname'),
                     'email': email,
-                    'credits': credits,
+                    'credits': _credits_display(credits),
                     'role': user_data.get('role', 'student'),
                     'level_title': user_data.get('level_title', 'Explorer') 
                 },
@@ -550,7 +658,7 @@ def social_login():
                             'name': name,
                             'surname': surname,
                             'email': email,
-                            'credits': current_credits,
+                            'credits': _credits_display(current_credits),
                             'role': 'student',
                             'level_title': 'Explorer'
                         },
@@ -596,7 +704,7 @@ def verify_otp():
                 'name': user_data.get('name'),
                 'surname': user_data.get('surname'),
                 'phone_number': phone_number,
-                'credits': credits,
+                'credits': _credits_display(credits),
             }
         }), 200
         
@@ -649,7 +757,7 @@ def get_profile():
                 'surname': user_data.get('surname'),
                 'email': user_data.get('email'),
                 'phone_number': user_data.get('phone_number'),
-                'credits': credits,
+                'credits': _credits_display(credits),
                 'date_of_birth': user_data.get('date_of_birth'),
             }
         }), 200
@@ -691,7 +799,7 @@ def get_user_stats_endpoint():
         return jsonify({
             'success': True,
             'data': {
-                'credits': credits,
+                'credits': _credits_display(credits),
                 'total_points': stats.get('total_xp', 0) if stats else 0,
                 'streak_count': stats.get('current_streak', 0) if stats else 0,
                 'accuracy': stats.get('accuracy', 0) if stats else 0,
@@ -911,19 +1019,19 @@ def generate_question():
             is_image_question = (question_count > 0 and question_count % 6 == 0)
             logger.info(f"🖼️ Image check: question #{question_count}, mix_images={mix_images}, is_image={is_image_question}")
         
+        credit_action = _get_quiz_credit_action(subject, question_type, question_format, data.get('question_type', 'mcq'))
         if is_image_question:
-            credit_cost = get_image_question_credit_cost()  # 4 credits
+            credit_cost = get_image_question_credit_cost()
         else:
             # Standard text question credit cost
-            credit_action = f"{subject}_topical" if question_type == 'topical' else f"{subject}_exam"
-            credit_cost = advanced_credit_service.get_credit_cost(credit_action) or get_text_question_credit_cost()  # Usually 1 credit
+            credit_cost = advanced_credit_service.get_credit_cost(credit_action)
         
         user_credits = get_user_credits(g.current_user_id) or 0
         if user_credits < credit_cost:
             return jsonify({
                 'success': False,
-                'message': f'Insufficient credits. Required: {credit_cost}, Available: {user_credits}',
-                'credit_cost': credit_cost,
+                'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}, Available: {_credits_text(user_credits)}',
+                'credit_cost': _credits_display(credit_cost),
                 'is_image_question': is_image_question
             }), 400
         
@@ -965,7 +1073,7 @@ def generate_question():
             else:
                 logger.warning(f"⚠️ Image question generation failed, falling back to text question")
                 is_image_question = False  # Fall back to text
-                credit_cost = get_text_question_credit_cost()
+                credit_cost = advanced_credit_service.get_credit_cost(credit_action)
         
         # STANDARD TEXT QUESTION PATH (or fallback)
         if not question_data:
@@ -1276,7 +1384,7 @@ def generate_question():
                 question['structured_question'] = {
                     'question_type': 'structured',
                     'subject': question_data.get('subject', 'A Level Biology'),
-                    'topic': question_data.get('topic', topic_name if 'topic_name' in locals() else topic),
+                    'topic': question_data.get('topic', topic),
                     'difficulty': question_data.get('difficulty', difficulty),
                     'stem': question_data.get('stimulus') or question_data.get('question', ''),
                     'parts': parts,
@@ -1355,13 +1463,13 @@ def generate_question_stream():
             }), 400
         
         # Check credits
-        credit_cost = advanced_credit_service.get_credit_cost('math_quiz', difficulty) or 1
+        credit_cost = advanced_credit_service.get_credit_cost('math_quiz')
         user_credits = get_user_credits(g.current_user_id) or 0
         
         if user_credits < credit_cost:
             return jsonify({
                 'success': False,
-                'message': f'Insufficient credits. Required: {credit_cost}, Available: {user_credits}'
+                'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}, Available: {_credits_text(user_credits)}'
             }), 400
         
         user_id = g.current_user_id
@@ -1445,13 +1553,13 @@ def get_next_exam_question():
         paper = data.get('paper')
         
         # Check credits
-        credit_cost = advanced_credit_service.get_credit_cost('mathematics_exam')
+        credit_cost = advanced_credit_service.get_credit_cost('math_exam')
         user_credits = get_user_credits(g.current_user_id) or 0
         
         if user_credits < credit_cost:
             return jsonify({
                 'success': False,
-                'message': f'Insufficient credits. Required: {credit_cost}, Available: {user_credits}'
+                'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}, Available: {_credits_text(user_credits)}'
             }), 400
         
         # Import the math exam service
@@ -1834,6 +1942,17 @@ def generate_virtual_lab_knowledge_check():
         if subject not in ['biology', 'chemistry', 'physics']:
             return jsonify({'success': False, 'message': 'Invalid subject'}), 400
 
+        user_id = g.current_user_id
+        breakdown = get_credit_breakdown(user_id)
+        purchased_credits = breakdown.get('purchased_credits', 0) or 0
+        if purchased_credits == 0 and simulation_id:
+            free_ids = FREE_VIRTUAL_LAB_SIMULATIONS.get(subject, set())
+            if simulation_id not in free_ids:
+                return jsonify({
+                    'success': False,
+                    'message': 'This simulation is locked. Purchase credits to unlock all simulations.'
+                }), 402
+
         # Map app difficulty to generator difficulty
         difficulty_map = {
             'easy': 'easy',
@@ -1859,22 +1978,23 @@ def generate_virtual_lab_knowledge_check():
         science_gen = CombinedScienceGenerator()
         questions = []
         
-        # --- NEW: Deduct Credits ---
-        # Cost: 2 credits per generation
+        # --- Deduct Credits ---
+        # Cost: per question
         from database.external_db import deduct_credits, get_user_credits
-        cost = 2
+        cost_per_question = advanced_credit_service.get_credit_cost('virtual_lab_knowledge_check')
+        cost = cost_per_question * count
         
         user_id = g.current_user_id
         current_credits = get_user_credits(user_id)
         
         if current_credits < cost:
-             return jsonify({'success': False, 'message': f'Insufficient credits. Required: {cost}, Available: {current_credits}'}), 402
+             return jsonify({'success': False, 'message': f'Insufficient credits. Required: {_credits_text(cost)}, Available: {_credits_text(current_credits)}'}), 402
              
         # Deduct the credits
         if not deduct_credits(user_id, cost, 'virtual_lab_knowledge_check', 'Virtual Lab Knowledge Check'):
             return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
             
-        logger.info(f"Deducted {cost} credits from {user_id} for Virtual Lab generation")
+        logger.info(f"Deducted {cost} units from {user_id} for Virtual Lab generation")
         # ---------------------------
 
         def _options_to_list(opts):
@@ -1977,7 +2097,7 @@ def get_credit_balance():
         return jsonify({
             'success': True,
             'data': {
-                'balance': credits
+                'balance': _credits_display(credits)
             }
         }), 200
     except Exception as e:
@@ -2012,13 +2132,14 @@ def get_credit_transactions():
         
         # Add payment transactions
         for tx in payment_txs:
+            credits_units = int(tx.get('credits', 0) or 0)
             transactions.append({
                 'id': tx.get('id', str(uuid.uuid4())),
                 'transaction_type': 'purchase',
-                'credits_change': tx.get('credits', 0),
+                'credits_change': _credits_display(credits_units),
                 'balance_before': 0, # We don't historically track balance snapshot in this simple table yet
                 'balance_after': 0,
-                'description': f"Purchased {tx.get('credits')} credits",
+                'description': f"Purchased {_credits_text(credits_units)} credits",
                 'transaction_date': tx.get('created_at'),
                 'amount': tx.get('amount', 0),
                 'currency': 'USD'
@@ -2400,7 +2521,7 @@ def generate_math_graph():
         if user_credits < credit_cost:
             return jsonify({
                 'success': False,
-                'message': f'Insufficient credits. Required: {credit_cost}'
+                'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
             }), 400
         
         # Generate graph
@@ -2438,7 +2559,7 @@ def generate_comprehension():
         if user_credits < credit_cost:
             return jsonify({
                 'success': False,
-                'message': f'Insufficient credits. Required: {credit_cost}'
+                'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
             }), 400
         
         # Generate comprehension
@@ -2540,7 +2661,7 @@ def submit_essay_marking():
         if user_credits < credit_cost:
             return jsonify({
                 'success': False,
-                'message': f'Insufficient credits. Required: {credit_cost}'
+                'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
             }), 400
             
         english_service = EnglishService()
@@ -2751,7 +2872,7 @@ def grade_comprehension():
         if user_credits < credit_cost:
             return jsonify({
                 'success': False,
-                'message': f'Insufficient credits. Required: {credit_cost}'
+                'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
             }), 400
             
         english_service = EnglishService()
@@ -2788,7 +2909,7 @@ def grade_summary():
         if user_credits < credit_cost:
             return jsonify({
                 'success': False,
-                'message': f'Insufficient credits. Required: {credit_cost}'
+                'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
             }), 400
             
         english_service = EnglishService()
@@ -2826,7 +2947,7 @@ def upload_image():
         if user_credits < credit_cost:
             return jsonify({
                 'success': False,
-                'message': f'Insufficient credits. Required: {credit_cost}'
+                'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
             }), 400
         
         # Process image
@@ -2874,7 +2995,7 @@ def start_teacher_mode():
         if user_credits < credit_cost:
             return jsonify({
                 'success': False,
-                'message': f'Insufficient credits. Required: {credit_cost}'
+                'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
             }), 400
         
         # Initialize session
@@ -2991,7 +3112,7 @@ def send_teacher_message():
         if user_credits < credit_cost:
             return jsonify({
                 'success': False,
-                'message': f'Insufficient credits. Required: {credit_cost}'
+                'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
             }), 400
         
         if not session_data or not session_data.get('active'):
@@ -3165,7 +3286,7 @@ def generate_teacher_notes():
         if user_credits < credit_cost:
             return jsonify({
                 'success': False,
-                'message': f'Insufficient credits. Required: {credit_cost}'
+                'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
             }), 400
         
         # Get session data (Math / English / Science)
@@ -3558,13 +3679,13 @@ def teacher_deep_research():
             return jsonify({'success': False, 'message': 'Research query is required'}), 400
         
         # Check credits for deep research (more expensive than regular search)
-        credit_cost = advanced_credit_service.get_credit_cost('teacher_mode_followup')
+        credit_cost = advanced_credit_service.get_credit_cost('deep_research')
         user_credits = get_user_credits(g.current_user_id) or 0
         
         if user_credits < credit_cost:
             return jsonify({
                 'success': False,
-                'message': f'Insufficient credits. Required: {credit_cost}'
+                'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
             }), 400
         
         # Get session data for context
@@ -3593,7 +3714,7 @@ Include key concepts, definitions, examples, and exam tips."""
                 
                 if result.get('success') and result.get('text'):
                     # Deduct credits
-                    deduct_credits(g.current_user_id, credit_cost, 'teacher_deep_research', f'Deep Research: {query[:50]}')
+                    deduct_credits(g.current_user_id, credit_cost, 'deep_research', f'Deep Research: {query[:50]}')
                     
                     logger.info(f"🔬 Deep Research completed for {g.current_user_id}")
                     
@@ -3615,7 +3736,7 @@ Include key concepts, definitions, examples, and exam tips."""
         
         if result.get('success'):
             # Deduct credits
-            deduct_credits(g.current_user_id, credit_cost, 'teacher_deep_research', f'Deep Research (fallback): {query[:50]}')
+            deduct_credits(g.current_user_id, credit_cost, 'deep_research', f'Deep Research (fallback): {query[:50]}')
             
             return jsonify({
                 'success': True,
@@ -3659,7 +3780,7 @@ def start_project_research(project_id):
         if user_credits < credit_cost:
             return jsonify({
                 'success': False,
-                'message': f'Insufficient credits. Required: {credit_cost}'
+                'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
             }), 400
         
         result = service.start_deep_research(g.current_user_id, project_id, query)
@@ -3834,7 +3955,7 @@ def project_web_search(project_id):
         if user_credits < credit_cost:
             return jsonify({
                 'success': False,
-                'message': f'Insufficient credits. Required: {credit_cost}'
+                'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
             }), 400
         
         result = service.search_with_grounding(g.current_user_id, project_id, query)
@@ -3874,13 +3995,13 @@ def transcribe_project_audio(project_id):
             return jsonify({'success': False, 'message': 'Audio data is required'}), 400
         
         # Check credits
-        credit_cost = advanced_credit_service.get_credit_cost('project_chat')
+        credit_cost = advanced_credit_service.get_credit_cost('project_transcribe')
         user_credits = get_user_credits(g.current_user_id) or 0
         
         if user_credits < credit_cost:
             return jsonify({
                 'success': False,
-                'message': f'Insufficient credits. Required: {credit_cost}'
+                'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
             }), 400
         
         # Use Gemini multimodal for transcription
@@ -3970,7 +4091,7 @@ def generate_graph():
         if user_credits < credit_cost:
             return jsonify({
                 'success': False,
-                'message': f'Insufficient credits. Required: {credit_cost}'
+                'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
             }), 400
         
         # Generate graph
@@ -4079,7 +4200,7 @@ def generate_custom_graph():
         if user_credits < credit_cost:
             return jsonify({
                 'success': False,
-                'message': f'Insufficient credits. Required: {credit_cost}'
+                'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
             }), 400
         
         # Create graph using graph service
@@ -4148,7 +4269,7 @@ def solve_graph_from_image():
         if user_credits < credit_cost:
             return jsonify({
                 'success': False,
-                'message': f'Insufficient credits. Required: {credit_cost}'
+                'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
             }), 400
         
         # Process image using ImageService (which can handle graph problems)
@@ -4194,7 +4315,7 @@ def generate_linear_programming_graph():
         if user_credits < credit_cost:
             return jsonify({
                 'success': False,
-                'message': f'Insufficient credits. Required: {credit_cost}'
+                'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
             }), 400
         
         # Generate linear programming graph
@@ -4267,7 +4388,21 @@ def get_science_notes_topics():
         
         from services.science_notes_service import ScienceNotesService
         notes_service = ScienceNotesService()
-        
+
+        breakdown = get_credit_breakdown(g.current_user_id)
+        purchased_credits = breakdown.get('purchased_credits', 0) or 0
+        if purchased_credits == 0:
+            all_topics = notes_service.get_all_topics(subject) or []
+            try:
+                topic_index = all_topics.index(topic)
+            except ValueError:
+                topic_index = -1
+            if topic_index >= 2:
+                return jsonify({
+                    'success': False,
+                    'message': 'This topic is locked. Purchase credits to unlock all topics.'
+                }), 402
+
         topics = notes_service.get_all_topics(subject)
         
         return jsonify({
@@ -4834,6 +4969,59 @@ def project_chat(project_id):
     except Exception as e:
         logger.error(f"Project chat error: {e}", exc_info=True)
         return jsonify({'success': False, 'message': 'Server error'}), 500
+
+@mobile_bp.route('/project/<int:project_id>/generate-image', methods=['POST'])
+@require_auth
+def project_generate_image(project_id):
+    """
+    Generate a high-quality educational image using Vertex AI.
+    
+    This endpoint is for explicit image generation mode where the user
+    specifically wants to generate an image (flyer, poster, diagram, etc.)
+    
+    Uses Gemini for prompt enhancement and Imagen for generation.
+    """
+    try:
+        data = request.get_json()
+        prompt = (data.get('prompt') or data.get('message') or '').strip()
+        
+        if not prompt:
+            return jsonify({
+                'success': False,
+                'message': 'Image description/prompt is required'
+            }), 400
+        
+        from services.project_assistant_service import ProjectAssistantService
+        service = ProjectAssistantService()
+        
+        result = service.generate_educational_image(
+            user_id=g.current_user_id,
+            project_id=project_id,
+            user_prompt=prompt,
+            explicit_mode=True
+        )
+        
+        if result.get('success'):
+            return jsonify({
+                'success': True,
+                'data': {
+                    'response': result.get('response'),
+                    'image_url': result.get('image_url'),
+                    'aspect_ratio': result.get('aspect_ratio'),
+                    'credits_remaining': result.get('credits_remaining')
+                }
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'message': result.get('error', 'Failed to generate image'),
+                'credits_remaining': result.get('credits_remaining')
+            }), 400
+            
+    except Exception as e:
+        logger.error(f"Project generate image error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 
 @mobile_bp.route('/project/<int:project_id>/history', methods=['GET'])
 @require_auth
@@ -6151,20 +6339,19 @@ def get_credit_info_endpoint():
     try:
         user_id = g.current_user_id
         
-        # Check daily refresh logic (idempotent)
-        daily_result = check_and_refresh_daily_credits(user_id)
-        
         # Get full breakdown
         breakdown = get_credit_breakdown(user_id)
         
         # Ensure total is top level for backward compatibility if needed
         response_data = breakdown.copy()
-        response_data['balance'] = breakdown['total'] # Alias
+        response_data['total'] = _credits_display(breakdown.get('total', 0))
+        response_data['free_credits'] = _credits_display(breakdown.get('free_credits', 0))
+        response_data['purchased_credits'] = _credits_display(breakdown.get('purchased_credits', 0))
+        response_data['balance'] = response_data['total']  # Alias
         
         return jsonify({
             'success': True,
-            'data': response_data,
-            'daily_refresh': daily_result
+            'data': response_data
         }), 200
     except Exception as e:
         logger.error(f"Credit info error: {e}", exc_info=True)
@@ -6176,6 +6363,7 @@ def get_credit_info_endpoint():
 # ============================================================================
 
 @mobile_bp.route('/flashcards/generate', methods=['POST'])
+@require_auth
 def generate_flashcards():
     """
     Generate AI-powered flashcards for a science topic.
@@ -6214,6 +6402,20 @@ def generate_flashcards():
             }), 400
         
         from services.flashcard_service import flashcard_service
+
+        # Deduct credits per flashcard
+        unit_cost = advanced_credit_service.get_credit_cost('flashcard_single')
+        total_cost = unit_cost * count
+        user_credits = get_user_credits(g.current_user_id) or 0
+
+        if user_credits < total_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {_credits_text(total_cost)}, Available: {_credits_text(user_credits)}'
+            }), 402
+
+        if not deduct_credits(g.current_user_id, total_cost, 'flashcard_single', f'Generated {count} flashcards'):
+            return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
         
         flashcards = flashcard_service.generate_flashcards(
             subject=subject,
@@ -6240,6 +6442,7 @@ def generate_flashcards():
 
 
 @mobile_bp.route('/flashcards/generate-single', methods=['POST'])
+@require_auth
 def generate_single_flashcard():
     """
     Generate a single flashcard (for streaming mode with >100 cards).
@@ -6270,6 +6473,18 @@ def generate_single_flashcard():
             }), 400
         
         from services.flashcard_service import flashcard_service
+
+        unit_cost = advanced_credit_service.get_credit_cost('flashcard_single')
+        user_credits = get_user_credits(g.current_user_id) or 0
+
+        if user_credits < unit_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {_credits_text(unit_cost)}, Available: {_credits_text(user_credits)}'
+            }), 402
+
+        if not deduct_credits(g.current_user_id, unit_cost, 'flashcard_single', 'Generated flashcard'):
+            return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
         
         flashcard = flashcard_service.generate_single_flashcard(
             subject=subject,
@@ -6553,22 +6768,8 @@ def create_exam_session():
         user_data = get_user_registration(g.current_user_id)
         username = user_data.get('name', 'Student') if user_data else 'Student'
         
-        # Calculate credit cost based on subject, level, and question mode
-        # O-Level Mathematics MCQ: 0.5 credits per question (1 credit = 2 questions)
-        # All other combinations: 1 credit per question
-        import math
-        if subject.lower() == 'mathematics' and level == 'O_LEVEL' and question_mode == 'MCQ_ONLY':
-            credit_cost = math.ceil(total_questions * 0.5)
-        elif question_mode == 'MIXED':
-            # Mixed: half MCQ (0.5 each), half structured (1 each)
-            mcq_count = total_questions // 2
-            structured_count = total_questions - mcq_count
-            if subject.lower() == 'mathematics' and level == 'O_LEVEL':
-                credit_cost = math.ceil(mcq_count * 0.5) + structured_count
-            else:
-                credit_cost = total_questions
-        else:
-            credit_cost = total_questions
+        # Calculate credit cost based on subject, level, and question mode (units)
+        credit_cost = _get_exam_session_cost_units(subject, level, question_mode, total_questions)
         
         # Check credits
         user_credits = get_user_credits(g.current_user_id) or 0
@@ -6576,7 +6777,7 @@ def create_exam_session():
         if user_credits < credit_cost:
             return jsonify({
                 'success': False,
-                'message': f'Insufficient credits. Required: {credit_cost}, Available: {user_credits}'
+                'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}, Available: {_credits_text(user_credits)}'
             }), 400
         
         # Create session
@@ -6593,9 +6794,9 @@ def create_exam_session():
         )
         
         # Add credit cost to response for frontend display
-        result['credit_cost'] = credit_cost
+        result['credit_cost'] = _credits_display(credit_cost)
         
-        logger.info(f"Created exam session for {g.current_user_id}: {result.get('session_id')} (cost: {credit_cost} credits)")
+        logger.info(f"Created exam session for {g.current_user_id}: {result.get('session_id')} (cost: {credit_cost} units)")
         
         return jsonify({
             'success': True,
@@ -6639,15 +6840,36 @@ def get_exam_next_question():
         if session.get('status') != 'active':
             return jsonify({'success': False, 'message': 'Session is not active'}), 400
         
+        # Determine question type for pricing
+        mode = session.get('question_mode', 'MCQ_ONLY')
+        idx = question_index if question_index is not None else session.get("current_index", 0)
+        if mode == "MCQ_ONLY":
+            question_type = "MCQ"
+        elif mode == "STRUCTURED_ONLY":
+            question_type = "STRUCTURED"
+        else:
+            question_type = "MCQ" if idx % 2 == 0 else "STRUCTURED"
+
+        credit_cost = _get_exam_question_cost_units(
+            session.get('subject', ''),
+            session.get('level', ''),
+            question_type
+        )
+
         # Deduct credit for this question
         user_credits = get_user_credits(g.current_user_id) or 0
-        if user_credits < 1:
+        if user_credits < credit_cost:
             return jsonify({
                 'success': False,
-                'message': 'Insufficient credits for next question'
+                'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}, Available: {_credits_text(user_credits)}'
             }), 400
         
-        deduct_credits(g.current_user_id, 1, 'exam_question', f'Exam question #{question_index or session.get("current_index", 0) + 1}')
+        deduct_credits(
+            g.current_user_id,
+            credit_cost,
+            'exam_question',
+            f'Exam question #{idx + 1} ({question_type})'
+        )
         
         # Generate next question
         question = exam_session_service.generate_next_question(session_id, question_index)

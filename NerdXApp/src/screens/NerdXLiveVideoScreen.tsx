@@ -39,6 +39,7 @@ import { Audio, AVPlaybackStatus } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { BlurView } from 'expo-blur';
+import { captureRef } from 'react-native-view-shot';
 import { WS_URL as APP_WS_BASE_URL } from '../config';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -56,12 +57,14 @@ try {
 const WS_URL = `${APP_WS_BASE_URL}/ws/nerdx-live-video`;
 
 // Video streaming settings (per Vertex AI Live API documentation)
-const FRAME_INTERVAL_MS = 1000; // 1 FPS
-const FRAME_QUALITY = 0.8;
+const FRAME_INTERVAL_MS = 1000; // 1 FPS - Gemini Live recommends 1 FPS for real-time
+const FRAME_QUALITY = 0.5; // Lower quality for faster capture (less flickering)
 const MAX_FRAME_SIZE = 768;
 
-// Jitter buffer settings
-const MIN_BUFFER_CHUNKS = 2;
+// Audio playback settings
+// With server-side buffering, we receive ONE complete audio per turn
+// No need for jitter buffering anymore - just play immediately
+const MIN_BUFFER_CHUNKS = 1; // Changed from 2 - server now sends complete audio
 
 // Color tokens
 const COLORS = {
@@ -264,7 +267,7 @@ const NerdXLiveVideoScreen: React.FC = () => {
         }, 50);
     }, [playNextAudio]);
 
-    // Capture and send video frame
+    // Capture and send video frame using ViewShot (SILENT - no shutter sound, no flickering)
     const captureAndSendFrame = useCallback(async () => {
         if (!cameraRef.current || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
         if (frameCaptureInProgressRef.current) return;
@@ -272,21 +275,26 @@ const NerdXLiveVideoScreen: React.FC = () => {
         frameCaptureInProgressRef.current = true;
 
         try {
-            const photo = await cameraRef.current.takePictureAsync({
+            // Use captureRef from react-native-view-shot for SILENT capture
+            // This captures the rendered camera preview without any shutter sound or flickering
+            const base64 = await captureRef(cameraRef, {
+                format: 'jpg',
                 quality: FRAME_QUALITY,
-                base64: true,
-                skipProcessing: true,
+                result: 'base64',
             });
 
-            if (photo?.base64 && wsRef.current?.readyState === WebSocket.OPEN) {
+            if (base64 && wsRef.current?.readyState === WebSocket.OPEN) {
+                // Send as 'video' type to match server expectation
                 wsRef.current.send(JSON.stringify({
-                    type: 'video_frame',
-                    data: photo.base64,
+                    type: 'video',
+                    data: base64,
+                    mimeType: 'image/jpeg',
                     timestamp: Date.now(),
                 }));
             }
         } catch (error) {
-            console.error('Frame capture error:', error);
+            // Silent failure - don't interrupt the conversation
+            console.debug('Frame capture skipped:', error);
         } finally {
             frameCaptureInProgressRef.current = false;
         }

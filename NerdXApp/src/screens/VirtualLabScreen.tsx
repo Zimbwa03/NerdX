@@ -10,11 +10,13 @@ import {
     TouchableOpacity,
     Dimensions,
     StatusBar,
+    Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 import { useThemedColors } from '../theme/useThemedStyles';
 import { SimulationCard } from '../components/virtualLab';
 import { PHASE1_SIMULATIONS, PHASE2_SIMULATIONS, getAllSimulations, SUBJECT_COLORS, Subject } from '../data/virtualLab';
@@ -26,6 +28,7 @@ type FilterOption = 'all' | Subject;
 const VirtualLabScreen: React.FC = () => {
     const navigation = useNavigation<any>();
     const { isDarkMode } = useTheme();
+    const { user } = useAuth();
     const themedColors = useThemedColors();
     const [activeFilter, setActiveFilter] = useState<FilterOption>('all');
 
@@ -42,6 +45,22 @@ const VirtualLabScreen: React.FC = () => {
     const totalSimulations = allSimulations.length;
 
     const handleSimulationPress = (simulationId: string) => {
+        const hasPaidCredits = (user?.credit_breakdown?.purchased_credits ?? 0) > 0;
+        if (!hasPaidCredits) {
+            const simulation = allSimulations.find(sim => sim.id === simulationId);
+            if (simulation) {
+                const subjectSims = allSimulations.filter(sim => sim.subject === simulation.subject);
+                const subjectIndex = subjectSims.findIndex(sim => sim.id === simulationId);
+                if (subjectIndex >= 3) {
+                    Alert.alert(
+                        'Locked Simulation',
+                        'This simulation is locked. Purchase credits to unlock all simulations.'
+                    );
+                    return;
+                }
+            }
+        }
+
         // Map simulation IDs to screen names
         const screenMap: Record<string, string> = {
             // Phase 1

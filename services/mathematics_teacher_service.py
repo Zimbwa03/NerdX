@@ -11,6 +11,7 @@ from typing import Dict, Optional, List
 from utils.session_manager import session_manager
 from services.whatsapp_service import WhatsAppService
 from database.external_db import make_supabase_request, get_user_credits, deduct_credits
+from utils.credit_units import format_credits
 from services.advanced_credit_service import advanced_credit_service
 from services.vertex_service import vertex_service
 
@@ -418,12 +419,13 @@ Current conversation context will be provided with each message."""
             if any(keyword in message_lower for keyword in ['generate notes', 'save notes', 'create notes', 'make notes']):
                 return self.generate_notes(session_id, user_id)
             
-            # Check credit status for batch billing
+            # Check credit status for per-response billing
+            credit_cost = advanced_credit_service.get_credit_cost('teacher_mode_followup')
             credit_status = advanced_credit_service.get_user_credit_status(user_id)
-            if credit_status['credits'] <= 0:
-                 return {
+            if credit_status['credits'] < credit_cost:
+                return {
                     'success': False,
-                    'response': "💰 **Insufficient Credits**\n\nYou need credits to continue Teacher Mode. Credits are deducted (1 credit) for every 10 AI responses.\n\nPlease top up to continue learning!",
+                    'response': "💰 **Insufficient Credits**\n\nYou need credits to continue Teacher Mode. Credits are deducted per AI response.\n\nPlease top up to continue learning!",
                     'session_ended': False
                 }
             
@@ -446,17 +448,10 @@ Current conversation context will be provided with each message."""
                 'content': response_text
             })
             
-            # Increment message counter for billing
-            messages_since_charge = session_data.get('messages_since_charge', 0) + 1
+            # Deduct per AI response
             credits_deducted = 0
-            
-            if messages_since_charge >= 10:
-                # Deduct 1 credit
-                if deduct_credits(user_id, 1, 'teacher_mode_batch', 'Teacher Mode (10 messages)'):
-                    credits_deducted = 1
-                    messages_since_charge = 0
-            
-            session_data['messages_since_charge'] = messages_since_charge
+            if deduct_credits(user_id, credit_cost, 'teacher_mode_followup', 'Teacher Mode response'):
+                credits_deducted = credit_cost
 
             # Keep last 20 messages
             session_data['conversation_history'] = conversation_history[-20:]
@@ -477,7 +472,7 @@ Current conversation context will be provided with each message."""
             if credits_deducted > 0:
                 # Get fresh credit status
                 credit_status = advanced_credit_service.get_user_credit_status(user_id)
-                clean_response += f"\n\nCard: *Credits:* {credit_status['credits']} (Deducted 1 credit for 10 messages)"
+                clean_response += f"\n\nCard: *Credits:* {format_credits(credit_status['credits'])} (Deducted {format_credits(credit_cost)} per response)"
             
             return {
                 'success': True,

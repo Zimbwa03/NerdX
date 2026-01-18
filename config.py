@@ -3,6 +3,9 @@ import os
 class Config:
     """Configuration class for the NerdX Quiz Bot"""
 
+    # Credit units
+    CREDIT_UNITS_PER_CREDIT = 10
+
     # Environment variables
     # DeepSeek AI is the primary AI provider for all text generation
     DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY')
@@ -35,63 +38,94 @@ class Config:
         'menu_navigation': 1    # 1 second between menu navigation
     }
 
-    # Credit system configuration - Advanced Credit System
+    # Credit system configuration (units) - Advanced Credit System
+    # 1 credit = 10 units
     CREDIT_COSTS = {
-        # Combined Science
-        'combined_science_topical': 1,      # Topical Questions
-        'combined_science_exam': 3,        # Combined Exam (Increased to match complexity)
-        
-        # Mathematics
-        'math_topical': 1,                 # Topical Questions
-        'math_exam': 3,                    # Math Exam (Increased to match complexity)
-        'math_graph_practice': 3,          # Graph Practices (Complex generation)
-        
-        # English
-        'english_topical': 1,              # Topical Questions
-        'english_comprehension': 3,        # Comprehension (Requires reading + generation)
-        'english_essay_writing': 4,        # Essay Writing (High complexity/token usage)
-        
-        # A-Level (Premium Content)
-        'a_level_biology': 2,              # Advanced Science logic
-        'a_level_physics': 2,
-        'a_level_chemistry': 2,
-        'a_level_math': 2,
-        
-        'audio_feature': 0,                # Simple Audio Feature/TTS (FREE)
-        'voice_chat': 3,                  # Full Voice Chat (Per Minute)
-        'flashcard_audio': 3,             # Audio Flashcards
-        
-        # AI Teacher & Assistant - Hybrid Model
-        'teacher_mode_start': 0,           # Set to 0 (credits deducted per 10 messages)
-        'teacher_mode_followup': 0,        # Set to 0 (credits deducted per 10 messages)
-        'teacher_mode_pdf': 2,             # PDF note generation (Document creation value)
-        'project_assistant_start': 0,      # Set to 0 (credits deducted per 10 messages)
-        'project_assistant_followup': 0,   # Set to 0 (credits deducted per 10 messages)
-        
+        # Combined Science (O-Level)
+        'combined_science_exam': 5,                # 0.5 credit per question
+        'combined_science_topical': 3,             # MCQ default: 0.25 credit (rounded up)
+        'combined_science_topical_mcq': 3,         # 0.25 credit per MCQ (rounded up)
+        'combined_science_topical_structured': 5,  # 0.5 credit per structured question
+
+        # Mathematics (O-Level)
+        'math_topical': 5,                 # 0.5 credit per question
+        'math_exam': 5,                    # 0.5 credit per question
+        'math_quiz': 5,                    # 0.5 credit per question (streaming)
+        'math_graph_practice': 10,         # 1 credit per graph/question/video
+
+        # English (unchanged pricing, now in units)
+        'english_topical': 10,             # 1 credit per question
+        'english_comprehension': 30,       # 3 credits
+        'english_essay_writing': 30,       # 3 credits
+        'english_essay_marking': 30,       # 3 credits
+        'english_comprehension_grading': 30,
+        'english_summary_grading': 30,
+
+        # A-Level Mathematics
+        'a_level_pure_math_topical': 5,    # 0.5 credit per question
+        'a_level_pure_math_exam': 5,       # 0.5 credit per question
+
+        # A-Level Chemistry
+        'a_level_chemistry_topical': 5,    # 0.5 credit per question
+        'a_level_chemistry_exam': 5,       # 0.5 credit per question
+
+        # A-Level Physics
+        'a_level_physics_topical': 5,      # 0.5 credit per question
+        'a_level_physics_exam': 5,         # 0.5 credit per question
+
+        # A-Level Biology (MCQ cheaper than structured/essay)
+        'a_level_biology_topical_mcq': 3,        # 0.25 credit (rounded up)
+        'a_level_biology_topical_structured': 5, # 0.5 credit
+        'a_level_biology_topical_essay': 5,      # 0.5 credit
+        'a_level_biology_exam_mcq': 3,
+        'a_level_biology_exam_structured': 5,
+        'a_level_biology_exam_essay': 5,
+
+        # Audio / Live
+        'audio_feature': 10,               # 1 credit per audio request
+        'voice_chat': 1,                   # 0.1 credit per 5 seconds (live)
+
+        # Flashcards
+        'flashcard_single': 3,             # 0.25 credit per flashcard (rounded up)
+        'flashcard_audio': 30,             # 3 credits (audio flashcards)
+
+        # Virtual Lab
+        'virtual_lab_knowledge_check': 5,  # 0.5 credit per question
+
+        # AI Teacher & Assistant - per response billing
+        'teacher_mode_start': 1,           # 0.1 credit per AI response
+        'teacher_mode_followup': 1,        # 0.1 credit per AI response
+        'teacher_mode_pdf': 10,            # 1 credit for PDF notes
+        'project_assistant_start': 2,      # 0.2 credit per AI response
+        'project_assistant_followup': 2,   # 0.2 credit per AI response
+        'project_assistant_batch': 2,      # Legacy mapping
+
         # Vision/Tools
-        'ocr_solve': 3,                   # Image Analysis
-        'image_generation': 3,            # Diagram/Image Gen
-        
+        'ocr_solve': 30,                   # 3 credits
+        'image_solve': 30,                 # 3 credits (OCR/solve)
+        'image_generation': 30,            # 3 credits
+
         # Project Assistant Research
-        'web_search': 2,                  # Project Web Search
-        'deep_research': 5,               # Project Deep Research
-        'project_web_search': 2,          # Explicit key for Web Search
-        'project_deep_research': 5,       # Explicit key for Deep Research
-        
+        'web_search': 20,                  # 2 credits
+        'deep_research': 50,               # 5 credits
+        'project_web_search': 20,
+        'project_deep_research': 50,
+        'project_transcribe': 20,          # 2 credits
+        'project_image_generation': 20,    # 2 credits
+
         # Legacy compatibility (Mapped values)
-        'math': 1,
-        'science': 1,
-        'english': 1,
-        'image_solve': 3,
-        'graph_generation': 3
+        'math': 5,
+        'science': 3,
+        'english': 10,
+        'graph_generation': 10
     }
     
-    # Registration and Referral Credits
-    REGISTRATION_BONUS = 75               # Credits given to new users (once off)
-    REFERRAL_BONUS = 5                    # Credits for successful referrals
+    # Registration and Referral Credits (units)
+    REGISTRATION_BONUS = 1500             # 150 credits
+    REFERRAL_BONUS = 50                   # 5 credits
     
-    # Low Credit Threshold
-    LOW_CREDIT_THRESHOLD = 20             # Show "Buy Credits" button when credits <= 20
+    # Low Credit Threshold (units)
+    LOW_CREDIT_THRESHOLD = 200            # 20 credits
 
     # AI API timeouts and retries
     AI_REQUEST_TIMEOUT = [30, 45, 60]

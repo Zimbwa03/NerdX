@@ -1,4 +1,4 @@
-// Loading Progress Component - Shows animated progress for AI generation
+// Loading Progress Component - Real-time thinking UI for AI generation
 import React, { useEffect, useRef, useState } from 'react';
 import {
     View,
@@ -11,87 +11,68 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 
+interface LoadingProgressStep {
+    label: string;
+    emoji?: string;
+}
+
 interface LoadingProgressProps {
     visible: boolean;
     message?: string;
     estimatedTime?: number; // in seconds
     stage?: string;
+    steps?: LoadingProgressStep[];
     onComplete?: () => void;
 }
+
+const DEFAULT_STEPS: LoadingProgressStep[] = [
+    { emoji: '📥', label: 'Loading topic context' },
+    { emoji: '🧠', label: 'Generating question' },
+    { emoji: '📝', label: 'Building marking points' },
+    { emoji: '🔎', label: 'Checking accuracy' },
+    { emoji: '✅', label: 'Complete' },
+];
 
 export const LoadingProgress: React.FC<LoadingProgressProps> = ({
     visible,
     message = 'Generating question...',
     estimatedTime = 10,
-    stage = 'Connecting to AI',
+    stage = 'Thinking',
+    steps = DEFAULT_STEPS,
     onComplete,
 }) => {
-    const [progress, setProgress] = useState(0);
     const [showOverlay, setShowOverlay] = useState(false);
-    const progressAnim = useRef(new Animated.Value(0)).current;
+    const [activeStepIndex, setActiveStepIndex] = useState(0);
+    const [ellipsis, setEllipsis] = useState('');
     const pulseAnim = useRef(new Animated.Value(1)).current;
-    const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const stepIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const dotIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const pulseLoopRef = useRef<Animated.CompositeAnimation | null>(null);
 
-    // Progress stages
-    const stages = [
-        { threshold: 10, text: '🔗 Connecting to AI...' },
-        { threshold: 25, text: '🧠 AI is thinking...' },
-        { threshold: 50, text: '📝 Generating question...' },
-        { threshold: 75, text: '✨ Formatting response...' },
-        { threshold: 90, text: '🔍 Validating question...' },
-        { threshold: 100, text: '✅ Almost ready!' },
-    ];
-
-    const getCurrentStage = (currentProgress: number) => {
-        for (const s of stages) {
-            if (currentProgress < s.threshold) {
-                return s.text;
-            }
-        }
-        return stages[stages.length - 1].text;
-    };
+    const finalStepIndex = Math.max(steps.length - 1, 0);
+    const runningMaxIndex = Math.max(finalStepIndex - 1, 0);
 
     useEffect(() => {
         if (visible) {
-            // Show overlay and start progress animation
             setShowOverlay(true);
-            setProgress(0);
-            progressAnim.setValue(0);
+            setActiveStepIndex(0);
+            setEllipsis('');
 
-            // Simulate progress with natural curve
-            const intervalTime = (estimatedTime * 1000) / 100;
-            let currentProgress = 0;
+            const totalSteps = Math.max(runningMaxIndex + 1, 1);
+            const stepIntervalMs = Math.max(900, Math.floor((estimatedTime * 1000) / totalSteps));
 
-            progressIntervalRef.current = setInterval(() => {
-                let increment = 1;
-                if (currentProgress < 20) {
-                    increment = 2.5;
-                } else if (currentProgress < 60) {
-                    increment = 0.8;
-                } else if (currentProgress < 85) {
-                    increment = 0.5;
-                } else if (currentProgress < 95) {
-                    increment = 0.3;
-                } else {
-                    increment = 0.1;
-                }
+            stepIntervalRef.current = setInterval(() => {
+                setActiveStepIndex((prev) => Math.min(prev + 1, runningMaxIndex));
+            }, stepIntervalMs);
 
-                currentProgress = Math.min(95, currentProgress + increment);
-                setProgress(Math.round(currentProgress));
+            dotIntervalRef.current = setInterval(() => {
+                setEllipsis((prev) => (prev.length >= 3 ? '' : `${prev}.`));
+            }, 450);
 
-                Animated.timing(progressAnim, {
-                    toValue: currentProgress / 100,
-                    duration: 200,
-                    useNativeDriver: false,
-                }).start();
-            }, intervalTime);
-
-            // Pulse animation
             pulseLoopRef.current = Animated.loop(
                 Animated.sequence([
                     Animated.timing(pulseAnim, {
-                        toValue: 1.1,
+                        toValue: 1.06,
                         duration: 800,
                         useNativeDriver: true,
                     }),
@@ -104,98 +85,98 @@ export const LoadingProgress: React.FC<LoadingProgressProps> = ({
             );
             pulseLoopRef.current.start();
         } else if (!visible && showOverlay) {
-            // Visible just became false - complete to 100% then hide
-            if (progressIntervalRef.current) {
-                clearInterval(progressIntervalRef.current);
-                progressIntervalRef.current = null;
+            if (stepIntervalRef.current) {
+                clearInterval(stepIntervalRef.current);
+                stepIntervalRef.current = null;
+            }
+            if (dotIntervalRef.current) {
+                clearInterval(dotIntervalRef.current);
+                dotIntervalRef.current = null;
             }
 
-            // Animate to 100%
-            setProgress(100);
-            Animated.timing(progressAnim, {
-                toValue: 1,
-                duration: 300,
-                useNativeDriver: false,
-            }).start(() => {
-                // Brief delay to show 100% before hiding
-                setTimeout(() => {
-                    if (pulseLoopRef.current) {
-                        pulseLoopRef.current.stop();
-                        pulseLoopRef.current = null;
-                    }
-                    setShowOverlay(false);
-                    setProgress(0);
-                    onComplete?.();
-                }, 400);
-            });
+            setActiveStepIndex(finalStepIndex);
+            setEllipsis('');
+
+            setTimeout(() => {
+                if (pulseLoopRef.current) {
+                    pulseLoopRef.current.stop();
+                    pulseLoopRef.current = null;
+                }
+                setShowOverlay(false);
+                setActiveStepIndex(0);
+                onComplete?.();
+            }, 500);
         }
 
-        // Cleanup on unmount
         return () => {
-            if (progressIntervalRef.current) {
-                clearInterval(progressIntervalRef.current);
+            if (stepIntervalRef.current) {
+                clearInterval(stepIntervalRef.current);
+            }
+            if (dotIntervalRef.current) {
+                clearInterval(dotIntervalRef.current);
             }
             if (pulseLoopRef.current) {
                 pulseLoopRef.current.stop();
             }
         };
-    }, [visible]);
+    }, [visible, estimatedTime, runningMaxIndex, finalStepIndex, showOverlay]);
 
-    // Only show when showOverlay is true
     if (!showOverlay) {
         return null;
     }
 
-    const progressBarWidth = progressAnim.interpolate({
-        inputRange: [0, 1],
-        outputRange: ['0%', '100%'],
-    });
-
     return (
         <View style={styles.overlay}>
             <View style={styles.container}>
-                {/* Animated Brain/AI Icon */}
-                <View style={styles.iconContainer}>
-                    <Text style={styles.icon}>🤖</Text>
-                    <Animated.View
-                        style={[
-                            styles.iconGlow,
-                            { transform: [{ scale: pulseAnim }] }
-                        ]}
-                    />
+                <Animated.View style={[styles.iconContainer, { transform: [{ scale: pulseAnim }] }]}>
+                    <LinearGradient
+                        colors={['#7C4DFF', '#00E5FF']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.iconGradient}
+                    >
+                        <Text style={styles.icon}>🤖</Text>
+                    </LinearGradient>
+                </Animated.View>
+
+                <Text style={styles.titleText}>{stage} in real time</Text>
+                <Text style={styles.messageText}>
+                    {message}
+                    {ellipsis}
+                </Text>
+
+                <View style={styles.stepsContainer}>
+                    {steps.map((step, index) => {
+                        const isActive = index === activeStepIndex;
+                        const isComplete = index < activeStepIndex || (index === finalStepIndex && !visible);
+                        const isFinal = index === finalStepIndex;
+                        const stepLabel = isFinal ? step.label : `Step ${index + 1}: ${step.label}`;
+                        return (
+                            <View key={`${step.label}-${index}`} style={styles.stepRow}>
+                                <View
+                                    style={[
+                                        styles.stepIndicator,
+                                        isActive && styles.stepIndicatorActive,
+                                        isComplete && styles.stepIndicatorComplete,
+                                    ]}
+                                >
+                                    <Text style={styles.stepIndicatorText}>
+                                        {isComplete || isFinal ? '✓' : index + 1}
+                                    </Text>
+                                </View>
+                                <View style={[styles.stepTextWrapper, isActive && styles.stepTextWrapperActive]}>
+                                    <Text style={[styles.stepText, isActive && styles.stepTextActive]}>
+                                        {step.emoji ? `${step.emoji} ` : ''}
+                                        {stepLabel}
+                                    </Text>
+                                </View>
+                            </View>
+                        );
+                    })}
                 </View>
 
-                {/* Percentage Display */}
-                <Animated.Text
-                    style={[
-                        styles.percentage,
-                        { transform: [{ scale: pulseAnim }] }
-                    ]}
-                >
-                    {progress}%
-                </Animated.Text>
-
-                {/* Progress Bar */}
-                <View style={styles.progressBarContainer}>
-                    <View style={styles.progressBarBackground}>
-                        <Animated.View style={[styles.progressBarFill, { width: progressBarWidth }]}>
-                            <LinearGradient
-                                colors={['#7C4DFF', '#00E5FF']}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 0 }}
-                                style={styles.progressGradient}
-                            />
-                        </Animated.View>
-                    </View>
-                </View>
-
-                {/* Status Text */}
-                <Text style={styles.stageText}>{getCurrentStage(progress)}</Text>
-                <Text style={styles.messageText}>{message}</Text>
-
-                {/* Tip */}
                 <Text style={styles.tipText}>
-                    💡 Tip: AI generates unique questions for better learning!
+                    🎯 DeepSeek is reasoning through the next question for you
                 </Text>
             </View>
         </View>
@@ -205,87 +186,114 @@ export const LoadingProgress: React.FC<LoadingProgressProps> = ({
 const styles = StyleSheet.create({
     overlay: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(10, 14, 33, 0.95)',
+        backgroundColor: 'rgba(10, 14, 33, 0.96)',
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 1000,
     },
     container: {
-        width: width * 0.85,
-        backgroundColor: '#1D1E33',
-        borderRadius: 24,
-        padding: 32,
+        width: width * 0.88,
+        backgroundColor: '#101425',
+        borderRadius: 28,
+        padding: 28,
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: 'rgba(124, 77, 255, 0.3)',
+        borderColor: 'rgba(124, 77, 255, 0.35)',
         shadowColor: '#7C4DFF',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.3,
-        shadowRadius: 16,
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.35,
+        shadowRadius: 18,
         elevation: 10,
     },
     iconContainer: {
-        width: 80,
-        height: 80,
+        width: 88,
+        height: 88,
+        borderRadius: 44,
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 16,
+        marginBottom: 14,
+    },
+    iconGradient: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 44,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     icon: {
-        fontSize: 48,
-        zIndex: 1,
+        fontSize: 42,
     },
-    iconGlow: {
-        position: 'absolute',
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        backgroundColor: 'rgba(124, 77, 255, 0.2)',
-    },
-    percentage: {
-        fontSize: 48,
-        fontWeight: 'bold',
+    titleText: {
+        fontSize: 22,
+        fontWeight: '700',
         color: '#FFFFFF',
-        marginBottom: 16,
-        textShadowColor: '#7C4DFF',
-        textShadowOffset: { width: 0, height: 0 },
-        textShadowRadius: 20,
-    },
-    progressBarContainer: {
-        width: '100%',
-        marginBottom: 20,
-    },
-    progressBarBackground: {
-        width: '100%',
-        height: 12,
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-        borderRadius: 6,
-        overflow: 'hidden',
-    },
-    progressBarFill: {
-        height: '100%',
-        borderRadius: 6,
-        overflow: 'hidden',
-    },
-    progressGradient: {
-        flex: 1,
-    },
-    stageText: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#B47CFF',
-        marginBottom: 8,
+        marginBottom: 6,
         textAlign: 'center',
     },
     messageText: {
         fontSize: 14,
-        color: '#B0BEC5',
+        color: '#C7D2FE',
         textAlign: 'center',
-        marginBottom: 20,
+        marginBottom: 18,
+    },
+    stepsContainer: {
+        width: '100%',
+        marginBottom: 18,
+    },
+    stepRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    stepIndicator: {
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        backgroundColor: 'rgba(255, 255, 255, 0.08)',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.15)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
+    },
+    stepIndicatorActive: {
+        backgroundColor: '#7C4DFF',
+        borderColor: '#BFA5FF',
+    },
+    stepIndicatorComplete: {
+        backgroundColor: '#22C55E',
+        borderColor: '#86EFAC',
+    },
+    stepIndicatorText: {
+        color: '#FFFFFF',
+        fontSize: 12,
+        fontWeight: '700',
+    },
+    stepTextWrapper: {
+        flex: 1,
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        borderRadius: 12,
+        backgroundColor: 'rgba(255, 255, 255, 0.04)',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.08)',
+    },
+    stepTextWrapperActive: {
+        backgroundColor: 'rgba(124, 77, 255, 0.2)',
+        borderColor: 'rgba(124, 77, 255, 0.45)',
+    },
+    stepText: {
+        fontSize: 14,
+        color: '#E2E8F0',
+        fontWeight: '500',
+    },
+    stepTextActive: {
+        color: '#FFFFFF',
+        fontWeight: '700',
     },
     tipText: {
         fontSize: 12,
-        color: '#78909C',
+        color: '#94A3B8',
         textAlign: 'center',
         fontStyle: 'italic',
     },

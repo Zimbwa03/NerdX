@@ -21,6 +21,7 @@ import logging
 from typing import Dict, Optional, Tuple, List
 from datetime import datetime
 from config import Config
+from utils.credit_units import format_credits
 from database.external_db import (
     get_user_credits, deduct_credits, add_credits, 
     get_user_registration, get_user_stats
@@ -34,23 +35,26 @@ class SecureCreditSystem:
     def __init__(self):
         # EXACT CREDIT COSTS AS SPECIFIED BY USER
         self.SECURE_CREDIT_COSTS = {
-            # Combined Science - EXACT REQUIREMENTS
-            'combined_science_topical': 1,      # Topical Questions: 1 credit
-            'combined_science_exam': 2,         # Exam Questions: 2 credits
+            # Combined Science (O-Level)
+            'combined_science_topical': 3,      # 0.25 credit (rounded up)
+            'combined_science_topical_mcq': 3,
+            'combined_science_topical_structured': 5,  # 0.5 credit
+            'combined_science_exam': 5,         # 0.5 credit
+
+            # Mathematics (O-Level)
+            'math_topical': 5,                  # 0.5 credit
+            'math_exam': 5,                     # 0.5 credit
+            'math_graph_practice': 10,          # 1 credit per graph/question/video
+            'math_quiz': 5,
             
-            # Mathematics - EXACT REQUIREMENTS  
-            'math_topical': 1,                  # Topical Questions: 1 credit
-            'math_exam': 2,                     # Exam Questions: 2 credits
-            'math_graph_practice': 3,           # Graph Practice: 3 credits
-            
-            # English - EXACT REQUIREMENTS
-            'english_topical': 1,               # Topical Questions: 1 credit  
-            'english_comprehension': 3,         # Comprehension: 3 credits
-            'english_essay_writing': 3,         # Essay Writing: 3 credits
+            # English
+            'english_topical': 10,
+            'english_comprehension': 30,
+            'english_essay_writing': 30,
             
             # Audio Features
-            'audio_feature': 10,                # Audio Feature
-            'voice_chat': 10,                   # Voice Chat
+            'audio_feature': 10,
+            'voice_chat': 1,                    # 0.1 credit per 5 seconds (live)
         }
         
         self.transaction_log = []  # Audit trail
@@ -105,7 +109,7 @@ class SecureCreditSystem:
                     'current_credits': current_credits,
                     'required_credits': required_credits,
                     'shortage': required_credits - current_credits,
-                    'message': f'💰 You need {required_credits} credits but have {current_credits}. Please purchase more credits.'
+                    'message': f'💰 You need {format_credits(required_credits)} credits but have {format_credits(current_credits)}. Please purchase more credits.'
                 }
             
             # SECURITY LAYER 4: Action validation
@@ -124,7 +128,7 @@ class SecureCreditSystem:
                 'current_credits': current_credits,
                 'required_credits': required_credits,
                 'remaining_after': current_credits - required_credits,
-                'message': f'✅ Validation passed. Cost: {required_credits} credits',
+                'message': f'✅ Validation passed. Cost: {format_credits(required_credits)} credits',
                 'user_name': user_data.get('name', 'Student')
             }
             

@@ -14,6 +14,7 @@ from typing import Dict, Optional, List
 from utils.session_manager import session_manager
 from services.whatsapp_service import WhatsAppService
 from database.external_db import make_supabase_request, get_user_credits, deduct_credits
+from utils.credit_units import format_credits, units_to_credits
 from services.advanced_credit_service import advanced_credit_service
 
 logger = logging.getLogger(__name__)
@@ -1474,9 +1475,10 @@ Remember: The 6-stage SBP structure applies, but adapt the deliverables and evid
             conversation_history = project_data.get('conversation_history', [])
             is_new_session = len(conversation_history) == 0
             
-            # Check credit status but don't deduct yet (deduction happens in batches)
+            # Check credit status for per-response billing
+            credit_cost = advanced_credit_service.get_credit_cost('project_assistant_followup')
             credit_status = advanced_credit_service.get_user_credit_status(user_id)
-            if credit_status['credits'] <= 0:
+            if credit_status['credits'] < credit_cost:
                  project_title = project_data.get('project_title', 'your project')
                  insufficient_msg = f"""💰 *Need More Credits!* 💰
 
@@ -1484,7 +1486,7 @@ Remember: The 6-stage SBP structure applies, but adapt the deliverables and evid
 📝 Project: {project_title}
 
 💳 *Credit Status:*
-You have 0 credits. Credits are deducted (1 credit) for every 10 AI responses.
+Credits are deducted per AI response.
 
 🎯 *Project Assistant Benefits:*
 • Comprehensive research assistance
@@ -1522,18 +1524,10 @@ You have 0 credits. Credits are deducted (1 credit) for every 10 AI responses.
                 'timestamp': datetime.now().isoformat()
             })
             
-            # Increment message counter for billing
-            messages_since_charge = project_data.get('messages_since_charge', 0) + 1
+            # Deduct per AI response
             credits_deducted = 0
-            
-            if messages_since_charge >= 10:
-                # Deduct 1 credit
-                if deduct_credits(user_id, 1, 'project_assistant_batch', 'Project Assistant (10 messages)'):
-                    credits_deducted = 1
-                    messages_since_charge = 0
-            
-            # Update project data
-            project_data['messages_since_charge'] = messages_since_charge
+            if deduct_credits(user_id, credit_cost, 'project_assistant_followup', 'Project Assistant response'):
+                credits_deducted = credit_cost
             
             # Keep last 50 messages to avoid memory issues
             if len(conversation_history) > 50:
@@ -1556,11 +1550,10 @@ You have 0 credits. Credits are deducted (1 credit) for every 10 AI responses.
             current_credits = get_user_credits(user_id)
             
             if credits_deducted > 0:
-                clean_response += f"\n\n💳 *Credits:* {current_credits} (Deducted 1 credit for 10 messages)"
+                clean_response += f"\n\n💳 *Credits:* {format_credits(current_credits)} (Deducted {format_credits(credit_cost)} per response)"
             else:
-                remaining_msgs = 10 - messages_since_charge
                 # Optional: Show progress to next charge? Or keep it clean.
-                # clean_response += f"\n\n💳 *Credits:* {current_credits} ({remaining_msgs} msgs until next charge)"
+                # clean_response += f"\n\n💳 *Credits:* {format_credits(current_credits)}"
             
             # Send AI response to user
             self.whatsapp_service.send_message(user_id, clean_response)
@@ -2115,6 +2108,322 @@ Recent context (optional): {context}
             logger.error(f"Failed to save generated image: {e}", exc_info=True)
             return None
 
+    # -------------------- Elite Educational Image Generation (Vertex AI) --------------------
+    
+    ELITE_IMAGE_SYSTEM_PROMPT = """You are an elite educational visual design AI powered by Vertex AI.
+You specialize in creating world-class academic images for students.
+
+Your task is to enhance the user's image description into a professional image generation prompt.
+
+GOALS:
+- Professional, clean, modern design
+- Suitable for school project submission
+- Clear typography instructions (NO distorted or unreadable text)
+- Accurate subject representation
+- Visually impressive but academically appropriate
+
+DESIGN STANDARDS:
+- Balanced layout
+- Proper margins
+- High contrast text placement areas
+- Minimal clutter
+- Academic tone (not cartoonish unless requested)
+- Print-ready quality
+
+PERSONALIZATION:
+If provided by the user, include these subtly:
+- Student name
+- School name
+- Subject
+- Topic
+If not provided, OMIT them completely.
+
+CONTENT RULES:
+- Never hallucinate school names or student details
+- Never include watermarks
+- Never include logos unless explicitly requested
+- Never include offensive or unsafe imagery
+- No copyrighted characters
+
+OUTPUT:
+You must output ONLY the enhanced image generation prompt, nothing else.
+The prompt should include:
+- Lighting and composition details
+- Typography clarity instructions (or "leave blank space for text overlay")
+- Color harmony specifications
+- Educational tone markers
+- Aspect ratio recommendation based on use case
+
+Aspect ratio guidance:
+- Poster/Flyer: portrait (9:16)
+- Cover/Banner: landscape (16:9)
+- Diagram/Infographic: square (1:1) or landscape
+
+IMPORTANT: Generate a single, detailed prompt that will produce a high-quality educational image."""
+
+    def _enhance_image_prompt(self, user_prompt: str, project_context: Dict = None) -> Dict:
+        """
+        Use Gemini to enhance a weak user prompt into a professional image generation prompt.
+        Returns dict with 'enhanced_prompt' and 'aspect_ratio'.
+        """
+        try:
+            if not self._is_gemini_configured or not self.gemini_client:
+                # Fallback: basic enhancement without AI
+                return self._basic_prompt_enhancement(user_prompt, project_context)
+            
+            # Build context string
+            context_str = ""
+            if project_context:
+                title = project_context.get("title", "")
+                subject = project_context.get("subject", "")
+                student_name = project_context.get("student_name", "")
+                school = project_context.get("school", "")
+                if title:
+                    context_str += f"Project Title: {title}\n"
+                if subject:
+                    context_str += f"Subject: {subject}\n"
+                if student_name:
+                    context_str += f"Student: {student_name}\n"
+                if school:
+                    context_str += f"School: {school}\n"
+            
+            enhancement_request = f"""Enhance this image request into a professional image generation prompt:
+
+User Request: {user_prompt}
+
+{f'Project Context:\n{context_str}' if context_str else ''}
+
+Remember to:
+1. Add lighting, composition, and color harmony details
+2. Specify typography/text placement instructions
+3. Include educational tone markers
+4. Recommend the best aspect ratio
+
+Output ONLY the enhanced prompt and aspect ratio in this format:
+PROMPT: [your enhanced prompt here]
+ASPECT_RATIO: [9:16 or 16:9 or 1:1]"""
+
+            response = self.gemini_client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=[
+                    {"role": "user", "parts": [{"text": self.ELITE_IMAGE_SYSTEM_PROMPT}]},
+                    {"role": "user", "parts": [{"text": enhancement_request}]}
+                ]
+            )
+            
+            if response and response.text:
+                result_text = response.text.strip()
+                
+                # Parse the response
+                enhanced_prompt = result_text
+                aspect_ratio = "1:1"  # Default
+                
+                if "PROMPT:" in result_text:
+                    parts = result_text.split("ASPECT_RATIO:")
+                    enhanced_prompt = parts[0].replace("PROMPT:", "").strip()
+                    if len(parts) > 1:
+                        aspect_ratio = parts[1].strip().split()[0] if parts[1].strip() else "1:1"
+                
+                # Validate aspect ratio
+                valid_ratios = ["9:16", "16:9", "1:1"]
+                if aspect_ratio not in valid_ratios:
+                    aspect_ratio = self._detect_aspect_ratio(user_prompt)
+                
+                logger.info(f"Enhanced prompt created with aspect ratio: {aspect_ratio}")
+                return {
+                    "enhanced_prompt": enhanced_prompt,
+                    "aspect_ratio": aspect_ratio,
+                    "original_prompt": user_prompt
+                }
+            
+        except Exception as e:
+            logger.error(f"Error enhancing image prompt: {e}", exc_info=True)
+        
+        # Fallback to basic enhancement
+        return self._basic_prompt_enhancement(user_prompt, project_context)
+    
+    def _basic_prompt_enhancement(self, user_prompt: str, project_context: Dict = None) -> Dict:
+        """Basic prompt enhancement without AI."""
+        m = user_prompt.lower()
+        aspect_ratio = self._detect_aspect_ratio(user_prompt)
+        
+        # Build enhanced prompt
+        title = (project_context or {}).get("title", "Academic Project")
+        subject = (project_context or {}).get("subject", "General")
+        
+        enhanced = f"""Create a professional, clean, modern educational image.
+
+User request: {user_prompt}
+
+Style: Professional academic design, high contrast, balanced layout, educational tone.
+Topic: {title}
+Subject: {subject}
+
+Requirements:
+- Clean, uncluttered design with proper margins
+- High-quality, print-ready resolution
+- Leave clear blank areas for text overlay if needed
+- Use appropriate educational iconography
+- Zimbabwe-friendly visuals where relevant
+- No watermarks, no logos unless requested
+- No people/faces unless specifically requested
+
+Color scheme: Professional, high-contrast, suitable for printing."""
+
+        return {
+            "enhanced_prompt": enhanced.strip(),
+            "aspect_ratio": aspect_ratio,
+            "original_prompt": user_prompt
+        }
+    
+    def _detect_aspect_ratio(self, prompt: str) -> str:
+        """Detect appropriate aspect ratio from prompt keywords."""
+        m = prompt.lower()
+        if any(k in m for k in ["poster", "flyer", "portrait", "tall"]):
+            return "9:16"
+        elif any(k in m for k in ["banner", "cover", "landscape", "wide", "header"]):
+            return "16:9"
+        elif any(k in m for k in ["diagram", "chart", "graph", "icon", "square"]):
+            return "1:1"
+        else:
+            return "1:1"  # Default to square
+
+    def generate_educational_image(
+        self,
+        user_id: str,
+        project_id: int,
+        user_prompt: str,
+        explicit_mode: bool = False
+    ) -> Dict:
+        """
+        Generate a high-quality educational image using Vertex AI.
+        
+        This is the main entry point for explicit image generation mode.
+        Uses Gemini for prompt enhancement and Imagen for generation.
+        
+        Args:
+            user_id: User identifier
+            project_id: Project ID for context
+            user_prompt: User's image description
+            explicit_mode: If True, user explicitly requested image generation
+            
+        Returns:
+            Dict with 'success', 'image_url', 'response', 'credits_remaining'
+        """
+        try:
+            # 1. Get project context
+            project = self.get_project_details(user_id, project_id)
+            if not project:
+                return {"success": False, "error": "Project not found"}
+            
+            project_context = {
+                "title": project.get("title", ""),
+                "subject": project.get("subject", ""),
+                "student_name": project.get("student_name", ""),
+                "school": project.get("school", ""),
+            }
+            
+            # 2. Check credits for image generation
+            credit_result = advanced_credit_service.check_and_deduct_credits(
+                user_id, 'project_image_generation'
+            )
+            
+            if not credit_result.get('success'):
+                return {
+                    "success": False,
+                    "error": credit_result.get('message', 'Insufficient credits for image generation'),
+                    "credits_remaining": units_to_credits(get_user_credits(user_id))
+                }
+            
+            # 3. Enhance the prompt using Gemini
+            enhancement_result = self._enhance_image_prompt(user_prompt, project_context)
+            enhanced_prompt = enhancement_result.get("enhanced_prompt", user_prompt)
+            aspect_ratio = enhancement_result.get("aspect_ratio", "1:1")
+            
+            logger.info(f"Generating image with enhanced prompt, aspect ratio: {aspect_ratio}")
+            
+            # 4. Generate image using Vertex AI Imagen
+            if not vertex_service.is_available():
+                return {
+                    "success": False,
+                    "error": "Image generation service not available",
+                    "credits_remaining": units_to_credits(get_user_credits(user_id))
+                }
+            
+            img_result = vertex_service.generate_image(enhanced_prompt, size="1K")
+            
+            if not img_result or not img_result.get("success"):
+                error_msg = (img_result or {}).get("error", "Failed to generate image")
+                logger.error(f"Imagen generation failed: {error_msg}")
+                return {
+                    "success": False,
+                    "error": f"Image generation failed: {error_msg}",
+                    "credits_remaining": units_to_credits(get_user_credits(user_id))
+                }
+            
+            # 5. Save the generated image
+            image_url = self._save_generated_image(
+                user_id, project_id, img_result.get("image_bytes")
+            )
+            
+            if not image_url:
+                return {
+                    "success": False,
+                    "error": "Failed to save generated image",
+                    "credits_remaining": units_to_credits(get_user_credits(user_id))
+                }
+            
+            # 6. Build response message
+            response_text = (
+                "Your image has been generated successfully.\n\n"
+                "You can download it, regenerate with the same prompt, or edit the prompt for a different result.\n\n"
+                "If you need text on the image, consider using Canva or PowerPoint to add text overlays for the best results."
+            )
+            
+            # 7. Save to chat history
+            project_data = project.get('project_data', {})
+            conversation_history = project_data.get('conversation_history', [])
+            
+            # Add user message
+            conversation_history.append({
+                'role': 'user',
+                'content': f"[Image Generation] {user_prompt}",
+                'timestamp': datetime.now().isoformat()
+            })
+            
+            # Add assistant response
+            conversation_history.append({
+                'role': 'assistant',
+                'content': response_text,
+                'image_url': image_url,
+                'timestamp': datetime.now().isoformat()
+            })
+            
+            # Keep history manageable
+            if len(conversation_history) > 50:
+                conversation_history = conversation_history[-50:]
+            
+            project_data['conversation_history'] = conversation_history
+            project_data['last_updated'] = datetime.now().isoformat()
+            
+            self._save_project_to_database(user_id, project_data, project_id=project_id)
+            
+            return {
+                "success": True,
+                "response": response_text,
+                "image_url": image_url,
+                "aspect_ratio": aspect_ratio,
+                "credits_remaining": units_to_credits(get_user_credits(user_id))
+            }
+            
+        except Exception as e:
+            logger.error(f"Error in generate_educational_image: {e}", exc_info=True)
+            return {
+                "success": False,
+                "error": str(e),
+                "credits_remaining": units_to_credits(get_user_credits(user_id)) if user_id else 0
+            }
+
     def process_mobile_message(self, user_id: str, project_id: int, message: str) -> Dict:
         """Process a chat message from mobile app"""
         try:
@@ -2125,7 +2434,7 @@ Recent context (optional): {context}
 
             project_data = project.get('project_data', {})
             
-            # 2. Check credits (1 credit per message)
+            # 2. Check credits (per AI response)
             credit_result = advanced_credit_service.check_and_deduct_credits(
                 user_id, 'project_assistant_followup'
             )
@@ -2160,7 +2469,7 @@ Recent context (optional): {context}
                     chosen_prompt = self._build_fallback_image_prompt(project, project_data, message, blueprint)
 
                 # Extra credits for image generation (separate from chat credit)
-                image_credit_check = advanced_credit_service.check_and_deduct_credits(user_id, "image_solve")
+                image_credit_check = advanced_credit_service.check_and_deduct_credits(user_id, "project_image_generation")
                 if image_credit_check.get("success"):
                     img_result = vertex_service.generate_image(chosen_prompt, size="1K")
                     if img_result and img_result.get("success"):
@@ -2205,7 +2514,7 @@ Recent context (optional): {context}
             response_payload = {
                 'response': ai_response,
                 'project_id': project_id,
-                'credits_remaining': get_user_credits(user_id)
+                'credits_remaining': units_to_credits(get_user_credits(user_id))
             }
             if image_url:
                 response_payload['image_url'] = image_url
@@ -2622,7 +2931,7 @@ Analyze any provided attachments and respond helpfully."""
                     'success': True,
                     'response': result['text'],
                     'project_id': project_id,
-                    'credits_remaining': get_user_credits(user_id)
+                    'credits_remaining': units_to_credits(get_user_credits(user_id))
                 }
             
             # Fallback to regular processing if multimodal fails

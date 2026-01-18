@@ -1,13 +1,20 @@
 #!/usr/bin/env python3
 """
 NerdX Live - Real-Time Voice AI Tutor
-Optimized Architecture: Server as TRANSPARENT PIPE (Control Plane)
+Optimized Architecture: Server with AUDIO BUFFERING for Smooth Playback
 
 DESIGN PRINCIPLES:
-- Server handles security (API key) and format conversion ONLY
-- NO buffering, batching, or artificial delays
-- Audio flows through as fast as possible
-- All jitter handling happens on the client
+- Server handles security (API key), format conversion, and AUDIO BUFFERING
+- Audio chunks from Gemini are buffered and sent as ONE file per turn
+- This prevents choppy word-by-word playback on the client
+- Provides smooth, natural conversational audio experience
+
+AUDIO BUFFERING STRATEGY:
+- Receive small PCM chunks from Gemini Live API (~100-200ms each)
+- Buffer all chunks until turnComplete is received
+- Concatenate all PCM data into one continuous audio
+- Convert to WAV and send single file to client
+- Client plays one smooth audio instead of many choppy fragments
 """
 
 import os
@@ -446,20 +453,23 @@ app.add_middleware(
 
 class BillingManager:
     """
-    Handles real-time credit deduction for voice sessions.
-    Charges user every minute.
+    Handles real-time credit deduction for live sessions.
+    Charges user every 5 seconds (voice/video).
     """
-    def __init__(self, user_id: str):
+    def __init__(self, user_id: str, mode: str = "voice"):
         self.user_id = user_id
+        self.mode = mode
+        self.tick_seconds = 5
         # Dynamic cost - getting it in the loop or init? 
         # Standardize on init but refreshes could be better. For now simple.
         # Avoid circular import at module level by importing inside methods or using a safe import
         try:
             from services.advanced_credit_service import advanced_credit_service
-            self.cost_per_minute = advanced_credit_service.get_credit_cost('voice_chat', 'medium') # Default to medium/standard
+            base_cost = advanced_credit_service.get_credit_cost('voice_chat')
+            self.cost_per_tick = base_cost if mode == "voice" else base_cost * 2
         except Exception as e:
             logger.warning(f"Using fallback cost due to import error: {e}")
-            self.cost_per_minute = 3  # Fallback
+            self.cost_per_tick = 1 if mode == "voice" else 2  # Fallback
             
         self.is_active = True
         
@@ -469,20 +479,21 @@ class BillingManager:
             # Refresh cost in case it changed
             try:
                 from services.advanced_credit_service import advanced_credit_service
-                self.cost_per_minute = advanced_credit_service.get_credit_cost('voice_chat', 'medium')
-            except:
+                base_cost = advanced_credit_service.get_credit_cost('voice_chat')
+                self.cost_per_tick = base_cost if self.mode == "voice" else base_cost * 2
+            except Exception:
                 pass
 
             # Run blocking DB call in thread
             current_credits = await asyncio.to_thread(get_user_credits, self.user_id)
-            logger.info(f"💰 Checking balance for {self.user_id}: {current_credits} (Required: {self.cost_per_minute})")
-            return current_credits >= self.cost_per_minute
+            logger.info(f"💰 Checking balance for {self.user_id}: {current_credits} (Required: {self.cost_per_tick})")
+            return current_credits >= self.cost_per_tick
         except Exception as e:
             logger.error(f"❌ Balance check failed: {e}")
             return False  # Fail safe
 
-    async def deduct_for_minute(self) -> bool:
-        """Deduct credits for the next minute of usage"""
+    async def deduct_for_tick(self) -> bool:
+        """Deduct credits for the next 5-second tick"""
         try:
             # Use atomic deduction via external_db directly (as advanced_credit_service wrappers might be sync)
             # But the plan urged to use advanced_credit_service or external_db. 
@@ -491,12 +502,12 @@ class BillingManager:
             success = await asyncio.to_thread(
                 deduct_credits, 
                 self.user_id, 
-                self.cost_per_minute, 
+                self.cost_per_tick, 
                 'voice_chat', 
-                'Voice Chat (1 min)'
+                f"Live {self.mode.title()} ({self.tick_seconds}s)"
             )
             if success:
-                logger.info(f"💸 Deducted {self.cost_per_minute} credits from {self.user_id} for voice chat")
+                logger.info(f"💸 Deducted {self.cost_per_tick} units from {self.user_id} for {self.mode} live")
             else:
                 logger.warning(f"⚠️ Failed to deduct credits for {self.user_id}")
             return success
@@ -505,25 +516,25 @@ class BillingManager:
             return False
 
 async def run_billing_scheduler(billing: BillingManager, websocket: WebSocket):
-    """Run periodic billing every 60 seconds"""
+    """Run periodic billing every 5 seconds"""
     try:
         logger.info(f"⏱️ Starting billing scheduler for {billing.user_id}")
         while True:
-            # Charge immediately for the upcoming minute (pre-paid for the minute)
-            if not await billing.deduct_for_minute():
+            # Charge immediately for the upcoming tick (pre-paid)
+            if not await billing.deduct_for_tick():
                 logger.warning(f"🛑 Insufficient credits for {billing.user_id}, closing session.")
                 try:
                     await websocket.send_json({
                         "type": "error", 
-                        "message": "Session ended: Insufficient credits to continue (3 credits/min required)"
+                        "message": "Session ended: Insufficient credits to continue."
                     })
                     await websocket.close()
                 except:
                     pass
                 break
             
-            # Wait 60 seconds before next charge
-            await asyncio.sleep(60)
+            # Wait 5 seconds before next charge
+            await asyncio.sleep(billing.tick_seconds)
             
     except asyncio.CancelledError:
         logger.info(f"Billing scheduler cancelled for {billing.user_id}")
@@ -533,9 +544,15 @@ async def run_billing_scheduler(billing: BillingManager, websocket: WebSocket):
 
 class TransparentGeminiPipe:
     """
-    TRANSPARENT PIPE: Forwards messages with zero buffering.
+    AUDIO BUFFERING PIPE: Buffers audio chunks for smooth playback.
     Supports both Vertex AI (preferred) and regular Gemini API.
     Includes session resumption and goAway handling per Gemini Live API docs.
+    
+    AUDIO BUFFERING STRATEGY:
+    - Collect PCM chunks during a model turn
+    - When turnComplete is received, concatenate all PCM data
+    - Convert to a single WAV file and send to client
+    - This prevents choppy word-by-word playback
     """
     
     def __init__(self, client_ws: WebSocket, session_handle: str = None):
@@ -547,6 +564,9 @@ class TransparentGeminiPipe:
         # Session resumption support
         self.session_handle = session_handle  # For resuming previous sessions
         self.session_id = None  # Returned by server during session
+        # Audio buffering for smooth playback
+        self.audio_buffer: list[bytes] = []  # Buffer of raw PCM bytes
+        self.buffer_lock = asyncio.Lock()  # Thread-safe buffer access
     
     async def _get_vertex_ai_token(self) -> Optional[str]:
         """Get OAuth2 access token for Vertex AI using service account."""
@@ -890,8 +910,12 @@ class TransparentGeminiPipe:
     
     async def receive_and_forward(self):
         """
-        Receive from Gemini and forward to client IMMEDIATELY.
-        No batching, no buffering - pure pipe.
+        Receive from Gemini and forward to client with AUDIO BUFFERING.
+        
+        BUFFERING STRATEGY:
+        - Collect all PCM audio chunks during a model turn
+        - When turnComplete is received, concatenate all chunks into one audio
+        - Send single smooth audio to client (no choppy word-by-word)
         """
         if not self.gemini_ws:
             logger.warning("⚠️ Cannot receive: Gemini WebSocket not connected")
@@ -908,10 +932,9 @@ class TransparentGeminiPipe:
                 if "serverContent" in data:
                     content = data["serverContent"]
                     
-                    # Forward audio immediately
+                    # BUFFER audio chunks instead of forwarding immediately
                     if "modelTurn" in content:
                         model_turn = content["modelTurn"]
-                        logger.info("🎤 Model turn received - processing audio response")
                         if "parts" in model_turn:
                             for part in model_turn["parts"]:
                                 if "inlineData" in part:
@@ -921,27 +944,24 @@ class TransparentGeminiPipe:
                                     if mime_type.startswith("audio/") and "pcm" in mime_type.lower():
                                         audio_b64 = inline_data.get("data", "")
                                         if audio_b64:
-                                            logger.info(f"🔄 Converting PCM to WAV: {len(audio_b64)} chars")
-                                            # Convert PCM to WAV (boundary conversion)
+                                            # Buffer PCM bytes (don't convert yet)
                                             pcm_bytes = base64.b64decode(audio_b64)
-                                            wav_bytes = convert_pcm_to_wav(pcm_bytes, sample_rate=24000)
-                                            wav_b64 = base64.b64encode(wav_bytes).decode('utf-8')
-                                            
-                                            # Forward IMMEDIATELY - no delay
-                                            await self.client_ws.send_json({
-                                                "type": "audio",
-                                                "data": wav_b64
-                                            })
-                                            logger.info(f"📢 Audio forwarded to client: {len(wav_b64)} chars WAV base64")
+                                            async with self.buffer_lock:
+                                                self.audio_buffer.append(pcm_bytes)
+                                            logger.debug(f"📦 Buffered audio chunk: {len(pcm_bytes)} bytes (total chunks: {len(self.audio_buffer)})")
                     
-                    # Forward control messages immediately
+                    # When turn is complete, send ALL buffered audio as ONE file
                     if content.get("turnComplete"):
+                        await self._flush_audio_buffer()
                         await self.client_ws.send_json({"type": "turnComplete"})
-                        logger.info("✅ Turn complete - sent to client")
+                        logger.info("✅ Turn complete - buffered audio sent to client")
                         
                     if content.get("interrupted"):
+                        # Clear buffer on interruption
+                        async with self.buffer_lock:
+                            self.audio_buffer.clear()
                         await self.client_ws.send_json({"type": "interrupted"})
-                        logger.info("🎤 Interrupted - sent to client")
+                        logger.info("🎤 Interrupted - buffer cleared, sent to client")
                 
                 # Handle goAway notification (session about to end)
                 if "goAway" in data:
@@ -975,6 +995,37 @@ class TransparentGeminiPipe:
         except Exception as e:
             if self.is_active:
                 logger.error(f"❌ Receive error: {e}", exc_info=True)
+    
+    async def _flush_audio_buffer(self):
+        """
+        Flush the audio buffer - concatenate all PCM chunks and send as one WAV.
+        This provides smooth, continuous audio playback instead of choppy chunks.
+        """
+        async with self.buffer_lock:
+            if not self.audio_buffer:
+                logger.debug("📭 No audio in buffer to flush")
+                return
+            
+            # Concatenate all PCM bytes
+            total_chunks = len(self.audio_buffer)
+            combined_pcm = b''.join(self.audio_buffer)
+            self.audio_buffer.clear()
+        
+        if len(combined_pcm) == 0:
+            return
+            
+        logger.info(f"🔊 Flushing audio buffer: {total_chunks} chunks, {len(combined_pcm)} bytes total PCM")
+        
+        # Convert combined PCM to single WAV
+        wav_bytes = convert_pcm_to_wav(combined_pcm, sample_rate=24000)
+        wav_b64 = base64.b64encode(wav_bytes).decode('utf-8')
+        
+        # Send single smooth audio to client
+        await self.client_ws.send_json({
+            "type": "audio",
+            "data": wav_b64
+        })
+        logger.info(f"📢 Sent combined audio to client: {len(wav_b64)} chars WAV base64 ({len(combined_pcm) / 24000 / 2:.1f}s audio)")
     
     async def close(self):
         """Close session"""
@@ -1013,10 +1064,12 @@ async def health():
 
 class TransparentGeminiVideoPipe:
     """
-    TRANSPARENT PIPE for Video + Audio.
+    AUDIO BUFFERING PIPE for Video + Audio.
     Handles both video frames and audio - tutor can SEE what student is working on.
     Supports both Vertex AI (preferred) and regular Gemini API.
     Includes session resumption and context window compression per Gemini Live API docs.
+    
+    AUDIO BUFFERING: Same strategy as audio-only pipe for smooth playback.
     """
     
     def __init__(self, client_ws: WebSocket, session_handle: str = None):
@@ -1028,6 +1081,9 @@ class TransparentGeminiVideoPipe:
         # Session resumption support
         self.session_handle = session_handle
         self.session_id = None
+        # Audio buffering for smooth playback
+        self.audio_buffer: list[bytes] = []
+        self.buffer_lock = asyncio.Lock()
         
     async def connect_to_gemini(self) -> bool:
         """Connect to Gemini Live API with video support.
@@ -1297,7 +1353,7 @@ This is REAL-TIME video - you can see them writing, erasing, and working. Use th
             logger.error(f"Audio forward error: {e}")
     
     async def receive_and_forward(self):
-        """Receive from Gemini and forward to client"""
+        """Receive from Gemini and forward to client with AUDIO BUFFERING."""
         if not self.gemini_ws:
             return
             
@@ -1320,26 +1376,52 @@ This is REAL-TIME video - you can see them writing, erasing, and working. Use th
                                     if mime_type.startswith("audio/") and "pcm" in mime_type.lower():
                                         audio_b64 = inline_data.get("data", "")
                                         if audio_b64:
+                                            # Buffer PCM bytes (don't convert yet)
                                             pcm_bytes = base64.b64decode(audio_b64)
-                                            wav_bytes = convert_pcm_to_wav(pcm_bytes, sample_rate=24000)
-                                            wav_b64 = base64.b64encode(wav_bytes).decode('utf-8')
-                                            
-                                            await self.client_ws.send_json({
-                                                "type": "audio",
-                                                "data": wav_b64
-                                            })
+                                            async with self.buffer_lock:
+                                                self.audio_buffer.append(pcm_bytes)
+                                            logger.debug(f"📦 Video: Buffered audio chunk: {len(pcm_bytes)} bytes")
                     
                     if content.get("turnComplete"):
+                        # Flush buffered audio as one smooth file
+                        await self._flush_audio_buffer()
                         await self.client_ws.send_json({"type": "turnComplete"})
-                        logger.info("✅ Turn complete")
+                        logger.info("✅ Video: Turn complete")
                         
                     if content.get("interrupted"):
+                        # Clear buffer on interruption
+                        async with self.buffer_lock:
+                            self.audio_buffer.clear()
                         await self.client_ws.send_json({"type": "interrupted"})
-                        logger.info("🎤 Interrupted")
+                        logger.info("🎤 Video: Interrupted")
                         
         except Exception as e:
             if self.is_active:
                 logger.error(f"Receive error: {e}")
+    
+    async def _flush_audio_buffer(self):
+        """Flush the audio buffer - concatenate all PCM chunks and send as one WAV."""
+        async with self.buffer_lock:
+            if not self.audio_buffer:
+                return
+            
+            total_chunks = len(self.audio_buffer)
+            combined_pcm = b''.join(self.audio_buffer)
+            self.audio_buffer.clear()
+        
+        if len(combined_pcm) == 0:
+            return
+            
+        logger.info(f"🔊 Video: Flushing audio buffer: {total_chunks} chunks, {len(combined_pcm)} bytes")
+        
+        wav_bytes = convert_pcm_to_wav(combined_pcm, sample_rate=24000)
+        wav_b64 = base64.b64encode(wav_bytes).decode('utf-8')
+        
+        await self.client_ws.send_json({
+            "type": "audio",
+            "data": wav_b64
+        })
+        logger.info(f"📢 Video: Sent combined audio: {len(combined_pcm) / 24000 / 2:.1f}s")
     
     async def close(self):
         """Close session"""
@@ -1361,11 +1443,11 @@ async def websocket_nerdx_live_video(websocket: WebSocket, user_id: str = "guest
     logger.info(f"🎥 Video client connected: {user_id}")
     
     # --- Billing Check ---
-    billing = BillingManager(user_id)
+    billing = BillingManager(user_id, mode="video")
     if not await billing.verify_balance():
         await websocket.send_json({
             "type": "error", 
-            "message": "Insufficient credits to start video session (3 credits/min)"
+            "message": "Insufficient credits to start video session"
         })
         await websocket.close()
         return
@@ -1433,11 +1515,11 @@ async def websocket_nerdx_live(websocket: WebSocket, user_id: str = "guest_voice
     logger.info(f"🎧 Client connected: {user_id}")
     
     # --- Billing Check ---
-    billing = BillingManager(user_id)
+    billing = BillingManager(user_id, mode="voice")
     if not await billing.verify_balance():
         await websocket.send_json({
             "type": "error", 
-            "message": "Insufficient credits to start voice session (3 credits/min)"
+            "message": "Insufficient credits to start voice session"
         })
         await websocket.close()
         return

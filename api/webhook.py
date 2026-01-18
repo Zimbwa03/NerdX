@@ -31,6 +31,7 @@ from utils.credit_system import credit_system
 from utils.validators import validators
 from constants import TOPICS, MESSAGE_TEMPLATES, DIFFICULTY_LEVELS
 from database.external_db import get_user_registration, get_user_stats, get_user_credits, deduct_credits
+from utils.credit_units import format_credits
 from services.advanced_credit_service import advanced_credit_service
 from services.analytics_tracker import analytics_tracker
 from config import Config
@@ -1275,9 +1276,9 @@ def handle_image_message(user_id: str, image_data: dict):
 📸 *Image Math Solver*
 
 💳 *Credit Status:*
-• Current Credits: {current_credits}
-• Required Credits: {required_credits}
-• Need: {shortage} more credits
+• Current Credits: {format_credits(current_credits)}
+• Required Credits: {format_credits(required_credits)}
+• Need: {format_credits(shortage)} more credits
 
 💡 Upload photos of math problems and get instant solutions!"""
 
@@ -2327,7 +2328,7 @@ def show_user_stats(user_id: str):
 
         # Credit Status
         message += f"💰 *Credit Balance*\n"
-        message += f"💳 Current Credits: {current_credits}\n"
+        message += f"💳 Current Credits: {format_credits(current_credits)}\n"
         message += f"🔥 Active Packages: {len(credit_status.get('active_packages', []))}\n\n"
 
         # Learning Progress  
@@ -2424,11 +2425,12 @@ def send_help_message(user_id: str):
 📊 Track your progress
 🎯 Earn points and maintain streaks
 
-*Credit Costs:*
-• Easy questions: 5-10 credits
-• Medium questions: 10-20 credits
-• Hard questions: 15-50 credits
-• Image solving: 15 credits
+*Credit Costs (examples):*
+• Exams/Topical (Math/Science): 0.5 credit per question
+• Science MCQ: 0.25 credit per question
+• Graph generation: 1 credit each
+• Teacher Mode: 0.1 credit per AI response
+• Voice Live: 0.1 credit per 5 seconds
 
 Need more help? Contact support!
 """
@@ -2447,9 +2449,9 @@ def handle_graph_request(user_id: str, function_text: str):
 📊 *Math Graph Practice*
 
 💳 *Credit Status:*
-• Current Credits: {current_credits}
-• Required Credits: {required_credits}
-• Need: {required_credits - current_credits} more credits
+• Current Credits: {format_credits(current_credits)}
+• Required Credits: {format_credits(required_credits)}
+• Need: {format_credits(required_credits - current_credits)} more credits
 
 📈 Visualize mathematical functions with interactive graphs!"""
 
@@ -2466,7 +2468,7 @@ def handle_graph_request(user_id: str, function_text: str):
 
         if result and result.get('success'):
             # Deduct credits
-            credit_system.deduct_credits(user_id, "graph")
+            deduct_credits(user_id, required_credits, "math_graph_practice", "Math graph generation")
 
             # Send graph image
             image_path = result.get('image_path', '')
@@ -2947,7 +2949,7 @@ def handle_combined_exam(user_id: str):
         # Check credits using advanced credit service
         user_credit_status = advanced_credit_service.get_user_credit_status(user_id)
         current_credits = user_credit_status['credits']
-        required_credits = advanced_credit_service.get_credit_cost('combined_science_exam')  # 2 credits per config
+        required_credits = advanced_credit_service.get_credit_cost('combined_science_exam')
 
         if current_credits < required_credits:
             # Enhanced gamified insufficient credits message
@@ -2957,9 +2959,9 @@ def handle_combined_exam(user_id: str):
 👤 Student: {user_name}
 
 💳 *Credit Status:*
-• Current Credits: {current_credits}
-• Required Credits: {required_credits}
-• Need: {required_credits - current_credits} more credits
+• Current Credits: {format_credits(current_credits)}
+• Required Credits: {format_credits(required_credits)}
+• Need: {format_credits(required_credits - current_credits)} more credits
 
 🎮 *Exam Mode Benefits:*
 • Biology, Chemistry & Physics questions
@@ -2983,8 +2985,8 @@ def handle_combined_exam(user_id: str):
         text = f"""🧪 *Combined Science Exam Mode* 🧪
 
 👤 Welcome {user_name}!
-💰 Credits Available: {current_credits}
-💳 Cost Per Question: {required_credits} credits
+💰 Credits Available: {format_credits(current_credits)}
+💳 Cost Per Question: {format_credits(required_credits)} credits
 
 🎯 *Exam Features:*
 • 🧬 Biology, Chemistry & Physics
@@ -3035,8 +3037,8 @@ def load_next_combined_question(user_id: str):
 
         # Check and deduct credits for combined exam question
         credit_result = advanced_credit_service.check_and_deduct_credits(
-            user_id, 
-            'combined_science_exam',  # 2 credits as per config
+            user_id,
+            'combined_science_exam',
             None
         )
 
@@ -3052,9 +3054,9 @@ def load_next_combined_question(user_id: str):
 🧪 *Combined Science Exam Question*
 
 💳 *Credit Status:*
-• Current Credits: {current_credits}
-• Required Credits: {required_credits}
-• Need: {shortage} more credits
+• Current Credits: {format_credits(current_credits)}
+• Required Credits: {format_credits(required_credits)}
+• Need: {format_credits(shortage)} more credits
 
 🎮 *Exam Mode Benefits:*
 • Biology, Chemistry & Physics questions
@@ -3302,9 +3304,17 @@ def generate_and_send_question(chat_id: str, subject: str, topic: str, difficult
 
         credits = user_stats.get('credits', 0)
 
-        # Get credit cost based on difficulty (standardized to 1 credit)
-        credit_costs = {'easy': 1, 'medium': 1, 'difficult': 1}
-        credit_cost = credit_costs.get(difficulty, 1)
+        # Get credit cost based on subject/type
+        if subject in ["Biology", "Chemistry", "Physics"]:
+            action_key = 'combined_science_topical_structured' if (question_type or '').lower() == 'structured' else 'combined_science_topical_mcq'
+        elif subject == "Mathematics":
+            action_key = 'math_topical'
+        elif subject == "English":
+            action_key = 'english_topical'
+        else:
+            action_key = 'combined_science_topical'
+
+        credit_cost = advanced_credit_service.get_credit_cost(action_key)
 
         # Check if user has enough credits
         if credits < credit_cost:
@@ -3314,9 +3324,9 @@ def generate_and_send_question(chat_id: str, subject: str, topic: str, difficult
 📚 Topic: {topic}
 
 💳 *Credit Status:*
-• Current Credits: {credits}
-• Required Credits: {credit_cost}
-• Need: {credit_cost - credits} more credits
+• Current Credits: {format_credits(credits)}
+• Required Credits: {format_credits(credit_cost)}
+• Need: {format_credits(credit_cost - credits)} more credits
 
 🎯 Master {subject} with personalized questions!"""
 
@@ -3394,7 +3404,7 @@ def send_question_to_user(chat_id: str, question_data: Dict, subject: str, topic
             message = f"🧪 *{subject} - {topic}*\n"
             message += f"👤 {user_name} | 🎯 {difficulty.title()} Level | 💎 {question_data.get('points', 10)} points\n"
             if credits_used > 0:
-                message += f"💳 *Credits Used:* {credits_used} | 💰 *Balance:* {new_balance}\n\n"
+                message += f"💳 *Credits Used:* {format_credits(credits_used)} | 💰 *Balance:* {format_credits(new_balance)}\n\n"
             else:
                 message += "\n"
             message += f"❓ *Question:*\n{question_data['question']}\n\n"
@@ -3534,7 +3544,7 @@ def _send_structured_science_question_to_user(chat_id: str, question_data: Dict,
 
         message = f"🧪 *{subject} - {topic}*\n"
         message += f"👤 {user_name} | 🎯 {difficulty.title()} | 📝 *Structured* | 💯 {total_marks} marks\n"
-        message += f"💳 *Credits Used:* {credits_used} | 💰 *Balance:* {new_balance}\n\n"
+        message += f"💳 *Credits Used:* {format_credits(credits_used)} | 💰 *Balance:* {format_credits(new_balance)}\n\n"
 
         if stem:
             message += f"*Stem/Instructions:*\n{stem}\n\n"
@@ -3816,7 +3826,7 @@ def handle_combined_science_question(user_id: str, subject: str, topic: str, dif
         from database.external_db import get_user_credits, deduct_credits
         
         current_credits = get_user_credits(user_id)
-        required_credits = 1  # Topical questions cost 1 credit
+        required_credits = advanced_credit_service.get_credit_cost('combined_science_topical_mcq')
         
         # Check if user has enough credits
         if current_credits < required_credits:
@@ -3826,9 +3836,9 @@ def handle_combined_science_question(user_id: str, subject: str, topic: str, dif
 🎯 Action: Topical Question
 
 💳 *Credit Status:*
-• Current Credits: {current_credits}
-• Required Credits: {required_credits}
-• Need: {required_credits - current_credits} more credits
+• Current Credits: {format_credits(current_credits)}
+• Required Credits: {format_credits(required_credits)}
+• Need: {format_credits(required_credits - current_credits)} more credits
 
 🎮 *Combined Science Benefits:*
 • Biology, Chemistry & Physics topics
@@ -3887,7 +3897,7 @@ def handle_combined_science_question(user_id: str, subject: str, topic: str, dif
         add_question_to_history(user_id, question_hash, topic, difficulty)
 
         # Deduct credits after successful question generation
-        deduct_success = deduct_credits(user_id, required_credits, 'combined_science_topical', f'{subject} topical question - {topic}')
+        deduct_success = deduct_credits(user_id, required_credits, 'combined_science_topical_mcq', f'{subject} topical question - {topic}')
         
         if not deduct_success:
             whatsapp_service.send_message(user_id, "❌ Error processing credits. Please try again.")

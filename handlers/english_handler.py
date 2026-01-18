@@ -5,6 +5,7 @@ import time
 import re
 from typing import Dict, List, Optional
 from database.external_db import get_user_registration, get_user_credits, get_user_stats, update_user_stats
+from utils.credit_units import format_credits
 from database.session_db import save_user_session, get_user_session, clear_user_session
 from services.whatsapp_service import WhatsAppService
 from services.english_service import EnglishService
@@ -78,7 +79,7 @@ class EnglishHandler:
 ✍️ *{user_name}, I'm your personal O-Level English tutor!*
 
 📊 **Your English Journey:**
-💳 Credits: **{current_credits}**
+💳 Credits: **{format_credits(current_credits)}**
 ⭐ Level: **{current_level}** (XP: {current_xp})
 🔥 Streak: **{current_streak} days**
 🎯 Next Level: **{xp_for_next_level} XP needed**
@@ -139,7 +140,7 @@ I'm here to help you master English, {user_name}, with:
             message = f"""📚 ZIMSEC Topical Questions
 
 👤 Student: {user_name}
-💰 Your Credits: {credits}
+💰 Your Credits: {format_credits(credits)}
 
 📝 Choose your topic:"""
 
@@ -267,9 +268,9 @@ Ready to boost your reading skills? 🚀"""
 📖 **English Comprehension Practice**
 
 💳 **Credit Status:**
-• Current Credits: {current_credits}
-• Required Credits: {required_credits}
-• Need: {shortage} more credits
+• Current Credits: {format_credits(current_credits)}
+• Required Credits: {format_credits(required_credits)}
+• Need: {format_credits(shortage)} more credits
 
 💎 **Get More Credits:**"""
 
@@ -423,7 +424,7 @@ Ready to boost your reading skills? 🚀"""
             stats_message = f"""🎉 Comprehension Complete! 🎉
 
 👤 {user_name}'s English Progress:
-💰 Credits: {final_credits}
+💰 Credits: {format_credits(final_credits)}
 ✨ XP Earned: +{points_earned} XP
 ⭐ Total XP: {final_xp}
 🔥 Streak: {final_streak} days
@@ -1258,9 +1259,9 @@ Type your essay below:"""
 ✍️ **English Essay Writing & Marking**
 
 💳 **Credit Status:**
-• Current Credits: {current_credits}
-• Required Credits: {required_credits}
-• Need: {shortage} more credits
+• Current Credits: {format_credits(current_credits)}
+• Required Credits: {format_credits(required_credits)}
+• Need: {format_credits(shortage)} more credits
 
 💎 **Get More Credits:**"""
 
@@ -1356,7 +1357,7 @@ Type your essay below:"""
 • Grade: {marking_result['grade']}
 
 📚 Your English Progress:
-• Credits: {final_credits}
+• Credits: {format_credits(final_credits)}
 • XP Earned: +{points_earned} XP
 • Total XP: {final_xp}
 • Streak: {final_streak} days
@@ -1390,7 +1391,7 @@ Type your essay below:"""
 • Grade: {marking_result['grade']}
 
 📚 Your English Progress:
-• Credits: {final_credits}
+• Credits: {format_credits(final_credits)}
 • XP Earned: +{points_earned} XP
 • Total XP: {final_xp}
 • Streak: {final_streak} days
@@ -2458,7 +2459,7 @@ IMPORTANT:
             stats_message = f"""🎮 Your English Progress Dashboard 🎮
 
 👤 {user_name}'s English Journey:
-💰 Credits: {current_credits} (Used: 1 credit)
+💰 Credits: {format_credits(current_credits)} (Used: 1 credit)
 ✨ XP Earned: +{points_earned} XP
 ⭐ Total XP: {new_xp}
 🔥 Streak: {new_streak} days
@@ -2569,7 +2570,7 @@ IMPORTANT:
             stats_message = f"""🎮 Your English Progress Dashboard 🎮
 
 👤 {user_name}'s Vocabulary Journey:
-💰 Credits: {current_credits} (Used: 1 credit)
+💰 Credits: {format_credits(current_credits)} (Used: 1 credit)
 ✨ XP Earned: +{points_earned} XP
 ⭐ Total XP: {new_xp}
 🔥 Streak: {new_streak} days
@@ -2875,7 +2876,7 @@ _(Send your complete essay as your next message)_"""
         message = f"""💰 Insufficient Credits
 
 👤 Student: {user_name}
-💰 Current Credits: {credits}
+💰 Current Credits: {format_credits(credits)}
 🎯 Required: {required} credits
 
 🔄 Please purchase more credits to continue learning English."""

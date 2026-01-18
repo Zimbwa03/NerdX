@@ -70,158 +70,303 @@ def create_credit_costs_table():
                 logger.info(f"Credit costs table already has {existing_count} entries")
                 return True
             
-            # Insert default credit costs from config
+            # Insert default credit costs (units)
             default_costs = [
-                # Combined Science
+                # Combined Science (O-Level)
                 {
                     'action_key': 'combined_science_topical',
-                    'cost': 1,
+                    'cost': 3,
                     'category': 'Combined Science',
-                    'component': 'Topical Questions',
-                    'description': 'Credit cost for Combined Science topical questions'
+                    'component': 'Topical Questions (MCQ default)',
+                    'description': '0.25 credit per MCQ (rounded up)'
+                },
+                {
+                    'action_key': 'combined_science_topical_mcq',
+                    'cost': 3,
+                    'category': 'Combined Science',
+                    'component': 'Topical Questions (MCQ)',
+                    'description': '0.25 credit per MCQ (rounded up)'
+                },
+                {
+                    'action_key': 'combined_science_topical_structured',
+                    'cost': 5,
+                    'category': 'Combined Science',
+                    'component': 'Topical Questions (Structured)',
+                    'description': '0.5 credit per structured question'
                 },
                 {
                     'action_key': 'combined_science_exam',
-                    'cost': 3,
+                    'cost': 5,
                     'category': 'Combined Science',
-                    'component': 'Exam Practice',
-                    'description': 'Credit cost for Combined Science exam practice'
+                    'component': 'Exam Questions',
+                    'description': '0.5 credit per exam question'
                 },
-                
-                # Mathematics
+
+                # Mathematics (O-Level)
                 {
                     'action_key': 'math_topical',
-                    'cost': 1,
+                    'cost': 5,
                     'category': 'Mathematics',
                     'component': 'Topical Questions',
-                    'description': 'Credit cost for Mathematics topical questions'
+                    'description': '0.5 credit per question'
                 },
                 {
                     'action_key': 'math_exam',
-                    'cost': 3,
+                    'cost': 5,
                     'category': 'Mathematics',
-                    'component': 'Exam Practice',
-                    'description': 'Credit cost for Mathematics exam practice'
+                    'component': 'Exam Questions',
+                    'description': '0.5 credit per question'
+                },
+                {
+                    'action_key': 'math_quiz',
+                    'cost': 5,
+                    'category': 'Mathematics',
+                    'component': 'Quiz Questions (Streaming)',
+                    'description': '0.5 credit per question'
                 },
                 {
                     'action_key': 'math_graph_practice',
-                    'cost': 3,
+                    'cost': 10,
                     'category': 'Mathematics',
                     'component': 'Graph Practice',
-                    'description': 'Credit cost for Mathematics graph generation'
+                    'description': '1 credit per graph/question/video'
                 },
-                
-                # English
+
+                # English (units)
                 {
                     'action_key': 'english_topical',
-                    'cost': 1,
+                    'cost': 10,
                     'category': 'English',
                     'component': 'Topical Questions',
-                    'description': 'Credit cost for English topical questions'
+                    'description': '1 credit per question'
                 },
                 {
                     'action_key': 'english_comprehension',
-                    'cost': 3,
+                    'cost': 30,
                     'category': 'English',
                     'component': 'Comprehension',
-                    'description': 'Credit cost for English comprehension exercises'
+                    'description': '3 credits per comprehension'
                 },
                 {
                     'action_key': 'english_essay_writing',
-                    'cost': 4,
+                    'cost': 30,
                     'category': 'English',
                     'component': 'Essay Writing',
-                    'description': 'Credit cost for English essay writing'
+                    'description': '3 credits per essay'
                 },
-                
-                # Premium Features
+                {
+                    'action_key': 'english_essay_marking',
+                    'cost': 30,
+                    'category': 'English',
+                    'component': 'Essay Marking',
+                    'description': '3 credits per marking'
+                },
+                {
+                    'action_key': 'english_comprehension_grading',
+                    'cost': 30,
+                    'category': 'English',
+                    'component': 'Comprehension Grading',
+                    'description': '3 credits per grading'
+                },
+                {
+                    'action_key': 'english_summary_grading',
+                    'cost': 30,
+                    'category': 'English',
+                    'component': 'Summary Grading',
+                    'description': '3 credits per grading'
+                },
+
+                # Flashcards
+                {
+                    'action_key': 'flashcard_single',
+                    'cost': 3,
+                    'category': 'Study Tools',
+                    'component': 'Flashcard Generation',
+                    'description': '0.25 credit per flashcard (rounded up)'
+                },
+
+                # Audio / Live
                 {
                     'action_key': 'audio_feature',
-                    'cost': 2,
-                    'category': 'Premium Features',
-                    'component': 'Audio Chat/TTS',
-                    'description': 'Credit cost for basic audio features'
+                    'cost': 10,
+                    'category': 'Audio',
+                    'component': 'Audio Feature',
+                    'description': '1 credit per audio response'
                 },
                 {
                     'action_key': 'voice_chat',
-                    'cost': 3,
-                    'category': 'Premium Features',
-                    'component': 'Voice Chat',
-                    'description': 'Credit cost for full voice chat interactions (per minute)'
+                    'cost': 1,
+                    'category': 'Audio',
+                    'component': 'Live Voice (per 5s)',
+                    'description': '0.1 credit per 5 seconds'
                 },
-                {
-                    'action_key': 'flashcard_audio',
-                    'cost': 3,
-                    'category': 'Premium Features',
-                    'component': 'Audio Flashcards',
-                    'description': 'Credit cost for generating audio flashcards'
-                },
-                
-                # AI Teacher & Assistant
+
+                # AI Teacher (per response)
                 {
                     'action_key': 'teacher_mode_start',
-                    'cost': 3,
+                    'cost': 1,
                     'category': 'AI Teacher',
-                    'component': 'Start Session',
-                    'description': 'Initial setup for AI Teacher session'
+                    'component': 'AI Response',
+                    'description': '0.1 credit per AI response'
                 },
                 {
                     'action_key': 'teacher_mode_followup',
-                    'cost': 0,
+                    'cost': 1,
                     'category': 'AI Teacher',
-                    'component': 'Follow-up Chat',
-                    'description': 'Free follow-up chat with AI Teacher'
+                    'component': 'AI Response',
+                    'description': '0.1 credit per AI response'
                 },
                 {
                     'action_key': 'teacher_mode_pdf',
-                    'cost': 2,
+                    'cost': 10,
                     'category': 'AI Teacher',
                     'component': 'PDF Notes',
-                    'description': 'Generate PDF notes from session'
+                    'description': '1 credit per PDF'
                 },
+
+                # Project Assistant (per response)
                 {
                     'action_key': 'project_assistant_start',
-                    'cost': 3,
+                    'cost': 2,
                     'category': 'Project Assistant',
-                    'component': 'Start Session',
-                    'description': 'Initial setup for Project Assistant'
+                    'component': 'AI Response',
+                    'description': '0.2 credit per AI response'
                 },
                 {
                     'action_key': 'project_assistant_followup',
-                    'cost': 0,
+                    'cost': 2,
                     'category': 'Project Assistant',
-                    'component': 'Follow-up Chat',
-                    'description': 'Free follow-up chat with Project Assistant'
+                    'component': 'AI Response',
+                    'description': '0.2 credit per AI response'
+                },
+                {
+                    'action_key': 'project_image_generation',
+                    'cost': 20,
+                    'category': 'Project Assistant',
+                    'component': 'Image Generation',
+                    'description': '2 credits per image'
+                },
+                {
+                    'action_key': 'project_web_search',
+                    'cost': 20,
+                    'category': 'Project Assistant',
+                    'component': 'Web Search',
+                    'description': '2 credits per search'
+                },
+                {
+                    'action_key': 'project_deep_research',
+                    'cost': 50,
+                    'category': 'Project Assistant',
+                    'component': 'Deep Research',
+                    'description': '5 credits per deep research'
+                },
+                {
+                    'action_key': 'project_transcribe',
+                    'cost': 20,
+                    'category': 'Project Assistant',
+                    'component': 'Audio Transcription',
+                    'description': '2 credits per transcription'
                 },
 
-                # A-Level Subjects
+                # Virtual Lab
                 {
-                    'action_key': 'a_level_biology',
-                    'cost': 2,
+                    'action_key': 'virtual_lab_knowledge_check',
+                    'cost': 5,
+                    'category': 'Virtual Lab',
+                    'component': 'Knowledge Check',
+                    'description': '0.5 credit per question'
+                },
+
+                # A-Level Mathematics
+                {
+                    'action_key': 'a_level_pure_math_topical',
+                    'cost': 5,
                     'category': 'A-Level',
-                    'component': 'Biology Questions',
-                    'description': 'Credit cost for A-Level Biology'
+                    'component': 'Pure Math Topical Questions',
+                    'description': '0.5 credit per question'
                 },
                 {
-                    'action_key': 'a_level_chemistry',
-                    'cost': 2,
+                    'action_key': 'a_level_pure_math_exam',
+                    'cost': 5,
                     'category': 'A-Level',
-                    'component': 'Chemistry Questions',
-                    'description': 'Credit cost for A-Level Chemistry'
+                    'component': 'Pure Math Exam Questions',
+                    'description': '0.5 credit per question'
+                },
+
+                # A-Level Chemistry
+                {
+                    'action_key': 'a_level_chemistry_topical',
+                    'cost': 5,
+                    'category': 'A-Level',
+                    'component': 'Chemistry Topical Questions',
+                    'description': '0.5 credit per question'
                 },
                 {
-                    'action_key': 'a_level_physics',
-                    'cost': 2,
+                    'action_key': 'a_level_chemistry_exam',
+                    'cost': 5,
                     'category': 'A-Level',
-                    'component': 'Physics Questions',
-                    'description': 'Credit cost for A-Level Physics'
+                    'component': 'Chemistry Exam Questions',
+                    'description': '0.5 credit per question'
+                },
+
+                # A-Level Physics
+                {
+                    'action_key': 'a_level_physics_topical',
+                    'cost': 5,
+                    'category': 'A-Level',
+                    'component': 'Physics Topical Questions',
+                    'description': '0.5 credit per question'
                 },
                 {
-                    'action_key': 'a_level_math',
-                    'cost': 2,
+                    'action_key': 'a_level_physics_exam',
+                    'cost': 5,
                     'category': 'A-Level',
-                    'component': 'Pure Math Questions',
-                    'description': 'Credit cost for A-Level Mathematics'
+                    'component': 'Physics Exam Questions',
+                    'description': '0.5 credit per question'
+                },
+
+                # A-Level Biology (MCQ vs structured/essay)
+                {
+                    'action_key': 'a_level_biology_topical_mcq',
+                    'cost': 3,
+                    'category': 'A-Level',
+                    'component': 'Biology Topical MCQ',
+                    'description': '0.25 credit per MCQ (rounded up)'
+                },
+                {
+                    'action_key': 'a_level_biology_topical_structured',
+                    'cost': 5,
+                    'category': 'A-Level',
+                    'component': 'Biology Topical Structured',
+                    'description': '0.5 credit per structured question'
+                },
+                {
+                    'action_key': 'a_level_biology_topical_essay',
+                    'cost': 5,
+                    'category': 'A-Level',
+                    'component': 'Biology Topical Essay',
+                    'description': '0.5 credit per essay'
+                },
+                {
+                    'action_key': 'a_level_biology_exam_mcq',
+                    'cost': 3,
+                    'category': 'A-Level',
+                    'component': 'Biology Exam MCQ',
+                    'description': '0.25 credit per MCQ (rounded up)'
+                },
+                {
+                    'action_key': 'a_level_biology_exam_structured',
+                    'cost': 5,
+                    'category': 'A-Level',
+                    'component': 'Biology Exam Structured',
+                    'description': '0.5 credit per structured question'
+                },
+                {
+                    'action_key': 'a_level_biology_exam_essay',
+                    'cost': 5,
+                    'category': 'A-Level',
+                    'component': 'Biology Exam Essay',
+                    'description': '0.5 credit per essay'
                 }
             ]
             
@@ -249,36 +394,67 @@ class CreditCostService:
     
     def __init__(self):
         self.fallback_costs = {
-            # Default costs from config - used when database is unavailable
-            'combined_science_topical': 1,
-            'combined_science_exam': 3,
-            'math_topical': 1,
-            'math_exam': 3,
-            'math_graph_practice': 3,
-            'english_topical': 1,
-            'english_comprehension': 3,
-            'english_essay_writing': 4,
-            
-            # Premium & Audio
-            'audio_feature': 0,
-            'voice_chat': 3,
-            'flashcard_audio': 3,
-            'image_solve': 3,
-            'graph_generation': 3,
-            'ocr_solve': 3,
-            
+            # Combined Science (O-Level)
+            'combined_science_topical': 3,
+            'combined_science_topical_mcq': 3,
+            'combined_science_topical_structured': 5,
+            'combined_science_exam': 5,
+
+            # Mathematics (O-Level)
+            'math_topical': 5,
+            'math_exam': 5,
+            'math_quiz': 5,
+            'math_graph_practice': 10,
+
+            # English
+            'english_topical': 10,
+            'english_comprehension': 30,
+            'english_essay_writing': 30,
+            'english_essay_marking': 30,
+            'english_comprehension_grading': 30,
+            'english_summary_grading': 30,
+
+            # Flashcards
+            'flashcard_single': 3,
+
+            # Audio & Vision
+            'audio_feature': 10,
+            'voice_chat': 1,
+            'flashcard_audio': 30,
+            'image_solve': 30,
+            'graph_generation': 10,
+            'ocr_solve': 30,
+
+            # Virtual Lab
+            'virtual_lab_knowledge_check': 5,
+
             # A-Level Subjects
-            'a_level_biology': 2,
-            'a_level_chemistry': 2,
-            'a_level_physics': 2,
-            'a_level_math': 2,
-            
+            'a_level_pure_math_topical': 5,
+            'a_level_pure_math_exam': 5,
+            'a_level_chemistry_topical': 5,
+            'a_level_chemistry_exam': 5,
+            'a_level_physics_topical': 5,
+            'a_level_physics_exam': 5,
+            'a_level_biology_topical_mcq': 3,
+            'a_level_biology_topical_structured': 5,
+            'a_level_biology_topical_essay': 5,
+            'a_level_biology_exam_mcq': 3,
+            'a_level_biology_exam_structured': 5,
+            'a_level_biology_exam_essay': 5,
+
             # AI Teacher
-            'teacher_mode_start': 3,
-            'teacher_mode_followup': 0,
-            'teacher_mode_pdf': 2,
-            'project_assistant_start': 3,
-            'project_assistant_followup': 0
+            'teacher_mode_start': 1,
+            'teacher_mode_followup': 1,
+            'teacher_mode_pdf': 10,
+            'project_assistant_start': 2,
+            'project_assistant_followup': 2,
+            'project_assistant_batch': 2,
+
+            # Project Assistant extras
+            'project_web_search': 20,
+            'project_deep_research': 50,
+            'project_transcribe': 20,
+            'project_image_generation': 20
         }
     
     def get_credit_cost(self, action_key: str) -> int:

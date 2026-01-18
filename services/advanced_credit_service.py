@@ -2,6 +2,7 @@ import logging
 from typing import Dict, Optional, List, Tuple
 from datetime import datetime
 from config import Config
+from utils.credit_units import format_credits
 from database.external_db import (
     get_user_credits, deduct_credits, add_credits, 
     get_user_registration, add_xp, update_streak, get_user_stats
@@ -26,16 +27,16 @@ class AdvancedCreditService:
         """Get comprehensive credit status for user"""
         try:
             user_data = get_user_registration(user_id)
-            # Use credits from users_registration table as primary source
+            # Use credits from users_registration table as primary source (units)
             current_credits = user_data.get('credits', 0) if user_data else 0
             
             return {
                 'credits': current_credits,
                 'is_low': current_credits <= self.low_credit_threshold,
                 'user_name': user_data.get('name', 'Student') if user_data else 'Student',
-                'can_afford_basic': current_credits >= 1,
-                'can_afford_premium': current_credits >= 10,
-                'low_credit_warning': current_credits <= 5
+                'can_afford_basic': current_credits >= 1 * Config.CREDIT_UNITS_PER_CREDIT,
+                'can_afford_premium': current_credits >= 10 * Config.CREDIT_UNITS_PER_CREDIT,
+                'low_credit_warning': current_credits <= 5 * Config.CREDIT_UNITS_PER_CREDIT
             }
         except Exception as e:
             logger.error(f"Error getting credit status for {user_id}: {e}")
@@ -49,12 +50,12 @@ class AdvancedCreditService:
             
             if credits == 0:
                 return "Credits: 0"
-            elif credits <= 5:
-                return f"Credits: {credits} (Very Low!)"
+            elif credits <= 5 * Config.CREDIT_UNITS_PER_CREDIT:
+                return f"Credits: {format_credits(credits)} (Very Low!)"
             elif credits <= self.low_credit_threshold:
-                return f"Credits: {credits} (Low)"
+                return f"Credits: {format_credits(credits)} (Low)"
             else:
-                return f"Credits: {credits}"
+                return f"Credits: {format_credits(credits)}"
                 
         except Exception as e:
             logger.error(f"Error formatting credit display: {e}")
@@ -131,11 +132,14 @@ class AdvancedCreditService:
             action_mapping = {
                 # Combined Science
                 'combined_science_topical': 'combined_science_topical',
+                'combined_science_topical_mcq': 'combined_science_topical_mcq',
+                'combined_science_topical_structured': 'combined_science_topical_structured',
                 'combined_science_exam': 'combined_science_exam',
                 
                 # Mathematics
                 'math_topical': 'math_topical',
                 'math_exam': 'math_exam',
+                'math_quiz': 'math_quiz',
                 'math_graph_practice': 'math_graph_practice',
                 'graph_practice': 'math_graph_practice',
                 
@@ -143,17 +147,49 @@ class AdvancedCreditService:
                 'english_topical': 'english_topical',
                 'english_comprehension': 'english_comprehension',
                 'english_essay_writing': 'english_essay_writing',
+                'english_essay_marking': 'english_essay_marking',
+                'english_comprehension_grading': 'english_comprehension_grading',
+                'english_summary_grading': 'english_summary_grading',
                 
                 # Audio Features
                 'audio_feature': 'audio_feature',
                 'voice_chat': 'voice_chat',
+
+                # Flashcards
+                'flashcard_single': 'flashcard_single',
                 
                 # Legacy mappings - map to new standardized keys
                 'math': 'math_topical',
                 'science': 'combined_science_topical',
                 'english': 'english_topical',
                 'image_solve': 'image_solve',
-                'graph_generation': 'math_graph_practice'
+                'graph_generation': 'math_graph_practice',
+
+                # A-Level mappings
+                'a_level_pure_math_topical': 'a_level_pure_math_topical',
+                'a_level_pure_math_exam': 'a_level_pure_math_exam',
+                'a_level_chemistry_topical': 'a_level_chemistry_topical',
+                'a_level_chemistry_exam': 'a_level_chemistry_exam',
+                'a_level_physics_topical': 'a_level_physics_topical',
+                'a_level_physics_exam': 'a_level_physics_exam',
+                'a_level_biology_topical_mcq': 'a_level_biology_topical_mcq',
+                'a_level_biology_topical_structured': 'a_level_biology_topical_structured',
+                'a_level_biology_topical_essay': 'a_level_biology_topical_essay',
+                'a_level_biology_exam_mcq': 'a_level_biology_exam_mcq',
+                'a_level_biology_exam_structured': 'a_level_biology_exam_structured',
+                'a_level_biology_exam_essay': 'a_level_biology_exam_essay',
+
+                # Project assistant
+                'project_assistant_start': 'project_assistant_start',
+                'project_assistant_followup': 'project_assistant_followup',
+                'project_assistant_batch': 'project_assistant_batch',
+                'project_web_search': 'project_web_search',
+                'project_deep_research': 'project_deep_research',
+                'project_transcribe': 'project_transcribe',
+                'project_image_generation': 'project_image_generation',
+
+                # Virtual lab
+                'virtual_lab_knowledge_check': 'virtual_lab_knowledge_check',
             }
             
             # Get the mapped action key
@@ -161,16 +197,6 @@ class AdvancedCreditService:
             
             # Get cost from database service (falls back to config if database unavailable)
             cost = credit_cost_service.get_credit_cost(mapped_action)
-            
-            # Apply difficulty multiplier if specified
-            if difficulty:
-                difficulty_multipliers = {
-                    'easy': 1.0,
-                    'medium': 1.5,
-                    'difficult': 2.0
-                }
-                multiplier = difficulty_multipliers.get(difficulty.lower(), 1.0)
-                cost = int(cost * multiplier)
             
             logger.debug(f"Credit cost for '{action}' (mapped to '{mapped_action}') with difficulty '{difficulty}': {cost}")
             return cost
@@ -186,7 +212,7 @@ class AdvancedCreditService:
         """Award registration bonus credits to new user"""
         try:
             if add_credits(user_id, self.registration_bonus, "Registration bonus"):
-                logger.info(f"Awarded {self.registration_bonus} credits to new user {user_id}")
+                logger.info(f"Awarded {self.registration_bonus} units to new user {user_id}")
                 return True
             return False
         except Exception as e:
@@ -219,8 +245,8 @@ Hey there!
 **{new_user_name}** just registered using your referral link!
 
 **Your Reward:**
-+{self.referral_bonus} Credits Added!
-New Balance: {new_balance} credits
++{format_credits(self.referral_bonus)} Credits Added!
+New Balance: {format_credits(new_balance)} credits
 
 Keep sharing to earn more credits!
 

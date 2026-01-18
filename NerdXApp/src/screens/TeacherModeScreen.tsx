@@ -19,6 +19,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import Markdown from 'react-native-markdown-display';
+import MathRenderer from '../components/MathRenderer';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
@@ -675,9 +676,18 @@ const TeacherModeScreen: React.FC = () => {
             <View style={styles.assistantMessageRow}>
               <View style={styles.assistantMessageFullWidth}>
                 <View style={styles.markdownContainer}>
-                  <Markdown style={markdownStyles}>
-                    {message.content}
-                  </Markdown>
+                  {/* Use MathRenderer if content contains LaTeX math ($...$), otherwise Markdown */}
+                  {message.content.includes('$') ? (
+                    <MathRenderer 
+                      content={message.content} 
+                      fontSize={16}
+                      minHeight={50}
+                    />
+                  ) : (
+                    <Markdown style={markdownStyles}>
+                      {message.content}
+                    </Markdown>
+                  )}
                   {message.graph_url && (
                     <View style={styles.graphContainer}>
                       <TouchableOpacity

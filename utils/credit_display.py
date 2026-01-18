@@ -1,6 +1,8 @@
 import logging
 from typing import Dict, List, Optional
 from database.external_db import get_user_credits, get_user_registration
+from config import Config
+from utils.credit_units import format_credits
 
 logger = logging.getLogger(__name__)
 
@@ -8,7 +10,7 @@ class CreditDisplayManager:
     """Manage credit display and low credit alerts across the system"""
     
     def __init__(self):
-        self.low_credit_threshold = 20
+        self.low_credit_threshold = Config.LOW_CREDIT_THRESHOLD
     
     def get_credit_display_header(self, user_id: str) -> str:
         """Get standardized credit display header for all menus"""
@@ -17,7 +19,7 @@ class CreditDisplayManager:
             registration = get_user_registration(user_id)
             user_name = registration.get('name', 'Student') if registration else 'Student'
             
-            header = f"💳 **Your Credits: {current_credits}**\n\n"
+            header = f"💳 **Your Credits: {format_credits(current_credits)}**\n\n"
             
             if current_credits <= self.low_credit_threshold:
                 header += "⚠️ **Low Credits Warning!** Consider purchasing more credits.\n\n"
@@ -62,9 +64,9 @@ class CreditDisplayManager:
             
             if current_credits >= cost:
                 message = f"🔍 **Service Request**: {service_name}\n"
-                message += f"💰 **Cost**: {cost} credits\n"
-                message += f"💳 **Your Balance**: {current_credits} credits\n"
-                message += f"📊 **Remaining After**: {remaining_after} credits\n\n"
+                message += f"💰 **Cost**: {format_credits(cost)} credits\n"
+                message += f"💳 **Your Balance**: {format_credits(current_credits)} credits\n"
+                message += f"📊 **Remaining After**: {format_credits(remaining_after)} credits\n\n"
                 
                 return {
                     'sufficient': True,
@@ -76,9 +78,9 @@ class CreditDisplayManager:
             else:
                 shortage = cost - current_credits
                 message = f"⚠️ **Insufficient Credits**\n\n"
-                message += f"💳 **Your Balance**: {current_credits} credits\n"
-                message += f"💰 **Required**: {cost} credits\n"
-                message += f"📈 **Need**: {shortage} more credits\n\n"
+                message += f"💳 **Your Balance**: {format_credits(current_credits)} credits\n"
+                message += f"💰 **Required**: {format_credits(cost)} credits\n"
+                message += f"📈 **Need**: {format_credits(shortage)} more credits\n\n"
                 message += f"🛒 **Quick Options:**\n"
                 
                 return {
@@ -104,8 +106,8 @@ class CreditDisplayManager:
             
             message = f"✅ **Transaction Completed**\n\n"
             message += f"📚 **Service**: {service_name}\n"
-            message += f"💰 **Cost**: {cost} credits\n"
-            message += f"💳 **New Balance**: {current_credits} credits\n\n"
+            message += f"💰 **Cost**: {format_credits(cost)} credits\n"
+            message += f"💳 **New Balance**: {format_credits(current_credits)} credits\n\n"
             
             if current_credits <= self.low_credit_threshold:
                 message += f"💰 Consider buying more credits to continue learning!\n\n"

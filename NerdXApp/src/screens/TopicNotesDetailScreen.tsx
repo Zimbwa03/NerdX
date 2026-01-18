@@ -21,6 +21,7 @@ import { aLevelChemistryNotesApi } from '../services/api/aLevelChemistryNotesApi
 import { useAuth } from '../context/AuthContext';
 import { Colors } from '../theme/colors';
 import Markdown from 'react-native-markdown-display';
+import MathRenderer from '../components/MathRenderer';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
 import AudioStreamPlayer from '../components/AudioStreamPlayer';
@@ -35,7 +36,12 @@ const TopicNotesDetailScreen: React.FC = () => {
     const { user } = useAuth();
     const { isDarkMode } = useTheme();
     const themedColors = useThemedColors();
-    const { subject, topic, isALevel } = route.params as { subject: string; topic: string; isALevel?: boolean };
+    const { subject, topic, isALevel, index } = route.params as {
+        subject: string;
+        topic: string;
+        isALevel?: boolean;
+        index?: number;
+    };
 
     const [notes, setNotes] = useState<TopicNotes | null>(null);
     const [loading, setLoading] = useState(true);
@@ -49,6 +55,18 @@ const TopicNotesDetailScreen: React.FC = () => {
         try {
             setLoading(true);
             let notesData = null;
+
+            const hasPaidCredits = (user?.credit_breakdown?.purchased_credits ?? 0) > 0;
+            const isScienceSubject = ['Biology', 'Chemistry', 'Physics'].includes(subject);
+            if (isScienceSubject && !hasPaidCredits && (index ?? 0) >= 2) {
+                setLoading(false);
+                Alert.alert(
+                    'Locked Topic',
+                    'This topic is locked. Purchase credits to unlock all topics.',
+                    [{ text: 'OK', onPress: () => navigation.goBack() }]
+                );
+                return;
+            }
 
             // Check if this is A Level Chemistry
             if (isALevel && subject === 'A Level Chemistry') {
@@ -256,8 +274,12 @@ const TopicNotesDetailScreen: React.FC = () => {
 
                                 {expandedSections.has(index) && (
                                     <View style={styles.sectionContent}>
-                                        {/* Markdown Content */}
-                                        <Markdown style={markdownStyles}>{section.content}</Markdown>
+                                        {/* Use MathRenderer for content with LaTeX, Markdown otherwise */}
+                                        {section.content.includes('$') ? (
+                                            <MathRenderer content={section.content} fontSize={16} minHeight={50} />
+                                        ) : (
+                                            <Markdown style={markdownStyles}>{section.content}</Markdown>
+                                        )}
 
                                         {/* Diagrams */}
                                         {section.diagrams && section.diagrams.length > 0 && (

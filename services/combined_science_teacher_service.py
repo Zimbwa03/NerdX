@@ -11,6 +11,7 @@ from typing import Dict, Optional, List
 from utils.session_manager import session_manager
 from services.whatsapp_service import WhatsAppService
 from database.external_db import make_supabase_request, get_user_credits, deduct_credits
+from utils.credit_units import format_credits, units_to_credits
 from services.advanced_credit_service import advanced_credit_service
 
 logger = logging.getLogger(__name__)
@@ -751,14 +752,14 @@ Current conversation context will be provided with each message."""
             conversation_history = session_data.get('conversation_history', [])
             is_new_session = len(conversation_history) == 0
             
-            # Check and deduct credits
+            # Check and deduct credits (per AI response)
             if is_new_session:
-                # Starting new session - costs 3 credits
+                # Starting new session - per response cost
                 credit_result = advanced_credit_service.check_and_deduct_credits(
                     user_id, 'teacher_mode_start'
                 )
             else:
-                # Follow-up question - costs 1 credit
+                # Follow-up question - per response cost
                 credit_result = advanced_credit_service.check_and_deduct_credits(
                     user_id, 'teacher_mode_followup'
                 )
@@ -811,14 +812,16 @@ Current conversation context will be provided with each message."""
                 
                 # Get current credits and show credit status
                 current_credits = get_user_credits(user_id)
-                credits_used = 3 if is_new_session else 1
+                credits_used = advanced_credit_service.get_credit_cost(
+                    'teacher_mode_start' if is_new_session else 'teacher_mode_followup'
+                )
                 
                 # Add helpful instructions with credit info
                 message = f"📖 *Topic: {topic}*\n\n{response_text}\n\n"
                 message += "─────────────────────\n"
                 message += "💬 Ask me questions or type *'generate notes'* when ready for PDF notes!\n"
                 message += "📤 Type *'exit'* to leave Teacher Mode\n\n"
-                message += f"💳 *Credits:* {current_credits} (Used: {credits_used})"
+                message += f"💳 *Credits:* {format_credits(current_credits)} (Used: {format_credits(credits_used)})"
                 
                 self.whatsapp_service.send_message(user_id, message)
             else:
@@ -848,7 +851,7 @@ Current conversation context will be provided with each message."""
                 self.generate_notes(user_id)
                 return
             
-            # Hybrid Model: Deduct 1 credit for follow-up question
+            # Per-response billing for follow-up question
             credit_result = advanced_credit_service.check_and_deduct_credits(
                 user_id, 'teacher_mode_followup'
             )
@@ -906,7 +909,8 @@ Current conversation context will be provided with each message."""
                 
                 # Get current credits and add to response
                 current_credits = get_user_credits(user_id)
-                clean_response += f"\n\n💳 *Credits:* {current_credits} (Used: 1)"
+                cost = advanced_credit_service.get_credit_cost('teacher_mode_followup')
+                clean_response += f"\n\n💳 *Credits:* {format_credits(current_credits)} (Used: {format_credits(cost)})"
                 
                 self.whatsapp_service.send_message(user_id, clean_response)
             else:
@@ -1227,7 +1231,7 @@ Current conversation context will be provided with each message."""
                     
                     self.whatsapp_service.send_message(
                         user_id,
-                        f"✅ Your personalized notes have been sent!\n\nWould you like to continue learning or start a new topic?\n\n💳 *Credits:* {current_credits} (Used: 1 for PDF)"
+                        f"✅ Your personalized notes have been sent!\n\nWould you like to continue learning or start a new topic?\n\n💳 *Credits:* {format_credits(current_credits)} (Used: {format_credits(advanced_credit_service.get_credit_cost('teacher_mode_pdf'))} for PDF)"
                     )
                 else:
                     self._send_fallback_notes(user_id, topic, subject, grade_level)
@@ -1385,7 +1389,7 @@ and provide educational guidance. Explain scientific concepts clearly."""
                 return {
                     'success': True,
                     'response': result['text'],
-                    'credits_remaining': get_user_credits(user_id)
+                    'credits_remaining': units_to_credits(get_user_credits(user_id))
                 }
             
             return self._handle_text_only_fallback(user_id, message)
@@ -1627,7 +1631,7 @@ to the Zimbabwe curriculum and O-Level/A-Level science examinations."""
         return {
             'success': True,
             'response': response,
-            'credits_remaining': get_user_credits(user_id)
+            'credits_remaining': units_to_credits(get_user_credits(user_id))
         }
     
     def exit_teacher_mode(self, user_id: str):

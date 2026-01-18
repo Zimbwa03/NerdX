@@ -68,7 +68,9 @@ const COLORS = {
 };
 
 // Audio settings
-const MAX_BUFFER_SIZE = 50;
+// With server-side audio buffering, we receive ONE complete audio per turn
+// The buffer is still useful for edge cases but typically receives 1 chunk now
+const MAX_BUFFER_SIZE = 10; // Reduced from 50 - server sends complete audio
 const MAX_RECORDING_DURATION_MS = 60000;
 
 type ConnectionState = 'idle' | 'connecting' | 'ready' | 'recording' | 'processing' | 'error';
@@ -262,14 +264,16 @@ const NerdXLiveAudioScreen: React.FC = () => {
         currentAudioTurnRef.current = null;
     }, [playCompleteAudioTurn]);
 
-    // Playback timeout
+    // Playback timeout (fallback in case turnComplete is missed)
+    // With server-side buffering, this should rarely trigger since
+    // server sends complete audio with turnComplete signal
     const startPlaybackTimeout = useCallback(() => {
         if (playbackTimeoutRef.current) clearTimeout(playbackTimeoutRef.current);
         playbackTimeoutRef.current = setTimeout(async () => {
             if (currentAudioTurnRef.current && !currentAudioTurnRef.current.isComplete) {
                 await completeAudioTurn();
             }
-        }, 10000);
+        }, 3000); // Reduced from 10s - server now sends complete audio faster
     }, [completeAudioTurn]);
 
     // Recording functions

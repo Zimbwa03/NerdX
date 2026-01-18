@@ -13,6 +13,8 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, List
 import logging
 
+from utils.credit_units import CREDIT_UNITS_PER_CREDIT, format_credits
+
 logger = logging.getLogger(__name__)
 
 # Supabase configuration - use environment variables
@@ -513,7 +515,7 @@ def calculate_level_from_xp(xp):
     return max(level, 1)  # Minimum level is 1
 
 def get_user_credits(user_id: str) -> int:
-    """Get user's current credit balance from users_registration table (primary source)"""
+    """Get user's current credit balance in units from users_registration table (primary source)"""
     try:
         result = make_supabase_request("GET", "users_registration", 
                                      select="credits", 
@@ -532,8 +534,8 @@ def get_user_credits(user_id: str) -> int:
 
 def deduct_credits(user_id: str, amount: int, transaction_type: str, description: str) -> bool:
     """
-    Deduct credits from user account with transaction logging.
-    Priority: Purchased Credits -> Free/Daily Credits
+    Deduct credit units from user account with transaction logging.
+    Priority: Purchased Credits -> Free/Bonus Credits
     Uses 'deduct_credits_atomic' RPC if available for atomic operations.
     """
     try:
@@ -656,7 +658,7 @@ def deduct_credits(user_id: str, amount: int, transaction_type: str, description
             except Exception as tx_error:
                 logger.warning(f"⚠️ Credit deduction successful but transaction logging failed: {tx_error}")
 
-            logger.info(f"Deducted {amount} credits from {user_id}. New Total: {new_free + new_purchased} (Free: {new_free}, Purchased: {new_purchased})")
+            logger.info(f"Deducted {amount} units from {user_id}. New Total: {new_free + new_purchased} (Free: {new_free}, Purchased: {new_purchased})")
             return True
         else:
             logger.error(f"Failed to update credits for {user_id}")
@@ -667,7 +669,7 @@ def deduct_credits(user_id: str, amount: int, transaction_type: str, description
         return False
 
 def add_credits(user_id, amount, transaction_type="purchase", description="Credit purchase"):
-    """Add credits to user account"""
+    """Add credit units to user account"""
     current_credits = get_user_credits(user_id)
     new_credits = current_credits + amount
 
@@ -705,7 +707,7 @@ def add_credits(user_id, amount, transaction_type="purchase", description="Credi
     return False
 
 def sync_user_credits(user_id: str = None) -> dict:
-    """Sync credits from users_registration to user_stats (users_registration is the primary source)"""
+    """Sync credit units from users_registration to user_stats (users_registration is the primary source)"""
     try:
         if user_id:
             # Sync specific user
@@ -757,17 +759,16 @@ def sync_user_credits(user_id: str = None) -> dict:
         return {"success": False, "message": f"Sync failed: {str(e)}"}
 
 # ============================================================
-# NEW CREDIT SYSTEM FUNCTIONS (Welcome Bonus + Daily Credits)
+# NEW CREDIT SYSTEM FUNCTIONS (Welcome Bonus Only)
 # ============================================================
 
-WELCOME_BONUS_CREDITS = 150  # First-time user welcome bonus
-DAILY_FREE_CREDITS = 10
+WELCOME_BONUS_CREDITS = 150 * CREDIT_UNITS_PER_CREDIT  # 150 credits
 
 def get_credit_breakdown(user_id: str) -> dict:
     """Get detailed credit breakdown for a user"""
     try:
         result = make_supabase_request("GET", "users_registration", 
-                                      select="credits,purchased_credits,welcome_bonus_claimed,last_daily_reset", 
+                                      select="credits,purchased_credits,welcome_bonus_claimed", 
                                       filters={"chat_id": f"eq.{user_id}"})
         
         if result and len(result) > 0:
@@ -775,36 +776,15 @@ def get_credit_breakdown(user_id: str) -> dict:
             credits = user_data.get('credits', 0) or 0
             purchased_credits = user_data.get('purchased_credits', 0) or 0
             welcome_claimed = user_data.get('welcome_bonus_claimed', False)
-            last_reset_str = user_data.get('last_daily_reset')
             
             # Calculate total available
             total = credits + purchased_credits
-            
-            # Calculate time until next daily reset
-            next_reset_info = "N/A"
-            if purchased_credits == 0:
-                if last_reset_str:
-                    try:
-                        last_reset = datetime.fromisoformat(last_reset_str.replace('Z', '+00:00'))
-                        next_reset = last_reset + timedelta(hours=24)
-                        now = datetime.now(last_reset.tzinfo) if last_reset.tzinfo else datetime.utcnow()
-                        remaining = next_reset - now
-                        if remaining.total_seconds() > 0:
-                            hours = int(remaining.total_seconds() // 3600)
-                            minutes = int((remaining.total_seconds() % 3600) // 60)
-                            next_reset_info = f"{hours}h {minutes}m"
-                        else:
-                            next_reset_info = "Available now"
-                    except Exception:
-                        next_reset_info = "Unknown"
             
             return {
                 "total": total,
                 "free_credits": credits,
                 "purchased_credits": purchased_credits,
-                "welcome_bonus_claimed": welcome_claimed,
-                "daily_credits_active": purchased_credits == 0,
-                "next_daily_reset": next_reset_info
+                "welcome_bonus_claimed": welcome_claimed
             }
         
         return {"total": 0, "free_credits": 0, "purchased_credits": 0, "welcome_bonus_claimed": False}
@@ -815,7 +795,7 @@ def get_credit_breakdown(user_id: str) -> dict:
 
 def claim_welcome_bonus(user_id: str) -> dict:
     """
-    Award welcome bonus (75 credits) to a first-time user.
+    Award welcome bonus (150 credits) to a first-time user.
     Returns: {success: True/False, awarded: True/False, credits: amount}
     """
     try:
@@ -872,12 +852,12 @@ def claim_welcome_bonus(user_id: str) -> dict:
             except Exception as e:
                 logger.warning(f"Failed to log welcome bonus transaction: {e}")
             
-            logger.info(f"✅ Awarded {WELCOME_BONUS_CREDITS} welcome bonus credits to {user_id}")
+            logger.info(f"✅ Awarded {WELCOME_BONUS_CREDITS} units welcome bonus to {user_id}")
             return {
                 "success": True, 
                 "awarded": True, 
                 "credits": WELCOME_BONUS_CREDITS,
-                "message": f"You received {WELCOME_BONUS_CREDITS} welcome credits!"
+                "message": f"You received {format_credits(WELCOME_BONUS_CREDITS)} welcome credits!"
             }
         
         return {"success": False, "awarded": False, "message": "Failed to update credits"}
@@ -886,122 +866,10 @@ def claim_welcome_bonus(user_id: str) -> dict:
         logger.error(f"Error claiming welcome bonus for {user_id}: {e}")
         return {"success": False, "awarded": False, "error": str(e)}
 
-def check_and_refresh_daily_credits(user_id: str) -> dict:
-    """
-    Check if user is eligible for daily credits (only when purchased_credits = 0).
-    If 24h have passed since last reset, refresh to 10 daily credits.
-    Returns: {refreshed: True/False, credits: amount, message: str}
-    """
-    try:
-        result = make_supabase_request("GET", "users_registration", 
-                                      select="credits,purchased_credits,last_daily_reset", 
-                                      filters={"chat_id": f"eq.{user_id}"})
-        
-        if not result or len(result) == 0:
-            return {"refreshed": False, "message": "User not found"}
-        
-        user_data = result[0]
-        purchased_credits = user_data.get('purchased_credits', 0) or 0
-        current_credits = user_data.get('credits', 0) or 0
-        last_reset_str = user_data.get('last_daily_reset')
-        
-        # Only give daily credits if purchased credits = 0
-        if purchased_credits > 0:
-            logger.info(f"User {user_id} has {purchased_credits} purchased credits, no daily refresh")
-            return {
-                "refreshed": False, 
-                "message": "You have purchased credits, daily credits don't apply",
-                "purchased_credits": purchased_credits
-            }
-        
-        # Protect Welcome Bonus and existing credits
-        # If user has >= 10 credits (e.g. 75 welcome bonus), don't reset/refresh
-        if current_credits >= DAILY_FREE_CREDITS:
-             return {
-                "refreshed": False, 
-                "credits": current_credits,
-                "message": "You have sufficient credits",
-                "next_daily_reset": "When balance < 10"
-            }
-
-        # Check if 24 hours have passed
-        now = datetime.utcnow()
-        should_refresh = False
-        
-        if last_reset_str:
-            try:
-                last_reset = datetime.fromisoformat(last_reset_str.replace('Z', '+00:00').replace('+00:00', ''))
-                time_diff = now - last_reset
-                should_refresh = time_diff.total_seconds() >= 24 * 3600  # 24 hours
-            except Exception as e:
-                logger.warning(f"Error parsing last_daily_reset: {e}")
-                should_refresh = True  # If we can't parse, assume refresh needed
-        else:
-            # No last reset recorded, so this is first daily check
-            should_refresh = True
-        
-        if not should_refresh:
-            remaining = timedelta(hours=24) - (now - last_reset) if last_reset_str else timedelta(0)
-            hours = int(remaining.total_seconds() // 3600)
-            minutes = int((remaining.total_seconds() % 3600) // 60)
-            return {
-                "refreshed": False, 
-                "credits": current_credits,
-                "next_reset_in": f"{hours}h {minutes}m",
-                "message": f"Daily credits refresh in {hours}h {minutes}m"
-            }
-        
-        # Refresh daily credits - set to 10
-        update_data = {
-            "credits": DAILY_FREE_CREDITS,
-            "last_daily_reset": now.isoformat()
-        }
-        
-        update_result = make_supabase_request("PATCH", "users_registration", update_data, 
-                                             filters={"chat_id": f"eq.{user_id}"}, use_service_role=True)
-        
-        if update_result:
-            # Sync to user_stats
-            try:
-                make_supabase_request("PATCH", "user_stats", 
-                                    {"credits": DAILY_FREE_CREDITS, "last_daily_reset": now.isoformat()}, 
-                                    filters={"user_id": f"eq.{user_id}"}, use_service_role=True)
-            except Exception:
-                pass
-            
-            # Log transaction
-            try:
-                transaction = {
-                    "user_id": user_id,
-                    "action": "daily_credits",
-                    "transaction_type": "daily_credits",
-                    "credits_change": DAILY_FREE_CREDITS,
-                    "balance_before": current_credits,
-                    "balance_after": DAILY_FREE_CREDITS,
-                    "description": f"Daily free credits: {DAILY_FREE_CREDITS}",
-                    "transaction_date": now.isoformat()
-                }
-                make_supabase_request("POST", "credit_transactions", transaction, use_service_role=True)
-            except Exception as e:
-                logger.warning(f"Failed to log daily credits transaction: {e}")
-            
-            logger.info(f"✅ Refreshed daily credits for {user_id}: {DAILY_FREE_CREDITS} credits")
-            return {
-                "refreshed": True, 
-                "credits": DAILY_FREE_CREDITS,
-                "message": f"Your daily {DAILY_FREE_CREDITS} credits have been refreshed!"
-            }
-        
-        return {"refreshed": False, "message": "Failed to refresh credits"}
-        
-    except Exception as e:
-        logger.error(f"Error checking daily credits for {user_id}: {e}")
-        return {"refreshed": False, "error": str(e)}
-
 def add_purchased_credits(user_id: str, amount: int, description: str = "Credit purchase") -> bool:
     """
     Add purchased credits to user account.
-    Purchased credits are tracked separately and prevent daily credit refresh.
+    Purchased credits are tracked separately from free/welcome bonus credits.
     """
     try:
         result = make_supabase_request("GET", "users_registration", 
@@ -1223,7 +1091,7 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
                     'credits_change': total_credits,
                     'balance_before': 0,
                     'balance_after': total_credits,
-                    'description': f'Welcome bonus: {total_credits} credits',
+                    'description': f'Welcome bonus: {format_credits(total_credits)} credits',
                     'transaction_type': 'new_user_registration',
                     'transaction_date': datetime.utcnow().isoformat()
                 }
@@ -1246,9 +1114,9 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
                 if referrer_registration:
                     referrer_chat_id = referrer_registration['chat_id']
 
-                    # Add 5 credits to referrer
+                    # Add 5 credits (units) to referrer
                     current_referrer_credits = get_user_credits(referrer_chat_id)
-                    new_referrer_credits = current_referrer_credits + 5
+                    new_referrer_credits = current_referrer_credits + (5 * CREDIT_UNITS_PER_CREDIT)
 
                     # Update referrer's credits
                     update_user_stats(referrer_chat_id, {'credits': new_referrer_credits})
@@ -1257,7 +1125,7 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
                     referrer_transaction = {
                         'user_id': referrer_chat_id,
                         'action': 'referral_bonus',
-                        'credits_change': 5,
+                        'credits_change': 5 * CREDIT_UNITS_PER_CREDIT,
                         'balance_before': current_referrer_credits,
                         'balance_after': new_referrer_credits,
                         'description': f'Referral bonus for {name} {surname}',
@@ -1317,12 +1185,12 @@ def add_referral_credits(referred_by_nerdx_id, new_user_chat_id):
         full_new_user_name = f"{new_user_name} {new_user_surname}".strip()
 
         # Add referral bonus credits (5 credits as requested)
-        referral_bonus = 5
+        referral_bonus = 5 * CREDIT_UNITS_PER_CREDIT
         description = f'Referral bonus: {full_new_user_name} joined using your code'
         success = add_credits(referrer_chat_id, referral_bonus, 'referral_bonus', description)
 
         if success:
-            logger.info(f"Added {referral_bonus} referral credits to {referrer_name} ({referrer_chat_id}) for referring {full_new_user_name} ({new_user_chat_id})")
+            logger.info(f"Added referral credits to {referrer_name} ({referrer_chat_id}) for referring {full_new_user_name} ({new_user_chat_id})")
 
             # 🎉 SEND WHATSAPP NOTIFICATION TO REFERRER
             try:
@@ -1336,8 +1204,8 @@ def add_referral_credits(referred_by_nerdx_id, new_user_chat_id):
 
 🔗 **{full_new_user_name}** just registered using your referral link!
 
-💰 **You received +{referral_bonus} credits**
-📊 **Your balance**: {current_credits} credits
+💰 **You received +{format_credits(referral_bonus)} credits**
+📊 **Your balance**: {format_credits(current_credits)} credits
 
 🚀 Keep sharing your NerdX ID **{referred_by_nerdx_id}** to earn more referral bonuses!
 

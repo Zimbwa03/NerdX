@@ -14,6 +14,7 @@ import requests
 from datetime import datetime
 from typing import Dict, Optional
 import logging
+from utils.credit_units import format_credits
 
 # Import processing libraries
 try:
@@ -758,9 +759,9 @@ Type 'end audio' to exit audio chat mode."""
 🎧 **Audio Chat Feature**
 
 💳 **Credit Status:**
-• Current Credits: {current_credits}
-• Required Credits: {required_credits}
-• Need: {shortage} more credits
+• Current Credits: {format_credits(current_credits)}
+• Required Credits: {format_credits(required_credits)}
+• Need: {format_credits(shortage)} more credits
 
 💎 **Get More Credits:**"""
 

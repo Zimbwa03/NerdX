@@ -15,7 +15,7 @@ interface AuthContextType {
 }
 
 export interface CreditNotificationData {
-  type: 'welcome_bonus' | 'daily_refresh';
+  type: 'welcome_bonus';
   title: string;
   message: string;
   credits: number;
@@ -74,14 +74,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             type: 'welcome_bonus',
             title: 'Welcome Bonus!',
             message: notifications.welcome_message || 'Here are your exclusive starter credits.',
-            credits: 75
-          });
-        } else if (notifications.daily_refresh) {
-          setCreditNotification({
-            type: 'daily_refresh',
-            title: 'Daily Credits Refreshed',
-            message: notifications.daily_message || 'Your daily credits are ready.',
-            credits: 10
+            credits: 150
           });
         }
       }

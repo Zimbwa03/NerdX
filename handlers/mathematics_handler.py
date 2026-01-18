@@ -8,6 +8,7 @@ import logging
 import json
 from datetime import datetime
 from typing import Dict, List, Optional
+from utils.credit_units import format_credits
 
 logger = logging.getLogger(__name__)
 
@@ -123,7 +124,7 @@ class MathematicsHandler:
             self.whatsapp_service.send_message(
                 user_id, 
                 f"🧮 Generating {difficulty} Mathematics question on {formatted_topic}...\n\n"
-                f"💳 Cost: {validation['required_credits']} credits (will be deducted after successful delivery)"
+                f"💳 Cost: {format_credits(validation['required_credits'])} credits (will be deducted after successful delivery)"
             )
             
             # Create a temporary session to prevent duplicate generation
@@ -334,7 +335,7 @@ class MathematicsHandler:
 💎 *Points:* {question_data.get('points', 10)} XP
 
 📊 *Your Current Stats:*
-💳 *Credits:* {credits}
+💳 *Credits:* {format_credits(credits)}
 ⭐ *Level:* {stats.get('level', 1)} (XP: {stats.get('xp_points', 0)})
 🔥 *Streak:* {stats.get('streak', 0)} days
 
@@ -424,7 +425,7 @@ class MathematicsHandler:
             # Instead of sending 2 separate messages, combine everything into one message
             combined_message = answer_message + "\n\n" + "═══════════════════════\n\n"
             stats_message = f"📊 *{user_name}'s Progress Dashboard:*\n"
-            stats_message += f"💳 *Credits:* {final_credits}\n"
+            stats_message += f"💳 *Credits:* {format_credits(final_credits)}\n"
             stats_message += f"⭐ *Level:* {final_level} (XP: {final_xp})\n"
             stats_message += f"🔥 *Streak:* {final_streak} days\n"
             

@@ -4,6 +4,7 @@ import os
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 from database.external_db import make_supabase_request, add_credits
+from utils.credit_units import credits_to_units, format_credits, units_to_credits
 from services.paynow_service import paynow_service
 
 logger = logging.getLogger(__name__)
@@ -18,39 +19,48 @@ class PaymentService:
         
         self.packages = [
             {
-                'id': 'pocket',
+                'id': 'lite',
+                'name': 'LITE STARTER',
+                'price': 2.00,
+                'credits': 150,
+                'description': 'Affordable entry point',
+                'best_for': 'Quick trial & testing',
+                'icon': '⚪'
+            },
+            {
+                'id': 'starter',
                 'name': 'STARTER PACKAGE',
-                'price': 2.50,
-                'credits': 200,
-                'description': 'High value entry point',
-                'best_for': '2-3 days of intensive use',
+                'price': 5.00,
+                'credits': 400,
+                'description': 'Perfect for trying out features',
+                'best_for': '1-2 weeks of regular use',
                 'icon': '🟤'
             },
             {
-                'id': 'mini',
+                'id': 'standard',
                 'name': 'STANDARD PACKAGE', 
-                'price': 5.00,
-                'credits': 420,
-                'description': 'Solid upgrade with bonus',
-                'best_for': 'Weekly revision & practice',
+                'price': 10.00,
+                'credits': 850,
+                'description': 'Most popular choice with bonus',
+                'best_for': 'Monthly intensive learning',
                 'icon': '🟢'
             },
             {
-                'id': 'quick',
+                'id': 'pro',
                 'name': 'PRO PACKAGE',
-                'price': 10.00,
-                'credits': 890,
-                'description': 'Serious student choice',
-                'best_for': 'Monthly master class',
+                'price': 18.00,
+                'credits': 1600,
+                'description': 'Excellent value for serious students',
+                'best_for': 'Term-long comprehensive study',
                 'icon': '🔵'
             },
             {
-                'id': 'boost',
+                'id': 'premium',
                 'name': 'PREMIUM PACKAGE',
-                'price': 15.00,
-                'credits': 1440,
-                'description': 'Maximum value per dollar',
-                'best_for': 'Term-long learning',
+                'price': 25.00,
+                'credits': 2250,
+                'description': 'Maximum value - best credits per dollar',
+                'best_for': 'Full academic year preparation',
                 'icon': '🟡'
             }
         ]
@@ -133,7 +143,7 @@ class PaymentService:
             'user_id': user_id,
             'transaction_reference': reference_code,
             'amount_expected': package['price'],
-            'credits_to_add': package['credits'],
+            'credits_to_add': credits_to_units(package['credits']),
             'status': 'pending',
             'package_type': package_id,
             'created_at': datetime.now().isoformat()
@@ -253,7 +263,7 @@ class PaymentService:
                 'package_id': package_id,  # Correct field name
                 'reference_code': reference_code,  # Correct field name  
                 'amount': float(package['price']),  # Correct field name and type
-                'credits': int(package['credits']),  # Correct field name and type
+                'credits': int(credits_to_units(package['credits'])),  # Store units
                 'payment_proof': proof_text,  # Correct field name
                 'status': 'pending',
                 'created_at': datetime.now().isoformat(),
@@ -320,12 +330,16 @@ class PaymentService:
             
             payment = result[0]
             user_id = payment['user_id']
-            credits = payment['credits']  # Updated field name
+            credits = int(payment['credits'])  # Stored units
             package = self.get_package_by_id(payment.get('package_id', 'unknown'))  # Updated field name
             
             # Add credits to user account using advanced credit system
             from services.advanced_credit_service import advanced_credit_service
-            add_success = advanced_credit_service.add_credits_for_purchase(user_id, credits, f"Credit purchase: {package['name'] if package else 'Package'}")
+            add_success = advanced_credit_service.add_credits_for_purchase(
+                user_id,
+                credits,
+                f"Credit purchase: {package['name'] if package else 'Package'}"
+            )
             
             if add_success:
                 # Update payment status to approved
@@ -431,7 +445,7 @@ class PaymentService:
 ✅ **Transaction Successful**
 
 💰 **Package**: {package['name']}
-💳 **Credits Added**: +{credits} credits
+💳 **Credits Added**: +{format_credits(credits)} credits
 🔢 **Transaction ID**: {reference_code}
 📅 **Date**: {datetime.now().strftime('%Y-%m-%d %H:%M')}
 
@@ -545,7 +559,7 @@ class PaymentService:
                 payment = result[0]
                 package = self.get_package_by_id(payment.get('package_id', 'unknown'))  # Updated field name
                 package_name = package['name'] if package else 'Unknown Package'
-                credits = payment.get('credits', 0)  # Updated field name
+                credits = int(payment.get('credits', 0))  # Stored units
                 timestamp = datetime.now().strftime("%H:%M on %d/%m/%Y")
             else:
                 package_name = 'Unknown Package'
@@ -561,7 +575,7 @@ class PaymentService:
         message = f"🎉 **PAYMENT APPROVED!**\n\n"
         message += f"✅ **Transaction Successful**\n\n"
         message += f"💰 **Package**: {package_name}\n"
-        message += f"💳 **Credits Added**: +{credits} credits\n"
+        message += f"💳 **Credits Added**: +{format_credits(credits)} credits\n"
         message += f"🔢 **Transaction ID**: {reference_code}\n"
         message += f"📅 **Date**: {timestamp}\n\n"
         message += f"🚀 **Your credits are ready to use!**\n"
@@ -617,7 +631,7 @@ class PaymentService:
                     'package_id': package_id,
                     'reference_code': reference_code,
                     'amount': float(package['price']),
-                    'credits': int(package['credits']),
+                    'credits': int(credits_to_units(package['credits'])),
                     'status': 'initiated',  # Paynow-specific status
                     'payment_method': 'paynow_ecocash',
                     'credits_added': 0,
@@ -974,7 +988,7 @@ Select your preferred payment method below:"""
         
         Args:
             user_id: User's chat ID
-            credits: Number of credits added
+            credits: Number of credit units added
             reference_code: Payment reference
             package_name: Name of purchased package
         """
@@ -987,7 +1001,7 @@ Select your preferred payment method below:"""
 ✅ **Your Paynow USD EcoCash payment has been successfully processed!**
 
 📦 **Package:** {package_name}
-💰 **Credits Added:** {credits} credits
+💰 **Credits Added:** {format_credits(credits)} credits
 🔗 **Reference:** {reference_code}
 ⚡ **Status:** Instant confirmation
 

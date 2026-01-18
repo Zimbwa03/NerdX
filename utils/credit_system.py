@@ -1,6 +1,7 @@
 import logging
 from typing import Dict, Optional, List
 from config import Config
+from utils.credit_units import format_credits
 from database.external_db import get_user_credits, deduct_credits, add_credits
 
 logger = logging.getLogger(__name__)
@@ -59,10 +60,15 @@ class CreditSystem:
             return 5
     
     def deduct_credits_for_action(self, user_id: str, action: str, difficulty: Optional[str] = None) -> bool:
-        """Deduct credits for a specific action"""
+        """Deduct credit units for a specific action"""
         try:
             required_credits = self.get_credit_cost(action, difficulty)
-            return deduct_credits(user_id, required_credits)
+            return deduct_credits(
+                user_id,
+                required_credits,
+                action,
+                f"Used {action} feature"
+            )
             
         except Exception as e:
             logger.error(f"Error deducting credits: {e}")
@@ -84,9 +90,9 @@ class CreditSystem:
             action_name = action_names.get(action, action.title())
             
             if difficulty:
-                return f"💰 {action_name} ({difficulty.title()}): {cost} credits"
+                return f"💰 {action_name} ({difficulty.title()}): {format_credits(cost)} credits"
             else:
-                return f"💰 {action_name}: {cost} credits"
+                return f"💰 {action_name}: {format_credits(cost)} credits"
                 
         except Exception as e:
             logger.error(f"Error formatting credit message: {e}")
@@ -171,10 +177,10 @@ class CreditSystem:
             
             if credits == 0:
                 return "💳 You have 0 credits. Purchase more to continue learning!"
-            elif credits < 10:
-                return f"💳 You have {credits} credits remaining. Consider purchasing more soon."
+            elif credits < 10 * Config.CREDIT_UNITS_PER_CREDIT:
+                return f"💳 You have {format_credits(credits)} credits remaining. Consider purchasing more soon."
             else:
-                return f"💳 You have {credits} credits"
+                return f"💳 You have {format_credits(credits)} credits"
                 
         except Exception as e:
             logger.error(f"Error formatting credit balance: {e}")

@@ -300,6 +300,22 @@ export const projectApi = {
     }
   },
 
+  // Generate educational image using Vertex AI (Gemini + Imagen)
+  generateImage: async (
+    projectId: number,
+    prompt: string
+  ): Promise<ImageGenerationResult | null> => {
+    try {
+      const response = await api.post(`/api/mobile/project/${projectId}/generate-image`, {
+        prompt,
+      });
+      return response.data.data || null;
+    } catch (error: any) {
+      console.error('Generate image error:', error);
+      throw error;
+    }
+  },
+
   // ==================== Export / Submission Pack Features ====================
 
   // Generate submission pack PDF
@@ -535,6 +551,13 @@ export interface TranscriptionResult {
   transcription: string;
   language?: string;
   confidence?: number;
+}
+
+export interface ImageGenerationResult {
+  response: string;
+  image_url: string;
+  aspect_ratio?: string;
+  credits_remaining?: number;
 }
 
 export interface ExportResult {

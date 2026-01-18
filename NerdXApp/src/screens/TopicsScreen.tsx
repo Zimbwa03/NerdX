@@ -37,6 +37,16 @@ const TopicsScreen: React.FC = () => {
   const themedColors = useThemedColors();
   const { showSuccess, showError, showWarning, showInfo } = useNotification();
   const { subject, parentSubject } = route.params as { subject: Subject; parentSubject?: string };
+  const mathThinkingSteps = [
+    { emoji: '📥', label: 'Loading topic context' },
+    { emoji: '🧠', label: 'Generating question' },
+    { emoji: '📚', label: 'Selecting syllabus objectives' },
+    { emoji: '🧮', label: 'Balancing difficulty' },
+    { emoji: '📝', label: 'Drafting marking points' },
+    { emoji: '🧩', label: 'Refining marking points' },
+    { emoji: '🔍', label: 'Checking method and accuracy' },
+    { emoji: '✅', label: 'Complete' },
+  ];
 
   // State for Combined Science Tabs
   const [activeTab, setActiveTab] = useState<string>(parentSubject || (subject.id === 'combined_science' ? 'Biology' : ''));
@@ -570,8 +580,10 @@ const TopicsScreen: React.FC = () => {
       {/* AI Loading Progress Overlay */}
       <LoadingProgress
         visible={isGeneratingQuestion}
-        message="Preparing your personalized question..."
+        message="Preparing your O Level Mathematics question..."
         estimatedTime={8}
+        stage="Thinking"
+        steps={subject.id === 'mathematics' ? mathThinkingSteps : undefined}
       />
 
       <StatusBar

@@ -53,6 +53,16 @@ const ALevelPureMathScreen: React.FC = () => {
     const { user, updateUser } = useAuth();
     const { isDarkMode } = useTheme();
     const themedColors = useThemedColors();
+    const pureMathThinkingSteps = [
+        { emoji: '📥', label: 'Loading topic context' },
+        { emoji: '🧠', label: 'Generating question' },
+        { emoji: '📚', label: 'Selecting syllabus objectives' },
+        { emoji: '🧮', label: 'Balancing difficulty' },
+        { emoji: '📝', label: 'Drafting marking points' },
+        { emoji: '🧩', label: 'Refining marking points' },
+        { emoji: '🔍', label: 'Checking method and accuracy' },
+        { emoji: '✅', label: 'Complete' },
+    ];
 
     const [selectedLevel, setSelectedLevel] = useState<'Lower Sixth' | 'Upper Sixth'>('Lower Sixth');
     const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
@@ -186,8 +196,10 @@ const ALevelPureMathScreen: React.FC = () => {
             {/* Loading Overlay */}
             <LoadingProgress
                 visible={isGeneratingQuestion}
-                message="DeepSeek is generating your Pure Mathematics question..."
+                message="DeepSeek is generating your A Level Pure Mathematics question..."
                 estimatedTime={10}
+                stage="Thinking"
+                steps={pureMathThinkingSteps}
             />
 
             <StatusBar barStyle="light-content" />

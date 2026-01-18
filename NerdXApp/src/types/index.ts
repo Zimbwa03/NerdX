@@ -13,8 +13,6 @@ export interface User {
     free_credits: number;
     purchased_credits: number;
     welcome_bonus_claimed: boolean;
-    daily_credits_active: boolean;
-    next_daily_reset: string;
   };
 }
 

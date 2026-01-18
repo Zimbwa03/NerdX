@@ -331,15 +331,9 @@ const CreditsScreen: React.FC = () => {
           <Text style={styles.breakdownValue}>{breakdown.purchased_credits}</Text>
         </View>
         <View style={styles.breakdownRow}>
-          <Text style={styles.breakdownLabel}>Free/Daily:</Text>
+          <Text style={styles.breakdownLabel}>Free/Bonus:</Text>
           <Text style={styles.breakdownValue}>{breakdown.free_credits}</Text>
         </View>
-        {!breakdown.daily_credits_active && breakdown.purchased_credits > 0 && (
-          <Text style={styles.noteText}>Daily credits paused while you have purchased credits</Text>
-        )}
-        {breakdown.next_daily_reset && (
-          <Text style={styles.resetText}>Next reset: {breakdown.next_daily_reset}</Text>
-        )}
       </View>
     );
   };

@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -33,6 +32,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
 import { Colors } from '../theme/colors';
+import { LoadingProgress } from '../components/LoadingProgress';
 
 interface Message {
   id: string;
@@ -43,6 +43,119 @@ interface Message {
   image_urls?: string[]; // Multi-image user messages
   context_pack_id?: string;
 }
+
+// Compact inline loading progress for chat messages
+const InlineLoadingProgress: React.FC<{
+  steps: Array<{ emoji: string; label: string }>;
+  message: string;
+  isDarkMode: boolean;
+  themedColors: any;
+}> = ({ steps, message, isDarkMode, themedColors }) => {
+  const [activeStepIndex, setActiveStepIndex] = React.useState(0);
+  const [ellipsis, setEllipsis] = React.useState('');
+  const ellipsisIntervalRef = React.useRef<NodeJS.Timeout | null>(null);
+  const stepIntervalRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  const finalStepIndex = Math.max(steps.length - 1, 0);
+  const runningMaxIndex = Math.max(finalStepIndex - 1, 0);
+
+  React.useEffect(() => {
+    setActiveStepIndex(0);
+    setEllipsis('');
+
+    // Calculate step interval (shorter for compact display)
+    const totalSteps = Math.max(runningMaxIndex + 1, 1);
+    const stepIntervalMs = Math.max(600, Math.floor(8000 / totalSteps));
+
+    stepIntervalRef.current = setInterval(() => {
+      setActiveStepIndex((prev) => {
+        const next = Math.min(prev + 1, runningMaxIndex);
+        return next;
+      });
+    }, stepIntervalMs);
+
+    ellipsisIntervalRef.current = setInterval(() => {
+      setEllipsis((prev) => (prev.length >= 3 ? '' : `${prev}.`));
+    }, 450);
+
+    return () => {
+      if (stepIntervalRef.current) {
+        clearInterval(stepIntervalRef.current);
+      }
+      if (ellipsisIntervalRef.current) {
+        clearInterval(ellipsisIntervalRef.current);
+      }
+    };
+  }, [steps, runningMaxIndex]);
+
+  return (
+    <View style={styles.inlineLoadingContainer}>
+      <View style={[
+        styles.inlineLoadingBubble,
+        {
+          backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.04)' : '#FFFFFF',
+          borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : '#F0F0F0',
+        }
+      ]}>
+        <Text style={[styles.inlineLoadingMessage, { color: themedColors.text.secondary }]}>
+          {message}
+          {ellipsis}
+        </Text>
+        <View style={styles.inlineStepsContainer}>
+          {steps.slice(0, finalStepIndex + 1).map((step, index) => {
+            const isActive = index === activeStepIndex;
+            const isComplete = index < activeStepIndex;
+            const isFinal = index === finalStepIndex;
+            
+            return (
+              <View key={`inline-${step.label}-${index}`} style={styles.inlineStepRow}>
+                <View
+                  style={[
+                    styles.inlineStepIndicator,
+                    {
+                      backgroundColor: isComplete
+                        ? '#22C55E'
+                        : isActive
+                        ? themedColors.primary.main
+                        : isDarkMode
+                        ? 'rgba(255, 255, 255, 0.15)'
+                        : 'rgba(0, 0, 0, 0.08)',
+                      borderColor: isComplete
+                        ? '#86EFAC'
+                        : isActive
+                        ? themedColors.primary.light
+                        : isDarkMode
+                        ? 'rgba(255, 255, 255, 0.2)'
+                        : 'rgba(0, 0, 0, 0.1)',
+                    },
+                  ]}
+                >
+                  <Text style={styles.inlineStepIndicatorText}>
+                    {isComplete ? '✓' : index + 1}
+                  </Text>
+                </View>
+                <Text
+                  style={[
+                    styles.inlineStepText,
+                    {
+                      color: isActive
+                        ? themedColors.text.primary
+                        : themedColors.text.secondary,
+                      fontWeight: isActive ? '600' : '400',
+                    },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {step.emoji} {step.label}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+      </View>
+    </View>
+  );
+};
 
 const ProjectAssistantScreen: React.FC = () => {
   const route = useRoute();
@@ -69,13 +182,64 @@ const ProjectAssistantScreen: React.FC = () => {
   const [showToolbar, setShowToolbar] = useState(false);
   const [activeResearch, setActiveResearch] = useState<ResearchSession | null>(null);
   const [researchPolling, setResearchPolling] = useState(false);
-  const [activeMode, setActiveMode] = useState<'chat'>('chat');
+  const [activeMode, setActiveMode] = useState<'chat' | 'image_generation'>('chat');
   const [showModeMenu, setShowModeMenu] = useState(false);
+  const [imageGenerationMode, setImageGenerationMode] = useState(false);
+  const [lastGeneratedImageUrl, setLastGeneratedImageUrl] = useState<string | null>(null);
+  const [lastImagePrompt, setLastImagePrompt] = useState<string>('');
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const scrollViewRef = useRef<ScrollView>(null);
+
+  // Loading step definitions for different operations
+  const chatThinkingSteps = [
+    { emoji: '🧠', label: 'Understanding your request' },
+    { emoji: '📚', label: 'Reviewing project context' },
+    { emoji: '✍️', label: 'Crafting response' },
+    { emoji: '🔍', label: 'Refining answer' },
+    { emoji: '✅', label: 'Complete' },
+  ];
+
+  const imageGenerationSteps = [
+    { emoji: '🎨', label: 'Enhancing your description' },
+    { emoji: '✨', label: 'Crafting design prompt' },
+    { emoji: '🖼️', label: 'Generating image' },
+    { emoji: '🎯', label: 'Optimizing quality' },
+    { emoji: '✅', label: 'Complete' },
+  ];
+
+  const documentGenerationSteps = [
+    { emoji: '📄', label: 'Compiling sections' },
+    { emoji: '🤖', label: 'Generating AI content' },
+    { emoji: '📋', label: 'Formatting document' },
+    { emoji: '🔍', label: 'Finalizing layout' },
+    { emoji: '✅', label: 'Complete' },
+  ];
+
+  const researchSteps = [
+    { emoji: '🔬', label: 'Analyzing topic' },
+    { emoji: '🌐', label: 'Gathering sources' },
+    { emoji: '📊', label: 'Processing data' },
+    { emoji: '📝', label: 'Synthesizing findings' },
+    { emoji: '✅', label: 'Complete' },
+  ];
+
+  const documentAnalysisSteps = [
+    { emoji: '📄', label: 'Reading document' },
+    { emoji: '🔍', label: 'Extracting content' },
+    { emoji: '🧠', label: 'Analyzing structure' },
+    { emoji: '📊', label: 'Summarizing key points' },
+    { emoji: '✅', label: 'Complete' },
+  ];
+
+  const initialLoadingSteps = [
+    { emoji: '📂', label: 'Loading project' },
+    { emoji: '💬', label: 'Fetching chat history' },
+    { emoji: '⚙️', label: 'Preparing interface' },
+    { emoji: '✅', label: 'Ready' },
+  ];
 
   useEffect(() => {
     initializeProject();
@@ -146,12 +310,19 @@ const ProjectAssistantScreen: React.FC = () => {
     const query = rawText.trim();
     const hasImages = selectedImages.length > 0;
     if ((!query && !hasImages) || !project || sending) return;
-    const isImageRequest = (() => {
+    
+    // Check if image generation mode is active OR if the message implies image generation
+    const isImageRequest = imageGenerationMode || (() => {
       const q = query.toLowerCase();
       const wantsGenerate = ['generate', 'create', 'make', 'design', 'draw'].some(k => q.includes(k));
       const mentionsVisual = ['image', 'flyer', 'poster', 'infographic', 'banner', 'logo', 'cover'].some(k => q.includes(k));
       return wantsGenerate && mentionsVisual;
     })();
+    
+    // Save prompt for potential regeneration
+    if (isImageRequest) {
+      setLastImagePrompt(query);
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -180,44 +351,23 @@ const ProjectAssistantScreen: React.FC = () => {
         contextPackId = pack?.id;
       }
 
-      // If this is an image-generation request, show a visual progress message while we wait.
-      const progressMessageId = `imggen-${Date.now()}`;
-      let progressTimer: any = null;
-      let progressValue = 0;
-      if (isImageRequest) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: progressMessageId,
-            role: 'assistant',
-            content: '🖼️ Generating image... 0%',
-            timestamp: new Date(),
-          },
-        ]);
-        progressTimer = setInterval(() => {
-          progressValue = Math.min(95, progressValue + 5);
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === progressMessageId
-                ? { ...m, content: `🖼️ Generating image... ${progressValue}%` }
-                : m
-            )
-          );
-        }, 600);
-      }
+      // No need for progress message - LoadingProgress overlay will handle it
 
-      // Regular chat with AI
-      const chatResponse = await projectApi.sendMessage(project.id, query, contextPackId);
-      if (chatResponse) {
-        response = chatResponse;
-      }
-
-      if (progressTimer) {
-        clearInterval(progressTimer);
-      }
-      if (isImageRequest) {
-        // Remove the progress message once we have a response
-        setMessages((prev) => prev.filter((m) => m.id !== progressMessageId));
+      // Use dedicated image generation endpoint when in explicit image mode
+      if (imageGenerationMode && isImageRequest) {
+        // Call the dedicated image generation endpoint
+        const imageResponse = await projectApi.generateImage(project.id, query);
+        if (imageResponse) {
+          response = imageResponse;
+        }
+        // Exit image generation mode after generating
+        setImageGenerationMode(false);
+      } else {
+        // Regular chat with AI
+        const chatResponse = await projectApi.sendMessage(project.id, query, contextPackId);
+        if (chatResponse) {
+          response = chatResponse;
+        }
       }
 
       if (response) {
@@ -232,18 +382,17 @@ const ProjectAssistantScreen: React.FC = () => {
 
         setMessages((prev) => [...prev, assistantMessage]);
 
-        // Update credits if returned
+        // Store last generated image URL for regeneration/download
+        if (response.image_url) {
+          setLastGeneratedImageUrl(response.image_url);
+        }
+
         // Update credits if returned (backend manages batch deduction)
         if (response.credits_remaining !== undefined) {
           updateUser({ credits: response.credits_remaining });
         }
-        // else if (user) {
-        //   // Fallback local deduction - DISABLED for batch model
-        //   updateUser({ credits: (user.credits || 0) - 1 });
-        // }
       }
     } catch (error: any) {
-      setMessages((prev) => prev.filter((msg) => msg.id !== 'researching'));
       Alert.alert('Error', error.response?.data?.message || error.message || 'Failed to send message');
       // Remove failed message
       setMessages((prev) => prev.filter((msg) => msg.id !== userMessage.id));
@@ -264,20 +413,9 @@ const ProjectAssistantScreen: React.FC = () => {
           text: 'Generate & Download',
           onPress: async () => {
             try {
-              setLoading(true);
-
-              // Add a loading message
-              setMessages((prev) => [...prev, {
-                id: 'generating',
-                role: 'assistant',
-                content: '📄 Generating your project document... This may take a moment as I compile all sections with AI-powered content.',
-                timestamp: new Date(),
-              }]);
+              setSending(true);
 
               const filePath = await projectApi.generateDocument(project.id);
-
-              // Remove loading message
-              setMessages((prev) => prev.filter((msg) => msg.id !== 'generating'));
 
               if (filePath) {
                 Alert.alert(
@@ -291,11 +429,9 @@ const ProjectAssistantScreen: React.FC = () => {
                 }
               }
             } catch (error: any) {
-              // Remove loading message
-              setMessages((prev) => prev.filter((msg) => msg.id !== 'generating'));
               Alert.alert('Error', error.message || 'Failed to generate document. Please try again.');
             } finally {
-              setLoading(false);
+              setSending(false);
             }
           },
         },
@@ -334,11 +470,10 @@ const ProjectAssistantScreen: React.FC = () => {
 
               if (session?.interaction_id) {
                 setActiveResearch(session);
-                setResearchPolling(true);
                 pollResearchStatus(session.interaction_id);
               }
             } catch (error: any) {
-              setMessages((prev) => prev.filter((msg) => msg.id !== 'research-start'));
+              setResearchPolling(false);
               Alert.alert('Error', error.message || 'Failed to start research');
             } finally {
               setSending(false);
@@ -358,7 +493,6 @@ const ProjectAssistantScreen: React.FC = () => {
 
       if (status?.status === 'completed' && status.result) {
         // Research completed - add result to chat
-        setMessages((prev) => prev.filter((msg) => msg.id !== 'research-start'));
         setMessages((prev) => [...prev, {
           id: `research-${Date.now()}`,
           role: 'assistant',
@@ -368,7 +502,6 @@ const ProjectAssistantScreen: React.FC = () => {
         setActiveResearch(null);
         setResearchPolling(false);
       } else if (status?.status === 'failed') {
-        setMessages((prev) => prev.filter((msg) => msg.id !== 'research-start'));
         Alert.alert('Research Failed', status.message || 'Unable to complete research');
         setActiveResearch(null);
         setResearchPolling(false);
@@ -504,20 +637,11 @@ const ProjectAssistantScreen: React.FC = () => {
         encoding: FileSystem.EncodingType.Base64,
       });
 
-      setMessages((prev) => [...prev, {
-        id: 'analyzing',
-        role: 'assistant',
-        content: `📄 **Analyzing Document**\n\nFile: ${file.name}\n\nProcessing with AI...`,
-        timestamp: new Date(),
-      }]);
-
       const analysis = await projectApi.analyzeDocument(
         project.id,
         base64,
         file.mimeType || 'application/pdf'
       );
-
-      setMessages((prev) => prev.filter((msg) => msg.id !== 'analyzing'));
 
       if (analysis?.analysis) {
         setMessages((prev) => [...prev, {
@@ -528,7 +652,6 @@ const ProjectAssistantScreen: React.FC = () => {
         }]);
       }
     } catch (error: any) {
-      setMessages((prev) => prev.filter((msg) => msg.id !== 'analyzing'));
       Alert.alert('Error', error.message || 'Failed to analyze document');
     } finally {
       setSending(false);
@@ -599,13 +722,6 @@ const ProjectAssistantScreen: React.FC = () => {
         setIsRecording(false);
         setSending(true);
 
-        setMessages((prev) => [...prev, {
-          id: 'transcribing',
-          role: 'assistant',
-          content: '🎤 **Processing Audio...**\n\nTranscribing your voice recording...',
-          timestamp: new Date(),
-        }]);
-
         await recording.stopAndUnloadAsync();
         const uri = recording.getURI();
         setRecording(null);
@@ -619,8 +735,6 @@ const ProjectAssistantScreen: React.FC = () => {
           // Send to backend for transcription
           try {
             const result = await projectApi.transcribeAudio(project.id, base64Audio, 'audio/m4a');
-
-            setMessages((prev) => prev.filter((msg) => msg.id !== 'transcribing'));
 
             if (result?.transcription) {
               // Add transcribed text to input or send as message
@@ -636,7 +750,6 @@ const ProjectAssistantScreen: React.FC = () => {
               }]);
             }
           } catch (error: any) {
-            setMessages((prev) => prev.filter((msg) => msg.id !== 'transcribing'));
             Alert.alert('Transcription Error', error.message || 'Failed to transcribe audio');
           }
         }
@@ -713,12 +826,43 @@ const ProjectAssistantScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={[styles.centerContainer, { backgroundColor: themedColors.background.default }]}>
-        <ActivityIndicator size="large" color={themedColors.primary.main} />
-        <Text style={[styles.loadingText, { color: themedColors.text.secondary }]}>Loading project...</Text>
+      <View style={[styles.container, { backgroundColor: themedColors.background.default }]}>
+        <LoadingProgress
+          visible={loading}
+          message="Loading your project..."
+          estimatedTime={3}
+          stage="Initializing"
+          steps={initialLoadingSteps}
+        />
       </View>
     );
   }
+
+  // Determine loading config for inline chat message
+  const getLoadingConfig = () => {
+    // Priority: Research > Image Generation > Regular Chat
+    if (researchPolling) {
+      return {
+        steps: researchSteps,
+        message: "DeepSeek is conducting deep research...",
+      };
+    }
+    if (sending && imageGenerationMode) {
+      return {
+        steps: imageGenerationSteps,
+        message: "Generating your professional educational image...",
+      };
+    }
+    if (sending) {
+      return {
+        steps: chatThinkingSteps,
+        message: "AI is thinking and crafting your response...",
+      };
+    }
+    return null;
+  };
+
+  const loadingConfig = getLoadingConfig();
 
   return (
     <KeyboardAvoidingView
@@ -799,6 +943,63 @@ const ProjectAssistantScreen: React.FC = () => {
                       style={styles.messageImage}
                       resizeMode="contain"
                     />
+                    {/* Image Action Buttons */}
+                    <View style={styles.imageActionButtons}>
+                      <TouchableOpacity
+                        style={[styles.imageActionButton, { backgroundColor: isDarkMode ? 'rgba(16, 185, 129, 0.2)' : 'rgba(16, 185, 129, 0.1)' }]}
+                        onPress={async () => {
+                          try {
+                            // Download image
+                            const downloadUri = FileSystem.documentDirectory + `nerdx_image_${Date.now()}.png`;
+                            await FileSystem.downloadAsync(message.image_url!, downloadUri);
+                            await Sharing.shareAsync(downloadUri);
+                            showSuccess('Image ready to save');
+                          } catch (error) {
+                            showError('Failed to download image');
+                          }
+                        }}
+                      >
+                        <Ionicons name="download-outline" size={16} color="#10B981" />
+                        <Text style={[styles.imageActionText, { color: '#10B981' }]}>Download</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[styles.imageActionButton, { backgroundColor: isDarkMode ? 'rgba(139, 92, 246, 0.2)' : 'rgba(139, 92, 246, 0.1)' }]}
+                        onPress={() => {
+                          // Regenerate with same prompt
+                          if (lastImagePrompt) {
+                            setInputText(lastImagePrompt);
+                            latestInputTextRef.current = lastImagePrompt;
+                            setImageGenerationMode(true);
+                            showInfo('Tap send to regenerate');
+                          } else {
+                            showWarning('No previous prompt to regenerate');
+                          }
+                        }}
+                      >
+                        <Ionicons name="refresh-outline" size={16} color={themedColors.primary.main} />
+                        <Text style={[styles.imageActionText, { color: themedColors.primary.main }]}>Regenerate</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[styles.imageActionButton, { backgroundColor: isDarkMode ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)' }]}
+                        onPress={() => {
+                          // Edit prompt
+                          if (lastImagePrompt) {
+                            setInputText(lastImagePrompt);
+                            latestInputTextRef.current = lastImagePrompt;
+                            setImageGenerationMode(true);
+                            showInfo('Edit the prompt and send');
+                          } else {
+                            setImageGenerationMode(true);
+                            showInfo('Enter a new image description');
+                          }
+                        }}
+                      >
+                        <Ionicons name="create-outline" size={16} color="#3B82F6" />
+                        <Text style={[styles.imageActionText, { color: '#3B82F6' }]}>Edit Prompt</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 )}
                 
@@ -858,18 +1059,29 @@ const ProjectAssistantScreen: React.FC = () => {
           )
         ))}
 
-        {sending && (
-          <View style={styles.assistantMessageRow}>
-            <View style={styles.assistantMessageFullWidth}>
-              <View style={styles.assistantContentContainer}>
-                <ActivityIndicator size="small" color={themedColors.primary.main} />
-              </View>
-            </View>
-          </View>
+        {/* Inline Loading Progress - Shows stages in chat */}
+        {sending && loadingConfig && (
+          <InlineLoadingProgress
+            steps={loadingConfig.steps}
+            message={loadingConfig.message}
+            isDarkMode={isDarkMode}
+            themedColors={themedColors}
+          />
         )}
       </ScrollView>
 
       <View style={[styles.inputContainer, { backgroundColor: themedColors.background.paper, borderTopColor: themedColors.border.light }]}>
+        {/* Image Generation Mode Indicator */}
+        {imageGenerationMode && (
+          <View style={styles.imageModeIndicator}>
+            <Ionicons name="sparkles" size={14} color="#10B981" />
+            <Text style={styles.imageModeIndicatorText}>Image Generation Mode (Vertex AI)</Text>
+            <TouchableOpacity onPress={() => setImageGenerationMode(false)}>
+              <Ionicons name="close-circle" size={18} color="#10B981" />
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Selected images preview (ChatGPT-style, above the input) */}
         {selectedImages.length > 0 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }}>
@@ -948,6 +1160,26 @@ const ProjectAssistantScreen: React.FC = () => {
               </View>
             </TouchableOpacity>
 
+            <TouchableOpacity
+              style={[
+                styles.modeMenuItem,
+                { backgroundColor: isDarkMode ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.08)' }
+              ]}
+              onPress={() => { 
+                setShowModeMenu(false); 
+                setImageGenerationMode(true);
+                showInfo('Image Generation Mode activated. Describe the image you want to create.');
+              }}
+            >
+              <View style={[styles.modeMenuIcon, { backgroundColor: isDarkMode ? 'rgba(16, 185, 129, 0.25)' : 'rgba(16, 185, 129, 0.15)' }]}>
+                <Ionicons name="sparkles" size={22} color="#10B981" />
+              </View>
+              <View style={styles.modeMenuTextContainer}>
+                <Text style={[styles.modeMenuText, { color: isDarkMode ? '#6EE7B7' : '#059669' }]}>Generate Image</Text>
+                <Text style={[styles.modeMenuDesc, { color: isDarkMode ? 'rgba(255, 255, 255, 0.5)' : '#888' }]}>Create posters, flyers, diagrams with AI</Text>
+              </View>
+            </TouchableOpacity>
+
             {/* Divider */}
             <View style={{ height: 1, backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)', marginVertical: 8 }} />
 
@@ -991,7 +1223,36 @@ const ProjectAssistantScreen: React.FC = () => {
           </View>
         )}
 
-        <View style={[styles.inputWrapper, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F7FA' }]}>
+        <View style={[
+          styles.inputWrapper, 
+          { 
+            backgroundColor: imageGenerationMode 
+              ? (isDarkMode ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.1)') 
+              : (isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F7FA'),
+            borderWidth: imageGenerationMode ? 1.5 : 0,
+            borderColor: imageGenerationMode ? '#10B981' : 'transparent',
+          }
+        ]}>
+          {/* Generate Image Button (left side) */}
+          <TouchableOpacity
+            style={[
+              styles.imageGenButton,
+              imageGenerationMode && styles.imageGenButtonActive
+            ]}
+            onPress={() => {
+              setImageGenerationMode(!imageGenerationMode);
+              if (!imageGenerationMode) {
+                showInfo('Image Generation Mode activated');
+              }
+            }}
+          >
+            <Ionicons 
+              name="sparkles" 
+              size={20} 
+              color={imageGenerationMode ? '#10B981' : themedColors.text.secondary} 
+            />
+          </TouchableOpacity>
+
           {/* Add Media Button (+ icon) */}
           <TouchableOpacity
             style={styles.modeButton}
@@ -1007,8 +1268,10 @@ const ProjectAssistantScreen: React.FC = () => {
               latestInputTextRef.current = text;
               setInputText(text);
             }}
-            placeholder="Ask for help with your project..."
-            placeholderTextColor={themedColors.text.secondary}
+            placeholder={imageGenerationMode 
+              ? "Describe the image you want to generate..." 
+              : "Ask for help with your project..."}
+            placeholderTextColor={imageGenerationMode ? '#10B981' : themedColors.text.secondary}
             multiline
             maxLength={1000}
             editable={!sending && !researchPolling && !isRecording}
@@ -1364,6 +1627,48 @@ const styles = StyleSheet.create({
     color: '#888',
     marginTop: 2,
   },
+  // Inline Loading Progress Styles
+  inlineLoadingContainer: {
+    marginBottom: 16,
+    width: '100%',
+  },
+  inlineLoadingBubble: {
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1,
+    maxWidth: '85%',
+  },
+  inlineLoadingMessage: {
+    fontSize: 13,
+    marginBottom: 12,
+    fontStyle: 'italic',
+  },
+  inlineStepsContainer: {
+    gap: 8,
+  },
+  inlineStepRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  inlineStepIndicator: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 1.5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexShrink: 0,
+  },
+  inlineStepIndicatorText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  inlineStepText: {
+    fontSize: 12,
+    flex: 1,
+  },
   micButton: {
     width: 36,
     height: 36,
@@ -1387,6 +1692,55 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   toolbarButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  // Image Generation Mode Styles
+  imageModeIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    marginBottom: 12,
+    gap: 8,
+  },
+  imageModeIndicatorText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#10B981',
+    flex: 1,
+  },
+  imageGenButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 4,
+  },
+  imageGenButtonActive: {
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+  },
+  imageActionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    marginTop: 12,
+    gap: 10,
+    flexWrap: 'wrap',
+  },
+  imageActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    gap: 6,
+  },
+  imageActionText: {
     fontSize: 13,
     fontWeight: '600',
   },

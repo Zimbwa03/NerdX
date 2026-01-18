@@ -5,6 +5,7 @@ import random
 import time
 from typing import Dict, List, Optional
 from database.external_db import get_user_registration, get_user_credits, deduct_credits
+from utils.credit_units import format_credits
 from database.session_db import save_user_session, get_user_session, clear_user_session
 from services.whatsapp_service import WhatsAppService
 from services.graph_service import GraphService
@@ -247,8 +248,8 @@ class GraphPracticeHandler:
             from services.advanced_credit_service import advanced_credit_service
             
             credit_result = advanced_credit_service.check_and_deduct_credits(
-                user_id, 
-                'math_graph_practice',  # 3 credits as per config
+                user_id,
+                'math_graph_practice',
                 None
             )
             
@@ -266,9 +267,9 @@ class GraphPracticeHandler:
 🎯 Action: AI Question Generation
 
 💳 **Credit Status:**
-• Current Credits: {current_credits}
-• Required Credits: {required_credits}
-• Need: {shortage} more credits
+• Current Credits: {format_credits(current_credits)}
+• Required Credits: {format_credits(required_credits)}
+• Need: {format_credits(shortage)} more credits
 
 🎮 **Why Credits Matter:**
 • Support AI generation costs
