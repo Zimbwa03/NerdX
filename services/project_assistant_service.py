@@ -1552,8 +1552,7 @@ Credits are deducted per AI response.
             if credits_deducted > 0:
                 clean_response += f"\n\n💳 *Credits:* {format_credits(current_credits)} (Deducted {format_credits(credit_cost)} per response)"
             else:
-                # Optional: Show progress to next charge? Or keep it clean.
-                # clean_response += f"\n\n💳 *Credits:* {format_credits(current_credits)}"
+                pass  # No credits deducted, don't show credit info
             
             # Send AI response to user
             self.whatsapp_service.send_message(user_id, clean_response)
@@ -2187,11 +2186,16 @@ IMPORTANT: Generate a single, detailed prompt that will produce a high-quality e
                 if school:
                     context_str += f"School: {school}\n"
             
+            # Build context section separately to avoid f-string backslash issue
+            context_section = ""
+            if context_str:
+                context_section = f"Project Context:\n{context_str}"
+            
             enhancement_request = f"""Enhance this image request into a professional image generation prompt:
 
 User Request: {user_prompt}
 
-{f'Project Context:\n{context_str}' if context_str else ''}
+{context_section}
 
 Remember to:
 1. Add lighting, composition, and color harmony details
