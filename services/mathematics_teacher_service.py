@@ -12,6 +12,7 @@ from utils.session_manager import session_manager
 from services.whatsapp_service import WhatsAppService
 from database.external_db import make_supabase_request, get_user_credits, deduct_credits
 from services.advanced_credit_service import advanced_credit_service
+from services.vertex_service import vertex_service
 
 logger = logging.getLogger(__name__)
 
@@ -35,8 +36,12 @@ class MathematicsTeacherService:
     
     def __init__(self):
         self.whatsapp_service = WhatsAppService()
+
+        # Teacher Mode Mathematics MUST use Vertex AI (Gemini via Vertex) when available.
+        # DeepSeek remains a fallback only (DeepSeek is intended for individual/other flows).
+        self._is_vertex_configured = bool(vertex_service and vertex_service.is_available())
         
-        # Initialize DeepSeek AI as primary provider
+        # Initialize DeepSeek AI as fallback provider
         self.deepseek_api_key = os.getenv('DEEPSEEK_API_KEY')
         self.deepseek_api_url = 'https://api.deepseek.com/chat/completions'
         self._is_deepseek_configured = bool(self.deepseek_api_key)
@@ -54,10 +59,12 @@ class MathematicsTeacherService:
         except Exception as e:
             logger.error(f"Error initializing Gemini fallback: {e}")
         
-        if self._is_deepseek_configured:
-            logger.info("✅ Mathematics Teacher initialized with DeepSeek AI (primary)")
+        if self._is_vertex_configured:
+            logger.info("✅ Mathematics Teacher initialized with Vertex AI Gemini (primary)")
+        elif self._is_deepseek_configured:
+            logger.warning("Vertex AI not available - using DeepSeek as fallback")
         elif self._is_gemini_configured:
-            logger.warning("DeepSeek not available - using Gemini as primary")
+            logger.warning("Vertex/DeepSeek not available - using Gemini (non-Vertex) as fallback")
         else:
             logger.warning("No AI services available")
     
@@ -355,8 +362,8 @@ Current conversation context will be provided with each message."""
             # Store session
             session_manager.set_data(user_id, 'math_teacher', session_data)
             
-            # Generate initial teaching message using DeepSeek AI (primary)
-            if (self._is_deepseek_configured or self._is_gemini_configured) and topic:
+            # Generate initial teaching message using Vertex AI Gemini (primary)
+            if (self._is_vertex_configured or self._is_deepseek_configured or self._is_gemini_configured) and topic:
                 initial_prompt = f"Start teaching {topic} to a {grade_level} Mathematics student. Begin with a warm greeting, ask about their current understanding, and introduce the topic clearly."
                 initial_message = self._get_teaching_response(user_id, initial_prompt, session_data)
             elif topic:
@@ -490,7 +497,7 @@ Current conversation context will be provided with each message."""
             }
     
     def _get_teaching_response(self, user_id: str, message: str, session_data: dict) -> str:
-        """Get teaching response from DeepSeek AI (primary) with Gemini fallback"""
+        """Get teaching response from Vertex AI Gemini (primary) with fallbacks."""
         try:
             # Build context
             subject = session_data.get('subject', 'Mathematics')
@@ -512,8 +519,19 @@ Current conversation context will be provided with each message."""
             
             # Create full prompt
             full_prompt = f"{context}\n\nStudent's message: {message}\n\nYour response:"
-            
-            # Try DeepSeek first (primary)
+
+            # PRIMARY: Vertex AI Gemini (Teacher Mode requirement)
+            if self._is_vertex_configured:
+                try:
+                    vertex_prompt = f"{system_prompt}\n\n{full_prompt}"
+                    v = vertex_service.generate_text(vertex_prompt, model="gemini-2.5-flash")
+                    if v and v.get('success') and (v.get('text') or '').strip():
+                        response_text = v.get('text', '').strip()
+                        return self._convert_math_to_latex(response_text)
+                except Exception as vertex_error:
+                    logger.error(f"Vertex AI error: {vertex_error}", exc_info=True)
+
+            # FALLBACK: DeepSeek (only if Vertex is unavailable/fails)
             if self._is_deepseek_configured:
                 try:
                     response = requests.post(
@@ -537,23 +555,23 @@ Current conversation context will be provided with each message."""
                             # Convert any plain math expressions to LaTeX
                             return self._convert_math_to_latex(response_text)
                 except Exception as deepseek_error:
-                    logger.error(f"DeepSeek error: {deepseek_error}")
+                    logger.error(f"DeepSeek error: {deepseek_error}", exc_info=True)
             
-            # Try Gemini as fallback
+            # FALLBACK: Gemini (non-Vertex) if configured
             if self._is_gemini_configured and self.gemini_model:
                 try:
-                    response = self.gemini_model.generate_content(full_prompt)
+                    response = self.gemini_model.generate_content(f"{system_prompt}\n\n{full_prompt}")
                     if response and response.text:
                         response_text = response.text.strip()
                         # Convert any plain math expressions to LaTeX
                         return self._convert_math_to_latex(response_text)
                 except Exception as gemini_error:
-                    logger.error(f"Gemini fallback error: {gemini_error}")
+                    logger.error(f"Gemini fallback error: {gemini_error}", exc_info=True)
             
             return self._get_fallback_response(message, session_data)
                 
         except Exception as e:
-            logger.error(f"Error getting teaching response: {e}")
+            logger.error(f"Error getting teaching response: {e}", exc_info=True)
             return self._get_fallback_response(message, session_data)
     
     
@@ -736,8 +754,8 @@ Current conversation context will be provided with each message."""
                     'session_ended': False
                 }
             
-            # Generate notes using DeepSeek AI (primary) with Gemini fallback
-            if self._is_deepseek_configured or self._is_gemini_configured:
+            # Generate notes using Vertex AI Gemini (primary) with fallbacks
+            if self._is_vertex_configured or self._is_deepseek_configured or self._is_gemini_configured:
                 subject = session_data.get('subject', 'Mathematics')
                 grade_level = session_data.get('grade_level', 'O-Level')
                 conversation_history = session_data.get('conversation_history', [])
@@ -755,7 +773,23 @@ Current conversation context will be provided with each message."""
                 prompt = f"Subject: {subject}\nGrade Level: {grade_level}\nTopic: {topic}{conversation_context}\n\nStudent request: Generate notes\n\nProvide comprehensive notes in valid JSON format."
                 
                 try:
-                    # Try DeepSeek first (primary - faster response)
+                    # PRIMARY: Vertex AI Gemini
+                    if self._is_vertex_configured:
+                        v = vertex_service.generate_text(f"{system_prompt}\n\n{prompt}", model="gemini-2.5-flash")
+                        if v and v.get("success") and (v.get("text") or "").strip():
+                            notes_data = self._parse_notes_response(v.get("text", ""))
+                            if notes_data:
+                                from utils.math_notes_pdf_generator import MathNotesPDFGenerator
+                                pdf_generator = MathNotesPDFGenerator()
+                                pdf_path = pdf_generator.generate_notes_pdf(notes_data, user_id)
+                                return {
+                                    'success': True,
+                                    'pdf_url': pdf_path,
+                                    'response': f'✅ Your Mathematics notes on {topic} have been generated!',
+                                    'session_ended': False
+                                }
+
+                    # FALLBACK: DeepSeek
                     if self._is_deepseek_configured:
                         response = requests.post(
                             self.deepseek_api_url,
@@ -787,25 +821,23 @@ Current conversation context will be provided with each message."""
                                         'session_ended': False
                                     }
                     
-                    # Fallback to Gemini if DeepSeek fails
+                    # FALLBACK: Gemini (non-Vertex) if DeepSeek/Vertex fails
                     if self._is_gemini_configured and self.gemini_model:
-                        response = self.gemini_model.generate_content(prompt)
-                    notes_data = self._parse_notes_response(response.text)
-                    
-                    if notes_data:
-                        # Generate PDF
-                        from utils.math_notes_pdf_generator import MathNotesPDFGenerator
-                        pdf_generator = MathNotesPDFGenerator()
-                        pdf_path = pdf_generator.generate_notes_pdf(notes_data, user_id)
-                        
-                        return {
-                            'success': True,
-                            'pdf_url': pdf_path,
-                            'response': f'✅ Your Mathematics notes on {topic} have been generated!',
-                            'session_ended': False
-                        }
+                        response = self.gemini_model.generate_content(f"{system_prompt}\n\n{prompt}")
+                        notes_data = self._parse_notes_response(getattr(response, "text", "") or "")
+                        if notes_data:
+                            # Generate PDF
+                            from utils.math_notes_pdf_generator import MathNotesPDFGenerator
+                            pdf_generator = MathNotesPDFGenerator()
+                            pdf_path = pdf_generator.generate_notes_pdf(notes_data, user_id)
+                            return {
+                                'success': True,
+                                'pdf_url': pdf_path,
+                                'response': f'✅ Your Mathematics notes on {topic} have been generated!',
+                                'session_ended': False
+                            }
                 except Exception as e:
-                    logger.error(f"Error generating notes: {e}")
+                    logger.error(f"Error generating notes: {e}", exc_info=True)
             
             # Fallback notes
             return self._generate_fallback_notes(user_id, session_data)

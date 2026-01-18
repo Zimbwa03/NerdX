@@ -26,6 +26,7 @@ export interface TeacherMessageResponse {
   session_ended?: boolean;
   graph_url?: string;
   video_url?: string;
+  context_pack_id?: string;
 }
 
 export interface TeacherNotes {
@@ -56,12 +57,14 @@ export const teacherApi = {
 
   sendMessage: async (
     sessionId: string,
-    message: string
+    message: string,
+    contextPackId?: string
   ): Promise<TeacherMessageResponse | null> => {
     try {
       const response = await api.post('/api/mobile/teacher/message', {
         session_id: sessionId,
         message,
+        context_pack_id: contextPackId,
       });
       return response.data.data || null;
     } catch (error: any) {

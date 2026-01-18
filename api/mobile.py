@@ -272,6 +272,75 @@ def require_auth(f):
             return jsonify({'success': False, 'message': str(e)}), 401
     return decorated_function
 
+
+# ============================================================================
+# ATTACHMENTS / CONTEXT PACK (Multi-image memory)
+# ============================================================================
+
+@mobile_bp.route('/attachments/analyze', methods=['POST'])
+@require_auth
+def analyze_attachments():
+    """
+    Analyze 1..10 attached images and create a durable Context Pack.
+    Multipart form-data:
+      - images: (repeatable file field) up to 10 images
+      - prompt: optional text instruction
+      - chat_id: optional string to link to a chat thread (e.g., teacher session id / project id)
+    """
+    try:
+        if not request.content_type or 'multipart/form-data' not in request.content_type:
+            return jsonify({'success': False, 'message': 'multipart/form-data required'}), 400
+
+        files = request.files.getlist('images')
+        prompt = (request.form.get('prompt') or '').strip()
+        chat_id = request.form.get('chat_id')
+
+        if not files or len(files) < 1:
+            return jsonify({'success': False, 'message': 'At least 1 image is required'}), 400
+        if len(files) > 10:
+            return jsonify({'success': False, 'message': 'Too many images (max 10)'}), 400
+
+        # Validate and read bytes
+        images = []
+        total_bytes = 0
+        for f in files:
+            data = f.read()
+            if not data:
+                return jsonify({'success': False, 'message': 'Empty image uploaded'}), 400
+
+            mime_type = (f.mimetype or '').lower().strip()
+            # Allow common formats only
+            if mime_type not in ('image/jpeg', 'image/jpg', 'image/png', 'image/webp'):
+                return jsonify({'success': False, 'message': f'Unsupported image type: {mime_type or "unknown"}'}), 400
+
+            # Per-image limit (5MB default)
+            if len(data) > 5 * 1024 * 1024:
+                return jsonify({'success': False, 'message': 'Image too large (max 5MB each)'}), 400
+
+            total_bytes += len(data)
+            images.append({'bytes': data, 'mime_type': mime_type})
+
+        # Total limit (15MB to stay within app MAX_CONTENT_LENGTH=16MB)
+        if total_bytes > 15 * 1024 * 1024:
+            return jsonify({'success': False, 'message': 'Total upload too large (max ~15MB)'}), 400
+
+        from services.context_pack_service import context_pack_service
+
+        pack = context_pack_service.create_context_pack(
+            user_id=str(g.current_user_id),
+            chat_id=chat_id,
+            images=images,
+            prompt=prompt,
+        )
+
+        return jsonify({'success': True, 'data': pack}), 200
+
+    except ValueError as e:
+        return jsonify({'success': False, 'message': str(e)}), 400
+    except Exception as e:
+        logger.error(f"Analyze attachments error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
 def generate_nerdx_id() -> str:
     """Generate unique NerdX ID"""
     return f"NX{secrets.token_hex(4).upper()}"
@@ -2876,11 +2945,12 @@ def send_teacher_message():
     """Send message to Teacher Mode chatbot"""
     try:
         data = request.get_json()
-        message = data.get('message', '').strip()
+        message = (data.get('message') or '').strip()
         session_id = data.get('session_id', '')
+        context_pack_id = data.get('context_pack_id')
         
-        if not message:
-            return jsonify({'success': False, 'message': 'Message is required'}), 400
+        if not message and not context_pack_id:
+            return jsonify({'success': False, 'message': 'Message or context_pack_id is required'}), 400
         
         from utils.session_manager import session_manager
         
@@ -2926,26 +2996,84 @@ def send_teacher_message():
         
         if not session_data or not session_data.get('active'):
             return jsonify({'success': False, 'message': 'No active teacher session'}), 400
+
+        # If a context pack was provided, attach its summary as grounding text.
+        # Also store as "latest" so follow-up messages can use it automatically.
+        augmented_message = message
+        if context_pack_id:
+            try:
+                from services.context_pack_service import context_pack_service
+                pack = context_pack_service.get_context_pack(str(context_pack_id))
+                if pack and pack.get('user_id') == str(g.current_user_id):
+                    session_data['latest_context_pack_id'] = str(context_pack_id)
+                    combined = (pack.get('combined_summary') or '').strip()
+                    images = pack.get('images') or []
+                    per_image = "\n".join(
+                        [
+                            f"- Image {i+1}: {(img.get('per_image_summary') or '').strip()}"
+                            for i, img in enumerate(images)
+                        ]
+                    ).strip()
+                    extracted_text = "\n".join(
+                        [f"- Image {i+1} text: {(img.get('extracted_text') or '').strip()}" for i, img in enumerate(images)]
+                    ).strip()
+                    concepts = "\n".join(
+                        [
+                            f"- Image {i+1} concepts: {', '.join((img.get('key_concepts') or [])[:8])}"
+                            for i, img in enumerate(images)
+                        ]
+                    ).strip()
+                    augmented_message = (
+                        (message or "Please analyze the attached images and help me.")
+                        + "\n\n[CONTEXT FROM USER IMAGES]\n"
+                        + (f"Combined summary: {combined}\n" if combined else "")
+                        + (f"What I see:\n{per_image}\n" if per_image else "")
+                        + (f"{extracted_text}\n" if extracted_text else "")
+                        + (f"{concepts}\n" if concepts else "")
+                        + "Instruction: First briefly describe each image (1–2 sentences) and any detected text. Then answer the student's request using this context as ground truth."
+                    ).strip()
+                else:
+                    logger.warning("Context pack not found or not owned by user.")
+            except Exception as e:
+                logger.warning(f"Failed to load context pack {context_pack_id}: {e}")
+        else:
+            # Auto-use latest context pack if present in this teacher session
+            latest_id = (session_data or {}).get('latest_context_pack_id')
+            if latest_id:
+                try:
+                    from services.context_pack_service import context_pack_service
+                    pack = context_pack_service.get_context_pack(str(latest_id))
+                    if pack and pack.get('user_id') == str(g.current_user_id):
+                        combined = (pack.get('combined_summary') or '').strip()
+                        if combined:
+                            augmented_message = (
+                                message
+                                + "\n\n[CONTEXT FROM LATEST USER IMAGES]\n"
+                                + f"Combined summary: {combined}\n"
+                                + "Use this as ground truth for the student's request."
+                            ).strip()
+                except Exception as e:
+                    logger.warning(f"Failed to auto-load latest context pack {latest_id}: {e}")
         
         # Get AI response based on subject
         conversation_history = session_data.get('conversation_history', [])
-        conversation_history.append({'role': 'user', 'content': message})
+        conversation_history.append({'role': 'user', 'content': message or '[images]'})
         
         if is_mathematics:
             # Use Mathematics Teacher Service (covers O Level Mathematics + Pure Mathematics)
-            from services.mathematics_teacher_service import MathematicsTeacherService
-            teacher_service = MathematicsTeacherService()
-            response_text = teacher_service._get_teaching_response(g.current_user_id, message, session_data)
+            from services.mathematics_teacher_service import mathematics_teacher_service
+            teacher_service = mathematics_teacher_service
+            response_text = mathematics_teacher_service._get_teaching_response(g.current_user_id, augmented_message, session_data)
         elif is_english:
             from services.english_teacher_service import EnglishTeacherService
             teacher_service = EnglishTeacherService()
-            response_text = teacher_service._get_teaching_response(g.current_user_id, message, session_data)
+            response_text = teacher_service._get_teaching_response(g.current_user_id, augmented_message, session_data)
         else:
             # Use Combined Science Teacher Service (Biology, Chemistry, Physics)
             from services.combined_science_teacher_service import CombinedScienceTeacherService
             teacher_service = CombinedScienceTeacherService()
             response_text = teacher_service._get_gemini_teaching_response(
-                g.current_user_id, message, session_data
+                g.current_user_id, augmented_message, session_data
             )
         
         conversation_history.append({'role': 'assistant', 'content': response_text})
@@ -3010,6 +3138,7 @@ def send_teacher_message():
             'data': {
                 'response': clean_response,
                 'session_id': session_id,
+                'context_pack_id': session_data.get('latest_context_pack_id'),
                 'graph_url': media_urls.get('graph_url'),
                 'video_url': media_urls.get('video_url')
             }
@@ -3066,9 +3195,9 @@ def generate_teacher_notes():
         # Generate notes JSON (best-effort per service)
         notes_data = None
         if session_key == 'math_teacher':
-            from services.mathematics_teacher_service import MathematicsTeacherService
-            teacher_service = MathematicsTeacherService()
-            notes_result = teacher_service.generate_notes(session_id, g.current_user_id) or {}
+            from services.mathematics_teacher_service import mathematics_teacher_service
+            teacher_service = mathematics_teacher_service
+            notes_result = mathematics_teacher_service.generate_notes(session_id, g.current_user_id) or {}
             notes_data = notes_result.get('notes') or notes_result
         elif session_key == 'english_teacher':
             from services.english_teacher_service import EnglishTeacherService
@@ -4640,15 +4769,61 @@ def project_chat(project_id):
     """Send message to project assistant"""
     try:
         data = request.get_json()
-        message = data.get('message')
+        message = (data.get('message') or '').strip()
+        context_pack_id = data.get('context_pack_id')
         
-        if not message:
-            return jsonify({'success': False, 'message': 'Message required'}), 400
+        if not message and not context_pack_id:
+            return jsonify({'success': False, 'message': 'Message or context_pack_id required'}), 400
             
         from services.project_assistant_service import ProjectAssistantService
         service = ProjectAssistantService()
+
+        augmented_message = message
+        # If context_pack_id not provided, default to latest for this project chat
+        if not context_pack_id:
+            try:
+                from database.context_pack_db import get_latest_context_pack_id
+                context_pack_id = get_latest_context_pack_id(str(g.current_user_id), f"project:{project_id}")
+            except Exception:
+                context_pack_id = None
+
+        if context_pack_id:
+            try:
+                from services.context_pack_service import context_pack_service
+                pack = context_pack_service.get_context_pack(str(context_pack_id))
+                if pack and pack.get('user_id') == str(g.current_user_id):
+                    combined = (pack.get('combined_summary') or '').strip()
+                    images = pack.get('images') or []
+                    per_image = "\n".join(
+                        [
+                            f"- Image {i+1}: {(img.get('per_image_summary') or '').strip()}"
+                            for i, img in enumerate(images)
+                        ]
+                    ).strip()
+                    extracted_text = "\n".join(
+                        [f"- Image {i+1} text: {(img.get('extracted_text') or '').strip()}" for i, img in enumerate(images)]
+                    ).strip()
+                    concepts = "\n".join(
+                        [
+                            f"- Image {i+1} concepts: {', '.join((img.get('key_concepts') or [])[:8])}"
+                            for i, img in enumerate(images)
+                        ]
+                    ).strip()
+                    augmented_message = (
+                        (message or "Please review the attached images and continue my project.")
+                        + "\n\n[CONTEXT FROM USER IMAGES]\n"
+                        + (f"Combined summary: {combined}\n" if combined else "")
+                        + (f"What I see:\n{per_image}\n" if per_image else "")
+                        + (f"{extracted_text}\n" if extracted_text else "")
+                        + (f"{concepts}\n" if concepts else "")
+                        + "Instruction: First briefly describe each image (1–2 sentences) and any detected text. Then continue the project response using this context as ground truth."
+                    ).strip()
+                else:
+                    logger.warning("Context pack not found or not owned by user.")
+            except Exception as e:
+                logger.warning(f"Failed to load context pack {context_pack_id}: {e}")
         
-        response = service.process_mobile_message(g.current_user_id, project_id, message)
+        response = service.process_mobile_message(g.current_user_id, project_id, augmented_message)
         
         return jsonify({
             'success': True,

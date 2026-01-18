@@ -41,6 +41,7 @@ export interface ChatResponse {
   project_id: number;
   credits_remaining?: number;
   image_url?: string;
+  context_pack_id?: string;
 }
 
 export const projectApi = {
@@ -80,11 +81,13 @@ export const projectApi = {
   // Send chat message
   sendMessage: async (
     projectId: number,
-    message: string
+    message: string,
+    contextPackId?: string
   ): Promise<ChatResponse | null> => {
     try {
       const response = await api.post(`/api/mobile/project/${projectId}/chat`, {
         message,
+        context_pack_id: contextPackId,
       });
       return response.data.data || null;
     } catch (error: any) {

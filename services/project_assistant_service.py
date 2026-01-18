@@ -8,6 +8,7 @@ import logging
 import json
 import os
 import base64
+import uuid
 from datetime import datetime
 from typing import Dict, Optional, List
 from utils.session_manager import session_manager
@@ -2031,7 +2032,72 @@ You have 0 credits. Credits are deducted (1 credit) for every 10 AI responses.
         # Stop before prompt pack if present
         if "Vertex Image Prompt Pack" in after:
             after = after.split("Vertex Image Prompt Pack", 1)[0]
-        return ("Design Blueprint\n" + after).strip()
+        blueprint = ("Design Blueprint\n" + after).strip()
+        return self._sanitize_assistant_text(blueprint)
+
+    def _sanitize_assistant_text(self, text: str) -> str:
+        """Remove stray quote-only lines and prompt-pack leftovers for nicer chat output."""
+        if not text:
+            return ""
+        t = text.replace("\r\n", "\n").strip()
+        # Remove any leftover prompt-pack variations (even if header text differs)
+        import re
+        t = re.sub(r"(?is)\n\s*Vertex\s*Image\s*Prompt\s*Pack.*$", "", t).strip()
+        t = re.sub(r"(?im)^\s*Variation\s*[123]\s*:.*$", "", t).strip()
+        # Remove trailing lines that are only quotes/backticks
+        lines = [ln.rstrip() for ln in t.split("\n")]
+        while lines and lines[-1].strip() in {'"', "''", "```", "”", "“", "'''" }:
+            lines.pop()
+        return "\n".join(lines).strip()
+
+    def _build_fallback_image_prompt(
+        self,
+        project: Dict,
+        project_data: Dict,
+        user_message: str,
+        blueprint_text: str,
+    ) -> str:
+        """
+        Build a solid Imagen prompt even if the model didn't output a prompt pack.
+        Keep it text-free (we'll add text later in Canva/PowerPoint).
+        """
+        title = (project.get("project_title") or project.get("title") or "ZIMSEC School Project").strip()
+        subject = (project.get("subject") or "General").strip()
+
+        # Pull a tiny bit of recent context to steer style/theme
+        history = (project_data or {}).get("conversation_history") or []
+        recent_bits = []
+        for item in history[-6:]:
+            if isinstance(item, dict):
+                c = (item.get("content") or "").strip()
+                if c:
+                    recent_bits.append(c[:180])
+        context = " | ".join(recent_bits[-3:])
+
+        # Detect likely asset type
+        m = (user_message or "").lower()
+        asset = "flyer background" if "flyer" in m else ("poster background" if "poster" in m else "infographic background")
+
+        # Imagen prompt: be explicit about no text
+        prompt = f"""Create an image of a {asset} for a Zimbabwean student project.
+
+Topic/title: {title}
+Subject: {subject}
+User request: {user_message}
+
+Style: modern, clean, high-contrast, professional educational design; Zimbabwe-friendly visuals (no flags or political symbols); minimal clutter.
+Layout: portrait poster/flyer layout with large blank areas reserved for text overlay (top header band + middle content zone + bottom footer band), safe margins, strong visual hierarchy.
+Background: relevant subtle thematic imagery and icons related to the topic (avoid over-detailed scenes).
+
+IMPORTANT:
+- Do NOT include any readable text, letters, watermarks, or logos.
+- No people/faces.
+- Crisp, high-quality, print-ready look.
+
+Extra design notes (optional): {blueprint_text[:350]}
+Recent context (optional): {context}
+"""
+        return prompt.strip()
 
     def _save_generated_image(self, user_id: str, project_id: int, image_bytes: bytes) -> Optional[str]:
         """Save generated image to /static and return public URL."""
@@ -2081,49 +2147,44 @@ You have 0 credits. Credits are deducted (1 credit) for every 10 AI responses.
             image_url = None
 
             if wants_image and vertex_service.is_available():
-                # Use the model's prompt pack (already embedded in assistant guidance) to generate an actual image.
+                # Build a clean blueprint for the user, and generate an actual image via Vertex Imagen.
+                blueprint = self._extract_design_blueprint(ai_response) or self._sanitize_assistant_text(ai_response)
+
                 prompt_pack = self._extract_vertex_prompt_pack(ai_response)
-                # Prefer Variation 2 for flyers; fallback to any prompt.
                 chosen_prompt = (
                     prompt_pack.get("variation_2")
                     or prompt_pack.get("variation_1")
                     or prompt_pack.get("variation_3")
                 )
+                if not chosen_prompt:
+                    chosen_prompt = self._build_fallback_image_prompt(project, project_data, message, blueprint)
 
-                if chosen_prompt:
-                    # Extra credits for image generation (separate from chat credit)
-                    image_credit_check = advanced_credit_service.check_and_deduct_credits(user_id, "image_solve")
-                    if image_credit_check.get("success"):
-                        img_result = vertex_service.generate_image(chosen_prompt, size="1K")
-                        if img_result and img_result.get("success"):
-                            image_url = self._save_generated_image(user_id, project_id, img_result.get("image_bytes"))
-                        else:
-                            logger.error(f"Vertex image generation failed: {(img_result or {}).get('error')}")
+                # Extra credits for image generation (separate from chat credit)
+                image_credit_check = advanced_credit_service.check_and_deduct_credits(user_id, "image_solve")
+                if image_credit_check.get("success"):
+                    img_result = vertex_service.generate_image(chosen_prompt, size="1K")
+                    if img_result and img_result.get("success"):
+                        image_url = self._save_generated_image(user_id, project_id, img_result.get("image_bytes"))
                     else:
-                        # If credits are insufficient, keep text-only guidance (but don't show raw prompt pack)
-                        ai_response = (
-                            self._extract_design_blueprint(ai_response)
-                            + "\n\n⚠️ Image generation needs more credits.\n"
-                            + (image_credit_check.get("message") or "Insufficient credits.")
-                        ).strip()
-                # Hide prompt pack from user-facing response even when we did generate
-                if "Vertex Image Prompt Pack" in ai_response:
-                    ai_response = self._extract_design_blueprint(ai_response)
+                        logger.error(f"Vertex image generation failed: {(img_result or {}).get('error')}")
+                else:
+                    ai_response = (
+                        f"{blueprint}\n\n⚠️ Image generation needs more credits.\n"
+                        f"{image_credit_check.get('message') or 'Insufficient credits.'}"
+                    ).strip()
+
+                # Always hide prompt pack / quotes from the user-facing response
+                ai_response = blueprint
 
                 if image_url:
                     ai_response = (
-                        f"{ai_response}\n\n✅ I generated an image for you and attached it here.\n"
-                        "If you want changes, tell me:\n"
-                        "1) size (A4/A3/social)\n"
-                        "2) colors\n"
-                        "3) mood/style (modern, academic, bold)\n"
-                        "4) what text you will add (I will leave safe blank space)"
+                        f"{ai_response}\n\n✅ Image generated and attached below."
                     ).strip()
 
             # 5. Add AI response to history
             assistant_entry = {
                 'role': 'assistant',
-                'content': ai_response,
+                'content': self._sanitize_assistant_text(ai_response),
                 'timestamp': datetime.now().isoformat()
             }
             if image_url:

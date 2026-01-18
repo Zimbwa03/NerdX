@@ -167,12 +167,12 @@ def _init_vertex_env() -> dict:
 # Initialize config once at import time (lifespan will re-run for safety)
 _VERTEX_CTX = _init_vertex_env()
 
-# Model selection - Gemini 2.5 Flash is best for real-time audio
-# gemini-2.5-flash supports native audio processing
-GEMINI_MODEL = os.getenv('GEMINI_LIVE_MODEL', 'gemini-2.5-flash-preview-native-audio-dialog')
+# Model selection (Gemini Live API)
+# Use official Live model IDs per Vertex AI documentation.
+GEMINI_MODEL = os.getenv('GEMINI_LIVE_MODEL', 'gemini-live-2.5-flash-native-audio')
 
-# Fallback model if native audio dialog is not available
-GEMINI_MODEL_FALLBACK = 'gemini-2.0-flash-exp'
+# Fallback model if the primary isn't available in region/project.
+GEMINI_MODEL_FALLBACK = os.getenv('GEMINI_LIVE_MODEL_FALLBACK', 'gemini-live-2.5-flash-preview-native-audio-09-2025')
 
 # NerdX System Instruction - Optimized for Gemini Live API (Native Audio)
 # Following Google's best practices for system instructions
@@ -641,11 +641,13 @@ class TransparentGeminiPipe:
                     and ("not found" in m or "invalid" in m or "unknown" in m or "resource" in m)
                 )
 
-            # Try a small set of models (some preview names differ by platform/region).
+            # Try a small set of Live models (some preview names differ by platform/region).
             model_candidates = []
             for m in [
                 GEMINI_MODEL,
                 os.getenv("GEMINI_LIVE_MODEL_FALLBACK"),
+                GEMINI_MODEL_FALLBACK,
+                "gemini-live-2.5-flash-preview-native-audio-09-2025",
                 "gemini-2.0-flash-live-001",
             ]:
                 if m and m not in model_candidates:
@@ -755,59 +757,83 @@ class TransparentGeminiPipe:
                 f"?key={GEMINI_API_KEY}"
             )
             
-            # Use fallback model for regular API
-            model_name = GEMINI_MODEL_FALLBACK
-            logger.info(f"🔗 Connecting to Gemini API (model: {model_name})...")
-            
-            self.gemini_ws = await websockets.connect(
-                gemini_url,
-                additional_headers={"Content-Type": "application/json"},
-                ping_interval=30,
-                ping_timeout=10,
-            )
-            
-            # Send setup message
-            setup_message = {
-                "setup": {
-                    "model": f"models/{model_name}",
-                    "generationConfig": {
-                        "responseModalities": ["AUDIO"],
-                        "speechConfig": {
-                            "voiceConfig": {
-                                "prebuiltVoiceConfig": {
-                                    "voiceName": "Aoede"
+            def _is_model_related_error(msg: str) -> bool:
+                m = (msg or "").lower()
+                return "model" in m and ("not found" in m or "invalid" in m or "unknown" in m)
+
+            def _is_quota_error(msg: str) -> bool:
+                m = (msg or "").lower()
+                return "quota" in m or "billing" in m or "exceeded" in m
+
+            # Try Live-capable models for the Gemini API WS endpoint.
+            model_candidates = []
+            for m in [
+                GEMINI_MODEL,
+                GEMINI_MODEL_FALLBACK,
+                "gemini-2.0-flash-live-001",
+            ]:
+                if m and m not in model_candidates:
+                    model_candidates.append(m)
+
+            for model_name in model_candidates:
+                logger.info(f"🔗 Connecting to Gemini API (model: {model_name})...")
+
+                # Reconnect per attempt to avoid stale WS state after setup errors
+                if self.gemini_ws:
+                    try:
+                        await self.gemini_ws.close()
+                    except Exception:
+                        pass
+                    self.gemini_ws = None
+
+                self.gemini_ws = await websockets.connect(
+                    gemini_url,
+                    additional_headers={"Content-Type": "application/json"},
+                    ping_interval=30,
+                    ping_timeout=10,
+                )
+
+                setup_message = {
+                    "setup": {
+                        "model": f"models/{model_name}",
+                        "generationConfig": {
+                            "responseModalities": ["AUDIO"],
+                            "speechConfig": {
+                                "voiceConfig": {
+                                    "prebuiltVoiceConfig": {"voiceName": "Aoede"}
                                 }
-                            }
-                        }
-                    },
-                    "systemInstruction": {
-                        "parts": [{"text": NERDX_SYSTEM_INSTRUCTION}]
-                    },
-                    "tools": []
+                            },
+                        },
+                        "systemInstruction": {"parts": [{"text": NERDX_SYSTEM_INSTRUCTION}]},
+                        "tools": [],
+                    }
                 }
-            }
-            
-            logger.info(f"📤 Sending Gemini API setup...")
-            await self.gemini_ws.send(json.dumps(setup_message))
-            
-            setup_response = await asyncio.wait_for(
-                self.gemini_ws.recv(),
-                timeout=30.0
-            )
-            setup_data = json.loads(setup_response)
-            
-            logger.info(f"📥 Gemini API setup response: {json.dumps(setup_data)[:500]}")
-            
-            if "setupComplete" in setup_data:
-                logger.info("✅ Gemini API session established")
-                self.is_active = True
-                return True
-            elif "error" in setup_data:
-                error_info = setup_data.get("error", {})
-                error_msg = error_info.get("message", str(setup_data))
-                logger.error(f"❌ Gemini API setup error: {error_msg}")
-                return False
-            else:
+
+                logger.info("📤 Sending Gemini API setup...")
+                await self.gemini_ws.send(json.dumps(setup_message))
+
+                setup_response = await asyncio.wait_for(self.gemini_ws.recv(), timeout=30.0)
+                setup_data = json.loads(setup_response)
+
+                logger.info(f"📥 Gemini API setup response: {json.dumps(setup_data)[:500]}")
+
+                if "setupComplete" in setup_data:
+                    logger.info("✅ Gemini API session established")
+                    self.is_active = True
+                    return True
+
+                if "error" in setup_data:
+                    error_info = setup_data.get("error", {})
+                    error_msg = error_info.get("message", str(setup_data))
+                    logger.error(f"❌ Gemini API setup error (model: {model_name}): {error_msg}")
+                    if _is_quota_error(error_msg):
+                        self.last_error = "Gemini API quota/billing exceeded"
+                        return False
+                    if _is_model_related_error(error_msg) and model_name != model_candidates[-1]:
+                        logger.warning("↩️ Retrying with fallback Gemini Live model...")
+                        continue
+                    return False
+
                 logger.error(f"❌ Unexpected response: {setup_data}")
                 return False
                 
@@ -1344,10 +1370,6 @@ async def websocket_nerdx_live_video(websocket: WebSocket, user_id: str = "guest
         await websocket.close()
         return
 
-    # Start billing schedule
-    billing_task = asyncio.create_task(run_billing_scheduler(billing, websocket))
-    # ---------------------
-    
     pipe = TransparentGeminiVideoPipe(websocket)
     
     if not await pipe.connect_to_gemini():
@@ -1355,9 +1377,11 @@ async def websocket_nerdx_live_video(websocket: WebSocket, user_id: str = "guest
             "type": "error",
             "message": pipe.last_error or "Failed to connect to AI"
         })
-        billing_task.cancel()
         await websocket.close()
         return
+
+    # Start billing schedule ONLY after session is established (setupComplete).
+    billing_task = asyncio.create_task(run_billing_scheduler(billing, websocket))
     
     await websocket.send_json({
         "type": "ready",
@@ -1418,10 +1442,6 @@ async def websocket_nerdx_live(websocket: WebSocket, user_id: str = "guest_voice
         await websocket.close()
         return
 
-    # Start billing schedule
-    billing_task = asyncio.create_task(run_billing_scheduler(billing, websocket))
-    # ---------------------
-    
     pipe = TransparentGeminiPipe(websocket)
     
     if not await pipe.connect_to_gemini():
@@ -1429,9 +1449,11 @@ async def websocket_nerdx_live(websocket: WebSocket, user_id: str = "guest_voice
             "type": "error",
             "message": pipe.last_error or "Failed to connect to AI"
         })
-        billing_task.cancel()
         await websocket.close()
         return
+
+    # Start billing schedule ONLY after session is established (setupComplete).
+    billing_task = asyncio.create_task(run_billing_scheduler(billing, websocket))
     
     await websocket.send_json({
         "type": "ready",

@@ -27,6 +27,7 @@ import { Audio } from 'expo-av';
 import * as Sharing from 'expo-sharing';
 import { projectApi, ProjectDetails, ResearchSession, ResearchStatus } from '../services/api/projectApi';
 import { mathApi } from '../services/api/mathApi';
+import { attachmentsApi } from '../services/api/attachmentsApi';
 import { useNotification } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -39,6 +40,8 @@ interface Message {
   content: string;
   timestamp: Date;
   image_url?: string; // User or assistant images
+  image_urls?: string[]; // Multi-image user messages
+  context_pack_id?: string;
 }
 
 const ProjectAssistantScreen: React.FC = () => {
@@ -57,6 +60,10 @@ const ProjectAssistantScreen: React.FC = () => {
   const [project, setProject] = useState<ProjectDetails | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
+  // Keep a "latest value" ref to avoid edge-cases where the last keystrokes
+  // haven't flushed to state before Send is tapped (common on some Android keyboards).
+  const latestInputTextRef = useRef<string>('');
+  const [selectedImages, setSelectedImages] = useState<Array<{ uri: string; name?: string; mimeType?: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [showToolbar, setShowToolbar] = useState(false);
@@ -135,27 +142,82 @@ const ProjectAssistantScreen: React.FC = () => {
   };
 
   const handleSend = async () => {
-    if (!inputText.trim() || !project || sending) return;
+    const rawText = (latestInputTextRef.current ?? inputText) as string;
+    const query = rawText.trim();
+    const hasImages = selectedImages.length > 0;
+    if ((!query && !hasImages) || !project || sending) return;
+    const isImageRequest = (() => {
+      const q = query.toLowerCase();
+      const wantsGenerate = ['generate', 'create', 'make', 'design', 'draw'].some(k => q.includes(k));
+      const mentionsVisual = ['image', 'flyer', 'poster', 'infographic', 'banner', 'logo', 'cover'].some(k => q.includes(k));
+      return wantsGenerate && mentionsVisual;
+    })();
 
-    const query = inputText.trim();
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: query,
+      content: query || '📷 (images)',
       timestamp: new Date(),
+      image_urls: hasImages ? selectedImages.map((i) => i.uri) : undefined,
     };
 
     setMessages((prev) => [...prev, userMessage]);
     setInputText('');
+    latestInputTextRef.current = '';
+    setSelectedImages([]);
     setSending(true);
 
     try {
       let response: any = null;
 
+      let contextPackId: string | undefined;
+      if (hasImages) {
+        const pack = await attachmentsApi.analyzeImages({
+          images: selectedImages,
+          prompt: query,
+          chatId: `project:${project.id}`,
+        });
+        contextPackId = pack?.id;
+      }
+
+      // If this is an image-generation request, show a visual progress message while we wait.
+      const progressMessageId = `imggen-${Date.now()}`;
+      let progressTimer: any = null;
+      let progressValue = 0;
+      if (isImageRequest) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: progressMessageId,
+            role: 'assistant',
+            content: '🖼️ Generating image... 0%',
+            timestamp: new Date(),
+          },
+        ]);
+        progressTimer = setInterval(() => {
+          progressValue = Math.min(95, progressValue + 5);
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === progressMessageId
+                ? { ...m, content: `🖼️ Generating image... ${progressValue}%` }
+                : m
+            )
+          );
+        }, 600);
+      }
+
       // Regular chat with AI
-      const chatResponse = await projectApi.sendMessage(project.id, query);
+      const chatResponse = await projectApi.sendMessage(project.id, query, contextPackId);
       if (chatResponse) {
         response = chatResponse;
+      }
+
+      if (progressTimer) {
+        clearInterval(progressTimer);
+      }
+      if (isImageRequest) {
+        // Remove the progress message once we have a response
+        setMessages((prev) => prev.filter((m) => m.id !== progressMessageId));
       }
 
       if (response) {
@@ -165,6 +227,7 @@ const ProjectAssistantScreen: React.FC = () => {
           content: response.response,
           timestamp: new Date(),
           image_url: response.image_url,
+          context_pack_id: response.context_pack_id || contextPackId,
         };
 
         setMessages((prev) => [...prev, assistantMessage]);
@@ -473,67 +536,43 @@ const ProjectAssistantScreen: React.FC = () => {
   };
 
   // ==================== Image Scan Handler ====================
-  const handleImageScan = async () => {
+  const handleAttachImages = async () => {
     if (!project) return;
 
     try {
-      // Request permission
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission Required', 'Please allow access to your photo library to scan images.');
+        Alert.alert('Permission Required', 'Please allow access to your photo library to attach images.');
         return;
       }
 
-      // Pick image
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: false,
         quality: 0.8,
-        base64: true,
+        allowsMultipleSelection: true,
+        selectionLimit: Math.max(1, 10 - selectedImages.length),
       });
 
-      if (result.canceled || !result.assets?.[0]) return;
+      if (result.canceled || !result.assets?.length) return;
 
-      const image = result.assets[0];
-      setSending(true);
-      setActiveMode('chat'); // Switch back to chat after scanning
-
-      // Show analyzing message with image preview
-      setMessages((prev) => [...prev, {
-        id: 'scanning-image',
-        role: 'assistant',
-        content: `📷 **Analyzing Image...**\n\nProcessing your image with AI vision...`,
-        timestamp: new Date(),
-      }]);
-
-      // Send to API for analysis
-      const base64Data = image.base64 || await FileSystem.readAsStringAsync(image.uri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-
-      const analysis = await projectApi.analyzeDocument(
-        project.id,
-        base64Data,
-        image.mimeType || 'image/jpeg'
-      );
-
-      setMessages((prev) => prev.filter((msg) => msg.id !== 'scanning-image'));
-
-      if (analysis?.analysis) {
-        setMessages((prev) => [...prev, {
-          id: `image-${Date.now()}`,
-          role: 'assistant',
-          content: `📷 **Image Analysis**\n\n${analysis.analysis}`,
-          timestamp: new Date(),
-        }]);
-      } else {
-        throw new Error('No analysis returned');
+      const next = [...selectedImages];
+      for (const asset of result.assets) {
+        if (!asset.uri) continue;
+        if (next.length >= 10) break;
+        next.push({
+          uri: asset.uri,
+          name: (asset as any).fileName || undefined,
+          mimeType: (asset as any).mimeType || 'image/jpeg',
+        });
       }
+      if (next.length > 10) {
+        Alert.alert('Limit reached', 'You can attach up to 10 images.');
+      }
+      setSelectedImages(next.slice(0, 10));
+      setActiveMode('chat');
     } catch (error: any) {
-      setMessages((prev) => prev.filter((msg) => msg.id !== 'scanning-image'));
-      Alert.alert('Error', error.message || 'Failed to analyze image');
-    } finally {
-      setSending(false);
+      Alert.alert('Error', error.message || 'Failed to pick images');
     }
   };
 
@@ -585,6 +624,7 @@ const ProjectAssistantScreen: React.FC = () => {
 
             if (result?.transcription) {
               // Add transcribed text to input or send as message
+              latestInputTextRef.current = result.transcription;
               setInputText(result.transcription);
               setActiveMode('chat');
 
@@ -727,6 +767,18 @@ const ProjectAssistantScreen: React.FC = () => {
                   colors={themedColors.gradients.primary}
                   style={styles.userBubbleGradient}
                 >
+                  {message.image_urls?.length ? (
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
+                      {message.image_urls.slice(0, 10).map((uri, idx) => (
+                        <Image
+                          key={`${message.id}-img-${idx}`}
+                          source={{ uri }}
+                          style={{ width: 96, height: 96, borderRadius: 12 }}
+                          resizeMode="cover"
+                        />
+                      ))}
+                    </View>
+                  ) : null}
                   <Text style={styles.userMessageText}>{message.content}</Text>
                 </LinearGradient>
               </View>
@@ -818,6 +870,37 @@ const ProjectAssistantScreen: React.FC = () => {
       </ScrollView>
 
       <View style={[styles.inputContainer, { backgroundColor: themedColors.background.paper, borderTopColor: themedColors.border.light }]}>
+        {/* Selected images preview (ChatGPT-style, above the input) */}
+        {selectedImages.length > 0 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }}>
+            {selectedImages.map((img, idx) => (
+              <View key={`${img.uri}-${idx}`} style={{ marginRight: 10 }}>
+                <Image
+                  source={{ uri: img.uri }}
+                  style={{ width: 72, height: 72, borderRadius: 14 }}
+                  resizeMode="cover"
+                />
+                <TouchableOpacity
+                  onPress={() => setSelectedImages((prev) => prev.filter((_, i) => i !== idx))}
+                  style={{
+                    position: 'absolute',
+                    top: -8,
+                    right: -8,
+                    width: 26,
+                    height: 26,
+                    borderRadius: 13,
+                    backgroundColor: 'rgba(0,0,0,0.55)',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Ionicons name="close" size={16} color="#FFF" />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </ScrollView>
+        )}
+
         {/* Media Selection Popup - Premium Glass Design */}
         {showModeMenu && (
           <View style={[
@@ -854,14 +937,14 @@ const ProjectAssistantScreen: React.FC = () => {
                 styles.modeMenuItem,
                 { backgroundColor: isDarkMode ? 'rgba(139, 92, 246, 0.15)' : 'rgba(139, 92, 246, 0.08)' }
               ]}
-              onPress={() => { setShowModeMenu(false); handleImageScan(); }}
+              onPress={() => { setShowModeMenu(false); handleAttachImages(); }}
             >
               <View style={[styles.modeMenuIcon, { backgroundColor: isDarkMode ? 'rgba(139, 92, 246, 0.25)' : 'rgba(139, 92, 246, 0.15)' }]}>
                 <Ionicons name="image-outline" size={22} color={themedColors.primary.main} />
               </View>
               <View style={styles.modeMenuTextContainer}>
-                <Text style={[styles.modeMenuText, { color: isDarkMode ? '#B794F6' : '#7C3AED' }]}>Scan Image</Text>
-                <Text style={[styles.modeMenuDesc, { color: isDarkMode ? 'rgba(255, 255, 255, 0.5)' : '#888' }]}>AI Vision Analysis</Text>
+                <Text style={[styles.modeMenuText, { color: isDarkMode ? '#B794F6' : '#7C3AED' }]}>Attach Images</Text>
+                <Text style={[styles.modeMenuDesc, { color: isDarkMode ? 'rgba(255, 255, 255, 0.5)' : '#888' }]}>Attach up to 10 images</Text>
               </View>
             </TouchableOpacity>
 
@@ -920,7 +1003,10 @@ const ProjectAssistantScreen: React.FC = () => {
           <TextInput
             style={[styles.textInput, { color: themedColors.text.primary }]}
             value={inputText}
-            onChangeText={setInputText}
+            onChangeText={(text) => {
+              latestInputTextRef.current = text;
+              setInputText(text);
+            }}
             placeholder="Ask for help with your project..."
             placeholderTextColor={themedColors.text.secondary}
             multiline

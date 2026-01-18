@@ -7,7 +7,7 @@ import json
 import base64
 import logging
 import uuid
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, List, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -247,6 +247,98 @@ Only respond with the JSON, no other text."""
                 
         except Exception as e:
             logger.error(f"❌ Image analysis failed: {e}")
+            return {'success': False, 'error': str(e)}
+
+    def analyze_images_context_pack(
+        self,
+        *,
+        images: List[Tuple[bytes, str]],
+        user_prompt: str,
+        model: str = "gemini-2.5-flash",
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Analyze up to 10 images in ONE multimodal prompt and return strict JSON suitable
+        for persistence as a "Context Pack".
+
+        Returns (dict):
+        {
+          "images": [
+            { "index": 0, "short_description": "...", "extracted_text": "", "key_concepts": [], "subject_guess": "Math", "confidence_notes": "" }
+          ],
+          "combined_summary": "...",
+          "follow_up_questions_suggestions": ["..."]
+        }
+        """
+        if not self.is_available():
+            return {'success': False, 'error': 'Vertex AI service not available'}
+
+        if not images or len(images) < 1:
+            return {'success': False, 'error': 'At least one image is required'}
+        if len(images) > 10:
+            return {'success': False, 'error': 'Too many images (max 10)'}
+
+        try:
+            from google.genai.types import Part
+
+            instruction = f"""You are NerdX Visual Context Extractor for education.
+The user will attach 1 to {len(images)} images and may include an instruction.
+
+Your job:
+1) For each image: describe what you see (1–2 sentences), extract any text, infer key concepts, and guess subject.
+2) Provide a combined summary (short paragraph) that can be used for follow-up chat.
+3) Provide suggested next actions/questions (3–8 items).
+
+IMPORTANT:
+- If an image is unclear, DO NOT answer "I don't know". Instead say what is unclear and how to retake it, and still attempt best-effort extraction.
+- Output MUST be valid JSON ONLY (no markdown, no extra words).
+
+Schema (exact keys):
+{{
+  "images": [
+    {{
+      "index": 0,
+      "short_description": "max 2 sentences",
+      "extracted_text": "best-effort OCR text, else empty string",
+      "key_concepts": ["3-8 tags"],
+      "subject_guess": "Math|Science|Accounting|English|Other",
+      "confidence_notes": "why confident/uncertain; if unclear include retake advice"
+    }}
+  ],
+  "combined_summary": "short paragraph",
+  "follow_up_questions_suggestions": ["3-8 items"]
+}}
+
+User instruction: {user_prompt.strip() if user_prompt else "(none)"}"""
+
+            parts: List[Any] = []
+            for data, mime_type in images:
+                parts.append(
+                    Part.from_bytes(data=data, mime_type=mime_type)
+                )
+            parts.append(instruction)
+
+            logger.info(f"🖼️ ContextPack: analyzing {len(images)} images with {model} (Vertex)")
+
+            response = self.client.models.generate_content(
+                model=model,
+                contents=parts,
+            )
+
+            if response and response.text:
+                parsed = self._parse_json_response(response.text)
+                if parsed:
+                    return parsed
+
+                # If parsing fails, return a safe failure with raw text for debugging.
+                return {
+                    "success": False,
+                    "error": "Failed to parse model JSON output",
+                    "raw_response": response.text,
+                }
+
+            return {'success': False, 'error': 'No response from model'}
+        except Exception as e:
+            logger.error(f"❌ ContextPack image analysis failed: {e}", exc_info=True)
             return {'success': False, 'error': str(e)}
     
     def transcribe_audio(

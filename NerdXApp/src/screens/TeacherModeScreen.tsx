@@ -40,6 +40,7 @@ const { width } = Dimensions.get('window');
 
 import { VideoStreamPlayer } from '../components/VideoStreamPlayer';
 import ZoomableImageModal from '../components/ZoomableImageModal';
+import { attachmentsApi } from '../services/api/attachmentsApi';
 
 interface Message {
   id: string;
@@ -49,6 +50,8 @@ interface Message {
   graph_url?: string;
   video_url?: string;
   image_url?: string; // User-sent images
+  image_urls?: string[]; // Multi-image user messages
+  context_pack_id?: string;
 }
 
 const TeacherModeScreen: React.FC = () => {
@@ -67,6 +70,10 @@ const TeacherModeScreen: React.FC = () => {
   const [session, setSession] = useState<TeacherSession | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
+  // On some Android keyboards, the last few keystrokes may not have flushed
+  // to React state when the user taps "Send". Keep a ref with the latest value
+  // to ensure we always send the full text.
+  const latestInputTextRef = useRef<string>('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
 
@@ -77,6 +84,7 @@ const TeacherModeScreen: React.FC = () => {
   const [showModeMenu, setShowModeMenu] = useState(false);
   const [pendingImage, setPendingImage] = useState<{ uri: string, base64?: string } | null>(null);
   const [showQuickAskButtons, setShowQuickAskButtons] = useState(true); // Hide after first message or when typing
+  const [selectedImages, setSelectedImages] = useState<Array<{ uri: string; name?: string; mimeType?: string }>>([]);
 
   // Zoom Modal State
   const [zoomVisible, setZoomVisible] = useState(false);
@@ -190,6 +198,7 @@ const TeacherModeScreen: React.FC = () => {
         setSending(true);
         try {
           const result = await mathApi.transcribeAudio(uri);
+          latestInputTextRef.current = result.text || '';
           setInputText(result.text);
         } catch (error) {
           Alert.alert('Error', 'Failed to transcribe audio.');
@@ -202,7 +211,7 @@ const TeacherModeScreen: React.FC = () => {
     }
   };
 
-  const handleImagePick = async () => {
+  const handleAttachImages = async () => {
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (permission.status !== 'granted') {
@@ -213,51 +222,28 @@ const TeacherModeScreen: React.FC = () => {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         quality: 0.8,
-        base64: true,
+        allowsMultipleSelection: true,
+        selectionLimit: Math.max(1, 10 - selectedImages.length),
       });
 
-      if (!result.canceled && result.assets[0].uri) {
-        const imageUri = result.assets[0].uri;
-        const imageBase64 = result.assets[0].base64;
+      if (result.canceled || !result.assets || result.assets.length === 0) return;
 
-        // Add image as user message in chat
-        const userImageMessage: Message = {
-          id: Date.now().toString(),
-          role: 'user',
-          content: '📷 Sent an image for analysis',
-          timestamp: new Date(),
-          image_url: imageUri,
-        };
-        setMessages((prev) => [...prev, userImageMessage]);
-
-        setSending(true);
-        try {
-          // Analyze with Gemini Vision
-          const scanResult = await mathApi.scanProblem(imageUri);
-
-          // Create AI response message
-          const aiMessage: Message = {
-            id: (Date.now() + 1).toString(),
-            role: 'assistant',
-            content: scanResult.success
-              ? `📝 **I found the following in your image:**\n\n${scanResult.latex}\n\nFeel free to ask me to explain or solve this!`
-              : 'I couldn\'t clearly recognize the content in this image. Could you try taking a clearer photo?',
-            timestamp: new Date(),
-          };
-          setMessages((prev) => [...prev, aiMessage]);
-
-        } catch (error) {
-          const errorMessage: Message = {
-            id: (Date.now() + 1).toString(),
-            role: 'assistant',
-            content: '❌ Sorry, I had trouble analyzing this image. Please try again with a clearer photo.',
-            timestamp: new Date(),
-          };
-          setMessages((prev) => [...prev, errorMessage]);
-        } finally {
-          setSending(false);
-        }
+      const next = [...selectedImages];
+      for (const asset of result.assets) {
+        if (!asset.uri) continue;
+        if (next.length >= 10) break;
+        next.push({
+          uri: asset.uri,
+          name: (asset as any).fileName || undefined,
+          mimeType: (asset as any).mimeType || 'image/jpeg',
+        });
       }
+
+      if (next.length > 10) {
+        Alert.alert('Limit reached', 'You can attach up to 10 images.');
+      }
+
+      setSelectedImages(next.slice(0, 10));
     } catch (error) {
       console.error('Image pick error', error);
     }
@@ -332,26 +318,42 @@ const TeacherModeScreen: React.FC = () => {
   }, [sound]);
 
   const handleSend = async () => {
-    if (!inputText.trim() || !session || sending) return;
+    const rawText = (latestInputTextRef.current ?? inputText) as string;
+    const query = rawText.trim();
+    const hasImages = selectedImages.length > 0;
+    if ((!query && !hasImages) || !session || sending) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: inputText.trim(),
+      content: query || '📷 (images)',
       timestamp: new Date(),
+      image_urls: hasImages ? selectedImages.map((i) => i.uri) : undefined,
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    const query = inputText.trim();
     setInputText('');
+    latestInputTextRef.current = '';
+    setSelectedImages([]);
     setShowQuickAskButtons(false); // Hide buttons after sending first message
     setSending(true);
 
     try {
       let response: any;
 
-      // Regular chat with Gemini
-      response = await teacherApi.sendMessage(session.session_id, query);
+      let contextPackId: string | undefined;
+      if (hasImages) {
+        // 1) Analyze + create Context Pack
+        const pack = await attachmentsApi.analyzeImages({
+          images: selectedImages,
+          prompt: query,
+          chatId: session.session_id,
+        });
+        contextPackId = pack?.id;
+      }
+
+      // 2) Regular chat using Context Pack grounding (if present)
+      response = await teacherApi.sendMessage(session.session_id, query, contextPackId);
 
       if (response) {
         if (response.session_ended) {
@@ -368,6 +370,7 @@ const TeacherModeScreen: React.FC = () => {
           timestamp: new Date(),
           graph_url: response.graph_url,
           video_url: response.video_url,
+          context_pack_id: response.context_pack_id || contextPackId,
         };
 
         setMessages((prev) => [...prev, assistantMessage]);
@@ -410,6 +413,7 @@ const TeacherModeScreen: React.FC = () => {
   const currentSubjectQuestions = quickQuestions[subject] || quickQuestions['Combined Science'];
 
   const handleQuickAsk = (question: string) => {
+    latestInputTextRef.current = question;
     setInputText(question);
     setShowQuickAskButtons(false); // Hide buttons when user selects a quick ask
   };
@@ -642,12 +646,25 @@ const TeacherModeScreen: React.FC = () => {
                   end={{ x: 1, y: 1 }}
                   style={styles.userMessageGradient}
                 >
-                  {message.image_url && (
-                    <Image
-                      source={{ uri: message.image_url }}
-                      style={{ width: '100%', height: 150, borderRadius: 12, marginBottom: 8 }}
-                      resizeMode="cover"
-                    />
+                  {message.image_urls?.length ? (
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
+                      {message.image_urls.slice(0, 10).map((uri, idx) => (
+                        <Image
+                          key={`${message.id}-img-${idx}`}
+                          source={{ uri }}
+                          style={{ width: 96, height: 96, borderRadius: 12 }}
+                          resizeMode="cover"
+                        />
+                      ))}
+                    </View>
+                  ) : (
+                    message.image_url ? (
+                      <Image
+                        source={{ uri: message.image_url }}
+                        style={{ width: '100%', height: 150, borderRadius: 12, marginBottom: 8 }}
+                        resizeMode="cover"
+                      />
+                    ) : null
                   )}
                   <Text style={styles.userMessageText}>{message.content}</Text>
                 </LinearGradient>
@@ -759,6 +776,41 @@ const TeacherModeScreen: React.FC = () => {
       />
 
       <View style={[styles.inputContainer, { backgroundColor: themedColors.background.paper, borderTopColor: themedColors.border.light }]}>
+        {/* Selected images preview (ChatGPT-style, above the input) */}
+        {selectedImages.length > 0 && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ marginBottom: 10 }}
+          >
+            {selectedImages.map((img, idx) => (
+              <View key={`${img.uri}-${idx}`} style={{ marginRight: 10 }}>
+                <Image
+                  source={{ uri: img.uri }}
+                  style={{ width: 72, height: 72, borderRadius: 14 }}
+                  resizeMode="cover"
+                />
+                <TouchableOpacity
+                  onPress={() => setSelectedImages((prev) => prev.filter((_, i) => i !== idx))}
+                  style={{
+                    position: 'absolute',
+                    top: -8,
+                    right: -8,
+                    width: 26,
+                    height: 26,
+                    borderRadius: 13,
+                    backgroundColor: 'rgba(0,0,0,0.55)',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Ionicons name="close" size={16} color="#FFF" />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </ScrollView>
+        )}
+
         {/* Quick Ask Buttons - Only show initially */}
         {showQuickAskButtons && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.quickAskContainer}>
@@ -812,14 +864,14 @@ const TeacherModeScreen: React.FC = () => {
                 styles.modeMenuItem,
                 { backgroundColor: isDarkMode ? 'rgba(139, 92, 246, 0.15)' : 'rgba(139, 92, 246, 0.08)' }
               ]}
-              onPress={() => { handleImagePick(); setShowModeMenu(false); }}
+              onPress={() => { handleAttachImages(); setShowModeMenu(false); }}
             >
               <View style={[styles.modeMenuIcon, { backgroundColor: isDarkMode ? 'rgba(139, 92, 246, 0.25)' : 'rgba(139, 92, 246, 0.15)' }]}>
                 <Ionicons name="image-outline" size={22} color={themedColors.primary.main} />
               </View>
               <View style={styles.modeMenuTextContainer}>
-                <Text style={[styles.modeMenuText, { color: isDarkMode ? '#B794F6' : '#7C3AED' }]}>Scan Image</Text>
-                <Text style={[styles.modeMenuDesc, { color: isDarkMode ? 'rgba(255, 255, 255, 0.5)' : '#888' }]}>Take a photo of a problem</Text>
+                <Text style={[styles.modeMenuText, { color: isDarkMode ? '#B794F6' : '#7C3AED' }]}>Attach Images</Text>
+                <Text style={[styles.modeMenuDesc, { color: isDarkMode ? 'rgba(255, 255, 255, 0.5)' : '#888' }]}>Attach up to 10 images</Text>
               </View>
             </TouchableOpacity>
           </View>
@@ -851,6 +903,7 @@ const TeacherModeScreen: React.FC = () => {
               ]}
               value={inputText}
               onChangeText={(text) => {
+                latestInputTextRef.current = text;
                 setInputText(text);
                 if (text.trim().length > 0) {
                   setShowQuickAskButtons(false); // Hide buttons when user starts typing
