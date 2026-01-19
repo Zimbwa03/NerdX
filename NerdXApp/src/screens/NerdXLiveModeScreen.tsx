@@ -22,14 +22,10 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const NerdXLiveModeScreen: React.FC = () => {
     const navigation = useNavigation<any>();
-    const [selectedMode, setSelectedMode] = useState<'audio' | 'video' | null>(null);
+    const [selectedMode, setSelectedMode] = useState<'audio' | null>(null);
 
     const handleAudioSelect = () => {
         navigation.navigate('NerdXLiveAudio');
-    };
-
-    const handleVideoSelect = () => {
-        navigation.navigate('NerdXLiveVideo');
     };
 
     return (
@@ -60,9 +56,9 @@ const NerdXLiveModeScreen: React.FC = () => {
                         <Ionicons name="sparkles" size={64} color="#6C63FF" />
                     </View>
                     
-                    <Text style={styles.mainTitle}>Choose Your Tutoring Mode</Text>
+                    <Text style={styles.mainTitle}>NerdX Live Audio</Text>
                     <Text style={styles.subtitle}>
-                        Select how you want to interact with your AI tutor
+                        Live voice tutoring is available now. Video mode will return later.
                     </Text>
 
                     {/* Mode Selection Cards */}
@@ -103,48 +99,13 @@ const NerdXLiveModeScreen: React.FC = () => {
                             </LinearGradient>
                         </TouchableOpacity>
 
-                        {/* Video Mode Card */}
-                        <TouchableOpacity
-                            style={[
-                                styles.modeCard,
-                                selectedMode === 'video' && styles.modeCardSelected,
-                            ]}
-                            onPress={handleVideoSelect}
-                            onPressIn={() => setSelectedMode('video')}
-                            onPressOut={() => setSelectedMode(null)}
-                            activeOpacity={0.9}
-                        >
-                            <LinearGradient
-                                colors={['#FF5722', '#E64A19']}
-                                style={styles.cardGradient}
-                            >
-                                <View style={styles.cardIconContainer}>
-                                    <Ionicons name="videocam" size={48} color="#fff" />
-                                </View>
-                                <Text style={styles.cardTitle}>Live Video</Text>
-                                <Text style={styles.cardDescription}>
-                                    Camera + Voice tutoring{'\n'}
-                                    AI can see what you're working on
-                                </Text>
-                                <View style={styles.cardFeatures}>
-                                    <View style={styles.featureItem}>
-                                        <Ionicons name="checkmark-circle" size={16} color="#fff" />
-                                        <Text style={styles.featureText}>See your work in real-time</Text>
-                                    </View>
-                                    <View style={styles.featureItem}>
-                                        <Ionicons name="checkmark-circle" size={16} color="#fff" />
-                                        <Text style={styles.featureText}>Perfect for homework help</Text>
-                                    </View>
-                                </View>
-                            </LinearGradient>
-                        </TouchableOpacity>
                     </View>
 
                     {/* Info Box */}
                     <View style={styles.infoBox}>
                         <Ionicons name="information-circle" size={20} color="#6C63FF" />
                         <Text style={styles.infoText}>
-                            Tap a mode to start your tutoring session
+                            Tap Live Audio to start your real-time session
                         </Text>
                     </View>
                 </View>

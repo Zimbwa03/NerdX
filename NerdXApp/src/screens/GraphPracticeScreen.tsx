@@ -97,13 +97,14 @@ const GraphPracticeScreen: React.FC = () => {
     { id: 'trigonometric', name: 'Trigonometric', icon: '🌊' },
   ];
 
-  const creditCost = 3; // Graph practice cost
+  const graphCreditCost = 1; // Graph generation cost (1 credit per graph)
+  const imageSolveCreditCost = 3; // Image solving cost (3 credits per image)
 
   const handleGenerate = async () => {
-    if ((user?.credits || 0) < creditCost) {
+    if ((user?.credits || 0) < graphCreditCost) {
       Alert.alert(
         'Insufficient Credits',
-        `Graph Practice requires ${creditCost} credits. Please buy credits first.`,
+        `Graph Practice requires ${graphCreditCost} credit per graph. Please buy credits first.`,
         [{ text: 'OK' }]
       );
       return;
@@ -122,8 +123,12 @@ const GraphPracticeScreen: React.FC = () => {
       const data = await graphApi.generateGraph(graphType);
       if (data) {
         setGraphData(data);
-        if (user) {
-          const newCredits = (user.credits || 0) - creditCost;
+        // Backend handles credit deduction - update from response if available
+        // For now, deduct locally for immediate UI feedback (backend also deducts)
+        if (user && data.credits_remaining !== undefined) {
+          updateUser({ credits: data.credits_remaining });
+        } else if (user) {
+          const newCredits = (user.credits || 0) - graphCreditCost;
           updateUser({ credits: newCredits });
         }
       }
@@ -220,10 +225,10 @@ const GraphPracticeScreen: React.FC = () => {
       return;
     }
 
-    if ((user?.credits || 0) < creditCost) {
+    if ((user?.credits || 0) < graphCreditCost) {
       Alert.alert(
         'Insufficient Credits',
-        `Graph Practice requires ${creditCost} credits. Please buy credits first.`,
+        `Graph Practice requires ${graphCreditCost} credit per graph. Please buy credits first.`,
         [{ text: 'OK' }]
       );
       return;
@@ -238,7 +243,7 @@ const GraphPracticeScreen: React.FC = () => {
       if (data) {
         setGraphData(data);
         if (user) {
-          const newCredits = (user.credits || 0) - creditCost;
+          const newCredits = (user.credits || 0) - graphCreditCost;
           updateUser({ credits: newCredits });
         }
       }
@@ -271,10 +276,10 @@ const GraphPracticeScreen: React.FC = () => {
 
       const imageUri = result.assets[0].uri;
 
-      if ((user?.credits || 0) < creditCost) {
+      if ((user?.credits || 0) < imageSolveCreditCost) {
         Alert.alert(
           'Insufficient Credits',
-          `Image solving requires ${creditCost} credits. Please buy credits first.`,
+          `Image solving requires ${imageSolveCreditCost} credits. Please buy credits first.`,
           [{ text: 'OK' }]
         );
         return;
@@ -288,7 +293,7 @@ const GraphPracticeScreen: React.FC = () => {
       if (solution) {
         setImageSolution(solution);
         if (user) {
-          const newCredits = (user.credits || 0) - creditCost;
+          const newCredits = (user.credits || 0) - imageSolveCreditCost;
           updateUser({ credits: newCredits });
         }
       }
@@ -306,10 +311,10 @@ const GraphPracticeScreen: React.FC = () => {
       return;
     }
 
-    if ((user?.credits || 0) < creditCost) {
+    if ((user?.credits || 0) < graphCreditCost) {
       Alert.alert(
         'Insufficient Credits',
-        `Linear Programming requires ${creditCost} credits. Please buy credits first.`,
+        `Linear Programming requires ${graphCreditCost} credit per graph. Please buy credits first.`,
         [{ text: 'OK' }]
       );
       return;
@@ -326,8 +331,11 @@ const GraphPracticeScreen: React.FC = () => {
       );
       if (data) {
         setGraphData(data);
-        if (user) {
-          const newCredits = (user.credits || 0) - creditCost;
+        // Backend handles credit deduction - update from response if available
+        if (user && data.credits_remaining !== undefined) {
+          updateUser({ credits: data.credits_remaining });
+        } else if (user) {
+          const newCredits = (user.credits || 0) - graphCreditCost;
           updateUser({ credits: newCredits });
         }
       }
@@ -437,7 +445,7 @@ const GraphPracticeScreen: React.FC = () => {
             {loading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.generateButtonText}>Generate Graph ({creditCost} credits)</Text>
+              <Text style={styles.generateButtonText}>Generate Graph ({graphCreditCost} credit)</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -476,7 +484,7 @@ const GraphPracticeScreen: React.FC = () => {
             {loading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.generateButtonText}>Generate Graph ({creditCost} credits)</Text>
+              <Text style={styles.generateButtonText}>Generate Graph ({graphCreditCost} credit)</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -497,7 +505,7 @@ const GraphPracticeScreen: React.FC = () => {
             {loading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.generateButtonText}>Select Image ({creditCost} credits)</Text>
+              <Text style={styles.generateButtonText}>Select Image ({imageSolveCreditCost} credits)</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -552,7 +560,7 @@ const GraphPracticeScreen: React.FC = () => {
             {loading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.generateButtonText}>Generate Graph ({creditCost} credits)</Text>
+              <Text style={styles.generateButtonText}>Generate Graph ({graphCreditCost} credit)</Text>
             )}
           </TouchableOpacity>
         </View>

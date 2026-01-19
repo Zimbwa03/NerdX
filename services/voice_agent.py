@@ -367,7 +367,7 @@ def convert_pcm_to_wav(pcm_data: bytes, sample_rate: int = 24000, channels: int 
     return wav_buffer.getvalue()
 
 
-def convert_m4a_to_pcm(m4a_base64: str) -> Optional[str]:
+def convert_m4a_to_pcm(m4a_base64: str) -> Optional[tuple[str, int]]:
     """
     Convert M4A/AAC audio to raw PCM for Gemini Live API.
     Returns base64-encoded 16-bit little-endian PCM at 16kHz mono.
@@ -397,7 +397,7 @@ def convert_m4a_to_pcm(m4a_base64: str) -> Optional[str]:
         pcm_base64 = base64.b64encode(pcm_bytes).decode('utf-8')
         
         logger.debug(f"✅ Converted to PCM: {len(pcm_bytes)} bytes, {len(pcm_base64)} chars base64")
-        return pcm_base64
+        return pcm_base64, len(pcm_bytes)
         
     except Exception as e:
         logger.error(f"❌ Audio conversion failed: {e}", exc_info=True)
@@ -472,6 +472,10 @@ class BillingManager:
             self.cost_per_tick = 1 if mode == "voice" else 2  # Fallback
             
         self.is_active = True
+        self.bytes_per_second = 16000 * 2  # 16kHz * 2 bytes per sample
+        self.bytes_per_tick = self.bytes_per_second * self.tick_seconds
+        self.audio_bytes_accumulated = 0
+        self.charge_lock = asyncio.Lock()
         
     async def verify_balance(self) -> bool:
         """Check if user has enough credits to start"""
@@ -514,6 +518,26 @@ class BillingManager:
         except Exception as e:
             logger.error(f"❌ Deduction error: {e}")
             return False
+
+    async def charge_for_audio_bytes(self, pcm_bytes_len: int) -> bool:
+        """
+        Charge ONLY for active user audio.
+        Deducts per 5 seconds of PCM audio received.
+        """
+        if not self.is_active or pcm_bytes_len <= 0:
+            return True
+
+        async with self.charge_lock:
+            self.audio_bytes_accumulated += pcm_bytes_len
+
+            while self.audio_bytes_accumulated >= self.bytes_per_tick:
+                success = await self.deduct_for_tick()
+                if not success:
+                    self.is_active = False
+                    return False
+                self.audio_bytes_accumulated -= self.bytes_per_tick
+
+        return True
 
 async def run_billing_scheduler(billing: BillingManager, websocket: WebSocket):
     """Run periodic billing every 5 seconds"""
@@ -866,7 +890,7 @@ class TransparentGeminiPipe:
             logger.error(f"❌ Gemini API connection error: {type(e).__name__}: {e}")
             return False
     
-    async def forward_audio_to_gemini(self, audio_base64: str):
+    async def forward_audio_to_gemini(self, audio_base64: str, billing: Optional[BillingManager] = None):
         """
         Forward audio to Gemini IMMEDIATELY - no buffering.
         Only converts format, then sends right away.
@@ -878,8 +902,8 @@ class TransparentGeminiPipe:
         try:
             logger.info(f"🔄 Converting audio: {len(audio_base64)} chars base64")
             # Convert M4A to PCM (boundary conversion)
-            pcm_base64 = convert_m4a_to_pcm(audio_base64)
-            if not pcm_base64:
+            pcm_result = convert_m4a_to_pcm(audio_base64)
+            if not pcm_result:
                 logger.error("❌ Audio conversion returned empty - cannot send to Gemini")
                 # Notify client of conversion failure
                 try:
@@ -891,7 +915,23 @@ class TransparentGeminiPipe:
                     pass
                 return
             
+            pcm_base64, pcm_bytes_len = pcm_result
             logger.info(f"✅ Audio converted: {len(pcm_base64)} chars PCM base64")
+
+            if billing:
+                charged = await billing.charge_for_audio_bytes(pcm_bytes_len)
+                if not charged:
+                    logger.warning("🛑 Insufficient credits during live session; closing connection.")
+                    try:
+                        await self.client_ws.send_json({
+                            "type": "error",
+                            "message": "Session ended: Insufficient credits to continue."
+                        })
+                    except Exception:
+                        pass
+                    await self.client_ws.close()
+                    self.is_active = False
+                    return
             
             # Send immediately - no batching
             message = {
@@ -1328,16 +1368,32 @@ This is REAL-TIME video - you can see them writing, erasing, and working. Use th
         except Exception as e:
             logger.error(f"Video forward error: {e}")
     
-    async def forward_audio_to_gemini(self, audio_base64: str):
+    async def forward_audio_to_gemini(self, audio_base64: str, billing: Optional[BillingManager] = None):
         """Forward audio to Gemini IMMEDIATELY"""
         if not self.gemini_ws or not self.is_active:
             return
             
         try:
-            pcm_base64 = convert_m4a_to_pcm(audio_base64)
-            if not pcm_base64:
+            pcm_result = convert_m4a_to_pcm(audio_base64)
+            if not pcm_result:
                 return
-            
+            pcm_base64, pcm_bytes_len = pcm_result
+
+            if billing:
+                charged = await billing.charge_for_audio_bytes(pcm_bytes_len)
+                if not charged:
+                    logger.warning("🛑 Insufficient credits during live video session; closing connection.")
+                    try:
+                        await self.client_ws.send_json({
+                            "type": "error",
+                            "message": "Session ended: Insufficient credits to continue."
+                        })
+                    except Exception:
+                        pass
+                    await self.client_ws.close()
+                    self.is_active = False
+                    return
+
             message = {
                 "realtimeInput": {
                     "mediaChunks": [{
@@ -1440,70 +1496,13 @@ async def websocket_nerdx_live_video(websocket: WebSocket, user_id: str = "guest
     WebSocket endpoint for VIDEO + AUDIO tutoring.
     """
     await websocket.accept()
-    logger.info(f"🎥 Video client connected: {user_id}")
-    
-    # --- Billing Check ---
-    billing = BillingManager(user_id, mode="video")
-    if not await billing.verify_balance():
-        await websocket.send_json({
-            "type": "error", 
-            "message": "Insufficient credits to start video session"
-        })
-        await websocket.close()
-        return
-
-    pipe = TransparentGeminiVideoPipe(websocket)
-    
-    if not await pipe.connect_to_gemini():
-        await websocket.send_json({
-            "type": "error",
-            "message": pipe.last_error or "Failed to connect to AI"
-        })
-        await websocket.close()
-        return
-
-    # Start billing schedule ONLY after session is established (setupComplete).
-    billing_task = asyncio.create_task(run_billing_scheduler(billing, websocket))
-    
+    logger.info(f"🎥 Video client connected (disabled): {user_id}")
     await websocket.send_json({
-        "type": "ready",
-        "message": "Connected to NerdX Live Video!"
+        "type": "error",
+        "message": "Video mode is temporarily disabled. Please use NerdX Live (audio)."
     })
-    
-    receive_task = asyncio.create_task(pipe.receive_and_forward())
-    
-    try:
-        while True:
-            data = await websocket.receive_json()
-            msg_type = data.get("type", "")
-            
-            if msg_type == "video":
-                # Forward video frame immediately for real-time processing
-                frame_data = data.get("data", "")
-                mime_type = data.get("mimeType", "image/jpeg")
-                timestamp = data.get("timestamp")
-                if frame_data:
-                    # Send immediately - no batching for real-time video
-                    await pipe.forward_video_frame(frame_data, mime_type, timestamp)
-                    
-            elif msg_type == "audio":
-                # Forward audio
-                audio_data = data.get("data", "")
-                if audio_data:
-                    await pipe.forward_audio_to_gemini(audio_data)
-                    
-            elif msg_type == "end":
-                logger.info("📴 Client ended video session")
-                break
-                
-    except WebSocketDisconnect:
-        logger.info("📴 Video client disconnected")
-    except Exception as e:
-        logger.error(f"Video WebSocket error: {e}")
-    finally:
-        billing_task.cancel()
-        receive_task.cancel()
-        await pipe.close()
+    await websocket.close()
+    return
 
 
 @app.websocket("/ws/nerdx-live")
@@ -1534,12 +1533,10 @@ async def websocket_nerdx_live(websocket: WebSocket, user_id: str = "guest_voice
         await websocket.close()
         return
 
-    # Start billing schedule ONLY after session is established (setupComplete).
-    billing_task = asyncio.create_task(run_billing_scheduler(billing, websocket))
-    
     await websocket.send_json({
         "type": "ready",
-        "message": "Connected to NerdX Live!"
+        "message": "Connected to NerdX Live!",
+        "playSound": "connected"
     })
     
     # Start receiving from Gemini
@@ -1555,9 +1552,18 @@ async def websocket_nerdx_live(websocket: WebSocket, user_id: str = "guest_voice
                 if audio_data:
                     logger.info(f"📥 Received audio from client: {len(audio_data)} chars base64")
                     # Forward immediately
-                    await pipe.forward_audio_to_gemini(audio_data)
+                    await pipe.forward_audio_to_gemini(audio_data, billing=billing)
                 else:
                     logger.warning("⚠️ Received audio message with empty data")
+            
+            elif msg_type == "interrupt":
+                # Client barge-in: stop any pending buffered audio immediately
+                try:
+                    async with pipe.buffer_lock:
+                        pipe.audio_buffer.clear()
+                    await websocket.send_json({"type": "interrupted"})
+                except Exception:
+                    pass
                     
             elif msg_type == "end":
                 logger.info("📴 Client ended session")
@@ -1568,7 +1574,6 @@ async def websocket_nerdx_live(websocket: WebSocket, user_id: str = "guest_voice
     except Exception as e:
         logger.error(f"WebSocket error: {e}")
     finally:
-        billing_task.cancel()
         receive_task.cancel()
         await pipe.close()
 

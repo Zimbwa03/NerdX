@@ -110,9 +110,11 @@ const ALevelBiologyScreen: React.FC = () => {
 
     const startQuestion = async (topic: ALevelBiologyTopic, questionType: BiologyQuestionType) => {
         try {
+            // A-Level Biology: MCQ = 0.25 credit, Structured/Essay = 0.5 credit
+            const creditCost = questionType === 'mcq' ? 0.25 : 0.5;
             const currentCredits = user?.credits || 0;
-            if (currentCredits < 1) {
-                showError('❌ Insufficient credits! You need at least 1 credit. Please top up your credits.', 5000);
+            if (currentCredits < creditCost) {
+                showError(`❌ Insufficient credits! You need at least ${creditCost} credit${creditCost === 0.25 ? '' : 's'}. Please top up your credits.`, 5000);
                 return;
             }
 
@@ -137,10 +139,12 @@ const ALevelBiologyScreen: React.FC = () => {
             setIsGeneratingQuestion(false);
 
             if (question) {
-                const newCredits = (user?.credits || 0) - 1;
+                // Backend deducts credits - update UI estimate based on question type
+                const newCredits = Math.max(0, (user?.credits || 0) - creditCost);
                 updateUser({ credits: newCredits });
 
-                showSuccess(`✅ ${questionType.toUpperCase()} question generated! ${newCredits} credits remaining.`, 3000);
+                const costText = creditCost === 0.25 ? '0.25 credit' : '0.5 credit';
+                showSuccess(`✅ ${questionType.toUpperCase()} question generated! (-${costText}) ${newCredits} credits remaining.`, 3000);
 
                 if (newCredits <= 3 && newCredits > 0) {
                     setTimeout(() => {

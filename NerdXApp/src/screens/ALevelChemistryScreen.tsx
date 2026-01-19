@@ -96,10 +96,12 @@ const ALevelChemistryScreen: React.FC = () => {
 
     const handleTopicPress = async (topic: ALevelChemistryTopic) => {
         try {
-            if (!user || (user.credits || 0) < 1) {
+            // A-Level Chemistry topical questions cost 0.5 credit
+            const creditCost = 0.5;
+            if (!user || (user.credits || 0) < creditCost) {
                 Alert.alert(
                     'Insufficient Credits',
-                    'You need at least 1 credit to start a quiz. Please purchase credits first.',
+                    `You need at least ${creditCost} credit to start a quiz. Please purchase credits first.`,
                     [{ text: 'OK' }]
                 );
                 return;
@@ -132,7 +134,8 @@ const ALevelChemistryScreen: React.FC = () => {
                                         subject: { id: 'a_level_chemistry', name: 'A Level Chemistry' },
                                         topic: { id: topic.id, name: topic.name }
                                     } as never);
-                                    const newCredits = (user.credits || 0) - 1;
+                                    // Backend deducts credits - update UI estimate (0.5 credit for topical)
+                                    const newCredits = Math.max(0, (user.credits || 0) - creditCost);
                                     updateUser({ credits: newCredits });
                                 }
                             } catch (error: any) {

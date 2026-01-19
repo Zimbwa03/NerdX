@@ -1,7 +1,9 @@
 // Authentication context provider
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
+import { AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User } from '../types';
+import { creditsApi } from '../services/api/creditsApi';
 
 interface AuthContextType {
   user: User | null;
@@ -10,6 +12,7 @@ interface AuthContextType {
   login: (user: User, token: string, notifications?: any) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (user: Partial<User>) => void;
+  refreshCredits: (includeBreakdown?: boolean) => Promise<void>;
   creditNotification: CreditNotificationData | null;
   clearCreditNotification: () => void;
 }
@@ -34,6 +37,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [creditNotification, setCreditNotification] = useState<CreditNotificationData | null>(null);
+  const creditSyncInFlight = useRef(false);
 
   useEffect(() => {
     loadStoredAuth();
@@ -100,15 +104,61 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const updateUser = (userData: Partial<User>) => {
-    if (user) {
-      const updatedUser = { ...user, ...userData };
-      setUser(updatedUser);
+  const updateUser = useCallback((userData: Partial<User>) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const updatedUser = { ...prev, ...userData };
       AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(updatedUser)).catch(error => {
         console.error('Failed to update user data:', error);
       });
+      return updatedUser;
+    });
+  }, []);
+
+  const refreshCredits = useCallback(async (includeBreakdown: boolean = false) => {
+    if (!user || creditSyncInFlight.current) return;
+    creditSyncInFlight.current = true;
+    try {
+      if (includeBreakdown) {
+        const info = await creditsApi.getCreditInfo();
+        if (info) {
+          const total = typeof info.total === 'number' ? info.total : (info.balance ?? user.credits ?? 0);
+          updateUser({ credits: total, credit_breakdown: info });
+          return;
+        }
+      }
+
+      const balance = await creditsApi.getBalance();
+      if (typeof balance === 'number') {
+        updateUser({ credits: balance });
+      }
+    } catch (error) {
+      console.error('Failed to refresh credits:', error);
+    } finally {
+      creditSyncInFlight.current = false;
     }
-  };
+  }, [user, updateUser]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    refreshCredits(true);
+
+    const intervalId = setInterval(() => {
+      refreshCredits(false);
+    }, 30000);
+
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        refreshCredits(true);
+      }
+    });
+
+    return () => {
+      clearInterval(intervalId);
+      subscription.remove();
+    };
+  }, [user?.id, refreshCredits]);
 
   const clearCreditNotification = () => {
     setCreditNotification(null);
@@ -121,6 +171,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     logout,
     updateUser,
+    refreshCredits,
     creditNotification,
     clearCreditNotification,
   };

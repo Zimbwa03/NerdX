@@ -182,10 +182,11 @@ def _parse_plot_tag(text: str) -> Optional[Dict]:
     expression = trigger_content
     x_range: Optional[Tuple[float, float]] = None
 
-    if ", range=" in trigger_content:
-        parts = trigger_content.split(", range=")
+    range_match = re.search(r",\s*(x_?range|range|domain|window|viewport)\s*=\s*([^,\]]+)", trigger_content, flags=re.IGNORECASE)
+    if range_match:
+        parts = trigger_content.split(range_match.group(0))
         expression = parts[0].strip()
-        range_str = parts[1].strip()
+        range_str = range_match.group(2).strip()
         if ":" in range_str:
             try:
                 a, b = range_str.split(":", 1)

@@ -4,7 +4,7 @@
  */
 
 import { getMathTopicNotes, getMathTopics, MathTopicNotes } from '../../data/mathNotes';
-import { getALevelPureMathNotes } from '../../data/aLevelPureMath';
+import { getALevelPureMathNotes, getAvailableALevelPureMathTopics } from '../../data/aLevelPureMath';
 import { getOLevelMathNotes, getAvailableOLevelMathTopics } from '../../data/oLevelMath/notes';
 
 export const mathNotesApi = {
@@ -14,7 +14,7 @@ export const mathNotesApi = {
      */
     getTopics: async (gradeLevel: string = 'O-Level'): Promise<string[]> => {
         if (gradeLevel === 'A-Level' || gradeLevel === 'A Level') {
-            return getMathTopics();
+            return getAvailableALevelPureMathTopics();
         }
         // For O-Level, combine topics from both sources
         const oldTopics = getMathTopics();

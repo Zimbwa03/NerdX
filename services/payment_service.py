@@ -636,6 +636,7 @@ class PaymentService:
                     'status': 'initiated',  # Paynow-specific status
                     'payment_method': 'paynow_ecocash',
                     'credits_added': 0,
+                    'paynow_poll_url': payment_result.get('poll_url'),
                     'admin_notes': f"Phone: {phone_number} | Email: {email} | Poll URL: {payment_result.get('poll_url')}"
                 }
                 
@@ -755,7 +756,7 @@ class PaymentService:
                     
                     # Update status in database
                     update_data = {
-                        'status': 'paid' if paynow_status['paid'] else 'pending',
+                        'status': 'paid' if paynow_status['paid'] else paynow_status.get('status', 'pending'),
                         'paynow_reference': paynow_status.get('paynow_reference')
                     }
                     

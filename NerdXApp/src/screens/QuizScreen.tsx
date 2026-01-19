@@ -1,4 +1,4 @@
-﻿// Quiz Screen Component - Professional UI/UX Design
+// Quiz Screen Component - Professional UI/UX Design
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
@@ -213,7 +213,7 @@ const QuizScreen: React.FC = () => {
       // Show alert to ask user if they want to enable image questions
       Alert.alert(
         '🖼️ Visual Learning Mode',
-        'Enable image-based questions? Every 6th question will include a scientific diagram.\n\n⚠️ Image questions cost 4 credits (vs 1 for text questions).',
+        'Enable image-based questions? Every 6th question will include a scientific diagram.\n\n⚠️ Image questions cost 4 credits (vs 0.25-0.5 credits for text questions, depending on subject).',
         [
           {
             text: 'No Thanks',
@@ -659,12 +659,14 @@ const QuizScreen: React.FC = () => {
         setQuestionStartTime(Date.now());
         setHintsUsed(0);
         setStructuredAnswers({});  // Reset structured question answers
+        // Credit cost varies by question type - backend handles deduction
+        // Backend will deduct the correct amount based on subject/question type
         if (user) {
-          const newCredits = (user.credits || 0) - 1;
-          updateUser({ credits: newCredits });
-
-          // Show credit deduction notification
-          showInfo(`1 credit used. ${newCredits} credits remaining.`, 3000);
+          // Backend handles credit deduction - estimate for UI (actual cost depends on question type)
+          // Most questions cost 0.5 credit, but some cost 0.25 or 1 credit
+          // The backend response would have credits_remaining if available
+          // For now, we show a generic message and rely on backend to handle deduction
+          showInfo(`Question loaded. Credits deducted by system.`, 2000);
 
           // Check if credits are getting low
           if (newCredits <= 3 && newCredits > 0) {

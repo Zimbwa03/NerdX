@@ -3,6 +3,7 @@
 // Following the MathTopicNotes interface for consistency with O-Level notes
 
 import { MathTopicNotes } from '../mathNotes/types';
+import { aLevelPureMathTopics } from './topics';
 
 // Complete notes for each A-Level Pure Mathematics topic
 export const aLevelPureMathNotes: Record<string, MathTopicNotes> = {
@@ -8637,7 +8638,67 @@ $= \\tan A$ = RHS ✓
 
 // Helper function to get notes for a specific topic
 export function getALevelPureMathNotes(topicName: string): MathTopicNotes | null {
-    return aLevelPureMathNotes[topicName] || null;
+    // Fast path: exact match
+    if (aLevelPureMathNotes[topicName]) return aLevelPureMathNotes[topicName];
+
+    // Robust match: ignore case/spacing/punctuation (prevents "missing notes" due to minor naming differences)
+    const normalize = (s: string) =>
+        (s || '')
+            .toLowerCase()
+            .replace(/&amp;/g, '&')
+            .replace(/[^a-z0-9]+/g, ' ')
+            .trim();
+
+    const wanted = normalize(topicName);
+    const keyMatch = Object.keys(aLevelPureMathNotes).find((k) => normalize(k) === wanted);
+    if (keyMatch) return aLevelPureMathNotes[keyMatch];
+
+    // Final fallback: generate a professional "starter notes" page from the syllabus topic metadata
+    const topicMeta = aLevelPureMathTopics.find((t) => normalize(t.name) === wanted);
+    if (!topicMeta) return null;
+
+    const formulas =
+        topicMeta.keyFormulas && topicMeta.keyFormulas.length
+            ? topicMeta.keyFormulas.map((f) => `- ${f}`).join('\n')
+            : '- (Formulae for this topic will be added shortly.)';
+
+    const objectives =
+        topicMeta.learningObjectives && topicMeta.learningObjectives.length
+            ? topicMeta.learningObjectives.map((o) => `- ${o}`).join('\n')
+            : '- (Learning objectives will be added shortly.)';
+
+    return {
+        topic: topicMeta.name,
+        subject: 'Mathematics',
+        grade_level: 'A-Level',
+        summary:
+            `These notes are being expanded. Below is a solid starter sheet built from the syllabus objectives and key formulae for **${topicMeta.name}**.`,
+        sections: [
+            {
+                title: '1. What you must know (Syllabus objectives)',
+                content: `## Learning Objectives\n\n${objectives}`,
+            },
+            {
+                title: '2. Key formulae & results',
+                content: `## Formulae\n\n${formulas}`,
+            },
+            {
+                title: '3. Exam focus',
+                content:
+                    `## How it appears in exams\n\n- Past paper questions often test the *core definition*, then a short manipulation/proof, then an application.\n- Show working clearly and state domains/conditions where relevant.\n\n**Paper relevance:** ${topicMeta.paperRelevance}\n**Level:** ${topicMeta.difficulty}`,
+            },
+        ],
+        key_points: [
+            'Learn the definitions and standard forms first.',
+            'Practice typical exam-style manipulations and substitutions.',
+            'Always state restrictions/conditions (domain, parameters, validity range) when required.',
+        ],
+        exam_tips: [
+            'Write final answers in the required form (exact values unless decimals requested).',
+            'Avoid algebraic slips: expand carefully and check by substitution.',
+            'Use correct notation consistently (especially sets, functions, and complex numbers).',
+        ],
+    };
 }
 
 // Get all available topic names with notes

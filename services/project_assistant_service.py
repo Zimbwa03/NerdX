@@ -2099,8 +2099,10 @@ Recent context (optional): {context}
             safe_user = (user_id or "user").replace("@", "_at_").replace(".", "_")
             filename = f"project_{project_id}_{safe_user}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}.png"
             rel_path = os.path.join("static", "project_images", filename)
-            os.makedirs(os.path.dirname(rel_path), exist_ok=True)
-            with open(rel_path, "wb") as f:
+            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            abs_path = os.path.join(base_dir, rel_path)
+            os.makedirs(os.path.dirname(abs_path), exist_ok=True)
+            with open(abs_path, "wb") as f:
                 f.write(image_bytes)
             return convert_local_path_to_public_url(rel_path)
         except Exception as e:

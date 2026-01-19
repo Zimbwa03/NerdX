@@ -537,7 +537,7 @@ const TeacherModeSetupScreen: React.FC = () => {
           </View>
           <View style={styles.creditInfo}>
             <Text style={[styles.creditText, { color: themedColors.text.hint }]}>
-              💎 <Text style={{ fontWeight: 'bold' }}>1 Credit</Text> per 10 AI responses (Start for Free)
+              💎 <Text style={{ fontWeight: 'bold' }}>0.1 Credit</Text> per AI response (Start for Free)
             </Text>
           </View>
         </View>

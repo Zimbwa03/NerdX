@@ -107,13 +107,38 @@ class VertexService:
                 config=GenerateImagesConfig(
                     number_of_images=1,
                     image_size=size,
-                    safety_filter_level="block_few",  # Allow educational content
                     person_generation="dont_allow",   # Safer for education
                 ),
             )
             
             if response.generated_images and len(response.generated_images) > 0:
-                image_bytes = response.generated_images[0].image.image_bytes
+                generated = response.generated_images[0]
+                image_bytes = None
+
+                image_obj = getattr(generated, "image", None)
+                if image_obj is not None:
+                    image_bytes = getattr(image_obj, "image_bytes", None)
+                    if not image_bytes:
+                        image_base64 = getattr(image_obj, "image_base64", None)
+                        if image_base64:
+                            image_bytes = base64.b64decode(image_base64)
+                    if not image_bytes:
+                        image_bytes = getattr(image_obj, "bytes", None) or getattr(image_obj, "data", None)
+
+                if not image_bytes:
+                    image_bytes = getattr(generated, "image_bytes", None)
+                if not image_bytes:
+                    image_base64 = getattr(generated, "image_base64", None)
+                    if image_base64:
+                        image_bytes = base64.b64decode(image_base64)
+
+                if isinstance(image_bytes, str):
+                    image_bytes = base64.b64decode(image_bytes)
+
+                if not image_bytes:
+                    logger.error("❌ Image generation returned empty image bytes")
+                    return {'success': False, 'error': 'Image bytes missing from response'}
+
                 image_base64 = base64.b64encode(image_bytes).decode('utf-8')
                 
                 logger.info(f"✅ Image generated successfully ({len(image_bytes)} bytes)")

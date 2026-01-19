@@ -581,14 +581,14 @@ Current conversation context will be provided with each message."""
             
             trigger_content = match.group(1)
             
-            # Simple parsing: "expression, range=a:b"
+            # Simple parsing: "expression, range=a:b" or "expression, x_range=a:b"
             expression = trigger_content
             x_range = (-10, 10)
-            
-            if ', range=' in trigger_content:
-                parts = trigger_content.split(', range=')
-                expression = parts[0].strip()
-                range_str = parts[1].strip()
+
+            range_match = re.search(r",\s*(x_?range|range|domain|window|viewport)\s*=\s*([^,\]]+)", trigger_content, flags=re.IGNORECASE)
+            if range_match:
+                expression = trigger_content.split(range_match.group(0))[0].strip()
+                range_str = range_match.group(2).strip()
                 if ':' in range_str:
                     try:
                         r_parts = range_str.split(':')
@@ -603,6 +603,7 @@ Current conversation context will be provided with each message."""
             # 1. Generate Static Graph
             from services.graph_service import GraphService
             graph_service = GraphService()
+            expression = graph_service._clean_expression(expression)
             relative_path = graph_service.generate_function_graph(expression, x_range)
             if relative_path:
                 media_urls['graph_url'] = f"/{relative_path}"

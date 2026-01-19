@@ -61,7 +61,7 @@ def paynow_webhook():
             'message': 'Webhook processing error'
         }), 200
 
-@paynow_webhook_bp.route('/webhook/paynow/return', methods=['GET'])
+@paynow_webhook_bp.route('/webhook/paynow/return', methods=['GET', 'POST'])
 def paynow_return():
     """
     Handle Paynow return URL (customer redirect after payment)
@@ -69,9 +69,13 @@ def paynow_return():
     This is where customers are redirected after completing payment on Paynow
     """
     try:
-        # Get return parameters
-        reference = request.args.get('reference', '')
-        status = request.args.get('status', 'unknown')
+        # Paynow can send GET or POST for return URL
+        if request.method == 'POST':
+            reference = request.form.get('reference', '')
+            status = request.form.get('status', 'unknown')
+        else:
+            reference = request.args.get('reference', '')
+            status = request.args.get('status', 'unknown')
         
         logger.info(f"🔄 Paynow return: {reference} - {status}")
         

@@ -109,11 +109,42 @@ class ManimService:
         This is used for trig/exponential graphs to avoid coefficient-specific drift.
         """
         import hashlib
-        key_src = f"expr:{expression}|x:{x_range}|y:{y_range}|q:{quality}"
+        cleaned_expression = self._sanitize_expression(expression)
+        key_src = f"expr:{cleaned_expression}|x:{x_range}|y:{y_range}|q:{quality}"
         render_key = hashlib.sha1(key_src.encode("utf-8")).hexdigest()[:16]
-        env = {"MANIM_EXPR": str(expression), "MANIM_RENDER_KEY": f"expr_{render_key}"}
+        env = {"MANIM_EXPR": str(cleaned_expression), "MANIM_RENDER_KEY": f"expr_{render_key}"}
         env.update(self._ranges_to_env(x_range, y_range))
         return self._render_scene("ExpressionScene", env, quality)
+
+    def _sanitize_expression(self, expression: str) -> str:
+        """Normalize expression text before sending to Manim/SymPy."""
+        try:
+            expr = (expression or "").strip()
+
+            # Remove common LaTeX wrappers
+            if (expr.startswith("$") and expr.endswith("$")) or (expr.startswith("$$") and expr.endswith("$$")):
+                expr = expr.strip("$").strip()
+            expr = expr.replace("\\(", "").replace("\\)", "").replace("\\[", "").replace("\\]", "")
+            expr = expr.replace("`", "").strip()
+
+            # Remove y= or f(x)= prefixes
+            lower = expr.lower()
+            if lower.startswith("y=") or lower.startswith("y ="):
+                expr = expr.split("=", 1)[-1].strip()
+            elif lower.startswith("f(x)=") or lower.startswith("f(x) ="):
+                expr = expr.split("=", 1)[-1].strip()
+
+            # Remove trailing range metadata
+            import re
+            expr = re.sub(r",\s*\$?(x_?range|range|domain|window|viewport)\b.*$", "", expr, flags=re.IGNORECASE).strip()
+            expr = re.sub(r"\$?(x_?range|range|domain|window|viewport)\b\s*[:=].*$", "", expr, flags=re.IGNORECASE).strip()
+
+            # Normalize power operator
+            expr = expr.replace("^", "**")
+
+            return expr
+        except Exception:
+            return (expression or "").strip()
 
     def _ranges_to_env(self, x_range: Optional[Dict], y_range: Optional[Dict]) -> Dict[str, str]:
         """

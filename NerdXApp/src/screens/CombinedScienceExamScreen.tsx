@@ -61,10 +61,12 @@ const CombinedScienceExamScreen: React.FC = () => {
       return;
     }
 
-    if (!user || (user.credits || 0) < selectedCount) {
+    // Each exam question costs 0.5 credits, so check if user has enough
+    const requiredCredits = Math.ceil(selectedCount * 0.5);
+    if (!user || (user.credits || 0) < requiredCredits) {
       Alert.alert(
         'Insufficient Credits',
-        `You need at least ${selectedCount} credits to start this exam. Please buy credits first.`,
+        `You need at least ${requiredCredits} credits (${selectedCount} questions × 0.5 credit each) to start this exam. Please buy credits first.`,
         [{ text: 'OK' }]
       );
       return;
@@ -107,9 +109,10 @@ const CombinedScienceExamScreen: React.FC = () => {
       setCurrentQuestionIndex(0);
       setCurrentAnswer('');
 
-      // Deduct credits upfront
+      // Deduct credits upfront (0.5 credit per question)
       if (user) {
-        const newCredits = (user.credits || 0) - selectedCount;
+        const creditsToDeduct = Math.ceil(selectedCount * 0.5);
+        const newCredits = (user.credits || 0) - creditsToDeduct;
         updateUser({ credits: newCredits });
       }
 
@@ -349,7 +352,7 @@ const CombinedScienceExamScreen: React.FC = () => {
             <Text style={[styles.infoText, { color: themedColors.text.secondary }]}>
               • Questions will be randomly selected from Biology, Chemistry, and Physics{'\n'}
               • Questions are evenly distributed across all three subjects{'\n'}
-              • Each question costs 1 credit{'\n'}
+              • Each question costs 0.5 credit{'\n'}
               • You'll receive detailed feedback after completion
             </Text>
           </Card>

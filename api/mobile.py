@@ -2293,7 +2293,10 @@ def initiate_credit_purchase():
             make_supabase_request(
                 'PATCH',
                 'payment_transactions',
-                {'poll_url': payment_result.get('poll_url', '')},
+                {
+                    'poll_url': payment_result.get('poll_url', ''),
+                    'paynow_poll_url': payment_result.get('poll_url', '')
+                },
                 filters={'reference_code': f"eq.{reference}"},
                 use_service_role=True
             )
@@ -2377,8 +2380,15 @@ def check_payment_status(reference):
     """Check payment status"""
     try:
         from database.external_db import make_supabase_request
-        
-        # Get payment transaction from database
+        from services.payment_service import payment_service
+
+        # Always run Paynow status sync so credits are applied promptly
+        try:
+            payment_service.check_paynow_payment_status(reference)
+        except Exception as sync_error:
+            logger.warning(f"Paynow status sync failed: {sync_error}")
+
+        # Get payment transaction from database (latest status)
         result = make_supabase_request(
             'GET',
             'payment_transactions',
@@ -2386,34 +2396,23 @@ def check_payment_status(reference):
             filters={'reference_code': f"eq.{reference}", 'user_id': f"eq.{g.current_user_id}"},
             use_service_role=True
         )
-        
+
         if not result or len(result) == 0:
             return jsonify({'success': False, 'message': 'Payment not found'}), 404
-        
+
         transaction = result[0]
         status = transaction.get('status', 'pending')
-        poll_url = transaction.get('poll_url', '')
-        
-        # If payment is still pending and we have poll_url, check with Paynow
-        if status == 'pending' and poll_url:
-            paynow_service = PaynowService()
-            if paynow_service.is_available():
-                try:
-                    paynow_status = paynow_service.check_payment_status(poll_url)
-                    if paynow_status.get('success') and paynow_status.get('paid'):
-                        # Payment confirmed - webhook should handle this, but update status
-                        status = 'completed'
-                except Exception as e:
-                    logger.warning(f"Failed to check Paynow status: {e}")
-        
+        credits_units = transaction.get('credits', 0) or 0
+        display_credits = _credits_display(credits_units)
+
         return jsonify({
             'success': True,
             'data': {
                 'reference': reference,
-                'status': status,  # 'pending', 'completed', 'failed', 'cancelled'
+                'status': status,  # 'pending', 'approved', 'failed', 'cancelled'
                 'amount': transaction.get('amount', 0),
-                'credits': transaction.get('credits', 0),
-                'paid': status == 'completed' or status == 'approved'
+                'credits': display_credits,
+                'paid': status in ['approved', 'completed', 'paid']
             }
         }), 200
     except Exception as e:

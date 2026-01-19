@@ -518,9 +518,10 @@ class GraphService:
         # Examples seen in logs:
         # - "2*x,$range = -5$:5"
         # - "y=x^2, range=-10..10"
+        # - "x, x_range = -3:3"
         import re
-        clean = re.sub(r',\s*\$?range\b.*$', '', clean, flags=re.IGNORECASE).strip()
-        clean = re.sub(r'\$range\b.*$', '', clean, flags=re.IGNORECASE).strip()
+        clean = re.sub(r',\s*\$?(x_?range|range|domain|window|viewport)\b.*$', '', clean, flags=re.IGNORECASE).strip()
+        clean = re.sub(r'\$?(x_?range|range|domain|window|viewport)\b\s*[:=].*$', '', clean, flags=re.IGNORECASE).strip()
 
         # CRITICAL FIX: Convert Unicode superscripts to standard notation
         # This fixes the "invalid character '²' (U+00B2)" error

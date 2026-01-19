@@ -31,6 +31,7 @@ import Animated, {
     SlideInDown,
 } from 'react-native-reanimated';
 import { Audio, AVPlaybackStatus } from 'expo-av';
+import * as FileSystem from 'expo-file-system';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { BlurView } from 'expo-blur';
@@ -49,6 +50,8 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 // Use the same backend host as the rest of the app (Render hybrid server).
 // `APP_WS_BASE_URL` should be like: wss://nerdx.onrender.com
 const WS_URL = `${APP_WS_BASE_URL}/ws/nerdx-live`;
+const CONNECT_BEEP_WAV_BASE64 =
+    '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';
 
 // Color tokens (from design spec)
 const COLORS = {
@@ -72,6 +75,9 @@ const COLORS = {
 // The buffer is still useful for edge cases but typically receives 1 chunk now
 const MAX_BUFFER_SIZE = 10; // Reduced from 50 - server sends complete audio
 const MAX_RECORDING_DURATION_MS = 60000;
+const VAD_SPEECH_THRESHOLD_DB = -45;
+const VAD_SILENCE_TIMEOUT_MS = 900;
+const VAD_MIN_RECORDING_MS = 700;
 
 type ConnectionState = 'idle' | 'connecting' | 'ready' | 'recording' | 'processing' | 'error';
 
@@ -96,17 +102,31 @@ const NerdXLiveAudioScreen: React.FC = () => {
     const [captionsEnabled, setCaptionsEnabled] = useState(false);
     const [captions, setCaptions] = useState<CaptionLine[]>([]);
     const [amplitude, setAmplitude] = useState(0);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [listeningEnabled, setListeningEnabled] = useState(false);
 
     // Refs
     const wsRef = useRef<WebSocket | null>(null);
     const recordingRef = useRef<Audio.Recording | null>(null);
     const soundRef = useRef<Audio.Sound | null>(null);
+    const connectedSoundRef = useRef<Audio.Sound | null>(null);
     const currentAudioTurnRef = useRef<AudioTurn | null>(null);
     const isPlayingRef = useRef(false);
     const playbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const recordingStartTimeRef = useRef<number>(0);
-    const endSessionRef = useRef<() => Promise<void>>();
-    const stopRecordingAndSendRef = useRef<() => Promise<void>>();
+    const bargeInMonitorRef = useRef<Audio.Recording | null>(null);
+    const startBargeInMonitorRef = useRef<(() => Promise<void>) | null>(null);
+    const stopBargeInMonitorRef = useRef<(() => Promise<void>) | null>(null);
+    const startRecordingRef = useRef<(() => Promise<void>) | null>(null);
+    const endSessionRef = useRef<(() => Promise<void>) | null>(null);
+    const stopRecordingAndSendRef = useRef<(() => Promise<void>) | null>(null);
+    const autoStartedListeningRef = useRef(false);
+    const bargeInRequestedRef = useRef(false);
+    const vadStateRef = useRef<{ lastVoiceAt: number; speechStarted: boolean }>({
+        lastVoiceAt: 0,
+        speechStarted: false,
+    });
+    const bargeVadRef = useRef<{ lastVoiceAt: number }>({ lastVoiceAt: 0 });
 
     // Animations
     const controlsScale = useSharedValue(1);
@@ -120,7 +140,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
             case 'processing':
                 return 'thinking';
             case 'ready':
-                return isPlayingRef.current ? 'speaking' : 'idle';
+                return isPlaying ? 'speaking' : 'idle';
             default:
                 return 'idle';
         }
@@ -180,6 +200,24 @@ const NerdXLiveAudioScreen: React.FC = () => {
         }
     }, []);
 
+    const playConnectedSound = useCallback(async () => {
+        try {
+            await configureAudioMode(false);
+            if (connectedSoundRef.current) {
+                try { await connectedSoundRef.current.unloadAsync(); } catch (e) { }
+                connectedSoundRef.current = null;
+            }
+            const uri = `data:audio/wav;base64,${CONNECT_BEEP_WAV_BASE64}`;
+            const { sound } = await Audio.Sound.createAsync(
+                { uri },
+                { shouldPlay: true, volume: 0.9 }
+            );
+            connectedSoundRef.current = sound;
+        } catch (error) {
+            console.error('Connected sound error:', error);
+        }
+    }, [configureAudioMode]);
+
     // Audio buffer management
     const bufferAudioChunk = useCallback((audioData: string) => {
         if (!currentAudioTurnRef.current) {
@@ -200,8 +238,10 @@ const NerdXLiveAudioScreen: React.FC = () => {
         if (isPlayingRef.current || audioTurn.chunks.length === 0) return;
 
         isPlayingRef.current = true;
+        setIsPlaying(true);
         setAmplitude(0.6); // Simulate speaking amplitude
         await configureAudioMode(false);
+        await startBargeInMonitorRef.current?.();
 
         for (let i = 0; i < audioTurn.chunks.length; i++) {
             if (!isPlayingRef.current) break;
@@ -245,9 +285,113 @@ const NerdXLiveAudioScreen: React.FC = () => {
         }
 
         isPlayingRef.current = false;
+        setIsPlaying(false);
         setAmplitude(0);
+        await stopBargeInMonitorRef.current?.();
         setConnectionState('ready');
     }, [configureAudioMode]);
+
+    const resetVadState = useCallback(() => {
+        vadStateRef.current = { lastVoiceAt: 0, speechStarted: false };
+    }, []);
+
+    const stopBargeInMonitor = useCallback(async () => {
+        if (!bargeInMonitorRef.current) return;
+        const rec = bargeInMonitorRef.current;
+        bargeInMonitorRef.current = null;
+        try {
+            const uri = rec.getURI();
+            try { await rec.stopAndUnloadAsync(); } catch (e) { }
+            if (uri) {
+                try { await FileSystem.deleteAsync(uri, { idempotent: true }); } catch (e) { }
+            }
+        } catch (e) { }
+    }, []);
+
+    const startBargeInMonitor = useCallback(async () => {
+        if (!listeningEnabled) return;
+        if (Platform.OS === 'web') return;
+        if (bargeInMonitorRef.current) return;
+        // Only monitor while AI is speaking and socket is open
+        if (!isPlayingRef.current) return;
+        if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
+
+        try {
+            // Allow simultaneous playback + mic monitoring
+            await configureAudioMode(true);
+            bargeVadRef.current.lastVoiceAt = 0;
+
+            const options: any = {
+                isMeteringEnabled: true,
+                android: {
+                    extension: '.m4a',
+                    outputFormat: Audio.AndroidOutputFormat.MPEG_4,
+                    audioEncoder: Audio.AndroidAudioEncoder.AAC,
+                    sampleRate: 16000,
+                    numberOfChannels: 1,
+                    bitRate: 64000,
+                },
+                ios: {
+                    extension: '.m4a',
+                    audioQuality: Audio.IOSAudioQuality.LOW,
+                    sampleRate: 16000,
+                    numberOfChannels: 1,
+                    bitRate: 64000,
+                    outputFormat: Audio.IOSOutputFormat.MPEG4AAC,
+                },
+            };
+
+            const { recording } = await Audio.Recording.createAsync(options);
+            bargeInMonitorRef.current = recording;
+            recording.setProgressUpdateInterval(200);
+            recording.setOnRecordingStatusUpdate((status) => {
+                if (!status.isRecording) return;
+                const metering = typeof status.metering === 'number' ? status.metering : -160;
+                const now = Date.now();
+                if (metering > VAD_SPEECH_THRESHOLD_DB) {
+                    bargeVadRef.current.lastVoiceAt = now;
+                    // Barge-in: stop AI playback and switch to user recording
+                    (async () => {
+                        try {
+                            if (soundRef.current) {
+                                await soundRef.current.stopAsync();
+                            }
+                        } catch (e) { }
+                        isPlayingRef.current = false;
+                        setIsPlaying(false);
+                        setAmplitude(0);
+                    })();
+                    try {
+                        if (wsRef.current?.readyState === WebSocket.OPEN) {
+                            bargeInRequestedRef.current = true;
+                            wsRef.current.send(JSON.stringify({ type: 'interrupt' }));
+                        }
+                    } catch (e) { }
+                    // Stop monitor + begin real recording ASAP
+                    stopBargeInMonitor().finally(() => {
+                        setTimeout(() => startRecordingRef.current?.(), 50);
+                    });
+                }
+            });
+        } catch (e) {
+            // If monitoring fails, continue without barge-in
+            try { await stopBargeInMonitor(); } catch (err) { }
+        }
+    }, [configureAudioMode, listeningEnabled, stopBargeInMonitor]);
+
+    stopBargeInMonitorRef.current = stopBargeInMonitor;
+    startBargeInMonitorRef.current = startBargeInMonitor;
+
+    const interruptPlayback = useCallback(async () => {
+        try {
+            if (soundRef.current) {
+                await soundRef.current.stopAsync();
+            }
+        } catch (e) { }
+        isPlayingRef.current = false;
+        setIsPlaying(false);
+        setAmplitude(0);
+    }, []);
 
     // Complete audio turn
     const completeAudioTurn = useCallback(async () => {
@@ -281,9 +425,9 @@ const NerdXLiveAudioScreen: React.FC = () => {
         if (recordingRef.current || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
 
         try {
-            if (soundRef.current) {
-                try { await soundRef.current.stopAsync(); } catch (e) { }
-            }
+            bargeInRequestedRef.current = false;
+            await stopBargeInMonitorRef.current?.();
+            await interruptPlayback();
             currentAudioTurnRef.current = null;
             if (playbackTimeoutRef.current) {
                 clearTimeout(playbackTimeoutRef.current);
@@ -293,7 +437,8 @@ const NerdXLiveAudioScreen: React.FC = () => {
             await configureAudioMode(true);
             triggerHaptic('medium');
 
-            const { recording } = await Audio.Recording.createAsync({
+            const recordingOptions: any = {
+                isMeteringEnabled: true,
                 android: {
                     extension: '.m4a',
                     outputFormat: Audio.AndroidOutputFormat.MPEG_4,
@@ -314,11 +459,40 @@ const NerdXLiveAudioScreen: React.FC = () => {
                     mimeType: 'audio/webm',
                     bitsPerSecond: 128000,
                 },
-            });
+            };
+            const { recording } = await Audio.Recording.createAsync(recordingOptions);
 
             recordingRef.current = recording;
             setConnectionState('recording');
             setAmplitude(0.4); // Simulate listening amplitude
+            resetVadState();
+            recording.setProgressUpdateInterval(200);
+            recording.setOnRecordingStatusUpdate((status) => {
+                if (!status.isRecording) return;
+                const metering = typeof status.metering === 'number' ? status.metering : -160;
+                const now = Date.now();
+                if (metering > VAD_SPEECH_THRESHOLD_DB) {
+                    vadStateRef.current.speechStarted = true;
+                    vadStateRef.current.lastVoiceAt = now;
+                    if (isPlayingRef.current) {
+                        interruptPlayback();
+                        // Tell server to stop/flush any pending AI audio (best-effort)
+                        try {
+                            if (wsRef.current?.readyState === WebSocket.OPEN) {
+                                bargeInRequestedRef.current = true;
+                                wsRef.current.send(JSON.stringify({ type: 'interrupt' }));
+                            }
+                        } catch (e) { }
+                    }
+                }
+
+                if (vadStateRef.current.speechStarted) {
+                    const silentFor = now - vadStateRef.current.lastVoiceAt;
+                    if (silentFor >= VAD_SILENCE_TIMEOUT_MS && status.durationMillis >= VAD_MIN_RECORDING_MS) {
+                        stopRecordingAndSendRef.current?.();
+                    }
+                }
+            });
 
             recordingStartTimeRef.current = Date.now();
             setTimeout(() => {
@@ -331,7 +505,9 @@ const NerdXLiveAudioScreen: React.FC = () => {
             Alert.alert('Microphone Error', 'Could not access microphone.');
             setConnectionState('ready');
         }
-    }, [configureAudioMode, triggerHaptic]);
+    }, [configureAudioMode, triggerHaptic, interruptPlayback, resetVadState]);
+
+    startRecordingRef.current = startRecording;
 
     const stopRecordingAndSend = useCallback(async () => {
         if (!recordingRef.current) return;
@@ -344,6 +520,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
                 if (!e?.message?.includes('already been unloaded')) console.warn('Stop warning:', e);
             }
             recordingRef.current = null;
+            resetVadState();
             setConnectionState('processing');
             setAmplitude(0.2);
 
@@ -388,7 +565,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
             console.error('Stop recording error:', error);
             setConnectionState('ready');
         }
-    }, [captionsEnabled, triggerHaptic]);
+    }, [captionsEnabled, triggerHaptic, resetVadState]);
 
     stopRecordingAndSendRef.current = stopRecordingAndSend;
 
@@ -401,9 +578,20 @@ const NerdXLiveAudioScreen: React.FC = () => {
                 case 'ready':
                     setConnectionState('ready');
                     configureAudioMode(false);
+                    if (data.playSound === 'connected') {
+                        playConnectedSound();
+                        triggerHaptic('medium');
+                    }
+                    // Auto-enable listening on first successful connect
+                    if (!autoStartedListeningRef.current) {
+                        autoStartedListeningRef.current = true;
+                        setListeningEnabled(true);
+                    }
                     break;
 
                 case 'audio':
+                    // If user is currently speaking, ignore AI audio (barge-in)
+                    if (recordingRef.current) return;
                     if (data.data) {
                         bufferAudioChunk(data.data);
                         startPlaybackTimeout();
@@ -414,6 +602,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
                     break;
 
                 case 'turnComplete':
+                    if (recordingRef.current) return;
                     completeAudioTurn();
                     break;
 
@@ -423,12 +612,8 @@ const NerdXLiveAudioScreen: React.FC = () => {
                         clearTimeout(playbackTimeoutRef.current);
                         playbackTimeoutRef.current = null;
                     }
-                    if (soundRef.current) {
-                        soundRef.current.stopAsync().catch(() => { });
-                    }
-                    isPlayingRef.current = false;
-                    setAmplitude(0);
-                    if (!recordingRef.current) {
+                    interruptPlayback();
+                    if (!bargeInRequestedRef.current && !recordingRef.current && listeningEnabled) {
                         setTimeout(() => startRecording(), 100);
                     }
                     break;
@@ -445,7 +630,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
         } catch (error) {
             console.error('Message error:', error);
         }
-    }, [bufferAudioChunk, startPlaybackTimeout, completeAudioTurn, configureAudioMode, startRecording, connectionState]);
+    }, [bufferAudioChunk, startPlaybackTimeout, completeAudioTurn, configureAudioMode, playConnectedSound, startRecording, connectionState, interruptPlayback, listeningEnabled, triggerHaptic]);
 
     // Connect
     const connect = useCallback(async () => {
@@ -502,6 +687,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
             clearTimeout(playbackTimeoutRef.current);
             playbackTimeoutRef.current = null;
         }
+        await stopBargeInMonitor();
 
         if (recordingRef.current) {
             try { await recordingRef.current.stopAndUnloadAsync(); } catch (e) { }
@@ -515,6 +701,13 @@ const NerdXLiveAudioScreen: React.FC = () => {
             } catch (e) { }
             soundRef.current = null;
         }
+        if (connectedSoundRef.current) {
+            try {
+                await connectedSoundRef.current.stopAsync();
+                await connectedSoundRef.current.unloadAsync();
+            } catch (e) { }
+            connectedSoundRef.current = null;
+        }
 
         isPlayingRef.current = false;
         setAmplitude(0);
@@ -527,9 +720,10 @@ const NerdXLiveAudioScreen: React.FC = () => {
             wsRef.current = null;
         }
 
+        setListeningEnabled(false);
         setConnectionState('idle');
         setCaptions([]);
-    }, []);
+    }, [stopBargeInMonitor]);
 
     endSessionRef.current = endSession;
 
@@ -537,36 +731,57 @@ const NerdXLiveAudioScreen: React.FC = () => {
         return () => { endSessionRef.current?.(); };
     }, []);
 
+    useEffect(() => {
+        if (connectionState === 'idle') {
+            connect();
+        }
+    }, [connectionState, connect]);
+
+    useEffect(() => {
+        if (connectionState === 'ready' && listeningEnabled && !isPlaying && !recordingRef.current) {
+            const timer = setTimeout(() => {
+                if (wsRef.current?.readyState === WebSocket.OPEN && !recordingRef.current) {
+                    startRecording();
+                }
+            }, 250);
+            return () => clearTimeout(timer);
+        }
+        return undefined;
+    }, [connectionState, listeningEnabled, isPlaying, startRecording]);
+
     // Handle main button press
     const handlePress = useCallback(() => {
-        switch (connectionState) {
-            case 'idle':
-            case 'error':
-                connect();
-                break;
-            case 'ready':
-                startRecording();
-                break;
-            case 'recording':
-                stopRecordingAndSend();
-                break;
-            case 'processing':
-                setConnectionState('ready');
-                break;
-            default:
-                endSession();
+        if (connectionState === 'idle' || connectionState === 'error') {
+            connect();
+            return;
         }
-    }, [connectionState, connect, startRecording, stopRecordingAndSend, endSession]);
+
+        if (!listeningEnabled) {
+            setListeningEnabled(true);
+            if (connectionState === 'ready' && !recordingRef.current && !isPlaying) {
+                startRecording();
+            }
+            return;
+        }
+
+        setListeningEnabled(false);
+        stopBargeInMonitor();
+        if (recordingRef.current) {
+            stopRecordingAndSend();
+        } else if (connectionState === 'recording') {
+            stopRecordingAndSend();
+        }
+    }, [connectionState, connect, listeningEnabled, startRecording, stopRecordingAndSend, isPlaying, stopBargeInMonitor]);
 
     // UI helpers
     const getStatusText = () => {
         switch (connectionState) {
             case 'connecting': return 'Connecting...';
-            case 'ready': return 'Tap to speak';
+            case 'ready': return listeningEnabled ? 'Listening (auto)' : 'Ready';
             case 'recording': return 'Listening...';
             case 'processing': return 'NerdX is thinking...';
-            case 'error': return 'Tap to retry';
-            default: return 'Tap to start';
+            case 'error': return 'Reconnecting...';
+            default: return 'Starting...';
         }
     };
 
@@ -694,30 +909,6 @@ const NerdXLiveAudioScreen: React.FC = () => {
                 >
                     <Animated.View style={[styles.controlsPill, controlsAnimatedStyle]}>
                         <BlurView intensity={30} tint="dark" style={styles.controlsBlur}>
-                            {/* Video button - navigates to video mode */}
-                            <TouchableOpacity
-                                style={styles.controlButton}
-                                onPressIn={handleButtonPressIn}
-                                onPressOut={handleButtonPressOut}
-                                onPress={() => {
-                                    triggerHaptic('medium');
-                                    endSession();
-                                    (navigation as any).replace('NerdXLiveVideo');
-                                }}
-                            >
-                                <Ionicons name="videocam-outline" size={24} color={COLORS.textPrimary} />
-                            </TouchableOpacity>
-
-                            {/* Hold/Pause button (placeholder) */}
-                            <TouchableOpacity
-                                style={styles.controlButton}
-                                onPressIn={handleButtonPressIn}
-                                onPressOut={handleButtonPressOut}
-                                disabled={true}
-                            >
-                                <Ionicons name="pause-outline" size={24} color={COLORS.textSecondary} />
-                            </TouchableOpacity>
-
                             {/* Main Mic button */}
                             <TouchableOpacity
                                 style={[
@@ -731,7 +922,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
                             >
                                 {connectionState === 'connecting' || connectionState === 'processing' ? (
                                     <Ionicons name="sync" size={28} color={COLORS.textPrimary} />
-                                ) : connectionState === 'recording' ? (
+                                ) : listeningEnabled ? (
                                     <View style={styles.stopIcon} />
                                 ) : connectionState === 'idle' ? (
                                     <Ionicons name="play" size={28} color={COLORS.textPrimary} />

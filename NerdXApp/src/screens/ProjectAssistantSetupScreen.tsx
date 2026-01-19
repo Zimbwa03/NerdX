@@ -181,7 +181,7 @@ const ProjectAssistantSetupScreen: React.FC = () => {
             <Text style={styles.infoTitle}>About Project Assistant</Text>
           </View>
           <Text style={styles.infoText}>
-            • <Text style={styles.bold}>1 Credit</Text> per 10 AI responses{'\n'}
+            • <Text style={styles.bold}>0.2 Credit</Text> per AI response{'\n'}
             • Get comprehensive research, writing help, and guidance for all 6 project stages.{'\n'}
             • Your project title will be developed together in the chat - no need to decide now!
           </Text>

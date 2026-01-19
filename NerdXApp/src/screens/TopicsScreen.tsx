@@ -26,6 +26,7 @@ import LoadingProgress from '../components/LoadingProgress';
 import ExamSetupModal from '../components/ExamSetupModal';
 import { ExamConfig, TimeInfo } from '../services/api/examApi';
 import { Ionicons } from '@expo/vector-icons';
+import { calculateQuizCreditCost, formatCreditCost, getMinimumCreditsForQuiz } from '../utils/creditCalculator';
 
 const { width } = Dimensions.get('window');
 
@@ -235,17 +236,32 @@ const TopicsScreen: React.FC = () => {
   const handleStartQuiz = async (topic?: Topic, questionType?: string, questionFormat?: 'mcq' | 'structured') => {
     try {
       const currentCredits = user?.credits || 0;
+      
+      // Calculate required credit cost based on subject/question type
+      const creditCost = calculateQuizCreditCost({
+        subject: subject.id,
+        questionType: topic ? 'topical' : 'exam',
+        questionFormat: questionFormat,
+        bioQuestionType: questionType as 'mcq' | 'structured' | 'essay' | undefined,
+      });
+      const minRequired = getMinimumCreditsForQuiz({
+        subject: subject.id,
+        questionType: topic ? 'topical' : 'exam',
+        questionFormat: questionFormat,
+        bioQuestionType: questionType as 'mcq' | 'structured' | 'essay' | undefined,
+      });
 
       // Check for low credits warning
       if (currentCredits <= 5 && currentCredits > 0) {
         showWarning(`⚠️ Low credits! You have ${currentCredits} credits remaining. Consider topping up soon.`, 5000);
       }
 
-      if (currentCredits < 1) {
-        showError('❌ Insufficient credits! You need at least 1 credit to start a quiz. Please top up your credits.', 6000);
+      if (currentCredits < minRequired) {
+        const requiredText = formatCreditCost(minRequired);
+        showError(`❌ Insufficient credits! You need at least ${requiredText} to start a quiz. Please top up your credits.`, 6000);
         Alert.alert(
           'Insufficient Credits',
-          'You need at least 1 credit to start a quiz. Please buy credits first.',
+          `You need at least ${requiredText} to start a quiz. Please buy credits first.`,
           [{ text: 'OK' }]
         );
         return;
@@ -279,12 +295,13 @@ const TopicsScreen: React.FC = () => {
                 setIsGeneratingQuestion(false);
 
                 if (question) {
-                  // Update user credits
-                  const newCredits = (user.credits || 0) - 1;
+                  // Backend deducts credits - update UI estimate
+                  const newCredits = Math.max(0, (user.credits || 0) - creditCost);
                   updateUser({ credits: newCredits });
 
-                  // Show success notification
-                  showSuccess(`✅ Question generated! ${newCredits} credits remaining.`, 3000);
+                  // Show success notification with correct credit cost
+                  const costText = formatCreditCost(creditCost);
+                  showSuccess(`✅ Question generated! (-${costText}) ${newCredits} credits remaining.`, 3000);
 
                   // Check if credits are getting low after deduction
                   if (newCredits <= 3 && newCredits > 0) {

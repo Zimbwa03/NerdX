@@ -107,6 +107,32 @@ const NerdXLiveVideoScreen: React.FC = () => {
     const [networkWarning, setNetworkWarning] = useState<string | null>(null);
     const [isSpeaking, setIsSpeaking] = useState(false);
 
+    const videoDisabled = true;
+    if (videoDisabled) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <StatusBar barStyle="light-content" />
+                <View style={styles.header}>
+                    <TouchableOpacity
+                        style={styles.backButton}
+                        onPress={() => navigation.goBack()}
+                    >
+                        <Ionicons name="arrow-back" size={24} color="#fff" />
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>NerdX Live Video</Text>
+                    <View style={styles.headerSpacer} />
+                </View>
+                <View style={styles.disabledContainer}>
+                    <Ionicons name="videocam-off" size={48} color={COLORS.textSecondary} />
+                    <Text style={styles.disabledTitle}>Video Temporarily Disabled</Text>
+                    <Text style={styles.disabledSubtitle}>
+                        Video mode will be re-enabled later. Please use Live Audio for now.
+                    </Text>
+                </View>
+            </SafeAreaView>
+        );
+    }
+
     // Refs
     const cameraRef = useRef<CameraView>(null);
     const wsRef = useRef<WebSocket | null>(null);
@@ -803,6 +829,33 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.glass,
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    headerTitle: {
+        color: COLORS.textPrimary,
+        fontSize: 18,
+        fontWeight: '700',
+    },
+    headerSpacer: {
+        width: 44,
+    },
+    disabledContainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 24,
+        gap: 12,
+    },
+    disabledTitle: {
+        color: COLORS.textPrimary,
+        fontSize: 20,
+        fontWeight: '700',
+        textAlign: 'center',
+    },
+    disabledSubtitle: {
+        color: COLORS.textSecondary,
+        fontSize: 14,
+        textAlign: 'center',
+        lineHeight: 20,
     },
     liveIndicator: {
         flexDirection: 'row',

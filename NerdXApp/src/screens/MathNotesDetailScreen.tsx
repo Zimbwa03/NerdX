@@ -28,7 +28,7 @@ const MathNotesDetailScreen: React.FC = () => {
     const navigation = useNavigation();
     const { isDarkMode } = useTheme();
     const themedColors = useThemedColors();
-    const { topic } = route.params as { topic: string };
+    const { topic, isALevel } = route.params as { topic: string; isALevel?: boolean };
 
     const [notes, setNotes] = useState<MathTopicNotes | null>(null);
     const [loading, setLoading] = useState(true);
@@ -41,7 +41,7 @@ const MathNotesDetailScreen: React.FC = () => {
     const loadNotes = async () => {
         try {
             setLoading(true);
-            const notesData = await mathNotesApi.getTopicNotes(topic);
+            const notesData = await mathNotesApi.getTopicNotes(topic, isALevel ? 'A-Level' : 'O-Level');
             if (notesData) {
                 setNotes(notesData);
             } else {

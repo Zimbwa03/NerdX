@@ -406,7 +406,7 @@ const ProjectAssistantScreen: React.FC = () => {
 
     Alert.alert(
       'Generate PDF Document',
-      'This will generate your complete project document as a PDF (3 credits). Continue?',
+      'This will generate your complete project document as a PDF. Credits will be deducted by the system. Continue?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -423,9 +423,10 @@ const ProjectAssistantScreen: React.FC = () => {
                   'Your project document has been generated and is ready to download/share.',
                   [{ text: 'OK' }]
                 );
-                // Update credits
+                // Credits are deducted by backend - refresh credit balance
                 if (user) {
-                  updateUser({ credits: (user.credits || 0) - 3 });
+                  // Backend handles credit deduction, just refresh the balance
+                  // The backend will return updated credits in response if available
                 }
               }
             } catch (error: any) {
@@ -727,25 +728,20 @@ const ProjectAssistantScreen: React.FC = () => {
         setRecording(null);
 
         if (uri) {
-          // Read audio file as base64
-          const base64Audio = await FileSystem.readAsStringAsync(uri, {
-            encoding: FileSystem.EncodingType.Base64,
-          });
-
-          // Send to backend for transcription
+          // Send to backend for transcription (same flow as Teacher Mode)
           try {
-            const result = await projectApi.transcribeAudio(project.id, base64Audio, 'audio/m4a');
+            const result = await mathApi.transcribeAudio(uri);
 
-            if (result?.transcription) {
+            if (result?.text) {
               // Add transcribed text to input or send as message
-              latestInputTextRef.current = result.transcription;
-              setInputText(result.transcription);
+              latestInputTextRef.current = result.text;
+              setInputText(result.text);
               setActiveMode('chat');
 
               setMessages((prev) => [...prev, {
                 id: `voice-${Date.now()}`,
                 role: 'assistant',
-                content: `🎤 **Voice Transcribed:**\n\n"${result.transcription}"\n\n*You can edit or send this message.*`,
+                content: `🎤 **Voice Transcribed:**\n\n"${result.text}"\n\n*You can edit or send this message.*`,
                 timestamp: new Date(),
               }]);
             }
