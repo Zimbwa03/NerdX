@@ -88,7 +88,7 @@ class VertexService:
         
         Args:
             prompt: Text prompt describing the image to generate
-            size: Image size - "1K" (1024x1024) or "2K" (2048x2048)
+            size: Image size - "1K" (1024x1024), "2K" (2048x2048), or custom dimensions like "1792x1024", "1024x1792"
         
         Returns:
             Dict with 'success', 'image_base64', 'image_bytes' or 'error'
@@ -99,16 +99,61 @@ class VertexService:
         try:
             from google.genai.types import GenerateImagesConfig
             
-            logger.info(f"🖼️ Generating image with prompt: {prompt[:100]}...")
+            logger.info(f"🖼️ Generating image with prompt: {prompt[:100]}..., size: {size}")
+            
+            # Parse size parameter - can be "1K", "2K", or aspect ratio format "WIDTHxHEIGHT"
+            # For aspect ratios, we convert to Google's supported format ("16:9", "9:16", "1:1")
+            config_params = {
+                'number_of_images': 1,
+                'person_generation': 'dont_allow',  # Safer for education
+            }
+            
+            # If size is in format "WIDTHxHEIGHT", convert to aspect ratio
+            if 'x' in size and size not in ['1K', '2K']:
+                try:
+                    width, height = map(int, size.split('x'))
+                    # Calculate aspect ratio
+                    if width == height:
+                        aspect_ratio = "1:1"
+                    elif width > height:
+                        # Landscape: simplify to common ratios
+                        ratio = width / height
+                        if abs(ratio - 16/9) < 0.1:
+                            aspect_ratio = "16:9"
+                        elif abs(ratio - 4/3) < 0.1:
+                            aspect_ratio = "4:3"
+                        elif abs(ratio - 3/2) < 0.1:
+                            aspect_ratio = "3:2"
+                        else:
+                            # Default to 16:9 for landscape
+                            aspect_ratio = "16:9"
+                    else:
+                        # Portrait: simplify to common ratios
+                        ratio = height / width
+                        if abs(ratio - 16/9) < 0.1:
+                            aspect_ratio = "9:16"
+                        elif abs(ratio - 4/3) < 0.1:
+                            aspect_ratio = "3:4"
+                        elif abs(ratio - 3/2) < 0.1:
+                            aspect_ratio = "2:3"
+                        else:
+                            # Default to 9:16 for portrait
+                            aspect_ratio = "9:16"
+                    
+                    config_params['aspect_ratio'] = aspect_ratio
+                    config_params['image_size'] = "1K"  # Use 1K resolution with aspect ratio
+                except (ValueError, AttributeError):
+                    # Fallback to default if parsing fails
+                    config_params['image_size'] = "1K"
+                    config_params['aspect_ratio'] = "1:1"
+            else:
+                # Use predefined size (defaults to square 1:1)
+                config_params['image_size'] = size
             
             response = self.client.models.generate_images(
                 model="imagen-4.0-generate-001",
                 prompt=prompt,
-                config=GenerateImagesConfig(
-                    number_of_images=1,
-                    image_size=size,
-                    person_generation="dont_allow",   # Safer for education
-                ),
+                config=GenerateImagesConfig(**config_params),
             )
             
             if response.generated_images and len(response.generated_images) > 0:

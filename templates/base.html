@@ -83,6 +83,18 @@
                             Admin
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('dashboard.notifications_page') }}">
+                            <i class="fas fa-bell me-1"></i>
+                            Notifications
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('dashboard.force_update_page') }}">
+                            <i class="fas fa-mobile-alt me-1"></i>
+                            Force Update
+                        </a>
+                    </li>
                     {% if admin_user and admin_user.role == 'super_admin' %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">

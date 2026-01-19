@@ -303,12 +303,15 @@ export const projectApi = {
   // Generate educational image using Vertex AI (Gemini + Imagen)
   generateImage: async (
     projectId: number,
-    prompt: string
+    prompt: string,
+    aspectRatio?: string
   ): Promise<ImageGenerationResult | null> => {
     try {
-      const response = await api.post(`/api/mobile/project/${projectId}/generate-image`, {
-        prompt,
-      });
+      const payload: any = { prompt };
+      if (aspectRatio) {
+        payload.aspect_ratio = aspectRatio;
+      }
+      const response = await api.post(`/api/mobile/project/${projectId}/generate-image`, payload);
       return response.data.data || null;
     } catch (error: any) {
       console.error('Generate image error:', error);

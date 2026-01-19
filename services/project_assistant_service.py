@@ -2299,7 +2299,8 @@ Color scheme: Professional, high-contrast, suitable for printing."""
         user_id: str,
         project_id: int,
         user_prompt: str,
-        explicit_mode: bool = False
+        explicit_mode: bool = False,
+        aspect_ratio: str = "1:1"
     ) -> Dict:
         """
         Generate a high-quality educational image using Vertex AI.
@@ -2344,9 +2345,10 @@ Color scheme: Professional, high-contrast, suitable for printing."""
             # 3. Enhance the prompt using Gemini
             enhancement_result = self._enhance_image_prompt(user_prompt, project_context)
             enhanced_prompt = enhancement_result.get("enhanced_prompt", user_prompt)
-            aspect_ratio = enhancement_result.get("aspect_ratio", "1:1")
+            # Use provided aspect_ratio if available, otherwise use from enhancement or default
+            final_aspect_ratio = aspect_ratio if aspect_ratio != "1:1" else enhancement_result.get("aspect_ratio", "1:1")
             
-            logger.info(f"Generating image with enhanced prompt, aspect ratio: {aspect_ratio}")
+            logger.info(f"Generating image with enhanced prompt, aspect ratio: {final_aspect_ratio}")
             
             # 4. Generate image using Vertex AI Imagen
             if not vertex_service.is_available():
@@ -2356,7 +2358,18 @@ Color scheme: Professional, high-contrast, suitable for printing."""
                     "credits_remaining": units_to_credits(get_user_credits(user_id))
                 }
             
-            img_result = vertex_service.generate_image(enhanced_prompt, size="1K")
+            # Map aspect ratio to Imagen dimensions format
+            # Vertex AI Imagen accepts aspect ratios directly, but we'll pass as "WIDTHxHEIGHT" format
+            # The vertex_service will convert this to the proper aspect_ratio parameter
+            size_map = {
+                "16:9": "1792x1024",   # Landscape
+                "9:16": "1024x1792",   # Portrait
+                "1:1": "1024x1024"     # Square
+            }
+            image_size = size_map.get(final_aspect_ratio, "1024x1024")
+            
+            # Pass dimensions in "WIDTHxHEIGHT" format - vertex_service will convert to aspect_ratio
+            img_result = vertex_service.generate_image(enhanced_prompt, size=image_size)
             
             if not img_result or not img_result.get("success"):
                 error_msg = (img_result or {}).get("error", "Failed to generate image")
@@ -2418,7 +2431,7 @@ Color scheme: Professional, high-contrast, suitable for printing."""
                 "success": True,
                 "response": response_text,
                 "image_url": image_url,
-                "aspect_ratio": aspect_ratio,
+                "aspect_ratio": final_aspect_ratio,
                 "credits_remaining": units_to_credits(get_user_credits(user_id))
             }
             

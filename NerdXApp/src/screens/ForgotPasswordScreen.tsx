@@ -31,23 +31,53 @@ const ForgotPasswordScreen: React.FC = () => {
             return;
         }
 
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            Alert.alert('Error', 'Please enter a valid email address');
+            return;
+        }
+
         setIsLoading(true);
         try {
-            const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: 'nerdx://reset-password', // Deep link to app if needed, or standard email handling
+            // Use Supabase to send password reset email
+            // The redirect URL should point to your app's deep link
+            // For React Native, we use expo-linking format
+            const redirectUrl = Platform.select({
+                ios: 'nerdx://reset-password',
+                android: 'nerdx://reset-password',
+                default: 'https://nerdx.app/reset-password', // Web fallback
+            });
+
+            // Use proper redirect URL format
+            // Supabase will append access_token and other params to this URL
+            const redirectUrl = Platform.select({
+                ios: 'nerdx://reset-password',
+                android: 'nerdx://reset-password',
+                default: 'https://nerdx.app/reset-password',
+            });
+
+            const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+                redirectTo: redirectUrl,
             });
 
             if (error) {
-                Alert.alert('Error', error.message);
+                Alert.alert('Error', error.message || 'Failed to send reset email. Please try again.');
             } else {
                 Alert.alert(
-                    'Email Sent',
-                    'Check your email for the password reset link.',
-                    [{ text: 'OK', onPress: () => navigation.goBack() }]
+                    'Email Sent! ✅',
+                    `We've sent a password reset link to ${email}.\n\nPlease check your email and click the link to reset your password.`,
+                    [
+                        { 
+                            text: 'OK', 
+                            onPress: () => navigation.goBack() 
+                        }
+                    ]
                 );
             }
         } catch (err: any) {
-            Alert.alert('Error', err.message || 'An unexpected error occurred.');
+            console.error('Reset password error:', err);
+            Alert.alert('Error', err.message || 'An unexpected error occurred. Please try again.');
         } finally {
             setIsLoading(false);
         }

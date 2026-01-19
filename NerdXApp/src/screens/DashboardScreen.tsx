@@ -21,6 +21,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useCreditMonitor } from '../hooks/useCreditMonitor';
 import { creditsApi } from '../services/api/creditsApi';
 import { Icons, IconCircle } from '../components/Icons';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors, getColors } from '../theme/colors';
 import { useThemedColors } from '../theme/useThemedStyles';
 import { Modal, ModalOptionCard } from '../components/Modal';
@@ -38,6 +39,8 @@ const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 48) / 2;
 
 import { sync } from '../services/SyncService';
+import { getUnreadCount, subscribeToNotifications } from '../services/notifications';
+import { checkUpdateRequired } from '../services/appVersion';
 
 
 
@@ -54,6 +57,8 @@ const DashboardScreen: React.FC = () => {
   const [loadingKnowledgeMap, setLoadingKnowledgeMap] = useState(false);
   const [dailyReview, setDailyReview] = useState<{ count: number, reviews: any[] } | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<'O Level' | 'A Level'>('O Level');
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showUpdateScreen, setShowUpdateScreen] = useState(false);
 
   // A Level subject colors
   const aLevelColors = {
@@ -61,6 +66,46 @@ const DashboardScreen: React.FC = () => {
     chemistry: '#10B981', // Green
     physics: '#3B82F6', // Blue
     biology: '#14B8A6', // Teal
+  };
+
+  // Load unread notification count
+  useEffect(() => {
+    const loadUnreadCount = async () => {
+      const count = await getUnreadCount();
+      setUnreadCount(count);
+    };
+    loadUnreadCount();
+
+    // Subscribe to realtime notification updates
+    if (user?.id) {
+      const unsubscribe = subscribeToNotifications(
+        user.id,
+        () => {
+          // New notification received
+          loadUnreadCount();
+        },
+        () => {
+          // Notification updated
+          loadUnreadCount();
+        }
+      );
+      return unsubscribe;
+    }
+  }, [user?.id]);
+
+  // Check for app update requirement
+  useEffect(() => {
+    const checkUpdate = async () => {
+      const updateInfo = await checkUpdateRequired();
+      if (updateInfo.updateRequired && updateInfo.isHardUpdate) {
+        setShowUpdateScreen(true);
+      }
+    };
+    checkUpdate();
+  }, []);
+
+  const navigateToNotifications = () => {
+    navigation.navigate('Notifications' as never);
   };
 
   useEffect(() => {
@@ -373,6 +418,26 @@ const DashboardScreen: React.FC = () => {
                   <Text style={styles.iconEmoji}>
                     {isDarkMode ? '☀️' : '🌙'}
                   </Text>
+                </TouchableOpacity>
+
+                {/* Notification Bell */}
+                <TouchableOpacity
+                  onPress={navigateToNotifications}
+                  style={styles.notificationButton}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons
+                    name="notifications-outline"
+                    size={24}
+                    color={themedColors.text.primary}
+                  />
+                  {unreadCount > 0 && (
+                    <View style={styles.notificationBadge}>
+                      <Text style={styles.notificationBadgeText}>
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </Text>
+                    </View>
+                  )}
                 </TouchableOpacity>
 
                 {/* Profile Button */}
@@ -724,6 +789,36 @@ const styles = StyleSheet.create({
   },
   iconEmoji: {
     fontSize: 18,
+  },
+  notificationButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    position: 'relative',
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    backgroundColor: '#FF3B30',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  notificationBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
   profileButton: {
     borderRadius: 20,

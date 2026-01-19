@@ -570,6 +570,18 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         lineHeight: 18,
     },
+    creditInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 12,
+        borderRadius: 12,
+        marginTop: 16,
+        gap: 8,
+    },
+    creditInfoText: {
+        fontSize: 13,
+        flex: 1,
+    },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',

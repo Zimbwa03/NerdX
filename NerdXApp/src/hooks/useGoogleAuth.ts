@@ -14,7 +14,7 @@ export const useGoogleAuth = () => {
 
     try {
       const redirectUrl = makeRedirectUri({
-        scheme: 'nerdxapp',
+        scheme: 'nerdx', // Use consistent scheme with app.json
         path: 'auth/callback',
       });
 
@@ -60,15 +60,32 @@ export const useGoogleAuth = () => {
             }
 
             // Get user data
-            const { data: userData } = await supabase.auth.getUser();
+            const { data: userData, error: getUserError } = await supabase.auth.getUser();
+
+            if (getUserError) {
+              throw new Error(getUserError.message);
+            }
 
             if (userData?.user) {
+              const metadata = userData.user.user_metadata || {};
+              
+              // Parse full_name if it exists (format: "First Last")
+              let given_name = metadata.given_name || '';
+              let family_name = metadata.family_name || '';
+              
+              if (!given_name && metadata.full_name) {
+                const nameParts = metadata.full_name.split(' ');
+                given_name = nameParts[0] || '';
+                family_name = nameParts.slice(1).join(' ') || '';
+              }
+              
               return {
-                email: userData.user.email,
-                name: userData.user.user_metadata?.full_name || userData.user.user_metadata?.name || '',
-                given_name: userData.user.user_metadata?.given_name || '',
-                family_name: userData.user.user_metadata?.family_name || '',
-                picture: userData.user.user_metadata?.avatar_url || userData.user.user_metadata?.picture || '',
+                id: userData.user.id, // Supabase user ID
+                email: userData.user.email || '',
+                name: metadata.full_name || metadata.name || given_name || '',
+                given_name: given_name || metadata.name || email?.split('@')[0] || '',
+                family_name: family_name || '',
+                picture: metadata.avatar_url || metadata.picture || '',
                 sub: userData.user.id,
               };
             }

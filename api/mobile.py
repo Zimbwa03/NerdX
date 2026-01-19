@@ -8,6 +8,7 @@ import jwt
 import hashlib
 import secrets
 import time
+import re
 from datetime import datetime, timedelta
 from functools import wraps
 from flask import Blueprint, request, jsonify, g
@@ -21,7 +22,8 @@ from database.external_db import (
     get_user_by_nerdx_id, add_xp, update_streak,
     claim_welcome_bonus, get_credit_breakdown,
     make_supabase_request,
-    authenticate_supabase_user
+    authenticate_supabase_user,
+    get_user_by_email_admin
 )
 # Additional Services
 from services.advanced_credit_service import advanced_credit_service
@@ -381,6 +383,161 @@ def require_auth(f):
     return decorated_function
 
 
+@mobile_bp.route('/auth/reset-password', methods=['POST'])
+def reset_password():
+    """Reset user password - handles both Supabase session and token-based reset"""
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'success': False, 'message': 'No data provided'}), 400
+        
+        new_password = data.get('new_password', '').strip()
+        email = data.get('email', '').strip().lower()
+        token = data.get('token') or data.get('access_token')
+        
+        if not new_password:
+            return jsonify({'success': False, 'message': 'New password is required'}), 400
+        
+        # Validate password strength
+        if len(new_password) < 8:
+            return jsonify({'success': False, 'message': 'Password must be at least 8 characters long'}), 400
+        
+        if not re.search(r'[a-z]', new_password):
+            return jsonify({'success': False, 'message': 'Password must contain at least one lowercase letter'}), 400
+        
+        if not re.search(r'[A-Z]', new_password):
+            return jsonify({'success': False, 'message': 'Password must contain at least one uppercase letter'}), 400
+        
+        if not re.search(r'\d', new_password):
+            return jsonify({'success': False, 'message': 'Password must contain at least one number'}), 400
+        
+        # If we have email, use it to find user and update password
+        if email:
+            user_data = get_user_registration(email)
+            if not user_data:
+                return jsonify({'success': False, 'message': 'User not found'}), 404
+            
+            # Hash new password
+            password_hash, password_salt = hash_password(new_password)
+            
+            # Update password in database
+            update_data = {
+                'password_hash': password_hash,
+                'password_salt': password_salt
+            }
+            
+            result = make_supabase_request(
+                "PATCH", 
+                "users_registration", 
+                update_data, 
+                filters={"chat_id": f"eq.{email}"},
+                use_service_role=True
+            )
+            
+            if result:
+                logger.info(f"Password reset successful for user: {email}")
+                
+                # Also update in Supabase Auth if user exists there
+                try:
+                    import requests
+                    supabase_admin_url = f"{os.getenv('SUPABASE_URL')}/auth/v1/admin/users"
+                    headers = {
+                        "apikey": os.getenv('SUPABASE_SERVICE_ROLE_KEY'),
+                        "Authorization": f"Bearer {os.getenv('SUPABASE_SERVICE_ROLE_KEY')}",
+                        "Content-Type": "application/json"
+                    }
+                    
+                    # Get user ID from Supabase Auth
+                    admin_user = get_user_by_email_admin(email)
+                    if admin_user and admin_user.get('user'):
+                        user_id = admin_user['user'].get('id')
+                        if user_id:
+                            # Update password in Supabase Auth
+                            requests.put(
+                                f"{supabase_admin_url}/{user_id}",
+                                headers=headers,
+                                json={"password": new_password}
+                            )
+                            logger.info(f"Supabase Auth password updated for user: {email}")
+                except Exception as supabase_error:
+                    logger.warning(f"Failed to update Supabase Auth password (non-critical): {supabase_error}")
+                
+                return jsonify({
+                    'success': True,
+                    'message': 'Password reset successfully'
+                }), 200
+            else:
+                return jsonify({'success': False, 'message': 'Failed to update password'}), 500
+        
+        elif token:
+            # Token-based reset (from email link)
+            # Verify token with Supabase
+            try:
+                import requests
+                supabase_url = os.getenv('SUPABASE_URL')
+                verify_url = f"{supabase_url}/auth/v1/user"
+                
+                headers = {
+                    "apikey": os.getenv('SUPABASE_ANON_KEY'),
+                    "Authorization": f"Bearer {token}",
+                    "Content-Type": "application/json"
+                }
+                
+                # Verify token by getting user info
+                response = requests.get(verify_url, headers=headers)
+                
+                if response.status_code == 200:
+                    user_info = response.json()
+                    user_email = user_info.get('email', '').strip().lower()
+                    
+                    if not user_email:
+                        return jsonify({'success': False, 'message': 'Invalid reset token'}), 400
+                    
+                    # Update password using email
+                    user_data = get_user_registration(user_email)
+                    if not user_data:
+                        return jsonify({'success': False, 'message': 'User not found'}), 404
+                    
+                    # Hash new password
+                    password_hash, password_salt = hash_password(new_password)
+                    
+                    # Update password in database
+                    update_data = {
+                        'password_hash': password_hash,
+                        'password_salt': password_salt
+                    }
+                    
+                    result = make_supabase_request(
+                        "PATCH", 
+                        "users_registration", 
+                        update_data, 
+                        filters={"chat_id": f"eq.{user_email}"},
+                        use_service_role=True
+                    )
+                    
+                    if result:
+                        logger.info(f"Password reset successful via token for user: {user_email}")
+                        return jsonify({
+                            'success': True,
+                            'message': 'Password reset successfully'
+                        }), 200
+                    else:
+                        return jsonify({'success': False, 'message': 'Failed to update password'}), 500
+                else:
+                    return jsonify({'success': False, 'message': 'Invalid or expired reset token'}), 400
+                    
+            except Exception as token_error:
+                logger.error(f"Token verification error: {token_error}")
+                return jsonify({'success': False, 'message': 'Invalid reset token'}), 400
+        else:
+            return jsonify({'success': False, 'message': 'Email or token is required'}), 400
+            
+    except Exception as e:
+        logger.error(f"Password reset error: {str(e)}", exc_info=True)
+        return jsonify({'success': False, 'message': f'Password reset failed: {str(e)}'}), 500
+
+
 # ============================================================================
 # ATTACHMENTS / CONTEXT PACK (Multi-image memory)
 # ============================================================================
@@ -573,14 +730,28 @@ def social_login():
         if not data:
             return jsonify({'success': False, 'message': 'No data provided'}), 400
             
-        # Social login data from frontend (Supabase user object)
+        # Social login data from frontend
+        # Can be: { provider: 'google', user: { email, name, given_name, family_name, id, ... } }
+        # OR: { provider: 'google', email: '...', name: '...', ... } (legacy format)
         provider = data.get('provider', 'google')
-        user_info = data.get('user', {})
-        email = user_info.get('email', '').lower()
-        supabase_uid = user_info.get('id')
+        
+        # Handle both formats
+        if 'user' in data:
+            user_info = data.get('user', {})
+        else:
+            # Legacy format - user data is at root level
+            user_info = data
+            
+        email = (user_info.get('email') or '').strip().lower()
+        supabase_uid = user_info.get('id') or user_info.get('sub')
+        name = user_info.get('name') or user_info.get('given_name') or ''
+        given_name = user_info.get('given_name') or name
+        family_name = user_info.get('family_name') or user_info.get('surname') or ''
         
         if not email:
             return jsonify({'success': False, 'message': 'Email is required for social login'}), 400
+            
+        logger.info(f"Social login attempt: provider={provider}, email={email}, uid={supabase_uid}")
             
         # Check if user is already registered in our system
         if is_user_registered(email):
@@ -593,14 +764,31 @@ def social_login():
                 logger.warning(f"Failed to sync Supabase UID: {e}")
 
             user_data = get_user_registration(email)
-            credits = get_user_credits(email) or 0
             
-            # Ensure user has credentials/stats initialized if they are old legacy users
-            # accessing via mobile for the first time
-            if credits == 0 and not user_data.get('credits_initialized'):
-                 # Maybe give them a welcome back bonus or ensure at least 5 credits?
-                 # For now, just return what they have.
-                 pass
+            # Update name if provided by OAuth and different from stored
+            if given_name and given_name != user_data.get('name'):
+                try:
+                    from database.external_db import make_supabase_request
+                    make_supabase_request(
+                        "PATCH",
+                        "users_registration",
+                        {"name": given_name, "surname": family_name},
+                        filters={"chat_id": f"eq.{email}"},
+                        use_service_role=True
+                    )
+                    user_data['name'] = given_name
+                    user_data['surname'] = family_name
+                except Exception as e:
+                    logger.warning(f"Failed to update user name from OAuth: {e}")
+            
+            # Get credit breakdown
+            credit_info = get_credit_breakdown(email)
+            credit_info_display = {
+                **credit_info,
+                "total": _credits_display(credit_info.get("total", 0)),
+                "free_credits": _credits_display(credit_info.get("free_credits", 0)),
+                "purchased_credits": _credits_display(credit_info.get("purchased_credits", 0)),
+            }
 
             token = generate_token(email)
             
@@ -610,10 +798,11 @@ def social_login():
                 'user': {
                     'id': user_data.get('chat_id'),
                     'nerdx_id': user_data.get('nerdx_id'),
-                    'name': user_data.get('name'),
-                    'surname': user_data.get('surname'),
+                    'name': user_data.get('name') or given_name,
+                    'surname': user_data.get('surname') or family_name,
                     'email': email,
-                    'credits': _credits_display(credits),
+                    'credits': credit_info_display.get("total", "0.0"),
+                    'credit_breakdown': credit_info_display,
                     'role': user_data.get('role', 'student'),
                     'level_title': user_data.get('level_title', 'Explorer') 
                 },
@@ -621,8 +810,11 @@ def social_login():
             }), 200
         else:
             # New user via social login - create registration
-            name = user_info.get('given_name') or user_info.get('name', 'User') or email.split('@')[0]
-            surname = user_info.get('family_name') or ''
+            # Use the extracted name fields
+            if not name:
+                # Fallback: use email prefix as name
+                name = email.split('@')[0].replace('.', ' ').title()
+                given_name = name
             
             # Create user registration in Supabase
             try:
@@ -630,22 +822,37 @@ def social_login():
                 # This matches the legacy bot logic where chat_id was the key
                 # For email users, chat_id = email
                 create_user_registration(
-                    email,
-                    name,
-                    surname,
-                    '2000-01-01', # Default DOB for social
-                    None # No referral for now
+                    chat_id=email,
+                    name=given_name,
+                    surname=family_name,
+                    date_of_birth='2000-01-01', # Default DOB for social
+                    referred_by_nerdx_id=None, # No referral for now
+                    email=email,
+                    password_hash=None, # OAuth users don't have passwords
+                    password_salt=None
                 )
                 
                 # Check if creation succeeded and return data
                 user_data = get_user_registration(email)
                 
                 if user_data:
-                    # Grant initial credits (Registration Bonus)
-                    current_credits = get_user_credits(email) or 0
-                    if current_credits < Config.REGISTRATION_BONUS:
-                        add_credits(email, Config.REGISTRATION_BONUS - current_credits, 'registration_bonus', 'Welcome bonus')
-                        current_credits = Config.REGISTRATION_BONUS
+                    # Grant initial credits (Registration Bonus) - one-time welcome bonus
+                    welcome_result = claim_welcome_bonus(email)
+                    
+                    # Get latest credit breakdown
+                    credit_info = get_credit_breakdown(email)
+                    credit_info_display = {
+                        **credit_info,
+                        "total": _credits_display(credit_info.get("total", 0)),
+                        "free_credits": _credits_display(credit_info.get("free_credits", 0)),
+                        "purchased_credits": _credits_display(credit_info.get("purchased_credits", 0)),
+                    }
+                    
+                    # Prepare notifications
+                    notifications = {
+                        "welcome_bonus": welcome_result.get("awarded", False),
+                        "welcome_message": welcome_result.get("message", "")
+                    }
                     
                     token = generate_token(email)
                     
@@ -655,13 +862,15 @@ def social_login():
                         'user': {
                             'id': email,
                             'nerdx_id': user_data.get('nerdx_id'),
-                            'name': name,
-                            'surname': surname,
+                            'name': given_name,
+                            'surname': family_name,
                             'email': email,
-                            'credits': _credits_display(current_credits),
+                            'credits': credit_info_display.get("total", "0.0"),
+                            'credit_breakdown': credit_info_display,
                             'role': 'student',
-                            'level_title': 'Explorer'
+                            'level_title': user_data.get('level_title', 'Explorer')
                         },
+                        'notifications': notifications,
                         'message': 'Account created successfully'
                     }), 201
                 else:
@@ -4985,6 +5194,7 @@ def project_generate_image(project_id):
     try:
         data = request.get_json()
         prompt = (data.get('prompt') or data.get('message') or '').strip()
+        aspect_ratio = data.get('aspect_ratio', '1:1')  # Default to 1:1 if not provided
         
         if not prompt:
             return jsonify({
@@ -4999,7 +5209,8 @@ def project_generate_image(project_id):
             user_id=g.current_user_id,
             project_id=project_id,
             user_prompt=prompt,
-            explicit_mode=True
+            explicit_mode=True,
+            aspect_ratio=aspect_ratio
         )
         
         if result.get('success'):

@@ -30,6 +30,7 @@ import {
     QUESTION_MODES,
     DIFFICULTIES,
 } from '../services/api/examApi';
+import { calculateQuizCreditCost, formatCreditCost } from '../utils/creditCalculator';
 
 const { width, height } = Dimensions.get('window');
 
@@ -147,19 +148,43 @@ const ExamSetupModal: React.FC<ExamSetupModalProps> = ({
         }
     };
 
-    // Calculate credit cost based on subject/level/mode
+    // Calculate credit cost based on subject/level/mode using the credit calculator
     const calculateCreditCost = (): number => {
-        if (subject === 'mathematics' && level === 'O_LEVEL' && questionMode === 'MCQ_ONLY') {
-            return Math.ceil(questionCount * 0.5);
-        } else if (questionMode === 'MIXED') {
+        const subjectKey = subject.toLowerCase();
+        let costPerQuestion = 0.5; // Default
+        
+        // For exam mode, calculate cost per question based on subject
+        if (subjectKey === 'mathematics' || subjectKey === 'math') {
+            costPerQuestion = 0.5; // Math exam: 0.5 credit per question
+        } else if (subjectKey === 'combined_science') {
+            costPerQuestion = 0.5; // Combined Science exam: 0.5 credit per question
+        } else if (subjectKey === 'a_level_biology') {
+            // A-Level Biology: MCQ = 0.25, Structured/Essay = 0.5
+            if (questionMode === 'MCQ_ONLY') {
+                costPerQuestion = 0.25;
+            } else if (questionMode === 'MIXED') {
+                // Mixed mode: average between MCQ and structured
+                const mcqCount = Math.floor(questionCount / 2);
+                const structuredCount = questionCount - mcqCount;
+                return (mcqCount * 0.25) + (structuredCount * 0.5);
+            } else {
+                costPerQuestion = 0.5; // Structured/Essay
+            }
+        } else if (subjectKey.includes('a_level_')) {
+            costPerQuestion = 0.5; // Other A-Level subjects: 0.5 credit per question
+        } else if (subjectKey === 'english') {
+            costPerQuestion = 1; // English: 1 credit per question
+        }
+        
+        // For MIXED mode (non-Biology), calculate weighted average
+        if (questionMode === 'MIXED' && subjectKey !== 'a_level_biology') {
             const mcqCount = Math.floor(questionCount / 2);
             const structuredCount = questionCount - mcqCount;
-            if (subject === 'mathematics' && level === 'O_LEVEL') {
-                return Math.ceil(mcqCount * 0.5) + structuredCount;
-            }
-            return questionCount;
+            // Most subjects: MCQ = same as structured (0.5), so just multiply
+            return questionCount * costPerQuestion;
         }
-        return questionCount;
+        
+        return questionCount * costPerQuestion;
     };
 
     const creditCost = calculateCreditCost();
@@ -445,13 +470,20 @@ const ExamSetupModal: React.FC<ExamSetupModalProps> = ({
                                         Credits Required
                                     </Text>
                                     <Text style={[styles.creditsValue, { color: themedColors.text.primary }]}>
-                                        {creditCost} / {userCredits} available
+                                        {creditCost.toFixed(1)} credits ({questionCount} questions × {formatCreditCost(creditCost / questionCount)} each) / {userCredits} available
                                     </Text>
                                 </View>
                             </View>
-                            {subject === 'mathematics' && level === 'O_LEVEL' && questionMode === 'MCQ_ONLY' && (
-                                <Text style={[styles.creditDiscount, { color: themedColors.success.main }]}>
-                                    🎉 O-Level Math MCQ: 2 questions per credit!
+                            {!hasEnoughCredits && (
+                                <Text style={[styles.creditWarning, { color: themedColors.error.main }]}>
+                                    ⚠️ Insufficient credits. Please top up to start this exam.
+                                </Text>
+                            )}
+                            {(subject === 'mathematics' || subject === 'combined_science' || subject.includes('a_level_')) && (
+                                <Text style={[styles.creditDiscount, { color: themedColors.text.secondary }]}>
+                                    💎 {formatCreditCost(creditCost / questionCount)} per question
+                                    {subject === 'a_level_biology' && questionMode === 'MCQ_ONLY' && ' (MCQ)'}
+                                    {subject === 'a_level_biology' && questionMode !== 'MCQ_ONLY' && questionMode !== 'MIXED' && ' (Structured/Essay)'}
                                 </Text>
                             )}
                         </View>
@@ -646,6 +678,11 @@ const styles = StyleSheet.create({
         fontWeight: '500',
         marginTop: 8,
         textAlign: 'center',
+    },
+    creditWarning: {
+        fontSize: 12,
+        marginTop: 8,
+        fontWeight: '600',
     },
     buttonContainer: {
         marginTop: 24,

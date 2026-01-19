@@ -3,6 +3,7 @@ import React from 'react';
 import { View, ActivityIndicator, StyleSheet, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import * as Linking from 'expo-linking';
 import { useAuth } from '../context/AuthContext';
 
 // Screens
@@ -42,6 +43,10 @@ import ALevelPureMathScreen from '../screens/ALevelPureMathScreen';
 import ALevelPureMathNotesScreen from '../screens/ALevelPureMathNotesScreen';
 import ALevelBiologyScreen from '../screens/ALevelBiologyScreen';
 import ALevelBiologyNotesScreen from '../screens/ALevelBiologyNotesScreen';
+import NotificationsScreen from '../screens/NotificationsScreen';
+import NotificationDetailScreen from '../screens/NotificationDetailScreen';
+import UpdateRequiredScreen from '../screens/UpdateRequiredScreen';
+import { checkUpdateRequired } from '../services/appVersion';
 
 // NerdX Live Voice/Video Screens
 import NerdXLiveModeScreen from '../screens/NerdXLiveModeScreen';
@@ -89,13 +94,90 @@ const LoadingScreen: React.FC = () => (
 
 const AppNavigator: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
+  const [updateRequired, setUpdateRequired] = React.useState<{
+    required: boolean;
+    isHardUpdate: boolean;
+    versionInfo: any;
+    installedVersion: string;
+  } | null>(null);
+  const [checkingUpdate, setCheckingUpdate] = React.useState(true);
 
-  if (isLoading) {
+  // Check for app update requirement
+  React.useEffect(() => {
+    const checkUpdate = async () => {
+      try {
+        const updateInfo = await checkUpdateRequired();
+        if (updateInfo.updateRequired) {
+          setUpdateRequired(updateInfo);
+        }
+      } catch (error) {
+        console.error('Error checking update:', error);
+      } finally {
+        setCheckingUpdate(false);
+      }
+    };
+    
+    if (isAuthenticated) {
+      checkUpdate();
+    } else {
+      setCheckingUpdate(false);
+    }
+  }, [isAuthenticated]);
+
+  if (isLoading || checkingUpdate) {
     return <LoadingScreen />;
   }
 
+  // Show update required screen if needed
+  if (updateRequired && updateRequired.isHardUpdate) {
+    return (
+      <NavigationContainer>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen
+            name="UpdateRequired"
+            component={UpdateRequiredScreen}
+            initialParams={{
+              versionInfo: updateRequired.versionInfo,
+              installedVersion: updateRequired.installedVersion,
+            }}
+            options={{
+              gestureEnabled: false,
+            }}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    );
+  }
+
+  // Configure deep linking for password reset and OAuth callbacks
+  const linking = {
+    prefixes: ['nerdx://', 'https://nerdx.app', 'com.Ngoni03.nerdxapp://', 'nerdxapp://'],
+    config: {
+      screens: {
+        ResetPassword: {
+          path: 'reset-password',
+          parse: {
+            token: (token: string) => token,
+            access_token: (access_token: string) => access_token,
+            hash: (hash: string) => hash,
+            type: (type: string) => type,
+          },
+        },
+        Login: {
+          path: 'auth/callback',
+          parse: {
+            access_token: (access_token: string) => access_token,
+            refresh_token: (refresh_token: string) => refresh_token,
+            type: (type: string) => type,
+          },
+        },
+        ForgotPassword: 'forgot-password',
+      },
+    },
+  };
+
   return (
-    <NavigationContainer>
+    <NavigationContainer linking={linking}>
       <Stack.Navigator
         screenOptions={{
           headerStyle: {
@@ -132,6 +214,11 @@ const AppNavigator: React.FC = () => {
             <Stack.Screen
               name="ForgotPassword"
               component={require('../screens/ForgotPasswordScreen').default}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="ResetPassword"
+              component={require('../screens/ResetPasswordScreen').default}
               options={{ headerShown: false }}
             />
 
@@ -187,6 +274,28 @@ const AppNavigator: React.FC = () => {
               component={ProfileScreen}
               options={{
                 headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="Notifications"
+              component={NotificationsScreen}
+              options={{
+                title: 'Notifications',
+              }}
+            />
+            <Stack.Screen
+              name="NotificationDetail"
+              component={NotificationDetailScreen}
+              options={{
+                title: 'Notification',
+              }}
+            />
+            <Stack.Screen
+              name="UpdateRequired"
+              component={UpdateRequiredScreen}
+              options={{
+                headerShown: false,
+                gestureEnabled: false,
               }}
             />
             <Stack.Screen

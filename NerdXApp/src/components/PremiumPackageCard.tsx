@@ -176,7 +176,13 @@ const PremiumPackageCard: React.FC<PremiumPackageCardProps> = ({
                         <Text style={styles.currency}>$</Text>
                         <Text style={styles.price}>{pkg.price}</Text>
                         <Text style={[styles.priceLabel, { color: themedColors.text.secondary }]}>
-                            USD
+                            /month
+                        </Text>
+                    </View>
+                    {/* Monthly Subscription Note */}
+                    <View style={[styles.monthlyNote, { backgroundColor: Colors.warning.main + '15' }]}>
+                        <Text style={[styles.monthlyNoteText, { color: Colors.warning.main }]}>
+                            ⏰ Credits valid for 1 month from purchase. Unused credits expire after subscription period ends.
                         </Text>
                     </View>
 
@@ -321,6 +327,19 @@ const styles = StyleSheet.create({
     },
     priceLabel: {
         fontSize: 14,
+        fontWeight: '600',
+    },
+    monthlyNote: {
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 8,
+        marginTop: 8,
+        marginBottom: 12,
+    },
+    monthlyNoteText: {
+        fontSize: 11,
+        lineHeight: 16,
+        textAlign: 'center',
     },
     valueContainer: {
         alignSelf: 'flex-start',

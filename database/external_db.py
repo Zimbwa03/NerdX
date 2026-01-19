@@ -514,16 +514,29 @@ def calculate_level_from_xp(xp):
     level = int(math.sqrt(xp / 100)) + 1
     return max(level, 1)  # Minimum level is 1
 
-def get_user_credits(user_id: str) -> int:
-    """Get user's current credit balance in units from users_registration table (primary source)"""
+def get_user_credits(user_id: str, check_expiry: bool = True) -> int:
+    """
+    Get user's current credit balance in units from users_registration table (primary source).
+    Automatically checks and expires credits if subscription has expired.
+    
+    Args:
+        user_id: User ID
+        check_expiry: Whether to check and expire credits (default: True)
+    """
     try:
+        # Check and expire credits if needed
+        if check_expiry:
+            check_and_expire_user_credits(user_id)
+        
         result = make_supabase_request("GET", "users_registration", 
-                                     select="credits", 
+                                     select="credits,purchased_credits", 
                                      filters={"chat_id": f"eq.{user_id}"})
 
         if result and len(result) > 0:
-            credits = result[0].get('credits', 0)
-            return int(credits) if credits is not None else 0
+            free_credits = int(result[0].get('credits', 0) or 0)
+            purchased_credits = int(result[0].get('purchased_credits', 0) or 0)
+            total = free_credits + purchased_credits
+            return total
         else:
             logger.warning(f"No user registration found for {user_id}")
             return 0
@@ -531,6 +544,122 @@ def get_user_credits(user_id: str) -> int:
     except Exception as e:
         logger.error(f"Error getting user credits for {user_id}: {e}")
         return 0
+
+def check_and_expire_user_credits(user_id: str) -> bool:
+    """
+    Check if user's subscription has expired and expire purchased credits if so.
+    Returns True if credits were expired, False otherwise.
+    """
+    try:
+        # Get user's subscription expiry
+        result = make_supabase_request("GET", "users_registration", 
+                                     select="subscription_expires_at,purchased_credits", 
+                                     filters={"chat_id": f"eq.{user_id}"})
+        
+        if not result or len(result) == 0:
+            return False
+        
+        user_data = result[0]
+        expiry_str = user_data.get('subscription_expires_at')
+        purchased_credits = int(user_data.get('purchased_credits', 0) or 0)
+        
+        # If no expiry date or no purchased credits, nothing to expire
+        if not expiry_str or purchased_credits == 0:
+            return False
+        
+        # Parse expiry date
+        from dateutil import parser
+        try:
+            expiry_date = parser.parse(expiry_str)
+        except:
+            logger.warning(f"Could not parse expiry date: {expiry_str}")
+            return False
+        
+        # Check if expired
+        if expiry_date < datetime.now():
+            # Expire purchased credits
+            update_data = {
+                "purchased_credits": 0,
+                "last_credit_expiry_check": datetime.now().isoformat()
+            }
+            make_supabase_request("PATCH", "users_registration", update_data, 
+                                filters={"chat_id": f"eq.{user_id}"}, use_service_role=True)
+            
+            logger.info(f"⏰ Expired {purchased_credits} purchased credits for {user_id} (expired on {expiry_date.strftime('%Y-%m-%d')})")
+            return True
+        
+        return False
+        
+    except Exception as e:
+        logger.error(f"Error checking credit expiry for {user_id}: {e}")
+        return False
+
+def get_subscription_status(user_id: str) -> Dict:
+    """
+    Get user's subscription status including expiry date and days remaining.
+    
+    Returns:
+        Dict with keys: is_active, expires_at, days_remaining, purchased_credits
+    """
+    try:
+        result = make_supabase_request("GET", "users_registration", 
+                                     select="subscription_expires_at,purchased_credits", 
+                                     filters={"chat_id": f"eq.{user_id}"})
+        
+        if not result or len(result) == 0:
+            return {
+                "is_active": False,
+                "expires_at": None,
+                "days_remaining": 0,
+                "purchased_credits": 0
+            }
+        
+        user_data = result[0]
+        expiry_str = user_data.get('subscription_expires_at')
+        purchased_credits = int(user_data.get('purchased_credits', 0) or 0)
+        
+        if not expiry_str:
+            return {
+                "is_active": False,
+                "expires_at": None,
+                "days_remaining": 0,
+                "purchased_credits": purchased_credits
+            }
+        
+        from dateutil import parser
+        try:
+            expiry_date = parser.parse(expiry_str)
+            now = datetime.now()
+            is_active = expiry_date > now and purchased_credits > 0
+            
+            if is_active:
+                days_remaining = (expiry_date - now).days
+            else:
+                days_remaining = 0
+            
+            return {
+                "is_active": is_active,
+                "expires_at": expiry_date.isoformat(),
+                "days_remaining": max(0, days_remaining),
+                "purchased_credits": purchased_credits
+            }
+        except Exception as e:
+            logger.error(f"Error parsing expiry date: {e}")
+            return {
+                "is_active": False,
+                "expires_at": None,
+                "days_remaining": 0,
+                "purchased_credits": purchased_credits
+            }
+        
+    except Exception as e:
+        logger.error(f"Error getting subscription status for {user_id}: {e}")
+        return {
+            "is_active": False,
+            "expires_at": None,
+            "days_remaining": 0,
+            "purchased_credits": 0
+        }
 
 def deduct_credits(user_id: str, amount: int, transaction_type: str, description: str) -> bool:
     """
@@ -668,40 +797,115 @@ def deduct_credits(user_id: str, amount: int, transaction_type: str, description
         logger.error(f"Error deducting credits for {user_id}: {e}")
         return False
 
-def add_credits(user_id, amount, transaction_type="purchase", description="Credit purchase"):
-    """Add credit units to user account"""
-    current_credits = get_user_credits(user_id)
-    new_credits = current_credits + amount
-
+def add_credits(user_id, amount, transaction_type="purchase", description="Credit purchase", is_monthly_subscription=True):
+    """
+    Add credit units to user account with monthly subscription support.
+    
+    Args:
+        user_id: User ID
+        amount: Credit units to add
+        transaction_type: Type of transaction (default: "purchase")
+        description: Transaction description
+        is_monthly_subscription: Whether this is a monthly subscription purchase (default: True)
+    
+    For monthly subscriptions:
+    - Sets subscription_started_at to current time
+    - Sets subscription_expires_at to 1 month from now
+    - Adds credits to purchased_credits (not free credits)
+    """
+    from datetime import timedelta
+    
+    current_result = make_supabase_request("GET", "users_registration", 
+                                         select="credits,purchased_credits", 
+                                         filters={"chat_id": f"eq.{user_id}"})
+    
+    if not current_result or len(current_result) == 0:
+        logger.warning(f"User {user_id} not found for credit addition")
+        return False
+    
+    current_data = current_result[0]
+    current_free = int(current_data.get('credits', 0) or 0)
+    current_purchased = int(current_data.get('purchased_credits', 0) or 0)
+    current_total = current_free + current_purchased
+    
+    # Calculate new balances
+    if is_monthly_subscription:
+        # Monthly subscription: Add to purchased_credits
+        new_purchased = current_purchased + amount
+        new_free = current_free
+        new_total = new_purchased + new_free
+        
+        # Set subscription period (1 month from now)
+        subscription_start = datetime.now()
+        subscription_end = subscription_start + timedelta(days=30)  # 30 days = 1 month
+        
+        update_data = {
+            "purchased_credits": new_purchased,
+            "credits": new_free,  # Keep free credits separate
+            "subscription_started_at": subscription_start.isoformat(),
+            "subscription_expires_at": subscription_end.isoformat()
+        }
+    else:
+        # Non-subscription (e.g., welcome bonus, referral): Add to free credits
+        new_purchased = current_purchased
+        new_free = current_free + amount
+        new_total = new_purchased + new_free
+        
+        update_data = {
+            "credits": new_free,
+            "purchased_credits": new_purchased
+            # Don't modify subscription dates for non-subscription credits
+        }
+    
     # Update user credits in the correct table (users_registration)
-    success = make_supabase_request("PATCH", "users_registration", {"credits": new_credits}, filters={"chat_id": f"eq.{user_id}"}, use_service_role=True)
+    success = make_supabase_request("PATCH", "users_registration", update_data, 
+                                   filters={"chat_id": f"eq.{user_id}"}, use_service_role=True)
 
     if success:
-        # Also update user_stats table for consistency (CRITICAL FIX)
+        # Also update user_stats table for consistency
         try:
-            make_supabase_request("PATCH", "user_stats", {"credits": new_credits}, 
+            stats_update = {
+                "credits": new_free,
+                "purchased_credits": new_purchased
+            }
+            make_supabase_request("PATCH", "user_stats", stats_update, 
                                 filters={"user_id": f"eq.{user_id}"}, use_service_role=True)
             logger.info(f"✅ Credits synced to user_stats for {user_id}")
         except Exception as stats_error:
             logger.warning(f"Failed to sync credits to user_stats: {stats_error}")
-            # Continue anyway - users_registration is the primary source
-        # Log credit transaction (try-catch to not fail credit addition if transaction logging fails)
+        
+        # Log credit transaction
         try:
             transaction = {
                 "user_id": user_id,
-                "action": transaction_type,  # Required field for credit_transactions table
+                "action": transaction_type,
                 "transaction_type": transaction_type,
-                "credits_change": amount,  # Positive because it's an addition
-                "balance_before": current_credits,
-                "balance_after": new_credits,
+                "credits_change": amount,
+                "balance_before": current_total,
+                "balance_after": new_total,
                 "description": description,
                 "transaction_date": datetime.now().isoformat()
             }
+            
+            # If monthly subscription, also log subscription period in payment_transactions
+            if is_monthly_subscription:
+                subscription_start = datetime.now()
+                subscription_end = subscription_start + timedelta(days=30)
+                transaction.update({
+                    "subscription_period_start": subscription_start.isoformat(),
+                    "subscription_period_end": subscription_end.isoformat(),
+                    "is_monthly_subscription": True
+                })
+            
             make_supabase_request("POST", "credit_transactions", transaction, use_service_role=True)
-            logger.info(f"✅ Transaction recorded for {user_id}")
+            
+            if is_monthly_subscription:
+                logger.info(f"✅ Monthly subscription added for {user_id}: {amount} credits, expires {subscription_end.strftime('%Y-%m-%d')}")
+            else:
+                logger.info(f"✅ Transaction recorded for {user_id}: +{amount} credits (free/bonus)")
         except Exception as tx_error:
             logger.warning(f"⚠️ Credit addition successful but transaction logging failed: {tx_error}")
-            # Don't return False here - credit addition was successful
+        
         return True
 
     return False

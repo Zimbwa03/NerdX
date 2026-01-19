@@ -956,10 +956,35 @@ class TransparentGeminiPipe:
         - Collect all PCM audio chunks during a model turn
         - When turnComplete is received, concatenate all chunks into one audio
         - Send single smooth audio to client (no choppy word-by-word)
+        - Added periodic flush to handle cases where turnComplete is delayed
         """
         if not self.gemini_ws:
             logger.warning("⚠️ Cannot receive: Gemini WebSocket not connected")
             return
+        
+        # Use a list to allow inner function to modify the time reference
+        last_chunk_time = [None]
+        flush_task = None
+        
+        async def periodic_flush_check():
+            """Periodically flush buffer if chunks are accumulating without turnComplete"""
+            while self.is_active:
+                await asyncio.sleep(2.0)  # Check every 2 seconds
+                async with self.buffer_lock:
+                    has_audio = len(self.audio_buffer) > 0
+                    buffer_size = len(self.audio_buffer) if has_audio else 0
+                
+                if has_audio and last_chunk_time[0]:
+                    time_since_last_chunk = time.time() - last_chunk_time[0]
+                    # If we have audio and no new chunks for 5 seconds, flush it
+                    # This handles cases where turnComplete might be delayed or missed
+                    if time_since_last_chunk >= 5.0:
+                        logger.info(f"⏱️ Periodic flush triggered: {buffer_size} chunks buffered, {time_since_last_chunk:.1f}s since last chunk")
+                        await self._flush_audio_buffer()
+                        last_chunk_time[0] = None  # Reset after flush
+            
+        # Start periodic flush monitor
+        flush_task = asyncio.create_task(periodic_flush_check())
             
         try:
             logger.info("👂 Starting to listen for Gemini responses...")
@@ -988,15 +1013,19 @@ class TransparentGeminiPipe:
                                             pcm_bytes = base64.b64decode(audio_b64)
                                             async with self.buffer_lock:
                                                 self.audio_buffer.append(pcm_bytes)
-                                            logger.debug(f"📦 Buffered audio chunk: {len(pcm_bytes)} bytes (total chunks: {len(self.audio_buffer)})")
+                                                buffer_size = len(self.audio_buffer)
+                                            last_chunk_time[0] = time.time()
+                                            logger.info(f"📦 Buffered audio chunk: {len(pcm_bytes)} bytes (total: {buffer_size} chunks, ~{sum(len(b) for b in self.audio_buffer) / 24000 / 2:.1f}s audio)")
                     
                     # When turn is complete, send ALL buffered audio as ONE file
                     if content.get("turnComplete"):
+                        last_chunk_time[0] = None  # Reset timer
                         await self._flush_audio_buffer()
                         await self.client_ws.send_json({"type": "turnComplete"})
                         logger.info("✅ Turn complete - buffered audio sent to client")
                         
                     if content.get("interrupted"):
+                        last_chunk_time[0] = None  # Reset timer
                         # Clear buffer on interruption
                         async with self.buffer_lock:
                             self.audio_buffer.clear()
@@ -1035,6 +1064,14 @@ class TransparentGeminiPipe:
         except Exception as e:
             if self.is_active:
                 logger.error(f"❌ Receive error: {e}", exc_info=True)
+        finally:
+            # Cancel periodic flush task
+            if flush_task:
+                flush_task.cancel()
+                try:
+                    await flush_task
+                except asyncio.CancelledError:
+                    pass
     
     async def _flush_audio_buffer(self):
         """

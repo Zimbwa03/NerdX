@@ -291,6 +291,14 @@ const FlashcardSection: React.FC<FlashcardSectionProps> = ({
                     </LinearGradient>
                 </TouchableOpacity>
 
+                {/* Credit Cost Info */}
+                <View style={[styles.creditInfo, { backgroundColor: themedColors.background.subtle }]}>
+                    <Ionicons name="information-circle-outline" size={16} color={themedColors.text.secondary} />
+                    <Text style={[styles.creditInfoText, { color: themedColors.text.secondary }]}>
+                        💎 <Text style={{ fontWeight: 'bold' }}>0.25 credit</Text> per flashcard ({cardCount} flashcards = {cardCount * 0.25} credits)
+                    </Text>
+                </View>
+                
                 {/* Info */}
                 <Text style={[styles.infoText, { color: themedColors.text.secondary }]}>
                     💡 Flashcards are generated based on the topic notes above
@@ -398,6 +406,18 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         marginLeft: 10,
+    },
+    creditInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 12,
+        borderRadius: 12,
+        marginBottom: 12,
+        gap: 8,
+    },
+    creditInfoText: {
+        fontSize: 13,
+        flex: 1,
     },
     infoText: {
         fontSize: 12,

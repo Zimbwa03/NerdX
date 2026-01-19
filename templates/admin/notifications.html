@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications - NerdX Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">
+                <i class="fas fa-bell me-2"></i>Notifications Management
+            </h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Create Notification Form -->
+        <div class="col-lg-5 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Create Notification</h5>
+                </div>
+                <div class="card-body">
+                    <form id="notificationForm">
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="title" required maxlength="100">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="body" class="form-label">Message <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="body" rows="4" required maxlength="500"></textarea>
+                            <small class="text-muted"><span id="bodyCount">0</span>/500 characters</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="type" class="form-label">Type</label>
+                            <select class="form-select" id="type">
+                                <option value="info">Info</option>
+                                <option value="warning">Warning</option>
+                                <option value="update">Update</option>
+                                <option value="promo">Promo</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Audience</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="audience" id="audienceAll" value="all" checked>
+                                <label class="btn btn-outline-primary" for="audienceAll">All Users</label>
+                                
+                                <input type="radio" class="btn-check" name="audience" id="audienceUsers" value="users">
+                                <label class="btn btn-outline-primary" for="audienceUsers">Selected Users</label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3" id="userSelection" style="display: none;">
+                            <label for="userSearch" class="form-label">Search Users</label>
+                            <input type="text" class="form-control" id="userSearch" placeholder="Search by name, NerdX ID, or email...">
+                            <div id="userResults" class="mt-2" style="max-height: 200px; overflow-y: auto;"></div>
+                            <div id="selectedUsers" class="mt-2"></div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100" id="sendBtn">
+                            <i class="fas fa-paper-plane me-2"></i>Send Notification
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications List -->
+        <div class="col-lg-7">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-list me-2"></i>Sent Notifications</h5>
+                </div>
+                <div class="card-body">
+                    <div id="notificationsList">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let selectedUserIds = [];
+
+// Character counter
+document.getElementById('body').addEventListener('input', function() {
+    document.getElementById('bodyCount').textContent = this.value.length;
+});
+
+// Audience selection
+document.querySelectorAll('input[name="audience"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        document.getElementById('userSelection').style.display = 
+            this.value === 'users' ? 'block' : 'none';
+        if (this.value === 'all') {
+            selectedUserIds = [];
+            document.getElementById('selectedUsers').innerHTML = '';
+        }
+    });
+});
+
+// User search
+let searchTimeout;
+document.getElementById('userSearch').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    const query = this.value.trim();
+    
+    if (query.length < 2) {
+        document.getElementById('userResults').innerHTML = '';
+        return;
+    }
+
+    searchTimeout = setTimeout(() => {
+        fetch(`/api/users/search?q=${encodeURIComponent(query)}`)
+            .then(res => res.json())
+            .then(data => {
+                const resultsDiv = document.getElementById('userResults');
+                if (data.users && data.users.length > 0) {
+                    resultsDiv.innerHTML = data.users.map(user => `
+                        <div class="border rounded p-2 mb-2 cursor-pointer user-result-item" 
+                             data-id="${user.id}" 
+                             data-name="${user.name}">
+                            <strong>${user.name}</strong> (${user.nerdx_id || 'N/A'})
+                        </div>
+                    `).join('');
+                    
+                    // Add click handlers
+                    document.querySelectorAll('.user-result-item').forEach(item => {
+                        item.addEventListener('click', function() {
+                            const userId = this.dataset.id;
+                            const userName = this.dataset.name;
+                            
+                            if (!selectedUserIds.includes(userId)) {
+                                selectedUserIds.push(userId);
+                                updateSelectedUsers();
+                            }
+                        });
+                    });
+                } else {
+                    resultsDiv.innerHTML = '<p class="text-muted">No users found</p>';
+                }
+            })
+            .catch(err => {
+                console.error('Search error:', err);
+                document.getElementById('userResults').innerHTML = 
+                    '<p class="text-danger">Error searching users</p>';
+            });
+    }, 300);
+});
+
+function updateSelectedUsers() {
+    const div = document.getElementById('selectedUsers');
+    div.innerHTML = selectedUserIds.map((id, index) => {
+        const user = Array.from(document.querySelectorAll('.user-result-item'))
+            .find(item => item.dataset.id === id);
+        const name = user ? user.dataset.name : id;
+        return `
+            <span class="badge bg-primary me-2 mb-2">
+                ${name}
+                <button type="button" class="btn-close btn-close-white ms-2" 
+                        onclick="removeUser(${index})" aria-label="Remove"></button>
+            </span>
+        `;
+    }).join('');
+}
+
+function removeUser(index) {
+    selectedUserIds.splice(index, 1);
+    updateSelectedUsers();
+}
+
+// Load notifications
+function loadNotifications() {
+    fetch('/api/notifications/list')
+        .then(res => res.json())
+        .then(data => {
+            const listDiv = document.getElementById('notificationsList');
+            if (data.notifications && data.notifications.length > 0) {
+                listDiv.innerHTML = data.notifications.map(notif => `
+                    <div class="border rounded p-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">
+                                    <span class="badge bg-${getTypeColor(notif.type)} me-2">${notif.type}</span>
+                                    ${notif.title}
+                                </h6>
+                                <p class="text-muted mb-2 small">${notif.body.substring(0, 100)}${notif.body.length > 100 ? '...' : ''}</p>
+                                <small class="text-muted">
+                                    <i class="fas fa-users me-1"></i>${notif.total_recipients || 0} recipients
+                                    <span class="ms-3"><i class="fas fa-check me-1"></i>${notif.read_count || 0} read</span>
+                                    <span class="ms-3"><i class="fas fa-clock me-1"></i>${formatDate(notif.created_at)}</span>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                listDiv.innerHTML = '<p class="text-muted text-center py-4">No notifications sent yet</p>';
+            }
+        })
+        .catch(err => {
+            console.error('Error loading notifications:', err);
+            document.getElementById('notificationsList').innerHTML = 
+                '<p class="text-danger">Error loading notifications</p>';
+        });
+}
+
+function getTypeColor(type) {
+    const colors = {
+        'info': 'info',
+        'warning': 'warning',
+        'update': 'primary',
+        'promo': 'success'
+    };
+    return colors[type] || 'secondary';
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleString();
+}
+
+// Submit form
+document.getElementById('notificationForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const audience = document.querySelector('input[name="audience"]:checked').value;
+    const data = {
+        title: document.getElementById('title').value,
+        body: document.getElementById('body').value,
+        type: document.getElementById('type').value,
+        audience: audience,
+        user_ids: audience === 'users' ? selectedUserIds : undefined,
+    };
+
+    const btn = document.getElementById('sendBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
+
+    fetch('/api/notifications/send', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Notification sent to ${data.recipients_created} users!`);
+            document.getElementById('notificationForm').reset();
+            document.getElementById('bodyCount').textContent = '0';
+            selectedUserIds = [];
+            document.getElementById('selectedUsers').innerHTML = '';
+            loadNotifications();
+        } else {
+            alert('Error: ' + (data.error || 'Failed to send notification'));
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        alert('Error sending notification');
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Send Notification';
+    });
+});
+
+// Load on page load
+loadNotifications();
+</script>
+
+<style>
+.user-result-item {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.user-result-item:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+}
+</style>
+{% endblock %}

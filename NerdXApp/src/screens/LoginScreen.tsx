@@ -77,14 +77,24 @@ const LoginScreen: React.FC = () => {
     setIsLoading(true);
     try {
       const googleUser = await signInWithGoogle();
+      
+      if (!googleUser || !googleUser.email) {
+        throw new Error('Failed to get user information from Google');
+      }
+
+      console.log('🔑 Google user data:', googleUser);
+      
       const response = await authApi.socialLogin('google', googleUser);
 
       if (response.success && response.token && response.user) {
-        await login(response.user, response.token);
+        console.log('✅ Social login successful, logging in user...');
+        await login(response.user, response.token, response.notifications);
+        // Navigation will happen automatically via AppNavigator when isAuthenticated becomes true
       } else {
         Alert.alert('Sign In Failed', response.message || 'Could not sign in with Google');
       }
     } catch (error: any) {
+      console.error('❌ Google Sign-In error:', error);
       Alert.alert('Error', error?.message || 'Google Sign-In failed');
     } finally {
       setIsLoading(false);

@@ -3,7 +3,7 @@ import uuid
 import os
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
-from database.external_db import make_supabase_request, add_credits
+from database.external_db import make_supabase_request, add_credits, check_and_expire_user_credits
 from utils.credit_units import credits_to_units, format_credits, units_to_credits
 from services.paynow_service import paynow_service
 
@@ -76,10 +76,12 @@ class PaymentService:
         
         for package in self.packages:
             cost_per_credit = package['price'] / package['credits']
-            message += f"{package['icon']} **{package['name']}** - ${package['price']:.2f}\n"
+            message += f"{package['icon']} **{package['name']}** - ${package['price']:.2f}/month\n"
             message += f"   💎 {package['credits']} Credits • ${cost_per_credit:.3f}/credit\n"
+            message += f"   ⏰ Valid for 1 month from purchase\n"
             message += f"   🎯 {package['description']}\n"
-            message += f"   💡 Best for: {package['best_for']}\n\n"
+            message += f"   💡 Best for: {package['best_for']}\n"
+            message += f"   ⚠️ Unused credits expire after subscription period\n\n"
         
         return message
     
@@ -115,12 +117,14 @@ class PaymentService:
         
         cost_per_credit = package['price'] / package['credits']
         
-        message = f"{package['icon']} **{package['name']} - ${package['price']:.2f}**\n\n"
+        message = f"{package['icon']} **{package['name']} - ${package['price']:.2f}/month**\n\n"
         message += f"📊 **PACKAGE DETAILS:**\n"
         message += f"💳 Credits: {package['credits']} credits\n"
         message += f"💰 Cost per credit: ${cost_per_credit:.3f}\n"
+        message += f"⏰ **Validity: 1 month from purchase**\n"
         message += f"🎯 Perfect for: {package['best_for']}\n\n"
-        message += f"✨ {package['description']}\n"
+        message += f"✨ {package['description']}\n\n"
+        message += f"⚠️ **IMPORTANT:** Credits expire after 1 month if not used. Use them before they expire!\n"
         
         return message
     
@@ -140,6 +144,10 @@ class PaymentService:
         
         # Save payment intent to pending_payments table
         # Schema: id, user_id, amount, payment_method, reference_code, created_at
+        # Calculate subscription period (1 month from purchase)
+        subscription_start = datetime.now()
+        subscription_end = subscription_start + timedelta(days=30)  # 30 days = 1 month
+        
         payment_data = {
             'user_id': user_id,
             'transaction_reference': reference_code,
@@ -147,7 +155,10 @@ class PaymentService:
             'credits_to_add': credits_to_units(package['credits']),
             'status': 'pending',
             'package_type': package_id,
-            'created_at': datetime.now().isoformat()
+            'created_at': datetime.now().isoformat(),
+            'subscription_period_start': subscription_start.isoformat(),
+            'subscription_period_end': subscription_end.isoformat(),
+            'is_monthly_subscription': True  # All credit purchases are monthly subscriptions
         }
         
         try:
@@ -334,12 +345,14 @@ class PaymentService:
             credits = int(payment['credits'])  # Stored units
             package = self.get_package_by_id(payment.get('package_id', 'unknown'))  # Updated field name
             
-            # Add credits to user account using advanced credit system
-            from services.advanced_credit_service import advanced_credit_service
-            add_success = advanced_credit_service.add_credits_for_purchase(
+            # Add credits to user account as monthly subscription
+            # Monthly subscriptions expire 30 days from purchase
+            add_success = add_credits(
                 user_id,
                 credits,
-                f"Credit purchase: {package['name'] if package else 'Package'}"
+                transaction_type="purchase",
+                description=f"Monthly subscription: {package['name'] if package else 'Package'}",
+                is_monthly_subscription=True  # This sets expiry to 30 days from now
             )
             
             if add_success:
@@ -441,6 +454,9 @@ class PaymentService:
             from services.whatsapp_service import WhatsAppService
             whatsapp_service = WhatsAppService()
             
+            # Calculate expiry date (30 days from now)
+            expiry_date = (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d')
+            
             message = f"""🎉 **PAYMENT APPROVED!**
 
 ✅ **Transaction Successful**
@@ -449,6 +465,10 @@ class PaymentService:
 💳 **Credits Added**: +{format_credits(credits)} credits
 🔢 **Transaction ID**: {reference_code}
 📅 **Date**: {datetime.now().strftime('%Y-%m-%d %H:%M')}
+
+⏰ **MONTHLY SUBSCRIPTION**
+📆 **Valid Until**: {expiry_date}
+⚠️ **Important**: Your credits expire after 1 month. Use them before they expire!
 
 🚀 **Your credits are ready to use!**
 🎯 **Start learning now and make the most of your purchase!**
@@ -548,6 +568,7 @@ class PaymentService:
         return message
     
     def get_payment_approved_message(self, reference_code: str) -> str:
+        """Get payment approved message with monthly subscription info"""
         """Get payment approved message"""
         try:
             result = make_supabase_request(
@@ -573,10 +594,15 @@ class PaymentService:
             credits = 0
             timestamp = datetime.now().strftime("%H:%M on %d/%m/%Y")
         
+        # Calculate expiry date (30 days from now)
+        expiry_date = (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d')
+        
         message = f"🎉 **PAYMENT APPROVED!**\n\n"
         message += f"✅ **Transaction Successful**\n\n"
         message += f"💰 **Package**: {package_name}\n"
         message += f"💳 **Credits Added**: +{format_credits(credits)} credits\n"
+        message += f"⏰ **Valid Until**: {expiry_date} (1 month from purchase)\n"
+        message += f"⚠️ **Important**: Credits expire after 1 month if not used!\n\n"
         message += f"🔢 **Transaction ID**: {reference_code}\n"
         message += f"📅 **Date**: {timestamp}\n\n"
         message += f"🚀 **Your credits are ready to use!**\n"

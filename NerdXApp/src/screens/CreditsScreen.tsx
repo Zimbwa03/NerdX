@@ -546,7 +546,17 @@ const CreditsScreen: React.FC = () => {
                     <View style={styles.ticketDivider} />
                     <View style={styles.ticketRow}>
                       <Text style={styles.ticketLabel}>PRICE</Text>
-                      <Text style={styles.ticketPrice}>${selectedPackage.price.toFixed(2)}</Text>
+                      <Text style={styles.ticketPrice}>${selectedPackage.price.toFixed(2)}/month</Text>
+                    </View>
+                    <View style={styles.ticketDivider} />
+                    <View style={styles.ticketRow}>
+                      <Text style={styles.ticketLabel}>VALIDITY</Text>
+                      <Text style={[styles.ticketValue, { color: Colors.warning.main }]}>1 Month</Text>
+                    </View>
+                    <View style={styles.monthlyWarning}>
+                      <Text style={styles.monthlyWarningText}>
+                        ⚠️ Credits expire after 1 month from purchase. Use them or they'll be lost!
+                      </Text>
                     </View>
                   </View>
                 )}
@@ -969,6 +979,21 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: Colors.premium?.gold || '#FFD700',
+  },
+  monthlyWarning: {
+    marginTop: 16,
+    padding: 12,
+    backgroundColor: Colors.warning.main + '15',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.warning.main + '40',
+  },
+  monthlyWarningText: {
+    fontSize: 12,
+    lineHeight: 18,
+    color: Colors.warning.main,
+    textAlign: 'center',
+    fontWeight: '500',
   },
   ticketPrice: {
     fontSize: 20,

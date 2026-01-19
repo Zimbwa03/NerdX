@@ -187,6 +187,8 @@ const ProjectAssistantScreen: React.FC = () => {
   const [imageGenerationMode, setImageGenerationMode] = useState(false);
   const [lastGeneratedImageUrl, setLastGeneratedImageUrl] = useState<string | null>(null);
   const [lastImagePrompt, setLastImagePrompt] = useState<string>('');
+  const [selectedAspectRatio, setSelectedAspectRatio] = useState<string>('1:1');
+  const [showAspectRatioModal, setShowAspectRatioModal] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
@@ -355,8 +357,8 @@ const ProjectAssistantScreen: React.FC = () => {
 
       // Use dedicated image generation endpoint when in explicit image mode
       if (imageGenerationMode && isImageRequest) {
-        // Call the dedicated image generation endpoint
-        const imageResponse = await projectApi.generateImage(project.id, query);
+        // Call the dedicated image generation endpoint with aspect ratio
+        const imageResponse = await projectApi.generateImage(project.id, query, selectedAspectRatio);
         if (imageResponse) {
           response = imageResponse;
         }
@@ -382,9 +384,10 @@ const ProjectAssistantScreen: React.FC = () => {
 
         setMessages((prev) => [...prev, assistantMessage]);
 
-        // Store last generated image URL for regeneration/download
+        // Store last generated image URL and prompt for regeneration/download
         if (response.image_url) {
           setLastGeneratedImageUrl(response.image_url);
+          setLastImagePrompt(query); // Store the prompt for regeneration
         }
 
         // Update credits if returned (backend manages batch deduction)
@@ -701,74 +704,54 @@ const ProjectAssistantScreen: React.FC = () => {
   };
 
   // ==================== Voice Recording Handler ====================
-  const handleVoiceRecord = async () => {
-    if (!project) return;
-
+  // Using the exact same implementation as Teacher Mode
+  const startRecording = async () => {
     try {
-      // Request audio recording permission
-      const { status } = await Audio.requestPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission Required', 'Please allow microphone access for voice recording.');
-        return;
-      }
+      const permission = await Audio.requestPermissionsAsync();
+      if (permission.status === 'granted') {
+        await Audio.setAudioModeAsync({
+          allowsRecordingIOS: true,
+          playsInSilentModeIOS: true,
+        });
 
-      // Configure audio mode
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
-      });
-
-      if (isRecording && recording) {
-        // Stop recording
-        setIsRecording(false);
-        setSending(true);
-
-        await recording.stopAndUnloadAsync();
-        const uri = recording.getURI();
-        setRecording(null);
-
-        if (uri) {
-          // Send to backend for transcription (same flow as Teacher Mode)
-          try {
-            const result = await mathApi.transcribeAudio(uri);
-
-            if (result?.text) {
-              // Add transcribed text to input or send as message
-              latestInputTextRef.current = result.text;
-              setInputText(result.text);
-              setActiveMode('chat');
-
-              setMessages((prev) => [...prev, {
-                id: `voice-${Date.now()}`,
-                role: 'assistant',
-                content: `🎤 **Voice Transcribed:**\n\n"${result.text}"\n\n*You can edit or send this message.*`,
-                timestamp: new Date(),
-              }]);
-            }
-          } catch (error: any) {
-            Alert.alert('Transcription Error', error.message || 'Failed to transcribe audio');
-          }
-        }
-        setSending(false);
-      } else {
-        // Start recording
-        const { recording: newRecording } = await Audio.Recording.createAsync(
+        const { recording } = await Audio.Recording.createAsync(
           Audio.RecordingOptionsPresets.HIGH_QUALITY
         );
-        setRecording(newRecording);
-        setIsRecording(true);
-        setActiveMode('voice_record');
 
-        Alert.alert(
-          '🎤 Recording Started',
-          'Tap the microphone icon in the mode menu again to stop recording and transcribe.',
-          [{ text: 'OK' }]
-        );
+        setRecording(recording);
+        setIsRecording(true);
+      } else {
+        Alert.alert('Permission Denied', 'Microphone permission is required.');
       }
-    } catch (error: any) {
-      setIsRecording(false);
+    } catch (err) {
+      console.error('Failed to start recording', err);
+    }
+  };
+
+  const stopRecording = async () => {
+    if (!recording) return;
+
+    setIsRecording(false);
+    try {
+      await recording.stopAndUnloadAsync();
+      const uri = recording.getURI();
       setRecording(null);
-      Alert.alert('Error', error.message || 'Failed to start voice recording');
+
+      if (uri) {
+        // Transcribe
+        setSending(true);
+        try {
+          const result = await mathApi.transcribeAudio(uri);
+          latestInputTextRef.current = result.text || '';
+          setInputText(result.text);
+        } catch (error) {
+          Alert.alert('Error', 'Failed to transcribe audio.');
+        } finally {
+          setSending(false);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to stop recording', error);
     }
   };
 
@@ -962,7 +945,7 @@ const ProjectAssistantScreen: React.FC = () => {
                       <TouchableOpacity
                         style={[styles.imageActionButton, { backgroundColor: isDarkMode ? 'rgba(139, 92, 246, 0.2)' : 'rgba(139, 92, 246, 0.1)' }]}
                         onPress={() => {
-                          // Regenerate with same prompt
+                          // Regenerate with same prompt and aspect ratio
                           if (lastImagePrompt) {
                             setInputText(lastImagePrompt);
                             latestInputTextRef.current = lastImagePrompt;
@@ -994,6 +977,17 @@ const ProjectAssistantScreen: React.FC = () => {
                       >
                         <Ionicons name="create-outline" size={16} color="#3B82F6" />
                         <Text style={[styles.imageActionText, { color: '#3B82F6' }]}>Edit Prompt</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[styles.imageActionButton, { backgroundColor: isDarkMode ? 'rgba(251, 146, 60, 0.2)' : 'rgba(251, 146, 60, 0.1)' }]}
+                        onPress={() => {
+                          // Show aspect ratio selection modal
+                          setShowAspectRatioModal(true);
+                        }}
+                      >
+                        <Ionicons name="resize-outline" size={16} color="#FB923C" />
+                        <Text style={[styles.imageActionText, { color: '#FB923C' }]}>Aspect {selectedAspectRatio}</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -1071,7 +1065,7 @@ const ProjectAssistantScreen: React.FC = () => {
         {imageGenerationMode && (
           <View style={styles.imageModeIndicator}>
             <Ionicons name="sparkles" size={14} color="#10B981" />
-            <Text style={styles.imageModeIndicatorText}>Image Generation Mode (Vertex AI)</Text>
+            <Text style={styles.imageModeIndicatorText}>Image Generation Mode (💎 2 credits) • Ratio: {selectedAspectRatio}</Text>
             <TouchableOpacity onPress={() => setImageGenerationMode(false)}>
               <Ionicons name="close-circle" size={18} color="#10B981" />
             </TouchableOpacity>
@@ -1172,7 +1166,7 @@ const ProjectAssistantScreen: React.FC = () => {
               </View>
               <View style={styles.modeMenuTextContainer}>
                 <Text style={[styles.modeMenuText, { color: isDarkMode ? '#6EE7B7' : '#059669' }]}>Generate Image</Text>
-                <Text style={[styles.modeMenuDesc, { color: isDarkMode ? 'rgba(255, 255, 255, 0.5)' : '#888' }]}>Create posters, flyers, diagrams with AI</Text>
+                <Text style={[styles.modeMenuDesc, { color: isDarkMode ? 'rgba(255, 255, 255, 0.5)' : '#888' }]}>Create posters, flyers, diagrams with AI (💎 2 credits per image)</Text>
               </View>
             </TouchableOpacity>
 
@@ -1238,7 +1232,7 @@ const ProjectAssistantScreen: React.FC = () => {
             onPress={() => {
               setImageGenerationMode(!imageGenerationMode);
               if (!imageGenerationMode) {
-                showInfo('Image Generation Mode activated');
+                showInfo(`Image Generation Mode activated (Ratio: ${selectedAspectRatio})`);
               }
             }}
           >
@@ -1279,7 +1273,7 @@ const ProjectAssistantScreen: React.FC = () => {
               styles.micButton,
               isRecording && { backgroundColor: themedColors.error?.light || '#FFCDD2' }
             ]}
-            onPress={() => handleVoiceRecord()}
+            onPress={() => isRecording ? stopRecording() : startRecording()}
             disabled={sending}
           >
             <Ionicons
@@ -1306,6 +1300,76 @@ const ProjectAssistantScreen: React.FC = () => {
           Credits: {user?.credits || 0}
         </Text>
       </View>
+
+      {/* Aspect Ratio Selection Modal */}
+      <Modal
+        visible={showAspectRatioModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowAspectRatioModal(false)}
+      >
+        <View style={styles.aspectRatioModalOverlay}>
+          <View style={[styles.aspectRatioModal, { backgroundColor: themedColors.background.paper }]}>
+            <View style={styles.aspectRatioModalHeader}>
+              <Text style={[styles.aspectRatioModalTitle, { color: themedColors.text.primary }]}>
+                Select Aspect Ratio
+              </Text>
+              <TouchableOpacity onPress={() => setShowAspectRatioModal(false)}>
+                <Ionicons name="close" size={24} color={themedColors.text.primary} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.aspectRatioOptions}>
+              {[
+                { ratio: '16:9', label: '16:9 (Landscape)', icon: '📺', description: 'Widescreen, perfect for posters and presentations' },
+                { ratio: '9:16', label: '9:16 (Portrait)', icon: '📱', description: 'Vertical, ideal for social media stories' },
+                { ratio: '1:1', label: '1:1 (Square)', icon: '⬜', description: 'Square format, great for social media posts' },
+              ].map((option) => (
+                <TouchableOpacity
+                  key={option.ratio}
+                  style={[
+                    styles.aspectRatioOption,
+                    {
+                      backgroundColor: selectedAspectRatio === option.ratio
+                        ? themedColors.primary.main
+                        : themedColors.background.subtle,
+                      borderColor: selectedAspectRatio === option.ratio
+                        ? themedColors.primary.main
+                        : themedColors.border.main,
+                    }
+                  ]}
+                  onPress={() => {
+                    setSelectedAspectRatio(option.ratio);
+                    setShowAspectRatioModal(false);
+                    if (imageGenerationMode && inputText.trim()) {
+                      showInfo(`Aspect ratio set to ${option.ratio}. Send to generate with new ratio.`);
+                    }
+                  }}
+                >
+                  <Text style={styles.aspectRatioIcon}>{option.icon}</Text>
+                  <View style={styles.aspectRatioOptionText}>
+                    <Text style={[
+                      styles.aspectRatioOptionLabel,
+                      { color: selectedAspectRatio === option.ratio ? '#FFF' : themedColors.text.primary }
+                    ]}>
+                      {option.label}
+                    </Text>
+                    <Text style={[
+                      styles.aspectRatioOptionDesc,
+                      { color: selectedAspectRatio === option.ratio ? 'rgba(255,255,255,0.8)' : themedColors.text.secondary }
+                    ]}>
+                      {option.description}
+                    </Text>
+                  </View>
+                  {selectedAspectRatio === option.ratio && (
+                    <Ionicons name="checkmark-circle" size={24} color="#FFF" />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 };
@@ -1739,6 +1803,58 @@ const styles = StyleSheet.create({
   imageActionText: {
     fontSize: 13,
     fontWeight: '600',
+  },
+  aspectRatioModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  aspectRatioModal: {
+    width: '85%',
+    maxWidth: 400,
+    borderRadius: 20,
+    padding: 24,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+  },
+  aspectRatioModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  aspectRatioModalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  aspectRatioOptions: {
+    gap: 12,
+  },
+  aspectRatioOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 2,
+    gap: 12,
+  },
+  aspectRatioIcon: {
+    fontSize: 28,
+  },
+  aspectRatioOptionText: {
+    flex: 1,
+  },
+  aspectRatioOptionLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  aspectRatioOptionDesc: {
+    fontSize: 12,
   },
 });
 

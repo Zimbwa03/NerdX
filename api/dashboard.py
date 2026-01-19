@@ -903,3 +903,262 @@ def get_profit_analytics():
     except Exception as e:
         logger.error(f"Error getting profit analytics: {e}")
         return jsonify({'error': str(e)}), 500
+
+# =====================================================
+# NOTIFICATIONS & APP VERSION MANAGEMENT ENDPOINTS
+# =====================================================
+
+@dashboard_bp.route('/notifications')
+@login_required
+def notifications_page():
+    """Notifications admin page"""
+    try:
+        return render_template('admin/notifications.html', admin_user=request.admin_user)
+    except Exception as e:
+        logger.error(f"Notifications page error: {e}")
+        return f"Error: {e}", 500
+
+@dashboard_bp.route('/force-update')
+@login_required
+def force_update_page():
+    """Force update admin page"""
+    try:
+        return render_template('admin/force_update.html', admin_user=request.admin_user)
+    except Exception as e:
+        logger.error(f"Force update page error: {e}")
+        return f"Error: {e}", 500
+
+@dashboard_bp.route('/api/notifications/send', methods=['POST'])
+@login_required
+def send_notification():
+    """Send notification to users"""
+    try:
+        data = request.get_json()
+        title = data.get('title')
+        body = data.get('body')
+        notification_type = data.get('type', 'info')
+        audience = data.get('audience', 'all')
+        user_ids = data.get('user_ids', [])
+        metadata = data.get('metadata', {})
+
+        if not title or not body:
+            return jsonify({'error': 'Title and body are required'}), 400
+
+        # Get all users if audience is 'all'
+        target_user_ids = []
+        if audience == 'all':
+            # Get all users from auth.users via Supabase Admin API
+            import requests
+            import os
+            supabase_url = os.getenv('SUPABASE_URL')
+            service_key = os.getenv('SUPABASE_SERVICE_ROLE_KEY')
+            
+            if not supabase_url or not service_key:
+                return jsonify({'error': 'Supabase configuration missing'}), 500
+
+            # Get all users from auth.users
+            headers = {
+                'apikey': service_key,
+                'Authorization': f'Bearer {service_key}',
+            }
+            response = requests.get(
+                f'{supabase_url}/auth/v1/admin/users',
+                headers=headers,
+                params={'per_page': 1000}
+            )
+            
+            if response.status_code == 200:
+                users_data = response.json()
+                target_user_ids = [user['id'] for user in users_data.get('users', [])]
+            else:
+                logger.error(f"Failed to fetch users: {response.status_code}")
+                return jsonify({'error': 'Failed to fetch users'}), 500
+        elif audience == 'users' and user_ids:
+            target_user_ids = user_ids
+        else:
+            return jsonify({'error': 'Invalid audience or missing user_ids'}), 400
+
+        # Create notification
+        notification_data = {
+            'title': title,
+            'body': body,
+            'type': notification_type,
+            'audience': audience,
+            'metadata': metadata,
+            'status': 'sent',
+        }
+        
+        notification = make_supabase_request('POST', 'notifications', data=notification_data, use_service_role=True)
+        
+        if not notification:
+            return jsonify({'error': 'Failed to create notification'}), 500
+
+        notification_id = notification[0]['id'] if isinstance(notification, list) else notification.get('id')
+
+        # Create recipients in batches
+        BATCH_SIZE = 1000
+        total_inserted = 0
+        errors = []
+
+        for i in range(0, len(target_user_ids), BATCH_SIZE):
+            batch = target_user_ids[i:i + BATCH_SIZE]
+            recipients = [{'notification_id': notification_id, 'user_id': user_id} for user_id in batch]
+            
+            result = make_supabase_request('POST', 'notification_recipients', data=recipients, use_service_role=True)
+            if result:
+                total_inserted += len(batch)
+            else:
+                errors.append(f'Failed to insert batch {i // BATCH_SIZE + 1}')
+
+        return jsonify({
+            'success': True,
+            'notification_id': notification_id,
+            'recipients_created': total_inserted,
+            'errors': errors if errors else None
+        })
+
+    except Exception as e:
+        logger.error(f"Error sending notification: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return jsonify({'error': str(e)}), 500
+
+@dashboard_bp.route('/api/notifications/list')
+@login_required
+def list_notifications():
+    """List all notifications"""
+    try:
+        notifications = make_supabase_request('GET', 'notifications', select='*', use_service_role=True)
+        
+        if not notifications:
+            notifications = []
+
+        # Get recipient counts for each notification
+        for notification in notifications:
+            recipients = make_supabase_request(
+                'GET', 'notification_recipients',
+                select='id,read_at',
+                filters={'notification_id': f"eq.{notification['id']}"},
+                use_service_role=True
+            )
+            
+            total_recipients = len(recipients) if recipients else 0
+            read_count = len([r for r in (recipients or []) if r.get('read_at')]) if recipients else 0
+            
+            notification['total_recipients'] = total_recipients
+            notification['read_count'] = read_count
+
+        # Sort by created_at descending
+        notifications.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+
+        return jsonify({'notifications': notifications})
+
+    except Exception as e:
+        logger.error(f"Error listing notifications: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@dashboard_bp.route('/api/app-versions', methods=['GET'])
+@login_required
+def get_app_versions():
+    """Get app version settings"""
+    try:
+        versions = make_supabase_request('GET', 'app_versions', select='*', use_service_role=True)
+        return jsonify({'versions': versions if versions else []})
+    except Exception as e:
+        logger.error(f"Error getting app versions: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@dashboard_bp.route('/api/app-versions', methods=['POST'])
+@login_required
+def set_app_version():
+    """Set app version requirements"""
+    try:
+        data = request.get_json()
+        platform = data.get('platform')
+        min_supported_version = data.get('min_supported_version')
+        latest_version = data.get('latest_version')
+        update_required = data.get('update_required', False)
+        soft_update = data.get('soft_update', False)
+        update_message = data.get('update_message', '')
+        update_url = data.get('update_url', '')
+
+        if not platform or not min_supported_version or not latest_version:
+            return jsonify({'error': 'Platform, min_supported_version, and latest_version are required'}), 400
+
+        # Upsert app version
+        version_data = {
+            'platform': platform,
+            'min_supported_version': min_supported_version,
+            'latest_version': latest_version,
+            'update_required': update_required,
+            'soft_update': soft_update,
+            'update_message': update_message,
+            'update_url': update_url,
+        }
+
+        # Check if version exists
+        existing = make_supabase_request(
+            'GET', 'app_versions',
+            filters={'platform': f"eq.{platform}"},
+            use_service_role=True
+        )
+
+        if existing and len(existing) > 0:
+            # Update existing
+            result = make_supabase_request(
+                'PATCH', 'app_versions',
+                data=version_data,
+                filters={'platform': f"eq.{platform}"},
+                use_service_role=True
+            )
+        else:
+            # Create new
+            result = make_supabase_request('POST', 'app_versions', data=version_data, use_service_role=True)
+
+        if result:
+            return jsonify({'success': True, 'version': result[0] if isinstance(result, list) else result})
+        else:
+            return jsonify({'error': 'Failed to update app version'}), 500
+
+    except Exception as e:
+        logger.error(f"Error setting app version: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return jsonify({'error': str(e)}), 500
+
+@dashboard_bp.route('/api/users/search')
+@login_required
+def search_users():
+    """Search users for notification targeting"""
+    try:
+        query = request.args.get('q', '')
+        limit = request.args.get('limit', 20, type=int)
+
+        if not query:
+            return jsonify({'users': []})
+
+        # Search users_registration table
+        users = make_supabase_request(
+            'GET', 'users_registration',
+            select='chat_id,name,surname,nerdx_id,email',
+            filters={'or': f'(name.ilike.%{query}%,surname.ilike.%{query}%,nerdx_id.ilike.%{query}%)'},
+            limit=limit,
+            use_service_role=True
+        )
+
+        # Format for frontend
+        formatted_users = []
+        if users:
+            for user in users:
+                formatted_users.append({
+                    'id': user.get('chat_id'),  # Use chat_id as identifier
+                    'name': f"{user.get('name', '')} {user.get('surname', '')}".strip(),
+                    'nerdx_id': user.get('nerdx_id'),
+                    'email': user.get('email'),
+                })
+
+        return jsonify({'users': formatted_users})
+
+    except Exception as e:
+        logger.error(f"Error searching users: {e}")
+        return jsonify({'error': str(e)}), 500

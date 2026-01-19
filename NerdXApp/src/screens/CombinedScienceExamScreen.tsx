@@ -391,7 +391,7 @@ const CombinedScienceExamScreen: React.FC = () => {
             </Text>
             {selectedCount && (
               <Text style={[styles.creditsText, { color: themedColors.text.primary }]}>
-                Required: {selectedCount} credits
+                Required: {Math.ceil(selectedCount * 0.5)} credits ({selectedCount} questions × 0.5 credit each)
               </Text>
             )}
           </View>

@@ -98,9 +98,18 @@ export const authApi = {
   socialLogin: async (provider: string, userInfo: any): Promise<AuthResponse> => {
     try {
       // Send the social user info to backend to create/sync account
+      // Backend expects: { provider: 'google', user: { email, id, name, given_name, family_name, ... } }
       const response = await api.post('/api/mobile/auth/social-login', {
         provider,
-        user: userInfo
+        user: {
+          id: userInfo.id || userInfo.sub,
+          email: userInfo.email,
+          name: userInfo.name,
+          given_name: userInfo.given_name,
+          family_name: userInfo.family_name,
+          picture: userInfo.picture,
+          sub: userInfo.sub || userInfo.id,
+        }
       });
 
       if (response.data.success && response.data.token) {
@@ -113,6 +122,19 @@ export const authApi = {
       return {
         success: false,
         message: error.response?.data?.message || 'Social login failed.',
+      };
+    }
+  },
+
+  resetPassword: async (data: { email?: string; token?: string; new_password: string }): Promise<{ success: boolean; message?: string }> => {
+    try {
+      const response = await api.post('/api/mobile/auth/reset-password', data);
+      return response.data;
+    } catch (error: any) {
+      console.error('Reset Password Error:', error.response?.data || error.message);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Password reset failed.',
       };
     }
   },

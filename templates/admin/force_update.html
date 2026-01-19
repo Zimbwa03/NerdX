@@ -1,0 +1,340 @@
+{% extends "base.html" %}
+
+{% block title %}Force Update - NerdX Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">
+                <i class="fas fa-mobile-alt me-2"></i>Force Update Management
+            </h2>
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Warning:</strong> Enabling forced updates will block users until they update the app.
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Platform Tabs -->
+        <div class="col-12 mb-3">
+            <ul class="nav nav-tabs" id="platformTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="android-tab" data-bs-toggle="tab" 
+                            data-bs-target="#android" type="button" role="tab">
+                        <i class="fab fa-android me-2"></i>Android
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="ios-tab" data-bs-toggle="tab" 
+                            data-bs-target="#ios" type="button" role="tab">
+                        <i class="fab fa-apple me-2"></i>iOS
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Android Tab -->
+        <div class="col-lg-8">
+            <div class="tab-content" id="platformTabContent">
+                <div class="tab-pane fade show active" id="android" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="fab fa-android me-2"></i>Android Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="androidForm">
+                                <input type="hidden" name="platform" value="android">
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="androidMinVersion" class="form-label">
+                                            Minimum Supported Version <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="text" class="form-control" id="androidMinVersion" 
+                                               name="min_supported_version" placeholder="1.0.0" required>
+                                        <small class="text-muted">Users below this version will be forced to update</small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="androidLatestVersion" class="form-label">
+                                            Latest Version <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="text" class="form-control" id="androidLatestVersion" 
+                                               name="latest_version" placeholder="1.1.0" required>
+                                        <small class="text-muted">Current latest version in store</small>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="androidUpdateRequired" 
+                                               name="update_required">
+                                        <label class="form-check-label" for="androidUpdateRequired">
+                                            <strong>Force Update Required</strong>
+                                        </label>
+                                    </div>
+                                    <small class="text-muted">When enabled, all users must update regardless of version</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="androidSoftUpdate" 
+                                               name="soft_update">
+                                        <label class="form-check-label" for="androidSoftUpdate">
+                                            <strong>Allow "Later" Option</strong>
+                                        </label>
+                                    </div>
+                                    <small class="text-muted">If enabled, users can dismiss the update (only works if update_required is false)</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="androidUpdateMessage" class="form-label">
+                                        Update Message <span class="text-danger">*</span>
+                                    </label>
+                                    <textarea class="form-control" id="androidUpdateMessage" 
+                                              name="update_message" rows="3" required 
+                                              placeholder="A new version is available with important updates..."></textarea>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="androidUpdateUrl" class="form-label">
+                                        Play Store URL <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="url" class="form-control" id="androidUpdateUrl" 
+                                           name="update_url" 
+                                           placeholder="https://play.google.com/store/apps/details?id=com.nerdx.app" required>
+                                </div>
+
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fas fa-save me-2"></i>Publish Update
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- iOS Tab -->
+                <div class="tab-pane fade" id="ios" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="fab fa-apple me-2"></i>iOS Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="iosForm">
+                                <input type="hidden" name="platform" value="ios">
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="iosMinVersion" class="form-label">
+                                            Minimum Supported Version <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="text" class="form-control" id="iosMinVersion" 
+                                               name="min_supported_version" placeholder="1.0.0" required>
+                                        <small class="text-muted">Users below this version will be forced to update</small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="iosLatestVersion" class="form-label">
+                                            Latest Version <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="text" class="form-control" id="iosLatestVersion" 
+                                               name="latest_version" placeholder="1.1.0" required>
+                                        <small class="text-muted">Current latest version in App Store</small>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="iosUpdateRequired" 
+                                               name="update_required">
+                                        <label class="form-check-label" for="iosUpdateRequired">
+                                            <strong>Force Update Required</strong>
+                                        </label>
+                                    </div>
+                                    <small class="text-muted">When enabled, all users must update regardless of version</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="iosSoftUpdate" 
+                                               name="soft_update">
+                                        <label class="form-check-label" for="iosSoftUpdate">
+                                            <strong>Allow "Later" Option</strong>
+                                        </label>
+                                    </div>
+                                    <small class="text-muted">If enabled, users can dismiss the update (only works if update_required is false)</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="iosUpdateMessage" class="form-label">
+                                        Update Message <span class="text-danger">*</span>
+                                    </label>
+                                    <textarea class="form-control" id="iosUpdateMessage" 
+                                              name="update_message" rows="3" required 
+                                              placeholder="A new version is available with important updates..."></textarea>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="iosUpdateUrl" class="form-label">
+                                        App Store URL <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="url" class="form-control" id="iosUpdateUrl" 
+                                           name="update_url" 
+                                           placeholder="https://apps.apple.com/app/id123456789" required>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-save me-2"></i>Publish Update
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview Card -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-eye me-2"></i>Preview</h5>
+                </div>
+                <div class="card-body">
+                    <div class="border rounded p-3 bg-light" style="max-width: 300px; margin: 0 auto;">
+                        <div class="text-center mb-3">
+                            <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" 
+                                 style="width: 60px; height: 60px;">
+                                <i class="fas fa-graduation-cap fa-2x"></i>
+                            </div>
+                            <h6 class="mt-2 mb-0">NerdX</h6>
+                        </div>
+                        <h5 class="text-center mb-3">Update Required</h5>
+                        <p class="text-muted small text-center" id="previewMessage">
+                            A new version is available...
+                        </p>
+                        <button class="btn btn-primary w-100 mb-2" disabled>
+                            <i class="fas fa-download me-2"></i>Update Now
+                        </button>
+                        <button class="btn btn-outline-secondary w-100" id="previewLater" style="display: none;" disabled>
+                            Later
+                        </button>
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            This is how the update screen will appear to users
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Load existing versions
+function loadVersions() {
+    fetch('/api/app-versions')
+        .then(res => res.json())
+        .then(data => {
+            if (data.versions) {
+                data.versions.forEach(version => {
+                    const platform = version.platform;
+                    if (platform === 'android') {
+                        document.getElementById('androidMinVersion').value = version.min_supported_version || '';
+                        document.getElementById('androidLatestVersion').value = version.latest_version || '';
+                        document.getElementById('androidUpdateRequired').checked = version.update_required || false;
+                        document.getElementById('androidSoftUpdate').checked = version.soft_update || false;
+                        document.getElementById('androidUpdateMessage').value = version.update_message || '';
+                        document.getElementById('androidUpdateUrl').value = version.update_url || '';
+                    } else if (platform === 'ios') {
+                        document.getElementById('iosMinVersion').value = version.min_supported_version || '';
+                        document.getElementById('iosLatestVersion').value = version.latest_version || '';
+                        document.getElementById('iosUpdateRequired').checked = version.update_required || false;
+                        document.getElementById('iosSoftUpdate').checked = version.soft_update || false;
+                        document.getElementById('iosUpdateMessage').value = version.update_message || '';
+                        document.getElementById('iosUpdateUrl').value = version.update_url || '';
+                    }
+                });
+                updatePreview();
+            }
+        })
+        .catch(err => console.error('Error loading versions:', err));
+}
+
+// Update preview
+function updatePreview() {
+    const activeTab = document.querySelector('.nav-link.active').id;
+    const platform = activeTab.includes('android') ? 'android' : 'ios';
+    
+    const messageField = document.getElementById(`${platform}UpdateMessage`);
+    const softUpdateCheck = document.getElementById(`${platform}SoftUpdate`);
+    
+    if (messageField) {
+        document.getElementById('previewMessage').textContent = 
+            messageField.value || 'A new version is available...';
+    }
+    
+    if (softUpdateCheck) {
+        document.getElementById('previewLater').style.display = 
+            softUpdateCheck.checked ? 'block' : 'none';
+    }
+}
+
+// Add event listeners for preview updates
+['android', 'ios'].forEach(platform => {
+    document.getElementById(`${platform}UpdateMessage`).addEventListener('input', updatePreview);
+    document.getElementById(`${platform}SoftUpdate`).addEventListener('change', updatePreview);
+});
+
+// Handle form submissions
+document.getElementById('androidForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    submitForm('android');
+});
+
+document.getElementById('iosForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    submitForm('ios');
+});
+
+function submitForm(platform) {
+    const form = document.getElementById(`${platform}Form`);
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData);
+    
+    // Convert checkboxes
+    data.update_required = document.getElementById(`${platform}UpdateRequired`).checked;
+    data.soft_update = document.getElementById(`${platform}SoftUpdate`).checked;
+
+    const btn = form.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+
+    fetch('/api/app-versions', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Update settings saved for ${platform.toUpperCase()}!`);
+        } else {
+            alert('Error: ' + (data.error || 'Failed to save settings'));
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        alert('Error saving settings');
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save me-2"></i>Publish Update';
+    });
+}
+
+// Load on page load
+loadVersions();
+</script>
+{% endblock %}
