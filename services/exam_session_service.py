@@ -8,6 +8,7 @@ import json
 import uuid
 import logging
 import time
+import random
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any, Tuple
 import requests
@@ -184,6 +185,9 @@ class ExamSessionService:
             difficulty=difficulty,
         )
         
+        topic_pool = self._get_subject_topics(subject, level, topics)
+        topic_plan = self._build_topic_plan(topic_pool, total_questions)
+
         session = {
             "id": session_id,
             "user_id": user_id,
@@ -203,6 +207,8 @@ class ExamSessionService:
             "responses": {},
             "asked_question_ids": [],
             "recent_topics": [],
+            "asked_question_signatures": [],
+            "topic_plan": topic_plan,
             "allowed_topics": topics or [],  # Store allowed topics for filtering
             "performance_signals": {
                 "weak_topics": [],
@@ -286,9 +292,36 @@ class ExamSessionService:
         if idx < len(session["questions"]) and session["questions"][idx].get("id"):
             return session["questions"][idx]
         
-        # Generate with DeepSeek
-        question = self._call_deepseek_generate(session, idx)
-        
+        # Generate with DeepSeek (retry for diversity / duplicates)
+        question = None
+        max_attempts = 3
+        target_topic = self._get_topic_for_index(session, idx)
+
+        for attempt in range(1, max_attempts + 1):
+            question = self._call_deepseek_generate(session, idx)
+            if not question:
+                continue
+
+            # Enforce planned topic label for diversity tracking
+            if target_topic:
+                question["topic"] = target_topic
+
+            # Ensure structured questions always have explanation
+            if question.get("question_type") == "STRUCTURED" and not question.get("explanation"):
+                question["explanation"] = self._build_structured_explanation(question)
+
+            signature = self._build_question_signature(question)
+            if signature and signature in session.get("asked_question_signatures", []):
+                logger.warning(
+                    f"Duplicate question signature detected (attempt {attempt}/{max_attempts}); regenerating."
+                )
+                question = None
+                continue
+
+            if signature:
+                session["asked_question_signatures"].append(signature)
+            break
+
         if question:
             # Store in session
             while len(session["questions"]) <= idx:
@@ -343,7 +376,55 @@ class ExamSessionService:
             if response.status_code == 200:
                 data = response.json()
                 content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-                question_data = json.loads(content)
+                
+                # Try to extract JSON from response (handle markdown formatting)
+                try:
+                    # Remove markdown code blocks if present
+                    if '```json' in content:
+                        start = content.find('```json') + 7
+                        end = content.find('```', start)
+                        if end > start:
+                            content = content[start:end].strip()
+                    elif '```' in content:
+                        start = content.find('```') + 3
+                        end = content.find('```', start)
+                        if end > start:
+                            content = content[start:end].strip()
+                    
+                    # Find JSON object boundaries
+                    json_start = content.find('{')
+                    json_end = content.rfind('}') + 1
+                    
+                    if json_start >= 0 and json_end > json_start:
+                        json_str = content[json_start:json_end]
+                        question_data = json.loads(json_str)
+                    else:
+                        # Try parsing the whole content
+                        question_data = json.loads(content)
+                        
+                except json.JSONDecodeError as e:
+                    logger.error(f"JSON parsing error in exam session: {e}. Content preview: {content[:500]}")
+                    # Try to recover partial JSON
+                    try:
+                        # Attempt to fix common JSON issues
+                        json_start = content.find('{')
+                        if json_start >= 0:
+                            # Try to find a valid JSON object by progressively removing trailing characters
+                            for end_pos in range(len(content), json_start, -1):
+                                try:
+                                    json_str = content[json_start:end_pos]
+                                    question_data = json.loads(json_str)
+                                    logger.warning(f"Recovered partial JSON by truncating at position {end_pos}")
+                                    break
+                                except json.JSONDecodeError:
+                                    continue
+                            else:
+                                raise json.JSONDecodeError("Could not recover JSON", content, 0)
+                        else:
+                            raise json.JSONDecodeError("No JSON object found", content, 0)
+                    except Exception as recovery_error:
+                        logger.error(f"Failed to recover JSON: {recovery_error}")
+                        return self._get_fallback_question(session)
                 
                 # Add metadata
                 question_data["id"] = str(uuid.uuid4())
@@ -390,7 +471,10 @@ class ExamSessionService:
         # Get allowed topics for filtering
         allowed_topics = session.get('allowed_topics', [])
         topic_instruction = ""
-        if allowed_topics:
+        planned_topic = self._get_topic_for_index(session, index)
+        if planned_topic:
+            topic_instruction = f"\nUse this EXACT topic for this question: {planned_topic}. Set the 'topic' field to exactly this value."
+        elif allowed_topics:
             topic_instruction = f"\nFocus ONLY on these topics: {allowed_topics}. Pick one topic from this list for each question."
         
         if question_type == "MCQ":
@@ -399,6 +483,8 @@ class ExamSessionService:
 Difficulty: {difficulty}{topic_instruction}
 Avoid these topics (recently used): {session.get('recent_topics', [])}
 Do NOT repeat these question IDs: {session.get('asked_question_ids', [])}
+
+Use PLAIN TEXT math (x², √, π) - NO LaTeX or $ symbols.
 
 Return ONLY valid JSON:
 {{
@@ -428,6 +514,8 @@ Requirements:
 
 Difficulty: {difficulty}{topic_instruction}
 Avoid these topics (recently used): {session.get('recent_topics', [])}
+
+Use PLAIN TEXT math (x², √, π) - NO LaTeX or $ symbols.
 
 Return ONLY valid JSON:
 {{
@@ -489,6 +577,103 @@ Requirements:
         }
         
         return fallback_questions.get(subject, fallback_questions["mathematics"])
+
+    def _get_subject_topics(self, subject: str, level: str, allowed_topics: Optional[List[str]] = None) -> List[str]:
+        """Resolve topic pool for a given subject/level."""
+        if allowed_topics:
+            return [t for t in allowed_topics if isinstance(t, str) and t.strip()]
+
+        subject_key = (subject or "").lower().replace(" ", "_").replace("-", "_")
+        try:
+            from constants import TOPICS, A_LEVEL_PURE_MATH_ALL_TOPICS
+        except Exception:
+            return []
+
+        if subject_key in ("mathematics", "math") or subject_key.startswith("mathematics_"):
+            return TOPICS.get("Mathematics", [])
+
+        if "pure_math" in subject_key or "a_level_pure_math" in subject_key or level == "A_LEVEL":
+            return list(A_LEVEL_PURE_MATH_ALL_TOPICS)
+
+        return []
+
+    def _build_topic_plan(self, topics: List[str], total_questions: int) -> List[str]:
+        """Build a topic plan that cycles through topics for maximum diversity."""
+        if not topics or total_questions <= 0:
+            return []
+
+        plan: List[str] = []
+        topics_clean = [t for t in topics if isinstance(t, str) and t.strip()]
+        if not topics_clean:
+            return []
+
+        while len(plan) < total_questions:
+            block = topics_clean[:]
+            random.shuffle(block)
+            # Avoid immediate repeat across block boundaries
+            if plan and block and plan[-1].strip().lower() == block[0].strip().lower():
+                if len(block) > 1:
+                    block[0], block[1] = block[1], block[0]
+            plan.extend(block)
+
+        return plan[:total_questions]
+
+    def _get_topic_for_index(self, session: Dict, index: int) -> Optional[str]:
+        plan = session.get("topic_plan", [])
+        if isinstance(plan, list) and 0 <= index < len(plan):
+            topic = plan[index]
+            return topic.strip() if isinstance(topic, str) else None
+        return None
+
+    def _build_question_signature(self, question: Dict) -> str:
+        """Build a normalized signature for duplicate detection within a session."""
+        if not question or not isinstance(question, dict):
+            return ""
+
+        stem = str(question.get("stem") or question.get("question_text") or "")
+        options = question.get("options") or []
+        option_texts = []
+        if isinstance(options, list):
+            for opt in options:
+                if isinstance(opt, dict):
+                    option_texts.append(str(opt.get("text") or ""))
+                else:
+                    option_texts.append(str(opt))
+
+        parts = question.get("parts") or []
+        part_texts = []
+        if isinstance(parts, list):
+            for part in parts:
+                if isinstance(part, dict):
+                    part_texts.append(str(part.get("prompt") or ""))
+                else:
+                    part_texts.append(str(part))
+
+        raw = " ".join([stem] + option_texts + part_texts).lower()
+        normalized = "".join(ch for ch in raw if ch.isalnum() or ch.isspace())
+        return " ".join(normalized.split())
+
+    def _build_structured_explanation(self, question: Dict) -> str:
+        """Create a step-by-step explanation for structured questions."""
+        parts = question.get("parts") or []
+        marking = question.get("marking_scheme") or {}
+        lines = ["Step-by-step solution:"]
+
+        if isinstance(parts, list) and parts:
+            for part in parts:
+                if not isinstance(part, dict):
+                    continue
+                label = part.get("part", "")
+                prompt = part.get("prompt", "")
+                key_points = part.get("key_points") or []
+                scheme = marking.get(label, {}) if isinstance(marking, dict) else {}
+                points = scheme.get("points") or key_points
+                points_text = ", ".join([p for p in points if isinstance(p, str)]) if points else "Show working clearly."
+                lines.append(f"Step {label}: {prompt} — Key points: {points_text}")
+        else:
+            lines.append("Work through each part logically and show your method.")
+
+        return "\n".join(lines)
     
     # =========================================================================
     # ANSWER MARKING
@@ -636,31 +821,44 @@ Requirements:
         correct_count = 0
         topic_breakdown = {}
         
-        for response in session["responses"].values():
-            total_marks += response.get("marks_total", 1)
-            marks_awarded += response.get("marks_awarded", 0)
-            
-            if response.get("is_correct"):
-                correct_count += 1
+        # Safely handle responses - ensure it's a dict
+        responses = session.get("responses", {})
+        if not isinstance(responses, dict):
+            responses = {}
+        
+        for response in responses.values():
+            if isinstance(response, dict):
+                total_marks += response.get("marks_total", 1)
+                marks_awarded += response.get("marks_awarded", 0)
+                
+                if response.get("is_correct"):
+                    correct_count += 1
         
         # Handle unanswered questions
-        answered_count = len(session["responses"])
-        unanswered_count = session["total_questions"] - answered_count
+        answered_count = len(responses)
+        total_questions = session.get("total_questions", 0)
+        unanswered_count = max(0, total_questions - answered_count)
         total_marks += unanswered_count  # 1 mark per unanswered MCQ
         
         # Calculate percentage and grade
         percentage = (marks_awarded / total_marks * 100) if total_marks > 0 else 0
         grade = self._calculate_grade(percentage)
         
-        # Topic breakdown
-        for question in session["questions"]:
+        # Topic breakdown - safely handle questions list
+        questions = session.get("questions", [])
+        if not isinstance(questions, list):
+            questions = []
+        
+        for question in questions:
+            if not isinstance(question, dict):
+                continue
             topic = question.get("topic", "Unknown")
             if topic not in topic_breakdown:
                 topic_breakdown[topic] = {"correct": 0, "total": 0}
             topic_breakdown[topic]["total"] += 1
             
             q_id = question.get("id")
-            if q_id and session["responses"].get(q_id, {}).get("is_correct"):
+            if q_id and responses.get(q_id, {}).get("is_correct"):
                 topic_breakdown[topic]["correct"] += 1
         
         # Calculate time used
@@ -695,20 +893,20 @@ Requirements:
                 "marks_awarded": marks_awarded,
                 "marks_total": total_marks,
                 "correct_count": correct_count,
-                "total_questions": session["total_questions"],
+                "total_questions": session.get("total_questions", total_questions),
                 "answered_count": answered_count,
                 "unanswered_count": unanswered_count,
                 "percentage": round(percentage, 1),
                 "grade": grade,
             },
             "time": {
-                "allowed_seconds": session["total_time_seconds"],
+                "allowed_seconds": session.get("total_time_seconds", 0),
                 "used_seconds": time_used_seconds,
                 "used_formatted": f"{time_used_seconds // 60}m {time_used_seconds % 60}s",
             },
             "topic_breakdown": topic_breakdown,
             "weak_areas": weak_areas,
-            "performance_signals": session["performance_signals"],
+            "performance_signals": session.get("performance_signals", {}),
             "encouragement": encouragement,
             "revision_suggestions": [f"Review: {topic}" for topic in weak_areas[:3]],
         }
@@ -737,6 +935,10 @@ Requirements:
             q_id = question.get("id")
             response = session["responses"].get(q_id, {})
             
+            explanation = question.get("explanation", "")
+            if question.get("question_type") == "STRUCTURED" and not explanation:
+                explanation = self._build_structured_explanation(question)
+
             review.append({
                 "question_number": idx + 1,
                 "question": question,
@@ -747,7 +949,7 @@ Requirements:
                 "was_flagged": response.get("is_flagged", False),
                 "time_spent": response.get("time_spent_seconds", 0),
                 "correct_answer": question.get("correct_option") or "See marking scheme",
-                "explanation": question.get("explanation", ""),
+                "explanation": explanation,
             })
         
         return {

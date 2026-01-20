@@ -14,7 +14,7 @@ export interface CreditCostParams {
 
 /**
  * Calculate credit cost for quiz question generation
- * Returns credit amount (not units) - e.g., 0.5, 0.25, 1, 4
+ * Returns whole-number credits only (per product decision).
  */
 export function calculateQuizCreditCost(params: CreditCostParams): number {
   const { subject, questionType = 'topical', questionFormat, bioQuestionType, isImageQuestion = false } = params;
@@ -28,19 +28,13 @@ export function calculateQuizCreditCost(params: CreditCostParams): number {
 
   // Mathematics
   if (subjectKey === 'mathematics' || subjectKey === 'math') {
-    return 0.5; // 0.5 credit per question
+    return 1; // 1 credit per question
   }
 
   // Combined Science (O-Level)
   if (subjectKey === 'combined_science') {
-    if (questionType === 'exam') {
-      return 0.5; // 0.5 credit per exam question
-    }
-    // Topical questions
-    if (questionFormat === 'structured') {
-      return 0.5; // 0.5 credit per structured question
-    }
-    return 0.25; // 0.25 credit per MCQ
+    // Whole-credit pricing: every question costs at least 1 credit
+    return 1;
   }
 
   // English
@@ -50,46 +44,34 @@ export function calculateQuizCreditCost(params: CreditCostParams): number {
 
   // A-Level Pure Math
   if (subjectKey === 'a_level_pure_math' || subjectKey === 'a_level_pure_mathematics') {
-    return 0.5; // 0.5 credit per question
+    return 1;
   }
 
   // A-Level Chemistry
   if (subjectKey === 'a_level_chemistry') {
-    return 0.5; // 0.5 credit per question
+    return 1;
   }
 
   // A-Level Physics
   if (subjectKey === 'a_level_physics') {
-    return 0.5; // 0.5 credit per question
+    return 1;
   }
 
   // A-Level Biology
   if (subjectKey === 'a_level_biology') {
-    const bioType = bioQuestionType || questionFormat || 'mcq';
-    if (bioType === 'mcq') {
-      return 0.25; // 0.25 credit per MCQ
-    }
-    return 0.5; // 0.5 credit per structured/essay
+    return 1;
   }
 
   // Default fallback
-  return 0.5; // Default to 0.5 credit
+  return 1;
 }
 
 /**
  * Format credit cost for display (e.g., "0.5 credit" or "1 credit")
  */
 export function formatCreditCost(credits: number): string {
-  if (credits === 1) {
-    return '1 credit';
-  }
-  if (credits === 0.5) {
-    return '0.5 credit';
-  }
-  if (credits === 0.25) {
-    return '0.25 credit';
-  }
-  return `${credits} credit${credits !== 1 ? 's' : ''}`;
+  const whole = Math.round(credits);
+  return `${whole} credit${whole === 1 ? '' : 's'}`;
 }
 
 /**

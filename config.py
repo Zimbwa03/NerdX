@@ -42,15 +42,16 @@ class Config:
     # 1 credit = 10 units
     CREDIT_COSTS = {
         # Combined Science (O-Level)
-        'combined_science_exam': 5,                # 0.5 credit per question
-        'combined_science_topical': 3,             # MCQ default: 0.25 credit (rounded up)
-        'combined_science_topical_mcq': 3,         # 0.25 credit per MCQ (rounded up)
-        'combined_science_topical_structured': 5,  # 0.5 credit per structured question
+        # Whole-credit pricing: all costs are multiples of 10 units (>= 1 credit) for visible deductions
+        'combined_science_exam': 10,                # 1 credit per question
+        'combined_science_topical': 10,             # 1 credit per question
+        'combined_science_topical_mcq': 10,         # 1 credit per MCQ
+        'combined_science_topical_structured': 10,  # 1 credit per structured question
 
         # Mathematics (O-Level)
-        'math_topical': 5,                 # 0.5 credit per question
-        'math_exam': 5,                    # 0.5 credit per question
-        'math_quiz': 5,                    # 0.5 credit per question (streaming)
+        'math_topical': 10,                # 1 credit per question
+        'math_exam': 10,                   # 1 credit per question
+        'math_quiz': 10,                   # 1 credit per question (streaming)
         'math_graph_practice': 10,         # 1 credit per graph/question/video
 
         # English (unchanged pricing, now in units)
@@ -62,43 +63,43 @@ class Config:
         'english_summary_grading': 30,
 
         # A-Level Mathematics
-        'a_level_pure_math_topical': 5,    # 0.5 credit per question
-        'a_level_pure_math_exam': 5,       # 0.5 credit per question
+        'a_level_pure_math_topical': 10,   # 1 credit per question
+        'a_level_pure_math_exam': 10,      # 1 credit per question
 
         # A-Level Chemistry
-        'a_level_chemistry_topical': 5,    # 0.5 credit per question
-        'a_level_chemistry_exam': 5,       # 0.5 credit per question
+        'a_level_chemistry_topical': 10,   # 1 credit per question
+        'a_level_chemistry_exam': 10,      # 1 credit per question
 
         # A-Level Physics
-        'a_level_physics_topical': 5,      # 0.5 credit per question
-        'a_level_physics_exam': 5,         # 0.5 credit per question
+        'a_level_physics_topical': 10,     # 1 credit per question
+        'a_level_physics_exam': 10,        # 1 credit per question
 
-        # A-Level Biology (MCQ cheaper than structured/essay)
-        'a_level_biology_topical_mcq': 3,        # 0.25 credit (rounded up)
-        'a_level_biology_topical_structured': 5, # 0.5 credit
-        'a_level_biology_topical_essay': 5,      # 0.5 credit
-        'a_level_biology_exam_mcq': 3,
-        'a_level_biology_exam_structured': 5,
-        'a_level_biology_exam_essay': 5,
+        # A-Level Biology (whole-credit pricing)
+        'a_level_biology_topical_mcq': 10,        # 1 credit
+        'a_level_biology_topical_structured': 10, # 1 credit
+        'a_level_biology_topical_essay': 10,      # 1 credit
+        'a_level_biology_exam_mcq': 10,
+        'a_level_biology_exam_structured': 10,
+        'a_level_biology_exam_essay': 10,
 
         # Audio / Live
         'audio_feature': 10,               # 1 credit per audio request
-        'voice_chat': 1,                   # 0.1 credit per 5 seconds (live)
+        'voice_chat': 10,                  # 1 credit per 5 seconds (live)
 
         # Flashcards
-        'flashcard_single': 3,             # 0.25 credit per flashcard (rounded up)
+        'flashcard_single': 10,            # 1 credit per flashcard
         'flashcard_audio': 30,             # 3 credits (audio flashcards)
 
         # Virtual Lab
-        'virtual_lab_knowledge_check': 5,  # 0.5 credit per question
+        'virtual_lab_knowledge_check': 10, # 1 credit per question
 
         # AI Teacher & Assistant - per response billing
-        'teacher_mode_start': 1,           # 0.1 credit per AI response
-        'teacher_mode_followup': 1,        # 0.1 credit per AI response
+        'teacher_mode_start': 10,          # 1 credit per AI response
+        'teacher_mode_followup': 10,       # 1 credit per AI response
         'teacher_mode_pdf': 10,            # 1 credit for PDF notes
-        'project_assistant_start': 2,      # 0.2 credit per AI response
-        'project_assistant_followup': 2,   # 0.2 credit per AI response
-        'project_assistant_batch': 2,      # Legacy mapping
+        'project_assistant_start': 10,     # 1 credit per AI response
+        'project_assistant_followup': 10,  # 1 credit per AI response
+        'project_assistant_batch': 10,     # Legacy mapping
 
         # Vision/Tools
         'ocr_solve': 30,                   # 3 credits
@@ -114,8 +115,8 @@ class Config:
         'project_image_generation': 20,    # 2 credits
 
         # Legacy compatibility (Mapped values)
-        'math': 5,
-        'science': 3,
+        'math': 10,
+        'science': 10,
         'english': 10,
         'graph_generation': 10
     }

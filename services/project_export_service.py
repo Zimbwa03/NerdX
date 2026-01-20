@@ -167,7 +167,7 @@ class ProjectExportService:
             }
             
         except Exception as e:
-            logger.error(f"Error getting project data for export: {e}")
+            logger.error(f"Error getting project data for export: {e}", exc_info=True)
             return None
     
     def get_submission_checklist(self, project_id: int, user_id: str) -> Dict:
@@ -177,33 +177,46 @@ class ProjectExportService:
         if not data:
             return {'error': 'Project not found'}
         
+        # Safely get lists with defaults
+        evidence = data.get('evidence', [])
+        references = data.get('references', [])
+        logbook = data.get('logbook', [])
+        sections = data.get('sections', [])
+        
         checklist = {
             'project_id': project_id,
             'stages': {},
-            'evidence_count': len(data['evidence']),
-            'references_count': len(data['references']),
-            'logbook_entries_count': len(data['logbook']),
+            'evidence_count': len(evidence) if isinstance(evidence, list) else 0,
+            'references_count': len(references) if isinstance(references, list) else 0,
+            'logbook_entries_count': len(logbook) if isinstance(logbook, list) else 0,
             'overall_completion': 0
         }
         
         # Organize sections by stage
         sections_by_stage = {}
-        for section in data['sections']:
-            stage = section['stage_number']
-            if stage not in sections_by_stage:
-                sections_by_stage[stage] = {}
-            sections_by_stage[stage][section['section_key']] = section
+        if isinstance(sections, list):
+            for section in sections:
+                if not isinstance(section, dict):
+                    continue
+                stage = section.get('stage_number')
+                if stage is not None:
+                    if stage not in sections_by_stage:
+                        sections_by_stage[stage] = {}
+                    section_key = section.get('section_key')
+                    if section_key:
+                        sections_by_stage[stage][section_key] = section
         
         total_items = 0
         completed_items = 0
         
         # Check each stage
         for stage_num, stage_sections in self.STAGE_SECTIONS.items():
+            stage_title = self.STAGE_TITLES.get(stage_num, f"Stage {stage_num}")
             stage_checklist = {
-                'title': self.STAGE_TITLES[stage_num],
+                'title': stage_title,
                 'items': [],
                 'completed': 0,
-                'total': len(stage_sections)
+                'total': len(stage_sections) if isinstance(stage_sections, (list, tuple)) else 0
             }
             
             for key, title in stage_sections:

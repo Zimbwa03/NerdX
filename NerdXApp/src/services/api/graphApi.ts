@@ -10,6 +10,7 @@ export interface GraphData {
   objective?: string;
   corner_points?: Array<[number, number]>;
   graph_spec?: GraphSpec;
+  credits_remaining?: number;
 }
 
 export interface GraphRange {
@@ -44,7 +45,12 @@ export const graphApi = {
         graph_type: graphType,
         equation,
       });
-      return response.data.data || null;
+      const data = response.data.data || null;
+      // Include credits_remaining from server response
+      if (data && response.data.credits_remaining !== undefined) {
+        data.credits_remaining = response.data.credits_remaining;
+      }
+      return data;
     } catch (error: any) {
       console.error('Generate graph error:', error);
       throw error;
@@ -58,7 +64,12 @@ export const graphApi = {
       const response = await api.post('/api/mobile/math/graph/custom', {
         equation,
       });
-      return response.data.data || null;
+      const data = response.data.data || null;
+      // Include credits_remaining from server response
+      if (data && response.data.credits_remaining !== undefined) {
+        data.credits_remaining = response.data.credits_remaining;
+      }
+      return data;
     } catch (error: any) {
       console.error('Generate custom graph error:', error);
       throw error;
@@ -67,7 +78,7 @@ export const graphApi = {
 
   solveGraphFromImage: async (
     imageUri: string
-  ): Promise<{ processed_text: string; solution: string; analysis?: string } | null> => {
+  ): Promise<{ processed_text: string; solution: string; analysis?: string; credits_remaining?: number } | null> => {
     try {
       const formData = new FormData();
       formData.append('image', {
@@ -81,7 +92,12 @@ export const graphApi = {
           'Content-Type': 'multipart/form-data',
         },
       });
-      return response.data.data || null;
+      const data = response.data.data || null;
+      // Include credits_remaining from server response
+      if (data && response.data.credits_remaining !== undefined) {
+        data.credits_remaining = response.data.credits_remaining;
+      }
+      return data;
     } catch (error: any) {
       console.error('Solve graph from image error:', error);
       throw error;
@@ -97,7 +113,12 @@ export const graphApi = {
         constraints,
         objective,
       });
-      return response.data.data || null;
+      const data = response.data.data || null;
+      // Include credits_remaining from server response
+      if (data && response.data.credits_remaining !== undefined) {
+        data.credits_remaining = response.data.credits_remaining;
+      }
+      return data;
     } catch (error: any) {
       console.error('Generate linear programming graph error:', error);
       throw error;

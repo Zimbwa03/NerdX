@@ -20,6 +20,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import Markdown from 'react-native-markdown-display';
 import MathRenderer from '../components/MathRenderer';
+import { shouldRenderMathText, toMathLatex } from '../utils/mathText';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
@@ -67,6 +68,7 @@ const TeacherModeScreen: React.FC = () => {
     gradeLevel: string;
     topic?: string;
   };
+  const isMathSubject = (subject || '').toLowerCase().includes('math');
 
   const [session, setSession] = useState<TeacherSession | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -375,12 +377,10 @@ const TeacherModeScreen: React.FC = () => {
         };
 
         setMessages((prev) => [...prev, assistantMessage]);
-        // Update credits (follow-up costs 1 credit)
-        // Update credits (handled in batches on backend)
-        // if (user) {
-        //   const newCredits = (user.credits || 0) - 1;
-        //   updateUser({ credits: newCredits });
-        // }
+        // Update credits from server response
+        if (user && response.credits_remaining !== undefined) {
+          updateUser({ credits: response.credits_remaining });
+        }
       }
     } catch (error: any) {
       setMessages((prev) => prev.filter((msg) => msg.id !== 'researching'));
@@ -676,10 +676,10 @@ const TeacherModeScreen: React.FC = () => {
             <View style={styles.assistantMessageRow}>
               <View style={styles.assistantMessageFullWidth}>
                 <View style={styles.markdownContainer}>
-                  {/* Use MathRenderer if content contains LaTeX math ($...$), otherwise Markdown */}
-                  {message.content.includes('$') ? (
+                  {/* Use MathRenderer for math subjects or math-like content to avoid raw $ delimiters */}
+                  {(isMathSubject || message.content.includes('$') || shouldRenderMathText(message.content)) ? (
                     <MathRenderer 
-                      content={message.content} 
+                      content={toMathLatex(message.content, true)} 
                       fontSize={16}
                       minHeight={50}
                     />

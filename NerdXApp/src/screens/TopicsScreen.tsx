@@ -27,6 +27,7 @@ import ExamSetupModal from '../components/ExamSetupModal';
 import { ExamConfig, TimeInfo } from '../services/api/examApi';
 import { Ionicons } from '@expo/vector-icons';
 import { calculateQuizCreditCost, formatCreditCost, getMinimumCreditsForQuiz } from '../utils/creditCalculator';
+import { getSubjectDisplayName, getSubjectLoadingSteps } from '../utils/loadingProgress';
 
 const { width } = Dimensions.get('window');
 
@@ -38,16 +39,8 @@ const TopicsScreen: React.FC = () => {
   const themedColors = useThemedColors();
   const { showSuccess, showError, showWarning, showInfo } = useNotification();
   const { subject, parentSubject } = route.params as { subject: Subject; parentSubject?: string };
-  const mathThinkingSteps = [
-    { emoji: '📥', label: 'Loading topic context' },
-    { emoji: '🧠', label: 'Generating question' },
-    { emoji: '📚', label: 'Selecting syllabus objectives' },
-    { emoji: '🧮', label: 'Balancing difficulty' },
-    { emoji: '📝', label: 'Drafting marking points' },
-    { emoji: '🧩', label: 'Refining marking points' },
-    { emoji: '🔍', label: 'Checking method and accuracy' },
-    { emoji: '✅', label: 'Complete' },
-  ];
+  const subjectDisplayName = getSubjectDisplayName(subject.id, subject.name);
+  const subjectSteps = getSubjectLoadingSteps(subject.id);
 
   // State for Combined Science Tabs
   const [activeTab, setActiveTab] = useState<string>(parentSubject || (subject.id === 'combined_science' ? 'Biology' : ''));
@@ -302,19 +295,20 @@ const TopicsScreen: React.FC = () => {
                 setIsGeneratingQuestion(false);
 
                 if (question) {
-                  // Backend deducts credits - update UI estimate
-                  const newCredits = Math.max(0, (user.credits || 0) - creditCost);
-                  updateUser({ credits: newCredits });
+                  // Update credits from server response
+                  const serverCredits = (question as any).credits_remaining;
+                  if (serverCredits !== undefined) {
+                    updateUser({ credits: serverCredits });
+                    // Show success notification with actual remaining credits
+                    const costText = formatCreditCost(creditCost);
+                    showSuccess(`✅ Question generated! (-${costText}) ${serverCredits} credits remaining.`, 3000);
 
-                  // Show success notification with correct credit cost
-                  const costText = formatCreditCost(creditCost);
-                  showSuccess(`✅ Question generated! (-${costText}) ${newCredits} credits remaining.`, 3000);
-
-                  // Check if credits are getting low after deduction
-                  if (newCredits <= 3 && newCredits > 0) {
-                    setTimeout(() => {
-                      showWarning(`⚠️ Running low on credits! Only ${newCredits} credits left. Top up now to continue learning.`, 5000);
-                    }, 3500);
+                    // Check if credits are getting low after deduction
+                    if (serverCredits <= 3 && serverCredits > 0) {
+                      setTimeout(() => {
+                        showWarning(`⚠️ Running low on credits! Only ${serverCredits} credits left. Top up now to continue learning.`, 5000);
+                      }, 3500);
+                    }
                   }
 
                   navigation.navigate('Quiz' as never, { question, subject, topic } as never);
@@ -604,10 +598,10 @@ const TopicsScreen: React.FC = () => {
       {/* AI Loading Progress Overlay */}
       <LoadingProgress
         visible={isGeneratingQuestion}
-        message="Preparing your O Level Mathematics question..."
+        message={`Preparing your ${subjectDisplayName} question...`}
         estimatedTime={8}
         stage="Thinking"
-        steps={subject.id === 'mathematics' ? mathThinkingSteps : undefined}
+        steps={subjectSteps}
       />
 
       <StatusBar

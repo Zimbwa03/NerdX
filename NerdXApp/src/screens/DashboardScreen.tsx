@@ -42,6 +42,7 @@ import { sync } from '../services/SyncService';
 import { getUnreadCount, subscribeToNotifications } from '../services/notifications';
 import { checkUpdateRequired } from '../services/appVersion';
 import { formatCreditBalance } from '../utils/creditCalculator';
+import { getSupabaseAuthUserId } from '../services/supabase';
 
 
 
@@ -69,29 +70,44 @@ const DashboardScreen: React.FC = () => {
     biology: '#14B8A6', // Teal
   };
 
-  // Load unread notification count
+  // Load unread notification count and subscribe to realtime updates
   useEffect(() => {
-    const loadUnreadCount = async () => {
+    let unsubscribe: (() => void) | undefined;
+
+    const setupNotifications = async () => {
+      // Load initial unread count
       const count = await getUnreadCount();
       setUnreadCount(count);
-    };
-    loadUnreadCount();
 
-    // Subscribe to realtime notification updates
-    if (user?.id) {
-      const unsubscribe = subscribeToNotifications(
-        user.id,
-        () => {
-          // New notification received
-          loadUnreadCount();
-        },
-        () => {
-          // Notification updated
-          loadUnreadCount();
-        }
-      );
-      return unsubscribe;
-    }
+      // Get Supabase Auth user ID for realtime subscription (required for RLS)
+      const supabaseUserId = await getSupabaseAuthUserId();
+      if (supabaseUserId) {
+        console.log('[Dashboard] Setting up notification subscription for Supabase user:', supabaseUserId);
+        unsubscribe = subscribeToNotifications(
+          supabaseUserId,
+          async () => {
+            // New notification received - refresh count
+            const newCount = await getUnreadCount();
+            setUnreadCount(newCount);
+          },
+          async () => {
+            // Notification updated (e.g., marked as read) - refresh count
+            const newCount = await getUnreadCount();
+            setUnreadCount(newCount);
+          }
+        );
+      } else {
+        console.log('[Dashboard] No Supabase Auth session - notifications disabled');
+      }
+    };
+
+    setupNotifications();
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, [user?.id]);
 
   // Check for app update requirement
@@ -213,7 +229,7 @@ const DashboardScreen: React.FC = () => {
   };
 
   const navigateToProfile = () => {
-    navigation.navigate('Profile' as never);
+    navigation.navigate('Account' as never);
   };
 
   const navigateToProjectAssistant = () => {

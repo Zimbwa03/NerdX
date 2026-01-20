@@ -13,9 +13,12 @@ export const useGoogleAuth = () => {
     setIsLoading(true);
 
     try {
+      // Use consistent scheme with app.json for standalone builds
+      // makeRedirectUri will handle dev vs production automatically
       const redirectUrl = makeRedirectUri({
-        scheme: 'nerdx', // Use consistent scheme with app.json
+        scheme: 'nerdx',
         path: 'auth/callback',
+        // preferLocalhost: false, // Use production scheme in standalone builds
       });
 
       console.log('🔑 Starting Supabase Google Auth with redirect:', redirectUrl);
@@ -68,6 +71,7 @@ export const useGoogleAuth = () => {
 
             if (userData?.user) {
               const metadata = userData.user.user_metadata || {};
+              const email = userData.user.email || '';
               
               // Parse full_name if it exists (format: "First Last")
               let given_name = metadata.given_name || '';
@@ -81,7 +85,7 @@ export const useGoogleAuth = () => {
               
               return {
                 id: userData.user.id, // Supabase user ID
-                email: userData.user.email || '',
+                email: email,
                 name: metadata.full_name || metadata.name || given_name || '',
                 given_name: given_name || metadata.name || email?.split('@')[0] || '',
                 family_name: family_name || '',

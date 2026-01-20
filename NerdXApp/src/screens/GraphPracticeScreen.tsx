@@ -123,13 +123,9 @@ const GraphPracticeScreen: React.FC = () => {
       const data = await graphApi.generateGraph(graphType);
       if (data) {
         setGraphData(data);
-        // Backend handles credit deduction - update from response if available
-        // For now, deduct locally for immediate UI feedback (backend also deducts)
+        // Update credits from server response
         if (user && data.credits_remaining !== undefined) {
           updateUser({ credits: data.credits_remaining });
-        } else if (user) {
-          const newCredits = (user.credits || 0) - graphCreditCost;
-          updateUser({ credits: newCredits });
         }
       }
 
@@ -242,9 +238,9 @@ const GraphPracticeScreen: React.FC = () => {
       const data = await graphApi.generateCustomGraph(customEquation.trim());
       if (data) {
         setGraphData(data);
-        if (user) {
-          const newCredits = (user.credits || 0) - graphCreditCost;
-          updateUser({ credits: newCredits });
+        // Update credits from server response
+        if (user && data.credits_remaining !== undefined) {
+          updateUser({ credits: data.credits_remaining });
         }
       }
     } catch (error: any) {
@@ -292,9 +288,9 @@ const GraphPracticeScreen: React.FC = () => {
       const solution = await graphApi.solveGraphFromImage(imageUri);
       if (solution) {
         setImageSolution(solution);
-        if (user) {
-          const newCredits = (user.credits || 0) - imageSolveCreditCost;
-          updateUser({ credits: newCredits });
+        // Update credits from server response
+        if (user && (solution as any).credits_remaining !== undefined) {
+          updateUser({ credits: (solution as any).credits_remaining });
         }
       }
     } catch (error: any) {
@@ -331,12 +327,9 @@ const GraphPracticeScreen: React.FC = () => {
       );
       if (data) {
         setGraphData(data);
-        // Backend handles credit deduction - update from response if available
+        // Update credits from server response
         if (user && data.credits_remaining !== undefined) {
           updateUser({ credits: data.credits_remaining });
-        } else if (user) {
-          const newCredits = (user.credits || 0) - graphCreditCost;
-          updateUser({ credits: newCredits });
         }
       }
     } catch (error: any) {

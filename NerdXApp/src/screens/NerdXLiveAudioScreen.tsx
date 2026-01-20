@@ -130,6 +130,9 @@ const NerdXLiveAudioScreen: React.FC = () => {
         speechStarted: false,
     });
     const bargeVadRef = useRef<{ lastVoiceAt: number }>({ lastVoiceAt: 0 });
+    const sessionHandleRef = useRef<string | null>(null);
+    const sessionIdRef = useRef<string | null>(null);
+    const resumeRequestedRef = useRef(false);
 
     // Animations
     const controlsScale = useSharedValue(1);
@@ -717,7 +720,20 @@ const NerdXLiveAudioScreen: React.FC = () => {
                     break;
 
                 case 'goAway':
-                    Alert.alert('Session Ending', data.message || 'Please reconnect soon.');
+                    if (data.handle) sessionHandleRef.current = data.handle;
+                    if (data.sessionId) sessionIdRef.current = data.sessionId;
+                    resumeRequestedRef.current = true;
+                    Alert.alert('Session Ending', data.message || 'Reconnecting to keep your session alive...');
+                    try {
+                        if (wsRef.current?.readyState === WebSocket.OPEN) {
+                            wsRef.current.close();
+                        }
+                    } catch (e) { }
+                    break;
+
+                case 'sessionUpdate':
+                    if (data.handle) sessionHandleRef.current = data.handle;
+                    if (data.sessionId) sessionIdRef.current = data.sessionId;
                     break;
 
                 case 'error':
@@ -761,6 +777,11 @@ const NerdXLiveAudioScreen: React.FC = () => {
                 }
             } catch (error) { }
 
+            if (sessionHandleRef.current) {
+                const joiner = wsUrl.includes('?') ? '&' : '?';
+                wsUrl = `${wsUrl}${joiner}session_handle=${encodeURIComponent(sessionHandleRef.current)}`;
+            }
+
             const ws = new WebSocket(wsUrl);
             wsRef.current = ws;
 
@@ -771,6 +792,11 @@ const NerdXLiveAudioScreen: React.FC = () => {
                 Alert.alert('Connection Error', 'Could not connect.');
             };
             ws.onclose = () => {
+                if (resumeRequestedRef.current) {
+                    resumeRequestedRef.current = false;
+                    connect();
+                    return;
+                }
                 if (connectionState !== 'idle') endSession();
             };
         } catch (error) {

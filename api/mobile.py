@@ -58,12 +58,31 @@ def _credits_display(units: int) -> int:
         return 0
     # Convert to credits and round to nearest whole number
     credits = units_to_credits(units)
-    return int(round(credits))
+    # Whole-number display policy: always show whole credits.
+    # Use floor (not bankers rounding) to avoid confusing .5 edge cases and to keep display stable.
+    return int(credits)
 
 
 def _credits_text(units: int) -> str:
     """Format credit units for messages."""
     return format_credits(units or 0)
+
+
+def _credits_remaining(user_id: str) -> int:
+    """Get current remaining credits (displayed as whole credits)."""
+    units = get_user_credits(user_id) or 0
+    return _credits_display(units)
+
+
+def _deduct_credits_or_fail(user_id: str, cost_units: int, transaction_type: str, description: str):
+    """
+    Deduct credits and return remaining displayed credits.
+    Returns int (credits remaining) on success, None on failure.
+    """
+    ok = deduct_credits(user_id, cost_units, transaction_type, description)
+    if not ok:
+        return None
+    return _credits_remaining(user_id)
 
 
 FREE_VIRTUAL_LAB_SIMULATIONS = {
@@ -1248,7 +1267,7 @@ def generate_question():
                 'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}, Available: {_credits_text(user_credits)}',
                 'credit_cost': _credits_display(credit_cost),
                 'is_image_question': is_image_question
-            }), 400
+            }), 402
         
         # Generate question based on subject
         question_data = None
@@ -1431,9 +1450,6 @@ def generate_question():
         
         if not question_data:
             return jsonify({'success': False, 'message': 'Failed to generate question'}), 500
-        
-        # Deduct credits
-        deduct_credits(g.current_user_id, credit_cost, 'quiz_generation', f'Generated {subject} {question_type} question')
         
         # Format question for mobile - normalize different question formats
         # English questions might have different structure
@@ -1645,10 +1661,22 @@ def generate_question():
                 if essay_solution_parts:
                     question['solution'] = '\n'.join(essay_solution_parts)
         
-        return jsonify({
-            'success': True,
-            'data': question
-        }), 200
+        # Deduct credits ONLY after we have successfully produced a question payload.
+        credits_remaining = _deduct_credits_or_fail(
+            g.current_user_id,
+            int(credit_cost),
+            'quiz_generation',
+            f'Generated {subject} {question_type} question'
+        )
+        if credits_remaining is None:
+            # If deduction fails (race condition / DB issue), do not deliver paid content.
+            return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
+
+        question['credits_remaining'] = credits_remaining
+        question['credit_cost'] = _credits_display(int(credit_cost))
+        question['is_image_question'] = bool(is_image_question)
+
+        return jsonify({'success': True, 'data': question}), 200
         
     except Exception as e:
         logger.error(f"Generate question error: {e}", exc_info=True)
@@ -1686,7 +1714,7 @@ def generate_question_stream():
             return jsonify({
                 'success': False,
                 'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}, Available: {_credits_text(user_credits)}'
-            }), 400
+            }), 402
         
         user_id = g.current_user_id
         
@@ -1711,8 +1739,16 @@ def generate_question_stream():
                         yield f"data: {json.dumps({'type': 'thinking', 'content': event.get('content', ''), 'stage': event.get('stage', 1), 'total_stages': event.get('total_stages', 4)})}\n\n"
                     
                     elif event_type == 'question':
-                        # Deduct credits on successful generation
-                        deduct_credits(user_id, credit_cost, 'math_quiz', f'Math question: {topic}')
+                        # Deduct credits on successful generation (do not deliver if transaction fails)
+                        credits_remaining = _deduct_credits_or_fail(
+                            user_id,
+                            int(credit_cost),
+                            'math_quiz',
+                            f'Math question: {topic}'
+                        )
+                        if credits_remaining is None:
+                            yield f"data: {json.dumps({'type': 'error', 'message': 'Transaction failed. Please try again.'})}\n\n"
+                            continue
                         
                         # Format question for mobile
                         question_data = event.get('data', {})
@@ -1730,7 +1766,8 @@ def generate_question_stream():
                             'difficulty': difficulty,
                             'allows_text_input': True,
                             'allows_image_upload': True,
-                            'source': 'deepseek_reasoner'
+                            'source': 'deepseek_reasoner',
+                            'credits_remaining': credits_remaining
                         }
                         
                         yield f"data: {json.dumps({'type': 'question', 'data': question})}\n\n"
@@ -1793,8 +1830,14 @@ def get_next_exam_question():
         if not question_data:
             return jsonify({'success': False, 'message': 'Failed to get exam question'}), 500
         
-        # Deduct credits
-        deduct_credits(g.current_user_id, credit_cost, 'math_exam', f'Math exam question #{question_count}')
+        credits_remaining = _deduct_credits_or_fail(
+            g.current_user_id,
+            int(credit_cost),
+            'math_exam',
+            f'Math exam question #{question_count}'
+        )
+        if credits_remaining is None:
+            return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
         
         # Filter out None values from answer_image_urls if present
         if 'answer_image_urls' in question_data:
@@ -1819,7 +1862,8 @@ def get_next_exam_question():
             'allows_text_input': question_data.get('allows_text_input', True),
             'allows_image_upload': question_data.get('allows_image_upload', True),
             'is_ai': question_data.get('is_ai', False),
-            'points': 10
+            'points': 10,
+            'credits_remaining': credits_remaining
         }
         
         return jsonify({
@@ -2207,7 +2251,7 @@ def generate_virtual_lab_knowledge_check():
         difficulty_in = (data.get('difficulty') or 'medium').strip().lower()
         count_raw = data.get('count', 5)
 
-        if subject not in ['biology', 'chemistry', 'physics']:
+        if subject not in ['biology', 'chemistry', 'physics', 'mathematics']:
             return jsonify({'success': False, 'message': 'Invalid subject'}), 400
 
         user_id = g.current_user_id
@@ -2239,31 +2283,16 @@ def generate_virtual_lab_knowledge_check():
         parent_subject = subject.capitalize()
         if not topic:
             # Sensible defaults per subject if topic omitted
-            topic = 'Cell Structure and Organisation' if subject == 'biology' else (
-                'Acids, Bases and Salts' if subject == 'chemistry' else 'Kinematics'
-            )
+            default_topics = {
+                'biology': 'Cell Structure and Organisation',
+                'chemistry': 'Acids, Bases and Salts',
+                'physics': 'Kinematics',
+                'mathematics': 'Differentiation',
+            }
+            topic = default_topics.get(subject, 'General')
 
         science_gen = CombinedScienceGenerator()
         questions = []
-        
-        # --- Deduct Credits ---
-        # Cost: per question
-        from database.external_db import deduct_credits, get_user_credits
-        cost_per_question = advanced_credit_service.get_credit_cost('virtual_lab_knowledge_check')
-        cost = cost_per_question * count
-        
-        user_id = g.current_user_id
-        current_credits = get_user_credits(user_id)
-        
-        if current_credits < cost:
-             return jsonify({'success': False, 'message': f'Insufficient credits. Required: {_credits_text(cost)}, Available: {_credits_text(current_credits)}'}), 402
-             
-        # Deduct the credits
-        if not deduct_credits(user_id, cost, 'virtual_lab_knowledge_check', 'Virtual Lab Knowledge Check'):
-            return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
-            
-        logger.info(f"Deducted {cost} units from {user_id} for Virtual Lab generation")
-        # ---------------------------
 
         def _options_to_list(opts):
             if isinstance(opts, dict):
@@ -2324,7 +2353,27 @@ def generate_virtual_lab_knowledge_check():
         if not questions:
             return jsonify({'success': False, 'message': 'Failed to generate questions'}), 500
 
-        return jsonify({'success': True, 'data': questions}), 200
+        # Deduct credits ONLY after successful generation (and charge based on actual delivered count).
+        cost_per_question = advanced_credit_service.get_credit_cost('virtual_lab_knowledge_check')
+        delivered_count = len(questions)
+        total_cost = int(cost_per_question) * int(delivered_count)
+        current_credits = get_user_credits(user_id) or 0
+        if current_credits < total_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {_credits_text(total_cost)}, Available: {_credits_text(current_credits)}'
+            }), 402
+
+        credits_remaining = _deduct_credits_or_fail(
+            user_id,
+            total_cost,
+            'virtual_lab_knowledge_check',
+            f'Virtual Lab Knowledge Check ({delivered_count} questions)'
+        )
+        if credits_remaining is None:
+            return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
+
+        return jsonify({'success': True, 'data': questions, 'credits_remaining': credits_remaining}), 200
 
     except Exception as e:
         logger.error(f"Virtual lab knowledge check generation error: {e}", exc_info=True)
@@ -2689,6 +2738,62 @@ def check_payment_status(reference):
         logger.error(f"Check payment status error: {e}")
         return jsonify({'success': False, 'message': 'Server error'}), 500
 
+
+@mobile_bp.route('/payment/latest', methods=['GET'])
+@require_auth
+def get_latest_payment():
+    """Get latest Paynow EcoCash payment for the current user."""
+    try:
+        # Look for most recent initiated/pending Paynow EcoCash payment
+        result = make_supabase_request(
+            'GET',
+            'payment_transactions',
+            None,
+            filters={
+                'user_id': f"eq.{g.current_user_id}",
+                'payment_method': 'eq.paynow_ecocash',
+                'status': 'in.(initiated,pending)',
+                'order': 'created_at.desc'
+            },
+            limit=1,
+            use_service_role=True
+        )
+
+        if not result:
+            return jsonify({'success': True, 'data': None}), 200
+
+        transaction = result[0]
+        created_at = transaction.get('created_at')
+        if created_at:
+            try:
+                created_dt = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                if datetime.utcnow() - created_dt.replace(tzinfo=None) > timedelta(minutes=10):
+                    return jsonify({'success': True, 'data': None}), 200
+            except Exception:
+                # If parsing fails, continue and return the record
+                pass
+
+        poll_url = transaction.get('paynow_poll_url') or transaction.get('poll_url')
+        if not poll_url:
+            admin_notes = transaction.get('admin_notes', '')
+            match = re.search(r'Poll URL:\s*(https?://[^\s]+)', admin_notes)
+            if match:
+                poll_url = match.group(1).strip()
+
+        response_data = {
+            'reference': transaction.get('reference_code'),
+            'poll_url': poll_url or '',
+            'instructions': 'Please check your phone for the EcoCash prompt and enter your PIN to complete the payment.',
+            'amount': transaction.get('amount', 0),
+            'credits': _credits_display(transaction.get('credits', 0) or 0),
+            'payment_method': 'ecocash'
+        }
+
+        return jsonify({'success': True, 'data': response_data}), 200
+    except Exception as e:
+        logger.error(f"Get latest payment error: {e}")
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
 # ============================================================================
 # REFERRAL ENDPOINTS
 # ============================================================================
@@ -2793,20 +2898,36 @@ def generate_math_graph():
             return jsonify({
                 'success': False,
                 'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
-            }), 400
+            }), 402
         
         # Generate graph
         graph_service = GraphService()
-        graph_result = graph_service.generate_graph(function_text)
+        graph_path = graph_service.generate_function_graph(function_text)
+        if not graph_path:
+            return jsonify({'success': False, 'message': 'Failed to generate graph image'}), 500
+
+        graph_url = convert_local_path_to_public_url(graph_path)
+        if not graph_url:
+            import os
+            filename = os.path.basename(graph_path)
+            base_url = os.environ.get('RENDER_EXTERNAL_URL', 'https://nerdx.onrender.com')
+            graph_url = f"{base_url.rstrip('/')}/static/graphs/{filename}"
         
-        # Deduct credits
-        deduct_credits(g.current_user_id, credit_cost, 'math_graph_practice', 'Math graph generation')
-        
+        credits_remaining = _deduct_credits_or_fail(
+            g.current_user_id,
+            int(credit_cost),
+            'math_graph_practice',
+            'Math graph generation'
+        )
+        if credits_remaining is None:
+            return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
+
         return jsonify({
             'success': True,
             'data': {
-                'graph_url': graph_result.get('graph_url', ''),
-                'image_url': graph_result.get('image_url', '')
+                'graph_url': graph_url,
+                'image_url': graph_url,
+                'credits_remaining': credits_remaining
             }
         }), 200
         
@@ -2831,20 +2952,27 @@ def generate_comprehension():
             return jsonify({
                 'success': False,
                 'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
-            }), 400
+            }), 402
         
         # Generate comprehension
         english_service = EnglishService()
         comprehension = english_service.generate_comprehension()
         
-        # Deduct credits
-        deduct_credits(g.current_user_id, credit_cost, 'english_comprehension', 'English comprehension generation')
+        credits_remaining = _deduct_credits_or_fail(
+            g.current_user_id,
+            int(credit_cost),
+            'english_comprehension',
+            'English comprehension generation'
+        )
+        if credits_remaining is None:
+            return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
         
         return jsonify({
             'success': True,
             'data': {
                 'passage': comprehension.get('passage', ''),
-                'questions': comprehension.get('questions', [])
+                'questions': comprehension.get('questions', []),
+                'credits_remaining': credits_remaining
             }
         }), 200
         
@@ -2933,7 +3061,7 @@ def submit_essay_marking():
             return jsonify({
                 'success': False,
                 'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
-            }), 400
+            }), 402
             
         english_service = EnglishService()
         result = None
@@ -2988,13 +3116,20 @@ def submit_essay_marking():
                 logger.error(f"Failed to save essay history: {db_err}")
                 # Don't fail the request if history save fails, just log it
             
-            # Deduct credits
-            deduct_credits(g.current_user_id, credit_cost, 'english_essay_marking', f'Marked {essay_type} essay')
+            credits_remaining = _deduct_credits_or_fail(
+                g.current_user_id,
+                int(credit_cost),
+                'english_essay_marking',
+                f'Marked {essay_type} essay'
+            )
+            if credits_remaining is None:
+                return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
             
             return jsonify({
                 'success': True,
                 'data': marking_result,
-                'credits_deducted': credit_cost
+                'credits_deducted': _credits_display(int(credit_cost)),
+                'credits_remaining': credits_remaining
             }), 200
             
         else:
@@ -3144,16 +3279,24 @@ def grade_comprehension():
             return jsonify({
                 'success': False,
                 'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
-            }), 400
+            }), 402
             
         english_service = EnglishService()
         result = english_service.grade_comprehension_answers(passage, questions, answers)
         
-        deduct_credits(g.current_user_id, credit_cost, 'english_comprehension_grading', 'English comprehension grading')
+        credits_remaining = _deduct_credits_or_fail(
+            g.current_user_id,
+            int(credit_cost),
+            'english_comprehension_grading',
+            'English comprehension grading'
+        )
+        if credits_remaining is None:
+            return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
         
         return jsonify({
             'success': True,
-            'data': result
+            'data': result,
+            'credits_remaining': credits_remaining
         }), 200
         
     except Exception as e:
@@ -3181,16 +3324,24 @@ def grade_summary():
             return jsonify({
                 'success': False,
                 'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
-            }), 400
+            }), 402
             
         english_service = EnglishService()
         result = english_service.grade_summary(passage, prompt, summary)
         
-        deduct_credits(g.current_user_id, credit_cost, 'english_summary_grading', 'English summary grading')
+        credits_remaining = _deduct_credits_or_fail(
+            g.current_user_id,
+            int(credit_cost),
+            'english_summary_grading',
+            'English summary grading'
+        )
+        if credits_remaining is None:
+            return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
         
         return jsonify({
             'success': True,
-            'data': result
+            'data': result,
+            'credits_remaining': credits_remaining
         }), 200
         
     except Exception as e:
@@ -3219,21 +3370,28 @@ def upload_image():
             return jsonify({
                 'success': False,
                 'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
-            }), 400
+            }), 402
         
         # Process image
         image_service = ImageService()
         result = image_service.process_image(image_file)
         
-        # Deduct credits
-        deduct_credits(g.current_user_id, credit_cost, 'image_solve', 'Image OCR solving')
+        credits_remaining = _deduct_credits_or_fail(
+            g.current_user_id,
+            int(credit_cost),
+            'image_solve',
+            'Image OCR solving'
+        )
+        if credits_remaining is None:
+            return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
         
         return jsonify({
             'success': True,
             'data': {
                 'image_id': str(uuid.uuid4()),
                 'processed_text': result.get('text', ''),
-                'solution': result.get('solution', '')
+                'solution': result.get('solution', ''),
+                'credits_remaining': credits_remaining
             }
         }), 200
         
@@ -3267,7 +3425,7 @@ def start_teacher_mode():
             return jsonify({
                 'success': False,
                 'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
-            }), 400
+            }), 402
         
         # Initialize session
         session_id = str(uuid.uuid4())
@@ -3294,8 +3452,14 @@ def start_teacher_mode():
             'started_at': datetime.utcnow().isoformat()
         })
         
-        # Deduct credits
-        deduct_credits(g.current_user_id, credit_cost, 'teacher_mode_start', f'Started Teacher Mode: {subject}')
+        credits_remaining = _deduct_credits_or_fail(
+            g.current_user_id,
+            int(credit_cost),
+            'teacher_mode_start',
+            f'Started Teacher Mode: {subject}'
+        )
+        if credits_remaining is None:
+            return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
         
         # Get appropriate initial message based on subject
         if is_mathematics:
@@ -3322,7 +3486,8 @@ def start_teacher_mode():
                 'subject': subject,
                 'grade_level': grade_level,
                 'topic': topic,
-                'initial_message': initial_message
+                'initial_message': initial_message,
+                'credits_remaining': credits_remaining
             }
         }), 200
         
@@ -3384,7 +3549,7 @@ def send_teacher_message():
             return jsonify({
                 'success': False,
                 'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
-            }), 400
+            }), 402
         
         if not session_data or not session_data.get('active'):
             return jsonify({'success': False, 'message': 'No active teacher session'}), 400
@@ -3475,9 +3640,6 @@ def send_teacher_message():
         session_data['updated_at'] = datetime.utcnow().isoformat()  # Update timestamp
         session_manager.set_data(g.current_user_id, session_key, session_data)
         
-        # Deduct credits
-        deduct_credits(g.current_user_id, credit_cost, 'teacher_mode_followup', 'Teacher Mode conversation')
-        
         # Check for media triggers (Graph & Video & Diagrams) - works for ALL subjects/topics
         media_urls = {'graph_url': None, 'video_url': None}
         
@@ -3525,6 +3687,15 @@ def send_teacher_message():
         else:
             clean_response = response_text
         
+        credits_remaining = _deduct_credits_or_fail(
+            g.current_user_id,
+            int(credit_cost),
+            'teacher_mode_followup',
+            'Teacher Mode conversation'
+        )
+        if credits_remaining is None:
+            return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
+
         return jsonify({
             'success': True,
             'data': {
@@ -3532,7 +3703,8 @@ def send_teacher_message():
                 'session_id': session_id,
                 'context_pack_id': session_data.get('latest_context_pack_id'),
                 'graph_url': media_urls.get('graph_url'),
-                'video_url': media_urls.get('video_url')
+                'video_url': media_urls.get('video_url'),
+                'credits_remaining': credits_remaining
             }
         }), 200
         
@@ -3558,7 +3730,7 @@ def generate_teacher_notes():
             return jsonify({
                 'success': False,
                 'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
-            }), 400
+            }), 402
         
         # Get session data (Math / English / Science)
         from utils.session_manager import session_manager
@@ -3618,9 +3790,6 @@ def generate_teacher_notes():
                 # If JSON parsing fails, return text response
                 notes_data = {'content': notes_response}
         
-        # Deduct credits
-        deduct_credits(g.current_user_id, credit_cost, 'teacher_mode_pdf', 'Generated Teacher Mode PDF notes')
-        
         # Generate PDF
         from utils.science_notes_pdf_generator import ScienceNotesPDFGenerator
         pdf_generator = ScienceNotesPDFGenerator()
@@ -3650,11 +3819,21 @@ def generate_teacher_notes():
             else:
                 pdf_url = ""
 
+        credits_remaining = _deduct_credits_or_fail(
+            g.current_user_id,
+            int(credit_cost),
+            'teacher_mode_pdf',
+            'Generated Teacher Mode PDF notes'
+        )
+        if credits_remaining is None:
+            return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
+
         return jsonify({
             'success': True,
             'data': {
                 'notes': notes_data,
-                'pdf_url': pdf_url
+                'pdf_url': pdf_url,
+                'credits_remaining': credits_remaining
             }
         }), 200
         
@@ -3957,7 +4136,7 @@ def teacher_deep_research():
             return jsonify({
                 'success': False,
                 'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
-            }), 400
+            }), 402
         
         # Get session data for context
         from utils.session_manager import session_manager
@@ -3984,8 +4163,14 @@ Include key concepts, definitions, examples, and exam tips."""
                 result = interactions_service.search_with_grounding(enhanced_query)
                 
                 if result.get('success') and result.get('text'):
-                    # Deduct credits
-                    deduct_credits(g.current_user_id, credit_cost, 'deep_research', f'Deep Research: {query[:50]}')
+                    credits_remaining = _deduct_credits_or_fail(
+                        g.current_user_id,
+                        int(credit_cost),
+                        'deep_research',
+                        f'Deep Research: {query[:50]}'
+                    )
+                    if credits_remaining is None:
+                        return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
                     
                     logger.info(f"🔬 Deep Research completed for {g.current_user_id}")
                     
@@ -3993,7 +4178,8 @@ Include key concepts, definitions, examples, and exam tips."""
                         'success': True,
                         'data': {
                             'response': result.get('text'),
-                            'status': 'completed'
+                            'status': 'completed',
+                            'credits_remaining': credits_remaining
                         }
                     }), 200
         except Exception as interactions_error:
@@ -4006,14 +4192,21 @@ Include key concepts, definitions, examples, and exam tips."""
         result = teacher_service.search_science_topic(g.current_user_id, query)
         
         if result.get('success'):
-            # Deduct credits
-            deduct_credits(g.current_user_id, credit_cost, 'deep_research', f'Deep Research (fallback): {query[:50]}')
+            credits_remaining = _deduct_credits_or_fail(
+                g.current_user_id,
+                int(credit_cost),
+                'deep_research',
+                f'Deep Research (fallback): {query[:50]}'
+            )
+            if credits_remaining is None:
+                return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
             
             return jsonify({
                 'success': True,
                 'data': {
                     'response': result.get('text'),
-                    'status': 'completed'
+                    'status': 'completed',
+                    'credits_remaining': credits_remaining
                 }
             }), 200
         else:
@@ -4052,20 +4245,27 @@ def start_project_research(project_id):
             return jsonify({
                 'success': False,
                 'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
-            }), 400
+            }), 402
         
         result = service.start_deep_research(g.current_user_id, project_id, query)
         
         if result.get('success'):
-            # Deduct credits
-            deduct_credits(g.current_user_id, credit_cost, 'project_deep_research', f'Deep Research: {query[:50]}')
+            credits_remaining = _deduct_credits_or_fail(
+                g.current_user_id,
+                int(credit_cost),
+                'project_deep_research',
+                f'Deep Research: {query[:50]}'
+            )
+            if credits_remaining is None:
+                return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
             
             return jsonify({
                 'success': True,
                 'data': {
                     'interaction_id': result.get('interaction_id'),
                     'status': result.get('status', 'in_progress'),
-                    'message': result.get('message', 'Deep Research started')
+                    'message': result.get('message', 'Deep Research started'),
+                    'credits_remaining': credits_remaining
                 }
             }), 200
         else:
@@ -4227,19 +4427,26 @@ def project_web_search(project_id):
             return jsonify({
                 'success': False,
                 'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
-            }), 400
+            }), 402
         
         result = service.search_with_grounding(g.current_user_id, project_id, query)
         
         if result.get('success'):
-            # Deduct credits
-            deduct_credits(g.current_user_id, credit_cost, 'project_web_search', f'Web Search: {query[:50]}')
+            credits_remaining = _deduct_credits_or_fail(
+                g.current_user_id,
+                int(credit_cost),
+                'project_web_search',
+                f'Web Search: {query[:50]}'
+            )
+            if credits_remaining is None:
+                return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
             
             return jsonify({
                 'success': True,
                 'data': {
                     'response': result.get('text'),
-                    'interaction_id': result.get('interaction_id')
+                    'interaction_id': result.get('interaction_id'),
+                    'credits_remaining': credits_remaining
                 }
             }), 200
         else:
@@ -4273,7 +4480,7 @@ def transcribe_project_audio(project_id):
             return jsonify({
                 'success': False,
                 'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
-            }), 400
+            }), 402
         
         # Use Gemini multimodal for transcription
         try:
@@ -4315,8 +4522,14 @@ def transcribe_project_audio(project_id):
             if not transcription:
                 raise Exception("No transcription generated")
             
-            # Deduct credits
-            deduct_credits(g.current_user_id, credit_cost, 'project_transcribe', 'Audio transcription')
+            credits_remaining = _deduct_credits_or_fail(
+                g.current_user_id,
+                int(credit_cost),
+                'project_transcribe',
+                'Audio transcription'
+            )
+            if credits_remaining is None:
+                return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
             
             logger.info(f"🎤 Audio transcribed for user {g.current_user_id}: {transcription[:50]}...")
             
@@ -4324,7 +4537,8 @@ def transcribe_project_audio(project_id):
                 'success': True,
                 'data': {
                     'transcription': transcription,
-                    'language': 'auto-detected'
+                    'language': 'auto-detected',
+                    'credits_remaining': credits_remaining
                 }
             }), 200
             
@@ -4363,7 +4577,7 @@ def generate_graph():
             return jsonify({
                 'success': False,
                 'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
-            }), 400
+            }), 402
         
         # Generate graph
         from services.graph_service import GraphService
@@ -4430,8 +4644,14 @@ def generate_graph():
             question = f"For the graph of {equation}, find the y-intercept."
             solution = f"To find the y-intercept, set x = 0 in {equation} and calculate the value of y."
         
-        # Deduct credits
-        deduct_credits(g.current_user_id, credit_cost, 'math_graph_practice', f'Generated {graph_type} graph')
+        credits_remaining = _deduct_credits_or_fail(
+            g.current_user_id,
+            int(credit_cost),
+            'math_graph_practice',
+            f'Generated {graph_type} graph'
+        )
+        if credits_remaining is None:
+            return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
         
         return jsonify({
             'success': True,
@@ -4441,7 +4661,8 @@ def generate_graph():
                 'question': question,
                 'solution': solution,
                 # Deterministic spec for consistent Matplotlib image + Manim animation + question
-                'graph_spec': graph_result.get('graph_spec')
+                'graph_spec': graph_result.get('graph_spec'),
+                'credits_remaining': credits_remaining
             }
         }), 200
         
@@ -4472,7 +4693,7 @@ def generate_custom_graph():
             return jsonify({
                 'success': False,
                 'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
-            }), 400
+            }), 402
         
         # Create graph using graph service
         from services.graph_service import GraphService
@@ -4504,8 +4725,14 @@ def generate_custom_graph():
             base_url = os.environ.get('RENDER_EXTERNAL_URL', 'https://nerdx.onrender.com')
             graph_url = f"{base_url.rstrip('/')}/static/graphs/{filename}"
         
-        # Deduct credits
-        deduct_credits(g.current_user_id, credit_cost, 'math_graph_practice', f'Generated custom graph: {equation}')
+        credits_remaining = _deduct_credits_or_fail(
+            g.current_user_id,
+            int(credit_cost),
+            'math_graph_practice',
+            f'Generated custom graph: {equation}'
+        )
+        if credits_remaining is None:
+            return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
         
         return jsonify({
             'success': True,
@@ -4514,7 +4741,8 @@ def generate_custom_graph():
                 'equation': equation,
                 'question': f"Graph of {equation}",
                 'solution': f"This is the graph of {equation}. Analyze its key features.",
-                'graph_spec': graph_result.get('graph_spec')
+                'graph_spec': graph_result.get('graph_spec'),
+                'credits_remaining': credits_remaining
             }
         }), 200
         
@@ -4541,21 +4769,28 @@ def solve_graph_from_image():
             return jsonify({
                 'success': False,
                 'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
-            }), 400
+            }), 402
         
         # Process image using ImageService (which can handle graph problems)
         image_service = ImageService()
         result = image_service.process_image(image_file)
         
-        # Deduct credits
-        deduct_credits(g.current_user_id, credit_cost, 'image_solve', 'Graph solving from image')
+        credits_remaining = _deduct_credits_or_fail(
+            g.current_user_id,
+            int(credit_cost),
+            'image_solve',
+            'Graph solving from image'
+        )
+        if credits_remaining is None:
+            return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
         
         return jsonify({
             'success': True,
             'data': {
                 'processed_text': result.get('text', ''),
                 'solution': result.get('solution', ''),
-                'analysis': result.get('analysis', '')
+                'analysis': result.get('analysis', ''),
+                'credits_remaining': credits_remaining
             }
         }), 200
         
@@ -4587,7 +4822,7 @@ def generate_linear_programming_graph():
             return jsonify({
                 'success': False,
                 'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
-            }), 400
+            }), 402
         
         # Generate linear programming graph
         from services.graph_service import GraphService
@@ -4618,8 +4853,14 @@ def generate_linear_programming_graph():
             base_url = os.environ.get('RENDER_EXTERNAL_URL', 'https://nerdx.onrender.com')
             graph_url = f"{base_url.rstrip('/')}/static/graphs/{filename}"
         
-        # Deduct credits
-        deduct_credits(g.current_user_id, credit_cost, 'math_graph_practice', 'Generated linear programming graph')
+        credits_remaining = _deduct_credits_or_fail(
+            g.current_user_id,
+            int(credit_cost),
+            'math_graph_practice',
+            'Generated linear programming graph'
+        )
+        if credits_remaining is None:
+            return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
         
         return jsonify({
             'success': True,
@@ -4629,7 +4870,8 @@ def generate_linear_programming_graph():
                 'objective': objective,
                 'corner_points': graph_result.get('corner_points', []),
                 'question': f"Analyze the feasible region for the constraints: {', '.join(constraints)}",
-                'solution': f"The feasible region R is shown in green. Corner points: {graph_result.get('corner_points', [])}"
+                'solution': f"The feasible region R is shown in green. Corner points: {graph_result.get('corner_points', [])}",
+                'credits_remaining': credits_remaining
             }
         }), 200
         
@@ -6348,17 +6590,23 @@ Return ONLY valid JSON in this exact format:
 
 If you cannot read the content clearly, still return JSON with empty strings and confidence < 0.5."""
 
-        result = vertex_service.analyze_image(
-            image_base64=image_base64,
-            mime_type=mime_type,
-            prompt=prompt
-        )
+        try:
+            result = vertex_service.analyze_image(
+                image_base64=image_base64,
+                mime_type=mime_type,
+                prompt=prompt
+            )
+        except Exception as vertex_error:
+            logger.error(f"Vertex service error: {vertex_error}", exc_info=True)
+            return jsonify({'success': False, 'message': f'OCR service error: {str(vertex_error)}'}), 500
 
         if not result or not result.get('success'):
-            return jsonify({'success': False, 'message': (result or {}).get('error', 'OCR failed')}), 500
+            error_msg = (result or {}).get('error', 'OCR failed') if result else 'OCR service unavailable'
+            logger.error(f"OCR analysis failed: {error_msg}")
+            return jsonify({'success': False, 'message': error_msg}), 500
 
         detected_text = (result.get('text') or '').strip()
-        latex = (result.get('latex') or '').strip()
+        latex = (result.get('latex') or detected_text).strip()  # Fallback to text if no latex
         confidence = float(result.get('confidence') or 0.0)
 
         data = {
@@ -6420,17 +6668,23 @@ Return ONLY valid JSON in this exact format:
 
 If you cannot read the content clearly, still return JSON with empty strings and confidence < 0.5."""
 
-        result = vertex_service.analyze_image(
-            image_base64=image_base64,
-            mime_type=mime_type,
-            prompt=prompt
-        )
+        try:
+            result = vertex_service.analyze_image(
+                image_base64=image_base64,
+                mime_type=mime_type,
+                prompt=prompt
+            )
+        except Exception as vertex_error:
+            logger.error(f"Vertex service error (gemini): {vertex_error}", exc_info=True)
+            return jsonify({'success': False, 'message': f'OCR service error: {str(vertex_error)}'}), 500
 
         if not result or not result.get('success'):
-            return jsonify({'success': False, 'message': (result or {}).get('error', 'OCR failed')}), 500
+            error_msg = (result or {}).get('error', 'OCR failed') if result else 'OCR service unavailable'
+            logger.error(f"OCR analysis failed (gemini): {error_msg}")
+            return jsonify({'success': False, 'message': error_msg}), 500
 
         detected_text = (result.get('text') or '').strip()
-        latex = (result.get('latex') or '').strip()
+        latex = (result.get('latex') or detected_text).strip()  # Fallback to text if no latex
         confidence = float(result.get('confidence') or 0.0)
 
         response_data = {
@@ -6687,9 +6941,6 @@ def generate_flashcards():
                 'message': f'Insufficient credits. Required: {_credits_text(total_cost)}, Available: {_credits_text(user_credits)}'
             }), 402
 
-        if not deduct_credits(g.current_user_id, total_cost, 'flashcard_single', f'Generated {count} flashcards'):
-            return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
-        
         flashcards = flashcard_service.generate_flashcards(
             subject=subject,
             topic=topic,
@@ -6698,6 +6949,20 @@ def generate_flashcards():
         )
         
         logger.info(f"✅ Generated {len(flashcards)} flashcards for {topic} ({subject})")
+
+        delivered = len(flashcards) if isinstance(flashcards, list) else 0
+        if delivered <= 0:
+            return jsonify({'success': False, 'message': 'Failed to generate flashcards'}), 500
+
+        charge_cost = int(unit_cost) * int(delivered)
+        credits_remaining = _deduct_credits_or_fail(
+            g.current_user_id,
+            charge_cost,
+            'flashcard_single',
+            f'Generated {delivered} flashcards'
+        )
+        if credits_remaining is None:
+            return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
         
         return jsonify({
             'success': True,
@@ -6705,7 +6970,8 @@ def generate_flashcards():
                 'flashcards': flashcards,
                 'count': len(flashcards),
                 'subject': subject,
-                'topic': topic
+                'topic': topic,
+                'credits_remaining': credits_remaining
             }
         }), 200
         
@@ -6756,9 +7022,6 @@ def generate_single_flashcard():
                 'message': f'Insufficient credits. Required: {_credits_text(unit_cost)}, Available: {_credits_text(user_credits)}'
             }), 402
 
-        if not deduct_credits(g.current_user_id, unit_cost, 'flashcard_single', 'Generated flashcard'):
-            return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
-        
         flashcard = flashcard_service.generate_single_flashcard(
             subject=subject,
             topic=topic,
@@ -6768,11 +7031,21 @@ def generate_single_flashcard():
         )
         
         if flashcard:
+            credits_remaining = _deduct_credits_or_fail(
+                g.current_user_id,
+                int(unit_cost),
+                'flashcard_single',
+                'Generated flashcard'
+            )
+            if credits_remaining is None:
+                return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
+
             return jsonify({
                 'success': True,
                 'data': {
                     'flashcard': flashcard,
-                    'index': index
+                    'index': index,
+                    'credits_remaining': credits_remaining
                 }
             }), 200
         else:
@@ -7129,7 +7402,7 @@ def get_exam_next_question():
             question_type
         )
 
-        # Deduct credit for this question
+        # Check credits
         user_credits = get_user_credits(g.current_user_id) or 0
         if user_credits < credit_cost:
             return jsonify({
@@ -7137,18 +7410,20 @@ def get_exam_next_question():
                 'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}, Available: {_credits_text(user_credits)}'
             }), 400
         
-        deduct_credits(
-            g.current_user_id,
-            credit_cost,
-            'exam_question',
-            f'Exam question #{idx + 1} ({question_type})'
-        )
-        
         # Generate next question
         question = exam_session_service.generate_next_question(session_id, question_index)
         
         if not question:
             return jsonify({'success': False, 'message': 'Failed to generate question'}), 500
+
+        credits_remaining = _deduct_credits_or_fail(
+            g.current_user_id,
+            int(credit_cost),
+            'exam_question',
+            f'Exam question #{idx + 1} ({question_type})'
+        )
+        if credits_remaining is None:
+            return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
         
         # Calculate remaining time
         state = exam_session_service.get_session_state(session_id)
@@ -7161,6 +7436,7 @@ def get_exam_next_question():
                 'total_questions': session.get('total_questions'),
                 'remaining_seconds': state.get('remaining_seconds') if state else None,
                 'prompt': question.get('prompt_to_student', ''),
+                'credits_remaining': credits_remaining,
             }
         }), 200
         
@@ -7392,4 +7668,692 @@ def calculate_exam_time():
     except Exception as e:
         logger.error(f"Calculate exam time error: {e}", exc_info=True)
         return jsonify({'success': False, 'message': str(e)}), 500
+
+
+# ============================================================================
+# ACCOUNT MANAGEMENT - REFERRAL HUB ENDPOINTS
+# ============================================================================
+
+@mobile_bp.route('/user/referral-stats', methods=['GET'])
+@require_auth
+def get_referral_stats():
+    """Get detailed referral statistics for the user"""
+    try:
+        user_id = g.current_user_id
+        
+        # Get user's nerdx_id for referral code
+        user_data = get_user_registration(user_id)
+        if not user_data:
+            return jsonify({'success': False, 'message': 'User not found'}), 404
+        
+        nerdx_id = user_data.get('nerdx_id', '')
+        
+        # Get referral stats from referral_stats table
+        stats = make_supabase_request("GET", "referral_stats", filters={
+            "user_id": f"eq.{user_id}"
+        })
+        
+        if stats and len(stats) > 0:
+            stat_data = stats[0]
+        else:
+            stat_data = {
+                'total_referrals': 0,
+                'successful_referrals': 0,
+                'total_bonus_earned': 0,
+                'last_referral_date': None
+            }
+        
+        # Get list of referred users
+        referred_users = make_supabase_request("GET", "users_registration", filters={
+            "referred_by_nerdx_id": f"eq.{nerdx_id}"
+        }, select="name,surname,registration_date,nerdx_id")
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'referral_code': nerdx_id,
+                'total_referrals': stat_data.get('total_referrals', 0),
+                'successful_referrals': stat_data.get('successful_referrals', 0),
+                'total_bonus_earned': stat_data.get('total_bonus_earned', 0),
+                'last_referral_date': stat_data.get('last_referral_date'),
+                'referred_users': [
+                    {
+                        'name': u.get('name', ''),
+                        'surname': u.get('surname', ''),
+                        'joined_date': u.get('registration_date'),
+                        'nerdx_id': u.get('nerdx_id', '')[:3] + '***'  # Partial ID for privacy
+                    }
+                    for u in (referred_users or [])
+                ]
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get referral stats error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+@mobile_bp.route('/user/referral-share', methods=['GET'])
+@require_auth
+def get_referral_share_link():
+    """Get shareable referral link and pre-filled message"""
+    try:
+        user_id = g.current_user_id
+        
+        user_data = get_user_registration(user_id)
+        if not user_data:
+            return jsonify({'success': False, 'message': 'User not found'}), 404
+        
+        nerdx_id = user_data.get('nerdx_id', '')
+        name = user_data.get('name', 'A friend')
+        
+        # WhatsApp share link
+        bot_number = "263781206192"
+        message = f"Hello! I want to join NerdX using referral code: {nerdx_id}"
+        whatsapp_link = f"https://wa.me/{bot_number}?text={message.replace(' ', '%20')}"
+        
+        # Pre-filled share message
+        share_message = f"🎓 Hey! Join NerdX, the AI study assistant for ZIMSEC students! Use my referral code {nerdx_id} to get bonus credits. Download the app and start learning smarter! 📚✨"
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'referral_code': nerdx_id,
+                'whatsapp_link': whatsapp_link,
+                'share_message': share_message,
+                'bonus_per_referral': 5
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get referral share link error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+# ============================================================================
+# ACCOUNT MANAGEMENT - BILLING HISTORY ENDPOINTS
+# ============================================================================
+
+@mobile_bp.route('/user/billing-history', methods=['GET'])
+@require_auth
+def get_billing_history():
+    """Get user's complete billing history including payments and credit usage"""
+    try:
+        user_id = g.current_user_id
+        limit = request.args.get('limit', 50, type=int)
+        
+        # Get payment transactions
+        payments = make_supabase_request("GET", "payment_transactions", filters={
+            "user_id": f"eq.{user_id}",
+            "order": "created_at.desc",
+            "limit": str(limit)
+        }) or []
+        
+        # Get credit transactions
+        credit_txs = make_supabase_request("GET", "credit_transactions", filters={
+            "user_id": f"eq.{user_id}",
+            "order": "transaction_date.desc",
+            "limit": str(limit)
+        }) or []
+        
+        # Get subscription info
+        user_data = get_user_registration(user_id)
+        subscription_info = {
+            'subscription_started_at': user_data.get('subscription_started_at') if user_data else None,
+            'subscription_expires_at': user_data.get('subscription_expires_at') if user_data else None,
+            'is_active': False
+        }
+        
+        if subscription_info['subscription_expires_at']:
+            try:
+                expiry = datetime.fromisoformat(subscription_info['subscription_expires_at'].replace('Z', '+00:00'))
+                subscription_info['is_active'] = expiry > datetime.now(expiry.tzinfo)
+            except:
+                pass
+        
+        # Get credit breakdown
+        credit_breakdown = get_credit_breakdown(user_id)
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'subscription': subscription_info,
+                'credit_balance': {
+                    'total': _credits_display(credit_breakdown.get('total', 0)) if credit_breakdown else 0,
+                    'purchased': _credits_display(credit_breakdown.get('purchased_credits', 0)) if credit_breakdown else 0,
+                    'free': _credits_display(credit_breakdown.get('free_credits', 0)) if credit_breakdown else 0
+                },
+                'payments': [
+                    {
+                        'id': p.get('id'),
+                        'reference': p.get('reference_code'),
+                        'amount': float(p.get('amount', 0)),
+                        'credits': p.get('credits', 0),
+                        'status': p.get('status'),
+                        'payment_method': p.get('payment_method'),
+                        'date': p.get('created_at'),
+                        'type': 'payment'
+                    }
+                    for p in payments
+                ],
+                'credit_transactions': [
+                    {
+                        'id': t.get('id'),
+                        'action': t.get('action'),
+                        'type': t.get('transaction_type'),
+                        'credits_change': _credits_display(t.get('credits_change', 0)),
+                        'description': t.get('description'),
+                        'date': t.get('transaction_date')
+                    }
+                    for t in credit_txs
+                ]
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get billing history error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+@mobile_bp.route('/user/invoice/<int:payment_id>', methods=['GET'])
+@require_auth
+def get_invoice(payment_id):
+    """Get invoice details for a specific payment"""
+    try:
+        user_id = g.current_user_id
+        
+        # Get payment transaction
+        payments = make_supabase_request("GET", "payment_transactions", filters={
+            "id": f"eq.{payment_id}",
+            "user_id": f"eq.{user_id}"
+        })
+        
+        if not payments:
+            return jsonify({'success': False, 'message': 'Payment not found'}), 404
+        
+        payment = payments[0]
+        user_data = get_user_registration(user_id)
+        
+        invoice_data = {
+            'invoice_number': f"NERDX-INV-{payment.get('id'):06d}",
+            'reference': payment.get('reference_code'),
+            'date': payment.get('created_at'),
+            'status': payment.get('status'),
+            'customer': {
+                'name': f"{user_data.get('name', '')} {user_data.get('surname', '')}".strip() if user_data else '',
+                'email': user_data.get('email', '') if user_data else '',
+                'nerdx_id': user_data.get('nerdx_id', '') if user_data else ''
+            },
+            'items': [
+                {
+                    'description': f"NerdX Credits Package ({payment.get('credits', 0)} credits)",
+                    'quantity': 1,
+                    'unit_price': float(payment.get('amount', 0)),
+                    'total': float(payment.get('amount', 0))
+                }
+            ],
+            'payment_method': payment.get('payment_method', 'EcoCash'),
+            'subtotal': float(payment.get('amount', 0)),
+            'total': float(payment.get('amount', 0)),
+            'currency': 'USD'
+        }
+        
+        return jsonify({
+            'success': True,
+            'data': invoice_data
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get invoice error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+# ============================================================================
+# ACCOUNT MANAGEMENT - SECURITY CENTER ENDPOINTS
+# ============================================================================
+
+@mobile_bp.route('/user/login-history', methods=['GET'])
+@require_auth
+def get_login_history():
+    """Get user's login history for security monitoring"""
+    try:
+        user_id = g.current_user_id
+        limit = request.args.get('limit', 20, type=int)
+        
+        history = make_supabase_request("GET", "login_history", filters={
+            "user_id": f"eq.{user_id}",
+            "order": "login_at.desc",
+            "limit": str(limit)
+        }) or []
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'sessions': [
+                    {
+                        'id': h.get('id'),
+                        'device_info': h.get('device_info', {}),
+                        'ip_address': h.get('ip_address'),
+                        'login_at': h.get('login_at'),
+                        'logout_at': h.get('logout_at'),
+                        'is_active': h.get('is_active', False)
+                    }
+                    for h in history
+                ]
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get login history error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+@mobile_bp.route('/user/sessions', methods=['GET'])
+@require_auth
+def get_active_sessions():
+    """Get user's active sessions"""
+    try:
+        user_id = g.current_user_id
+        
+        sessions = make_supabase_request("GET", "login_history", filters={
+            "user_id": f"eq.{user_id}",
+            "is_active": "eq.true",
+            "order": "login_at.desc"
+        }) or []
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'sessions': [
+                    {
+                        'id': s.get('id'),
+                        'device_info': s.get('device_info', {}),
+                        'ip_address': s.get('ip_address'),
+                        'login_at': s.get('login_at'),
+                        'is_current': False  # Client should compare with current session
+                    }
+                    for s in sessions
+                ]
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get active sessions error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+@mobile_bp.route('/user/sessions/<int:session_id>', methods=['DELETE'])
+@require_auth
+def logout_session(session_id):
+    """Logout a specific session"""
+    try:
+        user_id = g.current_user_id
+        
+        # Verify session belongs to user
+        sessions = make_supabase_request("GET", "login_history", filters={
+            "id": f"eq.{session_id}",
+            "user_id": f"eq.{user_id}"
+        })
+        
+        if not sessions:
+            return jsonify({'success': False, 'message': 'Session not found'}), 404
+        
+        # Mark session as inactive
+        make_supabase_request("PATCH", "login_history", 
+            data={
+                'is_active': False,
+                'logout_at': datetime.now().isoformat()
+            },
+            filters={"id": f"eq.{session_id}"},
+            use_service_role=True
+        )
+        
+        return jsonify({
+            'success': True,
+            'message': 'Session logged out successfully'
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Logout session error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+@mobile_bp.route('/user/change-password', methods=['POST'])
+@require_auth
+def change_password():
+    """Change user's password"""
+    try:
+        user_id = g.current_user_id
+        data = request.get_json()
+        
+        old_password = data.get('old_password', '')
+        new_password = data.get('new_password', '')
+        
+        if not old_password or not new_password:
+            return jsonify({'success': False, 'message': 'Both old and new passwords are required'}), 400
+        
+        if len(new_password) < 6:
+            return jsonify({'success': False, 'message': 'Password must be at least 6 characters'}), 400
+        
+        # Verify old password
+        user_data = get_user_registration(user_id)
+        if not user_data:
+            return jsonify({'success': False, 'message': 'User not found'}), 404
+        
+        stored_hash = user_data.get('password_hash')
+        stored_salt = user_data.get('password_salt')
+        
+        if not stored_hash or not stored_salt:
+            return jsonify({'success': False, 'message': 'Password not set for this account'}), 400
+        
+        # Verify old password using PBKDF2
+        old_hash = hashlib.pbkdf2_hmac(
+            'sha256',
+            old_password.encode('utf-8'),
+            stored_salt.encode('utf-8'),
+            100000
+        ).hex()
+        
+        if old_hash != stored_hash:
+            return jsonify({'success': False, 'message': 'Current password is incorrect'}), 401
+        
+        # Generate new salt and hash
+        new_salt = secrets.token_hex(32)
+        new_hash = hashlib.pbkdf2_hmac(
+            'sha256',
+            new_password.encode('utf-8'),
+            new_salt.encode('utf-8'),
+            100000
+        ).hex()
+        
+        # Update password
+        make_supabase_request("PATCH", "users_registration",
+            data={
+                'password_hash': new_hash,
+                'password_salt': new_salt,
+                'updated_at': datetime.now().isoformat()
+            },
+            filters={"chat_id": f"eq.{user_id}"},
+            use_service_role=True
+        )
+        
+        return jsonify({
+            'success': True,
+            'message': 'Password changed successfully'
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Change password error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+# ============================================================================
+# ACCOUNT MANAGEMENT - LEARNING PREFERENCES ENDPOINTS
+# ============================================================================
+
+@mobile_bp.route('/user/preferences', methods=['GET'])
+@require_auth
+def get_user_preferences():
+    """Get user's learning preferences"""
+    try:
+        user_id = g.current_user_id
+        
+        prefs = make_supabase_request("GET", "user_preferences", filters={
+            "user_id": f"eq.{user_id}"
+        })
+        
+        if prefs and len(prefs) > 0:
+            pref_data = prefs[0]
+        else:
+            # Return default preferences
+            pref_data = {
+                'preferred_subjects': [],
+                'exam_level': 'O Level',
+                'target_exam_date': None,
+                'daily_question_goal': 10,
+                'study_time_goal_minutes': 30,
+                'difficulty_preference': 'adaptive',
+                'notification_reminders': True,
+                'notification_achievements': True,
+                'notification_tips': True,
+                'theme_preference': 'system',
+                'school_name': None,
+                'grade_level': None
+            }
+        
+        return jsonify({
+            'success': True,
+            'data': pref_data
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get preferences error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+@mobile_bp.route('/user/preferences', methods=['PUT'])
+@require_auth
+def update_user_preferences():
+    """Update user's learning preferences"""
+    try:
+        user_id = g.current_user_id
+        data = request.get_json()
+        
+        # Allowed fields to update
+        allowed_fields = [
+            'preferred_subjects', 'exam_level', 'target_exam_date',
+            'daily_question_goal', 'study_time_goal_minutes', 'difficulty_preference',
+            'notification_reminders', 'notification_achievements', 'notification_tips',
+            'theme_preference', 'school_name', 'grade_level'
+        ]
+        
+        update_data = {k: v for k, v in data.items() if k in allowed_fields}
+        update_data['updated_at'] = datetime.now().isoformat()
+        
+        # Check if preferences exist
+        existing = make_supabase_request("GET", "user_preferences", filters={
+            "user_id": f"eq.{user_id}"
+        })
+        
+        if existing and len(existing) > 0:
+            # Update existing
+            make_supabase_request("PATCH", "user_preferences",
+                data=update_data,
+                filters={"user_id": f"eq.{user_id}"},
+                use_service_role=True
+            )
+        else:
+            # Create new
+            update_data['user_id'] = user_id
+            update_data['created_at'] = datetime.now().isoformat()
+            make_supabase_request("POST", "user_preferences",
+                data=update_data,
+                use_service_role=True
+            )
+        
+        return jsonify({
+            'success': True,
+            'message': 'Preferences updated successfully',
+            'data': update_data
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Update preferences error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+# ============================================================================
+# AI INSIGHTS - PERSONALIZED LEARNING FEEDBACK
+# ============================================================================
+
+@mobile_bp.route('/dkt/ai-insights', methods=['GET'])
+@require_auth
+def get_ai_insights():
+    """
+    Generate personalized AI learning insights based on DKT data.
+    Provides actionable feedback on strengths, weaknesses, and study recommendations.
+    """
+    try:
+        user_id = g.current_user_id
+        
+        from services.deep_knowledge_tracing import dkt_service
+        
+        # Get knowledge map for all subjects
+        knowledge_map = dkt_service.get_knowledge_map(user_id)
+        skills = knowledge_map.get('skills', []) if knowledge_map else []
+        
+        # Get recent interactions for trend analysis
+        interactions = make_supabase_request("GET", "student_interactions", filters={
+            "user_id": f"eq.{user_id}",
+            "order": "timestamp.desc",
+            "limit": "100"
+        }) or []
+        
+        # Calculate overall learning health score (0-100)
+        if skills:
+            avg_mastery = sum(s.get('mastery', 0) for s in skills) / len(skills)
+            health_score = int(avg_mastery * 100)
+        else:
+            health_score = 0
+        
+        # Identify strengths (top 3 mastered skills)
+        mastered_skills = sorted(
+            [s for s in skills if s.get('mastery', 0) >= 0.7],
+            key=lambda x: x.get('mastery', 0),
+            reverse=True
+        )[:3]
+        
+        strengths = [
+            {
+                'skill_name': s.get('skill_name', s.get('skill_id', '')),
+                'subject': s.get('subject', ''),
+                'topic': s.get('topic', ''),
+                'mastery': round(s.get('mastery', 0) * 100, 1),
+                'status': 'mastered' if s.get('mastery', 0) >= 0.8 else 'proficient'
+            }
+            for s in mastered_skills
+        ]
+        
+        # Identify focus areas (struggling skills with recommendations)
+        struggling_skills = sorted(
+            [s for s in skills if s.get('mastery', 0) < 0.5],
+            key=lambda x: x.get('mastery', 0)
+        )[:3]
+        
+        focus_areas = []
+        for s in struggling_skills:
+            mastery = s.get('mastery', 0)
+            skill_name = s.get('skill_name', s.get('skill_id', ''))
+            
+            # Generate personalized recommendation
+            if mastery < 0.2:
+                recommendation = f"Start with basic concepts in {skill_name}. Try practice mode with easy questions first."
+            elif mastery < 0.4:
+                recommendation = f"You're making progress with {skill_name}! Focus on understanding the core principles."
+            else:
+                recommendation = f"Almost there with {skill_name}! Practice more challenging problems to build confidence."
+            
+            focus_areas.append({
+                'skill_name': skill_name,
+                'subject': s.get('subject', ''),
+                'topic': s.get('topic', ''),
+                'mastery': round(mastery * 100, 1),
+                'status': 'struggling' if mastery < 0.3 else 'learning',
+                'recommendation': recommendation
+            })
+        
+        # Weekly trend analysis
+        week_ago = datetime.now() - timedelta(days=7)
+        recent_interactions = [
+            i for i in interactions
+            if i.get('timestamp') and datetime.fromisoformat(i['timestamp'].replace('Z', '+00:00')) > week_ago.replace(tzinfo=None)
+        ]
+        
+        total_this_week = len(recent_interactions)
+        correct_this_week = sum(1 for i in recent_interactions if i.get('response', False))
+        accuracy_this_week = round((correct_this_week / total_this_week * 100) if total_this_week > 0 else 0, 1)
+        
+        # Calculate daily activity for the week
+        daily_activity = {}
+        for i in recent_interactions:
+            try:
+                date = datetime.fromisoformat(i['timestamp'].replace('Z', '+00:00')).strftime('%Y-%m-%d')
+                daily_activity[date] = daily_activity.get(date, 0) + 1
+            except:
+                pass
+        
+        weekly_trend = {
+            'total_questions': total_this_week,
+            'correct_answers': correct_this_week,
+            'accuracy': accuracy_this_week,
+            'active_days': len(daily_activity),
+            'daily_breakdown': [
+                {'date': d, 'count': c}
+                for d, c in sorted(daily_activity.items())
+            ]
+        }
+        
+        # Generate AI study plan recommendation
+        study_plan = []
+        if focus_areas:
+            study_plan.append({
+                'priority': 'high',
+                'action': f"Practice {focus_areas[0]['skill_name']}",
+                'description': focus_areas[0]['recommendation'],
+                'estimated_time': '15 minutes'
+            })
+        
+        if len(focus_areas) > 1:
+            study_plan.append({
+                'priority': 'medium',
+                'action': f"Review {focus_areas[1]['skill_name']}",
+                'description': focus_areas[1]['recommendation'],
+                'estimated_time': '10 minutes'
+            })
+        
+        # Add daily review if available
+        try:
+            daily_reviews = dkt_service.generate_daily_review_queue(user_id)
+            if daily_reviews:
+                study_plan.append({
+                    'priority': 'medium',
+                    'action': 'Complete Daily Review',
+                    'description': f'You have {len(daily_reviews)} skills due for review today.',
+                    'estimated_time': f'{len(daily_reviews) * 3} minutes'
+                })
+        except:
+            pass
+        
+        # Generate personalized encouragement message
+        if health_score >= 80:
+            message = "🌟 Outstanding work! You're mastering your subjects like a pro. Keep up the excellent momentum!"
+        elif health_score >= 60:
+            message = "💪 Great progress! You're building solid foundations. A little more practice and you'll be unstoppable!"
+        elif health_score >= 40:
+            message = "📚 You're on the right track! Focus on your weak areas and you'll see rapid improvement. You've got this!"
+        elif health_score >= 20:
+            message = "🚀 Every expert was once a beginner. Keep practicing consistently and watch your skills grow!"
+        else:
+            message = "🎯 Let's start your learning journey! Take it one step at a time and celebrate every small win."
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'health_score': health_score,
+                'total_skills': len(skills),
+                'mastered_count': len([s for s in skills if s.get('mastery', 0) >= 0.8]),
+                'learning_count': len([s for s in skills if 0.4 <= s.get('mastery', 0) < 0.8]),
+                'struggling_count': len([s for s in skills if s.get('mastery', 0) < 0.4]),
+                'strengths': strengths,
+                'focus_areas': focus_areas,
+                'weekly_trend': weekly_trend,
+                'study_plan': study_plan,
+                'personalized_message': message,
+                'last_updated': datetime.now().isoformat()
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get AI insights error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
 

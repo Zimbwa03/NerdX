@@ -58,6 +58,34 @@ src/
 └── theme/         # Theme and styling
 ```
 
+## Environment Variables
+
+The app requires Supabase configuration for authentication (including Google OAuth). 
+
+### Required Environment Variables
+
+Create a `.env` file in the `NerdXApp` directory with:
+
+```bash
+# Supabase Configuration (Required for Authentication)
+EXPO_PUBLIC_SUPABASE_URL=https://lzteiewcvxoazqfxfjgg.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+```
+
+**Where to get these values:**
+1. Go to [Supabase Dashboard](https://supabase.com/dashboard)
+2. Select your project (`lzteiewcvxoazqfxfjgg`)
+3. Navigate to **Settings** → **API**
+4. Copy the **Project URL** and **anon/public key**
+
+### For EAS Builds
+
+If using EAS Build, set these in `eas.json` under the build profile's `env` section, or configure them in the EAS dashboard.
+
+### Fallback Values
+
+The app includes fallback values for the correct Supabase project, but using environment variables is recommended for flexibility and security.
+
 ## API Configuration
 
 Update API base URL in `src/services/api/config.ts`

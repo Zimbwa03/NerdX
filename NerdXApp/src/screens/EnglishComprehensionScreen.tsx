@@ -62,10 +62,9 @@ const EnglishComprehensionScreen: React.FC = () => {
       const data = await englishApi.generateComprehension();
       if (data) {
         setComprehension(data);
-        // Update credits
-        if (user) {
-          const newCredits = (user.credits || 0) - 3;
-          updateUser({ credits: newCredits });
+        // Update credits from server response (server handles deduction)
+        if (user && data.credits_remaining !== undefined) {
+          updateUser({ credits: data.credits_remaining });
         }
       }
     } catch (error: any) {

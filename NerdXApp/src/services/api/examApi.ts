@@ -80,6 +80,7 @@ export interface QuestionResponse {
     total_questions: number;
     remaining_seconds: number | null;
     prompt: string;
+    credits_remaining?: number;
 }
 
 export interface MarkResult {

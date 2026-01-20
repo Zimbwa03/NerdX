@@ -23,6 +23,7 @@ import {
   NotificationRecipient,
   subscribeToNotifications,
 } from '../services/notifications';
+import { getSupabaseAuthUserId } from '../services/supabase';
 import { Colors } from '../theme/colors';
 
 const { width } = Dimensions.get('window');
@@ -72,25 +73,41 @@ const NotificationsScreen: React.FC = () => {
     loadNotifications(true);
   }, []);
 
-  // Subscribe to realtime updates
+  // Subscribe to realtime updates using Supabase Auth user ID
   useEffect(() => {
-    if (!user?.id) return;
+    let unsubscribe: (() => void) | undefined;
 
-    const unsubscribe = subscribeToNotifications(
-      user.id,
-      (newRecipient) => {
-        // New notification received
-        setNotifications(prev => [newRecipient, ...prev]);
-      },
-      (updatedRecipient) => {
-        // Notification updated
-        setNotifications(prev =>
-          prev.map(n => n.id === updatedRecipient.id ? updatedRecipient : n)
+    const setupSubscription = async () => {
+      // Get Supabase Auth user ID for realtime subscription (required for RLS)
+      const supabaseUserId = await getSupabaseAuthUserId();
+      if (supabaseUserId) {
+        console.log('[Notifications] Setting up realtime subscription for Supabase user:', supabaseUserId);
+        unsubscribe = subscribeToNotifications(
+          supabaseUserId,
+          (newRecipient) => {
+            // New notification received - prepend to list
+            console.log('[Notifications] New notification received:', newRecipient.notification?.title);
+            setNotifications(prev => [newRecipient, ...prev]);
+          },
+          (updatedRecipient) => {
+            // Notification updated (e.g., marked as read)
+            setNotifications(prev =>
+              prev.map(n => n.id === updatedRecipient.id ? { ...n, ...updatedRecipient } : n)
+            );
+          }
         );
+      } else {
+        console.log('[Notifications] No Supabase Auth session - realtime updates disabled');
       }
-    );
+    };
 
-    return unsubscribe;
+    setupSubscription();
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, [user?.id]);
 
   const handleRefresh = useCallback(() => {

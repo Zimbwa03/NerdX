@@ -13,6 +13,14 @@
                 <i class="fas fa-exclamation-triangle me-2"></i>
                 <strong>Warning:</strong> Enabling forced updates will block users until they update the app.
             </div>
+            
+            <!-- Migration Info Box -->
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Tip for Website → Play Store Migration:</strong> 
+                Set a custom message instructing users to uninstall the old app and install from Play Store. 
+                Include keywords like "uninstall" or "reinstall" to trigger the enhanced migration UI in the app.
+            </div>
         </div>
     </div>
 
@@ -93,8 +101,15 @@
                                         Update Message <span class="text-danger">*</span>
                                     </label>
                                     <textarea class="form-control" id="androidUpdateMessage" 
-                                              name="update_message" rows="3" required 
+                                              name="update_message" rows="4" required 
                                               placeholder="A new version is available with important updates..."></textarea>
+                                    <div class="mt-2">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                                onclick="setMigrationMessage('android')">
+                                            <i class="fas fa-magic me-1"></i>Use Migration Message
+                                        </button>
+                                        <small class="text-muted ms-2">For website → Play Store migration</small>
+                                    </div>
                                 </div>
 
                                 <div class="mb-3">
@@ -170,8 +185,15 @@
                                         Update Message <span class="text-danger">*</span>
                                     </label>
                                     <textarea class="form-control" id="iosUpdateMessage" 
-                                              name="update_message" rows="3" required 
+                                              name="update_message" rows="4" required 
                                               placeholder="A new version is available with important updates..."></textarea>
+                                    <div class="mt-2">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                                onclick="setMigrationMessage('ios')">
+                                            <i class="fas fa-magic me-1"></i>Use Migration Message
+                                        </button>
+                                        <small class="text-muted ms-2">For website → App Store migration</small>
+                                    </div>
                                 </div>
 
                                 <div class="mb-3">
@@ -232,6 +254,30 @@
 </div>
 
 <script>
+// Migration message templates
+const MIGRATION_MESSAGES = {
+    android: `NerdX has moved to the Google Play Store! For improved security and automatic updates, please:
+
+1️⃣ Uninstall this old app
+2️⃣ Install NerdX from Google Play Store
+
+Your account and progress will be preserved after signing in again.`,
+    ios: `NerdX has been updated on the App Store! For the latest features and security improvements, please:
+
+1️⃣ Update or reinstall NerdX from the App Store
+
+Your account and progress will be preserved after signing in again.`
+};
+
+// Set migration message for a platform
+function setMigrationMessage(platform) {
+    const textarea = document.getElementById(`${platform}UpdateMessage`);
+    if (textarea) {
+        textarea.value = MIGRATION_MESSAGES[platform];
+        updatePreview();
+    }
+}
+
 // Load existing versions
 function loadVersions() {
     fetch('/api/app-versions')

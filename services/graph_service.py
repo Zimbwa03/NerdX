@@ -5,6 +5,7 @@ import requests
 import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend
 import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 from matplotlib.patches import Circle, Polygon, Rectangle
 import matplotlib.patches as patches
 from matplotlib import cm
@@ -44,6 +45,39 @@ class GraphService:
         plt.rcParams['axes.axisbelow'] = True
 
         logger.info("Enhanced Graph Service initialized for ZIMSEC educational graphs")
+
+    def _is_graph_image_valid(self, filepath: str) -> bool:
+        """Validate that a saved graph image is not blank or corrupted."""
+        try:
+            if not filepath or not os.path.exists(filepath):
+                return False
+
+            file_size = os.path.getsize(filepath)
+            if file_size < 5 * 1024:
+                return False
+
+            image = mpimg.imread(filepath)
+            if image is None or image.size == 0:
+                return False
+
+            if image.ndim == 3:
+                gray = image[..., :3].mean(axis=2)
+            else:
+                gray = image
+
+            variance = float(np.var(gray))
+            if variance < 1e-4:
+                return False
+
+            white_ratio = float(np.mean(gray > 0.98))
+            black_ratio = float(np.mean(gray < 0.02))
+            if white_ratio > 0.98 and black_ratio < 0.01:
+                return False
+
+            return True
+        except Exception as e:
+            logger.warning(f"Graph validation failed: {e}")
+            return False
 
     def generate_function_graph(self, function: str, x_range: tuple = (-10, 10), title: Optional[str] = None) -> Optional[str]:
         """Generate a graph for a mathematical function"""
@@ -108,6 +142,14 @@ class GraphService:
                 plt.savefig(filepath, dpi=150, bbox_inches='tight', 
                            facecolor='white', edgecolor='none')
                 plt.close(fig)
+
+                if not self._is_graph_image_valid(filepath):
+                    logger.error(f"Graph validation failed for function: {function}")
+                    try:
+                        os.remove(filepath)
+                    except Exception:
+                        pass
+                    return None
 
                 logger.info(f"Generated graph for function: {function}")
                 return filepath
@@ -1031,6 +1073,14 @@ class GraphService:
                 logger.info(f"✅ Matplotlib graph created successfully: {filepath} (size: {file_size} bytes)")
             else:
                 logger.error(f"❌ Graph file not created: {filepath}")
+                return None
+
+            if not self._is_graph_image_valid(filepath):
+                logger.error(f"❌ Graph validation failed for: {filepath}")
+                try:
+                    os.remove(filepath)
+                except Exception:
+                    pass
                 return None
 
             # Return in expected format

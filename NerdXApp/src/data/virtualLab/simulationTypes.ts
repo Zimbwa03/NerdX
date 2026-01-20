@@ -1,7 +1,7 @@
 // Virtual Lab Simulation Types
 // Type definitions for interactive science simulations
 
-export type Subject = 'biology' | 'chemistry' | 'physics';
+export type Subject = 'biology' | 'chemistry' | 'physics' | 'mathematics';
 export type Difficulty = 'easy' | 'medium' | 'hard';
 
 // ============================
@@ -221,6 +221,94 @@ export interface ProjectileMotionState {
     showAirResistance: boolean;
 }
 
+// ============================
+// Mathematics Simulation States
+// ============================
+
+export interface DifferentiationLabState {
+    functionType: 'polynomial' | 'trigonometric' | 'exponential';
+    xPosition: number; // Current x position on the curve
+    showTangent: boolean;
+    showDerivativeGraph: boolean;
+    derivativeValue: number; // f'(x) at current position
+    functionExpression: string;
+}
+
+export interface IntegrationLabState {
+    functionType: 'polynomial' | 'trigonometric';
+    numRectangles: number; // 1-100
+    sumType: 'left' | 'right' | 'midpoint';
+    lowerBound: number;
+    upperBound: number;
+    calculatedArea: number;
+    exactArea: number;
+    isAnimating: boolean;
+}
+
+export interface ComplexNumbersLabState {
+    realPart: number;
+    imaginaryPart: number;
+    modulus: number;
+    argument: number; // in radians
+    showPolarForm: boolean;
+    rotationHistory: { real: number; imag: number }[];
+    animationMode: 'none' | 'multiply_i' | 'euler_spiral';
+}
+
+export interface QuadraticExplorerState {
+    a: number; // coefficient of x^2
+    h: number; // vertex x-coordinate
+    k: number; // vertex y-coordinate
+    showRoots: boolean;
+    showAxisOfSymmetry: boolean;
+    discriminant: number;
+    roots: number[];
+}
+
+export interface TrigFunctionsLabState {
+    angle: number; // in radians
+    showSineWave: boolean;
+    showCosineWave: boolean;
+    amplitude: number;
+    period: number;
+    phaseShift: number;
+    showUnitCircle: boolean;
+    showTriangle: boolean;
+}
+
+export interface VectorVisualizerState {
+    vector1: { x: number; y: number };
+    vector2: { x: number; y: number };
+    operation: 'add' | 'subtract' | 'dot_product' | 'none';
+    showMagnitude: boolean;
+    showAngle: boolean;
+    resultVector: { x: number; y: number } | null;
+    dotProductValue: number | null;
+}
+
+export interface MatrixSandboxState {
+    matrix: [[number, number], [number, number]]; // 2x2 matrix
+    transformType: 'rotation' | 'reflection' | 'shear' | 'scale' | 'custom';
+    showOriginalShape: boolean;
+    showTransformedShape: boolean;
+    determinant: number;
+    shapeType: 'square' | 'triangle';
+}
+
+export interface LinearProgrammingLabState {
+    constraints: {
+        a: number;
+        b: number;
+        c: number;
+        inequality: '<=' | '>=' | '=';
+    }[];
+    objectiveFunction: { a: number; b: number };
+    optimizationType: 'maximize' | 'minimize';
+    feasibleRegion: { x: number; y: number }[];
+    optimalPoint: { x: number; y: number } | null;
+    optimalValue: number | null;
+}
+
 // Color palette for subjects
 export const SUBJECT_COLORS = {
     biology: {
@@ -237,6 +325,11 @@ export const SUBJECT_COLORS = {
         primary: '#2196F3',
         secondary: '#64B5F6',
         gradient: ['#2196F3', '#1565C0'] as [string, string],
+    },
+    mathematics: {
+        primary: '#2979FF',
+        secondary: '#82B1FF',
+        gradient: ['#2979FF', '#1565C0'] as [string, string],
     },
 } as const;
 

@@ -192,10 +192,9 @@ const EnglishEssayScreen: React.FC = () => {
 
         const deduction = result.credits_deducted || 3;
 
-        // Update credits
-        if (user) {
-          const newCredits = (user.credits || 0) - deduction;
-          updateUser({ credits: newCredits });
+        // Update credits from server response (server handles deduction)
+        if (user && result.credits_remaining !== undefined) {
+          updateUser({ credits: result.credits_remaining });
         }
 
         Alert.alert(

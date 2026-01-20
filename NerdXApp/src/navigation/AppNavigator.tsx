@@ -48,6 +48,14 @@ import NotificationDetailScreen from '../screens/NotificationDetailScreen';
 import UpdateRequiredScreen from '../screens/UpdateRequiredScreen';
 import { checkUpdateRequired } from '../services/appVersion';
 
+// Account Management Screens
+import AccountScreen from '../screens/AccountScreen';
+import ReferralHubScreen from '../screens/ReferralHubScreen';
+import BillingHistoryScreen from '../screens/BillingHistoryScreen';
+import SecurityCenterScreen from '../screens/SecurityCenterScreen';
+import LearningPreferencesScreen from '../screens/LearningPreferencesScreen';
+import AIInsightsScreen from '../screens/AIInsightsScreen';
+
 // NerdX Live Voice/Video Screens
 import NerdXLiveModeScreen from '../screens/NerdXLiveModeScreen';
 import NerdXLiveAudioScreen from '../screens/NerdXLiveAudioScreen';
@@ -82,6 +90,16 @@ import ThermalExpansionScreen from '../screens/virtualLab/ThermalExpansionScreen
 import WavePropertiesScreen from '../screens/virtualLab/WavePropertiesScreen';
 import VirtualLabTemplateScreen from '../screens/virtualLab/VirtualLabTemplateScreen';
 import VirtualLabInteractiveScreen from '../screens/virtualLab/VirtualLabInteractiveScreen';
+
+// Mathematics Virtual Lab Screens
+import DifferentiationLabScreen from '../screens/virtualLab/DifferentiationLabScreen';
+import IntegrationLabScreen from '../screens/virtualLab/IntegrationLabScreen';
+import QuadraticExplorerScreen from '../screens/virtualLab/QuadraticExplorerScreen';
+import ComplexNumbersLabScreen from '../screens/virtualLab/ComplexNumbersLabScreen';
+import TrigFunctionsLabScreen from '../screens/virtualLab/TrigFunctionsLabScreen';
+import VectorVisualizerScreen from '../screens/virtualLab/VectorVisualizerScreen';
+import MatrixSandboxScreen from '../screens/virtualLab/MatrixSandboxScreen';
+import LinearProgrammingLabScreen from '../screens/virtualLab/LinearProgrammingLabScreen';
 
 const Stack = createStackNavigator();
 
@@ -150,6 +168,7 @@ const AppNavigator: React.FC = () => {
   }
 
   // Configure deep linking for password reset and OAuth callbacks
+  // Supabase sends: token_hash (for OTP verification), type (recovery), and sometimes access_token/refresh_token
   const linking = {
     prefixes: ['nerdx://', 'https://nerdx.app', 'com.Ngoni03.nerdxapp://', 'nerdxapp://'],
     config: {
@@ -157,10 +176,14 @@ const AppNavigator: React.FC = () => {
         ResetPassword: {
           path: 'reset-password',
           parse: {
+            // Supabase password reset parameters
+            token_hash: (token_hash: string) => token_hash,  // Primary: Supabase OTP token hash
+            type: (type: string) => type,                     // Type: 'recovery' for password reset
+            access_token: (access_token: string) => access_token,  // Alternative: direct access token
+            refresh_token: (refresh_token: string) => refresh_token,
+            // Legacy parameters
             token: (token: string) => token,
-            access_token: (access_token: string) => access_token,
             hash: (hash: string) => hash,
-            type: (type: string) => type,
           },
         },
         Login: {
@@ -169,6 +192,7 @@ const AppNavigator: React.FC = () => {
             access_token: (access_token: string) => access_token,
             refresh_token: (refresh_token: string) => refresh_token,
             type: (type: string) => type,
+            token_hash: (token_hash: string) => token_hash,
           },
         },
         ForgotPassword: 'forgot-password',
@@ -272,6 +296,48 @@ const AppNavigator: React.FC = () => {
             <Stack.Screen
               name="Profile"
               component={ProfileScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="Account"
+              component={AccountScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="ReferralHub"
+              component={ReferralHubScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="BillingHistory"
+              component={BillingHistoryScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="SecurityCenter"
+              component={SecurityCenterScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="LearningPreferences"
+              component={LearningPreferencesScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="AIInsights"
+              component={AIInsightsScreen}
               options={{
                 headerShown: false,
               }}
@@ -478,6 +544,47 @@ const AppNavigator: React.FC = () => {
             <Stack.Screen
               name="VirtualLabInteractive"
               component={VirtualLabInteractiveScreen}
+              options={{ headerShown: false }}
+            />
+            {/* Mathematics Virtual Lab Screens */}
+            <Stack.Screen
+              name="DifferentiationLab"
+              component={DifferentiationLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="IntegrationLab"
+              component={IntegrationLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="QuadraticExplorer"
+              component={QuadraticExplorerScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="ComplexNumbersLab"
+              component={ComplexNumbersLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="TrigFunctionsLab"
+              component={TrigFunctionsLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="VectorVisualizer"
+              component={VectorVisualizerScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="MatrixSandbox"
+              component={MatrixSandboxScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="LinearProgrammingLab"
+              component={LinearProgrammingLabScreen}
               options={{ headerShown: false }}
             />
             <Stack.Screen

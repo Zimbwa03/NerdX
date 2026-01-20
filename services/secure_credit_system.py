@@ -36,16 +36,17 @@ class SecureCreditSystem:
         # EXACT CREDIT COSTS AS SPECIFIED BY USER
         self.SECURE_CREDIT_COSTS = {
             # Combined Science (O-Level)
-            'combined_science_topical': 3,      # 0.25 credit (rounded up)
-            'combined_science_topical_mcq': 3,
-            'combined_science_topical_structured': 5,  # 0.5 credit
-            'combined_science_exam': 5,         # 0.5 credit
+            # Whole-credit pricing: all costs are multiples of 10 units (>= 1 credit)
+            'combined_science_topical': 10,      # 1 credit
+            'combined_science_topical_mcq': 10,
+            'combined_science_topical_structured': 10,
+            'combined_science_exam': 10,
 
             # Mathematics (O-Level)
-            'math_topical': 5,                  # 0.5 credit
-            'math_exam': 5,                     # 0.5 credit
+            'math_topical': 10,                 # 1 credit
+            'math_exam': 10,                    # 1 credit
             'math_graph_practice': 10,          # 1 credit per graph/question/video
-            'math_quiz': 5,
+            'math_quiz': 10,
             
             # English
             'english_topical': 10,
@@ -54,14 +55,15 @@ class SecureCreditSystem:
             
             # Audio Features
             'audio_feature': 10,
-            'voice_chat': 1,                    # 0.1 credit per 5 seconds (live)
+            'voice_chat': 10,                   # 1 credit per 5 seconds (live)
         }
         
         self.transaction_log = []  # Audit trail
         
     def get_credit_cost(self, action: str) -> int:
         """Get exact credit cost for an action"""
-        return self.SECURE_CREDIT_COSTS.get(action, 1)
+        # Default is 1 credit (10 units) to avoid "free" access via unknown action keys
+        return self.SECURE_CREDIT_COSTS.get(action, Config.CREDIT_UNITS_PER_CREDIT)
     
     def ultra_secure_pre_validation(self, user_id: str, action: str) -> Dict:
         """

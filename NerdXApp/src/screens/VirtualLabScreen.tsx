@@ -83,6 +83,15 @@ const VirtualLabScreen: React.FC = () => {
             'newtons-laws-lab': 'NewtonsLawsLab',
             'thermal-expansion': 'ThermalExpansion',
             'wave-properties': 'WaveProperties',
+            // Mathematics Virtual Labs
+            'differentiation-lab': 'DifferentiationLab',
+            'integration-lab': 'IntegrationLab',
+            'quadratic-explorer': 'QuadraticExplorer',
+            'complex-numbers-lab': 'ComplexNumbersLab',
+            'trig-functions-lab': 'TrigFunctionsLab',
+            'vector-visualizer': 'VectorVisualizer',
+            'matrix-sandbox': 'MatrixSandbox',
+            'linear-programming-lab': 'LinearProgrammingLab',
         };
 
         const screenName = screenMap[simulationId];
@@ -99,6 +108,7 @@ const VirtualLabScreen: React.FC = () => {
         { key: 'biology', label: 'Biology', color: SUBJECT_COLORS.biology.primary },
         { key: 'chemistry', label: 'Chemistry', color: SUBJECT_COLORS.chemistry.primary },
         { key: 'physics', label: 'Physics', color: SUBJECT_COLORS.physics.primary },
+        { key: 'mathematics', label: 'Math', color: SUBJECT_COLORS.mathematics.primary },
     ];
 
     return (
@@ -134,7 +144,7 @@ const VirtualLabScreen: React.FC = () => {
                     </View>
                     <View style={[styles.statDivider, { backgroundColor: '#FFFFFF30' }]} />
                     <View style={styles.statItem}>
-                        <Text style={styles.statNumber}>3</Text>
+                        <Text style={styles.statNumber}>4</Text>
                         <Text style={styles.statLabel}>Subjects</Text>
                     </View>
                     <View style={[styles.statDivider, { backgroundColor: '#FFFFFF30' }]} />

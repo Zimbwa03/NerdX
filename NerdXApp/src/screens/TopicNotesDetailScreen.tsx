@@ -59,6 +59,11 @@ const TopicNotesDetailScreen: React.FC = () => {
             const hasPaidCredits = (user?.credit_breakdown?.purchased_credits ?? 0) > 0;
             const isScienceSubject = ['Biology', 'Chemistry', 'Physics'].includes(subject);
             if (isScienceSubject && !hasPaidCredits && (index ?? 0) >= 2) {
+                console.log('[TopicNotes] Locked topic due to unpaid credits', {
+                    subject,
+                    topic,
+                    index,
+                });
                 setLoading(false);
                 Alert.alert(
                     'Locked Topic',

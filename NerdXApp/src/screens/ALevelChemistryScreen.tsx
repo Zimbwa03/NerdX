@@ -134,9 +134,11 @@ const ALevelChemistryScreen: React.FC = () => {
                                         subject: { id: 'a_level_chemistry', name: 'A Level Chemistry' },
                                         topic: { id: topic.id, name: topic.name }
                                     } as never);
-                                    // Backend deducts credits - update UI estimate (0.5 credit for topical)
-                                    const newCredits = Math.max(0, (user.credits || 0) - creditCost);
-                                    updateUser({ credits: newCredits });
+                                    // Update credits from server response
+                                    const serverCredits = (question as any).credits_remaining;
+                                    if (serverCredits !== undefined) {
+                                        updateUser({ credits: serverCredits });
+                                    }
                                 }
                             } catch (error: any) {
                                 setIsGeneratingQuestion(false);

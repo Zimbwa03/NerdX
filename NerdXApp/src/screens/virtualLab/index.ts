@@ -24,3 +24,13 @@ export { default as MotionGrapherScreen } from './MotionGrapherScreen';
 export { default as NewtonsLawsLabScreen } from './NewtonsLawsLabScreen';
 export { default as ThermalExpansionScreen } from './ThermalExpansionScreen';
 export { default as WavePropertiesScreen } from './WavePropertiesScreen';
+
+// Mathematics Virtual Labs
+export { default as DifferentiationLabScreen } from './DifferentiationLabScreen';
+export { default as IntegrationLabScreen } from './IntegrationLabScreen';
+export { default as QuadraticExplorerScreen } from './QuadraticExplorerScreen';
+export { default as ComplexNumbersLabScreen } from './ComplexNumbersLabScreen';
+export { default as TrigFunctionsLabScreen } from './TrigFunctionsLabScreen';
+export { default as VectorVisualizerScreen } from './VectorVisualizerScreen';
+export { default as MatrixSandboxScreen } from './MatrixSandboxScreen';
+export { default as LinearProgrammingLabScreen } from './LinearProgrammingLabScreen';

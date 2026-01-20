@@ -27,6 +27,7 @@ export interface TeacherMessageResponse {
   graph_url?: string;
   video_url?: string;
   context_pack_id?: string;
+  credits_remaining?: number;
 }
 
 export interface TeacherNotes {
@@ -66,7 +67,12 @@ export const teacherApi = {
         message,
         context_pack_id: contextPackId,
       });
-      return response.data.data || null;
+      const msgData = response.data.data || null;
+      // Include credits_remaining from server response for UI updates
+      if (msgData && response.data.credits_remaining !== undefined) {
+        msgData.credits_remaining = response.data.credits_remaining;
+      }
+      return msgData;
     } catch (error: any) {
       console.error('Send teacher message error:', error);
       throw error;

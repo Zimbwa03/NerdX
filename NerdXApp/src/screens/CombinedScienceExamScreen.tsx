@@ -109,12 +109,8 @@ const CombinedScienceExamScreen: React.FC = () => {
       setCurrentQuestionIndex(0);
       setCurrentAnswer('');
 
-      // Deduct credits upfront (0.5 credit per question)
-      if (user) {
-        const creditsToDeduct = Math.ceil(selectedCount * 0.5);
-        const newCredits = (user.credits || 0) - creditsToDeduct;
-        updateUser({ credits: newCredits });
-      }
+      // Credits will be deducted per question when generated
+      // Server handles deduction and returns credits_remaining
 
       // Generate first question immediately
       await loadQuestion(0, shuffledPlan[0].subject);
@@ -146,6 +142,10 @@ const CombinedScienceExamScreen: React.FC = () => {
             const updatedQuestions = [...questions];
             updatedQuestions[index] = { ...question, subject: 'Biology' };
             setQuestions(updatedQuestions);
+            // Update credits from server response
+            if (user && (question as any).credits_remaining !== undefined) {
+              updateUser({ credits: (question as any).credits_remaining });
+            }
           }
         }
         return;
@@ -164,6 +164,10 @@ const CombinedScienceExamScreen: React.FC = () => {
         const updatedQuestions = [...questions];
         updatedQuestions[index] = { ...question, subject: parentSubject };
         setQuestions(updatedQuestions);
+        // Update credits from server response
+        if (user && (question as any).credits_remaining !== undefined) {
+          updateUser({ credits: (question as any).credits_remaining });
+        }
       }
     } catch (error) {
       console.error('Error loading question:', error);

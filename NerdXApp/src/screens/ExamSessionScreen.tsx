@@ -25,6 +25,9 @@ import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { useAuth } from '../context/AuthContext';
 import MathRenderer from '../components/MathRenderer';
+import { isMathSubjectId, toMathLatex } from '../utils/mathText';
+import LoadingProgress from '../components/LoadingProgress';
+import { getExamLoadingConfig } from '../utils/loadingProgress';
 import {
     examApi,
     ExamSession,
@@ -82,7 +85,6 @@ const ExamSessionScreen: React.FC = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [totalQuestions, setTotalQuestions] = useState(examConfig?.total_questions || 0);
     const [loadingQuestion, setLoadingQuestion] = useState(false);
-    const [loadingProgress, setLoadingProgress] = useState(0); // 0-100 percentage
 
     // Answer state
     const [selectedAnswer, setSelectedAnswer] = useState<string>('');
@@ -178,30 +180,13 @@ const ExamSessionScreen: React.FC = () => {
         }
         try {
             setSessionCreating(true);
-            setLoadingProgress(0);
-
-            // Simulate progress while API call is in flight
-            const progressInterval = setInterval(() => {
-                setLoadingProgress(prev => {
-                    // Slow down as we approach 90% - wait for actual completion
-                    if (prev < 30) return prev + 8;
-                    if (prev < 60) return prev + 5;
-                    if (prev < 85) return prev + 2;
-                    return Math.min(prev + 0.5, 90); // Cap at 90% until actually done
-                });
-            }, 200);
-
             const result = await examApi.createSession(examConfig);
 
-            clearInterval(progressInterval);
-
             if (result) {
-                setLoadingProgress(95);
                 setSession(result);
                 setRemainingSeconds(result.total_time_seconds);
                 // Load first question
                 await loadNextQuestion(result.session_id, 0);
-                setLoadingProgress(100);
             } else {
                 Alert.alert('Error', 'Failed to create exam session');
                 navigation.goBack();
@@ -232,6 +217,9 @@ const ExamSessionScreen: React.FC = () => {
                 setCurrentQuestion(response.question);
                 setCurrentIndex(response.question_index);
                 setTotalQuestions(response.total_questions);
+                if (response.credits_remaining !== undefined) {
+                    updateUser({ credits: response.credits_remaining });
+                }
                 if (response.remaining_seconds !== null) {
                     setRemainingSeconds(response.remaining_seconds);
                 }
@@ -433,58 +421,7 @@ const ExamSessionScreen: React.FC = () => {
         return '#FFFFFF';
     };
 
-    // Check if subject is mathematics-related (needs LaTeX rendering)
-    const isMathSubject = () => {
-        const subject = examConfig?.subject?.toLowerCase() || '';
-        return subject.includes('math') || 
-               subject === 'mathematics' || 
-               subject === 'pure_math' ||
-               subject === 'a_level_pure_math';
-    };
-
-    // Convert ASCII math notation to LaTeX format if needed
-    const convertToLatex = (text: string): string => {
-        if (!text || !isMathSubject()) return text;
-        
-        // If already wrapped in $...$, return as-is (already LaTeX formatted)
-        if (text.includes('$')) return text;
-        
-        let processed = text;
-        
-        // Convert multiplication: "2 x 3" or "2x3" -> "2 \times 3"
-        // Match: digit/letter, optional space, 'x' (lowercase), optional space, digit/letter
-        processed = processed.replace(/(\d+|\w+)\s*x\s*(\d+|\w+)/gi, '$1 \\times $2');
-        
-        // Handle exponents: "2^3" -> "2^{3}" or "a^b" -> "a^{b}"
-        // Match superscripts: base^exponent
-        processed = processed.replace(/(\w+)\^(\d+|\w+)/g, (match, base, exp) => {
-            // If exponent is multi-character, wrap in braces
-            if (exp.length > 1 || /[a-zA-Z]/.test(exp)) {
-                return `${base}^{${exp}}`;
-            }
-            return `${base}^{${exp}}`;
-        });
-        
-        // Handle expressions in parentheses: "(2^3 x 3^2)" -> properly formatted
-        // This handles cases like the question stem which might have parentheses
-        
-        // If the text contains math operators or exponents, wrap in $...$
-        const hasMathNotation = /[\^_\×\÷\+\-\=\(\)]/.test(processed) || 
-                                 /(\d+\s*[x×]\s*\d+)/.test(processed) ||
-                                 /\w+\^\w+/.test(processed);
-        
-        // For standalone math expressions (like options), wrap in $...$
-        // But preserve regular text that might contain some numbers
-        if (hasMathNotation && !processed.includes('$')) {
-            // Check if it's primarily a math expression
-            const mathPattern = /^[\s\w\d\^_×÷\+\-\=\(\)\\]+$/;
-            if (mathPattern.test(processed.trim()) || processed.includes('^') || processed.includes('\\times')) {
-                return `$${processed}$`;
-            }
-        }
-        
-        return processed;
-    };
+    const isMathSubject = isMathSubjectId(examConfig?.subject);
 
     // Render question based on type
     const renderQuestion = () => {
@@ -520,10 +457,10 @@ const ExamSessionScreen: React.FC = () => {
                                         {option.label}
                                     </Text>
                                 </View>
-                                {isMathSubject() ? (
+                                {isMathSubject ? (
                                     <View style={{ flex: 1, minHeight: 0 }}>
                                         <MathRenderer 
-                                            content={convertToLatex(option.text)} 
+                                            content={toMathLatex(option.text, isMathSubject)} 
                                             fontSize={15}
                                             minHeight={30}
                                             style={{ flex: 1, minHeight: 0 }}
@@ -580,45 +517,23 @@ const ExamSessionScreen: React.FC = () => {
         }
     };
 
+    const loadingConfig = getExamLoadingConfig(
+        examConfig?.subject,
+        sessionCreating ? 'setup' : 'question'
+    );
+
     // Loading state with progress
     if (sessionCreating || step === 'loading') {
         return (
             <View style={[styles.loadingContainer, { backgroundColor: themedColors.background.default }]}>
                 <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-
-                {/* Loading Icon */}
-                <View style={styles.loadingIconContainer}>
-                    <ActivityIndicator size="large" color={themedColors.primary.main} />
-                </View>
-
-                <Text style={[styles.loadingText, { color: themedColors.text.primary }]}>
-                    {sessionCreating ? 'Setting up exam...' : 'Loading question...'}
-                </Text>
-
-                {/* Progress Bar */}
-                {sessionCreating && (
-                    <View style={styles.progressContainer}>
-                        <View style={[styles.progressBarBackground, { backgroundColor: themedColors.border.main }]}>
-                            <View
-                                style={[
-                                    styles.progressBarFill,
-                                    {
-                                        backgroundColor: themedColors.primary.main,
-                                        width: `${Math.round(loadingProgress)}%`
-                                    }
-                                ]}
-                            />
-                        </View>
-                        <Text style={[styles.progressText, { color: themedColors.text.secondary }]}>
-                            {Math.round(loadingProgress)}%
-                        </Text>
-                    </View>
-                )}
-
-                {/* Motivational hint */}
-                <Text style={[styles.loadingHint, { color: themedColors.text.disabled }]}>
-                    Preparing your personalized questions...
-                </Text>
+                <LoadingProgress
+                    visible
+                    message={loadingConfig.message}
+                    estimatedTime={loadingConfig.estimatedTime}
+                    stage={loadingConfig.stage}
+                    steps={loadingConfig.steps}
+                />
             </View>
         );
     }
@@ -709,9 +624,9 @@ const ExamSessionScreen: React.FC = () => {
                         </Text>
                     )}
 
-                    {isMathSubject() && currentQuestion?.stem ? (
+                    {isMathSubject && currentQuestion?.stem ? (
                         <MathRenderer 
-                            content={convertToLatex(currentQuestion.stem)} 
+                            content={toMathLatex(currentQuestion.stem, isMathSubject)} 
                             fontSize={16}
                             style={styles.questionStem}
                         />

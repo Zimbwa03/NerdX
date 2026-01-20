@@ -285,7 +285,13 @@ class PaymentService:
             
             # Store in payment_transactions table for admin review
             logger.info(f"Attempting to submit payment proof to payment_transactions table...")
-            result = make_supabase_request("POST", "payment_transactions", payment_data)
+            try:
+                result = make_supabase_request("POST", "payment_transactions", payment_data)
+            except Exception as db_error:
+                logger.error(f"Error posting to payment_transactions: {db_error}")
+                # Log the payment_data structure for debugging (without sensitive info)
+                logger.error(f"Payment data keys: {list(payment_data.keys())}")
+                result = None
             
             if result:
                 logger.info(f"Payment proof submitted for user {user_id}, ref: {reference_code}")

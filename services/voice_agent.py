@@ -93,6 +93,100 @@ def _write_service_account_json_to_temp(service_account_json: str) -> Optional[s
         return None
 
 
+def _get_first_env(*names: str) -> Optional[str]:
+    for name in names:
+        value = os.getenv(name)
+        if value and value.strip():
+            return value.strip()
+    return None
+
+
+def _looks_like_placeholder(value: Optional[str]) -> bool:
+    if not value:
+        return True
+    lowered = value.strip().lower()
+    return any(token in lowered for token in ["your-", "replace", "changeme", "placeholder"])
+
+
+def _bool_env(name: str, default: bool = False) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in ["1", "true", "yes", "on"]
+
+
+def _build_live_setup_message(
+    model_path: str,
+    *,
+    use_snake_case: bool,
+    system_text: Optional[str],
+    session_handle: Optional[str],
+) -> dict:
+    """Build a Live API setup message with correct field casing."""
+    if use_snake_case:
+        gen_key = "generation_config"
+        response_key = "response_modalities"
+        speech_key = "speech_config"
+        voice_key = "voice_config"
+        prebuilt_key = "prebuilt_voice_config"
+        system_key = "system_instruction"
+        context_key = "context_window_compression"
+        session_key = "session_resumption"
+        input_trans_key = "input_audio_transcription"
+        output_trans_key = "output_audio_transcription"
+        audio_modality = "audio"
+        text_modality = "text"
+    else:
+        gen_key = "generationConfig"
+        response_key = "responseModalities"
+        speech_key = "speechConfig"
+        voice_key = "voiceConfig"
+        prebuilt_key = "prebuiltVoiceConfig"
+        system_key = "systemInstruction"
+        context_key = "contextWindowCompression"
+        session_key = "sessionResumption"
+        input_trans_key = "inputAudioTranscription"
+        output_trans_key = "outputAudioTranscription"
+        audio_modality = "AUDIO"
+        text_modality = "TEXT"
+
+    response_modalities = [audio_modality]
+    if ENABLE_TRANSCRIPTION:
+        response_modalities = [audio_modality, text_modality]
+
+    setup = {
+        "model": model_path,
+        gen_key: {
+            response_key: response_modalities,
+            speech_key: {
+                voice_key: {
+                    prebuilt_key: {"voiceName": "Aoede"}
+                }
+            },
+        },
+        context_key: {
+            "triggerTokens": 100000,
+            "slidingWindow": {"targetTokens": 50000},
+        },
+        session_key: {},
+        "tools": [],
+    }
+
+    if ENABLE_TRANSPARENT_RESUMPTION:
+        setup[session_key]["transparent"] = True
+    if session_handle:
+        setup[session_key]["handle"] = session_handle
+
+    if system_text:
+        setup[system_key] = {"parts": [{"text": system_text}]}
+
+    if ENABLE_TRANSCRIPTION:
+        setup[input_trans_key] = {}
+        setup[output_trans_key] = {}
+
+    return {"setup": setup}
+
+
 def _init_vertex_env() -> dict:
     """
     Normalize Vertex/Gemini Live configuration from environment variables.
@@ -113,7 +207,13 @@ def _init_vertex_env() -> dict:
     GOOGLE_APPLICATION_CREDENTIALS = os.getenv(
         "GOOGLE_APPLICATION_CREDENTIALS", "credentials/vertex_ai_service_account.json"
     )
-    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+    GEMINI_API_KEY = _get_first_env(
+        "GEMINI_API_KEY",
+        "GOOGLE_AI_API_KEY",
+        "GOOGLE_GENAI_API_KEY",
+        "GENAI_API_KEY",
+        "GOOGLE_API_KEY",
+    )
 
     # Candidate env vars that may contain service account JSON
     sa_json_raw = (
@@ -167,7 +267,7 @@ def _init_vertex_env() -> dict:
         "credentials_path_set": bool(os.getenv("GOOGLE_APPLICATION_CREDENTIALS")),
         "credentials_path_exists": bool(os.getenv("GOOGLE_APPLICATION_CREDENTIALS") and os.path.exists(os.getenv("GOOGLE_APPLICATION_CREDENTIALS"))),
         "client_email": client_email,
-        "has_gemini_api_key": bool(GEMINI_API_KEY),
+        "has_gemini_api_key": bool(GEMINI_API_KEY and not _looks_like_placeholder(GEMINI_API_KEY)),
     }
 
 
@@ -180,6 +280,11 @@ GEMINI_MODEL = os.getenv('GEMINI_LIVE_MODEL', 'gemini-live-2.5-flash-native-audi
 
 # Fallback model if the primary isn't available in region/project.
 GEMINI_MODEL_FALLBACK = os.getenv('GEMINI_LIVE_MODEL_FALLBACK', 'gemini-live-2.5-flash-preview-native-audio-09-2025')
+
+# Live session controls
+ENABLE_TRANSCRIPTION = _bool_env("GEMINI_LIVE_TRANSCRIPTION", False)
+ENABLE_TRANSPARENT_RESUMPTION = _bool_env("GEMINI_LIVE_TRANSPARENT_RESUMPTION", False)
+FORCE_VERTEX_AI = _bool_env("GOOGLE_GENAI_FORCE_VERTEXAI", False)
 
 # NerdX System Instruction - Optimized for Gemini Live API (Native Audio)
 # Following Google's best practices for system instructions
@@ -425,7 +530,7 @@ async def lifespan(app: FastAPI):
         else:
             logger.warning("⚠️ Vertex AI enabled but credentials file not found; Live API will fail until credentials are provided")
     
-    if GEMINI_API_KEY:
+    if GEMINI_API_KEY and not _looks_like_placeholder(GEMINI_API_KEY):
         logger.info("✅ Gemini API key configured (fallback)")
     else:
         logger.warning("⚠️ No Gemini API key (fallback unavailable)")
@@ -633,9 +738,12 @@ class TransparentGeminiPipe:
             if not self.last_error:
                 self.last_error = "Vertex AI connection failed"
             logger.warning("⚠️ Vertex AI connection failed, falling back to regular Gemini API")
+            if FORCE_VERTEX_AI:
+                logger.error("❌ FORCE_VERTEX_AI is enabled; skipping Gemini API fallback")
+                return False
         
         # Fallback to regular Gemini API
-        if GEMINI_API_KEY:
+        if GEMINI_API_KEY and not _looks_like_placeholder(GEMINI_API_KEY):
             connected = await self._connect_gemini_api()
             if connected:
                 return True
@@ -698,37 +806,12 @@ class TransparentGeminiPipe:
                     model_candidates.append(m)
 
             for model_name in model_candidates:
-                # Send setup message for Vertex AI
-                # Per docs: Enable context window compression for longer tutoring sessions
-                # and session resumption for mobile disconnects
-                setup_message = {
-                    "setup": {
-                        "model": f"projects/{GOOGLE_CLOUD_PROJECT}/locations/{GOOGLE_CLOUD_LOCATION}/publishers/google/models/{model_name}",
-                        "generationConfig": {
-                            "responseModalities": ["AUDIO", "TEXT"],  # Include TEXT for transcription
-                            "speechConfig": {
-                                "voiceConfig": {
-                                    "prebuiltVoiceConfig": {"voiceName": "Aoede"}  # Natural HD voice
-                                }
-                            },
-                        },
-                        # Context window compression for longer sessions (beyond 15 min default)
-                        "contextWindowCompression": {
-                            "triggerTokens": 100000,
-                            "slidingWindow": {"targetTokens": 50000},
-                        },
-                        # Session resumption for handling mobile disconnects
-                        "sessionResumption": {
-                            "handle": self.session_handle if self.session_handle else None
-                        },
-                        "systemInstruction": {"parts": [{"text": NERDX_SYSTEM_INSTRUCTION}]},
-                        "tools": [],
-                    }
-                }
-
-                # Remove None values (session handle if not resuming)
-                if setup_message["setup"]["sessionResumption"]["handle"] is None:
-                    del setup_message["setup"]["sessionResumption"]["handle"]
+                setup_message = _build_live_setup_message(
+                    f"projects/{GOOGLE_CLOUD_PROJECT}/locations/{GOOGLE_CLOUD_LOCATION}/publishers/google/models/{model_name}",
+                    use_snake_case=True,
+                    system_text=NERDX_SYSTEM_INSTRUCTION,
+                    session_handle=self.session_handle,
+                )
 
                 logger.info(f"📤 Sending Vertex AI setup (model: {model_name})...")
                 await self.gemini_ws.send(json.dumps(setup_message))
@@ -787,8 +870,8 @@ class TransparentGeminiPipe:
     
     async def _connect_gemini_api(self) -> bool:
         """Connect to regular Gemini API (fallback)."""
-        if not GEMINI_API_KEY:
-            self.last_error = "GEMINI_API_KEY not set"
+        if not GEMINI_API_KEY or _looks_like_placeholder(GEMINI_API_KEY):
+            self.last_error = "Gemini API key missing or invalid placeholder"
             logger.error("❌ GEMINI_API_KEY not set!")
             return False
             
@@ -837,21 +920,12 @@ class TransparentGeminiPipe:
                     ping_timeout=10,
                 )
 
-                setup_message = {
-                    "setup": {
-                        "model": f"models/{model_name}",
-                        "generationConfig": {
-                            "responseModalities": ["AUDIO", "TEXT"],  # Include TEXT for transcription
-                            "speechConfig": {
-                                "voiceConfig": {
-                                    "prebuiltVoiceConfig": {"voiceName": "Aoede"}
-                                }
-                            },
-                        },
-                        "systemInstruction": {"parts": [{"text": NERDX_SYSTEM_INSTRUCTION}]},
-                        "tools": [],
-                    }
-                }
+                setup_message = _build_live_setup_message(
+                    f"models/{model_name}",
+                    use_snake_case=False,
+                    system_text=NERDX_SYSTEM_INSTRUCTION,
+                    session_handle=self.session_handle,
+                )
 
                 logger.info("📤 Sending Gemini API setup...")
                 await self.gemini_ws.send(json.dumps(setup_message))
@@ -1057,6 +1131,8 @@ class TransparentGeminiPipe:
                     await self.client_ws.send_json({
                         "type": "goAway",
                         "timeLeft": time_left,
+                        "handle": self.session_handle,
+                        "sessionId": self.session_id,
                         "message": "Session ending soon. Please reconnect."
                     })
                 
@@ -1145,7 +1221,7 @@ async def root():
         # Avoid leaking filesystem paths in a public endpoint.
         "credentials_ready": bool(os.getenv("GOOGLE_APPLICATION_CREDENTIALS") and os.path.exists(os.getenv("GOOGLE_APPLICATION_CREDENTIALS"))),
         "credentials_source": (_VERTEX_CTX.get("credentials_source") if isinstance(_VERTEX_CTX, dict) else None),
-        "fallback_api_key_configured": bool(GEMINI_API_KEY),
+        "fallback_api_key_configured": bool(GEMINI_API_KEY and not _looks_like_placeholder(GEMINI_API_KEY)),
     }
 
 
@@ -1191,9 +1267,12 @@ class TransparentGeminiVideoPipe:
             if not self.last_error:
                 self.last_error = "Vertex AI video connection failed"
             logger.warning("⚠️ Vertex AI video connection failed, falling back to regular Gemini API")
+            if FORCE_VERTEX_AI:
+                logger.error("❌ FORCE_VERTEX_AI is enabled; skipping Gemini API fallback")
+                return False
         
         # Fallback to regular Gemini API
-        if GEMINI_API_KEY:
+        if GEMINI_API_KEY and not _looks_like_placeholder(GEMINI_API_KEY):
             connected = await self._connect_gemini_api_video()
             if connected:
                 return True
@@ -1237,7 +1316,8 @@ class TransparentGeminiVideoPipe:
             
             # Send setup message for Vertex AI video
             setup_message = self._build_video_setup_message(
-                model_path=f"projects/{GOOGLE_CLOUD_PROJECT}/locations/{GOOGLE_CLOUD_LOCATION}/publishers/google/models/{GEMINI_MODEL}"
+                model_path=f"projects/{GOOGLE_CLOUD_PROJECT}/locations/{GOOGLE_CLOUD_LOCATION}/publishers/google/models/{GEMINI_MODEL}",
+                use_snake_case=True,
             )
             
             logger.info(f"📤 Sending Vertex AI VIDEO setup...")
@@ -1295,6 +1375,11 @@ class TransparentGeminiVideoPipe:
         """Connect to regular Gemini API for video (fallback)."""
         try:
             import websockets
+
+            if not GEMINI_API_KEY or _looks_like_placeholder(GEMINI_API_KEY):
+                self.last_error = "Gemini API key missing or invalid placeholder"
+                logger.error("❌ GEMINI_API_KEY not set!")
+                return False
             
             gemini_url = (
                 f"wss://generativelanguage.googleapis.com/ws/"
@@ -1311,7 +1396,10 @@ class TransparentGeminiVideoPipe:
             )
             
             # Setup with video + audio capabilities
-            setup_message = self._build_video_setup_message(model_path=f"models/{GEMINI_MODEL}")
+            setup_message = self._build_video_setup_message(
+                model_path=f"models/{GEMINI_MODEL}",
+                use_snake_case=False,
+            )
             
             logger.info(f"📤 Sending Gemini API VIDEO setup...")
             await self.gemini_ws.send(json.dumps(setup_message))
@@ -1343,24 +1431,18 @@ class TransparentGeminiVideoPipe:
             logger.error(traceback.format_exc())
             return False
     
-    def _build_video_setup_message(self, model_path: str) -> dict:
+    def _build_video_setup_message(self, model_path: str, use_snake_case: bool) -> dict:
         """Build the setup message for video mode."""
-        return {
-            "setup": {
-                "model": model_path,
-                "generationConfig": {
-                    "responseModalities": ["AUDIO", "TEXT"],  # Include TEXT for transcription
-                    "speechConfig": {
-                        "voiceConfig": {
-                            "prebuiltVoiceConfig": {
-                                "voiceName": "Aoede"
-                            }
-                        }
-                    }
-                },
-                "systemInstruction": {
-                    "parts": [{
-                        "text": NERDX_SYSTEM_INSTRUCTION + """
+        setup_message = _build_live_setup_message(
+            model_path,
+            use_snake_case=use_snake_case,
+            system_text=None,
+            session_handle=self.session_handle,
+        )
+        system_key = "system_instruction" if use_snake_case else "systemInstruction"
+        setup_message["setup"][system_key] = {
+            "parts": [{
+                "text": NERDX_SYSTEM_INSTRUCTION + """
 
 ADDITIONAL CONTEXT FOR REAL-TIME VIDEO MODE:
 You are receiving CONTINUOUS VIDEO STREAM (1 frame per second) from the student's camera.
@@ -1390,11 +1472,9 @@ When you see their work:
 
 This is REAL-TIME video - you can see them writing, erasing, and working. Use this to provide immediate, contextual help.
 """
-                    }]
-                },
-                "tools": []
-            }
+            }]
         }
+        return setup_message
     
     async def forward_video_frame(self, frame_base64: str, mime_type: str = "image/jpeg", timestamp: int = None):
         """
@@ -1559,7 +1639,11 @@ async def websocket_nerdx_live_video(websocket: WebSocket, user_id: str = "guest
 
 
 @app.websocket("/ws/nerdx-live")
-async def websocket_nerdx_live(websocket: WebSocket, user_id: str = "guest_voice"):
+async def websocket_nerdx_live(
+    websocket: WebSocket,
+    user_id: str = "guest_voice",
+    session_handle: Optional[str] = None,
+):
     """
     WebSocket endpoint - TRANSPARENT PIPE to Gemini.
     """
@@ -1576,7 +1660,7 @@ async def websocket_nerdx_live(websocket: WebSocket, user_id: str = "guest_voice
         await websocket.close()
         return
 
-    pipe = TransparentGeminiPipe(websocket)
+    pipe = TransparentGeminiPipe(websocket, session_handle=session_handle)
     
     if not await pipe.connect_to_gemini():
         await websocket.send_json({

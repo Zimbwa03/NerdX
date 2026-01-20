@@ -269,11 +269,21 @@ class ManimService:
                 "error": "Animation rendering timed out (>120s)"
             }
         except subprocess.CalledProcessError as e:
-            logger.error(f"Manim rendering failed: {e.stderr}")
+            error_msg = e.stderr or ""
+            # Check for parse_expr errors specifically
+            if "parse_expr" in error_msg or "ValueError" in error_msg:
+                logger.error(f"Manim parse_expr error: {error_msg[:500]}")
+                return {
+                    "success": False,
+                    "error": "Mathematical expression parsing failed. Please check the input expression format.",
+                    "logs": (e.stdout or "") + "\n" + error_msg,
+                    "platform": "windows" if self.is_windows else "linux"
+                }
+            logger.error(f"Manim rendering failed: {error_msg}")
             return {
                 "success": False,
                 "error": "Manim rendering failed",
-                "logs": (e.stdout or "") + "\n" + (e.stderr or ""),
+                "logs": (e.stdout or "") + "\n" + error_msg,
                 "platform": "windows" if self.is_windows else "linux"
             }
         except Exception as e:

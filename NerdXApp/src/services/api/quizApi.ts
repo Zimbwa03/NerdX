@@ -163,7 +163,12 @@ export const quizApi = {
       const response = await api.post('/api/mobile/quiz/generate', payload, {
         timeout: 90000,  // 90 seconds for AI generation
       });
-      return response.data.data || null;
+      // Include credits_remaining from server response for UI updates
+      const questionData = response.data.data || null;
+      if (questionData && response.data.credits_remaining !== undefined) {
+        questionData.credits_remaining = response.data.credits_remaining;
+      }
+      return questionData;
     } catch (error: any) {
       console.error('Generate question error:', error);
       throw error;

@@ -50,7 +50,14 @@ const LoginScreen: React.FC = () => {
       });
 
       if (response.success && response.token && response.user) {
-        await login(response.user, response.token, response.notifications);
+        // Pass credentials for Supabase Auth (dual-auth for notifications)
+        // Only pass if identifier looks like an email
+        const isEmail = identifier.includes('@');
+        const supabaseCredentials = isEmail 
+          ? { email: identifier.toLowerCase().trim(), password }
+          : undefined;
+        
+        await login(response.user, response.token, response.notifications, supabaseCredentials);
       } else {
         Alert.alert('Login Failed', response.message || 'Invalid credentials');
       }

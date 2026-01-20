@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Slider from '@react-native-community/slider';
 import * as ScreenOrientation from 'expo-screen-orientation';
+import { checkUrlAccessible, ensureFreshMediaUrl, refreshMediaUrl } from '../services/mediaUrlService';
 
 interface VideoStreamPlayerProps {
     videoUrl: string;
@@ -51,9 +52,22 @@ const VideoStreamPlayer: React.FC<VideoStreamPlayerProps> = ({
     const [isMuted, setIsMuted] = useState(false);
     const [position, setPosition] = useState(0);
     const [duration, setDuration] = useState(0);
+    const [resolvedUrl, setResolvedUrl] = useState(videoUrl);
 
     const controlsTimeout = useRef<NodeJS.Timeout | null>(null);
     const pulseAnim = useRef(new Animated.Value(1)).current;
+
+    const resolveVideoUrl = useCallback(async (): Promise<string | null> => {
+        const initialUrl = await ensureFreshMediaUrl(videoUrl);
+        const initialOk = await checkUrlAccessible(initialUrl);
+        if (initialOk) return initialUrl;
+
+        const refreshedUrl = await refreshMediaUrl(videoUrl);
+        const refreshedOk = await checkUrlAccessible(refreshedUrl);
+        if (refreshedOk) return refreshedUrl;
+
+        return null;
+    }, [videoUrl]);
 
     // Update loading and error states based on player status
     useEffect(() => {
@@ -68,6 +82,29 @@ const VideoStreamPlayer: React.FC<VideoStreamPlayerProps> = ({
             setIsLoading(false);
         }
     }, [status, player.duration]);
+
+    // Resolve and replace URL when input changes
+    useEffect(() => {
+        let active = true;
+
+        const refreshUrl = async () => {
+            setIsLoading(true);
+            const playableUrl = await resolveVideoUrl();
+            if (!active) return;
+            if (!playableUrl) {
+                setError('Video could not be loaded. Please check your connection or try again.');
+                setIsLoading(false);
+                return;
+            }
+            setResolvedUrl(playableUrl);
+            player.replace(playableUrl);
+        };
+
+        refreshUrl();
+        return () => {
+            active = false;
+        };
+    }, [resolveVideoUrl, player]);
 
     // Update position periodically
     useEffect(() => {
@@ -214,10 +251,17 @@ const VideoStreamPlayer: React.FC<VideoStreamPlayerProps> = ({
         resetControlsTimer();
     };
 
-    const handleRetry = () => {
+    const handleRetry = async () => {
         setError(null);
         setIsLoading(true);
-        player.replace(videoUrl);
+        const playableUrl = await resolveVideoUrl();
+        if (!playableUrl) {
+            setError('Video could not be loaded. Please check your connection or try again.');
+            setIsLoading(false);
+            return;
+        }
+        setResolvedUrl(playableUrl);
+        player.replace(playableUrl);
     };
 
     const handleVideoPress = () => {

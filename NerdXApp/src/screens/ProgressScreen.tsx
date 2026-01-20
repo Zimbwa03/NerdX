@@ -24,6 +24,7 @@ import Colors from '../theme/colors';
 import { useThemedColors } from '../theme/useThemedStyles';
 import { gamificationService, LevelInfo, DailyGoal, DailyActivity } from '../services/GamificationService';
 import { dktService, KnowledgeMap } from '../services/api/dktApi';
+import { accountApi, AIInsights } from '../services/api/accountApi';
 
 // Import new components
 import { LevelProgressRing } from '../components/AnimatedProgressRing';
@@ -79,6 +80,7 @@ const EnhancedProgressScreen: React.FC = () => {
   const [weeklyActivity, setWeeklyActivity] = useState<DailyActivity[]>([]);
   const [subjectMastery, setSubjectMastery] = useState<SubjectMasteryData[]>([]);
   const [knowledgeMap, setKnowledgeMap] = useState<KnowledgeMap | null>(null);
+  const [aiInsights, setAIInsights] = useState<AIInsights | null>(null);
 
   const loadAllData = useCallback(async () => {
     try {
@@ -109,6 +111,14 @@ const EnhancedProgressScreen: React.FC = () => {
         mapData = await dktService.getKnowledgeMap();
       } catch (error) {
         console.log('DKT knowledge map unavailable (offline or no data yet)');
+      }
+
+      // Fetch AI insights
+      try {
+        const insightsData = await accountApi.getAIInsights();
+        if (insightsData) setAIInsights(insightsData);
+      } catch (error) {
+        console.log('AI insights unavailable');
       }
 
       // Set local gamification data
@@ -271,6 +281,48 @@ const EnhancedProgressScreen: React.FC = () => {
                 color={Colors.secondary.main}
               />
             </View>
+
+            {/* AI Insights Summary Card */}
+            {aiInsights && (
+              <TouchableOpacity
+                style={[styles.aiInsightsCard, { backgroundColor: themedColors.background.paper }]}
+                onPress={() => navigation.navigate('AIInsights' as never)}
+                activeOpacity={0.85}
+              >
+                <LinearGradient
+                  colors={['rgba(139, 92, 246, 0.15)', 'rgba(124, 58, 237, 0.15)']}
+                  style={styles.aiInsightsGradient}
+                >
+                  <View style={styles.aiInsightsHeader}>
+                    <Text style={styles.aiInsightsIcon}>🧠</Text>
+                    <View style={styles.aiInsightsHeaderText}>
+                      <Text style={[styles.aiInsightsTitle, { color: themedColors.text.primary }]}>
+                        AI Learning Insights
+                      </Text>
+                      <Text style={[styles.aiInsightsSubtitle, { color: themedColors.text.secondary }]}>
+                        Personalized feedback for you
+                      </Text>
+                    </View>
+                    <View style={styles.aiHealthScoreBadge}>
+                      <Text style={styles.aiHealthScoreValue}>{aiInsights.health_score}</Text>
+                    </View>
+                  </View>
+                  <Text style={[styles.aiInsightsMessage, { color: themedColors.text.secondary }]} numberOfLines={2}>
+                    {aiInsights.personalized_message}
+                  </Text>
+                  <View style={styles.aiInsightsFooter}>
+                    <View style={styles.aiInsightsStats}>
+                      <Text style={styles.aiInsightsStat}>✅ {aiInsights.mastered_count}</Text>
+                      <Text style={styles.aiInsightsStat}>📚 {aiInsights.learning_count}</Text>
+                      <Text style={styles.aiInsightsStat}>⚠️ {aiInsights.struggling_count}</Text>
+                    </View>
+                    <Text style={[styles.aiInsightsLink, { color: Colors.primary.main }]}>
+                      View Details →
+                    </Text>
+                  </View>
+                </LinearGradient>
+              </TouchableOpacity>
+            )}
 
             {/* Daily Goals Widget */}
             {dailyGoals.length > 0 && (
@@ -670,6 +722,76 @@ const styles = StyleSheet.create({
   // Spacing
   bottomSpacer: {
     height: 40,
+  },
+
+  // AI Insights Card
+  aiInsightsCard: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    marginBottom: 16,
+    shadowColor: Colors.primary.dark,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  aiInsightsGradient: {
+    padding: 16,
+  },
+  aiInsightsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  aiInsightsIcon: {
+    fontSize: 28,
+    marginRight: 12,
+  },
+  aiInsightsHeaderText: {
+    flex: 1,
+  },
+  aiInsightsTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  aiInsightsSubtitle: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  aiHealthScoreBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.primary.main,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  aiHealthScoreValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  aiInsightsMessage: {
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 12,
+  },
+  aiInsightsFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  aiInsightsStats: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  aiInsightsStat: {
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  aiInsightsLink: {
+    fontSize: 13,
+    fontWeight: '600',
   },
 });
 

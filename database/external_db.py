@@ -346,6 +346,20 @@ def make_supabase_request(method, table, data=None, select="*", filters=None, li
                 response.raise_for_status()
                 return []
         
+        # Better error handling for 400 Bad Request before raising
+        if response.status_code == 400:
+            error_detail = "Unknown error"
+            try:
+                error_data = response.json()
+                error_detail = error_data.get('message', str(error_data))
+                logger.error(f"Supabase 400 Bad Request for {method} {table}: {error_detail}")
+                if data:
+                    logger.error(f"Data being sent: {list(data.keys()) if isinstance(data, dict) else type(data)}")
+            except:
+                error_detail = response.text or "No error details available"
+                logger.error(f"Supabase 400 Bad Request for {method} {table}: {error_detail}")
+            return None
+        
         response.raise_for_status()
         return response.json()
     except requests.exceptions.HTTPError as e:

@@ -16,6 +16,8 @@ import { useThemedColors } from '../theme/useThemedStyles';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { examApi, ExamReview, ReviewQuestion } from '../services/api/examApi';
+import MathRenderer from '../components/MathRenderer';
+import { shouldRenderMathText, toMathLatex } from '../utils/mathText';
 
 const ExamReviewScreen: React.FC = () => {
     const route = useRoute();
@@ -57,6 +59,18 @@ const ExamReviewScreen: React.FC = () => {
     const renderQuestionCard = (item: ReviewQuestion) => {
         const isCorrect = item.is_correct;
         const question = item.question;
+        const renderContent = (content: string, textStyle: any, fontSize = 15) => {
+            if (shouldRenderMathText(content)) {
+                return (
+                    <MathRenderer
+                        content={toMathLatex(content, true)}
+                        fontSize={fontSize}
+                        style={textStyle}
+                    />
+                );
+            }
+            return <Text style={textStyle}>{content}</Text>;
+        };
 
         return (
             <Card
@@ -104,9 +118,7 @@ const ExamReviewScreen: React.FC = () => {
                 )}
 
                 {/* Question Stem */}
-                <Text style={[styles.questionStem, { color: themedColors.text.primary }]}>
-                    {question.stem}
-                </Text>
+                {renderContent(question.stem, [styles.questionStem, { color: themedColors.text.primary }], 16)}
 
                 {/* Options for MCQ */}
                 {question.question_type === 'MCQ' && question.options && (
@@ -146,9 +158,7 @@ const ExamReviewScreen: React.FC = () => {
                                             {option.label}
                                         </Text>
                                     </View>
-                                    <Text style={[styles.optionText, { color: themedColors.text.primary }]}>
-                                        {option.text}
-                                    </Text>
+                                    {renderContent(option.text, [styles.optionText, { color: themedColors.text.primary }], 15)}
                                     {isCorrectOption && (
                                         <Ionicons name="checkmark-circle" size={20} color={themedColors.success.main} />
                                     )}
@@ -177,9 +187,7 @@ const ExamReviewScreen: React.FC = () => {
                 {item.explanation && (
                     <View style={[styles.explanationContainer, { backgroundColor: isDarkMode ? 'rgba(33, 150, 243, 0.1)' : '#E3F2FD' }]}>
                         <Ionicons name="bulb-outline" size={18} color={themedColors.primary.main} />
-                        <Text style={[styles.explanationText, { color: themedColors.text.primary }]}>
-                            {item.explanation}
-                        </Text>
+                        {renderContent(item.explanation, [styles.explanationText, { color: themedColors.text.primary }], 14)}
                     </View>
                 )}
 

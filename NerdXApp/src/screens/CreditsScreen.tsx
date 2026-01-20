@@ -150,7 +150,7 @@ const CreditsScreen: React.FC = () => {
             // Show celebration modal!
             setSuccessCredits(status.credits);
             setShowSuccessModal(true);
-            showSuccess(`🎉 Payment successful! ${status.credits} credits added to your account!`, 5000);
+            showSuccess(`Warm welcome! You have purchased ${status.credits} credits.`, 5000);
 
             // Refresh data to show new balance and transaction
             await loadData();
@@ -217,9 +217,15 @@ const CreditsScreen: React.FC = () => {
         const errorMessage = apiError.response?.data?.message || apiError.message || 'Failed to initiate purchase';
 
         if (errorMessage.toLowerCase().includes('timeout') || !apiError.response) {
+          const latestPayment = await creditsApi.getLatestPayment();
+          if (latestPayment && latestPayment.reference) {
+            handlePaymentInitiated(latestPayment);
+            return;
+          }
+
           Alert.alert(
             'Connection Issue',
-            'The request took too long, but the payment prompt might still appear on your phone. If it does, please complete the payment and we will detect it automatically.',
+            'We could not confirm that the payment prompt was sent. Please try again.',
             [{ text: 'OK' }]
           );
         } else {

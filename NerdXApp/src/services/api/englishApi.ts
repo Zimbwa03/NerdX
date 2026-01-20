@@ -17,6 +17,7 @@ export interface ComprehensionData {
     marks: number;
     required_points: string[];
   };
+  credits_remaining?: number;
 }
 
 export interface GradingResult {
@@ -81,6 +82,7 @@ export interface EssayMarkingResult {
   detailed_feedback: string;
   pdf_report: string; // Base64-encoded PDF
   credits_deducted?: number;
+  credits_remaining?: number;
 }
 
 export interface EssayPrompt {
@@ -116,7 +118,12 @@ export const englishApi = {
   generateComprehension: async (): Promise<ComprehensionData | null> => {
     try {
       const response = await api.post('/api/mobile/english/comprehension');
-      return response.data.data || null;
+      const data = response.data.data || null;
+      // Include credits_remaining from server response for UI updates
+      if (data && response.data.credits_remaining !== undefined) {
+        data.credits_remaining = response.data.credits_remaining;
+      }
+      return data;
     } catch (error: any) {
       console.error('Generate comprehension error:', error);
       throw error;
@@ -161,7 +168,12 @@ export const englishApi = {
         topic: topic || undefined,
         prompt: prompt || undefined,
       });
-      return response.data.data || null;
+      const data = response.data.data || null;
+      // Include credits_remaining from server response for UI updates
+      if (data && response.data.credits_remaining !== undefined) {
+        data.credits_remaining = response.data.credits_remaining;
+      }
+      return data;
     } catch (error: any) {
       console.error('Submit essay error:', error);
       throw error;

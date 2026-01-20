@@ -850,8 +850,8 @@ Generate the question now:"""
                                 delta = chunk['choices'][0].get('delta', {})
                                 
                                 # Extract reasoning content (thinking process)
-                                if 'reasoning_content' in delta:
-                                    reasoning_content += delta['reasoning_content']
+                                if 'reasoning_content' in delta and delta['reasoning_content'] is not None:
+                                    reasoning_content += str(delta['reasoning_content'])
                                     # Update thinking stage based on content length
                                     new_stage = min(len(reasoning_content) // 200 + 1, len(thinking_messages))
                                     if new_stage > stage:
@@ -864,8 +864,8 @@ Generate the question now:"""
                                         }
                                 
                                 # Extract actual content
-                                if 'content' in delta:
-                                    full_content += delta['content']
+                                if 'content' in delta and delta['content'] is not None:
+                                    full_content += str(delta['content'])
                                     
                         except json.JSONDecodeError:
                             continue

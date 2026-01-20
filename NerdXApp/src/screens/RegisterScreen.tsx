@@ -96,7 +96,11 @@ const RegisterScreen: React.FC = () => {
       if (response.success && response.token && response.user) {
         // If there's an immediate message (unlikely for verified email flow, but possible if auto-confirm is on)
         if (!response.message) {
-          await login(response.user, response.token);
+          // Pass credentials for Supabase Auth (dual-auth for notifications)
+          const supabaseCredentials = email.trim() 
+            ? { email: email.trim().toLowerCase(), password }
+            : undefined;
+          await login(response.user, response.token, undefined, supabaseCredentials);
         } else {
           // Navigate to new Verification Screen if verification is needed
           navigation.navigate('EmailVerification' as never);

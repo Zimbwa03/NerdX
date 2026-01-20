@@ -14,6 +14,7 @@ import { Audio } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Slider from '@react-native-community/slider';
+import { checkUrlAccessible, ensureFreshMediaUrl, refreshMediaUrl } from '../services/mediaUrlService';
 
 interface AudioStreamPlayerProps {
     audioUrl: string;
@@ -92,12 +93,30 @@ const AudioStreamPlayer: React.FC<AudioStreamPlayerProps> = ({
         }
     };
 
+    const resolveAudioUrl = async (): Promise<string | null> => {
+        const initialUrl = await ensureFreshMediaUrl(audioUrl);
+        const initialOk = await checkUrlAccessible(initialUrl);
+        if (initialOk) return initialUrl;
+
+        const refreshedUrl = await refreshMediaUrl(audioUrl);
+        const refreshedOk = await checkUrlAccessible(refreshedUrl);
+        if (refreshedOk) return refreshedUrl;
+
+        return null;
+    };
+
     const loadAndPlayAudio = async () => {
         try {
             setError(null);
             setIsLoading(true);
             console.log('🎵 Audio: Starting to load audio...');
-            console.log('🎵 Audio URL:', audioUrl.substring(0, 100) + '...');
+            const playableUrl = await resolveAudioUrl();
+            if (!playableUrl) {
+                setError('Audio is unavailable right now. Please try again later.');
+                setIsLoading(false);
+                return;
+            }
+            console.log('🎵 Audio URL:', playableUrl.substring(0, 100) + '...');
 
             // Configure audio mode for streaming
             console.log('🎵 Audio: Setting audio mode...');
@@ -124,6 +143,9 @@ const AudioStreamPlayer: React.FC<AudioStreamPlayerProps> = ({
             );
             console.log('🎵 Audio: Sound created successfully!');
 
+            if (sound) {
+                await sound.unloadAsync();
+            }
             setSound(newSound);
             setIsLoading(false);
         } catch (err: any) {

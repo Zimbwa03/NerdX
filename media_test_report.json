@@ -1,0 +1,3540 @@
+{
+  "timestamp": "2026-01-21T01:06:32.127997",
+  "summary": {
+    "total_audio": 125,
+    "accessible_audio": 125,
+    "total_video": 119,
+    "accessible_video": 92
+  },
+  "results": [
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/SI_Uni...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T22:05:02",
+        "issued_at": "2026-01-10T22:05:02",
+        "seconds_until_expiry": 3499621876
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/Kinema...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T22:00:33",
+        "issued_at": "2026-01-10T22:00:33",
+        "seconds_until_expiry": 3499621605
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/F_equa...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T21:59:09",
+        "issued_at": "2026-01-10T21:59:09",
+        "seconds_until_expiry": 3499621517
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/Force_...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T21:59:32",
+        "issued_at": "2026-01-10T21:59:32",
+        "seconds_until_expiry": 3499621537
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/A-Leve...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T21:56:55",
+        "issued_at": "2026-01-10T21:56:55",
+        "seconds_until_expiry": 3499621378
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/Stress...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T22:05:16",
+        "issued_at": "2026-01-10T22:05:16",
+        "seconds_until_expiry": 3499621875
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/A-Leve...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T21:58:14",
+        "issued_at": "2026-01-10T21:58:14",
+        "seconds_until_expiry": 3499621449
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/A-Leve...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T21:56:37",
+        "issued_at": "2026-01-10T21:56:37",
+        "seconds_until_expiry": 3499621348
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/A-Leve...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T21:56:09",
+        "issued_at": "2026-01-10T21:56:09",
+        "seconds_until_expiry": 3499621316
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/DC_Cir...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T21:58:36",
+        "issued_at": "2026-01-10T21:58:36",
+        "seconds_until_expiry": 3499621461
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/Quarks...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T22:03:00",
+        "issued_at": "2026-01-10T22:03:00",
+        "seconds_until_expiry": 3499621722
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/Master...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T22:01:13",
+        "issued_at": "2026-01-10T22:01:13",
+        "seconds_until_expiry": 3499621611
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/Gravit...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T22:00:19",
+        "issued_at": "2026-01-10T22:00:19",
+        "seconds_until_expiry": 3499621555
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/A-Leve...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T21:57:34",
+        "issued_at": "2026-01-10T21:57:34",
+        "seconds_until_expiry": 3499621387
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/Kineti...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T22:00:51",
+        "issued_at": "2026-01-10T22:00:51",
+        "seconds_until_expiry": 3499621580
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/Thermo...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T22:05:30",
+        "issued_at": "2026-01-10T22:05:30",
+        "seconds_until_expiry": 3499621856
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/Oscill...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T22:02:39",
+        "issued_at": "2026-01-10T22:02:39",
+        "seconds_until_expiry": 3499621681
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/Electr...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T21:58:49",
+        "issued_at": "2026-01-10T21:58:49",
+        "seconds_until_expiry": 3499621448
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/remani...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-21T21:12:36",
+        "issued_at": "2026-01-17T21:12:36",
+        "seconds_until_expiry": 3500223472
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/remani...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-21T21:13:50",
+        "issued_at": "2026-01-17T21:13:50",
+        "seconds_until_expiry": 3500223542
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/remani...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-21T21:12:17",
+        "issued_at": "2026-01-17T21:12:17",
+        "seconds_until_expiry": 3500223446
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/remani...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-21T21:13:03",
+        "issued_at": "2026-01-17T21:13:03",
+        "seconds_until_expiry": 3500223488
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/remani...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-21T21:13:24",
+        "issued_at": "2026-01-17T21:13:24",
+        "seconds_until_expiry": 3500223505
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/remani...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-21T21:13:36",
+        "issued_at": "2026-01-17T21:13:36",
+        "seconds_until_expiry": 3500223513
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/A%20level/Phys...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T06:47:55",
+        "issued_at": "2026-01-11T06:47:55",
+        "seconds_until_expiry": 3499653168
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/A%20level/Kine...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T06:38:11",
+        "issued_at": "2026-01-11T06:38:11",
+        "seconds_until_expiry": 3499652581
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/A%20level/rema...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-21T21:35:31",
+        "issued_at": "2026-01-17T21:35:31",
+        "seconds_until_expiry": 3500224818
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/A%20level/A-Le...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T06:32:46",
+        "issued_at": "2026-01-11T06:32:46",
+        "seconds_until_expiry": 3499652251
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/A%20level/Work...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T06:49:58",
+        "issued_at": "2026-01-11T06:49:58",
+        "seconds_until_expiry": 3499653279
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/A%20level/Defo...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T06:35:43",
+        "issued_at": "2026-01-11T06:35:43",
+        "seconds_until_expiry": 3499652418
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/A%20level/rema...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-21T21:37:33",
+        "issued_at": "2026-01-17T21:37:33",
+        "seconds_until_expiry": 3500224918
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/A%20level/A-Le...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T06:34:12",
+        "issued_at": "2026-01-11T06:34:12",
+        "seconds_until_expiry": 3499652312
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/A%20level/rema...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-21T21:36:05",
+        "issued_at": "2026-01-17T21:36:05",
+        "seconds_until_expiry": 3500224820
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/A%20level/Mast...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2037-01-08T06:45:54",
+        "issued_at": "2026-01-11T06:45:54",
+        "seconds_until_expiry": 346053005
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/A%20level/Part...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T06:47:19",
+        "issued_at": "2026-01-11T06:47:19",
+        "seconds_until_expiry": 3499653087
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/A%20level/Moti...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T06:46:37",
+        "issued_at": "2026-01-11T06:46:37",
+        "seconds_until_expiry": 3499653041
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/A%20level/A-Le...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T06:33:05",
+        "issued_at": "2026-01-11T06:33:05",
+        "seconds_until_expiry": 3499652226
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/A%20level/Temp...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T06:48:53",
+        "issued_at": "2026-01-11T06:48:53",
+        "seconds_until_expiry": 3499653170
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/A%20level/A-Le...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T06:33:51",
+        "issued_at": "2026-01-11T06:33:51",
+        "seconds_until_expiry": 3499652265
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/A%20level/A-Le...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T06:34:49",
+        "issued_at": "2026-01-11T06:34:49",
+        "seconds_until_expiry": 3499652320
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/A%20level/The_...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T06:49:14",
+        "issued_at": "2026-01-11T06:49:14",
+        "seconds_until_expiry": 3499653182
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/A%20level/A-Le...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T06:32:26",
+        "issued_at": "2026-01-11T06:32:26",
+        "seconds_until_expiry": 3499652170
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/A%20level/rema...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-21T21:37:49",
+        "issued_at": "2026-01-17T21:37:49",
+        "seconds_until_expiry": 3500224890
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/A%20level/rema...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-21T21:35:02",
+        "issued_at": "2026-01-17T21:35:02",
+        "seconds_until_expiry": 3500224720
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/A%20level/rema...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-21T21:37:07",
+        "issued_at": "2026-01-17T21:37:07",
+        "seconds_until_expiry": 3500224842
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/A%20level/rema...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-21T21:36:45",
+        "issued_at": "2026-01-17T21:36:45",
+        "seconds_until_expiry": 3500224818
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/A%20level/rema...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelPhysics/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-21T21:35:15",
+        "issued_at": "2026-01-17T21:35:15",
+        "seconds_until_expiry": 3500224724
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/A%20Level/Ult...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T12:54:12",
+        "issued_at": "2026-01-11T12:54:12",
+        "seconds_until_expiry": 3499675057
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/A%20Level/Bio...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T12:51:19",
+        "issued_at": "2026-01-11T12:51:19",
+        "seconds_until_expiry": 3499674881
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/A%20Level/Enz...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T12:51:41",
+        "issued_at": "2026-01-11T12:51:41",
+        "seconds_until_expiry": 3499674900
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/A%20Level/Flu...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "error": "[Errno 22] Invalid argument"
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/A%20Level/Mit...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T12:53:06",
+        "issued_at": "2026-01-11T12:53:06",
+        "seconds_until_expiry": 3499674979
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/A%20Level/DNA...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T12:51:31",
+        "issued_at": "2026-01-11T12:51:31",
+        "seconds_until_expiry": 3499674881
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/A%20Level/Pla...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T12:53:54",
+        "issued_at": "2026-01-11T12:53:54",
+        "seconds_until_expiry": 3499675021
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/A%20Level/Mam...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T12:52:53",
+        "issued_at": "2026-01-11T12:52:53",
+        "seconds_until_expiry": 3499674958
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/A%20Level/Fic...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T12:52:19",
+        "issued_at": "2026-01-11T12:52:19",
+        "seconds_until_expiry": 3499674921
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/A%20Level/rem...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-19T17:33:32",
+        "issued_at": "2026-01-15T17:33:32",
+        "seconds_until_expiry": 3500037391
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/A%20Level/rem...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-19T17:32:52",
+        "issued_at": "2026-01-15T17:32:52",
+        "seconds_until_expiry": 3500037347
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/A%20Level/rem...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-19T17:34:08",
+        "issued_at": "2026-01-15T17:34:08",
+        "seconds_until_expiry": 3500037419
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/A%20Level/rem...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-19T17:28:05",
+        "issued_at": "2026-01-15T17:28:05",
+        "seconds_until_expiry": 3500037053
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/A%20Level/rem...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-19T17:31:31",
+        "issued_at": "2026-01-15T17:31:31",
+        "seconds_until_expiry": 3500037257
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/A%20Level/rem...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-19T17:34:21",
+        "issued_at": "2026-01-15T17:34:21",
+        "seconds_until_expiry": 3500037423
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/A%20Level/rem...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-19T17:29:43",
+        "issued_at": "2026-01-15T17:29:43",
+        "seconds_until_expiry": 3500037142
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/A%20Level/rem...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-19T17:33:12",
+        "issued_at": "2026-01-15T17:33:12",
+        "seconds_until_expiry": 3500037348
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/A%20Level/rem...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-19T17:31:13",
+        "issued_at": "2026-01-15T17:31:13",
+        "seconds_until_expiry": 3500037226
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/A%20Level/rem...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-19T17:29:07",
+        "issued_at": "2026-01-15T17:29:07",
+        "seconds_until_expiry": 3500037097
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/A%20Level/rem...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-19T17:33:51",
+        "issued_at": "2026-01-15T17:33:51",
+        "seconds_until_expiry": 3500037377
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/A%20Level/rem...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-19T17:30:55",
+        "issued_at": "2026-01-15T17:30:55",
+        "seconds_until_expiry": 3500037198
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/A%20Level/rem...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-19T17:29:21",
+        "issued_at": "2026-01-15T17:29:21",
+        "seconds_until_expiry": 3500037101
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/A%20Level/rem...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-19T17:28:45",
+        "issued_at": "2026-01-15T17:28:45",
+        "seconds_until_expiry": 3500037062
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/A%20level/The_...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T12:59:32",
+        "issued_at": "2026-01-11T12:59:32",
+        "seconds_until_expiry": 3499675305
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/A%20level/Biol...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T12:58:07",
+        "issued_at": "2026-01-11T12:58:07",
+        "seconds_until_expiry": 3499675216
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/A%20level/Enzy...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T12:58:15",
+        "issued_at": "2026-01-11T12:58:15",
+        "seconds_until_expiry": 3499675221
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/A%20level/The_...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T12:59:42",
+        "issued_at": "2026-01-11T12:59:42",
+        "seconds_until_expiry": 3499675305
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/A%20level/The_...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T12:59:58",
+        "issued_at": "2026-01-11T12:59:58",
+        "seconds_until_expiry": 3499675317
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/A%20level/Tran...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T13:00:36",
+        "issued_at": "2026-01-11T13:00:36",
+        "seconds_until_expiry": 3499675351
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/A%20level/Tran...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T13:00:48",
+        "issued_at": "2026-01-11T13:00:48",
+        "seconds_until_expiry": 3499675359
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/A%20level/The_...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T13:00:14",
+        "issued_at": "2026-01-11T13:00:14",
+        "seconds_until_expiry": 3499675321
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/A%20level/Infe...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T12:58:45",
+        "issued_at": "2026-01-11T12:58:45",
+        "seconds_until_expiry": 3499675228
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/A%20level/Immu...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T12:58:32",
+        "issued_at": "2026-01-11T12:58:32",
+        "seconds_until_expiry": 3499675212
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/A%20level/Smok...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-15T12:59:20",
+        "issued_at": "2026-01-11T12:59:20",
+        "seconds_until_expiry": 3499675257
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/A%20level/rema...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-19T18:18:12",
+        "issued_at": "2026-01-15T18:18:12",
+        "seconds_until_expiry": 3500039986
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/A%20level/rema...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-19T18:16:23",
+        "issued_at": "2026-01-15T18:16:23",
+        "seconds_until_expiry": 3500039872
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/A%20level/rema...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-19T18:15:32",
+        "issued_at": "2026-01-15T18:15:32",
+        "seconds_until_expiry": 3500039817
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/A%20level/rema...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-19T18:17:10",
+        "issued_at": "2026-01-15T18:17:10",
+        "seconds_until_expiry": 3500039910
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/A%20level/rema...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-19T18:16:03",
+        "issued_at": "2026-01-15T18:16:03",
+        "seconds_until_expiry": 3500039836
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/A%20level/rema...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-19T18:15:47",
+        "issued_at": "2026-01-15T18:15:47",
+        "seconds_until_expiry": 3500039814
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/A%20level/rema...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelBiology/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-19T18:18:51",
+        "issued_at": "2026-01-15T18:18:51",
+        "seconds_until_expiry": 3500039994
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/A...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T12:49:35",
+        "issued_at": "2026-01-10T12:49:35",
+        "seconds_until_expiry": 3499588236
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/r...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T18:01:55",
+        "issued_at": "2026-01-10T18:01:55",
+        "seconds_until_expiry": 3499606973
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/C...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T12:49:55",
+        "issued_at": "2026-01-10T12:49:55",
+        "seconds_until_expiry": 3499588250
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/A...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T12:48:54",
+        "issued_at": "2026-01-10T12:48:54",
+        "seconds_until_expiry": 3499588186
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/O...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T12:56:10",
+        "issued_at": "2026-01-10T12:56:10",
+        "seconds_until_expiry": 3499588620
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/A...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T12:49:10",
+        "issued_at": "2026-01-10T12:49:10",
+        "seconds_until_expiry": 3499588198
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/C...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T12:51:05",
+        "issued_at": "2026-01-10T12:51:05",
+        "seconds_until_expiry": 3499588310
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/I...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T12:54:01",
+        "issued_at": "2026-01-10T12:54:01",
+        "seconds_until_expiry": 3499588482
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/R...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T12:57:07",
+        "issued_at": "2026-01-10T12:57:07",
+        "seconds_until_expiry": 3499588666
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/E...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T12:51:33",
+        "issued_at": "2026-01-10T12:51:33",
+        "seconds_until_expiry": 3499588329
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/H...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T12:51:49",
+        "issued_at": "2026-01-10T12:51:49",
+        "seconds_until_expiry": 3499588343
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/r...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-21T22:40:39",
+        "issued_at": "2026-01-17T22:40:39",
+        "seconds_until_expiry": 3500228470
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/A...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T12:48:27",
+        "issued_at": "2026-01-10T12:48:27",
+        "seconds_until_expiry": 3499588135
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/A...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T12:48:41",
+        "issued_at": "2026-01-10T12:48:41",
+        "seconds_until_expiry": 3499588145
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/M...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T12:54:21",
+        "issued_at": "2026-01-10T12:54:21",
+        "seconds_until_expiry": 3499588483
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/H...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T12:52:07",
+        "issued_at": "2026-01-10T12:52:07",
+        "seconds_until_expiry": 3499588346
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/N...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T12:55:09",
+        "issued_at": "2026-01-10T12:55:09",
+        "seconds_until_expiry": 3499588526
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/O...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T12:55:25",
+        "issued_at": "2026-01-10T12:55:25",
+        "seconds_until_expiry": 3499588538
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/H...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T12:53:38",
+        "issued_at": "2026-01-10T12:53:38",
+        "seconds_until_expiry": 3499588427
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/r...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-21T22:41:22",
+        "issued_at": "2026-01-17T22:41:22",
+        "seconds_until_expiry": 3500228488
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/r...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T18:00:54",
+        "issued_at": "2026-01-10T18:00:54",
+        "seconds_until_expiry": 3499606855
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/r...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T18:01:37",
+        "issued_at": "2026-01-10T18:01:37",
+        "seconds_until_expiry": 3499606895
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/r...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T18:03:15",
+        "issued_at": "2026-01-10T18:03:15",
+        "seconds_until_expiry": 3499606988
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/r...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T18:02:49",
+        "issued_at": "2026-01-10T18:02:49",
+        "seconds_until_expiry": 3499606959
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/r...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T18:02:26",
+        "issued_at": "2026-01-10T18:02:26",
+        "seconds_until_expiry": 3499606932
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/r...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T18:03:04",
+        "issued_at": "2026-01-10T18:03:04",
+        "seconds_until_expiry": 3499606966
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/r...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T18:01:23",
+        "issued_at": "2026-01-10T18:01:23",
+        "seconds_until_expiry": 3499606860
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/R...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T12:56:44",
+        "issued_at": "2026-01-10T12:56:44",
+        "seconds_until_expiry": 3499588577
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/A...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T12:48:54",
+        "issued_at": "2026-01-10T12:48:54",
+        "seconds_until_expiry": 3499588101
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/C...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T12:49:55",
+        "issued_at": "2026-01-10T12:49:55",
+        "seconds_until_expiry": 3499588156
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/r...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T18:00:40",
+        "issued_at": "2026-01-10T18:00:40",
+        "seconds_until_expiry": 3499606795
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/r...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T18:03:29",
+        "issued_at": "2026-01-10T18:03:29",
+        "seconds_until_expiry": 3499606957
+      }
+    },
+    {
+      "url": "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/At...",
+      "accessible": false,
+      "status_code": null,
+      "content_type": null,
+      "error": "Connection Error",
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {}
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/r...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T17:51:21",
+        "issued_at": "2026-01-10T17:51:21",
+        "seconds_until_expiry": 3499606224
+      }
+    },
+    {
+      "url": "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Ca...",
+      "accessible": false,
+      "status_code": null,
+      "content_type": null,
+      "error": "Connection Error",
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {}
+    },
+    {
+      "url": "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Ca...",
+      "accessible": false,
+      "status_code": null,
+      "content_type": null,
+      "error": "Connection Error",
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {}
+    },
+    {
+      "url": "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Hy...",
+      "accessible": false,
+      "status_code": null,
+      "content_type": null,
+      "error": "Connection Error",
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {}
+    },
+    {
+      "url": "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/At...",
+      "accessible": false,
+      "status_code": null,
+      "content_type": null,
+      "error": "Connection Error",
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {}
+    },
+    {
+      "url": "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Ch...",
+      "accessible": false,
+      "status_code": null,
+      "content_type": null,
+      "error": "Connection Error",
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {}
+    },
+    {
+      "url": "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/St...",
+      "accessible": false,
+      "status_code": null,
+      "content_type": null,
+      "error": "Connection Error",
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {}
+    },
+    {
+      "url": "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/El...",
+      "accessible": false,
+      "status_code": null,
+      "content_type": null,
+      "error": "Connection Error",
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {}
+    },
+    {
+      "url": "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Eq...",
+      "accessible": false,
+      "status_code": null,
+      "content_type": null,
+      "error": "Connection Error",
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {}
+    },
+    {
+      "url": "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Ha...",
+      "accessible": false,
+      "status_code": null,
+      "content_type": null,
+      "error": "Connection Error",
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {}
+    },
+    {
+      "url": "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Re...",
+      "accessible": false,
+      "status_code": null,
+      "content_type": null,
+      "error": "Connection Error",
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {}
+    },
+    {
+      "url": "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Ch...",
+      "accessible": false,
+      "status_code": null,
+      "content_type": null,
+      "error": "Connection Error",
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {}
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/r...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T17:51:37",
+        "issued_at": "2026-01-10T17:51:37",
+        "seconds_until_expiry": 3499606235
+      }
+    },
+    {
+      "url": "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Gr...",
+      "accessible": false,
+      "status_code": null,
+      "content_type": null,
+      "error": "Connection Error",
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {}
+    },
+    {
+      "url": "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Gr...",
+      "accessible": false,
+      "status_code": null,
+      "content_type": null,
+      "error": "Connection Error",
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {}
+    },
+    {
+      "url": "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Ni...",
+      "accessible": false,
+      "status_code": null,
+      "content_type": null,
+      "error": "Connection Error",
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {}
+    },
+    {
+      "url": "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/An...",
+      "accessible": false,
+      "status_code": null,
+      "content_type": null,
+      "error": "Connection Error",
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {}
+    },
+    {
+      "url": "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Hy...",
+      "accessible": false,
+      "status_code": null,
+      "content_type": null,
+      "error": "Connection Error",
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {}
+    },
+    {
+      "url": "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Po...",
+      "accessible": false,
+      "status_code": null,
+      "content_type": null,
+      "error": "Connection Error",
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {}
+    },
+    {
+      "url": "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Or...",
+      "accessible": false,
+      "status_code": null,
+      "content_type": null,
+      "error": "Connection Error",
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {}
+    },
+    {
+      "url": "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/An...",
+      "accessible": false,
+      "status_code": null,
+      "content_type": null,
+      "error": "Connection Error",
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {}
+    },
+    {
+      "url": "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/La...",
+      "accessible": false,
+      "status_code": null,
+      "content_type": null,
+      "error": "Connection Error",
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {}
+    },
+    {
+      "url": "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Tr...",
+      "accessible": false,
+      "status_code": null,
+      "content_type": null,
+      "error": "Connection Error",
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {}
+    },
+    {
+      "url": "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Be...",
+      "accessible": false,
+      "status_code": null,
+      "content_type": null,
+      "error": "Connection Error",
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {}
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/r...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T17:52:32",
+        "issued_at": "2026-01-10T17:52:32",
+        "seconds_until_expiry": 3499606286
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/r...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T17:50:44",
+        "issued_at": "2026-01-10T17:50:44",
+        "seconds_until_expiry": 3499606173
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/r...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T17:50:31",
+        "issued_at": "2026-01-10T17:50:31",
+        "seconds_until_expiry": 3499606156
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/r...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T17:52:03",
+        "issued_at": "2026-01-10T17:52:03",
+        "seconds_until_expiry": 3499606244
+      }
+    },
+    {
+      "url": "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Ca...",
+      "accessible": false,
+      "status_code": null,
+      "content_type": null,
+      "error": "Connection Error",
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {}
+    },
+    {
+      "url": "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Ca...",
+      "accessible": false,
+      "status_code": null,
+      "content_type": null,
+      "error": "Connection Error",
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {}
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/r...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T17:51:51",
+        "issued_at": "2026-01-10T17:51:51",
+        "seconds_until_expiry": 3499606228
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/r...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/aLevelChemistry/notes.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-14T17:52:16",
+        "issued_at": "2026-01-10T17:52:16",
+        "seconds_until_expiry": 3499606250
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/Cell_Structur...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/biology.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-12T06:11:15",
+        "issued_at": "2025-12-09T06:11:15",
+        "seconds_until_expiry": 3496799385
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/Movement%20in...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/biology.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-12T06:11:42",
+        "issued_at": "2025-12-09T06:11:42",
+        "seconds_until_expiry": 3496799408
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/Enzymes.m4a?t...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/biology.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-12T06:16:05",
+        "issued_at": "2025-12-09T06:16:05",
+        "seconds_until_expiry": 3496799667
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/Plant%20Nutri...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/biology.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-12T06:12:28",
+        "issued_at": "2025-12-09T06:12:28",
+        "seconds_until_expiry": 3496799445
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/Human%20Nutri...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/biology.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-12T06:13:41",
+        "issued_at": "2025-12-09T06:13:41",
+        "seconds_until_expiry": 3496799514
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/Plant%20Trans...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/biology.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-12T06:12:10",
+        "issued_at": "2025-12-09T06:12:10",
+        "seconds_until_expiry": 3496799418
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/Human%20Trans...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/biology.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-12T06:13:22",
+        "issued_at": "2025-12-09T06:13:22",
+        "seconds_until_expiry": 3496799486
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/Respiration.m...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/biology.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-12T06:12:54",
+        "issued_at": "2025-12-09T06:12:54",
+        "seconds_until_expiry": 3496799455
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/Excretion.m4a...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/biology.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-12T06:14:38",
+        "issued_at": "2025-12-09T06:14:38",
+        "seconds_until_expiry": 3496799554
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/Biological_Fo...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/biology.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-12T06:16:26",
+        "issued_at": "2025-12-09T06:16:26",
+        "seconds_until_expiry": 3496799657
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/Fertile_Offsp...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/biology.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-12T06:14:10",
+        "issued_at": "2025-12-09T06:14:10",
+        "seconds_until_expiry": 3496799517
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/Cell_Structur...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/biology.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-16T00:43:01",
+        "issued_at": "2025-12-13T00:43:01",
+        "seconds_until_expiry": 3497125244
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/Cell_Structur...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/biology.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-14T19:04:22",
+        "issued_at": "2025-12-11T19:04:22",
+        "seconds_until_expiry": 3497018521
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Biology%20/Naming_Life_a...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/biology.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-14T17:46:18",
+        "issued_at": "2025-12-11T17:46:18",
+        "seconds_until_expiry": 3497013833
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/Cell_Structure...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/biology.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-18T21:43:17",
+        "issued_at": "2025-12-15T21:43:17",
+        "seconds_until_expiry": 3497373648
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/Movement_In_&_...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/biology.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-18T21:46:51",
+        "issued_at": "2025-12-15T21:46:51",
+        "seconds_until_expiry": 3497373858
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/Enzymes.mp4?to...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/biology.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-18T21:44:27",
+        "issued_at": "2025-12-15T21:44:27",
+        "seconds_until_expiry": 3497373710
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/Plant_Nutritio...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/biology.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2247-10-23T21:48:31",
+        "issued_at": "2025-12-15T21:48:31",
+        "seconds_until_expiry": 6997869950
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/Animal%20Trans...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/biology.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-18T21:43:04",
+        "issued_at": "2025-12-15T21:43:04",
+        "seconds_until_expiry": 3497373618
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/How_Plants_Def...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/biology.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2247-10-23T21:46:11",
+        "issued_at": "2025-12-15T21:46:11",
+        "seconds_until_expiry": 6997869801
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/Transport_in_H...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/biology.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-18T21:49:39",
+        "issued_at": "2025-12-15T21:49:39",
+        "seconds_until_expiry": 3497374005
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/Respiration.mp...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/biology.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-18T21:49:11",
+        "issued_at": "2025-12-15T21:49:11",
+        "seconds_until_expiry": 3497373973
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/Excretion__You...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/biology.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-18T21:44:39",
+        "issued_at": "2025-12-15T21:44:39",
+        "seconds_until_expiry": 3497373697
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/Coordination_a...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/biology.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-18T21:43:30",
+        "issued_at": "2025-12-15T21:43:30",
+        "seconds_until_expiry": 3497373625
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/Reproduction__...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/biology.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-18T21:48:48",
+        "issued_at": "2025-12-15T21:48:48",
+        "seconds_until_expiry": 3497373938
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/Organisms%20an...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/biology.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2247-10-23T21:47:33",
+        "issued_at": "2025-12-15T21:47:33",
+        "seconds_until_expiry": 6997869860
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Biology/Lets%20Classif...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/biology.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-18T21:46:31",
+        "issued_at": "2025-12-15T21:46:31",
+        "seconds_until_expiry": 3497373794
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/Kinetic_The...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-14T18:24:02",
+        "issued_at": "2025-12-11T18:24:02",
+        "seconds_until_expiry": 3497016039
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/remaining/T...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-21T22:33:48",
+        "issued_at": "2026-01-17T22:33:48",
+        "seconds_until_expiry": 3500227822
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/Ionic_Coval...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-14T18:23:40",
+        "issued_at": "2025-12-11T18:23:40",
+        "seconds_until_expiry": 3497016011
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/remaining/W...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-21T22:34:02",
+        "issued_at": "2026-01-17T22:34:02",
+        "seconds_until_expiry": 3500227829
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/Measuring_a...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-14T18:36:46",
+        "issued_at": "2025-12-11T18:36:46",
+        "seconds_until_expiry": 3497016789
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/remaining/T...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-21T22:33:36",
+        "issued_at": "2026-01-17T22:33:36",
+        "seconds_until_expiry": 3500227794
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/Bond_Breaki...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-14T18:22:08",
+        "issued_at": "2025-12-11T18:22:08",
+        "seconds_until_expiry": 3497015904
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/Electrolysi...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-14T18:22:41",
+        "issued_at": "2025-12-11T18:22:41",
+        "seconds_until_expiry": 3497015932
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/Oxidation_R...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-14T18:37:14",
+        "issued_at": "2025-12-11T18:37:14",
+        "seconds_until_expiry": 3497016802
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/remaining/A...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "error": "[Errno 22] Invalid argument"
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/remaining/F...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-21T22:33:22",
+        "issued_at": "2026-01-17T22:33:22",
+        "seconds_until_expiry": 3500227763
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/Why_Non-Met...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-14T18:38:14",
+        "issued_at": "2025-12-11T18:38:14",
+        "seconds_until_expiry": 3497016850
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/Proving_Wat...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-14T18:37:53",
+        "issued_at": "2025-12-11T18:37:53",
+        "seconds_until_expiry": 3497016824
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/How_Carbon_...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-14T18:23:01",
+        "issued_at": "2025-12-11T18:23:01",
+        "seconds_until_expiry": 3497015929
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/Chemical_Se...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-14T18:22:26",
+        "issued_at": "2025-12-11T18:22:26",
+        "seconds_until_expiry": 3497015891
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/Kinetic_The...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-14T18:24:02",
+        "issued_at": "2025-12-11T18:24:02",
+        "seconds_until_expiry": 3497015984
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/remaining/C...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-21T22:33:08",
+        "issued_at": "2026-01-17T22:33:08",
+        "seconds_until_expiry": 3500227727
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/Electrolysi...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-14T18:22:41",
+        "issued_at": "2025-12-11T18:22:41",
+        "seconds_until_expiry": 3497015898
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/Bond_Breaki...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-14T18:22:08",
+        "issued_at": "2025-12-11T18:22:08",
+        "seconds_until_expiry": 3497015862
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/remaining/T...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-21T22:33:36",
+        "issued_at": "2026-01-17T22:33:36",
+        "seconds_until_expiry": 3500227747
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/Proving_Wat...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-14T18:37:53",
+        "issued_at": "2025-12-11T18:37:53",
+        "seconds_until_expiry": 3497016801
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/Chemical_Se...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-14T18:22:26",
+        "issued_at": "2025-12-11T18:22:26",
+        "seconds_until_expiry": 3497015870
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/remaing/Stat...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-21T22:48:45",
+        "issued_at": "2026-01-17T22:48:45",
+        "seconds_until_expiry": 3500228644
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Building_Blo...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-19T09:24:36",
+        "issued_at": "2025-12-16T09:24:36",
+        "seconds_until_expiry": 3497415592
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Understandin...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-19T09:30:13",
+        "issued_at": "2025-12-16T09:30:13",
+        "seconds_until_expiry": 3497415926
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Stoichiometr...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-19T09:29:21",
+        "issued_at": "2025-12-16T09:29:21",
+        "seconds_until_expiry": 3497415871
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/remaing/Chem...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-21T22:48:18",
+        "issued_at": "2026-01-17T22:48:18",
+        "seconds_until_expiry": 3500228605
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Periodic_Tab...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-19T09:28:45",
+        "issued_at": "2025-12-16T09:28:45",
+        "seconds_until_expiry": 3497415827
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Chemical_Ene...",
+      "accessible": false,
+      "status_code": 400,
+      "content_type": "application/json; charset=utf-8",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-19T09:24:50",
+        "issued_at": "2025-12-16T09:24:50",
+        "seconds_until_expiry": 3497415586
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Electrochemi...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-19T09:25:18",
+        "issued_at": "2025-12-16T09:25:18",
+        "seconds_until_expiry": 3497415610
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Redox_Reacti...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-19T09:29:07",
+        "issued_at": "2025-12-16T09:29:07",
+        "seconds_until_expiry": 3497415835
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Acids,_Bases...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-19T09:24:21",
+        "issued_at": "2025-12-16T09:24:21",
+        "seconds_until_expiry": 3497415546
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/The_Explaine...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-19T09:29:57",
+        "issued_at": "2025-12-16T09:29:57",
+        "seconds_until_expiry": 3497415879
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/remaing/Non-...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-21T22:48:29",
+        "issued_at": "2026-01-17T22:48:29",
+        "seconds_until_expiry": 3500228588
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/The_Chemistr...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-19T09:29:41",
+        "issued_at": "2025-12-16T09:29:41",
+        "seconds_until_expiry": 3497415858
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Organic_Chem...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-19T09:28:24",
+        "issued_at": "2025-12-16T09:28:24",
+        "seconds_until_expiry": 3497415778
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Experimental...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-19T09:25:42",
+        "issued_at": "2025-12-16T09:25:42",
+        "seconds_until_expiry": 3497415613
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/remaing/The_...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-12-21T22:49:02",
+        "issued_at": "2026-01-17T22:49:02",
+        "seconds_until_expiry": 3500228609
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Stoichiometr...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-19T09:29:21",
+        "issued_at": "2025-12-16T09:29:21",
+        "seconds_until_expiry": 3497415823
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Electrochemi...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-19T09:25:18",
+        "issued_at": "2025-12-16T09:25:18",
+        "seconds_until_expiry": 3497415578
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Chemical_Ene...",
+      "accessible": false,
+      "status_code": 400,
+      "content_type": "application/json; charset=utf-8",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-19T09:24:50",
+        "issued_at": "2025-12-16T09:24:50",
+        "seconds_until_expiry": 3497415547
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Periodic_Tab...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-19T09:28:45",
+        "issued_at": "2025-12-16T09:28:45",
+        "seconds_until_expiry": 3497415780
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/The_Chemistr...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-19T09:29:41",
+        "issued_at": "2025-12-16T09:29:41",
+        "seconds_until_expiry": 3497415834
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Chemistry/Experimental...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/chemistry.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-19T09:25:42",
+        "issued_at": "2025-12-16T09:25:42",
+        "seconds_until_expiry": 3497415593
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/From_SI_Units_to...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/physics.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-16T06:44:26",
+        "issued_at": "2025-12-13T06:44:26",
+        "seconds_until_expiry": 3497146715
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/The_Physics_of_M...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/physics.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-16T06:48:45",
+        "issued_at": "2025-12-13T06:48:45",
+        "seconds_until_expiry": 3497146973
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/Newton_s_Laws_an...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/physics.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2026-04-03T06:46:29",
+        "issued_at": "2025-12-13T06:46:29",
+        "seconds_until_expiry": 6241235
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/Work_Energy_and_...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/physics.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-16T06:49:13",
+        "issued_at": "2025-12-13T06:49:13",
+        "seconds_until_expiry": 3497146997
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/Kinetic_Theory_B...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/physics.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-16T06:44:51",
+        "issued_at": "2025-12-13T06:44:51",
+        "seconds_until_expiry": 3497146731
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/The_Core_Rules_o...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/physics.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-16T06:48:22",
+        "issued_at": "2025-12-13T06:48:22",
+        "seconds_until_expiry": 3497146939
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/Circuit_Fundamen...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/physics.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-16T06:43:50",
+        "issued_at": "2025-12-13T06:43:50",
+        "seconds_until_expiry": 3497146666
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/Magnetic_Domains...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/physics.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-16T06:46:07",
+        "issued_at": "2025-12-13T06:46:07",
+        "seconds_until_expiry": 3497146801
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/Analogue_Digital...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/physics.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-16T06:43:31",
+        "issued_at": "2025-12-13T06:43:31",
+        "seconds_until_expiry": 3497146643
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/The_Atom_Is_Most...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "audio/x-m4a",
+      "error": null,
+      "type": "audio",
+      "file": "NerdXApp/src/data/scienceNotes/physics.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-16T06:46:50",
+        "issued_at": "2025-12-13T06:46:50",
+        "seconds_until_expiry": 3497146840
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/The_Language_o...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/physics.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-18T13:15:47",
+        "issued_at": "2025-12-15T13:15:47",
+        "seconds_until_expiry": 3497342975
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/The_World_in_M...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/physics.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-18T13:16:26",
+        "issued_at": "2025-12-15T13:16:26",
+        "seconds_until_expiry": 3497343012
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/Forces__Push_a...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/physics.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-18T13:14:41",
+        "issued_at": "2025-12-15T13:14:41",
+        "seconds_until_expiry": 3497342905
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/WORK,_ENERGY,_...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/physics.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-18T13:16:57",
+        "issued_at": "2025-12-15T13:16:57",
+        "seconds_until_expiry": 3497343040
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/Thermal_Physic...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/physics.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-18T13:34:31",
+        "issued_at": "2025-12-15T13:34:31",
+        "seconds_until_expiry": 3497344092
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/Understanding_...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/physics.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-18T13:16:38",
+        "issued_at": "2025-12-15T13:16:38",
+        "seconds_until_expiry": 3497343017
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/The_Explainer_...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/physics.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-18T13:15:31",
+        "issued_at": "2025-12-15T13:15:31",
+        "seconds_until_expiry": 3497342948
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/Magnetism__The...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/physics.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-18T13:14:57",
+        "issued_at": "2025-12-15T13:14:57",
+        "seconds_until_expiry": 3497342912
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/The_Logic_of_E...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/physics.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-18T13:16:02",
+        "issued_at": "2025-12-15T13:16:02",
+        "seconds_until_expiry": 3497342975
+      }
+    },
+    {
+      "url": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Science/Physics/Atomic_&_Nucle...",
+      "accessible": true,
+      "status_code": 200,
+      "content_type": "video/mp4",
+      "error": null,
+      "type": "video",
+      "file": "NerdXApp/src/data/scienceNotes/physics.ts",
+      "jwt_info": {
+        "expired": false,
+        "expires_at": "2136-11-18T13:14:24",
+        "issued_at": "2025-12-15T13:14:24",
+        "seconds_until_expiry": 3497342875
+      }
+    }
+  ]
+}

@@ -661,20 +661,17 @@ const QuizScreen: React.FC = () => {
         setQuestionStartTime(Date.now());
         setHintsUsed(0);
         setStructuredAnswers({});  // Reset structured question answers
-        // Credit cost varies by question type - backend handles deduction
-        // Backend will deduct the correct amount based on subject/question type
+        // Update credits from server response (server handles deduction)
         if (user) {
-          // Backend handles credit deduction - estimate for UI (actual cost depends on question type)
-          // Most questions cost 0.5 credit, but some cost 0.25 or 1 credit
-          // The backend response would have credits_remaining if available
-          // For now, we show a generic message and rely on backend to handle deduction
-          showInfo(`Question loaded. Credits deducted by system.`, 2000);
-
-          // Check if credits are getting low
-          if (newCredits <= 3 && newCredits > 0) {
-            setTimeout(() => {
-              showWarning(`âš ï¸ Running low on credits! Only ${newCredits} credits left.`, 5000);
-            }, 3500);
+          const serverCredits = (newQuestion as any).credits_remaining;
+          if (serverCredits !== undefined) {
+            updateUser({ credits: serverCredits });
+            // Warn if credits are getting low
+            if (serverCredits <= 3 && serverCredits > 0) {
+              setTimeout(() => {
+                showWarning(`âš ï¸ Running low on credits! Only ${serverCredits} credits left.`, 5000);
+              }, 3500);
+            }
           }
         }
       } else {

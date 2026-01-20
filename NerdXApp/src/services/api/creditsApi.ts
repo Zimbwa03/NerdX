@@ -100,6 +100,15 @@ export const creditsApi = {
       return null;
     }
   },
+  getLatestPayment: async (): Promise<PurchaseResult | null> => {
+    try {
+      const response = await api.get('/api/mobile/payment/latest');
+      return response.data.data || null;
+    } catch (error: any) {
+      console.error('Get latest payment error:', error);
+      return null;
+    }
+  },
 };
 
 export type PaymentMethod = 'ecocash' | 'visa_mastercard';

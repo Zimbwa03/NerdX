@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase, isSupabaseAuthSignedIn, getSupabaseAuthUserId } from './supabase';
 
 export interface Notification {
   id: string;
@@ -31,8 +31,20 @@ export interface NotificationRecipient {
  */
 export async function getUnreadCount(): Promise<number> {
   try {
+    // Check if Supabase Auth session is available
+    const isSignedIn = await isSupabaseAuthSignedIn();
+    if (!isSignedIn) {
+      console.log('[Notifications] No Supabase Auth session - cannot fetch unread count');
+      return 0;
+    }
+
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return 0;
+    if (!user) {
+      console.log('[Notifications] No user from Supabase Auth');
+      return 0;
+    }
+
+    console.log('[Notifications] Fetching unread count for user:', user.id);
 
     const { count, error } = await supabase
       .from('notification_recipients')
@@ -41,13 +53,14 @@ export async function getUnreadCount(): Promise<number> {
       .is('read_at', null);
 
     if (error) {
-      console.error('Error fetching unread count:', error);
+      console.error('[Notifications] Error fetching unread count:', error.message);
       return 0;
     }
 
+    console.log('[Notifications] Unread count:', count);
     return count || 0;
   } catch (error) {
-    console.error('Error in getUnreadCount:', error);
+    console.error('[Notifications] Error in getUnreadCount:', error);
     return 0;
   }
 }
@@ -60,8 +73,20 @@ export async function getNotifications(
   offset: number = 0
 ): Promise<NotificationRecipient[]> {
   try {
+    // Check if Supabase Auth session is available
+    const isSignedIn = await isSupabaseAuthSignedIn();
+    if (!isSignedIn) {
+      console.log('[Notifications] No Supabase Auth session - cannot fetch notifications');
+      return [];
+    }
+
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return [];
+    if (!user) {
+      console.log('[Notifications] No user from Supabase Auth');
+      return [];
+    }
+
+    console.log('[Notifications] Fetching notifications for user:', user.id, 'limit:', limit, 'offset:', offset);
 
     const { data, error } = await supabase
       .from('notification_recipients')
@@ -74,16 +99,19 @@ export async function getNotifications(
       .range(offset, offset + limit - 1);
 
     if (error) {
-      console.error('Error fetching notifications:', error);
+      console.error('[Notifications] Error fetching notifications:', error.message);
       return [];
     }
 
-    return (data || []).map((item: any) => ({
+    const notifications = (data || []).map((item: any) => ({
       ...item,
       notification: item.notification?.[0] || item.notification,
     }));
+
+    console.log('[Notifications] Fetched', notifications.length, 'notifications');
+    return notifications;
   } catch (error) {
-    console.error('Error in getNotifications:', error);
+    console.error('[Notifications] Error in getNotifications:', error);
     return [];
   }
 }
@@ -94,7 +122,12 @@ export async function getNotifications(
 export async function markAsRead(recipientId: string): Promise<boolean> {
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return false;
+    if (!user) {
+      console.log('[Notifications] Cannot mark as read - no Supabase Auth user');
+      return false;
+    }
+
+    console.log('[Notifications] Marking notification as read:', recipientId);
 
     const { error } = await supabase
       .from('notification_recipients')
@@ -103,13 +136,13 @@ export async function markAsRead(recipientId: string): Promise<boolean> {
       .eq('user_id', user.id);
 
     if (error) {
-      console.error('Error marking notification as read:', error);
+      console.error('[Notifications] Error marking notification as read:', error.message);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('Error in markAsRead:', error);
+    console.error('[Notifications] Error in markAsRead:', error);
     return false;
   }
 }
@@ -120,7 +153,12 @@ export async function markAsRead(recipientId: string): Promise<boolean> {
 export async function markAllAsRead(): Promise<boolean> {
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return false;
+    if (!user) {
+      console.log('[Notifications] Cannot mark all as read - no Supabase Auth user');
+      return false;
+    }
+
+    console.log('[Notifications] Marking all notifications as read for user:', user.id);
 
     const { error } = await supabase
       .from('notification_recipients')
@@ -129,13 +167,13 @@ export async function markAllAsRead(): Promise<boolean> {
       .is('read_at', null);
 
     if (error) {
-      console.error('Error marking all as read:', error);
+      console.error('[Notifications] Error marking all as read:', error.message);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('Error in markAllAsRead:', error);
+    console.error('[Notifications] Error in markAllAsRead:', error);
     return false;
   }
 }
@@ -146,7 +184,12 @@ export async function markAllAsRead(): Promise<boolean> {
 export async function dismissNotification(recipientId: string): Promise<boolean> {
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return false;
+    if (!user) {
+      console.log('[Notifications] Cannot dismiss - no Supabase Auth user');
+      return false;
+    }
+
+    console.log('[Notifications] Dismissing notification:', recipientId);
 
     const { error } = await supabase
       .from('notification_recipients')
@@ -155,25 +198,57 @@ export async function dismissNotification(recipientId: string): Promise<boolean>
       .eq('user_id', user.id);
 
     if (error) {
-      console.error('Error dismissing notification:', error);
+      console.error('[Notifications] Error dismissing notification:', error.message);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('Error in dismissNotification:', error);
+    console.error('[Notifications] Error in dismissNotification:', error);
     return false;
   }
 }
 
 /**
+ * Fetch a single notification recipient with joined notification data
+ */
+export async function fetchNotificationRecipient(recipientId: string): Promise<NotificationRecipient | null> {
+  try {
+    const { data, error } = await supabase
+      .from('notification_recipients')
+      .select(`
+        *,
+        notification:notifications(*)
+      `)
+      .eq('id', recipientId)
+      .single();
+
+    if (error) {
+      console.error('[Notifications] Error fetching notification recipient:', error.message);
+      return null;
+    }
+
+    return {
+      ...data,
+      notification: data.notification?.[0] || data.notification,
+    };
+  } catch (error) {
+    console.error('[Notifications] Error in fetchNotificationRecipient:', error);
+    return null;
+  }
+}
+
+/**
  * Subscribe to realtime notification updates
+ * Fetches full notification data on INSERT for proper display
  */
 export function subscribeToNotifications(
   userId: string,
   onInsert: (recipient: NotificationRecipient) => void,
   onUpdate: (recipient: NotificationRecipient) => void
 ) {
+  console.log('[Notifications] Subscribing to realtime updates for user:', userId);
+
   const channel = supabase
     .channel(`notifications:${userId}`)
     .on(
@@ -184,8 +259,16 @@ export function subscribeToNotifications(
         table: 'notification_recipients',
         filter: `user_id=eq.${userId}`,
       },
-      (payload) => {
-        onInsert(payload.new as NotificationRecipient);
+      async (payload) => {
+        console.log('[Notifications] Realtime INSERT received:', payload.new);
+        // Fetch full notification data including joined notification
+        const fullRecipient = await fetchNotificationRecipient(payload.new.id as string);
+        if (fullRecipient) {
+          onInsert(fullRecipient);
+        } else {
+          // Fallback to raw payload if fetch fails
+          onInsert(payload.new as NotificationRecipient);
+        }
       }
     )
     .on(
@@ -197,12 +280,16 @@ export function subscribeToNotifications(
         filter: `user_id=eq.${userId}`,
       },
       (payload) => {
+        console.log('[Notifications] Realtime UPDATE received:', payload.new);
         onUpdate(payload.new as NotificationRecipient);
       }
     )
-    .subscribe();
+    .subscribe((status) => {
+      console.log('[Notifications] Realtime subscription status:', status);
+    });
 
   return () => {
+    console.log('[Notifications] Unsubscribing from realtime updates');
     supabase.removeChannel(channel);
   };
 }
