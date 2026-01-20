@@ -2860,8 +2860,8 @@ def apply_referral_code():
 
 @mobile_bp.route('/referral/stats', methods=['GET'])
 @require_auth
-def get_referral_stats():
-    """Get referral statistics"""
+def get_referral_stats_simple():
+    """Get referral statistics (legacy endpoint)"""
     try:
         # TODO: Get referral stats from database
         return jsonify({
