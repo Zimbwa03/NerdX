@@ -14,216 +14,216 @@ logger = logging.getLogger(__name__)
 
 # A Level Chemistry topic details with category and key concepts
 A_LEVEL_CHEMISTRY_TOPIC_DETAILS = {
-    # AS Level - Physical Chemistry
+    # Lower Sixth - Physical Chemistry
     "Atomic Structure": {
-        "level": "AS Level",
+        "level": "Lower Sixth",
         "category": "Physical Chemistry",
         "key_concepts": ["electron configuration", "orbitals", "ionization energy", "isotopes", "mass spectrometry"],
         "key_formulas": ["Ar = Σ(isotope mass × abundance) / 100"]
     },
     "Atoms, Molecules and Stoichiometry": {
-        "level": "AS Level",
+        "level": "Lower Sixth",
         "category": "Physical Chemistry",
         "key_concepts": ["mole concept", "Avogadro constant", "empirical formula", "limiting reagent", "yield"],
         "key_formulas": ["n = m/M", "n = CV", "n = V/24", "% yield = actual/theoretical × 100"]
     },
     "Chemical Bonding": {
-        "level": "AS Level",
+        "level": "Lower Sixth",
         "category": "Physical Chemistry",
         "key_concepts": ["ionic bonding", "covalent bonding", "metallic bonding", "VSEPR", "intermolecular forces"],
         "key_formulas": []
     },
     "States of Matter": {
-        "level": "AS Level",
+        "level": "Lower Sixth",
         "category": "Physical Chemistry",
         "key_concepts": ["ideal gas", "kinetic theory", "partial pressures", "lattice structures"],
         "key_formulas": ["pV = nRT", "pₐ = xₐ × pₜₒₜₐₗ"]
     },
     "Chemical Energetics": {
-        "level": "AS Level",
+        "level": "Lower Sixth",
         "category": "Physical Chemistry",
         "key_concepts": ["enthalpy changes", "Hess's law", "bond energies", "calorimetry"],
         "key_formulas": ["q = mcΔT", "ΔH = Σ(bonds broken) - Σ(bonds formed)"]
     },
     "Electrochemistry": {
-        "level": "AS Level",
+        "level": "Lower Sixth",
         "category": "Physical Chemistry",
         "key_concepts": ["oxidation numbers", "redox reactions", "half-equations", "electrolysis"],
         "key_formulas": ["OIL RIG: Oxidation Is Loss, Reduction Is Gain"]
     },
     "Equilibria": {
-        "level": "AS Level",
+        "level": "Lower Sixth",
         "category": "Physical Chemistry",
         "key_concepts": ["dynamic equilibrium", "Le Chatelier's principle", "Kc expression"],
         "key_formulas": ["Kc = [products]ⁿ/[reactants]ᵐ"]
     },
     "Reaction Kinetics": {
-        "level": "AS Level",
+        "level": "Lower Sixth",
         "category": "Physical Chemistry",
         "key_concepts": ["rate of reaction", "collision theory", "activation energy", "catalysts"],
         "key_formulas": ["Rate = Δ[C]/Δt"]
     },
-    # AS Level - Inorganic Chemistry
+    # Lower Sixth - Inorganic Chemistry
     "The Periodic Table: Chemical Periodicity": {
-        "level": "AS Level",
+        "level": "Lower Sixth",
         "category": "Inorganic Chemistry",
         "key_concepts": ["periodic trends", "ionization energy", "electronegativity", "Period 3 oxides and chlorides"],
         "key_formulas": []
     },
     "Group 2 Elements": {
-        "level": "AS Level",
+        "level": "Lower Sixth",
         "category": "Inorganic Chemistry",
         "key_concepts": ["alkaline earth metals", "reactivity trends", "thermal decomposition", "solubility trends"],
         "key_formulas": []
     },
     "Group 17 Elements": {
-        "level": "AS Level",
+        "level": "Lower Sixth",
         "category": "Inorganic Chemistry",
         "key_concepts": ["halogens", "displacement reactions", "halide tests", "disproportionation"],
         "key_formulas": []
     },
     "Nitrogen and Sulfur": {
-        "level": "AS Level",
+        "level": "Lower Sixth",
         "category": "Inorganic Chemistry",
         "key_concepts": ["nitrogen cycle", "nitrogen oxides", "sulfur oxides", "acid rain"],
         "key_formulas": []
     },
-    # AS Level - Organic Chemistry
+    # Lower Sixth - Organic Chemistry
     "Introduction to Organic Chemistry": {
-        "level": "AS Level",
+        "level": "Lower Sixth",
         "category": "Organic Chemistry",
         "key_concepts": ["nomenclature", "functional groups", "isomerism", "reaction types"],
         "key_formulas": []
     },
     "Hydrocarbons": {
-        "level": "AS Level",
+        "level": "Lower Sixth",
         "category": "Organic Chemistry",
         "key_concepts": ["alkanes", "alkenes", "free radical substitution", "electrophilic addition"],
         "key_formulas": ["CₙH₂ₙ₊₂ (alkanes)", "CₙH₂ₙ (alkenes)"]
     },
     "Halogen Compounds": {
-        "level": "AS Level",
+        "level": "Lower Sixth",
         "category": "Organic Chemistry",
         "key_concepts": ["halogenoalkanes", "nucleophilic substitution", "SN1 and SN2", "elimination"],
         "key_formulas": []
     },
     "Hydroxy Compounds": {
-        "level": "AS Level",
+        "level": "Lower Sixth",
         "category": "Organic Chemistry",
         "key_concepts": ["alcohols", "classification", "oxidation", "esterification"],
         "key_formulas": []
     },
     "Carbonyl Compounds": {
-        "level": "AS Level",
+        "level": "Lower Sixth",
         "category": "Organic Chemistry",
         "key_concepts": ["aldehydes", "ketones", "nucleophilic addition", "Tollens' and Fehling's tests"],
         "key_formulas": []
     },
     "Carboxylic Acids and Derivatives": {
-        "level": "AS Level",
+        "level": "Lower Sixth",
         "category": "Organic Chemistry",
         "key_concepts": ["carboxylic acids", "esters", "acyl chlorides", "hydrolysis"],
         "key_formulas": []
     },
     "Nitrogen Compounds": {
-        "level": "AS Level",
+        "level": "Lower Sixth",
         "category": "Organic Chemistry",
         "key_concepts": ["amines", "amides", "amino acids", "peptide bonds"],
         "key_formulas": []
     },
     "Polymerisation": {
-        "level": "AS Level",
+        "level": "Lower Sixth",
         "category": "Organic Chemistry",
         "key_concepts": ["addition polymerisation", "condensation polymerisation", "polymers", "recycling"],
         "key_formulas": []
     },
     "Organic Synthesis": {
-        "level": "AS Level",
+        "level": "Lower Sixth",
         "category": "Organic Chemistry",
         "key_concepts": ["multi-step synthesis", "functional group interconversions", "retrosynthesis"],
         "key_formulas": []
     },
     "Analytical Techniques": {
-        "level": "AS Level",
+        "level": "Lower Sixth",
         "category": "Analysis",
         "key_concepts": ["mass spectrometry", "infrared spectroscopy", "functional group identification"],
         "key_formulas": []
     },
-    # A2 Level Topics
+    # Upper Sixth Topics
     "Chemical Energetics (Advanced)": {
-        "level": "A2 Level",
+        "level": "Upper Sixth",
         "category": "Physical Chemistry",
         "key_concepts": ["lattice energy", "Born-Haber cycles", "entropy", "Gibbs free energy"],
         "key_formulas": ["ΔG = ΔH - TΔS", "ΔS_total = ΔS_system + ΔS_surroundings"]
     },
     "Electrochemistry (Advanced)": {
-        "level": "A2 Level",
+        "level": "Upper Sixth",
         "category": "Physical Chemistry",
         "key_concepts": ["electrode potentials", "standard hydrogen electrode", "electrochemical cells", "Nernst equation"],
         "key_formulas": ["E°cell = E°cathode - E°anode", "E = E° - (RT/nF)lnQ"]
     },
     "Equilibria (Advanced)": {
-        "level": "A2 Level",
+        "level": "Upper Sixth",
         "category": "Physical Chemistry",
         "key_concepts": ["Kp", "Kw", "pH calculations", "buffers", "solubility product Ksp"],
         "key_formulas": ["pH = -log[H⁺]", "Kw = [H⁺][OH⁻]", "Henderson-Hasselbalch equation"]
     },
     "Reaction Kinetics (Advanced)": {
-        "level": "A2 Level",
+        "level": "Upper Sixth",
         "category": "Physical Chemistry",
         "key_concepts": ["rate equations", "rate constants", "order of reaction", "Arrhenius equation"],
         "key_formulas": ["Rate = k[A]ᵐ[B]ⁿ", "t½ = ln2/k", "ln k = ln A - Ea/RT"]
     },
     "Chemistry of Transition Elements": {
-        "level": "A2 Level",
+        "level": "Upper Sixth",
         "category": "Inorganic Chemistry",
         "key_concepts": ["d-block properties", "variable oxidation states", "complex ions", "ligands", "catalysis"],
         "key_formulas": []
     },
     "Benzene and Aromatic Compounds": {
-        "level": "A2 Level",
+        "level": "Upper Sixth",
         "category": "Organic Chemistry",
         "key_concepts": ["benzene structure", "delocalization", "electrophilic substitution", "nitration", "Friedel-Crafts"],
         "key_formulas": []
     },
     "Phenols": {
-        "level": "A2 Level",
+        "level": "Upper Sixth",
         "category": "Organic Chemistry",
         "key_concepts": ["phenol acidity", "comparison with alcohols", "electrophilic substitution"],
         "key_formulas": []
     },
     "Carbonyl Compounds (Advanced)": {
-        "level": "A2 Level",
+        "level": "Upper Sixth",
         "category": "Organic Chemistry",
         "key_concepts": ["reactions with HCN", "condensation reactions", "aldol reaction", "keto-enol tautomerism"],
         "key_formulas": []
     },
     "Carboxylic Acids and Derivatives (Advanced)": {
-        "level": "A2 Level",
+        "level": "Upper Sixth",
         "category": "Organic Chemistry",
         "key_concepts": ["acid derivatives", "nucleophilic acyl substitution", "acid anhydrides"],
         "key_formulas": []
     },
     "Nitrogen Compounds (Advanced)": {
-        "level": "A2 Level",
+        "level": "Upper Sixth",
         "category": "Organic Chemistry",
         "key_concepts": ["nitriles", "diazonium salts", "azo dyes", "aromatic amines"],
         "key_formulas": []
     },
     "Polymerisation (Advanced)": {
-        "level": "A2 Level",
+        "level": "Upper Sixth",
         "category": "Organic Chemistry",
         "key_concepts": ["copolymers", "polymer properties", "cross-linking", "thermosetting polymers"],
         "key_formulas": []
     },
     "Organic Synthesis (Advanced)": {
-        "level": "A2 Level",
+        "level": "Upper Sixth",
         "category": "Organic Chemistry",
         "key_concepts": ["complex synthesis", "stereochemistry", "protecting groups"],
         "key_formulas": []
     },
     "Analytical Techniques (Advanced)": {
-        "level": "A2 Level",
+        "level": "Upper Sixth",
         "category": "Analysis",
         "key_concepts": ["¹H NMR", "¹³C NMR", "chemical shift", "splitting patterns", "HPLC"],
         "key_formulas": []
@@ -330,16 +330,41 @@ class ALevelChemistryGenerator:
             "difficult": "Test deep understanding, complex mechanisms, and synthesis of multiple concepts."
         }
         
-        prompt = f"""You are an expert A Level Chemistry examiner. Generate a high-quality multiple choice question for the Cambridge/ZIMSEC A Level Chemistry syllabus.
+        prompt = f"""You are a SENIOR A-LEVEL CHEMISTRY TEACHER (15+ years) AND an examiner-style question designer. You teach and assess for BOTH:
+(A) ZIMSEC A Level Chemistry (Paper 1 MCQ, Paper 2 structured, Paper 3 free-response, Paper 4 practical)
+(B) Cambridge International AS & A Level Chemistry 9701 (Paper 1 MCQ, Paper 2 structured, Paper 3 practical, Paper 4 A Level structured, Paper 5 planning/analysis/evaluation)
 
+ROLE: SENIOR A-LEVEL CHEMISTRY TEACHER & EXAMINER
+
+NON-NEGOTIABLE RULES:
+1. SYLLABUS-LOCKED: Only generate content that is examinable for ZIMSEC A-Level Chemistry and Cambridge 9701
+2. NO LEAKAGE: Do NOT introduce off-syllabus topics or university-level methods
+3. EXAM AUTHENTICITY: Use real exam command words: "define", "state", "explain", "describe", "calculate", "deduce", "predict", "suggest", "identify", "compare"
+4. ORIGINALITY: Do not copy past-paper questions verbatim. Generate ORIGINAL questions with the same SKILL pattern
+5. MARKING REALISM: Provide mark allocation + method marks + final answer marks + common errors
+6. TOPIC INTEGRATION: Use mixed questions that combine topics the way real papers do (e.g., energetics + equilibria, organic + mechanisms, inorganic + redox)
+
+SUBJECT: A Level Chemistry (ZIMSEC A-Level / Cambridge 9701)
 TOPIC: {topic}
 CATEGORY: {category}
-LEVEL: {level}
+LEVEL: {level} (Form {'5' if level == 'Lower Sixth' else '6'})
 DIFFICULTY: {difficulty} - {difficulty_guidance.get(difficulty, difficulty_guidance['medium'])}
 
-KEY CONCEPTS TO COVER: {', '.join(key_concepts) if key_concepts else 'General concepts for this topic'}
+COMPREHENSIVE SUBTOPIC COVERAGE:
+- This question MUST test understanding of a SPECIFIC subtopic within {topic}
+- Reference: ZIMSEC A-Level Chemistry past papers and Cambridge 9701 past papers
+- Questions should rotate through all subtopics to ensure comprehensive topic coverage
 
-KEY FORMULAS (use when appropriate): {', '.join(key_formulas) if key_formulas else 'As applicable'}
+KEY CONCEPTS FOR THIS TOPIC:
+{', '.join(key_concepts) if key_concepts else 'General concepts for this topic'}
+
+KEY FORMULAS (use when appropriate):
+{chr(10).join(['• ' + f for f in key_formulas]) if key_formulas else '• As applicable to the topic'}
+
+EXAM-STYLE QUESTION PATTERNS FOR THIS TOPIC:
+- MCQ: definitions + recall traps, calculations, trends, mechanism choice, spectra interpretation
+- Structured: multi-step calculations, explain/justify with chemical reasoning, deduce unknowns from data, mechanisms, conditions, predictions
+- Practical/Planning: titration + error, kinetics/enthalpy data, qualitative tests reasoning, plan experiment, evaluate method, uncertainty, graphing
 
 CRITICAL FORMATTING RULES - PLAIN TEXT ONLY:
 - ABSOLUTELY NO LaTeX delimiters like $ or \\( or \\).
@@ -351,31 +376,67 @@ CRITICAL FORMATTING RULES - PLAIN TEXT ONLY:
 - Use ° for degrees: 25°C, 298 K
 - Examples: "CaCO₃ → CaO + CO₂", "pH = -log[H⁺]", "Kc = [products]/[reactants]"
 
-REQUIREMENTS:
-1. Create ONE multiple choice question with 4 options (A, B, C, D)
-2. The question should be clear, scientifically accurate, and at A Level standard
-3. Use PLAIN TEXT Unicode notation - NO LaTeX or $ symbols
-4. All options must be plausible - avoid obviously wrong answers
-5. For calculation questions, show appropriate significant figures and units
-6. The correct answer must be chemically accurate
-7. Provide a detailed explanation suitable for A Level students
+EXPERT EXAMINER GUIDELINES - PROFESSIONAL EXAM STANDARDS:
+- Use appropriate A-Level command words: "define", "state", "explain", "describe", "calculate", "deduce", "predict", "suggest", "identify", "compare"
+- Create distractors based on common A-Level student misconceptions from past marking experience
+- Ensure question tests the cognitive level appropriate for {difficulty}:
+  * Easy: Knowledge and comprehension (recall facts, understand concepts, simple calculations)
+  * Medium: Application and analysis (apply knowledge, multi-step calculations, interpret data, analyze relationships)
+  * Difficult: Synthesis and evaluation (complex mechanisms, combine multiple concepts, evaluate scenarios, draw conclusions)
+- Question should feel FRESH and different from standard textbook questions
+- Include relevant chemical contexts and real-world applications where appropriate
+- Distractors should be chemically plausible but clearly incorrect
+- Reference ZIMSEC/Cambridge past papers and exam patterns
 
-RESPONSE FORMAT (JSON):
+FRESHNESS REQUIREMENTS - CREATE UNIQUE QUESTIONS:
+- Use unique scenarios NOT commonly found in typical textbook questions
+- Vary contexts: industrial processes, environmental chemistry, laboratory scenarios, everyday applications
+- Vary numbers and approaches to test the same concept
+- Ensure question feels professionally crafted like a real ZIMSEC/Cambridge exam question
+
+COMMON EXAM TRAPS TO REFERENCE:
+- Sign conventions (enthalpy, entropy, electrode potentials)
+- Units and significant figures in calculations
+- State symbols in equations (s, l, g, aq)
+- Oxidation state errors
+- Mechanism arrow direction and electron movement
+- Equilibrium shift reasoning errors
+- Spectra interpretation mistakes
+
+REQUIREMENTS:
+1. Create ONE multiple choice question with exactly 4 options (A, B, C, D)
+2. The question should be clear, scientifically accurate, and at A Level standard - NOT O Level
+3. Use PLAIN TEXT Unicode notation - NO LaTeX or $ symbols
+4. All options must be plausible and based on common A-Level misconceptions
+5. For calculation questions, show appropriate significant figures and units
+6. The correct answer must be chemically accurate and exact (unless approximation requested)
+7. Provide a DETAILED step-by-step explanation suitable for A Level students
+8. Include teaching points that help students understand the concept and avoid common errors
+
+STUDENT LEVEL: A-Level Forms 5-6 (ages 17-19 in Zimbabwe). Keep content age-appropriate and at A-Level standard.
+
+OUTPUT FORMAT: Return ONLY valid JSON. No markdown. No extra text.
+
+JSON schema (required fields):
 {{
-    "question": "The full question text here (plain text)",
+    "question": "Clear, focused ZIMSEC/Cambridge exam-style question testing A-Level concepts (plain text chemistry notation)",
     "options": {{
-        "A": "First option (plain text)",
-        "B": "Second option (plain text)",
-        "C": "Third option (plain text)",
-        "D": "Fourth option (plain text)"
+        "A": "Option A with plain text chemistry - plausible distractor based on common A-Level misconception",
+        "B": "Option B with plain text chemistry - plausible distractor based on common A-Level misconception",
+        "C": "Option C with plain text chemistry - correct answer",
+        "D": "Option D with plain text chemistry - plausible distractor based on common A-Level misconception"
     }},
-    "correct_answer": "A",
-    "explanation": "Detailed explanation of why this is correct and why other options are wrong",
-    "solution": "Step-by-step solution for calculation questions (or concept explanation for theory questions)",
-    "teaching_explanation": "Additional teaching points for the student"
+    "correct_answer": "A/B/C/D",
+    "explanation": "Step-by-step explanation: Step 1: [reasoning] Step 2: [chemical principle] Step 3: [conclusion]. Why this is correct and why other options fail.",
+    "solution": "DETAILED step-by-step solution: Step 1: [clear step with chemical reasoning] Step 2: [next step] Step 3: [final step] Final Answer: [exact value with units]",
+    "teaching_points": "Key teaching points: 1) [concept] 2) [common error to avoid] 3) [exam technique]",
+    "common_errors": "Common errors students make: 1) [error description] 2) [why it's wrong] 3) [how to avoid]",
+    "marking_notes": "Marking scheme: Method marks (M) for correct approach, Accuracy marks (A) for correct answer. Common examiner comments.",
+    "zimsec_paper_reference": "Paper 1 (MCQ) or Paper 2/3 (as appropriate)",
+    "cambridge_paper_reference": "Paper 1 (MCQ) or Paper 2/4 (as appropriate)"
 }}
 
-Generate the question now:"""
+Generate ONE A Level Chemistry MCQ now:"""
 
         return prompt
     
@@ -400,16 +461,27 @@ Generate the question now:"""
                     "messages": [
                         {
                             "role": "system",
-                            "content": """You are an expert A Level Chemistry examiner. Generate high-quality MCQ questions suitable for Cambridge/ZIMSEC A Level Chemistry examinations.
+                            "content": """You are a SENIOR A-LEVEL CHEMISTRY TEACHER (15+ years) AND an examiner-style question designer. You teach and assess for BOTH ZIMSEC A-Level Chemistry and Cambridge International AS & A Level Chemistry 9701.
+
+ROLE: SENIOR A-LEVEL CHEMISTRY TEACHER & EXAMINER
+
+NON-NEGOTIABLE RULES:
+1. SYLLABUS-LOCKED: Only generate content examinable for ZIMSEC A-Level and Cambridge 9701
+2. NO LEAKAGE: Do NOT introduce off-syllabus topics or university-level methods
+3. EXAM AUTHENTICITY: Use real exam command words and structure
+4. ORIGINALITY: Generate ORIGINAL questions with the same SKILL pattern (not verbatim past papers)
+5. MARKING REALISM: Provide method marks + accuracy marks + common errors
+6. TOPIC INTEGRATION: Use mixed questions combining topics the way real papers do
 
 CRITICAL: Use PLAIN TEXT Unicode notation - NEVER use LaTeX or $ symbols:
 - ABSOLUTELY NO delimiters like $.
-- Use subscripts: H₂O, CO₂, SO₄²⁻ (NOT H_2O or $H_2O$)
-- Use superscripts for charges: Cu²⁺, Fe³⁺ (NOT Cu^2+)
+- Use subscripts: H₂O, CO₂, SO₄²⁻, CH₃COOH (NOT H_2O or $H_2O$)
+- Use superscripts for charges: Cu²⁺, Fe³⁺, SO₄²⁻ (NOT Cu^2+)
 - Use fractions as a/b (NOT $\\frac{a}{b}$)
 - Use → for arrows, ⇌ for equilibrium, Δ for delta
+- Use proper chemical notation: [H⁺], Kc, E°cell
 
-Always respond with valid JSON."""
+Always respond with valid JSON containing step-by-step solutions."""
                         },
                         {
                             "role": "user",

@@ -141,6 +141,13 @@ const TopicsScreen: React.FC = () => {
   };
 
   const handleTopicPress = async (topic: Topic) => {
+    // Special case: "Signs" topic in OLEVEL goes directly to practice mode
+    // (Teacher mode is now in the dashboard, so we skip the modal)
+    if (topic.name.toLowerCase() === 'signs') {
+      handleStartQuiz(topic);
+      return;
+    }
+
     // For Combined Science, if topic is a parent (Biology/Chemistry/Physics), show subtopics
     // BUT with tabs, we are already "inside" a parent. 
     // So we likely just start the quiz or go deeper if there are more levels.

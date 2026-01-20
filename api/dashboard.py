@@ -60,41 +60,60 @@ def payments():
 def get_dashboard_stats():
     """Get dashboard statistics with real Supabase data"""
     try:
+        # Get source filter (whatsapp or mobile)
+        source = request.args.get('source', 'whatsapp')
+        
         # Database connection test
         db_status = test_connection()
         
-        # Get total users
-        users_data = make_supabase_request("GET", "users_registration", select="id")
+        # Get total users filtered by source
+        filters = {"registration_source": f"eq.{source}"}
+        users_data = make_supabase_request("GET", "users_registration", select="id", filters=filters)
         total_users = len(users_data) if users_data else 0
         
-        # Get active users today
+        # Get active users today filtered by source
         today = datetime.now().strftime('%Y-%m-%d')
         active_users_data = make_supabase_request(
             "GET", "user_stats", 
-            select="user_id",
+            select="user_id,last_activity",
             filters={"last_activity": f"gte.{today}T00:00:00"}
         )
+        # Filter active users by source
+        user_ids_for_source = [user.get('chat_id') for user in users_data] if users_data else []
+        if active_users_data and user_ids_for_source:
+            active_users_data = [user for user in active_users_data if user.get('user_id') in user_ids_for_source]
         active_users_today = len(active_users_data) if active_users_data else 0
         
-        # Get total credit transactions (proxy for questions answered)
-        credit_transactions = make_supabase_request("GET", "credit_transactions", select="id")
+        # Get total credit transactions (proxy for questions answered) filtered by source
+        all_users_for_source = make_supabase_request("GET", "users_registration", select="chat_id", filters={"registration_source": f"eq.{source}"})
+        user_ids_list = [user.get('chat_id') for user in all_users_for_source] if all_users_for_source else []
+        
+        credit_transactions = make_supabase_request("GET", "credit_transactions", select="id,user_id")
+        if credit_transactions and user_ids_list:
+            credit_transactions = [tx for tx in credit_transactions if tx.get('user_id') in user_ids_list]
         total_questions_answered = len(credit_transactions) if credit_transactions else 0
         
-        # Get total payments/revenue
+        # Get total payments/revenue filtered by source
         payments_data = make_supabase_request(
             "GET", "payment_transactions", 
-            select="amount",
+            select="amount,user_id",
             filters={"status": "eq.completed"}
         )
+        # Filter payments by user source
+        if payments_data and user_ids_list:
+            payments_data = [p for p in payments_data if p.get('user_id') in user_ids_list]
         # Also try to get from completed payments table if payments table is empty
         if not payments_data or len(payments_data) == 0:
-            completed_payments = make_supabase_request("GET", "payment_transactions", select="amount")
+            completed_payments = make_supabase_request("GET", "payment_transactions", select="amount,user_id")
+            if completed_payments and user_ids_list:
+                completed_payments = [p for p in completed_payments if p.get('user_id') in user_ids_list]
             payments_data = completed_payments if completed_payments else []
         
         total_revenue = sum(p.get('amount', 0) for p in payments_data) if payments_data else 0
         
-        # Get recent user registrations for growth trend
-        all_registrations = make_supabase_request("GET", "users_registration", select="registration_date")
+        # Get recent user registrations for growth trend filtered by source
+        filters_with_source = {"registration_source": f"eq.{source}"}
+        all_registrations = make_supabase_request("GET", "users_registration", select="registration_date", filters=filters_with_source)
         new_registrations_week = 0
         
         if all_registrations:
@@ -116,7 +135,8 @@ def get_dashboard_stats():
             'total_revenue': round(total_revenue, 2),
             'new_registrations_week': new_registrations_week,
             'arpu': round(total_revenue / total_users, 2) if total_users > 0 else 0,
-            'database_status': 'connected' if db_status else 'disconnected'
+            'database_status': 'connected' if db_status else 'disconnected',
+            'source': source  # Include source in response
         }
         
         return jsonify(stats)
@@ -131,10 +151,19 @@ def get_users():
     try:
         page = request.args.get('page', 1, type=int)
         limit = request.args.get('limit', 50, type=int)
+        source = request.args.get('source', 'whatsapp')  # Get source filter
         
-        # Get user registrations with stats - use Supabase data properly
-        users_reg = make_supabase_request("GET", "users_registration", select="*")
+        # Get user registrations with stats - use Supabase data properly filtered by source
+        user_filters = {"registration_source": f"eq.{source}"}
+        users_reg = make_supabase_request("GET", "users_registration", select="*", filters=user_filters)
+        
+        # Get user IDs for this source
+        user_ids = [user.get('chat_id') for user in users_reg] if users_reg else []
+        
+        # Get user stats for this source's users
         users_stats = make_supabase_request("GET", "user_stats", select="*")
+        if users_stats and user_ids:
+            users_stats = [stat for stat in users_stats if stat.get('user_id') in user_ids]
         
         # Combine registration and stats data
         users_combined = []
@@ -275,10 +304,25 @@ def get_payments():
 def get_activity():
     """Get comprehensive user activity analytics with real data using Supabase"""
     try:
-        # Get user registrations and stats from Supabase
-        all_users = make_supabase_request("GET", "users_registration", select="*")
+        # Get source filter (whatsapp or mobile)
+        source = request.args.get('source', 'whatsapp')
+        
+        # Get user registrations and stats from Supabase filtered by source
+        user_filters = {"registration_source": f"eq.{source}"}
+        all_users = make_supabase_request("GET", "users_registration", select="*", filters=user_filters)
+        
+        # Get user IDs for this source to filter stats
+        user_ids = [user.get('chat_id') for user in all_users] if all_users else []
+        
+        # Get user stats for this source's users
         all_user_stats = make_supabase_request("GET", "user_stats", select="user_id,last_activity")
+        if all_user_stats and user_ids:
+            all_user_stats = [stat for stat in all_user_stats if stat.get('user_id') in user_ids]
+        
+        # Get credit transactions for this source's users
         all_credit_transactions = make_supabase_request("GET", "credit_transactions", select="*")
+        if all_credit_transactions and user_ids:
+            all_credit_transactions = [tx for tx in all_credit_transactions if tx.get('user_id') in user_ids]
         
         # Create daily activity data from real user data
         daily_active_users = []
@@ -403,9 +447,20 @@ def get_activity():
 def get_advanced_analytics():
     """Get comprehensive analytics data for the analytics page using Supabase"""
     try:
-        # Get user engagement metrics from real data
-        all_users = make_supabase_request("GET", "users_registration", select="*")
+        # Get source filter (whatsapp or mobile)
+        source = request.args.get('source', 'whatsapp')
+        
+        # Get user engagement metrics from real data filtered by source
+        user_filters = {"registration_source": f"eq.{source}"}
+        all_users = make_supabase_request("GET", "users_registration", select="*", filters=user_filters)
+        
+        # Get user IDs for this source
+        user_ids = [user.get('chat_id') for user in all_users] if all_users else []
+        
+        # Get user stats for this source's users
         all_user_stats = make_supabase_request("GET", "user_stats", select="*")
+        if all_user_stats and user_ids:
+            all_user_stats = [stat for stat in all_user_stats if stat.get('user_id') in user_ids]
         
         # Calculate user engagement metrics
         total_session_time = 0
@@ -525,9 +580,20 @@ def get_advanced_analytics():
 def get_user_engagement():
     """Get detailed user engagement data using Supabase"""
     try:
-        # Get user data from Supabase
-        users_reg = make_supabase_request("GET", "users_registration", select="*")
+        # Get source filter (whatsapp or mobile)
+        source = request.args.get('source', 'whatsapp')
+        
+        # Get user data from Supabase filtered by source
+        user_filters = {"registration_source": f"eq.{source}"}
+        users_reg = make_supabase_request("GET", "users_registration", select="*", filters=user_filters)
+        
+        # Get user IDs for this source
+        user_ids = [user.get('chat_id') for user in users_reg] if users_reg else []
+        
+        # Get user stats for this source's users
         users_stats = make_supabase_request("GET", "user_stats", select="*")
+        if users_stats and user_ids:
+            users_stats = [stat for stat in users_stats if stat.get('user_id') in user_ids]
         
         # Create a lookup dict for stats if they exist
         stats_lookup = {}
@@ -954,13 +1020,16 @@ def send_notification():
             service_key = os.getenv('SUPABASE_SERVICE_ROLE_KEY')
             
             if not supabase_url or not service_key:
+                logger.error("Supabase configuration missing for notifications")
                 return jsonify({'error': 'Supabase configuration missing'}), 500
 
-            # Get all users from auth.users
+            # Get all users from auth.users (mobile app users)
             headers = {
                 'apikey': service_key,
                 'Authorization': f'Bearer {service_key}',
             }
+            
+            logger.info(f"Fetching all users from {supabase_url}/auth/v1/admin/users")
             response = requests.get(
                 f'{supabase_url}/auth/v1/admin/users',
                 headers=headers,
@@ -969,12 +1038,15 @@ def send_notification():
             
             if response.status_code == 200:
                 users_data = response.json()
-                target_user_ids = [user['id'] for user in users_data.get('users', [])]
+                all_users = users_data.get('users', [])
+                target_user_ids = [user['id'] for user in all_users]
+                logger.info(f"Found {len(target_user_ids)} users to send notification to")
             else:
-                logger.error(f"Failed to fetch users: {response.status_code}")
-                return jsonify({'error': 'Failed to fetch users'}), 500
+                logger.error(f"Failed to fetch users: {response.status_code} - {response.text}")
+                return jsonify({'error': f'Failed to fetch users: {response.status_code}'}), 500
         elif audience == 'users' and user_ids:
             target_user_ids = user_ids
+            logger.info(f"Sending notification to {len(target_user_ids)} selected users")
         else:
             return jsonify({'error': 'Invalid audience or missing user_ids'}), 400
 
@@ -988,12 +1060,15 @@ def send_notification():
             'status': 'sent',
         }
         
+        logger.info(f"Creating notification: {title} for {len(target_user_ids)} users")
         notification = make_supabase_request('POST', 'notifications', data=notification_data, use_service_role=True)
         
         if not notification:
+            logger.error("Failed to create notification record")
             return jsonify({'error': 'Failed to create notification'}), 500
 
         notification_id = notification[0]['id'] if isinstance(notification, list) else notification.get('id')
+        logger.info(f"Notification created with ID: {notification_id}")
 
         # Create recipients in batches
         BATCH_SIZE = 1000
@@ -1004,11 +1079,18 @@ def send_notification():
             batch = target_user_ids[i:i + BATCH_SIZE]
             recipients = [{'notification_id': notification_id, 'user_id': user_id} for user_id in batch]
             
+            logger.info(f"Inserting batch {i // BATCH_SIZE + 1} with {len(batch)} recipients")
             result = make_supabase_request('POST', 'notification_recipients', data=recipients, use_service_role=True)
             if result:
-                total_inserted += len(batch)
+                inserted_count = len(result) if isinstance(result, list) else 1
+                total_inserted += inserted_count
+                logger.info(f"Successfully inserted {inserted_count} recipients in batch {i // BATCH_SIZE + 1}")
             else:
-                errors.append(f'Failed to insert batch {i // BATCH_SIZE + 1}')
+                error_msg = f'Failed to insert batch {i // BATCH_SIZE + 1}'
+                errors.append(error_msg)
+                logger.error(error_msg)
+        
+        logger.info(f"Notification sending complete: {total_inserted} recipients created, {len(errors)} errors")
 
         return jsonify({
             'success': True,

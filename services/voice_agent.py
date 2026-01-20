@@ -705,7 +705,7 @@ class TransparentGeminiPipe:
                     "setup": {
                         "model": f"projects/{GOOGLE_CLOUD_PROJECT}/locations/{GOOGLE_CLOUD_LOCATION}/publishers/google/models/{model_name}",
                         "generationConfig": {
-                            "responseModalities": ["AUDIO"],
+                            "responseModalities": ["AUDIO", "TEXT"],  # Include TEXT for transcription
                             "speechConfig": {
                                 "voiceConfig": {
                                     "prebuiltVoiceConfig": {"voiceName": "Aoede"}  # Natural HD voice
@@ -841,7 +841,7 @@ class TransparentGeminiPipe:
                     "setup": {
                         "model": f"models/{model_name}",
                         "generationConfig": {
-                            "responseModalities": ["AUDIO"],
+                            "responseModalities": ["AUDIO", "TEXT"],  # Include TEXT for transcription
                             "speechConfig": {
                                 "voiceConfig": {
                                     "prebuiltVoiceConfig": {"voiceName": "Aoede"}
@@ -997,11 +997,27 @@ class TransparentGeminiPipe:
                 if "serverContent" in data:
                     content = data["serverContent"]
                     
-                    # BUFFER audio chunks instead of forwarding immediately
+                    # BUFFER audio chunks and extract text for transcription
                     if "modelTurn" in content:
                         model_turn = content["modelTurn"]
                         if "parts" in model_turn:
                             for part in model_turn["parts"]:
+                                # Extract text for captions/transcription
+                                if "text" in part:
+                                    text_content = part["text"]
+                                    if text_content and text_content.strip():
+                                        logger.info(f"📝 Received text from Gemini: {text_content[:100]}...")
+                                        # Send text to client for captions
+                                        try:
+                                            await self.client_ws.send_json({
+                                                "type": "text",
+                                                "text": text_content,
+                                                "speaker": "nerdx"
+                                            })
+                                        except Exception as e:
+                                            logger.warning(f"⚠️ Failed to send text to client: {e}")
+                                
+                                # Buffer audio chunks
                                 if "inlineData" in part:
                                     inline_data = part["inlineData"]
                                     mime_type = inline_data.get("mimeType", "")
@@ -1333,7 +1349,7 @@ class TransparentGeminiVideoPipe:
             "setup": {
                 "model": model_path,
                 "generationConfig": {
-                    "responseModalities": ["AUDIO"],
+                    "responseModalities": ["AUDIO", "TEXT"],  # Include TEXT for transcription
                     "speechConfig": {
                         "voiceConfig": {
                             "prebuiltVoiceConfig": {

@@ -58,10 +58,12 @@ const QuizScreen: React.FC = () => {
   const normalizeQuestion = useCallback((q: Question | undefined): Question | undefined => {
     if (!q) return undefined;
     const hasOptions = Array.isArray(q.options) && q.options.length > 0;
+    // Enable image upload for mathematics and pure mathematics subjects
+    const isMathSubjectWithImageSupport = subject?.id === 'mathematics' || subject?.id === 'a_level_pure_math';
     return {
       ...q,
       allows_text_input: q.allows_text_input ?? !hasOptions,
-      allows_image_upload: q.allows_image_upload ?? (subject?.id === 'mathematics'),
+      allows_image_upload: q.allows_image_upload ?? isMathSubjectWithImageSupport,
     };
   }, [subject?.id]);
 
@@ -171,7 +173,7 @@ const QuizScreen: React.FC = () => {
             topic_id: firstReviewItem.topic,
             difficulty: 'medium',
             allows_text_input: !qData.options,
-            allows_image_upload: false,
+            allows_image_upload: subject?.id === 'mathematics' || subject?.id === 'a_level_pure_math',
             question_image_url: qData.image_url
           };
           const normalizedQ = normalizeQuestion(mappedQuestion);
@@ -528,7 +530,7 @@ const QuizScreen: React.FC = () => {
               topic_id: nextItem.topic,
               difficulty: 'medium',
               allows_text_input: !qData.options,
-              allows_image_upload: subject?.id === 'mathematics',
+              allows_image_upload: subject?.id === 'mathematics' || subject?.id === 'a_level_pure_math',
               question_image_url: qData.image_url
             };
             setQuestionCount(nextIndex + 1);
@@ -573,7 +575,7 @@ const QuizScreen: React.FC = () => {
 
         // Use streaming for Mathematics (DeepSeek Reasoner)
         if (subject?.id === 'mathematics' ||
-          subject?.id === 'a_level_pure_mathematics' ||
+          subject?.id === 'a_level_pure_math' ||
           subject?.id === 'a_level_statistics') {
 
           setShowThinking(true);

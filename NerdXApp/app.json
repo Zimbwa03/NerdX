@@ -1,5 +1,5 @@
 {
-    "expo": {
+  "expo": {
     "name": "NerdX",
     "slug": "nerdxapp",
     "scheme": "nerdx",
@@ -73,11 +73,11 @@
       "expo-video",
       "./plugins/withMavenRepositories"
     ],
-    "owner": "nerdx2",
     "extra": {
       "eas": {
         "projectId": "64c12ef5-abbd-4b71-8c9e-3e1ba2a0dcb2"
       }
-    }
+    },
+    "owner": "nerdx2"
   }
 }

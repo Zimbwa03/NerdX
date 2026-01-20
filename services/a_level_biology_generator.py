@@ -315,15 +315,40 @@ class ALevelBiologyGenerator:
             "difficult": "Test analysis and evaluation. Complex scenarios requiring deep understanding."
         }
         
-        prompt = f"""You are an expert ZIMSEC A Level Biology examiner. Generate a high-quality multiple choice question.
+        prompt = f"""You are a SENIOR A-LEVEL BIOLOGY TEACHER (15+ years) AND an examiner-style question designer. You teach and assess for BOTH:
+(A) ZIMSEC A Level Biology 6030 (Paper 1 MCQ, Paper 2 structured, Paper 3 essay)
+(B) Cambridge International AS & A Level Biology 9700 (Paper 1 MCQ, Paper 2 structured, Paper 4 A Level structured, Paper 5 practical)
 
-SUBJECT: A Level Biology (ZIMSEC Syllabus 6030)
+ROLE: SENIOR A-LEVEL BIOLOGY TEACHER & EXAMINER
+
+NON-NEGOTIABLE RULES:
+1. SYLLABUS-LOCKED: Only generate content that is examinable for ZIMSEC 6030 and Cambridge 9700
+2. NO LEAKAGE: Do NOT introduce off-syllabus topics or university-level methods
+3. EXAM AUTHENTICITY: Use real exam command words: "define", "state", "explain", "describe", "identify", "compare", "deduce", "predict", "suggest"
+4. ORIGINALITY: Do not copy past-paper questions verbatim. Generate ORIGINAL questions with the same SKILL pattern
+5. MARKING REALISM: Provide mark allocation + method marks + accuracy marks + common errors
+6. TOPIC INTEGRATION: Use mixed questions that combine topics the way real papers do (e.g., enzymes + metabolism, transport + gas exchange, genetics + evolution)
+
+SUBJECT: A Level Biology (ZIMSEC Syllabus 6030 / Cambridge 9700)
 TOPIC: {topic}
-LEVEL: {level}
+LEVEL: {level} (Form {'5' if level == 'Lower Sixth' else '6'})
 DIFFICULTY: {difficulty} - {difficulty_guidance.get(difficulty, difficulty_guidance['medium'])}
 
-KEY CONCEPTS: {', '.join(key_concepts) if key_concepts else 'General concepts for this topic'}
-KEY TERMS TO USE: {', '.join(key_terms) if key_terms else 'Scientific terminology as appropriate'}
+COMPREHENSIVE SUBTOPIC COVERAGE:
+- This question MUST test understanding of a SPECIFIC subtopic within {topic}
+- Reference: ZIMSEC 6030 past papers and Cambridge 9700 past papers
+- Questions should rotate through all subtopics to ensure comprehensive topic coverage
+
+KEY CONCEPTS FOR THIS TOPIC:
+{', '.join(key_concepts) if key_concepts else 'General concepts for this topic'}
+
+KEY TERMS TO USE (incorporate appropriately):
+{', '.join(key_terms) if key_terms else 'Scientific terminology as appropriate'}
+
+EXAM-STYLE QUESTION PATTERNS FOR THIS TOPIC:
+- MCQ: definitions + recall traps, process steps, structure-function relationships, data interpretation, mechanism choice
+- Structured: multi-step processes, explain/justify with biological reasoning, deduce from data, experimental design, predictions
+- Essay: comprehensive discussion, compare and contrast, evaluate evidence, synthesis of multiple topics
 
 CRITICAL FORMATTING RULES - PLAIN TEXT ONLY:
 - ABSOLUTELY NO LaTeX delimiters like $ or \\( or \\).
@@ -334,14 +359,40 @@ CRITICAL FORMATTING RULES - PLAIN TEXT ONLY:
 - Use → for arrows in processes, % for percentages
 - Examples: "ATP → ADP + Pᵢ", "glucose + O₂ → CO₂ + H₂O"
 
+EXPERT EXAMINER GUIDELINES - PROFESSIONAL EXAM STANDARDS:
+- Use appropriate A-Level command words: "define", "state", "explain", "describe", "identify", "compare", "deduce", "predict", "suggest"
+- Create distractors based on common A-Level student misconceptions from past marking experience
+- Ensure question tests the cognitive level appropriate for {difficulty}:
+  * Easy: Knowledge and comprehension (recall facts, understand concepts, identify structures)
+  * Medium: Application and analysis (apply knowledge, interpret data, analyze relationships, explain processes)
+  * Difficult: Synthesis and evaluation (combine multiple concepts, evaluate scenarios, draw conclusions, predict outcomes)
+- Question should feel FRESH and different from standard textbook questions
+- Include relevant biological contexts and real-world applications where appropriate
+- Distractors should be biologically plausible but clearly incorrect
+- Reference ZIMSEC/Cambridge past papers and exam patterns
+
+FRESHNESS REQUIREMENTS - CREATE UNIQUE QUESTIONS:
+- Use unique scenarios NOT commonly found in typical textbook questions
+- Vary contexts: laboratory experiments, medical scenarios, environmental biology, agricultural applications, biotechnology
+- Vary numbers and approaches to test the same concept
+- Ensure question feels professionally crafted like a real ZIMSEC/Cambridge exam question
+
+COMMON EXAM TRAPS TO REFERENCE:
+- Confusing similar terms (e.g., mitosis vs meiosis, transcription vs translation)
+- Misunderstanding processes (e.g., active transport vs facilitated diffusion)
+- Incorrect structure-function relationships
+- Misinterpreting data or experimental results
+- Confusing cause and effect in biological systems
+
 REQUIREMENTS:
 1. Create ONE multiple choice question with exactly 4 options (A, B, C, D)
-2. The question must be at A Level standard (not O Level)
+2. The question must be at A Level standard - NOT O Level
 3. Use correct biological terminology with PLAIN TEXT formatting
 4. Use PLAIN TEXT Unicode notation - NO LaTeX or $ symbols
-5. All distractors must be plausible (based on common misconceptions)
+5. All distractors must be plausible and based on common A-Level misconceptions
 6. Include context or scenarios where appropriate
-7. Provide a detailed explanation with teaching points
+7. Provide a DETAILED step-by-step explanation with teaching points
+8. Include common errors students make on this topic
 
 RESPONSE FORMAT (strict JSON):
 {{
@@ -364,11 +415,23 @@ Generate the MCQ now:"""
                                  key_concepts: List[str], key_terms: List[str]) -> str:
         """Create prompt for structured questions (multi-part, short answers - 1 sentence each)"""
         
-        prompt = f"""You are an expert ZIMSEC A Level Biology examiner. Generate a structured question worth 8-12 marks with SHORT answers.
+        prompt = f"""You are a SENIOR A-LEVEL BIOLOGY TEACHER (15+ years) AND an examiner-style question designer. You teach and assess for BOTH:
+(A) ZIMSEC A Level Biology 6030 (Paper 1 MCQ, Paper 2 structured, Paper 3 essay)
+(B) Cambridge International AS & A Level Biology 9700 (Paper 1 MCQ, Paper 2 structured, Paper 4 A Level structured, Paper 5 practical)
 
-SUBJECT: A Level Biology (ZIMSEC Syllabus 6030)
+ROLE: SENIOR A-LEVEL BIOLOGY TEACHER & EXAMINER
+
+NON-NEGOTIABLE RULES:
+1. SYLLABUS-LOCKED: Only generate content that is examinable for ZIMSEC 6030 and Cambridge 9700
+2. NO LEAKAGE: Do NOT introduce off-syllabus topics or university-level methods
+3. EXAM AUTHENTICITY: Use real exam command words: "define", "state", "explain", "describe", "identify", "compare", "deduce", "predict", "suggest", "calculate"
+4. ORIGINALITY: Do not copy past-paper questions verbatim. Generate ORIGINAL questions with the same SKILL pattern
+5. MARKING REALISM: Provide mark allocation + method marks + accuracy marks + common errors
+6. TOPIC INTEGRATION: Use mixed questions that combine topics the way real papers do (e.g., enzymes + metabolism, transport + gas exchange, genetics + evolution)
+
+SUBJECT: A Level Biology (ZIMSEC Syllabus 6030 / Cambridge 9700)
 TOPIC: {topic}
-LEVEL: {level}
+LEVEL: {level} (Form {'5' if level == 'Lower Sixth' else '6'})
 DIFFICULTY: {difficulty}
 
 KEY CONCEPTS: {', '.join(key_concepts) if key_concepts else 'General concepts'}
@@ -390,6 +453,30 @@ CRITICAL RESTRICTIONS:
 - Focus on KNOWLEDGE-BASED questions that test understanding, recall, and application
 - You may describe scenarios, processes, or concepts in text, but never require diagram interpretation
 
+EXPERT EXAMINER GUIDELINES - PROFESSIONAL EXAM STANDARDS:
+- Use appropriate A-Level command words: "define", "state", "explain", "describe", "identify", "compare", "deduce", "predict", "suggest", "calculate"
+- Create marking schemes based on common A-Level student responses from past marking experience
+- Ensure question tests the cognitive level appropriate for {difficulty}:
+  * Easy: Knowledge and comprehension (recall facts, understand concepts, identify structures)
+  * Medium: Application and analysis (apply knowledge, interpret data, analyze relationships, explain processes)
+  * Difficult: Synthesis and evaluation (combine multiple concepts, evaluate scenarios, draw conclusions, predict outcomes)
+- Question should feel FRESH and different from standard textbook questions
+- Include relevant biological contexts and real-world applications where appropriate
+- Reference ZIMSEC/Cambridge past papers and exam patterns
+
+FRESHNESS REQUIREMENTS - CREATE UNIQUE QUESTIONS:
+- Use unique scenarios NOT commonly found in typical textbook questions
+- Vary contexts: laboratory experiments, medical scenarios, environmental biology, agricultural applications, biotechnology
+- Vary data and approaches to test the same concept
+- Ensure question feels professionally crafted like a real ZIMSEC/Cambridge exam question
+
+COMMON EXAM TRAPS TO REFERENCE:
+- Confusing similar terms or processes
+- Misunderstanding structure-function relationships
+- Misinterpreting data or experimental results
+- Incorrect application of biological principles
+- Confusing cause and effect in biological systems
+
 REQUIREMENTS:
 1. Use text-based scenarios, data tables, or process descriptions (NO diagram references)
 2. Part (a): 2-3 marks - Test recall or basic understanding (SHORT answer - 1 sentence max)
@@ -398,8 +485,8 @@ REQUIREMENTS:
 5. Keep total marks between 8-12 marks
 6. Each part should be answerable in 1 sentence or brief phrase
 7. All questions must be answerable using knowledge only - NO visual diagram interpretation
-8. Provide full marking scheme with expected SHORT answers
-9. Include examiner tips for common mistakes
+8. Provide full marking scheme with expected SHORT answers + method marks (M) and accuracy marks (A)
+9. Include examiner tips for common mistakes and examiner notes
 10. Use PLAIN TEXT Unicode notation - NO LaTeX
 
 RESPONSE FORMAT (strict JSON):
@@ -447,11 +534,23 @@ Generate now:"""
                             key_concepts: List[str], key_terms: List[str]) -> str:
         """Create prompt for essay questions (20-25 marks)"""
         
-        prompt = f"""You are an expert ZIMSEC A Level Biology examiner. Generate an essay question worth 20-25 marks.
+        prompt = f"""You are a SENIOR A-LEVEL BIOLOGY TEACHER (15+ years) AND an examiner-style question designer. You teach and assess for BOTH:
+(A) ZIMSEC A Level Biology 6030 (Paper 1 MCQ, Paper 2 structured, Paper 3 essay)
+(B) Cambridge International AS & A Level Biology 9700 (Paper 1 MCQ, Paper 2 structured, Paper 4 A Level structured, Paper 5 practical)
 
-SUBJECT: A Level Biology (ZIMSEC Syllabus 6030)
+ROLE: SENIOR A-LEVEL BIOLOGY TEACHER & EXAMINER
+
+NON-NEGOTIABLE RULES:
+1. SYLLABUS-LOCKED: Only generate content that is examinable for ZIMSEC 6030 and Cambridge 9700
+2. NO LEAKAGE: Do NOT introduce off-syllabus topics or university-level methods
+3. EXAM AUTHENTICITY: Use real exam command words: "discuss", "explain", "compare and contrast", "evaluate", "describe", "analyze"
+4. ORIGINALITY: Do not copy past-paper questions verbatim. Generate ORIGINAL questions with the same SKILL pattern
+5. MARKING REALISM: Provide detailed mark allocation + content marks + structure marks + common errors
+6. TOPIC INTEGRATION: Use essay questions that integrate multiple topics the way real papers do (e.g., enzymes + metabolism + respiration, transport + gas exchange + cellular respiration)
+
+SUBJECT: A Level Biology (ZIMSEC Syllabus 6030 / Cambridge 9700)
 TOPIC: {topic}
-LEVEL: {level}
+LEVEL: {level} (Form {'5' if level == 'Lower Sixth' else '6'})
 DIFFICULTY: {difficulty}
 
 KEY CONCEPTS TO COVER: {', '.join(key_concepts) if key_concepts else 'General concepts'}
@@ -463,14 +562,35 @@ CRITICAL FORMATTING RULES - PLAIN TEXT ONLY:
 - Use Unicode superscripts: 10⁶, 10⁻⁹
 - Use proper symbols: μm, μg, →, %
 
-Create an essay question that tests comprehensive understanding and ability to construct a coherent argument.
+EXPERT EXAMINER GUIDELINES - PROFESSIONAL EXAM STANDARDS:
+- Use appropriate A-Level essay command words: "discuss", "explain", "compare and contrast", "evaluate", "describe", "analyze"
+- Create marking criteria based on common A-Level student responses from past marking experience
+- Ensure question tests the cognitive level appropriate for {difficulty}:
+  * Easy: Knowledge and comprehension (recall facts, describe processes)
+  * Medium: Application and analysis (apply knowledge, analyze relationships, explain connections)
+  * Difficult: Synthesis and evaluation (combine multiple concepts, evaluate evidence, draw conclusions, construct arguments)
+- Question should feel FRESH and different from standard textbook questions
+- Include relevant biological contexts and real-world applications where appropriate
+- Reference ZIMSEC/Cambridge past papers and exam patterns
+
+FRESHNESS REQUIREMENTS - CREATE UNIQUE ESSAY QUESTIONS:
+- Use unique topics and angles NOT commonly found in typical textbook questions
+- Vary contexts: laboratory experiments, medical scenarios, environmental biology, agricultural applications, biotechnology
+- Ensure question feels professionally crafted like a real ZIMSEC/Cambridge exam question
+
+COMMON ESSAY MISTAKES TO REFERENCE:
+- Lack of structure and logical flow
+- Insufficient use of biological terminology
+- Missing key concepts or oversimplifying complex processes
+- Failure to integrate related topics
+- Poor use of examples and evidence
 
 REQUIREMENTS:
 1. Clear, focused question that allows students to demonstrate depth of knowledge
-2. Question should require discussion of multiple aspects/concepts
-3. May include "Discuss", "Explain", "Compare and contrast", "Evaluate" command words
-4. Provide a detailed essay plan/outline showing expected structure
-5. Include marking criteria for different grade boundaries
+2. Question should require discussion of multiple aspects/concepts from {topic}
+3. Use appropriate command words: "Discuss", "Explain", "Compare and contrast", "Evaluate", "Analyze"
+4. Provide a detailed essay plan/outline showing expected structure with mark allocation
+5. Include marking criteria for different grade boundaries with content marks and structure marks
 6. List key biological terms that MUST be included for high marks
 7. Use PLAIN TEXT Unicode notation - NO LaTeX
 
@@ -515,7 +635,11 @@ RESPONSE FORMAT (strict JSON):
     }},
     "model_answer_outline": "A brief outline of what an excellent answer would include",
     "common_mistakes": ["Mistake 1", "Mistake 2", "Mistake 3"],
-    "teaching_points": "Key learning from this essay topic"
+    "examiner_notes": "Examiner guidance: What examiners look for, common pitfalls, how to achieve top marks",
+    "teaching_points": "Key learning from this essay topic",
+    "marking_notes": "Marking scheme: Content marks (C) for accurate information, Structure marks (S) for organization and coherence, Quality marks (Q) for depth and synthesis.",
+    "zimsec_paper_reference": "Paper 3 (essay)",
+    "cambridge_paper_reference": "Paper 4 (essay/structured) as appropriate"
 }}
 
 Generate now:"""
@@ -548,18 +672,29 @@ Generate now:"""
                     "messages": [
                         {
                             "role": "system",
-                            "content": """You are an expert A Level Biology examiner for ZIMSEC examinations.
+                            "content": """You are a SENIOR A-LEVEL BIOLOGY TEACHER (15+ years) AND an examiner-style question designer. You teach and assess for BOTH ZIMSEC A Level Biology 6030 and Cambridge International AS & A Level Biology 9700.
+
+ROLE: SENIOR A-LEVEL BIOLOGY TEACHER & EXAMINER
+
+NON-NEGOTIABLE RULES:
+1. SYLLABUS-LOCKED: Only generate content examinable for ZIMSEC 6030 and Cambridge 9700
+2. NO LEAKAGE: Do NOT introduce off-syllabus topics or university-level methods
+3. EXAM AUTHENTICITY: Use real exam command words and structure
+4. ORIGINALITY: Generate ORIGINAL questions with the same SKILL pattern (not verbatim past papers)
+5. MARKING REALISM: Provide method marks + accuracy marks + common errors
+6. TOPIC INTEGRATION: Use mixed questions combining topics the way real papers do
+
 You create rigorous, high-quality questions that test deep biological understanding.
-Always use correct biological terminology and provide detailed marking schemes.
+Always use correct biological terminology and provide detailed marking schemes with step-by-step explanations.
 
 CRITICAL: Use PLAIN TEXT Unicode notation - NEVER use LaTeX or $ symbols:
 - ABSOLUTELY NO delimiters like $.
-- Use subscripts: CO₂, O₂, H₂O, ATP (NOT CO_2 or $CO_2$)
+- Use subscripts: CO₂, O₂, H₂O, ATP, NADH (NOT CO_2 or $CO_2$)
 - Use superscripts: 10⁶, 10⁻⁹ (NOT 10^6)
 - Use μm, μg for micro units
 - Use → for arrows in reactions
 
-Respond with valid JSON only - no markdown or extra text."""
+Always respond with valid JSON containing step-by-step solutions."""
                         },
                         {
                             "role": "user",

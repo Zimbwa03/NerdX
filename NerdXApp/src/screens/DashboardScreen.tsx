@@ -41,6 +41,7 @@ const CARD_WIDTH = (width - 48) / 2;
 import { sync } from '../services/SyncService';
 import { getUnreadCount, subscribeToNotifications } from '../services/notifications';
 import { checkUpdateRequired } from '../services/appVersion';
+import { formatCreditBalance } from '../utils/creditCalculator';
 
 
 
@@ -480,7 +481,7 @@ const DashboardScreen: React.FC = () => {
                   colors={['rgba(124, 77, 255, 0.2)', 'rgba(63, 29, 203, 0.2)']}
                   style={styles.creditsBadgeGradient}
                 >
-                  <Text style={styles.creditsValue}>{user?.credits || 0}</Text>
+                  <Text style={styles.creditsValue}>{formatCreditBalance(user?.credits)}</Text>
                   <Text style={styles.creditsLabelSmall}>Credits</Text>
                   <View style={styles.topUpIndicator}>
                     <Text style={styles.topUpText}>+</Text>

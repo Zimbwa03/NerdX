@@ -66,38 +66,93 @@ Return ONLY a JSON object:
             logger.error("DeepSeek API key not configured")
             return self._get_fallback_long_comprehension(theme)
 
-        prompt = f"""Generate a "VERY LONG" ZIMSEC O-Level English reading comprehension exercise on the theme: {theme}
+        prompt = f"""You are Dr. Muzenda, an EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER with 15+ years experience setting professional comprehension exercises for Zimbabwean students. You have deep knowledge of the ZIMSEC Ordinary Level English Language syllabus and extensive experience as a ZIMSEC examiner and marker.
 
-**ZIMSEC Format Requirements:**
-- Passage: **800-1000 words** (Must be a long, detailed, multi-paragraph narrative or article).
-- Context: Authentic Zimbabwe setting, characters, and cultural references.
-- Level: Form {form_level} (Age 15-17).
-- Questions: **EXACTLY 10 QUESTIONS**. Number them 1-10 in your internal reasoning to ensure count.
+ROLE: EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER & TEACHER
 
-**Question Distribution (Must sum to 10):**
-1. Literal (Direct Recall): 3 questions.
-2. Inferential (Reading between lines): 4 questions.
-3. Analysis/Critical (Evaluation/Opinion): 3 questions.
+CORE PRINCIPLES (NON-NEGOTIABLE):
+1. STRICT ZIMSEC ALIGNMENT
+   - Use ONLY ZIMSEC O-Level English Language Paper 2 Comprehension format
+   - Do NOT introduce external systems (IELTS, Cambridge IGCSE variations, foreign rubrics)
+   - Focus on ZIMSEC Paper 2 structure and marking schemes only
 
-**Return ONLY a JSON object with this EXACT structure:**
+2. EXAMINER-FOCUSED
+   - Generate comprehension exercises that test exactly what ZIMSEC examiners look for
+   - Highlight how marks are awarded and lost
+   - Emphasize literal understanding, inference, vocabulary in context, and critical analysis
+   - Reference ZIMSEC marking criteria and common examiner comments
+
+3. PAPER-BASED THINKING
+   - This comprehension exercise aligns with ZIMSEC Paper 2 Section A (Comprehension)
+   - Consider time allocation and mark distribution per question type
+   - Ensure questions test examinable skills only
+
+4. ZIMBABWE CONTEXT
+   - Use local, culturally relevant contexts (schools, communities, daily life in Zimbabwe)
+   - Maintain formal exam-appropriate English register
+   - Include Zimbabwean names, places, and situations
+   - Authentic Zimbabwe setting, characters, and cultural references
+
+SUBJECT: English Language (ZIMSEC O-Level - Paper 2 Section A: Comprehension)
+THEME: {theme}
+LEVEL: Form {form_level} (Age 15-17)
+
+**ZIMSEC FORMAT REQUIREMENTS:**
+- Passage: **800-1000 words** (Must be a long, detailed, multi-paragraph narrative or article)
+- Context: Authentic Zimbabwe setting, characters, and cultural references
+- Level: Form {form_level} (Age 15-17)
+- Questions: **EXACTLY 10 QUESTIONS**. Number them 1-10 in your internal reasoning to ensure count
+
+**QUESTION DISTRIBUTION (Must sum to 10):**
+1. Literal (Direct Recall): 3 questions - Test information directly stated in the text
+2. Inferential (Reading between lines): 4 questions - Test ability to draw conclusions from implied information
+3. Analysis/Critical (Evaluation/Opinion): 3 questions - Test critical thinking and personal evaluation
+
+**EXPERT EXAMINER GUIDELINES:**
+- Literal questions: Should test direct recall of facts, details, and information explicitly stated
+- Inferential questions: Should require students to read between lines, understand implied meaning, make connections
+- Critical questions: Should test evaluation, opinion formation, and critical analysis with evidence from text
+- Vocabulary questions: Include vocabulary-in-context questions where appropriate
+- Mark allocation: Typically 2 marks per question (total 20 marks for comprehension section)
+- Ensure questions progress from easier (literal) to more challenging (critical)
+- Questions should feel like professional ZIMSEC exam questions, not generic textbook exercises
+
+**FRESHNESS REQUIREMENTS:**
+- Use unique scenarios NOT commonly found in typical textbook passages
+- Vary contexts: school situations, community events, everyday life in Zimbabwe, cultural references
+- Create engaging, age-appropriate content that resonates with Zimbabwean students
+- Ensure passage feels professionally crafted like a real ZIMSEC exam passage
+
+**Return ONLY a JSON object with this EXACT structure (NO markdown formatting, NO additional text):**
 {{
     "passage": {{
-        "title": "A Creative Title",
-        "text": "The full text of the passage... (Ensure this is VERY LONG, at least 800 words)",
+        "title": "A Creative Title Relevant to {theme}",
+        "text": "The full text of the passage... (Ensure this is VERY LONG, at least 800 words, with authentic Zimbabwean context)",
         "word_count": 850,
-        "theme": "{theme}"
+        "theme": "{theme}",
+        "zimsec_paper_reference": "Paper 2 Section A (Comprehension)"
     }},
     "questions": [
         {{
-            "question": "Question text...",
-            "correct_answer": "Complete answer...",
+            "question": "Clear, focused ZIMSEC exam-style question",
+            "correct_answer": "Complete answer with evidence from passage",
             "question_type": "literal/inferential/critical",
             "marks": 2,
-            "explanation": "Why this is correct..."
+            "explanation": "DETAILED EXPLANATION: Why this answer is correct, with reference to specific parts of the passage. Reference ZIMSEC marking criteria.",
+            "teaching_explanation": "TEACHER FEEDBACK: A warm, encouraging explanation helping students understand how to approach this type of question. MUST BE DIFFERENT from explanation above."
         }},
-        ... (Total of 10 objects)
-    ]
-}}"""
+        ... (Total of 10 objects - ensure exactly 3 literal, 4 inferential, 3 critical)
+    ],
+    "zimsec_marking_notes": "Brief notes on common student mistakes and examiner expectations for this comprehension exercise"
+}}
+
+CRITICAL REQUIREMENTS:
+- Passage must be 800-1000 words with authentic Zimbabwean context
+- Exactly 10 questions: 3 literal, 4 inferential, 3 critical
+- Each question worth 2 marks (total 20 marks)
+- Questions must test ZIMSEC examinable skills only
+- No foreign syllabus contamination (IELTS, Cambridge IGCSE variations)
+- Passage and questions must feel professionally crafted like a real ZIMSEC exam paper"""
 
         return self._call_deepseek_api(prompt, "long_comprehension_passage")
 

@@ -43,18 +43,11 @@ const ForgotPasswordScreen: React.FC = () => {
             // Use Supabase to send password reset email
             // The redirect URL should point to your app's deep link
             // For React Native, we use expo-linking format
-            const redirectUrl = Platform.select({
-                ios: 'nerdx://reset-password',
-                android: 'nerdx://reset-password',
-                default: 'https://nerdx.app/reset-password', // Web fallback
-            });
-
-            // Use proper redirect URL format
             // Supabase will append access_token and other params to this URL
             const redirectUrl = Platform.select({
                 ios: 'nerdx://reset-password',
                 android: 'nerdx://reset-password',
-                default: 'https://nerdx.app/reset-password',
+                default: 'https://nerdx.app/reset-password', // Web fallback
             });
 
             const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {

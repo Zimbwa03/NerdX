@@ -72,6 +72,12 @@ TOPICS = {
         "Probability"
     ],
     "English": [
+        # ZIMSEC O-Level English Language Papers
+        "Continuous Writing / Composition",
+        "Guided Writing / Functional Writing",
+        "Comprehension Skills",
+        "Summary Writing",
+        "Language and Grammar in Context",
         "Grammar Usage and Vocabulary"
     ]
 }
@@ -113,7 +119,7 @@ A_LEVEL_PHYSICS_ALL_TOPICS = A_LEVEL_PHYSICS_TOPICS["AS Level"] + A_LEVEL_PHYSIC
 
 # A Level Chemistry Topics (Cambridge/ZIMSEC A Level Syllabus)
 A_LEVEL_CHEMISTRY_TOPICS = {
-    "AS Level": [
+    "Lower Sixth": [
         # Physical Chemistry
         "Atomic Structure",
         "Atoms, Molecules and Stoichiometry",
@@ -140,7 +146,7 @@ A_LEVEL_CHEMISTRY_TOPICS = {
         "Organic Synthesis",
         "Analytical Techniques"
     ],
-    "A2 Level": [
+    "Upper Sixth": [
         # Physical Chemistry
         "Chemical Energetics (Advanced)",
         "Electrochemistry (Advanced)",
@@ -161,7 +167,7 @@ A_LEVEL_CHEMISTRY_TOPICS = {
 }
 
 # All A Level Chemistry topics flat list
-A_LEVEL_CHEMISTRY_ALL_TOPICS = A_LEVEL_CHEMISTRY_TOPICS["AS Level"] + A_LEVEL_CHEMISTRY_TOPICS["A2 Level"]
+A_LEVEL_CHEMISTRY_ALL_TOPICS = A_LEVEL_CHEMISTRY_TOPICS["Lower Sixth"] + A_LEVEL_CHEMISTRY_TOPICS["Upper Sixth"]
 
 # A Level Pure Mathematics Topics (ZIMSEC Syllabus 6042)
 A_LEVEL_PURE_MATH_TOPICS = {

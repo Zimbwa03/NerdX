@@ -23,20 +23,29 @@ export async function getAppVersion(): Promise<AppVersion | null> {
   try {
     const platform = Platform.OS === 'ios' ? 'ios' : 'android';
     
+    // Use maybeSingle() instead of single() to gracefully handle missing rows
+    // maybeSingle() returns null instead of throwing PGRST116 error when no rows exist
     const { data, error } = await supabase
       .from('app_versions')
       .select('*')
       .eq('platform', platform)
-      .single();
+      .maybeSingle();
 
+    // Only log errors that aren't "no rows found" (PGRST116)
+    // PGRST116 means no rows found - this is expected when app_versions table is empty
+    // and should not be treated as an error
     if (error) {
-      console.error('Error fetching app version:', error);
+      // Silently handle PGRST116 (no rows found) - this is expected behavior
+      // Only log actual errors (network issues, permission problems, etc.)
+      if (error.code !== 'PGRST116' && error.code !== 'PGRST301') {
+        console.warn('Non-critical error fetching app version:', error.code || error.message);
+      }
       return null;
     }
 
     return data;
   } catch (error) {
-    console.error('Error in getAppVersion:', error);
+    // Silently handle errors - missing app version is not critical
     return null;
   }
 }

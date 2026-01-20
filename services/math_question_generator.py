@@ -39,6 +39,143 @@ except ImportError:
 
 class MathQuestionGenerator:
     """DeepSeek AI mathematics question generator (Gemini fallback disabled for Graph Practice)"""
+    
+    # Comprehensive learning objectives for all 14 O-Level Mathematics topics
+    learning_objectives = {
+        "Real Numbers": [
+            "Number types: natural, integers, rational, irrational, real",
+            "Place value, rounding, significant figures, decimal places",
+            "Order of operations (BODMAS)",
+            "Fractions: simplify, compare, operations, mixed numbers",
+            "Decimals: operations, recurring decimals",
+            "Standard form (scientific notation)",
+            "Bounds and limits of accuracy (upper/lower bounds)",
+            "Estimation and approximation",
+            "Surds (simplify, rationalise denominator if required)"
+        ],
+        "Sets": [
+            "Set notation: ∈, ∉, ∅, U, ⊂, ⊆",
+            "Listing vs set-builder notation",
+            "Venn diagrams (2 and 3 sets)",
+            "Union, intersection, complement, difference",
+            "Number of elements: n(A), n(A∪B), etc.",
+            "Applications: survey problems and counting"
+        ],
+        "Financial Mathematics": [
+            "Percentages: increase/decrease, reverse percentage",
+            "Profit and loss, discount, commission",
+            "Simple interest",
+            "Compound interest",
+            "Hire purchase / instalments",
+            "Exchange rates (currency conversion)",
+            "Ratios in money contexts",
+            "Wages: overtime, deductions (basic payslip problems)"
+        ],
+        "Measures and Mensuration": [
+            "Units and conversions (length, area, volume, mass, time)",
+            "Perimeter of plane shapes",
+            "Area: triangle, rectangle, parallelogram, trapezium, circle",
+            "Circumference of a circle, arc length (if included)",
+            "Volume: cuboid, cylinder, prism, cone, sphere (as syllabus allows)",
+            "Surface area: cube, cuboid, cylinder (as syllabus allows)",
+            "Density (mass/volume) if included under measures",
+            "Scale and maps (distance/area scaling)"
+        ],
+        "Graphs": [
+            "Cartesian plane, coordinates",
+            "Plotting points",
+            "Linear graphs: y = mx + c",
+            "Gradient and intercept interpretation",
+            "Drawing graphs from tables",
+            "Reading graphs: distance-time, speed-time style (if included)",
+            "Solving equations by graphing",
+            "Graph transformations basics (shift/stretch) if in syllabus"
+        ],
+        "Variation": [
+            "Direct variation: y ∝ x",
+            "Inverse variation: y ∝ 1/x",
+            "Joint variation: y ∝ xz",
+            "Combined variation forms",
+            "Forming equations from statements",
+            "Solving for constants of proportionality"
+        ],
+        "Algebra": [
+            "Simplifying expressions (including indices)",
+            "Expansion: single/double brackets",
+            "Factorisation: common factor, grouping, difference of two squares, quadratic trinomials",
+            "Algebraic fractions (simplify, add/subtract)",
+            "Linear equations (including brackets/fractions)",
+            "Simultaneous equations (elimination/substitution, graphical)",
+            "Quadratic equations (factorisation, formula if included)",
+            "Inequalities (number line/region shading)",
+            "Sequences: term-to-term, nth term",
+            "Changing the subject of a formula",
+            "Indices laws (positive/negative/fractional where included)"
+        ],
+        "Geometry": [
+            "Angle facts: lines, triangles, polygons",
+            "Properties of triangles/quadrilaterals",
+            "Similarity and congruence",
+            "Pythagoras' theorem",
+            "Circle theorems (angles in same segment, tangent-radius, etc.) if included",
+            "Bearings (3-figure bearings)",
+            "Loci and constructions (if included)",
+            "Geometric reasoning/proofs (simple)"
+        ],
+        "Statistics": [
+            "Data types, collection methods",
+            "Frequency tables",
+            "Bar charts, pie charts, histograms (if included), line graphs",
+            "Mean, median, mode",
+            "Range (and possibly IQR if included)",
+            "Cumulative frequency and ogives (if included)",
+            "Interpretations and conclusions from data"
+        ],
+        "Trigonometry": [
+            "Right-angled triangle trig: sin, cos, tan",
+            "Finding unknown sides/angles",
+            "Angle of elevation/depression",
+            "Bearings + trig combination",
+            "Trig in real-life contexts",
+            "Pythagoras + trig integration"
+        ],
+        "Vectors": [
+            "Vector notation and representation",
+            "Magnitude and direction (simple)",
+            "Addition and subtraction of vectors",
+            "Scalar multiplication",
+            "Column vectors (2D)",
+            "Vector geometry: midpoint, ratio division (basic)",
+            "Using vectors in shapes (parallelogram/triangle)"
+        ],
+        "Matrices": [
+            "Matrix notation, order",
+            "Addition and subtraction",
+            "Scalar multiplication",
+            "Matrix multiplication (where allowed)",
+            "Determinant (2×2) if included",
+            "Solving simple simultaneous equations using matrices (if included)",
+            "Transformations using matrices (linked topic)"
+        ],
+        "Transformation": [
+            "Translation (vector form)",
+            "Reflection (in axes and lines like y=x)",
+            "Rotation (centre, angle, direction)",
+            "Enlargement (scale factor, centre)",
+            "Combined transformations",
+            "Invariants and mapping"
+        ],
+        "Probability": [
+            "Basic probability language and notation",
+            "Probability scale (0 to 1)",
+            "Simple events",
+            "Complementary events",
+            "Combined events: independent events, mutually exclusive events",
+            "Tree diagrams (if included)",
+            "Two-way tables (if included)",
+            "Experimental probability vs theoretical"
+        ]
+    }
 
     def __init__(self):
         # DeepSeek configuration (fallback)
@@ -319,28 +456,38 @@ Return JSON:
         }
 
     def _create_question_prompt(self, subject: str, topic: str, difficulty: str, recent_topics: set = None) -> str:
-        """Create optimized prompt using structured prompts when available"""
+        """Create optimized prompt using structured prompts when available with expert examiner persona"""
         
         if recent_topics is None:
             recent_topics = set()
         
         difficulty_descriptions = {
-            "easy": "Direct application of basic concepts, straightforward calculations, minimal steps",
+            "easy": "Direct application of basic concepts, straightforward calculations, minimal steps (1-2 steps)",
             "medium": "Requires understanding of multiple concepts, moderate calculations, 2-3 steps",
-            "difficult": "Complex problem-solving, multi-step reasoning, synthesis of several concepts"
+            "difficult": "Complex problem-solving, multi-step reasoning, synthesis of several concepts (4+ steps)"
         }
+        
+        difficulty_guidance = {
+            'easy': "Basic recall and understanding level. Test definitions, simple calculations, and basic procedures.",
+            'medium': "Application and analysis level. Require understanding of concepts, moderate calculations, and application of methods.",
+            'difficult': "Evaluation and synthesis level. Complex scenarios requiring deeper understanding, multi-step problem-solving, and synthesis of concepts."
+        }
+        
+        # Get learning objectives for this topic
+        objectives = self.learning_objectives.get(topic, [f"understanding of {topic}"])
+        selected_subtopic = random.choice(objectives) if objectives else f"understanding of {topic}"
         
         # Try to get a structured prompt for this topic
         structured_prompt = None
-        subtopic = topic
-        learning_obj = f"Test understanding of {topic}"
+        subtopic = selected_subtopic
+        learning_obj = f"Test understanding of {selected_subtopic}"
         
         if PROMPTS_AVAILABLE:
             try:
                 prompt_data = get_random_prompt(topic, difficulty=difficulty)
                 if prompt_data:
                     structured_prompt = prompt_data.get('prompt', '')
-                    subtopic = prompt_data.get('subtopic', topic)
+                    subtopic = prompt_data.get('subtopic', selected_subtopic)
                     learning_obj = prompt_data.get('learning_objective', learning_obj)
                     logger.info(f"Using structured prompt: {prompt_data.get('id', 'unknown')} for {topic}")
             except Exception as e:
@@ -353,17 +500,84 @@ Return JSON:
         
         points = 10 if difficulty == 'easy' else 20 if difficulty == 'medium' else 30
         
+        # Topic-specific question styles based on user's structure
+        topic_question_styles = {
+            "Real Numbers": ["Rounding/standard form", "Bounds and limits", "Estimation", "Number type identification"],
+            "Sets": ["Venn diagram problems", "Set operations", "Survey problems", "Counting elements"],
+            "Financial Mathematics": ["Percentage calculations", "Profit/loss", "Interest calculations", "Currency conversion", "Best-buy comparisons"],
+            "Measures and Mensuration": ["Area/volume calculations", "Unit conversions", "Scale problems", "Cost calculations"],
+            "Graphs": ["Plotting graphs", "Gradient/intercept", "Graph interpretation", "Solving by graphing"],
+            "Variation": ["Direct/inverse variation", "Finding constants", "Proportionality problems"],
+            "Algebra": ["Simplification", "Factorisation", "Solving equations", "Word problems forming equations", "Sequences"],
+            "Geometry": ["Angle calculations", "Properties of shapes", "Pythagoras", "Bearings", "Geometric reasoning"],
+            "Statistics": ["Mean/median/mode", "Graph interpretation", "Frequency tables", "Data analysis"],
+            "Trigonometry": ["Right-angled triangle problems", "Elevation/depression", "Real-life applications"],
+            "Vectors": ["Vector operations", "Vector geometry", "Midpoint/ratio problems"],
+            "Matrices": ["Matrix operations", "Matrix multiplication", "Solving systems"],
+            "Transformation": ["Drawing transformations", "Describing transformations", "Combined transformations"],
+            "Probability": ["Simple probability", "Combined events", "Tree diagrams", "Two-way tables"]
+        }
+        
+        question_styles = topic_question_styles.get(topic, ["Standard calculation", "Problem solving", "Application"])
+        
         # Use structured prompt if available
         if structured_prompt:
-            prompt = f"""Generate a ZIMSEC O-Level Mathematics question.
+            prompt = f"""You are Dr. Muzenda, a SENIOR ZIMSEC O-LEVEL MATHEMATICS TEACHER with over 15 years of classroom and examination experience. You have deep mastery of the ZIMSEC Ordinary Level Mathematics syllabus, examiner-level understanding of what is tested, how marks are allocated, and common learner errors. You have full awareness of Paper structures, topic weightings, and recurring exam patterns.
 
-**Topic:** {topic}
-**Subtopic:** {subtopic}
-**Difficulty:** {difficulty} - {difficulty_descriptions[difficulty]}
-**Learning Objective:** {learning_obj}
-{variation_note}
+ROLE: SENIOR ZIMSEC O-LEVEL MATHEMATICS TEACHER & EXAMINER
 
-**CRITICAL MATH FORMATTING - PLAIN TEXT ONLY:**
+CORE PRINCIPLES (NON-NEGOTIABLE):
+1. STRICT ZIMSEC SYLLABUS ADHERENCE
+   - Cover ONLY topics examinable at ZIMSEC O Level
+   - Do NOT include A Level content or foreign syllabus extensions
+   - Do NOT skip foundational skills (ZIMSEC tests basics heavily)
+
+2. EXAMINER-ORIENTED TEACHING
+   - Teach how marks are earned and lost
+   - Emphasize method marks, accuracy marks, and presentation
+   - Highlight common traps and examiner expectations
+
+3. STRUCTURED THINKING
+   - Every question must test specific concepts and skills
+   - Include typical exam question styles
+   - Reference common mistakes and marking focus
+
+4. PROGRESSIVE DIFFICULTY
+   - Move from basic → standard → exam-level → challenging questions
+
+SUBJECT: Mathematics (ZIMSEC O-Level)
+TOPIC: {topic}
+SPECIFIC SUBTOPIC TO TEST: {selected_subtopic}
+DIFFICULTY: {difficulty} - {difficulty_descriptions[difficulty]}
+
+COMPREHENSIVE COVERAGE REQUIREMENT:
+- This question MUST test understanding of a SPECIFIC subtopic: "{selected_subtopic}"
+- All available subtopics for this topic: {chr(10).join(f"  - {obj}" for obj in objectives)}
+- To ensure full syllabus coverage, different subtopics should be tested across multiple question generations
+- Questions should rotate through all learning objectives to ensure comprehensive topic coverage
+
+TYPICAL QUESTION STYLES FOR THIS TOPIC:
+{', '.join(question_styles)}
+
+EXPERT EXAMINER GUIDELINES - PROFESSIONAL EXAM STANDARDS:
+- Use appropriate ZIMSEC command words: "calculate", "find", "solve", "show that", "prove", "simplify", "factorise", "expand"
+- Create questions that test method marks, accuracy marks, and presentation
+- Ensure question tests the cognitive level appropriate for {difficulty}:
+  * Easy: Knowledge and comprehension (recall facts, understand concepts, basic calculations)
+  * Medium: Application and analysis (apply knowledge, interpret data, analyze relationships, 2-3 step problems)
+  * Difficult: Synthesis and evaluation (compare concepts, evaluate scenarios, multi-step problem-solving, 4+ steps)
+- Question should feel FRESH and different from standard textbook questions
+- Include relevant real-world or Zimbabwean context where applicable
+- Reference ZIMSEC past papers and exam patterns
+- Highlight common learner errors in distractors (for MCQs) or mark allocation (for structured)
+
+FRESHNESS REQUIREMENTS - CREATE UNIQUE QUESTIONS:
+- Use unique scenarios NOT commonly found in typical textbook questions
+- Vary contexts: Zimbabwean school/community situations, everyday life, practical applications
+- Vary numbers and approaches to test the same concept
+- Ensure question feels professionally crafted like a real ZIMSEC exam question
+
+CRITICAL MATH FORMATTING - PLAIN TEXT ONLY:
 - ABSOLUTELY NO LaTeX delimiters like $ or \\( or \\).
 - Use Unicode superscripts: x², x³, xⁿ (NOT x^2 or $x^2$)
 - Use Unicode subscripts: x₁, x₂, aₙ (NOT x_1)
@@ -375,25 +589,86 @@ Return JSON:
 **Specific Instructions:**
 {structured_prompt}
 
-Return your response in this EXACT JSON format:
+STUDENT LEVEL: ZIMSEC O-Level Forms 1-4 (ages 15-17 in Zimbabwe). Keep content age-appropriate.
+
+OUTPUT FORMAT: Return ONLY valid JSON. No markdown. No extra text.
+
+JSON schema (required fields):
 {{
-    "question": "Clear, focused question testing the concept (plain text math)",
-    "solution": "Complete step-by-step solution with working (plain text math)",
+    "question": "Clear, focused ZIMSEC exam-style question testing: {selected_subtopic} (plain text math)",
+    "solution": "Complete step-by-step solution with working showing method marks (plain text math)",
     "answer": "Final answer only",
     "points": {points},
-    "explanation": "Conceptual explanation of what is being tested",
-    "teaching_explanation": "Friendly tutor-style explanation with analogies",
+    "explanation": "Conceptual explanation of what is being tested and why it matters for ZIMSEC exams",
+    "teaching_explanation": "Friendly tutor-style explanation with analogies and common mistakes to avoid",
     "difficulty": "{difficulty}",
-    "subtopic": "{subtopic}"
+    "subtopic": "{selected_subtopic}",
+    "topic": "{topic}",
+    "zimsec_paper_reference": "Paper 1 or Paper 2 (as appropriate)",
+    "marking_notes": "Brief notes on how marks are allocated (method marks vs accuracy marks) and common examiner comments"
 }}
 
 Generate the question now:"""
         else:
             # Default prompt when structured prompts not available
-            prompt = f"""Generate a high-quality {difficulty} level {subject} question about {topic} for ZIMSEC O-Level students.
+            prompt = f"""You are Dr. Muzenda, a SENIOR ZIMSEC O-LEVEL MATHEMATICS TEACHER with over 15 years of classroom and examination experience. You have deep mastery of the ZIMSEC Ordinary Level Mathematics syllabus, examiner-level understanding of what is tested, how marks are allocated, and common learner errors. You have full awareness of Paper structures, topic weightings, and recurring exam patterns.
+
+ROLE: SENIOR ZIMSEC O-LEVEL MATHEMATICS TEACHER & EXAMINER
+
+CORE PRINCIPLES (NON-NEGOTIABLE):
+1. STRICT ZIMSEC SYLLABUS ADHERENCE
+   - Cover ONLY topics examinable at ZIMSEC O Level
+   - Do NOT include A Level content or foreign syllabus extensions
+   - Do NOT skip foundational skills (ZIMSEC tests basics heavily)
+
+2. EXAMINER-ORIENTED TEACHING
+   - Teach how marks are earned and lost
+   - Emphasize method marks, accuracy marks, and presentation
+   - Highlight common traps and examiner expectations
+
+3. STRUCTURED THINKING
+   - Every question must test specific concepts and skills
+   - Include typical exam question styles
+   - Reference common mistakes and marking focus
+
+4. PROGRESSIVE DIFFICULTY
+   - Move from basic → standard → exam-level → challenging questions
+
+SUBJECT: Mathematics (ZIMSEC O-Level)
+TOPIC: {topic}
+SPECIFIC SUBTOPIC TO TEST: {selected_subtopic}
+DIFFICULTY: {difficulty} - {difficulty_descriptions[difficulty]}
+
+COMPREHENSIVE COVERAGE REQUIREMENT:
+- This question MUST test understanding of a SPECIFIC subtopic: "{selected_subtopic}"
+- All available subtopics for this topic: {chr(10).join(f"  - {obj}" for obj in objectives)}
+- To ensure full syllabus coverage, different subtopics should be tested across multiple question generations
+- Questions should rotate through all learning objectives to ensure comprehensive topic coverage
+
+TYPICAL QUESTION STYLES FOR THIS TOPIC:
+{', '.join(question_styles)}
+
+EXPERT EXAMINER GUIDELINES - PROFESSIONAL EXAM STANDARDS:
+- Use appropriate ZIMSEC command words: "calculate", "find", "solve", "show that", "prove", "simplify", "factorise", "expand"
+- Create questions that test method marks, accuracy marks, and presentation
+- Ensure question tests the cognitive level appropriate for {difficulty}:
+  * Easy: Knowledge and comprehension (recall facts, understand concepts, basic calculations)
+  * Medium: Application and analysis (apply knowledge, interpret data, analyze relationships, 2-3 step problems)
+  * Difficult: Synthesis and evaluation (compare concepts, evaluate scenarios, multi-step problem-solving, 4+ steps)
+- Question should feel FRESH and different from standard textbook questions
+- Include relevant real-world or Zimbabwean context where applicable
+- Reference ZIMSEC past papers and exam patterns
+- Highlight common learner errors
+
+FRESHNESS REQUIREMENTS - CREATE UNIQUE QUESTIONS:
+- Use unique scenarios NOT commonly found in typical textbook questions
+- Vary contexts: Zimbabwean school/community situations, everyday life, practical applications
+- Vary numbers and approaches to test the same concept
+- Ensure question feels professionally crafted like a real ZIMSEC exam question
+
 {variation_note}
 
-**CRITICAL MATH FORMATTING - PLAIN TEXT ONLY:**
+CRITICAL MATH FORMATTING - PLAIN TEXT ONLY:
 - ABSOLUTELY NO LaTeX delimiters like $ or \\( or \\).
 - Use Unicode superscripts: x², x³, xⁿ (NOT x^2 or $x^2$)
 - Use Unicode subscripts: x₁, x₂, aₙ (NOT x_1)
@@ -407,19 +682,29 @@ Requirements:
 - Use PLAIN TEXT Unicode math notation - NO LaTeX
 - Include specific numbers and realistic scenarios
 - Appropriate for {difficulty} difficulty level: {difficulty_descriptions[difficulty]}
-- Focus specifically on {topic}
+- Focus specifically on {selected_subtopic} within {topic}
 - Question should test understanding, not just recall
-- Provide a complete step-by-step solution
+- Provide a complete step-by-step solution showing method marks
 - Give the final answer clearly
+- Include examiner notes on common mistakes if applicable
 
-Return your response in this EXACT JSON format:
+STUDENT LEVEL: ZIMSEC O-Level Forms 1-4 (ages 15-17 in Zimbabwe). Keep content age-appropriate.
+
+OUTPUT FORMAT: Return ONLY valid JSON. No markdown. No extra text.
+
+JSON schema (required fields):
 {{
-    "question": "Your generated question here (plain text math)",
-    "solution": "Complete step-by-step solution with clear working (plain text math)",
+    "question": "Clear, focused ZIMSEC exam-style question testing: {selected_subtopic} (plain text math)",
+    "solution": "Complete step-by-step solution with working showing method marks (plain text math)",
     "answer": "Final answer only",
     "points": {points},
-    "explanation": "Brief explanation of the concept being tested",
-    "teaching_explanation": "Friendly tutor-style explanation"
+    "explanation": "Conceptual explanation of what is being tested and why it matters for ZIMSEC exams",
+    "teaching_explanation": "Friendly tutor-style explanation with analogies and common mistakes to avoid",
+    "difficulty": "{difficulty}",
+    "subtopic": "{selected_subtopic}",
+    "topic": "{topic}",
+    "zimsec_paper_reference": "Paper 1 or Paper 2 (as appropriate)",
+    "marking_notes": "Brief notes on how marks are allocated (method marks vs accuracy marks) and common examiner comments"
 }}
 
 Generate the question now:"""

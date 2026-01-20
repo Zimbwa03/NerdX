@@ -249,35 +249,57 @@ Provide your concept explanation:"""
         
         is_correct = self._compare_answers(user_answer, correct_answer)
         
-        prompt = f"""You are MathMentor, expert ZIMSEC mathematics tutor with deep pedagogical knowledge.
+        prompt = f"""You are MathMentor, an expert ZIMSEC mathematics tutor with 15+ years of experience teaching O-Level and A-Level Mathematics.
 
-TASK: Analyze a student's answer and provide constructive feedback.
+TASK: Analyze a student's answer and provide CLEAR, STEP-BY-STEP feedback.
 
 QUESTION: {question}
 STUDENT'S ANSWER: {user_answer}
 CORRECT ANSWER: {correct_answer}
 SOLUTION: {solution}
 
+CRITICAL REQUIREMENTS FOR FEEDBACK:
+1. **STEP-BY-STEP STRUCTURE**: Break down feedback into clear, numbered steps (Step 1, Step 2, Step 3, etc.)
+2. **CLARITY**: Use simple, clear language appropriate for the student's level
+3. **EDUCATIONAL FOCUS**: Explain the "why" behind each step, not just the "what"
+4. **ENCOURAGEMENT**: Be supportive and motivating, especially for incorrect answers
+5. **SPECIFIC GUIDANCE**: Point out exactly where errors occurred (if any) and why
+
+FEEDBACK STRUCTURE REQUIREMENTS:
+- If CORRECT: Confirm understanding with numbered steps highlighting key concepts mastered
+- If INCORRECT: 
+  * Step 1: Identify what they did correctly (if anything)
+  * Step 2: Point out the specific error or misconception with exact location
+  * Step 3: Explain the correct approach step-by-step
+  * Step 4: Provide a similar example or practice tip
+
 ANALYSIS REQUIREMENTS:
 1. Determine if the student's answer is mathematically correct
 2. Identify any partial credit if applicable  
-3. Explain what the student did right (if anything)
-4. Identify specific errors or misconceptions
-5. Provide clear guidance for improvement
+3. Explain what the student did right (if anything) - be specific
+4. Identify specific errors or misconceptions - point to exact step/calculation
+5. Provide clear, step-by-step guidance for improvement
 6. Be encouraging and educational
 7. Suggest a related topic to practice if they got it wrong
 
-RESPONSE FORMAT (JSON):
+RESPONSE FORMAT (JSON - STRICT):
 {{
     "is_correct": {str(is_correct).lower()},
     "partial_credit": "percentage if partially correct (0-100)",
-    "feedback": "Constructive feedback focusing on learning",
-    "what_went_right": "What the student did correctly",
-    "what_went_wrong": "Specific errors or misconceptions", 
-    "improvement_tips": "Clear guidance for next time",
+    "feedback": "Step-by-step feedback with numbered steps. Format: Step 1: ... Step 2: ... Step 3: ...",
+    "what_went_right": "Specific things the student did correctly (be specific, not generic)",
+    "what_went_wrong": "Exact error location and explanation (e.g., 'In Step 2, you forgot to...')", 
+    "improvement_tips": "Actionable, step-by-step advice (numbered steps if multiple tips)",
     "encouragement": "Positive, motivating message",
-    "related_topic": "Topic to practice next"
+    "related_topic": "Topic to practice next",
+    "step_by_step_explanation": "Detailed step-by-step walkthrough of the correct solution method"
 }}
+
+IMPORTANT:
+- Use numbered steps (Step 1, Step 2, Step 3, etc.) throughout the feedback
+- Be specific about which step of the solution had an error
+- Provide clear mathematical reasoning, not just answers
+- Use plain text math notation (x², √, π, etc.) - NO LaTeX
 
 Provide your analysis:"""
 
@@ -335,48 +357,117 @@ Provide your analysis:"""
             return None
 
     def _format_analysis_response(self, analysis: Dict, user_answer: str, correct_answer: str) -> Dict:
-        """Format the analysis response"""
+        """Format the analysis response with step-by-step structure"""
         
         if isinstance(analysis, str):
-            # Handle raw text response
+            # Handle raw text response - add step structure if missing
             is_correct = self._compare_answers(user_answer, correct_answer)
+            feedback = analysis
+            if 'Step 1' not in feedback and 'Step' not in feedback:
+                if is_correct:
+                    feedback = f"""✅ Step 1: Your answer is CORRECT!
+
+{feedback}
+
+💡 Well done! Continue practicing to master this topic."""
+                else:
+                    feedback = f"""❌ Step 1: Let's review the correct approach.
+
+{feedback}
+
+📚 Study the solution steps carefully."""
+            
             return {
                 'is_correct': is_correct,
-                'feedback': analysis,
+                'feedback': feedback,
+                'step_by_step_explanation': feedback,
                 'detailed_analysis': True
             }
         
         # Handle structured JSON response
+        feedback = analysis.get('feedback', 'Keep practicing!')
+        step_by_step = analysis.get('step_by_step_explanation', '')
+        
+        # Ensure feedback has step structure
+        if 'Step 1' not in feedback and 'Step' not in feedback:
+            if analysis.get('is_correct', False):
+                feedback = f"""✅ Step 1: Your answer is CORRECT!
+
+{feedback}
+
+💡 Well done! Continue practicing to master this topic."""
+            else:
+                feedback = f"""❌ Step 1: Let's review the correct approach.
+
+{feedback}
+
+📚 Study the solution steps carefully."""
+        
+        # Combine feedback and step-by-step explanation if both exist
+        if step_by_step and step_by_step not in feedback:
+            feedback = f"{feedback}\n\n📚 DETAILED STEP-BY-STEP SOLUTION:\n{step_by_step}"
+        elif not step_by_step:
+            step_by_step = feedback
+        
         return {
             'is_correct': analysis.get('is_correct', False),
             'partial_credit': analysis.get('partial_credit', '0'),
-            'feedback': analysis.get('feedback', 'Keep practicing!'),
+            'feedback': feedback,
             'what_went_right': analysis.get('what_went_right', ''),
             'what_went_wrong': analysis.get('what_went_wrong', ''),
             'improvement_tips': analysis.get('improvement_tips', ''),
             'encouragement': analysis.get('encouragement', 'Great effort!'),
             'related_topic': analysis.get('related_topic', ''),
+            'step_by_step_explanation': step_by_step,
             'detailed_analysis': True
         }
 
     def _generate_basic_feedback(self, user_answer: str, correct_answer: str, solution: str) -> Dict:
-        """Generate basic feedback when AI analysis is not available"""
+        """Generate basic feedback when AI analysis is not available - with step-by-step structure"""
         
         is_correct = self._compare_answers(user_answer, correct_answer)
         
         if is_correct:
+            feedback = f"""✅ Step 1: Your answer is CORRECT!
+Step 2: You've successfully applied the mathematical concepts.
+Step 3: Well done on showing your working!
+
+📚 Key Concepts Mastered:
+• You correctly identified the problem type
+• You applied the appropriate method
+• You arrived at the correct solution
+
+💡 Keep practicing similar problems to reinforce your understanding!"""
+            
             return {
                 'is_correct': True,
-                'feedback': '✅ Excellent work! Your answer is correct.',
+                'feedback': feedback,
                 'encouragement': 'You showed great mathematical understanding!',
+                'what_went_right': 'You correctly solved the problem and applied the mathematical concepts accurately.',
+                'improvement_tips': 'Step 1: Continue practicing similar problems\nStep 2: Try more challenging variations\nStep 3: Focus on understanding the underlying concepts',
+                'step_by_step_explanation': solution or 'Review the solution steps provided with the question.',
                 'detailed_analysis': False
             }
         else:
+            feedback = f"""❌ Step 1: Your answer needs review.
+Step 2: The correct answer is: {correct_answer}
+Step 3: Review the detailed solution steps below to understand the correct approach.
+
+📚 How to Improve:
+Step 1: Read through the solution carefully
+Step 2: Identify where your approach differed
+Step 3: Practice similar problems to master the method
+
+💡 Remember: Understanding the method is more important than just getting the answer!"""
+            
             return {
                 'is_correct': False,
-                'feedback': f'❌ The correct answer is {correct_answer}. Review the solution steps provided.',
-                'improvement_tips': 'Take your time with each step and double-check your calculations.',
+                'feedback': feedback,
+                'what_went_right': '',
+                'what_went_wrong': f'Your answer ({user_answer}) does not match the correct solution ({correct_answer}). Review the step-by-step solution to identify where the error occurred.',
+                'improvement_tips': 'Step 1: Review the solution steps provided\nStep 2: Identify which step you may have missed or done incorrectly\nStep 3: Try solving similar problems step-by-step\nStep 4: Check your work at each step',
                 'encouragement': 'Keep practicing - mathematics improves with experience!',
+                'step_by_step_explanation': solution or 'No detailed solution available. Review the question and try again.',
                 'detailed_analysis': False
             }
 

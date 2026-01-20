@@ -47,9 +47,8 @@ const SubjectsScreen: React.FC = () => {
   const handleSubjectPress = (subject: Subject) => {
     const subjectId = subject.id.toLowerCase();
     if (subjectId === 'combined_science') {
-      // Show modal for Combined Science
-      setSelectedSubject(subject);
-      setMathModalVisible(true);
+      // Go directly to practice mode (Teacher Mode is now in the dashboard)
+      navigation.navigate('Topics' as never, { subject } as never);
     } else if (subjectId === 'mathematics' || subject.name.toLowerCase() === 'mathematics') {
       // Show modal for Mathematics
       setSelectedSubject(subject);

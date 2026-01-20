@@ -1226,6 +1226,12 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
             registration_data['email'] = email
         if phone_number:
             registration_data['phone_number'] = phone_number
+        
+        # Set registration_source: mobile if email+password provided, otherwise whatsapp
+        if email and password_hash:
+            registration_data['registration_source'] = 'mobile'
+        else:
+            registration_data['registration_source'] = 'whatsapp'
 
         logger.info(f"📝 Registration data prepared: {registration_data}")
 

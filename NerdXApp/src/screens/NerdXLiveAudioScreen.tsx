@@ -266,44 +266,85 @@ const NerdXLiveAudioScreen: React.FC = () => {
 
             try {
                 if (soundRef.current) {
-                    try { await soundRef.current.unloadAsync(); } catch (e) { }
+                    try { 
+                        await soundRef.current.stopAsync();
+                        await soundRef.current.unloadAsync(); 
+                    } catch (e) { }
                 }
 
                 console.log(`▶️ Playing chunk ${i + 1}/${audioTurn.chunks.length}`);
                 const { sound } = await Audio.Sound.createAsync(
                     { uri: audioUri },
-                    { shouldPlay: true, volume: 1.0 }
+                    { 
+                        shouldPlay: true, 
+                        volume: 1.0,
+                        progressUpdateIntervalMillis: 100
+                    }
                 );
                 soundRef.current = sound;
 
+                // Wait for playback to complete with proper status tracking
                 await new Promise<void>((resolve) => {
                     let resolved = false;
+                    let playbackFinished = false;
+                    
+                    // Calculate estimated duration (WAV file size / sample rate / channels / bit depth)
+                    // Rough estimate: base64 size * 3/4 / 48000 / 2 / 2 = seconds
+                    const estimatedDuration = Math.max(30000, (chunk.length * 3 / 4 / 48000 / 2 / 2) * 1000);
                     const timeout = setTimeout(() => {
                         if (!resolved) {
-                            console.log(`⏱️ Chunk ${i + 1} playback timeout`);
+                            console.log(`⏱️ Chunk ${i + 1} playback timeout after ${estimatedDuration}ms`);
                             resolved = true;
+                            playbackFinished = true;
                             resolve();
                         }
-                    }, 60000); // Increased timeout for longer chunks
+                    }, estimatedDuration + 5000); // Add 5s buffer
 
                     sound.setOnPlaybackStatusUpdate((status: AVPlaybackStatus) => {
                         if (resolved) return;
-                        if (!status.isLoaded && 'error' in status) {
-                            console.error(`❌ Chunk ${i + 1} playback error:`, status.error);
-                            clearTimeout(timeout);
-                            resolved = true;
-                            resolve();
-                        } else if (status.isLoaded && status.didJustFinish) {
-                            console.log(`✅ Chunk ${i + 1} finished playing`);
-                            clearTimeout(timeout);
-                            resolved = true;
-                            resolve();
+                        
+                        if (!status.isLoaded) {
+                            if ('error' in status) {
+                                console.error(`❌ Chunk ${i + 1} playback error:`, status.error);
+                                clearTimeout(timeout);
+                                resolved = true;
+                                playbackFinished = true;
+                                resolve();
+                            }
+                            return;
+                        }
+                        
+                        // Check if playback finished
+                        if (status.didJustFinish || (status.positionMillis > 0 && status.durationMillis > 0 && status.positionMillis >= status.durationMillis - 100)) {
+                            if (!playbackFinished) {
+                                console.log(`✅ Chunk ${i + 1} finished playing (position: ${status.positionMillis}ms, duration: ${status.durationMillis}ms)`);
+                                clearTimeout(timeout);
+                                resolved = true;
+                                playbackFinished = true;
+                                resolve();
+                            }
                         }
                     });
                 });
+                
+                // Small delay between chunks to ensure smooth transition
+                if (i < audioTurn.chunks.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                }
             } catch (error) {
                 console.error(`❌ Error playing chunk ${i + 1}/${audioTurn.chunks.length}:`, error);
             }
+        }
+
+        // Ensure sound is fully stopped and cleaned up
+        if (soundRef.current) {
+            try {
+                await soundRef.current.stopAsync();
+                await soundRef.current.unloadAsync();
+            } catch (e) {
+                console.warn('Cleanup warning:', e);
+            }
+            soundRef.current = null;
         }
 
         console.log('🔇 Audio playback complete');
@@ -552,7 +593,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
                 const response = await fetch(uri);
                 const blob = await response.blob();
 
-                // Add to captions
+                // Add to captions (will be updated when transcription is received)
                 if (captionsEnabled) {
                     setCaptions(prev => [...prev, {
                         id: Date.now().toString(),
@@ -626,6 +667,31 @@ const NerdXLiveAudioScreen: React.FC = () => {
                         if (connectionState !== 'recording') {
                             setConnectionState('processing');
                         }
+                    }
+                    break;
+
+                case 'text':
+                    // Handle transcription text from server
+                    if (captionsEnabled && data.text && data.speaker) {
+                        const speaker = data.speaker === 'nerdx' ? 'nerdx' : 'user';
+                        setCaptions(prev => {
+                            // Update last partial caption or add new one
+                            const lastCaption = prev[prev.length - 1];
+                            if (lastCaption && lastCaption.isPartial && lastCaption.speaker === speaker) {
+                                return [...prev.slice(0, -1), {
+                                    ...lastCaption,
+                                    text: data.text,
+                                    isPartial: false
+                                }];
+                            } else {
+                                return [...prev, {
+                                    id: Date.now().toString(),
+                                    speaker: speaker,
+                                    text: data.text,
+                                    isPartial: false
+                                }];
+                            }
+                        });
                     }
                     break;
 
@@ -1087,7 +1153,7 @@ const styles = StyleSheet.create({
     },
     captionsOverlay: {
         position: 'absolute',
-        bottom: 120,
+        bottom: 200, // Positioned below the record button circle
         left: 16,
         right: 16,
         maxHeight: SCREEN_HEIGHT * 0.25,

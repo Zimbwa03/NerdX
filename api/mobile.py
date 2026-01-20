@@ -42,7 +42,7 @@ from services.voice_service import get_voice_service
 from services.vertex_service import vertex_service, get_image_question_credit_cost, get_text_question_credit_cost
 from services.exam_session_service import exam_session_service
 from utils.url_utils import convert_local_path_to_public_url
-from utils.credit_units import format_credits, units_to_credits
+from utils.credit_units import format_credits, units_to_credits, credits_to_units
 from config import Config
 
 logger = logging.getLogger(__name__)
@@ -50,9 +50,15 @@ logger = logging.getLogger(__name__)
 mobile_bp = Blueprint('mobile', __name__)
 
 
-def _credits_display(units: int) -> float:
-    """Convert credit units to display credits for API responses."""
-    return units_to_credits(units or 0)
+def _credits_display(units: int) -> int:
+    """Convert credit units to display credits for API responses.
+    Returns whole number credits (rounded) - no decimals.
+    1 credit = 10 units, so we round to nearest whole credit."""
+    if units is None or units == 0:
+        return 0
+    # Convert to credits and round to nearest whole number
+    credits = units_to_credits(units)
+    return int(round(credits))
 
 
 def _credits_text(units: int) -> str:
@@ -1549,11 +1555,12 @@ def generate_question():
             'difficulty': difficulty,
             'allows_text_input': (
                 subject == 'mathematics' or 
+                subject == 'a_level_pure_math' or
                 question_type_mobile == 'short_answer' or
                 question_type_mobile == 'structured' or
                 (subject == 'english' and not options)  # English grammar questions without MCQ options need text input
             ),
-            'allows_image_upload': subject == 'mathematics',  # Math questions support image upload
+            'allows_image_upload': subject == 'mathematics' or subject == 'a_level_pure_math',  # Math questions support image upload
             
             # New AI Tutor Fields
             'concept_explanation': question_data.get('concept_explanation', ''),
@@ -1665,7 +1672,7 @@ def generate_question_stream():
         difficulty = data.get('difficulty', 'medium')
         
         # Only allow streaming for mathematics subjects
-        if subject not in ['mathematics', 'a_level_pure_mathematics', 'a_level_statistics']:
+        if subject not in ['mathematics', 'a_level_pure_math', 'a_level_statistics']:
             return jsonify({
                 'success': False,
                 'message': 'Streaming only available for Mathematics subjects'
@@ -1690,8 +1697,9 @@ def generate_question_stream():
                 math_generator = MathQuestionGenerator()
                 
                 # Stream thinking updates and final question
+                subject_name = 'Mathematics' if subject == 'mathematics' else 'A Level Pure Mathematics'
                 for event in math_generator.generate_question_stream(
-                    'Mathematics' if subject == 'mathematics' else 'A Level Pure Mathematics',
+                    subject_name,
                     topic,
                     difficulty,
                     user_id
@@ -1853,7 +1861,7 @@ def submit_answer():
         detailed_solution = solution or 'No solution provided'
         analysis_result = {}
         
-        if subject == 'mathematics':
+        if subject == 'mathematics' or subject == 'a_level_pure_math':
             from services.math_solver import MathSolver
             math_solver = MathSolver()
             
@@ -1907,12 +1915,44 @@ def submit_answer():
                 analysis_result = {}
                 feedback = ''
 
+            # Enhance feedback to ensure it's step-by-step and clear
             if is_correct:
                 if not feedback:
-                    feedback = '✅ Excellent! Your answer is correct!'
+                    feedback = """✅ Step 1: Your answer is CORRECT!
+Step 2: You've successfully applied the mathematical concepts.
+Step 3: Well done on showing your working!
+
+💡 Keep practicing similar problems to reinforce your understanding!"""
+                elif 'Step 1' not in feedback and 'Step' not in feedback:
+                    # Add step structure if missing
+                    feedback = f"""✅ Step 1: Your answer is CORRECT!
+
+{feedback}
+
+💡 Well done! Continue practicing to master this topic."""
             else:
                 if not feedback:
-                    feedback = '❌ Not quite right. Review the solution below to understand the correct approach.'
+                    feedback = """❌ Step 1: Your answer needs review.
+Step 2: Review the detailed solution steps below to understand the correct approach.
+Step 3: Identify where your approach differed and learn from it.
+
+💡 Remember: Understanding the method is more important than just getting the answer!"""
+                elif 'Step 1' not in feedback and 'Step' not in feedback:
+                    # Add step structure if missing
+                    feedback = f"""❌ Step 1: Let's review the correct approach.
+
+{feedback}
+
+📚 Step-by-step solution is provided below. Study each step carefully."""
+            
+            # Ensure detailed_solution is properly formatted
+            if not detailed_solution or detailed_solution == 'No solution provided':
+                detailed_solution = solution or 'Review the solution steps provided with the question.'
+            
+            # Add step-by-step explanation from analysis if available
+            step_by_step = analysis_result.get('step_by_step_explanation', '')
+            if step_by_step and step_by_step not in detailed_solution:
+                detailed_solution = f"{detailed_solution}\n\n📚 DETAILED STEP-BY-STEP EXPLANATION:\n{step_by_step}"
         elif subject == 'combined_science' and (question_type == 'structured' or isinstance(structured_question, dict)):
             # ZIMSEC-style structured question marking (DeepSeek) for mobile.
             try:
@@ -2066,6 +2106,24 @@ def submit_answer():
                 logger.warning(f"Failed to add XP (non-critical): {xp_error}")
                 # Continue execution - XP failure should not block answer submission
         
+        # Format detailed solution to ensure step-by-step structure
+        if detailed_solution and 'Step 1' not in detailed_solution and 'Step' not in detailed_solution:
+            # Try to add step structure if solution is provided but not formatted
+            solution_lines = detailed_solution.split('\n')
+            if len(solution_lines) > 1:
+                # Add step numbers if multiple lines
+                formatted_solution = []
+                step_num = 1
+                for line in solution_lines:
+                    line = line.strip()
+                    if line and not line.startswith('Step'):
+                        formatted_solution.append(f"Step {step_num}: {line}")
+                        step_num += 1
+                    else:
+                        formatted_solution.append(line)
+                if formatted_solution:
+                    detailed_solution = '\n'.join(formatted_solution)
+        
         return jsonify({
             'success': True,
             'data': {
@@ -2076,12 +2134,13 @@ def submit_answer():
                 'points_earned': points_earned,
                 'credits_used': 0,  # Already deducted
                 
-                # Enhanced feedback fields
+                # Enhanced feedback fields with step-by-step structure
                 'what_went_right': analysis_result.get('what_went_right', ''),
                 'what_went_wrong': analysis_result.get('what_went_wrong', ''),
                 'improvement_tips': analysis_result.get('improvement_tips', ''),
                 'encouragement': analysis_result.get('encouragement', ''),
-                'related_topic': analysis_result.get('related_topic', '')
+                'related_topic': analysis_result.get('related_topic', ''),
+                'step_by_step_explanation': analysis_result.get('step_by_step_explanation', detailed_solution)
             }
         }), 200
         
@@ -2465,12 +2524,14 @@ def initiate_credit_purchase():
             
             # Store payment transaction in database before initiating
             # from database.external_db import make_supabase_request  <-- Removed, already imported at top
+            # Convert package credits to units for storage (1 credit = 10 units)
+            from utils.credit_units import credits_to_units
             payment_transaction = {
                 'user_id': g.current_user_id,
                 'reference_code': reference,
                 'package_id': package_id,
                 'amount': package['price'],
-                'credits': package['credits'],
+                'credits': int(credits_to_units(package['credits'])),  # Store as units
                 'payment_method': 'paynow_' + payment_method,
                 'status': 'pending',
                 'phone_number': phone_number,

@@ -244,33 +244,198 @@ Generate ONE high-quality {subject} MCQ question for {topic} now:
     def _generate_english_with_deepseek(self, topic: str, difficulty: str) -> Optional[Dict]:
         """Generate English question using DeepSeek AI (primary provider)"""
         try:
-            prompt = f"""
-You are an expert English Language tutor for ZIMSEC O-Level curriculum.
+            # ZIMSEC O-Level English topic-specific learning objectives
+            english_objectives = {
+                "Continuous Writing / Composition": [
+                    "Write narrative compositions with clear plot, setting, and characterization",
+                    "Write descriptive compositions with vivid imagery and sensory details",
+                    "Write argumentative/discursive compositions with clear thesis and supporting evidence",
+                    "Use appropriate register, tone, and style for different composition types",
+                    "Structure compositions with clear introduction, body paragraphs, and conclusion",
+                    "Demonstrate accurate grammar, punctuation, and spelling",
+                    "Use varied sentence structures and vocabulary appropriate for O-Level"
+                ],
+                "Guided Writing / Functional Writing": [
+                    "Write formal letters with correct format (addresses, date, salutation, closing)",
+                    "Write informal letters with appropriate tone and structure",
+                    "Write reports with clear sections (introduction, body, conclusion)",
+                    "Write speeches appropriate for different audiences and occasions",
+                    "Write articles for school magazines or youth publications",
+                    "Use appropriate register and format for each functional writing type",
+                    "Include all required elements specified in guided composition prompts"
+                ],
+                "Comprehension Skills": [
+                    "Answer literal questions by identifying information directly stated in the text",
+                    "Answer inferential questions by drawing conclusions from implied information",
+                    "Answer vocabulary-in-context questions by determining word meaning from surrounding text",
+                    "Identify main ideas and supporting details in passages",
+                    "Analyze author's tone, mood, and purpose",
+                    "Make connections between different parts of a text",
+                    "Evaluate text critically and express personal opinions with evidence"
+                ],
+                "Summary Writing": [
+                    "Identify key points and main ideas from source text",
+                    "Paraphrase information using own words while retaining original meaning",
+                    "Write summaries within specified word limits",
+                    "Maintain logical sequence and coherence in summaries",
+                    "Exclude irrelevant details and examples",
+                    "Use appropriate linking words and transitions",
+                    "Demonstrate accurate grammar and spelling in summary writing"
+                ],
+                "Language and Grammar in Context": [
+                    "Identify and correct errors in sentence structure",
+                    "Use correct tenses (present, past, future, perfect, continuous forms)",
+                    "Demonstrate subject-verb agreement (concord)",
+                    "Use correct punctuation marks (periods, commas, semicolons, colons, apostrophes, quotation marks)",
+                    "Maintain appropriate register (formal vs informal) and tone",
+                    "Use correct word classes (nouns, verbs, adjectives, adverbs, prepositions, conjunctions)",
+                    "Identify and correct common grammatical errors (double negatives, misplaced modifiers, run-on sentences)"
+                ],
+                "Grammar Usage and Vocabulary": [
+                    "Define and use vocabulary appropriate for O-Level English",
+                    "Distinguish between commonly confused words (affect/effect, accept/except, their/there/they're)",
+                    "Use idioms and expressions correctly in context",
+                    "Demonstrate understanding of word formation (prefixes, suffixes, root words)",
+                    "Use synonyms and antonyms appropriately",
+                    "Demonstrate understanding of figurative language (similes, metaphors, personification)",
+                    "Use appropriate vocabulary for different contexts and registers"
+                ]
+            }
+            
+            # Get learning objectives for the topic
+            objectives = english_objectives.get(topic, [
+                f"Demonstrate understanding of {topic}",
+                f"Apply {topic} skills to exam-style questions",
+                f"Use correct English language conventions for {topic}"
+            ])
+            
+            # Select a specific subtopic/objective to test
+            import random
+            selected_subtopic = random.choice(objectives) if objectives else f"understanding of {topic}"
+            
+            difficulty_guidance = {
+                'easy': "Basic recall and understanding level. Test definitions, simple grammar rules, and basic vocabulary.",
+                'medium': "Application and analysis level. Require understanding of context, inference, and application of grammar rules.",
+                'difficult': "Evaluation and synthesis level. Complex scenarios requiring deeper understanding, critical thinking, and analysis."
+            }
+            
+            prompt = f"""You are Dr. Muzenda, an EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER with 15+ years experience setting professional examination papers for Zimbabwean students. You have deep knowledge of the ZIMSEC Ordinary Level English Language syllabus and extensive experience as a ZIMSEC examiner and marker.
 
-Generate ONE multiple choice English question for: {topic}
-Difficulty: {difficulty}
+ROLE: EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER & TEACHER
 
-Requirements:
-1. Align with ZIMSEC English Language syllabus
-2. Age-appropriate for Forms 1-4 students
-3. Multiple choice format with 4 options (A, B, C, D)
-4. Clear question with one correct answer
-5. Practical and educational
+CORE PRINCIPLES (NON-NEGOTIABLE):
+1. STRICT ZIMSEC ALIGNMENT
+   - Use ONLY topics, skills, and task types examinable under ZIMSEC O-Level English
+   - Do NOT introduce external systems (IELTS, Cambridge IGCSE variations, foreign rubrics)
+   - Focus on ZIMSEC Paper structure and marking schemes only
 
-MANDATORY JSON format:
+2. EXAMINER-FOCUSED
+   - Generate questions that test exactly what ZIMSEC examiners look for
+   - Highlight how marks are awarded and lost
+   - Emphasize structure, register, relevance, and accuracy
+   - Reference ZIMSEC marking criteria and common examiner comments
+
+3. PAPER-BASED THINKING
+   - Every question must be mapped to a specific ZIMSEC paper and section
+   - No vague "English skills" — everything must link to an examinable task
+   - Consider time allocation and mark distribution per section
+
+4. ZIMBABWE CONTEXT
+   - Use local, culturally relevant contexts (schools, communities, daily life in Zimbabwe)
+   - Maintain formal exam-appropriate English register
+   - Include Zimbabwean names, places, and situations where appropriate
+
+SUBJECT: English Language (ZIMSEC O-Level - Paper 1 & Paper 2)
+TOPIC: {topic}
+SPECIFIC SUBTOPIC TO TEST: {selected_subtopic}
+DIFFICULTY: {difficulty} - {difficulty_guidance.get(difficulty, 'Standard level')}
+
+COMPREHENSIVE COVERAGE REQUIREMENT:
+- This question MUST test understanding of a SPECIFIC subtopic: "{selected_subtopic}"
+- Reference: ZIMSEC O-Level English Language past papers and marking schemes
+- All available subtopics for this topic: {chr(10).join(f"  - {obj}" for obj in objectives)}
+- To ensure full syllabus coverage, different subtopics should be tested across multiple question generations
+- Questions should rotate through all learning objectives to ensure comprehensive topic coverage
+
+ZIMSEC EXAM STRUCTURE REFERENCE:
+- Paper 1: Continuous Writing (Composition) and Guided Writing (Functional Writing)
+- Paper 2: Comprehension, Summary, and Language & Grammar in Context
+- This question type aligns with: {topic} section of ZIMSEC papers
+
+EXPERT EXAMINER GUIDELINES - PROFESSIONAL EXAM STANDARDS:
+- Use appropriate ZIMSEC command words: "identify", "explain", "describe", "analyze", "compare", "correct", "choose", "select"
+- Create distractors based on common student misconceptions from ZIMSEC marking experience
+- Ensure question tests the cognitive level appropriate for {difficulty}:
+  * Easy: Knowledge and comprehension (recall facts, understand basic grammar rules, identify correct vocabulary)
+  * Medium: Application and analysis (apply knowledge, interpret context, analyze language use, infer meaning)
+  * Difficult: Synthesis and evaluation (evaluate language use, synthesize information, make critical judgments)
+- Question should feel FRESH and different from standard textbook questions
+- Include relevant Zimbabwean context where applicable
+- Distractors should be linguistically plausible but clearly incorrect
+- Reference ZIMSEC marking criteria and examiner expectations
+
+FRESHNESS REQUIREMENTS - CREATE UNIQUE QUESTIONS:
+- Use unique scenarios NOT commonly found in typical textbook questions
+- Vary contexts: school situations, community events, everyday life in Zimbabwe, cultural references
+- Create innovative applications of the language concept being tested
+- Ensure question feels like a professional ZIMSEC exam question, NOT a generic textbook exercise
+- Avoid repetitive question structures - vary how questions are phrased
+- Use different real-world applications for the same concept across different generations
+- For guided writing topics: Use varied situations, audiences, and purposes relevant to Zimbabwean students
+
+QUESTION REQUIREMENTS:
+- Subject: English Language
+- Topic: {topic}
+- Format: Multiple choice (4 options A, B, C, D)
+- Use clear, simple language suitable for ZIMSEC O-Level students (ages 15-17, Forms 1-4)
+- One option must be clearly correct
+- Distractors should be plausible but linguistically/grammatically incorrect
+- All options should be of similar length where possible
+- Ensure question tests ZIMSEC examinable skills only
+
+CRITICAL - AVOID:
+- IELTS-style questions or Cambridge IGCSE variations (foreign syllabus contamination)
+- Overly complex university-level content or A-Level English concepts
+- Ambiguous options where multiple could be correct
+- Using the same scenario repeatedly (vary contexts for each generation)
+- Foreign cultural references that don't apply to Zimbabwean students
+- Questions that require knowledge beyond ZIMSEC O-Level syllabus
+
+ZIMSEC-SPECIFIC REQUIREMENTS:
+- For Composition topics: Focus on structure, register, and relevance to prompt
+- For Comprehension topics: Test literal understanding, inference, and vocabulary in context
+- For Summary topics: Emphasize note selection, conciseness, and paraphrasing
+- For Grammar topics: Test sentence structure, tenses, concord, punctuation in context
+- For Vocabulary topics: Test understanding of word meaning, usage, and register appropriateness
+
+Return ONLY a valid JSON object (NO markdown formatting, NO additional text):
 {{
-    "question": "Clear English language question",
+    "question": "Clear, focused, professional ZIMSEC exam-style question testing: {selected_subtopic}",
     "options": {{
-        "A": "First option",
-        "B": "Second option", 
-        "C": "Third option", 
-        "D": "Fourth option"
+        "A": "First option - plausible distractor based on common student misconception",
+        "B": "Second option - plausible distractor based on common student misconception", 
+        "C": "Third option - correct answer",
+        "D": "Fourth option - plausible distractor based on common student misconception"
     }},
-    "correct_answer": "A",
-    "explanation": "Detailed explanation of why the answer is correct",
+    "correct_answer": "C",
+    "explanation": "DETAILED EXPLANATION: A thorough professional explanation (4-6 sentences) covering WHY the correct answer is right, WHY each other option is wrong (with linguistic/grammatical reasoning), and the underlying language principle. Reference ZIMSEC marking criteria and examiner expectations. Use proper linguistic terminology appropriate for O-Level students.",
+    "teaching_explanation": "TEACHER FEEDBACK: A warm, encouraging, conversational explanation written as if you're a patient, experienced ZIMSEC English teacher having a one-on-one conversation with the student. Use relatable examples from Zimbabwean school/community life, or real-life applications to help them truly understand. MUST BE COMPLETELY DIFFERENT from the explanation above - focus on making the concept memorable, easy to understand, and relatable. Use simple language and friendly tone.",
+    "difficulty": "{difficulty}",
+    "learning_objective": "{selected_subtopic}",
+    "zimsec_paper_reference": "Paper 1 or Paper 2 (specify section)",
+    "subtopic_tested": "{selected_subtopic}",
     "points": {10 if difficulty == 'easy' else 20 if difficulty == 'medium' else 30}
 }}
-"""
+
+CRITICAL REQUIREMENTS:
+- The 'explanation' and 'teaching_explanation' MUST be completely different texts with different approaches!
+- 'explanation': Formal, academic, professional (for understanding ZIMSEC marking criteria)
+- 'teaching_explanation': Conversational, relatable, encouraging (for student engagement and memorability)
+- Question must feel fresh and professionally crafted like a real ZIMSEC exam question
+- Ensure comprehensive coverage of subtopic: {selected_subtopic}
+- Strictly ZIMSEC-aligned - NO foreign syllabus contamination
+
+Generate a high-quality, professional ZIMSEC exam-style question now!"""
 
             return self._call_deepseek_api(prompt)
 

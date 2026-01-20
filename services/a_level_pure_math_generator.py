@@ -220,6 +220,9 @@ class ALevelPureMathGenerator:
                 question_data['level'] = level
                 question_data['source'] = 'ai_generated_a_level_pure_math'
                 question_data['ai_model'] = 'deepseek'
+                # Enable image upload for pure mathematics (like regular mathematics)
+                question_data['allows_text_input'] = True
+                question_data['allows_image_upload'] = True
                 return question_data
             
             # If AI generation failed, use fallback question
@@ -297,14 +300,33 @@ class ALevelPureMathGenerator:
             - Combining multiple topics"""
         }
         
-        prompt = f"""You are an expert ZIMSEC A Level Pure Mathematics examiner. Generate a high-quality multiple choice question.
+        prompt = f"""You are a SENIOR A-LEVEL PURE MATHEMATICS TEACHER (15+ years) AND an examiner-style question designer. You teach and assess for BOTH:
+(A) ZIMSEC A Level Pure Mathematics 6042 (Paper 1 & Paper 2)
+(B) Cambridge International AS & A Level Mathematics 9709 (Pure Mathematics Papers)
+(C) Cambridge Further Mathematics 9231 (for topics that overlap, e.g., complex numbers, hyperbolic functions, differential equations)
 
-SUBJECT: A Level Pure Mathematics (ZIMSEC Syllabus 6042)
+ROLE: SENIOR A-LEVEL PURE MATHEMATICS TEACHER & EXAMINER
+
+NON-NEGOTIABLE RULES:
+1. SYLLABUS-LOCKED: Only generate content that is examinable for ZIMSEC 6042 and Cambridge 9709/9231
+2. NO LEAKAGE: Do NOT introduce off-syllabus topics or university-level methods
+3. EXAM AUTHENTICITY: Use real exam command words: "show that...", "hence...", "prove...", "sketch...", "find exact value...", "solve...", "determine...", "verify..."
+4. ORIGINALITY: Do not copy past-paper questions verbatim. Generate ORIGINAL questions with the same SKILL pattern
+5. MARKING REALISM: Provide mark allocation + method marks + final answer marks + common errors
+6. TOPIC INTEGRATION: Use mixed questions that combine topics the way real papers do (e.g., trig + differentiation, polynomials + complex numbers, vectors + coordinate geometry)
+
+SUBJECT: A Level Pure Mathematics (ZIMSEC Syllabus 6042 / Cambridge 9709)
 TOPIC: {topic}
 LEVEL: {level} (Form {'5' if level == 'Lower Sixth' else '6'})
 DIFFICULTY: {difficulty}
 
+DIFFICULTY GUIDANCE:
 {difficulty_guidance.get(difficulty, difficulty_guidance['medium'])}
+
+COMPREHENSIVE SUBTOPIC COVERAGE:
+- This question MUST test understanding of a SPECIFIC subtopic within {topic}
+- Reference: ZIMSEC 6042 past papers and Cambridge 9709/9231 past papers
+- Questions should rotate through all subtopics to ensure comprehensive topic coverage
 
 KEY CONCEPTS FOR THIS TOPIC:
 {', '.join(key_concepts) if key_concepts else 'General concepts for this topic'}
@@ -328,41 +350,75 @@ CRITICAL MATH FORMATTING RULES - PLAIN TEXT ONLY:
 - Write sin⁻¹(x) for inverse trig (NOT $\\sin^{{-1}}$)
 - Examples: "Find ∑(r=1 to n) of r²", "Solve x² + 3x - 4 = 0", "Evaluate √(16) + 3/4"
 
+EXPERT EXAMINER GUIDELINES - PROFESSIONAL EXAM STANDARDS:
+- Use appropriate A-Level command words: "show that", "hence", "prove", "sketch", "find exact value", "solve", "determine", "verify"
+- Create distractors based on common A-Level student misconceptions from past marking experience
+- Ensure question tests the cognitive level appropriate for {difficulty}:
+  * Easy: Knowledge and comprehension (recall facts, understand concepts, direct formula application)
+  * Medium: Application and analysis (apply knowledge, multi-step calculations, combining concepts)
+  * Difficult: Synthesis and evaluation (complex multi-step problems, proof elements, combining multiple topics)
+- Question should feel FRESH and different from standard textbook questions
+- Include relevant mathematical contexts and real-world applications where appropriate
+- Distractors should be mathematically plausible but clearly incorrect
+- Reference ZIMSEC/Cambridge past papers and exam patterns
+
+FRESHNESS REQUIREMENTS - CREATE UNIQUE QUESTIONS:
+- Use unique scenarios NOT commonly found in typical textbook questions
+- Vary contexts: mathematical modeling, real-world applications, theoretical problems
+- Vary numbers and approaches to test the same concept
+- Ensure question feels professionally crafted like a real ZIMSEC/Cambridge exam question
+
+COMMON EXAM TRAPS TO REFERENCE:
+- Domain restrictions (logs, trig, rational functions)
+- Exact values vs decimal approximations
+- Presentation errors (missing working, incorrect notation)
+- Sign errors in calculations
+- Misapplication of formulas or theorems
+
 REQUIREMENTS:
 1. Create ONE multiple choice question with exactly 4 options (A, B, C, D)
 2. The question MUST be at A Level standard - NOT O Level
 3. Use PLAIN TEXT Unicode math notation as described above - NO LaTeX
-4. All options must be plausible and based on common misconceptions
+4. All options must be plausible and based on common A-Level misconceptions
 5. For calculation questions, ensure workings are required (not just substitution)
-6. The correct answer must be mathematically rigorous
-7. Provide a DETAILED worked solution showing every step
-8. Include teaching points that help students understand the concept
+6. The correct answer must be mathematically rigorous and exact (unless approximation requested)
+7. Provide a DETAILED step-by-step worked solution showing every step with clear reasoning
+8. Include teaching points that help students understand the concept and avoid common errors
 9. If a sketch/graph/diagram would help, add an optional "visualization" block with:
    - "needed": true/false
    - "type": "graph" | "shape" | "argand"
    - "expression": function to plot (for graphs) OR "shape"/"region" details
    - "points": optional list of Argand points with real/imag parts
 
-RESPONSE FORMAT (strict JSON only - keep explanation SHORT, max 3 sentences):
+STUDENT LEVEL: A-Level Forms 5-6 (ages 17-19 in Zimbabwe). Keep content age-appropriate and at A-Level standard.
+
+OUTPUT FORMAT: Return ONLY valid JSON. No markdown. No extra text.
+
+JSON schema (required fields):
 {{
-    "question": "Question text with plain text mathematical expressions",
+    "question": "Clear, focused ZIMSEC/Cambridge exam-style question testing A-Level concepts (plain text math)",
     "options": {{
-        "A": "Option A with plain text math",
-        "B": "Option B with plain text math",
-        "C": "Option C with plain text math",
-        "D": "Option D with plain text math"
+        "A": "Option A with plain text math - plausible distractor based on common A-Level misconception",
+        "B": "Option B with plain text math - plausible distractor based on common A-Level misconception",
+        "C": "Option C with plain text math - correct answer",
+        "D": "Option D with plain text math - plausible distractor based on common A-Level misconception"
     }},
-    "correct_answer": "A",
-    "explanation": "Brief 2-3 sentence explanation of the answer",
-    "solution": "Key steps: Step 1... Step 2... Final answer",
+    "correct_answer": "A/B/C/D",
+    "explanation": "Step-by-step explanation: Step 1: [reasoning] Step 2: [calculation] Step 3: [conclusion]. Why this is correct and why other options fail.",
+    "solution": "DETAILED step-by-step solution: Step 1: [clear step with reasoning] Step 2: [next step] Step 3: [final step] Final Answer: [exact value]",
+    "teaching_points": "Key teaching points: 1) [concept] 2) [common error to avoid] 3) [exam technique]",
+    "common_errors": "Common errors students make: 1) [error description] 2) [why it's wrong] 3) [how to avoid]",
+    "marking_notes": "Marking scheme: Method marks (M) for correct approach, Accuracy marks (A) for correct answer. Common examiner comments.",
     "visualization": {{
         "needed": false,
-        "type": "graph",
-        "expression": "y = x^2 - 4x + 3"
-    }}
+        "type": "graph/shape/argand",
+        "expression": "function or description if needed"
+    }},
+    "zimsec_paper_reference": "Paper 1 or Paper 2 (as appropriate)",
+    "cambridge_paper_reference": "Paper 1 or Paper 3 (as appropriate)"
 }}
 
-Generate ONE A Level Pure Mathematics MCQ (keep response under 500 words):"""
+Generate ONE A Level Pure Mathematics MCQ now:"""
 
         return prompt
     
@@ -371,15 +427,40 @@ Generate ONE A Level Pure Mathematics MCQ (keep response under 500 words):"""
                                   question_types: List[str]) -> str:
         """Create prompt for structured (long-form) questions"""
         
-        prompt = f"""You are an expert ZIMSEC A Level Pure Mathematics examiner. Generate a structured question worth 8-12 marks.
+        prompt = f"""You are a SENIOR A-LEVEL PURE MATHEMATICS TEACHER (15+ years) AND an examiner-style question designer. You teach and assess for BOTH:
+(A) ZIMSEC A Level Pure Mathematics 6042 (Paper 1 & Paper 2)
+(B) Cambridge International AS & A Level Mathematics 9709 (Pure Mathematics Papers)
+(C) Cambridge Further Mathematics 9231 (for topics that overlap, e.g., complex numbers, hyperbolic functions, differential equations)
 
-SUBJECT: A Level Pure Mathematics (ZIMSEC Syllabus 6042)
+ROLE: SENIOR A-LEVEL PURE MATHEMATICS TEACHER & EXAMINER
+
+NON-NEGOTIABLE RULES:
+1. SYLLABUS-LOCKED: Only generate content that is examinable for ZIMSEC 6042 and Cambridge 9709/9231
+2. NO LEAKAGE: Do NOT introduce off-syllabus topics or university-level methods
+3. EXAM AUTHENTICITY: Use real exam command words: "show that...", "hence...", "prove...", "sketch...", "find exact value...", "solve...", "determine...", "verify..."
+4. ORIGINALITY: Do not copy past-paper questions verbatim. Generate ORIGINAL questions with the same SKILL pattern
+5. MARKING REALISM: Provide mark allocation + method marks + final answer marks + common errors
+6. TOPIC INTEGRATION: Use mixed questions that combine topics the way real papers do (e.g., trig + differentiation, polynomials + complex numbers, vectors + coordinate geometry)
+
+SUBJECT: A Level Pure Mathematics (ZIMSEC Syllabus 6042 / Cambridge 9709)
 TOPIC: {topic}
-LEVEL: {level}
+LEVEL: {level} (Form {'5' if level == 'Lower Sixth' else '6'})
 DIFFICULTY: {difficulty}
 
-KEY CONCEPTS: {', '.join(key_concepts) if key_concepts else 'General concepts'}
-KEY FORMULAS: {', '.join(key_formulas) if key_formulas else 'As applicable'}
+COMPREHENSIVE SUBTOPIC COVERAGE:
+- This structured question MUST cover MULTIPLE different subtopics from the learning objectives
+- Each part should test a DIFFERENT aspect/subtopic of {topic}
+- Reference: ZIMSEC 6042 past papers and Cambridge 9709/9231 past papers
+- To ensure comprehensive coverage, different subtopics should be tested across multiple question generations
+
+KEY CONCEPTS FOR THIS TOPIC:
+{', '.join(key_concepts) if key_concepts else 'General concepts for this topic'}
+
+KEY FORMULAS (use when appropriate):
+{chr(10).join(['• ' + f for f in key_formulas]) if key_formulas else '• As applicable to the topic'}
+
+TYPICAL QUESTION TYPES FOR THIS TOPIC:
+{', '.join(question_types) if question_types else 'Various standard types'}
 
 CRITICAL MATH FORMATTING RULES - PLAIN TEXT ONLY:
 - ABSOLUTELY NO LaTeX delimiters like $ or \\( or \\).
@@ -391,55 +472,108 @@ CRITICAL MATH FORMATTING RULES - PLAIN TEXT ONLY:
 - Use ∫ for integrals: ∫(x²)dx
 - Write sin⁻¹(x) for inverse trig
 
-Create a multi-part structured question (parts a, b, c) that builds up in difficulty.
+EXPERT EXAMINER GUIDELINES - PROFESSIONAL EXAM STANDARDS:
+- Use appropriate A-Level command words: "show that", "hence", "prove", "sketch", "find exact value", "solve", "determine", "verify"
+- Mark allocation must be realistic: Easy (6-8 marks), Medium (8-12 marks), Difficult (10-15 marks)
+- Include comprehensive marking rubric with method marks (M) and accuracy marks (A)
+- Provide examiner notes on common misconceptions and marking tips
+- Ensure questions align with ZIMSEC/Cambridge exam standards
+- Questions should flow logically with parts building on each other (use "hence" where appropriate)
+
+FRESHNESS REQUIREMENTS - CREATE UNIQUE QUESTIONS:
+- Use unique scenarios NOT commonly found in typical textbook questions
+- Vary contexts: mathematical modeling, real-world applications, theoretical problems
+- Vary numbers and approaches to test the same concept
+- Ensure question feels professionally crafted like a real ZIMSEC/Cambridge exam question
+
+COMMON EXAM TRAPS TO REFERENCE:
+- Domain restrictions (logs, trig, rational functions)
+- Exact values vs decimal approximations
+- Presentation errors (missing working, incorrect notation)
+- Sign errors in calculations
+- Misapplication of formulas or theorems
+- Missing "show that" verification steps
+
+QUESTION STRUCTURE REQUIREMENTS:
+- Must be a *STRUCTURED* question (NOT multiple choice)
+- Must be broken into parts like (a), (b), (c), (d) etc.
+- Each part must test a DIFFERENT subtopic from the learning objectives
+- Part progression: Basic recall → Understanding → Application → Analysis/Synthesis
+- Easy: 3-4 parts, Medium: 4-6 parts, Difficult: 5-7 parts
+- Keep the stem/context brief and exam-like (1-3 lines maximum - avoid long stories)
+- Ensure it is *exactly one* question with parts (not a paper, not multiple questions)
+
+ENHANCED PART VARIETY:
+- Mix different question types within the structured question (show that, prove, find, solve, sketch, determine)
+- Ensure parts test different cognitive levels (recall, understanding, application, analysis, synthesis)
+- Include proof elements where appropriate (especially for Upper Sixth topics)
+- Include "hence" questions that build on previous parts
+- Vary the command words used across parts to test different skills
 
 REQUIREMENTS:
-1. Part (a): Should be accessible (2-3 marks) - basic concept or simple calculation
-2. Part (b): Medium difficulty (3-4 marks) - apply concepts or extend part (a)
-3. Part (c): Challenging (4-5 marks) - synthesis, proof, or complex application
-4. Include clear mark allocations
-5. Provide complete worked solutions for each part
-6. Questions should flow logically
-7. Use PLAIN TEXT Unicode math notation - NO LaTeX
-8. If a diagram/graph (e.g., Argand, function sketch, shape) helps, include a "visualization" block describing what to plot
+1. Part (a): Should be accessible (2-3 marks) - basic concept or simple calculation, tests recall/understanding
+2. Part (b): Medium difficulty (3-4 marks) - apply concepts or extend part (a), tests application
+3. Part (c): Challenging (4-5 marks) - synthesis, proof, or complex application, tests analysis/synthesis
+4. Additional parts (d), (e) if difficulty is medium/hard: Further extension or mixed-topic integration
+5. Include clear mark allocations with method marks (M) and accuracy marks (A)
+6. Provide complete step-by-step worked solutions for each part
+7. Questions should flow logically with parts building on each other
+8. Use PLAIN TEXT Unicode math notation - NO LaTeX
+9. If a diagram/graph (e.g., Argand, function sketch, shape) helps, include a "visualization" block describing what to plot
+10. Include marking scheme with common errors and examiner comments
 
-RESPONSE FORMAT (strict JSON):
+STUDENT LEVEL: A-Level Forms 5-6 (ages 17-19 in Zimbabwe). Keep content age-appropriate and at A-Level standard.
+
+OUTPUT FORMAT: Return ONLY valid JSON. No markdown. No extra text.
+
+JSON schema (required fields):
 {{
-    "question": "Main question stem with context if needed",
+    "question": "Main question stem with context if needed (brief, 1-3 lines maximum)",
     "parts": [
         {{
             "part": "a",
-            "question": "Part (a) question text",
+            "question": "Part (a) question text with appropriate command word (show that/find/solve/etc.)",
             "marks": 3,
-            "solution": "Worked solution for part (a)",
-            "mark_scheme": "What is needed for full marks"
+            "mark_breakdown": "M2 A1 (2 method marks, 1 accuracy mark)",
+            "solution": "DETAILED step-by-step solution: Step 1: [clear step] Step 2: [next step] Step 3: [final step] Final Answer: [exact value]",
+            "mark_scheme": "What is needed for full marks: [method marks] for correct approach, [accuracy marks] for correct answer",
+            "common_errors": "Common errors: 1) [error] 2) [why wrong] 3) [how to avoid]",
+            "examiner_notes": "Examiner notes: [common mistakes and marking tips]"
         }},
         {{
             "part": "b", 
-            "question": "Part (b) question text",
+            "question": "Part (b) question text (may use 'hence' if builds on part a)",
             "marks": 4,
-            "solution": "Worked solution for part (b)",
-            "mark_scheme": "What is needed for full marks"
+            "mark_breakdown": "M2 A2 (2 method marks, 2 accuracy marks)",
+            "solution": "DETAILED step-by-step solution: Step 1: [clear step] Step 2: [next step] Step 3: [final step] Final Answer: [exact value]",
+            "mark_scheme": "What is needed for full marks: [method marks] for correct approach, [accuracy marks] for correct answer",
+            "common_errors": "Common errors: 1) [error] 2) [why wrong] 3) [how to avoid]",
+            "examiner_notes": "Examiner notes: [common mistakes and marking tips]"
         }},
         {{
             "part": "c",
-            "question": "Part (c) question text",
+            "question": "Part (c) question text (most challenging part - proof/synthesis/complex application)",
             "marks": 5,
-            "solution": "Worked solution for part (c)",
-            "mark_scheme": "What is needed for full marks"
+            "mark_breakdown": "M3 A2 (3 method marks, 2 accuracy marks)",
+            "solution": "DETAILED step-by-step solution: Step 1: [clear step] Step 2: [next step] Step 3: [final step] Final Answer: [exact value]",
+            "mark_scheme": "What is needed for full marks: [method marks] for correct approach, [accuracy marks] for correct answer",
+            "common_errors": "Common errors: 1) [error] 2) [why wrong] 3) [how to avoid]",
+            "examiner_notes": "Examiner notes: [common mistakes and marking tips]"
         }}
     ],
     "total_marks": 12,
-    "teaching_explanation": "Key learning points from this question",
-    "common_mistakes": ["List of common student errors to avoid"],
+    "marking_summary": "Overall marking guidance: Method marks awarded for correct approach even if final answer wrong. Accuracy marks for correct final answer. Common presentation errors: [list]",
+    "teaching_points": "Key teaching points: 1) [concept] 2) [exam technique] 3) [common error to avoid]",
     "visualization": {{
         "needed": false,
-        "type": "graph",
-        "expression": "y = x^2 - 4x + 3"
-    }}
+        "type": "graph/shape/argand",
+        "description": "What to plot if needed"
+    }},
+    "zimsec_paper_reference": "Paper 1 or Paper 2 (as appropriate)",
+    "cambridge_paper_reference": "Paper 1 or Paper 3 (as appropriate)"
 }}
 
-Generate the structured A Level Pure Mathematics question now:"""
+Generate ONE A Level Pure Mathematics structured question now:"""
 
         return prompt
     

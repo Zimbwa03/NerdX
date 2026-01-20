@@ -32,6 +32,7 @@ import { useThemedColors } from '../theme/useThemedStyles';
 import TransactionHistoryCard from '../components/TransactionHistoryCard';
 import SpendingChart from '../components/SpendingChart';
 import PremiumPackageCard from '../components/PremiumPackageCard';
+import { formatCreditBalance } from '../utils/creditCalculator';
 
 const CreditsScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -379,7 +380,7 @@ const CreditsScreen: React.FC = () => {
               />
               <View style={styles.balanceInfo}>
                 <Text style={styles.balanceLabel}>Current Balance</Text>
-                <Text style={styles.balanceAmount}>{user?.credits || 0} Credits</Text>
+                <Text style={styles.balanceAmount}>{formatCreditBalance(user?.credits)} Credits</Text>
                 {getBreakdownText()}
               </View>
             </View>

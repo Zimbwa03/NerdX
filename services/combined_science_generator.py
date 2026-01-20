@@ -27,33 +27,172 @@ class CombinedScienceGenerator:
         # ZIMSEC O-Level learning objectives per topic
         self.learning_objectives = {
             "Biology": {
+                # Reference: ZIMSEC O-Level Combined Science & Cambridge O-Level Biology (5090) Syllabus
+                # Sources: Save My Exams, PapaCambridge, Cambridge International
                 "Cell Structure and Organisation": [
-                    "Identify basic cell structures and their functions",
-                    "Compare plant and animal cells",
-                    "Understand cell theory basics"
+                    "Identify and describe cell structures: nucleus, cytoplasm, cell membrane, mitochondria, ribosomes",
+                    "Compare plant and animal cells (cell wall, chloroplasts, vacuole)",
+                    "Understand cell theory: all living things are made of cells",
+                    "Describe functions of organelles (nucleus controls cell, mitochondria produces energy)",
+                    "Explain cell specialization and differentiation",
+                    "Identify cell types: prokaryotic vs eukaryotic cells"
                 ],
                 "Movement In and Out of Cells": [
-                    "Explain diffusion and osmosis",
-                    "Understand factors affecting movement",
-                    "Apply concepts to everyday examples"
+                    "Define and explain diffusion with examples (gas exchange, food particles)",
+                    "Define and explain osmosis with examples (plant cells, red blood cells)",
+                    "Describe active transport and when it occurs",
+                    "Explain factors affecting diffusion rate (temperature, concentration gradient, surface area)",
+                    "Explain factors affecting osmosis (water potential, membrane permeability)",
+                    "Apply concepts: food preservation, kidney function, plant support",
+                    "Compare diffusion, osmosis, and active transport"
                 ],
                 "Enzymes": [
-                    "Describe enzyme properties and functions",
-                    "Explain factors affecting enzyme activity",
-                    "Give examples of enzyme applications"
+                    "Define enzymes as biological catalysts made of protein",
+                    "Explain enzyme-substrate specificity (lock and key model)",
+                    "Describe factors affecting enzyme activity (temperature, pH, substrate concentration)",
+                    "Explain enzyme denaturation and optimal conditions",
+                    "Give examples of enzyme applications (digestion, washing powders)",
+                    "Describe enzyme names and their substrates (amylase-starch, protease-protein)",
+                    "Explain how enzymes speed up chemical reactions"
                 ],
                 "Plant Nutrition": [
-                    "Understand photosynthesis process",
-                    "Identify factors affecting photosynthesis rate",
-                    "Describe leaf structure adaptations"
+                    "Define photosynthesis and write the equation: CO₂ + H₂O → glucose + O₂",
+                    "Describe raw materials needed: carbon dioxide, water, sunlight, chlorophyll",
+                    "Explain products of photosynthesis: glucose and oxygen",
+                    "Identify factors affecting photosynthesis rate (light intensity, CO₂ concentration, temperature)",
+                    "Describe leaf structure adaptations for photosynthesis (stomata, chloroplasts, broad surface)",
+                    "Explain importance of chlorophyll and chloroplasts",
+                    "Describe mineral nutrition: nitrogen, phosphorus, potassium and their roles",
+                    "Identify deficiency symptoms in plants"
                 ],
                 "Animal Nutrition": [
-                    "Identify components of balanced diet",
-                    "Understand digestive system structure",
-                    "Explain absorption and assimilation"
+                    "Identify components of balanced diet (carbohydrates, proteins, fats, vitamins, minerals, water, fiber)",
+                    "Describe functions of each nutrient type",
+                    "Identify deficiencies (scurvy-vitamin C, rickets-vitamin D, anemia-iron)",
+                    "Understand digestive system structure: mouth, esophagus, stomach, small intestine, large intestine",
+                    "Describe functions of digestive organs and associated glands (liver, pancreas)",
+                    "Explain role of digestive enzymes (amylase, protease, lipase)",
+                    "Describe absorption in small intestine (villi structure and function)",
+                    "Explain assimilation: how absorbed nutrients are used by the body"
+                ],
+                "Transport in Plants": [
+                    "Describe xylem structure and function (water and mineral transport)",
+                    "Explain root pressure and transpiration pull mechanisms",
+                    "Describe phloem structure and function (food transport - translocation)",
+                    "Define transpiration and explain its process",
+                    "Identify factors affecting transpiration rate (temperature, humidity, wind, light)",
+                    "Explain role of stomata in transpiration",
+                    "Describe adaptations of root and stem for transport",
+                    "Explain why transpiration is important to plants"
+                ],
+                "Transport in Humans": [
+                    "Describe heart structure (atria, ventricles, valves, coronary arteries)",
+                    "Explain blood circulation: pulmonary and systemic circulation",
+                    "Describe blood vessels: arteries, veins, capillaries and their adaptations",
+                    "Describe blood composition: red blood cells, white blood cells, platelets, plasma",
+                    "Explain functions of blood components (oxygen transport, defense, clotting)",
+                    "Describe blood groups (ABO system) and blood transfusions",
+                    "Explain heartbeat and cardiac cycle",
+                    "Define pulse rate and blood pressure",
+                    "Describe role of circulatory system in transport"
+                ],
+                "Respiration": [
+                    "Define aerobic respiration and write equation: glucose + oxygen → CO₂ + water + energy",
+                    "Compare aerobic and anaerobic respiration",
+                    "Describe anaerobic respiration in humans (lactic acid fermentation)",
+                    "Describe anaerobic respiration in yeast (alcoholic fermentation)",
+                    "Explain where respiration occurs (mitochondria)",
+                    "Describe human respiratory system structure (nose, trachea, bronchi, alveoli)",
+                    "Explain gas exchange in alveoli (oxygen in, carbon dioxide out)",
+                    "Describe breathing mechanism (diaphragm and intercostal muscles)",
+                    "Compare composition of inspired and expired air",
+                    "Explain effects of smoking on respiratory system",
+                    "Describe plant gas exchange through stomata"
+                ],
+                "Excretion": [
+                    "Define excretion as removal of metabolic waste",
+                    "Identify excretory organs in humans (kidneys, lungs, skin)",
+                    "Describe kidney structure (cortex, medulla, pelvis, nephron)",
+                    "Explain urine formation: filtration, reabsorption, secretion",
+                    "Describe nephron structure and function",
+                    "Identify components of urine (water, urea, salts)",
+                    "Explain how kidneys regulate water balance",
+                    "Describe excretory system structure (ureters, bladder, urethra)",
+                    "Explain plant excretion (through leaves, storage in vacuoles)",
+                    "Describe kidney disorders and their effects"
+                ],
+                "Coordination and Response": [
+                    "Describe nervous system: central (brain, spinal cord) and peripheral",
+                    "Explain nerve impulse transmission and synapses",
+                    "Describe reflex actions and reflex arc",
+                    "Distinguish voluntary and involuntary actions",
+                    "Describe sense organs: eye (structure, accommodation, defects)",
+                    "Describe sense organs: ear (hearing, balance)",
+                    "Describe other sense organs: nose (smell), tongue (taste), skin (touch)",
+                    "Explain endocrine system and hormones",
+                    "Identify major endocrine glands (pituitary, thyroid, pancreas, adrenal, ovaries, testes)",
+                    "Describe hormone action (insulin, adrenaline, thyroxine)",
+                    "Explain diabetes and hormone deficiencies",
+                    "Describe plant responses: tropisms (phototropism, geotropism)",
+                    "Explain plant hormones (auxins)"
+                ],
+                "Reproduction": [
+                    "Describe human male reproductive system (testes, sperm ducts, penis)",
+                    "Describe human female reproductive system (ovaries, oviducts, uterus, vagina)",
+                    "Explain sperm and egg production",
+                    "Describe fertilization process and implantation",
+                    "Explain menstrual cycle and hormones (estrogen, progesterone)",
+                    "Describe fetal development and placenta function",
+                    "Describe birth process",
+                    "Explain plant reproduction: flower structure (stamen, carpel)",
+                    "Describe pollination: self-pollination vs cross-pollination",
+                    "Explain fertilization in plants and seed formation",
+                    "Describe seed dispersal methods",
+                    "Explain germination conditions and process",
+                    "Compare sexual and asexual reproduction"
+                ],
+                "Organisms and Environment": [
+                    "Define ecosystem, habitat, population, community",
+                    "Describe food chains and food webs with examples",
+                    "Explain trophic levels: producers, consumers (primary, secondary, tertiary), decomposers",
+                    "Describe energy flow through ecosystems (energy pyramids)",
+                    "Explain why energy is lost at each trophic level",
+                    "Describe nutrient cycles: carbon cycle, nitrogen cycle, water cycle",
+                    "Explain role of decomposers in nutrient cycling",
+                    "Describe predator-prey relationships",
+                    "Explain competition and its effects",
+                    "Identify limiting factors in ecosystems",
+                    "Describe population growth and carrying capacity"
+                ],
+                "Human Influences on Ecosystem": [
+                    "Identify types of pollution: air, water, land pollution",
+                    "Describe effects of air pollution (acid rain, smog, respiratory problems)",
+                    "Describe effects of water pollution (eutrophication, disease)",
+                    "Explain deforestation and its consequences",
+                    "Describe overfishing and its impact on ecosystems",
+                    "Explain greenhouse effect and global warming",
+                    "Describe ozone layer depletion (CFCs)",
+                    "Explain importance of conservation",
+                    "Describe sustainable practices (reforestation, recycling)",
+                    "Explain impact of human activities on biodiversity",
+                    "Describe conservation methods (protected areas, breeding programs)"
+                ],
+                "Classification": [
+                    "Explain why classification is important",
+                    "Describe the five kingdoms: Animal, Plant, Fungi, Prokaryote, Protoctist",
+                    "Use binomial nomenclature (genus and species)",
+                    "Classify vertebrates: fish, amphibians, reptiles, birds, mammals",
+                    "Classify invertebrates: insects, arachnids, crustaceans, mollusks, annelids",
+                    "Describe key features of each vertebrate group",
+                    "Describe key features of each invertebrate group",
+                    "Classify plants: flowering (monocotyledons, dicotyledons) vs non-flowering",
+                    "Use dichotomous keys to identify organisms",
+                    "Compare different classification systems"
                 ]
             },
             "Chemistry": {
+                # Reference: ZIMSEC O-Level Combined Science & Cambridge O-Level Chemistry (5070) Syllabus
+                # Sources: Save My Exams, PapaCambridge, Cambridge International, ZIMSEC Chemistry Notes
                 "States of Matter": [
                     "Describe particle arrangement and movement in solids, liquids, and gases",
                     "Explain changes of state using kinetic theory (melting, boiling, evaporation)",
@@ -188,7 +327,7 @@ class CombinedScienceGenerator:
                     "Explain addition polymerisation and draw repeat units",
                     "Discuss environmental problems with plastics and disposal solutions"
                 ],
-                "Experimental Techniques": [
+                "Experimental Techniques and Chemical Analysis": [
                     "Select appropriate apparatus for measuring volume accurately",
                     "Test for purity using melting and boiling points",
                     "Describe separation techniques: filtration, crystallisation, distillation, chromatography",
@@ -200,15 +339,176 @@ class CombinedScienceGenerator:
                 ]
             },
             "Physics": {
-                "Motion, Forces and Energy": [
-                    "Calculate speed and acceleration",
-                    "Apply Newton's laws to simple situations",
-                    "Understand work and energy concepts"
+                # Reference: ZIMSEC O-Level Combined Science & Cambridge O-Level Physics (5054) Syllabus
+                # Sources: Save My Exams, PapaCambridge, Cambridge International, MegaLecture, ZIMSEC Physics Notes
+                "Measurement and Physical Quantities": [
+                    "Define and use SI base units: metre (m), kilogram (kg), second (s), ampere (A), kelvin (K), mole (mol), candela (cd)",
+                    "State derived units: newton (N), joule (J), watt (W), pascal (Pa), volt (V), ohm (Ω)",
+                    "Convert between units (e.g., km to m, g to kg, cm³ to m³)",
+                    "Use prefixes: kilo (k), centi (c), milli (m), micro (μ), nano (n)",
+                    "Measure length using rulers, micrometers, and vernier calipers",
+                    "Measure mass using balances (electronic and beam balance)",
+                    "Measure time using stopwatches and timers",
+                    "Estimate measurements and identify sources of error",
+                    "Calculate uncertainties in measurements",
+                    "Express measurements with appropriate significant figures"
                 ],
-                "Electricity": [
-                    "Understand current, voltage, and resistance",
-                    "Analyze simple circuits",
-                    "Apply Ohm's law to basic problems"
+                "Kinematics (Speed, Velocity, Acceleration, Graphs of Motion)": [
+                    "Define speed as distance travelled per unit time (speed = distance/time)",
+                    "Define velocity as displacement per unit time (velocity = displacement/time)",
+                    "Distinguish between speed and velocity (scalar vs vector)",
+                    "Define acceleration as change in velocity per unit time (a = (v-u)/t)",
+                    "Calculate speed, velocity, and acceleration from given data",
+                    "Draw and interpret distance-time graphs",
+                    "Draw and interpret speed-time graphs",
+                    "Calculate distance from speed-time graphs (area under graph)",
+                    "Calculate acceleration from speed-time graphs (gradient)",
+                    "Apply equations of motion: v = u + at, s = ut + ½at², v² = u² + 2as",
+                    "Solve problems involving free fall and projectile motion (qualitative)"
+                ],
+                "Forces (Including Machines, Turning Effects, Friction, and Mechanical Structures)": [
+                    "Define force as push or pull with units in newtons (N)",
+                    "State Newton's first law: objects at rest stay at rest, objects in motion stay in motion unless acted upon by unbalanced force",
+                    "State Newton's second law: F = ma (force = mass × acceleration)",
+                    "State Newton's third law: action and reaction forces are equal and opposite",
+                    "Calculate resultant forces and their effects on motion",
+                    "Define weight as force due to gravity (W = mg)",
+                    "Distinguish between mass and weight",
+                    "Explain turning effect of forces: moment = force × perpendicular distance",
+                    "Apply principle of moments: sum of clockwise moments = sum of anticlockwise moments",
+                    "Describe equilibrium: balanced forces and balanced moments",
+                    "Explain friction and its effects (static, kinetic, rolling friction)",
+                    "Identify factors affecting friction (surface roughness, normal force)",
+                    "Describe simple machines: levers, pulleys, inclined planes",
+                    "Calculate mechanical advantage and efficiency of machines",
+                    "Explain centre of gravity and stability",
+                    "Describe forces in structures: tension, compression, shear"
+                ],
+                "Work, Energy and Power": [
+                    "Define work as force × distance moved in direction of force (W = Fd)",
+                    "State unit of work: joule (J) where 1 J = 1 Nm",
+                    "Calculate work done from force and distance",
+                    "Define kinetic energy: KE = ½mv²",
+                    "Define potential energy (gravitational): PE = mgh",
+                    "Explain energy conversion and conservation of energy",
+                    "Describe energy losses (to heat, sound, friction)",
+                    "Calculate efficiency: (useful energy output / total energy input) × 100%",
+                    "Define power as rate of doing work (P = W/t or P = Fv)",
+                    "State unit of power: watt (W) where 1 W = 1 J/s",
+                    "Calculate power from work and time, or force and velocity",
+                    "Compare energy sources: renewable vs non-renewable",
+                    "Describe energy transformations in everyday situations"
+                ],
+                "Thermal Physics (Kinetic Theory, Thermal Properties, Heat Transfer)": [
+                    "Describe kinetic theory of matter: particles in motion",
+                    "Explain temperature as measure of average kinetic energy of particles",
+                    "Define heat as energy transferred due to temperature difference",
+                    "Describe thermal expansion of solids, liquids, and gases",
+                    "Explain expansion in everyday situations (bridges, railway tracks)",
+                    "Describe thermal conduction, convection, and radiation",
+                    "Identify good and poor conductors of heat",
+                    "Explain convection currents in liquids and gases",
+                    "Describe practical applications: insulation, cooling systems",
+                    "Define specific heat capacity and use equation Q = mcΔθ",
+                    "Calculate energy changes using specific heat capacity",
+                    "Explain melting and boiling as changes of state",
+                    "Define specific latent heat of fusion and vaporization",
+                    "Describe effects of heating and cooling curves",
+                    "Explain pressure-temperature relationship in gases (qualitative)",
+                    "Describe gas laws: Boyle's law (P ∝ 1/V), Charles' law (V ∝ T)"
+                ],
+                "Waves (General Wave Properties, Optics, Sound)": [
+                    "Define wave as transfer of energy without transfer of matter",
+                    "Describe transverse waves: particles vibrate perpendicular to wave direction",
+                    "Describe longitudinal waves: particles vibrate parallel to wave direction",
+                    "Define wavelength, frequency, amplitude, period, and wave speed",
+                    "Use equation: wave speed = frequency × wavelength (v = fλ)",
+                    "Describe reflection, refraction, diffraction, and interference of waves",
+                    "Explain reflection of light: angle of incidence = angle of reflection",
+                    "Describe refraction of light: change in direction when entering different medium",
+                    "Explain total internal reflection and critical angle",
+                    "Describe formation of images by plane mirrors",
+                    "Describe formation of images by converging and diverging lenses",
+                    "Use ray diagrams for mirrors and lenses",
+                    "Explain dispersion of light (rainbow effect)",
+                    "Define sound as longitudinal wave requiring medium for propagation",
+                    "Describe how sound is produced and travels",
+                    "Explain echo formation and uses (sonar, ultrasound)",
+                    "Define pitch (frequency), loudness (amplitude), and quality of sound",
+                    "Describe factors affecting speed of sound (temperature, medium)",
+                    "Explain uses of ultrasound: scanning, cleaning, medical imaging"
+                ],
+                "Electricity (Current Electricity, Circuits)": [
+                    "Define electric current as flow of charge (I = Q/t)",
+                    "State unit of current: ampere (A)",
+                    "Define potential difference (voltage) as energy per unit charge (V = W/Q)",
+                    "State unit of potential difference: volt (V)",
+                    "Define resistance as opposition to current flow (R = V/I)",
+                    "State unit of resistance: ohm (Ω)",
+                    "State and apply Ohm's law: V = IR (at constant temperature)",
+                    "Describe factors affecting resistance: length, cross-sectional area, material, temperature",
+                    "Draw and interpret current-voltage (I-V) graphs",
+                    "Describe series circuits: same current, voltages add up, resistances add",
+                    "Describe parallel circuits: same voltage, currents add up, reciprocal resistances add",
+                    "Calculate total resistance in series and parallel circuits",
+                    "Draw circuit diagrams using standard symbols",
+                    "Explain function of switches, fuses, circuit breakers",
+                    "Define electrical power: P = IV = I²R = V²/R",
+                    "Calculate electrical energy: E = Pt = IVt",
+                    "State unit of electrical energy: kilowatt-hour (kWh)",
+                    "Calculate cost of electrical energy",
+                    "Describe dangers of electricity and safety measures"
+                ],
+                "Magnetism and Electromagnetism": [
+                    "Describe properties of magnets: attraction, repulsion, poles (N and S)",
+                    "Explain magnetic field as region where magnetic forces act",
+                    "Draw magnetic field patterns around bar magnets",
+                    "Describe Earth's magnetic field and compass behavior",
+                    "Explain magnetic materials: ferromagnetic, paramagnetic, diamagnetic",
+                    "Describe effect of electric current on magnetic field",
+                    "Explain magnetic field around current-carrying wire (right-hand rule)",
+                    "Describe magnetic field around solenoid (electromagnet)",
+                    "Explain factors affecting strength of electromagnet (current, number of turns, core material)",
+                    "Describe applications of electromagnets: electric bells, motors, relays",
+                    "Explain electromagnetic induction: changing magnetic field induces current",
+                    "Describe factors affecting induced EMF (speed, field strength, number of turns)",
+                    "Explain principles of generators (AC and DC)",
+                    "Explain principles of transformers: primary and secondary coils",
+                    "Use transformer equation: Vp/Vs = Np/Ns",
+                    "Calculate transformer output voltage from turns ratio",
+                    "Describe applications of transformers: power transmission, voltage conversion",
+                    "Explain principles of electric motors: Fleming's left-hand rule"
+                ],
+                "Electronics (Logic Gates, Components)": [
+                    "Define digital and analog signals",
+                    "Describe logic gates: AND, OR, NOT, NAND, NOR",
+                    "Draw truth tables for logic gates",
+                    "Describe simple electronic circuits using logic gates",
+                    "Explain use of diodes as one-way valves for current",
+                    "Describe LEDs (light-emitting diodes) and their applications",
+                    "Explain use of transistors as switches or amplifiers",
+                    "Describe input devices: LDR (light-dependent resistor), thermistor",
+                    "Explain how LDR resistance changes with light intensity",
+                    "Explain how thermistor resistance changes with temperature",
+                    "Describe output devices: LED, buzzer, relay, motor",
+                    "Design simple electronic systems (input → process → output)",
+                    "Explain applications: light sensors, temperature alarms, automatic systems"
+                ],
+                "Atomic and Nuclear Physics (Modern Physics)": [
+                    "Describe structure of atom: nucleus (protons, neutrons) and electrons",
+                    "Define atomic number (Z) and mass number (A)",
+                    "Explain isotopes: same element, different number of neutrons",
+                    "Describe radioactive decay: alpha, beta, gamma radiation",
+                    "Explain properties of alpha, beta, and gamma radiation",
+                    "Describe uses of radioactivity: medical (X-rays, cancer treatment), dating (carbon-14), tracers",
+                    "Explain dangers of radiation and safety measures",
+                    "Define half-life and use it in calculations",
+                    "Describe nuclear fission: splitting of large nuclei (uranium-235)",
+                    "Explain nuclear reactors and power generation",
+                    "Describe nuclear fusion: combining small nuclei (hydrogen)",
+                    "Explain fusion in stars (qualitative)",
+                    "Describe hazards of nuclear energy and safety measures",
+                    "Explain environmental impact of nuclear energy"
                 ]
             }
         }
@@ -322,41 +622,118 @@ class CombinedScienceGenerator:
             'difficult': "More depth and reasoning. 5-7 parts with subparts. Total 10-15 marks."
         }
 
+        # Select multiple subtopics to ensure comprehensive coverage across parts
+        import random
+        if len(objectives) >= 3:
+            selected_subtopics = random.sample(objectives, min(3, len(objectives)))
+        else:
+            selected_subtopics = objectives
+
+        # Subject-specific syllabus references and examiner persona
+        subject_syllabus_refs = {
+            "Biology": "Cambridge O-Level Biology (5090)",
+            "Chemistry": "Cambridge O-Level Chemistry (5070)",
+            "Physics": "Cambridge O-Level Physics (5054)"
+        }
+        syllabus_ref = subject_syllabus_refs.get(subject, f"Cambridge O-Level {subject}")
+        
         # ZIMSEC structured questions: short stem, then (a)(i)(ii) style parts, marks in brackets.
-        return f"""Create ONE ZIMSEC O-Level *Structured* question for Combined Science ({subject}) on the topic: {topic}.
+        return f"""You are Dr. Muzenda, an expert ZIMSEC O-Level {subject} examiner with 15+ years experience setting professional structured questions for Zimbabwean students. You have deep knowledge of both ZIMSEC Combined Science syllabus and {syllabus_ref} syllabus.
 
-STUDENT LEVEL: ZIMSEC O-Level Forms 1-4 (ages 15-17 in Zimbabwe).
+SUBJECT: {subject} (O-Level Combined Science - ZIMSEC Syllabus / {syllabus_ref})
+TOPIC: {topic}
+DIFFICULTY: {difficulty} - {difficulty_guidance.get(difficulty, 'Standard')}
 
-STYLE REQUIREMENTS (must follow):
-- Must be a *STRUCTURED* question (NOT multiple choice).
+COMPREHENSIVE SUBTOPIC COVERAGE REQUIREMENT:
+- This structured question MUST cover MULTIPLE different subtopics from the learning objectives
+- Each part should test a DIFFERENT aspect/subtopic of {topic}
+- Selected subtopics to cover: {chr(10).join(f"  - {sub}" for sub in selected_subtopics)}
+- All available subtopics for this topic: {chr(10).join(f"  - {obj}" for obj in objectives)}
+- Ensure full syllabus coverage across the parts (a), (b), (c), etc.
+- Progress logically through cognitive levels: recall → understanding → application → analysis
+- Reference: Cambridge O-Level Biology (5090) past papers and ZIMSEC Combined Science past papers
+- To ensure comprehensive coverage, different subtopics should be tested across multiple question generations
+
+CRITICAL RESTRICTIONS - ABSOLUTELY NO DIAGRAM QUESTIONS:
+{"- For Chemistry: You may describe molecular structures, reaction mechanisms, or experimental setups in text, but NEVER require diagram interpretation" if subject == "Chemistry" else ""}
+{"- For Physics: You may describe circuit diagrams, ray diagrams, experimental setups, or graphs in text, but NEVER require diagram interpretation. Describe all measurements, readings, and observations in text" if subject == "Physics" else ""}
+- DO NOT create questions requiring diagram interpretation
+- DO NOT ask "What part is labeled X?" or "Identify the structure labeled Y"
+- DO NOT ask "Name structure X in the diagram" or "Label part Y"
+- DO NOT ask "What does X represent in the diagram?" or "From the diagram, which..."
+- DO NOT reference any visual diagrams, figures, or labeled structures
+- INSTEAD use: text descriptions of structures/processes, data tables, scenarios, process descriptions, experimental setups (in text)
+- You may DESCRIBE structures or processes in text format, but NEVER require students to interpret visual diagrams
+- All information must be provided in text format - students should answer based on knowledge, not visual interpretation
+- If describing a structure or process, provide complete text description so no diagram is needed
+
+PROFESSIONAL EXAMINER STANDARDS:
+- Use appropriate ZIMSEC command words with correct mark allocations:
+  * "State" (1-2 marks): Simple recall, one-word or short phrase answers
+  * "Define" (2 marks): Precise definition required
+  * "Name" (1 mark): Simple identification
+  * "Describe" (2-3 marks): Detailed explanation in sentences
+  * "Explain" (2-4 marks): Requires reasoning and scientific understanding
+  * "Compare" (3-4 marks): Similarities and differences with examples
+  * "Suggest" (2-3 marks): Apply knowledge to new situation
+- Mark allocation must be realistic: Easy (6-8 marks), Medium (8-12 marks), Difficult (10-15 marks)
+- Include comprehensive marking rubric with expected points per part
+- Provide examiner notes on common misconceptions and marking tips
+- Ensure questions align with ZIMSEC/Cambridge exam standards
+
+QUESTION STRUCTURE REQUIREMENTS:
+- Must be a *STRUCTURED* question (NOT multiple choice)
 - Must be broken into parts like (a)(i), (a)(ii), (b), (c)(i) etc.
-- Each part must have a mark allocation like [2] and the total marks must be realistic for ZIMSEC.
-- Use clear ZIMSEC command words: state, define, describe, explain, calculate, name, label, suggest.
-- Keep the stem/context brief and exam-like (avoid long stories).
-- Ensure it is *exactly one* question with parts (not a paper, not multiple questions).
+- Each part must test a DIFFERENT subtopic from the learning objectives
+- Part progression: Basic recall → Understanding → Application → Analysis
+- Easy: 3-4 parts, Medium: 4-6 parts with subparts, Difficult: 5-7 parts with subparts
+- Keep the stem/context brief and exam-like (1-3 lines maximum - avoid long stories)
+- Ensure it is *exactly one* question with parts (not a paper, not multiple questions)
 
-Learning Objectives:
-{chr(10).join(f"- {obj}" for obj in objectives)}
+ENHANCED PART VARIETY:
+- Mix different question types within the structured question (state, define, explain, describe, compare, suggest)
+- Ensure parts test different cognitive levels (recall, understanding, application, analysis)
+- Include data interpretation parts (text-based tables/scenarios) where appropriate
+- Include practical application parts with real-world scenarios
+- Vary the command words used across parts to test different skills
 
-Difficulty: {difficulty} ({difficulty_guidance.get(difficulty, 'Standard')})
+FRESHNESS REQUIREMENTS:
+- Use unique contexts and scenarios NOT commonly found in textbooks
+- Include relevant real-world applications where appropriate
+- Vary from typical textbook examples
+- Ensure question feels professionally crafted like a real exam paper
+- Use different approaches to test the same concept across multiple generations
+- For Chemistry: Include practical applications, industrial processes, environmental chemistry, laboratory scenarios
+- For Biology: Include medical scenarios, agricultural applications, environmental issues, everyday life situations
+- For Physics: Include technological applications, everyday phenomena, environmental issues, household physics
+
+STUDENT LEVEL: ZIMSEC O-Level Forms 1-4 (ages 15-17 in Zimbabwe). Keep content age-appropriate.
 
 OUTPUT FORMAT: Return ONLY valid JSON. No markdown. No extra text.
 
-JSON schema (example fields):
+JSON schema (required fields):
 {{
   "question_type": "structured",
   "subject": "{subject}",
   "topic": "{topic}",
   "difficulty": "{difficulty}",
-  "stem": "Short exam-style context/instructions (1-3 lines).",
+  "stem": "Short exam-style context/instructions (1-3 lines maximum - NO diagram references). Use text descriptions only.",
   "parts": [
     {{
       "label": "(a)(i)",
-      "question": "Part question text",
+      "question": "Part question text testing subtopic from learning objectives. NO diagram references - use text descriptions only.",
       "marks": 2,
       "command_word": "state",
       "expected_points": ["marking point 1", "marking point 2"],
-      "model_answer": "A concise model answer a ZIMSEC marker expects"
+      "model_answer": "A concise model answer a ZIMSEC marker expects (1-2 sentences maximum)"
+    }},
+    {{
+      "label": "(a)(ii)",
+      "question": "Another part testing a DIFFERENT subtopic",
+      "marks": 2,
+      "command_word": "define",
+      "expected_points": ["point 1", "point 2"],
+      "model_answer": "Model answer for this part"
     }}
   ],
   "total_marks": 10,
@@ -365,12 +742,24 @@ JSON schema (example fields):
       "marks": 2,
       "points": ["point 1", "point 2"],
       "accept_alternatives": ["acceptable alternative phrasing if any"]
+    }},
+    "(a)(ii)": {{
+      "marks": 2,
+      "points": ["point 1", "point 2"],
+      "accept_alternatives": []
     }}
   }},
-  "teacher_notes": "Short examiner/teacher note (1-2 lines) about common misconceptions."
+  "teacher_notes": "Short examiner/teacher note (1-2 lines) about common misconceptions and marking tips."
 }}
 
-Generate the structured question now."""
+CRITICAL REMINDERS:
+- Each part must test a DIFFERENT subtopic from the learning objectives
+- NO diagram questions - ALL information must be in text format
+- Use appropriate command words with correct mark allocations
+- Ensure comprehensive coverage of multiple subtopics across all parts
+- Question must feel professionally crafted like a real exam paper
+
+Generate a high-quality, professional structured question now!"""
 
     def _validate_and_enhance_structured_question(self, question_data: Dict[str, Any], subject: str, topic: str, difficulty: str, user_id: str = None) -> Dict[str, Any]:
         """Validate and enhance structured question payload for consistency."""
@@ -662,7 +1051,7 @@ Mark strictly but fairly like ZIMSEC. Determine is_correct=true if percentage >=
             'difficult': "Evaluation and synthesis level. Multi-step problems requiring deeper understanding and comparisons."
         }
         
-        # Rich variety of question styles for diversity (10 types)
+        # Rich variety of question styles for diversity (12+ types)
         question_style = random.choice([
             'definition',           # What is X? Define Y
             'process',              # Describe how X works/happens
@@ -673,7 +1062,10 @@ Mark strictly but fairly like ZIMSEC. Determine is_correct=true if percentage >=
             'application',          # Apply concept to scenario
             'calculation',          # Simple calculations (Physics/Chemistry)
             'diagram_based',        # Based on a diagram description
-            'real_world'            # Local/real-world application with Zimbabwean context
+            'real_world',           # Local/real-world application with Zimbabwean context
+            'data_interpretation',  # Interpret tables, graphs, or experimental data
+            'practical_application', # Real-world practical scenarios
+            'experiment_based'      # Questions based on experimental procedures
         ])
         
         # Expanded list of diverse Zimbabwean names for real_world questions
@@ -755,54 +1147,123 @@ Mark strictly but fairly like ZIMSEC. Determine is_correct=true if percentage >=
 - Location: {random.choice(zim_locations)}
 - Examples: "[Name] in [Location] observes that..."
 - Keep the scenario brief - focus on testing the scientific principle in {topic}
-- The science should be applicable to everyday life in Zimbabwe"""
+- The science should be applicable to everyday life in Zimbabwe""",
+
+            'data_interpretation': f"""Generate a DATA INTERPRETATION question:
+- Present a text-based data table, graph description, or experimental results
+- Ask students to interpret, analyze, or draw conclusions from the data
+- Examples: "The table shows... What can you conclude?", "Based on the data, which statement is correct?"
+- Ensure data is clearly presented in text format (NO diagrams)
+- Test understanding of data analysis and scientific reasoning for {topic}""",
+
+            'practical_application': f"""Generate a PRACTICAL APPLICATION question:
+- Apply scientific concepts to real-world practical scenarios or problems
+- Test how well students can use their knowledge in practical situations
+- Examples: "A farmer wants to... Which method would be best?", "To prevent... which approach should be used?"
+- Scenarios should be realistic and applicable to O-Level students
+- Ensure the practical application clearly tests understanding of {topic}""",
+
+            'experiment_based': f"""Generate an EXPERIMENT-BASED question:
+- Present a text description of an experimental setup or procedure
+- Ask about expected results, controls, or conclusions
+- Examples: "In an experiment to test... what would happen if...?", "Why was a control used in this experiment?"
+- Describe experiments clearly in text (NO diagram references)
+- Test understanding of experimental design and scientific method for {topic}"""
         }
         
-        prompt = f"""Generate a ZIMSEC O-Level Combined Science question for {subject} - {topic}.
+        # Select a specific subtopic from learning objectives to ensure comprehensive coverage
+        selected_subtopic = random.choice(objectives) if objectives else f"understanding of {topic}"
+        
+        # Subject-specific syllabus references and examiner persona
+        subject_syllabus_refs = {
+            "Biology": "Cambridge O-Level Biology (5090)",
+            "Chemistry": "Cambridge O-Level Chemistry (5070)",
+            "Physics": "Cambridge O-Level Physics (5054)"
+        }
+        syllabus_ref = subject_syllabus_refs.get(subject, f"Cambridge O-Level {subject}")
+        
+        prompt = f"""You are Dr. Muzenda, an expert ZIMSEC and Cambridge O-Level {subject} examiner with 15+ years experience setting professional examination papers for Zimbabwean and international students. You have deep knowledge of both ZIMSEC Combined Science syllabus and {syllabus_ref} syllabus.
 
-**STUDENT LEVEL:** O-Level students (ages 15-17 in Zimbabwe). Keep content age-appropriate.
+SUBJECT: {subject} (O-Level Combined Science - ZIMSEC Syllabus / {syllabus_ref})
+TOPIC: {topic}
+SPECIFIC SUBTOPIC TO TEST: {selected_subtopic}
+DIFFICULTY: {difficulty} - {difficulty_guidance.get(difficulty, 'Standard level')}
 
-**QUESTION STYLE:** {question_style.upper()}
+COMPREHENSIVE COVERAGE REQUIREMENT:
+- This question MUST test understanding of a SPECIFIC subtopic: "{selected_subtopic}"
+- Reference: {syllabus_ref} past papers and ZIMSEC Combined Science past papers
+- All available subtopics for this topic: {chr(10).join(f"  - {obj}" for obj in objectives)}
+- To ensure full syllabus coverage, different subtopics should be tested across multiple question generations
+- Questions should rotate through all learning objectives to ensure comprehensive topic coverage
+
+QUESTION STYLE: {question_style.upper()}
 {style_guidance.get(question_style, style_guidance['definition'])}
 
-**Learning Objectives:**
-{chr(10).join(f"• {obj}" for obj in objectives)}
+EXPERT EXAMINER GUIDELINES - PROFESSIONAL EXAM STANDARDS:
+- Use appropriate ZIMSEC/Cambridge command words: "define", "state", "describe", "explain", "compare", "identify", "name"
+- Create distractors based on common student misconceptions from past marking experience
+- Ensure question tests the cognitive level appropriate for {difficulty}:
+  * Easy: Knowledge and comprehension (recall facts, understand concepts)
+  * Medium: Application and analysis (apply knowledge, interpret data, analyze relationships)
+  * Difficult: Synthesis and evaluation (compare concepts, evaluate scenarios, draw conclusions)
+- Question should feel FRESH and different from standard textbook questions
+- Include relevant real-world or Zimbabwean context where applicable
+- Distractors should be scientifically plausible but clearly incorrect
+- Reference Bloom's taxonomy: ensure appropriate cognitive level for difficulty
 
-**Question Requirements:**
+FRESHNESS REQUIREMENTS - CREATE UNIQUE QUESTIONS:
+- Use unique scenarios NOT commonly found in typical textbook questions
+- Vary contexts: {"industrial applications, environmental issues, household chemistry, laboratory scenarios, everyday life situations" if subject == "Chemistry" else "medical scenarios, agricultural applications, environmental issues, everyday life situations" if subject == "Biology" else "technological applications, everyday phenomena, environmental issues, household physics"}
+- Create innovative applications of the concept being tested
+- Ensure question feels like a professional exam question crafted by an experienced examiner, NOT a generic textbook exercise
+- Avoid repetitive question structures - vary how questions are phrased
+- Use different real-world applications for the same concept across different generations
+- For Chemistry: Include practical applications, industrial processes, environmental chemistry where relevant
+
+QUESTION REQUIREMENTS:
 - Subject: {subject}
-- Topic: {topic}  
-- Difficulty: {difficulty} ({difficulty_guidance.get(difficulty, 'Standard level')})
+- Topic: {topic}
 - Format: Multiple choice (4 options A, B, C, D)
-- Use clear, simple language suitable for teenagers
+- Use clear, simple language suitable for O-Level students (ages 15-17)
 - One option must be clearly correct
 - Distractors should be plausible but scientifically incorrect
+- All options should be of similar length where possible
 
-**IMPORTANT - Avoid:**
-- Overly complex laboratory procedures
-- University-level content
+CRITICAL - AVOID:
+- Overly complex laboratory procedures beyond O-Level
+- University-level or A-Level content
 - Ambiguous options where multiple could be correct
-- Using the same name repeatedly (vary names for context questions)
+- Using the same name/scenario repeatedly (vary names and contexts for real-world questions)
+- Questions that require visual diagram interpretation (describe diagrams in text if needed)
+{"- For Chemistry: Avoid complex organic synthesis reactions, advanced quantum mechanics, or A-Level inorganic chemistry concepts" if subject == "Chemistry" else ""}
+{"- For Physics: Avoid complex calculus-based physics, advanced quantum mechanics, relativity, or A-Level physics concepts. Keep calculations simple with basic algebra" if subject == "Physics" else ""}
 
-Return ONLY a valid JSON object:
+Return ONLY a valid JSON object (NO markdown formatting, NO additional text):
 {{
-    "question": "Clear, focused question testing understanding of {topic}",
+    "question": "Clear, focused, professional exam-style question testing understanding of: {selected_subtopic}",
     "options": {{
-        "A": "First option",
-        "B": "Second option", 
-        "C": "Third option",
-        "D": "Fourth option"
+        "A": "First option - plausible distractor based on common misconception",
+        "B": "Second option - plausible distractor based on common misconception", 
+        "C": "Third option - correct answer",
+        "D": "Fourth option - plausible distractor based on common misconception"
     }},
-    "correct_answer": "B",
-    "explanation": "DETAILED SOLUTION: A thorough scientific explanation (4-6 sentences) covering WHY the correct answer is right, why other options are wrong, and the underlying scientific principle. Use proper scientific terminology.",
-    "teaching_explanation": "TEACHER FEEDBACK: A warm, encouraging explanation written as if you're a patient tutor having a conversation with the student. Use a relatable analogy, everyday example, or real-life application to help them truly understand. MUST BE DIFFERENT from the explanation above - focus on making the concept memorable and easy to understand.",
+    "correct_answer": "C",
+    "explanation": "DETAILED SCIENTIFIC SOLUTION: A thorough professional explanation (4-6 sentences) covering WHY the correct answer is right, WHY each other option is wrong (with scientific reasoning), and the underlying scientific principle. Use proper scientific terminology appropriate for O-Level students. Reference ZIMSEC/Cambridge syllabus content.",
+    "teaching_explanation": "TEACHER FEEDBACK: A warm, encouraging, conversational explanation written as if you're a patient, experienced tutor having a one-on-one conversation with the student. Use a relatable analogy, everyday example from Zimbabwe/Africa, or real-life application to help them truly understand. MUST BE COMPLETELY DIFFERENT from the explanation above - focus on making the concept memorable, easy to understand, and relatable. Use simple language and friendly tone.",
     "difficulty": "{difficulty}",
-    "learning_objective": "What the student should learn from this question",
-    "question_style": "{question_style}"
+    "learning_objective": "{selected_subtopic}",
+    "question_style": "{question_style}",
+    "subtopic_tested": "{selected_subtopic}"
 }}
 
-CRITICAL: The 'explanation' and 'teaching_explanation' MUST be completely different texts with different approaches!
+CRITICAL REQUIREMENTS:
+- The 'explanation' and 'teaching_explanation' MUST be completely different texts with different approaches!
+- 'explanation': Formal, scientific, professional (for academic understanding)
+- 'teaching_explanation': Conversational, relatable, encouraging (for student engagement and memorability)
+- Question must feel fresh and professionally crafted, not a generic textbook question
+- Ensure comprehensive coverage of subtopic: {selected_subtopic}
 
-Generate an educational {question_style.replace('_', ' ')} question now!"""
+Generate a high-quality, professional exam-style {question_style.replace('_', ' ')} question now!"""
 
         return prompt
 

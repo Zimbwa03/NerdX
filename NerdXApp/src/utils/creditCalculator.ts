@@ -93,6 +93,18 @@ export function formatCreditCost(credits: number): string {
 }
 
 /**
+ * Format credit balance for display - ensures whole numbers only (no decimals)
+ * Backend returns credits in units (1 credit = 10 units), converted to whole credits
+ */
+export function formatCreditBalance(credits: number | undefined | null): number {
+  if (credits === undefined || credits === null || isNaN(credits)) {
+    return 0;
+  }
+  // Round to nearest whole number to ensure no decimals are displayed
+  return Math.round(credits);
+}
+
+/**
  * Get minimum required credits for a quiz based on subject/question type
  */
 export function getMinimumCreditsForQuiz(params: CreditCostParams): number {

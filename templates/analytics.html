@@ -14,10 +14,25 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h1 class="h2 mb-0">👥 User Analytics</h1>
+                    <h1 class="h2 mb-0">
+                        👥 User Analytics
+                        <span class="badge bg-primary ms-2" id="sourceBadge">WhatsApp Bot</span>
+                    </h1>
                     <p class="text-muted">Comprehensive user behavior and engagement analysis</p>
                 </div>
-                <div>
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Source Filter Toggle -->
+                    <div class="btn-group" role="group" id="sourceFilterGroup">
+                        <input type="radio" class="btn-check" name="sourceFilter" id="sourceWhatsApp" value="whatsapp" autocomplete="off" checked>
+                        <label class="btn btn-outline-primary" for="sourceWhatsApp">
+                            <i class="fab fa-whatsapp me-1"></i> WhatsApp Bot
+                        </label>
+                        
+                        <input type="radio" class="btn-check" name="sourceFilter" id="sourceMobile" value="mobile" autocomplete="off">
+                        <label class="btn btn-outline-success" for="sourceMobile">
+                            <i class="fas fa-mobile-alt me-1"></i> Mobile App
+                        </label>
+                    </div>
                     <button class="btn btn-primary" onclick="refreshAnalytics()">
                         <i class="fas fa-sync-alt"></i> Refresh
                     </button>
@@ -214,8 +229,12 @@
 let userActivityChart, subjectEngagementChart;
 let currentPage = 1;
 let totalPages = 1;
+let currentSource = 'whatsapp'; // Default to WhatsApp
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Set up source filter change handler
+    setupSourceFilter();
+    
     loadUserAnalytics();
     createCharts();
     loadAdvancedAnalytics();
@@ -235,6 +254,34 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }, 5 * 60 * 1000);
 });
+
+function setupSourceFilter() {
+    const sourceFilters = document.querySelectorAll('input[name="sourceFilter"]');
+    const sourceBadge = document.getElementById('sourceBadge');
+    
+    sourceFilters.forEach(filter => {
+        filter.addEventListener('change', function() {
+            if (this.checked) {
+                currentSource = this.value;
+                console.log('Source filter changed to:', currentSource);
+                
+                // Update badge
+                if (sourceBadge) {
+                    if (currentSource === 'mobile') {
+                        sourceBadge.textContent = 'Mobile App';
+                        sourceBadge.className = 'badge bg-success ms-2';
+                    } else {
+                        sourceBadge.textContent = 'WhatsApp Bot';
+                        sourceBadge.className = 'badge bg-primary ms-2';
+                    }
+                }
+                
+                // Reload all data with new source filter
+                refreshAnalytics();
+            }
+        });
+    });
+}
 
 async function loadUserAnalytics() {
     try {
@@ -491,7 +538,8 @@ function updateSubjectEngagementChart(subjectData) {
 
 async function loadAdvancedAnalytics() {
     try {
-        const response = await fetch('/api/analytics/advanced');
+        const sourceParam = `source=${currentSource}`;
+        const response = await fetch(`/api/analytics/advanced?${sourceParam}`);
         const analytics = await response.json();
         
         if (analytics.user_engagement) {
@@ -567,7 +615,8 @@ let filteredUsers = [];
 
 async function loadAllUsers() {
     try {
-        const response = await fetch('/api/users/engagement');
+        const sourceParam = `source=${currentSource}`;
+        const response = await fetch(`/api/users/engagement?${sourceParam}`);
         const data = await response.json();
         allUsers = data.users || [];
         filteredUsers = [...allUsers];
