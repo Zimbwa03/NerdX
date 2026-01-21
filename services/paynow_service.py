@@ -368,19 +368,33 @@ class PaynowService:
         }
     
     def _is_valid_phone_number(self, phone_number: str) -> bool:
-        """Validate Zimbabwe phone number format"""
+        """Validate Zimbabwe phone number format - MUST be exactly 10 digits"""
         # Remove any whitespace and standardize format
         phone = phone_number.replace(' ', '').replace('-', '')
         
         # Check if it's a valid Zimbabwe mobile number
         # EcoCash numbers: 077, 078 (Econet)
+        # MUST be exactly 10 digits
         valid_prefixes = ['077', '078']
         
-        if len(phone) == 10 and phone.startswith('07'):
-            prefix = phone[:3]
-            return prefix in valid_prefixes
+        # First check: must be exactly 10 digits
+        if len(phone) != 10:
+            logger.warning(f"Invalid phone number length: {len(phone)} digits (expected 10) - {phone}")
+            return False
         
-        return False
+        # Second check: must start with 07
+        if not phone.startswith('07'):
+            logger.warning(f"Invalid phone number format: must start with 07 - {phone}")
+            return False
+        
+        # Third check: must have valid prefix (077 or 078)
+        prefix = phone[:3]
+        if prefix not in valid_prefixes:
+            logger.warning(f"Invalid phone number prefix: {prefix} (expected 077 or 078) - {phone}")
+            return False
+        
+        # All validations passed
+        return True
     
     def _get_payment_instructions(self, phone_number: str, amount: float, test_mode: bool) -> str:
         """Generate payment instructions for customer"""

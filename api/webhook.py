@@ -4773,9 +4773,20 @@ def handle_paynow_phone_collection(user_id: str, phone_number: str):
         elif phone_cleaned.startswith('263'):
             local_phone = '0' + phone_cleaned[3:]  # 263771111111 -> 0771111111
 
-        # Validate local format
-        if not (len(local_phone) == 10 and local_phone.startswith('07') and 
-                local_phone[:3] in ['077', '078']):
+        # Validate local format - MUST be exactly 10 digits
+        # Check length first (must be exactly 10 digits)
+        if len(local_phone) != 10:
+            whatsapp_service.send_message(user_id, 
+                "❌ *Invalid Phone Number Format*\n\n"
+                "Please provide a valid Zimbabwe EcoCash number:\n"
+                "• Format: 077XXXXXXX or 078XXXXXXX (10 digits total)\n"
+                "• Example: 0771234567\n"
+                f"• Your number has {len(local_phone)} digits (must be exactly 10)\n\n"
+                "Please send your EcoCash number again:")
+            return
+        
+        # Check prefix and format (must start with 07 and have valid prefix)
+        if not (local_phone.startswith('07') and local_phone[:3] in ['077', '078']):
             whatsapp_service.send_message(user_id, 
                 "❌ *Invalid Phone Number Format*\n\n"
                 "Please provide a valid Zimbabwe EcoCash number:\n"
