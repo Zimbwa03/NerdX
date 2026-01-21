@@ -2649,6 +2649,32 @@ def initiate_credit_purchase():
                     'success': False,
                     'message': 'Phone number and email are required for EcoCash payment'
                 }), 400
+            
+            # Normalize and validate phone number - MUST be exactly 10 digits
+            phone_cleaned = re.sub(r'[^\d+]', '', phone_number.strip())
+            
+            # Normalize to local format (10 digits: 077XXXXXXX or 078XXXXXXX)
+            local_phone = phone_cleaned
+            if phone_cleaned.startswith('+263'):
+                local_phone = '0' + phone_cleaned[4:]  # +263771111111 -> 0771111111
+            elif phone_cleaned.startswith('263'):
+                local_phone = '0' + phone_cleaned[3:]  # 263771111111 -> 0771111111
+            
+            # Validate: MUST be exactly 10 digits with valid prefix
+            if len(local_phone) != 10:
+                return jsonify({
+                    'success': False,
+                    'message': f'Invalid phone number: must be exactly 10 digits (you entered {len(local_phone)} digits). Format: 077XXXXXXX or 078XXXXXXX'
+                }), 400
+            
+            if not (local_phone.startswith('07') and local_phone[:3] in ['077', '078']):
+                return jsonify({
+                    'success': False,
+                    'message': 'Invalid phone number format. Must start with 077 or 078 (e.g., 0771234567)'
+                }), 400
+            
+            # Use normalized phone number
+            phone_number = local_phone
         else:
             # Visa/Mastercard only needs email
             if not email:
