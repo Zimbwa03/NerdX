@@ -140,7 +140,7 @@ A_LEVEL_PHYSICS_TOPIC_DETAILS = {
 
 
 class ALevelPhysicsGenerator:
-    """Generator for A Level Physics MCQ questions using DeepSeek AI"""
+    """Generator for A Level Physics MCQ and Structured questions using DeepSeek AI"""
     
     def __init__(self):
         self.deepseek_api_key = os.environ.get('DEEPSEEK_API_KEY')
@@ -181,8 +181,19 @@ class ALevelPhysicsGenerator:
             return topic_id
         return slug_map.get(topic_id)
     
-    def generate_question(self, topic: str, difficulty: str = "medium", user_id: str = None) -> Optional[Dict]:
-        """Generate an A Level Physics MCQ question"""
+    def generate_question(self, topic: str, difficulty: str = "medium", user_id: str = None, question_type: str = "mcq") -> Optional[Dict]:
+        """
+        Generate an A Level Physics question
+        
+        Args:
+            topic: The topic identifier
+            difficulty: 'easy', 'medium', or 'difficult'
+            user_id: Optional user ID for tracking
+            question_type: 'mcq' for multiple choice, 'structured' for Paper 2 style
+        
+        Returns:
+            Dictionary containing question data or None on failure
+        """
         try:
             # Map slug IDs from mobile to syllabus display names
             topic_name = self._get_topic_name(topic) or topic
@@ -197,11 +208,14 @@ class ALevelPhysicsGenerator:
             key_concepts = topic_details.get("key_concepts", [])
             key_formulas = topic_details.get("key_formulas", [])
             
-            # Create detailed prompt for DeepSeek
-            prompt = self._create_question_prompt(topic_name, difficulty, level, key_concepts, key_formulas)
+            # Create detailed prompt for DeepSeek based on question type
+            if question_type == "structured":
+                prompt = self._create_structured_prompt(topic_name, difficulty, level, key_concepts, key_formulas)
+            else:
+                prompt = self._create_question_prompt(topic_name, difficulty, level, key_concepts, key_formulas)
             
             # Generate question using DeepSeek
-            question_data = self._call_deepseek(prompt)
+            question_data = self._call_deepseek(prompt, question_type)
             
             if question_data:
                 question_data['subject'] = 'A Level Physics'
@@ -209,6 +223,10 @@ class ALevelPhysicsGenerator:
                 question_data['difficulty'] = difficulty
                 question_data['level'] = level
                 question_data['source'] = 'ai_generated_a_level'
+                question_data['question_type'] = question_type
+                # Enable voice input for structured questions
+                question_data['allows_text_input'] = True
+                question_data['allows_voice_input'] = True
                 return question_data
             
             return None
@@ -336,7 +354,117 @@ Generate ONE A Level Physics MCQ now:"""
 
         return prompt
     
-    def _call_deepseek(self, prompt: str) -> Optional[Dict]:
+    def _create_structured_prompt(self, topic: str, difficulty: str, level: str, key_concepts: list, key_formulas: list) -> str:
+        """Create prompt for structured (Paper 2 style) questions - knowledge-based, no diagrams"""
+        
+        difficulty_marks = {
+            "easy": {"total": 8, "parts": 3},
+            "medium": {"total": 12, "parts": 4},
+            "difficult": {"total": 15, "parts": 5}
+        }
+        marks_info = difficulty_marks.get(difficulty, difficulty_marks["medium"])
+        
+        prompt = f"""You are a SENIOR A-LEVEL PHYSICS TEACHER (15+ years) AND an examiner-style question designer for ZIMSEC and Cambridge A Level Physics 9702.
+
+ROLE: SENIOR A-LEVEL PHYSICS EXAMINER - PAPER 2 STRUCTURED QUESTIONS
+
+NON-NEGOTIABLE RULES:
+1. SYLLABUS-LOCKED: Only generate content examinable for ZIMSEC A-Level and Cambridge 9702
+2. NO DIAGRAMS: Questions must be answerable with TEXT ONLY - no diagrams, graphs, or circuit drawings required
+3. KNOWLEDGE-FOCUSED: Test understanding through explanations, definitions, derivations, and calculations
+4. EXAM AUTHENTICITY: Use real exam command words: "define", "state", "explain", "describe", "calculate", "derive", "deduce", "suggest", "justify"
+5. ORIGINALITY: Generate ORIGINAL questions with realistic exam patterns
+6. MARKING REALISM: Provide clear mark allocation and model answers
+
+SUBJECT: A Level Physics (ZIMSEC / Cambridge 9702)
+TOPIC: {topic}
+LEVEL: {level}
+DIFFICULTY: {difficulty}
+TOTAL MARKS: {marks_info['total']}
+NUMBER OF PARTS: {marks_info['parts']}
+
+KEY CONCEPTS FOR THIS TOPIC:
+{', '.join(key_concepts) if key_concepts else 'General concepts for this topic'}
+
+KEY FORMULAS (use when appropriate):
+{chr(10).join(['• ' + f for f in key_formulas]) if key_formulas else '• As applicable to the topic'}
+
+CRITICAL FORMATTING RULES - PLAIN TEXT ONLY:
+- ABSOLUTELY NO LaTeX delimiters like $ or \\( or \\)
+- Use Unicode superscripts: m², s⁻¹, m/s², kg·m/s (NOT m^2)
+- Use Unicode subscripts: v₀, a₁, Fₙₑₜ (NOT v_0)
+- Write fractions as: (a+b)/(c+d) or a/b
+- Use √ for square root: √(2gh)
+- Use proper symbols: Ω for ohms, μ for micro, ° for degrees
+- Use × for multiplication: 3.0 × 10⁸ m/s
+
+QUESTION STRUCTURE REQUIREMENTS:
+- Create ONE structured question with {marks_info['parts']} parts: (a), (b), (c), etc.
+- Each part tests DIFFERENT aspects of {topic}
+- Part progression: Definition/recall → Explanation → Calculation → Application/analysis
+- Keep the stem/context brief (1-3 lines maximum)
+- ALL parts must be answerable with TEXT - no diagrams needed
+- Include numerical calculations where appropriate with clear working
+
+PART DIFFICULTY PROGRESSION:
+- Part (a): 2-3 marks - Define, state, or recall (basic knowledge)
+- Part (b): 3-4 marks - Explain or describe (understanding)
+- Part (c): 4-5 marks - Calculate or derive (application)
+- Part (d) if needed: 4-6 marks - Deduce, evaluate, or apply to new context (analysis)
+
+COMMAND WORDS TO USE:
+- Define: Give the precise meaning of a term
+- State: Give a concise factual answer
+- Explain: Give reasons using physical principles
+- Describe: Give a detailed account
+- Calculate: Find a numerical answer showing working
+- Derive: Show how an equation is obtained
+- Deduce: Draw conclusions from given information
+- Suggest: Apply knowledge to unfamiliar contexts
+- Justify: Support a conclusion with reasoning
+
+OUTPUT FORMAT: Return ONLY valid JSON. No markdown. No extra text.
+
+JSON schema (required fields):
+{{
+    "question_type": "structured",
+    "question_text": "Brief stem/context (1-3 lines) introducing the question",
+    "structured_question": {{
+        "total_marks": {marks_info['total']},
+        "parts": [
+            {{
+                "label": "(a)",
+                "question": "Part (a) question text with appropriate command word",
+                "marks": 2,
+                "model_answer": "Complete model answer for part (a) - what a student should write",
+                "marking_points": ["Key point 1 [1 mark]", "Key point 2 [1 mark]"]
+            }},
+            {{
+                "label": "(b)",
+                "question": "Part (b) question text (builds on or relates to part a)",
+                "marks": 4,
+                "model_answer": "Complete model answer for part (b)",
+                "marking_points": ["Key point 1 [1 mark]", "Key point 2 [1 mark]", "Key point 3 [1 mark]", "Key point 4 [1 mark]"]
+            }},
+            {{
+                "label": "(c)",
+                "question": "Part (c) question text (calculation or derivation)",
+                "marks": 4,
+                "model_answer": "Complete model answer with full working: Step 1... Step 2... Final answer with units",
+                "marking_points": ["Correct formula [1 mark]", "Correct substitution [1 mark]", "Correct calculation [1 mark]", "Correct units [1 mark]"]
+            }}
+        ]
+    }},
+    "teaching_points": "Key concepts students should know: 1) [concept] 2) [concept] 3) [concept]",
+    "common_errors": "Common mistakes: 1) [error] 2) [error] 3) [error]",
+    "examiner_tips": "What examiners look for: clear physical reasoning, correct units, complete working"
+}}
+
+Generate ONE A Level Physics structured question now:"""
+
+        return prompt
+    
+    def _call_deepseek(self, prompt: str, question_type: str = "mcq") -> Optional[Dict]:
         """Call DeepSeek API to generate question with retry logic"""
         import time
         
@@ -388,7 +516,7 @@ Always respond with valid JSON containing step-by-step solutions."""
                         }
                     ],
                     "temperature": 0.7,
-                    "max_tokens": 1500
+                    "max_tokens": 2000 if question_type == "structured" else 1500
                 }
                 
                 # Increase timeout with each retry attempt
@@ -413,7 +541,7 @@ Always respond with valid JSON containing step-by-step solutions."""
                 content = result.get('choices', [{}])[0].get('message', {}).get('content', '')
                 
                 # Parse JSON from response
-                question_data = self._parse_question_response(content)
+                question_data = self._parse_question_response(content, question_type)
                 if question_data:
                     return question_data
                 else:
@@ -437,7 +565,7 @@ Always respond with valid JSON containing step-by-step solutions."""
         logger.error("All DeepSeek retry attempts failed for Physics question")
         return None
     
-    def _parse_question_response(self, content: str) -> Optional[Dict]:
+    def _parse_question_response(self, content: str, question_type: str = "mcq") -> Optional[Dict]:
         """Parse the JSON response from DeepSeek with truncation recovery"""
         try:
             # Try to extract JSON from the response
@@ -469,21 +597,37 @@ Always respond with valid JSON containing step-by-step solutions."""
                 if not question_data:
                     return None
             
-            # Validate required fields
-            required_fields = ['question', 'options', 'correct_answer', 'explanation']
-            for field in required_fields:
-                if field not in question_data:
-                    logger.error(f"Missing required field: {field}")
+            # Validate based on question type
+            if question_type == "structured":
+                # Validate structured question fields
+                if 'structured_question' not in question_data:
+                    logger.error("Missing structured_question field for structured question")
                     return None
-            
-            # Validate options
-            if not isinstance(question_data['options'], dict):
-                logger.error("Options must be a dictionary")
-                return None
-            
-            if len(question_data['options']) < 4:
-                logger.error("Must have at least 4 options")
-                return None
+                
+                structured = question_data.get('structured_question', {})
+                if not isinstance(structured.get('parts'), list) or len(structured['parts']) < 2:
+                    logger.error("Structured question must have at least 2 parts")
+                    return None
+                
+                # Map question_text to question for compatibility
+                if 'question_text' in question_data and 'question' not in question_data:
+                    question_data['question'] = question_data['question_text']
+            else:
+                # Validate MCQ required fields
+                required_fields = ['question', 'options', 'correct_answer', 'explanation']
+                for field in required_fields:
+                    if field not in question_data:
+                        logger.error(f"Missing required field: {field}")
+                        return None
+                
+                # Validate options
+                if not isinstance(question_data['options'], dict):
+                    logger.error("Options must be a dictionary")
+                    return None
+                
+                if len(question_data['options']) < 4:
+                    logger.error("Must have at least 4 options")
+                    return None
             
             return question_data
             

@@ -79,6 +79,10 @@ const MAX_RECORDING_DURATION_MS = 60000;
 // - Higher threshold = less sensitive (won't trigger on background noise)
 // - Longer silence timeout = allows natural speech pauses
 const VAD_SPEECH_THRESHOLD_DB = -40; // Increased from -45 (less sensitive)
+// Barge-in detection is more strict to avoid false triggers from speaker bleed.
+const BARGE_IN_SPEECH_THRESHOLD_DB = -30;
+const BARGE_IN_MIN_HOLD_MS = 350;
+const BARGE_IN_COOLDOWN_MS = 600;
 const VAD_SILENCE_TIMEOUT_MS = 1500; // Increased from 900ms (allow longer pauses)
 const VAD_MIN_RECORDING_MS = 500; // Reduced from 700ms (faster response)
 
@@ -129,7 +133,11 @@ const NerdXLiveAudioScreen: React.FC = () => {
         lastVoiceAt: 0,
         speechStarted: false,
     });
-    const bargeVadRef = useRef<{ lastVoiceAt: number }>({ lastVoiceAt: 0 });
+    const bargeVadRef = useRef<{
+        lastVoiceAt: number;
+        speechStartAt: number;
+        playbackStartedAt: number;
+    }>({ lastVoiceAt: 0, speechStartAt: 0, playbackStartedAt: 0 });
     const sessionHandleRef = useRef<string | null>(null);
     const sessionIdRef = useRef<string | null>(null);
     const resumeRequestedRef = useRef(false);
@@ -387,6 +395,8 @@ const NerdXLiveAudioScreen: React.FC = () => {
             // Allow simultaneous playback + mic monitoring
             await configureAudioMode(true);
             bargeVadRef.current.lastVoiceAt = 0;
+            bargeVadRef.current.speechStartAt = 0;
+            bargeVadRef.current.playbackStartedAt = Date.now();
 
             const options: any = {
                 isMeteringEnabled: true,
@@ -415,29 +425,40 @@ const NerdXLiveAudioScreen: React.FC = () => {
                 if (!status.isRecording) return;
                 const metering = typeof status.metering === 'number' ? status.metering : -160;
                 const now = Date.now();
-                if (metering > VAD_SPEECH_THRESHOLD_DB) {
+                if (metering > BARGE_IN_SPEECH_THRESHOLD_DB) {
                     bargeVadRef.current.lastVoiceAt = now;
-                    // Barge-in: stop AI playback and switch to user recording
-                    (async () => {
+                    if (!bargeVadRef.current.speechStartAt) {
+                        bargeVadRef.current.speechStartAt = now;
+                    }
+                    const heldFor = now - bargeVadRef.current.speechStartAt;
+                    const playbackFor = now - bargeVadRef.current.playbackStartedAt;
+
+                    // Require sustained speech and a brief cooldown after playback starts
+                    if (heldFor >= BARGE_IN_MIN_HOLD_MS && playbackFor >= BARGE_IN_COOLDOWN_MS) {
+                        // Barge-in: stop AI playback and switch to user recording
+                        (async () => {
+                            try {
+                                if (soundRef.current) {
+                                    await soundRef.current.stopAsync();
+                                }
+                            } catch (e) { }
+                            isPlayingRef.current = false;
+                            setIsPlaying(false);
+                            setAmplitude(0);
+                        })();
                         try {
-                            if (soundRef.current) {
-                                await soundRef.current.stopAsync();
+                            if (wsRef.current?.readyState === WebSocket.OPEN) {
+                                bargeInRequestedRef.current = true;
+                                wsRef.current.send(JSON.stringify({ type: 'interrupt' }));
                             }
                         } catch (e) { }
-                        isPlayingRef.current = false;
-                        setIsPlaying(false);
-                        setAmplitude(0);
-                    })();
-                    try {
-                        if (wsRef.current?.readyState === WebSocket.OPEN) {
-                            bargeInRequestedRef.current = true;
-                            wsRef.current.send(JSON.stringify({ type: 'interrupt' }));
-                        }
-                    } catch (e) { }
-                    // Stop monitor + begin real recording ASAP
-                    stopBargeInMonitor().finally(() => {
-                        setTimeout(() => startRecordingRef.current?.(), 50);
-                    });
+                        // Stop monitor + begin real recording ASAP
+                        stopBargeInMonitor().finally(() => {
+                            setTimeout(() => startRecordingRef.current?.(), 50);
+                        });
+                    }
+                } else {
+                    bargeVadRef.current.speechStartAt = 0;
                 }
             });
         } catch (e) {

@@ -114,11 +114,17 @@ def _get_quiz_credit_action(
 
     # A-Level subjects
     if subject_key == 'a_level_pure_math':
-        return 'a_level_pure_math_topical' if qt == 'topical' else 'a_level_pure_math_exam'
+        if qt == 'exam':
+            return 'a_level_pure_math_exam'
+        return 'a_level_pure_math_topical_structured' if qf == 'structured' else 'a_level_pure_math_topical_mcq'
     if subject_key == 'a_level_chemistry':
-        return 'a_level_chemistry_topical' if qt == 'topical' else 'a_level_chemistry_exam'
+        if qt == 'exam':
+            return 'a_level_chemistry_exam'
+        return 'a_level_chemistry_topical_structured' if qf == 'structured' else 'a_level_chemistry_topical_mcq'
     if subject_key == 'a_level_physics':
-        return 'a_level_physics_topical' if qt == 'topical' else 'a_level_physics_exam'
+        if qt == 'exam':
+            return 'a_level_physics_exam'
+        return 'a_level_physics_topical_structured' if qf == 'structured' else 'a_level_physics_topical_mcq'
     if subject_key == 'a_level_biology':
         bio_key = bio_qt if bio_qt in ['mcq', 'structured', 'essay'] else 'mcq'
         return f"a_level_biology_{qt}_{bio_key}"
@@ -1253,7 +1259,9 @@ def generate_question():
             is_image_question = (question_count > 0 and question_count % 6 == 0)
             logger.info(f"🖼️ Image check: question #{question_count}, mix_images={mix_images}, is_image={is_image_question}")
         
-        credit_action = _get_quiz_credit_action(subject, question_type, question_format, data.get('question_type', 'mcq'))
+        # For A-Level Biology, use question_type from data (mcq, structured, essay)
+        bio_question_type = data.get('question_type', 'mcq') if subject == 'a_level_biology' else 'mcq'
+        credit_action = _get_quiz_credit_action(subject, question_type, question_format, bio_question_type)
         if is_image_question:
             credit_cost = get_image_question_credit_cost()
         else:
@@ -1325,7 +1333,46 @@ def generate_question():
                         topic = random.choice(math_topics)
                         topic = topic.lower().replace(' ', '_')
                 
-                question_data = math_generator.generate_question('Mathematics', topic or 'Algebra', difficulty, g.current_user_id)
+                # Retry logic for AI generation - reject fallback questions and None returns
+                max_retries = 3
+                question_data = None
+                last_error = None
+                
+                for attempt in range(max_retries):
+                    try:
+                        question_data = math_generator.generate_question('Mathematics', topic or 'Algebra', difficulty, g.current_user_id)
+                        
+                        # Reject fallback questions - they are default/static questions
+                        if question_data and question_data.get('source') == 'fallback':
+                            logger.warning(f"⚠️ Fallback question detected (attempt {attempt + 1}/{max_retries}) - rejecting and retrying")
+                            question_data = None
+                        
+                        # Valid AI-generated question found
+                        if question_data and question_data.get('source') != 'fallback':
+                            logger.info(f"✅ Successfully generated question on attempt {attempt + 1}")
+                            break
+                        
+                        # If None or fallback, wait before retry
+                        if attempt < max_retries - 1:
+                            import time
+                            wait_time = (attempt + 1) * 1.5  # Exponential backoff: 1.5s, 3s
+                            logger.info(f"⏳ Retrying question generation in {wait_time}s (attempt {attempt + 2}/{max_retries})")
+                            time.sleep(wait_time)
+                    except Exception as e:
+                        last_error = str(e)
+                        logger.error(f"❌ Error during question generation (attempt {attempt + 1}/{max_retries}): {e}")
+                        if attempt < max_retries - 1:
+                            import time
+                            time.sleep(1)
+                
+                # Final check - ensure we have a valid question
+                if not question_data or question_data.get('source') == 'fallback':
+                    error_msg = last_error or 'AI generation service unavailable'
+                    logger.error(f"❌ Failed to generate valid question after {max_retries} attempts: {error_msg}")
+                    return jsonify({
+                        'success': False, 
+                        'message': 'Unable to generate question at this time. The AI service may be temporarily unavailable. Please try again in a moment.'
+                    }), 503
                 
                 # Generate hint for math questions if not already present
                 if question_data and not question_data.get('hint_level_1'):
@@ -1396,7 +1443,13 @@ def generate_question():
                     level_topics = A_LEVEL_PHYSICS_TOPICS.get(level, A_LEVEL_PHYSICS_ALL_TOPICS)
                     selected_topic = random.choice(level_topics)
                 
-                question_data = a_level_physics_generator.generate_question(selected_topic, difficulty, g.current_user_id)
+                # Pass question_format to support MCQ vs Structured questions
+                question_data = a_level_physics_generator.generate_question(
+                    selected_topic, 
+                    difficulty, 
+                    g.current_user_id,
+                    question_format  # 'mcq' or 'structured'
+                )
             
             elif subject == 'a_level_chemistry':
                 # A Level Chemistry - uses DeepSeek generator
@@ -1410,7 +1463,13 @@ def generate_question():
                     level_topics = A_LEVEL_CHEMISTRY_TOPICS.get(level, A_LEVEL_CHEMISTRY_ALL_TOPICS)
                     selected_topic = random.choice(level_topics)
                 
-                question_data = a_level_chemistry_generator.generate_question(selected_topic, difficulty, g.current_user_id)
+                # Pass question_format to support MCQ vs Structured questions
+                question_data = a_level_chemistry_generator.generate_question(
+                    selected_topic, 
+                    difficulty, 
+                    g.current_user_id,
+                    question_format  # 'mcq' or 'structured'
+                )
             
             elif subject == 'a_level_pure_math':
                 # A Level Pure Mathematics - uses DeepSeek generator
@@ -1424,7 +1483,13 @@ def generate_question():
                     level_topics = A_LEVEL_PURE_MATH_TOPICS.get(level, A_LEVEL_PURE_MATH_ALL_TOPICS)
                     selected_topic = random.choice(level_topics)
                 
-                question_data = a_level_pure_math_generator.generate_question(selected_topic, difficulty, g.current_user_id)
+                # Pass question_format to support MCQ vs Structured questions
+                question_data = a_level_pure_math_generator.generate_question(
+                    selected_topic, 
+                    difficulty, 
+                    g.current_user_id,
+                    question_format  # 'mcq' or 'structured'
+                )
             
             elif subject == 'a_level_biology':
                 # A Level Biology - uses DeepSeek generator with MCQ, Structured, Essay support
@@ -1449,7 +1514,14 @@ def generate_question():
 
         
         if not question_data:
-            return jsonify({'success': False, 'message': 'Failed to generate question'}), 500
+            # Provide more specific error message for Biology questions
+            if subject == 'a_level_biology':
+                bio_type = data.get('question_type', 'mcq')
+                error_msg = f'Failed to generate A-Level Biology {bio_type} question. Please try again or contact support if the issue persists.'
+            else:
+                error_msg = 'Failed to generate question'
+            logger.error(f"Question generation failed for {subject}/{topic} (type: {data.get('question_type', 'mcq')})")
+            return jsonify({'success': False, 'message': error_msg}), 500
         
         # Format question for mobile - normalize different question formats
         # English questions might have different structure
@@ -1525,14 +1597,29 @@ def generate_question():
         question_type_mobile = question_data.get('question_type', '') or question_data.get('type', 'short_answer')
         if subject == 'mathematics' and not options:
             question_type_mobile = 'short_answer'  # Math questions allow text input
-        if subject == 'combined_science' and (question_data.get('question_type') or '').lower() == 'structured':
+        
+        # Handle A-Level Biology question types (mcq, structured, essay)
+        if subject == 'a_level_biology':
+            bio_question_type = (question_data.get('question_type') or '').lower()
+            if bio_question_type in ['structured', 'essay']:
+                question_type_mobile = bio_question_type
+            elif bio_question_type == 'mcq':
+                question_type_mobile = 'mcq'
+        
+        # Handle structured questions for Combined Science and other A-Level subjects
+        if (question_data.get('question_type') or '').lower() == 'structured' and subject != 'a_level_biology':
             question_type_mobile = 'structured'
-            # Structured science uses typed answers; options/correct_answer are not used
+            # Structured questions use typed answers; options/correct_answer are not used
             options = []
             correct_answer = ''
             # Provide a compact "solution" string (model answers) for UI display if desired
             try:
-                parts = question_data.get('parts', []) if isinstance(question_data.get('parts'), list) else []
+                # For A-Level subjects, parts are in structured_question.parts
+                structured_q = question_data.get('structured_question', {})
+                parts = structured_q.get('parts', []) if structured_q else []
+                # Fallback to top-level parts if not in structured_question
+                if not parts:
+                    parts = question_data.get('parts', []) if isinstance(question_data.get('parts'), list) else []
                 model_lines = []
                 for p in parts:
                     label = p.get('label', '')
@@ -1603,6 +1690,25 @@ def generate_question():
                 # rubric is needed for server-side marking in stateless mobile flow
                 'marking_rubric': question_data.get('marking_rubric', {})
             }
+        
+        # Handle A-Level Physics and Chemistry structured questions
+        if subject in ['a_level_physics', 'a_level_chemistry', 'a_level_pure_math'] and question_type_mobile == 'structured':
+            structured_q = question_data.get('structured_question', {})
+            parts = structured_q.get('parts', []) if structured_q else question_data.get('parts', [])
+            question['structured_question'] = {
+                'question_type': 'structured',
+                'subject': question_data.get('subject', subject.replace('_', ' ').title()),
+                'topic': question_data.get('topic', topic),
+                'difficulty': question_data.get('difficulty', difficulty),
+                'stem': question_data.get('question_text', '') or question_data.get('question', ''),
+                'parts': parts,
+                'total_marks': structured_q.get('total_marks', 0) if structured_q else sum(p.get('marks', 0) for p in parts),
+                'marking_rubric': {}
+            }
+            question['allows_text_input'] = True
+            # For Pure Math, also allow image upload
+            if subject == 'a_level_pure_math':
+                question['allows_image_upload'] = True
         
         # Handle A-Level Biology structured and essay questions
         if subject == 'a_level_biology':

@@ -43,6 +43,7 @@ const { width } = Dimensions.get('window');
 import { VideoStreamPlayer } from '../components/VideoStreamPlayer';
 import ZoomableImageModal from '../components/ZoomableImageModal';
 import { attachmentsApi } from '../services/api/attachmentsApi';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface Message {
   id: string;
@@ -63,6 +64,7 @@ const TeacherModeScreen: React.FC = () => {
   const { isDarkMode } = useTheme();
   const themedColors = useThemedColors();
   const { showSuccess, showError, showWarning, showInfo } = useNotification();
+  const insets = useSafeAreaInsets();
   const { subject, gradeLevel, topic } = route.params as {
     subject: string;
     gradeLevel: string;
@@ -785,7 +787,11 @@ const TeacherModeScreen: React.FC = () => {
         }
       />
 
-      <View style={[styles.inputContainer, { backgroundColor: themedColors.background.paper, borderTopColor: themedColors.border.light }]}>
+      <View style={[styles.inputContainer, { 
+        backgroundColor: themedColors.background.paper, 
+        borderTopColor: themedColors.border.light,
+        paddingBottom: Math.max(24, insets.bottom + 12) // Ensure minimum 24px + safe area
+      }]}>
         {/* Selected images preview (ChatGPT-style, above the input) */}
         {selectedImages.length > 0 && (
           <ScrollView
@@ -1132,7 +1138,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Colors.border.light,
     padding: 12,
-    paddingBottom: 24,
+    paddingBottom: 24, // Base padding, will be overridden with safe area insets
   },
   notesButton: {
     backgroundColor: Colors.success.main,

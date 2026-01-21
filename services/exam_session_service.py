@@ -468,6 +468,20 @@ class ExamSessionService:
         difficulty = session["difficulty"]
         paper_style = session.get("paper_style", "ZIMSEC")
         
+        # Normalize subject name for prompt clarity
+        subject_key = (subject or "").lower().replace(" ", "_").replace("-", "_")
+        subject_display = subject
+        if "a_level_physics" in subject_key:
+            subject_display = "A Level Physics"
+        elif "a_level_chemistry" in subject_key:
+            subject_display = "A Level Chemistry"
+        elif "a_level_biology" in subject_key:
+            subject_display = "A Level Biology"
+        elif "a_level_pure_math" in subject_key or "pure_math" in subject_key:
+            subject_display = "A Level Pure Mathematics"
+        elif subject_key in ("mathematics", "math"):
+            subject_display = "Mathematics"
+        
         # Get allowed topics for filtering
         allowed_topics = session.get('allowed_topics', [])
         topic_instruction = ""
@@ -478,7 +492,7 @@ class ExamSessionService:
             topic_instruction = f"\nFocus ONLY on these topics: {allowed_topics}. Pick one topic from this list for each question."
         
         if question_type == "MCQ":
-            return f"""Generate ONE {paper_style}-style {level.replace("_", " ")} {subject} MCQ question.
+            return f"""Generate ONE {paper_style}-style {level.replace("_", " ")} {subject_display} MCQ question.
 
 Difficulty: {difficulty}{topic_instruction}
 Avoid these topics (recently used): {session.get('recent_topics', [])}
@@ -510,7 +524,7 @@ Requirements:
 - Clear, unambiguous"""
 
         else:  # STRUCTURED
-            return f"""Generate ONE {paper_style}-style {level.replace("_", " ")} {subject} structured question.
+            return f"""Generate ONE {paper_style}-style {level.replace("_", " ")} {subject_display} structured question.
 
 Difficulty: {difficulty}{topic_instruction}
 Avoid these topics (recently used): {session.get('recent_topics', [])}
@@ -542,6 +556,7 @@ Requirements:
     def _get_fallback_question(self, session: Dict) -> Dict:
         """Return a fallback question when DeepSeek fails."""
         subject = session["subject"].lower()
+        subject_key = subject.replace(" ", "_").replace("-", "_")
         
         fallback_questions = {
             "mathematics": {
@@ -574,7 +589,79 @@ Requirements:
                 "explanation": "Mitochondria are the powerhouse of the cell, producing ATP through cellular respiration.",
                 "prompt_to_student": "Here's a question while we prepare the next one.",
             },
+            "a_level_physics": {
+                "id": f"fallback-{uuid.uuid4()}",
+                "question_type": "MCQ",
+                "topic": "Kinematics",
+                "stem": "A car accelerates from rest at 2 m/s² for 5 seconds. What is its final velocity?",
+                "options": [
+                    {"label": "A", "text": "5 m/s"},
+                    {"label": "B", "text": "10 m/s"},
+                    {"label": "C", "text": "15 m/s"},
+                    {"label": "D", "text": "20 m/s"},
+                ],
+                "correct_option": "B",
+                "explanation": "Using v = u + at, where u = 0, a = 2 m/s², t = 5 s: v = 0 + (2)(5) = 10 m/s",
+                "prompt_to_student": "Here's a question while we prepare the next one.",
+            },
+            "a_level_chemistry": {
+                "id": f"fallback-{uuid.uuid4()}",
+                "question_type": "MCQ",
+                "topic": "Atomic Structure",
+                "stem": "What is the maximum number of electrons that can occupy the third shell (n=3)?",
+                "options": [
+                    {"label": "A", "text": "8"},
+                    {"label": "B", "text": "18"},
+                    {"label": "C", "text": "32"},
+                    {"label": "D", "text": "2"},
+                ],
+                "correct_option": "B",
+                "explanation": "The maximum number of electrons in shell n is 2n². For n=3: 2(3)² = 2(9) = 18 electrons.",
+                "prompt_to_student": "Here's a question while we prepare the next one.",
+            },
+            "a_level_biology": {
+                "id": f"fallback-{uuid.uuid4()}",
+                "question_type": "MCQ",
+                "topic": "Cell Structure",
+                "stem": "Which organelle contains DNA in eukaryotic cells?",
+                "options": [
+                    {"label": "A", "text": "Mitochondria"},
+                    {"label": "B", "text": "Nucleus"},
+                    {"label": "C", "text": "Ribosome"},
+                    {"label": "D", "text": "Endoplasmic reticulum"},
+                ],
+                "correct_option": "B",
+                "explanation": "The nucleus contains the cell's DNA in eukaryotic cells, controlling cellular activities.",
+                "prompt_to_student": "Here's a question while we prepare the next one.",
+            },
+            "pure_math": {
+                "id": f"fallback-{uuid.uuid4()}",
+                "question_type": "MCQ",
+                "topic": "Polynomials",
+                "stem": "If f(x) = x² + 3x - 4, what is f(2)?",
+                "options": [
+                    {"label": "A", "text": "2"},
+                    {"label": "B", "text": "6"},
+                    {"label": "C", "text": "8"},
+                    {"label": "D", "text": "10"},
+                ],
+                "correct_option": "B",
+                "explanation": "f(2) = (2)² + 3(2) - 4 = 4 + 6 - 4 = 6",
+                "prompt_to_student": "Here's a question while we prepare the next one.",
+            },
         }
+        
+        # Check for A-Level subjects
+        if "a_level_physics" in subject_key:
+            return fallback_questions["a_level_physics"]
+        elif "a_level_chemistry" in subject_key:
+            return fallback_questions["a_level_chemistry"]
+        elif "a_level_biology" in subject_key:
+            return fallback_questions["a_level_biology"]
+        elif "pure_math" in subject_key or "a_level_pure_math" in subject_key:
+            return fallback_questions["pure_math"]
+        elif "biology" in subject_key:
+            return fallback_questions["biology"]
         
         return fallback_questions.get(subject, fallback_questions["mathematics"])
 
@@ -585,15 +672,69 @@ Requirements:
 
         subject_key = (subject or "").lower().replace(" ", "_").replace("-", "_")
         try:
-            from constants import TOPICS, A_LEVEL_PURE_MATH_ALL_TOPICS
+            from constants import (
+                TOPICS,
+                A_LEVEL_PURE_MATH_ALL_TOPICS,
+                A_LEVEL_PURE_MATH_TOPICS,
+                A_LEVEL_PHYSICS_ALL_TOPICS,
+                A_LEVEL_PHYSICS_TOPICS,
+                A_LEVEL_CHEMISTRY_ALL_TOPICS,
+                A_LEVEL_CHEMISTRY_TOPICS,
+                A_LEVEL_BIOLOGY_ALL_TOPICS,
+                A_LEVEL_BIOLOGY_TOPICS,
+            )
         except Exception:
             return []
 
+        # O-Level Mathematics
         if subject_key in ("mathematics", "math") or subject_key.startswith("mathematics_"):
             return TOPICS.get("Mathematics", [])
 
-        if "pure_math" in subject_key or "a_level_pure_math" in subject_key or level == "A_LEVEL":
+        # A-Level Pure Mathematics
+        if "pure_math" in subject_key or "a_level_pure_math" in subject_key:
+            # Check if level-specific topics are requested
+            if level == "A_LEVEL" and allowed_topics is None:
+                # Return all topics if no specific level requested
+                return list(A_LEVEL_PURE_MATH_ALL_TOPICS)
+            # If specific level requested, return that level's topics
+            if "lower_sixth" in level.lower() or "form_5" in level.lower():
+                return list(A_LEVEL_PURE_MATH_TOPICS.get("Lower Sixth", []))
+            elif "upper_sixth" in level.lower() or "form_6" in level.lower():
+                return list(A_LEVEL_PURE_MATH_TOPICS.get("Upper Sixth", []))
             return list(A_LEVEL_PURE_MATH_ALL_TOPICS)
+
+        # A-Level Physics
+        if "a_level_physics" in subject_key or subject_key == "a_level_physics":
+            if level == "A_LEVEL" and allowed_topics is None:
+                return list(A_LEVEL_PHYSICS_ALL_TOPICS)
+            # Check for AS/A2 level
+            if "as_level" in level.lower() or "as" in level.lower():
+                return list(A_LEVEL_PHYSICS_TOPICS.get("AS Level", []))
+            elif "a2_level" in level.lower() or "a2" in level.lower():
+                return list(A_LEVEL_PHYSICS_TOPICS.get("A2 Level", []))
+            return list(A_LEVEL_PHYSICS_ALL_TOPICS)
+
+        # A-Level Chemistry
+        if "a_level_chemistry" in subject_key or subject_key == "a_level_chemistry":
+            if level == "A_LEVEL" and allowed_topics is None:
+                return list(A_LEVEL_CHEMISTRY_ALL_TOPICS)
+            # Check for Lower/Upper Sixth
+            if "lower_sixth" in level.lower() or "as_level" in level.lower() or "as" in level.lower():
+                return list(A_LEVEL_CHEMISTRY_TOPICS.get("Lower Sixth", []))
+            elif "upper_sixth" in level.lower() or "a2_level" in level.lower() or "a2" in level.lower():
+                return list(A_LEVEL_CHEMISTRY_TOPICS.get("Upper Sixth", []))
+            return list(A_LEVEL_CHEMISTRY_ALL_TOPICS)
+
+        # A-Level Biology
+        if "a_level_biology" in subject_key or subject_key == "a_level_biology":
+            if level == "A_LEVEL" and allowed_topics is None:
+                return list(A_LEVEL_BIOLOGY_ALL_TOPICS)
+            # Check for Lower/Upper Sixth
+            if "lower_sixth" in level.lower() or "as_level" in level.lower() or "as" in level.lower():
+                return list(A_LEVEL_BIOLOGY_TOPICS.get("Lower Sixth", []))
+            elif "upper_sixth" in level.lower() or "a2_level" in level.lower() or "a2" in level.lower():
+                return list(A_LEVEL_BIOLOGY_TOPICS.get("Upper Sixth", []))
+            return list(A_LEVEL_BIOLOGY_ALL_TOPICS)
 
         return []
 

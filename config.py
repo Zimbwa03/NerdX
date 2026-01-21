@@ -63,16 +63,22 @@ class Config:
         'english_summary_grading': 30,
 
         # A-Level Mathematics
-        'a_level_pure_math_topical': 10,   # 1 credit per question
-        'a_level_pure_math_exam': 10,      # 1 credit per question
+        'a_level_pure_math_topical': 10,             # 1 credit per MCQ question
+        'a_level_pure_math_topical_mcq': 10,         # 1 credit per MCQ question
+        'a_level_pure_math_topical_structured': 10,  # 1 credit per structured question
+        'a_level_pure_math_exam': 10,                # 1 credit per question
 
         # A-Level Chemistry
-        'a_level_chemistry_topical': 10,   # 1 credit per question
-        'a_level_chemistry_exam': 10,      # 1 credit per question
+        'a_level_chemistry_topical': 10,             # 1 credit per MCQ question
+        'a_level_chemistry_topical_mcq': 10,         # 1 credit per MCQ question
+        'a_level_chemistry_topical_structured': 10,  # 1 credit per structured question
+        'a_level_chemistry_exam': 10,                # 1 credit per question
 
         # A-Level Physics
-        'a_level_physics_topical': 10,     # 1 credit per question
-        'a_level_physics_exam': 10,        # 1 credit per question
+        'a_level_physics_topical': 10,               # 1 credit per MCQ question
+        'a_level_physics_topical_mcq': 10,           # 1 credit per MCQ question
+        'a_level_physics_topical_structured': 10,    # 1 credit per structured question
+        'a_level_physics_exam': 10,                  # 1 credit per question
 
         # A-Level Biology (whole-credit pricing)
         'a_level_biology_topical_mcq': 10,        # 1 credit

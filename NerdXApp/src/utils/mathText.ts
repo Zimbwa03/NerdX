@@ -8,10 +8,25 @@ export const isMathSubjectId = (subjectId?: string): boolean => {
 
 export const shouldRenderMathText = (text?: string): boolean => {
     if (!text) return false;
-    return /[\^_×÷=]/.test(text) ||
+    const hasMathTokens = /[\^_×÷=]/.test(text) ||
         /(\d+\s*[x×]\s*\d+)/.test(text) ||
         /\w+\^\w+/.test(text) ||
         /sqrt|\bpi\b/i.test(text);
+
+    if (!hasMathTokens) return false;
+
+    const words = text.match(/\b[a-zA-Z]{2,}\b/g) || [];
+    const wordCount = words.length;
+    const longWordCount = words.filter(word => word.length > 3).length;
+    const mathSymbolCount = (text.match(/[\^_×÷=]/g) || []).length;
+    const letterCount = (text.match(/[a-zA-Z]/g) || []).length;
+
+    // Avoid rendering full sentences as LaTeX, which strips spacing and colors everything.
+    if (wordCount >= 6) return false;
+    if (longWordCount >= 4 && mathSymbolCount < 2) return false;
+    if (letterCount > 20 && mathSymbolCount < 2) return false;
+
+    return true;
 };
 
 export const toMathLatex = (text: string, enable: boolean): string => {

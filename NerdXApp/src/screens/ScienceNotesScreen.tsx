@@ -52,16 +52,8 @@ const ScienceNotesScreen: React.FC = () => {
     };
 
     const handleTopicPress = (topic: string) => {
+        // Notes are FREE for all topics. We only lock audio/video at the detail level.
         const topicIndex = topics.indexOf(topic);
-        const hasPaidCredits = (user?.credit_breakdown?.purchased_credits ?? 0) > 0;
-
-        if (!hasPaidCredits && topicIndex >= 2) {
-            Alert.alert(
-                'Locked Topic',
-                'This topic is locked. Purchase credits to unlock all topics.'
-            );
-            return;
-        }
 
         navigation.navigate('TopicNotesDetail' as never, {
             subject: activeTab,

@@ -187,8 +187,9 @@ class ALevelBiologyGenerator:
         # DeepSeek configuration (primary)
         self.deepseek_api_key = os.environ.get('DEEPSEEK_API_KEY')
         self.deepseek_url = "https://api.deepseek.com/v1/chat/completions"
-        self.max_retries = 2  # 2 attempts for DeepSeek
-        self.timeout = 18  # Reduced to allow fallback within Render's 30s limit
+        self.max_retries = 3  # 3 attempts for DeepSeek (increased for reliability)
+        # Timeout varies by question type - structured/essay need more time
+        self.timeout_base = 25  # Base timeout (increased from 18)
         
         # Gemini configuration (fallback)
         self.gemini_api_key = os.environ.get('GEMINI_API_KEY')
@@ -264,10 +265,11 @@ class ALevelBiologyGenerator:
                 return question_data
             
             logger.error(f"All AI providers failed for A Level Biology {question_type} on {topic_name}")
+            logger.error(f"Topic details: {topic_details}, Level: {level}")
             return None
             
         except Exception as e:
-            logger.error(f"Error generating A Level Biology question: {e}")
+            logger.error(f"Error generating A Level Biology question: {e}", exc_info=True)
             return None
     
     def _get_topic_name(self, topic_id: str) -> Optional[str]:
@@ -648,13 +650,19 @@ Generate now:"""
     def _call_deepseek(self, prompt: str, question_type: str = "mcq") -> Optional[Dict]:
         """Call DeepSeek API with retries - optimized for Render's 30s timeout"""
         
-        # Reduced tokens for faster response (Render has 30s edge timeout)
-        # These are significantly reduced to ensure we get responses within timeout
+        # Token allocation based on question complexity
         max_tokens = {
-            "mcq": 800,        # MCQ needs minimal tokens
-            "structured": 1200, # Reduced from 1500
-            "essay": 1500      # Reduced from 2000
-        }.get(question_type, 1000)
+            "mcq": 1000,       # MCQ needs moderate tokens for good explanations
+            "structured": 2000, # Structured needs more for parts and marking schemes
+            "essay": 2500      # Essay needs most for comprehensive plans and criteria
+        }.get(question_type, 1500)
+        
+        # Timeout increases with question complexity
+        timeout = {
+            "mcq": self.timeout_base,
+            "structured": self.timeout_base + 5,  # 30s for structured
+            "essay": self.timeout_base + 10       # 35s for essay
+        }.get(question_type, self.timeout_base)
         
         for attempt in range(self.max_retries):
             try:
@@ -705,8 +713,6 @@ Always respond with valid JSON containing step-by-step solutions."""
                     "max_tokens": max_tokens
                 }
                 
-                # Use consistent timeout that fits within Render's 30s limit
-                timeout = self.timeout
                 logger.info(f"DeepSeek Biology {question_type} attempt {attempt + 1}/{self.max_retries} (timeout: {timeout}s, max_tokens: {max_tokens})")
                 
                 response = requests.post(
@@ -733,9 +739,10 @@ Always respond with valid JSON containing step-by-step solutions."""
                     return question_data
                 else:
                     logger.warning(f"Failed to parse response on attempt {attempt + 1}")
+                    logger.debug(f"Response content preview (first 1000 chars): {content[:1000]}")
                     
             except requests.Timeout:
-                logger.warning(f"DeepSeek timeout on attempt {attempt + 1}/{self.max_retries} after {self.timeout}s for {question_type}")
+                logger.warning(f"DeepSeek timeout on attempt {attempt + 1}/{self.max_retries} after {timeout}s for {question_type}")
                 # Continue to next attempt (if any) or return None to trigger fallback
                 continue
             except Exception as e:
@@ -820,43 +827,104 @@ Always respond with valid JSON containing step-by-step solutions."""
             try:
                 question_data = json.loads(content)
             except json.JSONDecodeError as e:
-                logger.warning(f"Initial JSON parse failed: {e}")
-                # Attempt to recover truncated JSON (only for MCQ)
+                logger.warning(f"Initial JSON parse failed for {question_type}: {e}")
+                # Attempt to recover truncated JSON
                 if question_type == "mcq":
                     question_data = self._recover_truncated_json(content)
                     if not question_data:
                         return None
                 else:
-                    return None
+                    # For structured/essay, try to find and parse a partial JSON object
+                    question_data = self._recover_partial_json(content, question_type)
+                    if not question_data:
+                        logger.error(f"Could not recover JSON for {question_type} question")
+                        return None
             
-            # Validate based on question type
+            # Validate and normalize based on question type
             if question_type == "mcq":
                 required = ['question', 'options', 'correct_answer', 'explanation']
+                for field in required:
+                    if field not in question_data:
+                        logger.error(f"Missing required field for MCQ: {field}")
+                        return None
+                return question_data
+                
             elif question_type == "structured":
-                required = ['question', 'parts', 'total_marks']
-            elif question_type == "essay":
-                required = ['question', 'essay_plan', 'total_marks']
-            else:
-                required = ['question']
-            
-            for field in required:
-                if field not in question_data:
-                    logger.error(f"Missing required field: {field}")
+                # Structured questions can have 'question' or 'stimulus' field
+                if 'stimulus' in question_data and 'question' not in question_data:
+                    question_data['question'] = question_data.get('stimulus', '')
+                
+                # Check for required fields
+                if 'parts' not in question_data:
+                    logger.error("Missing required field 'parts' for structured question")
                     return None
-            
-            return question_data
+                
+                if not isinstance(question_data.get('parts'), list) or len(question_data['parts']) < 2:
+                    logger.error(f"Invalid parts format: expected list with at least 2 parts, got {type(question_data.get('parts'))}")
+                    return None
+                
+                # Ensure each part has required fields
+                for i, part in enumerate(question_data['parts']):
+                    if not isinstance(part, dict):
+                        logger.error(f"Part {i} is not a dictionary")
+                        return None
+                    # Normalize part labels
+                    if 'label' not in part and 'part' in part:
+                        part['label'] = part['part']
+                    if 'part' not in part and 'label' in part:
+                        part['part'] = part['label']
+                    # Ensure model_answer exists (can be from expected_answer)
+                    if 'model_answer' not in part and 'expected_answer' in part:
+                        part['model_answer'] = part['expected_answer']
+                
+                # Calculate total_marks if not provided
+                if 'total_marks' not in question_data:
+                    total = sum(p.get('marks', 0) for p in question_data['parts'])
+                    question_data['total_marks'] = total
+                    logger.info(f"Calculated total_marks: {total}")
+                
+                return question_data
+                
+            elif question_type == "essay":
+                # Check for required fields
+                if 'essay_plan' not in question_data:
+                    logger.error("Missing required field 'essay_plan' for essay question")
+                    return None
+                
+                if not isinstance(question_data.get('essay_plan'), dict):
+                    logger.error(f"Invalid essay_plan format: expected dict, got {type(question_data.get('essay_plan'))}")
+                    return None
+                
+                # Calculate total_marks if not provided
+                if 'total_marks' not in question_data:
+                    # Default to 25 marks for essay
+                    question_data['total_marks'] = 25
+                    logger.info("Set default total_marks: 25")
+                
+                return question_data
+            else:
+                if 'question' not in question_data:
+                    logger.error("Missing required field 'question'")
+                    return None
+                return question_data
             
         except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse JSON: {e}")
-            logger.error(f"Content preview: {content[:500]}...")
-            # Try to recover truncated JSON for MCQ
+            logger.error(f"Failed to parse JSON for {question_type}: {e}")
+            logger.error(f"Content preview (first 1000 chars): {content[:1000]}...")
+            logger.error(f"Content length: {len(content)} characters")
+            # Try to recover truncated JSON for MCQ only
             if question_type == "mcq":
                 recovered = self._recover_truncated_json(content)
                 if recovered:
+                    logger.info("Successfully recovered truncated MCQ JSON")
                     return recovered
+            else:
+                # For structured/essay, log more details for debugging
+                logger.error(f"JSON parse error details: {str(e)}")
+                logger.error(f"Error position: {getattr(e, 'pos', 'unknown')}")
             return None
         except Exception as e:
-            logger.error(f"Error parsing response: {e}")
+            logger.error(f"Error parsing response for {question_type}: {e}", exc_info=True)
             return None
     
     def _recover_truncated_json(self, content: str) -> Optional[Dict]:
@@ -895,7 +963,7 @@ Always respond with valid JSON containing step-by-step solutions."""
             
             # If we have enough data, construct a valid response
             if question and len(options) >= 4:
-                logger.info("Successfully recovered truncated JSON response for Biology")
+                logger.info("Successfully recovered truncated JSON response for Biology MCQ")
                 return {
                     "question": question,
                     "options": options,
@@ -908,6 +976,53 @@ Always respond with valid JSON containing step-by-step solutions."""
             
         except Exception as e:
             logger.error(f"Failed to recover truncated JSON: {e}")
+            return None
+    
+    def _recover_partial_json(self, content: str, question_type: str) -> Optional[Dict]:
+        """Attempt to recover partial JSON for structured/essay questions"""
+        try:
+            import re
+            
+            # Find where JSON starts
+            json_start = content.find('{')
+            if json_start == -1:
+                return None
+            
+            # Try to find the end of the JSON object by counting braces
+            brace_count = 0
+            json_end = json_start
+            for i, char in enumerate(content[json_start:], start=json_start):
+                if char == '{':
+                    brace_count += 1
+                elif char == '}':
+                    brace_count -= 1
+                    if brace_count == 0:
+                        json_end = i + 1
+                        break
+            
+            if json_end > json_start:
+                json_str = content[json_start:json_end]
+                try:
+                    question_data = json.loads(json_str)
+                    logger.info(f"Successfully recovered partial JSON for {question_type}")
+                    return question_data
+                except json.JSONDecodeError:
+                    pass
+            
+            # If that fails, try progressively truncating from the end
+            for truncate_pos in range(len(content), json_start + 50, -10):
+                try:
+                    json_str = content[json_start:truncate_pos] + '}'
+                    question_data = json.loads(json_str)
+                    logger.info(f"Successfully recovered truncated JSON for {question_type} by truncating at position {truncate_pos}")
+                    return question_data
+                except (json.JSONDecodeError, ValueError):
+                    continue
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Failed to recover partial JSON for {question_type}: {e}")
             return None
     
     def generate_exam_question(self, level: str = "Lower Sixth", 

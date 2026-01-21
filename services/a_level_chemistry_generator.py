@@ -232,7 +232,7 @@ A_LEVEL_CHEMISTRY_TOPIC_DETAILS = {
 
 
 class ALevelChemistryGenerator:
-    """Generator for A Level Chemistry MCQ questions using DeepSeek AI"""
+    """Generator for A Level Chemistry MCQ and Structured questions using DeepSeek AI"""
     
     def __init__(self):
         self.deepseek_api_key = os.environ.get('DEEPSEEK_API_KEY')
@@ -284,8 +284,19 @@ class ALevelChemistryGenerator:
             return topic_id
         return slug_map.get(topic_id)
     
-    def generate_question(self, topic: str, difficulty: str = "medium", user_id: str = None) -> Optional[Dict]:
-        """Generate an A Level Chemistry MCQ question"""
+    def generate_question(self, topic: str, difficulty: str = "medium", user_id: str = None, question_type: str = "mcq") -> Optional[Dict]:
+        """
+        Generate an A Level Chemistry question
+        
+        Args:
+            topic: The topic identifier
+            difficulty: 'easy', 'medium', or 'difficult'
+            user_id: Optional user ID for tracking
+            question_type: 'mcq' for multiple choice, 'structured' for Paper 2 style
+        
+        Returns:
+            Dictionary containing question data or None on failure
+        """
         try:
             topic_name = self._get_topic_name(topic) or topic
             
@@ -300,11 +311,14 @@ class ALevelChemistryGenerator:
             key_concepts = topic_details.get("key_concepts", [])
             key_formulas = topic_details.get("key_formulas", [])
             
-            # Create detailed prompt for DeepSeek
-            prompt = self._create_question_prompt(topic_name, difficulty, level, category, key_concepts, key_formulas)
+            # Create detailed prompt for DeepSeek based on question type
+            if question_type == "structured":
+                prompt = self._create_structured_prompt(topic_name, difficulty, level, category, key_concepts, key_formulas)
+            else:
+                prompt = self._create_question_prompt(topic_name, difficulty, level, category, key_concepts, key_formulas)
             
             # Generate question using DeepSeek
-            question_data = self._call_deepseek(prompt)
+            question_data = self._call_deepseek(prompt, question_type)
             
             if question_data:
                 question_data['subject'] = 'A Level Chemistry'
@@ -313,6 +327,10 @@ class ALevelChemistryGenerator:
                 question_data['difficulty'] = difficulty
                 question_data['level'] = level
                 question_data['source'] = 'ai_generated_a_level'
+                question_data['question_type'] = question_type
+                # Enable voice input for structured questions
+                question_data['allows_text_input'] = True
+                question_data['allows_voice_input'] = True
                 return question_data
             
             return None
@@ -440,7 +458,119 @@ Generate ONE A Level Chemistry MCQ now:"""
 
         return prompt
     
-    def _call_deepseek(self, prompt: str) -> Optional[Dict]:
+    def _create_structured_prompt(self, topic: str, difficulty: str, level: str, category: str, key_concepts: list, key_formulas: list) -> str:
+        """Create prompt for structured (Paper 2 style) questions - knowledge-based, no diagrams"""
+        
+        difficulty_marks = {
+            "easy": {"total": 8, "parts": 3},
+            "medium": {"total": 12, "parts": 4},
+            "difficult": {"total": 15, "parts": 5}
+        }
+        marks_info = difficulty_marks.get(difficulty, difficulty_marks["medium"])
+        
+        prompt = f"""You are a SENIOR A-LEVEL CHEMISTRY TEACHER (15+ years) AND an examiner-style question designer for ZIMSEC and Cambridge A Level Chemistry.
+
+ROLE: SENIOR A-LEVEL CHEMISTRY EXAMINER - PAPER 2 STRUCTURED QUESTIONS
+
+NON-NEGOTIABLE RULES:
+1. SYLLABUS-LOCKED: Only generate content examinable for ZIMSEC A-Level and Cambridge 9701
+2. NO DIAGRAMS: Questions must be answerable with TEXT ONLY - no diagrams, graphs, or images required
+3. KNOWLEDGE-FOCUSED: Test understanding through explanations, descriptions, comparisons, and deductions
+4. EXAM AUTHENTICITY: Use real exam command words: "state", "explain", "describe", "compare", "deduce", "suggest", "justify", "outline", "discuss"
+5. ORIGINALITY: Generate ORIGINAL questions with realistic exam patterns
+6. MARKING REALISM: Provide clear mark allocation and model answers
+
+SUBJECT: A Level Chemistry (ZIMSEC / Cambridge 9701)
+TOPIC: {topic}
+CATEGORY: {category}
+LEVEL: {level}
+DIFFICULTY: {difficulty}
+TOTAL MARKS: {marks_info['total']}
+NUMBER OF PARTS: {marks_info['parts']}
+
+KEY CONCEPTS FOR THIS TOPIC:
+{', '.join(key_concepts) if key_concepts else 'General concepts for this topic'}
+
+KEY FORMULAS (use when appropriate):
+{chr(10).join(['• ' + f for f in key_formulas]) if key_formulas else '• As applicable to the topic'}
+
+CRITICAL FORMATTING RULES - PLAIN TEXT ONLY:
+- ABSOLUTELY NO LaTeX delimiters like $ or \\( or \\)
+- Use Unicode subscripts: H₂O, CO₂, CH₃COOH, SO₄²⁻ (NOT H_2O)
+- Use Unicode superscripts for charges: Cu²⁺, Fe³⁺, 10⁻³ (NOT Cu^2+)
+- Write fractions as: a/b (NOT $\\frac{{a}}{{b}}$)
+- Use → for reaction arrows, ⇌ for equilibrium
+- Use Δ for delta: ΔH, ΔG, ΔS
+- Use ° for degrees: 25°C
+
+QUESTION STRUCTURE REQUIREMENTS:
+- Create ONE structured question with {marks_info['parts']} parts: (a), (b), (c), etc.
+- Each part tests DIFFERENT aspects of {topic}
+- Part progression: Basic recall → Understanding → Application → Analysis
+- Keep the stem/context brief (1-3 lines maximum)
+- ALL parts must be answerable with TEXT - no diagrams needed
+- Focus on explanations, comparisons, deductions, and chemical reasoning
+
+PART DIFFICULTY PROGRESSION:
+- Part (a): 2-3 marks - Define, state, or recall (basic knowledge)
+- Part (b): 3-4 marks - Explain, describe, or compare (understanding)
+- Part (c): 4-5 marks - Deduce, suggest, or apply (application)
+- Part (d) if needed: 4-6 marks - Evaluate, discuss, or justify (analysis/synthesis)
+
+COMMAND WORDS TO USE:
+- State: Give a concise factual answer
+- Define: Give the precise meaning
+- Explain: Give reasons with chemical principles
+- Describe: Give a detailed account
+- Compare: State similarities and differences
+- Deduce: Draw conclusions from given information
+- Suggest: Apply knowledge to unfamiliar contexts
+- Justify: Support a conclusion with evidence/reasoning
+- Outline: Give main features briefly
+- Discuss: Present arguments for and against
+
+OUTPUT FORMAT: Return ONLY valid JSON. No markdown. No extra text.
+
+JSON schema (required fields):
+{{
+    "question_type": "structured",
+    "question_text": "Brief stem/context (1-3 lines) introducing the question",
+    "structured_question": {{
+        "total_marks": {marks_info['total']},
+        "parts": [
+            {{
+                "label": "(a)",
+                "question": "Part (a) question text with appropriate command word",
+                "marks": 2,
+                "model_answer": "Complete model answer for part (a) - what a student should write",
+                "marking_points": ["Key point 1 [1 mark]", "Key point 2 [1 mark]"]
+            }},
+            {{
+                "label": "(b)",
+                "question": "Part (b) question text (builds on or relates to part a)",
+                "marks": 4,
+                "model_answer": "Complete model answer for part (b)",
+                "marking_points": ["Key point 1 [1 mark]", "Key point 2 [1 mark]", "Key point 3 [1 mark]", "Key point 4 [1 mark]"]
+            }},
+            {{
+                "label": "(c)",
+                "question": "Part (c) question text (most challenging - application/analysis)",
+                "marks": 4,
+                "model_answer": "Complete model answer for part (c)",
+                "marking_points": ["Key point 1 [1 mark]", "Key point 2 [1 mark]", "Key point 3 [1 mark]", "Key point 4 [1 mark]"]
+            }}
+        ]
+    }},
+    "teaching_points": "Key concepts students should know: 1) [concept] 2) [concept] 3) [concept]",
+    "common_errors": "Common mistakes: 1) [error] 2) [error] 3) [error]",
+    "examiner_tips": "What examiners look for: clear chemical reasoning, correct terminology, complete explanations"
+}}
+
+Generate ONE A Level Chemistry structured question now:"""
+
+        return prompt
+    
+    def _call_deepseek(self, prompt: str, question_type: str = "mcq") -> Optional[Dict]:
         """Call DeepSeek API to generate question with retry logic"""
         import time
         
@@ -456,12 +586,7 @@ Generate ONE A Level Chemistry MCQ now:"""
                     "Content-Type": "application/json"
                 }
                 
-                payload = {
-                    "model": "deepseek-chat",
-                    "messages": [
-                        {
-                            "role": "system",
-                            "content": """You are a SENIOR A-LEVEL CHEMISTRY TEACHER (15+ years) AND an examiner-style question designer. You teach and assess for BOTH ZIMSEC A-Level Chemistry and Cambridge International AS & A Level Chemistry 9701.
+                system_content = """You are a SENIOR A-LEVEL CHEMISTRY TEACHER (15+ years) AND an examiner-style question designer. You teach and assess for BOTH ZIMSEC A-Level Chemistry and Cambridge International AS & A Level Chemistry 9701.
 
 ROLE: SENIOR A-LEVEL CHEMISTRY TEACHER & EXAMINER
 
@@ -482,6 +607,13 @@ CRITICAL: Use PLAIN TEXT Unicode notation - NEVER use LaTeX or $ symbols:
 - Use proper chemical notation: [H⁺], Kc, E°cell
 
 Always respond with valid JSON containing step-by-step solutions."""
+                
+                payload = {
+                    "model": "deepseek-chat",
+                    "messages": [
+                        {
+                            "role": "system",
+                            "content": system_content
                         },
                         {
                             "role": "user",
@@ -489,7 +621,7 @@ Always respond with valid JSON containing step-by-step solutions."""
                         }
                     ],
                     "temperature": 0.7,
-                    "max_tokens": 1500
+                    "max_tokens": 2000 if question_type == "structured" else 1500
                 }
                 
                 # Increase timeout with each retry attempt
@@ -514,7 +646,7 @@ Always respond with valid JSON containing step-by-step solutions."""
                 content = result.get('choices', [{}])[0].get('message', {}).get('content', '')
                 
                 # Parse JSON from response
-                question_data = self._parse_question_response(content)
+                question_data = self._parse_question_response(content, question_type)
                 if question_data:
                     return question_data
                 else:
@@ -538,7 +670,7 @@ Always respond with valid JSON containing step-by-step solutions."""
         logger.error("All DeepSeek retry attempts failed for Chemistry question")
         return None
     
-    def _parse_question_response(self, content: str) -> Optional[Dict]:
+    def _parse_question_response(self, content: str, question_type: str = "mcq") -> Optional[Dict]:
         """Parse the JSON response from DeepSeek with truncation recovery"""
         try:
             content = content.strip()
@@ -568,15 +700,32 @@ Always respond with valid JSON containing step-by-step solutions."""
                 if not question_data:
                     return None
             
-            required_fields = ['question', 'options', 'correct_answer', 'explanation']
-            for field in required_fields:
-                if field not in question_data:
-                    logger.error(f"Missing required field: {field}")
+            # Validate based on question type
+            if question_type == "structured":
+                # Validate structured question fields
+                if 'structured_question' not in question_data:
+                    logger.error("Missing structured_question field for structured question")
                     return None
-            
-            if not isinstance(question_data['options'], dict) or len(question_data['options']) < 4:
-                logger.error("Invalid options format")
-                return None
+                
+                structured = question_data.get('structured_question', {})
+                if not isinstance(structured.get('parts'), list) or len(structured['parts']) < 2:
+                    logger.error("Structured question must have at least 2 parts")
+                    return None
+                
+                # Map question_text to question for compatibility
+                if 'question_text' in question_data and 'question' not in question_data:
+                    question_data['question'] = question_data['question_text']
+            else:
+                # Validate MCQ fields
+                required_fields = ['question', 'options', 'correct_answer', 'explanation']
+                for field in required_fields:
+                    if field not in question_data:
+                        logger.error(f"Missing required field: {field}")
+                        return None
+                
+                if not isinstance(question_data['options'], dict) or len(question_data['options']) < 4:
+                    logger.error("Invalid options format")
+                    return None
             
             return question_data
             

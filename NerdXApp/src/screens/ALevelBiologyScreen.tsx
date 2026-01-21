@@ -172,13 +172,13 @@ const ALevelBiologyScreen: React.FC = () => {
     const getLoadingMessage = (type: BiologyQuestionType): string => {
         switch (type) {
             case 'mcq':
-                return 'DeepSeek is generating your Multiple Choice question...';
+                return 'Preparing your Multiple Choice question...';
             case 'structured':
-                return 'DeepSeek is preparing a detailed Structured question...';
+                return 'Preparing your Structured question...';
             case 'essay':
-                return 'DeepSeek is crafting your Essay question...';
+                return 'Preparing your Essay question...';
             default:
-                return 'Generating your A Level Biology question...';
+                return 'Preparing your A Level Biology question...';
         }
     };
 
@@ -386,7 +386,7 @@ const ALevelBiologyScreen: React.FC = () => {
             <LoadingProgress
                 visible={isGeneratingQuestion}
                 message={loadingMessage}
-                estimatedTime={12}
+                estimatedTime={7}
             />
 
             <StatusBar barStyle="light-content" />

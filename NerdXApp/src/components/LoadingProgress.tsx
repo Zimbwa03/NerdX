@@ -1,4 +1,4 @@
-// Loading Progress Component - Real-time thinking UI for AI generation
+// Loading Progress Component - Smooth, step-based loading experience
 import React, { useEffect, useRef, useState } from 'react';
 import {
     View,
@@ -35,9 +35,9 @@ const DEFAULT_STEPS: LoadingProgressStep[] = [
 
 export const LoadingProgress: React.FC<LoadingProgressProps> = ({
     visible,
-    message = 'Generating question...',
-    estimatedTime = 10,
-    stage = 'Thinking',
+    message = 'Preparing question...',
+    estimatedTime = 8,
+    stage = 'Preparing',
     steps = DEFAULT_STEPS,
     onComplete,
 }) => {
@@ -45,6 +45,7 @@ export const LoadingProgress: React.FC<LoadingProgressProps> = ({
     const [activeStepIndex, setActiveStepIndex] = useState(0);
     const [ellipsis, setEllipsis] = useState('');
     const pulseAnim = useRef(new Animated.Value(1)).current;
+    const overlayOpacity = useRef(new Animated.Value(0)).current;
     const stepIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const dotIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const pulseLoopRef = useRef<Animated.CompositeAnimation | null>(null);
@@ -59,7 +60,14 @@ export const LoadingProgress: React.FC<LoadingProgressProps> = ({
             setEllipsis('');
 
             const totalSteps = Math.max(runningMaxIndex + 1, 1);
-            const stepIntervalMs = Math.max(900, Math.floor((estimatedTime * 1000) / totalSteps));
+            const stepIntervalMs = Math.max(650, Math.floor((estimatedTime * 1000) / totalSteps));
+
+            overlayOpacity.setValue(0);
+            Animated.timing(overlayOpacity, {
+                toValue: 1,
+                duration: 220,
+                useNativeDriver: true,
+            }).start();
 
             stepIntervalRef.current = setInterval(() => {
                 setActiveStepIndex((prev) => Math.min(prev + 1, runningMaxIndex));
@@ -97,7 +105,11 @@ export const LoadingProgress: React.FC<LoadingProgressProps> = ({
             setActiveStepIndex(finalStepIndex);
             setEllipsis('');
 
-            setTimeout(() => {
+            Animated.timing(overlayOpacity, {
+                toValue: 0,
+                duration: 220,
+                useNativeDriver: true,
+            }).start(() => {
                 if (pulseLoopRef.current) {
                     pulseLoopRef.current.stop();
                     pulseLoopRef.current = null;
@@ -105,7 +117,7 @@ export const LoadingProgress: React.FC<LoadingProgressProps> = ({
                 setShowOverlay(false);
                 setActiveStepIndex(0);
                 onComplete?.();
-            }, 500);
+            });
         }
 
         return () => {
@@ -126,7 +138,7 @@ export const LoadingProgress: React.FC<LoadingProgressProps> = ({
     }
 
     return (
-        <View style={styles.overlay}>
+        <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]}>
             <View style={styles.container}>
                 <Animated.View style={[styles.iconContainer, { transform: [{ scale: pulseAnim }] }]}>
                     <LinearGradient
@@ -139,7 +151,7 @@ export const LoadingProgress: React.FC<LoadingProgressProps> = ({
                     </LinearGradient>
                 </Animated.View>
 
-                <Text style={styles.titleText}>{stage} in real time</Text>
+                <Text style={styles.titleText}>{stage}</Text>
                 <Text style={styles.messageText}>
                     {message}
                     {ellipsis}
@@ -175,11 +187,8 @@ export const LoadingProgress: React.FC<LoadingProgressProps> = ({
                     })}
                 </View>
 
-                <Text style={styles.tipText}>
-                    🎯 DeepSeek is reasoning through the next question for you
-                </Text>
             </View>
-        </View>
+        </Animated.View>
     );
 };
 
@@ -290,12 +299,6 @@ const styles = StyleSheet.create({
     stepTextActive: {
         color: '#FFFFFF',
         fontWeight: '700',
-    },
-    tipText: {
-        fontSize: 12,
-        color: '#94A3B8',
-        textAlign: 'center',
-        fontStyle: 'italic',
     },
 });
 

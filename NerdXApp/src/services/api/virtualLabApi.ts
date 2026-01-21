@@ -1,7 +1,7 @@
 // Virtual Lab API services
 import api from './config';
 
-export type VirtualLabSubject = 'biology' | 'chemistry' | 'physics';
+export type VirtualLabSubject = 'biology' | 'chemistry' | 'physics' | 'mathematics';
 export type VirtualLabDifficulty = 'easy' | 'medium' | 'hard';
 
 export interface VirtualLabKnowledgeCheckQuestion {

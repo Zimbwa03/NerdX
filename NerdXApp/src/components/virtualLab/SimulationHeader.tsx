@@ -12,20 +12,22 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { LearningObjective, SUBJECT_COLORS, Subject } from '../../data/virtualLab';
+import { LearningObjective, SimulationMetadata, SUBJECT_COLORS, Subject } from '../../data/virtualLab';
 import { useTheme } from '../../context/ThemeContext';
 import { useThemedColors } from '../../theme/useThemedStyles';
 
 interface SimulationHeaderProps {
-    title: string;
-    subject: Subject;
-    learningObjectives: LearningObjective[];
+    simulation?: SimulationMetadata;
+    title?: string;
+    subject?: Subject;
+    learningObjectives?: LearningObjective[];
     onBack: () => void;
     onHelp?: () => void;
-    xpReward: number;
+    xpReward?: number;
 }
 
 export const SimulationHeader: React.FC<SimulationHeaderProps> = ({
+    simulation,
     title,
     subject,
     learningObjectives,
@@ -36,7 +38,14 @@ export const SimulationHeader: React.FC<SimulationHeaderProps> = ({
     const { isDarkMode } = useTheme();
     const themedColors = useThemedColors();
     const [showObjectives, setShowObjectives] = useState(false);
-    const subjectColors = SUBJECT_COLORS[subject];
+    const resolvedTitle = simulation?.title ?? title ?? 'Simulation';
+    const resolvedSubject = simulation?.subject ?? subject ?? 'mathematics';
+    const resolvedObjectives = simulation?.learningObjectives ?? learningObjectives ?? [];
+    const resolvedXpReward = simulation?.xpReward ?? xpReward ?? 0;
+    const subjectColors = SUBJECT_COLORS[resolvedSubject] ?? SUBJECT_COLORS.mathematics;
+    const subjectLabel = resolvedSubject
+        ? resolvedSubject.charAt(0).toUpperCase() + resolvedSubject.slice(1)
+        : 'Subject';
 
     return (
         <>
@@ -50,10 +59,10 @@ export const SimulationHeader: React.FC<SimulationHeaderProps> = ({
                     </TouchableOpacity>
 
                     <View style={styles.titleContainer}>
-                        <Text style={styles.title} numberOfLines={1}>{title}</Text>
+                        <Text style={styles.title} numberOfLines={1}>{resolvedTitle}</Text>
                         <View style={styles.subjectBadge}>
                             <Text style={styles.subjectText}>
-                                {subject.charAt(0).toUpperCase() + subject.slice(1)}
+                                {subjectLabel}
                             </Text>
                         </View>
                     </View>
@@ -75,7 +84,7 @@ export const SimulationHeader: React.FC<SimulationHeaderProps> = ({
 
                 <View style={styles.xpBadge}>
                     <Ionicons name="star" size={16} color="#FFD700" />
-                    <Text style={styles.xpText}>{xpReward} XP</Text>
+                    <Text style={styles.xpText}>{resolvedXpReward} XP</Text>
                 </View>
             </LinearGradient>
 
@@ -98,7 +107,7 @@ export const SimulationHeader: React.FC<SimulationHeaderProps> = ({
                         </View>
 
                         <ScrollView style={styles.objectivesList}>
-                            {learningObjectives.map((objective, index) => (
+                            {resolvedObjectives.map((objective, index) => (
                                 <View key={objective.id} style={styles.objectiveItem}>
                                     <View style={[styles.objectiveNumber, { backgroundColor: subjectColors.primary }]}>
                                         <Text style={styles.objectiveNumberText}>{index + 1}</Text>

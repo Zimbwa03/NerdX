@@ -24,7 +24,6 @@ import { Icons, IconCircle } from '../components/Icons';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, getColors } from '../theme/colors';
 import { useThemedColors } from '../theme/useThemedStyles';
-import { Modal, ModalOptionCard } from '../components/Modal';
 import { gamificationService, UserProgress, Badge } from '../services/GamificationService';
 import { dktService, KnowledgeMap } from '../services/api/dktApi';
 import { KnowledgeMapWidget } from '../components/KnowledgeMapWidget';
@@ -53,7 +52,6 @@ const DashboardScreen: React.FC = () => {
   const { theme, isDarkMode, toggleTheme } = useTheme();
   const themedColors = useThemedColors();
   useCreditMonitor(); // Monitor credits and show warnings
-  const [scienceModalVisible, setScienceModalVisible] = useState(false);
   const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
   const [knowledgeMap, setKnowledgeMap] = useState<KnowledgeMap | null>(null);
   const [loadingKnowledgeMap, setLoadingKnowledgeMap] = useState(false);
@@ -178,22 +176,7 @@ const DashboardScreen: React.FC = () => {
   };
 
   const handleSciencePress = () => {
-    setScienceModalVisible(true);
-  };
-
-  const handleTeacherMode = () => {
-    setScienceModalVisible(false);
-    const subject: Partial<Subject> = {
-      id: 'combined_science',
-      name: 'Combined Science',
-      icon: 'science',
-      color: Colors.subjects.science,
-    };
-    navigation.navigate('TeacherModeSetup' as never, { subject } as never);
-  };
-
-  const handlePracticeMode = () => {
-    setScienceModalVisible(false);
+    // Navigate directly to Practice Mode (Topics screen)
     const subject: Partial<Subject> = {
       id: 'combined_science',
       name: 'Combined Science',
@@ -201,6 +184,10 @@ const DashboardScreen: React.FC = () => {
       color: Colors.subjects.science,
     };
     navigation.navigate('Topics' as never, { subject } as never);
+  };
+
+  const handleTeacherMode = () => {
+    navigation.navigate('TeacherModeSetup' as never);
   };
 
   const navigateToVirtualLab = () => {
@@ -722,28 +709,6 @@ const DashboardScreen: React.FC = () => {
           </View>
         </ScrollView>
 
-        {/* Science Mode Selection Modal */}
-        <Modal
-          visible={scienceModalVisible}
-          onClose={() => setScienceModalVisible(false)}
-          title="Combined Science"
-        >
-          <Text style={styles.modalDescription}>Choose your learning mode:</Text>
-          <ModalOptionCard
-            icon="👨‍🏫"
-            title="Teacher Mode"
-            description="Interactive AI teaching with personalized explanations and notes"
-            onPress={handleTeacherMode}
-            color={Colors.subjects.science}
-          />
-          <ModalOptionCard
-            icon="📝"
-            title="Practice Mode"
-            description="Practice questions by topic and test your knowledge"
-            onPress={handlePracticeMode}
-            color={Colors.primary.main}
-          />
-        </Modal>
       </ImageBackground>
 
       {/* NerdX Live - Now accessed via Dashboard button */}

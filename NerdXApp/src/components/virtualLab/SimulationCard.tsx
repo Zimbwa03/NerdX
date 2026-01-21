@@ -48,7 +48,7 @@ export const SimulationCard: React.FC<SimulationCardProps> = ({
 }) => {
     const { isDarkMode } = useTheme();
     const themedColors = useThemedColors();
-    const subjectColors = SUBJECT_COLORS[simulation.subject];
+    const subjectColors = SUBJECT_COLORS[simulation.subject] ?? SUBJECT_COLORS.mathematics;
     const difficultyColor = DIFFICULTY_COLORS[simulation.difficulty];
 
     return (

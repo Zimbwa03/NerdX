@@ -10,6 +10,7 @@ import {
   Alert,
   StatusBar,
   Dimensions,
+  Switch,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -19,7 +20,8 @@ import { useTheme } from '../context/ThemeContext';
 import { useNotification } from '../context/NotificationContext';
 import { Icons, IconCircle } from '../components/Icons';
 import { Card } from '../components/Card';
-import { Modal, ModalOptionCard } from '../components/Modal';
+import { Button } from '../components/Button';
+import { Modal } from '../components/Modal';
 import { Colors, getColors } from '../theme/colors';
 import { useThemedColors } from '../theme/useThemedStyles';
 import LoadingProgress from '../components/LoadingProgress';
@@ -51,10 +53,19 @@ const TopicsScreen: React.FC = () => {
   const [pharmaModalVisible, setPharmaModalVisible] = useState(false);
   const [selectedPharmaTopic, setSelectedPharmaTopic] = useState<Topic | null>(null);
   const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
+  const [selectedPharmaQuestionType, setSelectedPharmaQuestionType] = useState<'MCQ' | 'True/False'>('MCQ');
 
   // Combined Science Question Type Modal (MCQ vs Structured)
   const [scienceQuestionTypeModalVisible, setScienceQuestionTypeModalVisible] = useState(false);
   const [selectedScienceTopic, setSelectedScienceTopic] = useState<Topic | null>(null);
+  const [selectedScienceQuestionFormat, setSelectedScienceQuestionFormat] = useState<'mcq' | 'structured'>('mcq');
+
+  // Start Quiz Modal (single popup with Visual Learning toggle)
+  const [startQuizModalVisible, setStartQuizModalVisible] = useState(false);
+  const [pendingTopic, setPendingTopic] = useState<Topic | null>(null);
+  const [pendingQuestionType, setPendingQuestionType] = useState<string | undefined>(undefined);
+  const [pendingQuestionFormat, setPendingQuestionFormat] = useState<'mcq' | 'structured' | undefined>(undefined);
+  const [mixImagesEnabled, setMixImagesEnabled] = useState(false);
 
   // Exam Setup Modal state
   const [examSetupModalVisible, setExamSetupModalVisible] = useState(false);
@@ -153,29 +164,27 @@ const TopicsScreen: React.FC = () => {
     } else if (subject.id === 'pharmacology') {
       // Show Pharmacology Question Type Modal
       setSelectedPharmaTopic(topic);
+      setSelectedPharmaQuestionType('MCQ');
+      setMixImagesEnabled(false);
       setPharmaModalVisible(true);
     } else if (subject.id === 'combined_science') {
       // Show Combined Science Question Type Modal (MCQ vs Structured - Paper 1 vs Paper 2)
       setSelectedScienceTopic(topic);
+      setSelectedScienceQuestionFormat('mcq');
+      setMixImagesEnabled(false);
       setScienceQuestionTypeModalVisible(true);
     } else {
-      // Start quiz
-      handleStartQuiz(topic);
+      // Start quiz modal with visual learning toggle
+      openStartQuizModal(topic);
     }
   };
 
-  const handlePharmaQuizStart = (type: 'MCQ' | 'True/False') => {
-    setPharmaModalVisible(false);
-    if (selectedPharmaTopic) {
-      handleStartQuiz(selectedPharmaTopic, type);
-    }
-  };
-
-  const handleScienceQuizStart = (format: 'mcq' | 'structured') => {
-    setScienceQuestionTypeModalVisible(false);
-    if (selectedScienceTopic) {
-      handleStartQuiz(selectedScienceTopic, undefined, format);
-    }
+  const openStartQuizModal = (topic?: Topic, questionType?: string, questionFormat?: 'mcq' | 'structured') => {
+    setPendingTopic(topic || null);
+    setPendingQuestionType(questionType);
+    setPendingQuestionFormat(questionFormat);
+    setMixImagesEnabled(false);
+    setStartQuizModalVisible(true);
   };
 
   const handleGraphPractice = () => {
@@ -204,13 +213,6 @@ const TopicsScreen: React.FC = () => {
     } as never);
   };
 
-  const handlePastPapers = () => {
-    navigation.navigate('PastPaper' as never);
-  };
-
-  const handleFormulaSheet = () => {
-    navigation.navigate('FormulaSheet' as never);
-  };
 
   const handleMathNotes = (topicName: string) => {
     navigation.navigate('MathNotesDetail' as never, { topic: topicName } as never);
@@ -223,6 +225,15 @@ const TopicsScreen: React.FC = () => {
     } as never);
   };
 
+  const getEstimatedCost = (topic?: Topic | null, questionType?: string, questionFormat?: 'mcq' | 'structured', mixImages?: boolean) =>
+    calculateQuizCreditCost({
+      subject: subject.id,
+      questionType: topic ? 'topical' : 'exam',
+      questionFormat: questionFormat,
+      bioQuestionType: questionType as 'mcq' | 'structured' | 'essay' | undefined,
+      isImageQuestion: !!mixImages,
+    });
+
   // Handle exam modal start
   const handleExamStart = async (config: ExamConfig, timeInfo: TimeInfo) => {
     setExamSetupModalVisible(false);
@@ -233,7 +244,12 @@ const TopicsScreen: React.FC = () => {
     } as never);
   };
 
-  const handleStartQuiz = async (topic?: Topic, questionType?: string, questionFormat?: 'mcq' | 'structured') => {
+  const handleStartQuiz = async (
+    topic?: Topic,
+    questionType?: string,
+    questionFormat?: 'mcq' | 'structured',
+    mixImages?: boolean
+  ) => {
     try {
       const currentCredits = user?.credits || 0;
       
@@ -243,12 +259,14 @@ const TopicsScreen: React.FC = () => {
         questionType: topic ? 'topical' : 'exam',
         questionFormat: questionFormat,
         bioQuestionType: questionType as 'mcq' | 'structured' | 'essay' | undefined,
+        isImageQuestion: !!mixImages,
       });
       const minRequired = getMinimumCreditsForQuiz({
         subject: subject.id,
         questionType: topic ? 'topical' : 'exam',
         questionFormat: questionFormat,
         bioQuestionType: questionType as 'mcq' | 'structured' | 'essay' | undefined,
+        isImageQuestion: !!mixImages,
       });
 
       // Check for low credits warning
@@ -267,66 +285,50 @@ const TopicsScreen: React.FC = () => {
         return;
       }
 
-      const questionFormatLabel = questionFormat === 'structured' ? 'Structured (Paper 2)' : 'Multiple Choice (Paper 1)';
+      // Show AI loading progress
+      setIsGeneratingQuestion(true);
 
-      Alert.alert(
-        'Start Quiz',
-        `Start ${topic ? topic.name : 'Exam'} quiz for ${subject.name}?${questionFormat ? `\n\nFormat: ${questionFormatLabel}` : ''}`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Start',
-            onPress: async () => {
-              try {
-                // Show AI loading progress
-                setIsGeneratingQuestion(true);
-
-                const question = await quizApi.generateQuestion(
-                  subject.id,
-                  topic?.id,
-                  'medium',  // difficulty
-                  topic ? 'topical' : 'exam',  // type
-                  topic?.parent_subject || (subject.id === 'combined_science' ? activeTab : currentParentSubject),  // parent_subject for Combined Science
-                  questionType,  // Pass question type (e.g., for Pharmacology)
-                  questionFormat  // Pass question format (mcq or structured for Paper 1/2)
-                );
-
-                // Hide loading before navigation
-                setIsGeneratingQuestion(false);
-
-                if (question) {
-                  // Update credits from server response
-                  const serverCredits = (question as any).credits_remaining;
-                  if (serverCredits !== undefined) {
-                    updateUser({ credits: serverCredits });
-                    // Show success notification with actual remaining credits
-                    const costText = formatCreditCost(creditCost);
-                    showSuccess(`✅ Question generated! (-${costText}) ${serverCredits} credits remaining.`, 3000);
-
-                    // Check if credits are getting low after deduction
-                    if (serverCredits <= 3 && serverCredits > 0) {
-                      setTimeout(() => {
-                        showWarning(`⚠️ Running low on credits! Only ${serverCredits} credits left. Top up now to continue learning.`, 5000);
-                      }, 3500);
-                    }
-                  }
-
-                  navigation.navigate('Quiz' as never, { question, subject, topic } as never);
-                } else {
-                  showError('❌ Failed to generate question. Please try again.', 4000);
-                }
-              } catch (error: any) {
-                setIsGeneratingQuestion(false);
-                const errorMessage = error.response?.data?.message || 'Failed to start quiz';
-                showError(`❌ ${errorMessage}`, 5000);
-                Alert.alert('Error', errorMessage);
-              }
-            },
-          },
-        ]
+      const question = await quizApi.generateQuestion(
+        subject.id,
+        topic?.id,
+        'medium',  // difficulty
+        topic ? 'topical' : 'exam',  // type
+        topic?.parent_subject || (subject.id === 'combined_science' ? activeTab : currentParentSubject),  // parent_subject for Combined Science
+        questionType,  // Pass question type (e.g., for Pharmacology)
+        questionFormat,  // Pass question format (mcq or structured for Paper 1/2)
+        undefined,
+        mixImages
       );
-    } catch (error) {
-      Alert.alert('Error', 'Failed to start quiz');
+
+      // Hide loading before navigation
+      setIsGeneratingQuestion(false);
+
+      if (question) {
+        // Update credits from server response
+        const serverCredits = (question as any).credits_remaining;
+        if (serverCredits !== undefined) {
+          updateUser({ credits: serverCredits });
+          // Show success notification with actual remaining credits
+          const costText = formatCreditCost(creditCost);
+          showSuccess(`✅ Question generated! (-${costText}) ${serverCredits} credits remaining.`, 3000);
+
+          // Check if credits are getting low after deduction
+          if (serverCredits <= 3 && serverCredits > 0) {
+            setTimeout(() => {
+              showWarning(`⚠️ Running low on credits! Only ${serverCredits} credits left. Top up now to continue learning.`, 5000);
+            }, 3500);
+          }
+        }
+
+        navigation.navigate('Quiz' as never, { question, subject, topic, mixImagesEnabled: !!mixImages } as never);
+      } else {
+        showError('❌ Failed to generate question. Please try again.', 4000);
+      }
+    } catch (error: any) {
+      setIsGeneratingQuestion(false);
+      const errorMessage = error.response?.data?.message || 'Failed to start quiz';
+      showError(`❌ ${errorMessage}`, 5000);
+      Alert.alert('Error', errorMessage);
     }
   };
 
@@ -556,6 +558,69 @@ const TopicsScreen: React.FC = () => {
       marginBottom: 20,
       textAlign: 'center',
     },
+    choiceCard: {
+      backgroundColor: themedColors.background.paper,
+      borderRadius: 12,
+      padding: 14,
+      marginBottom: 12,
+      borderWidth: 1,
+      borderColor: themedColors.border.light,
+    },
+    choiceCardSelected: {
+      borderColor: Colors.primary.main,
+      backgroundColor: Colors.primary.light + '20',
+    },
+    choiceTitle: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: themedColors.text.primary,
+      marginBottom: 4,
+    },
+    choiceDescription: {
+      fontSize: 12,
+      color: themedColors.text.secondary,
+    },
+    visualModeContainer: {
+      backgroundColor: themedColors.background.subtle,
+      borderRadius: 12,
+      padding: 12,
+      marginTop: 4,
+      marginBottom: 12,
+      borderWidth: 1,
+      borderColor: themedColors.border.light,
+    },
+    visualModeHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 6,
+    },
+    visualModeTitle: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: themedColors.text.primary,
+    },
+    visualModeNote: {
+      fontSize: 12,
+      color: themedColors.text.secondary,
+      marginBottom: 4,
+    },
+    visualModeCost: {
+      fontSize: 12,
+      color: themedColors.text.primary,
+      fontWeight: '600',
+    },
+    modalButtonRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: 8,
+    },
+    modalButton: {
+      flex: 1,
+    },
+    modalButtonSpacer: {
+      width: 12,
+    },
   }), [themedColors]);
 
   const renderTabs = () => {
@@ -599,8 +664,8 @@ const TopicsScreen: React.FC = () => {
       <LoadingProgress
         visible={isGeneratingQuestion}
         message={`Preparing your ${subjectDisplayName} question...`}
-        estimatedTime={8}
-        stage="Thinking"
+        estimatedTime={6}
+        stage="Preparing"
         steps={subjectSteps}
       />
 
@@ -829,36 +894,6 @@ const TopicsScreen: React.FC = () => {
                   {Icons.arrowRight(24, Colors.text.secondary)}
                 </View>
               </Card>
-
-              <Card variant="elevated" onPress={handlePastPapers} style={styles.featureCard}>
-                <View style={styles.featureContent}>
-                  <IconCircle
-                    icon={Icons.essay(28, Colors.subjects.science)}
-                    size={56}
-                    backgroundColor={Colors.iconBg.science}
-                  />
-                  <View style={styles.featureInfo}>
-                    <Text style={styles.featureTitle}>Past Papers</Text>
-                    <Text style={styles.featureSubtitle}>Practice with exam questions</Text>
-                  </View>
-                  {Icons.arrowRight(24, Colors.text.secondary)}
-                </View>
-              </Card>
-
-              <Card variant="elevated" onPress={handleFormulaSheet} style={styles.featureCard}>
-                <View style={styles.featureContent}>
-                  <IconCircle
-                    icon={Icons.mathematics(28, Colors.subjects.combinedScience)}
-                    size={56}
-                    backgroundColor={Colors.iconBg.science}
-                  />
-                  <View style={styles.featureInfo}>
-                    <Text style={styles.featureTitle}>Formula Sheet</Text>
-                    <Text style={styles.featureSubtitle}>Quick reference for {activeTab} formulas</Text>
-                  </View>
-                  {Icons.arrowRight(24, Colors.text.secondary)}
-                </View>
-              </Card>
             </>
           )}
 
@@ -879,7 +914,7 @@ const TopicsScreen: React.FC = () => {
                   // For English, open exam setup modal
                   setExamSetupModalVisible(true);
                 } else {
-                  handleStartQuiz();
+                  openStartQuizModal();
                 }
               }}
               style={styles.examCard}
@@ -952,47 +987,189 @@ const TopicsScreen: React.FC = () => {
       {/* Pharma Modal */}
       <Modal
         visible={pharmaModalVisible}
-        onClose={() => setPharmaModalVisible(false)}
+        onClose={() => {
+          setPharmaModalVisible(false);
+          setMixImagesEnabled(false);
+        }}
         title="Pharmacology Practice"
       >
         <Text style={styles.modalDescription}>Choose how you want to practice {selectedPharmaTopic?.name}:</Text>
-        <ModalOptionCard
-          icon="📝"
-          title="Multiple Choice"
-          description="Standard 4-option questions"
-          onPress={() => handlePharmaQuizStart('MCQ')}
-          color={Colors.primary.main}
-        />
-        <ModalOptionCard
-          icon="✅"
-          title="True / False"
-          description="Quick concept verification"
-          onPress={() => handlePharmaQuizStart('True/False')}
-          color={Colors.secondary.main}
-        />
+        <TouchableOpacity
+          style={[
+            styles.choiceCard,
+            selectedPharmaQuestionType === 'MCQ' && styles.choiceCardSelected,
+          ]}
+          onPress={() => setSelectedPharmaQuestionType('MCQ')}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.choiceTitle}>Multiple Choice</Text>
+          <Text style={styles.choiceDescription}>Standard 4-option questions</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.choiceCard,
+            selectedPharmaQuestionType === 'True/False' && styles.choiceCardSelected,
+          ]}
+          onPress={() => setSelectedPharmaQuestionType('True/False')}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.choiceTitle}>True / False</Text>
+          <Text style={styles.choiceDescription}>Quick concept verification</Text>
+        </TouchableOpacity>
+        <View style={styles.visualModeContainer}>
+          <View style={styles.visualModeHeader}>
+            <Text style={styles.visualModeTitle}>Visual learning mode</Text>
+            <Switch
+              value={mixImagesEnabled}
+              onValueChange={setMixImagesEnabled}
+              thumbColor={mixImagesEnabled ? Colors.primary.main : '#ccc'}
+              trackColor={{ false: '#ccc', true: Colors.primary.light }}
+            />
+          </View>
+          <Text style={styles.visualModeNote}>
+            Mix image-based questions (higher credit cost).
+          </Text>
+          <Text style={styles.visualModeCost}>
+            Estimated cost: {formatCreditCost(getEstimatedCost(selectedPharmaTopic, selectedPharmaQuestionType, undefined, mixImagesEnabled))} per question
+          </Text>
+        </View>
+        <View style={styles.modalButtonRow}>
+          <Button
+            title="Cancel"
+            variant="outline"
+            style={styles.modalButton}
+            onPress={() => setPharmaModalVisible(false)}
+          />
+          <View style={styles.modalButtonSpacer} />
+          <Button
+            title="Start Quiz"
+            style={styles.modalButton}
+            onPress={() => {
+              setPharmaModalVisible(false);
+              if (selectedPharmaTopic) {
+                handleStartQuiz(selectedPharmaTopic, selectedPharmaQuestionType, undefined, mixImagesEnabled);
+              }
+            }}
+          />
+        </View>
       </Modal>
 
       {/* Combined Science Question Type Modal (Paper 1 vs Paper 2) */}
       <Modal
         visible={scienceQuestionTypeModalVisible}
-        onClose={() => setScienceQuestionTypeModalVisible(false)}
+        onClose={() => {
+          setScienceQuestionTypeModalVisible(false);
+          setMixImagesEnabled(false);
+        }}
         title={`${activeTab} - ${selectedScienceTopic?.name || 'Practice'}`}
       >
         <Text style={styles.modalDescription}>Choose your question format:</Text>
-        <ModalOptionCard
-          icon="📝"
-          title="Multiple Choice (Paper 1)"
-          description="Quick MCQ questions with 4 options - great for revision"
-          onPress={() => handleScienceQuizStart('mcq')}
-          color={Colors.subjects.science}
-        />
-        <ModalOptionCard
-          icon="📋"
-          title="Structured (Paper 2)"
-          description="ZIMSEC-style written questions with multiple parts - deeper understanding"
-          onPress={() => handleScienceQuizStart('structured')}
-          color={Colors.subjects.combinedScience}
-        />
+        <TouchableOpacity
+          style={[
+            styles.choiceCard,
+            selectedScienceQuestionFormat === 'mcq' && styles.choiceCardSelected,
+          ]}
+          onPress={() => setSelectedScienceQuestionFormat('mcq')}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.choiceTitle}>Multiple Choice (Paper 1)</Text>
+          <Text style={styles.choiceDescription}>Quick MCQ questions with 4 options - great for revision</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.choiceCard,
+            selectedScienceQuestionFormat === 'structured' && styles.choiceCardSelected,
+          ]}
+          onPress={() => setSelectedScienceQuestionFormat('structured')}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.choiceTitle}>Structured (Paper 2)</Text>
+          <Text style={styles.choiceDescription}>ZIMSEC-style written questions with multiple parts - deeper understanding</Text>
+        </TouchableOpacity>
+        <View style={styles.visualModeContainer}>
+          <View style={styles.visualModeHeader}>
+            <Text style={styles.visualModeTitle}>Visual learning mode</Text>
+            <Switch
+              value={mixImagesEnabled}
+              onValueChange={setMixImagesEnabled}
+              thumbColor={mixImagesEnabled ? Colors.subjects.science : '#ccc'}
+              trackColor={{ false: '#ccc', true: Colors.subjects.science + '66' }}
+            />
+          </View>
+          <Text style={styles.visualModeNote}>
+            Mix image-based questions (higher credit cost).
+          </Text>
+          <Text style={styles.visualModeCost}>
+            Estimated cost: {formatCreditCost(getEstimatedCost(selectedScienceTopic, undefined, selectedScienceQuestionFormat, mixImagesEnabled))} per question
+          </Text>
+        </View>
+        <View style={styles.modalButtonRow}>
+          <Button
+            title="Cancel"
+            variant="outline"
+            style={styles.modalButton}
+            onPress={() => setScienceQuestionTypeModalVisible(false)}
+          />
+          <View style={styles.modalButtonSpacer} />
+          <Button
+            title="Start Quiz"
+            style={styles.modalButton}
+            onPress={() => {
+              setScienceQuestionTypeModalVisible(false);
+              if (selectedScienceTopic) {
+                handleStartQuiz(selectedScienceTopic, undefined, selectedScienceQuestionFormat, mixImagesEnabled);
+              }
+            }}
+          />
+        </View>
+      </Modal>
+
+      {/* Start Quiz Modal */}
+      <Modal
+        visible={startQuizModalVisible}
+        onClose={() => {
+          setStartQuizModalVisible(false);
+          setMixImagesEnabled(false);
+        }}
+        title="Start Quiz"
+      >
+        <Text style={styles.modalDescription}>
+          Start {pendingTopic ? pendingTopic.name : 'Exam'} quiz for {subjectDisplayName}?
+        </Text>
+        <View style={styles.visualModeContainer}>
+          <View style={styles.visualModeHeader}>
+            <Text style={styles.visualModeTitle}>Visual learning mode</Text>
+            <Switch
+              value={mixImagesEnabled}
+              onValueChange={setMixImagesEnabled}
+              thumbColor={mixImagesEnabled ? Colors.primary.main : '#ccc'}
+              trackColor={{ false: '#ccc', true: Colors.primary.light }}
+            />
+          </View>
+          <Text style={styles.visualModeNote}>
+            Mix image-based questions (higher credit cost).
+          </Text>
+          <Text style={styles.visualModeCost}>
+            Estimated cost: {formatCreditCost(getEstimatedCost(pendingTopic, pendingQuestionType, pendingQuestionFormat, mixImagesEnabled))} per question
+          </Text>
+        </View>
+        <View style={styles.modalButtonRow}>
+          <Button
+            title="Cancel"
+            variant="outline"
+            style={styles.modalButton}
+            onPress={() => setStartQuizModalVisible(false)}
+          />
+          <View style={styles.modalButtonSpacer} />
+          <Button
+            title="Start Quiz"
+            style={styles.modalButton}
+            onPress={() => {
+              setStartQuizModalVisible(false);
+              handleStartQuiz(pendingTopic || undefined, pendingQuestionType, pendingQuestionFormat, mixImagesEnabled);
+            }}
+          />
+        </View>
       </Modal>
 
       {/* Exam Setup Modal for Mathematics and Combined Science */}

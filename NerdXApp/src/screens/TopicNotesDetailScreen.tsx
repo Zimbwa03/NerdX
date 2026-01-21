@@ -56,23 +56,6 @@ const TopicNotesDetailScreen: React.FC = () => {
             setLoading(true);
             let notesData = null;
 
-            const hasPaidCredits = (user?.credit_breakdown?.purchased_credits ?? 0) > 0;
-            const isScienceSubject = ['Biology', 'Chemistry', 'Physics'].includes(subject);
-            if (isScienceSubject && !hasPaidCredits && (index ?? 0) >= 2) {
-                console.log('[TopicNotes] Locked topic due to unpaid credits', {
-                    subject,
-                    topic,
-                    index,
-                });
-                setLoading(false);
-                Alert.alert(
-                    'Locked Topic',
-                    'This topic is locked. Purchase credits to unlock all topics.',
-                    [{ text: 'OK', onPress: () => navigation.goBack() }]
-                );
-                return;
-            }
-
             // Check if this is A Level Chemistry
             if (isALevel && subject === 'A Level Chemistry') {
                 notesData = await aLevelChemistryNotesApi.getTopicNotes(topic);
@@ -126,6 +109,31 @@ const TopicNotesDetailScreen: React.FC = () => {
                 return themedColors.primary.main;
         }
     };
+
+    // Determine if media (video/audio) should be locked for this topic.
+    // NOTES themselves are always free – only media is premium.
+    const getMediaLockStatus = () => {
+        const hasPaidCredits = (user?.credit_breakdown?.purchased_credits ?? 0) > 0;
+        const lowerSubject = (subject || '').toLowerCase();
+
+        // Treat any Biology / Chemistry / Physics (O-Level or A-Level) as science subjects.
+        const isScienceSubject =
+            lowerSubject.includes('biology') ||
+            lowerSubject.includes('chemistry') ||
+            lowerSubject.includes('physics');
+
+        const topicIndex = index ?? 0;
+
+        // First two topics for each subject are always free.
+        if (topicIndex < 2) {
+            return false;
+        }
+
+        // Lock media for unpaid users on science subjects, while keeping notes free.
+        return isScienceSubject && !hasPaidCredits;
+    };
+
+    const isMediaLocked = getMediaLockStatus();
 
     const markdownStyles = {
         body: {
@@ -213,30 +221,58 @@ const TopicNotesDetailScreen: React.FC = () => {
                     contentContainerStyle={styles.scrollContent}
                     showsVerticalScrollIndicator={false}
                 >
-                    {/* Video Player - Shows when topic has video lesson */}
-                    {notes.videoUrl && notes.videoUrl.trim().length > 0 && (
-                        <VideoStreamPlayer
-                            videoUrl={notes.videoUrl}
-                            topicTitle={topic}
-                            accentColor={getSubjectColor()}
-                        />
-                    )}
-
-                    {/* Audio Player - Shows when topic has audio podcast */}
-                    {notes.audioUrl && notes.audioUrl.trim().length > 0 && (
-                        <AudioStreamPlayer
-                            audioUrl={notes.audioUrl}
-                            topicTitle={topic}
-                            accentColor={getSubjectColor()}
-                        />
-                    )}
-
-                    {/* Fallback - Show something if no media */}
-                    {!notes.videoUrl && !notes.audioUrl && (
-                        <View style={{ backgroundColor: 'red', padding: 20, marginBottom: 16 }}>
-                            <Text style={{ color: 'white', fontWeight: 'bold' }}>NO MEDIA FOUND</Text>
-                            <Text style={{ color: 'white' }}>This topic has no video or audio content.</Text>
+                    {/* Video / Audio Media - lock only media, not notes */}
+                    {isMediaLocked ? (
+                        <View style={styles.lockedMediaCard}>
+                            <LinearGradient
+                                colors={isDarkMode
+                                    ? [themedColors.background.paper, themedColors.background.paper]
+                                    : ['rgba(255,255,255,0.98)', 'rgba(255,255,255,0.92)']}
+                                style={styles.cardGradient}
+                            >
+                                <View style={styles.lockedMediaHeader}>
+                                    <Ionicons name="lock-closed" size={24} color={getSubjectColor()} />
+                                    <Text style={[styles.lockedMediaTitle, { color: themedColors.text.primary }]}>
+                                        Premium Audio & Video
+                                    </Text>
+                                </View>
+                                <Text style={[styles.lockedMediaText, { color: themedColors.text.secondary }]}>
+                                    Audio lessons and video explanations for this topic are available for premium users.
+                                    Your written notes below remain completely free.
+                                </Text>
+                            </LinearGradient>
                         </View>
+                    ) : (
+                        <>
+                            {/* Video Player - Shows when topic has video lesson */}
+                            {notes.videoUrl && notes.videoUrl.trim().length > 0 && (
+                                <VideoStreamPlayer
+                                    videoUrl={notes.videoUrl}
+                                    topicTitle={topic}
+                                    accentColor={getSubjectColor()}
+                                />
+                            )}
+
+                            {/* Audio Player - Shows when topic has audio podcast */}
+                            {notes.audioUrl && notes.audioUrl.trim().length > 0 && (
+                                <AudioStreamPlayer
+                                    audioUrl={notes.audioUrl}
+                                    topicTitle={topic}
+                                    accentColor={getSubjectColor()}
+                                />
+                            )}
+
+                            {/* Fallback - Show something if no media */}
+                            {!notes.videoUrl && !notes.audioUrl && (
+                                <View style={styles.noMediaCard}>
+                                    <Text style={styles.noMediaTitle}>No Audio or Video</Text>
+                                    <Text style={styles.noMediaText}>
+                                        This topic currently has written notes only. Audio and video content will be
+                                        added soon.
+                                    </Text>
+                                </View>
+                            )}
+                        </>
                     )}
 
                     {/* Summary Card */}
@@ -423,6 +459,46 @@ const styles = StyleSheet.create({
     scrollContent: {
         paddingHorizontal: 20,
         paddingBottom: 40,
+    },
+    lockedMediaCard: {
+        borderRadius: 16,
+        overflow: 'hidden',
+        marginBottom: 16,
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+    },
+    lockedMediaHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    lockedMediaTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginLeft: 10,
+    },
+    lockedMediaText: {
+        fontSize: 14,
+        lineHeight: 20,
+    },
+    noMediaCard: {
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 16,
+        backgroundColor: 'rgba(0,0,0,0.03)',
+    },
+    noMediaTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        marginBottom: 4,
+        color: Colors.text.primary,
+    },
+    noMediaText: {
+        fontSize: 14,
+        color: Colors.text.secondary,
     },
     summaryCard: {
         borderRadius: 16,

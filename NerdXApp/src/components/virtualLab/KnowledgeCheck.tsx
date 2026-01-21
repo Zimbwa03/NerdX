@@ -11,14 +11,19 @@ import {
     Modal,
     Dimensions,
     ActivityIndicator,
+    TextInput,
+    Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
+import { Audio } from 'expo-av';
+import * as ImagePicker from 'expo-image-picker';
 import { SimulationMetadata, QuizQuestion } from '../../data/virtualLab';
 import { useThemedColors } from '../../theme/useThemedStyles';
 import { virtualLabApi } from '../../services/api/virtualLabApi';
 import { gamificationService } from '../../services/GamificationService';
+import { mathApi } from '../../services/api/mathApi';
 
 const { width } = Dimensions.get('window');
 
@@ -59,9 +64,18 @@ export const KnowledgeCheck: React.FC<KnowledgeCheckProps> = ({
     const [correctAnswers, setCorrectAnswers] = useState(0);
     const [isComplete, setIsComplete] = useState(false);
 
+    const [textAnswers, setTextAnswers] = useState<Record<string, string>>({});
+    const [imageAnswers, setImageAnswers] = useState<Record<string, { uploadUri?: string; cameraUri?: string }>>({});
+    const [audioAnswers, setAudioAnswers] = useState<Record<string, string>>({});
+    const [answeredIds, setAnsweredIds] = useState<Record<string, boolean>>({});
+    const [mediaStatus, setMediaStatus] = useState<string | null>(null);
+    const [recording, setRecording] = useState<Audio.Recording | null>(null);
+    const [isRecording, setIsRecording] = useState(false);
+
     const currentQuestion = activeQuestions[currentIndex];
     const isCorrect = selectedAnswer === currentQuestion?.correctIndex;
     const progress = activeQuestions.length > 0 ? ((currentIndex + 1) / activeQuestions.length) * 100 : 0;
+    const isMath = simulation.subject === 'mathematics';
 
     useEffect(() => {
         if (!visible) return;
@@ -76,6 +90,13 @@ export const KnowledgeCheck: React.FC<KnowledgeCheckProps> = ({
         setShowExplanation(false);
         setCorrectAnswers(0);
         setIsComplete(false);
+        setTextAnswers({});
+        setImageAnswers({});
+        setAudioAnswers({});
+        setAnsweredIds({});
+        setMediaStatus(null);
+        setRecording(null);
+        setIsRecording(false);
     }, [visible, simulation.id]);
 
     const fallbackQuestions = useMemo(() => {
@@ -150,6 +171,7 @@ export const KnowledgeCheck: React.FC<KnowledgeCheckProps> = ({
     };
 
     const handleSelectAnswer = (index: number) => {
+        if (isMath) return;
         if (selectedAnswer !== null) return;
         setSelectedAnswer(index);
         setShowExplanation(true);
@@ -168,25 +190,160 @@ export const KnowledgeCheck: React.FC<KnowledgeCheckProps> = ({
         }
     };
 
+    const handleSubmitMathAnswer = () => {
+        if (!currentQuestion) return;
+        setAnsweredIds(prev => ({ ...prev, [currentQuestion.id]: true }));
+        setMediaStatus(null);
+        handleNext();
+    };
+
+    const updateAnswerText = (questionId: string, nextText: string) => {
+        setTextAnswers(prev => ({ ...prev, [questionId]: nextText }));
+    };
+
+    const appendAnswerText = (questionId: string, nextChunk: string) => {
+        setTextAnswers(prev => {
+            const current = prev[questionId] || '';
+            const trimmed = current.trim();
+            const joined = trimmed ? `${trimmed}\n${nextChunk}` : nextChunk;
+            return { ...prev, [questionId]: joined };
+        });
+    };
+
+    const pickImage = async (source: 'library' | 'camera') => {
+        if (!currentQuestion) return;
+        try {
+            if (source === 'library') {
+                const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                if (permission.status !== 'granted') {
+                    Alert.alert('Permission Denied', 'Gallery permission is required.');
+                    return;
+                }
+            } else {
+                const permission = await ImagePicker.requestCameraPermissionsAsync();
+                if (permission.status !== 'granted') {
+                    Alert.alert('Permission Denied', 'Camera permission is required.');
+                    return;
+                }
+            }
+
+            const result = source === 'library'
+                ? await ImagePicker.launchImageLibraryAsync({
+                    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                    quality: 0.8,
+                })
+                : await ImagePicker.launchCameraAsync({
+                    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                    quality: 0.8,
+                });
+
+            if (result.canceled || !result.assets || result.assets.length === 0) return;
+
+            const uri = result.assets[0]?.uri;
+            if (!uri) return;
+
+            setImageAnswers(prev => ({
+                ...prev,
+                [currentQuestion.id]: {
+                    ...prev[currentQuestion.id],
+                    [source === 'library' ? 'uploadUri' : 'cameraUri']: uri,
+                },
+            }));
+
+            setMediaStatus('Scanning image for equations...');
+            try {
+                const scan = await mathApi.scanProblem(uri);
+                if (scan.success && scan.latex) {
+                    appendAnswerText(currentQuestion.id, scan.latex);
+                    setMediaStatus(`Extracted from image (${scan.method}).`);
+                } else {
+                    setMediaStatus('Image attached.');
+                }
+            } catch (error) {
+                console.error('Image scan error:', error);
+                setMediaStatus('Image attached.');
+            }
+        } catch (error) {
+            console.error('Image pick error:', error);
+            Alert.alert('Error', 'Unable to attach image.');
+        }
+    };
+
+    const startRecording = async () => {
+        if (isRecording) return;
+        try {
+            const permission = await Audio.requestPermissionsAsync();
+            if (permission.status !== 'granted') {
+                Alert.alert('Permission Denied', 'Microphone permission is required.');
+                return;
+            }
+            await Audio.setAudioModeAsync({
+                allowsRecordingIOS: true,
+                playsInSilentModeIOS: true,
+            });
+            const { recording: newRecording } = await Audio.Recording.createAsync(
+                Audio.RecordingOptionsPresets.HIGH_QUALITY
+            );
+            setRecording(newRecording);
+            setIsRecording(true);
+        } catch (error) {
+            console.error('Failed to start recording', error);
+            Alert.alert('Error', 'Unable to start recording.');
+        }
+    };
+
+    const stopRecording = async () => {
+        if (!recording || !currentQuestion) return;
+        setIsRecording(false);
+        try {
+            await recording.stopAndUnloadAsync();
+            const uri = recording.getURI();
+            setRecording(null);
+            if (!uri) return;
+
+            setAudioAnswers(prev => ({ ...prev, [currentQuestion.id]: uri }));
+            setMediaStatus('Transcribing audio...');
+            try {
+                const result = await mathApi.transcribeAudio(uri);
+                if (result?.text) {
+                    appendAnswerText(currentQuestion.id, result.text);
+                    setMediaStatus('Audio transcribed.');
+                } else {
+                    setMediaStatus('Audio attached.');
+                }
+            } catch (error) {
+                console.error('Audio transcription error:', error);
+                setMediaStatus('Audio attached.');
+            }
+        } catch (error) {
+            console.error('Failed to stop recording', error);
+            Alert.alert('Error', 'Unable to stop recording.');
+        }
+    };
+
     const resetQuiz = () => {
         setCurrentIndex(0);
         setSelectedAnswer(null);
         setShowExplanation(false);
         setCorrectAnswers(0);
         setIsComplete(false);
+        setAnsweredIds({});
     };
 
     const finalize = async (goToProgress?: boolean) => {
         const total = Math.max(1, activeQuestions.length);
-        const scorePercent = Math.round((correctAnswers / total) * 100);
-        const xpEarned = Math.round((correctAnswers / total) * simulation.xpReward);
+        const answeredCount = isMath
+            ? activeQuestions.filter(q => answeredIds[q.id]).length
+            : correctAnswers;
+        const scorePercent = Math.round((answeredCount / total) * 100);
+        const xpEarned = Math.round((answeredCount / total) * simulation.xpReward);
 
         try {
             await gamificationService.logVirtualLabKnowledgeCheck({
                 xpEarned,
                 totalQuestions: total,
-                correctAnswers,
-                subjectForMastery: 'science',
+                correctAnswers: answeredCount,
+                subjectForMastery: isMath ? 'mathematics' : 'science',
                 scorePercent,
             });
         } catch {
@@ -194,7 +351,7 @@ export const KnowledgeCheck: React.FC<KnowledgeCheckProps> = ({
         }
 
         onComplete?.({
-            correctAnswers,
+            correctAnswers: answeredCount,
             totalQuestions: total,
             scorePercent,
             xpEarned,
@@ -320,49 +477,116 @@ export const KnowledgeCheck: React.FC<KnowledgeCheckProps> = ({
                                     {currentQuestion.question}
                                 </Text>
 
-                                {currentQuestion.options.map((option, index) => {
-                                    let optionColor = themedColors.background.paper;
-                                    let textColor = themedColors.text.primary;
-                                    let borderColor = themedColors.text.secondary + '40';
-
-                                    if (selectedAnswer !== null) {
-                                        if (index === currentQuestion.correctIndex) {
-                                            optionColor = '#4CAF5020';
-                                            borderColor = '#4CAF50';
-                                            textColor = '#4CAF50';
-                                        } else if (index === selectedAnswer && !isCorrect) {
-                                            optionColor = '#F4433620';
-                                            borderColor = '#F44336';
-                                            textColor = '#F44336';
-                                        }
-                                    }
-
-                                    return (
-                                        <TouchableOpacity
-                                            key={index}
-                                            style={[styles.option, { backgroundColor: optionColor, borderColor }]}
-                                            onPress={() => handleSelectAnswer(index)}
-                                            disabled={selectedAnswer !== null}
-                                        >
-                                            <View style={[styles.optionIndex, { borderColor }]}>
-                                                <Text style={[styles.optionIndexText, { color: textColor }]}>
-                                                    {String.fromCharCode(65 + index)}
+                                {isMath ? (
+                                    <View style={[styles.answerCard, { backgroundColor: themedColors.background.paper }]}>
+                                        <Text style={[styles.answerLabel, { color: themedColors.text.secondary }]}>
+                                            Your Answer
+                                        </Text>
+                                        <TextInput
+                                            value={textAnswers[currentQuestion.id] || ''}
+                                            onChangeText={(text) => updateAnswerText(currentQuestion.id, text)}
+                                            placeholder="Type your equation or explanation..."
+                                            placeholderTextColor={themedColors.text.disabled}
+                                            style={[styles.answerInput, { color: themedColors.text.primary, borderColor: themedColors.border.light }]}
+                                            multiline
+                                        />
+                                        <View style={styles.actionRow}>
+                                            <TouchableOpacity
+                                                style={[styles.actionButton, { backgroundColor: themedColors.background.subtle }]}
+                                                onPress={() => pickImage('library')}
+                                            >
+                                                <Ionicons name="cloud-upload-outline" size={18} color={themedColors.text.primary} />
+                                                <Text style={[styles.actionText, { color: themedColors.text.primary }]}>Upload image</Text>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity
+                                                style={[styles.actionButton, { backgroundColor: themedColors.background.subtle }]}
+                                                onPress={() => pickImage('camera')}
+                                            >
+                                                <Ionicons name="camera-outline" size={18} color={themedColors.text.primary} />
+                                                <Text style={[styles.actionText, { color: themedColors.text.primary }]}>Camera</Text>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity
+                                                style={[
+                                                    styles.actionButton,
+                                                    { backgroundColor: isRecording ? '#FFCDD2' : themedColors.background.subtle },
+                                                ]}
+                                                onPress={() => isRecording ? stopRecording() : startRecording()}
+                                            >
+                                                <Ionicons name={isRecording ? 'stop' : 'mic-outline'} size={18} color={isRecording ? '#B71C1C' : themedColors.text.primary} />
+                                                <Text style={[styles.actionText, { color: isRecording ? '#B71C1C' : themedColors.text.primary }]}>
+                                                    {isRecording ? 'Stop' : 'Record'}
                                                 </Text>
-                                            </View>
-                                            <Text style={[styles.optionText, { color: textColor }]}>
-                                                {option}
-                                            </Text>
-                                            {selectedAnswer !== null && index === currentQuestion.correctIndex && (
-                                                <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
+                                            </TouchableOpacity>
+                                        </View>
+                                        <View style={styles.mediaRow}>
+                                            {imageAnswers[currentQuestion.id]?.uploadUri && (
+                                                <View style={styles.mediaBadge}>
+                                                    <Ionicons name="image-outline" size={14} color="#1976D2" />
+                                                    <Text style={[styles.mediaText, { color: themedColors.text.secondary }]}>Upload attached</Text>
+                                                </View>
                                             )}
-                                            {selectedAnswer === index && !isCorrect && (
-                                                <Ionicons name="close-circle" size={24} color="#F44336" />
+                                            {imageAnswers[currentQuestion.id]?.cameraUri && (
+                                                <View style={styles.mediaBadge}>
+                                                    <Ionicons name="camera-outline" size={14} color="#1976D2" />
+                                                    <Text style={[styles.mediaText, { color: themedColors.text.secondary }]}>Camera attached</Text>
+                                                </View>
                                             )}
-                                        </TouchableOpacity>
-                                    );
-                                })}
+                                            {audioAnswers[currentQuestion.id] && (
+                                                <View style={styles.mediaBadge}>
+                                                    <Ionicons name="mic-outline" size={14} color="#1976D2" />
+                                                    <Text style={[styles.mediaText, { color: themedColors.text.secondary }]}>Audio attached</Text>
+                                                </View>
+                                            )}
+                                        </View>
+                                        {mediaStatus && (
+                                            <Text style={[styles.mediaStatus, { color: themedColors.text.secondary }]}>{mediaStatus}</Text>
+                                        )}
+                                    </View>
+                                ) : (
+                                    currentQuestion.options.map((option, index) => {
+                                        let optionColor = themedColors.background.paper;
+                                        let textColor = themedColors.text.primary;
+                                        let borderColor = themedColors.text.secondary + '40';
 
-                                {showExplanation && (
+                                        if (selectedAnswer !== null) {
+                                            if (index === currentQuestion.correctIndex) {
+                                                optionColor = '#4CAF5020';
+                                                borderColor = '#4CAF50';
+                                                textColor = '#4CAF50';
+                                            } else if (index === selectedAnswer && !isCorrect) {
+                                                optionColor = '#F4433620';
+                                                borderColor = '#F44336';
+                                                textColor = '#F44336';
+                                            }
+                                        }
+
+                                        return (
+                                            <TouchableOpacity
+                                                key={index}
+                                                style={[styles.option, { backgroundColor: optionColor, borderColor }]}
+                                                onPress={() => handleSelectAnswer(index)}
+                                                disabled={selectedAnswer !== null}
+                                            >
+                                                <View style={[styles.optionIndex, { borderColor }]}>
+                                                    <Text style={[styles.optionIndexText, { color: textColor }]}>
+                                                        {String.fromCharCode(65 + index)}
+                                                    </Text>
+                                                </View>
+                                                <Text style={[styles.optionText, { color: textColor }]}>
+                                                    {option}
+                                                </Text>
+                                                {selectedAnswer !== null && index === currentQuestion.correctIndex && (
+                                                    <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
+                                                )}
+                                                {selectedAnswer === index && !isCorrect && (
+                                                    <Ionicons name="close-circle" size={24} color="#F44336" />
+                                                )}
+                                            </TouchableOpacity>
+                                        );
+                                    })
+                                )}
+
+                                {!isMath && showExplanation && (
                                     <View style={[
                                         styles.explanationBox,
                                         {
@@ -389,10 +613,36 @@ export const KnowledgeCheck: React.FC<KnowledgeCheckProps> = ({
                                     </View>
                                 )}
 
-                                {selectedAnswer !== null && (
+                                {!isMath && selectedAnswer !== null && (
                                     <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
                                         <Text style={styles.nextButtonText}>
                                             {currentIndex < activeQuestions.length - 1 ? 'Next Question' : 'See Results'}
+                                        </Text>
+                                        <Ionicons name="arrow-forward" size={20} color="#FFF" />
+                                    </TouchableOpacity>
+                                )}
+
+                                {isMath && (
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.nextButton,
+                                            !(
+                                                (textAnswers[currentQuestion.id]?.trim()) ||
+                                                imageAnswers[currentQuestion.id]?.uploadUri ||
+                                                imageAnswers[currentQuestion.id]?.cameraUri ||
+                                                audioAnswers[currentQuestion.id]
+                                            ) && styles.nextButtonDisabled,
+                                        ]}
+                                        onPress={handleSubmitMathAnswer}
+                                        disabled={!(
+                                            (textAnswers[currentQuestion.id]?.trim()) ||
+                                            imageAnswers[currentQuestion.id]?.uploadUri ||
+                                            imageAnswers[currentQuestion.id]?.cameraUri ||
+                                            audioAnswers[currentQuestion.id]
+                                        )}
+                                    >
+                                        <Text style={styles.nextButtonText}>
+                                            {currentIndex < activeQuestions.length - 1 ? 'Submit Answer' : 'Finish & Score'}
                                         </Text>
                                         <Ionicons name="arrow-forward" size={20} color="#FFF" />
                                     </TouchableOpacity>
@@ -402,21 +652,23 @@ export const KnowledgeCheck: React.FC<KnowledgeCheckProps> = ({
                             <View style={styles.resultsContainer}>
                                 <View style={[styles.resultsCard, { backgroundColor: themedColors.background.paper }]}>
                                     <Ionicons
-                                        name={correctAnswers === activeQuestions.length ? "trophy" : "ribbon"}
+                                        name={(isMath ? Object.keys(answeredIds).length : correctAnswers) === activeQuestions.length ? "trophy" : "ribbon"}
                                         size={64}
-                                        color={correctAnswers === activeQuestions.length ? "#FFD700" : "#1976D2"}
+                                        color={(isMath ? Object.keys(answeredIds).length : correctAnswers) === activeQuestions.length ? "#FFD700" : "#1976D2"}
                                     />
                                     <Text style={[styles.resultsTitle, { color: themedColors.text.primary }]}>
-                                        {correctAnswers === activeQuestions.length ? 'Perfect Score!' : 'Quiz Complete!'}
+                                        {(isMath ? Object.keys(answeredIds).length : correctAnswers) === activeQuestions.length ? 'Perfect Score!' : 'Quiz Complete!'}
                                     </Text>
                                     <Text style={[styles.scoreText, { color: themedColors.text.secondary }]}>
-                                        You got {correctAnswers} out of {activeQuestions.length} correct
+                                        {isMath
+                                            ? `You answered ${Object.keys(answeredIds).length} of ${activeQuestions.length} questions`
+                                            : `You got ${correctAnswers} out of ${activeQuestions.length} correct`}
                                     </Text>
 
                                     <View style={styles.xpEarned}>
                                         <Ionicons name="star" size={28} color="#FFD700" />
                                         <Text style={styles.xpEarnedText}>
-                                            +{Math.round((correctAnswers / Math.max(1, activeQuestions.length)) * simulation.xpReward)} XP
+                                            +{Math.round(((isMath ? Object.keys(answeredIds).length : correctAnswers) / Math.max(1, activeQuestions.length)) * simulation.xpReward)} XP
                                         </Text>
                                     </View>
 
@@ -645,6 +897,67 @@ const styles = StyleSheet.create({
         fontSize: 15,
         lineHeight: 22,
     },
+    answerCard: {
+        padding: 16,
+        borderRadius: 12,
+        marginBottom: 16,
+    },
+    answerLabel: {
+        fontSize: 12,
+        fontWeight: '600',
+        marginBottom: 8,
+        textTransform: 'uppercase',
+        letterSpacing: 0.4,
+    },
+    answerInput: {
+        minHeight: 90,
+        borderRadius: 10,
+        borderWidth: 1,
+        padding: 12,
+        fontSize: 14,
+        lineHeight: 20,
+    },
+    actionRow: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 10,
+        marginTop: 12,
+    },
+    actionButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 10,
+        gap: 6,
+    },
+    actionText: {
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    mediaRow: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+        marginTop: 10,
+    },
+    mediaBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        paddingVertical: 4,
+        paddingHorizontal: 8,
+        borderRadius: 8,
+        backgroundColor: '#E3F2FD',
+    },
+    mediaText: {
+        fontSize: 11,
+        fontWeight: '600',
+    },
+    mediaStatus: {
+        marginTop: 8,
+        fontSize: 12,
+    },
     explanationBox: {
         padding: 16,
         borderRadius: 12,
@@ -674,6 +987,9 @@ const styles = StyleSheet.create({
         padding: 16,
         borderRadius: 12,
         gap: 8,
+    },
+    nextButtonDisabled: {
+        backgroundColor: '#9E9E9E',
     },
     nextButtonText: {
         color: '#FFF',

@@ -12,6 +12,8 @@ import {
     StatusBar,
     Dimensions,
     Platform,
+    Modal as RNModal,
+    Pressable,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -67,6 +69,11 @@ const ALevelPureMathScreen: React.FC = () => {
     const [selectedLevel, setSelectedLevel] = useState<'Lower Sixth' | 'Upper Sixth'>('Lower Sixth');
     const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
     const [examSetupModalVisible, setExamSetupModalVisible] = useState(false);
+    
+    // Question Type Modal State
+    const [questionTypeModalVisible, setQuestionTypeModalVisible] = useState(false);
+    const [selectedTopic, setSelectedTopic] = useState<ALevelPureMathTopic | null>(null);
+    const [selectedQuestionFormat, setSelectedQuestionFormat] = useState<'mcq' | 'structured'>('mcq');
 
     // Filter topics by selected level
     const filteredTopics = aLevelPureMathTopics.filter(
@@ -78,61 +85,58 @@ const ALevelPureMathScreen: React.FC = () => {
         : pureMathTheme.upperSixthPrimary;
 
     const handleTopicPress = async (topic: ALevelPureMathTopic) => {
-        try {
-            // A-Level Pure Math topical questions cost 0.5 credit
-            const creditCost = 0.5;
-            if (!user || (user.credits || 0) < creditCost) {
-                Alert.alert(
-                    'Insufficient Credits',
-                    `You need at least ${creditCost} credit to start a quiz. Please purchase credits first.`,
-                    [{ text: 'OK' }]
-                );
-                return;
-            }
-
+        // Check credits first
+        const creditCost = 0.5;
+        if (!user || (user.credits || 0) < creditCost) {
             Alert.alert(
-                '📐 Start Quiz',
-                `${topic.name}\n\n${topic.description}`,
-                [
-                    { text: 'Cancel', style: 'cancel' },
-                    {
-                        text: 'Start Quiz',
-                        onPress: async () => {
-                            try {
-                                setIsGeneratingQuestion(true);
-
-                                const question = await quizApi.generateQuestion(
-                                    'a_level_pure_math',
-                                    topic.id,
-                                    'medium',
-                                    'topical',
-                                    'Pure Mathematics'
-                                );
-
-                                setIsGeneratingQuestion(false);
-
-                                if (question) {
-                                    navigation.navigate('Quiz' as never, {
-                                        question,
-                                        subject: { id: 'a_level_pure_math', name: 'A Level Pure Mathematics' },
-                                        topic: { id: topic.id, name: topic.name }
-                                    } as never);
-                                    // Update credits from server response
-                                    const serverCredits = (question as any).credits_remaining;
-                                    if (serverCredits !== undefined) {
-                                        updateUser({ credits: serverCredits });
-                                    }
-                                }
-                            } catch (error: any) {
-                                setIsGeneratingQuestion(false);
-                                Alert.alert('Error', error.response?.data?.message || 'Failed to start quiz');
-                            }
-                        },
-                    },
-                ]
+                'Insufficient Credits',
+                `You need at least ${creditCost} credit to start a quiz. Please purchase credits first.`,
+                [{ text: 'OK' }]
             );
-        } catch (error) {
-            Alert.alert('Error', 'Failed to start quiz');
+            return;
+        }
+        
+        // Show question type modal
+        setSelectedTopic(topic);
+        setSelectedQuestionFormat('mcq');
+        setQuestionTypeModalVisible(true);
+    };
+    
+    const startQuizWithFormat = async () => {
+        if (!selectedTopic) return;
+        
+        setQuestionTypeModalVisible(false);
+        
+        try {
+            setIsGeneratingQuestion(true);
+
+            const question = await quizApi.generateQuestion(
+                'a_level_pure_math',
+                selectedTopic.id,
+                'medium',
+                'topical',
+                'Pure Mathematics',
+                undefined,  // questionType
+                selectedQuestionFormat  // questionFormat: 'mcq' or 'structured'
+            );
+
+            setIsGeneratingQuestion(false);
+
+            if (question) {
+                navigation.navigate('Quiz' as never, {
+                    question,
+                    subject: { id: 'a_level_pure_math', name: 'A Level Pure Mathematics' },
+                    topic: { id: selectedTopic.id, name: selectedTopic.name }
+                } as never);
+                // Update credits from server response
+                const serverCredits = (question as any).credits_remaining;
+                if (serverCredits !== undefined) {
+                    updateUser({ credits: serverCredits });
+                }
+            }
+        } catch (error: any) {
+            setIsGeneratingQuestion(false);
+            Alert.alert('Error', error.response?.data?.message || 'Failed to start quiz');
         }
     };
 
@@ -201,9 +205,9 @@ const ALevelPureMathScreen: React.FC = () => {
             {/* Loading Overlay */}
             <LoadingProgress
                 visible={isGeneratingQuestion}
-                message="DeepSeek is generating your A Level Pure Mathematics question..."
-                estimatedTime={10}
-                stage="Thinking"
+                message="Preparing your A Level Pure Mathematics question..."
+                estimatedTime={7}
+                stage="Preparing"
                 steps={pureMathThinkingSteps}
             />
 
@@ -418,6 +422,118 @@ const ALevelPureMathScreen: React.FC = () => {
                 userCredits={user?.credits || 0}
                 availableTopics={filteredTopics.map(t => t.name)}
             />
+            
+            {/* Question Type Modal - MCQ vs Structured */}
+            <RNModal
+                visible={questionTypeModalVisible}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setQuestionTypeModalVisible(false)}
+            >
+                <Pressable
+                    style={styles.modalOverlay}
+                    onPress={() => setQuestionTypeModalVisible(false)}
+                >
+                    <Pressable style={[styles.modalContent, { backgroundColor: isDarkMode ? '#1A1D2E' : '#FFFFFF' }]} onPress={e => e.stopPropagation()}>
+                        {/* Modal Header */}
+                        <View style={styles.modalHeader}>
+                            <View style={styles.modalTitleContainer}>
+                                <MaterialCommunityIcons name="math-integral-box" size={24} color="#8B5CF6" />
+                                <Text style={[styles.modalTitle, { color: isDarkMode ? '#FFFFFF' : '#1A1A2E' }]}>
+                                    {selectedTopic?.name || 'Practice'}
+                                </Text>
+                            </View>
+                            <TouchableOpacity
+                                onPress={() => setQuestionTypeModalVisible(false)}
+                                style={[styles.closeButton, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}
+                            >
+                                <Ionicons name="close" size={20} color={isDarkMode ? '#FFFFFF' : '#1A1A2E'} />
+                            </TouchableOpacity>
+                        </View>
+                        
+                        <Text style={[styles.modalSubtitle, { color: isDarkMode ? 'rgba(255,255,255,0.6)' : 'rgba(26,26,46,0.6)' }]}>
+                            Choose your question format
+                        </Text>
+                        
+                        {/* MCQ Option */}
+                        <TouchableOpacity
+                            style={[
+                                styles.formatOption,
+                                { 
+                                    backgroundColor: isDarkMode ? 'rgba(139, 92, 246, 0.08)' : 'rgba(139, 92, 246, 0.05)',
+                                    borderColor: selectedQuestionFormat === 'mcq' ? '#8B5CF6' : isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                                    borderWidth: selectedQuestionFormat === 'mcq' ? 2 : 1,
+                                }
+                            ]}
+                            onPress={() => setSelectedQuestionFormat('mcq')}
+                            activeOpacity={0.8}
+                        >
+                            <View style={[styles.formatIconContainer, { backgroundColor: 'rgba(139, 92, 246, 0.15)' }]}>
+                                <MaterialCommunityIcons name="checkbox-marked-circle-outline" size={28} color="#8B5CF6" />
+                            </View>
+                            <View style={styles.formatTextContainer}>
+                                <Text style={[styles.formatTitle, { color: isDarkMode ? '#FFFFFF' : '#1A1A2E' }]}>
+                                    Multiple Choice (Paper 1)
+                                </Text>
+                                <Text style={[styles.formatDescription, { color: isDarkMode ? 'rgba(255,255,255,0.6)' : 'rgba(26,26,46,0.6)' }]}>
+                                    Quick practice with 4 options • Instant feedback
+                                </Text>
+                            </View>
+                            {selectedQuestionFormat === 'mcq' && (
+                                <Ionicons name="checkmark-circle" size={24} color="#8B5CF6" />
+                            )}
+                        </TouchableOpacity>
+                        
+                        {/* Structured Option */}
+                        <TouchableOpacity
+                            style={[
+                                styles.formatOption,
+                                { 
+                                    backgroundColor: isDarkMode ? 'rgba(236, 72, 153, 0.08)' : 'rgba(236, 72, 153, 0.05)',
+                                    borderColor: selectedQuestionFormat === 'structured' ? '#EC4899' : isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                                    borderWidth: selectedQuestionFormat === 'structured' ? 2 : 1,
+                                }
+                            ]}
+                            onPress={() => setSelectedQuestionFormat('structured')}
+                            activeOpacity={0.8}
+                        >
+                            <View style={[styles.formatIconContainer, { backgroundColor: 'rgba(236, 72, 153, 0.15)' }]}>
+                                <MaterialCommunityIcons name="file-document-edit-outline" size={28} color="#EC4899" />
+                            </View>
+                            <View style={styles.formatTextContainer}>
+                                <Text style={[styles.formatTitle, { color: isDarkMode ? '#FFFFFF' : '#1A1A2E' }]}>
+                                    Structured (Paper 2)
+                                </Text>
+                                <Text style={[styles.formatDescription, { color: isDarkMode ? 'rgba(255,255,255,0.6)' : 'rgba(26,26,46,0.6)' }]}>
+                                    ZIMSEC-style with parts (a), (b), (c) • Image upload for working
+                                </Text>
+                            </View>
+                            {selectedQuestionFormat === 'structured' && (
+                                <Ionicons name="checkmark-circle" size={24} color="#EC4899" />
+                            )}
+                        </TouchableOpacity>
+                        
+                        {/* Start Button */}
+                        <TouchableOpacity
+                            style={styles.startQuizButton}
+                            onPress={startQuizWithFormat}
+                            activeOpacity={0.8}
+                        >
+                            <LinearGradient
+                                colors={selectedQuestionFormat === 'mcq' 
+                                    ? ['#8B5CF6', '#7C3AED'] 
+                                    : ['#EC4899', '#DB2777']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                                style={styles.startQuizButtonGradient}
+                            >
+                                <Text style={styles.startQuizButtonText}>Start Practice</Text>
+                                <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+                            </LinearGradient>
+                        </TouchableOpacity>
+                    </Pressable>
+                </Pressable>
+            </RNModal>
         </View>
     );
 };
@@ -615,6 +731,98 @@ const styles = StyleSheet.create({
         fontSize: 11,
         fontWeight: '700',
         letterSpacing: 0.3,
+    },
+    
+    // Question Type Modal Styles
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    modalContent: {
+        width: '100%',
+        maxWidth: 400,
+        borderRadius: 20,
+        padding: 24,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.25,
+        shadowRadius: 16,
+        elevation: 10,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    modalTitleContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        flex: 1,
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        flex: 1,
+    },
+    closeButton: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalSubtitle: {
+        fontSize: 14,
+        marginBottom: 20,
+    },
+    formatOption: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 16,
+        borderRadius: 14,
+        marginBottom: 12,
+        gap: 14,
+    },
+    formatIconContainer: {
+        width: 52,
+        height: 52,
+        borderRadius: 14,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    formatTextContainer: {
+        flex: 1,
+    },
+    formatTitle: {
+        fontSize: 16,
+        fontWeight: '700',
+        marginBottom: 4,
+    },
+    formatDescription: {
+        fontSize: 13,
+        lineHeight: 18,
+    },
+    startQuizButton: {
+        marginTop: 8,
+        borderRadius: 14,
+        overflow: 'hidden',
+    },
+    startQuizButtonGradient: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 16,
+        gap: 8,
+    },
+    startQuizButtonText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: '700',
     },
 });
 

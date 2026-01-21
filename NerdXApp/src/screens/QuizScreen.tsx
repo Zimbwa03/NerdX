@@ -1,5 +1,5 @@
 // Quiz Screen Component - Professional UI/UX Design
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,6 @@ import {
   TextInput,
   Image,
   StatusBar,
-  Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -32,9 +31,9 @@ import { Button } from '../components/Button';
 import { Colors } from '../theme/colors';
 import { useThemedColors } from '../theme/useThemedStyles';
 import LoadingProgress from '../components/LoadingProgress';
+import { getSubjectLoadingSteps } from '../utils/loadingProgress';
 import MathText from '../components/MathText';
 import VoiceMathInput from '../components/VoiceMathInput';
-import AIThinkingOverlay from '../components/AIThinkingOverlay';
 
 const QuizScreen: React.FC = () => {
   const route = useRoute();
@@ -43,7 +42,7 @@ const QuizScreen: React.FC = () => {
   const { isDarkMode } = useTheme();
   const themedColors = useThemedColors();
   const { showSuccess, showError, showWarning, showInfo } = useNotification();
-  const { question: initialQuestion, subject, topic, isExamMode, year, paper, isReviewMode, reviewItems, questionType } = route.params as {
+  const { question: initialQuestion, subject, topic, isExamMode, year, paper, isReviewMode, reviewItems, questionType, mixImagesEnabled: initialMixImagesEnabled } = route.params as {
     question?: Question;
     subject: any;
     topic?: any;
@@ -53,6 +52,7 @@ const QuizScreen: React.FC = () => {
     isReviewMode?: boolean;
     reviewItems?: any[];
     questionType?: string; // 'mcq', 'structured', or 'essay'
+    mixImagesEnabled?: boolean;
   };
 
   const normalizeQuestion = useCallback((q: Question | undefined): Question | undefined => {
@@ -103,25 +103,19 @@ const QuizScreen: React.FC = () => {
   const [hintsUsed, setHintsUsed] = useState<number>(0);
 
   // Vertex AI Image Mixing state
-  const [mixImagesEnabled, setMixImagesEnabled] = useState<boolean>(false);
-  const [showMixImagesPrompt, setShowMixImagesPrompt] = useState<boolean>(false);
-
-  /* Thinking UI State */
-  const [showThinking, setShowThinking] = useState(false);
-  const [thinkingContent, setThinkingContent] = useState('');
-  const [thinkingStage, setThinkingStage] = useState(1);
-  const [totalThinkingStages, setTotalThinkingStages] = useState(4);
-
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-
-  // Check if subject supports image questions (Science subjects only)
-  const supportsImageQuestions = ['combined_science', 'a_level_biology', 'a_level_chemistry', 'a_level_physics'].includes(subject?.id || '');
+  const [mixImagesEnabled, setMixImagesEnabled] = useState<boolean>(!!initialMixImagesEnabled);
 
 
   // Voice/STT support (Wispr Flow) â€” enable for A Level sciences and math
   const isMathSubject = subject?.id === 'mathematics' || subject?.id === 'a_level_pure_math';
-  const supportsVoiceToText = isMathSubject || ['a_level_physics', 'a_level_chemistry', 'a_level_biology'].includes(subject?.id);
+  const supportsVoiceToText = isMathSubject || ['combined_science', 'a_level_physics', 'a_level_chemistry', 'a_level_biology'].includes(subject?.id);
   const voiceInputMode: 'math' | 'general' = isMathSubject ? 'math' : 'general';
+
+  const loadingSteps = React.useMemo(() => getSubjectLoadingSteps(subject?.id), [subject?.id]);
+  const loadingMessage = isExamMode
+    ? 'Loading exam question...'
+    : (topic?.name ? `Preparing ${topic.name} question...` : 'Preparing next question...');
+  const loadingTime = isExamMode ? 5 : (isMathSubject ? 6 : 7);
 
   // Initial fetch for exam mode OR review mode if no question provided
   useEffect(() => {
@@ -209,32 +203,9 @@ const QuizScreen: React.FC = () => {
     }
   }, [question]);
 
-  // Show image mixing prompt for science subjects on first load
   useEffect(() => {
-    if (supportsImageQuestions && questionCount === 1 && !isExamMode && !isReviewMode) {
-      // Show alert to ask user if they want to enable image questions
-      Alert.alert(
-        '🖼️ Visual Learning Mode',
-        'Enable image-based questions? Every 6th question will include a scientific diagram.\n\n⚠️ Image questions cost 4 credits (vs 0.25-0.5 credits for text questions, depending on subject).',
-        [
-          {
-            text: 'No Thanks',
-            style: 'cancel',
-            onPress: () => setMixImagesEnabled(false),
-          },
-          {
-            text: 'Enable Images',
-            style: 'default',
-            onPress: () => {
-              setMixImagesEnabled(true);
-              showSuccess('🖼️ Visual questions enabled! Every 6th question will have a diagram.', 4000);
-            },
-          },
-        ],
-        { cancelable: true }
-      );
-    }
-  }, [supportsImageQuestions, questionCount, isExamMode, isReviewMode]);
+    setMixImagesEnabled(!!initialMixImagesEnabled);
+  }, [initialMixImagesEnabled]);
 
 
   // Determine gradient colors based on subject
@@ -251,6 +222,14 @@ const QuizScreen: React.FC = () => {
       setSelectedAnswer(answer);
     }
   };
+
+  const isStructuredQuestion = !!(question?.question_type === 'structured' && question.structured_question);
+  const hasStructuredAnswer = isStructuredQuestion
+    ? Object.values(structuredAnswers).some((answer) => answer.trim().length > 0)
+    : false;
+  const canSubmit = isStructuredQuestion
+    ? hasStructuredAnswer
+    : (!!selectedAnswer || !!textAnswer || !!answerImage);
 
   const handleSubmit = async () => {
     if (!question) return;
@@ -571,69 +550,34 @@ const QuizScreen: React.FC = () => {
           nextQuestionType = questionType;
         }
 
-        console.log(`ðŸ”„ Generating next ${nextQuestionType || 'MCQ'} question for topic: ${topic?.id || 'general'}`);
+        console.log(`🔄 Generating next ${nextQuestionType || 'MCQ'} question for topic: ${topic?.id || 'general'}`);
 
-        // Use streaming for Mathematics (DeepSeek Reasoner)
-        if (subject?.id === 'mathematics' ||
-          subject?.id === 'a_level_pure_math' ||
-          subject?.id === 'a_level_statistics') {
+        // Keep structured format sticky for Combined Science and A-Level subjects
+        const supportsStructuredFormat = [
+          'combined_science',
+          'a_level_biology',
+          'a_level_chemistry',
+          'a_level_physics'
+        ].includes(subject?.id || '');
 
-          setShowThinking(true);
-          setThinkingContent('🧠 Analyzing request...');
-          setThinkingStage(1);
+        const nextQuestionFormat =
+          supportsStructuredFormat && (nextQuestionType === 'structured' || question?.structured_question)
+            ? 'structured'
+            : undefined;
 
-          try {
-            newQuestion = await quizApi.generateQuestionStream(
-              subject.id,
-              topic?.id || '',
-              'medium',
-              (content, stage, total) => {
-                setThinkingContent(content);
-                setThinkingStage(stage);
-                setTotalThinkingStages(total);
-              }
-            );
-          } catch (err) {
-            console.error('Streaming failed, falling back to standard generation:', err);
-            setShowThinking(false);
-            // Fallback to standard generation
-            newQuestion = await quizApi.generateQuestion(
-              subject.id,
-              topic?.id,
-              'medium',
-              topic ? 'topical' : 'exam',
-              topic?.parent_subject,
-              nextQuestionType,
-              undefined,
-              nextQuestionType,
-              mixImagesEnabled,
-              questionCount + 1
-            );
-          }
-
-          // Add small delay to show completion
-          if (newQuestion) {
-            setThinkingContent('✅ Finalizing question...');
-            setThinkingStage(4);
-            await new Promise(resolve => setTimeout(resolve, 800));
-          }
-
-          setShowThinking(false);
-        } else {
-          // Standard generation for other subjects
-          newQuestion = await quizApi.generateQuestion(
-            subject.id,
-            topic?.id,
-            'medium',  // difficulty
-            topic ? 'topical' : 'exam',  // type
-            topic?.parent_subject,  // parent_subject for Combined Science
-            nextQuestionType,  // Preserve question type (mcq, structured, essay)
-            undefined,  // questionFormat
-            nextQuestionType,  // Also pass as question_type for backend compatibility
-            mixImagesEnabled,  // Enable Vertex AI image questions
-            questionCount + 1   // Pass the next question number
-          );
-        }
+        // Use standard generation for all subjects (stable, no streaming)
+        newQuestion = await quizApi.generateQuestion(
+          subject.id,
+          topic?.id,
+          'medium',  // difficulty
+          topic ? 'topical' : 'exam',  // type
+          topic?.parent_subject,  // parent_subject for Combined Science
+          nextQuestionType,  // Preserve question type (mcq, structured, essay)
+          nextQuestionFormat,  // questionFormat (keep structured for Combined Science)
+          nextQuestionType,  // Also pass as question_type for backend compatibility
+          mixImagesEnabled,  // Enable Vertex AI image questions
+          questionCount + 1   // Pass the next question number
+        );
       }
 
       if (newQuestion) {
@@ -678,7 +622,10 @@ const QuizScreen: React.FC = () => {
         Alert.alert('Notice', 'No more questions available right now.');
       }
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.message || 'Failed to load next question');
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to load next question';
+      console.error('Question generation error:', error);
+      showError(`❌ ${errorMessage}`, 5000);
+      Alert.alert('Generation Error', errorMessage);
     } finally {
       setLoading(false);
       setGeneratingQuestion(false);
@@ -946,6 +893,8 @@ const QuizScreen: React.FC = () => {
       marginTop: 12,
       borderWidth: 1,
       borderColor: themedColors.border.light,
+      flexShrink: 0,
+      width: '100%',
     },
     solutionTitle: {
       fontSize: 16,
@@ -971,6 +920,8 @@ const QuizScreen: React.FC = () => {
       marginTop: 12,
       borderWidth: 1,
       borderColor: Colors.warning.light,
+      flexShrink: 0,
+      width: '100%',
     },
     hintTitle: {
       fontSize: 16,
@@ -990,6 +941,8 @@ const QuizScreen: React.FC = () => {
       marginTop: 12,
       borderWidth: 1,
       borderColor: Colors.info.light,
+      flexShrink: 0,
+      width: '100%',
     },
     explanationTitle: {
       fontSize: 16,
@@ -1330,6 +1283,14 @@ const QuizScreen: React.FC = () => {
       alignItems: 'flex-start',
       gap: 8,
     },
+    structuredInputBlock: {
+      gap: 6,
+    },
+    structuredAnswerLabel: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: themedColors.text.secondary,
+    },
     structuredInputFlex: {
       flex: 1,
     },
@@ -1383,13 +1344,6 @@ const QuizScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: themedColors.background.default }]}>
-      {/* AI Loading Progress Overlay */}
-      <LoadingProgress
-        visible={generatingQuestion}
-        message="Generating your next question..."
-        estimatedTime={8}
-      />
-
       <StatusBar
         barStyle={isDarkMode ? "light-content" : "dark-content"}
         backgroundColor={themedColors.background.default}
@@ -1522,39 +1476,42 @@ const QuizScreen: React.FC = () => {
                       <Text style={styles.structuredPartQuestion}>{part.question}</Text>
 
                       {!result ? (
-                        <View style={styles.structuredInputRow}>
-                          <TextInput
-                            style={[styles.structuredPartInput, styles.structuredInputFlex]}
-                            value={structuredAnswers[part.label] || ''}
-                            onChangeText={(text) => {
-                              // Limit structured answers to short responses (1-2 sentences max, 200 chars)
-                              const maxLength = 200;
-                              const trimmed = text.length > maxLength ? text.substring(0, maxLength) : text;
-                              setStructuredAnswers(prev => ({
-                                ...prev,
-                                [part.label]: trimmed
-                              }));
-                            }}
-                            placeholder={`Brief answer for ${part.label} (1-2 sentences)...`}
-                            placeholderTextColor={Colors.text.secondary}
-                            multiline
-                            numberOfLines={2}
-                            maxLength={200}
-                            textAlignVertical="top"
-                          />
-                          {supportsVoiceToText && (
-                            <VoiceMathInput
-                              mode="general"
-                              onTranscription={(text) => {
-                                // For structured, keep answers short - replace rather than append
+                        <View style={styles.structuredInputBlock}>
+                          <Text style={styles.structuredAnswerLabel}>Your Answer</Text>
+                          <View style={styles.structuredInputRow}>
+                            <TextInput
+                              style={[styles.structuredPartInput, styles.structuredInputFlex]}
+                              value={structuredAnswers[part.label] || ''}
+                              onChangeText={(text) => {
+                                // Limit structured answers to short responses (1-2 sentences max, 200 chars)
+                                const maxLength = 200;
+                                const trimmed = text.length > maxLength ? text.substring(0, maxLength) : text;
                                 setStructuredAnswers(prev => ({
                                   ...prev,
-                                  [part.label]: text.substring(0, 200) // Limit to 200 chars
+                                  [part.label]: trimmed
                                 }));
                               }}
-                              disabled={!!result}
+                              placeholder={`Brief answer for ${part.label} (1-2 sentences)...`}
+                              placeholderTextColor={Colors.text.secondary}
+                              multiline
+                              numberOfLines={2}
+                              maxLength={200}
+                              textAlignVertical="top"
                             />
-                          )}
+                            {supportsVoiceToText && (
+                              <VoiceMathInput
+                                mode="general"
+                                onTranscription={(text) => {
+                                  // For structured, keep answers short - replace rather than append
+                                  setStructuredAnswers(prev => ({
+                                    ...prev,
+                                    [part.label]: text.substring(0, 200) // Limit to 200 chars
+                                  }));
+                                }}
+                                disabled={!!result}
+                              />
+                            )}
+                          </View>
                         </View>
                       ) : (
                         <View style={styles.structuredPartAnswerDisplay}>
@@ -1801,7 +1758,7 @@ const QuizScreen: React.FC = () => {
 
                   {result.solution && (
                     <View style={styles.solutionContainer}>
-                      <Text style={styles.solutionTitle}>ðŸ“š Detailed Solution:</Text>
+                      <Text style={styles.solutionTitle}>ðŸ"š Detailed Solution:</Text>
                       <MathText>{formatSolutionText(result.solution)}</MathText>
                     </View>
                   )}
@@ -1859,7 +1816,7 @@ const QuizScreen: React.FC = () => {
                       size="large"
                       fullWidth
                       onPress={handleSubmit}
-                      disabled={(!selectedAnswer && !textAnswer && !answerImage) || loading}
+                      disabled={!canSubmit || loading}
                       loading={loading}
                       icon="checkmark-circle"
                       iconPosition="left"
@@ -1909,14 +1866,10 @@ const QuizScreen: React.FC = () => {
       {/* Loading Progress Overlay */}
       <LoadingProgress
         visible={generatingQuestion}
-        message={isExamMode ? 'Loading exam question...' : 'Generating your question...'}
-        estimatedTime={12}
-      />
-      <AIThinkingOverlay
-        visible={showThinking}
-        thinkingContent={thinkingContent}
-        currentStage={thinkingStage}
-        totalStages={totalThinkingStages}
+        message={loadingMessage}
+        estimatedTime={loadingTime}
+        stage="Preparing"
+        steps={loadingSteps}
       />
     </View>
   );

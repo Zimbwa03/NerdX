@@ -267,45 +267,38 @@ class MathQuestionGenerator:
                     recent_topics = set()
             
             # PRIMARY: Try DeepSeek AI first (better for step-by-step math reasoning)
-            if self.deepseek_api_key:
-                logger.info(f"Trying DeepSeek AI (primary) for {subject}/{topic}")
-                prompt = self._create_question_prompt(subject, topic, difficulty, recent_topics)
-                
-                # Single attempt with reasonable timeout
-                try:
-                    response = self._send_api_request(prompt, timeout=30)
-                    if response:
-                        question_data = self._validate_and_format_question(response, subject, topic, difficulty, user_id)
-                        if question_data:
-                            question_data['source'] = 'deepseek_ai'
-                            logger.info(f"DeepSeek AI generated question for {subject}/{topic}")
-                            return question_data
-                except requests.exceptions.Timeout:
-                    logger.warning("DeepSeek API timeout (30s limit)")
-                except Exception as e:
-                    logger.warning(f"DeepSeek API error: {e}")
-                logger.warning("DeepSeek AI failed, using local fallback")
+            if not self.deepseek_api_key:
+                logger.error(f"❌ DeepSeek API key not configured - cannot generate questions for {subject}/{topic}")
+                return None  # Return None instead of fallback - let API endpoint handle retry/error
             
-            # GEMINI FALLBACK DISABLED - Using DeepSeek only
-            # To re-enable Gemini fallback, uncomment the following block:
-            # if self._gemini_configured:
-            #     logger.info(f"Trying Gemini AI (fallback) for {subject}/{topic}")
-            #     gemini_result = self._generate_with_gemini(subject, topic, difficulty, recent_topics)
-            #     if gemini_result:
-            #         question_data = self._validate_and_format_question(gemini_result, subject, topic, difficulty, user_id)
-            #         if question_data:
-            #             question_data['source'] = 'gemini_ai'
-            #             logger.info(f"Gemini AI (fallback) generated question for {subject}/{topic}")
-            #             return question_data
-            #     logger.warning("Gemini AI fallback also failed")
-
-            # FINAL FALLBACK: Use local fallback questions
-            logger.warning(f"All AI providers failed for {subject}/{topic}, using local fallback questions")
-            return self._generate_fallback_question(subject, topic, difficulty)
+            logger.info(f"Trying DeepSeek AI (primary) for {subject}/{topic}")
+            prompt = self._create_question_prompt(subject, topic, difficulty, recent_topics)
+            
+            # Single attempt with reasonable timeout
+            try:
+                response = self._send_api_request(prompt, timeout=30)
+                if response:
+                    question_data = self._validate_and_format_question(response, subject, topic, difficulty, user_id)
+                    if question_data:
+                        question_data['source'] = 'deepseek_ai'
+                        logger.info(f"✅ DeepSeek AI generated question for {subject}/{topic}")
+                        return question_data
+                    else:
+                        logger.warning(f"⚠️ DeepSeek response validation failed for {subject}/{topic}")
+                else:
+                    logger.warning(f"⚠️ Empty response from DeepSeek API for {subject}/{topic}")
+            except requests.exceptions.Timeout:
+                logger.error(f"❌ DeepSeek API timeout (30s limit) for {subject}/{topic}")
+            except Exception as e:
+                logger.error(f"❌ DeepSeek API error for {subject}/{topic}: {e}", exc_info=True)
+            
+            # Return None instead of fallback - API endpoint will handle retry
+            logger.error(f"❌ Failed to generate question for {subject}/{topic} - returning None for retry")
+            return None
 
         except Exception as e:
-            logger.error(f"Critical error in generate_question: {e}")
-            return self._generate_fallback_question(subject, topic, difficulty)
+            logger.error(f"❌ Critical error in generate_question for {subject}/{topic}: {e}", exc_info=True)
+            return None  # Return None instead of fallback - let API endpoint handle retry/error
 
     def _generate_with_gemini(self, subject: str, topic: str, difficulty: str, recent_topics: set = None) -> Optional[Dict]:
         """

@@ -48,8 +48,8 @@ export const getExamLoadingConfig = (
 
     return {
         message,
-        stage: 'Thinking',
+        stage: 'Preparing',
         steps,
-        estimatedTime: phase === 'setup' ? 8 : 6,
+        estimatedTime: phase === 'setup' ? 6 : 5,
     };
 };

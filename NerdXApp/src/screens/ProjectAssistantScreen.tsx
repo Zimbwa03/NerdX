@@ -33,6 +33,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
 import { Colors } from '../theme/colors';
 import { LoadingProgress } from '../components/LoadingProgress';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface Message {
   id: string;
@@ -164,6 +165,7 @@ const ProjectAssistantScreen: React.FC = () => {
   const { isDarkMode } = useTheme();
   const themedColors = useThemedColors();
   const { showSuccess, showError, showWarning, showInfo } = useNotification();
+  const insets = useSafeAreaInsets();
   const params = route.params as {
     projectId: number;
     projectTitle: string;
@@ -1060,7 +1062,11 @@ const ProjectAssistantScreen: React.FC = () => {
         )}
       </ScrollView>
 
-      <View style={[styles.inputContainer, { backgroundColor: themedColors.background.paper, borderTopColor: themedColors.border.light }]}>
+      <View style={[styles.inputContainer, { 
+        backgroundColor: themedColors.background.paper, 
+        borderTopColor: themedColors.border.light,
+        paddingBottom: Math.max(16, insets.bottom + 12) // Ensure minimum 16px + safe area
+      }]}>
         {/* Image Generation Mode Indicator */}
         {imageGenerationMode && (
           <View style={styles.imageModeIndicator}>

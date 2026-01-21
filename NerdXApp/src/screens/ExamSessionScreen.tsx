@@ -36,6 +36,7 @@ import {
     TimeInfo,
     ExamConfig,
 } from '../services/api/examApi';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type ExamStep = 'loading' | 'question' | 'submitting';
 
@@ -51,6 +52,7 @@ const ExamSessionScreen: React.FC = () => {
     const { user, updateUser } = useAuth();
     const { isDarkMode } = useTheme();
     const themedColors = useThemedColors();
+    const insets = useSafeAreaInsets();
 
     // Route params with safe defaults
     const params = route.params as {
@@ -644,7 +646,10 @@ const ExamSessionScreen: React.FC = () => {
             </ScrollView>
 
             {/* Bottom Navigation */}
-            <View style={[styles.bottomNav, { backgroundColor: themedColors.background.paper }]}>
+            <View style={[styles.bottomNav, { 
+                backgroundColor: themedColors.background.paper,
+                paddingBottom: Math.max(24, insets.bottom + 12) // Ensure minimum 24px + safe area
+            }]}>
                 <Button
                     title="Previous"
                     variant="outline"

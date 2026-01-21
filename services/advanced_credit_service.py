@@ -167,10 +167,16 @@ class AdvancedCreditService:
 
                 # A-Level mappings
                 'a_level_pure_math_topical': 'a_level_pure_math_topical',
+                'a_level_pure_math_topical_mcq': 'a_level_pure_math_topical_mcq',
+                'a_level_pure_math_topical_structured': 'a_level_pure_math_topical_structured',
                 'a_level_pure_math_exam': 'a_level_pure_math_exam',
                 'a_level_chemistry_topical': 'a_level_chemistry_topical',
+                'a_level_chemistry_topical_mcq': 'a_level_chemistry_topical_mcq',
+                'a_level_chemistry_topical_structured': 'a_level_chemistry_topical_structured',
                 'a_level_chemistry_exam': 'a_level_chemistry_exam',
                 'a_level_physics_topical': 'a_level_physics_topical',
+                'a_level_physics_topical_mcq': 'a_level_physics_topical_mcq',
+                'a_level_physics_topical_structured': 'a_level_physics_topical_structured',
                 'a_level_physics_exam': 'a_level_physics_exam',
                 'a_level_biology_topical_mcq': 'a_level_biology_topical_mcq',
                 'a_level_biology_topical_structured': 'a_level_biology_topical_structured',
