@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
 NerdX Live - Real-Time Voice AI Tutor
-Optimized Architecture: Server with AUDIO BUFFERING for Smooth Playback
+Optimized Architecture: TRUE STREAMING for minimal latency
 
 DESIGN PRINCIPLES:
-- Server handles security (API key), format conversion, and AUDIO BUFFERING
-- Audio chunks from Gemini are buffered and sent as ONE file per turn
-- This prevents choppy word-by-word playback on the client
-- Provides smooth, natural conversational audio experience
+- Server handles security (API key), format conversion
+- Audio chunks from Gemini are sent IMMEDIATELY to client as they arrive
+- Client plays audio chunks in sequence for real-time conversation
+- Provides sub-second response latency
 
-AUDIO BUFFERING STRATEGY:
-- Receive small PCM chunks from Gemini Live API (~100-200ms each)
-- Buffer all chunks until turnComplete is received
-- Concatenate all PCM data into one continuous audio
-- Convert to WAV and send single file to client
-- Client plays one smooth audio instead of many choppy fragments
+STREAMING STRATEGY:
+- Receive PCM chunks from Gemini Live API (~100-200ms each)
+- Immediately convert each chunk to WAV format
+- Send WAV chunk to client right away
+- Client queues and plays chunks sequentially
+- No waiting for turnComplete before playing audio
 """
 
 import os
@@ -673,15 +673,15 @@ async def run_billing_scheduler(billing: BillingManager, websocket: WebSocket):
 
 class TransparentGeminiPipe:
     """
-    AUDIO BUFFERING PIPE: Buffers audio chunks for smooth playback.
+    TRUE STREAMING PIPE: Sends audio chunks immediately for minimal latency.
     Supports both Vertex AI (preferred) and regular Gemini API.
     Includes session resumption and goAway handling per Gemini Live API docs.
     
-    AUDIO BUFFERING STRATEGY:
-    - Collect PCM chunks during a model turn
-    - When turnComplete is received, concatenate all PCM data
-    - Convert to a single WAV file and send to client
-    - This prevents choppy word-by-word playback
+    STREAMING STRATEGY:
+    - Each PCM chunk from Gemini is immediately converted to WAV
+    - WAV chunk is sent to client right away
+    - Client queues and plays chunks in sequence
+    - Sub-second response latency
     """
     
     def __init__(self, client_ws: WebSocket, session_handle: str = None):
@@ -693,9 +693,6 @@ class TransparentGeminiPipe:
         # Session resumption support
         self.session_handle = session_handle  # For resuming previous sessions
         self.session_id = None  # Returned by server during session
-        # Audio buffering for smooth playback
-        self.audio_buffer: list[bytes] = []  # Buffer of raw PCM bytes
-        self.buffer_lock = asyncio.Lock()  # Thread-safe buffer access
     
     async def _get_vertex_ai_token(self) -> Optional[str]:
         """Get OAuth2 access token for Vertex AI using service account."""
@@ -1024,44 +1021,20 @@ class TransparentGeminiPipe:
     
     async def receive_and_forward(self):
         """
-        Receive from Gemini and forward to client with AUDIO BUFFERING.
+        Receive from Gemini and forward to client with TRUE STREAMING.
         
-        BUFFERING STRATEGY:
-        - Collect all PCM audio chunks during a model turn
-        - When turnComplete is received, concatenate all chunks into one audio
-        - Send single smooth audio to client (no choppy word-by-word)
-        - Added periodic flush to handle cases where turnComplete is delayed
+        STREAMING STRATEGY:
+        - Each PCM audio chunk is immediately converted to WAV
+        - WAV chunk is sent to client right away (no buffering)
+        - Client queues and plays chunks in sequence
+        - Sub-second response latency
         """
         if not self.gemini_ws:
             logger.warning("⚠️ Cannot receive: Gemini WebSocket not connected")
             return
-        
-        # Use a list to allow inner function to modify the time reference
-        last_chunk_time = [None]
-        flush_task = None
-        
-        async def periodic_flush_check():
-            """Periodically flush buffer if chunks are accumulating without turnComplete"""
-            while self.is_active:
-                await asyncio.sleep(2.0)  # Check every 2 seconds
-                async with self.buffer_lock:
-                    has_audio = len(self.audio_buffer) > 0
-                    buffer_size = len(self.audio_buffer) if has_audio else 0
-                
-                if has_audio and last_chunk_time[0]:
-                    time_since_last_chunk = time.time() - last_chunk_time[0]
-                    # If we have audio and no new chunks for 5 seconds, flush it
-                    # This handles cases where turnComplete might be delayed or missed
-                    if time_since_last_chunk >= 5.0:
-                        logger.info(f"⏱️ Periodic flush triggered: {buffer_size} chunks buffered, {time_since_last_chunk:.1f}s since last chunk")
-                        await self._flush_audio_buffer()
-                        last_chunk_time[0] = None  # Reset after flush
-            
-        # Start periodic flush monitor
-        flush_task = asyncio.create_task(periodic_flush_check())
             
         try:
-            logger.info("👂 Starting to listen for Gemini responses...")
+            logger.info("👂 Starting to listen for Gemini responses (STREAMING mode)...")
             while self.is_active:
                 response = await self.gemini_ws.recv()
                 data = json.loads(response)
@@ -1071,7 +1044,7 @@ class TransparentGeminiPipe:
                 if "serverContent" in data:
                     content = data["serverContent"]
                     
-                    # BUFFER audio chunks and extract text for transcription
+                    # Stream audio chunks and extract text for transcription
                     if "modelTurn" in content:
                         model_turn = content["modelTurn"]
                         if "parts" in model_turn:
@@ -1091,7 +1064,7 @@ class TransparentGeminiPipe:
                                         except Exception as e:
                                             logger.warning(f"⚠️ Failed to send text to client: {e}")
                                 
-                                # Buffer audio chunks
+                                # STREAM audio chunks IMMEDIATELY (no buffering)
                                 if "inlineData" in part:
                                     inline_data = part["inlineData"]
                                     mime_type = inline_data.get("mimeType", "")
@@ -1099,28 +1072,26 @@ class TransparentGeminiPipe:
                                     if mime_type.startswith("audio/") and "pcm" in mime_type.lower():
                                         audio_b64 = inline_data.get("data", "")
                                         if audio_b64:
-                                            # Buffer PCM bytes (don't convert yet)
+                                            # Convert PCM to WAV immediately
                                             pcm_bytes = base64.b64decode(audio_b64)
-                                            async with self.buffer_lock:
-                                                self.audio_buffer.append(pcm_bytes)
-                                                buffer_size = len(self.audio_buffer)
-                                            last_chunk_time[0] = time.time()
-                                            logger.info(f"📦 Buffered audio chunk: {len(pcm_bytes)} bytes (total: {buffer_size} chunks, ~{sum(len(b) for b in self.audio_buffer) / 24000 / 2:.1f}s audio)")
+                                            wav_bytes = convert_pcm_to_wav(pcm_bytes, sample_rate=24000)
+                                            wav_b64 = base64.b64encode(wav_bytes).decode('utf-8')
+                                            
+                                            # Send to client RIGHT AWAY
+                                            await self.client_ws.send_json({
+                                                "type": "audio",
+                                                "data": wav_b64
+                                            })
+                                            logger.debug(f"📤 Streamed audio chunk: {len(pcm_bytes)} bytes PCM (~{len(pcm_bytes) / 24000 / 2:.2f}s)")
                     
-                    # When turn is complete, send ALL buffered audio as ONE file
+                    # Notify client when turn is complete
                     if content.get("turnComplete"):
-                        last_chunk_time[0] = None  # Reset timer
-                        await self._flush_audio_buffer()
                         await self.client_ws.send_json({"type": "turnComplete"})
-                        logger.info("✅ Turn complete - buffered audio sent to client")
+                        logger.info("✅ Turn complete")
                         
                     if content.get("interrupted"):
-                        last_chunk_time[0] = None  # Reset timer
-                        # Clear buffer on interruption
-                        async with self.buffer_lock:
-                            self.audio_buffer.clear()
                         await self.client_ws.send_json({"type": "interrupted"})
-                        logger.info("🎤 Interrupted - buffer cleared, sent to client")
+                        logger.info("🎤 Interrupted")
                 
                 # Handle goAway notification (session about to end)
                 if "goAway" in data:
@@ -1156,45 +1127,6 @@ class TransparentGeminiPipe:
         except Exception as e:
             if self.is_active:
                 logger.error(f"❌ Receive error: {e}", exc_info=True)
-        finally:
-            # Cancel periodic flush task
-            if flush_task:
-                flush_task.cancel()
-                try:
-                    await flush_task
-                except asyncio.CancelledError:
-                    pass
-    
-    async def _flush_audio_buffer(self):
-        """
-        Flush the audio buffer - concatenate all PCM chunks and send as one WAV.
-        This provides smooth, continuous audio playback instead of choppy chunks.
-        """
-        async with self.buffer_lock:
-            if not self.audio_buffer:
-                logger.debug("📭 No audio in buffer to flush")
-                return
-            
-            # Concatenate all PCM bytes
-            total_chunks = len(self.audio_buffer)
-            combined_pcm = b''.join(self.audio_buffer)
-            self.audio_buffer.clear()
-        
-        if len(combined_pcm) == 0:
-            return
-            
-        logger.info(f"🔊 Flushing audio buffer: {total_chunks} chunks, {len(combined_pcm)} bytes total PCM")
-        
-        # Convert combined PCM to single WAV
-        wav_bytes = convert_pcm_to_wav(combined_pcm, sample_rate=24000)
-        wav_b64 = base64.b64encode(wav_bytes).decode('utf-8')
-        
-        # Send single smooth audio to client
-        await self.client_ws.send_json({
-            "type": "audio",
-            "data": wav_b64
-        })
-        logger.info(f"📢 Sent combined audio to client: {len(wav_b64)} chars WAV base64 ({len(combined_pcm) / 24000 / 2:.1f}s audio)")
     
     async def close(self):
         """Close session"""
@@ -1694,10 +1626,9 @@ async def websocket_nerdx_live(
                     logger.warning("⚠️ Received audio message with empty data")
             
             elif msg_type == "interrupt":
-                # Client barge-in: stop any pending buffered audio immediately
+                # Client barge-in: notify client that interrupt was received
+                # With streaming mode, there's no buffer to clear - just acknowledge
                 try:
-                    async with pipe.buffer_lock:
-                        pipe.audio_buffer.clear()
                     await websocket.send_json({"type": "interrupted"})
                 except Exception:
                     pass

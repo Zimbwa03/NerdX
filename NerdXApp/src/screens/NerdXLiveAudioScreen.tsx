@@ -71,20 +71,20 @@ const COLORS = {
 };
 
 // Audio settings
-// With server-side audio buffering, we receive ONE complete audio per turn
-// The buffer is still useful for edge cases but typically receives 1 chunk now
-const MAX_BUFFER_SIZE = 10; // Reduced from 50 - server sends complete audio
+// With TRUE STREAMING, server sends audio chunks as they arrive from Gemini
+// Each chunk is ~100-200ms of audio, played sequentially for sub-second latency
+const MAX_BUFFER_SIZE = 20; // Queue up to 20 chunks for smooth playback
 const MAX_RECORDING_DURATION_MS = 60000;
-// Adjusted VAD thresholds for better sensitivity:
-// - Higher threshold = less sensitive (won't trigger on background noise)
-// - Longer silence timeout = allows natural speech pauses
-const VAD_SPEECH_THRESHOLD_DB = -40; // Increased from -45 (less sensitive)
-// Barge-in detection is more strict to avoid false triggers from speaker bleed.
+// VAD thresholds optimized for low latency:
+// - Threshold at -40dB ignores background noise
+// - Reduced silence timeout = faster end-of-speech detection
+const VAD_SPEECH_THRESHOLD_DB = -40;
+// Barge-in detection is more strict to avoid false triggers from speaker bleed
 const BARGE_IN_SPEECH_THRESHOLD_DB = -30;
 const BARGE_IN_MIN_HOLD_MS = 350;
 const BARGE_IN_COOLDOWN_MS = 600;
-const VAD_SILENCE_TIMEOUT_MS = 1500; // Increased from 900ms (allow longer pauses)
-const VAD_MIN_RECORDING_MS = 500; // Reduced from 700ms (faster response)
+const VAD_SILENCE_TIMEOUT_MS = 600; // Reduced from 1500ms for faster response
+const VAD_MIN_RECORDING_MS = 300; // Reduced from 500ms for faster response
 
 type ConnectionState = 'idle' | 'connecting' | 'ready' | 'recording' | 'processing' | 'error';
 
@@ -232,19 +232,95 @@ const NerdXLiveAudioScreen: React.FC = () => {
         }
     }, [configureAudioMode]);
 
-    // Audio buffer management
-    const bufferAudioChunk = useCallback((audioData: string) => {
-        if (!currentAudioTurnRef.current) {
-            currentAudioTurnRef.current = {
-                chunks: [],
-                timestamp: Date.now(),
-                isComplete: false
-            };
+    // Streaming audio queue - plays chunks immediately as they arrive
+    const audioQueueRef = useRef<string[]>([]);
+    const isProcessingQueueRef = useRef(false);
+
+    // Process audio queue - plays chunks sequentially as they arrive
+    const processAudioQueue = useCallback(async () => {
+        if (isProcessingQueueRef.current) return; // Already processing
+        if (audioQueueRef.current.length === 0) return; // Nothing to play
+
+        isProcessingQueueRef.current = true;
+        isPlayingRef.current = true;
+        setIsPlaying(true);
+        setAmplitude(0.6);
+        await configureAudioMode(false);
+
+        while (audioQueueRef.current.length > 0 && isPlayingRef.current) {
+            const chunk = audioQueueRef.current.shift();
+            if (!chunk) continue;
+
+            const audioUri = `data:audio/wav;base64,${chunk}`;
+
+            try {
+                if (soundRef.current) {
+                    try {
+                        await soundRef.current.stopAsync();
+                        await soundRef.current.unloadAsync();
+                    } catch (e) { }
+                }
+
+                const { sound } = await Audio.Sound.createAsync(
+                    { uri: audioUri },
+                    { shouldPlay: true, volume: 1.0, progressUpdateIntervalMillis: 100 }
+                );
+                soundRef.current = sound;
+
+                // Wait for playback to complete
+                await new Promise<void>((resolve) => {
+                    let resolved = false;
+                    const timeout = setTimeout(() => {
+                        if (!resolved) { resolved = true; resolve(); }
+                    }, 10000); // 10s max per chunk
+
+                    sound.setOnPlaybackStatusUpdate((status: AVPlaybackStatus) => {
+                        if (resolved) return;
+                        if (!status.isLoaded) {
+                            if ('error' in status) { clearTimeout(timeout); resolved = true; resolve(); }
+                            return;
+                        }
+                        if (status.didJustFinish) {
+                            clearTimeout(timeout);
+                            resolved = true;
+                            resolve();
+                        }
+                    });
+                });
+            } catch (error) {
+                console.error('❌ Error playing audio chunk:', error);
+            }
         }
-        currentAudioTurnRef.current.chunks.push(audioData);
-        if (currentAudioTurnRef.current.chunks.length > MAX_BUFFER_SIZE) {
-            currentAudioTurnRef.current.chunks = currentAudioTurnRef.current.chunks.slice(-MAX_BUFFER_SIZE);
+
+        // Queue exhausted, cleanup
+        if (soundRef.current) {
+            try {
+                await soundRef.current.stopAsync();
+                await soundRef.current.unloadAsync();
+            } catch (e) { }
+            soundRef.current = null;
         }
+
+        isProcessingQueueRef.current = false;
+        isPlayingRef.current = false;
+        setIsPlaying(false);
+        setAmplitude(0);
+        setConnectionState('ready');
+    }, [configureAudioMode]);
+
+    // Queue audio chunk and start processing
+    const queueAudioChunk = useCallback((audioData: string) => {
+        audioQueueRef.current.push(audioData);
+        if (audioQueueRef.current.length > MAX_BUFFER_SIZE) {
+            audioQueueRef.current = audioQueueRef.current.slice(-MAX_BUFFER_SIZE);
+        }
+        // Start processing if not already running
+        processAudioQueue();
+    }, [processAudioQueue]);
+
+    // Clear audio queue (for interruptions)
+    const clearAudioQueue = useCallback(() => {
+        audioQueueRef.current = [];
     }, []);
 
     // Play complete audio turn
@@ -253,7 +329,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
             console.log('⚠️ Already playing audio - ignoring duplicate play request');
             return;
         }
-        
+
         if (audioTurn.chunks.length === 0) {
             console.log('⚠️ No audio chunks to play');
             return;
@@ -277,17 +353,17 @@ const NerdXLiveAudioScreen: React.FC = () => {
 
             try {
                 if (soundRef.current) {
-                    try { 
+                    try {
                         await soundRef.current.stopAsync();
-                        await soundRef.current.unloadAsync(); 
+                        await soundRef.current.unloadAsync();
                     } catch (e) { }
                 }
 
                 console.log(`▶️ Playing chunk ${i + 1}/${audioTurn.chunks.length}`);
                 const { sound } = await Audio.Sound.createAsync(
                     { uri: audioUri },
-                    { 
-                        shouldPlay: true, 
+                    {
+                        shouldPlay: true,
                         volume: 1.0,
                         progressUpdateIntervalMillis: 100
                     }
@@ -298,7 +374,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
                 await new Promise<void>((resolve) => {
                     let resolved = false;
                     let playbackFinished = false;
-                    
+
                     // Calculate estimated duration (WAV file size / sample rate / channels / bit depth)
                     // Rough estimate: base64 size * 3/4 / 48000 / 2 / 2 = seconds
                     const estimatedDuration = Math.max(30000, (chunk.length * 3 / 4 / 48000 / 2 / 2) * 1000);
@@ -313,7 +389,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
 
                     sound.setOnPlaybackStatusUpdate((status: AVPlaybackStatus) => {
                         if (resolved) return;
-                        
+
                         if (!status.isLoaded) {
                             if ('error' in status) {
                                 console.error(`❌ Chunk ${i + 1} playback error:`, status.error);
@@ -324,7 +400,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
                             }
                             return;
                         }
-                        
+
                         // Check if playback finished
                         if (status.didJustFinish || (status.positionMillis > 0 && status.durationMillis > 0 && status.positionMillis >= status.durationMillis - 100)) {
                             if (!playbackFinished) {
@@ -337,7 +413,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
                         }
                     });
                 });
-                
+
                 // Small delay between chunks to ensure smooth transition
                 if (i < audioTurn.chunks.length - 1) {
                     await new Promise(resolve => setTimeout(resolve, 50));
@@ -674,9 +750,8 @@ const NerdXLiveAudioScreen: React.FC = () => {
                         return;
                     }
                     if (data.data) {
-                        console.log('📥 Received AI audio chunk, buffering...');
-                        bufferAudioChunk(data.data);
-                        startPlaybackTimeout();
+                        console.log('📥 Received AI audio chunk, playing immediately...');
+                        queueAudioChunk(data.data);
                         if (connectionState !== 'recording') {
                             setConnectionState('processing');
                         }
@@ -709,15 +784,12 @@ const NerdXLiveAudioScreen: React.FC = () => {
                     break;
 
                 case 'turnComplete':
-                    if (recordingRef.current) {
-                        console.log('🔇 Ignoring turnComplete - user is speaking');
-                        return;
-                    }
-                    console.log('✅ Turn complete received - playing buffered audio');
-                    completeAudioTurn();
+                    // With streaming, audio is already playing - just log
+                    console.log('✅ Turn complete received');
                     break;
 
                 case 'interrupted':
+                    clearAudioQueue();
                     currentAudioTurnRef.current = null;
                     if (playbackTimeoutRef.current) {
                         clearTimeout(playbackTimeoutRef.current);
@@ -753,7 +825,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
         } catch (error) {
             console.error('Message error:', error);
         }
-    }, [bufferAudioChunk, startPlaybackTimeout, completeAudioTurn, configureAudioMode, playConnectedSound, startRecording, connectionState, interruptPlayback, triggerHaptic]);
+    }, [queueAudioChunk, clearAudioQueue, configureAudioMode, playConnectedSound, startRecording, connectionState, interruptPlayback, triggerHaptic, captionsEnabled]);
 
     // Connect
     const connect = useCallback(async () => {
