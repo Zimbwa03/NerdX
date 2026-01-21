@@ -15,6 +15,7 @@ import {
   RefreshControl,
   ImageBackground,
   Linking,
+  Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -528,7 +529,7 @@ const CreditsScreen: React.FC = () => {
           }}
         >
           <View style={[styles.modalOverlay, { paddingBottom: insets.bottom }]}>
-            <View style={styles.modalContent}>
+            <View style={[styles.modalContent, { maxHeight: Dimensions.get('window').height * 0.85 }]}>
               {/* ✨ Gold Ticket Header */}
               <LinearGradient
                 colors={Colors.premium.goldDark ? [Colors.premium.gold, Colors.premium.goldDark] : ['#FFD700', '#FFA500']}
@@ -540,11 +541,13 @@ const CreditsScreen: React.FC = () => {
                 <Text style={styles.ticketSubtitle}>PREMIUM ACCESS</Text>
               </LinearGradient>
 
-              <View style={styles.ticketBody}>
+              <View style={[styles.ticketBody, { maxHeight: Dimensions.get('window').height * 0.5 }]}>
                 <ScrollView 
                   style={styles.ticketBodyScroll}
-                  showsVerticalScrollIndicator={false}
+                  showsVerticalScrollIndicator={true}
                   contentContainerStyle={styles.ticketBodyContent}
+                  nestedScrollEnabled={true}
+                  keyboardShouldPersistTaps="handled"
                 >
                   <Text style={styles.modalTitle}>Confirm Purchase</Text>
                   {selectedPackage && (
@@ -671,7 +674,17 @@ const CreditsScreen: React.FC = () => {
                 </ScrollView>
                 
                 {!checkingPayment && (
-                  <View style={[styles.modalButtons, { marginBottom: Math.max(insets.bottom, 0) }]}>
+                  <View style={[
+                    styles.modalButtons, 
+                    { 
+                      paddingBottom: Math.max(insets.bottom, 16),
+                      paddingTop: 16,
+                      paddingHorizontal: 24,
+                      backgroundColor: Colors.background.paper,
+                      borderTopWidth: 1,
+                      borderTopColor: Colors.border.light,
+                    }
+                  ]}>
                     <TouchableOpacity
                       style={styles.cancelModalButton}
                       onPress={() => setShowPaymentModal(false)}
@@ -921,7 +934,7 @@ const styles = StyleSheet.create({
     padding: 0, // Remove padding to let header flush
     width: '90%',
     maxWidth: 380,
-    maxHeight: '85%',
+    // maxHeight set inline to avoid StyleSheet.create() issues with dynamic values
     shadowColor: Colors.premium?.gold || '#FFD700',
     shadowOffset: {
       width: 0,
@@ -933,6 +946,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: Colors.premium?.gold || '#FFD700',
+    flexDirection: 'column', // Ensure proper layout
+    // Ensure modal doesn't exceed screen bounds
+    alignSelf: 'center',
   },
   modalHeader: {
     paddingVertical: 20,
@@ -958,14 +974,19 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   ticketBody: {
-    flex: 1,
+    flexShrink: 1, // Allow shrinking instead of flex: 1
     padding: 0,
+    minHeight: 0, // Important for ScrollView to work properly
+    // maxHeight set inline to avoid StyleSheet.create() issues with dynamic values
   },
   ticketBodyScroll: {
-    flex: 1,
+    flexGrow: 0, // Don't grow, let content determine size
+    flexShrink: 1, // Allow shrinking
   },
   ticketBodyContent: {
     padding: 24,
+    paddingBottom: 16, // Reduce bottom padding since buttons have their own padding
+    flexGrow: 0, // Don't force content to fill space
   },
   modalTitle: {
     fontSize: 18,
@@ -1055,9 +1076,8 @@ const styles = StyleSheet.create({
   modalButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 24,
     gap: 12,
-    paddingBottom: 0,
+    // marginTop and paddingBottom removed - handled inline with safe area insets
   },
   cancelModalButton: {
     flex: 1,

@@ -785,7 +785,20 @@ def social_login():
         logger.info(f"Social login attempt: provider={provider}, email={email}, uid={supabase_uid}")
             
         # Check if user is already registered in our system
-        if is_user_registered(email):
+        # For OAuth, check by email first (to prevent duplicates)
+        from database.external_db import is_user_registered_by_email, get_user_registration_by_email
+        
+        # Check by email first (for OAuth users)
+        user_data = None
+        if is_user_registered_by_email(email):
+            logger.info(f"Found existing user by email: {email}")
+            user_data = get_user_registration_by_email(email)
+        # Fallback: check by chat_id (email) in case email field is null
+        elif is_user_registered(email):
+            logger.info(f"Found existing user by chat_id: {email}")
+            user_data = get_user_registration(email)
+        
+        if user_data:
             # Existing user - sync Supabase UID if not present
             try:
                 # Update Supabase UID in our local record if possible/needed
@@ -793,8 +806,6 @@ def social_login():
                 pass 
             except Exception as e:
                 logger.warning(f"Failed to sync Supabase UID: {e}")
-
-            user_data = get_user_registration(email)
             
             # Update name if provided by OAuth and different from stored
             if given_name and given_name != user_data.get('name'):
@@ -864,7 +875,10 @@ def social_login():
                 )
                 
                 # Check if creation succeeded and return data
-                user_data = get_user_registration(email)
+                # Try by email first, then by chat_id
+                user_data = get_user_registration_by_email(email)
+                if not user_data:
+                    user_data = get_user_registration(email)
                 
                 if user_data:
                     # Grant initial credits (Registration Bonus) - one-time welcome bonus
@@ -8323,6 +8337,7 @@ def update_user_preferences():
 def get_ai_insights():
     """
     Generate personalized AI learning insights based on DKT data.
+    Uses Vertex AI (Gemini) to generate personalized feedback and recommendations.
     Provides actionable feedback on strengths, weaknesses, and study recommendations.
     """
     try:
@@ -8330,16 +8345,25 @@ def get_ai_insights():
         
         from services.deep_knowledge_tracing import dkt_service
         
-        # Get knowledge map for all subjects
-        knowledge_map = dkt_service.get_knowledge_map(user_id)
-        skills = knowledge_map.get('skills', []) if knowledge_map else []
+        # Get knowledge map for all subjects (handle errors gracefully)
+        try:
+            knowledge_map = dkt_service.get_knowledge_map(user_id)
+            skills = knowledge_map.get('skills', []) if knowledge_map else []
+        except Exception as dkt_error:
+            logger.warning(f"DKT knowledge map error for user {user_id}: {dkt_error}")
+            knowledge_map = None
+            skills = []
         
-        # Get recent interactions for trend analysis
-        interactions = make_supabase_request("GET", "student_interactions", filters={
-            "user_id": f"eq.{user_id}",
-            "order": "timestamp.desc",
-            "limit": "100"
-        }) or []
+        # Get recent interactions for trend analysis (handle errors gracefully)
+        try:
+            interactions = make_supabase_request("GET", "student_interactions", filters={
+                "user_id": f"eq.{user_id}",
+                "order": "timestamp.desc",
+                "limit": "100"
+            }) or []
+        except Exception as interaction_error:
+            logger.warning(f"Failed to fetch interactions for user {user_id}: {interaction_error}")
+            interactions = []
         
         # Calculate overall learning health score (0-100)
         if skills:
@@ -8456,17 +8480,62 @@ def get_ai_insights():
         except:
             pass
         
-        # Generate personalized encouragement message
-        if health_score >= 80:
-            message = "🌟 Outstanding work! You're mastering your subjects like a pro. Keep up the excellent momentum!"
-        elif health_score >= 60:
-            message = "💪 Great progress! You're building solid foundations. A little more practice and you'll be unstoppable!"
-        elif health_score >= 40:
-            message = "📚 You're on the right track! Focus on your weak areas and you'll see rapid improvement. You've got this!"
-        elif health_score >= 20:
-            message = "🚀 Every expert was once a beginner. Keep practicing consistently and watch your skills grow!"
-        else:
-            message = "🎯 Let's start your learning journey! Take it one step at a time and celebrate every small win."
+        # Generate personalized encouragement message using Vertex AI if available
+        message = None
+        if vertex_service.is_available() and skills:
+            try:
+                # Build context for AI
+                context = f"""
+Student Learning Profile:
+- Health Score: {health_score}/100
+- Total Skills: {len(skills)}
+- Mastered: {len([s for s in skills if s.get('mastery', 0) >= 0.8])}
+- Learning: {len([s for s in skills if 0.4 <= s.get('mastery', 0) < 0.8])}
+- Struggling: {len([s for s in skills if s.get('mastery', 0) < 0.4])}
+- Weekly Activity: {total_this_week} questions, {accuracy_this_week}% accuracy
+- Top Strengths: {', '.join([s['skill_name'] for s in strengths[:3]]) if strengths else 'None yet'}
+- Focus Areas: {', '.join([f['skill_name'] for f in focus_areas[:3]]) if focus_areas else 'None yet'}
+"""
+                
+                prompt = f"""You are an encouraging AI learning coach for a ZIMSEC student in Zimbabwe. 
+Generate a personalized, motivating message (2-3 sentences max) based on this student's learning profile.
+
+{context}
+
+Requirements:
+- Be warm, encouraging, and culturally appropriate for Zimbabwean students
+- Acknowledge their progress and strengths
+- Provide gentle guidance on areas to improve
+- Use emojis sparingly (1-2 max)
+- Keep it concise and actionable
+- Write in friendly, conversational English
+
+Generate ONLY the message text, no explanations or formatting."""
+                
+                # Use Vertex AI to generate personalized message
+                result = vertex_service.generate_text(
+                    prompt=prompt,
+                    model="gemini-2.5-flash"
+                )
+                
+                if result and result.get('success') and result.get('text'):
+                    message = result['text'].strip()
+                    logger.info(f"Generated personalized AI message for user {user_id}")
+            except Exception as ai_error:
+                logger.warning(f"Vertex AI message generation failed: {ai_error}, using fallback")
+        
+        # Fallback to rule-based messages if AI unavailable or failed
+        if not message:
+            if health_score >= 80:
+                message = "🌟 Outstanding work! You're mastering your subjects like a pro. Keep up the excellent momentum!"
+            elif health_score >= 60:
+                message = "💪 Great progress! You're building solid foundations. A little more practice and you'll be unstoppable!"
+            elif health_score >= 40:
+                message = "📚 You're on the right track! Focus on your weak areas and you'll see rapid improvement. You've got this!"
+            elif health_score >= 20:
+                message = "🚀 Every expert was once a beginner. Keep practicing consistently and watch your skills grow!"
+            else:
+                message = "🎯 Let's start your learning journey! Take it one step at a time and celebrate every small win."
         
         return jsonify({
             'success': True,
@@ -8486,6 +8555,28 @@ def get_ai_insights():
         }), 200
         
     except Exception as e:
-        logger.error(f"Get AI insights error: {e}", exc_info=True)
-        return jsonify({'success': False, 'message': 'Server error'}), 500
+        logger.error(f"Get AI insights error for user {g.current_user_id}: {e}", exc_info=True)
+        # Return a default response instead of 500 to prevent frontend errors
+        return jsonify({
+            'success': True,
+            'data': {
+                'health_score': 0,
+                'total_skills': 0,
+                'mastered_count': 0,
+                'learning_count': 0,
+                'struggling_count': 0,
+                'strengths': [],
+                'focus_areas': [],
+                'weekly_trend': {
+                    'total_questions': 0,
+                    'correct_answers': 0,
+                    'accuracy': 0,
+                    'active_days': 0,
+                    'daily_breakdown': []
+                },
+                'study_plan': [],
+                'personalized_message': "🎯 Start answering questions to unlock personalized AI learning insights!",
+                'last_updated': datetime.now().isoformat()
+            }
+        }), 200
 

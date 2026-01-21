@@ -63,14 +63,24 @@ const ResetPasswordScreen: React.FC = () => {
         Linking.getInitialURL().then((url) => {
             if (url) {
                 console.log('🔑 Initial URL:', url);
-                handleDeepLinkUrl(url);
+                // Only process production deep links (nerdx://) or Supabase callbacks
+                if (url.startsWith('nerdx://') || url.includes('supabase.co/auth/v1/callback')) {
+                    handleDeepLinkUrl(url);
+                } else {
+                    console.log('🔑 Skipping dev URL, waiting for production deep link');
+                }
             }
         });
 
         // Listen for URL changes (when link is clicked while app is open)
         const linkingSubscription = Linking.addEventListener('url', (event) => {
             console.log('🔑 URL event:', event.url);
-            handleDeepLinkUrl(event.url);
+            // Only process production deep links (nerdx://) or Supabase callbacks
+            if (event.url.startsWith('nerdx://') || event.url.includes('supabase.co/auth/v1/callback')) {
+                handleDeepLinkUrl(event.url);
+            } else {
+                console.log('🔑 Skipping dev URL, waiting for production deep link');
+            }
         });
 
         return () => {
@@ -90,10 +100,25 @@ const ResetPasswordScreen: React.FC = () => {
     const handleDeepLinkUrl = async (url: string) => {
         try {
             console.log('🔑 Parsing deep link URL:', url);
+            
+            // Skip Expo dev URLs - only process production deep links
+            if (url.startsWith('exp://') || (url.startsWith('http://') && !url.includes('supabase.co'))) {
+                console.log('🔑 Skipping dev URL, waiting for production deep link');
+                return;
+            }
+            
+            // Only process if it's a production deep link (nerdx://) or Supabase callback
+            if (!url.startsWith('nerdx://') && !url.includes('supabase.co/auth/v1/callback')) {
+                console.log('🔑 Skipping non-production URL');
+                return;
+            }
+            
             const parsed = Linking.parse(url);
             console.log('🔑 Parsed URL:', JSON.stringify(parsed));
             
-            if (parsed.path === 'reset-password' || parsed.hostname === 'reset-password') {
+            // Handle nerdx://reset-password (production password reset callback)
+            if ((parsed.scheme === 'nerdx' && (parsed.path === 'reset-password' || parsed.hostname === 'reset-password')) ||
+                (url.includes('supabase.co/auth/v1/callback') && parsed.queryParams?.type === 'recovery')) {
                 const params = parsed.queryParams || {};
                 
                 // Extract Supabase token parameters

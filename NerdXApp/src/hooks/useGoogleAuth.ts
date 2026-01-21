@@ -2,6 +2,7 @@
 import { useCallback, useState } from 'react';
 import * as WebBrowser from 'expo-web-browser';
 import { makeRedirectUri } from 'expo-auth-session';
+import Constants from 'expo-constants';
 import { supabase } from '../services/supabase';
 
 WebBrowser.maybeCompleteAuthSession();
@@ -13,13 +14,34 @@ export const useGoogleAuth = () => {
     setIsLoading(true);
 
     try {
-      // Use consistent scheme with app.json for standalone builds
-      // makeRedirectUri will handle dev vs production automatically
-      const redirectUrl = makeRedirectUri({
-        scheme: 'nerdx',
-        path: 'auth/callback',
-        // preferLocalhost: false, // Use production scheme in standalone builds
-      });
+      // Always use production scheme for OAuth redirect
+      // This ensures APK builds use nerdx://auth/callback
+      // makeRedirectUri will use exp:// in Expo Go, but we want nerdx:// for production
+      const isStandalone = Constants.executionEnvironment === 'standalone' || 
+                          Constants.executionEnvironment === 'storeClient';
+      
+      // For production APK builds, always use hardcoded production scheme
+      // For development, try makeRedirectUri but fallback to production scheme
+      let redirectUrl: string;
+      
+      if (isStandalone) {
+        // Production/standalone build - use hardcoded production scheme
+        redirectUrl = 'nerdx://auth/callback';
+        console.log('🔑 Production/standalone build - using: nerdx://auth/callback');
+      } else {
+        // Development - try makeRedirectUri first
+        const devRedirect = makeRedirectUri({
+          scheme: 'nerdx',
+          path: 'auth/callback',
+          preferLocalhost: false,
+        });
+        
+        // Always use production scheme (nerdx://) even in development
+        // This ensures consistency and works in both dev and production
+        redirectUrl = 'nerdx://auth/callback';
+        console.log('🔑 Using production redirect URL: nerdx://auth/callback');
+        console.log('🔑 (Dev redirect would be:', devRedirect + ')');
+      }
 
       console.log('🔑 Starting Supabase Google Auth with redirect:', redirectUrl);
 
@@ -36,14 +58,57 @@ export const useGoogleAuth = () => {
       }
 
       if (data?.url) {
-        // Open the OAuth URL in browser
+        console.log('🔑 Opening OAuth URL in browser...');
+        console.log('🔑 Expected redirect URL:', redirectUrl);
+        
+        // Open the OAuth URL in browser with proper options
         const result = await WebBrowser.openAuthSessionAsync(
           data.url,
-          redirectUrl
+          redirectUrl,
+          {
+            // Ensure the browser can handle the redirect properly
+            showInRecents: true,
+          }
         );
 
-        console.log('🔑 Browser result:', result.type);
-        console.log('🔑 Callback URL:', result.url);
+        console.log('🔑 Browser result type:', result.type);
+        console.log('🔑 Callback URL received:', result.url);
+        
+        // Handle case where browser might return early
+        if (!result.url && result.type === 'success') {
+          console.log('🔑 No URL in result but type is success, checking for session...');
+          // Wait a bit for the redirect to complete
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Try to get the session directly
+          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+          if (session && !sessionError) {
+            console.log('🔑 Found session after redirect');
+            const { data: userData } = await supabase.auth.getUser();
+            if (userData?.user) {
+              const metadata = userData.user.user_metadata || {};
+              const email = userData.user.email || '';
+              let given_name = metadata.given_name || '';
+              let family_name = metadata.family_name || '';
+              
+              if (!given_name && metadata.full_name) {
+                const nameParts = metadata.full_name.split(' ');
+                given_name = nameParts[0] || '';
+                family_name = nameParts.slice(1).join(' ') || '';
+              }
+              
+              return {
+                id: userData.user.id,
+                email: email,
+                name: metadata.full_name || metadata.name || given_name || '',
+                given_name: given_name || metadata.name || email?.split('@')[0] || '',
+                family_name: family_name || '',
+                picture: metadata.avatar_url || metadata.picture || '',
+                sub: userData.user.id,
+              };
+            }
+          }
+        }
 
         if (result.type === 'success' && result.url) {
           try {

@@ -116,9 +116,15 @@ const EnhancedProgressScreen: React.FC = () => {
       // Fetch AI insights
       try {
         const insightsData = await accountApi.getAIInsights();
-        if (insightsData) setAIInsights(insightsData);
-      } catch (error) {
-        console.log('AI insights unavailable');
+        if (insightsData) {
+          setAIInsights(insightsData);
+          console.log('✅ AI insights loaded successfully');
+        } else {
+          console.log('⚠️ AI insights returned null (no data yet)');
+        }
+      } catch (error: any) {
+        console.error('❌ Get AI insights error:', error);
+        // Don't set error state - allow UI to show empty state gracefully
       }
 
       // Set local gamification data

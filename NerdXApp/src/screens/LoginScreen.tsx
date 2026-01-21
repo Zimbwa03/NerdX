@@ -1,5 +1,5 @@
 // Login Screen Component - Premium UI/UX Design
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -17,6 +17,8 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Linking from 'expo-linking';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../services/api/authApi';
 import { Icons, IconCircle, Icon } from '../components/Icons';
@@ -24,6 +26,7 @@ import { Button } from '../components/Button';
 import { Colors } from '../theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 import { useGoogleAuth } from '../hooks/useGoogleAuth';
+import { supabase } from '../services/supabase';
 
 const { width, height } = Dimensions.get('window');
 
@@ -36,11 +39,13 @@ const LoginScreen: React.FC = () => {
   const route = useRoute();
   const { login } = useAuth();
   const { isReady: isGoogleReady, signIn: signInWithGoogle } = useGoogleAuth();
+  const insets = useSafeAreaInsets();
 
-  // Handle password reset redirects from Supabase callback (but not OAuth callbacks)
+  // Handle deep links for both password reset and OAuth callbacks
   useEffect(() => {
     const params = route.params as any;
-    // Only redirect if it's a password reset (type=recovery), not OAuth (which has access_token but no type=recovery)
+    
+    // Handle password reset redirects
     if (params?.type === 'recovery' || (params?.token_hash && !params?.access_token)) {
       // This is a password reset callback - redirect to ResetPassword screen
       console.log('🔑 Password reset detected in Login screen, redirecting to ResetPassword');
@@ -50,9 +55,182 @@ const LoginScreen: React.FC = () => {
         access_token: params.access_token,
         refresh_token: params.refresh_token,
       } as never);
+      return;
     }
-    // Note: OAuth callbacks with access_token are handled by useGoogleAuth hook, not here
-  }, [route.params, navigation]);
+    
+    // Handle OAuth callbacks (Google sign-in)
+    if (params?.access_token && !params?.type) {
+      console.log('🔑 OAuth callback detected in Login screen, processing...');
+      handleOAuthCallback(params.access_token, params.refresh_token);
+    }
+  }, [route.params, navigation, handleOAuthCallback]);
+
+  // Listen for deep links when app is opened via OAuth redirect
+  useEffect(() => {
+    // Check initial URL (when app is opened via deep link)
+    Linking.getInitialURL().then((url) => {
+      if (url) {
+        console.log('🔑 Initial URL detected:', url);
+        // Only process production deep links (nerdx://) or Supabase callbacks
+        if (url.startsWith('nerdx://') || url.includes('supabase.co/auth/v1/callback')) {
+          handleDeepLink(url);
+        } else {
+          console.log('🔑 Skipping dev URL, waiting for production deep link');
+        }
+      }
+    });
+
+    // Listen for deep links while app is running
+    const subscription = Linking.addEventListener('url', (event) => {
+      console.log('🔑 Deep link received:', event.url);
+      // Only process production deep links (nerdx://) or Supabase callbacks
+      if (event.url.startsWith('nerdx://') || event.url.includes('supabase.co/auth/v1/callback')) {
+        handleDeepLink(event.url);
+      } else {
+        console.log('🔑 Skipping dev URL, waiting for production deep link');
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [handleOAuthCallback]);
+
+  const handleDeepLink = async (url: string) => {
+    try {
+      console.log('🔑 Processing deep link:', url);
+      
+      // Skip Expo dev URLs - only process production deep links
+      if (url.startsWith('exp://') || url.startsWith('http://') || url.startsWith('https://')) {
+        // Only process if it's a Supabase callback URL (for password reset)
+        if (url.includes('supabase.co/auth/v1/callback')) {
+          console.log('🔑 Supabase callback URL detected, processing...');
+        } else {
+          console.log('🔑 Skipping dev/web URL, waiting for production deep link');
+          return;
+        }
+      }
+      
+      const parsed = Linking.parse(url);
+      
+      // Handle nerdx://auth/callback (production OAuth callback)
+      if (parsed.scheme === 'nerdx' && (parsed.path === 'auth/callback' || parsed.hostname === 'auth/callback')) {
+        const params = parsed.queryParams || {};
+        const accessToken = params.access_token as string;
+        const refreshToken = params.refresh_token as string;
+        const type = params.type as string;
+        
+        console.log('🔑 OAuth callback params:', { 
+          hasAccessToken: !!accessToken, 
+          hasRefreshToken: !!refreshToken,
+          type: type 
+        });
+        
+        // Handle OAuth callback (not password reset)
+        if (accessToken && type !== 'recovery') {
+          console.log('🔑 Processing OAuth callback...');
+          await handleOAuthCallback(accessToken, refreshToken);
+        }
+        // Handle password reset
+        else if (type === 'recovery' || params.token_hash) {
+          console.log('🔑 Password reset detected, redirecting...');
+          navigation.navigate('ResetPassword' as never, {
+            token_hash: params.token_hash,
+            type: params.type,
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          } as never);
+        }
+      }
+    } catch (error) {
+      console.error('🔑 Error handling deep link:', error);
+    }
+  };
+
+  const handleOAuthCallback = useCallback(async (accessToken: string, refreshToken?: string) => {
+    try {
+      setIsLoading(true);
+      console.log('🔑 Setting Supabase session from OAuth callback...');
+      
+      // Set the session in Supabase
+      const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken || '',
+      });
+
+      if (sessionError) {
+        console.error('🔑 Session error:', sessionError);
+        throw new Error(`Failed to set session: ${sessionError.message}`);
+      }
+
+      console.log('🔑 Session set successfully, getting user data...');
+      
+      // Get user data from Supabase
+      const { data: userData, error: getUserError } = await supabase.auth.getUser();
+
+      if (getUserError) {
+        console.error('🔑 Get user error:', getUserError);
+        throw new Error(`Failed to get user: ${getUserError.message}`);
+      }
+
+      if (userData?.user) {
+        console.log('🔑 User data retrieved:', { email: userData.user.email, id: userData.user.id });
+        const metadata = userData.user.user_metadata || {};
+        const email = userData.user.email || '';
+        
+        // Parse full_name if it exists
+        let given_name = metadata.given_name || '';
+        let family_name = metadata.family_name || '';
+        
+        if (!given_name && metadata.full_name) {
+          const nameParts = metadata.full_name.split(' ');
+          given_name = nameParts[0] || '';
+          family_name = nameParts.slice(1).join(' ') || '';
+        }
+        
+        const googleUser = {
+          id: userData.user.id,
+          email: email,
+          name: metadata.full_name || metadata.name || given_name || '',
+          given_name: given_name || metadata.name || email?.split('@')[0] || '',
+          family_name: family_name || '',
+          picture: metadata.avatar_url || metadata.picture || '',
+          sub: userData.user.id,
+        };
+        
+        console.log('🔑 Google user data:', { email: googleUser.email, name: googleUser.name });
+        console.log('🔑 Sending to backend for authentication...');
+        
+        // Send to backend for authentication
+        const response = await authApi.socialLogin('google', googleUser);
+
+        console.log('🔑 Backend response:', { success: response.success, hasToken: !!response.token, hasUser: !!response.user });
+
+        if (response.success && response.token && response.user) {
+          console.log('✅ Social login successful, logging in user...');
+          await login(response.user, response.token, response.notifications);
+          console.log('✅ User logged in successfully');
+          // Navigation will happen automatically via AppNavigator when isAuthenticated becomes true
+        } else {
+          console.error('❌ Backend login failed:', response.message);
+          Alert.alert(
+            'Sign In Failed', 
+            response.message || 'Could not sign in with Google. Please try again.'
+          );
+        }
+      } else {
+        throw new Error('User data not found in response');
+      }
+    } catch (error: any) {
+      console.error('❌ OAuth callback error:', error);
+      Alert.alert(
+        'Sign In Error',
+        error?.message || 'Failed to complete Google sign-in. Please try again.'
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, [login]);
 
   const handleLogin = async () => {
     if (!identifier || !password) {
@@ -314,7 +492,7 @@ const LoginScreen: React.FC = () => {
             </View>
 
             {/* Sign Up Link */}
-            <View style={styles.signUpContainer}>
+            <View style={[styles.signUpContainer, { paddingBottom: Math.max(insets.bottom, 20) }]}>
               <Text style={styles.signUpText}>Don't have an account? </Text>
               <TouchableOpacity onPress={navigateToRegister}>
                 <Text style={styles.signUpLink}>Sign Up</Text>
@@ -542,7 +720,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 28,
-    marginBottom: 20,
+    // marginBottom removed - using paddingBottom with safe area insets instead
   },
   signUpText: {
     color: 'rgba(255,255,255,0.7)',

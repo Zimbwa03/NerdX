@@ -5,16 +5,33 @@ import { createClient } from '@supabase/supabase-js';
 import Constants from 'expo-constants';
 
 // Credentials - Using same Supabase project as backend for notifications
-// Use environment variables with fallback to default values for the correct project
+// IMPORTANT: Always use the correct Supabase project: lzteiewcvxoazqfxfjgg
+// Priority: app.json extra config > environment variable > hardcoded fallback
+const CORRECT_SUPABASE_URL = 'https://lzteiewcvxoazqfxfjgg.supabase.co';
+const CORRECT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6dGVpZXdjdnhvYXpxZnhmamdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE5NDE0MTIsImV4cCI6MjA3NzUxNzQxMn0.ZtCVuK3rx2rqpc5kJV-6iblqjUEZy52dkpUdkEbQlvI';
+
+// Get URL from app.json extra config first (most reliable)
 const SUPABASE_URL = 
     Constants.expoConfig?.extra?.supabaseUrl ||
     process.env.EXPO_PUBLIC_SUPABASE_URL ||
-    'https://lzteiewcvxoazqfxfjgg.supabase.co';
+    CORRECT_SUPABASE_URL;
 
 const SUPABASE_ANON_KEY = 
     Constants.expoConfig?.extra?.supabaseAnonKey ||
     process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ||
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6dGVpZXdjdnhvYXpxZnhmamdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE5NDE0MTIsImV4cCI6MjA3NzUxNzQxMn0.ZtCVuK3rx2rqpc5kJV-6iblqjUEZy52dkpUdkEbQlvI';
+    CORRECT_SUPABASE_ANON_KEY;
+
+// Validate that we're using the correct Supabase project
+if (SUPABASE_URL !== CORRECT_SUPABASE_URL) {
+    console.warn('⚠️ WARNING: Using incorrect Supabase URL:', SUPABASE_URL);
+    console.warn('⚠️ Expected URL:', CORRECT_SUPABASE_URL);
+    console.warn('⚠️ This may cause authentication failures!');
+}
+
+// Log the URL being used (for debugging)
+console.log('🔧 Supabase Configuration:');
+console.log('   URL:', SUPABASE_URL);
+console.log('   Project:', SUPABASE_URL.includes('lzteiewcvxoazqfxfjgg') ? '✅ CORRECT' : '❌ WRONG PROJECT');
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     throw new Error('Missing Supabase configuration. Please set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY');

@@ -16,6 +16,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
 import { supabase } from '../services/supabase';
 
 const { width, height } = Dimensions.get('window');
@@ -41,14 +42,21 @@ const ForgotPasswordScreen: React.FC = () => {
         setIsLoading(true);
         try {
             // Use Supabase to send password reset email
-            // The redirect URL should point to your app's deep link
-            // For React Native, we use expo-linking format
-            // Supabase will append access_token and other params to this URL
+            // Always use production scheme for password reset (consistent with OAuth)
+            // For production APK builds, this ensures nerdx://reset-password is used
+            const isStandalone = Constants.executionEnvironment === 'standalone' || 
+                                Constants.executionEnvironment === 'storeClient';
+            
+            // Always use production scheme (nerdx://) for consistency
+            // This ensures APK builds use the correct deep link
             const redirectUrl = Platform.select({
                 ios: 'nerdx://reset-password',
                 android: 'nerdx://reset-password',
                 default: 'https://nerdx.app/reset-password', // Web fallback
             });
+
+            console.log('🔑 Password reset redirect URL:', redirectUrl);
+            console.log('🔑 Build environment:', isStandalone ? 'production/standalone' : 'development');
 
             const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
                 redirectTo: redirectUrl,

@@ -1175,6 +1175,25 @@ def get_user_registration(chat_id):
         logger.error(f"Error getting user registration: {e}")
         return None
 
+def get_user_registration_by_email(email):
+    """Get user registration data by email (for OAuth users)"""
+    try:
+        if not email:
+            return None
+        email_lower = email.strip().lower()
+        result = make_supabase_request("GET", "users_registration", filters={"email": f"eq.{email_lower}"}, use_service_role=True)
+        if result and len(result) > 0:
+            return result[0]
+        return None
+    except Exception as e:
+        logger.error(f"Error getting user registration by email: {e}")
+        return None
+
+def is_user_registered_by_email(email):
+    """Check if user is registered by email (for OAuth users)"""
+    registration = get_user_registration_by_email(email)
+    return registration is not None
+
 def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_nerdx_id=None, password_hash=None, password_salt=None, email=None, phone_number=None):
     """Create new user registration - MUST succeed in Supabase or fail completely"""
     try:
