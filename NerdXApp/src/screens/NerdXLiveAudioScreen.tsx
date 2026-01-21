@@ -384,7 +384,6 @@ const NerdXLiveAudioScreen: React.FC = () => {
     }, []);
 
     const startBargeInMonitor = useCallback(async () => {
-        if (!listeningEnabled) return;
         if (Platform.OS === 'web') return;
         if (bargeInMonitorRef.current) return;
         // Only monitor while AI is speaking and socket is open
@@ -465,7 +464,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
             // If monitoring fails, continue without barge-in
             try { await stopBargeInMonitor(); } catch (err) { }
         }
-    }, [configureAudioMode, listeningEnabled, stopBargeInMonitor]);
+    }, [configureAudioMode, stopBargeInMonitor]);
 
     stopBargeInMonitorRef.current = stopBargeInMonitor;
     startBargeInMonitorRef.current = startBargeInMonitor;
@@ -560,6 +559,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
                 if (!status.isRecording) return;
                 const metering = typeof status.metering === 'number' ? status.metering : -160;
                 const now = Date.now();
+                // Update amplitude for visual feedback (no auto-stop)
                 if (metering > VAD_SPEECH_THRESHOLD_DB) {
                     vadStateRef.current.speechStarted = true;
                     vadStateRef.current.lastVoiceAt = now;
@@ -574,13 +574,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
                         } catch (e) { }
                     }
                 }
-
-                if (vadStateRef.current.speechStarted) {
-                    const silentFor = now - vadStateRef.current.lastVoiceAt;
-                    if (silentFor >= VAD_SILENCE_TIMEOUT_MS && status.durationMillis >= VAD_MIN_RECORDING_MS) {
-                        stopRecordingAndSendRef.current?.();
-                    }
-                }
+                // Note: Auto-stop on silence removed - user must tap to stop and send
             });
 
             recordingStartTimeRef.current = Date.now();
@@ -671,11 +665,6 @@ const NerdXLiveAudioScreen: React.FC = () => {
                         playConnectedSound();
                         triggerHaptic('medium');
                     }
-                    // Auto-enable listening on first successful connect
-                    if (!autoStartedListeningRef.current) {
-                        autoStartedListeningRef.current = true;
-                        setListeningEnabled(true);
-                    }
                     break;
 
                 case 'audio':
@@ -735,9 +724,8 @@ const NerdXLiveAudioScreen: React.FC = () => {
                         playbackTimeoutRef.current = null;
                     }
                     interruptPlayback();
-                    if (!bargeInRequestedRef.current && !recordingRef.current && listeningEnabled) {
-                        setTimeout(() => startRecording(), 100);
-                    }
+                    // Return to ready state - user must tap to record
+                    setConnectionState('ready');
                     break;
 
                 case 'goAway':
@@ -765,7 +753,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
         } catch (error) {
             console.error('Message error:', error);
         }
-    }, [bufferAudioChunk, startPlaybackTimeout, completeAudioTurn, configureAudioMode, playConnectedSound, startRecording, connectionState, interruptPlayback, listeningEnabled, triggerHaptic]);
+    }, [bufferAudioChunk, startPlaybackTimeout, completeAudioTurn, configureAudioMode, playConnectedSound, startRecording, connectionState, interruptPlayback, triggerHaptic]);
 
     // Connect
     const connect = useCallback(async () => {
@@ -865,7 +853,6 @@ const NerdXLiveAudioScreen: React.FC = () => {
             wsRef.current = null;
         }
 
-        setListeningEnabled(false);
         setConnectionState('idle');
         setCaptions([]);
     }, [stopBargeInMonitor]);
@@ -882,48 +869,38 @@ const NerdXLiveAudioScreen: React.FC = () => {
         }
     }, [connectionState, connect]);
 
-    useEffect(() => {
-        if (connectionState === 'ready' && listeningEnabled && !isPlaying && !recordingRef.current) {
-            const timer = setTimeout(() => {
-                if (wsRef.current?.readyState === WebSocket.OPEN && !recordingRef.current) {
-                    startRecording();
-                }
-            }, 250);
-            return () => clearTimeout(timer);
-        }
-        return undefined;
-    }, [connectionState, listeningEnabled, isPlaying, startRecording]);
-
-    // Handle main button press
+    // Handle main button press - Tap-to-speak mode
     const handlePress = useCallback(() => {
         if (connectionState === 'idle' || connectionState === 'error') {
             connect();
             return;
         }
 
-        if (!listeningEnabled) {
-            setListeningEnabled(true);
-            if (connectionState === 'ready' && !recordingRef.current && !isPlaying) {
-                startRecording();
-            }
+        // If ready, start recording
+        if (connectionState === 'ready' && !recordingRef.current && !isPlaying) {
+            startRecording();
             return;
         }
 
-        setListeningEnabled(false);
-        stopBargeInMonitor();
-        if (recordingRef.current) {
+        // If recording, stop and send
+        if (connectionState === 'recording' && recordingRef.current) {
             stopRecordingAndSend();
-        } else if (connectionState === 'recording') {
-            stopRecordingAndSend();
+            return;
         }
-    }, [connectionState, connect, listeningEnabled, startRecording, stopRecordingAndSend, isPlaying, stopBargeInMonitor]);
+
+        // If processing, allow cancel (return to ready)
+        if (connectionState === 'processing') {
+            setConnectionState('ready');
+            return;
+        }
+    }, [connectionState, connect, startRecording, stopRecordingAndSend, isPlaying]);
 
     // UI helpers
     const getStatusText = () => {
         switch (connectionState) {
             case 'connecting': return 'Connecting...';
-            case 'ready': return listeningEnabled ? 'Listening (auto)' : 'Ready';
-            case 'recording': return 'Listening...';
+            case 'ready': return 'Tap to speak';
+            case 'recording': return 'Recording... Tap to send';
             case 'processing': return 'NerdX is thinking...';
             case 'error': return 'Reconnecting...';
             default: return 'Starting...';
@@ -1067,7 +1044,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
                             >
                                 {connectionState === 'connecting' || connectionState === 'processing' ? (
                                     <Ionicons name="sync" size={28} color={COLORS.textPrimary} />
-                                ) : listeningEnabled ? (
+                                ) : connectionState === 'recording' ? (
                                     <View style={styles.stopIcon} />
                                 ) : connectionState === 'idle' ? (
                                     <Ionicons name="play" size={28} color={COLORS.textPrimary} />

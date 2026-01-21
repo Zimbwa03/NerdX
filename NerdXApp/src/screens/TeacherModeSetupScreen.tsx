@@ -262,7 +262,7 @@ const TeacherModeSetupScreen: React.FC = () => {
   const { isDarkMode } = useTheme();
   const themedColors = useThemedColors();
   const { showError } = useNotification();
-  const { subject, preselectedSubject, preselectedTopic } = route.params as {
+  const { subject, preselectedSubject, preselectedTopic } = (route.params || {}) as {
     subject?: any;
     preselectedSubject?: string;
     preselectedTopic?: string;

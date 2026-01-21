@@ -1,5 +1,5 @@
 // Login Screen Component - Premium UI/UX Design
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -16,7 +16,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../services/api/authApi';
 import { Icons, IconCircle, Icon } from '../components/Icons';
@@ -33,8 +33,26 @@ const LoginScreen: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigation = useNavigation();
+  const route = useRoute();
   const { login } = useAuth();
   const { isReady: isGoogleReady, signIn: signInWithGoogle } = useGoogleAuth();
+
+  // Handle password reset redirects from Supabase callback (but not OAuth callbacks)
+  useEffect(() => {
+    const params = route.params as any;
+    // Only redirect if it's a password reset (type=recovery), not OAuth (which has access_token but no type=recovery)
+    if (params?.type === 'recovery' || (params?.token_hash && !params?.access_token)) {
+      // This is a password reset callback - redirect to ResetPassword screen
+      console.log('🔑 Password reset detected in Login screen, redirecting to ResetPassword');
+      navigation.navigate('ResetPassword' as never, {
+        token_hash: params.token_hash,
+        type: params.type,
+        access_token: params.access_token,
+        refresh_token: params.refresh_token,
+      } as never);
+    }
+    // Note: OAuth callbacks with access_token are handled by useGoogleAuth hook, not here
+  }, [route.params, navigation]);
 
   const handleLogin = async () => {
     if (!identifier || !password) {
@@ -83,26 +101,57 @@ const LoginScreen: React.FC = () => {
 
     setIsLoading(true);
     try {
+      console.log('🔑 Starting Google Sign-In flow...');
       const googleUser = await signInWithGoogle();
       
       if (!googleUser || !googleUser.email) {
-        throw new Error('Failed to get user information from Google');
+        console.error('❌ Invalid Google user data:', googleUser);
+        throw new Error('Failed to get user information from Google. Please try again.');
       }
 
-      console.log('🔑 Google user data:', googleUser);
+      console.log('🔑 Google user data retrieved:', { email: googleUser.email, name: googleUser.name });
+      console.log('🔑 Sending to backend for authentication...');
       
       const response = await authApi.socialLogin('google', googleUser);
+
+      console.log('🔑 Backend response:', { success: response.success, hasToken: !!response.token, hasUser: !!response.user });
 
       if (response.success && response.token && response.user) {
         console.log('✅ Social login successful, logging in user...');
         await login(response.user, response.token, response.notifications);
         // Navigation will happen automatically via AppNavigator when isAuthenticated becomes true
+        console.log('✅ User logged in successfully');
       } else {
-        Alert.alert('Sign In Failed', response.message || 'Could not sign in with Google');
+        console.error('❌ Backend login failed:', response.message);
+        Alert.alert(
+          'Sign In Failed', 
+          response.message || 'Could not sign in with Google. Please try again.'
+        );
       }
     } catch (error: any) {
       console.error('❌ Google Sign-In error:', error);
-      Alert.alert('Error', error?.message || 'Google Sign-In failed');
+      console.error('❌ Error details:', {
+        message: error?.message,
+        stack: error?.stack,
+        name: error?.name,
+      });
+      
+      // Show user-friendly error message
+      let errorMessage = 'Google Sign-In failed. Please try again.';
+      
+      if (error?.message) {
+        if (error.message.includes('cancelled')) {
+          errorMessage = 'Sign-In was cancelled.';
+        } else if (error.message.includes('network') || error.message.includes('connection')) {
+          errorMessage = 'Network error. Please check your connection and try again.';
+        } else if (error.message.includes('session') || error.message.includes('token')) {
+          errorMessage = 'Authentication error. Please try again.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      Alert.alert('Sign-In Error', errorMessage);
     } finally {
       setIsLoading(false);
     }

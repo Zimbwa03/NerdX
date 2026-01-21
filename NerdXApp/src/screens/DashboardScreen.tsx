@@ -13,6 +13,7 @@ import {
   StatusBar,
   Platform,
   Animated,
+  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -220,6 +221,25 @@ const DashboardScreen: React.FC = () => {
   };
 
   const navigateToProjectAssistant = () => {
+    // Check if user has sufficient credits before navigating
+    const userCredits = formatCreditBalance(user?.credits);
+    const requiredCredits = 1; // 1 credit per AI response
+    
+    if (userCredits < requiredCredits) {
+      Alert.alert(
+        'Insufficient Credits',
+        `Project Assistant requires at least ${requiredCredits} credit to use. You currently have ${userCredits} credit${userCredits === 1 ? '' : 's'}.\n\nPlease purchase more credits to continue.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Buy Credits',
+            onPress: () => navigation.navigate('Credits' as never),
+          },
+        ]
+      );
+      return;
+    }
+
     navigation.navigate('ProjectAssistantSetup' as never);
   };
 

@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { creditsApi, CreditPackage, PaymentStatus, CreditTransaction, PaymentMethod } from '../services/api/creditsApi';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -40,6 +41,7 @@ const CreditsScreen: React.FC = () => {
   const { isDarkMode } = useTheme();
   const themedColors = useThemedColors();
   const { showSuccess, showError, showInfo } = useNotification();
+  const insets = useSafeAreaInsets();
   const [packages, setPackages] = useState<CreditPackage[]>([]);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState<string | null>(null);
@@ -353,6 +355,7 @@ const CreditsScreen: React.FC = () => {
     >
       <ScrollView
         style={[styles.container, { backgroundColor: 'transparent' }]}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary.main]} />
@@ -524,7 +527,7 @@ const CreditsScreen: React.FC = () => {
             }
           }}
         >
-          <View style={styles.modalOverlay}>
+          <View style={[styles.modalOverlay, { paddingBottom: insets.bottom }]}>
             <View style={styles.modalContent}>
               {/* ✨ Gold Ticket Header */}
               <LinearGradient
@@ -538,166 +541,174 @@ const CreditsScreen: React.FC = () => {
               </LinearGradient>
 
               <View style={styles.ticketBody}>
-                <Text style={styles.modalTitle}>Confirm Purchase</Text>
-                {selectedPackage && (
-                  <View style={styles.ticketPackageInfo}>
-                    <View style={styles.ticketRow}>
-                      <Text style={styles.ticketLabel}>PACKAGE</Text>
-                      <Text style={styles.ticketValue}>{selectedPackage.name}</Text>
+                <ScrollView 
+                  style={styles.ticketBodyScroll}
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={styles.ticketBodyContent}
+                >
+                  <Text style={styles.modalTitle}>Confirm Purchase</Text>
+                  {selectedPackage && (
+                    <View style={styles.ticketPackageInfo}>
+                      <View style={styles.ticketRow}>
+                        <Text style={styles.ticketLabel}>PACKAGE</Text>
+                        <Text style={styles.ticketValue}>{selectedPackage.name}</Text>
+                      </View>
+                      <View style={styles.ticketDivider} />
+                      <View style={styles.ticketRow}>
+                        <Text style={styles.ticketLabel}>CREDITS</Text>
+                        <Text style={styles.ticketValueLarge}>{selectedPackage.credits}</Text>
+                      </View>
+                      <View style={styles.ticketDivider} />
+                      <View style={styles.ticketRow}>
+                        <Text style={styles.ticketLabel}>PRICE</Text>
+                        <Text style={styles.ticketPrice}>${selectedPackage.price.toFixed(2)}/month</Text>
+                      </View>
+                      <View style={styles.ticketDivider} />
+                      <View style={styles.ticketRow}>
+                        <Text style={styles.ticketLabel}>VALIDITY</Text>
+                        <Text style={[styles.ticketValue, { color: Colors.warning.main }]}>1 Month</Text>
+                      </View>
+                      <View style={styles.monthlyWarning}>
+                        <Text style={styles.monthlyWarningText}>
+                          ⚠️ Credits expire after 1 month from purchase. Use them or they'll be lost!
+                        </Text>
+                      </View>
                     </View>
-                    <View style={styles.ticketDivider} />
-                    <View style={styles.ticketRow}>
-                      <Text style={styles.ticketLabel}>CREDITS</Text>
-                      <Text style={styles.ticketValueLarge}>{selectedPackage.credits}</Text>
-                    </View>
-                    <View style={styles.ticketDivider} />
-                    <View style={styles.ticketRow}>
-                      <Text style={styles.ticketLabel}>PRICE</Text>
-                      <Text style={styles.ticketPrice}>${selectedPackage.price.toFixed(2)}/month</Text>
-                    </View>
-                    <View style={styles.ticketDivider} />
-                    <View style={styles.ticketRow}>
-                      <Text style={styles.ticketLabel}>VALIDITY</Text>
-                      <Text style={[styles.ticketValue, { color: Colors.warning.main }]}>1 Month</Text>
-                    </View>
-                    <View style={styles.monthlyWarning}>
-                      <Text style={styles.monthlyWarningText}>
-                        ⚠️ Credits expire after 1 month from purchase. Use them or they'll be lost!
-                      </Text>
-                    </View>
-                  </View>
-                )}
+                  )}
 
-                {checkingPayment ? (
-                  <View style={styles.checkingContainer}>
-                    <ActivityIndicator size="large" color={Colors.premium.gold} />
-                    <Text style={styles.checkingText}>
-                      Waiting for payment confirmation...
-                    </Text>
-                    {paymentReference && (
-                      <Text style={styles.referenceText}>
-                        Ref: {paymentReference}
+                  {checkingPayment ? (
+                    <View style={styles.checkingContainer}>
+                      <ActivityIndicator size="large" color={Colors.premium.gold} />
+                      <Text style={styles.checkingText}>
+                        Waiting for payment confirmation...
                       </Text>
-                    )}
-                    <Text style={styles.instructionText}>
-                      {paymentMethod === 'ecocash'
-                        ? 'Please check your phone and enter your EcoCash PIN.'
-                        : 'Complete your payment on the Paynow payment page.'}
-                    </Text>
+                      {paymentReference && (
+                        <Text style={styles.referenceText}>
+                          Ref: {paymentReference}
+                        </Text>
+                      )}
+                      <Text style={styles.instructionText}>
+                        {paymentMethod === 'ecocash'
+                          ? 'Please check your phone and enter your EcoCash PIN.'
+                          : 'Complete your payment on the Paynow payment page.'}
+                      </Text>
+                      <TouchableOpacity
+                        style={styles.cancelButton}
+                        onPress={() => {
+                          if (paymentCheckInterval.current) {
+                            clearInterval(paymentCheckInterval.current);
+                            paymentCheckInterval.current = null;
+                          }
+                          setCheckingPayment(false);
+                          setShowPaymentModal(false);
+                          setPaymentReference(null);
+                        }}
+                      >
+                        <Text style={styles.cancelButtonText}>Cancel</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <>
+                      {/* 💳 Payment Method Selector */}
+                      <Text style={styles.inputLabel}>PAYMENT METHOD</Text>
+                      <View style={styles.paymentMethodSelector}>
+                        <TouchableOpacity
+                          style={[
+                            styles.paymentMethodOption,
+                            paymentMethod === 'ecocash' && styles.paymentMethodSelected,
+                          ]}
+                          onPress={() => setPaymentMethod('ecocash')}
+                        >
+                          <Text style={styles.paymentMethodIcon}>📱</Text>
+                          <Text style={[
+                            styles.paymentMethodText,
+                            paymentMethod === 'ecocash' && styles.paymentMethodTextSelected,
+                          ]}>EcoCash</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[
+                            styles.paymentMethodOption,
+                            paymentMethod === 'visa_mastercard' && styles.paymentMethodSelected,
+                          ]}
+                          onPress={() => setPaymentMethod('visa_mastercard')}
+                        >
+                          <Text style={styles.paymentMethodIcon}>💳</Text>
+                          <Text style={[
+                            styles.paymentMethodText,
+                            paymentMethod === 'visa_mastercard' && styles.paymentMethodTextSelected,
+                          ]}>Visa/Mastercard</Text>
+                        </TouchableOpacity>
+                      </View>
+
+                      {/* Show phone number field only for EcoCash */}
+                      {paymentMethod === 'ecocash' && (
+                        <>
+                          <Text style={styles.inputLabel}>ECOCASH NUMBER</Text>
+                          <TextInput
+                            style={styles.input}
+                            value={phoneNumber}
+                            onChangeText={setPhoneNumber}
+                            placeholder="077..."
+                            placeholderTextColor={Colors.text.disabled}
+                            keyboardType="phone-pad"
+                            maxLength={10}
+                          />
+                        </>
+                      )}
+
+                      <Text style={styles.inputLabel}>EMAIL ADDRESS</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={email}
+                        onChangeText={setEmail}
+                        placeholder="email@example.com"
+                        placeholderTextColor={Colors.text.disabled}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                      />
+                    </>
+                  )}
+                </ScrollView>
+                
+                {!checkingPayment && (
+                  <View style={[styles.modalButtons, { marginBottom: Math.max(insets.bottom, 0) }]}>
                     <TouchableOpacity
-                      style={styles.cancelButton}
-                      onPress={() => {
-                        if (paymentCheckInterval.current) {
-                          clearInterval(paymentCheckInterval.current);
-                          paymentCheckInterval.current = null;
-                        }
-                        setCheckingPayment(false);
-                        setShowPaymentModal(false);
-                        setPaymentReference(null);
-                      }}
+                      style={styles.cancelModalButton}
+                      onPress={() => setShowPaymentModal(false)}
                     >
-                      <Text style={styles.cancelButtonText}>Cancel</Text>
+                      <Text style={styles.cancelModalButtonText}>CANCEL</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.confirmButton,
+                        ((paymentMethod === 'ecocash' && !phoneNumber.trim()) || !email.trim() || purchasing) &&
+                        styles.confirmButtonDisabled,
+                      ]}
+                      onPress={handleConfirmPurchase}
+                      disabled={(paymentMethod === 'ecocash' && !phoneNumber.trim()) || !email.trim() || !!purchasing}
+                    >
+                      <LinearGradient
+                        colors={paymentMethod === 'visa_mastercard'
+                          ? ['#1A237E', '#3949AB']
+                          : (Colors.premium.goldDark ? [Colors.premium.gold, Colors.premium.goldDark] : ['#FFD700', '#FFA500'])}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={styles.confirmGradient}
+                      >
+                        {purchasing ? (
+                          <ActivityIndicator color={paymentMethod === 'visa_mastercard' ? '#FFFFFF' : Colors.premium.text} />
+                        ) : (
+                          <Text style={[
+                            styles.confirmButtonText,
+                            paymentMethod === 'visa_mastercard' && { color: '#FFFFFF' }
+                          ]}>
+                            {paymentMethod === 'ecocash' ? 'PAY VIA ECOCASH' : 'PAY WITH CARD'}
+                          </Text>
+                        )}
+                      </LinearGradient>
                     </TouchableOpacity>
                   </View>
-                ) : (
-                  <>
-                    {/* 💳 Payment Method Selector */}
-                    <Text style={styles.inputLabel}>PAYMENT METHOD</Text>
-                    <View style={styles.paymentMethodSelector}>
-                      <TouchableOpacity
-                        style={[
-                          styles.paymentMethodOption,
-                          paymentMethod === 'ecocash' && styles.paymentMethodSelected,
-                        ]}
-                        onPress={() => setPaymentMethod('ecocash')}
-                      >
-                        <Text style={styles.paymentMethodIcon}>📱</Text>
-                        <Text style={[
-                          styles.paymentMethodText,
-                          paymentMethod === 'ecocash' && styles.paymentMethodTextSelected,
-                        ]}>EcoCash</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[
-                          styles.paymentMethodOption,
-                          paymentMethod === 'visa_mastercard' && styles.paymentMethodSelected,
-                        ]}
-                        onPress={() => setPaymentMethod('visa_mastercard')}
-                      >
-                        <Text style={styles.paymentMethodIcon}>💳</Text>
-                        <Text style={[
-                          styles.paymentMethodText,
-                          paymentMethod === 'visa_mastercard' && styles.paymentMethodTextSelected,
-                        ]}>Visa/Mastercard</Text>
-                      </TouchableOpacity>
-                    </View>
-
-                    {/* Show phone number field only for EcoCash */}
-                    {paymentMethod === 'ecocash' && (
-                      <>
-                        <Text style={styles.inputLabel}>ECOCASH NUMBER</Text>
-                        <TextInput
-                          style={styles.input}
-                          value={phoneNumber}
-                          onChangeText={setPhoneNumber}
-                          placeholder="077..."
-                          placeholderTextColor={Colors.text.disabled}
-                          keyboardType="phone-pad"
-                          maxLength={10}
-                        />
-                      </>
-                    )}
-
-                    <Text style={styles.inputLabel}>EMAIL ADDRESS</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={email}
-                      onChangeText={setEmail}
-                      placeholder="email@example.com"
-                      placeholderTextColor={Colors.text.disabled}
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                    />
-
-                    <View style={styles.modalButtons}>
-                      <TouchableOpacity
-                        style={styles.cancelModalButton}
-                        onPress={() => setShowPaymentModal(false)}
-                      >
-                        <Text style={styles.cancelModalButtonText}>CANCEL</Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={[
-                          styles.confirmButton,
-                          ((paymentMethod === 'ecocash' && !phoneNumber.trim()) || !email.trim() || purchasing) &&
-                          styles.confirmButtonDisabled,
-                        ]}
-                        onPress={handleConfirmPurchase}
-                        disabled={(paymentMethod === 'ecocash' && !phoneNumber.trim()) || !email.trim() || !!purchasing}
-                      >
-                        <LinearGradient
-                          colors={paymentMethod === 'visa_mastercard'
-                            ? ['#1A237E', '#3949AB']
-                            : (Colors.premium.goldDark ? [Colors.premium.gold, Colors.premium.goldDark] : ['#FFD700', '#FFA500'])}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 0 }}
-                          style={styles.confirmGradient}
-                        >
-                          {purchasing ? (
-                            <ActivityIndicator color={paymentMethod === 'visa_mastercard' ? '#FFFFFF' : Colors.premium.text} />
-                          ) : (
-                            <Text style={[
-                              styles.confirmButtonText,
-                              paymentMethod === 'visa_mastercard' && { color: '#FFFFFF' }
-                            ]}>
-                              {paymentMethod === 'ecocash' ? 'PAY VIA ECOCASH' : 'PAY WITH CARD'}
-                            </Text>
-                          )}
-                        </LinearGradient>
-                      </TouchableOpacity>
-                    </View>
-                  </>
                 )}
               </View>
             </View>
@@ -711,7 +722,7 @@ const CreditsScreen: React.FC = () => {
           transparent={true}
           onRequestClose={() => setShowSuccessModal(false)}
         >
-          <View style={styles.modalOverlay}>
+          <View style={[styles.modalOverlay, { paddingBottom: insets.bottom }]}>
             <View style={[styles.modalContent, styles.successModalContent]}>
               <LinearGradient
                 colors={['#10B981', '#059669']}
@@ -738,7 +749,7 @@ const CreditsScreen: React.FC = () => {
                 </Text>
 
                 <TouchableOpacity
-                  style={styles.successButton}
+                  style={[styles.successButton, { marginBottom: Math.max(insets.bottom, 0) }]}
                   onPress={() => setShowSuccessModal(false)}
                 >
                   <LinearGradient
@@ -910,6 +921,7 @@ const styles = StyleSheet.create({
     padding: 0, // Remove padding to let header flush
     width: '90%',
     maxWidth: 380,
+    maxHeight: '85%',
     shadowColor: Colors.premium?.gold || '#FFD700',
     shadowOffset: {
       width: 0,
@@ -946,6 +958,13 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   ticketBody: {
+    flex: 1,
+    padding: 0,
+  },
+  ticketBodyScroll: {
+    flex: 1,
+  },
+  ticketBodyContent: {
     padding: 24,
   },
   modalTitle: {
@@ -1038,6 +1057,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 24,
     gap: 12,
+    paddingBottom: 0,
   },
   cancelModalButton: {
     flex: 1,

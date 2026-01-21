@@ -34,6 +34,7 @@ import { useThemedColors } from '../theme/useThemedStyles';
 import { Colors } from '../theme/colors';
 import { LoadingProgress } from '../components/LoadingProgress';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { formatCreditBalance } from '../utils/creditCalculator';
 
 interface Message {
   id: string;
@@ -273,6 +274,29 @@ const ProjectAssistantScreen: React.FC = () => {
     try {
       setLoading(true);
 
+      // Check if user has sufficient credits before loading project
+      const userCredits = formatCreditBalance(user?.credits);
+      const requiredCredits = 1; // 1 credit per AI response
+      
+      if (userCredits < requiredCredits) {
+        Alert.alert(
+          'Insufficient Credits',
+          `Project Assistant requires at least ${requiredCredits} credit to use. You currently have ${userCredits} credit${userCredits === 1 ? '' : 's'}.\n\nPlease purchase more credits to continue.`,
+          [
+            { text: 'OK', onPress: () => navigation.goBack() },
+            {
+              text: 'Buy Credits',
+              onPress: () => {
+                navigation.goBack();
+                setTimeout(() => navigation.navigate('Credits' as never), 100);
+              },
+            },
+          ]
+        );
+        setLoading(false);
+        return;
+      }
+
       // Get full project details
       const projectDetails = await projectApi.getProject(params.projectId);
       if (projectDetails) {
@@ -314,6 +338,25 @@ const ProjectAssistantScreen: React.FC = () => {
     const query = rawText.trim();
     const hasImages = selectedImages.length > 0;
     if ((!query && !hasImages) || !project || sending) return;
+
+    // Check if user has sufficient credits before sending message
+    const userCredits = formatCreditBalance(user?.credits);
+    const requiredCredits = 1; // 1 credit per AI response
+    
+    if (userCredits < requiredCredits) {
+      Alert.alert(
+        'Insufficient Credits',
+        `You need at least ${requiredCredits} credit to send a message. You currently have ${userCredits} credit${userCredits === 1 ? '' : 's'}.\n\nPlease purchase more credits to continue.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Buy Credits',
+            onPress: () => navigation.navigate('Credits' as never),
+          },
+        ]
+      );
+      return;
+    }
     
     // Check if image generation mode is active OR if the message implies image generation
     const isImageRequest = imageGenerationMode || (() => {

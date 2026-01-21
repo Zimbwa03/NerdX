@@ -28,6 +28,7 @@ import LoadingProgress from '../components/LoadingProgress';
 import ExamSetupModal from '../components/ExamSetupModal';
 import { ExamConfig, TimeInfo } from '../services/api/examApi';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { calculateQuizCreditCost, formatCreditCost, getMinimumCreditsForQuiz } from '../utils/creditCalculator';
 import { getSubjectDisplayName, getSubjectLoadingSteps } from '../utils/loadingProgress';
 
@@ -40,6 +41,7 @@ const TopicsScreen: React.FC = () => {
   const { isDarkMode } = useTheme();
   const themedColors = useThemedColors();
   const { showSuccess, showError, showWarning, showInfo } = useNotification();
+  const insets = useSafeAreaInsets();
   const { subject, parentSubject } = route.params as { subject: Subject; parentSubject?: string };
   const subjectDisplayName = getSubjectDisplayName(subject.id, subject.name);
   const subjectSteps = getSubjectLoadingSteps(subject.id);
@@ -617,6 +619,29 @@ const TopicsScreen: React.FC = () => {
     },
     modalButton: {
       flex: 1,
+      borderRadius: 12,
+      paddingVertical: 14,
+      paddingHorizontal: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    cancelButton: {
+      backgroundColor: 'transparent',
+      borderWidth: 2,
+      borderColor: Colors.primary.main,
+    },
+    startButton: {
+      backgroundColor: Colors.primary.main,
+    },
+    cancelButtonText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: Colors.primary.main,
+    },
+    startButtonText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: '#FFFFFF',
     },
     modalButtonSpacer: {
       width: 12,
@@ -1033,24 +1058,25 @@ const TopicsScreen: React.FC = () => {
             Estimated cost: {formatCreditCost(getEstimatedCost(selectedPharmaTopic, selectedPharmaQuestionType, undefined, mixImagesEnabled))} per question
           </Text>
         </View>
-        <View style={styles.modalButtonRow}>
-          <Button
-            title="Cancel"
-            variant="outline"
-            style={styles.modalButton}
+        <View style={[styles.modalButtonRow, { marginBottom: Math.max(insets.bottom, 8), paddingBottom: Math.max(insets.bottom, 0) }]}>
+          <TouchableOpacity
+            style={[styles.modalButton, styles.cancelButton]}
             onPress={() => setPharmaModalVisible(false)}
-          />
+          >
+            <Text style={styles.cancelButtonText}>Cancel</Text>
+          </TouchableOpacity>
           <View style={styles.modalButtonSpacer} />
-          <Button
-            title="Start Quiz"
-            style={styles.modalButton}
+          <TouchableOpacity
+            style={[styles.modalButton, styles.startButton]}
             onPress={() => {
               setPharmaModalVisible(false);
               if (selectedPharmaTopic) {
                 handleStartQuiz(selectedPharmaTopic, selectedPharmaQuestionType, undefined, mixImagesEnabled);
               }
             }}
-          />
+          >
+            <Text style={styles.startButtonText}>Start Quiz</Text>
+          </TouchableOpacity>
         </View>
       </Modal>
 
@@ -1103,24 +1129,25 @@ const TopicsScreen: React.FC = () => {
             Estimated cost: {formatCreditCost(getEstimatedCost(selectedScienceTopic, undefined, selectedScienceQuestionFormat, mixImagesEnabled))} per question
           </Text>
         </View>
-        <View style={styles.modalButtonRow}>
-          <Button
-            title="Cancel"
-            variant="outline"
-            style={styles.modalButton}
+        <View style={[styles.modalButtonRow, { marginBottom: Math.max(insets.bottom, 8), paddingBottom: Math.max(insets.bottom, 0) }]}>
+          <TouchableOpacity
+            style={[styles.modalButton, styles.cancelButton]}
             onPress={() => setScienceQuestionTypeModalVisible(false)}
-          />
+          >
+            <Text style={styles.cancelButtonText}>Cancel</Text>
+          </TouchableOpacity>
           <View style={styles.modalButtonSpacer} />
-          <Button
-            title="Start Quiz"
-            style={styles.modalButton}
+          <TouchableOpacity
+            style={[styles.modalButton, styles.startButton]}
             onPress={() => {
               setScienceQuestionTypeModalVisible(false);
               if (selectedScienceTopic) {
                 handleStartQuiz(selectedScienceTopic, undefined, selectedScienceQuestionFormat, mixImagesEnabled);
               }
             }}
-          />
+          >
+            <Text style={styles.startButtonText}>Start Quiz</Text>
+          </TouchableOpacity>
         </View>
       </Modal>
 
@@ -1153,22 +1180,23 @@ const TopicsScreen: React.FC = () => {
             Estimated cost: {formatCreditCost(getEstimatedCost(pendingTopic, pendingQuestionType, pendingQuestionFormat, mixImagesEnabled))} per question
           </Text>
         </View>
-        <View style={styles.modalButtonRow}>
-          <Button
-            title="Cancel"
-            variant="outline"
-            style={styles.modalButton}
+        <View style={[styles.modalButtonRow, { marginBottom: Math.max(insets.bottom, 8), paddingBottom: Math.max(insets.bottom, 0) }]}>
+          <TouchableOpacity
+            style={[styles.modalButton, styles.cancelButton]}
             onPress={() => setStartQuizModalVisible(false)}
-          />
+          >
+            <Text style={styles.cancelButtonText}>Cancel</Text>
+          </TouchableOpacity>
           <View style={styles.modalButtonSpacer} />
-          <Button
-            title="Start Quiz"
-            style={styles.modalButton}
+          <TouchableOpacity
+            style={[styles.modalButton, styles.startButton]}
             onPress={() => {
               setStartQuizModalVisible(false);
               handleStartQuiz(pendingTopic || undefined, pendingQuestionType, pendingQuestionFormat, mixImagesEnabled);
             }}
-          />
+          >
+            <Text style={styles.startButtonText}>Start Quiz</Text>
+          </TouchableOpacity>
         </View>
       </Modal>
 

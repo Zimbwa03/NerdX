@@ -21,6 +21,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
 import { Colors } from '../theme/colors';
+import { formatCreditBalance } from '../utils/creditCalculator';
 
 const ProjectListScreen: React.FC = () => {
     const navigation = useNavigation();
@@ -75,6 +76,25 @@ const ProjectListScreen: React.FC = () => {
     };
 
     const handleProjectPress = (project: Project) => {
+        // Check if user has sufficient credits before opening project
+        const userCredits = formatCreditBalance(user?.credits);
+        const requiredCredits = 1; // 1 credit per AI response
+        
+        if (userCredits < requiredCredits) {
+            Alert.alert(
+                'Insufficient Credits',
+                `Project Assistant requires at least ${requiredCredits} credit to use. You currently have ${userCredits} credit${userCredits === 1 ? '' : 's'}.\n\nPlease purchase more credits to continue.`,
+                [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                        text: 'Buy Credits',
+                        onPress: () => navigation.navigate('Credits' as never),
+                    },
+                ]
+            );
+            return;
+        }
+
         navigation.navigate('ProjectAssistant' as any, {
             projectId: project.id,
             projectTitle: project.title,
@@ -83,6 +103,25 @@ const ProjectListScreen: React.FC = () => {
     };
 
     const handleNewProject = () => {
+        // Check if user has sufficient credits before creating new project
+        const userCredits = formatCreditBalance(user?.credits);
+        const requiredCredits = 1; // 1 credit per AI response
+        
+        if (userCredits < requiredCredits) {
+            Alert.alert(
+                'Insufficient Credits',
+                `Project Assistant requires at least ${requiredCredits} credit to start. You currently have ${userCredits} credit${userCredits === 1 ? '' : 's'}.\n\nPlease purchase more credits to continue.`,
+                [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                        text: 'Buy Credits',
+                        onPress: () => navigation.navigate('Credits' as never),
+                    },
+                ]
+            );
+            return;
+        }
+
         navigation.navigate('ProjectAssistantSetup' as any);
     };
 

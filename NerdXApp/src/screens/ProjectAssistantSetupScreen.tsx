@@ -21,6 +21,7 @@ import { projectApi } from '../services/api/projectApi';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
 import { Colors } from '../theme/colors';
+import { formatCreditBalance } from '../utils/creditCalculator';
 
 const ProjectAssistantSetupScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -54,6 +55,25 @@ const ProjectAssistantSetupScreen: React.FC = () => {
   const handleStart = async () => {
     if (!subject || !level || !school.trim() || !formLevel) {
       Alert.alert('Missing Information', 'Please fill in all required fields to start your project.');
+      return;
+    }
+
+    // Check if user has sufficient credits (minimum 1 credit required per AI response)
+    const userCredits = formatCreditBalance(user?.credits);
+    const requiredCredits = 1; // 1 credit per AI response
+    
+    if (userCredits < requiredCredits) {
+      Alert.alert(
+        'Insufficient Credits',
+        `Project Assistant requires at least ${requiredCredits} credit to start. You currently have ${userCredits} credit${userCredits === 1 ? '' : 's'}.\n\nPlease purchase more credits to continue.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Buy Credits',
+            onPress: () => navigation.navigate('Credits' as never),
+          },
+        ]
+      );
       return;
     }
 

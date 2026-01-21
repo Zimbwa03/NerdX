@@ -170,10 +170,11 @@ const AppNavigator: React.FC = () => {
   // Configure deep linking for password reset and OAuth callbacks
   // Supabase sends: token_hash (for OTP verification), type (recovery), and sometimes access_token/refresh_token
   const linking = {
-    prefixes: ['nerdx://', 'https://nerdx.app', 'com.Ngoni03.nerdxapp://', 'nerdxapp://'],
+    prefixes: ['nerdx://', 'https://nerdx.app', 'com.Ngoni03.nerdxapp://', 'nerdxapp://', 'https://lzteiewcvxoazqfxfjgg.supabase.co'],
     config: {
       screens: {
         ResetPassword: {
+          // Handle both direct reset-password path and Supabase callback with type=recovery
           path: 'reset-password',
           parse: {
             // Supabase password reset parameters
@@ -187,6 +188,7 @@ const AppNavigator: React.FC = () => {
           },
         },
         Login: {
+          // Handle Supabase callback - will redirect to ResetPassword if type=recovery
           path: 'auth/callback',
           parse: {
             access_token: (access_token: string) => access_token,
