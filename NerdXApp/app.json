@@ -75,11 +75,11 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "b32a5981-ae54-4421-9c57-d1e0b4f75ede"
+        "projectId": "0fe6e9b5-455b-48b6-8ed1-8ce81c277e2b"
       },
       "supabaseUrl": "https://lzteiewcvxoazqfxfjgg.supabase.co",
       "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6dGVpZXdjdnhvYXpxZnhmamdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE5NDE0MTIsImV4cCI6MjA3NzUxNzQxMn0.ZtCVuK3rx2rqpc5kJV-6iblqjUEZy52dkpUdkEbQlvI"
     },
-    "owner": "nerdx11"
+    "owner": "nerdx12"
   }
 }
