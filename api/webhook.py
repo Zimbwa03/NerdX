@@ -5,6 +5,7 @@ import threading
 import os
 import hmac
 import hashlib
+import base64
 import urllib.parse
 from typing import Dict, Optional
 from collections import defaultdict
@@ -297,7 +298,7 @@ def verify_webhook_signature(data: bytes, signature: str, url: str = None, form_
             signature_string.encode('utf-8'),
             hashlib.sha1
         ).digest()
-        expected_signature_base64 = expected_signature.hex()
+        expected_signature_base64 = base64.b64encode(expected_signature).decode('utf-8')
 
         # Compare signatures (case-insensitive)
         if hmac.compare_digest(expected_signature_base64.lower(), signature.lower()):
