@@ -8,7 +8,6 @@
         "gradleCommand": ":app:assembleDebug"
       },
       "prebuildCommand": "npx expo prebuild --clean --platform android",
-      "installCommand": "npm install --include=dev",
       "env": {
         "EAS_SKIP_AUTO_FINGERPRINT": "1",
         "EAS_NO_VCS": "1",
@@ -16,12 +15,12 @@
       },
       "node": "20.19.3"
     },
+
     "preview": {
       "android": {
         "buildType": "apk"
       },
       "prebuildCommand": "npx expo prebuild --clean --platform android",
-      "installCommand": "npm install --include=dev",
       "env": {
         "EAS_SKIP_AUTO_FINGERPRINT": "1",
         "EAS_NO_VCS": "1",
@@ -29,12 +28,12 @@
       },
       "node": "20.19.3"
     },
+
     "production": {
       "android": {
         "buildType": "apk"
       },
       "prebuildCommand": "npx expo prebuild --clean --platform android",
-      "installCommand": "npm install --include=dev",
       "env": {
         "EAS_SKIP_AUTO_FINGERPRINT": "1",
         "EAS_NO_VCS": "1",
