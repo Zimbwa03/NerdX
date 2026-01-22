@@ -22,9 +22,20 @@ const GENERIC_STEPS: LoadingProgressStep[] = [
     { emoji: '✅', label: 'Complete' },
 ];
 
+const CS_STEPS: LoadingProgressStep[] = [
+    { emoji: '💻', label: 'Loading topic context' },
+    { emoji: '🧠', label: 'Generating question' },
+    { emoji: '📋', label: 'Selecting syllabus objectives' },
+    { emoji: '📝', label: 'Drafting marking scheme' },
+    { emoji: '🔍', label: 'Checking accuracy' },
+    { emoji: '✅', label: 'Complete' },
+];
+
 export const getSubjectLoadingSteps = (subjectId?: string): LoadingProgressStep[] => {
     const id = subjectId?.toLowerCase() || '';
-    return id.includes('math') ? MATH_STEPS : GENERIC_STEPS;
+    if (id.includes('math')) return MATH_STEPS;
+    if (id === 'computer_science') return CS_STEPS;
+    return GENERIC_STEPS;
 };
 
 export const getSubjectDisplayName = (subjectId?: string, fallback?: string): string => {
@@ -32,6 +43,7 @@ export const getSubjectDisplayName = (subjectId?: string, fallback?: string): st
     const id = subjectId.toLowerCase();
     if (id === 'mathematics') return 'All-Level Mathematics';
     if (id === 'pure_math' || id === 'a_level_pure_math') return 'A-Level Pure Mathematics';
+    if (id === 'computer_science') return 'Computer Science';
     if (fallback) return fallback;
     return subjectId.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 };

@@ -34,3 +34,19 @@ export { default as TrigFunctionsLabScreen } from './TrigFunctionsLabScreen';
 export { default as VectorVisualizerScreen } from './VectorVisualizerScreen';
 export { default as MatrixSandboxScreen } from './MatrixSandboxScreen';
 export { default as LinearProgrammingLabScreen } from './LinearProgrammingLabScreen';
+
+// New English Labs
+export { default as MarketNegotiationScreen } from './MarketNegotiationScreen';
+export { default as JobInterviewScreen } from './JobInterviewScreen';
+export { default as UniversityCampusLifeScreen } from './UniversityCampusLifeScreen';
+export { default as MedicalConsultationScreen } from './MedicalConsultationScreen';
+export { default as InternationalTravelScreen } from './InternationalTravelScreen';
+export { default as SocialGatheringsScreen } from './SocialGatheringsScreen';
+export { default as BankingServicesScreen } from './BankingServicesScreen';
+
+// New Math Labs
+export { default as ProbabilitySimulatorScreen } from './ProbabilitySimulatorScreen';
+export { default as StatisticsExplorerScreen } from './StatisticsExplorerScreen';
+export { default as LogarithmsLabScreen } from './LogarithmsLabScreen';
+export { default as SequencesSeriesLabScreen } from './SequencesSeriesLabScreen';
+export { default as SimultaneousEquationsLabScreen } from './SimultaneousEquationsLabScreen';

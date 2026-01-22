@@ -87,12 +87,8 @@ const ALevelBiologyScreen: React.FC = () => {
         : biologyTheme.upperSixthPrimary;
 
     const handleTopicPress = async (topic: ALevelBiologyTopic) => {
-        // If a question type was previously chosen, generate question first before navigating
-        if (selectedQuestionType) {
-            await startQuestion(topic, selectedQuestionType.id);
-            return;
-        }
-        // Otherwise prompt the user to choose the question type.
+        // Always show the question type selection modal for each new topic
+        // This ensures users explicitly choose MCQ, Structured, or Essay for each topic
         setSelectedTopic(topic);
         setQuestionTypeModalVisible(true);
     };
@@ -249,7 +245,10 @@ const ALevelBiologyScreen: React.FC = () => {
             visible={questionTypeModalVisible}
             transparent={true}
             animationType="slide"
-            onRequestClose={() => setQuestionTypeModalVisible(false)}
+            onRequestClose={() => {
+                setQuestionTypeModalVisible(false);
+                setSelectedTopic(null);
+            }}
         >
             <View style={styles.modalOverlay}>
                 <View style={[
@@ -273,7 +272,10 @@ const ALevelBiologyScreen: React.FC = () => {
                             </Text>
                         </View>
                         <TouchableOpacity
-                            onPress={() => setQuestionTypeModalVisible(false)}
+                            onPress={() => {
+                                setQuestionTypeModalVisible(false);
+                                setSelectedTopic(null);
+                            }}
                             style={[
                                 styles.closeButton,
                                 { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' }
@@ -572,7 +574,7 @@ const ALevelBiologyScreen: React.FC = () => {
                         </View>
                     </View>
                     <Text style={[styles.sectionSubtitle, { color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(26,26,46,0.5)' }]}>
-                        Tap a topic to practice. Your last selected format applies automatically.
+                        Tap a topic to choose MCQ, Structured, or Essay question.
                     </Text>
 
                     {filteredTopics.map((topic, index) => (

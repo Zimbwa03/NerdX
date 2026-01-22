@@ -92,6 +92,22 @@ const VirtualLabScreen: React.FC = () => {
             'vector-visualizer': 'VectorVisualizer',
             'matrix-sandbox': 'MatrixSandbox',
             'linear-programming-lab': 'LinearProgrammingLab',
+
+            // New English Labs
+            'eng-market-negotiation': 'MarketNegotiationScreen',
+            'eng-job-interview': 'JobInterviewScreen',
+            'eng-university-campus': 'UniversityCampusLifeScreen',
+            'eng-medical-consultation': 'MedicalConsultationScreen',
+            'eng-international-travel': 'InternationalTravelScreen',
+            'eng-social-gatherings': 'SocialGatheringsScreen',
+            'eng-banking-services': 'BankingServicesScreen',
+
+            // New Math Labs
+            'probability-simulator': 'ProbabilitySimulatorScreen',
+            'statistics-explorer': 'StatisticsExplorerScreen',
+            'logarithms-lab': 'LogarithmsLabScreen',
+            'sequences-series-lab': 'SequencesSeriesLabScreen',
+            'simultaneous-equations-lab': 'SimultaneousEquationsLabScreen',
         };
 
         const screenName = screenMap[simulationId];
@@ -109,6 +125,7 @@ const VirtualLabScreen: React.FC = () => {
         { key: 'chemistry', label: 'Chemistry', color: SUBJECT_COLORS.chemistry.primary },
         { key: 'physics', label: 'Physics', color: SUBJECT_COLORS.physics.primary },
         { key: 'mathematics', label: 'Math', color: SUBJECT_COLORS.mathematics.primary },
+        { key: 'english', label: 'English', color: SUBJECT_COLORS.english.primary },
     ];
 
     return (
@@ -144,7 +161,7 @@ const VirtualLabScreen: React.FC = () => {
                     </View>
                     <View style={[styles.statDivider, { backgroundColor: '#FFFFFF30' }]} />
                     <View style={styles.statItem}>
-                        <Text style={styles.statNumber}>4</Text>
+                        <Text style={styles.statNumber}>5</Text>
                         <Text style={styles.statLabel}>Subjects</Text>
                     </View>
                     <View style={[styles.statDivider, { backgroundColor: '#FFFFFF30' }]} />

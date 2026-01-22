@@ -101,6 +101,17 @@ import VectorVisualizerScreen from '../screens/virtualLab/VectorVisualizerScreen
 import MatrixSandboxScreen from '../screens/virtualLab/MatrixSandboxScreen';
 import LinearProgrammingLabScreen from '../screens/virtualLab/LinearProgrammingLabScreen';
 
+// New English Labs
+import MarketNegotiationScreen from '../screens/virtualLab/MarketNegotiationScreen';
+import JobInterviewScreen from '../screens/virtualLab/JobInterviewScreen';
+
+// New Math Labs
+import ProbabilitySimulatorScreen from '../screens/virtualLab/ProbabilitySimulatorScreen';
+import StatisticsExplorerScreen from '../screens/virtualLab/StatisticsExplorerScreen';
+import LogarithmsLabScreen from '../screens/virtualLab/LogarithmsLabScreen';
+import SequencesSeriesLabScreen from '../screens/virtualLab/SequencesSeriesLabScreen';
+import SimultaneousEquationsLabScreen from '../screens/virtualLab/SimultaneousEquationsLabScreen';
+
 const Stack = createStackNavigator();
 
 const LoadingScreen: React.FC = () => (
@@ -134,7 +145,7 @@ const AppNavigator: React.FC = () => {
         setCheckingUpdate(false);
       }
     };
-    
+
     if (isAuthenticated) {
       checkUpdate();
     } else {
@@ -587,6 +598,68 @@ const AppNavigator: React.FC = () => {
             <Stack.Screen
               name="LinearProgrammingLab"
               component={LinearProgrammingLabScreen}
+              options={{ headerShown: false }}
+            />
+            {/* New English Labs */}
+            <Stack.Screen
+              name="MarketNegotiationScreen"
+              component={MarketNegotiationScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="JobInterviewScreen"
+              component={JobInterviewScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="UniversityCampusLifeScreen"
+              component={UniversityCampusLifeScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="MedicalConsultationScreen"
+              component={MedicalConsultationScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="InternationalTravelScreen"
+              component={InternationalTravelScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="SocialGatheringsScreen"
+              component={SocialGatheringsScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="BankingServicesScreen"
+              component={BankingServicesScreen}
+              options={{ headerShown: false }}
+            />
+            {/* New Math Labs */}
+            <Stack.Screen
+              name="ProbabilitySimulatorScreen"
+              component={ProbabilitySimulatorScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="StatisticsExplorerScreen"
+              component={StatisticsExplorerScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="LogarithmsLabScreen"
+              component={LogarithmsLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="SequencesSeriesLabScreen"
+              component={SequencesSeriesLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="SimultaneousEquationsLabScreen"
+              component={SimultaneousEquationsLabScreen}
               options={{ headerShown: false }}
             />
             <Stack.Screen

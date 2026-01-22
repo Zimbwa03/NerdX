@@ -62,6 +62,11 @@ const TopicsScreen: React.FC = () => {
   const [selectedScienceTopic, setSelectedScienceTopic] = useState<Topic | null>(null);
   const [selectedScienceQuestionFormat, setSelectedScienceQuestionFormat] = useState<'mcq' | 'structured'>('mcq');
 
+  // Computer Science Question Type Modal (MCQ, Structured, Essay)
+  const [csQuestionTypeModalVisible, setCsQuestionTypeModalVisible] = useState(false);
+  const [selectedCsTopic, setSelectedCsTopic] = useState<Topic | null>(null);
+  const [selectedCsQuestionType, setSelectedCsQuestionType] = useState<'mcq' | 'structured' | 'essay'>('mcq');
+
   // Start Quiz Modal (single popup with Visual Learning toggle)
   const [startQuizModalVisible, setStartQuizModalVisible] = useState(false);
   const [pendingTopic, setPendingTopic] = useState<Topic | null>(null);
@@ -175,6 +180,12 @@ const TopicsScreen: React.FC = () => {
       setSelectedScienceQuestionFormat('mcq');
       setMixImagesEnabled(false);
       setScienceQuestionTypeModalVisible(true);
+    } else if (subject.id === 'computer_science') {
+      // Show Computer Science Question Type Modal
+      setSelectedCsTopic(topic);
+      setSelectedCsQuestionType('mcq');
+      setMixImagesEnabled(false);
+      setCsQuestionTypeModalVisible(true);
     } else {
       // Start quiz modal with visual learning toggle
       openStartQuizModal(topic);
@@ -254,7 +265,7 @@ const TopicsScreen: React.FC = () => {
   ) => {
     try {
       const currentCredits = user?.credits || 0;
-      
+
       // Calculate required credit cost based on subject/question type
       const creditCost = calculateQuizCreditCost({
         subject: subject.id,
@@ -344,6 +355,8 @@ const TopicsScreen: React.FC = () => {
       return [Colors.subjects.science, Colors.secondary.dark];
     }
     if (subject.id === 'english') return [Colors.subjects.english, Colors.warning.dark];
+    if (subject.id === 'english') return [Colors.subjects.english, Colors.warning.dark];
+    if (subject.id === 'computer_science') return [Colors.subjects.combinedScience, Colors.info.dark];
     return Colors.gradients.primary;
   };
 
@@ -1151,6 +1164,76 @@ const TopicsScreen: React.FC = () => {
         </View>
       </Modal>
 
+      {/* Computer Science Question Type Modal */}
+      <Modal
+        visible={csQuestionTypeModalVisible}
+        onClose={() => {
+          setCsQuestionTypeModalVisible(false);
+          setMixImagesEnabled(false);
+        }}
+        title={`${selectedCsTopic?.name || 'Computer Science'}`}
+      >
+        <Text style={styles.modalDescription}>Choose your question format:</Text>
+
+        <TouchableOpacity
+          style={[
+            styles.choiceCard,
+            selectedCsQuestionType === 'mcq' && styles.choiceCardSelected,
+          ]}
+          onPress={() => setSelectedCsQuestionType('mcq')}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.choiceTitle}>Multiple Choice</Text>
+          <Text style={styles.choiceDescription}>Quick revision questions with clear explanations</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.choiceCard,
+            selectedCsQuestionType === 'structured' && styles.choiceCardSelected,
+          ]}
+          onPress={() => setSelectedCsQuestionType('structured')}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.choiceTitle}>Structured Questions</Text>
+          <Text style={styles.choiceDescription}>Multi-part written questions for deep understanding</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.choiceCard,
+            selectedCsQuestionType === 'essay' && styles.choiceCardSelected,
+          ]}
+          onPress={() => setSelectedCsQuestionType('essay')}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.choiceTitle}>Essay / Discussion</Text>
+          <Text style={styles.choiceDescription}>Extended response questions to practice analysis</Text>
+        </TouchableOpacity>
+
+        <View style={[styles.modalButtonRow, { marginBottom: Math.max(insets.bottom, 8), paddingBottom: Math.max(insets.bottom, 0) }]}>
+          <TouchableOpacity
+            style={[styles.modalButton, styles.cancelButton]}
+            onPress={() => setCsQuestionTypeModalVisible(false)}
+          >
+            <Text style={styles.cancelButtonText}>Cancel</Text>
+          </TouchableOpacity>
+          <View style={styles.modalButtonSpacer} />
+          <TouchableOpacity
+            style={[styles.modalButton, styles.startButton]}
+            onPress={() => {
+              setCsQuestionTypeModalVisible(false);
+              if (selectedCsTopic) {
+                // Pass the selected type as questionType argument
+                handleStartQuiz(selectedCsTopic, selectedCsQuestionType, undefined, false);
+              }
+            }}
+          >
+            <Text style={styles.startButtonText}>Start Quiz</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
+
       {/* Start Quiz Modal */}
       <Modal
         visible={startQuizModalVisible}
@@ -1218,6 +1301,7 @@ const getSubjectIcon = (subjectId: string): React.ReactNode => {
     mathematics: Icons.mathematics(32, '#FFFFFF'),
     combined_science: Icons.science(32, '#FFFFFF'),
     english: Icons.english(32, '#FFFFFF'),
+    computer_science: <Ionicons name="hardware-chip-outline" size={32} color="#FFFFFF" />,
   };
   return iconMap[subjectId] || Icons.quiz(32, '#FFFFFF');
 };
@@ -1234,12 +1318,18 @@ const getTopicIcon = (topic: Topic, subjectId: string): React.ReactNode => {
       return Icons.vocabulary(24, Colors.subjects.english);
     }
   }
+  if (subjectId === 'computer_science') {
+    return <Ionicons name="desktop-outline" size={24} color={Colors.info.main} />;
+  }
   return Icons.quiz(24, Colors.primary.main);
 };
 
 const getTopicIconBg = (topic: Topic, subjectId: string): string => {
   if (subjectId === 'combined_science') {
     return Colors.iconBg.science;
+  }
+  if (subjectId === 'computer_science') {
+    return Colors.iconBg.info;
   }
   return Colors.iconBg.default;
 };

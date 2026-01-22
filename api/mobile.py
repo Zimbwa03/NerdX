@@ -33,6 +33,7 @@ from services.math_ocr_service import MathOCRService
 from services.symbolic_solver_service import SymbolicSolverService
 from services.mathematics_teacher_service import mathematics_teacher_service
 from services.combined_science_generator import CombinedScienceGenerator
+from services.computer_science_generator import ComputerScienceGenerator
 from services.english_service import EnglishService
 from services.referral_service import ReferralService
 from services.paynow_service import PaynowService
@@ -1105,6 +1106,7 @@ def get_subjects():
                 'icon': 'science',
                 'color': '#4CAF50'
             },
+
             {
                 'id': 'english',
                 'name': 'English',
@@ -1227,6 +1229,15 @@ def get_topics():
                         'subject': 'mathematics'
                     })
 
+        elif subject == 'computer_science':
+            # Return all Computer Science topics
+            if 'Computer Science' in TOPICS:
+                for topic in TOPICS['Computer Science']:
+                    topics.append({
+                        'id': topic.lower().replace(' ', '_').replace('-', '_'),
+                        'name': topic,
+                        'subject': 'computer_science'
+                    })
         elif subject in TOPICS:
             # Default handling for other subjects
             for topic in TOPICS[subject]:
@@ -1525,6 +1536,31 @@ def generate_question():
                     g.current_user_id, 
                     bio_question_type
                 )
+            
+            elif subject == 'computer_science':
+                # Computer Science - uses DeepSeek generator with MCQ, Structured, Essay support
+                cs_generator = ComputerScienceGenerator()
+                from constants import TOPICS
+                import random
+                
+                # Handle exam mode - randomly select topic
+                if question_type == 'exam':
+                    cs_topics = TOPICS.get('Computer Science', [])
+                    if cs_topics:
+                        topic = random.choice(cs_topics)
+                
+                # Default topic if none specified
+                selected_topic = topic or 'Hardware and Software'
+                
+                # Determine question format - MCQ, structured, or essay
+                cs_question_type = data.get('question_type', question_format or 'mcq').lower()
+                
+                if cs_question_type == 'essay':
+                    question_data = cs_generator.generate_essay_question(selected_topic, difficulty, g.current_user_id)
+                elif cs_question_type == 'structured':
+                    question_data = cs_generator.generate_structured_question(selected_topic, difficulty, g.current_user_id)
+                else:
+                    question_data = cs_generator.generate_topical_question(selected_topic, difficulty, g.current_user_id)
 
         
         if not question_data:

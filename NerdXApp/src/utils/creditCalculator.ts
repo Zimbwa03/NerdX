@@ -18,7 +18,7 @@ export interface CreditCostParams {
  */
 export function calculateQuizCreditCost(params: CreditCostParams): number {
   const { subject, questionType = 'topical', questionFormat, bioQuestionType, isImageQuestion = false } = params;
-  
+
   const subjectKey = (subject || '').toLowerCase();
 
   // Image questions cost 4 credits (40 units)
@@ -60,6 +60,11 @@ export function calculateQuizCreditCost(params: CreditCostParams): number {
   // A-Level Biology
   if (subjectKey === 'a_level_biology') {
     return 1;
+  }
+
+  // Computer Science (O-Level)
+  if (subjectKey === 'computer_science') {
+    return 1; // Same as Combined Science
   }
 
   // Default fallback

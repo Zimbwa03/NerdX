@@ -79,6 +79,30 @@ TOPICS = {
         "Summary Writing",
         "Language and Grammar in Context",
         "Grammar Usage and Vocabulary"
+    ],
+    "Computer Science": [
+        # Hardware and Software
+        "Hardware and Software",
+        # Applications of Computer Science
+        "Applications of Computer Science",
+        # Data Representation
+        "Data Representation",
+        # Communication Networks & Internet Technologies
+        "Communication Networks and Internet Technologies",
+        # Security and Ethics / Cyber Security
+        "Security and Ethics",
+        # System Analysis and Design
+        "System Analysis and Design",
+        # Algorithm Design and Problem-Solving
+        "Algorithm Design and Problem-Solving",
+        # Programming
+        "Programming",
+        # Databases
+        "Databases",
+        # Web Design and Internet Uses
+        "Web Design and Internet Uses",
+        # Automated and Emerging Technologies / Technopreneurship
+        "Automated and Emerging Technologies"
     ]
 }
 

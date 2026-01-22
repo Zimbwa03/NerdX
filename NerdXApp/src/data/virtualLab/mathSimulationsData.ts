@@ -4,7 +4,7 @@
 import { SimulationMetadata, Badge } from './simulationTypes';
 
 // ============================================
-// MATHEMATICS SIMULATIONS (8 Total)
+// MATHEMATICS SIMULATIONS (13 Total)
 // ============================================
 
 export const MATH_SIMULATIONS: SimulationMetadata[] = [
@@ -411,6 +411,250 @@ export const MATH_SIMULATIONS: SimulationMetadata[] = [
             },
         ],
     },
+
+    // ============================================
+    // NEW SIMULATIONS (5 Additional)
+    // ============================================
+    {
+        id: 'logarithms-lab',
+        title: 'Logarithms Lab',
+        subject: 'mathematics',
+        topic: 'Algebra - Logarithms',
+        description: 'Explore logarithmic functions and their relationship to exponentials. Drag sliders to see how base changes affect the curve.',
+        difficulty: 'medium',
+        xpReward: 175,
+        estimatedTime: '15-20 mins',
+        icon: 'pulse',
+        color: '#26A69A',
+        learningObjectives: [
+            { id: 'lg-1', text: 'Understand logarithms as inverse of exponentials' },
+            { id: 'lg-2', text: 'Apply laws of logarithms (product, quotient, power)' },
+            { id: 'lg-3', text: 'Convert between logarithmic and exponential forms' },
+            { id: 'lg-4', text: 'Solve equations involving logarithms' },
+        ],
+        quizQuestions: [
+            {
+                id: 'lg-q1',
+                question: 'What is log₁₀(100)?',
+                options: ['1', '2', '10', '100'],
+                correctIndex: 1,
+                explanation: 'log₁₀(100) = 2 because 10² = 100. The logarithm asks: "What power gives 100?"',
+            },
+            {
+                id: 'lg-q2',
+                question: 'If log₂(x) = 5, what is x?',
+                options: ['10', '25', '32', '64'],
+                correctIndex: 2,
+                explanation: 'log₂(x) = 5 means 2⁵ = x, so x = 32.',
+            },
+            {
+                id: 'lg-q3',
+                question: 'log(ab) equals:',
+                options: ['log(a) × log(b)', 'log(a) + log(b)', 'log(a) - log(b)', 'log(a) ÷ log(b)'],
+                correctIndex: 1,
+                explanation: 'The product rule: log(ab) = log(a) + log(b). Logs turn multiplication into addition.',
+            },
+            {
+                id: 'lg-q4',
+                question: 'The natural logarithm ln(x) uses which base?',
+                options: ['10', '2', 'e ≈ 2.718', 'π'],
+                correctIndex: 2,
+                explanation: 'The natural logarithm uses base e (Euler\'s number ≈ 2.718281828...).',
+            },
+        ],
+    },
+    {
+        id: 'probability-simulator',
+        title: 'Probability Simulator',
+        subject: 'mathematics',
+        topic: 'Probability & Statistics',
+        description: 'Roll dice, flip coins, and see probability distributions form in real-time. Watch the law of large numbers in action.',
+        difficulty: 'easy',
+        xpReward: 150,
+        estimatedTime: '10-15 mins',
+        icon: 'dice',
+        color: '#AB47BC',
+        learningObjectives: [
+            { id: 'pb-1', text: 'Calculate theoretical probabilities' },
+            { id: 'pb-2', text: 'Understand experimental vs theoretical probability' },
+            { id: 'pb-3', text: 'Observe the law of large numbers' },
+            { id: 'pb-4', text: 'Apply addition and multiplication rules' },
+        ],
+        quizQuestions: [
+            {
+                id: 'pb-q1',
+                question: 'The probability of rolling a 6 on a fair die is:',
+                options: ['1/2', '1/3', '1/6', '6'],
+                correctIndex: 2,
+                explanation: 'A fair die has 6 outcomes, each equally likely. P(6) = 1/6.',
+            },
+            {
+                id: 'pb-q2',
+                question: 'If you flip a coin twice, P(two heads) is:',
+                options: ['1/2', '1/4', '1/3', '2/4'],
+                correctIndex: 1,
+                explanation: 'P(HH) = P(H) × P(H) = 1/2 × 1/2 = 1/4. Independent events multiply.',
+            },
+            {
+                id: 'pb-q3',
+                question: 'The law of large numbers says that as trials increase:',
+                options: ['Results become random', 'Experimental probability approaches theoretical probability', 'All outcomes become equal', 'Probability decreases'],
+                correctIndex: 1,
+                explanation: 'With many trials, the experimental probability converges to the theoretical value.',
+            },
+            {
+                id: 'pb-q4',
+                question: 'A probability can have a value:',
+                options: ['Between 0 and 1 only', 'Any positive number', 'Between -1 and 1', 'Any number'],
+                correctIndex: 0,
+                explanation: 'Probabilities are always between 0 (impossible) and 1 (certain), inclusive.',
+            },
+        ],
+    },
+    {
+        id: 'sequences-series-lab',
+        title: 'Sequences & Series Lab',
+        subject: 'mathematics',
+        topic: 'Algebra - Sequences',
+        description: 'Build arithmetic and geometric sequences step by step. Visualize convergent and divergent series with animated partial sums.',
+        difficulty: 'medium',
+        xpReward: 200,
+        estimatedTime: '15-20 mins',
+        icon: 'list',
+        color: '#42A5F5',
+        learningObjectives: [
+            { id: 'ss-1', text: 'Identify arithmetic and geometric sequences' },
+            { id: 'ss-2', text: 'Find nth terms using formulas' },
+            { id: 'ss-3', text: 'Calculate sums of arithmetic and geometric series' },
+            { id: 'ss-4', text: 'Determine if a geometric series converges' },
+        ],
+        quizQuestions: [
+            {
+                id: 'ss-q1',
+                question: 'In an arithmetic sequence, the difference between consecutive terms is:',
+                options: ['Variable', 'Constant', 'Increasing', 'Zero'],
+                correctIndex: 1,
+                explanation: 'An arithmetic sequence has a constant common difference d between terms.',
+            },
+            {
+                id: 'ss-q2',
+                question: 'The 10th term of the sequence 2, 5, 8, 11, ... is:',
+                options: ['29', '26', '32', '35'],
+                correctIndex: 0,
+                explanation: 'First term a = 2, common difference d = 3. T₁₀ = a + (n-1)d = 2 + 9(3) = 29.',
+            },
+            {
+                id: 'ss-q3',
+                question: 'A geometric series converges only if:',
+                options: ['r > 1', 'r < 1', '|r| < 1', '|r| > 1'],
+                correctIndex: 2,
+                explanation: 'A geometric series converges when the common ratio r satisfies |r| < 1.',
+            },
+            {
+                id: 'ss-q4',
+                question: 'The sum of an infinite geometric series with a = 4 and r = 0.5 is:',
+                options: ['2', '4', '8', 'Infinite'],
+                correctIndex: 2,
+                explanation: 'S∞ = a/(1-r) = 4/(1-0.5) = 4/0.5 = 8',
+            },
+        ],
+    },
+    {
+        id: 'statistics-explorer',
+        title: 'Statistics Explorer',
+        subject: 'mathematics',
+        topic: 'Statistics',
+        description: 'Add data points and watch mean, median, mode, and standard deviation update in real-time. See how outliers affect measures.',
+        difficulty: 'easy',
+        xpReward: 150,
+        estimatedTime: '10-15 mins',
+        icon: 'bar-chart',
+        color: '#66BB6A',
+        learningObjectives: [
+            { id: 'st-1', text: 'Calculate mean, median, and mode' },
+            { id: 'st-2', text: 'Understand the effect of outliers on measures' },
+            { id: 'st-3', text: 'Calculate variance and standard deviation' },
+            { id: 'st-4', text: 'Choose appropriate measures for data sets' },
+        ],
+        quizQuestions: [
+            {
+                id: 'st-q1',
+                question: 'For the data set 2, 3, 5, 7, 8, the median is:',
+                options: ['5', '3', '7', '25'],
+                correctIndex: 0,
+                explanation: 'The median is the middle value when ordered. With 5 values, the median is the 3rd value = 5.',
+            },
+            {
+                id: 'st-q2',
+                question: 'Which measure is MOST affected by outliers?',
+                options: ['Median', 'Mode', 'Mean', 'Range'],
+                correctIndex: 2,
+                explanation: 'The mean is most sensitive to outliers because every value is included in the calculation.',
+            },
+            {
+                id: 'st-q3',
+                question: 'Standard deviation measures:',
+                options: ['The average value', 'The middle value', 'The spread of data from the mean', 'The most common value'],
+                correctIndex: 2,
+                explanation: 'Standard deviation measures how spread out the data is from the mean.',
+            },
+            {
+                id: 'st-q4',
+                question: 'For the data set 4, 4, 6, 8, the mode is:',
+                options: ['4', '5.5', '6', '22'],
+                correctIndex: 0,
+                explanation: 'The mode is the most frequently occurring value. Here, 4 appears twice.',
+            },
+        ],
+    },
+    {
+        id: 'simultaneous-equations-lab',
+        title: 'Simultaneous Equations Lab',
+        subject: 'mathematics',
+        topic: 'Algebra - Systems of Equations',
+        description: 'Graph two lines and find their intersection point. Explore substitution and elimination methods with step-by-step solutions.',
+        difficulty: 'medium',
+        xpReward: 175,
+        estimatedTime: '15-20 mins',
+        icon: 'git-merge',
+        color: '#EF5350',
+        learningObjectives: [
+            { id: 'se-1', text: 'Solve simultaneous equations graphically' },
+            { id: 'se-2', text: 'Apply the substitution method' },
+            { id: 'se-3', text: 'Apply the elimination method' },
+            { id: 'se-4', text: 'Identify cases with no solution or infinite solutions' },
+        ],
+        quizQuestions: [
+            {
+                id: 'se-q1',
+                question: 'The solution to simultaneous equations graphically is:',
+                options: ['Where both lines cross the x-axis', 'The point where the two lines intersect', 'The y-intercept of both lines', 'The gradient of the lines'],
+                correctIndex: 1,
+                explanation: 'The solution is the point (x, y) where both lines meet, satisfying both equations.',
+            },
+            {
+                id: 'se-q2',
+                question: 'Solve: x + y = 5 and x - y = 1. What is x?',
+                options: ['2', '3', '4', '5'],
+                correctIndex: 1,
+                explanation: 'Adding: 2x = 6, so x = 3. (Then y = 2 from the first equation.)',
+            },
+            {
+                id: 'se-q3',
+                question: 'If two lines are parallel, the system has:',
+                options: ['One solution', 'No solution', 'Infinite solutions', 'Two solutions'],
+                correctIndex: 1,
+                explanation: 'Parallel lines never meet, so there is no point satisfying both equations.',
+            },
+            {
+                id: 'se-q4',
+                question: 'In the elimination method, you:',
+                options: ['Substitute one variable', 'Add or subtract equations to eliminate a variable', 'Graph both lines', 'Find the y-intercept'],
+                correctIndex: 1,
+                explanation: 'The elimination method adds or subtracts equations to cancel out one variable.',
+            },
+        ],
+    },
 ];
 
 // ============================================
@@ -435,9 +679,9 @@ export const MATH_LAB_BADGES: Badge[] = [
     {
         id: 'math-master',
         name: 'Mathematics Master',
-        description: 'Complete all 8 mathematics simulations',
+        description: 'Complete all 13 mathematics simulations',
         icon: 'trophy',
-        requirement: { type: 'subject_mastery', value: 8, subject: 'mathematics' },
+        requirement: { type: 'subject_mastery', value: 13, subject: 'mathematics' },
     },
     {
         id: 'complex-thinker',
