@@ -22,7 +22,7 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.Ngoni03.nerdxapp"
+      "bundleIdentifier": "com.ngoni03.nerdxapp"
     },
     "android": {
       "adaptiveIcon": {
