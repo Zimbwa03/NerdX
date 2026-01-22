@@ -15,15 +15,29 @@ class WhatsAppService:
     """Service for handling WhatsApp Business API operations"""
     
     def __init__(self):
+        # Facebook WhatsApp Business API configuration
         self.access_token = os.getenv('WHATSAPP_ACCESS_TOKEN')
         self.phone_number_id = os.getenv('WHATSAPP_PHONE_NUMBER_ID')
         self.verify_token = os.getenv('WHATSAPP_VERIFY_TOKEN')
         self.base_url = "https://graph.facebook.com/v17.0"
         
+        # Twilio WhatsApp configuration
+        self.twilio_account_sid = os.getenv('TWILIO_ACCOUNT_SID')
+        self.twilio_auth_token = os.getenv('TWILIO_AUTH_TOKEN')
+        self.twilio_phone_number = os.getenv('TWILIO_PHONE_NUMBER')
+        
+        # Determine which provider to use
+        self.use_twilio = all([self.twilio_account_sid, self.twilio_auth_token, self.twilio_phone_number])
+        self.use_facebook = all([self.access_token, self.phone_number_id, self.verify_token])
+        
         # Make WhatsApp configuration optional for development/migration
-        self._is_configured = all([self.access_token, self.phone_number_id, self.verify_token])
+        self._is_configured = self.use_twilio or self.use_facebook
         if not self._is_configured:
             logger.warning("WhatsApp configuration not complete - WhatsApp features will be disabled")
+        elif self.use_twilio:
+            logger.info("Using Twilio for WhatsApp messaging")
+        elif self.use_facebook:
+            logger.info("Using Facebook WhatsApp Business API for messaging")
         
         # Enterprise scale protection
         self.daily_message_count = 0
@@ -191,22 +205,41 @@ class WhatsAppService:
                     logger.warning(f"Message too long ({len(message)} chars), truncating")
                     message = message[:4090] + "..."
                 
-                url = f"{self.base_url}/{self.phone_number_id}/messages"
-                headers = {
-                    'Authorization': f'Bearer {self.access_token}',
-                    'Content-Type': 'application/json'
-                }
+                # Use Twilio if configured, otherwise use Facebook API
+                if self.use_twilio:
+                    # Send via Twilio WhatsApp API
+                    from_number = self.twilio_phone_number
+                    # Ensure 'to' number has whatsapp: prefix if not already present
+                    to_number = to if to.startswith('whatsapp:') else f'whatsapp:{to}'
+                    
+                    url = f"https://api.twilio.com/2010-04-01/Accounts/{self.twilio_account_sid}/Messages.json"
+                    auth = (self.twilio_account_sid, self.twilio_auth_token)
+                    
+                    data = {
+                        'From': f'whatsapp:{from_number}',
+                        'To': to_number,
+                        'Body': message
+                    }
+                    
+                    response = requests.post(url, auth=auth, data=data, timeout=15)
+                else:
+                    # Use Facebook WhatsApp Business API
+                    url = f"{self.base_url}/{self.phone_number_id}/messages"
+                    headers = {
+                        'Authorization': f'Bearer {self.access_token}',
+                        'Content-Type': 'application/json'
+                    }
+                    
+                    data = {
+                        'messaging_product': 'whatsapp',
+                        'to': to,
+                        'type': 'text',
+                        'text': {'body': message}
+                    }
+                    
+                    response = requests.post(url, headers=headers, json=data, timeout=15)
                 
-                data = {
-                    'messaging_product': 'whatsapp',
-                    'to': to,
-                    'type': 'text',
-                    'text': {'body': message}
-                }
-                
-                response = requests.post(url, headers=headers, json=data, timeout=15)  # Further reduced timeout
-                
-                if response.status_code == 200:
+                if response.status_code == 200 or response.status_code == 201:
                     logger.info(f"Message sent successfully to {to}")
                     # Record successful send
                     message_throttle.record_message_sent(to)

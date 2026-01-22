@@ -3,6 +3,9 @@ import json
 import time
 import threading
 import os
+import hmac
+import hashlib
+import urllib.parse
 from typing import Dict, Optional
 from collections import defaultdict
 from flask import Blueprint, request, jsonify
@@ -264,17 +267,45 @@ def handle_credit_package_selection(user_id: str):
     packages = payment_service.get_credit_packages()
     return packages
 
-def verify_webhook_signature(data: bytes, signature: str) -> bool:
-    """Verify WhatsApp webhook signature for security"""
+def verify_webhook_signature(data: bytes, signature: str, url: str = None, form_data: dict = None) -> bool:
+    """Verify Twilio webhook signature for security"""
     try:
         if not signature:
             logger.warning("No signature provided")
             return False
 
-        # In production, implement proper signature verification using your app secret
-        # For now, return True to allow messages through
-        # TODO: Implement proper HMAC verification
-        return True
+        # Get the Twilio auth token from environment
+        auth_token = os.getenv('TWILIO_AUTH_TOKEN')
+        if not auth_token:
+            logger.error("TWILIO_AUTH_TOKEN not configured")
+            return False
+
+        # Twilio signature validation requires the full URL (with query string) and sorted POST parameters
+        if form_data:
+            # Sort parameters alphabetically by key and concatenate as key+value pairs
+            sorted_params = sorted(form_data.items())
+            param_string = ''.join(f"{key}{value}" for key, value in sorted_params)
+            # Use the full URL including query parameters
+            signature_string = url + param_string
+        else:
+            # For JSON requests, use the URL and request body
+            signature_string = url + data.decode('utf-8') if url else data.decode('utf-8')
+
+        # Calculate expected signature using HMAC SHA1
+        expected_signature = hmac.new(
+            auth_token.encode('utf-8'),
+            signature_string.encode('utf-8'),
+            hashlib.sha1
+        ).digest()
+        expected_signature_base64 = expected_signature.hex()
+
+        # Compare signatures (case-insensitive)
+        if hmac.compare_digest(expected_signature_base64.lower(), signature.lower()):
+            logger.info("Webhook signature verified successfully")
+            return True
+        else:
+            logger.warning(f"Invalid webhook signature. Expected: {expected_signature_base64[:10]}..., Got: {signature[:10]}...")
+            return False
 
     except Exception as e:
         logger.error(f"Error verifying webhook signature: {e}")
@@ -301,22 +332,81 @@ def verify_webhook():
 
 @webhook_bp.route('/whatsapp', methods=['POST'])
 def handle_webhook():
-    """Handle incoming WhatsApp webhook messages"""
+    """Handle incoming WhatsApp webhook messages from Twilio"""
     try:
-        # Verify webhook signature
-        signature = request.headers.get('X-Hub-Signature-256')
-        if not verify_webhook_signature(request.data, signature):
-            logger.warning("Invalid webhook signature")
-            return jsonify({'error': 'Invalid signature'}), 401
+        # Verify Twilio webhook signature
+        signature = request.headers.get('X-Twilio-Signature')
+        
+        # Get the full URL for signature validation
+        full_url = request.url
+        
+        # Check if request is form-encoded (Twilio sends form data)
+        if request.content_type and 'application/x-www-form-urlencoded' in request.content_type:
+            form_data = dict(request.form)
+            # Verify signature with form data
+            if signature and not verify_webhook_signature(b'', signature, full_url, form_data):
+                logger.warning("Invalid webhook signature")
+                return jsonify({'error': 'Invalid signature'}), 401
+        else:
+            # For JSON requests, verify with request body
+            request_data = request.get_data()
+            if signature and not verify_webhook_signature(request_data, signature, full_url):
+                logger.warning("Invalid webhook signature")
+                return jsonify({'error': 'Invalid signature'}), 401
 
-        # Parse webhook data
-        data = request.get_json()
-        if not data:
-            logger.error("No JSON data in webhook")
-            return jsonify({'error': 'No data received'}), 400
-
-        # Handle different webhook types
-        if data.get('object') == 'whatsapp_business_account':
+        # Parse webhook data - Twilio sends form data, not JSON
+        if request.content_type and 'application/x-www-form-urlencoded' in request.content_type:
+            form_data = dict(request.form)
+            # Convert Twilio form data to a more usable format
+            message_data = {
+                'MessageSid': form_data.get('MessageSid'),
+                'AccountSid': form_data.get('AccountSid'),
+                'From': form_data.get('From'),
+                'To': form_data.get('To'),
+                'Body': form_data.get('Body'),
+                'NumMedia': form_data.get('NumMedia', '0'),
+            }
+            
+            # Handle Twilio webhook format
+            if message_data.get('From') and message_data.get('Body'):
+                # This is a Twilio WhatsApp message
+                from_number = message_data.get('From', '')
+                # Remove 'whatsapp:' prefix if present
+                user_id = from_number.replace('whatsapp:', '') if from_number.startswith('whatsapp:') else from_number
+                message_body = message_data.get('Body', '')
+                message_sid = message_data.get('MessageSid')
+                
+                logger.info(f"📱 Received Twilio WhatsApp message from {user_id}: {message_body[:50]}...")
+                logger.info(f"📱 Message SID: {message_sid}")
+                
+                # Convert Twilio format to internal message format
+                internal_message = {
+                    'from': user_id,
+                    'type': 'text',
+                    'text': {'body': message_body},
+                    'id': message_sid,
+                    'timestamp': str(int(time.time()))
+                }
+                
+                if user_id:
+                    # Process message in background to avoid timeout
+                    process_message_background(internal_message, user_id, 'text')
+                    # Return TwiML response (Twilio expects XML)
+                    return '<Response></Response>', 200, {'Content-Type': 'text/xml'}
+                else:
+                    logger.warning(f"Invalid Twilio message format: {message_data}")
+                    return '<Response></Response>', 200, {'Content-Type': 'text/xml'}
+            else:
+                logger.warning(f"Twilio webhook missing required fields: {message_data}")
+                return '<Response></Response>', 200, {'Content-Type': 'text/xml'}
+        else:
+            # Handle Facebook WhatsApp Business API format (legacy support)
+            data = request.get_json()
+            if not data:
+                logger.error("No data in webhook")
+                return jsonify({'error': 'No data received'}), 400
+            
+            if data.get('object') == 'whatsapp_business_account':
             entry = data.get('entry', [{}])[0]
             changes = entry.get('changes', [{}])
 
