@@ -3,7 +3,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { Platform } from 'react-native';
-import { logger } from '../utils/logger';
+import { logger } from '../../utils/logger';
 
 // IMPORTANT: For APK builds, update this to your actual backend URL
 // For development: use localhost (Android emulator uses 10.0.2.2 to access host machine's localhost)
