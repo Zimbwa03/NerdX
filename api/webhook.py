@@ -407,30 +407,30 @@ def handle_webhook():
                 return jsonify({'error': 'No data received'}), 400
             
             if data.get('object') == 'whatsapp_business_account':
-            entry = data.get('entry', [{}])[0]
-            changes = entry.get('changes', [{}])
+                entry = data.get('entry', [{}])[0]
+                changes = entry.get('changes', [{}])
 
-            for change in changes:
-                if change.get('value', {}).get('messages'):
-                    messages = change['value']['messages']
+                for change in changes:
+                    if change.get('value', {}).get('messages'):
+                        messages = change['value']['messages']
 
-                    for message in messages:
-                        # Extract message details
-                        user_id = message.get('from')
-                        message_type = message.get('type', 'text')
+                        for message in messages:
+                            # Extract message details
+                            user_id = message.get('from')
+                            message_type = message.get('type', 'text')
 
-                        # Debug: Log the full message structure
-                        logger.info(f"🔍 Received WhatsApp message: {message}")
-                        logger.info(f"🔍 User ID: {user_id}, Type: {message_type}")
+                            # Debug: Log the full message structure
+                            logger.info(f"🔍 Received WhatsApp message: {message}")
+                            logger.info(f"🔍 User ID: {user_id}, Type: {message_type}")
 
-                        if user_id and message_type:
-                            # Process message in background to avoid timeout
-                            process_message_background(message, user_id, message_type)
+                            if user_id and message_type:
+                                # Process message in background to avoid timeout
+                                process_message_background(message, user_id, message_type)
 
-                            # Return immediate response to WhatsApp
-                            return jsonify({'status': 'ok'})
-                        else:
-                            logger.warning(f"Invalid message format: {message}")
+                                # Return immediate response to WhatsApp
+                                return jsonify({'status': 'ok'})
+                            else:
+                                logger.warning(f"Invalid message format: {message}")
 
         # If no messages to process, return success
         return jsonify({'status': 'ok'})
