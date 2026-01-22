@@ -7,16 +7,25 @@
         "buildType": "apk",
         "gradleCommand": ":app:assembleDebug"
       },
-      "prebuildCommand": "npx expo prebuild --clean --platform android"
+      "prebuildCommand": "npx expo prebuild --clean --platform android",
+      "installCommand": "npm install --include=dev",
+      "env": {
+        "EAS_SKIP_AUTO_FINGERPRINT": "1",
+        "EAS_NO_VCS": "1",
+        "NPM_CONFIG_LEGACY_PEER_DEPS": "true"
+      },
+      "node": "20.19.3"
     },
     "preview": {
       "android": {
         "buildType": "apk"
       },
       "prebuildCommand": "npx expo prebuild --clean --platform android",
+      "installCommand": "npm install --include=dev",
       "env": {
         "EAS_SKIP_AUTO_FINGERPRINT": "1",
-        "EAS_NO_VCS": "1"
+        "EAS_NO_VCS": "1",
+        "NPM_CONFIG_LEGACY_PEER_DEPS": "true"
       },
       "node": "20.19.3"
     },
@@ -25,13 +34,14 @@
         "buildType": "apk"
       },
       "prebuildCommand": "npx expo prebuild --clean --platform android",
+      "installCommand": "npm install --include=dev",
       "env": {
         "EAS_SKIP_AUTO_FINGERPRINT": "1",
+        "EAS_NO_VCS": "1",
         "NPM_CONFIG_LEGACY_PEER_DEPS": "true",
-        "EAS_BUILD_MAVEN_CACHE_ENABLED": "false",
-        "EAS_NO_VCS": "1"
+        "EAS_BUILD_MAVEN_CACHE_ENABLED": "false"
       },
-      "node": "22.12.0",
+      "node": "20.19.3",
       "cache": {
         "disabled": true
       }
