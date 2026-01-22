@@ -3,6 +3,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { Platform } from 'react-native';
+import { logger } from '../utils/logger';
 
 // IMPORTANT: For APK builds, update this to your actual backend URL
 // For development: use localhost (Android emulator uses 10.0.2.2 to access host machine's localhost)
@@ -10,9 +11,9 @@ import { Platform } from 'react-native';
 // NOTE: Changed to always use Render server for testing NerdX Live feature
 export const API_BASE_URL = 'https://nerdx.onrender.com';
 
-console.log('🌐 API Base URL:', API_BASE_URL);
-console.log('🔧 Platform:', Platform.OS);
-console.log('🏗️ Dev Mode:', __DEV__);
+logger.info(`API Base URL: ${API_BASE_URL}`);
+logger.debug(`Platform: ${Platform.OS}, Dev Mode: ${__DEV__}`);
+
 
 const AUTH_TOKEN_KEY = '@auth_token';
 

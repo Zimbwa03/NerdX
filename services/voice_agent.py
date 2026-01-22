@@ -658,7 +658,7 @@ async def run_billing_scheduler(billing: BillingManager, websocket: WebSocket):
                         "message": "Session ended: Insufficient credits to continue."
                     })
                     await websocket.close()
-                except:
+                except Exception:
                     pass
                 break
             
@@ -982,7 +982,7 @@ class TransparentGeminiPipe:
                         "type": "error",
                         "message": "Audio conversion failed"
                     })
-                except:
+                except Exception:
                     pass
                 return
             
@@ -1134,7 +1134,7 @@ class TransparentGeminiPipe:
         if self.gemini_ws:
             try:
                 await self.gemini_ws.close()
-            except:
+            except Exception:
                 pass
         logger.info("👋 Session closed")
 
@@ -1550,7 +1550,7 @@ This is REAL-TIME video - you can see them writing, erasing, and working. Use th
         if self.gemini_ws:
             try:
                 await self.gemini_ws.close()
-            except:
+            except Exception:
                 pass
         logger.info("👋 Video session closed")
 

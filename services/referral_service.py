@@ -101,7 +101,7 @@ class ReferralService:
             try:
                 safe_id = ''.join(filter(str.isdigit, user_id))[-6:].zfill(6)
                 return f"NX{safe_id}"
-            except:
+            except Exception:
                 return "NERDX123"
     
     def validate_referral_code(self, referral_code: str) -> Optional[str]:
@@ -282,7 +282,7 @@ class ReferralService:
                 from database.external_db import get_user_registration
                 registration = get_user_registration(user_id)
                 fallback_code = registration.get('nerdx_id') if registration else None
-            except:
+            except Exception:
                 fallback_code = None
             
             return {

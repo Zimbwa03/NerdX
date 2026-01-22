@@ -6636,8 +6636,8 @@ v = **2.65 × 10⁷ m s⁻¹**`,
         ]
     },
     "Capacitance": {
-        topic: "Capacitance"
-        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/Electrostatics_Masterclass_Fields_Potential_Capacitance.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9QaHlzaWNzL0EgbGV2ZWwvRWxlY3Ryb3N0YXRpY3NfTWFzdGVyY2xhc3NfRmllbGRzX1BvdGVudGlhbF9DYXBhY2l0YW5jZS5tNGEiLCJpYXQiOjE3NjgwNzUxMjksImV4cCI6NTI2ODU3MTEyOX0.YwiS1MVDmM0SRR3PvmAEkoykAvV7YQZJFkBAyV8QWKM",,
+        topic: "Capacitance",
+        audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Physics/A%20level/Electrostatics_Masterclass_Fields_Potential_Capacitance.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9QaHlzaWNzL0EgbGV2ZWwvRWxlY3Ryb3N0YXRpY3NfTWFzdGVyY2xhc3NfRmllbGRzX1BvdGVudGlhbF9DYXBhY2l0YW5jZS5tNGEiLCJpYXQiOjE3NjgwNzUxMjksImV4cCI6NTI2ODU3MTEyOX0.YwiS1MVDmM0SRR3PvmAEkoykAvV7YQZJFkBAyV8QWKM",
         subject: "A Level Physics",
         summary: "Capacitors store electrical energy by separating charges. This topic covers capacitance, parallel plate capacitors, energy storage, and the charging/discharging of capacitors through resistors.",
         sections: [

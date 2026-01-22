@@ -1294,7 +1294,7 @@ class GraphService:
             # Parse right side (should be a number)
             try:
                 c = float(right)
-            except:
+            except Exception:
                 return None
 
             # Parse left side to extract coefficients of x and y
@@ -1381,7 +1381,7 @@ class GraphService:
 
             return (x, y)
 
-        except:
+        except Exception:
             return None
 
     def _point_satisfies_constraints(self, x: float, y: float, constraints: List[Tuple]) -> bool:
@@ -1400,7 +1400,7 @@ class GraphService:
             # Check non-negativity (standard assumption)
             return x >= -1e-10 and y >= -1e-10
 
-        except:
+        except Exception:
             return False
 
     def _plot_objective_function(self, ax, objective: str, corner_points: List, x_range: Tuple, y_range: Tuple):
