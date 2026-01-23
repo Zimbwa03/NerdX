@@ -33,6 +33,7 @@ from utils.pdf_generator import PDFGenerator
 from utils.session_manager import session_manager
 from utils.credit_system import credit_system
 from utils.validators import validators
+from utils.menu_router import menu_router
 from constants import TOPICS, MESSAGE_TEMPLATES, DIFFICULTY_LEVELS
 from database.external_db import get_user_registration, get_user_stats, get_user_credits, deduct_credits
 from utils.credit_units import format_credits
@@ -250,6 +251,42 @@ cleanup_thread.start()
 # Global session storage for question data
 question_sessions = {}
 
+# Session types where free-text input should not be hijacked by menu routing
+MENU_ROUTING_BLOCKLIST = {
+    'question',
+    'math_question',
+    'science_structured_question',
+    'english_grammar',
+    'english_vocabulary',
+    'english_grammar_meta',
+    'english_vocabulary_meta',
+    'comprehension_questions',
+    'comprehension_passage_ready',
+    'essay_free_response',
+    'essay_guided_composition',
+    'essay_writing',
+    'english_essay',
+    'audio_chat',
+    'project_assistant',
+    'paynow_phone_collection',
+    'payment_flow',
+    'payment'
+}
+
+def try_route_menu_selection(user_id: str, message_text: str, session_type: Optional[str] = None) -> bool:
+    """Route text replies to stored menu selections (Twilio text-only menus)."""
+    allow_numbers = True
+    if session_type and session_type in MENU_ROUTING_BLOCKLIST:
+        # Avoid hijacking numeric/free-form answers during active learning sessions
+        allow_numbers = False
+
+    selection_id = menu_router.resolve_selection(user_id, message_text, allow_numbers=allow_numbers)
+    if not selection_id:
+        return False
+
+    handle_interactive_message(user_id, {'button_reply': {'id': selection_id}})
+    return True
+
 # Wrapper functions for service methods
 def process_referral_code(user_id: str, referral_code: str):
     """Process referral code using referral service"""
@@ -401,40 +438,9 @@ def handle_webhook():
                 logger.warning(f"Twilio webhook missing required fields: {message_data}")
                 return '<Response></Response>', 200, {'Content-Type': 'text/xml'}
         else:
-            # Handle Facebook WhatsApp Business API format (legacy support)
-            data = request.get_json()
-            if not data:
-                logger.error("No data in webhook")
-                return jsonify({'error': 'No data received'}), 400
-            
-            if data.get('object') == 'whatsapp_business_account':
-                entry = data.get('entry', [{}])[0]
-                changes = entry.get('changes', [{}])
-
-                for change in changes:
-                    if change.get('value', {}).get('messages'):
-                        messages = change['value']['messages']
-
-                        for message in messages:
-                            # Extract message details
-                            user_id = message.get('from')
-                            message_type = message.get('type', 'text')
-
-                            # Debug: Log the full message structure
-                            logger.info(f"🔍 Received WhatsApp message: {message}")
-                            logger.info(f"🔍 User ID: {user_id}, Type: {message_type}")
-
-                            if user_id and message_type:
-                                # Process message in background to avoid timeout
-                                process_message_background(message, user_id, message_type)
-
-                                # Return immediate response to WhatsApp
-                                return jsonify({'status': 'ok'})
-                            else:
-                                logger.warning(f"Invalid message format: {message}")
-
-        # If no messages to process, return success
-        return jsonify({'status': 'ok'})
+            # Only Twilio webhooks are supported (form data)
+            logger.warning("Webhook received non-Twilio format (expected form data)")
+            return jsonify({'error': 'Only Twilio webhooks are supported'}), 400
 
     except Exception as e:
         logger.error(f"Webhook error: {e}")
@@ -619,6 +625,8 @@ def handle_text_message(user_id: str, message_text: str):
         # Check for other session types
         session_type = session_manager.get_session_type(user_id)
         if session_type:
+            if try_route_menu_selection(user_id, message_text, session_type):
+                return
             handle_session_message(user_id, message_text)
             return
 
@@ -632,6 +640,10 @@ def handle_text_message(user_id: str, message_text: str):
                 "Your registration status is inconsistent. For security, please register again.\n\n"
                 "Please provide your first name:")
             user_service.start_registration(user_id)
+            return
+
+        # Route menu selections for text-only menus (no session active)
+        if try_route_menu_selection(user_id, message_text):
             return
 
         # Handle registered user commands
@@ -746,32 +758,26 @@ def handle_new_user(user_id: str, message_text: str):
         })
 
         # First-time interaction - Request explicit consent (WhatsApp Policy Requirement)
-        consent_message = """🎓 *Welcome to NerdX Quiz Bot!*
+        consent_message = """*Welcome to NerdX Quiz Bot!*
 
-📚 *Your ZIMSEC Study Companion*
-• Biology, Chemistry, Physics & Math questions
-• AI-powered personalized learning
-• Track progress & earn achievements
+*ZIMSEC Study Companion*
+- Biology, Chemistry, Physics, and Math
+- AI-guided practice and progress tracking
 
-⚖️ *CONSENT REQUIRED*
-To comply with WhatsApp Business Policy, we need your explicit consent to:
-• Send educational content and quiz questions
-• Process your learning progress data
-• Provide study materials and notifications
+*Consent required*
+Reply YES to allow NerdX to:
+- Send educational quizzes and study materials
+- Store your learning progress
+- Send service notifications
 
-🏢 *Business Info:*
-• Company: Neuronet AI Solutions Pvt Ltd
-• Registration: 51491A0272025
-• Phone: +263 5494594
-• Email: info@neuronet.co.zw
-• Website: neuronet.co.zw
-• CEO: Ngonidzashe Zimbwa
+*Business*: Neuronet AI Solutions Pvt Ltd (Reg 51491A0272025)
+Phone: +263 5494594 | Email: info@neuronet.co.zw | Web: neuronet.co.zw
 
-✅ *Reply "YES" to consent and start learning*
-❌ *Reply "NO" to decline*
+Reply *YES* to continue
+Reply *NO* to decline
 
-📞 *Need help?* Reply 'SUPPORT'
-🛑 *To stop messages:* Reply 'STOP'"""
+Need help? Reply *SUPPORT*
+Stop messages: Reply *STOP*"""
 
         if referral_code:
             consent_message += f"\n\n🎁 *Bonus:* Referral code {referral_code} detected!"
@@ -851,24 +857,17 @@ def handle_opt_out(user_id: str):
     try:
         logger.info(f"❌ User {user_id} declined consent or requested opt-out")
         
-        opt_out_message = """❌ *We understand and respect your choice*
+        opt_out_message = """*You are opted out*
 
-🛑 *You have successfully opted out*
+We will not send further messages from NerdX.
 
-You will not receive further messages from NerdX Quiz Bot unless you:
-• Send us a new message to restart
-• Explicitly request to rejoin our service
+To rejoin anytime, send *START* or *HI*.
 
-📞 *If you change your mind:*
-Simply send "START" or "HI" anytime to begin again
-
-🏢 *Business Contact:*
+*Business Contact*
 Neuronet AI Solutions Pvt Ltd
-Phone: +263 5494594
-Email: info@neuronet.co.zw
-Website: neuronet.co.zw
+Phone: +263 5494594 | Email: info@neuronet.co.zw | Web: neuronet.co.zw
 
-Thank you for considering NerdX! 🎓"""
+Thank you for considering NerdX."""
 
         whatsapp_service.send_message(user_id, opt_out_message)
         
@@ -884,42 +883,27 @@ Thank you for considering NerdX! 🎓"""
 def send_support_info(user_id: str):
     """Send business support information (WhatsApp Policy Compliance)"""
     try:
-        support_message = """📞 *Neuronet AI Solutions - NerdX Support*
+        support_message = """*NerdX Support (Neuronet AI Solutions)*
 
-🏢 *Business Information:*
-• Company: Neuronet AI Solutions Pvt Ltd
-• Registration: 51491A0272025  
-• Address: 9 Munino Mufakose, Harare
-• Phone: +263 5494594
-• Email: info@neuronet.co.zw
-• Website: neuronet.co.zw
-• CEO: Ngonidzashe Zimbwa
-• Service: NerdX ZIMSEC Study Companion
+Neuronet AI Solutions Pvt Ltd (Reg 51491A0272025)
+Address: 9 Munino Mufakose, Harare
+Phone: +263 5494594 | Email: info@neuronet.co.zw
+Web: neuronet.co.zw
+Hours: 8 AM - 6 PM CAT (reply within 24h)
 
-💬 *How We Can Help:*
-• Technical issues with the bot
-• Account and registration problems
-• Payment and credit queries
-• Learning content questions
-• General inquiries
+We can help with:
+- Account and registration
+- Payments and credits
+- Quiz/content issues
+- Technical problems
 
-📧 *Contact Options:*
-• WhatsApp: Continue chatting here
-• Phone: +263 5494594
-• Email: info@neuronet.co.zw
-• Response Time: Within 24 hours
-• Business Hours: 8 AM - 6 PM CAT
+Quick commands:
+- *menu* or *start* (restart)
+- *stats* (account info)
+- *privacy* (policy)
+- *stop* (opt out)
 
-🔧 *Common Solutions:*
-• Reset rate limits: Reply 'reset limits'
-• Restart bot: Reply 'start' or 'menu'
-• Check account: Reply 'stats'
-
-🛡️ *Privacy & Data:*
-• Privacy Policy: Reply 'PRIVACY'
-• Opt-out: Reply 'STOP'
-
-How can we assist you today? 🎓"""
+How can we help?"""
 
         whatsapp_service.send_message(user_id, support_message)
         logger.info(f"📞 Support information sent to {user_id}")
@@ -931,50 +915,29 @@ How can we assist you today? 🎓"""
 def send_privacy_policy(user_id: str):
     """Send privacy policy information (WhatsApp Policy Compliance)"""
     try:
-        privacy_message = """🛡️ *Neuronet AI Solutions - Privacy Policy*
+        privacy_message = """*NerdX Privacy Summary*
 
-🏢 *Data Controller:*
-• Company: Neuronet AI Solutions Pvt Ltd
-• Registration: 51491A0272025
-• Address: 9 Munino Mufakose, Harare
-• Contact: info@neuronet.co.zw
-• Website: neuronet.co.zw
+Data controller: Neuronet AI Solutions Pvt Ltd (Reg 51491A0272025)
+Contact: info@neuronet.co.zw | +263 5494594 | neuronet.co.zw
 
-📋 *Data We Collect:*
-• Name and WhatsApp number (for account)
-• Learning progress and quiz results
-• Usage statistics for service improvement
-• Payment information (for credit purchases)
+We collect:
+- Name and WhatsApp number
+- Learning progress and quiz results
+- Usage statistics
+- Payment records (if you buy credits)
 
-🔒 *How We Protect Your Data:*
-• Secure encrypted storage systems
-• No data sharing with third parties
-• Used only for NerdX educational services
-• Automatic data cleanup after 12 months of inactivity
-• Zimbabwe data protection compliance
+We use your data to deliver learning services only.
+We do not sell your data.
 
-📱 *WhatsApp Messaging Consent:*
-• Educational content and quiz questions
-• Progress updates and achievements  
-• Service notifications only
-• No promotional/marketing messages
-• You explicitly consented to receive messages
+Your choices:
+- Delete data: reply *DELETE DATA*
+- Opt out: reply *STOP*
+- Privacy questions: reply *SUPPORT*
 
-⚖️ *Your Rights:*
-• Request data deletion: Reply 'DELETE DATA'
-• Opt-out anytime: Reply 'STOP'
-• Data portability available on request
-• Access your data: Contact info@neuronet.co.zw
+Full policy: neuronet.co.zw/privacy
+Last updated: December 2024
 
-🏢 *Contact for Privacy Concerns:*
-• Email: info@neuronet.co.zw
-• Phone: +263 5494594
-• All privacy requests processed within 7 days
-
-📜 *Full Policy:* Available at neuronet.co.zw/privacy
-🕐 *Last Updated:* December 2024
-
-Reply 'MENU' to return to main options 📚"""
+Reply *MENU* to continue."""
 
         whatsapp_service.send_message(user_id, privacy_message)
         logger.info(f"🛡️ Privacy policy sent to {user_id}")
@@ -1165,7 +1128,7 @@ Don't worry - no charges were made to your account."""
             # CRITICAL FIX: Don't automatically send main menu - it causes message chains
             # Only send menu if user explicitly requests it
             logger.info(f"No active session for {user_id}, but not auto-sending menu to prevent message chains")
-            whatsapp_service.send_message(user_id, "I didn't understand that. Please use the menu buttons to navigate.")
+            whatsapp_service.send_message(user_id, "I didn't understand that. Please use the menu options to navigate.")
 
     except Exception as e:
         logger.error(f"Error handling session message for {user_id}: {e}", exc_info=True)
@@ -1405,7 +1368,7 @@ def handle_image_message(user_id: str, image_data: dict):
             response += f"*Answer:* {solution.get('final_answer', 'No answer')}\n\n"
 
             if solution.get('notes'):
-                response += f"*Notes:** {solution['notes']}\n"
+                response += f"*Notes:* {solution['notes']}\n"
 
             response += f"💰 Cost: {credit_system.get_credit_cost('image_solve')} credits"
 
@@ -4957,7 +4920,7 @@ Click the link below to complete your EcoCash payment:
         except Exception as payment_error:
             logger.error(f"Paynow payment exception for {user_id}: {payment_error}")
             whatsapp_service.send_message(user_id, 
-                "❌ *Payment System Error**\n\n"
+                "❌ *Payment System Error*\n\n"
                 "The instant payment system is temporarily unavailable. "
                 "Let's use manual payment instead.")
             handle_manual_payment(user_id, package_id)

@@ -25,8 +25,8 @@ const BUTTON_SIZE = 60;
 const WS_URL = `${APP_WS_BASE_URL}/ws/nerdx-live`;
 
 // ===== JITTER BUFFER CONFIGURATION =====
-// Buffer ~200-400ms of audio before starting playback to prevent stuttering
-const MIN_BUFFER_CHUNKS = 3; // Wait for 3 chunks before starting (adjust as needed)
+// Server micro-batches audio; start playback immediately for low latency
+const MIN_BUFFER_CHUNKS = 1; // Start on first chunk
 const PLAYBACK_CHECK_INTERVAL = 50; // Check queue every 50ms
 
 // Connection states for tap-to-talk mode

@@ -1,7 +1,7 @@
 // Project Assistant API services - Database-backed
 import api from './config';
 import HybridAIService from '../HybridAIService';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 
 export interface Project {

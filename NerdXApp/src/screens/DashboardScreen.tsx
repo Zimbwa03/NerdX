@@ -216,6 +216,10 @@ const DashboardScreen: React.FC = () => {
     navigation.navigate('NerdXLiveAudio' as never);
   };
 
+  const navigateToOfflineChat = () => {
+    navigation.navigate('OfflineChat' as never);
+  };
+
   const navigateToProfile = () => {
     navigation.navigate('Account' as never);
   };
@@ -680,13 +684,24 @@ const DashboardScreen: React.FC = () => {
 
               {/* Full Width Cards - Always visible */}
               <AnimatedCard
+                title="Offline Chat"
+                subtitle="Free • Basic Questions • Works Offline"
+                imageSource={require('../../assets/images/my_progress_card.png')}
+                onPress={navigateToOfflineChat}
+                glowColor="#10B981"
+                fullWidth={true}
+                index={6}
+                hideText={true}
+              />
+
+              <AnimatedCard
                 title="NerdX Live"
                 subtitle="Real-time Speech-to-Speech Conversations"
                 imageSource={require('../../assets/images/nerdx_live_card.png')}
                 onPress={navigateToNerdXLive}
                 glowColor="#6C63FF"
                 fullWidth={true}
-                index={6}
+                index={7}
                 hideText={true}
               />
 
@@ -697,7 +712,7 @@ const DashboardScreen: React.FC = () => {
                 onPress={navigateToProgress}
                 glowColor="#a18cd1"
                 fullWidth={true}
-                index={7}
+                index={8}
                 hideText={true}
               />
 
@@ -708,7 +723,7 @@ const DashboardScreen: React.FC = () => {
                 onPress={navigateToCredits}
                 glowColor="#fbc2eb"
                 fullWidth={true}
-                index={8}
+                index={9}
                 hideText={true}
               />
 

@@ -1,6 +1,6 @@
 // Model Download Service for Phi-3 model management
 // Uses expo-file-system as primary (works in all builds) with react-native-fs as enhanced option
-import * as ExpoFileSystem from 'expo-file-system';
+import * as ExpoFileSystem from 'expo-file-system/legacy';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetworkService from './NetworkService';
 
@@ -36,6 +36,7 @@ type DownloadProgressListener = (progress: DownloadProgress) => void;
 const STORAGE_KEYS = {
     MODEL_INFO: '@nerdx_phi3_model_info',
     MODEL_VERSION: '@nerdx_phi3_model_version',
+    DOWNLOAD_STATE: '@nerdx_download_state', // Track download progress for resumption
 };
 
 // ============================================
@@ -207,6 +208,15 @@ class ModelDownloadService {
         }
     }
 
+    // Notify download completion (for local notifications)
+    private notifyDownloadComplete(): void {
+        // This will be handled by the notification service
+        // We emit a custom event that can be listened to
+        if (typeof window !== 'undefined' && window.dispatchEvent) {
+            window.dispatchEvent(new CustomEvent('modelDownloadComplete'));
+        }
+    }
+
     // Download model with progress tracking - downloads BOTH files
     public async downloadModel(): Promise<void> {
         console.log('📥 Starting model download...');
@@ -296,10 +306,16 @@ class ModelDownloadService {
             };
             await AsyncStorage.setItem(STORAGE_KEYS.MODEL_INFO, JSON.stringify(modelInfo));
             await AsyncStorage.setItem(STORAGE_KEYS.MODEL_VERSION, PHI3_MODEL_VERSION);
+            
+            // Clear download state on success
+            await this.saveDownloadState(null);
 
             console.log('✅ Both model files downloaded successfully with RNFS!');
             console.log(`   Main file: ${mainStat.size} bytes`);
             console.log(`   Data file: ${dataStat.size} bytes`);
+            
+            // Trigger notification (will be handled by caller)
+            this.notifyDownloadComplete();
 
         } catch (error) {
             // Clean up partial downloads on failure
@@ -457,8 +473,14 @@ class ModelDownloadService {
             };
             await AsyncStorage.setItem(STORAGE_KEYS.MODEL_INFO, JSON.stringify(modelInfo));
             await AsyncStorage.setItem(STORAGE_KEYS.MODEL_VERSION, PHI3_MODEL_VERSION);
+            
+            // Clear download state on success
+            await this.saveDownloadState(null);
 
             console.log('✅ Model files downloaded successfully with ExpoFS!');
+            
+            // Trigger notification
+            this.notifyDownloadComplete();
 
         } catch (error) {
             this.stopProgressPolling(); // Ensure polling stops on error
@@ -496,6 +518,10 @@ class ModelDownloadService {
                 // Timeouts help avoid silent stalls on long downloads
                 connectionTimeout: 15_000,
                 readTimeout: 60_000,
+                // Enable background download - continues even when app is in background
+                background: true,
+                discretionary: false, // Don't defer to WiFi - use current connection
+                cacheable: false,
                 begin: (res: { contentLength: number; jobId: number }) => {
                     console.log(`Download started: ${url} `);
                     console.log(`Expected size: ${res.contentLength} bytes`);
@@ -685,6 +711,8 @@ class ModelDownloadService {
         }
         // Clean up partial downloads (both files)
         await this.cleanupPartialDownload();
+        // Clear download state
+        await this.saveDownloadState(null);
     }
 
     // Delete downloaded model (both files)

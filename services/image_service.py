@@ -270,21 +270,13 @@ Format your response as JSON:
             }
     
     def _get_whatsapp_image_url(self, image_id: str, whatsapp_service) -> Optional[str]:
-        """Get image URL from WhatsApp API using image ID"""
+        """Get image URL from Twilio WhatsApp API using media SID"""
         try:
-            url = f"https://graph.facebook.com/v17.0/{image_id}"
-            headers = {
-                'Authorization': f'Bearer {whatsapp_service.access_token}'
-            }
-            
-            response = requests.get(url, headers=headers, timeout=30)
-            
-            if response.status_code == 200:
-                data = response.json()
-                return data.get('url')
-            else:
-                logger.error(f"Failed to get WhatsApp image URL: {response.status_code}")
-                return None
+            # Twilio provides media URLs directly in webhook payload
+            # This method is kept for compatibility but Twilio handles media differently
+            # Media URLs are typically provided in the webhook's MediaUrl fields
+            logger.warning("Twilio doesn't use image IDs - media URLs come from webhook payload")
+            return None
                 
         except Exception as e:
             logger.error(f"Error getting WhatsApp image URL: {e}")

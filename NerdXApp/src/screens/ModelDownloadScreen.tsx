@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import ModelDownloadService, { DownloadProgress, ModelInfo } from '../services/ModelDownloadService';
 import NetworkService from '../services/NetworkService';
 import OfflineAIService from '../services/OfflineAIService';
+import DownloadNotificationService from '../services/DownloadNotificationService';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
 
@@ -27,9 +28,33 @@ const ModelDownloadScreen = ({ navigation }: any) => {
             setIsDownloading(true);
         });
 
+        // Listen for download completion
+        const handleDownloadComplete = async () => {
+            setIsDownloading(false);
+            setProgress(null);
+            await checkStatus();
+            await OfflineAIService.initializeModel();
+            await DownloadNotificationService.notifyDownloadComplete();
+            Alert.alert('Success', 'Phi-3 AI model downloaded and ready for offline use!');
+        };
+
+        // Listen for custom event
+        const listener = (event: Event) => {
+            if ((event as CustomEvent).type === 'modelDownloadComplete') {
+                handleDownloadComplete();
+            }
+        };
+
+        if (typeof window !== 'undefined') {
+            window.addEventListener('modelDownloadComplete', listener);
+        }
+
         return () => {
             unsubscribeNetwork();
             unsubscribeProgress();
+            if (typeof window !== 'undefined') {
+                window.removeEventListener('modelDownloadComplete', listener);
+            }
         };
     }, []);
 
@@ -64,17 +89,14 @@ const ModelDownloadScreen = ({ navigation }: any) => {
             }
 
             setIsDownloading(true);
+            
+            // Request notification permissions and notify start
+            await DownloadNotificationService.requestPermissions();
+            await DownloadNotificationService.notifyDownloadStarted();
+            
             await ModelDownloadService.downloadModel();
 
-            // After download complete
-            setIsDownloading(false);
-            setProgress(null);
-            checkStatus();
-
-            // Initialize model immediately
-            await OfflineAIService.initializeModel();
-
-            Alert.alert('Success', 'Phi-3 AI model downloaded and ready for offline use!');
+            // Download completion is handled by event listener
         } catch (error: any) {
             setIsDownloading(false);
             Alert.alert('Download Failed', error.message || 'An unknown error occurred');

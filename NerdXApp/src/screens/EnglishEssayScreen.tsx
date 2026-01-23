@@ -27,7 +27,7 @@ import {
 } from '../services/api/englishApi';
 import { useAuth } from '../context/AuthContext';
 import { Colors } from '../theme/colors';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';

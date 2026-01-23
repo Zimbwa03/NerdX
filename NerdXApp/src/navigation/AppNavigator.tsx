@@ -35,6 +35,7 @@ import MathSolverScreen from '../screens/MathSolverScreen';
 import OfflineSettingsScreen from '../screens/OfflineSettingsScreen';
 import ModelDownloadScreen from '../screens/ModelDownloadScreen';
 import MathNotesDetailScreen from '../screens/MathNotesDetailScreen';
+import OfflineChatScreen from '../screens/OfflineChatScreen';
 import ALevelPhysicsScreen from '../screens/ALevelPhysicsScreen';
 import ALevelPhysicsNotesScreen from '../screens/ALevelPhysicsNotesScreen';
 import ALevelChemistryScreen from '../screens/ALevelChemistryScreen';
@@ -104,6 +105,11 @@ import LinearProgrammingLabScreen from '../screens/virtualLab/LinearProgrammingL
 // New English Labs
 import MarketNegotiationScreen from '../screens/virtualLab/MarketNegotiationScreen';
 import JobInterviewScreen from '../screens/virtualLab/JobInterviewScreen';
+import UniversityCampusLifeScreen from '../screens/virtualLab/UniversityCampusLifeScreen';
+import MedicalConsultationScreen from '../screens/virtualLab/MedicalConsultationScreen';
+import InternationalTravelScreen from '../screens/virtualLab/InternationalTravelScreen';
+import SocialGatheringsScreen from '../screens/virtualLab/SocialGatheringsScreen';
+import BankingServicesScreen from '../screens/virtualLab/BankingServicesScreen';
 
 // New Math Labs
 import ProbabilitySimulatorScreen from '../screens/virtualLab/ProbabilitySimulatorScreen';
@@ -714,6 +720,13 @@ const AppNavigator: React.FC = () => {
             <Stack.Screen
               name="ModelDownload"
               component={ModelDownloadScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="OfflineChat"
+              component={OfflineChatScreen}
               options={{
                 headerShown: false,
               }}

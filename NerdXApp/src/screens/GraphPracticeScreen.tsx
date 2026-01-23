@@ -14,7 +14,7 @@ import {
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useEvent } from 'expo';
 import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as MediaLibrary from 'expo-media-library';
 import * as Sharing from 'expo-sharing';
 import { useNavigation } from '@react-navigation/native';

@@ -16,10 +16,11 @@ class Config:
     # Base URL for public file access
     BASE_URL = os.getenv('BASE_URL')
 
-    # WhatsApp API configuration
-    WHATSAPP_ACCESS_TOKEN = os.getenv('WHATSAPP_ACCESS_TOKEN')
-    WHATSAPP_PHONE_NUMBER_ID = os.getenv('WHATSAPP_PHONE_NUMBER_ID')
-    WHATSAPP_VERIFY_TOKEN = os.getenv('WHATSAPP_VERIFY_TOKEN')
+    # Twilio WhatsApp configuration (PRIMARY AND ONLY PROVIDER)
+    # Note: Facebook/Meta API has been completely removed - Twilio is the only provider
+    TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
+    TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
+    TWILIO_PHONE_NUMBER = os.getenv('TWILIO_PHONE_NUMBER')
 
     # EcoCash payment configuration
     ECOCASH_API_KEY = os.getenv('ECOCASH_API_KEY')
@@ -157,9 +158,9 @@ class Config:
         """Validate required configuration"""
         required_vars = [
             'DEEPSEEK_API_KEY',
-            'WHATSAPP_ACCESS_TOKEN',
-            'WHATSAPP_PHONE_NUMBER_ID',
-            'WHATSAPP_VERIFY_TOKEN'
+            'TWILIO_ACCOUNT_SID',
+            'TWILIO_AUTH_TOKEN',
+            'TWILIO_PHONE_NUMBER'
         ]
 
         missing_vars = []

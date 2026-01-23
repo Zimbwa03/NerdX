@@ -3,11 +3,13 @@ import json
 import logging
 import requests
 import time
+import re
 from typing import Dict, List, Optional, Any
 from services.message_throttle import message_throttle
 from services.whatsapp_template_service import get_template_service
 from services.content_variation_engine import content_variation_engine
 from services.quality_monitor import quality_monitor
+from utils.menu_router import menu_router
 
 logger = logging.getLogger(__name__)
 
@@ -15,29 +17,18 @@ class WhatsAppService:
     """Service for handling WhatsApp Business API operations"""
     
     def __init__(self):
-        # Facebook WhatsApp Business API configuration
-        self.access_token = os.getenv('WHATSAPP_ACCESS_TOKEN')
-        self.phone_number_id = os.getenv('WHATSAPP_PHONE_NUMBER_ID')
-        self.verify_token = os.getenv('WHATSAPP_VERIFY_TOKEN')
-        self.base_url = "https://graph.facebook.com/v17.0"
-        
-        # Twilio WhatsApp configuration
+        # Twilio WhatsApp configuration (PRIMARY AND ONLY PROVIDER)
         self.twilio_account_sid = os.getenv('TWILIO_ACCOUNT_SID')
         self.twilio_auth_token = os.getenv('TWILIO_AUTH_TOKEN')
         self.twilio_phone_number = os.getenv('TWILIO_PHONE_NUMBER')
         
-        # Determine which provider to use
-        self.use_twilio = all([self.twilio_account_sid, self.twilio_auth_token, self.twilio_phone_number])
-        self.use_facebook = all([self.access_token, self.phone_number_id, self.verify_token])
-        
-        # Make WhatsApp configuration optional for development/migration
-        self._is_configured = self.use_twilio or self.use_facebook
+        # Twilio is required - no fallback
+        self._is_configured = all([self.twilio_account_sid, self.twilio_auth_token, self.twilio_phone_number])
         if not self._is_configured:
-            logger.warning("WhatsApp configuration not complete - WhatsApp features will be disabled")
-        elif self.use_twilio:
-            logger.info("Using Twilio for WhatsApp messaging")
-        elif self.use_facebook:
-            logger.info("Using Facebook WhatsApp Business API for messaging")
+            logger.error("Twilio WhatsApp configuration not complete - WhatsApp features will be disabled")
+            logger.error("Required: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER")
+        else:
+            logger.info("✅ Using Twilio for WhatsApp messaging (PRIMARY PROVIDER)")
         
         # Enterprise scale protection
         self.daily_message_count = 0
@@ -50,6 +41,50 @@ class WhatsAppService:
         
         # Quality monitoring
         self.quality_monitor = quality_monitor
+
+    def _format_options_message(self, message: str, options: List[str], prompt: str) -> str:
+        """Format a clean, professional menu message for text-only WhatsApp."""
+        base = (message or "").strip()
+        lines = []
+        if base:
+            lines.append(base)
+
+        if options:
+            if lines:
+                lines.append("")
+            lines.append("*Options*")
+            lines.append("------------------------------")
+            for i, option_text in enumerate(options, 1):
+                lines.append(f"{i}. {option_text}")
+            lines.append("------------------------------")
+
+        if prompt:
+            lines.append(prompt)
+
+        return "\n".join(lines).strip()
+
+    def _format_mcq_message(self, message: str, options: List[str], prompt: str) -> str:
+        """Format MCQ messages with A/B/C/D style options."""
+        base = (message or "").strip()
+        lines = []
+        if base:
+            lines.append(base)
+
+        if options:
+            if lines:
+                lines.append("")
+            lines.append("*Options*")
+            lines.append("------------------------------")
+            option_labels = ['A', 'B', 'C', 'D', 'E', 'F']
+            for i, option_text in enumerate(options):
+                label = option_labels[i] if i < len(option_labels) else str(i + 1)
+                lines.append(f"{label}. {option_text}")
+            lines.append("------------------------------")
+
+        if prompt:
+            lines.append(prompt)
+
+        return "\n".join(lines).strip()
     
     def _is_critical_user_response(self, message: str) -> bool:
         """
@@ -161,6 +196,34 @@ class WhatsAppService:
                 return is_critical
         
         return False
+
+    def _normalize_whatsapp_formatting(self, message: str) -> str:
+        """Normalize outgoing WhatsApp formatting and spacing."""
+        if not message:
+            return message
+
+        # Normalize line endings
+        message = message.replace("\r\n", "\n").replace("\r", "\n")
+
+        # Convert markdown-style **bold** to WhatsApp *bold*
+        message = re.sub(r"\*\*(.+?)\*\*", r"*\1*", message, flags=re.S)
+
+        # Trim trailing whitespace on each line
+        message = "\n".join(line.rstrip() for line in message.split("\n"))
+
+        # Collapse excessive blank lines (max two)
+        message = re.sub(r"\n{3,}", "\n\n", message)
+
+        # Add a blank line after the first heading line if needed
+        lines = message.split("\n")
+        if len(lines) > 1:
+            first = lines[0].strip()
+            second = lines[1].strip()
+            if first and "*" in first and second:
+                lines.insert(1, "")
+                message = "\n".join(lines)
+
+        return message.strip()
     
     def send_message(self, to: str, message: str) -> bool:
         """Send a text message to a WhatsApp user with enhanced error handling and throttling"""
@@ -169,6 +232,9 @@ class WhatsAppService:
             return False
             
         try:
+            # Normalize formatting for WhatsApp
+            message = self._normalize_whatsapp_formatting(message)
+
             # Check if this is a critical user-initiated response
             is_critical = self._is_critical_user_response(message)
 
@@ -200,44 +266,26 @@ class WhatsAppService:
                 return False
             
             try:
-                # Check message length and truncate if needed
-                if len(message) > 4096:
+                # Check message length and truncate if needed (Twilio limit: 1600 chars per segment)
+                if len(message) > 1600:
                     logger.warning(f"Message too long ({len(message)} chars), truncating")
-                    message = message[:4090] + "..."
+                    message = message[:1590] + "..."
                 
-                # Use Twilio if configured, otherwise use Facebook API
-                if self.use_twilio:
-                    # Send via Twilio WhatsApp API
-                    from_number = self.twilio_phone_number
-                    # Ensure 'to' number has whatsapp: prefix if not already present
-                    to_number = to if to.startswith('whatsapp:') else f'whatsapp:{to}'
-                    
-                    url = f"https://api.twilio.com/2010-04-01/Accounts/{self.twilio_account_sid}/Messages.json"
-                    auth = (self.twilio_account_sid, self.twilio_auth_token)
-                    
-                    data = {
-                        'From': f'whatsapp:{from_number}',
-                        'To': to_number,
-                        'Body': message
-                    }
-                    
-                    response = requests.post(url, auth=auth, data=data, timeout=15)
-                else:
-                    # Use Facebook WhatsApp Business API
-                    url = f"{self.base_url}/{self.phone_number_id}/messages"
-                    headers = {
-                        'Authorization': f'Bearer {self.access_token}',
-                        'Content-Type': 'application/json'
-                    }
-                    
-                    data = {
-                        'messaging_product': 'whatsapp',
-                        'to': to,
-                        'type': 'text',
-                        'text': {'body': message}
-                    }
-                    
-                    response = requests.post(url, headers=headers, json=data, timeout=15)
+                # Send via Twilio WhatsApp API (PRIMARY AND ONLY PROVIDER)
+                from_number = self.twilio_phone_number
+                # Ensure 'to' number has whatsapp: prefix if not already present
+                to_number = to if to.startswith('whatsapp:') else f'whatsapp:{to}'
+                
+                url = f"https://api.twilio.com/2010-04-01/Accounts/{self.twilio_account_sid}/Messages.json"
+                auth = (self.twilio_account_sid, self.twilio_auth_token)
+                
+                data = {
+                    'From': f'whatsapp:{from_number}',
+                    'To': to_number,
+                    'Body': message
+                }
+                
+                response = requests.post(url, auth=auth, data=data, timeout=15)
                 
                 if response.status_code == 200 or response.status_code == 201:
                     logger.info(f"Message sent successfully to {to}")
@@ -285,14 +333,15 @@ class WhatsAppService:
             return False
 
     def send_audio_message(self, to: str, audio_file_path: str) -> bool:
-        """Send audio message via WhatsApp"""
+        """Send audio message via Twilio WhatsApp API"""
         if not self._is_configured:
-            logger.warning("WhatsApp not configured - audio message not sent")
+            logger.warning("Twilio WhatsApp not configured - audio message not sent")
             return False
             
         try:
             import requests
             import os
+            from services.image_hosting_service import ImageHostingService
             
             # Validate file exists and has content
             if not os.path.exists(audio_file_path):
@@ -306,143 +355,36 @@ class WhatsAppService:
                 
             logger.info(f"Uploading audio file: {audio_file_path} (size: {file_size} bytes)")
             
-            # First upload the audio file
-            upload_url = f"{self.base_url}/{self.phone_number_id}/media"
+            # Upload audio to a hosting service to get a public URL (Twilio requires public URL)
+            hosting_service = ImageHostingService()
+            audio_url = hosting_service.upload_audio_with_fallback(audio_file_path)
             
-            headers = {
-                'Authorization': f'Bearer {self.access_token}'
-            }
-            
-            # Determine file format based on extension
-            file_extension = audio_file_path.lower().split('.')[-1]
-            
-            if file_extension == 'wav':
-                content_type = 'audio/wav'
-                filename = 'audio.wav'
-            elif file_extension == 'mp3':
-                content_type = 'audio/mpeg'
-                filename = 'audio.mp3'
-            elif file_extension == 'ogg':
-                content_type = 'audio/ogg'
-                filename = 'audio.ogg'
-            elif file_extension == 'm4a':
-                content_type = 'audio/mp4'
-                filename = 'audio.m4a'
-            elif file_extension == 'aac':
-                content_type = 'audio/aac'
-                filename = 'audio.aac'
-            else:
-                # Default to M4A for unknown extensions (better WhatsApp compatibility)
-                content_type = 'audio/mp4'
-                filename = 'audio.m4a'
-            
-            logger.info(f"Uploading as {content_type} with filename {filename}")
-            
-            with open(audio_file_path, 'rb') as audio_file:
-                files = {
-                    'file': (filename, audio_file, content_type),
-                    'type': (None, 'audio'),
-                    'messaging_product': (None, 'whatsapp')
-                }
-                
-                # Try upload with retry logic and shorter timeouts to prevent worker timeouts
-                max_retries = 3
-                upload_response = None
-                for attempt in range(max_retries):
-                    try:
-                        # Use shorter timeout to prevent worker timeouts
-                        timeout = 20 if attempt == 0 else 15  # Shorter on retries
-                        logger.info(f"Upload attempt {attempt + 1}/{max_retries} with {timeout}s timeout")
-                        upload_response = requests.post(upload_url, headers=headers, files=files, timeout=timeout)
-                        break  # Success, exit retry loop
-                    except requests.exceptions.Timeout as e:
-                        logger.warning(f"Upload attempt {attempt + 1} timed out after {timeout}s: {e}")
-                        if attempt == max_retries - 1:  # Last attempt
-                            logger.error(f"All {max_retries} upload attempts failed due to timeout")
-                            return False
-                        # Wait briefly before retry
-                        time.sleep(1)
-                    except requests.exceptions.RequestException as e:
-                        logger.error(f"Upload attempt {attempt + 1} failed with request error: {e}")
-                        if attempt == max_retries - 1:  # Last attempt
-                            return False
-                        time.sleep(1)
-                
-                if upload_response is None:
-                    logger.error("Upload failed - no response received")
-                    return False
-                
-                logger.info(f"Upload response status: {upload_response.status_code}")
-                
-                if upload_response.status_code != 200:
-                    logger.error(f"Failed to upload audio: {upload_response.status_code} - {upload_response.text}")
-                    return False
-                
-                upload_data = upload_response.json()
-                media_id = upload_data.get('id')
-                
-                logger.info(f"Upload response: {upload_data}")
-                
-                if not media_id:
-                    logger.error("No media ID returned from upload")
-                    return False
-                    
-                logger.info(f"Audio uploaded successfully with media ID: {media_id}")
-            
-            # Now send the audio message
-            send_url = f"{self.base_url}/{self.phone_number_id}/messages"
-            
-            headers = {
-                'Authorization': f'Bearer {self.access_token}',
-                'Content-Type': 'application/json'
-            }
-            
-            data = {
-                'messaging_product': 'whatsapp',
-                'to': to,
-                'type': 'audio',
-                'audio': {
-                    'id': media_id
-                }
-            }
-            
-            logger.info(f"Sending audio message with data: {data}")
-            
-            # Send message with retry logic for better reliability
-            max_retries = 2
-            response = None
-            for attempt in range(max_retries):
-                try:
-                    response = requests.post(send_url, headers=headers, json=data, timeout=15)
-                    break  # Success, exit retry loop
-                except requests.exceptions.Timeout as e:
-                    logger.warning(f"Send attempt {attempt + 1} timed out: {e}")
-                    if attempt == max_retries - 1:  # Last attempt
-                        logger.error(f"All {max_retries} send attempts failed due to timeout")
-                        return False
-                    time.sleep(0.5)
-                except requests.exceptions.RequestException as e:
-                    logger.error(f"Send attempt {attempt + 1} failed: {e}")
-                    if attempt == max_retries - 1:  # Last attempt
-                        return False
-                    time.sleep(0.5)
-            
-            if response is None:
-                logger.error("Send failed - no response received")
+            if not audio_url:
+                logger.error(f"Failed to get public URL for audio file: {audio_file_path}")
                 return False
             
-            logger.info(f"Send response status: {response.status_code}")
-            logger.info(f"Send response: {response.text}")
+            logger.info(f"Audio uploaded to public URL: {audio_url}")
             
-            if response.status_code == 200:
-                response_data = response.json()
-                message_id = response_data.get('messages', [{}])[0].get('id', 'unknown')
-                logger.info(f"Audio message sent successfully to {to}. Message ID: {message_id}")
-                logger.info(f"Full response: {response_data}")
+            # Send via Twilio WhatsApp API
+            from_number = self.twilio_phone_number
+            to_number = to if to.startswith('whatsapp:') else f'whatsapp:{to}'
+            
+            url = f"https://api.twilio.com/2010-04-01/Accounts/{self.twilio_account_sid}/Messages.json"
+            auth = (self.twilio_account_sid, self.twilio_auth_token)
+            
+            data = {
+                'From': f'whatsapp:{from_number}',
+                'To': to_number,
+                'MediaUrl': audio_url
+            }
+            
+            response = requests.post(url, auth=auth, data=data, timeout=30)
+            
+            if response.status_code == 200 or response.status_code == 201:
+                logger.info(f"Audio message sent successfully to {to}")
                 return True
             else:
                 logger.error(f"Failed to send audio message: {response.status_code} - {response.text}")
-                logger.error(f"Request data was: {data}")
                 return False
                 
         except Exception as e:
@@ -450,8 +392,11 @@ class WhatsAppService:
             return False
     
     def send_interactive_message(self, to: str, message: str, buttons: List[Dict]) -> bool:
-        """Send buttons as interactive message - use List Message for 4+ options for WhatsApp compliance"""
+        """Send a text-only menu (Twilio WhatsApp does not support buttons)."""
         try:
+            # Normalize formatting for WhatsApp menus
+            message = self._normalize_whatsapp_formatting(message)
+
             # Check if this is a critical user-initiated response
             is_critical = self._is_critical_user_response(message)
             
@@ -496,66 +441,35 @@ class WhatsAppService:
                     return False
             
             try:
-                # Validate and truncate message length (WhatsApp limit: 1-1024 characters)
+                # Validate and truncate message length for text-only menus
                 if not message or len(message.strip()) == 0:
                     logger.error("Message body cannot be empty for interactive message")
                     return False
+
+                if len(message) > 1200:
+                    logger.warning(f"Message too long ({len(message)} chars), truncating to 1200 characters")
+                    message = message[:1197] + "..."
+
+                # Store menu options for text-based selection routing
+                menu_router.store_menu(to, buttons, source="interactive")
+
+                # Convert to a professional text menu with numbered options
+                option_texts = []
+                for i, button in enumerate(buttons, 1):
+                    button_text = button.get('text') or button.get('title', f'Option {i}')
+                    option_texts.append(button_text)
+
+                full_message = self._format_options_message(
+                    message,
+                    option_texts,
+                    "Reply with the option number or name."
+                )
                 
-                if len(message) > 1024:
-                    logger.warning(f"Message too long ({len(message)} chars), truncating to 1024 characters")
-                    message = message[:1021] + "..."
-                
-                # CRITICAL FIX: Use List Messages for 4+ buttons - WhatsApp Best Practice
-                if len(buttons) >= 4:
-                    logger.info(f"Using List Message for {len(buttons)} buttons - WhatsApp compliant")
-                    result = self.send_list_message_from_buttons(to, message, buttons)
-                    # Record message sent if successful
-                    if result:
-                        message_throttle.record_message_sent(to)
-                    return result
-                
-                # Otherwise use regular interactive buttons (max 3)
-                url = f"{self.base_url}/{self.phone_number_id}/messages"
-                headers = {
-                    'Authorization': f'Bearer {self.access_token}',
-                    'Content-Type': 'application/json'
-                }
-                
-                interactive_buttons = []
-                for i, button in enumerate(buttons[:3]):  # WhatsApp supports max 3 buttons
-                    # Support both formats: {"text": "...", "callback_data": "..."} and {"id": "...", "title": "..."}
-                    button_id = button.get('callback_data') or button.get('id', f"btn_{i}")
-                    button_title = button.get('text') or button.get('title', '')
-                    
-                    interactive_buttons.append({
-                        "type": "reply",
-                        "reply": {
-                            "id": button_id,
-                            "title": button_title[:20]  # Max 20 characters
-                        }
-                    })
-                
-                data = {
-                    'messaging_product': 'whatsapp',
-                    'to': to,
-                    'type': 'interactive',
-                    'interactive': {
-                        'type': 'button',
-                        'body': {'text': message},
-                        'action': {'buttons': interactive_buttons}
-                    }
-                }
-                
-                response = requests.post(url, headers=headers, json=data, timeout=15)
-                
-                if response.status_code == 200:
-                    logger.info(f"Interactive message sent successfully to {to}")
-                    # Record successful send
+                # Send as regular text message via Twilio
+                result = self.send_message(to, full_message)
+                if result:
                     message_throttle.record_message_sent(to)
-                    return True
-                else:
-                    logger.error(f"Failed to send interactive message: {response.status_code} - {response.text}")
-                    return False
+                return result
             finally:
                 # Always release lock
                 message_throttle.release_lock(to)
@@ -567,14 +481,20 @@ class WhatsAppService:
     def send_grouped_buttons(self, to: str, message: str, buttons: List[Dict]) -> bool:
         """CRITICAL FIX: Send buttons in groups with proper throttling to prevent spam detection"""
         try:
+            # Normalize formatting for WhatsApp menus
+            message = self._normalize_whatsapp_formatting(message)
+
             # Validate message length
             if not message or len(message.strip()) == 0:
                 logger.error("Message body cannot be empty for grouped buttons")
                 return False
             
-            if len(message) > 1024:
-                logger.warning(f"Message too long ({len(message)} chars), truncating to 1024 characters")
-                message = message[:1021] + "..."
+            if len(message) > 1200:
+                logger.warning(f"Message too long ({len(message)} chars), truncating to 1200 characters")
+                message = message[:1197] + "..."
+
+            # Store menu options for text-based selection routing
+            menu_router.store_menu(to, buttons, source="grouped")
             
             # CRITICAL: Menu/navigation messages are critical - allow them to bypass throttle
             is_menu_message = any(keyword in message.lower() for keyword in [
@@ -658,263 +578,174 @@ class WhatsAppService:
             return False
 
     def send_single_button_group(self, to: str, message: str, buttons: List[Dict]) -> bool:
-        """Send a single group of up to 3 buttons"""
+        """Send a single group of buttons as text options (Twilio doesn't support interactive buttons)"""
         try:
+            # Normalize formatting for WhatsApp menus
+            message = self._normalize_whatsapp_formatting(message)
+
             # Validate message length
             if not message or len(message.strip()) == 0:
                 logger.error("Message body cannot be empty for button group")
                 return False
             
-            if len(message) > 1024:
-                logger.warning(f"Message too long ({len(message)} chars), truncating to 1024 characters")
-                message = message[:1021] + "..."
-            
-            url = f"{self.base_url}/{self.phone_number_id}/messages"
-            headers = {
-                'Authorization': f'Bearer {self.access_token}',
-                'Content-Type': 'application/json'
-            }
-            
-            interactive_buttons = []
-            for button in buttons[:3]:  # Max 3 buttons per message
-                button_id = button.get('callback_data') or button.get('id', '')
-                button_title = button.get('text') or button.get('title', '')
-                
-                interactive_buttons.append({
-                    "type": "reply",
-                    "reply": {
-                        "id": button_id,
-                        "title": button_title[:20]  # Max 20 characters
-                    }
-                })
-            
-            data = {
-                'messaging_product': 'whatsapp',
-                'to': to,
-                'type': 'interactive',
-                'interactive': {
-                    'type': 'button',
-                    'body': {'text': message},
-                    'action': {'buttons': interactive_buttons}
-                }
-            }
-            
-            response = requests.post(url, headers=headers, json=data, timeout=15)
-            
-            if response.status_code == 200:
-                return True
-            else:
-                logger.error(f"Failed to send button group: {response.status_code} - {response.text}")
-                return False
+            # Store menu options for text-based selection routing
+            menu_router.store_menu(to, buttons, source="button_group")
+
+            # Convert buttons to a professional text menu
+            option_texts = []
+            for i, button in enumerate(buttons, 1):
+                button_text = button.get('text') or button.get('title', f'Option {i}')
+                option_texts.append(button_text)
+
+            full_message = self._format_options_message(
+                message,
+                option_texts,
+                "Reply with the option number or name."
+            )
+
+            # Send as regular text message via Twilio
+            return self.send_message(to, full_message)
                 
         except Exception as e:
             logger.error(f"Error sending button group: {e}")
             return False
 
     def send_mcq_list_message(self, to: str, message: str, buttons: List[Dict]) -> bool:
-        """Send MCQ question as list message to support 4 options (A, B, C, D)"""
+        """Send MCQ question as text message with options (Twilio doesn't support list messages)"""
         try:
-            url = f"{self.base_url}/{self.phone_number_id}/messages"
-            headers = {
-                'Authorization': f'Bearer {self.access_token}',
-                'Content-Type': 'application/json'
-            }
-            
-            # Create list rows for each option
-            rows = []
-            for button in buttons:
-                button_id = button.get('callback_data') or button.get('id', '')
-                button_title = button.get('text') or button.get('title', '')
-                
-                rows.append({
-                    "id": button_id,
-                    "title": button_title[:24],  # Max 24 characters for list items
-                    "description": ""
-                })
-            
-            data = {
-                'messaging_product': 'whatsapp',
-                'to': to,
-                'type': 'interactive',
-                'interactive': {
-                    'type': 'list',
-                    'body': {'text': message},
-                    'action': {
-                        'button': 'Choose Answer',
-                        'sections': [{
-                            'title': 'Answer Options',
-                            'rows': rows
-                        }]
-                    }
-                }
-            }
-            
-            response = requests.post(url, headers=headers, json=data, timeout=15)
-            
-            if response.status_code == 200:
-                logger.info(f"MCQ list message sent successfully to {to}")
-                return True
-            else:
-                logger.error(f"Failed to send MCQ list message: {response.status_code} - {response.text}")
-                return False
+            # Normalize formatting for WhatsApp
+            message = self._normalize_whatsapp_formatting(message)
+
+            # Store menu options for text-based selection routing
+            menu_router.store_menu(to, buttons, source="mcq")
+
+            # Convert to text format with A, B, C, D options
+            option_texts = []
+            for i, button in enumerate(buttons):
+                button_text = button.get('text') or button.get('title', f'Option {i+1}')
+                option_texts.append(button_text)
+
+            full_message = self._format_mcq_message(
+                message,
+                option_texts,
+                "Reply with A, B, C, or D."
+            )
+
+            # Send as regular text message via Twilio
+            return self.send_message(to, full_message)
                 
         except Exception as e:
-            logger.error(f"Error sending MCQ list message: {e}")
+            logger.error(f"Error sending MCQ message: {e}")
             return False
     
     def send_list_message(self, to: str, header: str, body: str, sections: List[Dict]) -> bool:
-        """Send a list message with multiple options"""
+        '''Send a list message as text with options (Twilio doesn't support list messages)'''
         try:
-            url = f"{self.base_url}/{self.phone_number_id}/messages"
-            headers = {
-                'Authorization': f'Bearer {self.access_token}',
-                'Content-Type': 'application/json'
-            }
-            
-            data = {
-                'messaging_product': 'whatsapp',
-                'to': to,
-                'type': 'interactive',
-                'interactive': {
-                    'type': 'list',
-                    'header': {'type': 'text', 'text': header},
-                    'body': {'text': body},
-                    'action': {
-                        'button': 'Select Option',
-                        'sections': sections
-                    }
-                }
-            }
-            
-            response = requests.post(url, headers=headers, json=data, timeout=15)
-            
-            if response.status_code == 200:
-                logger.info(f"List message sent successfully to {to}")
-                return True
-            else:
-                logger.error(f"Failed to send list message: {response.status_code} - {response.text}")
-                return False
-                
+            # Normalize formatting for WhatsApp
+            header = self._normalize_whatsapp_formatting(header)
+            body = self._normalize_whatsapp_formatting(body)
+
+            # Convert sections to text format with clear headings
+            full_message = f"*{header}*\n\n{body}\n\n"
+
+            option_num = 1
+            menu_options = []
+            for section in sections:
+                section_title = section.get('title', 'Options')
+                rows = section.get('rows', [])
+
+                if rows:
+                    full_message += f"*{section_title}:*\n"
+                    for row in rows:
+                        row_title = row.get('title', f'Option {option_num}')
+                        row_desc = row.get('description', '')
+                        display_text = f"{row_title} - {row_desc}" if row_desc else row_title
+
+                        full_message += f"{option_num}. {display_text}\n"
+                        menu_options.append({
+                            'text': display_text,
+                            'callback_data': row.get('id') or row.get('callback_data') or row_title
+                        })
+                        option_num += 1
+
+            # Store menu options for text-based selection routing
+            menu_router.store_menu(to, menu_options, source="list")
+
+            full_message += "\nReply with the option number or name."
+
+            # Send as regular text message via Twilio
+            return self.send_message(to, full_message)
+
         except Exception as e:
-            logger.error(f"Error sending WhatsApp list message: {e}")
+            logger.error(f"Error sending list message: {e}")
             return False
-    
+
     def send_list_message_from_buttons(self, to: str, message: str, buttons: List[Dict]) -> bool:
-        """Convert button list to WhatsApp List Message - supports pagination for >10 buttons"""
+        '''Convert button list to text message with numbered options (Twilio doesn't support list messages)'''
         try:
-            # UPDATED: Allow pagination instead of forcing grouped buttons for >10 items
-            # This will be handled by the caller (topic menu pagination)
-            if len(buttons) > 10:
-                logger.info(f"Sending list message with {len(buttons)} buttons (may exceed 10-row limit)")
-                # Continue with list message - pagination should be handled by caller
-            
-            url = f"{self.base_url}/{self.phone_number_id}/messages"
-            headers = {
-                'Authorization': f'Bearer {self.access_token}',
-                'Content-Type': 'application/json'
-            }
-            
-            # Convert buttons to list rows (max 10)
-            rows = []
-            seen_ids = set()  # Track IDs to ensure uniqueness
-            for i, button in enumerate(buttons[:10]):  # WhatsApp max 10 rows per list
-                button_id = button.get('callback_data') or button.get('id', f'option_{i}')
-                button_title = button.get('text') or button.get('title', f'Option {i+1}')
-                
-                # Ensure unique ID by appending index if duplicate detected
-                base_id = button_id
-                unique_id = base_id
-                counter = 0
-                while unique_id in seen_ids:
-                    counter += 1
-                    unique_id = f"{base_id}_{counter}"
-                
-                seen_ids.add(unique_id)
-                
-                # Clean button title for list display
-                clean_title = button_title.replace('🔙 ', '↩️ ').replace('🏠 ', '🏠 ')
-                
-                rows.append({
-                    "id": unique_id,  # Use unique ID
-                    "title": clean_title[:24],  # Max 24 characters for list items
-                    "description": f"Select {clean_title[:20]}" if len(clean_title) > 12 else ""
-                })
-            
-            data = {
-                'messaging_product': 'whatsapp',
-                'to': to,
-                'type': 'interactive',
-                'interactive': {
-                    'type': 'list',
-                    'body': {'text': message},
-                    'action': {
-                        'button': 'Select Option',
-                        'sections': [{
-                            'title': 'Choose an Option',
-                            'rows': rows
-                        }]
-                    }
-                }
-            }
-            
-            response = requests.post(url, headers=headers, json=data, timeout=15)
-            
-            if response.status_code == 200:
-                logger.info(f"List message sent successfully to {to} with {len(rows)} options")
-                return True
-            else:
-                logger.error(f"Failed to send list message: {response.status_code} - {response.text}")
-                # Fallback to grouped buttons if list message fails
-                logger.warning(f"Falling back to grouped buttons for {to}")
-                return self.send_grouped_buttons(to, message, buttons)
-                
+            # Normalize formatting for WhatsApp
+            message = self._normalize_whatsapp_formatting(message)
+
+            # Store menu options for text-based selection routing
+            menu_router.store_menu(to, buttons, source="button_list")
+
+            # Convert buttons to a professional text menu
+            option_texts = []
+            for i, button in enumerate(buttons, 1):
+                button_text = button.get('text') or button.get('title', f'Option {i}')
+                option_texts.append(button_text)
+
+            full_message = self._format_options_message(
+                message,
+                option_texts,
+                "Reply with the option number or name."
+            )
+
+            # Send as regular text message via Twilio
+            return self.send_message(to, full_message)
+
         except Exception as e:
             logger.error(f"Error sending list message from buttons: {e}")
-            # Fallback to grouped buttons
-            return self.send_grouped_buttons(to, message, buttons)
-    
+            return False
+
     def send_image(self, to: str, image_url: str, caption: str = "") -> bool:
-        """Send an image message"""
+        """Send an image message via Twilio WhatsApp API"""
         try:
             # Validate image URL format
             if not image_url or not image_url.startswith(('http://', 'https://')):
                 logger.error(f"Invalid image URL format: {image_url}")
                 return False
             
-            url = f"{self.base_url}/{self.phone_number_id}/messages"
-            headers = {
-                'Authorization': f'Bearer {self.access_token}',
-                'Content-Type': 'application/json'
-            }
+            # Ensure caption is not too long (Twilio limit: 1600 chars)
+            caption = self._normalize_whatsapp_formatting(caption)
+            if len(caption) > 1600:
+                caption = caption[:1590] + "..."
             
-            # Ensure caption is not too long (WhatsApp limit)
-            if len(caption) > 1024:
-                caption = caption[:1021] + "..."
+            # Send via Twilio WhatsApp API
+            from_number = self.twilio_phone_number
+            to_number = to if to.startswith('whatsapp:') else f'whatsapp:{to}'
+            
+            url = f"https://api.twilio.com/2010-04-01/Accounts/{self.twilio_account_sid}/Messages.json"
+            auth = (self.twilio_account_sid, self.twilio_auth_token)
             
             data = {
-                'messaging_product': 'whatsapp',
-                'to': to,
-                'type': 'image',
-                'image': {
-                    'link': image_url
-                }
+                'From': f'whatsapp:{from_number}',
+                'To': to_number,
+                'MediaUrl': image_url
             }
             
-            # Only add caption if it's not empty
+            # Add body text if caption provided
             if caption.strip():
-                data['image']['caption'] = caption
+                data['Body'] = caption
             
             logger.info(f"Sending image to {to} with URL: {image_url}")
-            response = requests.post(url, headers=headers, json=data, timeout=45)
+            response = requests.post(url, auth=auth, data=data, timeout=45)
             
-            if response.status_code == 200:
-                response_data = response.json()
-                logger.info(f"Image sent successfully to {to}. Message ID: {response_data.get('messages', [{}])[0].get('id', 'unknown')}")
+            if response.status_code == 200 or response.status_code == 201:
+                logger.info(f"Image sent successfully to {to}")
                 return True
             else:
                 logger.error(f"Failed to send image: {response.status_code} - {response.text}")
-                # Log the exact request data for debugging
-                logger.error(f"Request data was: {data}")
                 return False
                 
         except Exception as e:
@@ -941,6 +772,7 @@ class WhatsAppService:
                 logger.error(f"Failed to get public URL for {file_path}")
                 # Send text-only caption as fallback if image hosting fails
                 if caption:
+                    caption = self._normalize_whatsapp_formatting(caption)
                     fallback_msg = f"📊 Graph Generation Complete!\n\n{caption}\n\n❌ Image hosting temporarily unavailable. Please check back later or contact support."
                     return self.send_message(to, fallback_msg)
                 return False
@@ -991,146 +823,69 @@ class WhatsAppService:
             return False
     
     def verify_webhook(self, mode: str, token: str, challenge: str) -> Optional[str]:
-        """Verify webhook for WhatsApp"""
-        if mode == "subscribe" and token == self.verify_token:
-            logger.info("Webhook verified successfully")
-            return challenge
-        else:
-            logger.warning("Webhook verification failed")
-            return None
+        """Verify webhook for Twilio WhatsApp (not needed - Twilio uses signature verification)"""
+        # Twilio doesn't use this verification method
+        logger.info("Twilio webhook verification handled by signature validation")
+        return None
     
     def parse_webhook_message(self, data: Dict) -> Optional[Dict]:
-        """Parse incoming webhook message"""
-        try:
-            if 'entry' not in data:
-                return None
-            
-            for entry in data['entry']:
-                if 'changes' not in entry:
-                    continue
-                    
-                for change in entry['changes']:
-                    if change.get('field') != 'messages':
-                        continue
-                    
-                    value = change.get('value', {})
-                    messages = value.get('messages', [])
-                    
-                    for message in messages:
-                        return {
-                            'from': message.get('from'),
-                            'id': message.get('id'),
-                            'timestamp': message.get('timestamp'),
-                            'type': message.get('type'),
-                            'text': message.get('text', {}).get('body', ''),
-                            'interactive': message.get('interactive', {}),
-                            'image': message.get('image', {}),
-                            'document': message.get('document', {})
-                        }
-            
-            return None
-            
-        except Exception as e:
-            logger.error(f"Error parsing webhook message: {e}")
-            return None
+        """Parse incoming Twilio webhook message (handled in webhook.py)"""
+        # Twilio webhook parsing is handled in api/webhook.py
+        logger.debug("Twilio webhook parsing handled in webhook.py")
+        return None
     
     def send_document(self, to: str, file_path: str, caption: str = "", filename: str = None) -> bool:
-        """Send a document (PDF, etc.) via WhatsApp"""
+        """Send a document (PDF, etc.) via Twilio WhatsApp API"""
         try:
             import os
-            import requests
+            from services.image_hosting_service import ImageHostingService
             
             # Check if file exists
             if not os.path.exists(file_path):
                 logger.error(f"Document file does not exist: {file_path}")
                 return False
             
-            # Determine file type and MIME type
-            file_extension = os.path.splitext(file_path)[1].lower()
-            mime_types = {
-                '.pdf': 'application/pdf',
-                '.doc': 'application/msword',
-                '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                '.txt': 'text/plain'
-            }
+            logger.info(f"Uploading document: {file_path}")
             
-            mime_type = mime_types.get(file_extension, 'application/octet-stream')
-            display_filename = filename or os.path.basename(file_path)
+            # Upload document to a hosting service to get a public URL (Twilio requires public URL)
+            hosting_service = ImageHostingService()
+            document_url = hosting_service.upload_document_with_fallback(file_path)
             
-            # First upload the document
-            upload_url = f"{self.base_url}/{self.phone_number_id}/media"
-            
-            headers = {
-                'Authorization': f'Bearer {self.access_token}'
-            }
-            
-            # Add retry logic for file uploads
-            max_retries = 3
-            retry_count = 0
-            media_id = None
-            
-            while retry_count < max_retries and media_id is None:
-                try:
-                    with open(file_path, 'rb') as doc_file:
-                        files = {
-                            'file': (display_filename, doc_file, mime_type),
-                            'type': (None, 'document'),
-                            'messaging_product': (None, 'whatsapp')
-                        }
-                        
-                        logger.info(f"Uploading document (attempt {retry_count + 1}/{max_retries})...")
-                        upload_response = requests.post(upload_url, headers=headers, files=files, timeout=30)
-                        
-                        if upload_response.status_code == 200:
-                            media_id = upload_response.json().get('id')
-                            if media_id:
-                                logger.info(f"Document uploaded successfully: {media_id}")
-                                break
-                            else:
-                                logger.error("No media ID returned from document upload")
-                        else:
-                            logger.error(f"Upload failed (attempt {retry_count + 1}): {upload_response.status_code} - {upload_response.text}")
-                            
-                except requests.exceptions.Timeout:
-                    logger.error(f"Upload timeout (attempt {retry_count + 1})")
-                except Exception as e:
-                    logger.error(f"Upload error (attempt {retry_count + 1}): {str(e)}")
-                
-                retry_count += 1
-                if retry_count < max_retries:
-                    logger.info(f"Retrying upload in 2 seconds...")
-                    time.sleep(2)
-            
-            if not media_id:
-                logger.error("Failed to upload document after all retries")
+            if not document_url:
+                logger.error(f"Failed to get public URL for document: {file_path}")
+                # Fallback: send caption as text if document upload fails
+                if caption:
+                    caption = self._normalize_whatsapp_formatting(caption)
+                    return self.send_message(to, f"📄 Document: {filename or os.path.basename(file_path)}\n\n{caption}")
                 return False
             
-            # Now send the document message
-            send_url = f"{self.base_url}/{self.phone_number_id}/messages"
+            logger.info(f"Document uploaded to public URL: {document_url}")
             
-            headers = {
-                'Authorization': f'Bearer {self.access_token}',
-                'Content-Type': 'application/json'
-            }
+            # Ensure caption is not too long
+            caption = self._normalize_whatsapp_formatting(caption)
+            if len(caption) > 1600:
+                caption = caption[:1590] + "..."
             
-            document_data = {
-                'id': media_id,
-                'filename': display_filename
-            }
+            # Send via Twilio WhatsApp API
+            from_number = self.twilio_phone_number
+            to_number = to if to.startswith('whatsapp:') else f'whatsapp:{to}'
             
-            if caption:
-                document_data['caption'] = caption[:1024]  # WhatsApp caption limit
+            url = f"https://api.twilio.com/2010-04-01/Accounts/{self.twilio_account_sid}/Messages.json"
+            auth = (self.twilio_account_sid, self.twilio_auth_token)
             
             data = {
-                'messaging_product': 'whatsapp',
-                'to': to,
-                'type': 'document',
-                'document': document_data
+                'From': f'whatsapp:{from_number}',
+                'To': to_number,
+                'MediaUrl': document_url
             }
             
-            response = requests.post(send_url, headers=headers, json=data, timeout=30)
+            # Add body text if caption provided
+            if caption.strip():
+                data['Body'] = caption
             
-            if response.status_code == 200:
+            response = requests.post(url, auth=auth, data=data, timeout=30)
+            
+            if response.status_code == 200 or response.status_code == 201:
                 logger.info(f"Document sent successfully to {to}")
                 return True
             else:
@@ -1370,84 +1125,12 @@ class WhatsAppService:
             logger.error(f"Error tracking engagement for {user_id}: {e}")
 
     def send_document_quick(self, to: str, file_path: str, caption: str = None, filename: str = None) -> bool:
-        """Send document with shorter timeout to avoid worker timeout"""
+        """Send document with shorter timeout to avoid worker timeout (Twilio version)"""
         try:
             logger.info(f"Attempting quick document upload to {to}")
             
-            if not os.path.exists(file_path):
-                logger.error(f"Document file does not exist: {file_path}")
-                return False
-            
-            # Determine file type and MIME type
-            file_extension = os.path.splitext(file_path)[1].lower()
-            mime_types = {
-                '.pdf': 'application/pdf',
-                '.doc': 'application/msword',
-                '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                '.txt': 'text/plain'
-            }
-            
-            mime_type = mime_types.get(file_extension, 'application/octet-stream')
-            display_filename = filename or os.path.basename(file_path)
-            
-            # Upload with shorter timeout
-            upload_url = f"{self.base_url}/{self.phone_number_id}/media"
-            
-            headers = {
-                'Authorization': f'Bearer {self.access_token}'
-            }
-            
-            with open(file_path, 'rb') as doc_file:
-                files = {
-                    'file': (display_filename, doc_file, mime_type),
-                    'type': (None, 'document'),
-                    'messaging_product': (None, 'whatsapp')
-                }
-                
-                # Use shorter timeout to avoid worker timeout
-                upload_response = requests.post(upload_url, headers=headers, files=files, timeout=25)
-                
-                if upload_response.status_code != 200:
-                    logger.error(f"Quick upload failed: {upload_response.status_code}")
-                    return False
-                
-                media_id = upload_response.json().get('id')
-                
-                if not media_id:
-                    logger.error("No media ID returned from quick upload")
-                    return False
-            
-            # Send the document message
-            send_url = f"{self.base_url}/{self.phone_number_id}/messages"
-            
-            headers = {
-                'Authorization': f'Bearer {self.access_token}',
-                'Content-Type': 'application/json'
-            }
-            
-            document_data = {
-                'id': media_id,
-                'filename': display_filename
-            }
-            
-            if caption:
-                document_data['caption'] = caption[:1024]
-            
-            data = {
-                'messaging_product': 'whatsapp',
-                'to': to,
-                'type': 'document',
-                'document': document_data
-            }
-            
-            response = requests.post(send_url, headers=headers, json=data, timeout=15)
-            
-            if response.status_code == 200:
-                logger.info(f"Quick document sent successfully to {to}")
-                return True
-            else:
-                logger.error(f"Failed to send quick document: {response.status_code}")
-                return False
+            # Use the regular send_document method (Twilio handles timeouts well)
+            return self.send_document(to, file_path, caption or "", filename)
                 
         except Exception as e:
             logger.error(f"Error in quick document send: {str(e)}")

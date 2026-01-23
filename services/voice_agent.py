@@ -5,16 +5,16 @@ Optimized Architecture: TRUE STREAMING for minimal latency
 
 DESIGN PRINCIPLES:
 - Server handles security (API key), format conversion
-- Audio chunks from Gemini are sent IMMEDIATELY to client as they arrive
+- Audio chunks from Gemini are MICRO-BATCHED into short, smooth WAVs
 - Client plays audio chunks in sequence for real-time conversation
-- Provides sub-second response latency
+- Provides sub-second response latency with fewer audible gaps
 
 STREAMING STRATEGY:
 - Receive PCM chunks from Gemini Live API (~100-200ms each)
-- Immediately convert each chunk to WAV format
-- Send WAV chunk to client right away
+- Buffer a few chunks (~400ms) to reduce boundary clicks/gaps
+- Convert combined PCM to WAV and stream to client ASAP
 - Client queues and plays chunks sequentially
-- No waiting for turnComplete before playing audio
+- Flush remaining audio immediately on turnComplete
 """
 
 import os
@@ -442,6 +442,13 @@ When the session begins, greet the student and ask what they want to study.
 Example: "Hi! I'm NerdX, your AI tutor for O-Level and A-Level subjects. What subject would you like help with today?"
 """
 
+# Audio micro-batching for smoother playback without large latency.
+# Tunable via env vars for production tuning.
+LIVE_AUDIO_BATCH_MS = int(os.getenv("NERDX_LIVE_AUDIO_BATCH_MS", "400"))
+LIVE_AUDIO_MAX_LATENCY_MS = int(os.getenv("NERDX_LIVE_AUDIO_MAX_LATENCY_MS", "700"))
+LIVE_AUDIO_SAMPLE_RATE = 24000
+LIVE_AUDIO_BYTES_PER_SECOND = LIVE_AUDIO_SAMPLE_RATE * 2  # 16-bit mono PCM
+
 
 def convert_pcm_to_wav(pcm_data: bytes, sample_rate: int = 24000, channels: int = 1, sample_width: int = 2) -> bytes:
     """
@@ -673,15 +680,15 @@ async def run_billing_scheduler(billing: BillingManager, websocket: WebSocket):
 
 class TransparentGeminiPipe:
     """
-    TRUE STREAMING PIPE: Sends audio chunks immediately for minimal latency.
+    SMOOTH STREAMING PIPE: Micro-batches PCM to reduce audible gaps.
     Supports both Vertex AI (preferred) and regular Gemini API.
     Includes session resumption and goAway handling per Gemini Live API docs.
     
     STREAMING STRATEGY:
-    - Each PCM chunk from Gemini is immediately converted to WAV
-    - WAV chunk is sent to client right away
+    - PCM chunks are buffered briefly and concatenated (~400ms)
+    - Combined PCM is converted to WAV and sent immediately
     - Client queues and plays chunks in sequence
-    - Sub-second response latency
+    - Sub-second response latency with fewer boundary artifacts
     """
     
     def __init__(self, client_ws: WebSocket, session_handle: str = None):
@@ -693,6 +700,10 @@ class TransparentGeminiPipe:
         # Session resumption support
         self.session_handle = session_handle  # For resuming previous sessions
         self.session_id = None  # Returned by server during session
+        # Audio micro-batch buffer (PCM bytes)
+        self.audio_buffer = bytearray()
+        self.audio_buffer_lock = asyncio.Lock()
+        self.last_flush_time = time.time()
     
     async def _get_vertex_ai_token(self) -> Optional[str]:
         """Get OAuth2 access token for Vertex AI using service account."""
@@ -1018,14 +1029,60 @@ class TransparentGeminiPipe:
             
         except Exception as e:
             logger.error(f"❌ Forward error: {e}", exc_info=True)
+
+    async def _flush_audio_buffer(self):
+        """Flush buffered PCM as a single WAV chunk to the client."""
+        async with self.audio_buffer_lock:
+            if not self.audio_buffer:
+                return
+            pcm_bytes = bytes(self.audio_buffer)
+            self.audio_buffer.clear()
+
+        try:
+            wav_bytes = convert_pcm_to_wav(pcm_bytes, sample_rate=LIVE_AUDIO_SAMPLE_RATE)
+            wav_b64 = base64.b64encode(wav_bytes).decode('utf-8')
+            await self.client_ws.send_json({
+                "type": "audio",
+                "data": wav_b64
+            })
+            logger.debug(
+                f"Streamed batched audio: {len(pcm_bytes)} bytes PCM (~{len(pcm_bytes) / LIVE_AUDIO_BYTES_PER_SECOND:.2f}s)"
+            )
+        finally:
+            self.last_flush_time = time.time()
+
+    async def _clear_audio_buffer(self):
+        """Clear any pending buffered PCM (e.g., on interruption)."""
+        async with self.audio_buffer_lock:
+            self.audio_buffer.clear()
+
+    async def _buffer_pcm_and_maybe_flush(self, pcm_bytes: bytes):
+        """Buffer PCM and flush when batch size or latency threshold is reached."""
+        if not pcm_bytes:
+            return
+
+        async with self.audio_buffer_lock:
+            was_empty = len(self.audio_buffer) == 0
+            self.audio_buffer.extend(pcm_bytes)
+            buffered_len = len(self.audio_buffer)
+
+        if was_empty:
+            self.last_flush_time = time.time()
+
+        buffered_ms = (buffered_len / LIVE_AUDIO_BYTES_PER_SECOND) * 1000
+        elapsed_ms = (time.time() - self.last_flush_time) * 1000
+
+        if buffered_ms >= LIVE_AUDIO_BATCH_MS or elapsed_ms >= LIVE_AUDIO_MAX_LATENCY_MS:
+            await self._flush_audio_buffer()
+
     
     async def receive_and_forward(self):
         """
-        Receive from Gemini and forward to client with TRUE STREAMING.
+        Receive from Gemini and forward to client with SMOOTH STREAMING.
         
         STREAMING STRATEGY:
-        - Each PCM audio chunk is immediately converted to WAV
-        - WAV chunk is sent to client right away (no buffering)
+        - PCM audio chunks are briefly buffered and concatenated
+        - WAV chunk is sent to client ASAP after micro-batching
         - Client queues and plays chunks in sequence
         - Sub-second response latency
         """
@@ -1064,7 +1121,7 @@ class TransparentGeminiPipe:
                                         except Exception as e:
                                             logger.warning(f"⚠️ Failed to send text to client: {e}")
                                 
-                                # STREAM audio chunks IMMEDIATELY (no buffering)
+                                # BUFFER audio chunks and flush in micro-batches
                                 if "inlineData" in part:
                                     inline_data = part["inlineData"]
                                     mime_type = inline_data.get("mimeType", "")
@@ -1072,24 +1129,18 @@ class TransparentGeminiPipe:
                                     if mime_type.startswith("audio/") and "pcm" in mime_type.lower():
                                         audio_b64 = inline_data.get("data", "")
                                         if audio_b64:
-                                            # Convert PCM to WAV immediately
+                                            # Buffer PCM and flush in micro-batches
                                             pcm_bytes = base64.b64decode(audio_b64)
-                                            wav_bytes = convert_pcm_to_wav(pcm_bytes, sample_rate=24000)
-                                            wav_b64 = base64.b64encode(wav_bytes).decode('utf-8')
-                                            
-                                            # Send to client RIGHT AWAY
-                                            await self.client_ws.send_json({
-                                                "type": "audio",
-                                                "data": wav_b64
-                                            })
-                                            logger.debug(f"📤 Streamed audio chunk: {len(pcm_bytes)} bytes PCM (~{len(pcm_bytes) / 24000 / 2:.2f}s)")
+                                            await self._buffer_pcm_and_maybe_flush(pcm_bytes)
                     
                     # Notify client when turn is complete
                     if content.get("turnComplete"):
+                        await self._flush_audio_buffer()
                         await self.client_ws.send_json({"type": "turnComplete"})
                         logger.info("✅ Turn complete")
                         
                     if content.get("interrupted"):
+                        await self._clear_audio_buffer()
                         await self.client_ws.send_json({"type": "interrupted"})
                         logger.info("🎤 Interrupted")
                 

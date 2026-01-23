@@ -82,7 +82,19 @@ export const creditsApi = {
       });
       return response.data.data || null;
     } catch (error: any) {
-      console.error('Purchase credits error:', error);
+      // Only log actual errors, not database save failures when payment prompt was sent
+      const errorMessage = error.response?.data?.message || error.message || '';
+      const isDatabaseError = errorMessage.toLowerCase().includes('save') || 
+                              errorMessage.toLowerCase().includes('transaction') ||
+                              errorMessage.toLowerCase().includes('database');
+      
+      // Don't log database errors as errors - they're non-blocking warnings
+      if (!isDatabaseError) {
+        console.error('Purchase credits error:', error);
+      } else {
+        console.warn('⚠️ Database save warning (payment prompt was sent successfully):', errorMessage);
+      }
+      
       // Propagate the specific error message from server if available
       if (error.response?.data?.message) {
         throw new Error(error.response.data.message);

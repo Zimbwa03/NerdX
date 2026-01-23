@@ -159,9 +159,14 @@ export const quizApi = {
       if (questionCount !== undefined) {
         payload.question_count = questionCount;
       }
-      // Use extended timeout for AI question generation (can take 30+ seconds)
+      // Use extended timeout for AI question generation
+      // Essay and structured questions can take longer (up to 90 seconds)
+      const timeout = payload.question_type === 'essay' || payload.question_type === 'structured' 
+        ? 120000  // 120 seconds for essay/structured (more complex)
+        : 90000;  // 90 seconds for MCQ
+      
       const response = await api.post('/api/mobile/quiz/generate', payload, {
-        timeout: 90000,  // 90 seconds for AI generation
+        timeout: timeout,
       });
       // Include credits_remaining from server response for UI updates
       const questionData = response.data.data || null;
@@ -170,8 +175,24 @@ export const quizApi = {
       }
       return questionData;
     } catch (error: any) {
-      console.error('Generate question error:', error);
-      throw error;
+      // Provide better error messages for network/timeout issues
+      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        const questionType = payload.question_type || 'question';
+        console.error(`Generate ${questionType} timeout:`, error);
+        throw new Error(
+          questionType === 'essay' || questionType === 'structured'
+            ? 'Question generation is taking longer than expected. Essay and structured questions may take up to 2 minutes. Please try again.'
+            : 'Question generation timed out. Please try again.'
+        );
+      } else if (error.message?.includes('Network Error') || error.code === 'ERR_NETWORK') {
+        console.error('Network error generating question:', error);
+        throw new Error('Network error. Please check your internet connection and try again.');
+      } else {
+        console.error('Generate question error:', error);
+        // Use server error message if available, otherwise generic message
+        const errorMessage = error.response?.data?.message || error.message || 'Failed to generate question';
+        throw new Error(errorMessage);
+      }
     }
   },
 

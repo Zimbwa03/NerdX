@@ -23,7 +23,8 @@ from database.external_db import (
     claim_welcome_bonus, get_credit_breakdown,
     make_supabase_request,
     authenticate_supabase_user,
-    get_user_by_email_admin
+    get_user_by_email_admin,
+    get_user_registration_by_email
 )
 # Additional Services
 from services.advanced_credit_service import advanced_credit_service
@@ -446,9 +447,13 @@ def reset_password():
         
         # If we have email, use it to find user and update password
         if email:
-            user_data = get_user_registration(email)
+            user_data = get_user_registration_by_email(email)
             if not user_data:
                 return jsonify({'success': False, 'message': 'User not found'}), 404
+            
+            user_id = user_data.get('chat_id')
+            if not user_id:
+                return jsonify({'success': False, 'message': 'User ID not found'}), 404
             
             # Hash new password
             password_hash, password_salt = hash_password(new_password)
@@ -456,14 +461,15 @@ def reset_password():
             # Update password in database
             update_data = {
                 'password_hash': password_hash,
-                'password_salt': password_salt
+                'password_salt': password_salt,
+                'updated_at': datetime.now().isoformat()
             }
             
             result = make_supabase_request(
                 "PATCH", 
                 "users_registration", 
                 update_data, 
-                filters={"chat_id": f"eq.{email}"},
+                filters={"chat_id": f"eq.{user_id}"},
                 use_service_role=True
             )
             
@@ -1026,21 +1032,88 @@ def update_profile():
     """Update user profile"""
     try:
         data = request.get_json()
-        user_data = get_user_registration(g.current_user_id)
+        user_id = g.current_user_id
+        user_data = get_user_registration(user_id)
         
         if not user_data:
             return jsonify({'success': False, 'message': 'User not found'}), 404
         
-        # TODO: Implement profile update
-        # Update fields that are provided
+        # Prepare update data - only update fields that are provided
+        update_data = {
+            'updated_at': datetime.now().isoformat()
+        }
+        
+        # Update name if provided
+        if 'name' in data and data['name']:
+            update_data['name'] = data['name'].strip()
+        
+        # Update surname if provided
+        if 'surname' in data and data['surname']:
+            update_data['surname'] = data['surname'].strip()
+        
+        # Update email if provided
+        if 'email' in data and data['email']:
+            email = data['email'].strip().lower()
+            # Validate email format
+            import re
+            if re.match(r'^[^\s@]+@[^\s@]+\.[^\s@]+$', email):
+                update_data['email'] = email
+            else:
+                return jsonify({'success': False, 'message': 'Invalid email format'}), 400
+        
+        # Update phone_number if provided
+        if 'phone_number' in data:
+            phone = data['phone_number'].strip() if data['phone_number'] else None
+            update_data['phone_number'] = phone
+        
+        # Update Supabase database
+        result = make_supabase_request(
+            "PATCH",
+            "users_registration",
+            data=update_data,
+            filters={"chat_id": f"eq.{user_id}"},
+            use_service_role=True
+        )
+        
+        if result is None:
+            logger.error(f"Failed to update profile for user {user_id}")
+            return jsonify({'success': False, 'message': 'Failed to update profile'}), 500
+        
+        # Also update Supabase Auth email if email was changed
+        if 'email' in update_data:
+            try:
+                from supabase import create_client, Client
+                import os
+                supabase_url = os.getenv('SUPABASE_URL')
+                supabase_service_key = os.getenv('SUPABASE_SERVICE_ROLE_KEY')
+                
+                if supabase_url and supabase_service_key:
+                    supabase: Client = create_client(supabase_url, supabase_service_key)
+                    # Get user's auth ID from email
+                    auth_users = supabase.auth.admin.list_users()
+                    for auth_user in auth_users:
+                        if auth_user.email == user_data.get('email'):
+                            # Update email in Supabase Auth
+                            supabase.auth.admin.update_user_by_id(
+                                auth_user.id,
+                                {'email': update_data['email']}
+                            )
+                            logger.info(f"Updated Supabase Auth email for user {user_id}")
+                            break
+            except Exception as auth_error:
+                logger.warning(f"Failed to update Supabase Auth email: {auth_error}")
+                # Continue even if Auth update fails - database update succeeded
+        
+        # Get updated user data
+        updated_user = get_user_registration(user_id)
         
         return jsonify({
             'success': True,
-            'data': user_data,
+            'data': updated_user,
             'message': 'Profile updated successfully'
         }), 200
     except Exception as e:
-        logger.error(f"Update profile error: {e}")
+        logger.error(f"Update profile error: {e}", exc_info=True)
         return jsonify({'success': False, 'message': 'Server error'}), 500
 
 @mobile_bp.route('/user/stats', methods=['GET'])
@@ -1469,12 +1542,16 @@ def generate_question():
                     selected_topic = random.choice(level_topics)
                 
                 # Pass question_format to support MCQ vs Structured questions
-                question_data = a_level_physics_generator.generate_question(
-                    selected_topic, 
-                    difficulty, 
-                    g.current_user_id,
-                    question_format  # 'mcq' or 'structured'
-                )
+                try:
+                    question_data = a_level_physics_generator.generate_question(
+                        selected_topic, 
+                        difficulty, 
+                        g.current_user_id,
+                        question_format  # 'mcq' or 'structured'
+                    )
+                except Exception as physics_error:
+                    logger.error(f"Error generating A-Level Physics {question_format} question: {physics_error}", exc_info=True)
+                    question_data = None
             
             elif subject == 'a_level_chemistry':
                 # A Level Chemistry - uses DeepSeek generator
@@ -1489,12 +1566,16 @@ def generate_question():
                     selected_topic = random.choice(level_topics)
                 
                 # Pass question_format to support MCQ vs Structured questions
-                question_data = a_level_chemistry_generator.generate_question(
-                    selected_topic, 
-                    difficulty, 
-                    g.current_user_id,
-                    question_format  # 'mcq' or 'structured'
-                )
+                try:
+                    question_data = a_level_chemistry_generator.generate_question(
+                        selected_topic, 
+                        difficulty, 
+                        g.current_user_id,
+                        question_format  # 'mcq' or 'structured'
+                    )
+                except Exception as chemistry_error:
+                    logger.error(f"Error generating A-Level Chemistry {question_format} question: {chemistry_error}", exc_info=True)
+                    question_data = None
             
             elif subject == 'a_level_pure_math':
                 # A Level Pure Mathematics - uses DeepSeek generator
@@ -1509,12 +1590,16 @@ def generate_question():
                     selected_topic = random.choice(level_topics)
                 
                 # Pass question_format to support MCQ vs Structured questions
-                question_data = a_level_pure_math_generator.generate_question(
-                    selected_topic, 
-                    difficulty, 
-                    g.current_user_id,
-                    question_format  # 'mcq' or 'structured'
-                )
+                try:
+                    question_data = a_level_pure_math_generator.generate_question(
+                        selected_topic, 
+                        difficulty, 
+                        g.current_user_id,
+                        question_format  # 'mcq' or 'structured'
+                    )
+                except Exception as math_error:
+                    logger.error(f"Error generating A-Level Pure Math {question_format} question: {math_error}", exc_info=True)
+                    question_data = None
             
             elif subject == 'a_level_biology':
                 # A Level Biology - uses DeepSeek generator with MCQ, Structured, Essay support
@@ -1530,12 +1615,16 @@ def generate_question():
                     level_topics = A_LEVEL_BIOLOGY_TOPICS.get(level, A_LEVEL_BIOLOGY_ALL_TOPICS)
                     selected_topic = random.choice(level_topics)
                 
-                question_data = a_level_biology_generator.generate_question(
-                    selected_topic, 
-                    difficulty, 
-                    g.current_user_id, 
-                    bio_question_type
-                )
+                try:
+                    question_data = a_level_biology_generator.generate_question(
+                        selected_topic, 
+                        difficulty, 
+                        g.current_user_id, 
+                        bio_question_type
+                    )
+                except Exception as bio_error:
+                    logger.error(f"Error generating A-Level Biology {bio_question_type} question: {bio_error}", exc_info=True)
+                    question_data = None
             
             elif subject == 'computer_science':
                 # Computer Science - uses DeepSeek generator with MCQ, Structured, Essay support
@@ -1564,13 +1653,25 @@ def generate_question():
 
         
         if not question_data:
-            # Provide more specific error message for Biology questions
+            # Provide more specific error messages based on subject and question type
+            question_format_used = data.get('question_format') or data.get('question_type', 'mcq')
+            
             if subject == 'a_level_biology':
                 bio_type = data.get('question_type', 'mcq')
-                error_msg = f'Failed to generate A-Level Biology {bio_type} question. Please try again or contact support if the issue persists.'
+                if bio_type == 'essay':
+                    error_msg = 'Failed to generate essay question. The AI service may be experiencing high load. Please try again in a moment.'
+                elif bio_type == 'structured':
+                    error_msg = 'Failed to generate structured question. Please try again or switch to MCQ questions.'
+                else:
+                    error_msg = f'Failed to generate A-Level Biology {bio_type} question. Please try again.'
+            elif subject in ['a_level_physics', 'a_level_chemistry', 'a_level_pure_math']:
+                if question_format_used == 'structured':
+                    error_msg = f'Failed to generate {subject.replace("a_level_", "").replace("_", " ").title()} structured question. Please try again or switch to MCQ questions.'
+                else:
+                    error_msg = f'Failed to generate {subject.replace("a_level_", "").replace("_", " ").title()} question. Please try again.'
             else:
-                error_msg = 'Failed to generate question'
-            logger.error(f"Question generation failed for {subject}/{topic} (type: {data.get('question_type', 'mcq')})")
+                error_msg = 'Failed to generate question. Please try again.'
+            logger.error(f"Question generation failed for {subject}/{topic} (type: {question_format_used})")
             return jsonify({'success': False, 'message': error_msg}), 500
         
         # Format question for mobile - normalize different question formats
@@ -1837,7 +1938,18 @@ def generate_question():
     except Exception as e:
         logger.error(f"Generate question error: {e}", exc_info=True)
         error_message = str(e) if str(e) else 'Server error'
-        return jsonify({'success': False, 'message': f'Failed to generate question: {error_message}'}), 500
+        
+        # Provide user-friendly error messages
+        if 'timeout' in error_message.lower() or 'timed out' in error_message.lower():
+            user_message = 'Question generation is taking longer than expected. Please try again - essay and structured questions may take up to 90 seconds.'
+        elif 'connection' in error_message.lower() or 'network' in error_message.lower():
+            user_message = 'Network error while generating question. Please check your connection and try again.'
+        elif 'a_level_biology' in error_message.lower() or subject == 'a_level_biology':
+            user_message = 'Failed to generate Biology question. The AI service may be temporarily unavailable. Please try again in a moment.'
+        else:
+            user_message = 'Failed to generate question. Please try again.'
+        
+        return jsonify({'success': False, 'message': user_message}), 500
 
 @mobile_bp.route('/quiz/generate-stream', methods=['POST'])
 @require_auth
@@ -2789,20 +2901,20 @@ def initiate_credit_purchase():
                 'message': payment_result.get('message', 'Failed to initiate payment')
             }), 400
         
-        # Update transaction with poll_url
+        # Update transaction with poll_url (non-blocking - payment prompt already sent successfully)
         try:
             make_supabase_request(
                 'PATCH',
                 'payment_transactions',
                 {
-                    'poll_url': payment_result.get('poll_url', ''),
-                    'paynow_poll_url': payment_result.get('poll_url', '')
+                    'poll_url': payment_result.get('poll_url', '')  # Only use poll_url (paynow_poll_url doesn't exist)
                 },
                 filters={'reference_code': f"eq.{reference}"},
                 use_service_role=True
             )
         except Exception as e:
-            logger.warning(f"Failed to update payment transaction: {e}")
+            # Log as warning, not error - payment prompt was successfully sent
+            logger.warning(f"Payment prompt sent successfully but failed to update transaction poll_url: {reference} - {e}")
         
         # Build response based on payment method
         response_data = {

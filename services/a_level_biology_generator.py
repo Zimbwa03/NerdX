@@ -189,7 +189,8 @@ class ALevelBiologyGenerator:
         self.deepseek_url = "https://api.deepseek.com/v1/chat/completions"
         self.max_retries = 3  # 3 attempts for DeepSeek (increased for reliability)
         # Timeout varies by question type - structured/essay need more time
-        self.timeout_base = 25  # Base timeout (increased from 18)
+        # Increased timeouts to handle longer AI generation times
+        self.timeout_base = 30  # Base timeout for MCQ (increased from 25)
         
         # Gemini configuration (fallback)
         self.gemini_api_key = os.environ.get('GEMINI_API_KEY')
@@ -658,10 +659,11 @@ Generate now:"""
         }.get(question_type, 1500)
         
         # Timeout increases with question complexity
+        # Longer timeouts for complex questions that need more AI processing
         timeout = {
-            "mcq": self.timeout_base,
-            "structured": self.timeout_base + 5,  # 30s for structured
-            "essay": self.timeout_base + 10       # 35s for essay
+            "mcq": self.timeout_base,              # 30s for MCQ
+            "structured": self.timeout_base + 10,  # 40s for structured (more parts to generate)
+            "essay": self.timeout_base + 15        # 45s for essay (most complex, needs detailed plans)
         }.get(question_type, self.timeout_base)
         
         for attempt in range(self.max_retries):
@@ -743,10 +745,24 @@ Always respond with valid JSON containing step-by-step solutions."""
                     
             except requests.Timeout:
                 logger.warning(f"DeepSeek timeout on attempt {attempt + 1}/{self.max_retries} after {timeout}s for {question_type}")
-                # Continue to next attempt (if any) or return None to trigger fallback
+                # For essay/structured, try one more time with slightly reduced max_tokens if we have retries left
+                if attempt < self.max_retries - 1 and question_type in ['essay', 'structured']:
+                    logger.info(f"Retrying {question_type} with reduced max_tokens to speed up generation")
+                    max_tokens = int(max_tokens * 0.9)  # Reduce by 10% to speed up
+                continue
+            except requests.exceptions.ConnectionError as e:
+                logger.error(f"DeepSeek connection error on attempt {attempt + 1}: {e}")
+                # Wait before retry for connection errors
+                if attempt < self.max_retries - 1:
+                    import time
+                    time.sleep(2 * (attempt + 1))  # Exponential backoff: 2s, 4s, 6s
                 continue
             except Exception as e:
                 logger.error(f"Error calling DeepSeek API on attempt {attempt + 1}: {e}")
+                # Wait before retry for other errors
+                if attempt < self.max_retries - 1:
+                    import time
+                    time.sleep(1 * (attempt + 1))  # Exponential backoff: 1s, 2s, 3s
                 continue
         
         logger.error(f"All {self.max_retries} DeepSeek attempts failed for Biology {question_type} question")

@@ -159,9 +159,27 @@ const ALevelBiologyScreen: React.FC = () => {
             }
         } catch (error: any) {
             setIsGeneratingQuestion(false);
-            const errorMessage = error.response?.data?.message || 'Failed to generate question';
-            showError(`❌ ${errorMessage}`, 5000);
-            Alert.alert('Error', errorMessage);
+            
+            // Extract user-friendly error message
+            let errorMessage = error.message || error.response?.data?.message || 'Failed to generate question';
+            
+            // Provide specific guidance based on error type
+            if (errorMessage.includes('timeout') || errorMessage.includes('taking longer')) {
+                errorMessage = questionType === 'essay' 
+                    ? 'Essay questions take longer to generate (up to 2 minutes). Please wait and try again.'
+                    : questionType === 'structured'
+                    ? 'Structured questions take longer to generate. Please wait and try again.'
+                    : errorMessage;
+            } else if (errorMessage.includes('Network') || errorMessage.includes('connection')) {
+                errorMessage = 'Network error. Please check your internet connection and try again.';
+            }
+            
+            showError(`❌ ${errorMessage}`, 6000);
+            
+            // Only show alert for critical errors, not timeouts (user already sees toast)
+            if (!errorMessage.includes('timeout') && !errorMessage.includes('taking longer')) {
+                Alert.alert('Error', errorMessage);
+            }
         }
     };
 

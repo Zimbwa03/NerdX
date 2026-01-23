@@ -31,7 +31,7 @@ import Animated, {
     SlideInDown,
 } from 'react-native-reanimated';
 import { Audio, AVPlaybackStatus } from 'expo-av';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { BlurView } from 'expo-blur';
@@ -233,11 +233,11 @@ const NerdXLiveAudioScreen: React.FC = () => {
     }, [configureAudioMode]);
 
     // Jitter buffer for smooth audio playback
-    // Collects chunks and combines them for smooth continuous audio
+    // Server micro-batches PCM into short WAVs, so keep buffer minimal for low latency
     const audioQueueRef = useRef<string[]>([]);
     const isProcessingQueueRef = useRef(false);
-    const JITTER_BUFFER_MIN = 3; // Wait for 3 chunks before starting (~300-600ms)
-    const CHUNK_BATCH_SIZE = 3; // Combine 3 chunks at a time
+    const JITTER_BUFFER_MIN = 1; // Start immediately with batched chunks
+    const CHUNK_BATCH_SIZE = 1; // Play each batched chunk as it arrives
 
     // Combine multiple base64 WAV chunks into one
     // This is a simplified approach - we just play them sequentially but with proper overlap
@@ -604,8 +604,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
     }, [playCompleteAudioTurn]);
 
     // Playback timeout (fallback in case turnComplete is missed)
-    // With server-side buffering, server sends complete audio with turnComplete signal.
-    // Increased timeout to allow longer AI responses (30+ seconds).
+    // Server micro-batches audio, so allow longer AI responses (30+ seconds).
     const startPlaybackTimeout = useCallback(() => {
         if (playbackTimeoutRef.current) clearTimeout(playbackTimeoutRef.current);
         playbackTimeoutRef.current = setTimeout(async () => {
@@ -823,6 +822,9 @@ const NerdXLiveAudioScreen: React.FC = () => {
                 case 'turnComplete':
                     // With streaming, audio is already playing - just log
                     console.log('✅ Turn complete received');
+                    if (!isPlayingRef.current && audioQueueRef.current.length === 0) {
+                        setConnectionState('ready');
+                    }
                     break;
 
                 case 'interrupted':

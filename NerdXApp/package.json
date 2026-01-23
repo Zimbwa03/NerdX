@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "expo start",
-    "start:dev": "expo start",
+    "start": "expo start --offline",
+    "start:dev": "expo start --offline",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
@@ -40,6 +40,7 @@
     "expo-image-picker": "~17.0.10",
     "expo-linear-gradient": "~15.0.8",
     "expo-media-library": "~18.2.1",
+    "expo-notifications": "^0.29.14",
     "expo-screen-orientation": "~9.0.8",
     "expo-sharing": "~14.0.8",
     "expo-splash-screen": "~31.0.13",

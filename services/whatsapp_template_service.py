@@ -20,7 +20,7 @@ class WhatsAppTemplateService:
         self.template_cache = {}
         self.template_usage_stats = {}
         
-        # Approved template definitions (these must match what's submitted to Meta)
+        # Template definitions for Twilio WhatsApp (Twilio doesn't require pre-approval like Meta)
         self.approved_templates = {
             'nerdx_welcome_consent': {
                 'name': 'nerdx_welcome_consent',

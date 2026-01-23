@@ -66,23 +66,13 @@ class PaymentService:
         ]
     
     def get_credit_packages_display(self) -> str:
-        """Get artistic formatted credit packages display"""
-        message = f"""✨ 𝗖𝗥𝗘𝗗𝗜𝗧 𝗦𝗧𝗢𝗥𝗘 ✨
-╔═══════════════════╗
-║ 💎 PREMIUM PLANS 💎 ║
-╚═══════════════════╝
-
-"""
-        
+        """Get compact formatted credit packages display"""
+        message = "*CREDIT STORE*\n\n"
         for package in self.packages:
-            cost_per_credit = package['price'] / package['credits']
-            message += f"{package['icon']} **{package['name']}** - ${package['price']:.2f}/month\n"
-            message += f"   💎 {package['credits']} Credits • ${cost_per_credit:.3f}/credit\n"
-            message += f"   ⏰ Valid for 1 month from purchase\n"
-            message += f"   🎯 {package['description']}\n"
-            message += f"   💡 Best for: {package['best_for']}\n"
-            message += f"   ⚠️ Unused credits expire after subscription period\n\n"
-        
+            message += f"{package['icon']} *{package['name']}* - ${package['price']:.2f}/month\n"
+            message += f"{package['credits']} credits - {package['description']}\n"
+            message += f"Best for: {package['best_for']}\n\n"
+        message += "Note: Credits expire 30 days after purchase."
         return message
     
     def get_package_by_id(self, package_id: str) -> Optional[Dict]:
@@ -115,17 +105,12 @@ class PaymentService:
         if not package:
             return "❌ Package not found."
         
-        cost_per_credit = package['price'] / package['credits']
-        
-        message = f"{package['icon']} **{package['name']} - ${package['price']:.2f}/month**\n\n"
-        message += f"📊 **PACKAGE DETAILS:**\n"
-        message += f"💳 Credits: {package['credits']} credits\n"
-        message += f"💰 Cost per credit: ${cost_per_credit:.3f}\n"
-        message += f"⏰ **Validity: 1 month from purchase**\n"
-        message += f"🎯 Perfect for: {package['best_for']}\n\n"
-        message += f"✨ {package['description']}\n\n"
-        message += f"⚠️ **IMPORTANT:** Credits expire after 1 month if not used. Use them before they expire!\n"
-        
+        message = f"{package['icon']} *{package['name']}* - ${package['price']:.2f}/month\n\n"
+        message += f"Credits: {package['credits']}\n"
+        message += f"Best for: {package['best_for']}\n"
+        message += f"Description: {package['description']}\n"
+        message += "Validity: 30 days (unused credits expire).\n"
+
         return message
     
     def generate_payment_reference(self, user_id: str, package_id: str) -> str:
@@ -178,20 +163,16 @@ class PaymentService:
             except Exception as session_e:
                 logger.error(f"Error saving to session database: {session_e}")
         
-        message = f"💳 **PAYMENT INSTRUCTIONS**\n\n"
-        message += f"📱 **PAY VIA ECOCASH:**\n"
-        message += f"📞 **Number**: {self.ecocash_number}\n"
-        message += f"👤 **Name**: Ngonidzashe Zimbwa\n"
-        message += f"💰 **Amount**: ${package['price']:.2f} USD\n"
-        message += f"📋 **Reference**: {reference_code}\n\n"
-        message += f"⚠️ **IMPORTANT STEPS:**\n"
-        message += f"1️⃣ Send ${package['price']:.2f} to {self.ecocash_number}\n"
-        message += f"2️⃣ Copy your EcoCash confirmation SMS\n"
-        message += f"3️⃣ Paste it in the next message\n"
-        message += f"4️⃣ Wait for approval (usually within 30 minutes)\n\n"
-        message += f"💡 **Why this process?**\n"
-        message += f"Secure verification ensures your payment is protected and credits are accurately added."
-        
+        message = "*EcoCash Payment Instructions*\n\n"
+        message += f"Send *${package['price']:.2f}* to *{self.ecocash_number}*\n"
+        message += "Name: Ngonidzashe Zimbwa\n"
+        message += f"Reference: *{reference_code}*\n\n"
+        message += "Next steps:\n"
+        message += "1) Send the payment\n"
+        message += "2) Copy the EcoCash confirmation SMS\n"
+        message += "3) Paste it here\n"
+        message += "Verification usually takes 5-30 minutes."
+
         return {
             'success': True,
             'message': message,
@@ -231,15 +212,12 @@ class PaymentService:
             package_name = 'Unknown Package'
             amount = '0.00'
         
-        message = f"📝 **SUBMIT PAYMENT PROOF**\n\n"
-        message += f"💳 **Package**: {package_name} - ${amount}\n"
-        message += f"📞 **Payment Number**: {self.ecocash_number}\n"
-        message += f"🔢 **Reference Code**: {reference_code}\n\n"
-        message += f"📋 **PASTE YOUR ECOCASH CONFIRMATION MESSAGE:**\n"
-        message += f"(Copy and paste the entire SMS confirmation you received)\n\n"
-        message += f"Example format:\n"
-        message += f"\"Confirmed. You have sent ${amount} to {self.ecocash_number}. Transaction ID: ABC123XYZ...\""
-        
+        message = "*Submit Payment Proof*\n\n"
+        message += f"Package: {package_name} (${amount})\n"
+        message += f"Payment number: {self.ecocash_number}\n"
+        message += f"Reference: {reference_code}\n\n"
+        message += "Please paste the *full* EcoCash confirmation SMS."
+
         return message
     
     def calculate_credit_packages(self) -> List[Dict]:
@@ -463,26 +441,8 @@ class PaymentService:
             # Calculate expiry date (30 days from now)
             expiry_date = (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d')
             
-            message = f"""🎉 **PAYMENT APPROVED!**
+            message = f"""*Payment approved!*\n\nPackage: {package['name']}\nCredits added: +{format_credits(credits)} credits\nTransaction ID: {reference_code}\nDate: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n\nValid until: {expiry_date} (30 days)\n\nYour credits are ready. Choose an option below."""
 
-✅ **Transaction Successful**
-
-💰 **Package**: {package['name']}
-💳 **Credits Added**: +{format_credits(credits)} credits
-🔢 **Transaction ID**: {reference_code}
-📅 **Date**: {datetime.now().strftime('%Y-%m-%d %H:%M')}
-
-⏰ **MONTHLY SUBSCRIPTION**
-📆 **Valid Until**: {expiry_date}
-⚠️ **Important**: Your credits expire after 1 month. Use them before they expire!
-
-🚀 **Your credits are ready to use!**
-🎯 **Start learning now and make the most of your purchase!**
-
-📚 **CONTINUE LEARNING**
-🏠 **MAIN MENU**
-💰 **BUY MORE CREDITS**"""
-            
             buttons = [
                 {"text": "📚 CONTINUE LEARNING", "callback_data": "start_quiz"},
                 {"text": "🏠 MAIN MENU", "callback_data": "back_to_menu"},
@@ -500,25 +460,8 @@ class PaymentService:
             from services.whatsapp_service import WhatsAppService
             whatsapp_service = WhatsAppService()
             
-            message = f"""⚠️ **PAYMENT REQUIRES CLARIFICATION**
+            message = f"""*Payment needs clarification*\n\nIssue: {reason}\n\nPlease re-send the *full* EcoCash confirmation SMS and ensure the amount and number are correct. Choose an option below."""
 
-❗ **Issue Identified:**
-{reason}
-
-📋 **Next Steps:**
-1️⃣ Check your EcoCash SMS again
-2️⃣ Ensure you sent the exact amount
-3️⃣ Resubmit complete confirmation message
-
-💡 **Common Issues:**
-• Incomplete SMS text copied
-• Wrong amount sent
-• Payment to wrong number
-
-🔄 **RESUBMIT PAYMENT PROOF**
-💬 **CONTACT SUPPORT**
-🏠 **BACK TO MAIN MENU**"""
-            
             buttons = [
                 {"text": "🔄 RESUBMIT PAYMENT PROOF", "callback_data": "credit_store"},
                 {"text": "💬 CONTACT SUPPORT", "callback_data": "contact_support"},
@@ -556,21 +499,13 @@ class PaymentService:
             amount = '0.00'
             timestamp = datetime.now().strftime("%H:%M on %d/%m/%Y")
         
-        message = f"⏳ **PAYMENT UNDER REVIEW**\n\n"
-        message += f"✅ **Submission Successful!**\n\n"
-        message += f"📋 **Details:**\n"
-        message += f"💰 Package: {package_name}\n"
-        message += f"💳 Amount: ${amount}\n"
-        message += f"🔢 Reference: {reference_code}\n"
-        message += f"⏰ Submitted: {timestamp}\n\n"
-        message += f"🕐 **Processing Time**: Usually 5-30 minutes\n"
-        message += f"📧 **Status**: Payment verification in progress...\n\n"
-        message += f"💡 **What happens next?**\n"
-        message += f"• Our team verifies your EcoCash transaction\n"
-        message += f"• Once confirmed, credits are instantly added\n"
-        message += f"• You'll receive a confirmation message\n\n"
-        message += f"🔔 **You'll be notified when approved!**"
-        
+        message = "*Payment under review*\n\n"
+        message += f"Package: {package_name}\n"
+        message += f"Amount: ${amount}\n"
+        message += f"Reference: {reference_code}\n"
+        message += f"Submitted: {timestamp}\n\n"
+        message += "We usually verify within 5-30 minutes. You'll be notified when approved."
+
         return message
     
     def get_payment_approved_message(self, reference_code: str) -> str:
@@ -603,17 +538,14 @@ class PaymentService:
         # Calculate expiry date (30 days from now)
         expiry_date = (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d')
         
-        message = f"🎉 **PAYMENT APPROVED!**\n\n"
-        message += f"✅ **Transaction Successful**\n\n"
-        message += f"💰 **Package**: {package_name}\n"
-        message += f"💳 **Credits Added**: +{format_credits(credits)} credits\n"
-        message += f"⏰ **Valid Until**: {expiry_date} (1 month from purchase)\n"
-        message += f"⚠️ **Important**: Credits expire after 1 month if not used!\n\n"
-        message += f"🔢 **Transaction ID**: {reference_code}\n"
-        message += f"📅 **Date**: {timestamp}\n\n"
-        message += f"🚀 **Your credits are ready to use!**\n"
-        message += f"🎯 **Start learning now and make the most of your purchase!**"
-        
+        message = "*Payment approved!*\n\n"
+        message += f"Package: {package_name}\n"
+        message += f"Credits added: +{format_credits(credits)} credits\n"
+        message += f"Valid until: {expiry_date} (30 days)\n"
+        message += f"Transaction ID: {reference_code}\n"
+        message += f"Date: {timestamp}\n\n"
+        message += "Your credits are ready to use."
+
         return message
     
     # PAYNOW USD ECOCASH INTEGRATION
@@ -659,6 +591,7 @@ class PaymentService:
             if payment_result['success']:
                 # Store payment transaction in database
                 # Note: Only include columns that exist in payment_transactions table schema
+                # Use 'poll_url' instead of 'paynow_poll_url' (column doesn't exist in schema)
                 payment_data = {
                     'user_id': user_id,
                     'package_id': package_id,
@@ -668,50 +601,54 @@ class PaymentService:
                     'status': 'initiated',  # Paynow-specific status
                     'payment_method': 'paynow_ecocash',
                     'credits_added': 0,
-                    'paynow_poll_url': payment_result.get('poll_url'),
+                    'poll_url': payment_result.get('poll_url'),  # Use poll_url (not paynow_poll_url)
                     'admin_notes': f"Phone: {phone_number} | Email: {email} | Poll URL: {payment_result.get('poll_url')}"
                 }
                 
-                # Save to payment_transactions table
-                result = make_supabase_request("POST", "payment_transactions", payment_data)
+                # Save to payment_transactions table (non-blocking - payment prompt already sent successfully)
+                try:
+                    result = make_supabase_request("POST", "payment_transactions", payment_data)
+                    if result:
+                        logger.info(f"Paynow payment initiated: {reference_code}")
+                    else:
+                        logger.warning(f"Payment prompt sent successfully but failed to save transaction to database: {reference_code}")
+                except Exception as db_error:
+                    logger.warning(f"Payment prompt sent successfully but database save failed: {reference_code} - {db_error}")
                 
-                if result:
-                    logger.info(f"Paynow payment initiated: {reference_code}")
-                    
-                    # Start background payment monitoring
-                    poll_url = payment_result.get('poll_url')
-                    if poll_url:
-                        self._start_payment_monitoring(reference_code, poll_url, user_id)
-                    
-                    message = f"💳 **PAYNOW USD ECOCASH PAYMENT**\n\n" \
-                              f"📱 **Payment initiated to {phone_number}**\n" \
-                              f"💰 **Amount**: ${package['price']:.2f} USD\n" \
-                              f"📞 **EcoCash Number**: {phone_number}\n" \
-                              f"🔢 **Reference**: {reference_code}\n\n" \
-                              f"{payment_result['instructions']}\n\n" \
-                              f"⏰ **Status will be updated automatically once payment is confirmed.**"
+                # Start background payment monitoring (payment prompt was sent, so monitor it)
+                poll_url = payment_result.get('poll_url')
+                if poll_url:
+                    self._start_payment_monitoring(reference_code, poll_url, user_id)
+                
+                message = f"💳 **PAYNOW USD ECOCASH PAYMENT**\n\n" \
+                          f"📱 **Payment initiated to {phone_number}**\n" \
+                          f"💰 **Amount**: ${package['price']:.2f} USD\n" \
+                          f"📞 **EcoCash Number**: {phone_number}\n" \
+                          f"🔢 **Reference**: {reference_code}\n\n" \
+                          f"{payment_result['instructions']}\n\n" \
+                          f"⏰ **Status will be updated automatically once payment is confirmed.**"
 
-                    # Add Test Mode Information if active
-                    if os.environ.get('PAYNOW_TEST_MODE', 'true').lower() == 'true':
-                         message += "\n\n🧪 **TEST MODE ACTIVE**\n" \
-                                   "Use these numbers to simulate results:\n" \
-                                   "✅ Success: 0771111111\n" \
-                                   "⏱️ Delayed: 0772222222\n" \
-                                   "❌ Cancel: 0773333333\n" \
-                                   "🚫 No Funds: 0774444444"
+                # Add Test Mode Information if active
+                if os.environ.get('PAYNOW_TEST_MODE', 'true').lower() == 'true':
+                     message += "\n\n🧪 **TEST MODE ACTIVE**\n" \
+                               "Use these numbers to simulate results:\n" \
+                               "✅ Success: 0771111111\n" \
+                               "⏱️ Delayed: 0772222222\n" \
+                               "❌ Cancel: 0773333333\n" \
+                               "🚫 No Funds: 0774444444"
 
-                    return {
-                        'success': True,
-                        'payment_type': 'paynow',
-                        'reference_code': reference_code,
-                        'instructions': payment_result['instructions'],
-                        'poll_url': payment_result['poll_url'],
-                        'status': 'initiated',
-                        'message': message,
-                        'package': package
-                    }
-                else:
-                    return {'success': False, 'message': 'Failed to save payment transaction'}
+                # Return success - payment prompt was sent successfully
+                # Database save failure is non-blocking (just for tracking purposes)
+                return {
+                    'success': True,
+                    'payment_type': 'paynow',
+                    'reference_code': reference_code,
+                    'instructions': payment_result['instructions'],
+                    'poll_url': payment_result['poll_url'],
+                    'status': 'initiated',
+                    'message': message,
+                    'package': package
+                }
             else:
                 logger.error(f"Paynow payment failed: {payment_result.get('error')}")
                 # Fall back to manual payment process
@@ -747,8 +684,8 @@ class PaymentService:
             payment = result[0]
             current_status = payment.get('status', 'unknown')
             
-            # Extract poll_url from admin_notes if not directly available
-            poll_url = payment.get('paynow_poll_url')
+            # Extract poll_url from payment record
+            poll_url = payment.get('poll_url')  # Use poll_url (paynow_poll_url doesn't exist in schema)
             if not poll_url:
                 admin_notes = payment.get('admin_notes', '')
                 if 'Poll URL:' in admin_notes:

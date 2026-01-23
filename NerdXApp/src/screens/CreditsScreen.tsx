@@ -212,26 +212,32 @@ const CreditsScreen: React.FC = () => {
           handlePaymentInitiated(result);
         }
       } catch (apiError: any) {
-        // Handle specific error cases
-        console.error('Payment initiation error:', apiError);
+        // Check if payment was actually successful despite the error
+        // This handles cases where database save fails but payment prompt was sent
+        const latestPayment = await creditsApi.getLatestPayment();
+        if (latestPayment && latestPayment.reference) {
+          // Payment was actually successful - don't show error to user
+          console.log('✅ Payment prompt sent successfully (verified via latest payment check)');
+          handlePaymentInitiated(latestPayment);
+          return;
+        }
 
-        // If it looks like a timeout but passing 504/500, it might have actually sent the push
-        // But we safely show the error message returned by API if available
+        // Only show error if we confirmed payment was NOT sent
         const errorMessage = apiError.response?.data?.message || apiError.message || 'Failed to initiate purchase';
-
+        
+        // Don't log as error if it's a timeout - might have actually sent
         if (errorMessage.toLowerCase().includes('timeout') || !apiError.response) {
-          const latestPayment = await creditsApi.getLatestPayment();
-          if (latestPayment && latestPayment.reference) {
-            handlePaymentInitiated(latestPayment);
-            return;
-          }
-
+          console.warn('⚠️ Payment initiation timeout - payment may have been sent');
           Alert.alert(
             'Connection Issue',
-            'We could not confirm that the payment prompt was sent. Please try again.',
+            'We could not confirm that the payment prompt was sent. Please check your phone for the payment prompt, or try again.',
             [{ text: 'OK' }]
           );
         } else {
+          // Only log actual errors (not database save failures when payment was sent)
+          if (!errorMessage.toLowerCase().includes('save') && !errorMessage.toLowerCase().includes('transaction')) {
+            console.error('Payment initiation error:', apiError);
+          }
           Alert.alert('Error', errorMessage);
         }
         // Don't close modal on error so user can try again easily
