@@ -9,6 +9,7 @@ import time
 import logging
 import random
 from typing import Dict, List, Optional, Any, Tuple
+from utils.deepseek import get_deepseek_chat_model
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +19,7 @@ class CombinedScienceGenerator:
     def __init__(self):
         self.api_key = os.environ.get('DEEPSEEK_API_KEY')
         self.api_url = 'https://api.deepseek.com/chat/completions'
+        self.deepseek_model = get_deepseek_chat_model()
         
         # O-Level appropriate settings
         self.max_retries = 2
@@ -1277,7 +1279,7 @@ Generate a high-quality, professional exam-style {question_style.replace('_', ' 
         }
         
         data = {
-            "model": "deepseek-chat",
+            "model": self.deepseek_model,
             "messages": [
                 {
                     "role": "system",

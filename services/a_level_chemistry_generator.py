@@ -9,6 +9,7 @@ import requests
 import os
 from typing import Dict, Optional
 from constants import A_LEVEL_CHEMISTRY_TOPICS, A_LEVEL_CHEMISTRY_ALL_TOPICS
+from utils.deepseek import get_deepseek_chat_model
 
 logger = logging.getLogger(__name__)
 
@@ -237,6 +238,7 @@ class ALevelChemistryGenerator:
     def __init__(self):
         self.deepseek_api_key = os.environ.get('DEEPSEEK_API_KEY')
         self.deepseek_url = "https://api.deepseek.com/v1/chat/completions"
+        self.deepseek_model = get_deepseek_chat_model()
         self.timeout = 45  # Base timeout for chemistry questions
         self.max_retries = 3  # Retry up to 3 times
     
@@ -609,7 +611,7 @@ CRITICAL: Use PLAIN TEXT Unicode notation - NEVER use LaTeX or $ symbols:
 Always respond with valid JSON containing step-by-step solutions."""
                 
                 payload = {
-                    "model": "deepseek-chat",
+                    "model": self.deepseek_model,
                     "messages": [
                         {
                             "role": "system",

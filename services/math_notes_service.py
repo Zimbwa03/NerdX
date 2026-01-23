@@ -8,6 +8,7 @@ import json
 import logging
 import requests
 from typing import Dict, Optional, List
+from utils.deepseek import get_deepseek_chat_model
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +16,7 @@ class MathNotesService:
     def __init__(self):
         self.api_key = os.environ.get('DEEPSEEK_API_KEY')
         self.api_url = 'https://api.deepseek.com/chat/completions'
+        self.deepseek_model = get_deepseek_chat_model()
         self.timeout = 120  # Math notes can be long
         
         if not self.api_key:
@@ -37,7 +39,7 @@ class MathNotesService:
                     'Content-Type': 'application/json'
                 },
                 json={
-                    'model': 'deepseek-chat',
+                    'model': self.deepseek_model,
                     'messages': [
                         {'role': 'system', 'content': "You are an expert ZIMSEC O-Level Mathematics teacher. You provide professional, comprehensive, and clear notes."},
                         {'role': 'user', 'content': prompt}

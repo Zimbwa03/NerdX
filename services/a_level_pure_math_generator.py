@@ -11,6 +11,7 @@ import os
 import re
 from typing import Dict, Optional, List
 from constants import A_LEVEL_PURE_MATH_TOPICS, A_LEVEL_PURE_MATH_ALL_TOPICS
+from utils.deepseek import get_deepseek_chat_model
 
 logger = logging.getLogger(__name__)
 
@@ -171,6 +172,7 @@ class ALevelPureMathGenerator:
     def __init__(self):
         self.deepseek_api_key = os.environ.get('DEEPSEEK_API_KEY')
         self.deepseek_url = "https://api.deepseek.com/v1/chat/completions"
+        self.deepseek_model = get_deepseek_chat_model()
         self.max_retries = 2  # Reduced retries to prevent worker timeout
         self.timeout = 30  # Shorter timeout to prevent worker death
         self.graph_service = None  # Lazy init to avoid heavy imports unless needed
@@ -592,7 +594,7 @@ Generate ONE A Level Pure Mathematics structured question now:"""
                 }
                 
                 payload = {
-                    "model": "deepseek-chat",
+                    "model": self.deepseek_model,
                     "messages": [
                         {
                             "role": "system",

@@ -12,6 +12,7 @@ import uuid
 from typing import Optional, Dict, List
 
 import requests
+from utils.deepseek import get_deepseek_chat_model
 
 # Try to import google-genai SDK (Vertex AI)
 try:
@@ -26,6 +27,7 @@ except ImportError:
 from config import Config
 
 logger = logging.getLogger(__name__)
+DEEPSEEK_CHAT_MODEL = get_deepseek_chat_model()
 
 class EnglishService:
     def __init__(self):
@@ -512,7 +514,7 @@ Return ONLY valid JSON strictly using this structure (no markdown fences or comm
             }
 
             payload = {
-                'model': 'deepseek-chat',
+                'model': DEEPSEEK_CHAT_MODEL,
                 'messages': [
                     {'role': 'system', 'content': system_prompt},
                     {'role': 'user', 'content': user_prompt}
@@ -807,7 +809,7 @@ Return ONLY valid JSON:
             }
             
             payload = {
-                'model': 'deepseek-chat',
+                'model': DEEPSEEK_CHAT_MODEL,
                 'messages': [
                     {'role': 'system', 'content': system_prompt},
                     {'role': 'user', 'content': user_prompt}
@@ -1266,7 +1268,7 @@ Return ONLY valid JSON in this exact format (NO markdown formatting, NO addition
                     "Content-Type": "application/json"
                 },
                 json={
-                    "model": "deepseek-chat",
+                    "model": DEEPSEEK_CHAT_MODEL,
                     "messages": [
                         {"role": "system", "content": "You are Dr. Muzenda, an EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER with 15+ years experience. You create professional ZIMSEC-aligned comprehension exercises for Zimbabwean students. Strictly ZIMSEC format only - no foreign syllabus contamination."},
                         {"role": "user", "content": prompt}
@@ -1359,7 +1361,7 @@ Return valid JSON with the exact format requested (no markdown, no code blocks, 
             }
 
             payload = {
-                'model': 'deepseek-chat',
+                'model': DEEPSEEK_CHAT_MODEL,
                 'messages': [{'role': 'user', 'content': enhanced_prompt}],
                 'max_tokens': 2500,
                 'temperature': 0.3
@@ -1454,7 +1456,7 @@ Return ONLY valid JSON:
             }
 
             payload = {
-                'model': 'deepseek-chat',
+                'model': DEEPSEEK_CHAT_MODEL,
                 'messages': [{'role': 'user', 'content': prompt}],
                 'max_tokens': 2000,
                 'temperature': 0.3
@@ -1586,7 +1588,7 @@ Return ONLY valid JSON (NO markdown formatting, NO additional text):
             }
 
             payload = {
-                'model': 'deepseek-chat',
+                'model': DEEPSEEK_CHAT_MODEL,
                 'messages': [{'role': 'user', 'content': prompt}],
                 'max_tokens': 1500,
                 'temperature': 0.3
@@ -1863,7 +1865,7 @@ Return ONLY valid JSON:
                     "Content-Type": "application/json"
                 },
                 json={
-                    "model": "deepseek-chat",
+                    "model": DEEPSEEK_CHAT_MODEL,
                     "messages": [
                         {"role": "system", "content": "You are a ZIMSEC English examiner."},
                         {"role": "user", "content": prompt}
@@ -2115,7 +2117,7 @@ Return ONLY valid JSON (NO markdown formatting, NO additional text):
                     "Content-Type": "application/json"
                 },
                 json={
-                    "model": "deepseek-chat",
+                    "model": DEEPSEEK_CHAT_MODEL,
                     "messages": [
                         {"role": "system", "content": "You are Dr. Muzenda, an EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER with 15+ years experience. You create professional ZIMSEC-aligned guided composition prompts for Zimbabwean students. Strictly ZIMSEC format only - no foreign syllabus contamination."},
                         {"role": "user", "content": prompt}
@@ -2378,7 +2380,7 @@ Return ONLY valid JSON (NO markdown formatting, NO additional text):
                     "Content-Type": "application/json"
                 },
                 json={
-                    "model": "deepseek-chat",
+                    "model": DEEPSEEK_CHAT_MODEL,
                     "messages": [
                         {"role": "system", "content": "You are a ZIMSEC English examiner."},
                         {"role": "user", "content": prompt_intro + prompt_criteria}
@@ -2653,7 +2655,7 @@ Return ONLY valid JSON (NO markdown formatting, NO additional text):
                     "Content-Type": "application/json"
                 },
                 json={
-                    "model": "deepseek-chat",
+                    "model": DEEPSEEK_CHAT_MODEL,
                     "messages": [
                         {"role": "system", "content": "You are a ZIMSEC English examiner."},
                         {"role": "user", "content": prompt_intro + prompt_criteria}

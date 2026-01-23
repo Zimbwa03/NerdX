@@ -74,6 +74,8 @@ const QuizScreen: React.FC = () => {
   const [result, setResult] = useState<AnswerResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [generatingQuestion, setGeneratingQuestion] = useState(false);
+  const [streamingStatus, setStreamingStatus] = useState<string | null>(null);
+  const [streamingStage, setStreamingStage] = useState<string | null>(null);
   const [showHint, setShowHint] = useState(false);
   const [questionCount, setQuestionCount] = useState(1);
 
@@ -116,6 +118,8 @@ const QuizScreen: React.FC = () => {
     ? 'Loading exam question...'
     : (topic?.name ? `Preparing ${topic.name} question...` : 'Preparing next question...');
   const loadingTime = isExamMode ? 5 : (isMathSubject ? 6 : 7);
+  const overlayMessage = streamingStatus ?? loadingMessage;
+  const overlayStage = streamingStage ?? 'Preparing';
 
   // Initial fetch for exam mode OR review mode if no question provided
   useEffect(() => {
@@ -482,6 +486,8 @@ const QuizScreen: React.FC = () => {
     try {
       setLoading(true);
       setGeneratingQuestion(true); // Show loading progress
+      setStreamingStatus(null);
+      setStreamingStage(null);
       let newQuestion: Question | null = null;
 
       if (isExamMode) {
@@ -565,19 +571,47 @@ const QuizScreen: React.FC = () => {
             ? 'structured'
             : undefined;
 
-        // Use standard generation for all subjects (stable, no streaming)
-        newQuestion = await quizApi.generateQuestion(
-          subject.id,
-          topic?.id,
-          'medium',  // difficulty
-          topic ? 'topical' : 'exam',  // type
-          topic?.parent_subject,  // parent_subject for Combined Science
-          nextQuestionType,  // Preserve question type (mcq, structured, essay)
-          nextQuestionFormat,  // questionFormat (keep structured for Combined Science)
-          nextQuestionType,  // Also pass as question_type for backend compatibility
-          mixImagesEnabled,  // Enable Vertex AI image questions
-          questionCount + 1   // Pass the next question number
-        );
+        const canStreamMath = subject?.id === 'mathematics' && !!topic?.id;
+
+        if (canStreamMath) {
+          try {
+            newQuestion = await quizApi.generateQuestionStream(
+              subject.id,
+              topic?.id || 'Algebra',
+              'medium',
+              {
+                onThinking: (update) => {
+                  if (update.content) {
+                    setStreamingStatus(update.content);
+                  }
+                  if (update.stage && update.total_stages) {
+                    setStreamingStage(`Thinking ${update.stage}/${update.total_stages}`);
+                  } else {
+                    setStreamingStage('Thinking');
+                  }
+                },
+              }
+            );
+          } catch (streamError) {
+            console.warn('Streaming generation failed, falling back to standard generation', streamError);
+          }
+        }
+
+        if (!newQuestion) {
+          // Use standard generation when streaming is unavailable or unsupported
+          newQuestion = await quizApi.generateQuestion(
+            subject.id,
+            topic?.id,
+            'medium',  // difficulty
+            topic ? 'topical' : 'exam',  // type
+            topic?.parent_subject,  // parent_subject for Combined Science
+            nextQuestionType,  // Preserve question type (mcq, structured, essay)
+            nextQuestionFormat,  // questionFormat (keep structured for Combined Science)
+            nextQuestionType,  // Also pass as question_type for backend compatibility
+            mixImagesEnabled,  // Enable Vertex AI image questions
+            questionCount + 1   // Pass the next question number
+          );
+        }
       }
 
       if (newQuestion) {
@@ -629,6 +663,8 @@ const QuizScreen: React.FC = () => {
     } finally {
       setLoading(false);
       setGeneratingQuestion(false);
+      setStreamingStatus(null);
+      setStreamingStage(null);
     }
   };
 
@@ -1866,9 +1902,9 @@ const QuizScreen: React.FC = () => {
       {/* Loading Progress Overlay */}
       <LoadingProgress
         visible={generatingQuestion}
-        message={loadingMessage}
+        message={overlayMessage}
         estimatedTime={loadingTime}
-        stage="Preparing"
+        stage={overlayStage}
         steps={loadingSteps}
       />
     </View>

@@ -22,6 +22,7 @@ interface SimulationCardProps {
     simulation: SimulationMetadata;
     isCompleted?: boolean;
     xpEarned?: number;
+    isLocked?: boolean;
     onPress: () => void;
 }
 
@@ -44,6 +45,7 @@ export const SimulationCard: React.FC<SimulationCardProps> = ({
     simulation,
     isCompleted = false,
     xpEarned = 0,
+    isLocked = false,
     onPress,
 }) => {
     const { isDarkMode } = useTheme();
@@ -53,28 +55,34 @@ export const SimulationCard: React.FC<SimulationCardProps> = ({
 
     return (
         <TouchableOpacity
-            style={[styles.card, { backgroundColor: themedColors.background.paper }]}
+            style={[styles.card, { backgroundColor: themedColors.background.paper }, isLocked && styles.cardLocked]}
             onPress={onPress}
             activeOpacity={0.8}
+            disabled={isLocked}
         >
             <LinearGradient
                 colors={subjectColors.gradient}
-                style={styles.iconContainer}
+                style={[styles.iconContainer, isLocked && styles.iconContainerLocked]}
             >
                 <Ionicons
                     name={getIconName(simulation.icon)}
                     size={32}
-                    color="#FFFFFF"
+                    color={isLocked ? "rgba(255,255,255,0.5)" : "#FFFFFF"}
                 />
-                {isCompleted && (
+                {isCompleted && !isLocked && (
                     <View style={styles.completedBadge}>
                         <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
+                    </View>
+                )}
+                {isLocked && (
+                    <View style={styles.lockBadge}>
+                        <Ionicons name="lock-closed" size={20} color="#FFF" />
                     </View>
                 )}
             </LinearGradient>
 
             <Text
-                style={[styles.title, { color: themedColors.text.primary }]}
+                style={[styles.title, { color: isLocked ? themedColors.text.secondary : themedColors.text.primary }]}
                 numberOfLines={2}
             >
                 {simulation.title}
@@ -95,7 +103,7 @@ export const SimulationCard: React.FC<SimulationCardProps> = ({
                 </Text>
 
                 <View style={styles.xpContainer}>
-                    <Ionicons name="star" size={14} color="#FFD700" />
+                    <Ionicons name="star" size={14} color={isLocked ? "#999" : "#FFD700"} />
                     <Text style={[styles.xpText, { color: themedColors.text.secondary }]}>
                         {isCompleted ? xpEarned : simulation.xpReward} XP
                     </Text>
@@ -108,6 +116,22 @@ export const SimulationCard: React.FC<SimulationCardProps> = ({
             >
                 ⏱️ {simulation.estimatedTime}
             </Text>
+
+            {/* Lock Overlay */}
+            {isLocked && (
+                <View style={styles.lockOverlay}>
+                    <LinearGradient
+                        colors={['rgba(0,0,0,0.6)', 'rgba(0,0,0,0.8)']}
+                        style={styles.lockOverlayGradient}
+                    >
+                        <View style={[styles.lockIconOverlay, { backgroundColor: subjectColors.primary }]}>
+                            <Ionicons name="lock-closed" size={32} color="#FFF" />
+                        </View>
+                        <Text style={styles.lockOverlayText}>Premium</Text>
+                        <Text style={styles.lockOverlaySubtext}>Purchase credits to unlock</Text>
+                    </LinearGradient>
+                </View>
+            )}
         </TouchableOpacity>
     );
 };
@@ -123,6 +147,10 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
+        position: 'relative',
+    },
+    cardLocked: {
+        opacity: 0.7,
     },
     iconContainer: {
         width: 56,
@@ -133,12 +161,65 @@ const styles = StyleSheet.create({
         marginBottom: 12,
         position: 'relative',
     },
+    iconContainerLocked: {
+        opacity: 0.6,
+    },
     completedBadge: {
         position: 'absolute',
         top: -4,
         right: -4,
         backgroundColor: '#FFFFFF',
         borderRadius: 10,
+    },
+    lockBadge: {
+        position: 'absolute',
+        top: -4,
+        right: -4,
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        borderRadius: 10,
+        padding: 4,
+    },
+    lockOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        borderRadius: 16,
+        overflow: 'hidden',
+        zIndex: 10,
+    },
+    lockOverlayGradient: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 12,
+    },
+    lockIconOverlay: {
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 8,
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+    },
+    lockOverlayText: {
+        fontSize: 12,
+        fontWeight: 'bold',
+        color: '#FFF',
+        marginTop: 4,
+        textAlign: 'center',
+    },
+    lockOverlaySubtext: {
+        fontSize: 10,
+        color: 'rgba(255,255,255,0.8)',
+        textAlign: 'center',
+        marginTop: 2,
     },
     title: {
         fontSize: 14,

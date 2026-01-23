@@ -44,21 +44,37 @@ const VirtualLabScreen: React.FC = () => {
     const totalXP = allSimulations.reduce((sum, sim) => sum + sim.xpReward, 0);
     const totalSimulations = allSimulations.length;
 
-    const handleSimulationPress = (simulationId: string) => {
+    // Determine if a simulation is locked
+    const isSimulationLocked = (simulationId: string): boolean => {
         const hasPaidCredits = (user?.credit_breakdown?.purchased_credits ?? 0) > 0;
-        if (!hasPaidCredits) {
-            const simulation = allSimulations.find(sim => sim.id === simulationId);
-            if (simulation) {
-                const subjectSims = allSimulations.filter(sim => sim.subject === simulation.subject);
-                const subjectIndex = subjectSims.findIndex(sim => sim.id === simulationId);
-                if (subjectIndex >= 3) {
-                    Alert.alert(
-                        'Locked Simulation',
-                        'This simulation is locked. Purchase credits to unlock all simulations.'
-                    );
-                    return;
-                }
-            }
+        if (hasPaidCredits) {
+            return false; // All unlocked for paid users
+        }
+        
+        const simulation = allSimulations.find(sim => sim.id === simulationId);
+        if (simulation) {
+            const subjectSims = allSimulations.filter(sim => sim.subject === simulation.subject);
+            const subjectIndex = subjectSims.findIndex(sim => sim.id === simulationId);
+            // First 3 simulators (indices 0, 1, 2) are free, rest are locked
+            return subjectIndex >= 3;
+        }
+        return false;
+    };
+
+    const handleSimulationPress = (simulationId: string) => {
+        if (isSimulationLocked(simulationId)) {
+            Alert.alert(
+                'Locked Simulation',
+                'This simulation is locked. Purchase credits to unlock all simulations.',
+                [
+                    { text: 'Cancel', style: 'cancel' },
+                    { 
+                        text: 'Buy Credits', 
+                        onPress: () => navigation.navigate('Credits' as never)
+                    }
+                ]
+            );
+            return;
         }
 
         // Map simulation IDs to screen names
@@ -218,6 +234,7 @@ const VirtualLabScreen: React.FC = () => {
                         <SimulationCard
                             key={simulation.id}
                             simulation={simulation}
+                            isLocked={isSimulationLocked(simulation.id)}
                             onPress={() => handleSimulationPress(simulation.id)}
                         />
                     ))}

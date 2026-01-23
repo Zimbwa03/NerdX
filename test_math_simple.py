@@ -7,6 +7,7 @@ import os
 import requests
 import json
 import logging
+from utils.deepseek import get_deepseek_chat_model
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -68,7 +69,7 @@ Generate the question now:"""
             }
             
             data = {
-                'model': 'deepseek-chat',
+                'model': get_deepseek_chat_model(),
                 'messages': [
                     {
                         'role': 'user',

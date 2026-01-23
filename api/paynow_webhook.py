@@ -26,8 +26,10 @@ def paynow_webhook():
     try:
         # Paynow can send GET or POST - handle both
         if request.method == 'POST':
+            raw_payload = request.get_data(as_text=True) or ''
             webhook_data = request.form.to_dict()
         else:
+            raw_payload = request.query_string.decode('utf-8') if request.query_string else ''
             webhook_data = request.args.to_dict()
         
         if not webhook_data:
@@ -41,7 +43,7 @@ def paynow_webhook():
         logger.info(f"📋 Full data: {webhook_data}")
         
         # Process result through payment service
-        result = payment_service.process_paynow_webhook(webhook_data)
+        result = payment_service.process_paynow_webhook(webhook_data, raw_payload=raw_payload)
         
         if result['success']:
             if result.get('approved'):
@@ -66,7 +68,7 @@ def paynow_webhook():
 def paynow_return():
     """
     Handle Paynow return URL (customer redirect after payment)
-    
+
     This is where customers are redirected after completing payment on Paynow
     """
     try:
@@ -77,133 +79,19 @@ def paynow_return():
         else:
             reference = request.args.get('reference', '')
             status = request.args.get('status', 'unknown')
-        
+
         logger.info(f"🔄 Paynow return URL called: reference={reference}, status={status}")
         logger.info(f"📋 Request method: {request.method}, Form data: {dict(request.form) if request.method == 'POST' else dict(request.args)}")
-        
+
         if reference:
-            # Paynow sends payment status in the return URL
-            # Check all possible status values that indicate success
-            status_upper = status.upper() if status else ''
-            
-            # IMPORTANT: Paynow uses return URL to notify of payment status
-            # If status indicates payment was successful, approve immediately
-            if status_upper in ['PAID', 'SUCCESS', 'SUCCESSFUL', 'OK', 'COMPLETED']:
-                logger.info(f"✅ Payment confirmed via return URL: {reference} - Status: {status}")
-                
-                # Try to approve the payment immediately
-                approval_result = payment_service.approve_paynow_payment(reference)
-                
-                if approval_result['success']:
-                    logger.info(f"✅ Payment {reference} approved via return URL - {approval_result.get('credits_added', 0)} credits added")
-                    
-                    # Show success page with credits info
-                    credits_added = approval_result.get('credits_added', 0)
-                    return f"""
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <title>Payment Successful - NerdX</title>
-                        <meta http-equiv="refresh" content="5;url=https://wa.me/2635494594">
-                        <style>
-                            body {{ 
-                                font-family: Arial, sans-serif; 
-                                text-align: center; 
-                                padding: 50px;
-                                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                                color: white;
-                            }}
-                            .success-box {{ 
-                                background: white; 
-                                color: #333; 
-                                padding: 40px; 
-                                border-radius: 15px; 
-                                max-width: 500px; 
-                                margin: 0 auto;
-                                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-                            }}
-                            h1 {{ color: #28a745; font-size: 32px; }}
-                            .credits {{ 
-                                background: #d4edda; 
-                                color: #155724; 
-                                padding: 15px; 
-                                border-radius: 8px; 
-                                margin: 20px 0;
-                                font-size: 18px;
-                                font-weight: bold;
-                            }}
-                            .reference {{ 
-                                background: #f8f9fa; 
-                                padding: 10px; 
-                                border-radius: 5px; 
-                                margin: 20px 0;
-                                font-family: monospace;
-                            }}
-                        </style>
-                    </head>
-                    <body>
-                        <div class="success-box">
-                            <h1>🎉 Payment Successful!</h1>
-                            <p><strong>Your payment has been confirmed!</strong></p>
-                            <div class="credits">💎 {credits_added} Credits Added to Your Account</div>
-                            <div class="reference">Reference: {reference}</div>
-                            <p>✅ Credits are now available in your NerdX account.</p>
-                            <p>You can now return to WhatsApp to continue your learning journey!</p>
-                            <p>💬 <em>Redirecting to WhatsApp in 5 seconds...</em></p>
-                        </div>
-                    </body>
-                    </html>
-                    """
-                else:
-                    logger.error(f"❌ Failed to approve payment {reference} via return URL: {approval_result.get('message')}")
-                    # Still show success page but mention manual review
-                    return f"""
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <title>Payment Received - NerdX</title>
-                        <style>
-                            body {{ 
-                                font-family: Arial, sans-serif; 
-                                text-align: center; 
-                                padding: 50px;
-                                background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-                                color: #333;
-                            }}
-                            .info-box {{ 
-                                background: white; 
-                                padding: 40px; 
-                                border-radius: 15px; 
-                                max-width: 500px; 
-                                margin: 0 auto;
-                                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-                            }}
-                            h1 {{ color: #ffc107; }}
-                        </style>
-                    </head>
-                    <body>
-                        <div class="info-box">
-                            <h1>⏳ Payment Processing</h1>
-                            <p><strong>Your payment has been received and is being processed.</strong></p>
-                            <div class="reference">Reference: {reference}</div>
-                            <p>Credits will be added to your account shortly. Please check WhatsApp for confirmation.</p>
-                            <p>💬 <em>Return to WhatsApp to check your balance.</em></p>
-                        </div>
-                    </body>
-                    </html>
-                    """
-            
-            # If status is not clearly successful, check with Paynow API using poll_url
-            # This is a fallback to verify payment status
-            logger.info(f"🔍 Status '{status}' not clearly successful, checking with Paynow API...")
+            # Return URL is user-facing; verify with Paynow poll before approving
             payment_status = payment_service.check_paynow_payment_status(reference)
-            
-            if payment_status['success'] and payment_status.get('paid'):
-                # Payment confirmed via API check - approve it
+
+            if payment_status.get('success') and payment_status.get('paid'):
                 logger.info(f"✅ Payment {reference} confirmed via API check - approving...")
                 approval_result = payment_service.approve_paynow_payment(reference)
-                
-                if approval_result['success']:
+
+                if approval_result.get('success'):
                     credits_added = approval_result.get('credits_added', 0)
                     return f"""
                     <!DOCTYPE html>
@@ -260,9 +148,12 @@ def paynow_return():
                     </body>
                     </html>
                     """
-            
-            # Payment status unclear or not yet paid
-            logger.info(f"⏳ Payment {reference} status: {payment_status.get('status', 'unknown')} - not yet confirmed")
+
+                logger.error(f"❌ Failed to approve payment {reference} via return URL: {approval_result.get('message')}")
+
+            # Not yet confirmed or approval failed
+            display_status = payment_status.get('status', status)
+            logger.info(f"⏳ Payment {reference} status: {display_status} - not yet confirmed")
             return f"""
             <!DOCTYPE html>
             <html>
@@ -299,51 +190,51 @@ def paynow_return():
                     <h1>⏳ Payment Processing</h1>
                     <p><strong>Your payment is being processed. This may take a few minutes.</strong></p>
                     <div class="reference">Reference: {reference}</div>
-                    <p>Status: {status}</p>
+                    <p>Status: {display_status}</p>
                     <p>We'll notify you on WhatsApp once your credits are added!</p>
                     <p>💬 <em>Check back with our bot in a few minutes.</em></p>
                 </div>
             </body>
             </html>
             """
-        else:
-            return f"""
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Payment Status - NerdX</title>
-                <style>
-                    body {{ 
-                        font-family: Arial, sans-serif; 
-                        text-align: center; 
-                        padding: 50px;
-                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                        color: white;
-                    }}
-                    .info-box {{ 
-                        background: white; 
-                        color: #333; 
-                        padding: 40px; 
-                        border-radius: 15px; 
-                        max-width: 500px; 
-                        margin: 0 auto;
-                        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-                    }}
-                </style>
-            </head>
-            <body>
-                <div class="info-box">
-                    <h1>🏠 Welcome to NerdX Payments</h1>
-                    <p>Return to WhatsApp to continue with your payment or start learning!</p>
-                    <p>💬 <em>Message our bot to get started.</em></p>
-                </div>
-            </body>
-            </html>
-            """
-            
+
+        return """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Payment Status - NerdX</title>
+            <style>
+                body {{ 
+                    font-family: Arial, sans-serif; 
+                    text-align: center; 
+                    padding: 50px;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                }}
+                .info-box {{ 
+                    background: white; 
+                    color: #333; 
+                    padding: 40px; 
+                    border-radius: 15px; 
+                    max-width: 500px; 
+                    margin: 0 auto;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="info-box">
+                <h1>🏠 Welcome to NerdX Payments</h1>
+                <p>Return to WhatsApp to continue with your payment or start learning!</p>
+                <p>💬 <em>Message our bot to get started.</em></p>
+            </div>
+        </body>
+        </html>
+        """
+
     except Exception as e:
         logger.error(f"🚨 Paynow return handler error: {e}")
-        return f"""
+        return """
         <!DOCTYPE html>
         <html>
         <head>
@@ -376,6 +267,7 @@ def paynow_return():
         </body>
         </html>
         """
+
 
 @paynow_webhook_bp.route('/webhook/paynow/status/<reference_code>', methods=['GET'])
 def check_paynow_status(reference_code):

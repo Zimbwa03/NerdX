@@ -8,8 +8,10 @@ import os
 from typing import Dict, Optional
 
 import requests
+from utils.deepseek import get_deepseek_chat_model
 
 logger = logging.getLogger(__name__)
+DEEPSEEK_CHAT_MODEL = get_deepseek_chat_model()
 
 
 class EnglishTeacherService:
@@ -176,7 +178,7 @@ Current conversation context will be provided with each message."""
                     "Content-Type": "application/json",
                 }
                 payload = {
-                    "model": "deepseek-chat",
+                    "model": DEEPSEEK_CHAT_MODEL,
                     "messages": [{"role": "system", "content": system_prompt}, {"role": "user", "content": full_prompt}],
                     "temperature": 0.5,
                     "max_tokens": 1500,
@@ -220,5 +222,3 @@ Current conversation context will be provided with each message."""
             "key_concepts": {"overview": "Notes generation for English is available. Ask for specific subtopic notes to get a more detailed set."},
             "detailed_explanation": "Ask: 'Generate notes on <topic>' for a focused notes document.",
         }
-
-

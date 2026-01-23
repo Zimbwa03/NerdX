@@ -4,6 +4,7 @@ Quick test to verify DeepSeek API is working
 """
 import os
 import requests
+from utils.deepseek import get_deepseek_chat_model
 
 # Set the API key
 os.environ['DEEPSEEK_API_KEY'] = 'sk-5e3b99e25a5246eb8df7f480e4989677'
@@ -23,7 +24,7 @@ headers = {
 }
 
 data = {
-    'model': 'deepseek-chat',
+    'model': get_deepseek_chat_model(),
     'messages': [{'role': 'user', 'content': 'Generate a simple math question: What is 5 + 3?'}],
     'max_tokens': 100,
     'temperature': 0.7

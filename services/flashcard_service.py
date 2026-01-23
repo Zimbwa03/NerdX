@@ -9,8 +9,10 @@ import logging
 import requests
 from typing import List, Dict, Optional
 from dataclasses import dataclass, asdict
+from utils.deepseek import get_deepseek_chat_model
 
 logger = logging.getLogger(__name__)
+DEEPSEEK_CHAT_MODEL = get_deepseek_chat_model()
 
 @dataclass
 class Flashcard:
@@ -238,7 +240,7 @@ Generate the flashcard now (JSON only):"""
         }
         
         data = {
-            'model': 'deepseek-chat',
+            'model': DEEPSEEK_CHAT_MODEL,
             'messages': [{'role': 'user', 'content': prompt}],
             'max_tokens': 4000,
             'temperature': 0.7

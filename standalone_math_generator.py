@@ -11,6 +11,7 @@ import time
 import logging
 from typing import Dict, List, Optional
 from datetime import datetime
+from utils.deepseek import get_deepseek_chat_model
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -22,6 +23,7 @@ class StandaloneMathGenerator:
     def __init__(self):
         self.api_key = os.environ.get('DEEPSEEK_API_KEY')
         self.api_url = 'https://api.deepseek.com/chat/completions'
+        self.deepseek_model = get_deepseek_chat_model()
 
         # Optimized settings for DeepSeek API V3.1
         self.max_retries = 3
@@ -125,7 +127,7 @@ Generate the question now:"""
         }
 
         data = {
-            'model': 'deepseek-chat',
+            'model': self.deepseek_model,
             'messages': [{'role': 'user', 'content': prompt}],
             'max_tokens': 2500,
             'temperature': 0.7,

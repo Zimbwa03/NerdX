@@ -10,6 +10,7 @@ import requests
 import os
 from typing import Dict, Optional, List
 from constants import A_LEVEL_BIOLOGY_TOPICS, A_LEVEL_BIOLOGY_ALL_TOPICS
+from utils.deepseek import get_deepseek_chat_model
 
 logger = logging.getLogger(__name__)
 
@@ -187,6 +188,7 @@ class ALevelBiologyGenerator:
         # DeepSeek configuration (primary)
         self.deepseek_api_key = os.environ.get('DEEPSEEK_API_KEY')
         self.deepseek_url = "https://api.deepseek.com/v1/chat/completions"
+        self.deepseek_model = get_deepseek_chat_model()
         self.max_retries = 3  # 3 attempts for DeepSeek (increased for reliability)
         # Timeout varies by question type - structured/essay need more time
         # Increased timeouts to handle longer AI generation times
@@ -678,7 +680,7 @@ Generate now:"""
                 }
                 
                 payload = {
-                    "model": "deepseek-chat",
+                    "model": self.deepseek_model,
                     "messages": [
                         {
                             "role": "system",
@@ -1055,4 +1057,3 @@ Always respond with valid JSON containing step-by-step solutions."""
 
 # Singleton instance
 a_level_biology_generator = ALevelBiologyGenerator()
-

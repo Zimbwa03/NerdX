@@ -14,8 +14,10 @@ from database.external_db import make_supabase_request, get_user_credits, deduct
 from utils.credit_units import format_credits
 from services.advanced_credit_service import advanced_credit_service
 from services.vertex_service import vertex_service
+from utils.deepseek import get_deepseek_chat_model
 
 logger = logging.getLogger(__name__)
+DEEPSEEK_CHAT_MODEL = get_deepseek_chat_model()
 
 # Import requests for DeepSeek API
 import requests
@@ -550,7 +552,7 @@ Current conversation context will be provided with each message."""
                         self.deepseek_api_url,
                         headers={'Authorization': f'Bearer {self.deepseek_api_key}', 'Content-Type': 'application/json'},
                         json={
-                            'model': 'deepseek-chat',
+                            'model': DEEPSEEK_CHAT_MODEL,
                             'messages': [
                                 {'role': 'system', 'content': system_prompt},
                                 {'role': 'user', 'content': full_prompt}
@@ -808,7 +810,7 @@ Current conversation context will be provided with each message."""
                             self.deepseek_api_url,
                             headers={'Authorization': f'Bearer {self.deepseek_api_key}', 'Content-Type': 'application/json'},
                             json={
-                                'model': 'deepseek-chat',
+                                'model': DEEPSEEK_CHAT_MODEL,
                                 'messages': [
                                     {'role': 'system', 'content': system_prompt},
                                     {'role': 'user', 'content': prompt}

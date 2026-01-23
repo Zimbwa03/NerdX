@@ -370,11 +370,7 @@ class UserService:
                 message += "• Click *🚀 Continue to Menu* below to see all options\n"
                 message += "• Or type *MENU* anytime to start exploring\n"
                 message += "• Type *HELP* for assistance\n\n"
-                message += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-                message += "📋 **What's Next?**\n"
-                message += "• Click *🚀 Continue* below to see the main menu\n"
-                message += "• Or type *MENU* to start exploring\n"
-                message += "• Type *HELP* anytime for assistance\n\n"
+                message += "💡 *The main menu will appear automatically in a moment...*\n\n"
                 message += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
                 # Create buttons for the completion message

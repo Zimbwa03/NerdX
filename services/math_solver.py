@@ -11,6 +11,7 @@ import requests
 import time
 from typing import Dict, List, Optional, Tuple
 from datetime import datetime
+from utils.deepseek import get_deepseek_chat_model
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,7 @@ class MathSolver:
     def __init__(self):
         self.api_key = os.environ.get('DEEPSEEK_API_KEY')
         self.api_url = 'https://api.deepseek.com/chat/completions'
+        self.deepseek_model = get_deepseek_chat_model()
         
     def analyze_answer(self, question: str, user_answer: str, correct_answer: str, solution: str) -> Dict:
         """Analyze user's answer and provide detailed feedback using DeepSeek AI"""
@@ -314,7 +316,7 @@ Provide your analysis:"""
         }
 
         data = {
-            'model': 'deepseek-chat',
+            'model': self.deepseek_model,
             'messages': [{'role': 'user', 'content': prompt}],
             'max_tokens': 2000,
             'temperature': 0.5

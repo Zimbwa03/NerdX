@@ -1,5 +1,5 @@
 // Quiz API services
-import api from './config';
+import api, { API_BASE_URL, getAuthToken } from './config';
 
 export interface Subject {
   id: string;
@@ -76,6 +76,18 @@ export interface Question {
   structured_question?: StructuredQuestion;
 }
 
+export interface StreamingThinkingUpdate {
+  content: string;
+  stage?: number;
+  total_stages?: number;
+}
+
+export interface StreamHandlers {
+  onThinking?: (update: StreamingThinkingUpdate) => void;
+  onQuestion?: (question: Question) => void;
+  onError?: (message: string) => void;
+}
+
 export interface AnswerResult {
   correct: boolean;
   feedback: string;
@@ -93,6 +105,120 @@ export interface AnswerResult {
 }
 
 export const quizApi = {
+  generateQuestionStream: async (
+    subject: string,
+    topic: string,
+    difficulty: string = 'medium',
+    handlers: StreamHandlers = {}
+  ): Promise<Question | null> => {
+    const token = await getAuthToken();
+
+    const response = await fetch(`${API_BASE_URL}/api/mobile/quiz/generate-stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({
+        subject,
+        topic,
+        difficulty,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      const message = errorText || `Server error: ${response.status}`;
+      handlers.onError?.(message);
+      throw new Error(message);
+    }
+
+    const reader = (response as any).body?.getReader?.();
+    if (!reader) {
+      // Streaming not supported in this environment; fall back to standard generation.
+      return await quizApi.generateQuestion(subject, topic, difficulty);
+    }
+
+    const decoder = typeof (globalThis as any).TextDecoder !== 'undefined'
+      ? new (globalThis as any).TextDecoder('utf-8')
+      : null;
+    const decodeChunk = (chunk: Uint8Array) => {
+      if (decoder) {
+        return decoder.decode(chunk, { stream: true });
+      }
+      let result = '';
+      for (let i = 0; i < chunk.length; i += 1) {
+        result += String.fromCharCode(chunk[i]);
+      }
+      return result;
+    };
+
+    let buffer = '';
+    let resolvedQuestion: Question | null = null;
+    let shouldStop = false;
+
+    while (!shouldStop) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      if (!value) continue;
+
+      buffer += decodeChunk(value);
+
+      let boundaryIndex = buffer.indexOf('\n\n');
+      while (boundaryIndex >= 0) {
+        const rawEvent = buffer.slice(0, boundaryIndex).trim();
+        buffer = buffer.slice(boundaryIndex + 2);
+
+        if (rawEvent) {
+          const lines = rawEvent.split('\n');
+          for (const line of lines) {
+            if (!line.startsWith('data:')) continue;
+            const dataStr = line.slice(5).trim();
+            if (!dataStr) continue;
+
+            try {
+              const eventData = JSON.parse(dataStr);
+              if (eventData.type === 'thinking') {
+                handlers.onThinking?.({
+                  content: eventData.content || '',
+                  stage: eventData.stage,
+                  total_stages: eventData.total_stages,
+                });
+              } else if (eventData.type === 'question') {
+                resolvedQuestion = eventData.data as Question;
+                handlers.onQuestion?.(resolvedQuestion);
+                shouldStop = true;
+                break;
+              } else if (eventData.type === 'error') {
+                const message = eventData.message || 'Streaming error';
+                handlers.onError?.(message);
+                throw new Error(message);
+              } else if (eventData.type === 'done') {
+                shouldStop = true;
+                break;
+              }
+            } catch (err) {
+              console.warn('Failed to parse streaming event', err);
+            }
+          }
+        }
+
+        if (shouldStop) break;
+        boundaryIndex = buffer.indexOf('\n\n');
+      }
+    }
+
+    if (shouldStop && typeof reader.cancel === 'function') {
+      try {
+        await reader.cancel();
+      } catch {
+        // Ignore cancellation errors.
+      }
+    }
+
+    return resolvedQuestion;
+  },
+
   getSubjects: async (): Promise<Subject[]> => {
     try {
       const response = await api.get('/api/mobile/quiz/subjects');

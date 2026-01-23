@@ -9,6 +9,9 @@ class Config:
     # Environment variables
     # DeepSeek AI is the primary AI provider for all text generation
     DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY')
+    # DeepSeek model aliases (use official "latest" aliases by default)
+    DEEPSEEK_CHAT_MODEL = os.getenv('DEEPSEEK_CHAT_MODEL', 'deepseek-chat')
+    DEEPSEEK_REASONER_MODEL = os.getenv('DEEPSEEK_REASONER_MODEL', 'deepseek-reasoner')
     # Gemini is only used for image generation
     GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
     DESMOS_API_KEY = os.getenv('DESMOS_API_KEY')
@@ -141,9 +144,9 @@ class Config:
 
     # Enhanced Learning Features
     # All subjects now use DeepSeek AI (DeepSeek-V3) for better performance
-    SCIENCE_AI_MODEL = os.getenv('SCIENCE_AI_MODEL', 'deepseek-chat')
-    ENGLISH_AI_MODEL = os.getenv('ENGLISH_AI_MODEL', 'deepseek-chat')
-    MATHEMATICS_AI_MODEL = os.getenv('MATHEMATICS_AI_MODEL', 'deepseek-chat')
+    SCIENCE_AI_MODEL = os.getenv('SCIENCE_AI_MODEL', DEEPSEEK_CHAT_MODEL)
+    ENGLISH_AI_MODEL = os.getenv('ENGLISH_AI_MODEL', DEEPSEEK_CHAT_MODEL)
+    MATHEMATICS_AI_MODEL = os.getenv('MATHEMATICS_AI_MODEL', DEEPSEEK_CHAT_MODEL)
 
     # Audio Processing
     AUDIO_MODEL = os.getenv('AUDIO_MODEL', 'whisper-1')

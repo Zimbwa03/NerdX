@@ -9,6 +9,7 @@ import time
 import logging
 import random
 from typing import Dict, List, Optional, Any, Tuple
+from utils.deepseek import get_deepseek_chat_model
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ class ComputerScienceGenerator:
     def __init__(self):
         self.api_key = os.environ.get('DEEPSEEK_API_KEY')
         self.api_url = "https://api.deepseek.com/v1/chat/completions"
-        self.model = "deepseek-chat"
+        self.model = get_deepseek_chat_model()
         
         # Computer Science Topics with Subtopics (ZIMSEC & Cambridge O-Level 2210)
         self.topics = {

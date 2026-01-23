@@ -776,6 +776,20 @@ class PaymentService:
             user_id = payment['user_id']
             credits = payment['credits']
             package_id = payment.get('package_id', 'unknown')
+            current_status = (payment.get('status') or '').lower()
+            credits_added = int(payment.get('credits_added') or 0)
+
+            # Idempotency guard: avoid double-adding credits
+            if current_status in ['approved', 'completed', 'paid'] or credits_added > 0:
+                package = self.get_package_by_id(package_id)
+                package_name = package['name'] if package else 'Package'
+                return {
+                    'success': True,
+                    'message': 'Payment already approved',
+                    'credits_added': credits_added or credits,
+                    'package_name': package_name,
+                    'user_id': user_id
+                }
             
             # Add credits to user account
             credit_result = add_credits(user_id, credits)
@@ -817,7 +831,7 @@ class PaymentService:
             logger.error(f"Error approving Paynow payment: {e}")
             return {'success': False, 'message': 'Error approving payment'}
     
-    def process_paynow_webhook(self, webhook_data: Dict) -> Dict:
+    def process_paynow_webhook(self, webhook_data: Dict, raw_payload: Optional[str] = None) -> Dict:
         """
         Process Paynow webhook notification
         
@@ -832,7 +846,7 @@ class PaymentService:
                 return {'success': False, 'message': 'Paynow service not available'}
             
             # Process webhook through Paynow service
-            webhook_result = paynow_service.process_webhook(webhook_data)
+            webhook_result = paynow_service.process_webhook(webhook_data, raw_payload=raw_payload)
             
             if webhook_result['success'] and webhook_result['valid']:
                 reference_code = webhook_result['reference']

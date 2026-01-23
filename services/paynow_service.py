@@ -8,6 +8,7 @@ Handles payment initiation, status checking, and webhook processing
 import os
 import logging
 from typing import Dict, Optional, Tuple
+from urllib.parse import parse_qsl
 from paynow import Paynow
 from datetime import datetime
 import uuid
@@ -33,11 +34,17 @@ class PaynowService:
         self.integration_key = os.environ.get('PAYNOW_INTEGRATION_KEY')
         
         # URLs for Paynow result and return handling
-        # According to Paynow docs: result_url is called by Paynow to notify of payment status
-        # return_url is where users are redirected after payment
-        base_url = os.environ.get('BASE_URL', 'https://nerdx.onrender.com')
-        self.result_url = f'{base_url}/webhook/paynow/result'  # Paynow calls this automatically
-        self.return_url = f'{base_url}/webhook/paynow/return'  # User redirect after payment
+        # result_url: Paynow server-to-server notification
+        # return_url: user redirect after payment
+        env_result_url = os.environ.get('PAYNOW_RESULT_URL')
+        env_return_url = os.environ.get('PAYNOW_RETURN_URL')
+        if env_result_url and env_return_url:
+            self.result_url = env_result_url
+            self.return_url = env_return_url
+        else:
+            base_url = os.environ.get('BASE_URL', 'https://nerdx.onrender.com')
+            self.result_url = f'{base_url}/webhook/paynow/result'
+            self.return_url = f'{base_url}/webhook/paynow/return'
         
         logger.info(f"✅ Paynow URLs configured:")
         logger.info(f"   Result URL (auto-notification): {self.result_url}")
@@ -50,11 +57,12 @@ class PaynowService:
         
         # Initialize Paynow client
         if self.integration_id and self.integration_key:
+            # Paynow SDK expects (integration_id, integration_key, return_url, result_url)
             self.paynow_client = Paynow(
                 self.integration_id,
                 self.integration_key,
-                self.result_url,
-                self.return_url
+                self.return_url,
+                self.result_url
             )
             logger.info("✅ Paynow service initialized successfully")
         else:
@@ -312,7 +320,7 @@ class PaynowService:
                 'message': str(e)
             }
     
-    def process_webhook(self, webhook_data: Dict) -> Dict:
+    def process_webhook(self, webhook_data: Dict, raw_payload: Optional[str] = None) -> Dict:
         """
         Process Paynow webhook notification
         
@@ -333,7 +341,7 @@ class PaynowService:
             logger.info(f"🔔 Paynow webhook received: {reference} - {status}")
             
             # Validate webhook hash for security
-            is_valid = self._validate_webhook_hash(webhook_data, hash_value)
+            is_valid = self._validate_webhook_hash(webhook_data, hash_value, raw_payload)
             
             if not is_valid:
                 logger.warning(f"⚠️ Invalid webhook hash for {reference}")
@@ -435,44 +443,73 @@ class PaynowService:
 💡 Ensure you have sufficient USD balance in your EcoCash wallet.
 """
     
-    def _validate_webhook_hash(self, data: Dict, received_hash: str) -> bool:
+    def _validate_webhook_hash(self, data: Dict, received_hash: str, raw_payload: Optional[str] = None) -> bool:
         """Validate webhook hash for security"""
         try:
             if not self.integration_key:
-                logger.warning("⚠️ No integration key configured - allowing webhook for development")
-                return True  # Allow in development mode
-            
-            # Build hash string from webhook data according to Paynow docs
-            hash_fields = []
-            for key in sorted(data.keys()):
-                if key != 'hash':  # Exclude hash field itself
-                    hash_fields.append(f"{data[key]}")
-            
-            hash_string = ''.join(hash_fields) + self.integration_key
-            
-            # Calculate expected hash using SHA512 as per Paynow specification
+                logger.warning("No integration key configured - cannot validate webhook hash")
+                return False
+
+            allow_invalid = os.environ.get('PAYNOW_ALLOW_INVALID_HASH', 'false').lower() == 'true'
+
             import hashlib
-            expected_hash = hashlib.sha512(hash_string.encode()).hexdigest().upper()
-            
-            is_valid = received_hash.upper() == expected_hash
-            
-            if not is_valid:
-                logger.warning(f"🔍 Hash validation failed:")
-                logger.warning(f"  Expected: {expected_hash}")
+
+            def _sha512_upper(value: str) -> str:
+                return hashlib.sha512(value.encode('utf-8')).hexdigest().upper()
+
+            # Prefer raw payload to preserve field order and URL decoding
+            if raw_payload:
+                payload = raw_payload.lstrip('?')
+                pairs = parse_qsl(payload, keep_blank_values=True)
+
+                values_only = ''.join([value for key, value in pairs if key.lower() != 'hash'])
+                expected_hash = _sha512_upper(values_only + self.integration_key)
+
+                if received_hash and received_hash.upper() == expected_hash:
+                    logger.info('Webhook hash validation successful (values-only)')
+                    return True
+
+                # Fallback to key+value concatenation (some docs/examples use this form)
+                kv_concat = ''.join([f"{key}{value}" for key, value in pairs if key.lower() != 'hash'])
+                expected_kv_hash = _sha512_upper(kv_concat + self.integration_key)
+
+                if received_hash and received_hash.upper() == expected_kv_hash:
+                    logger.warning('Webhook hash matched key+value mode; verify Paynow hash mode in use')
+                    return True
+
+                if allow_invalid:
+                    logger.warning('PAYNOW_ALLOW_INVALID_HASH=true - accepting invalid webhook hash')
+                    return True
+
+                logger.warning('Webhook hash validation failed')
                 logger.warning(f"  Received: {received_hash}")
-                logger.warning(f"  Hash string: {hash_string[:50]}...")
-                # TEMPORARY: Allow invalid hashes during debugging
-                logger.warning("⚠️ Allowing invalid hash for debugging - REMOVE IN PRODUCTION")
+                logger.warning(f"  Expected (values-only): {expected_hash}")
+                logger.warning(f"  Expected (key+value): {expected_kv_hash}")
+                return False
+
+            # Fallback when raw payload is unavailable: use insertion order from dict
+            values_only = ''.join([str(value) for key, value in data.items() if key.lower() != 'hash'])
+            expected_hash = _sha512_upper(values_only + self.integration_key)
+
+            if received_hash and received_hash.upper() == expected_hash:
+                logger.info('Webhook hash validation successful (dict-order fallback)')
                 return True
-            
-            logger.info("✅ Webhook hash validation successful")
-            return True
-            
+
+            if allow_invalid:
+                logger.warning('PAYNOW_ALLOW_INVALID_HASH=true - accepting invalid webhook hash (dict fallback)')
+                return True
+
+            logger.warning('Webhook hash validation failed (dict fallback)')
+            logger.warning(f"  Received: {received_hash}")
+            logger.warning(f"  Expected: {expected_hash}")
+            return False
+
         except Exception as e:
             logger.error(f"Hash validation error: {e}")
-            # TEMPORARY: Allow on error during debugging
-            logger.warning("⚠️ Allowing webhook due to validation error - REMOVE IN PRODUCTION")
-            return True
+            if os.environ.get('PAYNOW_ALLOW_INVALID_HASH', 'false').lower() == 'true':
+                logger.warning('PAYNOW_ALLOW_INVALID_HASH=true - accepting webhook despite error')
+                return True
+            return False
 
 # Global Paynow service instance
 paynow_service = PaynowService()

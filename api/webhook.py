@@ -1028,6 +1028,12 @@ def handle_registration_flow(user_id: str, user_input: str):
                         whatsapp_service.send_message(user_id, 
                             "💡 *Tip:* Type *MENU* anytime to see all available options!")
                         send_main_menu(user_id)
+                    else:
+                        # Successfully sent interactive message - now automatically send main menu
+                        # Give user a moment to read the completion message, then show menu
+                        time.sleep(2)  # 2 second delay for user to read completion message
+                        logger.info(f"📋 Auto-sending main menu to {user_id} after registration")
+                        send_main_menu(user_id)
                 else:
                     whatsapp_service.send_message(user_id, result['message'])
                     # Add instruction message

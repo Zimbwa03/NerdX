@@ -13,6 +13,7 @@ class ImageService:
     
     def __init__(self):
         self.deepseek_api_key = Config.DEEPSEEK_API_KEY
+        self.deepseek_model = Config.DEEPSEEK_CHAT_MODEL
         
         if not self.deepseek_api_key:
             logger.warning("DEEPSEEK_API_KEY not configured - image processing features will be limited")
@@ -91,7 +92,7 @@ Format your response as JSON:
             }
             
             data = {
-                'model': 'deepseek-chat',
+                'model': self.deepseek_model,
                 'messages': [
                     {
                         'role': 'user',

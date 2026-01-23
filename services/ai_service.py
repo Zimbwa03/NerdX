@@ -14,7 +14,7 @@ class AIService:
     def __init__(self):
         self.deepseek_api_key = Config.DEEPSEEK_API_KEY
         # DeepSeek is now the primary AI provider for all subjects
-        self.deepseek_model = 'deepseek-chat'
+        self.deepseek_model = Config.DEEPSEEK_CHAT_MODEL
         self.deepseek_api_url = 'https://api.deepseek.com/chat/completions'
 
         if not self.deepseek_api_key:
@@ -452,7 +452,7 @@ Generate a high-quality, professional ZIMSEC exam-style question now!"""
             }
 
             data = {
-                'model': 'deepseek-chat',
+                'model': self.deepseek_model,
                 'messages': [
                     {
                         'role': 'user',

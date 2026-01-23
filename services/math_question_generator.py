@@ -12,6 +12,7 @@ import time
 import random
 from typing import Dict, List, Optional
 from datetime import datetime
+from utils.deepseek import get_deepseek_chat_model, get_deepseek_reasoner_model
 
 logger = logging.getLogger(__name__)
 
@@ -181,6 +182,8 @@ class MathQuestionGenerator:
         # DeepSeek configuration (fallback)
         self.deepseek_api_key = os.environ.get('DEEPSEEK_API_KEY')
         self.deepseek_api_url = 'https://api.deepseek.com/chat/completions'
+        self.deepseek_chat_model = get_deepseek_chat_model()
+        self.deepseek_reasoner_model = get_deepseek_reasoner_model()
         
         # Vertex AI / Gemini configuration (primary - higher rate limits)
         self.project_id = os.environ.get('GOOGLE_CLOUD_PROJECT', 'gen-lang-client-0303273462')
@@ -713,7 +716,7 @@ Generate the question now:"""
         }
 
         data = {
-            'model': 'deepseek-chat',  # Fast mode for non-streaming
+            'model': self.deepseek_chat_model,  # Fast mode for non-streaming
             'messages': [{'role': 'user', 'content': prompt}],
             'max_tokens': 2500,  # Increased for detailed solutions
             'temperature': 0.85  # Increased for more creative variation and diversity
@@ -793,7 +796,7 @@ Generate the question now:"""
 
         # Use deepseek-reasoner for Chain-of-Thought reasoning
         data = {
-            'model': 'deepseek-reasoner',  # V3.2 with CoT thinking
+            'model': self.deepseek_reasoner_model,  # Reasoning model (latest alias)
             'messages': [{'role': 'user', 'content': prompt}],
             'max_tokens': 3000,
             'temperature': 0.7,

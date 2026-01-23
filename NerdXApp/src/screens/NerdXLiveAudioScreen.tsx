@@ -263,38 +263,50 @@ const NerdXLiveAudioScreen: React.FC = () => {
     const playSoundAndWait = useCallback(async (sound: Audio.Sound) => {
         await new Promise<void>((resolve) => {
             let resolved = false;
-            const timeout = setTimeout(() => {
-                if (!resolved) {
-                    resolved = true;
-                    resolve();
-                }
-            }, 5000);
+            let timeout: NodeJS.Timeout | null = null;
+
+            const scheduleTimeout = (ms: number) => {
+                if (timeout) clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    if (!resolved) {
+                        resolved = true;
+                        resolve();
+                    }
+                }, ms);
+            };
+
+            // Fallback timeout to prevent hanging forever (full-turn audio can be long)
+            scheduleTimeout(120000);
 
             sound.setOnPlaybackStatusUpdate((status: AVPlaybackStatus) => {
                 if (resolved) return;
                 if (!isPlayingRef.current) {
-                    clearTimeout(timeout);
+                    if (timeout) clearTimeout(timeout);
                     resolved = true;
                     resolve();
                     return;
                 }
                 if (!status.isLoaded) {
                     if ('error' in status) {
-                        clearTimeout(timeout);
+                        if (timeout) clearTimeout(timeout);
                         resolved = true;
                         resolve();
                     }
                     return;
                 }
+                if (status.durationMillis && status.durationMillis > 0) {
+                    // Align timeout to actual duration (+0.5s buffer)
+                    scheduleTimeout(status.durationMillis + 500);
+                }
                 if (status.didJustFinish) {
-                    clearTimeout(timeout);
+                    if (timeout) clearTimeout(timeout);
                     resolved = true;
                     resolve();
                 }
             });
 
             sound.playAsync().catch(() => {
-                clearTimeout(timeout);
+                if (timeout) clearTimeout(timeout);
                 if (!resolved) {
                     resolved = true;
                     resolve();

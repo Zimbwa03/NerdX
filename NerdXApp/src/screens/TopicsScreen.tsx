@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { quizApi, Topic, Subject } from '../services/api/quizApi';
+import { quizApi, Topic, Subject, Question } from '../services/api/quizApi';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useNotification } from '../context/NotificationContext';
@@ -45,6 +45,8 @@ const TopicsScreen: React.FC = () => {
   const { subject, parentSubject } = route.params as { subject: Subject; parentSubject?: string };
   const subjectDisplayName = getSubjectDisplayName(subject.id, subject.name);
   const subjectSteps = getSubjectLoadingSteps(subject.id);
+  const overlayMessage = streamingStatus ?? `Preparing your ${subjectDisplayName} question...`;
+  const overlayStage = streamingStage ?? 'Preparing';
 
   // State for Combined Science Tabs
   const [activeTab, setActiveTab] = useState<string>(parentSubject || (subject.id === 'combined_science' ? 'Biology' : ''));
@@ -55,6 +57,8 @@ const TopicsScreen: React.FC = () => {
   const [pharmaModalVisible, setPharmaModalVisible] = useState(false);
   const [selectedPharmaTopic, setSelectedPharmaTopic] = useState<Topic | null>(null);
   const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
+  const [streamingStatus, setStreamingStatus] = useState<string | null>(null);
+  const [streamingStage, setStreamingStage] = useState<string | null>(null);
   const [selectedPharmaQuestionType, setSelectedPharmaQuestionType] = useState<'MCQ' | 'True/False'>('MCQ');
 
   // Combined Science Question Type Modal (MCQ vs Structured)
@@ -301,20 +305,51 @@ const TopicsScreen: React.FC = () => {
       // Show AI loading progress
       setIsGeneratingQuestion(true);
 
-      const question = await quizApi.generateQuestion(
-        subject.id,
-        topic?.id,
-        'medium',  // difficulty
-        topic ? 'topical' : 'exam',  // type
-        topic?.parent_subject || (subject.id === 'combined_science' ? activeTab : currentParentSubject),  // parent_subject for Combined Science
-        questionType,  // Pass question type (e.g., for Pharmacology)
-        questionFormat,  // Pass question format (mcq or structured for Paper 1/2)
-        undefined,
-        mixImages
-      );
+      let question: Question | null = null;
+
+      const canStreamMath = subject.id === 'mathematics' && !!topic?.id;
+      if (canStreamMath) {
+        try {
+          question = await quizApi.generateQuestionStream(
+            subject.id,
+            topic?.id || 'Algebra',
+            'medium',
+            {
+              onThinking: (update) => {
+                if (update.content) {
+                  setStreamingStatus(update.content);
+                }
+                if (update.stage && update.total_stages) {
+                  setStreamingStage(`Thinking ${update.stage}/${update.total_stages}`);
+                } else {
+                  setStreamingStage('Thinking');
+                }
+              },
+            }
+          );
+        } catch (streamError) {
+          console.warn('Streaming generation failed, falling back to standard generation', streamError);
+        }
+      }
+
+      if (!question) {
+        question = await quizApi.generateQuestion(
+          subject.id,
+          topic?.id,
+          'medium',  // difficulty
+          topic ? 'topical' : 'exam',  // type
+          topic?.parent_subject || (subject.id === 'combined_science' ? activeTab : currentParentSubject),  // parent_subject for Combined Science
+          questionType,  // Pass question type (e.g., for Pharmacology)
+          questionFormat,  // Pass question format (mcq or structured for Paper 1/2)
+          undefined,
+          mixImages
+        );
+      }
 
       // Hide loading before navigation
       setIsGeneratingQuestion(false);
+      setStreamingStatus(null);
+      setStreamingStage(null);
 
       if (question) {
         // Update credits from server response
@@ -339,6 +374,8 @@ const TopicsScreen: React.FC = () => {
       }
     } catch (error: any) {
       setIsGeneratingQuestion(false);
+      setStreamingStatus(null);
+      setStreamingStage(null);
       const errorMessage = error.response?.data?.message || 'Failed to start quiz';
       showError(`❌ ${errorMessage}`, 5000);
       Alert.alert('Error', errorMessage);
@@ -701,9 +738,9 @@ const TopicsScreen: React.FC = () => {
       {/* AI Loading Progress Overlay */}
       <LoadingProgress
         visible={isGeneratingQuestion}
-        message={`Preparing your ${subjectDisplayName} question...`}
+        message={overlayMessage}
         estimatedTime={6}
-        stage="Preparing"
+        stage={overlayStage}
         steps={subjectSteps}
       />
 

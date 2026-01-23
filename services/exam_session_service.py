@@ -12,8 +12,10 @@ import random
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any, Tuple
 import requests
+from utils.deepseek import get_deepseek_chat_model
 
 logger = logging.getLogger(__name__)
+DEEPSEEK_CHAT_MODEL = get_deepseek_chat_model()
 
 # =============================================================================
 # TIME ALLOCATION CONFIGURATION
@@ -358,7 +360,7 @@ class ExamSessionService:
                     "Content-Type": "application/json",
                 },
                 json={
-                    "model": "deepseek-chat",
+                    "model": DEEPSEEK_CHAT_MODEL,
                     "messages": [
                         {
                             "role": "system",

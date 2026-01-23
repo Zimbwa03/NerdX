@@ -14,8 +14,10 @@ from services.whatsapp_service import WhatsAppService
 from database.external_db import make_supabase_request, get_user_credits, deduct_credits, get_user_registration
 from utils.credit_units import format_credits, units_to_credits
 from services.advanced_credit_service import advanced_credit_service
+from utils.deepseek import get_deepseek_chat_model
 
 logger = logging.getLogger(__name__)
+DEEPSEEK_CHAT_MODEL = get_deepseek_chat_model()
 
 # Import Google GenAI SDK for Vertex AI (primary for conversational text)
 try:
@@ -655,7 +657,7 @@ Current conversation context will be provided with each message."""
                     response = requests.post(
                         self.deepseek_api_url,
                         headers={'Authorization': f'Bearer {self.deepseek_api_key}', 'Content-Type': 'application/json'},
-                        json={'model': 'deepseek-chat', 'messages': [{'role': 'user', 'content': prompt}], 'max_tokens': 100},
+                        json={'model': DEEPSEEK_CHAT_MODEL, 'messages': [{'role': 'user', 'content': prompt}], 'max_tokens': 100},
                         timeout=15
                     )
                     if response.status_code == 200:
@@ -693,7 +695,7 @@ Current conversation context will be provided with each message."""
                     response = requests.post(
                         self.deepseek_api_url,
                         headers={'Authorization': f'Bearer {self.deepseek_api_key}', 'Content-Type': 'application/json'},
-                        json={'model': 'deepseek-chat', 'messages': [{'role': 'user', 'content': prompt}], 'max_tokens': 300},
+                        json={'model': DEEPSEEK_CHAT_MODEL, 'messages': [{'role': 'user', 'content': prompt}], 'max_tokens': 300},
                         timeout=20
                     )
                     if response.status_code == 200:
@@ -1091,7 +1093,7 @@ Current conversation context will be provided with each message."""
                             'Authorization': f'Bearer {self.deepseek_api_key}'
                         },
                         json={
-                            'model': 'deepseek-chat',
+                            'model': DEEPSEEK_CHAT_MODEL,
                             'messages': [
                                 {'role': 'system', 'content': system_prompt},
                                 {'role': 'user', 'content': full_prompt}
@@ -1142,7 +1144,7 @@ Current conversation context will be provided with each message."""
                     'Authorization': f'Bearer {deepseek_key}'
                 },
                 json={
-                    'model': 'deepseek-chat',
+                    'model': DEEPSEEK_CHAT_MODEL,
                     'messages': [
                         {'role': 'system', 'content': system_prompt},
                         {'role': 'user', 'content': prompt}
@@ -1271,7 +1273,7 @@ Current conversation context will be provided with each message."""
                                 'Authorization': f'Bearer {self.deepseek_api_key}'
                             },
                             json={
-                                'model': 'deepseek-chat',
+                                'model': DEEPSEEK_CHAT_MODEL,
                                 'messages': [
                                     {'role': 'system', 'content': system_prompt},
                                     {'role': 'user', 'content': f"Subject: {subject}\nGrade Level: {grade_level}\nTopic: {topic}{conversation_context}\n\nStudent request: Generate notes\n\nProvide comprehensive personalized notes in valid JSON format."}

@@ -16,8 +16,10 @@ from services.whatsapp_service import WhatsAppService
 from database.external_db import make_supabase_request, get_user_credits, deduct_credits
 from utils.credit_units import format_credits, units_to_credits
 from services.advanced_credit_service import advanced_credit_service
+from utils.deepseek import get_deepseek_chat_model
 
 logger = logging.getLogger(__name__)
+DEEPSEEK_CHAT_MODEL = get_deepseek_chat_model()
 
 # Import requests for DeepSeek API
 import requests
@@ -1627,7 +1629,7 @@ Credits are deducted per AI response.
                         self.deepseek_api_url,
                         headers={'Authorization': f'Bearer {self.deepseek_api_key}', 'Content-Type': 'application/json'},
                         json={
-                            'model': 'deepseek-chat',
+                            'model': DEEPSEEK_CHAT_MODEL,
                             'messages': [
                                 {'role': 'system', 'content': system_prompt},
                                 {'role': 'user', 'content': full_prompt}
@@ -3118,7 +3120,7 @@ Generate content for each section. Be detailed and professional. Return ONLY val
                         "Content-Type": "application/json"
                     },
                     json={
-                        "model": "deepseek-chat",
+                        "model": DEEPSEEK_CHAT_MODEL,
                         "messages": [
                             {"role": "system", "content": "You are a ZIMSEC project document writer. Generate professional, detailed content for school-based projects."},
                             {"role": "user", "content": prompt}
@@ -3175,4 +3177,3 @@ Generate content for each section. Be detailed and professional. Return ONLY val
             "evaluation": "The project was evaluated against the original objectives, demonstrating significant achievement of goals.",
             "conclusion": "This project successfully addressed the identified problem and provides a sustainable solution with recommendations for future improvements."
         }
-

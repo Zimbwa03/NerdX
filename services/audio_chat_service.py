@@ -15,6 +15,7 @@ from datetime import datetime
 from typing import Dict, Optional
 import logging
 from utils.credit_units import format_credits
+from utils.deepseek import get_deepseek_chat_model
 
 # Import processing libraries
 try:
@@ -35,6 +36,7 @@ except ImportError:
     sr = None
 
 logger = logging.getLogger(__name__)
+DEEPSEEK_CHAT_MODEL = get_deepseek_chat_model()
 
 # Import Google GenAI SDK for audio generation (Vertex AI)
 try:
@@ -227,7 +229,7 @@ class AudioChatService:
             }
 
             data = {
-                'model': 'deepseek-chat',
+                'model': DEEPSEEK_CHAT_MODEL,
                 'messages': [
                     {
                         'role': 'system',
