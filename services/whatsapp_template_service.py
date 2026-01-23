@@ -58,7 +58,7 @@ class WhatsAppTemplateService:
                 'name': 'nerdx_registration_complete',
                 'category': 'UTILITY',
                 'language': 'en',
-                'body': """Registration successful. Welcome {{1}}. Your NerdX ID is {{2}}. Free credits: {{3}}. Starting level: Form {{4}}. Reply MENU to start learning.""",
+                'body': """Registration successful. Welcome {{1}}. Your NerdX ID is {{2}}. Free credits: {{3}}. Starting level: Form {{4}}. Reply MENU for the main menu, HELP for commands, or CREDITS to check your balance.""",
                 'variables': ['student_name', 'nerdx_id', 'starting_credits', 'form_level']
             },
             
@@ -381,6 +381,4 @@ def get_template_service(whatsapp_service: 'WhatsAppService' = None) -> WhatsApp
     if whatsapp_template_service is None and whatsapp_service:
         whatsapp_template_service = WhatsAppTemplateService(whatsapp_service)
     return whatsapp_template_service
-
-
 
