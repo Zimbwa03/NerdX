@@ -32,6 +32,7 @@ export interface ModelInfo {
 }
 
 type DownloadProgressListener = (progress: DownloadProgress) => void;
+type DownloadCompleteListener = () => void;
 
 const STORAGE_KEYS = {
     MODEL_INFO: '@nerdx_phi3_model_info',
@@ -84,6 +85,7 @@ const PHI3_MODEL_MIN_SIZE = Math.floor(PHI3_MODEL_SIZE * 0.9); // fail fast on o
 class ModelDownloadService {
     private downloadJobId: number | null = null;
     private progressListeners: Set<DownloadProgressListener> = new Set();
+    private completeListeners: Set<DownloadCompleteListener> = new Set();
     private isPaused: boolean = false;
     private progressPollInterval: NodeJS.Timeout | null = null;
     private currentDownloadInfo: { filePath: string; progressStart: number; progressEnd: number; totalSize: number; mainFileSize: number } | null = null;
@@ -761,6 +763,14 @@ class ModelDownloadService {
 
     private notifyProgressListeners(progress: DownloadProgress) {
         this.progressListeners.forEach(listener => listener(progress));
+    }
+
+    // Download completion listeners
+    public subscribeToComplete(listener: DownloadCompleteListener): () => void {
+        this.completeListeners.add(listener);
+        return () => {
+            this.completeListeners.delete(listener);
+        };
     }
 
     // Get download status

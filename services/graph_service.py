@@ -546,6 +546,11 @@ class GraphService:
         """Clean and standardize mathematical expressions for ZIMSEC"""
         clean = expr.strip()
 
+        # Strip common LaTeX wrappers to avoid breaking parsing
+        if (clean.startswith("$") and clean.endswith("$")) or (clean.startswith("$$") and clean.endswith("$$")):
+            clean = clean.strip("$").strip()
+        clean = clean.replace("\\(", "").replace("\\)", "").replace("\\[", "").replace("\\]", "").strip()
+
         # Remove y = or f(x) = prefix if present
         if clean.lower().startswith('y ='):
             clean = clean[3:].strip()
@@ -555,6 +560,13 @@ class GraphService:
             clean = clean[2:].strip()
         elif clean.lower().startswith('f(x)='):
             clean = clean[5:].strip()
+
+        # Normalize common LaTeX fragments for plotting
+        clean = re.sub(r'\\frac\s*\{([^{}]+)\}\s*\{([^{}]+)\}', r'(\1)/(\2)', clean)
+        clean = re.sub(r'\\sqrt\s*\{([^{}]+)\}', r'sqrt(\1)', clean)
+        clean = re.sub(r'\\(sin|cos|tan|asin|acos|atan|sinh|cosh|tanh|log|ln|exp)\b', r'\1', clean)
+        clean = clean.replace("\\pi", "pi")
+        clean = clean.replace("\\cdot", "*").replace("\\times", "*")
 
         # Strip UI/metadata annotations accidentally appended to expressions
         # Examples seen in logs:

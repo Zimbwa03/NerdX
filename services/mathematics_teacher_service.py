@@ -95,6 +95,7 @@ Examples:
 
 ### Graph Generation
 If a concept is best explained with a graph (like linear equations, quadratics, trig functions, etc.), include a special tag in your response: `[PLOT: function_expression]`. For example: `[PLOT: x^2 + 2x + 1]`. You can also specify a range: `[PLOT: sin(x), range=-2pi:2pi]`.
+IMPORTANT: Inside `[PLOT: ...]`, use a plain ASCII expression without `$...$` or LaTeX commands. Keep LaTeX formatting in the main explanation only.
 """,
         'biology': """
 ### Biology-Specific Teaching Guidelines
@@ -460,10 +461,26 @@ Current conversation context will be provided with each message."""
             # Check for graph triggers [PLOT: expression]
             media_urls = {'graph_url': None, 'video_url': None}
             if '[PLOT:' in response_text:
-                media_urls = self._handle_media_triggers(response_text)
-                # Remove the trigger tag from the text shown to user
-                import re
-                response_text = re.sub(r'\[PLOT:.*?\]', '', response_text).strip()
+                try:
+                    from services.teacher_visualization_service import handle_teacher_plot_trigger
+                    from database.external_db import get_user_registration
+
+                    user_data = get_user_registration(user_id)
+                    user_name = user_data.get('name', 'Student') if user_data else 'Student'
+
+                    vis = handle_teacher_plot_trigger(
+                        response_text=response_text,
+                        user_id=user_id,
+                        user_name=user_name,
+                        title=f"{session_data.get('subject', 'Mathematics')} â€¢ {session_data.get('topic', 'Lesson')}".strip(" â€¢"),
+                    )
+                    response_text = vis.get('clean_text') or response_text
+                    media_urls['graph_url'] = vis.get('graph_url')
+                    media_urls['video_url'] = vis.get('video_url')
+                except Exception as e:
+                    logger.error(f"Error checking PLOT media triggers: {e}", exc_info=True)
+                    import re
+                    response_text = re.sub(r'\[PLOT:.*?\]', '', response_text).strip()
             
             # Clean formatting
             clean_response = self._clean_whatsapp_formatting(response_text)

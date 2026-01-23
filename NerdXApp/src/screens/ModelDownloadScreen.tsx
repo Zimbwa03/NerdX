@@ -38,23 +38,13 @@ const ModelDownloadScreen = ({ navigation }: any) => {
             Alert.alert('Success', 'Phi-3 AI model downloaded and ready for offline use!');
         };
 
-        // Listen for custom event
-        const listener = (event: Event) => {
-            if ((event as CustomEvent).type === 'modelDownloadComplete') {
-                handleDownloadComplete();
-            }
-        };
-
-        if (typeof window !== 'undefined') {
-            window.addEventListener('modelDownloadComplete', listener);
-        }
+        // Subscribe to download completion
+        const unsubscribeComplete = ModelDownloadService.subscribeToComplete(handleDownloadComplete);
 
         return () => {
             unsubscribeNetwork();
             unsubscribeProgress();
-            if (typeof window !== 'undefined') {
-                window.removeEventListener('modelDownloadComplete', listener);
-            }
+            unsubscribeComplete();
         };
     }, []);
 

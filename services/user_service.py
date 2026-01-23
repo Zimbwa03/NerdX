@@ -365,17 +365,27 @@ class UserService:
                     message += f"🔗 **Referral Code**: {referral_code}\n\n"
 
                 message += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-                message += "🚀 **Ready to start your learning journey!**"
+                message += "🚀 **Ready to start your learning journey!**\n\n"
+                message += "📋 **What's Next?**\n"
+                message += "• Click *🚀 Continue to Menu* below to see all options\n"
+                message += "• Or type *MENU* anytime to start exploring\n"
+                message += "• Type *HELP* for assistance\n\n"
+                message += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                message += "📋 **What's Next?**\n"
+                message += "• Click *🚀 Continue* below to see the main menu\n"
+                message += "• Or type *MENU* to start exploring\n"
+                message += "• Type *HELP* anytime for assistance\n\n"
+                message += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
                 # Create buttons for the completion message
                 buttons = [
                     {
-                        "text": "📢 Join Channel",
-                        "callback_data": "join_channel"
+                        "text": "🚀 Continue to Menu",
+                        "callback_data": "continue_after_registration"
                     },
                     {
-                        "text": "🚀 Continue",
-                        "callback_data": "continue_after_registration"
+                        "text": "📢 Join Channel",
+                        "callback_data": "join_channel"
                     }
                 ]
 

@@ -752,6 +752,66 @@ class WhatsAppService:
             logger.error(f"Error sending WhatsApp image: {e}")
             return False
 
+    def send_media_url(self, to: str, media_url: str, caption: str = "") -> bool:
+        """Send a media message (image/video/etc.) via Twilio WhatsApp API"""
+        try:
+            if not media_url or not media_url.startswith(('http://', 'https://')):
+                logger.error(f"Invalid media URL format: {media_url}")
+                return False
+
+            caption = self._normalize_whatsapp_formatting(caption)
+            if len(caption) > 1600:
+                caption = caption[:1590] + "..."
+
+            from_number = self.twilio_phone_number
+            to_number = to if to.startswith('whatsapp:') else f'whatsapp:{to}'
+
+            url = f"https://api.twilio.com/2010-04-01/Accounts/{self.twilio_account_sid}/Messages.json"
+            auth = (self.twilio_account_sid, self.twilio_auth_token)
+
+            data = {
+                'From': f'whatsapp:{from_number}',
+                'To': to_number,
+                'MediaUrl': media_url
+            }
+
+            if caption.strip():
+                data['Body'] = caption
+
+            logger.info(f"Sending media to {to} with URL: {media_url}")
+            response = requests.post(url, auth=auth, data=data, timeout=45)
+
+            if response.status_code in (200, 201):
+                logger.info(f"Media sent successfully to {to}")
+                return True
+
+            logger.error(f"Failed to send media: {response.status_code} - {response.text}")
+            return False
+
+        except Exception as e:
+            logger.error(f"Error sending WhatsApp media: {e}")
+            return False
+
+    def send_video_file(self, to: str, file_path: str, caption: str = "") -> bool:
+        """Send a video from a local file path via a public URL"""
+        try:
+            import os
+            from utils.url_utils import convert_local_path_to_public_url
+
+            if not os.path.exists(file_path):
+                logger.error(f"Video file does not exist: {file_path}")
+                return False
+
+            public_url = convert_local_path_to_public_url(file_path)
+            if not public_url:
+                logger.error(f"Failed to create public URL for video: {file_path}")
+                return False
+
+            return self.send_media_url(to, public_url, caption)
+        except Exception as e:
+            logger.error(f"Error sending video file {file_path}: {e}")
+            return False
+
     def send_image_file(self, to: str, file_path: str, caption: str = "") -> bool:
         """Send an image from a local file path using ImgBB hosting"""
         try:

@@ -686,7 +686,7 @@ const DashboardScreen: React.FC = () => {
               <AnimatedCard
                 title="Offline Chat"
                 subtitle="Free • Basic Questions • Works Offline"
-                imageSource={require('../../assets/images/my_progress_card.png')}
+                imageSource={require('../../assets/images/offline_chat_card.png')}
                 onPress={navigateToOfflineChat}
                 glowColor="#10B981"
                 fullWidth={true}

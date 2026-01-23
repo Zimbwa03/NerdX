@@ -81,15 +81,33 @@ const AudioStreamPlayer: React.FC<AudioStreamPlayerProps> = ({
             setPosition(status.positionMillis || 0);
             setIsPlaying(status.isPlaying);
             setIsBuffering(status.isBuffering);
+            
+            // Log status changes for debugging
+            if (status.isPlaying && !isPlaying) {
+                console.log('🎵 Audio: Started playing');
+            }
 
             // Handle playback finished
             if (status.didJustFinish) {
+                console.log('🎵 Audio: Playback finished');
                 setIsPlaying(false);
                 setPosition(0);
             }
+            
+            // Handle errors during playback
+            if (status.error) {
+                console.error('🎵 Audio playback error in status:', status.error);
+                setError('Audio playback error. Please try again.');
+                setIsLoading(false);
+                setIsPlaying(false);
+            }
         } else if (status.error) {
+            console.error('🎵 Audio load error:', status.error);
             setError('Unable to stream audio. Please check your internet connection.');
             setIsLoading(false);
+        } else {
+            // Still loading
+            console.log('🎵 Audio: Still loading...', status);
         }
     };
 
@@ -120,32 +138,101 @@ const AudioStreamPlayer: React.FC<AudioStreamPlayerProps> = ({
 
             // Configure audio mode for streaming
             console.log('🎵 Audio: Setting audio mode...');
-            await Audio.setAudioModeAsync({
-                allowsRecordingIOS: false,
-                staysActiveInBackground: false,
-                playsInSilentModeIOS: true,
-                shouldDuckAndroid: true,
-                playThroughEarpieceAndroid: false,
-            });
-            console.log('🎵 Audio: Audio mode set successfully');
+            try {
+                await Audio.setAudioModeAsync({
+                    allowsRecordingIOS: false,
+                    staysActiveInBackground: false,
+                    playsInSilentModeIOS: true,
+                    shouldDuckAndroid: true,
+                    playThroughEarpieceAndroid: false,
+                });
+                console.log('🎵 Audio: Audio mode set successfully');
+            } catch (audioModeError) {
+                console.warn('🎵 Audio: Audio mode setting failed (non-critical):', audioModeError);
+                // Continue anyway - audio might still work
+            }
 
             // Create and load the sound (streaming, not downloading)
-            console.log('🎵 Audio: Creating sound object...');
-            const { sound: newSound } = await Audio.Sound.createAsync(
-                { uri: audioUrl },
-                {
-                    shouldPlay: true,
-                    progressUpdateIntervalMillis: 500,
-                    // Prevent caching/downloading - stream only
-                    androidImplementation: 'MediaPlayer',
-                },
-                onPlaybackStatusUpdate
-            );
-            console.log('🎵 Audio: Sound created successfully!');
-
+            console.log('🎵 Audio: Creating sound object with URL:', playableUrl.substring(0, 100) + '...');
+            
+            // Clean up any existing sound first
             if (sound) {
-                await sound.unloadAsync();
+                try {
+                    await sound.unloadAsync();
+                } catch (e) {
+                    console.warn('🎵 Audio: Error unloading previous sound:', e);
+                }
             }
+            
+            let newSound: Audio.Sound;
+            try {
+                // Create sound without shouldPlay first to ensure it loads
+                const soundResult = await Audio.Sound.createAsync(
+                    { uri: playableUrl },
+                    {
+                        shouldPlay: false, // Don't auto-play, we'll start it manually
+                        progressUpdateIntervalMillis: 500,
+                        volume: 1.0,
+                        isMuted: false,
+                        rate: 1.0,
+                    },
+                    onPlaybackStatusUpdate
+                );
+                newSound = soundResult.sound;
+                console.log('🎵 Audio: Sound created successfully!');
+            } catch (createError: any) {
+                console.error('🎵 Audio: Failed to create sound:', createError);
+                throw new Error(`Failed to load audio: ${createError?.message || 'Unknown error'}`);
+            }
+            
+            // Wait a bit for the sound to initialize
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Check status and start playing
+            try {
+                const status = await newSound.getStatusAsync();
+                console.log('🎵 Audio: Initial status:', {
+                    isLoaded: status.isLoaded,
+                    error: status.error,
+                    durationMillis: status.isLoaded ? status.durationMillis : null,
+                });
+                
+                if (status.isLoaded) {
+                    // Sound is ready, start playing
+                    console.log('🎵 Audio: Starting playback...');
+                    await newSound.playAsync();
+                    
+                    // Verify it started playing
+                    const playStatus = await newSound.getStatusAsync();
+                    if (playStatus.isLoaded && playStatus.isPlaying) {
+                        console.log('🎵 Audio: Playback started successfully!');
+                    } else {
+                        console.warn('🎵 Audio: Playback may not have started, status:', playStatus);
+                    }
+                } else if (status.error) {
+                    throw new Error(`Audio load error: ${status.error}`);
+                } else {
+                    // Wait a bit more and try again
+                    console.log('🎵 Audio: Sound not loaded yet, waiting...');
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    const retryStatus = await newSound.getStatusAsync();
+                    if (retryStatus.isLoaded) {
+                        await newSound.playAsync();
+                        console.log('🎵 Audio: Playback started after retry!');
+                    } else {
+                        throw new Error('Audio failed to load after waiting');
+                    }
+                }
+            } catch (playError: any) {
+                console.error('🎵 Audio: Error starting playback:', playError);
+                try {
+                    await newSound.unloadAsync();
+                } catch (e) {
+                    // Ignore unload errors
+                }
+                throw playError;
+            }
+
             setSound(newSound);
             setIsLoading(false);
         } catch (err: any) {

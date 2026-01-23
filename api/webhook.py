@@ -616,11 +616,30 @@ def handle_text_message(user_id: str, message_text: str):
                     # Continue registration process
                     handle_registration_flow(user_id, message_text)
                 else:
-                    # Force registration - NO EXCEPTIONS
-                    handle_new_user(user_id, message_text)
+                    # Check if user just completed registration (grace period for DB sync)
+                    # If they send MENU, HELP, or any command right after registration, be helpful
+                    normalized_message = message_text.lower().strip()
+                    if normalized_message in ['menu', 'help', 'start', 'hi', 'hello', 'continue']:
+                        # User might have just registered - send helpful message with menu
+                        whatsapp_service.send_message(user_id, 
+                            "🎉 *Welcome!*\n\n"
+                            "It looks like you're trying to access the menu.\n\n"
+                            "If you just completed registration, please wait a moment for your account to be activated, then type *MENU* again.\n\n"
+                            "If you haven't registered yet, please provide your first name to begin:")
+                        user_service.start_registration(user_id)
+                    else:
+                        # Force registration - NO EXCEPTIONS
+                        handle_new_user(user_id, message_text)
                 return
 
         # Check if user is in a general session (only after registration is confirmed)
+
+        # 🎯 Handle common commands that should work immediately after registration
+        normalized_message = message_text.lower().strip()
+        if normalized_message in ['menu', 'help', 'start', 'hi', 'hello', 'continue']:
+            logger.info(f"📋 User {user_id} requested menu/help - sending main menu")
+            send_main_menu(user_id)
+            return
 
         # Check for other session types
         session_type = session_manager.get_session_type(user_id)
@@ -995,15 +1014,25 @@ def handle_registration_flow(user_id: str, user_input: str):
                 # Registration complete - send message with buttons
                 logger.info(f"✅ Registration completed for {user_id}")
                 
+                # Small delay to ensure database is fully updated
+                import time
+                time.sleep(0.5)
+                
                 # Send completion message
                 if result.get('buttons'):
                     success = whatsapp_service.send_interactive_message(user_id, result['message'], result['buttons'])
                     if not success:
                         # Fallback to plain message if interactive fails
                         whatsapp_service.send_message(user_id, result['message'])
+                        # Add instruction message
+                        whatsapp_service.send_message(user_id, 
+                            "💡 *Tip:* Type *MENU* anytime to see all available options!")
                         send_main_menu(user_id)
                 else:
                     whatsapp_service.send_message(user_id, result['message'])
+                    # Add instruction message
+                    whatsapp_service.send_message(user_id, 
+                        "💡 *Tip:* Type *MENU* anytime to see all available options!")
                     send_main_menu(user_id)
             else:
                 # Continue to next step

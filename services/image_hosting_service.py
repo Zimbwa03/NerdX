@@ -113,3 +113,22 @@ class ImageHostingService:
     def is_configured(self) -> bool:
         """Check if ImgBB is properly configured"""
         return bool(self.api_key)
+
+    def upload_document_with_fallback(self, file_path: str) -> Optional[str]:
+        """Return a public URL for a non-image document (PDF/video/etc.)."""
+        try:
+            if not os.path.exists(file_path):
+                logger.error(f"Document file does not exist: {file_path}")
+                return None
+
+            from utils.url_utils import convert_local_path_to_public_url
+            public_url = convert_local_path_to_public_url(file_path)
+
+            if not public_url:
+                logger.error("Document URL conversion failed - BASE_URL not configured")
+                return None
+
+            return public_url
+        except Exception as e:
+            logger.error(f"Error uploading document with fallback: {e}")
+            return None

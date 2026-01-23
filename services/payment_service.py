@@ -837,22 +837,38 @@ class PaymentService:
             if webhook_result['success'] and webhook_result['valid']:
                 reference_code = webhook_result['reference']
                 
+                # Log webhook details for debugging
+                logger.info(f"🔔 Processing webhook for {reference_code}: status={webhook_result.get('status')}, paid={webhook_result.get('paid')}")
+                
                 if webhook_result['paid']:
                     # Payment confirmed - approve automatically
+                    logger.info(f"✅ Payment {reference_code} confirmed as PAID - approving...")
                     approval_result = self.approve_paynow_payment(reference_code)
                     
                     if approval_result['success']:
-                        logger.info(f"Webhook processed: {reference_code} - payment approved")
+                        logger.info(f"✅ Webhook processed: {reference_code} - payment approved and credits added")
                         return {
                             'success': True,
                             'message': 'Payment confirmed via webhook',
                             'reference_code': reference_code,
-                            'approved': True
+                            'approved': True,
+                            'credits_added': approval_result.get('credits_added', 0)
+                        }
+                    else:
+                        logger.error(f"❌ Failed to approve payment {reference_code}: {approval_result.get('message', 'Unknown error')}")
+                        return {
+                            'success': False,
+                            'message': f"Payment confirmed but approval failed: {approval_result.get('message', 'Unknown error')}",
+                            'reference_code': reference_code,
+                            'approved': False
                         }
                 else:
                     # Update payment status but don't approve yet
+                    status = webhook_result['status'].lower()
+                    logger.info(f"📊 Payment {reference_code} status updated to: {status}")
+                    
                     update_data = {
-                        'status': webhook_result['status'].lower(),
+                        'status': status,
                         'paynow_reference': webhook_result.get('paynow_reference')
                     }
                     
@@ -860,14 +876,15 @@ class PaymentService:
                         "PATCH", 
                         "payment_transactions", 
                         update_data,
-                        filters={"reference_code": f"eq.{reference_code}"}
+                        filters={"reference_code": f"eq.{reference_code}"},
+                        use_service_role=True
                     )
                     
                     return {
                         'success': True,
                         'message': 'Payment status updated',
                         'reference_code': reference_code,
-                        'status': webhook_result['status']
+                        'status': status
                     }
             
             return {'success': False, 'message': 'Invalid webhook data'}

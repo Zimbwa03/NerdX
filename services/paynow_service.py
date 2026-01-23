@@ -32,12 +32,16 @@ class PaynowService:
         self.integration_id = os.environ.get('PAYNOW_INTEGRATION_ID')
         self.integration_key = os.environ.get('PAYNOW_INTEGRATION_KEY')
         
-        # URLs for webhook and return handling - use BASE_URL from environment
+        # URLs for Paynow result and return handling
+        # According to Paynow docs: result_url is called by Paynow to notify of payment status
+        # return_url is where users are redirected after payment
         base_url = os.environ.get('BASE_URL', 'https://nerdx.onrender.com')
-        self.result_url = f'{base_url}/webhook/paynow/result'
-        self.return_url = f'{base_url}/webhook/paynow/return'
+        self.result_url = f'{base_url}/webhook/paynow/result'  # Paynow calls this automatically
+        self.return_url = f'{base_url}/webhook/paynow/return'  # User redirect after payment
         
-        logger.info(f"Paynow webhook URLs configured: result={self.result_url}, return={self.return_url}")
+        logger.info(f"✅ Paynow URLs configured:")
+        logger.info(f"   Result URL (auto-notification): {self.result_url}")
+        logger.info(f"   Return URL (user redirect): {self.return_url}")
         
         # Test mode configuration
         self.test_mode = os.environ.get('PAYNOW_TEST_MODE', 'true').lower() == 'true'

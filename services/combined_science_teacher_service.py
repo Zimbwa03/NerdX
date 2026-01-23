@@ -6,11 +6,12 @@ A conversational AI teacher for Biology, Chemistry, and Physics with personalize
 import logging
 import json
 import os
+import re
 from datetime import datetime
 from typing import Dict, Optional, List
 from utils.session_manager import session_manager
 from services.whatsapp_service import WhatsAppService
-from database.external_db import make_supabase_request, get_user_credits, deduct_credits
+from database.external_db import make_supabase_request, get_user_credits, deduct_credits, get_user_registration
 from utils.credit_units import format_credits, units_to_credits
 from services.advanced_credit_service import advanced_credit_service
 
@@ -447,6 +448,7 @@ Examples:
 - `[PLOT: 2x + 3]`
 - `[PLOT: sin(x), range=-2pi:2pi]`
 - `[PLOT: exp(x), range=-3:3]`
+IMPORTANT: Inside `[PLOT: ...]`, use a plain ASCII expression (no `$...$` or LaTeX commands).
 
 For diagrams, include:
 `[DIAGRAM: diagram_type]`
@@ -807,6 +809,8 @@ Current conversation context will be provided with each message."""
                 initial_message = f"Start teaching {topic} to a {grade_level} student studying {subject}. Begin with a warm greeting and introduction to the topic."
                 
                 response_text = self._get_gemini_teaching_response(user_id, initial_message, session_data)
+                visual_result = self._apply_visual_triggers(response_text, user_id, session_data)
+                response_text = visual_result.get("clean_text", response_text)
                 # Clean formatting for WhatsApp (convert ** to *)
                 response_text = self._clean_whatsapp_formatting(response_text)
                 
@@ -824,6 +828,7 @@ Current conversation context will be provided with each message."""
                 message += f"💳 *Credits:* {format_credits(current_credits)} (Used: {format_credits(credits_used)})"
                 
                 self.whatsapp_service.send_message(user_id, message)
+                self._send_teacher_mode_visuals(user_id, (visual_result or {}).get("media_urls"))
             else:
                 self._send_fallback_teaching(user_id, topic, subject, grade_level)
         
@@ -904,8 +909,10 @@ Current conversation context will be provided with each message."""
                 session_data['conversation_history'] = conversation_history[-20:]
                 session_manager.set_data(user_id, 'science_teacher', session_data)
                 
+                visual_result = self._apply_visual_triggers(response_text, user_id, session_data)
+                clean_response = visual_result.get("clean_text", response_text)
                 # Clean formatting for WhatsApp (convert ** to *)
-                clean_response = self._clean_whatsapp_formatting(response_text)
+                clean_response = self._clean_whatsapp_formatting(clean_response)
                 
                 # Get current credits and add to response
                 current_credits = get_user_credits(user_id)
@@ -913,6 +920,7 @@ Current conversation context will be provided with each message."""
                 clean_response += f"\n\n💳 *Credits:* {format_credits(current_credits)} (Used: {format_credits(cost)})"
                 
                 self.whatsapp_service.send_message(user_id, clean_response)
+                self._send_teacher_mode_visuals(user_id, (visual_result or {}).get("media_urls"))
             else:
                 self._send_fallback_response(user_id, message_text, session_data)
         
@@ -925,11 +933,93 @@ Current conversation context will be provided with each message."""
     
     def _clean_whatsapp_formatting(self, text: str) -> str:
         """Clean formatting for WhatsApp - convert double asterisks to single for bold"""
-        import re
         # Replace **text** with *text* (WhatsApp bold format)
         # Use a regex to avoid replacing single asterisks
         cleaned = re.sub(r'\*\*([^\*]+?)\*\*', r'*\1*', text)
         return cleaned
+
+    def _apply_visual_triggers(self, response_text: str, user_id: str, session_data: dict) -> Dict:
+        """Handle [PLOT: ...] and [DIAGRAM: ...] tags and return cleaned text + media URLs."""
+        clean_text = response_text or ""
+        media_urls = {'graph_url': None, 'video_url': None}
+
+        if '[PLOT:' in clean_text:
+            try:
+                from services.teacher_visualization_service import handle_teacher_plot_trigger
+
+                user_data = get_user_registration(user_id)
+                user_name = user_data.get('name', 'Student') if user_data else 'Student'
+                title = f"{session_data.get('subject', 'Teacher Mode')} â€¢ {session_data.get('topic', 'Lesson')}".strip(" â€¢")
+
+                vis = handle_teacher_plot_trigger(
+                    response_text=clean_text,
+                    user_id=user_id,
+                    user_name=user_name,
+                    title=title,
+                )
+                clean_text = vis.get('clean_text') or clean_text
+                media_urls['graph_url'] = vis.get('graph_url')
+                media_urls['video_url'] = vis.get('video_url')
+            except Exception as e:
+                logger.error(f"Error checking PLOT media triggers: {e}", exc_info=True)
+                clean_text = re.sub(r'\[PLOT:.*?\]', '', clean_text).strip()
+
+        if '[DIAGRAM:' in clean_text:
+            try:
+                from services.teacher_visualization_service import handle_teacher_diagram_trigger
+
+                diagram_vis = handle_teacher_diagram_trigger(
+                    response_text=clean_text,
+                    user_id=user_id,
+                    subject_hint=session_data.get('subject', ''),
+                )
+                clean_text = diagram_vis.get('clean_text') or clean_text
+                if diagram_vis.get('video_url') and not media_urls.get('video_url'):
+                    media_urls['video_url'] = diagram_vis.get('video_url')
+            except Exception as e:
+                logger.error(f"Error checking DIAGRAM media triggers: {e}", exc_info=True)
+                clean_text = re.sub(r'\[DIAGRAM:.*?\]', '', clean_text).strip()
+
+        return {"clean_text": clean_text, "media_urls": media_urls}
+
+    def _send_teacher_mode_visuals(self, user_id: str, media_urls: Dict[str, Optional[str]]):
+        """Send Matplotlib graphs or Manim videos via WhatsApp when available."""
+        if not media_urls:
+            return
+
+        graph_url = media_urls.get('graph_url')
+        if graph_url:
+            try:
+                if graph_url.startswith(('http://', 'https://')):
+                    self.whatsapp_service.send_image(user_id, graph_url, "ðŸ“Š Graph visual")
+                else:
+                    local_path = graph_url.lstrip("/")
+                    if os.path.exists(local_path):
+                        sent = self.whatsapp_service.send_image_file(user_id, local_path, "ðŸ“Š Graph visual")
+                        if not sent:
+                            from utils.url_utils import convert_local_path_to_public_url
+                            public_url = convert_local_path_to_public_url(local_path)
+                            if public_url:
+                                self.whatsapp_service.send_image(user_id, public_url, "ðŸ“Š Graph visual")
+            except Exception as e:
+                logger.warning(f"Failed to send graph visual to {user_id}: {e}")
+
+        video_url = media_urls.get('video_url')
+        if video_url:
+            try:
+                if video_url.startswith(('http://', 'https://')):
+                    self.whatsapp_service.send_media_url(user_id, video_url, "ðŸŽžï¸ Manim animation")
+                else:
+                    local_path = video_url.lstrip("/")
+                    if os.path.exists(local_path):
+                        self.whatsapp_service.send_video_file(user_id, local_path, "ðŸŽžï¸ Manim animation")
+                    else:
+                        from utils.url_utils import convert_local_path_to_public_url
+                        public_url = convert_local_path_to_public_url(local_path)
+                        if public_url:
+                            self.whatsapp_service.send_media_url(user_id, public_url, "ðŸŽžï¸ Manim animation")
+            except Exception as e:
+                logger.warning(f"Failed to send animation to {user_id}: {e}")
 
     def _clean_research_text(self, text: str) -> str:
         """Clean and format research text for mobile"""
