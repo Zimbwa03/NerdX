@@ -367,10 +367,11 @@ class UserService:
                 message += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
                 message += "🚀 **Ready to start your learning journey!**\n\n"
                 message += "📋 **What's Next?**\n"
-                message += "• Click *🚀 Continue to Menu* below to see all options\n"
-                message += "• Or type *MENU* anytime to start exploring\n"
-                message += "• Type *HELP* for assistance\n\n"
-                message += "💡 *The main menu will appear automatically in a moment...*\n\n"
+                message += "• Tap *🚀 Continue to Menu* below or type *MENU* to see all options\n"
+                message += "• Type *HELP* to view commands and support info\n"
+                message += "• Type *CREDITS* to check your balance or *BUY CREDITS* to top up\n"
+                message += "• Type *STATS* to view your progress\n\n"
+                message += "💡 *The main menu will appear automatically in a moment. If it doesn't, type* *MENU*.\n\n"
                 message += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
                 # Create buttons for the completion message
