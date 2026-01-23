@@ -62,27 +62,70 @@ const MathSolverScreen: React.FC = () => {
             if (!result.canceled && result.assets[0].uri) {
                 setImageUri(result.assets[0].uri);
                 setLoading(true);
+                setSolution(null); // Clear previous solution
                 try {
+                    // Step 1: Scan the image
                     const scanResult = await mathApi.scanProblem(result.assets[0].uri);
-                    if (scanResult.success) {
-                        setProblem(scanResult.latex);
-
-                        // Show which OCR method was used
-                        const methodLabel = scanResult.method === 'offline-mlkit'
-                            ? '⚡ Scanned offline with ML Kit'
-                            : scanResult.method === 'vertex_gemini_vision' || scanResult.method === 'vertex-vision'
-                                ? '☁️ Scanned online (NerdX Cloud OCR)'
-                                : '☁️ Scanned online';
-                        console.log(methodLabel);
-
-                        // Auto-solve after scan
-                        const solveResult = await mathApi.solveProblem(scanResult.latex);
-                        setSolution(solveResult);
-                    } else {
+                    
+                    if (!scanResult.success) {
                         Alert.alert('Scan Failed', 'Could not recognize equation. Try a clearer image.');
+                        setLoading(false);
+                        return;
                     }
-                } catch (error) {
-                    Alert.alert('Error', 'Failed to process image. Make sure the math is clearly visible.');
+
+                    // Check if we got valid latex/text
+                    const detectedText = scanResult.latex?.trim() || '';
+                    if (!detectedText) {
+                        Alert.alert('Scan Failed', 'No text or equation detected in the image. Please try a clearer image.');
+                        setLoading(false);
+                        return;
+                    }
+
+                    // Set the problem text
+                    setProblem(detectedText);
+
+                    // Show which OCR method was used
+                    const methodLabel = scanResult.method === 'offline-mlkit'
+                        ? '⚡ Scanned offline with ML Kit'
+                        : scanResult.method === 'vertex_gemini_vision' || scanResult.method === 'vertex-vision'
+                            ? '☁️ Scanned online (NerdX Cloud OCR)'
+                            : '☁️ Scanned online';
+                    console.log(methodLabel);
+
+                    // Step 2: Auto-solve after scan (with separate error handling)
+                    try {
+                        const solveResult = await mathApi.solveProblem(detectedText);
+                        
+                        if (solveResult && solveResult.success !== false) {
+                            setSolution(solveResult);
+                        } else {
+                            // Solve failed but scan succeeded - show the problem and let user try solving manually
+                            Alert.alert(
+                                'Scan Successful',
+                                `Equation detected: ${detectedText}\n\nSolving failed. You can try solving it manually or check your connection.`,
+                                [{ text: 'OK' }]
+                            );
+                        }
+                    } catch (solveError: any) {
+                        // Solve step failed - but scan was successful, so show the problem
+                        console.error('Solve error:', solveError);
+                        const errorMessage = solveError?.response?.data?.message 
+                            || solveError?.message 
+                            || 'Failed to solve the equation. The problem has been detected - you can try solving it manually.';
+                        
+                        Alert.alert(
+                            'Scan Successful, Solve Failed',
+                            `Equation detected: ${detectedText}\n\nError: ${errorMessage}`,
+                            [{ text: 'OK' }]
+                        );
+                        // Don't clear the problem - let user try solving manually
+                    }
+                } catch (error: any) {
+                    console.error('Scan error:', error);
+                    const errorMessage = error?.response?.data?.message 
+                        || error?.message 
+                        || 'Failed to process image. Make sure the math is clearly visible.';
+                    Alert.alert('Error', errorMessage);
                 } finally {
                     setLoading(false);
                 }
@@ -139,9 +182,24 @@ const MathSolverScreen: React.FC = () => {
                             />
                         </View>
 
-                        <TouchableOpacity style={[styles.scanButton, { backgroundColor: themedColors.secondary.main }]} onPress={handleScan}>
+                        <TouchableOpacity 
+                            style={[
+                                styles.scanButton, 
+                                { 
+                                    backgroundColor: themedColors.secondary.main,
+                                    borderWidth: 2,
+                                    borderColor: '#4CAF50',
+                                }
+                            ]} 
+                            onPress={handleScan}
+                        >
                             <Ionicons name="camera" size={24} color="#FFF" />
-                            <Text style={styles.buttonText}>Scan</Text>
+                            <View style={styles.scanButtonContent}>
+                                <Text style={styles.buttonText}>Scan</Text>
+                                <View style={styles.offlineBadge}>
+                                    <Text style={styles.offlineBadgeText}>OFFLINE</Text>
+                                </View>
+                            </View>
                         </TouchableOpacity>
 
                         <TouchableOpacity
@@ -308,6 +366,25 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         borderRadius: 12,
         gap: 8,
+        position: 'relative',
+    },
+    scanButtonContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+    },
+    offlineBadge: {
+        backgroundColor: '#4CAF50',
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 8,
+        marginLeft: 4,
+    },
+    offlineBadgeText: {
+        color: '#FFF',
+        fontSize: 10,
+        fontWeight: '700',
+        letterSpacing: 0.5,
     },
     solveButton: {
         flex: 2,

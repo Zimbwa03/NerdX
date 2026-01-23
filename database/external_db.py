@@ -980,7 +980,9 @@ def sync_user_credits(user_id: str = None) -> dict:
 # NEW CREDIT SYSTEM FUNCTIONS (Welcome Bonus Only)
 # ============================================================
 
-WELCOME_BONUS_CREDITS = 150 * CREDIT_UNITS_PER_CREDIT  # 150 credits
+from config import Config
+
+WELCOME_BONUS_CREDITS = Config.REGISTRATION_BONUS
 
 def get_credit_breakdown(user_id: str) -> dict:
     """Get detailed credit breakdown for a user"""
@@ -1013,7 +1015,7 @@ def get_credit_breakdown(user_id: str) -> dict:
 
 def claim_welcome_bonus(user_id: str) -> dict:
     """
-    Award welcome bonus (150 credits) to a first-time user.
+    Award welcome bonus (75 credits) to a first-time user.
     Returns: {success: True/False, awarded: True/False, credits: amount}
     """
     try:
@@ -1035,7 +1037,13 @@ def claim_welcome_bonus(user_id: str) -> dict:
         
         # Award welcome bonus
         current_credits = user_data.get('credits', 0) or 0
-        new_credits = current_credits + WELCOME_BONUS_CREDITS
+        if 0 < current_credits < WELCOME_BONUS_CREDITS:
+            # Fix legacy credit values stored without unit conversion
+            new_credits = WELCOME_BONUS_CREDITS
+            credits_change = WELCOME_BONUS_CREDITS - current_credits
+        else:
+            new_credits = current_credits + WELCOME_BONUS_CREDITS
+            credits_change = WELCOME_BONUS_CREDITS
         
         update_data = {
             "credits": new_credits,
@@ -1060,10 +1068,10 @@ def claim_welcome_bonus(user_id: str) -> dict:
                     "user_id": user_id,
                     "action": "welcome_bonus",
                     "transaction_type": "welcome_bonus",
-                    "credits_change": WELCOME_BONUS_CREDITS,
+                    "credits_change": credits_change,
                     "balance_before": current_credits,
                     "balance_after": new_credits,
-                    "description": f"Welcome bonus: {WELCOME_BONUS_CREDITS} credits",
+                    "description": f"Welcome bonus: {format_credits(credits_change)} credits",
                     "transaction_date": datetime.utcnow().isoformat()
                 }
                 make_supabase_request("POST", "credit_transactions", transaction, use_service_role=True)
@@ -1072,10 +1080,10 @@ def claim_welcome_bonus(user_id: str) -> dict:
             
             logger.info(f"✅ Awarded {WELCOME_BONUS_CREDITS} units welcome bonus to {user_id}")
             return {
-                "success": True, 
-                "awarded": True, 
-                "credits": WELCOME_BONUS_CREDITS,
-                "message": f"You received {format_credits(WELCOME_BONUS_CREDITS)} welcome credits!"
+                "success": True,
+                "awarded": True,
+                "credits": credits_change,
+                "message": f"You received {format_credits(credits_change)} welcome credits!"
             }
         
         return {"success": False, "awarded": False, "message": "Failed to update credits"}

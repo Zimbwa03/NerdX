@@ -425,6 +425,17 @@ Current conversation context will be provided with each message."""
             # Check credit status for per-response billing
             credit_cost = advanced_credit_service.get_credit_cost('teacher_mode_followup')
             credit_status = advanced_credit_service.get_user_credit_status(user_id)
+            
+            # CRITICAL: Block users with zero credits
+            if credit_status['credits'] <= 0:
+                # Clear the session since user has no credits
+                session_manager.clear_session(user_id, 'math_teacher')
+                return {
+                    'success': False,
+                    'response': "🚫 **Access Denied**\n\nYou have 0 credits. Teacher Mode requires credits to use. Please purchase credits to continue.",
+                    'session_ended': True
+                }
+            
             if credit_status['credits'] < credit_cost:
                 return {
                     'success': False,

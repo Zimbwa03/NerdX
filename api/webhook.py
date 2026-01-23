@@ -664,12 +664,18 @@ def handle_text_message(user_id: str, message_text: str):
         # Route menu selections for text-only menus (no session active)
         if try_route_menu_selection(user_id, message_text):
             return
+        fallback_selection = resolve_main_menu_fallback(user_id, message_text)
+        if fallback_selection:
+            handle_interactive_message(user_id, {'button_reply': {'id': fallback_selection}})
+            return
 
         # Handle registered user commands
         command = message_text.lower().strip()
 
         if command in ['hi', 'hello', 'menu']:
             send_main_menu(user_id)
+        elif command in ['start quiz', 'quiz', 'quiz me']:
+            handle_quiz_menu(user_id)
         elif command == 'credits':
             show_credit_balance(user_id)
         elif command == 'stats':
@@ -1017,6 +1023,10 @@ def handle_registration_flow(user_id: str, user_input: str):
             if result.get('completed'):
                 # Registration complete - send message with buttons
                 logger.info(f"✅ Registration completed for {user_id}")
+
+                # Clear any temporary session state (e.g., awaiting consent)
+                from database.session_db import clear_user_session
+                clear_user_session(user_id)
                 
                 # Small delay to ensure database is fully updated
                 import time
@@ -1441,14 +1451,75 @@ def handle_audio_chat_image(user_id: str, image_data: dict):
         logger.error(f"Error handling audio chat image for {user_id}: {e}", exc_info=True)
         whatsapp_service.send_message(user_id, "❌ Error processing your image. Please try again.")
 
+def build_main_menu_buttons(user_id: str):
+    """Build the main menu buttons with low-credit options included."""
+    from services.advanced_credit_service import advanced_credit_service
+
+    main_buttons = [
+        {"text": "🎯 Start Quiz", "callback_data": "start_quiz"},
+        # {"text": "🎤 Audio Chat", "callback_data": "audio_chat_menu"},  # Hidden but code preserved
+        {"text": "🎓 Project Assistant", "callback_data": "project_assistant_menu"},
+        {"text": "📊 My Stats", "callback_data": "user_stats"},
+        {"text": "👥 Referrals", "callback_data": "referrals_menu"},
+        {"text": "💰 Buy Credits", "callback_data": "credit_store"}
+    ]
+
+    # Add low credit button if applicable using advanced credit system
+    main_buttons = advanced_credit_service.add_low_credit_button(main_buttons, user_id)
+
+    # Add additional buttons (avoiding duplicates)
+    # Only add Share to Friend since Buy Credits and My Stats already exist above
+    main_buttons.append({
+        "text": "📤 Share to Friend",
+        "callback_data": "share_to_friend"
+    })
+
+    return main_buttons
+
+
+def resolve_main_menu_fallback(user_id: str, message_text: str) -> str:
+    """Resolve menu replies when in-memory menu routing is unavailable."""
+    if not message_text:
+        return ""
+
+    buttons = build_main_menu_buttons(user_id)
+    number = menu_router._extract_number(message_text)
+    if number:
+        index = int(number) - 1
+        if 0 <= index < len(buttons):
+            return buttons[index].get("callback_data", "")
+
+    normalized_input = menu_router._normalize_text(message_text)
+    if not normalized_input:
+        return ""
+
+    for button in buttons:
+        text = button.get("text") or button.get("title") or ""
+        normalized_text = menu_router._normalize_text(text)
+        if normalized_text == normalized_input:
+            return button.get("callback_data", "")
+
+    for button in buttons:
+        text = button.get("text") or button.get("title") or ""
+        normalized_text = menu_router._normalize_text(text)
+        if normalized_input in normalized_text or normalized_text in normalized_input:
+            return button.get("callback_data", "")
+
+    return ""
+
+
 def send_main_menu(user_id: str, user_name: str = None):
     """Send main menu to user with advanced credit system integration"""
     try:
         # Get user registration data for personalization
-        from database.external_db import get_user_registration, get_user_stats
+        from database.external_db import get_user_registration, get_user_stats, claim_welcome_bonus
         from services.advanced_credit_service import advanced_credit_service
 
         registration = get_user_registration(user_id)
+        try:
+            claim_welcome_bonus(user_id)
+        except Exception as bonus_error:
+            logger.warning(f"Welcome bonus check failed for {user_id}: {bonus_error}")
         if not user_name:
             user_name = registration['name'] if registration else None
 
@@ -1533,24 +1604,7 @@ def send_main_menu(user_id: str, user_name: str = None):
         welcome_text += f"👇 *Choose an option to get started:*"
 
         # Create main buttons with advanced credit system integration
-        main_buttons = [
-                {"text": "🎯 Start Quiz", "callback_data": "start_quiz"},
-                # {"text": "🎤 Audio Chat", "callback_data": "audio_chat_menu"},  # Hidden but code preserved
-                {"text": "🎓 Project Assistant", "callback_data": "project_assistant_menu"},
-            {"text": "📊 My Stats", "callback_data": "user_stats"},
-            {"text": "👥 Referrals", "callback_data": "referrals_menu"},
-            {"text": "💰 Buy Credits", "callback_data": "credit_store"}
-        ]
-
-        # Add low credit button if applicable using advanced credit system
-        main_buttons = advanced_credit_service.add_low_credit_button(main_buttons, user_id)
-
-        # Add additional buttons (avoiding duplicates)
-        # Only add Share to Friend since Buy Credits and My Stats already exist above
-        main_buttons.append({
-            "text": "📤 Share to Friend", 
-            "callback_data": "share_to_friend"
-        })
+        main_buttons = build_main_menu_buttons(user_id)
 
         sent = whatsapp_service.send_interactive_message(user_id, welcome_text, main_buttons)
         if not sent:

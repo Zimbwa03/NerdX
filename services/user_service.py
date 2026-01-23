@@ -358,7 +358,8 @@ class UserService:
                 message += f"📱 **WhatsApp**: {whatsapp_id}\n\n"
                 message += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
                 message += "💎 **Welcome Bonus**: +75 Credits\n"
-                message += f"💳 **Total Credits**: {final_credits} credits\n\n"
+                from utils.credit_units import format_credits
+                message += f"💳 **Total Credits**: {format_credits(final_credits)} credits\n\n"
 
                 if referral_code:
                     message += f"🎁 **Referral Bonus Applied!**\n"

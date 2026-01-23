@@ -557,6 +557,34 @@ Current conversation context will be provided with each message."""
     def start_teacher_mode(self, user_id: str):
         """Start teacher mode - ask for subject and topic selection"""
         try:
+            # CRITICAL: Check if user has zero credits - block access immediately
+            current_credits = get_user_credits(user_id)
+            if current_credits <= 0:
+                insufficient_msg = """💰 *Need More Credits!* 💰
+
+🎓 *Combined Science Teacher Mode*
+
+🚫 *Access Denied*
+You have 0 credits. Teacher Mode requires credits to use.
+
+🎯 *Teacher Mode Benefits:*
+• AI-powered personalized teaching
+• Interactive Q&A sessions
+• Professional PDF notes
+• Biology, Chemistry & Physics topics
+• ZIMSEC exam-focused content
+
+💎 *Get More Credits:*"""
+                
+                buttons = [
+                    {"text": "💰 Buy Credits", "callback_data": "credit_store"},
+                    {"text": "👥 Invite Friends (+5 each)", "callback_data": "share_to_friend"},
+                    {"text": "🏠 Main Menu", "callback_data": "combined_science"}
+                ]
+                
+                self.whatsapp_service.send_interactive_message(user_id, insufficient_msg, buttons)
+                return
+            
             # Initialize new teaching session
             session_manager.set_data(user_id, 'science_teacher', {
                 'active': True,
@@ -856,6 +884,29 @@ Current conversation context will be provided with each message."""
             # Check if user wants to generate notes
             if any(keyword in message_text.lower() for keyword in ['generate notes', 'save notes', 'create notes', 'make notes', 'notes pdf']):
                 self.generate_notes(user_id)
+                return
+            
+            # CRITICAL: Check if user has zero credits before processing conversation
+            current_credits = get_user_credits(user_id)
+            if current_credits <= 0:
+                insufficient_msg = """💰 *Need More Credits!* 💰
+
+🎓 *Combined Science Teacher Mode*
+
+🚫 *Access Denied*
+You have 0 credits. Teacher Mode requires credits to use.
+
+💎 *Get More Credits:*"""
+                
+                buttons = [
+                    {"text": "💰 Buy Credits", "callback_data": "credit_store"},
+                    {"text": "👥 Invite Friends (+5 each)", "callback_data": "share_to_friend"},
+                    {"text": "🏠 Main Menu", "callback_data": "combined_science"}
+                ]
+                
+                self.whatsapp_service.send_interactive_message(user_id, insufficient_msg, buttons)
+                # Clear the session since user has no credits
+                session_manager.clear_session(user_id, 'science_teacher')
                 return
             
             # Per-response billing for follow-up question

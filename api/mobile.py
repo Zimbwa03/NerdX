@@ -3715,6 +3715,13 @@ def start_teacher_mode():
         credit_cost = advanced_credit_service.get_credit_cost('teacher_mode_start')
         user_credits = get_user_credits(g.current_user_id) or 0
         
+        # CRITICAL: Block users with zero credits from accessing Teacher Mode
+        if user_credits <= 0:
+            return jsonify({
+                'success': False,
+                'message': 'Access denied. You have 0 credits. Teacher Mode requires credits to use. Please purchase credits to continue.'
+            }), 402
+        
         if user_credits < credit_cost:
             return jsonify({
                 'success': False,
@@ -3838,6 +3845,17 @@ def send_teacher_message():
         # Check credits for follow-up
         credit_cost = advanced_credit_service.get_credit_cost('teacher_mode_followup')
         user_credits = get_user_credits(g.current_user_id) or 0
+        
+        # CRITICAL: Block users with zero credits from continuing Teacher Mode
+        if user_credits <= 0:
+            # Clear the session since user has no credits
+            if session_data:
+                session_manager.clear_session(g.current_user_id, session_key)
+            return jsonify({
+                'success': False,
+                'message': 'Access denied. You have 0 credits. Teacher Mode requires credits to use. Please purchase credits to continue.',
+                'session_ended': True
+            }), 402
         
         if user_credits < credit_cost:
             return jsonify({

@@ -871,17 +871,40 @@ const TopicsScreen: React.FC = () => {
               <Card
                 variant="elevated"
                 onPress={() => navigation.navigate('MathSolver' as never)}
-                style={[styles.featureCard, { borderLeftColor: Colors.error.main, borderLeftWidth: 4 }]}
+                style={[
+                  styles.featureCard, 
+                  { 
+                    borderLeftColor: '#4CAF50', 
+                    borderLeftWidth: 4,
+                    borderWidth: 2,
+                    borderColor: '#4CAF50',
+                  }
+                ]}
               >
                 <View style={styles.featureContent}>
                   <IconCircle
-                    icon={<Ionicons name="camera" size={28} color={Colors.error.main} />}
+                    icon={<Ionicons name="camera" size={28} color="#4CAF50" />}
                     size={56}
-                    backgroundColor="rgba(244, 67, 54, 0.1)"
+                    backgroundColor="rgba(76, 175, 80, 0.15)"
                   />
                   <View style={styles.featureInfo}>
-                    <Text style={styles.featureTitle}>Scan & Solve</Text>
-                    <Text style={styles.featureSubtitle}>Snap a photo or type any math problem - works offline!</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                      <Text style={styles.featureTitle}>Scan & Solve</Text>
+                      <View style={{
+                        backgroundColor: '#4CAF50',
+                        paddingHorizontal: 8,
+                        paddingVertical: 3,
+                        borderRadius: 10,
+                      }}>
+                        <Text style={{
+                          color: '#FFF',
+                          fontSize: 10,
+                          fontWeight: '700',
+                          letterSpacing: 0.5,
+                        }}>OFFLINE</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.featureSubtitle}>Snap a photo or type any math problem - works completely offline!</Text>
                   </View>
                   {Icons.arrowRight(24, Colors.text.secondary)}
                 </View>
