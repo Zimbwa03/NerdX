@@ -619,7 +619,7 @@ def handle_text_message(user_id: str, message_text: str):
                     # Check if user just completed registration (grace period for DB sync)
                     # If they send MENU, HELP, or any command right after registration, be helpful
                     normalized_message = message_text.lower().strip()
-                    if normalized_message in ['menu', 'help', 'start', 'hi', 'hello', 'continue']:
+                    if normalized_message in ['menu', 'help', 'hi', 'hello', 'continue']:
                         # User might have just registered - send helpful message with menu
                         whatsapp_service.send_message(user_id, 
                             "🎉 *Welcome!*\n\n"
@@ -636,7 +636,7 @@ def handle_text_message(user_id: str, message_text: str):
 
         # 🎯 Handle common commands that should work immediately after registration
         normalized_message = message_text.lower().strip()
-        if normalized_message in ['menu', 'help', 'start', 'hi', 'hello', 'continue']:
+        if normalized_message in ['menu', 'help', 'hi', 'hello', 'continue']:
             logger.info(f"📋 User {user_id} requested menu/help - sending main menu")
             send_main_menu(user_id)
             return
@@ -668,7 +668,7 @@ def handle_text_message(user_id: str, message_text: str):
         # Handle registered user commands
         command = message_text.lower().strip()
 
-        if command in ['hi', 'hello', 'start', 'menu']:
+        if command in ['hi', 'hello', 'menu']:
             send_main_menu(user_id)
         elif command == 'credits':
             show_credit_balance(user_id)
@@ -713,17 +713,21 @@ def handle_text_message(user_id: str, message_text: str):
             handle_unsubscribe_request(user_id)
             return
         elif command in ['start', 'subscribe', 'resubscribe', 'yes']:
-            try:
-                from database.external_db import set_user_subscription
-                set_user_subscription(user_id, True)
-            except Exception as _:
-                pass
-            # Send confirmation template if available
-            try:
-                whatsapp_service.send_template_message(user_id, 'nerdx_resubscribe_confirmation', {})
-            except Exception:
-                whatsapp_service.send_message(user_id, "You are now subscribed to NerdX study updates. Reply STOP to unsubscribe anytime.")
-            send_main_menu(user_id)
+            from database.external_db import get_user_registration
+            registration = get_user_registration(user_id)
+            is_active = registration.get('is_active', True) if registration else True
+            if not is_active:
+                try:
+                    from database.external_db import set_user_subscription
+                    set_user_subscription(user_id, True)
+                except Exception as _:
+                    pass
+                # Send confirmation template if available
+                try:
+                    whatsapp_service.send_template_message(user_id, 'nerdx_resubscribe_confirmation', {})
+                except Exception:
+                    whatsapp_service.send_message(user_id, "You are now subscribed to NerdX study updates. Reply STOP to unsubscribe anytime.")
+                send_main_menu(user_id)
             return
         elif command in ['register', 'registration', 'sign up', 'signup']:
             # Force restart registration for stuck users
@@ -1070,10 +1074,10 @@ def handle_session_message(user_id: str, message_text: str):
 
         # Handle reset commands and main menu requests - these should always work
         command = message_text.lower().strip()
-        if command in ['cancel', 'reset', 'stop', 'start', 'menu', 'hi', 'hello']:
+        if command in ['cancel', 'reset', 'stop', 'menu', 'hi', 'hello']:
             from database.session_db import clear_user_session
             clear_user_session(user_id)
-            if command in ['start', 'menu', 'hi', 'hello']:
+            if command in ['menu', 'hi', 'hello']:
                 send_main_menu(user_id)
             else:
                 whatsapp_service.send_message(user_id, "✅ Session cancelled. You can now start a new question.")
@@ -1444,8 +1448,8 @@ def send_main_menu(user_id: str, user_name: str = None):
         from database.external_db import get_user_registration, get_user_stats
         from services.advanced_credit_service import advanced_credit_service
 
+        registration = get_user_registration(user_id)
         if not user_name:
-            registration = get_user_registration(user_id)
             user_name = registration['name'] if registration else None
 
         user_stats = get_user_stats(user_id) or {'level': 1, 'xp_points': 0, 'streak': 0, 'correct_answers': 0, 'total_attempts': 0}
@@ -1548,7 +1552,21 @@ def send_main_menu(user_id: str, user_name: str = None):
             "callback_data": "share_to_friend"
         })
 
-        whatsapp_service.send_interactive_message(user_id, welcome_text, main_buttons)
+        sent = whatsapp_service.send_interactive_message(user_id, welcome_text, main_buttons)
+        if not sent:
+            logger.warning(f"Primary menu send failed for {user_id}, attempting grouped fallback")
+            sent = whatsapp_service.send_grouped_buttons(user_id, welcome_text, main_buttons)
+
+        if not sent:
+            logger.warning(f"Grouped menu send failed for {user_id}, attempting plain-text fallback")
+            option_texts = [button.get('text') or button.get('title', 'Option') for button in main_buttons]
+            menu_router.store_menu(user_id, main_buttons, source="menu_fallback")
+            fallback_message = whatsapp_service._format_options_message(
+                welcome_text,
+                option_texts,
+                "Reply with the option number or name."
+            )
+            whatsapp_service.send_message(user_id, fallback_message)
 
     except Exception as e:
         logger.error(f"Error sending main menu for {user_id}: {e}", exc_info=True)
