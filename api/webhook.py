@@ -1026,7 +1026,7 @@ def handle_registration_flow(user_id: str, user_input: str):
                         whatsapp_service.send_message(user_id, result['message'])
                         # Add instruction message
                         whatsapp_service.send_message(user_id, 
-                            "💡 *Tip:* Type *MENU* anytime to see all available options!")
+                            "💡 *Tip:* Type *MENU* to see all options or *HELP* for commands.")
                         send_main_menu(user_id)
                     else:
                         # Successfully sent interactive message - now automatically send main menu
@@ -1038,7 +1038,7 @@ def handle_registration_flow(user_id: str, user_input: str):
                     whatsapp_service.send_message(user_id, result['message'])
                     # Add instruction message
                     whatsapp_service.send_message(user_id, 
-                        "💡 *Tip:* Type *MENU* anytime to see all available options!")
+                        "💡 *Tip:* Type *MENU* to see all options or *HELP* for commands.")
                     send_main_menu(user_id)
             else:
                 # Continue to next step
