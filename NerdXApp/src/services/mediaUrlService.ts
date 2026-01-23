@@ -53,17 +53,52 @@ const isExpired = (exp?: number, minTtlSeconds: number = MIN_TTL_SECONDS): boole
   return exp - now <= minTtlSeconds;
 };
 
-export const checkUrlAccessible = async (url: string): Promise<boolean> => {
+export const checkUrlAccessible = async (url: string, timeout: number = 5000): Promise<boolean> => {
+  // Create an AbortController for timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+
   try {
-    const head = await fetch(url, { method: 'HEAD' });
-    if (head.ok) return true;
-  } catch {
-    // ignore
-  }
-  try {
-    const get = await fetch(url, { method: 'GET', headers: { Range: 'bytes=0-0' } });
-    return get.ok;
-  } catch {
+    // Try HEAD request first (lighter)
+    try {
+      const head = await fetch(url, { 
+        method: 'HEAD',
+        signal: controller.signal,
+        cache: 'no-cache'
+      });
+      clearTimeout(timeoutId);
+      if (head.ok || head.status === 206) return true; // 206 is Partial Content (valid for video)
+    } catch (headErr: any) {
+      // If HEAD fails, try GET with Range header
+      if (headErr.name !== 'AbortError') {
+        clearTimeout(timeoutId);
+        const getController = new AbortController();
+        const getTimeoutId = setTimeout(() => getController.abort(), timeout);
+        
+        try {
+          const get = await fetch(url, { 
+            method: 'GET', 
+            headers: { Range: 'bytes=0-0' },
+            signal: getController.signal,
+            cache: 'no-cache'
+          });
+          clearTimeout(getTimeoutId);
+          return get.ok || get.status === 206; // 206 is Partial Content (valid for video)
+        } catch {
+          clearTimeout(getTimeoutId);
+          return false;
+        }
+      }
+    }
+    
+    clearTimeout(timeoutId);
+    return false;
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+    // Timeout or network error - don't treat as fatal, let the player try
+    if (err.name === 'AbortError') {
+      console.warn('🎥 URL accessibility check timed out (non-critical)');
+    }
     return false;
   }
 };

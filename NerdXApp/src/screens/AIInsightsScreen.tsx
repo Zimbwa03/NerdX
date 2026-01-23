@@ -45,7 +45,7 @@ const buildInsightThoughts = (insights: AIInsights, firstName?: string) => {
     const weekly = insights.weekly_trend;
 
     if (weekly) {
-        const accuracy = Number.isFinite(weekly.accuracy) ? Math.round(weekly.accuracy) : weekly.accuracy;
+        const accuracy = Number.isFinite(weekly.accuracy) ? Math.round(weekly.accuracy) : 0;
         const totalQuestions = Number.isFinite(weekly.total_questions) ? weekly.total_questions : 0;
         const activeDays = Number.isFinite(weekly.active_days) ? weekly.active_days : 0;
         const intro = firstName ? `I'm ${firstName}, and ` : '';
@@ -59,7 +59,10 @@ const buildInsightThoughts = (insights: AIInsights, firstName?: string) => {
     }
 
     if (typeof insights.mastered_count === 'number' || typeof insights.learning_count === 'number' || typeof insights.struggling_count === 'number') {
-        thoughts.push(`I've mastered ${insights.mastered_count} skills, I'm learning ${insights.learning_count}, and ${insights.struggling_count} need work.`);
+        const masteredCount = Number.isFinite(insights.mastered_count) ? insights.mastered_count : 0;
+        const learningCount = Number.isFinite(insights.learning_count) ? insights.learning_count : 0;
+        const strugglingCount = Number.isFinite(insights.struggling_count) ? insights.struggling_count : 0;
+        thoughts.push(`I've mastered ${masteredCount} skills, I'm learning ${learningCount}, and ${strugglingCount} need work.`);
     }
 
     if (insights.strengths?.length) {

@@ -1,5 +1,5 @@
 // Topic Notes Detail Screen - Display detailed notes with diagrams
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     View,
     Text,
@@ -20,6 +20,11 @@ import { scienceNotesApi, TopicNotes } from '../services/api/scienceNotesApi';
 import { aLevelChemistryNotesApi } from '../services/api/aLevelChemistryNotesApi';
 import { aLevelPhysicsNotesApi } from '../services/api/aLevelPhysicsNotesApi';
 import { aLevelBiologyNotesApi } from '../services/api/aLevelBiologyNotesApi';
+// Direct imports for instant synchronous loading
+import { getTopicNotes as getScienceTopicNotes } from '../data/scienceNotes';
+import { getTopicNotes as getALevelChemistryNotes } from '../data/aLevelChemistry';
+import { getTopicNotes as getALevelPhysicsNotes } from '../data/aLevelPhysics';
+import { getTopicNotes as getALevelBiologyNotes } from '../data/aLevelBiology';
 import { useAuth } from '../context/AuthContext';
 import { Colors } from '../theme/colors';
 import Markdown from 'react-native-markdown-display';
@@ -45,55 +50,51 @@ const TopicNotesDetailScreen: React.FC = () => {
         index?: number;
     };
 
-    const [notes, setNotes] = useState<TopicNotes | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [expandedSections, setExpandedSections] = useState<Set<number>>(new Set([0])); // First section expanded by default
-
-    useEffect(() => {
-        loadNotes();
-    }, []);
-
-    const loadNotes = async () => {
+    // Optimize: Load notes synchronously on mount for instant display (local data, no network)
+    const notes = React.useMemo(() => {
         try {
-            setLoading(true);
-            let notesData = null;
-
             // Check if this is A Level Chemistry
             if (isALevel && subject === 'A Level Chemistry') {
-                notesData = await aLevelChemistryNotesApi.getTopicNotes(topic);
+                return getALevelChemistryNotes(topic);
             } 
             // Check if this is A Level Physics
             else if (isALevel && subject === 'A Level Physics') {
-                notesData = await aLevelPhysicsNotesApi.getTopicNotes(topic);
+                return getALevelPhysicsNotes(topic);
             }
             // Check if this is A Level Biology (subject is 'Biology' but isALevel is true)
             else if (isALevel && subject === 'Biology') {
-                notesData = await aLevelBiologyNotesApi.getTopicNotes(topic);
+                return getALevelBiologyNotes(topic);
             } 
             else {
-                // O Level science notes
-                notesData = await scienceNotesApi.getTopicNotes(
+                // O Level science notes - synchronous access
+                return getScienceTopicNotes(
                     subject as 'Biology' | 'Chemistry' | 'Physics',
                     topic
                 );
             }
+        } catch (error: any) {
+            console.error('Error loading notes:', error);
+            return null;
+        }
+    }, [subject, topic, isALevel]);
 
-            if (notesData) {
-                setNotes(notesData);
-            } else {
+    const [expandedSections, setExpandedSections] = useState<Set<number>>(new Set([0])); // First section expanded by default
+    const loading = notes === null; // Loading is false if notes exist (instant)
+
+    // Handle missing notes
+    useEffect(() => {
+        if (!notes) {
+            // Small delay to ensure UI is ready, then show error
+            const timer = setTimeout(() => {
                 Alert.alert(
                     'Notes Not Available',
                     `Notes for ${topic} are being prepared. Please check back soon!`
                 );
                 navigation.goBack();
-            }
-        } catch (error: any) {
-            Alert.alert('Error', 'Failed to load notes');
-            navigation.goBack();
-        } finally {
-            setLoading(false);
+            }, 50);
+            return () => clearTimeout(timer);
         }
-    };
+    }, [notes, topic, navigation]);
 
     const toggleSection = (index: number) => {
         const newExpanded = new Set(expandedSections);
@@ -447,10 +448,11 @@ const TopicNotesDetailScreen: React.FC = () => {
                         </View>
                     )}
 
-                    {/* AI Flashcards Section - All Science topics */}
-                    {(subject === 'Biology' || subject === 'Chemistry' || subject === 'Physics') && notes && (
+                    {/* AI Flashcards Section - All Science topics (O-Level and A-Level) */}
+                    {((subject === 'Biology' || subject === 'Chemistry' || subject === 'Physics') || 
+                      (isALevel && (subject === 'A Level Chemistry' || subject === 'A Level Physics' || subject === 'Biology'))) && notes && (
                         <FlashcardSection
-                            subject={subject}
+                            subject={isALevel && subject === 'Biology' ? 'A Level Biology' : subject}
                             topic={topic}
                             notes={notes}
                             accentColor={getSubjectColor()}

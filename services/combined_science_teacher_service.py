@@ -1332,7 +1332,7 @@ You have 0 credits. Teacher Mode requires credits to use.
                                 'temperature': 0.7,
                                 'max_tokens': 4000
                             },
-                            timeout=90
+                            timeout=60  # Optimized: Reduced from 90s - DeepSeek typically responds faster
                         )
                         
                         if response.status_code == 200:

@@ -1,6 +1,6 @@
 // Video Stream Player Component - Advanced streaming video player for topic video lessons
 // Uses expo-video for video playback with fullscreen, minimize, and advanced controls
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
     View,
     Text,
@@ -43,46 +43,90 @@ const VideoStreamPlayer: React.FC<VideoStreamPlayerProps> = ({
     const [position, setPosition] = useState(0);
     const [duration, setDuration] = useState(0);
     const [resolvedUrl, setResolvedUrl] = useState<string | null>(null);
+    const retryCountRef = useRef(0);
+    const retryInFlightRef = useRef(false);
+    const loadRequestIdRef = useRef(0);
+    const MAX_RETRIES = 2;
 
     const controlsTimeout = useRef<NodeJS.Timeout | null>(null);
     const pulseAnim = useRef(new Animated.Value(1)).current;
 
-    const resolveVideoUrl = useCallback(async (): Promise<string | null> => {
+    const resolveVideoUrl = useCallback(async (options?: { forceRefresh?: boolean }): Promise<string | null> => {
+        const forceRefresh = options?.forceRefresh ?? false;
         try {
             console.log('🎥 Video: Resolving URL...');
-            const initialUrl = await ensureFreshMediaUrl(videoUrl);
-            const initialOk = await checkUrlAccessible(initialUrl);
+            
+            // Step 1: Try to get a fresh URL
+            const initialUrl = forceRefresh
+                ? await refreshMediaUrl(videoUrl)
+                : await ensureFreshMediaUrl(videoUrl);
+            console.log('🎥 Video: Got initial URL, checking accessibility...');
+            
+            // Try accessibility check with timeout (don't block if it fails)
+            let initialOk = false;
+            try {
+                initialOk = await Promise.race([
+                    checkUrlAccessible(initialUrl),
+                    new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 3000)) // 3s timeout
+                ]);
+            } catch (checkErr) {
+                console.warn('🎥 Video: Accessibility check failed (non-critical):', checkErr);
+            }
+            
             if (initialOk) {
                 console.log('🎥 Video: Initial URL is accessible');
                 return initialUrl;
             }
 
-            console.log('🎥 Video: Initial URL not accessible, refreshing...');
-            const refreshedUrl = await refreshMediaUrl(videoUrl);
-            const refreshedOk = await checkUrlAccessible(refreshedUrl);
+            console.log('🎥 Video: Initial URL accessibility check failed, refreshing URL...');
+            const refreshedUrl = forceRefresh ? initialUrl : await refreshMediaUrl(videoUrl);
+            
+            // Try accessibility check on refreshed URL with timeout
+            let refreshedOk = false;
+            try {
+                refreshedOk = await Promise.race([
+                    checkUrlAccessible(refreshedUrl),
+                    new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 3000)) // 3s timeout
+                ]);
+            } catch (checkErr) {
+                console.warn('🎥 Video: Refreshed URL accessibility check failed (non-critical):', checkErr);
+            }
+            
             if (refreshedOk) {
                 console.log('🎥 Video: Refreshed URL is accessible');
                 return refreshedUrl;
             }
 
-            console.error('🎥 Video: Both URLs failed accessibility check');
-            return null;
+            // Even if accessibility checks fail, try using the refreshed URL anyway
+            // The video player itself will report if there's a real problem
+            console.warn('🎥 Video: Accessibility checks failed, but will attempt to load video anyway');
+            console.log('🎥 Video: Using refreshed URL (player will validate):', refreshedUrl.substring(0, 100) + '...');
+            return refreshedUrl;
         } catch (err) {
             console.error('🎥 Video: Error resolving URL:', err);
-            return null;
+            // As a last resort, try using the original URL
+            console.log('🎥 Video: Falling back to original URL');
+            return videoUrl;
         }
     }, [videoUrl]);
 
-    // Create video player with resolved URL (or empty string if not resolved yet)
-    // Using resolvedUrl state ensures we don't try to load expired URLs
-    const player = useVideoPlayer(resolvedUrl || '', (p) => {
+    const baseSource = useMemo(() => ({
+        uri: videoUrl,
+        contentType: 'progressive' as const,
+    }), [videoUrl]);
+
+    // Create video player with the original URL; use replaceAsync for fresh signed URLs
+    const player = useVideoPlayer(baseSource, (p) => {
         p.loop = false;
         p.muted = false;
+        p.timeUpdateEventInterval = 0.5;
     });
 
     // Subscribe to player events
     const { isPlaying } = useEvent(player, 'playingChange', { isPlaying: player.playing });
-    const { status } = useEvent(player, 'statusChange', { status: player.status });
+    const statusEvent = useEvent(player, 'statusChange', { status: player.status });
+    const status = statusEvent?.status;
+    const statusError = statusEvent?.error;
 
     // Resolve URL and update player when videoUrl changes
     useEffect(() => {
@@ -91,27 +135,33 @@ const VideoStreamPlayer: React.FC<VideoStreamPlayerProps> = ({
         const initializePlayer = async () => {
             setIsLoading(true);
             setError(null);
+            setResolvedUrl(null);
+            retryCountRef.current = 0; // Reset retry count on new video
+            retryInFlightRef.current = false;
+            const requestId = ++loadRequestIdRef.current;
             
             console.log('🎥 Video: Resolving URL for video...');
             const playableUrl = await resolveVideoUrl();
             if (!active) return;
+            if (requestId !== loadRequestIdRef.current) return;
             
             if (!playableUrl) {
-                console.error('🎥 Video: Failed to resolve URL');
-                setError('Video could not be loaded. Please check your connection or try again.');
+                console.error('🎥 Video: Failed to resolve URL - no URL available');
+                setError('Video URL could not be resolved. Please check your connection or try again.');
                 setIsLoading(false);
                 return;
             }
             
             console.log('🎥 Video: URL resolved, updating player:', playableUrl.substring(0, 100) + '...');
-            // Set resolved URL - this will trigger the player to update since it depends on resolvedUrl
+            // Track resolved URL for UI/state
             setResolvedUrl(playableUrl);
             
             // Also explicitly replace in case the player was already created
             try {
-                if (playableUrl) {
-                    player.replace(playableUrl);
-                }
+                await player.replaceAsync({
+                    uri: playableUrl,
+                    contentType: 'progressive',
+                });
             } catch (err) {
                 console.error('🎥 Video: Error replacing player URL:', err);
                 // Don't set error here - let the status effect handle it
@@ -135,6 +185,7 @@ const VideoStreamPlayer: React.FC<VideoStreamPlayerProps> = ({
             console.log('🎥 Video: Ready to play');
             setIsLoading(false);
             setError(null);
+            retryCountRef.current = 0;
             if (player.duration > 0) {
                 setDuration(player.duration * 1000); // Convert to milliseconds
             }
@@ -143,27 +194,48 @@ const VideoStreamPlayer: React.FC<VideoStreamPlayerProps> = ({
             setIsLoading(true);
         } else if (status === 'error') {
             console.error('🎥 Video: Player error with resolved URL');
+            if (statusError?.message) {
+                console.error('🎥 Video: Player error message:', statusError.message);
+            }
+            
+            // Prevent infinite retry loops
+            if (retryCountRef.current >= MAX_RETRIES) {
+                console.error('🎥 Video: Max retries reached, giving up');
+                setError('Video could not be loaded after multiple attempts. Please check your internet connection and try again.');
+                setIsLoading(false);
+                return;
+            }
+            
             // If we have a resolved URL and still get an error, try refreshing once more
             const retry = async () => {
-                console.log('🎥 Video: Retrying with fresh URL...');
-                const newUrl = await resolveVideoUrl();
-                if (newUrl && newUrl !== resolvedUrl) {
+                if (retryInFlightRef.current) {
+                    return;
+                }
+                retryInFlightRef.current = true;
+                retryCountRef.current += 1;
+                console.log(`🎥 Video: Retrying with fresh URL (attempt ${retryCountRef.current}/${MAX_RETRIES})...`);
+                const newUrl = await resolveVideoUrl({ forceRefresh: true });
+                if (newUrl) {
                     try {
-                        player.replace(newUrl);
+                        await player.replaceAsync({
+                            uri: newUrl,
+                            contentType: 'progressive',
+                        });
                         setResolvedUrl(newUrl);
                     } catch (err) {
                         console.error('🎥 Video: Retry failed:', err);
-                        setError('Video could not be loaded. Please check your internet connection and try again.');
-                        setIsLoading(false);
                     }
-                } else {
+                }
+
+                if (retryCountRef.current >= MAX_RETRIES) {
                     setError('Video could not be loaded. Please check your internet connection and try again.');
                     setIsLoading(false);
                 }
+                retryInFlightRef.current = false;
             };
             retry();
         }
-    }, [status, player.duration, resolvedUrl, resolveVideoUrl, player]);
+    }, [status, statusError, player.duration, resolvedUrl, resolveVideoUrl, player]);
 
     // Update position periodically
     useEffect(() => {
@@ -313,14 +385,24 @@ const VideoStreamPlayer: React.FC<VideoStreamPlayerProps> = ({
     const handleRetry = async () => {
         setError(null);
         setIsLoading(true);
-        const playableUrl = await resolveVideoUrl();
+        retryCountRef.current = 0; // Reset retry count on manual retry
+        const playableUrl = await resolveVideoUrl({ forceRefresh: true });
         if (!playableUrl) {
             setError('Video could not be loaded. Please check your connection or try again.');
             setIsLoading(false);
             return;
         }
         setResolvedUrl(playableUrl);
-        player.replace(playableUrl);
+        try {
+            await player.replaceAsync({
+                uri: playableUrl,
+                contentType: 'progressive',
+            });
+        } catch (err) {
+            console.error('🎥 Video: Manual retry failed:', err);
+            setError('Video could not be loaded. Please check your connection or try again.');
+            setIsLoading(false);
+        }
     };
 
     const handleVideoPress = () => {
@@ -413,7 +495,7 @@ const VideoStreamPlayer: React.FC<VideoStreamPlayerProps> = ({
                             style={styles.video}
                             contentFit="contain"
                             nativeControls={false}
-                            allowsFullscreen
+                            fullscreenOptions={{ enterFullscreenButton: true }}
                             onFullscreenEnter={() => setIsFullscreen(true)}
                             onFullscreenExit={() => setIsFullscreen(false)}
                         />

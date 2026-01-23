@@ -1,6 +1,6 @@
 """
 Flashcard Generation Service
-Generates AI-powered educational flashcards using DeepSeek AI for Science Notes revision.
+Generates AI-powered educational flashcards using DeepSeek AI for O-Level and Vertex AI for A-Level Science Notes revision.
 """
 
 import os
@@ -27,7 +27,7 @@ class Flashcard:
 
 class FlashcardService:
     """
-    Service for generating educational flashcards using DeepSeek AI.
+    Service for generating educational flashcards using DeepSeek AI (O-Level) and Vertex AI (A-Level).
     
     Supports two modes:
     - Batch mode: Generate up to 100 cards at once
@@ -40,8 +40,25 @@ class FlashcardService:
         self.max_batch_size = 100
         self.timeout = 60  # seconds
         
+        # Initialize Vertex AI service for A-level subjects
+        self.vertex_service = None
+        try:
+            from services.vertex_service import vertex_service
+            self.vertex_service = vertex_service
+            if self.vertex_service.is_available():
+                logger.info("✅ Vertex AI service available for A-level flashcards")
+            else:
+                logger.warning("⚠️ Vertex AI service not available - A-level flashcards will use fallback")
+        except Exception as e:
+            logger.warning(f"⚠️ Could not initialize Vertex AI service: {e}")
+        
         if not self.api_key:
-            logger.warning("DEEPSEEK_API_KEY not configured - flashcard generation will be limited")
+            logger.warning("DEEPSEEK_API_KEY not configured - O-level flashcard generation will be limited")
+    
+    def _is_a_level_subject(self, subject: str) -> bool:
+        """Check if subject is an A-level subject"""
+        a_level_indicators = ['A Level', 'A-Level']
+        return any(indicator in subject for indicator in a_level_indicators)
     
     def generate_flashcards(
         self,
@@ -71,11 +88,16 @@ class FlashcardService:
         
         try:
             prompt = self._create_batch_prompt(subject, topic, notes_content, actual_count)
-            response = self._send_api_request(prompt)
+            
+            # Use Vertex AI for A-level subjects, DeepSeek for O-level
+            if self._is_a_level_subject(subject):
+                response = self._send_vertex_ai_request(prompt)
+            else:
+                response = self._send_api_request(prompt)
             
             if response:
                 flashcards = self._parse_flashcards_response(response, actual_count)
-                logger.info(f"✅ Generated {len(flashcards)} flashcards for {topic}")
+                logger.info(f"✅ Generated {len(flashcards)} flashcards for {topic} ({subject})")
                 return flashcards
             else:
                 logger.warning(f"Failed to generate flashcards, using fallback")
@@ -111,7 +133,12 @@ class FlashcardService:
         
         try:
             prompt = self._create_single_prompt(subject, topic, notes_content, index, previous_questions)
-            response = self._send_api_request(prompt, timeout=30)
+            
+            # Use Vertex AI for A-level subjects, DeepSeek for O-level
+            if self._is_a_level_subject(subject):
+                response = self._send_vertex_ai_request(prompt)
+            else:
+                response = self._send_api_request(prompt, timeout=30)
             
             if response:
                 flashcard = self._parse_single_flashcard(response, index)
@@ -135,8 +162,55 @@ class FlashcardService:
         truncated_notes = notes_content[:8000] if len(notes_content) > 8000 else notes_content
         
         # Detect if A Level or O Level
-        level = "A-Level" if "A Level" in subject else "ZIMSEC O-Level"
+        is_a_level = self._is_a_level_subject(subject)
+        level = "A-Level" if is_a_level else "ZIMSEC O-Level"
         
+        # Enhanced prompt for A-level subjects
+        if is_a_level:
+            return f"""You are an expert Cambridge/ZIMSEC A-Level {subject.replace('A Level ', '')} teacher with 15+ years of experience creating high-quality educational flashcards for advanced students.
+
+TOPIC: {topic}
+SUBJECT: {subject}
+EXAM BOARD: Cambridge/ZIMSEC A-Level
+
+NOTES CONTENT TO BASE FLASHCARDS ON:
+{truncated_notes}
+
+TASK: Generate exactly {count} high-quality A-Level flashcards that comprehensively cover this topic with appropriate depth and complexity.
+
+REQUIREMENTS FOR A-LEVEL FLASHCARDS:
+1. Test higher-order thinking skills: analysis, evaluation, and synthesis, not just recall.
+2. Include application questions that require students to apply concepts to new situations.
+3. Cover complex relationships, mechanisms, and theoretical frameworks.
+4. Use proper scientific terminology and notation appropriate for A-Level.
+5. For Chemistry/Physics: Include mathematical derivations and formula applications where relevant.
+6. For Biology: Include detailed processes, pathways, and regulatory mechanisms.
+7. Questions should challenge students to think critically and make connections.
+8. Answers should be comprehensive (3-5 sentences) with sufficient detail for A-Level standard.
+9. Include hints that guide students toward the answer without giving it away.
+10. Make flashcards exam-relevant and aligned with Cambridge/ZIMSEC A-Level standards.
+
+DIFFICULTY DISTRIBUTION:
+- 20% Easy: Core definitions, fundamental concepts
+- 50% Medium: Application, analysis, comparisons, mechanisms
+- 30% Difficult: Synthesis, evaluation, complex problem-solving, exam-style questions
+
+OUTPUT FORMAT (JSON array only, no other text):
+[
+  {{
+    "id": 1,
+    "question": "Clear, specific A-Level question that tests understanding?",
+    "answer": "Comprehensive answer with appropriate depth (3-5 sentences).",
+    "difficulty": "easy|medium|difficult",
+    "category": "Section name from notes",
+    "hint": "Helpful hint that guides without revealing (null if not needed)"
+  }},
+  ...
+]
+
+Generate {count} high-quality A-Level flashcards now:"""
+        
+        # O-Level prompt (original)
         return f"""You are an expert {level} {subject} teacher creating educational flashcards for students.
 
 TOPIC: {topic}
@@ -200,8 +274,44 @@ Generate {count} flashcards now:"""
         difficulty = "easy" if index % 5 < 2 else "medium" if index % 5 < 4 else "difficult"
         
         # Detect if A Level or O Level
-        level = "A-Level" if "A Level" in subject else "ZIMSEC O-Level"
+        is_a_level = self._is_a_level_subject(subject)
+        level = "A-Level" if is_a_level else "ZIMSEC O-Level"
         
+        # Enhanced prompt for A-level subjects
+        if is_a_level:
+            return f"""You are an expert Cambridge/ZIMSEC A-Level {subject.replace('A Level ', '')} teacher. Generate ONE unique, high-quality A-Level flashcard.
+
+TOPIC: {topic}
+CARD NUMBER: {index + 1}
+REQUIRED DIFFICULTY: {difficulty}
+EXAM BOARD: Cambridge/ZIMSEC A-Level
+{avoid_text}
+
+NOTES EXCERPT:
+{truncated_notes[:3000]}
+
+REQUIREMENTS FOR A-LEVEL FLASHCARD:
+- Test higher-order thinking: analysis, evaluation, or synthesis
+- Use proper A-Level scientific terminology
+- Answer should be comprehensive (3-5 sentences) with appropriate depth
+- Include application to real-world scenarios where relevant
+- For Chemistry/Physics: Include mathematical reasoning if applicable
+- For Biology: Include detailed mechanisms and processes
+- Make it challenging and exam-relevant
+
+Generate ONE A-Level flashcard in this exact JSON format:
+{{
+  "id": {index + 1},
+  "question": "Your unique A-Level question here?",
+  "answer": "Comprehensive answer with appropriate depth (3-5 sentences)",
+  "difficulty": "{difficulty}",
+  "category": "Relevant section name",
+  "hint": "Helpful hint that guides without revealing (null if not needed)"
+}}
+
+Generate the A-Level flashcard now (JSON only):"""
+        
+        # O-Level prompt (original)
         return f"""You are an expert {level} {subject} teacher. Generate ONE unique flashcard.
 
 TOPIC: {topic}
@@ -269,6 +379,30 @@ Generate the flashcard now (JSON only):"""
             logger.error(f"DeepSeek API error: {e}")
         
         return None
+    
+    def _send_vertex_ai_request(self, prompt: str) -> Optional[str]:
+        """Send request to Vertex AI Gemini for A-level flashcards"""
+        
+        if not self.vertex_service or not self.vertex_service.is_available():
+            logger.error("Vertex AI service not available")
+            return None
+        
+        try:
+            logger.info("📝 Generating flashcards using Vertex AI Gemini...")
+            result = self.vertex_service.generate_text(prompt, model="gemini-2.5-flash")
+            
+            if result and result.get('success'):
+                text = result.get('text', '').strip()
+                logger.info(f"✅ Vertex AI generated response ({len(text)} chars)")
+                return text
+            else:
+                error = result.get('error', 'Unknown error') if result else 'No response'
+                logger.error(f"Vertex AI generation failed: {error}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Vertex AI request error: {e}")
+            return None
     
     def _parse_flashcards_response(self, response: str, expected_count: int) -> List[Dict]:
         """Parse batch flashcard response from AI"""

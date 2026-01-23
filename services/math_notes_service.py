@@ -17,7 +17,7 @@ class MathNotesService:
         self.api_key = os.environ.get('DEEPSEEK_API_KEY')
         self.api_url = 'https://api.deepseek.com/chat/completions'
         self.deepseek_model = get_deepseek_chat_model()
-        self.timeout = 120  # Math notes can be long
+        self.timeout = 60  # Optimized: Reduced from 120s - DeepSeek typically responds faster
         
         if not self.api_key:
             logger.warning("DEEPSEEK_API_KEY not configured for MathNotesService")
