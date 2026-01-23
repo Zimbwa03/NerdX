@@ -1575,6 +1575,8 @@ def generate_question():
                     )
                 except Exception as chemistry_error:
                     logger.error(f"Error generating A-Level Chemistry {question_format} question: {chemistry_error}", exc_info=True)
+                    import traceback
+                    logger.error(f"Full traceback: {traceback.format_exc()}")
                     question_data = None
             
             elif subject == 'a_level_pure_math':
@@ -3649,13 +3651,56 @@ def grade_summary():
 @mobile_bp.route('/image/upload', methods=['POST'])
 @require_auth
 def upload_image():
-    """Upload image for OCR solving"""
+    """Upload image for OCR solving or exam answers"""
     try:
         if 'image' not in request.files:
             return jsonify({'success': False, 'message': 'No image file provided'}), 400
         
         image_file = request.files['image']
+        use_for_exam = request.form.get('use_for_exam', 'false').lower() == 'true'
         
+        # For exam answers, upload to hosting service and return URL (no credit check)
+        if use_for_exam:
+            try:
+                from services.image_hosting_service import ImageHostingService
+                import tempfile
+                import os
+                
+                # Save uploaded file temporarily
+                tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.jpg')
+                try:
+                    image_file.save(tmp_file.name)
+                    tmp_path = tmp_file.name
+                finally:
+                    tmp_file.close()
+                
+                try:
+                    # Upload to image hosting service
+                    hosting_service = ImageHostingService()
+                    image_url = hosting_service.upload_image_with_fallback(tmp_path)
+                    
+                    if image_url:
+                        return jsonify({
+                            'success': True,
+                            'data': {
+                                'image_url': image_url,
+                                'image_id': str(uuid.uuid4()),
+                            }
+                        }), 200
+                    else:
+                        return jsonify({'success': False, 'message': 'Failed to upload image to hosting service'}), 500
+                finally:
+                    # Clean up temp file
+                    if os.path.exists(tmp_path):
+                        try:
+                            os.unlink(tmp_path)
+                        except:
+                            pass
+            except Exception as e:
+                logger.error(f"Error uploading exam image: {e}", exc_info=True)
+                return jsonify({'success': False, 'message': f'Failed to upload image: {str(e)}'}), 500
+        
+        # Original OCR flow (requires credits)
         # Check credits
         credit_cost = advanced_credit_service.get_credit_cost('image_solve')
         user_credits = get_user_credits(g.current_user_id) or 0
@@ -4938,23 +4983,57 @@ def generate_graph():
             base_url = os.environ.get('RENDER_EXTERNAL_URL', 'https://nerdx.onrender.com')
             graph_url = f"{base_url.rstrip('/')}/static/graphs/{filename}"
         
+        # Get graph_spec - this is the source of truth for the actual equation used
+        graph_spec = graph_result.get('graph_spec', {})
+        if not graph_spec:
+            logger.error(f"graph_spec missing from graph_result for user {g.current_user_id}, graph_type: {graph_type}")
+            return jsonify({
+                'success': False,
+                'message': 'Failed to generate graph specification'
+            }), 500
         
-        # Generate AI question about the graph using DeepSeek with equation context
+        # Use the equation from graph_spec to ensure consistency with the actual graph
+        # Prefer clean_expression if available (normalized), otherwise use equation
+        actual_equation = graph_spec.get('clean_expression') or graph_spec.get('equation') or equation
+        actual_graph_type = graph_spec.get('graph_type') or graph_type
+        
+        logger.info(f"Graph generated successfully for user {g.current_user_id}: "
+                   f"original_equation='{equation}', actual_equation='{actual_equation}', "
+                   f"graph_type='{actual_graph_type}', has_coefficients={graph_spec.get('coefficients') is not None}")
+        
+        logger.info(f"Generating question for equation: {actual_equation}, graph_type: {actual_graph_type} (user: {g.current_user_id})")
+        
+        # Generate AI question about the graph using the ACTUAL equation from graph_spec
+        question = None
+        solution = None
         try:
-            # Use the new equation-specific question generator for consistency
+            # Use the equation from graph_spec to ensure consistency
             question_data = question_generator.generate_graph_question(
-                equation,
-                graph_type,
+                actual_equation,
+                actual_graph_type,
                 'medium',
                 g.current_user_id
             )
-            question = question_data.get('question', f"Analyze the graph of {equation}. What are the key features of this graph?")
-            solution = question_data.get('solution', f"The graph of {equation} shows key features including intercepts, slope, and behavior.")
+            
+            if question_data and question_data.get('question'):
+                question = question_data.get('question')
+                solution = question_data.get('solution', f"Solution for {actual_equation}")
+                logger.info(f"AI question generated successfully for {actual_equation}")
+            else:
+                logger.warning(f"Question data returned empty for {actual_equation}, using fallback")
+                raise ValueError("Empty question data")
+                
         except Exception as ai_error:
-            logger.warning(f"AI question generation failed, using fallback: {ai_error}")
-            # Fallback to basic question about the equation
-            question = f"For the graph of {equation}, find the y-intercept."
-            solution = f"To find the y-intercept, set x = 0 in {equation} and calculate the value of y."
+            logger.warning(f"AI question generation failed for {actual_equation}, using fallback: {ai_error}")
+            # Fallback to basic question about the equation from graph_spec
+            question = f"For the graph of {actual_equation}, find the y-intercept."
+            solution = f"To find the y-intercept, set x = 0 in {actual_equation} and calculate the value of y."
+        
+        # Ensure question and solution are always present
+        if not question or not solution:
+            logger.error(f"Question generation completely failed for {actual_equation}, using emergency fallback")
+            question = f"Analyze the graph of {actual_equation}. What are the key features of this graph?"
+            solution = f"The graph of {actual_equation} shows key features including intercepts, slope, and behavior."
         
         credits_remaining = _deduct_credits_or_fail(
             g.current_user_id,
@@ -4969,11 +5048,11 @@ def generate_graph():
             'success': True,
             'data': {
                 'graph_url': graph_url,
-                'equation': equation,
+                'equation': actual_equation,  # Use equation from graph_spec for consistency
                 'question': question,
                 'solution': solution,
                 # Deterministic spec for consistent Matplotlib image + Manim animation + question
-                'graph_spec': graph_result.get('graph_spec'),
+                'graph_spec': graph_spec,
                 'credits_remaining': credits_remaining
             }
         }), 200
@@ -5037,11 +5116,64 @@ def generate_custom_graph():
             base_url = os.environ.get('RENDER_EXTERNAL_URL', 'https://nerdx.onrender.com')
             graph_url = f"{base_url.rstrip('/')}/static/graphs/{filename}"
         
+        # Get graph_spec - this is the source of truth for the actual equation used
+        graph_spec = graph_result.get('graph_spec', {})
+        if not graph_spec:
+            logger.error(f"graph_spec missing from custom graph_result for user {g.current_user_id}, equation: {equation}")
+            return jsonify({
+                'success': False,
+                'message': 'Failed to generate graph specification'
+            }), 500
+        
+        # Use the equation from graph_spec to ensure consistency
+        actual_equation = graph_spec.get('clean_expression') or graph_spec.get('equation') or equation
+        actual_graph_type = graph_spec.get('graph_type') or 'custom'
+        
+        logger.info(f"Custom graph generated successfully for user {g.current_user_id}: "
+                   f"original_equation='{equation}', actual_equation='{actual_equation}', "
+                   f"graph_type='{actual_graph_type}', has_coefficients={graph_spec.get('coefficients') is not None}")
+        
+        logger.info(f"Generating question for custom equation: {actual_equation} (user: {g.current_user_id})")
+        
+        # Generate AI question about the custom graph
+        from services.math_question_generator import MathQuestionGenerator
+        question_generator = MathQuestionGenerator()
+        
+        question = None
+        solution = None
+        try:
+            question_data = question_generator.generate_graph_question(
+                actual_equation,
+                actual_graph_type,
+                'medium',
+                g.current_user_id
+            )
+            
+            if question_data and question_data.get('question'):
+                question = question_data.get('question')
+                solution = question_data.get('solution', f"Solution for {actual_equation}")
+                logger.info(f"AI question generated successfully for custom graph: {actual_equation}")
+            else:
+                logger.warning(f"Question data returned empty for {actual_equation}, using fallback")
+                raise ValueError("Empty question data")
+                
+        except Exception as ai_error:
+            logger.warning(f"AI question generation failed for custom graph {actual_equation}, using fallback: {ai_error}")
+            # Fallback to basic question about the equation
+            question = f"For the graph of {actual_equation}, find the y-intercept."
+            solution = f"To find the y-intercept, set x = 0 in {actual_equation} and calculate the value of y."
+        
+        # Ensure question and solution are always present
+        if not question or not solution:
+            logger.error(f"Question generation completely failed for custom graph {actual_equation}, using emergency fallback")
+            question = f"Analyze the graph of {actual_equation}. What are the key features of this graph?"
+            solution = f"The graph of {actual_equation} shows key features including intercepts, slope, and behavior."
+        
         credits_remaining = _deduct_credits_or_fail(
             g.current_user_id,
             int(credit_cost),
             'math_graph_practice',
-            f'Generated custom graph: {equation}'
+            f'Generated custom graph: {actual_equation}'
         )
         if credits_remaining is None:
             return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
@@ -5050,10 +5182,10 @@ def generate_custom_graph():
             'success': True,
             'data': {
                 'graph_url': graph_url,
-                'equation': equation,
-                'question': f"Graph of {equation}",
-                'solution': f"This is the graph of {equation}. Analyze its key features.",
-                'graph_spec': graph_result.get('graph_spec'),
+                'equation': actual_equation,  # Use equation from graph_spec for consistency
+                'question': question,
+                'solution': solution,
+                'graph_spec': graph_spec,
                 'credits_remaining': credits_remaining
             }
         }), 200
@@ -7769,7 +7901,8 @@ def submit_exam_answer():
         "question_id": "uuid",
         "answer": "A" or "structured text answer",
         "time_spent_seconds": 45,
-        "is_flagged": false
+        "is_flagged": false,
+        "image_url": "https://..." (optional, for image-based answers in mathematics)
     }
     """
     try:
@@ -7779,6 +7912,7 @@ def submit_exam_answer():
         answer = data.get('answer', '')
         time_spent = data.get('time_spent_seconds', 0)
         is_flagged = data.get('is_flagged', False)
+        image_url = data.get('image_url', '')  # For image-based answers
         
         if not session_id or not question_id:
             return jsonify({'success': False, 'message': 'session_id and question_id are required'}), 400
@@ -7798,6 +7932,7 @@ def submit_exam_answer():
             answer=answer,
             time_spent_seconds=time_spent,
             is_flagged=is_flagged,
+            image_url=image_url if image_url else None,
         )
         
         if 'error' in result:

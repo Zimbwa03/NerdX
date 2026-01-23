@@ -130,33 +130,48 @@ const GraphPracticeScreen: React.FC = () => {
       }
 
       // Generate Animation (Manim) if supported
+      // Use graph_spec as the single source of truth for consistency with graph and question
       const spec = data?.graph_spec;
-      const specType = spec?.graph_type || graphType;
-      const coeffs = spec?.coefficients;
-      const xRange = spec?.x_range;
-      const yRange = spec?.y_range;
+      if (!spec) {
+        console.warn('graph_spec missing from response, skipping animation');
+      } else {
+        const specType = spec.graph_type || graphType;
+        const coeffs = spec.coefficients;
+        const xRange = spec.x_range;
+        const yRange = spec.y_range;
+        const cleanExpression = spec.clean_expression || spec.equation;
 
-      // Animate using the same deterministic graph_spec the server used for the Matplotlib image.
-      if (
-        (specType === 'quadratic' || specType === 'linear') ||
-        (specType === 'trigonometric' || specType === 'exponential')
-      ) {
-        try {
-          setVideoLoading(true);
-          let animResult = null;
-          if (specType === 'quadratic' && coeffs) {
-            const a = coeffs.a ?? 1;
-            const b = coeffs.b ?? 0;
-            const c = coeffs.c ?? 0;
-            animResult = await graphApi.generateQuadraticAnimation(a, b, c, xRange, yRange);
-          } else if (specType === 'linear' && coeffs) {
-            const m = coeffs.m ?? 1;
-            const c = coeffs.c ?? 0;
-            animResult = await graphApi.generateLinearAnimation(m, c, xRange, yRange);
-          } else if (spec?.clean_expression) {
-            // Trig/exponential (and any non-polynomial) uses expression-based animation
-            animResult = await graphApi.generateExpressionAnimation(spec.clean_expression, xRange, yRange);
-          }
+        // Animate using the same deterministic graph_spec the server used for the Matplotlib image.
+        // This ensures the video matches the graph exactly
+        if (
+          specType === 'quadratic' || 
+          specType === 'linear' || 
+          specType === 'trigonometric' || 
+          specType === 'exponential' ||
+          cleanExpression  // Try expression-based if we have an expression
+        ) {
+          try {
+            setVideoLoading(true);
+            let animResult = null;
+            
+            // Try coefficient-based animation first (more accurate for linear/quadratic)
+            if (specType === 'quadratic' && coeffs && coeffs.a !== undefined) {
+              const a = coeffs.a ?? 1;
+              const b = coeffs.b ?? 0;
+              const c = coeffs.c ?? 0;
+              console.log(`Generating quadratic animation: a=${a}, b=${b}, c=${c}`, { xRange, yRange });
+              animResult = await graphApi.generateQuadraticAnimation(a, b, c, xRange, yRange);
+            } else if (specType === 'linear' && coeffs && coeffs.m !== undefined) {
+              const m = coeffs.m ?? 1;
+              const c = coeffs.c ?? 0;
+              console.log(`Generating linear animation: m=${m}, c=${c}`, { xRange, yRange });
+              animResult = await graphApi.generateLinearAnimation(m, c, xRange, yRange);
+            } else if (cleanExpression) {
+              // Trig/exponential/other uses expression-based animation
+              // Use clean_expression (normalized) for best compatibility
+              console.log(`Generating expression animation: ${cleanExpression}`, { xRange, yRange });
+              animResult = await graphApi.generateExpressionAnimation(cleanExpression, xRange, yRange);
+            }
 
           if (animResult && animResult.video_path) {
             // Construct full URL - backend returns "/static/..."
@@ -196,15 +211,60 @@ const GraphPracticeScreen: React.FC = () => {
               console.warn('Video URL not accessible after retries');
               setVideoError('Animation video is not available. The server may still be generating it.');
             }
-          } else {
-            console.log('Animation not available for this graph type');
-            // Don't show error for animation not available - it's optional
+            } else {
+              console.log('Animation not available for this graph type or missing parameters');
+              // Don't show error for animation not available - it's optional
+            }
+
+            if (animResult && animResult.video_path) {
+              // Construct full URL - backend returns "/static/..."
+              const baseUrl = API_BASE_URL;
+              const videoPath = animResult.video_path.startsWith('/')
+                ? animResult.video_path
+                : '/' + animResult.video_path;
+              const fullVideoUrl = baseUrl + videoPath;
+
+              // Validate the video URL with retry logic (server may still be writing file)
+              const validateVideoUrl = async (url: string, retries: number = 2): Promise<boolean> => {
+                for (let attempt = 0; attempt < retries; attempt++) {
+                  try {
+                    // Wait a bit before each attempt (let server finish writing)
+                    if (attempt > 0) {
+                      await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
+                    const response = await fetch(url, { method: 'HEAD' });
+                    if (response.ok) {
+                      return true;
+                    }
+                    console.warn(`Video URL validation attempt ${attempt + 1}/${retries} failed:`, response.status);
+                  } catch (e) {
+                    console.warn(`Video URL fetch attempt ${attempt + 1}/${retries} error:`, e);
+                  }
+                }
+                return false;
+              };
+
+              const isAccessible = await validateVideoUrl(fullVideoUrl);
+              if (isAccessible) {
+                // Reset error state and set URL
+                setErrorShown(false);
+                setVideoError(null);
+                setVideoUrl(fullVideoUrl);
+                console.log('Video loaded successfully:', fullVideoUrl);
+              } else {
+                console.warn('Video URL not accessible after retries');
+                setVideoError('Animation video is not available. The server may still be generating it.');
+              }
+            } else if (animResult && !animResult.video_path) {
+              console.warn('Animation generation returned no video_path:', animResult);
+              setVideoError('Animation generation completed but no video was returned.');
+            }
+          } catch (animError: any) {
+            console.warn('Animation generation failed:', animError);
+            setVideoError('Animation service is currently unavailable. Graph image is still available above.');
+          } finally {
+            setVideoLoading(false);
           }
-        } catch (animError: any) {
-          console.warn('Animation generation failed:', animError);
-          setVideoError('Animation service is currently unavailable. Graph image is still available above.');
-        } finally {
-          setVideoLoading(false);
         }
       }
 

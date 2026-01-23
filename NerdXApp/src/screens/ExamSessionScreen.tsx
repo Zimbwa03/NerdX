@@ -14,10 +14,12 @@ import {
     Modal,
     FlatList,
     StatusBar,
+    Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
 import { Colors } from '../theme/colors';
@@ -91,6 +93,8 @@ const ExamSessionScreen: React.FC = () => {
     // Answer state
     const [selectedAnswer, setSelectedAnswer] = useState<string>('');
     const [structuredAnswer, setStructuredAnswer] = useState<string>('');
+    const [answerImage, setAnswerImage] = useState<string | null>(null);
+    const [uploadingImage, setUploadingImage] = useState(false);
     const [responses, setResponses] = useState<Record<number, LocalResponse>>({});
     const [flaggedQuestions, setFlaggedQuestions] = useState<Set<number>>(new Set());
 
@@ -237,6 +241,7 @@ const ExamSessionScreen: React.FC = () => {
                 } else {
                     setSelectedAnswer('');
                     setStructuredAnswer('');
+                    setAnswerImage(null);
                 }
 
                 setStep('question');
@@ -264,6 +269,43 @@ const ExamSessionScreen: React.FC = () => {
             },
         }));
     };
+    
+    // Upload image and get URL
+    const uploadImageAndGetUrl = async (imageUri: string): Promise<string | null> => {
+        try {
+            setUploadingImage(true);
+            const { Platform } = require('react-native');
+            const formData = new FormData();
+            
+            const filename = imageUri.split('/').pop() || 'answer.jpg';
+            const type = 'image/jpeg';
+            
+            formData.append('image', {
+                uri: Platform.OS === 'ios' ? imageUri.replace('file://', '') : imageUri,
+                type,
+                name: filename,
+            } as any);
+            formData.append('use_for_exam', 'true');
+            
+            const api = require('../services/api/config').default;
+            const response = await api.post('/api/mobile/image/upload', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+            
+            if (response.data?.success && response.data?.data?.image_url) {
+                return response.data.data.image_url;
+            }
+            return null;
+        } catch (error) {
+            console.error('Image upload error:', error);
+            Alert.alert('Error', 'Failed to upload image. Please try again.');
+            return null;
+        } finally {
+            setUploadingImage(false);
+        }
+    };
 
     const handleAnswerSelect = (answer: string) => {
         setSelectedAnswer(answer);
@@ -288,7 +330,18 @@ const ExamSessionScreen: React.FC = () => {
 
         // Submit current answer to backend
         if (currentQuestion) {
-            const answer = currentQuestion.question_type === 'MCQ' ? selectedAnswer : structuredAnswer;
+            let answer = currentQuestion.question_type === 'MCQ' ? selectedAnswer : structuredAnswer;
+            let imageUrl: string | null = null;
+            
+            // Upload image if present for math questions
+            if (isMathSubject && answerImage && currentQuestion.question_type === 'STRUCTURED') {
+                imageUrl = await uploadImageAndGetUrl(answerImage);
+                if (!imageUrl) {
+                    Alert.alert('Error', 'Failed to upload image. Please try again.');
+                    return;
+                }
+            }
+            
             const timeSpent = Math.floor((Date.now() - questionStartTime.current) / 1000);
 
             try {
@@ -297,7 +350,8 @@ const ExamSessionScreen: React.FC = () => {
                     currentQuestion.id,
                     answer,
                     timeSpent,
-                    flaggedQuestions.has(currentIndex)
+                    flaggedQuestions.has(currentIndex),
+                    imageUrl || undefined
                 );
             } catch (error) {
                 console.error('Submit answer error:', error);
@@ -362,7 +416,14 @@ const ExamSessionScreen: React.FC = () => {
         try {
             // Submit final question if not already submitted
             if (currentQuestion) {
-                const answer = currentQuestion.question_type === 'MCQ' ? selectedAnswer : structuredAnswer;
+                let answer = currentQuestion.question_type === 'MCQ' ? selectedAnswer : structuredAnswer;
+                let imageUrl: string | null = null;
+                
+                // Upload image if present for math questions
+                if (isMathSubject && answerImage && currentQuestion.question_type === 'STRUCTURED') {
+                    imageUrl = await uploadImageAndGetUrl(answerImage);
+                }
+                
                 const timeSpent = Math.floor((Date.now() - questionStartTime.current) / 1000);
 
                 await examApi.submitAnswer(
@@ -370,7 +431,8 @@ const ExamSessionScreen: React.FC = () => {
                     currentQuestion.id,
                     answer,
                     timeSpent,
-                    flaggedQuestions.has(currentIndex)
+                    flaggedQuestions.has(currentIndex),
+                    imageUrl || undefined
                 );
             }
 
@@ -424,6 +486,53 @@ const ExamSessionScreen: React.FC = () => {
     };
 
     const isMathSubject = isMathSubjectId(examConfig?.subject);
+    
+    // Image upload handlers for mathematics
+    const handleImageUpload = async () => {
+        try {
+            const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (!permissionResult.granted) {
+                Alert.alert('Permission Required', 'Please grant camera roll permissions to upload images');
+                return;
+            }
+
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true,
+                quality: 0.8,
+            });
+
+            if (!result.canceled && result.assets[0]) {
+                const uri = result.assets[0].uri;
+                setAnswerImage(uri);
+            }
+        } catch (error) {
+            Alert.alert('Error', 'Failed to pick image');
+        }
+    };
+
+    const handleCameraCapture = async () => {
+        try {
+            const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+            if (!permissionResult.granted) {
+                Alert.alert('Permission Required', 'Please grant camera permissions to capture images');
+                return;
+            }
+
+            const result = await ImagePicker.launchCameraAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true,
+                quality: 0.8,
+            });
+
+            if (!result.canceled && result.assets[0]) {
+                const uri = result.assets[0].uri;
+                setAnswerImage(uri);
+            }
+        } catch (error) {
+            Alert.alert('Error', 'Failed to capture image');
+        }
+    };
 
     // Render question based on type
     const renderQuestion = () => {
@@ -514,6 +623,64 @@ const ExamSessionScreen: React.FC = () => {
                         placeholderTextColor={themedColors.text.disabled}
                         textAlignVertical="top"
                     />
+                    
+                    {/* Image Upload - for math structured questions */}
+                    {isMathSubject && (
+                        <View style={styles.imageUploadContainer}>
+                            <TouchableOpacity
+                                style={[styles.imageUploadButton, { backgroundColor: themedColors.primary.light }]}
+                                onPress={handleImageUpload}
+                                disabled={uploadingImage}
+                            >
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                    <Ionicons 
+                                        name={answerImage ? "refresh" : "image-outline"} 
+                                        size={20} 
+                                        color={themedColors.primary.main} 
+                                    />
+                                    <Text style={[styles.imageUploadButtonText, { color: themedColors.primary.main }]}>
+                                        {answerImage ? 'Change Image' : 'Upload Answer Image'}
+                                    </Text>
+                                </View>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.imageUploadButton, styles.secondaryImageButton, { backgroundColor: themedColors.background.paper, borderColor: themedColors.border.main }]}
+                                onPress={handleCameraCapture}
+                                disabled={uploadingImage}
+                            >
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                    <Ionicons 
+                                        name="camera-outline" 
+                                        size={20} 
+                                        color={themedColors.text.primary} 
+                                    />
+                                    <Text style={[styles.imageUploadButtonText, { color: themedColors.text.primary }]}>
+                                        Capture with Camera
+                                    </Text>
+                                </View>
+                            </TouchableOpacity>
+                            {answerImage && (
+                                <View style={styles.imagePreview}>
+                                    <Image
+                                        source={{ uri: answerImage }}
+                                        style={styles.uploadedImage}
+                                        onError={(error) => {
+                                            console.warn('Failed to load answer image:', error.nativeEvent.error);
+                                        }}
+                                    />
+                                    <TouchableOpacity
+                                        style={styles.removeImageButton}
+                                        onPress={() => setAnswerImage(null)}
+                                    >
+                                        <Text style={styles.removeImageText}>✕ Remove</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+                            <Text style={[styles.imageHintText, { color: themedColors.text.secondary }]}>
+                                📸 Tip: For mathematics, you can upload or capture a photo of your handwritten solution
+                            </Text>
+                        </View>
+                    )}
                 </View>
             );
         }
@@ -1045,6 +1212,54 @@ const styles = StyleSheet.create({
     },
     reviewModalFooter: {
         marginTop: 20,
+    },
+    imageUploadContainer: {
+        marginTop: 16,
+        gap: 12,
+    },
+    imageUploadButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderRadius: 12,
+        gap: 8,
+    },
+    secondaryImageButton: {
+        borderWidth: 1,
+    },
+    imageUploadButtonText: {
+        fontSize: 15,
+        fontWeight: '500',
+    },
+    imagePreview: {
+        marginTop: 8,
+        borderRadius: 12,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+    },
+    uploadedImage: {
+        width: '100%',
+        height: 200,
+        resizeMode: 'contain',
+        backgroundColor: '#F5F5F5',
+    },
+    removeImageButton: {
+        padding: 12,
+        alignItems: 'center',
+        backgroundColor: '#FFEBEE',
+    },
+    removeImageText: {
+        color: '#D32F2F',
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    imageHintText: {
+        fontSize: 12,
+        fontStyle: 'italic',
+        marginTop: 4,
     },
 });
 

@@ -226,16 +226,21 @@ export const examApi = {
         questionId: string,
         answer: string,
         timeSpentSeconds: number = 0,
-        isFlagged: boolean = false
+        isFlagged: boolean = false,
+        imageUrl?: string
     ): Promise<MarkResult | null> => {
         try {
-            const response = await api.post('/api/mobile/exam/submit', {
+            const payload: any = {
                 session_id: sessionId,
                 question_id: questionId,
                 answer,
                 time_spent_seconds: timeSpentSeconds,
                 is_flagged: isFlagged,
-            });
+            };
+            if (imageUrl) {
+                payload.image_url = imageUrl;
+            }
+            const response = await api.post('/api/mobile/exam/submit', payload);
             return response.data.data || null;
         } catch (error: any) {
             console.error('Submit answer error:', error);

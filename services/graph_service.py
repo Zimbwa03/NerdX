@@ -1094,6 +1094,32 @@ class GraphService:
                     pass
                 return None
 
+            # Validate graph_spec is present and complete
+            if not graph_spec:
+                logger.error(f"graph_spec is None for expression: {expression}")
+                graph_spec = {
+                    "equation": expression,
+                    "clean_expression": clean_expr,
+                    "x_range": {"min": -10.0, "max": 10.0, "step": 1},
+                    "y_range": {"min": -10.0, "max": 10.0, "step": 1},
+                    "coefficients": None,
+                    "graph_type": "unknown"
+                }
+            
+            # Ensure graph_spec has required fields
+            if "equation" not in graph_spec:
+                graph_spec["equation"] = expression
+            if "clean_expression" not in graph_spec:
+                graph_spec["clean_expression"] = clean_expr
+            if "x_range" not in graph_spec:
+                graph_spec["x_range"] = {"min": -10.0, "max": 10.0, "step": 1}
+            if "y_range" not in graph_spec:
+                graph_spec["y_range"] = {"min": -10.0, "max": 10.0, "step": 1}
+            
+            logger.info(f"Graph created successfully with spec: equation={graph_spec.get('equation')}, "
+                       f"graph_type={graph_spec.get('graph_type')}, "
+                       f"has_coefficients={graph_spec.get('coefficients') is not None}")
+            
             # Return in expected format
             return {
                 'image_path': filepath,
@@ -1104,7 +1130,7 @@ class GraphService:
             }
 
         except Exception as e:
-            logger.error(f"Error creating matplotlib graph: {e}")
+            logger.error(f"Error creating matplotlib graph: {e}", exc_info=True)
             return None
 
     def generate_linear_programming_graph(self, constraints: List[str], objective_function: str = None, 

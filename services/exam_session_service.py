@@ -829,9 +829,11 @@ Requirements:
         answer: Any,
         time_spent_seconds: int = 0,
         is_flagged: bool = False,
+        image_url: str = None,
     ) -> Dict[str, Any]:
         """
         Mark a single answer and return immediate feedback.
+        Supports image-based answers for mathematics questions using Vertex AI.
         """
         session = self._sessions.get(session_id)
         if not session:
@@ -849,19 +851,34 @@ Requirements:
         if not question:
             return {"error": "Question not found in session"}
         
+        # Process image answer if provided (for mathematics)
+        processed_answer = answer
+        if image_url and question.get("question_type") == "STRUCTURED":
+            # Check if this is a mathematics subject
+            subject = session.get("subject", "").lower()
+            is_math = "math" in subject or subject in ["mathematics", "pure_math", "a_level_pure_math"]
+            
+            if is_math:
+                # Extract text from image using Vertex AI
+                extracted_text = self._extract_text_from_image(image_url)
+                if extracted_text:
+                    # Combine text answer with extracted image text
+                    processed_answer = f"{answer}\n\n[From image: {extracted_text}]" if answer else extracted_text
+        
         # Mark the answer
-        result = self._mark_answer(question, answer, session.get("username", "Student"))
+        result = self._mark_answer(question, processed_answer, session.get("username", "Student"), image_url)
         
         # Store response
         session["responses"][question_id] = {
             "question_id": question_id,
-            "answer": answer,
+            "answer": processed_answer,
             "is_correct": result["is_correct"],
             "marks_awarded": result.get("marks_awarded", 0),
             "marks_total": result.get("marks_total", 1),
             "time_spent_seconds": time_spent_seconds,
             "is_flagged": is_flagged,
             "marked_at": datetime.utcnow().isoformat(),
+            "image_url": image_url if image_url else None,
         }
         
         # Update performance signals
@@ -880,7 +897,7 @@ Requirements:
         
         return result
     
-    def _mark_answer(self, question: Dict, answer: Any, username: str) -> Dict:
+    def _mark_answer(self, question: Dict, answer: Any, username: str, image_url: str = None) -> Dict:
         """Mark a single answer."""
         question_type = question.get("question_type", "MCQ")
         
@@ -897,12 +914,16 @@ Requirements:
                 "feedback": self._generate_mcq_feedback(is_correct, username),
             }
         else:  # STRUCTURED
-            return self._mark_structured_answer(question, answer, username)
+            return self._mark_structured_answer(question, answer, username, image_url)
     
-    def _mark_structured_answer(self, question: Dict, answer: str, username: str) -> Dict:
-        """Mark a structured answer using keyword matching and DeepSeek if available."""
+    def _mark_structured_answer(self, question: Dict, answer: str, username: str, image_url: str = None) -> Dict:
+        """Mark a structured answer using keyword matching and Vertex AI for image-based answers."""
         total_marks = question.get("total_marks", 5)
         marking_scheme = question.get("marking_scheme", {})
+        
+        # If image is provided, use Vertex AI for intelligent marking
+        if image_url:
+            return self._mark_image_answer_with_vertex_ai(question, answer, image_url, username, total_marks)
         
         # Simple keyword-based marking (can enhance with DeepSeek)
         marks_awarded = 0
@@ -934,6 +955,196 @@ Requirements:
             "feedback": f"You scored {marks_awarded}/{total_marks} marks. " +
                        (f"Good effort, {username}!" if percentage >= 50 else f"Keep practicing, {username}."),
         }
+    
+    def _extract_text_from_image(self, image_url: str) -> str:
+        """Extract text from image using Vertex AI."""
+        try:
+            import requests
+            import base64
+            from services.vertex_service import vertex_service
+            
+            if not vertex_service.is_available():
+                logger.warning("Vertex AI not available for image extraction")
+                return ""
+            
+            # Download image from URL
+            response = requests.get(image_url, timeout=10)
+            if response.status_code != 200:
+                logger.error(f"Failed to download image from {image_url}")
+                return ""
+            
+            # Convert to base64
+            image_base64 = base64.b64encode(response.content).decode('utf-8')
+            mime_type = response.headers.get('content-type', 'image/jpeg')
+            
+            # Analyze image with Vertex AI
+            result = vertex_service.analyze_image(
+                image_base64=image_base64,
+                mime_type=mime_type,
+                prompt="""Extract all mathematical equations, expressions, and handwritten text from this image.
+                
+Please respond in this exact JSON format:
+{
+    "detected_text": "the exact text/math expression you see",
+    "latex": "the LaTeX representation if it's math, or the plain text otherwise",
+    "confidence": 0.95
+}
+
+If you see handwritten math, interpret it as accurately as possible. Convert fractions, exponents, roots, and special symbols to proper LaTeX notation.
+Only respond with the JSON, no other text."""
+            )
+            
+            if result and result.get('success'):
+                # Return the detected text or LaTeX
+                return result.get('latex') or result.get('text', '')
+            
+            return ""
+        except Exception as e:
+            logger.error(f"Error extracting text from image: {e}", exc_info=True)
+            return ""
+    
+    def _mark_image_answer_with_vertex_ai(
+        self, 
+        question: Dict, 
+        answer: str, 
+        image_url: str, 
+        username: str, 
+        total_marks: int
+    ) -> Dict:
+        """Mark an image-based answer using Vertex AI for intelligent evaluation."""
+        try:
+            import requests
+            import base64
+            from services.vertex_service import vertex_service
+            
+            if not vertex_service.is_available():
+                # Fallback to simple marking
+                return self._mark_structured_answer(question, answer, username, None)
+            
+            # Download image
+            response = requests.get(image_url, timeout=10)
+            if response.status_code != 200:
+                logger.error(f"Failed to download image for marking")
+                return self._mark_structured_answer(question, answer, username, None)
+            
+            image_base64 = base64.b64encode(response.content).decode('utf-8')
+            mime_type = response.headers.get('content-type', 'image/jpeg')
+            
+            # Get question details
+            question_stem = question.get("stem", "")
+            parts = question.get("parts", [])
+            marking_scheme = question.get("marking_scheme", {})
+            
+            # Build marking prompt
+            marking_prompt = f"""You are a mathematics teacher marking a student's exam answer.
+
+QUESTION:
+{question_stem}
+
+MARKING SCHEME:
+{marking_scheme}
+
+STUDENT'S ANSWER (from image):
+[The student has submitted a handwritten answer in the image]
+
+Please analyze the student's handwritten answer in the image and:
+1. Extract the mathematical solution/work shown
+2. Compare it against the marking scheme
+3. Award marks based on correctness and completeness
+4. Provide constructive feedback
+
+Respond in this exact JSON format:
+{{
+    "marks_awarded": <number between 0 and {total_marks}>,
+    "marks_total": {total_marks},
+    "is_correct": <true if marks >= 50% of total, false otherwise>,
+    "feedback": "Constructive feedback message",
+    "extracted_solution": "What you extracted from the image",
+    "strengths": ["list of what the student did well"],
+    "improvements": ["list of areas for improvement"]
+}}
+
+Be fair but accurate. Award partial marks for correct steps even if the final answer is wrong."""
+            
+            # Analyze with Vertex AI
+            result = vertex_service.analyze_image(
+                image_base64=image_base64,
+                mime_type=mime_type,
+                prompt=marking_prompt
+            )
+            
+            if result and result.get('success'):
+                analysis_text = result.get('analysis', '') or result.get('text', '')
+                
+                # Try to parse JSON from response
+                try:
+                    import json
+                    # Extract JSON from response (might be wrapped in markdown)
+                    import re
+                    json_match = re.search(r'\{.*\}', analysis_text, re.DOTALL)
+                    if json_match:
+                        parsed = json.loads(json_match.group())
+                        marks_awarded = min(int(parsed.get('marks_awarded', 0)), total_marks)
+                        percentage = (marks_awarded / total_marks * 100) if total_marks > 0 else 0
+                        
+                        return {
+                            "is_correct": parsed.get('is_correct', percentage >= 50),
+                            "marks_awarded": marks_awarded,
+                            "marks_total": total_marks,
+                            "percentage": percentage,
+                            "feedback": parsed.get('feedback', f"You scored {marks_awarded}/{total_marks} marks."),
+                            "extracted_solution": parsed.get('extracted_solution', ''),
+                            "strengths": parsed.get('strengths', []),
+                            "improvements": parsed.get('improvements', []),
+                        }
+                except (json.JSONDecodeError, ValueError, KeyError) as e:
+                    logger.warning(f"Failed to parse Vertex AI response as JSON: {e}")
+                    # Fallback: extract marks from text
+                    marks_awarded = self._extract_marks_from_text(analysis_text, total_marks)
+                    percentage = (marks_awarded / total_marks * 100) if total_marks > 0 else 0
+                    
+                    return {
+                        "is_correct": percentage >= 50,
+                        "marks_awarded": marks_awarded,
+                        "marks_total": total_marks,
+                        "percentage": percentage,
+                        "feedback": f"You scored {marks_awarded}/{total_marks} marks. " +
+                                   (f"Good effort, {username}!" if percentage >= 50 else f"Keep practicing, {username}."),
+                    }
+            
+            # Fallback to simple marking
+            return self._mark_structured_answer(question, answer, username, None)
+            
+        except Exception as e:
+            logger.error(f"Error in Vertex AI marking: {e}", exc_info=True)
+            # Fallback to simple marking
+            return self._mark_structured_answer(question, answer, username, None)
+    
+    def _extract_marks_from_text(self, text: str, total_marks: int) -> int:
+        """Extract marks from text response (fallback method)."""
+        import re
+        # Look for patterns like "X marks", "X/10", etc.
+        patterns = [
+            r'(\d+)\s*marks',
+            r'(\d+)\s*/\s*(\d+)',
+            r'scored\s*(\d+)',
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, text, re.IGNORECASE)
+            if match:
+                try:
+                    marks = int(match.group(1))
+                    return min(marks, total_marks)
+                except (ValueError, IndexError):
+                    continue
+        
+        # Default: award 50% if text contains positive indicators
+        positive_indicators = ['correct', 'right', 'good', 'well done', 'accurate']
+        if any(indicator in text.lower() for indicator in positive_indicators):
+            return max(1, total_marks // 2)
+        
+        return 0
     
     def _generate_mcq_feedback(self, is_correct: bool, username: str) -> str:
         """Generate personalized MCQ feedback."""
