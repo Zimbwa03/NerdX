@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
 NerdX Live - Real-Time Voice AI Tutor
-Optimized Architecture: TRUE STREAMING for minimal latency
+Optimized Architecture: TURN BUFFERING for smooth, gap-free audio
 
 DESIGN PRINCIPLES:
 - Server handles security (API key), format conversion
-- Audio chunks from Gemini are MICRO-BATCHED into short, smooth WAVs
+- Audio chunks from Gemini are buffered per turn into one smooth WAV
 - Client plays audio chunks in sequence for real-time conversation
-- Provides sub-second response latency with fewer audible gaps
+- Provides gap-free playback (higher latency per response)
 
 STREAMING STRATEGY:
 - Receive PCM chunks from Gemini Live API (~100-200ms each)
-- Buffer a few chunks (~400ms) to reduce boundary clicks/gaps
-- Convert combined PCM to WAV and stream to client ASAP
+- Buffer the full turn before sending audio
+- Convert combined PCM to WAV and send once per turn
 - Client queues and plays chunks sequentially
-- Flush remaining audio immediately on turnComplete
+- Flush audio at turnComplete
 """
 
 import os
@@ -172,6 +172,11 @@ def _build_live_setup_message(
         "tools": [],
     }
 
+    # Keep turns short for teacher cadence, if configured
+    if LIVE_MAX_OUTPUT_TOKENS and LIVE_MAX_OUTPUT_TOKENS > 0:
+        max_key = "max_output_tokens" if use_snake_case else "maxOutputTokens"
+        setup[gen_key][max_key] = LIVE_MAX_OUTPUT_TOKENS
+
     if ENABLE_TRANSPARENT_RESUMPTION:
         setup[session_key]["transparent"] = True
     if session_handle:
@@ -285,6 +290,9 @@ GEMINI_MODEL_FALLBACK = os.getenv('GEMINI_LIVE_MODEL_FALLBACK', 'gemini-live-2.5
 ENABLE_TRANSCRIPTION = _bool_env("GEMINI_LIVE_TRANSCRIPTION", False)
 ENABLE_TRANSPARENT_RESUMPTION = _bool_env("GEMINI_LIVE_TRANSPARENT_RESUMPTION", False)
 FORCE_VERTEX_AI = _bool_env("GOOGLE_GENAI_FORCE_VERTEXAI", False)
+ENABLE_TEACHER_CADENCE = _bool_env("NERDX_LIVE_TEACHER_CADENCE", True)
+# Optional hard cap on response length; set explicitly if needed.
+LIVE_MAX_OUTPUT_TOKENS = int(os.getenv("NERDX_LIVE_MAX_OUTPUT_TOKENS", "0") or "0")
 
 # NerdX System Instruction - Optimized for Gemini Live API (Native Audio)
 # Following Google's best practices for system instructions
@@ -442,12 +450,42 @@ When the session begins, greet the student and ask what they want to study.
 Example: "Hi! I'm NerdX, your AI tutor for O-Level and A-Level subjects. What subject would you like help with today?"
 """
 
-# Audio micro-batching for smoother playback without large latency.
+TEACHER_CADENCE_INSTRUCTION = """
+## TEACHER CADENCE MODE (MANDATORY)
+
+Your goal is short, high-value turns that feel like a professional teacher.
+
+RULES:
+- Keep each spoken turn 10-20 seconds max (1-3 short sentences).
+- Deliver one idea per turn: definition OR step OR example OR common mistake.
+- End every turn with a short check-in question.
+- If the explanation needs more depth, ask permission to continue.
+- Do not chain multiple steps in one turn.
+- Avoid filler and repetition.
+
+TURN TEMPLATE (follow strictly):
+1) Name the step or idea.
+2) Explain briefly.
+3) Ask a check-in question.
+"""
+
+
+def _get_system_instruction() -> str:
+    if ENABLE_TEACHER_CADENCE:
+        return NERDX_SYSTEM_INSTRUCTION + "\n\n" + TEACHER_CADENCE_INSTRUCTION
+    return NERDX_SYSTEM_INSTRUCTION
+
+# Audio buffering configuration. Default is full-turn buffering for gap-free audio.
 # Tunable via env vars for production tuning.
 LIVE_AUDIO_BATCH_MS = int(os.getenv("NERDX_LIVE_AUDIO_BATCH_MS", "400"))
 LIVE_AUDIO_MAX_LATENCY_MS = int(os.getenv("NERDX_LIVE_AUDIO_MAX_LATENCY_MS", "700"))
 LIVE_AUDIO_SAMPLE_RATE = 24000
 LIVE_AUDIO_BYTES_PER_SECOND = LIVE_AUDIO_SAMPLE_RATE * 2  # 16-bit mono PCM
+LIVE_AUDIO_MODE = os.getenv("NERDX_LIVE_AUDIO_MODE", "turn").strip().lower()
+
+if LIVE_AUDIO_MODE not in {"turn", "stream", "micro"}:
+    LIVE_AUDIO_MODE = "turn"
+
 
 
 def convert_pcm_to_wav(pcm_data: bytes, sample_rate: int = 24000, channels: int = 1, sample_width: int = 2) -> bytes:
@@ -680,15 +718,15 @@ async def run_billing_scheduler(billing: BillingManager, websocket: WebSocket):
 
 class TransparentGeminiPipe:
     """
-    SMOOTH STREAMING PIPE: Micro-batches PCM to reduce audible gaps.
+    TURN-BUFFERED PIPE: Buffers PCM for a full turn to avoid gaps.
     Supports both Vertex AI (preferred) and regular Gemini API.
     Includes session resumption and goAway handling per Gemini Live API docs.
     
     STREAMING STRATEGY:
-    - PCM chunks are buffered briefly and concatenated (~400ms)
-    - Combined PCM is converted to WAV and sent immediately
+    - PCM chunks are buffered for the full turn and concatenated
+    - Combined PCM is converted to WAV and sent at turn end
     - Client queues and plays chunks in sequence
-    - Sub-second response latency with fewer boundary artifacts
+    - Gap-free playback with higher latency per response
     """
     
     def __init__(self, client_ws: WebSocket, session_handle: str = None):
@@ -817,7 +855,7 @@ class TransparentGeminiPipe:
                 setup_message = _build_live_setup_message(
                     f"projects/{GOOGLE_CLOUD_PROJECT}/locations/{GOOGLE_CLOUD_LOCATION}/publishers/google/models/{model_name}",
                     use_snake_case=True,
-                    system_text=NERDX_SYSTEM_INSTRUCTION,
+                    system_text=_get_system_instruction(),
                     session_handle=self.session_handle,
                 )
 
@@ -931,7 +969,7 @@ class TransparentGeminiPipe:
                 setup_message = _build_live_setup_message(
                     f"models/{model_name}",
                     use_snake_case=False,
-                    system_text=NERDX_SYSTEM_INSTRUCTION,
+                    system_text=_get_system_instruction(),
                     session_handle=self.session_handle,
                 )
 
@@ -1046,10 +1084,18 @@ class TransparentGeminiPipe:
                 "data": wav_b64
             })
             logger.debug(
-                f"Streamed batched audio: {len(pcm_bytes)} bytes PCM (~{len(pcm_bytes) / LIVE_AUDIO_BYTES_PER_SECOND:.2f}s)"
+                f"Sent buffered audio: {len(pcm_bytes)} bytes PCM (~{len(pcm_bytes) / LIVE_AUDIO_BYTES_PER_SECOND:.2f}s)"
             )
         finally:
             self.last_flush_time = time.time()
+
+    async def _buffer_pcm_turn(self, pcm_bytes: bytes):
+        """Buffer PCM for the full turn (no mid-turn flush)."""
+        if not pcm_bytes:
+            return
+
+        async with self.audio_buffer_lock:
+            self.audio_buffer.extend(pcm_bytes)
 
     async def _clear_audio_buffer(self):
         """Clear any pending buffered PCM (e.g., on interruption)."""
@@ -1057,7 +1103,7 @@ class TransparentGeminiPipe:
             self.audio_buffer.clear()
 
     async def _buffer_pcm_and_maybe_flush(self, pcm_bytes: bytes):
-        """Buffer PCM and flush when batch size or latency threshold is reached."""
+        """Buffer PCM and flush when batch size or latency threshold is reached (stream mode)."""
         if not pcm_bytes:
             return
 
@@ -1078,20 +1124,20 @@ class TransparentGeminiPipe:
     
     async def receive_and_forward(self):
         """
-        Receive from Gemini and forward to client with SMOOTH STREAMING.
+        Receive from Gemini and forward to client with configurable buffering.
         
         STREAMING STRATEGY:
-        - PCM audio chunks are briefly buffered and concatenated
-        - WAV chunk is sent to client ASAP after micro-batching
+        - Default: buffer PCM for the full turn
+        - Send WAV once at turn end (turn mode) or micro-batch (stream mode)
         - Client queues and plays chunks in sequence
-        - Sub-second response latency
+        - Gap-free playback (higher latency per response)
         """
         if not self.gemini_ws:
             logger.warning("⚠️ Cannot receive: Gemini WebSocket not connected")
             return
             
         try:
-            logger.info("👂 Starting to listen for Gemini responses (STREAMING mode)...")
+            logger.info(f"👂 Starting to listen for Gemini responses (audio_mode={LIVE_AUDIO_MODE})...")
             while self.is_active:
                 response = await self.gemini_ws.recv()
                 data = json.loads(response)
@@ -1129,9 +1175,12 @@ class TransparentGeminiPipe:
                                     if mime_type.startswith("audio/") and "pcm" in mime_type.lower():
                                         audio_b64 = inline_data.get("data", "")
                                         if audio_b64:
-                                            # Buffer PCM and flush in micro-batches
+                                            # Buffer PCM (turn mode) or flush in micro-batches (stream mode)
                                             pcm_bytes = base64.b64decode(audio_b64)
-                                            await self._buffer_pcm_and_maybe_flush(pcm_bytes)
+                                            if LIVE_AUDIO_MODE == "turn":
+                                                await self._buffer_pcm_turn(pcm_bytes)
+                                            else:
+                                                await self._buffer_pcm_and_maybe_flush(pcm_bytes)
                     
                     # Notify client when turn is complete
                     if content.get("turnComplete"):
@@ -1425,7 +1474,7 @@ class TransparentGeminiVideoPipe:
         system_key = "system_instruction" if use_snake_case else "systemInstruction"
         setup_message["setup"][system_key] = {
             "parts": [{
-                "text": NERDX_SYSTEM_INSTRUCTION + """
+                "text": _get_system_instruction() + """
 
 ADDITIONAL CONTEXT FOR REAL-TIME VIDEO MODE:
 You are receiving CONTINUOUS VIDEO STREAM (1 frame per second) from the student's camera.

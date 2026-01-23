@@ -234,7 +234,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
     }, [configureAudioMode]);
 
     // Jitter buffer for smooth audio playback
-    // Server micro-batches PCM into short WAVs, so keep buffer minimal for low latency
+    // Server buffers a full turn into a single WAV, so keep buffer minimal
     const audioQueueRef = useRef<string[]>([]);
     const isProcessingQueueRef = useRef(false);
     const JITTER_BUFFER_MIN = 1; // Start immediately with batched chunks
@@ -656,7 +656,7 @@ const NerdXLiveAudioScreen: React.FC = () => {
     }, [playCompleteAudioTurn]);
 
     // Playback timeout (fallback in case turnComplete is missed)
-    // Server micro-batches audio, so allow longer AI responses (30+ seconds).
+    // Server buffers full turns, so allow longer AI responses (30+ seconds).
     const startPlaybackTimeout = useCallback(() => {
         if (playbackTimeoutRef.current) clearTimeout(playbackTimeoutRef.current);
         playbackTimeoutRef.current = setTimeout(async () => {

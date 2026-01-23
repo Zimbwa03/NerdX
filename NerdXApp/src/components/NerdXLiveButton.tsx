@@ -25,7 +25,7 @@ const BUTTON_SIZE = 60;
 const WS_URL = `${APP_WS_BASE_URL}/ws/nerdx-live`;
 
 // ===== JITTER BUFFER CONFIGURATION =====
-// Server micro-batches audio; start playback immediately for low latency
+// Server buffers a full turn into one WAV; start playback immediately when it arrives
 const MIN_BUFFER_CHUNKS = 1; // Start on first chunk
 const PLAYBACK_CHECK_INTERVAL = 50; // Check queue every 50ms
 
