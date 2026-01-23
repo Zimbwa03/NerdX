@@ -1,4 +1,5 @@
 // Quiz API services
+import { Platform } from 'react-native';
 import api, { API_BASE_URL, getAuthToken } from './config';
 
 export interface Subject {
@@ -111,6 +112,11 @@ export const quizApi = {
     difficulty: string = 'medium',
     handlers: StreamHandlers = {}
   ): Promise<Question | null> => {
+    // React Native does not reliably support SSE/ReadableStream yet.
+    if (Platform.OS !== 'web' || typeof (globalThis as any).ReadableStream === 'undefined') {
+      return await quizApi.generateQuestion(subject, topic, difficulty);
+    }
+
     const token = await getAuthToken();
 
     const response = await fetch(`${API_BASE_URL}/api/mobile/quiz/generate-stream`, {

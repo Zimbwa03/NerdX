@@ -18,6 +18,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { scienceNotesApi, TopicNotes } from '../services/api/scienceNotesApi';
 import { aLevelChemistryNotesApi } from '../services/api/aLevelChemistryNotesApi';
+import { aLevelPhysicsNotesApi } from '../services/api/aLevelPhysicsNotesApi';
+import { aLevelBiologyNotesApi } from '../services/api/aLevelBiologyNotesApi';
 import { useAuth } from '../context/AuthContext';
 import { Colors } from '../theme/colors';
 import Markdown from 'react-native-markdown-display';
@@ -59,7 +61,16 @@ const TopicNotesDetailScreen: React.FC = () => {
             // Check if this is A Level Chemistry
             if (isALevel && subject === 'A Level Chemistry') {
                 notesData = await aLevelChemistryNotesApi.getTopicNotes(topic);
-            } else {
+            } 
+            // Check if this is A Level Physics
+            else if (isALevel && subject === 'A Level Physics') {
+                notesData = await aLevelPhysicsNotesApi.getTopicNotes(topic);
+            }
+            // Check if this is A Level Biology (subject is 'Biology' but isALevel is true)
+            else if (isALevel && subject === 'Biology') {
+                notesData = await aLevelBiologyNotesApi.getTopicNotes(topic);
+            } 
+            else {
                 // O Level science notes
                 notesData = await scienceNotesApi.getTopicNotes(
                     subject as 'Biology' | 'Chemistry' | 'Physics',
@@ -97,6 +108,12 @@ const TopicNotesDetailScreen: React.FC = () => {
     const getSubjectColor = () => {
         if (isALevel && subject === 'A Level Chemistry') {
             return '#00897B'; // Teal for A Level Chemistry
+        }
+        if (isALevel && subject === 'A Level Physics') {
+            return '#1976D2'; // Blue for A Level Physics
+        }
+        if (isALevel && subject === 'Biology') {
+            return '#10B981'; // Green for A Level Biology
         }
         switch (subject) {
             case 'Biology':
@@ -226,34 +243,39 @@ const TopicNotesDetailScreen: React.FC = () => {
                         {/* Video Player - Shows when topic has video lesson */}
                         {notes.videoUrl && notes.videoUrl.trim().length > 0 && (
                             <View style={styles.mediaContainer}>
-                                <VideoStreamPlayer
-                                    videoUrl={notes.videoUrl}
-                                    topicTitle={topic}
-                                    accentColor={getSubjectColor()}
-                                />
-                                {isMediaLocked && (
-                                    <View style={styles.lockOverlay}>
-                                        <LinearGradient
-                                            colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.85)']}
-                                            style={styles.lockOverlayGradient}
-                                        >
-                                            <View style={[styles.lockIconContainer, { backgroundColor: getSubjectColor() }]}>
-                                                <Ionicons name="lock-closed" size={48} color="#FFF" />
-                                            </View>
-                                            <Text style={styles.lockOverlayTitle}>Premium Video</Text>
-                                            <Text style={styles.lockOverlayText}>
-                                                Unlock this video lesson by purchasing credits
-                                            </Text>
-                                            <TouchableOpacity
-                                                style={[styles.unlockButton, { backgroundColor: getSubjectColor() }]}
-                                                onPress={() => {
-                                                    // Navigate to credits screen
-                                                    navigation.navigate('Credits' as never);
-                                                }}
+                                {/* Render player if not locked */}
+                                {!isMediaLocked ? (
+                                    <VideoStreamPlayer
+                                        videoUrl={notes.videoUrl}
+                                        topicTitle={topic}
+                                        accentColor={getSubjectColor()}
+                                    />
+                                ) : (
+                                    /* Show locked placeholder with overlay */
+                                    <View style={styles.lockedMediaPlaceholder}>
+                                        <View style={styles.lockOverlay}>
+                                            <LinearGradient
+                                                colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.85)']}
+                                                style={styles.lockOverlayGradient}
                                             >
-                                                <Text style={styles.unlockButtonText}>Unlock Now</Text>
-                                            </TouchableOpacity>
-                                        </LinearGradient>
+                                                <View style={[styles.lockIconContainer, { backgroundColor: getSubjectColor() }]}>
+                                                    <Ionicons name="lock-closed" size={48} color="#FFF" />
+                                                </View>
+                                                <Text style={styles.lockOverlayTitle}>Premium Video</Text>
+                                                <Text style={styles.lockOverlayText}>
+                                                    Unlock this video lesson by purchasing credits
+                                                </Text>
+                                                <TouchableOpacity
+                                                    style={[styles.unlockButton, { backgroundColor: getSubjectColor() }]}
+                                                    onPress={() => {
+                                                        // Navigate to credits screen
+                                                        navigation.navigate('Credits' as never);
+                                                    }}
+                                                >
+                                                    <Text style={styles.unlockButtonText}>Unlock Now</Text>
+                                                </TouchableOpacity>
+                                            </LinearGradient>
+                                        </View>
                                     </View>
                                 )}
                             </View>
@@ -262,34 +284,39 @@ const TopicNotesDetailScreen: React.FC = () => {
                         {/* Audio Player - Shows when topic has audio podcast */}
                         {notes.audioUrl && notes.audioUrl.trim().length > 0 && (
                             <View style={styles.mediaContainer}>
-                                <AudioStreamPlayer
-                                    audioUrl={notes.audioUrl}
-                                    topicTitle={topic}
-                                    accentColor={getSubjectColor()}
-                                />
-                                {isMediaLocked && (
-                                    <View style={styles.lockOverlay}>
-                                        <LinearGradient
-                                            colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.85)']}
-                                            style={styles.lockOverlayGradient}
-                                        >
-                                            <View style={[styles.lockIconContainer, { backgroundColor: getSubjectColor() }]}>
-                                                <Ionicons name="lock-closed" size={48} color="#FFF" />
-                                            </View>
-                                            <Text style={styles.lockOverlayTitle}>Premium Audio</Text>
-                                            <Text style={styles.lockOverlayText}>
-                                                Unlock this audio lesson by purchasing credits
-                                            </Text>
-                                            <TouchableOpacity
-                                                style={[styles.unlockButton, { backgroundColor: getSubjectColor() }]}
-                                                onPress={() => {
-                                                    // Navigate to credits screen
-                                                    navigation.navigate('Credits' as never);
-                                                }}
+                                {/* Render player if not locked */}
+                                {!isMediaLocked ? (
+                                    <AudioStreamPlayer
+                                        audioUrl={notes.audioUrl}
+                                        topicTitle={topic}
+                                        accentColor={getSubjectColor()}
+                                    />
+                                ) : (
+                                    /* Show locked placeholder with overlay */
+                                    <View style={styles.lockedMediaPlaceholder}>
+                                        <View style={styles.lockOverlay}>
+                                            <LinearGradient
+                                                colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.85)']}
+                                                style={styles.lockOverlayGradient}
                                             >
-                                                <Text style={styles.unlockButtonText}>Unlock Now</Text>
-                                            </TouchableOpacity>
-                                        </LinearGradient>
+                                                <View style={[styles.lockIconContainer, { backgroundColor: getSubjectColor() }]}>
+                                                    <Ionicons name="lock-closed" size={48} color="#FFF" />
+                                                </View>
+                                                <Text style={styles.lockOverlayTitle}>Premium Audio</Text>
+                                                <Text style={styles.lockOverlayText}>
+                                                    Unlock this audio lesson by purchasing credits
+                                                </Text>
+                                                <TouchableOpacity
+                                                    style={[styles.unlockButton, { backgroundColor: getSubjectColor() }]}
+                                                    onPress={() => {
+                                                        // Navigate to credits screen
+                                                        navigation.navigate('Credits' as never);
+                                                    }}
+                                                >
+                                                    <Text style={styles.unlockButtonText}>Unlock Now</Text>
+                                                </TouchableOpacity>
+                                            </LinearGradient>
+                                        </View>
                                     </View>
                                 )}
                             </View>
@@ -495,6 +522,13 @@ const styles = StyleSheet.create({
     mediaContainer: {
         position: 'relative',
         marginBottom: 16,
+    },
+    lockedMediaPlaceholder: {
+        minHeight: 200,
+        borderRadius: 16,
+        overflow: 'hidden',
+        backgroundColor: '#000',
+        position: 'relative',
     },
     lockOverlay: {
         position: 'absolute',

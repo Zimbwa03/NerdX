@@ -1,6 +1,7 @@
 import sqlite3
 import json
 import logging
+import time
 from datetime import datetime, timedelta
 from typing import Dict, Optional, List
 
@@ -59,6 +60,18 @@ def init_session_database():
                 surname TEXT,
                 date_of_birth TEXT,
                 referred_by_nerdx_id TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
+        # Create menu routing table to persist last menu options per user
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS user_menus (
+                user_id TEXT PRIMARY KEY,
+                menu_data TEXT,
+                source TEXT,
+                timestamp REAL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
@@ -175,6 +188,75 @@ def clear_user_session(user_id: str) -> bool:
         
     except Exception as e:
         logger.error(f"Error clearing user session: {e}")
+        return False
+
+def save_user_menu(user_id: str, menu_options: List[Dict], source: str = "menu", timestamp: Optional[float] = None) -> bool:
+    """Persist the last menu options for a user (for multi-worker menu routing)."""
+    try:
+        if not user_id or not menu_options:
+            return False
+
+        if timestamp is None:
+            timestamp = time.time()
+
+        conn = sqlite3.connect(DATABASE_NAME)
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT OR REPLACE INTO user_menus (user_id, menu_data, source, timestamp, updated_at)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (
+            user_id,
+            json.dumps(menu_options),
+            source,
+            timestamp,
+            datetime.utcnow()
+        ))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        logger.error(f"Error saving user menu: {e}")
+        return False
+
+def get_user_menu(user_id: str) -> Optional[Dict]:
+    """Get the last persisted menu options for a user."""
+    try:
+        conn = sqlite3.connect(DATABASE_NAME)
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT menu_data, source, timestamp
+            FROM user_menus
+            WHERE user_id = ?
+        ''', (user_id,))
+        row = cursor.fetchone()
+        conn.close()
+
+        if not row:
+            return None
+
+        menu_data = json.loads(row[0]) if row[0] else []
+        return {
+            'menu_options': menu_data,
+            'source': row[1],
+            'timestamp': row[2] or 0
+        }
+    except Exception as e:
+        logger.error(f"Error getting user menu: {e}")
+        return None
+
+def clear_user_menu(user_id: str) -> bool:
+    """Clear persisted menu options for a user."""
+    try:
+        if not user_id:
+            return False
+        conn = sqlite3.connect(DATABASE_NAME)
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM user_menus WHERE user_id = ?', (user_id,))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        logger.error(f"Error clearing user menu: {e}")
         return False
 
 def save_combined_exam_session(user_id: str, question_data: Dict) -> bool:
@@ -404,6 +486,9 @@ def cleanup_old_sessions():
         
         cursor.execute('DELETE FROM user_sessions WHERE created_at < ?', (cutoff,))
         cursor.execute('DELETE FROM registration_sessions WHERE created_at < ?', (cutoff,))
+
+        # Remove old menu snapshots (older than 24 hours)
+        cursor.execute('DELETE FROM user_menus WHERE updated_at < ?', (cutoff,))
         
         # Remove question history older than 30 days
         question_cutoff = datetime.utcnow() - timedelta(days=30)

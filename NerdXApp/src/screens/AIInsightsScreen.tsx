@@ -15,6 +15,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 import { useThemedColors } from '../theme/useThemedStyles';
 import Colors from '../theme/colors';
 import FloatingParticles from '../components/FloatingParticles';
@@ -22,12 +23,76 @@ import { accountApi, AIInsights, SkillInsight, StudyPlanItem } from '../services
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
+const getDisplayName = (name?: string, surname?: string) => {
+    const fullName = [name, surname].filter(Boolean).join(' ').trim();
+    return fullName || 'Student';
+};
+
+const getFirstName = (fullName: string) => {
+    const parts = fullName.split(' ').filter(Boolean);
+    return parts[0] || fullName;
+};
+
+const getHealthTone = (score: number) => {
+    if (score >= 80) return 'I feel steady and confident';
+    if (score >= 60) return 'I am on the right track';
+    if (score >= 40) return 'I need to tighten my focus';
+    return 'I need a reset and steady practice';
+};
+
+const buildInsightThoughts = (insights: AIInsights, firstName?: string) => {
+    const thoughts: string[] = [];
+    const weekly = insights.weekly_trend;
+
+    if (weekly) {
+        const accuracy = Number.isFinite(weekly.accuracy) ? Math.round(weekly.accuracy) : weekly.accuracy;
+        const totalQuestions = Number.isFinite(weekly.total_questions) ? weekly.total_questions : 0;
+        const activeDays = Number.isFinite(weekly.active_days) ? weekly.active_days : 0;
+        const intro = firstName ? `I'm ${firstName}, and ` : '';
+        thoughts.push(`${intro}this week I answered ${totalQuestions} questions at ${accuracy}% accuracy over ${activeDays}/7 days.`);
+    } else if (firstName) {
+        thoughts.push(`I'm ${firstName}, and I'm checking in on my progress today.`);
+    }
+
+    if (typeof insights.health_score === 'number') {
+        thoughts.push(`My learning health is ${insights.health_score}/100 - ${getHealthTone(insights.health_score)}.`);
+    }
+
+    if (typeof insights.mastered_count === 'number' || typeof insights.learning_count === 'number' || typeof insights.struggling_count === 'number') {
+        thoughts.push(`I've mastered ${insights.mastered_count} skills, I'm learning ${insights.learning_count}, and ${insights.struggling_count} need work.`);
+    }
+
+    if (insights.strengths?.length) {
+        const topStrength = insights.strengths[0];
+        const strengthArea = [topStrength.subject, topStrength.skill_name].filter(Boolean).join(' - ');
+        thoughts.push(`I'm strongest in ${strengthArea} (${topStrength.mastery}%).`);
+    }
+
+    if (insights.focus_areas?.length) {
+        const focusArea = insights.focus_areas[0];
+        const focusName = [focusArea.subject, focusArea.skill_name].filter(Boolean).join(' - ');
+        thoughts.push(`I keep stumbling in ${focusName}, so I'm making it a priority.`);
+    }
+
+    if (insights.study_plan?.length) {
+        const nextStep = insights.study_plan[0];
+        thoughts.push(`My next move is ${nextStep.action} (${nextStep.estimated_time}).`);
+    }
+
+    return thoughts.filter(Boolean).slice(0, 5);
+};
+
 const AIInsightsScreen: React.FC = () => {
     const navigation = useNavigation();
     const themedColors = useThemedColors();
+    const { user } = useAuth();
     const [refreshing, setRefreshing] = useState(false);
     const [loading, setLoading] = useState(true);
     const [insights, setInsights] = useState<AIInsights | null>(null);
+    const hasName = !!(user?.name || user?.surname);
+    const displayName = hasName ? getDisplayName(user?.name, user?.surname) : '';
+    const firstName = displayName ? getFirstName(displayName) : '';
+    const insightThoughts = insights ? buildInsightThoughts(insights, firstName) : [];
 
     const loadData = useCallback(async () => {
         try {
@@ -224,7 +289,19 @@ const AIInsightsScreen: React.FC = () => {
 
                     {/* Personalized Message */}
                     <View style={styles.messageCard}>
-                        <Text style={styles.messageText}>{insights.personalized_message}</Text>
+                        <Text style={styles.messageTitle}>
+                            {hasName ? `Inside ${firstName}'s thoughts` : 'Your learning thoughts'}
+                        </Text>
+                        <Text style={styles.messageSubtitle}>Personal notes based on your learning data</Text>
+                        {insightThoughts.map((thought, index) => (
+                            <View key={`${index}-${thought.slice(0, 12)}`} style={styles.thoughtRow}>
+                                <Text style={styles.thoughtBullet}>-</Text>
+                                <Text style={styles.thoughtText}>{thought}</Text>
+                            </View>
+                        ))}
+                        {insightThoughts.length === 0 && (
+                            <Text style={styles.messageText}>{insights.personalized_message}</Text>
+                        )}
                     </View>
 
                     {/* Weekly Trend */}
@@ -391,11 +468,39 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: 'rgba(255, 255, 255, 0.15)',
     },
+    messageTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#FFFFFF',
+        marginBottom: 4,
+    },
+    messageSubtitle: {
+        fontSize: 12,
+        color: 'rgba(255, 255, 255, 0.6)',
+        marginBottom: 12,
+    },
     messageText: {
         fontSize: 16,
         color: '#FFFFFF',
         lineHeight: 24,
-        textAlign: 'center',
+        textAlign: 'left',
+    },
+    thoughtRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        marginBottom: 8,
+    },
+    thoughtBullet: {
+        width: 14,
+        fontSize: 14,
+        color: 'rgba(255, 255, 255, 0.7)',
+        lineHeight: 20,
+    },
+    thoughtText: {
+        flex: 1,
+        fontSize: 14,
+        color: '#FFFFFF',
+        lineHeight: 20,
     },
     section: {
         marginHorizontal: 20,

@@ -3,6 +3,8 @@ import re
 import time
 from typing import Dict, List, Optional
 
+from database.session_db import save_user_menu, get_user_menu, clear_user_menu
+
 logger = logging.getLogger(__name__)
 
 
@@ -20,7 +22,21 @@ class MenuRouter:
 
         user_key = self._normalize_user_id(user_id)
         now = time.time()
+        menu_maps = self._build_menu_maps(options)
+        if not menu_maps:
+            return
 
+        menu_maps["timestamp"] = now
+        menu_maps["source"] = source
+        self._menus[user_key] = menu_maps
+
+        try:
+            save_user_menu(user_key, options, source=source, timestamp=now)
+        except Exception as e:
+            logger.warning(f"Menu persistence failed for {user_key}: {e}")
+
+    def _build_menu_maps(self, options: List[Dict]) -> Optional[Dict]:
+        """Build number/text/callback maps from menu options."""
         by_number: Dict[str, str] = {}
         by_text: Dict[str, str] = {}
         by_callback: Dict[str, str] = {}
@@ -52,11 +68,9 @@ class MenuRouter:
                 by_callback[norm_cb] = callback
 
         if not by_number:
-            return
+            return None
 
-        self._menus[user_key] = {
-            "timestamp": now,
-            "source": source,
+        return {
             "by_number": by_number,
             "by_text": by_text,
             "by_callback": by_callback,
@@ -69,11 +83,25 @@ class MenuRouter:
 
         user_key = self._normalize_user_id(user_id)
         menu = self._menus.get(user_key)
-        if not menu:
-            return None
+        if not menu or self._is_expired(menu.get("timestamp")):
+            # Clear expired in-memory menu
+            if menu and self._is_expired(menu.get("timestamp")):
+                self._menus.pop(user_key, None)
 
-        if self._is_expired(menu.get("timestamp")):
-            self._menus.pop(user_key, None)
+            # Attempt to load last menu from persistent storage
+            persisted = get_user_menu(user_key)
+            if persisted:
+                if self._is_expired(persisted.get("timestamp")):
+                    clear_user_menu(user_key)
+                else:
+                    menu_maps = self._build_menu_maps(persisted.get("menu_options", []))
+                    if menu_maps:
+                        menu_maps["timestamp"] = persisted.get("timestamp")
+                        menu_maps["source"] = persisted.get("source", "persistent")
+                        menu = menu_maps
+                        self._menus[user_key] = menu
+
+        if not menu:
             return None
 
         text = message_text.strip()
@@ -82,6 +110,7 @@ class MenuRouter:
             if number and number in menu["by_number"]:
                 selection = menu["by_number"][number]
                 self._menus.pop(user_key, None)
+                clear_user_menu(user_key)
                 return selection
 
         normalized = self._normalize_text(text)
@@ -91,11 +120,13 @@ class MenuRouter:
         if normalized in menu["by_text"]:
             selection = menu["by_text"][normalized]
             self._menus.pop(user_key, None)
+            clear_user_menu(user_key)
             return selection
 
         if normalized in menu["by_callback"]:
             selection = menu["by_callback"][normalized]
             self._menus.pop(user_key, None)
+            clear_user_menu(user_key)
             return selection
 
         # Fuzzy partial match (only if unique)
@@ -108,6 +139,7 @@ class MenuRouter:
             if len(candidates) == 1:
                 selection = candidates[0]
                 self._menus.pop(user_key, None)
+                clear_user_menu(user_key)
                 return selection
 
         return None
@@ -118,6 +150,7 @@ class MenuRouter:
             return
         user_key = self._normalize_user_id(user_id)
         self._menus.pop(user_key, None)
+        clear_user_menu(user_key)
 
     def _is_expired(self, timestamp: Optional[float]) -> bool:
         if not timestamp:

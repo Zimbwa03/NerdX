@@ -147,8 +147,8 @@ class ALevelPhysicsGenerator:
         self.deepseek_api_key = os.environ.get('DEEPSEEK_API_KEY')
         self.deepseek_url = "https://api.deepseek.com/v1/chat/completions"
         self.deepseek_model = get_deepseek_chat_model()
-        self.timeout = 45  # Base timeout for physics questions
-        self.max_retries = 3  # Retry up to 3 times
+        self.timeout = 25  # Optimized timeout for physics questions (reduced from 45)
+        self.max_retries = 2  # Reduced retries for faster failure recovery
     
     def _get_topic_name(self, topic_id: str) -> Optional[str]:
         """Map frontend topic IDs to display names used in constants."""
@@ -521,21 +521,35 @@ Always respond with valid JSON containing step-by-step solutions."""
                     "max_tokens": 2000 if question_type == "structured" else 1500
                 }
                 
-                # Increase timeout with each retry attempt
-                timeout = self.timeout + (attempt * 15)
+                # Optimized timeout - slightly increase for retries but cap it
+                timeout = self.timeout + (attempt * 5)  # Reduced increment: 25s, 30s
                 logger.info(f"DeepSeek Physics attempt {attempt + 1}/{self.max_retries} (timeout: {timeout}s)")
                 
-                response = requests.post(
-                    self.deepseek_url,
-                    headers=headers,
-                    json=payload,
-                    timeout=timeout
-                )
+                # Use session for connection pooling
+                session = requests.Session()
+                session.headers.update(headers)
+                
+                try:
+                    response = session.post(
+                        self.deepseek_url,
+                        json=payload,
+                        timeout=timeout
+                    )
+                finally:
+                    session.close()
                 
                 if response.status_code != 200:
-                    logger.error(f"DeepSeek API error: {response.status_code} - {response.text}")
+                    # Handle rate limiting specifically
+                    if response.status_code == 429:
+                        logger.warning(f"DeepSeek rate limit hit on attempt {attempt + 1}")
+                        if attempt < self.max_retries - 1:
+                            wait_time = 5 * (attempt + 1)  # Wait longer for rate limits
+                            logger.info(f"Rate limited, waiting {wait_time}s before retry...")
+                            time.sleep(wait_time)
+                            continue
+                    logger.error(f"DeepSeek API error: {response.status_code} - {response.text[:200]}")
                     if attempt < self.max_retries - 1:
-                        time.sleep(2)  # Wait before retry
+                        time.sleep(1)  # Brief wait before retry
                         continue
                     return None
                 
@@ -555,13 +569,38 @@ Always respond with valid JSON containing step-by-step solutions."""
             except (requests.Timeout, requests.exceptions.ReadTimeout) as e:
                 timeout_str = f" (timeout: {timeout}s)" if timeout else ""
                 logger.warning(f"DeepSeek timeout on attempt {attempt + 1}/{self.max_retries}{timeout_str}")
+                # Reduce max_tokens for retry to speed up
                 if attempt < self.max_retries - 1:
-                    time.sleep(2)  # Wait before retry
+                    payload['max_tokens'] = int(payload.get('max_tokens', 2000) * 0.85)  # Reduce by 15%
+                    logger.info(f"Retrying with reduced max_tokens ({payload['max_tokens']})")
+                    time.sleep(1)  # Brief wait before retry
                     continue
-            except Exception as e:
-                logger.error(f"Error calling DeepSeek API on attempt {attempt + 1}: {e}")
+            except requests.exceptions.ConnectionError as e:
+                logger.error(f"DeepSeek connection error on attempt {attempt + 1}: {e}")
+                # Exponential backoff for connection errors
                 if attempt < self.max_retries - 1:
-                    time.sleep(2)
+                    wait_time = min(2 ** attempt, 5)  # Cap at 5 seconds: 1s, 2s, 4s, 5s
+                    logger.info(f"Connection error, waiting {wait_time}s before retry...")
+                    time.sleep(wait_time)
+                    continue
+            except requests.exceptions.HTTPError as e:
+                status_code = getattr(e.response, 'status_code', None)
+                if status_code == 429:  # Rate limit
+                    logger.warning(f"DeepSeek rate limit hit on attempt {attempt + 1}")
+                    if attempt < self.max_retries - 1:
+                        wait_time = 5 * (attempt + 1)  # Wait longer for rate limits
+                        logger.info(f"Rate limited, waiting {wait_time}s before retry...")
+                        time.sleep(wait_time)
+                        continue
+                else:
+                    logger.error(f"DeepSeek HTTP error {status_code} on attempt {attempt + 1}: {e}")
+                    if attempt < self.max_retries - 1:
+                        time.sleep(2)
+                        continue
+            except Exception as e:
+                logger.error(f"Error calling DeepSeek API on attempt {attempt + 1}: {e}", exc_info=True)
+                if attempt < self.max_retries - 1:
+                    time.sleep(1)  # Brief wait before retry
                     continue
         
         logger.error("All DeepSeek retry attempts failed for Physics question")

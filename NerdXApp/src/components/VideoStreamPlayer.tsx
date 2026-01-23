@@ -33,16 +33,6 @@ const VideoStreamPlayer: React.FC<VideoStreamPlayerProps> = ({
 }) => {
     const videoViewRef = useRef<any>(null);
 
-    // Create video player using the hook
-    const player = useVideoPlayer(videoUrl, (p) => {
-        p.loop = false;
-        p.muted = false;
-    });
-
-    // Subscribe to player events
-    const { isPlaying } = useEvent(player, 'playingChange', { isPlaying: player.playing });
-    const { status } = useEvent(player, 'statusChange', { status: player.status });
-
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
@@ -52,59 +42,128 @@ const VideoStreamPlayer: React.FC<VideoStreamPlayerProps> = ({
     const [isMuted, setIsMuted] = useState(false);
     const [position, setPosition] = useState(0);
     const [duration, setDuration] = useState(0);
-    const [resolvedUrl, setResolvedUrl] = useState(videoUrl);
+    const [resolvedUrl, setResolvedUrl] = useState<string | null>(null);
 
     const controlsTimeout = useRef<NodeJS.Timeout | null>(null);
     const pulseAnim = useRef(new Animated.Value(1)).current;
 
     const resolveVideoUrl = useCallback(async (): Promise<string | null> => {
-        const initialUrl = await ensureFreshMediaUrl(videoUrl);
-        const initialOk = await checkUrlAccessible(initialUrl);
-        if (initialOk) return initialUrl;
+        try {
+            console.log('🎥 Video: Resolving URL...');
+            const initialUrl = await ensureFreshMediaUrl(videoUrl);
+            const initialOk = await checkUrlAccessible(initialUrl);
+            if (initialOk) {
+                console.log('🎥 Video: Initial URL is accessible');
+                return initialUrl;
+            }
 
-        const refreshedUrl = await refreshMediaUrl(videoUrl);
-        const refreshedOk = await checkUrlAccessible(refreshedUrl);
-        if (refreshedOk) return refreshedUrl;
+            console.log('🎥 Video: Initial URL not accessible, refreshing...');
+            const refreshedUrl = await refreshMediaUrl(videoUrl);
+            const refreshedOk = await checkUrlAccessible(refreshedUrl);
+            if (refreshedOk) {
+                console.log('🎥 Video: Refreshed URL is accessible');
+                return refreshedUrl;
+            }
 
-        return null;
+            console.error('🎥 Video: Both URLs failed accessibility check');
+            return null;
+        } catch (err) {
+            console.error('🎥 Video: Error resolving URL:', err);
+            return null;
+        }
     }, [videoUrl]);
 
-    // Update loading and error states based on player status
-    useEffect(() => {
-        if (status === 'readyToPlay') {
-            setIsLoading(false);
-            setError(null);
-            setDuration(player.duration * 1000); // Convert to milliseconds
-        } else if (status === 'loading') {
-            setIsLoading(true);
-        } else if (status === 'error') {
-            setError('Video could not be loaded. Please check your internet connection and try again.');
-            setIsLoading(false);
-        }
-    }, [status, player.duration]);
+    // Create video player with resolved URL (or empty string if not resolved yet)
+    // Using resolvedUrl state ensures we don't try to load expired URLs
+    const player = useVideoPlayer(resolvedUrl || '', (p) => {
+        p.loop = false;
+        p.muted = false;
+    });
 
-    // Resolve and replace URL when input changes
+    // Subscribe to player events
+    const { isPlaying } = useEvent(player, 'playingChange', { isPlaying: player.playing });
+    const { status } = useEvent(player, 'statusChange', { status: player.status });
+
+    // Resolve URL and update player when videoUrl changes
     useEffect(() => {
         let active = true;
 
-        const refreshUrl = async () => {
+        const initializePlayer = async () => {
             setIsLoading(true);
+            setError(null);
+            
+            console.log('🎥 Video: Resolving URL for video...');
             const playableUrl = await resolveVideoUrl();
             if (!active) return;
+            
             if (!playableUrl) {
+                console.error('🎥 Video: Failed to resolve URL');
                 setError('Video could not be loaded. Please check your connection or try again.');
                 setIsLoading(false);
                 return;
             }
+            
+            console.log('🎥 Video: URL resolved, updating player:', playableUrl.substring(0, 100) + '...');
+            // Set resolved URL - this will trigger the player to update since it depends on resolvedUrl
             setResolvedUrl(playableUrl);
-            player.replace(playableUrl);
+            
+            // Also explicitly replace in case the player was already created
+            try {
+                if (playableUrl) {
+                    player.replace(playableUrl);
+                }
+            } catch (err) {
+                console.error('🎥 Video: Error replacing player URL:', err);
+                // Don't set error here - let the status effect handle it
+            }
         };
 
-        refreshUrl();
+        initializePlayer();
         return () => {
             active = false;
         };
-    }, [resolveVideoUrl, player]);
+    }, [videoUrl, resolveVideoUrl, player]);
+
+    // Update loading and error states based on player status
+    useEffect(() => {
+        // Don't process status if we don't have a resolved URL yet
+        if (!resolvedUrl) {
+            return;
+        }
+
+        if (status === 'readyToPlay') {
+            console.log('🎥 Video: Ready to play');
+            setIsLoading(false);
+            setError(null);
+            if (player.duration > 0) {
+                setDuration(player.duration * 1000); // Convert to milliseconds
+            }
+        } else if (status === 'loading') {
+            console.log('🎥 Video: Loading...');
+            setIsLoading(true);
+        } else if (status === 'error') {
+            console.error('🎥 Video: Player error with resolved URL');
+            // If we have a resolved URL and still get an error, try refreshing once more
+            const retry = async () => {
+                console.log('🎥 Video: Retrying with fresh URL...');
+                const newUrl = await resolveVideoUrl();
+                if (newUrl && newUrl !== resolvedUrl) {
+                    try {
+                        player.replace(newUrl);
+                        setResolvedUrl(newUrl);
+                    } catch (err) {
+                        console.error('🎥 Video: Retry failed:', err);
+                        setError('Video could not be loaded. Please check your internet connection and try again.');
+                        setIsLoading(false);
+                    }
+                } else {
+                    setError('Video could not be loaded. Please check your internet connection and try again.');
+                    setIsLoading(false);
+                }
+            };
+            retry();
+        }
+    }, [status, player.duration, resolvedUrl, resolveVideoUrl, player]);
 
     // Update position periodically
     useEffect(() => {
@@ -269,7 +328,7 @@ const VideoStreamPlayer: React.FC<VideoStreamPlayerProps> = ({
     };
 
     // Minimized floating player (fixed position bottom-right)
-    if (isMinimized) {
+    if (isMinimized && resolvedUrl) {
         return (
             <View
                 style={[
@@ -345,17 +404,25 @@ const VideoStreamPlayer: React.FC<VideoStreamPlayerProps> = ({
                     activeOpacity={1}
                     style={styles.videoWrapper}
                     onPress={handleVideoPress}
+                    disabled={!resolvedUrl || isLoading}
                 >
-                    <VideoView
-                        ref={videoViewRef}
-                        player={player}
-                        style={styles.video}
-                        contentFit="contain"
-                        nativeControls={false}
-                        allowsFullscreen
-                        onFullscreenEnter={() => setIsFullscreen(true)}
-                        onFullscreenExit={() => setIsFullscreen(false)}
-                    />
+                    {resolvedUrl ? (
+                        <VideoView
+                            ref={videoViewRef}
+                            player={player}
+                            style={styles.video}
+                            contentFit="contain"
+                            nativeControls={false}
+                            allowsFullscreen
+                            onFullscreenEnter={() => setIsFullscreen(true)}
+                            onFullscreenExit={() => setIsFullscreen(false)}
+                        />
+                    ) : (
+                        <View style={styles.videoPlaceholder}>
+                            <Ionicons name="videocam-outline" size={48} color="rgba(255,255,255,0.5)" />
+                            <Text style={styles.placeholderText}>Preparing video...</Text>
+                        </View>
+                    )}
 
                     {/* Loading Overlay */}
                     {isLoading && (
