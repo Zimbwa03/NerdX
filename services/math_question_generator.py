@@ -204,11 +204,18 @@ class MathQuestionGenerator:
         self.api_key = self.deepseek_api_key
         self.api_url = self.deepseek_api_url
 
-        # Reduced timeout parameters to prevent worker crashes
-        self.max_retries = 2  # Reduced retries for faster fallback
-        self.base_timeout = int(os.environ.get("DEEPSEEK_TIMEOUT_SECONDS", "20"))
+        # Progressive timeout parameters to handle DeepSeek API delays
+        # Support environment variables for timeout configuration
+        self.base_timeout = int(os.environ.get("DEEPSEEK_TIMEOUT_SECONDS", "30"))
         self.connect_timeout = int(os.environ.get("DEEPSEEK_CONNECT_TIMEOUT_SECONDS", "5"))
-        self.retry_delay = 1   # Minimal delay between retries
+        self.max_retries = 3  # Retry up to 3 times
+        # Progressive timeouts based on base_timeout: 1x, 1.5x, 2x
+        self.timeouts = [
+            self.base_timeout,
+            int(self.base_timeout * 1.5),
+            self.base_timeout * 2
+        ]
+        self.retry_delay = 2   # Delay between retries (seconds)
     
     def _init_gemini_client(self):
         """Initialize Gemini client with Vertex AI or API key."""
@@ -278,29 +285,50 @@ class MathQuestionGenerator:
             logger.info(f"Trying DeepSeek AI (primary) for {subject}/{topic}")
             prompt = self._create_question_prompt(subject, topic, difficulty, recent_topics)
             
-            # Single attempt with reasonable timeout
-            timeout_limit = self.base_timeout
+            # Retry with progressive timeouts, respecting timeout_seconds parameter if provided
+            # Calculate timeouts based on remaining budget
+            base_timeouts = self.timeouts.copy()
             if timeout_seconds is not None:
-                timeout_limit = max(5, int(min(timeout_seconds, self.base_timeout)))
-            try:
-                response = self._send_api_request(prompt, timeout=timeout_limit)
-                if response:
-                    question_data = self._validate_and_format_question(response, subject, topic, difficulty, user_id)
-                    if question_data:
-                        question_data['source'] = 'deepseek_ai'
-                        logger.info(f"✅ DeepSeek AI generated question for {subject}/{topic}")
-                        return question_data
-                    else:
-                        logger.warning(f"⚠️ DeepSeek response validation failed for {subject}/{topic}")
-                else:
-                    logger.warning(f"⚠️ Empty response from DeepSeek API for {subject}/{topic}")
-            except requests.exceptions.Timeout:
-                logger.error(f"❌ DeepSeek API timeout ({timeout_limit}s limit) for {subject}/{topic}")
-            except Exception as e:
-                logger.error(f"❌ DeepSeek API error for {subject}/{topic}: {e}", exc_info=True)
+                # Cap all timeouts to the remaining budget
+                base_timeouts = [max(5, int(min(t, timeout_seconds))) for t in base_timeouts]
             
-            # Return None instead of fallback - API endpoint will handle retry
-            logger.error(f"❌ Failed to generate question for {subject}/{topic} - returning None for retry")
+            for attempt in range(self.max_retries):
+                timeout = base_timeouts[min(attempt, len(base_timeouts) - 1)]
+                logger.info(f"DeepSeek AI attempt {attempt + 1}/{self.max_retries} (timeout: {timeout}s) for {subject}/{topic}")
+                
+                try:
+                    response = self._send_api_request(prompt, timeout=timeout)
+                    if response:
+                        question_data = self._validate_and_format_question(response, subject, topic, difficulty, user_id)
+                        if question_data:
+                            question_data['source'] = 'deepseek_ai'
+                            logger.info(f"✅ DeepSeek AI generated question for {subject}/{topic} on attempt {attempt + 1}")
+                            return question_data
+                        else:
+                            logger.warning(f"⚠️ DeepSeek response validation failed for {subject}/{topic} on attempt {attempt + 1}")
+                    else:
+                        logger.warning(f"⚠️ Empty response from DeepSeek API for {subject}/{topic} on attempt {attempt + 1}")
+                
+                except requests.exceptions.Timeout:
+                    logger.warning(f"⚠️ DeepSeek API timeout on attempt {attempt + 1}/{self.max_retries} (waited {timeout}s) for {subject}/{topic}")
+                    if attempt < self.max_retries - 1:
+                        time.sleep(self.retry_delay)
+                    continue
+                
+                except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as e:
+                    logger.warning(f"⚠️ DeepSeek API connection error on attempt {attempt + 1}/{self.max_retries}: {e}")
+                    if attempt < self.max_retries - 1:
+                        time.sleep(self.retry_delay)
+                    continue
+                
+                except Exception as e:
+                    logger.error(f"❌ DeepSeek API error on attempt {attempt + 1}/{self.max_retries} for {subject}/{topic}: {e}", exc_info=True)
+                    if attempt < self.max_retries - 1:
+                        time.sleep(self.retry_delay)
+                    continue
+            
+            # All attempts failed
+            logger.error(f"❌ Failed to generate question for {subject}/{topic} after {self.max_retries} attempts - returning None for retry")
             return None
 
         except Exception as e:
@@ -377,27 +405,53 @@ class MathQuestionGenerator:
             prompt = self._create_graph_question_prompt(equation, graph_type, difficulty)
             logger.info(f"Generating graph question for equation: {equation}")
             
-            timeout_limit = self.base_timeout
+            # Retry with progressive timeouts, respecting timeout_seconds parameter if provided
+            base_timeouts = self.timeouts.copy()
             if timeout_seconds is not None:
-                timeout_limit = max(5, int(min(timeout_seconds, self.base_timeout)))
-            response = self._send_api_request(prompt, timeout=timeout_limit)
-            if response:
-                question_data = self._validate_and_format_question(
-                    response, 'Mathematics', f'Graph - {graph_type.title()}', difficulty, user_id
-                )
-                if question_data:
-                    question_data['source'] = 'deepseek_ai'
-                    question_data['equation'] = equation
-                    logger.info(f"DeepSeek AI generated graph question for {equation}")
-                    return question_data
+                # Cap all timeouts to the remaining budget
+                base_timeouts = [max(5, int(min(t, timeout_seconds))) for t in base_timeouts]
+            
+            for attempt in range(self.max_retries):
+                timeout = base_timeouts[min(attempt, len(base_timeouts) - 1)]
+                logger.info(f"DeepSeek AI graph question attempt {attempt + 1}/{self.max_retries} (timeout: {timeout}s)")
+                
+                try:
+                    response = self._send_api_request(prompt, timeout=timeout)
+                    if response:
+                        question_data = self._validate_and_format_question(
+                            response, 'Mathematics', f'Graph - {graph_type.title()}', difficulty, user_id
+                        )
+                        if question_data:
+                            question_data['source'] = 'deepseek_ai'
+                            question_data['equation'] = equation
+                            logger.info(f"✅ DeepSeek AI generated graph question for {equation} on attempt {attempt + 1}")
+                            return question_data
                     
-        except requests.exceptions.Timeout:
-            logger.warning("DeepSeek API timeout for graph question")
-        except Exception as e:
-            logger.warning(f"DeepSeek API error for graph question: {e}")
+                except requests.exceptions.Timeout:
+                    logger.warning(f"⚠️ DeepSeek API timeout for graph question on attempt {attempt + 1}/{self.max_retries} (waited {timeout}s)")
+                    if attempt < self.max_retries - 1:
+                        time.sleep(self.retry_delay)
+                    continue
+                
+                except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as e:
+                    logger.warning(f"⚠️ DeepSeek API connection error for graph question on attempt {attempt + 1}/{self.max_retries}: {e}")
+                    if attempt < self.max_retries - 1:
+                        time.sleep(self.retry_delay)
+                    continue
+                
+                except Exception as e:
+                    logger.warning(f"⚠️ DeepSeek API error for graph question on attempt {attempt + 1}/{self.max_retries}: {e}")
+                    if attempt < self.max_retries - 1:
+                        time.sleep(self.retry_delay)
+                    continue
+            
+            # All attempts failed, use fallback
+            logger.warning(f"⚠️ AI failed after {self.max_retries} attempts, using fallback graph question for {equation}")
+            return self._generate_fallback_graph_question(equation, graph_type, difficulty)
         
-        logger.warning(f"AI failed, using fallback graph question for {equation}")
-        return self._generate_fallback_graph_question(equation, graph_type, difficulty)
+        except Exception as e:
+            logger.error(f"❌ Critical error generating graph question: {e}", exc_info=True)
+            return self._generate_fallback_graph_question(equation, graph_type, difficulty)
     
     def _create_graph_question_prompt(self, equation: str, graph_type: str, difficulty: str) -> str:
         """Create a prompt for graph-specific questions about the given equation."""
@@ -725,7 +779,7 @@ Generate the question now:"""
         data = {
             'model': self.deepseek_chat_model,  # Fast mode for non-streaming
             'messages': [{'role': 'user', 'content': prompt}],
-            'max_tokens': 2500,  # Increased for detailed solutions
+            'max_tokens': 2000,  # Reduced to speed up response time
             'temperature': 0.85  # Increased for more creative variation and diversity
         }
 
