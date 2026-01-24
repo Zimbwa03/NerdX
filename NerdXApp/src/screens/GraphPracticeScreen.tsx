@@ -52,15 +52,17 @@ const GraphPracticeScreen: React.FC = () => {
   const [videoLoading, setVideoLoading] = useState(false);
   const [videoError, setVideoError] = useState<string | null>(null);
   const [savingVideo, setSavingVideo] = useState(false);
+  const [cachedVideoUrl, setCachedVideoUrl] = useState<string | null>(null);
 
   // Zoom Modal State
   const [zoomVisible, setZoomVisible] = useState(false);
   const [zoomImage, setZoomImage] = useState<string | null>(null);
 
   // Create video player when videoUrl changes
-  const videoPlayer = useVideoPlayer(videoUrl || '', (player) => {
+  const videoSource = cachedVideoUrl || videoUrl || '';
+  const videoPlayer = useVideoPlayer(videoSource, (player) => {
     player.loop = true;
-    if (videoUrl) {
+    if (videoSource) {
       // Small delay before playing to allow video to buffer
       setTimeout(() => {
         try {
@@ -100,6 +102,28 @@ const GraphPracticeScreen: React.FC = () => {
   const graphCreditCost = 1; // Graph generation cost (1 credit per graph)
   const imageSolveCreditCost = 3; // Image solving cost (3 credits per image)
 
+  const cacheVideoForPlayback = async (url: string): Promise<string | null> => {
+    try {
+      const filename = url.split('/').pop()?.split('?')[0] || `graph_animation_${Date.now()}.mp4`;
+      const cacheBase = FileSystem.cacheDirectory || FileSystem.documentDirectory;
+      if (!cacheBase) {
+        return null;
+      }
+      const localUri = `${cacheBase}${filename}`;
+      const existingFile = await FileSystem.getInfoAsync(localUri);
+      if (!existingFile.exists) {
+        const downloadResult = await FileSystem.downloadAsync(url, localUri);
+        if (downloadResult.status !== 200) {
+          return null;
+        }
+      }
+      return localUri;
+    } catch (error) {
+      console.warn('Failed to cache video for playback:', error);
+      return null;
+    }
+  };
+
   const handleGenerate = async () => {
     if ((user?.credits || 0) < graphCreditCost) {
       Alert.alert(
@@ -116,6 +140,7 @@ const GraphPracticeScreen: React.FC = () => {
       setAnswer('');
       setImageSolution(null);
       setVideoUrl(null);
+      setCachedVideoUrl(null);
       setVideoError(null);
       setVideoLoading(false);
 
@@ -173,49 +198,6 @@ const GraphPracticeScreen: React.FC = () => {
               animResult = await graphApi.generateExpressionAnimation(cleanExpression, xRange, yRange);
             }
 
-          if (animResult && animResult.video_path) {
-            // Construct full URL - backend returns "/static/..."
-            const baseUrl = API_BASE_URL;
-            const videoPath = animResult.video_path.startsWith('/')
-              ? animResult.video_path
-              : '/' + animResult.video_path;
-            const fullVideoUrl = baseUrl + videoPath;
-
-            // Validate the video URL with retry logic (server may still be writing file)
-            const validateVideoUrl = async (url: string, retries: number = 2): Promise<boolean> => {
-              for (let attempt = 0; attempt < retries; attempt++) {
-                try {
-                  // Wait a bit before each attempt (let server finish writing)
-                  if (attempt > 0) {
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                  }
-                  const response = await fetch(url, { method: 'HEAD' });
-                  if (response.ok) {
-                    return true;
-                  }
-                  console.warn(`Video URL validation attempt ${attempt + 1}/${retries} failed:`, response.status);
-                } catch (e) {
-                  console.warn(`Video URL fetch attempt ${attempt + 1}/${retries} error:`, e);
-                }
-              }
-              return false;
-            };
-
-            const isAccessible = await validateVideoUrl(fullVideoUrl);
-            if (isAccessible) {
-              // Reset error state and set URL
-              setErrorShown(false);
-              setVideoError(null);
-              setVideoUrl(fullVideoUrl);
-            } else {
-              console.warn('Video URL not accessible after retries');
-              setVideoError('Animation video is not available. The server may still be generating it.');
-            }
-            } else {
-              console.log('Animation not available for this graph type or missing parameters');
-              // Don't show error for animation not available - it's optional
-            }
-
             if (animResult && animResult.video_path) {
               // Construct full URL - backend returns "/static/..."
               const baseUrl = API_BASE_URL;
@@ -250,12 +232,18 @@ const GraphPracticeScreen: React.FC = () => {
                 setErrorShown(false);
                 setVideoError(null);
                 setVideoUrl(fullVideoUrl);
+                const localUri = await cacheVideoForPlayback(fullVideoUrl);
+                setCachedVideoUrl(localUri);
                 console.log('Video loaded successfully:', fullVideoUrl);
               } else {
                 console.warn('Video URL not accessible after retries');
                 setVideoError('Animation video is not available. The server may still be generating it.');
               }
-            } else if (animResult && !animResult.video_path) {
+            } else {
+              console.log('Animation not available for this graph type or missing parameters');
+              // Don't show error for animation not available - it's optional
+            }
+            if (animResult && !animResult.video_path) {
               console.warn('Animation generation returned no video_path:', animResult);
               setVideoError('Animation generation completed but no video was returned.');
             }
@@ -698,6 +686,16 @@ const GraphPracticeScreen: React.FC = () => {
                         const { status } = await MediaLibrary.requestPermissionsAsync();
                         if (status !== 'granted') {
                           Alert.alert('Permission Required', 'Please grant permission to save videos.');
+                          return;
+                        }
+
+                        const existingCache = cachedVideoUrl && (await FileSystem.getInfoAsync(cachedVideoUrl));
+                        const saveUri = existingCache?.exists ? cachedVideoUrl : null;
+
+                        if (saveUri) {
+                          const asset = await MediaLibrary.createAssetAsync(saveUri);
+                          await MediaLibrary.createAlbumAsync('NerdX', asset, false);
+                          Alert.alert('Success', 'Video saved to your gallery in the NerdX album!');
                           return;
                         }
 

@@ -45,11 +45,13 @@ from services.vertex_service import vertex_service, get_image_question_credit_co
 from services.exam_session_service import exam_session_service
 from utils.url_utils import convert_local_path_to_public_url
 from utils.credit_units import format_credits, units_to_credits, credits_to_units
+from utils.question_cache import QuestionCacheService
 from config import Config
 
 logger = logging.getLogger(__name__)
 
 mobile_bp = Blueprint('mobile', __name__)
+question_cache = QuestionCacheService()
 
 
 def _credits_display(units: int) -> int:
@@ -1421,56 +1423,73 @@ def generate_question():
                 from services.math_question_generator import MathQuestionGenerator
                 from services.math_solver import MathSolver
                 math_generator = MathQuestionGenerator()
+                used_cached_question = False
+
+                if question_type == 'topical' and topic and not is_image_question:
+                    cached_question = question_cache.get_cached_question(topic, difficulty, g.current_user_id)
+                    if cached_question:
+                        question_data = dict(cached_question)
+                        question_data['source'] = question_data.get('source') or 'cached'
+                        question_text = question_data.get('question') or question_data.get('question_text') or ''
+                        if question_text:
+                            question_cache.save_question_to_history(
+                                g.current_user_id,
+                                question_text,
+                                topic,
+                                difficulty
+                            )
+                        used_cached_question = True
                 
-                # For exam mode, select random topic if no topic specified
-                if question_type == 'exam' and not topic:
-                    from constants import TOPICS
-                    import random
-                    math_topics = TOPICS.get('Mathematics', [])
-                    if math_topics:
-                        topic = random.choice(math_topics)
-                        topic = topic.lower().replace(' ', '_')
-                
-                # Retry logic for AI generation - reject fallback questions and None returns
-                max_retries = 3
-                question_data = None
-                last_error = None
-                
-                for attempt in range(max_retries):
-                    try:
-                        question_data = math_generator.generate_question('Mathematics', topic or 'Algebra', difficulty, g.current_user_id)
-                        
-                        # Reject fallback questions - they are default/static questions
-                        if question_data and question_data.get('source') == 'fallback':
-                            logger.warning(f"⚠️ Fallback question detected (attempt {attempt + 1}/{max_retries}) - rejecting and retrying")
-                            question_data = None
-                        
-                        # Valid AI-generated question found
-                        if question_data and question_data.get('source') != 'fallback':
-                            logger.info(f"✅ Successfully generated question on attempt {attempt + 1}")
-                            break
-                        
-                        # If None or fallback, wait before retry
-                        if attempt < max_retries - 1:
-                            import time
-                            wait_time = (attempt + 1) * 1.5  # Exponential backoff: 1.5s, 3s
-                            logger.info(f"⏳ Retrying question generation in {wait_time}s (attempt {attempt + 2}/{max_retries})")
-                            time.sleep(wait_time)
-                    except Exception as e:
-                        last_error = str(e)
-                        logger.error(f"❌ Error during question generation (attempt {attempt + 1}/{max_retries}): {e}")
-                        if attempt < max_retries - 1:
-                            import time
-                            time.sleep(1)
-                
-                # Final check - ensure we have a valid question
-                if not question_data or question_data.get('source') == 'fallback':
-                    error_msg = last_error or 'AI generation service unavailable'
-                    logger.error(f"❌ Failed to generate valid question after {max_retries} attempts: {error_msg}")
-                    return jsonify({
-                        'success': False, 
-                        'message': 'Unable to generate question at this time. The AI service may be temporarily unavailable. Please try again in a moment.'
-                    }), 503
+                if not question_data:
+                    # For exam mode, select random topic if no topic specified
+                    if question_type == 'exam' and not topic:
+                        from constants import TOPICS
+                        import random
+                        math_topics = TOPICS.get('Mathematics', [])
+                        if math_topics:
+                            topic = random.choice(math_topics)
+                            topic = topic.lower().replace(' ', '_')
+                    
+                    # Retry logic for AI generation - reject fallback questions and None returns
+                    max_retries = 3
+                    question_data = None
+                    last_error = None
+                    
+                    for attempt in range(max_retries):
+                        try:
+                            question_data = math_generator.generate_question('Mathematics', topic or 'Algebra', difficulty, g.current_user_id)
+                            
+                            # Reject fallback questions - they are default/static questions
+                            if question_data and question_data.get('source') == 'fallback':
+                                logger.warning(f"⚠️ Fallback question detected (attempt {attempt + 1}/{max_retries}) - rejecting and retrying")
+                                question_data = None
+                            
+                            # Valid AI-generated question found
+                            if question_data and question_data.get('source') != 'fallback':
+                                logger.info(f"✅ Successfully generated question on attempt {attempt + 1}")
+                                break
+                            
+                            # If None or fallback, wait before retry
+                            if attempt < max_retries - 1:
+                                import time
+                                wait_time = (attempt + 1) * 1.5  # Exponential backoff: 1.5s, 3s
+                                logger.info(f"⏳ Retrying question generation in {wait_time}s (attempt {attempt + 2}/{max_retries})")
+                                time.sleep(wait_time)
+                        except Exception as e:
+                            last_error = str(e)
+                            logger.error(f"❌ Error during question generation (attempt {attempt + 1}/{max_retries}): {e}")
+                            if attempt < max_retries - 1:
+                                import time
+                                time.sleep(1)
+                    
+                    # Final check - ensure we have a valid question
+                    if not question_data or question_data.get('source') == 'fallback':
+                        error_msg = last_error or 'AI generation service unavailable'
+                        logger.error(f"❌ Failed to generate valid question after {max_retries} attempts: {error_msg}")
+                        return jsonify({
+                            'success': False, 
+                            'message': 'Unable to generate question at this time. The AI service may be temporarily unavailable. Please try again in a moment.'
+                        }), 503
                 
                 # Generate hint for math questions if not already present
                 if question_data and not question_data.get('hint_level_1'):
@@ -1478,6 +1497,17 @@ def generate_question():
                     hint = math_solver.get_hint(question_data.get('question', ''), difficulty)
                     if hint:
                         question_data['hint_level_1'] = hint
+
+                if question_data and question_type == 'topical' and topic and not is_image_question and not used_cached_question:
+                    question_text = question_data.get('question') or question_data.get('question_text') or ''
+                    if question_text:
+                        question_cache.cache_question(topic, difficulty, question_data)
+                        question_cache.save_question_to_history(
+                            g.current_user_id,
+                            question_text,
+                            topic,
+                            difficulty
+                        )
                         
             elif subject == 'combined_science':
                 # Combined Science needs parent_subject (Biology/Chemistry/Physics) and topic (subtopic)
@@ -8880,4 +8910,3 @@ Generate ONLY the message text, no explanations or formatting."""
                 'last_updated': datetime.now().isoformat()
             }
         }), 200
-

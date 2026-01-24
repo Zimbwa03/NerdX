@@ -289,6 +289,17 @@ const TeacherModeSetupScreen: React.FC = () => {
       return;
     }
 
+    const currentCredits = user?.credits || 0;
+    if (currentCredits <= 0) {
+      showError('❌ You have 0 credits. Please top up to use Teacher Mode.', 6000);
+      Alert.alert(
+        'Insufficient Credits',
+        'Teacher Mode requires credits to start. Please buy credits first.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
     // Initial deduction removed - pay as you go
     // const currentCredits = user?.credits || 0;
     // if (currentCredits < 3) {
