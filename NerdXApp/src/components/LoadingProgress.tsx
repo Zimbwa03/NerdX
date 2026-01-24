@@ -23,6 +23,8 @@ interface LoadingProgressProps {
     stage?: string;
     steps?: LoadingProgressStep[];
     onComplete?: () => void;
+    onCancel?: () => void; // Optional cancel handler
+    showCancel?: boolean; // Whether to show cancel button
 }
 
 const DEFAULT_STEPS: LoadingProgressStep[] = [
@@ -105,9 +107,10 @@ export const LoadingProgress: React.FC<LoadingProgressProps> = ({
             setActiveStepIndex(finalStepIndex);
             setEllipsis('');
 
+            // Faster fade-out for better responsiveness, especially for Mathematics O-level questions
             Animated.timing(overlayOpacity, {
                 toValue: 0,
-                duration: 220,
+                duration: 100, // Reduced from 220ms to 100ms for faster response
                 useNativeDriver: true,
             }).start(() => {
                 if (pulseLoopRef.current) {

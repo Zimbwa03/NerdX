@@ -132,6 +132,8 @@ const QuizScreen: React.FC = () => {
           if (firstQuestion) {
             const normalizedQ = normalizeQuestion(firstQuestion);
             setQuestion(normalizedQ);
+            // Clear loading immediately when question is ready - especially for Mathematics O-level
+            setGeneratingQuestion(false);
             // Update question type state
             if (normalizedQ) {
               if (normalizedQ.question_type === 'essay' || (normalizedQ as any).essay_data) {
@@ -618,6 +620,12 @@ const QuizScreen: React.FC = () => {
         const normalizedQ = normalizeQuestion(newQuestion);
         setQuestion(normalizedQ);
 
+        // Clear loading immediately when question is ready - especially important for Mathematics O-level
+        // This ensures the question appears as soon as it's received, not after the loading animation completes
+        setGeneratingQuestion(false);
+        setStreamingStatus(null);
+        setStreamingStage(null);
+
         // Update stored question type based on the new question
         if (normalizedQ) {
           if (normalizedQ.question_type === 'essay' || (normalizedQ as any).essay_data) {
@@ -653,18 +661,31 @@ const QuizScreen: React.FC = () => {
           }
         }
       } else {
+        // Clear loading even if no question received
+        setGeneratingQuestion(false);
+        setStreamingStatus(null);
+        setStreamingStage(null);
         Alert.alert('Notice', 'No more questions available right now.');
       }
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || error.message || 'Failed to load next question';
       console.error('Question generation error:', error);
+      // Clear loading on error too
+      setGeneratingQuestion(false);
+      setStreamingStatus(null);
+      setStreamingStage(null);
       showError(`❌ ${errorMessage}`, 5000);
       Alert.alert('Generation Error', errorMessage);
     } finally {
       setLoading(false);
-      setGeneratingQuestion(false);
-      setStreamingStatus(null);
-      setStreamingStage(null);
+      // Safety net - clear if still set (should already be cleared above)
+      if (generatingQuestion) {
+        setGeneratingQuestion(false);
+      }
+      if (streamingStatus || streamingStage) {
+        setStreamingStatus(null);
+        setStreamingStage(null);
+      }
     }
   };
 

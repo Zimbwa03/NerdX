@@ -58,21 +58,34 @@ const GraphPracticeScreen: React.FC = () => {
   const [zoomVisible, setZoomVisible] = useState(false);
   const [zoomImage, setZoomImage] = useState<string | null>(null);
 
-  // Create video player when videoUrl changes
-  const videoSource = cachedVideoUrl || videoUrl || '';
-  const videoPlayer = useVideoPlayer(videoSource, (player) => {
+  // Create video player - initialize with empty source, will be updated when URL is available
+  const videoPlayer = useVideoPlayer('', (player) => {
     player.loop = true;
-    if (videoSource) {
-      // Small delay before playing to allow video to buffer
-      setTimeout(() => {
-        try {
-          player.play();
-        } catch (e) {
-          console.warn('Video play failed:', e);
-        }
-      }, 500);
-    }
   });
+
+  // Update video player source when videoUrl or cachedVideoUrl changes
+  React.useEffect(() => {
+    const videoSource = cachedVideoUrl || videoUrl;
+    if (videoSource) {
+      console.log('🎥 Updating video player with source:', videoSource);
+      // Use replaceAsync to update the player source
+      videoPlayer.replaceAsync({
+        uri: videoSource,
+        contentType: 'progressive',
+      }).then(() => {
+        // Small delay before playing to allow video to buffer
+        setTimeout(() => {
+          try {
+            videoPlayer.play();
+          } catch (e) {
+            console.warn('Video play failed:', e);
+          }
+        }, 500);
+      }).catch((err) => {
+        console.error('Failed to replace video source:', err);
+      });
+    }
+  }, [videoUrl, cachedVideoUrl, videoPlayer]);
 
   // Track video player status for error handling
   const { isPlaying } = useEvent(videoPlayer, 'playingChange', { isPlaying: videoPlayer.playing });
@@ -659,7 +672,7 @@ const GraphPracticeScreen: React.FC = () => {
                 </View>
               )}
 
-              {!videoError && videoUrl && (
+              {!videoError && (videoUrl || cachedVideoUrl) && (
                 <>
                   {/* Show loading overlay while video loads */}
                   {status !== 'readyToPlay' && !videoError && (
