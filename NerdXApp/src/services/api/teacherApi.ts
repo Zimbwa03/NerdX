@@ -9,6 +9,7 @@ export interface TeacherSession {
   topic?: string;
   initial_message: string;
   updated_at?: string;
+  credits_remaining?: number;
 }
 
 export interface TeacherHistoryItem {

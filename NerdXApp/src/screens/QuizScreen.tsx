@@ -571,7 +571,7 @@ const QuizScreen: React.FC = () => {
             ? 'structured'
             : undefined;
 
-        const canStreamMath = subject?.id === 'mathematics' && !!topic?.id;
+        const canStreamMath = subject?.id === 'mathematics' && !topic?.id;
 
         if (canStreamMath) {
           try {

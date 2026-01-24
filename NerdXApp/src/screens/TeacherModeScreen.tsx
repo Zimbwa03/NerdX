@@ -113,12 +113,24 @@ const TeacherModeScreen: React.FC = () => {
   const startSession = async () => {
     try {
       setLoading(true);
+      if ((user?.credits || 0) <= 0) {
+        showError('❌ You have 0 credits. Please top up to use Teacher Mode.', 6000);
+        Alert.alert(
+          'Insufficient Credits',
+          'Teacher Mode requires credits to start. Please buy credits first.',
+          [{ text: 'OK', onPress: () => navigation.goBack() }]
+        );
+        return;
+      }
       console.log('Starting Teacher Mode session with:', { subject, gradeLevel, topic });
 
       const sessionData = await teacherApi.startSession(subject, gradeLevel, topic);
       console.log('Session data received:', sessionData);
 
       if (sessionData && sessionData.session_id) {
+        if (user && sessionData.credits_remaining !== undefined) {
+          updateUser({ credits: sessionData.credits_remaining });
+        }
         setSession(sessionData);
         setMessages([
           {
@@ -327,6 +339,15 @@ const TeacherModeScreen: React.FC = () => {
     const query = rawText.trim();
     const hasImages = selectedImages.length > 0;
     if ((!query && !hasImages) || !session || sending) return;
+    if ((user?.credits || 0) <= 0) {
+      showError('❌ You have 0 credits. Please top up to continue Teacher Mode.', 6000);
+      Alert.alert(
+        'Insufficient Credits',
+        'Teacher Mode requires credits to continue. Please buy credits first.',
+        [{ text: 'OK', onPress: () => navigation.goBack() }]
+      );
+      return;
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -386,9 +407,15 @@ const TeacherModeScreen: React.FC = () => {
       }
     } catch (error: any) {
       setMessages((prev) => prev.filter((msg) => msg.id !== 'researching'));
-      Alert.alert('Error', error.response?.data?.message || error.message || 'Failed to send message');
-      // Remove user message on error
-      setMessages((prev) => prev.filter((msg) => msg.id !== userMessage.id));
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to send message';
+      Alert.alert('Error', errorMessage);
+      if (error.response?.status === 402) {
+        showError(`❌ ${errorMessage}`, 6000);
+        navigation.goBack();
+      } else {
+        // Remove user message on error
+        setMessages((prev) => prev.filter((msg) => msg.id !== userMessage.id));
+      }
     } finally {
       setSending(false);
     }
@@ -599,6 +626,26 @@ const TeacherModeScreen: React.FC = () => {
     },
   });
 
+  const getRenderPlan = (text: string) => {
+    const displayMatches = [...text.matchAll(/\$\$([\s\S]+?)\$\$/g)].map((match) => match[1]);
+    const inlineMatches = [...text.matchAll(/\$([^$\n]+?)\$/g)].map((match) => match[1]);
+    const hasLatexSegments = displayMatches.length > 0 || inlineMatches.length > 0;
+    const hasMathSegments = inlineMatches.some((segment) => {
+      const trimmed = segment.trim();
+      if (!trimmed) return false;
+      if (/^\d+(\.\d+)?$/.test(trimmed)) return false;
+      return /[=^_\\]|\\[a-zA-Z]+|[+\-*/]/.test(trimmed) || /[a-zA-Z]/.test(trimmed);
+    }) || displayMatches.length > 0;
+    const hasMathSignals = shouldRenderMathText(text) || /\\[a-zA-Z]+/.test(text);
+    const shouldUseMath = hasMathSignals || (hasLatexSegments && hasMathSegments);
+    const markdownContent = shouldUseMath ? text : text.replace(/\$/g, '\\$');
+    return {
+      shouldUseMath,
+      mathContent: toMathLatex(text, shouldUseMath),
+      markdownContent,
+    };
+  };
+
   return (
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: themedColors.background.default }]}
@@ -678,18 +725,20 @@ const TeacherModeScreen: React.FC = () => {
             <View style={styles.assistantMessageRow}>
               <View style={styles.assistantMessageFullWidth}>
                 <View style={styles.markdownContainer}>
-                  {/* Use MathRenderer for math subjects or math-like content to avoid raw $ delimiters */}
-                  {(isMathSubject || message.content.includes('$') || shouldRenderMathText(message.content)) ? (
-                    <MathRenderer 
-                      content={toMathLatex(message.content, true)} 
-                      fontSize={16}
-                      minHeight={50}
-                    />
-                  ) : (
-                    <Markdown style={markdownStyles}>
-                      {message.content}
-                    </Markdown>
-                  )}
+                  {(() => {
+                    const renderPlan = getRenderPlan(message.content);
+                    return renderPlan.shouldUseMath ? (
+                      <MathRenderer
+                        content={renderPlan.mathContent}
+                        fontSize={16}
+                        minHeight={50}
+                      />
+                    ) : (
+                      <Markdown style={markdownStyles}>
+                        {renderPlan.markdownContent}
+                      </Markdown>
+                    );
+                  })()}
                   {message.graph_url && (
                     <View style={styles.graphContainer}>
                       <TouchableOpacity
