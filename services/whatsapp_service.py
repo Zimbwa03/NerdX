@@ -225,7 +225,7 @@ class WhatsAppService:
 
         return message.strip()
     
-    def send_message(self, to: str, message: str) -> bool:
+    def send_message(self, to: str, message: str, assume_lock: bool = False) -> bool:
         """Send a text message to a WhatsApp user with enhanced error handling and throttling"""
         if not self._is_configured:
             logger.warning("WhatsApp not configured - message not sent")
@@ -260,10 +260,13 @@ class WhatsAppService:
                 else:
                     logger.info(f"Allowing critical user response to {to} despite throttle")
             
-            # Acquire lock to prevent concurrent sends
-            if not message_throttle.acquire_lock(to):
-                logger.warning(f"Message to {to} blocked - concurrent send in progress")
-                return False
+            lock_acquired = False
+            if not assume_lock:
+                # Acquire lock to prevent concurrent sends
+                if not message_throttle.acquire_lock(to):
+                    logger.warning(f"Message to {to} blocked - concurrent send in progress")
+                    return False
+                lock_acquired = True
             
             try:
                 # Check message length and truncate if needed (Twilio limit: 1600 chars per segment)
@@ -319,8 +322,9 @@ class WhatsAppService:
                     logger.error(f"Failed to send message: {response.status_code} - {response.text}")
                     return False
             finally:
-                # Always release lock
-                message_throttle.release_lock(to)
+                # Always release lock if we acquired it here
+                if lock_acquired:
+                    message_throttle.release_lock(to)
                 
         except requests.exceptions.Timeout:
             logger.error(f"WhatsApp API timeout for {to}")
@@ -466,10 +470,7 @@ class WhatsAppService:
                 )
                 
                 # Send as regular text message via Twilio
-                result = self.send_message(to, full_message)
-                if result:
-                    message_throttle.record_message_sent(to)
-                return result
+                return self.send_message(to, full_message, assume_lock=True)
             finally:
                 # Always release lock
                 message_throttle.release_lock(to)
@@ -604,7 +605,7 @@ class WhatsAppService:
             )
 
             # Send as regular text message via Twilio
-            return self.send_message(to, full_message)
+            return self.send_message(to, full_message, assume_lock=True)
                 
         except Exception as e:
             logger.error(f"Error sending button group: {e}")
