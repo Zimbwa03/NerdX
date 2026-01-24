@@ -1452,7 +1452,9 @@ def generate_question():
                     
                     # Retry logic for AI generation - reject fallback questions and None returns
                     max_retries = 3
-                    time_budget_seconds = 30
+                    # Increased time budget to accommodate progressive timeouts (30s, 45s, 60s) + retry delays
+                    # Allow up to 70s total: 30s + 2s delay + 45s + 2s delay + 60s = ~139s max, but cap at 70s for safety
+                    time_budget_seconds = 70
                     attempt_start_time = time.monotonic()
                     question_data = None
                     last_error = None
@@ -1464,10 +1466,12 @@ def generate_question():
                             break
                         try:
                             remaining_budget = time_budget_seconds - (time.monotonic() - attempt_start_time)
-                            if remaining_budget <= 3:
+                            if remaining_budget <= 5:
                                 logger.warning(f"⏱️ AI generation remaining budget too small before attempt {attempt + 1}/{max_retries} ({remaining_budget:.1f}s)")
                                 break
-                            attempt_timeout = max(8, min(math_generator.base_timeout, int(remaining_budget - 2)))
+                            # Allow progressive timeouts to work: don't cap too aggressively
+                            # The generator will handle its own progressive timeouts [30s, 45s, 60s]
+                            attempt_timeout = max(10, min(max(math_generator.timeouts) if hasattr(math_generator, 'timeouts') else math_generator.base_timeout * 2, int(remaining_budget - 5)))
                             question_data = math_generator.generate_question('Mathematics', topic or 'Algebra', difficulty, g.current_user_id, timeout_seconds=attempt_timeout)
                             
                             # Reject fallback questions - they are default/static questions
