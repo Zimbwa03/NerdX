@@ -276,13 +276,21 @@ MENU_ROUTING_BLOCKLIST = {
 def try_route_menu_selection(user_id: str, message_text: str, session_type: Optional[str] = None) -> bool:
     """Route text replies to stored menu selections (Twilio text-only menus)."""
     allow_numbers = True
+    latest_menu_source = menu_router.get_menu_source(user_id)
     if session_type and session_type in MENU_ROUTING_BLOCKLIST:
-        # Avoid hijacking numeric/free-form answers during active learning sessions
-        allow_numbers = False
+        # Avoid hijacking numeric/free-form answers during active learning sessions,
+        # unless the latest menu shown was the main menu.
+        if latest_menu_source != "main_menu":
+            allow_numbers = False
 
     selection_id = menu_router.resolve_selection(user_id, message_text, allow_numbers=allow_numbers)
     if not selection_id:
         return False
+
+    # If the user selected a main menu option while a session is active, exit the session first.
+    if session_type and session_type in MENU_ROUTING_BLOCKLIST:
+        if latest_menu_source == "main_menu":
+            session_manager.clear_session(user_id)
 
     handle_interactive_message(user_id, {'button_reply': {'id': selection_id}})
     return True
@@ -1620,7 +1628,11 @@ def send_main_menu(user_id: str, user_name: str = None):
                 option_texts,
                 "Reply with the option number or name."
             )
-            whatsapp_service.send_message(user_id, fallback_message)
+            sent = whatsapp_service.send_message(user_id, fallback_message)
+
+        # Persist main menu as the latest menu so numeric replies can be routed safely
+        if sent:
+            menu_router.store_menu(user_id, main_buttons, source="main_menu")
 
     except Exception as e:
         logger.error(f"Error sending main menu for {user_id}: {e}", exc_info=True)

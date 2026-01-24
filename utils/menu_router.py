@@ -82,24 +82,7 @@ class MenuRouter:
             return None
 
         user_key = self._normalize_user_id(user_id)
-        menu = self._menus.get(user_key)
-        if not menu or self._is_expired(menu.get("timestamp")):
-            # Clear expired in-memory menu
-            if menu and self._is_expired(menu.get("timestamp")):
-                self._menus.pop(user_key, None)
-
-            # Attempt to load last menu from persistent storage
-            persisted = get_user_menu(user_key)
-            if persisted:
-                if self._is_expired(persisted.get("timestamp")):
-                    clear_user_menu(user_key)
-                else:
-                    menu_maps = self._build_menu_maps(persisted.get("menu_options", []))
-                    if menu_maps:
-                        menu_maps["timestamp"] = persisted.get("timestamp")
-                        menu_maps["source"] = persisted.get("source", "persistent")
-                        menu = menu_maps
-                        self._menus[user_key] = menu
+        menu = self._get_active_menu(user_key)
 
         if not menu:
             return None
@@ -151,6 +134,36 @@ class MenuRouter:
         user_key = self._normalize_user_id(user_id)
         self._menus.pop(user_key, None)
         clear_user_menu(user_key)
+
+    def get_menu_source(self, user_id: str) -> Optional[str]:
+        """Get the source of the latest active menu without consuming it."""
+        if not user_id:
+            return None
+        user_key = self._normalize_user_id(user_id)
+        menu = self._get_active_menu(user_key)
+        return menu.get("source") if menu else None
+
+    def _get_active_menu(self, user_key: str) -> Optional[Dict]:
+        """Retrieve an active menu, loading from persistence if needed."""
+        menu = self._menus.get(user_key)
+        if not menu or self._is_expired(menu.get("timestamp")):
+            # Clear expired in-memory menu
+            if menu and self._is_expired(menu.get("timestamp")):
+                self._menus.pop(user_key, None)
+
+            # Attempt to load last menu from persistent storage
+            persisted = get_user_menu(user_key)
+            if persisted:
+                if self._is_expired(persisted.get("timestamp")):
+                    clear_user_menu(user_key)
+                else:
+                    menu_maps = self._build_menu_maps(persisted.get("menu_options", []))
+                    if menu_maps:
+                        menu_maps["timestamp"] = persisted.get("timestamp")
+                        menu_maps["source"] = persisted.get("source", "persistent")
+                        menu = menu_maps
+                        self._menus[user_key] = menu
+        return menu
 
     def _is_expired(self, timestamp: Optional[float]) -> bool:
         if not timestamp:
