@@ -206,7 +206,8 @@ class MathQuestionGenerator:
 
         # Reduced timeout parameters to prevent worker crashes
         self.max_retries = 2  # Reduced retries for faster fallback
-        self.base_timeout = 25  # Reduced timeout to prevent worker kills
+        self.base_timeout = int(os.environ.get("DEEPSEEK_TIMEOUT_SECONDS", "20"))
+        self.connect_timeout = int(os.environ.get("DEEPSEEK_CONNECT_TIMEOUT_SECONDS", "5"))
         self.retry_delay = 1   # Minimal delay between retries
     
     def _init_gemini_client(self):
@@ -251,7 +252,7 @@ class MathQuestionGenerator:
             logger.error(f"Failed to configure Gemini: {e}")
             self._gemini_configured = False
 
-    def generate_question(self, subject: str, topic: str, difficulty: str = 'medium', user_id: str = None) -> Optional[Dict]:
+    def generate_question(self, subject: str, topic: str, difficulty: str = 'medium', user_id: str = None, timeout_seconds: Optional[float] = None) -> Optional[Dict]:
         """
         Generate a question using DeepSeek AI (primary) with Gemini fallback.
         DeepSeek excels at step-by-step mathematical reasoning.
@@ -278,8 +279,11 @@ class MathQuestionGenerator:
             prompt = self._create_question_prompt(subject, topic, difficulty, recent_topics)
             
             # Single attempt with reasonable timeout
+            timeout_limit = self.base_timeout
+            if timeout_seconds is not None:
+                timeout_limit = max(5, int(min(timeout_seconds, self.base_timeout)))
             try:
-                response = self._send_api_request(prompt, timeout=30)
+                response = self._send_api_request(prompt, timeout=timeout_limit)
                 if response:
                     question_data = self._validate_and_format_question(response, subject, topic, difficulty, user_id)
                     if question_data:
@@ -291,7 +295,7 @@ class MathQuestionGenerator:
                 else:
                     logger.warning(f"⚠️ Empty response from DeepSeek API for {subject}/{topic}")
             except requests.exceptions.Timeout:
-                logger.error(f"❌ DeepSeek API timeout (30s limit) for {subject}/{topic}")
+                logger.error(f"❌ DeepSeek API timeout ({timeout_limit}s limit) for {subject}/{topic}")
             except Exception as e:
                 logger.error(f"❌ DeepSeek API error for {subject}/{topic}: {e}", exc_info=True)
             
@@ -360,7 +364,7 @@ class MathQuestionGenerator:
         """
         return self.generate_question(subject, topic, difficulty)
 
-    def generate_graph_question(self, equation: str, graph_type: str, difficulty: str = 'medium', user_id: str = None) -> Optional[Dict]:
+    def generate_graph_question(self, equation: str, graph_type: str, difficulty: str = 'medium', user_id: str = None, timeout_seconds: Optional[float] = None) -> Optional[Dict]:
         """
         Generate a question specifically about the displayed graph equation.
         Ensures the question is directly related to the graph shown to the student.
@@ -373,7 +377,10 @@ class MathQuestionGenerator:
             prompt = self._create_graph_question_prompt(equation, graph_type, difficulty)
             logger.info(f"Generating graph question for equation: {equation}")
             
-            response = self._send_api_request(prompt, timeout=30)
+            timeout_limit = self.base_timeout
+            if timeout_seconds is not None:
+                timeout_limit = max(5, int(min(timeout_seconds, self.base_timeout)))
+            response = self._send_api_request(prompt, timeout=timeout_limit)
             if response:
                 question_data = self._validate_and_format_question(
                     response, 'Mathematics', f'Graph - {graph_type.title()}', difficulty, user_id
@@ -727,7 +734,7 @@ Generate the question now:"""
                 self.api_url,
                 headers=headers,
                 json=data,
-                timeout=timeout
+                timeout=(self.connect_timeout, timeout)
             )
 
             if response.status_code == 200:
@@ -760,7 +767,7 @@ Generate the question now:"""
                 return None
 
         except requests.exceptions.Timeout:
-            logger.warning(f"AI API request timed out after {timeout}s")
+            logger.warning(f"AI API request timed out after {timeout}s (connect timeout {self.connect_timeout}s)")
             return None
         except requests.exceptions.ConnectionError as e:
             logger.warning(f"AI API connection error: {e}")
@@ -811,7 +818,7 @@ Generate the question now:"""
                 self.api_url,
                 headers=headers,
                 json=data,
-                timeout=60,
+                timeout=(self.connect_timeout, max(self.base_timeout, 20)),
                 stream=True
             )
             
