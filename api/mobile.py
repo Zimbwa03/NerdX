@@ -1452,12 +1452,23 @@ def generate_question():
                     
                     # Retry logic for AI generation - reject fallback questions and None returns
                     max_retries = 3
+                    time_budget_seconds = 30
+                    attempt_start_time = time.monotonic()
                     question_data = None
                     last_error = None
                     
                     for attempt in range(max_retries):
+                        elapsed = time.monotonic() - attempt_start_time
+                        if elapsed >= time_budget_seconds:
+                            logger.warning(f"⏱️ AI generation time budget exceeded before attempt {attempt + 1}/{max_retries} ({elapsed:.1f}s/{time_budget_seconds}s)")
+                            break
                         try:
-                            question_data = math_generator.generate_question('Mathematics', topic or 'Algebra', difficulty, g.current_user_id)
+                            remaining_budget = time_budget_seconds - (time.monotonic() - attempt_start_time)
+                            if remaining_budget <= 3:
+                                logger.warning(f"⏱️ AI generation remaining budget too small before attempt {attempt + 1}/{max_retries} ({remaining_budget:.1f}s)")
+                                break
+                            attempt_timeout = max(8, min(math_generator.base_timeout, int(remaining_budget - 2)))
+                            question_data = math_generator.generate_question('Mathematics', topic or 'Algebra', difficulty, g.current_user_id, timeout_seconds=attempt_timeout)
                             
                             # Reject fallback questions - they are default/static questions
                             if question_data and question_data.get('source') == 'fallback':
@@ -1471,15 +1482,16 @@ def generate_question():
                             
                             # If None or fallback, wait before retry
                             if attempt < max_retries - 1:
-                                import time
-                                wait_time = (attempt + 1) * 1.5  # Exponential backoff: 1.5s, 3s
-                                logger.info(f"⏳ Retrying question generation in {wait_time}s (attempt {attempt + 2}/{max_retries})")
-                                time.sleep(wait_time)
+                                wait_time = (attempt + 1) * 1.0
+                                remaining_budget = max(0.0, time_budget_seconds - (time.monotonic() - attempt_start_time))
+                                wait_time = min(wait_time, remaining_budget)
+                                if wait_time > 0:
+                                    logger.info(f"⏳ Retrying question generation in {wait_time:.1f}s (attempt {attempt + 2}/{max_retries})")
+                                    time.sleep(wait_time)
                         except Exception as e:
                             last_error = str(e)
                             logger.error(f"❌ Error during question generation (attempt {attempt + 1}/{max_retries}): {e}")
                             if attempt < max_retries - 1:
-                                import time
                                 time.sleep(1)
                     
                     # Final check - ensure we have a valid question
