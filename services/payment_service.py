@@ -580,6 +580,13 @@ class PaymentService:
             # Create Paynow payment
             logger.info(f"Creating Paynow payment: {reference_code} - ${package['price']:.2f} for {phone_number}")
             
+            # #region agent log
+            import json
+            try:
+                with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"E","location":"payment_service.py:583","message":"BEFORE calling paynow_service.create_usd_ecocash_payment","data":{"phone_number":phone_number,"amount":package['price'],"reference_code":reference_code},"timestamp":int(__import__('time').time()*1000)})+'\n')
+            except: pass
+            # #endregion
             payment_result = paynow_service.create_usd_ecocash_payment(
                 amount=package['price'],
                 phone_number=phone_number,
@@ -587,6 +594,12 @@ class PaymentService:
                 reference=reference_code,
                 description=f"NerdX {package['name']} - {package['credits']} credits"
             )
+            # #region agent log
+            try:
+                with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"E","location":"payment_service.py:591","message":"AFTER calling paynow_service.create_usd_ecocash_payment","data":{"success":payment_result.get('success'),"has_error":'error' in payment_result,"error":payment_result.get('error')},"timestamp":int(__import__('time').time()*1000)})+'\n')
+            except: pass
+            # #endregion
             
             if payment_result['success']:
                 # Store payment transaction in database
@@ -602,7 +615,9 @@ class PaymentService:
                     'payment_method': 'paynow_ecocash',
                     'credits_added': 0,
                     'poll_url': payment_result.get('poll_url'),  # Use poll_url (not paynow_poll_url)
-                    'admin_notes': f"Phone: {phone_number} | Email: {email} | Poll URL: {payment_result.get('poll_url')}"
+                    'phone_number': phone_number,  # Save phone number to database
+                    'email': email,  # Save email to database
+                    'admin_notes': f"Paynow payment initiated | Poll URL: {payment_result.get('poll_url')}"
                 }
                 
                 # Save to payment_transactions table (non-blocking - payment prompt already sent successfully)

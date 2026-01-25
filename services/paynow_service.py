@@ -56,6 +56,13 @@ class PaynowService:
             logger.info(f"🧪 PAYNOW TEST MODE ACTIVE - Using Merchant Email: {self.MERCHANT_EMAIL}")
         
         # Initialize Paynow client
+        # #region agent log
+        import json
+        try:
+            with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"A","location":"paynow_service.py:59","message":"Paynow service initialization check","data":{"has_integration_id":bool(self.integration_id),"has_integration_key":bool(self.integration_key),"integration_id_length":len(self.integration_id) if self.integration_id else 0},"timestamp":int(__import__('time').time()*1000)})+'\n')
+        except: pass
+        # #endregion
         if self.integration_id and self.integration_key:
             # Paynow SDK expects (integration_id, integration_key, return_url, result_url)
             self.paynow_client = Paynow(
@@ -65,9 +72,21 @@ class PaynowService:
                 self.result_url
             )
             logger.info("✅ Paynow service initialized successfully")
+            # #region agent log
+            try:
+                with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"A","location":"paynow_service.py:68","message":"Paynow client created successfully","data":{"test_mode":self.test_mode},"timestamp":int(__import__('time').time()*1000)})+'\n')
+            except: pass
+            # #endregion
         else:
             self.paynow_client = None
             logger.warning("⚠️ Paynow credentials not configured - using fallback mode")
+            # #region agent log
+            try:
+                with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"A","location":"paynow_service.py:72","message":"Paynow client NOT created - missing credentials","data":{},"timestamp":int(__import__('time').time()*1000)})+'\n')
+            except: pass
+            # #endregion
     
     def is_available(self) -> bool:
         """Check if Paynow service is properly configured"""
@@ -92,8 +111,27 @@ class PaynowService:
         Returns:
             Dict with payment status and transaction details
         """
+        # #region agent log
+        import json
         try:
+            with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"A","location":"paynow_service.py:95","message":"create_usd_ecocash_payment ENTRY","data":{"phone_number":phone_number,"amount":amount,"reference":reference,"email":email},"timestamp":int(__import__('time').time()*1000)})+'\n')
+        except: pass
+        # #endregion
+        try:
+            # #region agent log
+            try:
+                with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"A","location":"paynow_service.py:102","message":"Checking Paynow availability","data":{"is_available":self.is_available(),"has_client":self.paynow_client is not None,"integration_id_set":self.integration_id is not None,"integration_key_set":self.integration_key is not None},"timestamp":int(__import__('time').time()*1000)})+'\n')
+            except: pass
+            # #endregion
             if not self.is_available():
+                # #region agent log
+                try:
+                    with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                        f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"A","location":"paynow_service.py:107","message":"Paynow service NOT available - EXIT","data":{},"timestamp":int(__import__('time').time()*1000)})+'\n')
+                except: pass
+                # #endregion
                 return {
                     'success': False,
                     'error': 'Paynow service not available',
@@ -101,7 +139,27 @@ class PaynowService:
                 }
             
             # Validate phone number format
-            if not self._is_valid_phone_number(phone_number):
+            # #region agent log
+            try:
+                with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"B","location":"paynow_service.py:113","message":"BEFORE phone validation","data":{"phone_number":phone_number,"phone_length":len(phone_number)},"timestamp":int(__import__('time').time()*1000)})+'\n')
+            except: pass
+            # #endregion
+            is_valid = self._is_valid_phone_number(phone_number)
+            # #region agent log
+            try:
+                with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"B","location":"paynow_service.py:116","message":"AFTER phone validation","data":{"is_valid":is_valid,"phone_number":phone_number},"timestamp":int(__import__('time').time()*1000)})+'\n')
+            except: pass
+            # #endregion
+            if not is_valid:
+                logger.error(f"❌ Invalid phone number format: {phone_number}")
+                # #region agent log
+                try:
+                    with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                        f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"B","location":"paynow_service.py:120","message":"Phone validation FAILED - EXIT","data":{"phone_number":phone_number},"timestamp":int(__import__('time').time()*1000)})+'\n')
+                except: pass
+                # #endregion
                 return {
                     'success': False,
                     'error': 'Invalid phone number',
@@ -118,25 +176,71 @@ class PaynowService:
             payment = self.paynow_client.create_payment(reference, auth_email)
             payment.add(description, amount)
             
-            logger.info(f"💰 Creating Paynow payment: {reference} - ${amount:.2f} to {phone_number} (Auth: {auth_email})")
+            logger.info(f"💰 Creating Paynow payment: {reference} - ${amount:.2f} USD")
+            logger.info(f"📱 Phone number: {phone_number}")
+            logger.info(f"📧 Auth email: {auth_email}")
+            logger.info(f"🔑 Integration ID: {self.integration_id}")
             
             # Send mobile payment request (documentation: send_mobile(payment, phone, method))
-            response = self.paynow_client.send_mobile(payment, phone_number, 'ecocash')
+            # This should trigger Paynow to send a USSD prompt to the user's phone
+            logger.info(f"📲 Sending mobile payment request to Paynow API for {phone_number}...")
+            # #region agent log
+            try:
+                with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"C","location":"paynow_service.py:130","message":"BEFORE send_mobile API call","data":{"phone_number":phone_number,"amount":amount,"reference":reference,"test_mode":self.test_mode},"timestamp":int(__import__('time').time()*1000)})+'\n')
+            except: pass
+            # #endregion
+            try:
+                response = self.paynow_client.send_mobile(payment, phone_number, 'ecocash')
+                # #region agent log
+                try:
+                    with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                        response_data = {"success":response.success if hasattr(response,'success') else None,"has_error":hasattr(response,'error'),"has_poll_url":hasattr(response,'poll_url'),"has_instructions":hasattr(response,'instructions')}
+                        if hasattr(response,'error'): response_data["error"] = str(response.error)
+                        if hasattr(response,'poll_url'): response_data["poll_url"] = str(response.poll_url)
+                        f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"C","location":"paynow_service.py:133","message":"AFTER send_mobile API call - SUCCESS","data":response_data,"timestamp":int(__import__('time').time()*1000)})+'\n')
+                except: pass
+                # #endregion
+            except Exception as api_exception:
+                # #region agent log
+                try:
+                    with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                        f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"D","location":"paynow_service.py:136","message":"send_mobile API call EXCEPTION","data":{"exception_type":type(api_exception).__name__,"exception_message":str(api_exception)},"timestamp":int(__import__('time').time()*1000)})+'\n')
+                except: pass
+                # #endregion
+                raise
+            logger.info(f"📲 Paynow API response received")
             
             # Debug response details
             logger.info(f"🔍 Paynow response debug: success={response.success}")
             
             if hasattr(response, 'error'):
-                logger.info(f"🔍 Response error: {response.error} (type: {type(response.error)})")
+                error_value = response.error
+                logger.warning(f"🔍 Response has error attribute: {error_value} (type: {type(error_value)})")
+            
+            if hasattr(response, 'instructions'):
+                logger.info(f"📋 Paynow provided instructions: {response.instructions}")
             
             if response.success:
-                logger.info(f"✅ Paynow payment initiated successfully: {response.poll_url}")
-                
-                # For mobile payments, use instructions instead of redirect_url
-                instructions = getattr(response, 'instructions', 'Complete payment on your mobile device')
                 poll_url = getattr(response, 'poll_url', '')
+                logger.info(f"✅ Paynow payment initiated successfully!")
+                logger.info(f"🔗 Poll URL: {poll_url}")
+                logger.info(f"📱 USSD prompt should be sent to {phone_number} by Paynow")
+                logger.info(f"⏰ User should check their phone for payment prompt now")
+                # #region agent log
+                try:
+                    with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                        f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"C","location":"paynow_service.py:150","message":"Response.success=TRUE - Payment initiated","data":{"phone_number":phone_number,"poll_url":str(poll_url),"test_mode":self.test_mode},"timestamp":int(__import__('time').time()*1000)})+'\n')
+                except: pass
+                # #endregion
                 
-                return {
+                # For mobile payments, generate proper instructions
+                # Paynow sends USSD prompt automatically, but we provide clear instructions
+                
+                # Generate proper payment instructions
+                instructions = self._get_payment_instructions(phone_number, amount, self.test_mode)
+                
+                result = {
                     'success': True,
                     'poll_url': str(poll_url),
                     'redirect_url': str(poll_url),  # Use poll_url as redirect for mobile
@@ -147,6 +251,13 @@ class PaynowService:
                     'status': 'INITIATED',
                     'instructions': str(instructions)
                 }
+                # #region agent log
+                try:
+                    with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                        f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"C","location":"paynow_service.py:166","message":"RETURNING success result","data":{"has_poll_url":bool(result.get('poll_url')),"phone_number":result.get('phone_number')},"timestamp":int(__import__('time').time()*1000)})+'\n')
+                except: pass
+                # #endregion
+                return result
             else:
                 # Get error detail - handle case where error might be a type instead of string
                 raw_error = getattr(response, 'error', None)
@@ -159,6 +270,13 @@ class PaynowService:
                     error_detail = getattr(response, 'data', {}).get('error', 'Payment failed - please try again')
                 else:
                     error_detail = str(raw_error)
+                
+                # #region agent log
+                try:
+                    with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                        f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"C","location":"paynow_service.py:175","message":"Response.success=FALSE - Payment failed","data":{"error_detail":error_detail,"raw_error":str(raw_error) if raw_error else None},"timestamp":int(__import__('time').time()*1000)})+'\n')
+                except: pass
+                # #endregion
                 
                 if "ACTIVE 'ecocash' payment method" in error_detail:
                     logger.critical("🚨 PAYNOW CONFIG ERROR: EcoCash is not enabled for this Integration ID!")
@@ -173,6 +291,12 @@ class PaynowService:
                 
         except Exception as e:
             logger.error(f"🚨 Paynow payment creation error: {e}")
+            # #region agent log
+            try:
+                with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"D","location":"paynow_service.py:195","message":"EXCEPTION in create_usd_ecocash_payment","data":{"exception_type":type(e).__name__,"exception_message":str(e)},"timestamp":int(__import__('time').time()*1000)})+'\n')
+            except: pass
+            # #endregion
             return {
                 'success': False,
                 'error': str(e),
@@ -411,37 +535,48 @@ class PaynowService:
     def _get_payment_instructions(self, phone_number: str, amount: float, test_mode: bool) -> str:
         """Generate payment instructions for customer"""
         if test_mode:
-            return f"""
-📱 TEST MODE PAYMENT INSTRUCTIONS:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-💰 Amount: ${amount:.2f} USD
-📞 EcoCash Number: {phone_number}
+            return f"""⚡ **CHECK YOUR PHONE NOW!** ⚡
 
-🧪 Test Numbers Available:
-• 0771111111 - Instant Success
-• 0772222222 - Delayed Success (30s)
-• 0773333333 - User Cancelled
-• 0774444444 - Insufficient Balance
+📱 A USSD payment prompt has been sent to:
+   {phone_number}
 
-⚡ You should receive a USSD prompt on your phone.
-📲 Enter your EcoCash PIN to complete payment.
-"""
-        else:
-            return f"""
-📱 USD ECOCASH PAYMENT INSTRUCTIONS:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-💰 Amount: ${amount:.2f} USD
-📞 EcoCash Number: {phone_number}
+💰 **Amount**: ${amount:.2f} USD
 
-📋 STEPS TO COMPLETE PAYMENT:
-1️⃣ Check your phone for USSD prompt (*151*2*7#)
+📲 **WHAT TO DO:**
+1️⃣ Look for a USSD popup on your phone screen
 2️⃣ Enter your EcoCash PIN when prompted
 3️⃣ Confirm the payment amount
-4️⃣ Wait for payment confirmation
+4️⃣ Wait for confirmation (5-30 seconds)
 
-⏰ Payment will be confirmed within 30 seconds.
-💡 Ensure you have sufficient USD balance in your EcoCash wallet.
-"""
+🧪 **TEST MODE ACTIVE**
+Test numbers for simulation:
+• 0771111111 - ✅ Instant Success
+• 0772222222 - ⏱️ Delayed Success (30s)
+• 0773333333 - ❌ User Cancelled
+• 0774444444 - 🚫 No Funds
+
+💡 If you don't see the prompt, check your phone's USSD settings or try again."""
+        else:
+            return f"""⚡ **CHECK YOUR PHONE NOW!** ⚡
+
+📱 A USSD payment prompt has been sent to:
+   {phone_number}
+
+💰 **Amount**: ${amount:.2f} USD
+
+📲 **WHAT TO DO:**
+1️⃣ Look for a USSD popup on your phone screen
+2️⃣ Enter your EcoCash PIN when prompted
+3️⃣ Confirm the payment amount
+4️⃣ Wait for automatic confirmation (5-30 seconds)
+
+⏰ Payment will be confirmed automatically once you complete it on your phone.
+
+💡 **IMPORTANT:**
+• Ensure you have sufficient USD balance in your EcoCash wallet
+• The USSD prompt may appear as a popup or notification
+• If you don't see it, check your phone's USSD settings
+• Payment expires in 5 minutes if not completed"""
     
     def _validate_webhook_hash(self, data: Dict, received_hash: str, raw_payload: Optional[str] = None) -> bool:
         """Validate webhook hash for security"""

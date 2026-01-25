@@ -81,6 +81,16 @@ processed_messages = {}  # In production, use Redis or database
 user_last_message_time = defaultdict(float)
 message_processing_lock = threading.Lock()
 
+def is_duplicate_message(message_id: Optional[str]) -> bool:
+    """Check and record duplicate message IDs to prevent reprocessing."""
+    if not message_id:
+        return False
+    with message_processing_lock:
+        if message_id in processed_messages:
+            return True
+        processed_messages[message_id] = time.time()
+    return False
+
 # Maintenance mode check
 MAINTENANCE_MODE = os.getenv('MAINTENANCE_MODE', 'false').lower() == 'true'
 
@@ -382,6 +392,7 @@ def handle_webhook():
     try:
         # Verify Twilio webhook signature
         signature = request.headers.get('X-Twilio-Signature')
+        require_signature = os.getenv('TWILIO_REQUIRE_SIGNATURE', 'true').lower() == 'true'
         
         # Get the full URL for signature validation
         full_url = request.url
@@ -389,6 +400,9 @@ def handle_webhook():
         # Check if request is form-encoded (Twilio sends form data)
         if request.content_type and 'application/x-www-form-urlencoded' in request.content_type:
             form_data = dict(request.form)
+            if require_signature and not signature:
+                logger.warning("Missing Twilio signature header")
+                return jsonify({'error': 'Missing signature'}), 401
             # Verify signature with form data
             if signature and not verify_webhook_signature(b'', signature, full_url, form_data):
                 logger.warning("Invalid webhook signature")
@@ -396,6 +410,9 @@ def handle_webhook():
         else:
             # For JSON requests, verify with request body
             request_data = request.get_data()
+            if require_signature and not signature:
+                logger.warning("Missing Twilio signature header (non-form request)")
+                return jsonify({'error': 'Missing signature'}), 401
             if signature and not verify_webhook_signature(request_data, signature, full_url):
                 logger.warning("Invalid webhook signature")
                 return jsonify({'error': 'Invalid signature'}), 401
@@ -413,30 +430,72 @@ def handle_webhook():
                 'NumMedia': form_data.get('NumMedia', '0'),
             }
             
-            # Handle Twilio webhook format
-            if message_data.get('From') and message_data.get('Body'):
+            # Handle Twilio webhook format (text or media)
+            num_media_raw = message_data.get('NumMedia', '0') or '0'
+            try:
+                num_media = int(num_media_raw)
+            except ValueError:
+                num_media = 0
+
+            if message_data.get('From') and (message_data.get('Body') or num_media > 0):
                 # This is a Twilio WhatsApp message
                 from_number = message_data.get('From', '')
                 # Remove 'whatsapp:' prefix if present
                 user_id = from_number.replace('whatsapp:', '') if from_number.startswith('whatsapp:') else from_number
                 message_body = message_data.get('Body', '')
                 message_sid = message_data.get('MessageSid')
-                
+                media_url = form_data.get('MediaUrl0')
+                media_content_type = form_data.get('MediaContentType0', '')
+
                 logger.info(f"📱 Received Twilio WhatsApp message from {user_id}: {message_body[:50]}...")
                 logger.info(f"📱 Message SID: {message_sid}")
-                
+
+                if is_duplicate_message(message_sid):
+                    logger.info(f"Duplicate message ignored (SID: {message_sid})")
+                    return '<Response></Response>', 200, {'Content-Type': 'text/xml'}
+
+                is_image = bool(num_media > 0 and media_url and media_content_type.startswith('image/'))
+                if num_media > 0 and not is_image and not message_body:
+                    # Unsupported media type with no text; respond gracefully.
+                    threading.Thread(
+                        target=whatsapp_service.send_message,
+                        args=(
+                            user_id,
+                            'Thanks for your file. At the moment I can only process images (JPG/PNG). Please send a clear image or type your question.'
+                        ),
+                        daemon=True
+                    ).start()
+                    return '<Response></Response>', 200, {'Content-Type': 'text/xml'}
+
                 # Convert Twilio format to internal message format
-                internal_message = {
-                    'from': user_id,
-                    'type': 'text',
-                    'text': {'body': message_body},
-                    'id': message_sid,
-                    'timestamp': str(int(time.time()))
-                }
-                
+                if is_image:
+                    internal_message = {
+                        'from': user_id,
+                        'type': 'image',
+                        'image': {
+                            'url': media_url,
+                            'mime_type': media_content_type
+                        },
+                        'id': message_sid,
+                        'timestamp': str(int(time.time()))
+                    }
+                else:
+                    internal_message = {
+                        'from': user_id,
+                        'type': 'text',
+                        'text': {'body': message_body},
+                        'id': message_sid,
+                        'timestamp': str(int(time.time()))
+                    }
+
                 if user_id:
                     # Process message in background to avoid timeout
-                    process_message_background(internal_message, user_id, 'text')
+                    message_type = 'image' if is_image else 'text'
+                    threading.Thread(
+                        target=process_message_background,
+                        args=(internal_message, user_id, message_type),
+                        daemon=True
+                    ).start()
                     # Return TwiML response (Twilio expects XML)
                     return '<Response></Response>', 200, {'Content-Type': 'text/xml'}
                 else:
@@ -491,11 +550,17 @@ def health_check():
         current_time = time.time()
         with message_processing_lock:
             processed_count = len(processed_messages)
+        try:
+            from services.vertex_service import vertex_service
+            vertex_ai_available = vertex_service.is_available()
+        except Exception:
+            vertex_ai_available = False
 
         return jsonify({
             'status': 'healthy',
             'maintenance_mode': MAINTENANCE_MODE,
             'processed_messages_count': processed_count,
+            'vertex_ai_available': vertex_ai_available,
             'uptime': current_time,
             'message': 'Bot is running normally'
         }), 200
@@ -559,6 +624,12 @@ def handle_text_message(user_id: str, message_text: str):
         session_data = get_user_session(user_id)
 
         normalized_message = message_text.strip().lower()
+
+        # Check for account linking session (high priority - before other sessions)
+        if session_data and session_data.get('session_type') in ['awaiting_mobile_account_check', 'awaiting_full_name', 'awaiting_email_verification']:
+            logger.info(f"Processing account linking for user {user_id}, session_type: {session_data.get('session_type')}")
+            handle_account_linking(user_id, message_text)
+            return
 
         # Check for English grammar answer session
         if session_data and session_data.get('session_type') == 'english_grammar' and session_data.get('awaiting_answer'):
@@ -681,15 +752,19 @@ def handle_text_message(user_id: str, message_text: str):
         command = message_text.lower().strip()
 
         if command in ['hi', 'hello', 'menu']:
-            send_main_menu(user_id)
+            # Option B: Command bundling (1 credit = 2 commands)
+            handle_command_with_tracking(user_id, 'menu_navigation', send_main_menu)
         elif command in ['start quiz', 'quiz', 'quiz me']:
             handle_quiz_menu(user_id)
         elif command == 'credits':
-            show_credit_balance(user_id)
+            # Option B: Command bundling
+            handle_command_with_tracking(user_id, 'check_balance', show_credit_balance)
         elif command == 'stats':
-            show_user_stats(user_id)
+            # Option B: Command bundling
+            handle_command_with_tracking(user_id, 'settings_access', show_user_stats)
         elif command == 'help':
-            send_help_message(user_id)
+            # Option B: Command bundling
+            handle_command_with_tracking(user_id, 'help_command', send_help_message)
         elif command == 'buy credits':
             show_credit_packages(user_id)
         elif command == 'referral':
@@ -856,17 +931,180 @@ def start_registration_flow(user_id: str, message_text: str):
             logger.info(f"🔗 Referral context detected but no valid code found in: {message_text}")
             # Still proceed with registration but ask for code later
 
-        # Send registration welcome message
+        # Ask if user has mobile app account first
         welcome_msg = "✅ *Thank you for your consent!*\n\n"
-        welcome_msg += "🎯 Let's create your secure NerdX account\n\n"
-
+        welcome_msg += "🔗 *Do you already have a NerdX mobile app account?*\n\n"
+        welcome_msg += "If you've signed in to the mobile app (via Google or email), you can link your WhatsApp to that account.\n\n"
+        welcome_msg += "• Reply *YES* if you have a mobile app account\n"
+        welcome_msg += "• Reply *NO* to create a new WhatsApp account\n\n"
+        
         if referral_code:
-            welcome_msg += f"🔗 *Referral Code Detected*: {referral_code}\n\n"
-
-        welcome_msg += "Please enter your *first name*:"
+            welcome_msg += f"🎁 *Referral Code Detected*: {referral_code}\n\n"
 
         whatsapp_service.send_message(user_id, welcome_msg)
 
+        # Store session to track account linking flow
+        from database.session_db import save_user_session
+        save_user_session(user_id, {
+            'session_type': 'awaiting_mobile_account_check',
+            'referral_code': referral_code,
+            'initial_message': message_text
+        })
+        logger.info(f"✅ Asked user {user_id} about mobile app account")
+
+    except Exception as e:
+        logger.error(f"Error starting registration for {user_id}: {e}")
+
+
+def handle_account_linking(user_id: str, user_input: str):
+    """Handle account linking flow for users with mobile app accounts"""
+    try:
+        from database.session_db import get_user_session, save_user_session, clear_user_session
+        from database.external_db import get_user_registration
+        
+        # First check if user is already registered (maybe they just linked)
+        existing_user = get_user_registration(user_id)
+        if existing_user:
+            logger.info(f"User {user_id} is already registered, clearing linking session")
+            clear_user_session(user_id)
+            whatsapp_service.send_message(user_id,
+                "✅ *You're already registered!*\n\n"
+                "Your account is active. Type *MENU* to get started.")
+            send_main_menu(user_id)
+            return
+        
+        session = get_user_session(user_id)
+        if not session:
+            logger.warning(f"No session found for account linking, restarting flow for {user_id}")
+            start_registration_flow(user_id, "")
+            return
+        
+        session_type = session.get('session_type', '')
+        
+        # Step 1: Check if user has mobile app account
+        if session_type == 'awaiting_mobile_account_check':
+            user_input_lower = user_input.lower().strip()
+            if user_input_lower in ['yes', 'y', 'have', 'yes i have', 'i have']:
+                # User has mobile app account - ask for name
+                whatsapp_service.send_message(user_id, 
+                    "📱 *Great! Let's link your accounts*\n\n"
+                    "Please enter your *full name* exactly as you used in the mobile app:\n"
+                    "(First name and surname together, e.g., 'John Doe')")
+                
+                save_user_session(user_id, {
+                    'session_type': 'awaiting_full_name',
+                    'referral_code': session.get('referral_code')
+                })
+                logger.info(f"User {user_id} confirmed mobile app account, waiting for full name")
+            elif user_input_lower in ['no', 'n', 'dont', "don't", 'new account']:
+                # User doesn't have mobile app account - proceed with normal registration
+                referral_code = session.get('referral_code')
+                start_normal_registration(user_id, referral_code)
+            else:
+                # Unclear response - ask again
+                whatsapp_service.send_message(user_id,
+                    "Please reply *YES* if you have a mobile app account, or *NO* to create a new WhatsApp account.")
+            return
+        
+        # Step 2: Get full name and search for account
+        if session_type == 'awaiting_full_name':
+            # Parse full name (assume format: "FirstName Surname" or "FirstName MiddleName Surname")
+            name_parts = user_input.strip().split()
+            
+            if len(name_parts) < 2:
+                whatsapp_service.send_message(user_id,
+                    "Please enter your full name with both first name and surname:\n"
+                    "Example: 'John Doe' or 'Mary Jane Smith'")
+                return
+            
+            # Use first part as name, last part as surname
+            # If more than 2 parts, join middle names with first name
+            name = name_parts[0]
+            surname = name_parts[-1]
+            
+            if len(name_parts) > 2:
+                # Middle names - join with first name
+                name = ' '.join(name_parts[:-1])
+            
+            logger.info(f"Searching for account with name='{name}', surname='{surname}' for user {user_id}")
+            
+            # Search for matching account
+            result = user_service.link_mobile_account(user_id, name, surname)
+            
+            if result.get('success'):
+                # Account linked successfully
+                whatsapp_service.send_message(user_id, result['message'])
+                # Clear session
+                from database.session_db import clear_user_session
+                clear_user_session(user_id)
+                # Send main menu
+                send_main_menu(user_id)
+            elif result.get('requires_email'):
+                # Multiple matches - need email verification
+                save_user_session(user_id, {
+                    'session_type': 'awaiting_email_verification',
+                    'name': name,
+                    'surname': surname,
+                    'referral_code': session.get('referral_code')
+                })
+                whatsapp_service.send_message(user_id, result['message'])
+            else:
+                # No match found or error
+                whatsapp_service.send_message(user_id, result['message'])
+                # Offer to start normal registration
+                whatsapp_service.send_message(user_id,
+                    "\nWould you like to create a new WhatsApp account? Reply *REGISTER* to continue.")
+            return
+        
+        # Step 3: Email verification for multiple matches
+        if session_type == 'awaiting_email_verification':
+            email = user_input.strip()
+            name = session.get('name')
+            surname = session.get('surname')
+            
+            if not email or '@' not in email:
+                whatsapp_service.send_message(user_id,
+                    "Please enter a valid email address:")
+                return
+            
+            logger.info(f"Verifying email '{email}' for name='{name}', surname='{surname}' for user {user_id}")
+            
+            # Try linking with email
+            result = user_service.link_mobile_account(user_id, name, surname, email)
+            
+            if result.get('success'):
+                # Account linked successfully
+                whatsapp_service.send_message(user_id, result['message'])
+                # Clear session
+                from database.session_db import clear_user_session
+                clear_user_session(user_id)
+                # Send main menu
+                send_main_menu(user_id)
+            else:
+                whatsapp_service.send_message(user_id, result['message'])
+                # Offer to start normal registration
+                whatsapp_service.send_message(user_id,
+                    "\nWould you like to create a new WhatsApp account? Reply *REGISTER* to continue.")
+            return
+            
+    except Exception as e:
+        logger.error(f"Error handling account linking for {user_id}: {e}")
+        whatsapp_service.send_message(user_id,
+            "❌ An error occurred while linking your account. Please try again or reply *REGISTER* to create a new account.")
+
+
+def start_normal_registration(user_id: str, referral_code: str = None):
+    """Start normal WhatsApp registration flow"""
+    try:
+        welcome_msg = "🎯 *Let's create your secure NerdX account*\n\n"
+        
+        if referral_code:
+            welcome_msg += f"🔗 *Referral Code Detected*: {referral_code}\n\n"
+        
+        welcome_msg += "Please enter your *first name*:"
+        
+        whatsapp_service.send_message(user_id, welcome_msg)
+        
         # Start registration process with referral code if detected
         if referral_code:
             # Pre-fill the referral code in the session
@@ -884,9 +1122,9 @@ def start_registration_flow(user_id: str, message_text: str):
             # Start normal registration
             user_service.start_registration(user_id)
             logger.info(f"✅ Registration flow initiated for {user_id}")
-
+            
     except Exception as e:
-        logger.error(f"Error starting registration for {user_id}: {e}")
+        logger.error(f"Error starting normal registration for {user_id}: {e}")
 
 
 def handle_opt_out(user_id: str):
@@ -1205,10 +1443,10 @@ def handle_science_structured_answer(user_id: str, student_answer: str):
         topic = session.get('topic') or structured_question.get('topic') or ''
         difficulty = session.get('difficulty') or structured_question.get('difficulty') or 'medium'
 
-        # Evaluate with DeepSeek through CombinedScienceGenerator
+        # Evaluate with AI through CombinedScienceGenerator
         from services.combined_science_generator import CombinedScienceGenerator
         gen = CombinedScienceGenerator()
-        evaluation = gen.evaluate_structured_answer(structured_question, student_answer)
+        evaluation = gen.evaluate_structured_answer(structured_question, student_answer, platform='whatsapp')
 
         if not evaluation or not evaluation.get('success'):
             whatsapp_service.send_message(
@@ -1638,6 +1876,65 @@ def send_main_menu(user_id: str, user_name: str = None):
         logger.error(f"Error sending main menu for {user_id}: {e}", exc_info=True)
         whatsapp_service.send_message(user_id, "Error loading menu. Please try again.")
 
+def handle_command_with_tracking(user_id: str, action: str, command_function):
+    """
+    Handle commands with Option B bundling: 1 credit = 2 commands
+    Tracks command usage and only deducts credit when bundle is complete
+    """
+    try:
+        from services.command_credit_tracker import command_credit_tracker
+        from services.advanced_credit_service import advanced_credit_service
+        from utils.credit_units import format_credits
+        
+        # Check if credit should be deducted
+        tracker_result = command_credit_tracker.should_deduct_credit(user_id, action)
+        
+        if not tracker_result.get('should_deduct', True):
+            # Command in bundle - don't deduct yet, just execute
+            commands_used = tracker_result.get('commands_used', 0)
+            commands_remaining = tracker_result.get('commands_remaining', 0)
+            
+            # Execute the command function
+            command_function(user_id)
+            
+            # Send bundle status message
+            bundle_msg = f"📦 *Command Bundle Status*\n\n"
+            bundle_msg += f"✅ Command {commands_used} of 2 used\n"
+            bundle_msg += f"💳 No credit deducted yet\n"
+            bundle_msg += f"📊 {commands_remaining} command(s) remaining in bundle\n\n"
+            bundle_msg += f"💡 *Tip:* Use {commands_remaining} more command to complete the bundle (1 credit for 2 commands)"
+            
+            whatsapp_service.send_message(user_id, bundle_msg)
+            return
+        
+        # Bundle complete or not a command - check and deduct credits (WhatsApp uses Option B)
+        credit_result = advanced_credit_service.check_and_deduct_credits(user_id, action, platform='whatsapp')
+        
+        if credit_result.get('success'):
+            # Credits deducted successfully - execute command
+            command_function(user_id)
+            
+            # Show bundle completion message if applicable
+            if tracker_result.get('bundle_complete'):
+                bundle_msg = f"✅ *Bundle Complete!*\n\n"
+                bundle_msg += f"💳 1 credit deducted for 2 commands\n"
+                bundle_msg += f"💰 New balance: {format_credits(credit_result.get('new_balance', 0))}\n\n"
+                bundle_msg += f"🎯 *New bundle started* - Next 2 commands = 1 credit"
+                whatsapp_service.send_message(user_id, bundle_msg)
+        else:
+            # Insufficient credits
+            insufficient_msg = credit_result.get('message', 'Insufficient credits')
+            whatsapp_service.send_message(user_id, f"❌ {insufficient_msg}\n\n💡 *Get more credits:* Use 'buy credits' command")
+            
+    except Exception as e:
+        logger.error(f"Error in handle_command_with_tracking for {user_id}, action {action}: {e}", exc_info=True)
+        # Fallback: execute command without tracking (graceful degradation)
+        try:
+            command_function(user_id)
+        except Exception as fallback_error:
+            logger.error(f"Fallback command execution also failed: {fallback_error}")
+            whatsapp_service.send_message(user_id, "❌ Error processing command. Please try again.")
+
 def handle_interactive_message(user_id: str, interactive_data: dict):
     """Handle interactive button/list responses - supports both button and list interactions"""
     try:
@@ -1966,7 +2263,11 @@ def handle_interactive_message(user_id: str, interactive_data: dict):
         elif selection_id == 'level_advanced':
             handle_level_menu(user_id, 'advanced')
         elif selection_id == 'main_menu' or selection_id == 'back_to_menu':
-            send_main_menu(user_id)
+            # Option B: Command bundling (button clicks also count as commands)
+            handle_command_with_tracking(user_id, 'menu_navigation', send_main_menu)
+        elif selection_id == 'user_stats':
+            # Option B: Command bundling
+            handle_command_with_tracking(user_id, 'settings_access', show_user_stats)
         elif selection_id == 'clear_session' or selection_id == 'reset_session':
             # Allow users to manually clear stuck sessions
             from database.session_db import clear_user_session
@@ -2132,9 +2433,11 @@ Click the link above to join our official WhatsApp channel!"""
         elif selection_id == 'upload_math_image':
             whatsapp_service.send_message(user_id, "📷 Please send an image of your math problem to solve it!")
         elif selection_id == 'stats':
-            show_user_stats(user_id)
+            # Option B: Command bundling
+            handle_command_with_tracking(user_id, 'settings_access', show_user_stats)
         elif selection_id == 'user_stats':
-            show_user_stats(user_id)
+            # Option B: Command bundling
+            handle_command_with_tracking(user_id, 'settings_access', show_user_stats)
         elif selection_id.startswith('package_'):
             handle_credit_package_selection(user_id, selection_id)
 
@@ -2280,7 +2583,8 @@ Click the link above to join our official WhatsApp channel!"""
             package_id = selection_id.replace('manual_payment_', '')
             handle_manual_payment(user_id, package_id)
         elif selection_id == 'back_to_menu':
-            send_main_menu(user_id)
+            # Option B: Command bundling
+            handle_command_with_tracking(user_id, 'menu_navigation', send_main_menu)
         elif selection_id == 'continue_current':
             # User clicked continue on referral notification - do nothing to maintain flow
             pass
@@ -2598,12 +2902,10 @@ def send_help_message(user_id: str):
 📊 Track your progress
 🎯 Earn points and maintain streaks
 
-*Credit Costs (examples):*
-• Exams/Topical (Math/Science): 0.5 credit per question
-• Science MCQ: 0.25 credit per question
-• Graph generation: 1 credit each
-• Teacher Mode: 0.1 credit per AI response
-• Voice Live: 0.1 credit per 5 seconds
+*Credit Costs (WhatsApp - Option B - Student-Friendly):*
+• Commands: 1 credit = 2 commands (bundled to save credits!)
+• AI Questions: 1 credit per question (affordable learning)
+• Complex Features: 2 credits (essays, comprehension, A-Level, audio, images)
 
 Need more help? Contact support!
 """
@@ -2614,7 +2916,7 @@ def handle_graph_request(user_id: str, function_text: str):
     try:
         # Check credits
         current_credits = get_user_credits(user_id)
-        required_credits = advanced_credit_service.get_credit_cost('math_graph_practice')
+        required_credits = advanced_credit_service.get_credit_cost('math_graph_practice', platform='whatsapp')
 
         if current_credits < required_credits:
             insufficient_msg = f"""💰 *Need More Credits!* 💰
@@ -2838,7 +3140,7 @@ def show_referral_info(user_id: str):
 
 ✨ *How it works:*
 1️⃣ Share your referral link with friends
-2️⃣ They click the link and register (get 75 welcome credits)
+2️⃣ They click the link and register (get 150 welcome credits)
 3️⃣ You get +{referrer_bonus} credits automatically!
 
 📲 Share your referral link to earn more credits!"""
@@ -3122,7 +3424,7 @@ def handle_combined_exam(user_id: str):
         # Check credits using advanced credit service
         user_credit_status = advanced_credit_service.get_user_credit_status(user_id)
         current_credits = user_credit_status['credits']
-        required_credits = advanced_credit_service.get_credit_cost('combined_science_exam')
+        required_credits = advanced_credit_service.get_credit_cost('combined_science_exam', platform='whatsapp')
 
         if current_credits < required_credits:
             # Enhanced gamified insufficient credits message
@@ -3208,11 +3510,12 @@ def load_next_combined_question(user_id: str):
         from database.external_db import get_user_registration, get_random_exam_question
         from services.advanced_credit_service import advanced_credit_service
 
-        # Check and deduct credits for combined exam question
+        # Check and deduct credits for combined exam question (WhatsApp uses Option B)
         credit_result = advanced_credit_service.check_and_deduct_credits(
             user_id,
             'combined_science_exam',
-            None
+            None,
+            platform='whatsapp'
         )
 
         if not credit_result['success']:
@@ -3487,7 +3790,7 @@ def generate_and_send_question(chat_id: str, subject: str, topic: str, difficult
         else:
             action_key = 'combined_science_topical'
 
-        credit_cost = advanced_credit_service.get_credit_cost(action_key)
+        credit_cost = advanced_credit_service.get_credit_cost(action_key, platform='whatsapp')
 
         # Check if user has enough credits
         if credits < credit_cost:
@@ -3521,22 +3824,22 @@ def generate_and_send_question(chat_id: str, subject: str, topic: str, difficult
                 logger.info(f"Generating structured science question: {subject} - {topic} - {difficulty}")
                 from services.combined_science_generator import CombinedScienceGenerator
                 science_gen = CombinedScienceGenerator()
-                question_data = science_gen.generate_structured_question(subject, topic, difficulty, chat_id)
+                question_data = science_gen.generate_structured_question(subject, topic, difficulty, chat_id, platform='whatsapp')
             else:
                 logger.info(f"Generating MCQ science question: {subject} - {topic} - {difficulty}")
                 from services.ai_service import AIService
                 ai_service = AIService()
-                question_data = ai_service.generate_science_question(subject, topic, difficulty)
+                question_data = ai_service.generate_science_question(subject, topic, difficulty, platform='whatsapp')
         elif subject == "Mathematics":
             logger.info(f"Generating math question: {topic} - {difficulty}")
             from services.ai_service import AIService
             ai_service = AIService()
-            question_data = ai_service.generate_math_question(topic, difficulty)
+            question_data = ai_service.generate_math_question(topic, difficulty, platform='whatsapp')
         elif subject == "English":
             logger.info(f"Generating English question: {topic} - {difficulty}")
             from services.ai_service import AIService
             ai_service = AIService()
-            question_data = ai_service.generate_english_question(topic, difficulty)
+            question_data = ai_service.generate_english_question(topic, difficulty, platform='whatsapp')
         else:
             logger.error(f"Unsupported subject: {subject}")
             whatsapp_service.send_message(chat_id, f"❌ Subject {subject} not supported yet.")
@@ -3999,7 +4302,7 @@ def handle_combined_science_question(user_id: str, subject: str, topic: str, dif
         from database.external_db import get_user_credits, deduct_credits
         
         current_credits = get_user_credits(user_id)
-        required_credits = advanced_credit_service.get_credit_cost('combined_science_topical_mcq')
+        required_credits = advanced_credit_service.get_credit_cost('combined_science_topical_mcq', platform='whatsapp')
         
         # Check if user has enough credits
         if current_credits < required_credits:
@@ -5037,12 +5340,29 @@ Click the link below to complete your EcoCash payment:
                 handle_manual_payment(user_id, package_id)
 
         except Exception as payment_error:
-            logger.error(f"Paynow payment exception for {user_id}: {payment_error}")
-            whatsapp_service.send_message(user_id, 
-                "❌ *Payment System Error*\n\n"
-                "The instant payment system is temporarily unavailable. "
-                "Let's use manual payment instead.")
-            handle_manual_payment(user_id, package_id)
+            logger.error(f"Paynow payment exception for {user_id}: {payment_error}", exc_info=True)
+            error_message = str(payment_error)
+            
+            # Provide more specific error message
+            if "Invalid phone number" in error_message:
+                whatsapp_service.send_message(user_id, 
+                    "❌ *Invalid Phone Number*\n\n"
+                    "The phone number format is incorrect. Please try again with a valid EcoCash number:\n"
+                    "• Format: 077XXXXXXX or 078XXXXXXX\n"
+                    "• Example: 0771234567")
+            elif "not available" in error_message.lower():
+                whatsapp_service.send_message(user_id, 
+                    "❌ *Payment Service Unavailable*\n\n"
+                    "The instant payment system is temporarily unavailable. "
+                    "Let's use manual payment instead.")
+                handle_manual_payment(user_id, package_id)
+            else:
+                whatsapp_service.send_message(user_id, 
+                    f"❌ *Payment System Error*\n\n"
+                    f"Error: {error_message}\n\n"
+                    "The instant payment system encountered an issue. "
+                    "Let's use manual payment instead.")
+                handle_manual_payment(user_id, package_id)
 
     except Exception as e:
         logger.error(f"Error handling Paynow phone collection for {user_id}: {e}")
