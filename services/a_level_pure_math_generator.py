@@ -173,8 +173,16 @@ class ALevelPureMathGenerator:
         self.deepseek_api_key = os.environ.get('DEEPSEEK_API_KEY')
         self.deepseek_url = "https://api.deepseek.com/v1/chat/completions"
         self.deepseek_model = get_deepseek_chat_model()
-        self.max_retries = 2  # Reduced retries to prevent worker timeout
-        self.timeout = 30  # Shorter timeout to prevent worker death
+        self.max_retries = 4  # Increased from 2 to 4 for better reliability
+        self.timeout = 35  # Increased timeout for better reliability
+        self.connect_timeout = 10  # Connection timeout
+        
+        # Create a session for connection pooling and reuse
+        self.session = requests.Session()
+        self.session.headers.update({
+            'Content-Type': 'application/json',
+            'User-Agent': 'NerdX-Education/1.0'
+        })
         self.graph_service = None  # Lazy init to avoid heavy imports unless needed
     
     def generate_question(self, topic: str, difficulty: str = "medium", user_id: str = None, question_type: str = "mcq") -> Optional[Dict]:
@@ -620,19 +628,40 @@ Keep explanations concise (2-3 sentences). Always respond with valid, complete J
                     "max_tokens": 1500 if question_type == "structured" else 1000  # Reduced for faster responses
                 }
                 
-                timeout = self.timeout + (attempt * 5)  # Smaller timeout increase
-                logger.info(f"DeepSeek Pure Math {question_type} attempt {attempt + 1}/{self.max_retries}")
+                timeout = self.timeout + (attempt * 5)  # Progressive timeout increase
+                logger.info(f"DeepSeek Pure Math {question_type} attempt {attempt + 1}/{self.max_retries} (timeout: {timeout}s)")
                 
-                response = requests.post(
+                # Exponential backoff with jitter
+                if attempt > 0:
+                    import random
+                    backoff_delay = 1 * (2 ** (attempt - 1)) + random.uniform(0, 1)
+                    logger.info(f"Waiting {backoff_delay:.2f}s before retry {attempt + 1}/{self.max_retries}")
+                    time.sleep(backoff_delay)
+                
+                # Use session for connection pooling
+                self.session.headers.update(headers)
+                response = self.session.post(
                     self.deepseek_url,
-                    headers=headers,
                     json=payload,
-                    timeout=timeout
+                    timeout=(self.connect_timeout, timeout)
                 )
                 
-                if response.status_code != 200:
-                    logger.error(f"DeepSeek API error: {response.status_code} - {response.text}")
-                    continue
+                if response.status_code == 429:
+                    # Rate limit
+                    retry_after = int(response.headers.get('Retry-After', 10))
+                    logger.warning(f"DeepSeek rate limit hit (429), waiting {retry_after}s")
+                    if attempt < self.max_retries - 1:
+                        time.sleep(retry_after)
+                        continue
+                elif response.status_code == 503:
+                    # Service unavailable
+                    logger.warning(f"DeepSeek service unavailable (503)")
+                    if attempt < self.max_retries - 1:
+                        continue
+                elif response.status_code != 200:
+                    logger.error(f"DeepSeek API error: {response.status_code} - {response.text[:200]}")
+                    if attempt < self.max_retries - 1:
+                        continue
                 
                 result = response.json()
                 content = result.get('choices', [{}])[0].get('message', {}).get('content', '')
@@ -649,7 +678,31 @@ Keep explanations concise (2-3 sentences). Always respond with valid, complete J
                 logger.error(f"Error calling DeepSeek API on attempt {attempt + 1}: {e}")
                 continue
         
-        logger.error("All DeepSeek retry attempts failed for Pure Math question")
+        logger.error("All DeepSeek retry attempts failed for Pure Math question, trying Vertex AI fallback")
+        
+        # FALLBACK: Try Vertex AI when DeepSeek fails
+        try:
+            from services.vertex_service import vertex_service
+            
+            if vertex_service.is_available():
+                logger.info(f"🔄 Falling back to Vertex AI for Pure Math {question_type}")
+                
+                system_message = """You are an expert A Level Pure Mathematics examiner for ZIMSEC examinations. Generate questions with clear solutions. Always respond with valid, complete JSON only."""
+                full_prompt = f"{system_message}\n\n{prompt}"
+                
+                result = vertex_service.generate_text(prompt=full_prompt, model="gemini-2.5-flash")
+                
+                if result and result.get('success'):
+                    text = result['text']
+                    question_data = self._parse_question_response(text)
+                    if question_data:
+                        logger.info(f"✅ Successfully generated Pure Math {question_type} with Vertex AI fallback")
+                        return question_data
+            else:
+                logger.warning("Vertex AI not available for fallback")
+        except Exception as e:
+            logger.error(f"Error in Vertex AI fallback: {e}")
+        
         return None
 
     def _maybe_attach_visualization(self, question_data: Dict, topic_name: str) -> Dict:

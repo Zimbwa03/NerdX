@@ -42,11 +42,32 @@ class Config:
         'menu_navigation': 1    # 1 second between menu navigation
     }
 
-    # Credit system configuration (units) - Advanced Credit System
+    # Credit system configuration (units) - Option B: Student-Friendly Structure
     # 1 credit = 10 units
+    # OPTION B IMPLEMENTATION:
+    # - Commands: 1 credit = 2 commands (bundled to encourage learning, not spending on navigation)
+    # - AI-Generated: 1 credit per use (reduced from 2 to make learning affordable)
+    # - Complex Features: 2 credits per use (reduced from 3)
     CREDIT_COSTS = {
+        # ============================================
+        # COMMANDS: Bundled System (1 Credit = 2 Commands)
+        # ============================================
+        # User pays 1 credit, gets 2 command uses
+        # Tracked via command_credit_tracker service
+        # Cost: $0.005 × 2 = $0.010 per credit (sustainable)
+        'menu_navigation': 10,             # Part of bundle: 1 credit = 2 commands
+        'help_command': 10,                # Part of bundle: 1 credit = 2 commands
+        'check_balance': 10,               # Part of bundle: 1 credit = 2 commands
+        'settings_access': 10,              # Part of bundle: 1 credit = 2 commands
+        'registration_step': 10,            # Part of bundle: 1 credit = 2 commands
+
+        # ============================================
+        # AI-GENERATED CONTENT: 1 Credit Per Use (10 units)
+        # ============================================
+        # Reduced from 2 credits to 1 credit - makes learning more affordable
+        # Cost: Twilio ($0.005) + AI ($0.002) = $0.007 per credit
+        
         # Combined Science (O-Level)
-        # Whole-credit pricing: all costs are multiples of 10 units (>= 1 credit) for visible deductions
         'combined_science_exam': 10,                # 1 credit per question
         'combined_science_topical': 10,             # 1 credit per question
         'combined_science_topical_mcq': 10,         # 1 credit per MCQ
@@ -58,81 +79,87 @@ class Config:
         'math_quiz': 10,                   # 1 credit per question (streaming)
         'math_graph_practice': 10,         # 1 credit per graph/question/video
 
-        # English (unchanged pricing, now in units)
+        # English (Topical)
         'english_topical': 10,             # 1 credit per question
-        'english_comprehension': 30,       # 3 credits
-        'english_essay_writing': 30,       # 3 credits
-        'english_essay_marking': 30,       # 3 credits
-        'english_comprehension_grading': 30,
-        'english_summary_grading': 30,
 
-        # A-Level Mathematics
-        'a_level_pure_math_topical': 10,             # 1 credit per MCQ question
-        'a_level_pure_math_topical_mcq': 10,         # 1 credit per MCQ question
-        'a_level_pure_math_topical_structured': 10,  # 1 credit per structured question
-        'a_level_pure_math_exam': 10,                # 1 credit per question
+        # AI Teacher Mode
+        'teacher_mode_start': 10,          # 1 credit per AI response (start)
+        'teacher_mode_followup': 10,       # 1 credit per AI response (follow-up)
 
-        # A-Level Chemistry
-        'a_level_chemistry_topical': 10,             # 1 credit per MCQ question
-        'a_level_chemistry_topical_mcq': 10,         # 1 credit per MCQ question
-        'a_level_chemistry_topical_structured': 10,  # 1 credit per structured question
-        'a_level_chemistry_exam': 10,                # 1 credit per question
+        # Project Assistant (Basic)
+        'project_assistant_start': 10,     # 1 credit per AI response (start)
+        'project_assistant_followup': 10,  # 1 credit per AI response (follow-up)
 
-        # A-Level Physics
-        'a_level_physics_topical': 10,               # 1 credit per MCQ question
-        'a_level_physics_topical_mcq': 10,           # 1 credit per MCQ question
-        'a_level_physics_topical_structured': 10,    # 1 credit per structured question
-        'a_level_physics_exam': 10,                  # 1 credit per question
-
-        # A-Level Biology (whole-credit pricing)
-        'a_level_biology_topical_mcq': 10,        # 1 credit
-        'a_level_biology_topical_structured': 10, # 1 credit
-        'a_level_biology_topical_essay': 10,      # 1 credit
-        'a_level_biology_exam_mcq': 10,
-        'a_level_biology_exam_structured': 10,
-        'a_level_biology_exam_essay': 10,
-
-        # Audio / Live
-        'audio_feature': 10,               # 1 credit per audio request
-        'voice_chat': 10,                  # 1 credit per 5 seconds (live)
-
-        # Flashcards
+        # Study Tools
         'flashcard_single': 10,            # 1 credit per flashcard
-        'flashcard_audio': 30,             # 3 credits (audio flashcards)
-
-        # Virtual Lab
         'virtual_lab_knowledge_check': 10, # 1 credit per question
 
-        # AI Teacher & Assistant - per response billing
-        'teacher_mode_start': 10,          # 1 credit per AI response
-        'teacher_mode_followup': 10,       # 1 credit per AI response
-        'teacher_mode_pdf': 10,            # 1 credit for PDF notes
-        'project_assistant_start': 10,     # 1 credit per AI response
-        'project_assistant_followup': 10,  # 1 credit per AI response
-        'project_assistant_batch': 10,     # Legacy mapping
+        # ============================================
+        # COMPLEX FEATURES: 2 Credits Per Use (20 units)
+        # ============================================
+        # Reduced from 3 credits to 2 credits
+        # Cost: Twilio ($0.005) + High AI ($0.007) = $0.012 per 2 credits = $0.006 per credit
 
-        # Vision/Tools
-        'ocr_solve': 30,                   # 3 credits
-        'image_solve': 30,                 # 3 credits (OCR/solve)
-        'image_generation': 30,            # 3 credits
+        # English (Complex Features)
+        'english_comprehension': 20,       # 2 credits - Full passage + questions
+        'english_essay_writing': 20,       # 2 credits - Long-form content
+        'english_essay_marking': 20,       # 2 credits - Detailed AI analysis
+        'english_comprehension_grading': 20, # 2 credits - AI grading
+        'english_summary_grading': 20,     # 2 credits - AI grading
 
-        # Project Assistant Research
-        'web_search': 20,                  # 2 credits
-        'deep_research': 50,               # 5 credits
-        'project_web_search': 20,
-        'project_deep_research': 50,
-        'project_transcribe': 20,          # 2 credits
-        'project_image_generation': 20,    # 2 credits
+        # A-Level (All Subjects - Complex content)
+        'a_level_pure_math_topical': 20,             # 2 credits
+        'a_level_pure_math_topical_mcq': 20,         # 2 credits
+        'a_level_pure_math_topical_structured': 20, # 2 credits
+        'a_level_pure_math_exam': 20,                # 2 credits
+        'a_level_chemistry_topical': 20,             # 2 credits
+        'a_level_chemistry_topical_mcq': 20,         # 2 credits
+        'a_level_chemistry_topical_structured': 20,  # 2 credits
+        'a_level_chemistry_exam': 20,                # 2 credits
+        'a_level_physics_topical': 20,               # 2 credits
+        'a_level_physics_topical_mcq': 20,           # 2 credits
+        'a_level_physics_topical_structured': 20,    # 2 credits
+        'a_level_physics_exam': 20,                  # 2 credits
+        'a_level_biology_topical_mcq': 20,           # 2 credits
+        'a_level_biology_topical_structured': 20,    # 2 credits
+        'a_level_biology_topical_essay': 20,         # 2 credits
+        'a_level_biology_exam_mcq': 20,              # 2 credits
+        'a_level_biology_exam_structured': 20,        # 2 credits
+        'a_level_biology_exam_essay': 20,            # 2 credits
+
+        # Audio / Live (Complex processing)
+        'audio_feature': 20,               # 2 credits - Audio processing + AI
+        'voice_chat': 20,                 # 2 credits - Real-time voice processing
+
+        # Vision/Tools (Complex processing)
+        'ocr_solve': 20,                   # 2 credits - OCR + solving
+        'image_solve': 20,                 # 2 credits - Image processing + solving
+        'image_generation': 20,           # 2 credits - AI image generation
+
+        # Project Assistant (Advanced Features)
+        'project_web_search': 20,         # 2 credits - Web search + synthesis
+        'project_deep_research': 20,       # 2 credits - Extensive research
+        'project_transcribe': 20,          # 2 credits - Audio transcription
+        'project_image_generation': 20,    # 2 credits - Image generation
+        'project_assistant_batch': 20,     # 2 credits - Batch processing
+
+        # AI Teacher PDF Generation
+        'teacher_mode_pdf': 20,           # 2 credits - PDF generation
+
+        # Audio Flashcards
+        'flashcard_audio': 20,            # 2 credits - Audio flashcards
 
         # Legacy compatibility (Mapped values)
-        'math': 10,
-        'science': 10,
-        'english': 10,
-        'graph_generation': 10
+        'math': 10,                        # Maps to math_topical (1 credit)
+        'science': 10,                     # Maps to combined_science_topical (1 credit)
+        'english': 10,                     # Maps to english_topical (1 credit)
+        'graph_generation': 10,            # Maps to math_graph_practice (1 credit)
+        'web_search': 20,                 # Maps to project_web_search (2 credits)
+        'deep_research': 20               # Maps to project_deep_research (2 credits)
     }
     
     # Registration and Referral Credits (units)
-    REGISTRATION_BONUS = 750              # 75 credits
+    REGISTRATION_BONUS = 1500             # 150 credits
     REFERRAL_BONUS = 50                   # 5 credits
     
     # Low Credit Threshold (units)

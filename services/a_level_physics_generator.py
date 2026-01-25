@@ -147,8 +147,16 @@ class ALevelPhysicsGenerator:
         self.deepseek_api_key = os.environ.get('DEEPSEEK_API_KEY')
         self.deepseek_url = "https://api.deepseek.com/v1/chat/completions"
         self.deepseek_model = get_deepseek_chat_model()
-        self.timeout = 25  # Optimized timeout for physics questions (reduced from 45)
-        self.max_retries = 2  # Reduced retries for faster failure recovery
+        self.timeout = 30  # Increased timeout for better reliability
+        self.max_retries = 4  # Increased from 2 to 4 for better reliability
+        self.connect_timeout = 10  # Connection timeout
+        
+        # Create a session for connection pooling and reuse
+        self.session = requests.Session()
+        self.session.headers.update({
+            'Content-Type': 'application/json',
+            'User-Agent': 'NerdX-Education/1.0'
+        })
     
     def _get_topic_name(self, topic_id: str) -> Optional[str]:
         """Map frontend topic IDs to display names used in constants."""
@@ -526,32 +534,39 @@ Always respond with valid JSON containing step-by-step solutions."""
                 logger.info(f"DeepSeek Physics attempt {attempt + 1}/{self.max_retries} (timeout: {timeout}s)")
                 
                 # Use session for connection pooling
-                session = requests.Session()
-                session.headers.update(headers)
+                # Add auth header to session
+                self.session.headers.update(headers)
+                
+                # Exponential backoff with jitter
+                if attempt > 0:
+                    import random
+                    backoff_delay = 1 * (2 ** (attempt - 1)) + random.uniform(0, 1)
+                    logger.info(f"Waiting {backoff_delay:.2f}s before retry {attempt + 1}/{self.max_retries}")
+                    time.sleep(backoff_delay)
                 
                 try:
-                    response = session.post(
+                    response = self.session.post(
                         self.deepseek_url,
                         json=payload,
-                        timeout=timeout
+                        timeout=(self.connect_timeout, timeout)
                     )
-                finally:
-                    session.close()
                 
-                if response.status_code != 200:
-                    # Handle rate limiting specifically
-                    if response.status_code == 429:
-                        logger.warning(f"DeepSeek rate limit hit on attempt {attempt + 1}")
-                        if attempt < self.max_retries - 1:
-                            wait_time = 5 * (attempt + 1)  # Wait longer for rate limits
-                            logger.info(f"Rate limited, waiting {wait_time}s before retry...")
-                            time.sleep(wait_time)
-                            continue
+                if response.status_code == 429:
+                    # Rate limit - use Retry-After header if available
+                    retry_after = int(response.headers.get('Retry-After', 10))
+                    logger.warning(f"DeepSeek rate limit hit (429) on attempt {attempt + 1}, waiting {retry_after}s")
+                    if attempt < self.max_retries - 1:
+                        time.sleep(retry_after)
+                        continue
+                elif response.status_code == 503:
+                    # Service unavailable
+                    logger.warning(f"DeepSeek service unavailable (503) on attempt {attempt + 1}")
+                    if attempt < self.max_retries - 1:
+                        continue
+                elif response.status_code != 200:
                     logger.error(f"DeepSeek API error: {response.status_code} - {response.text[:200]}")
                     if attempt < self.max_retries - 1:
-                        time.sleep(1)  # Brief wait before retry
                         continue
-                    return None
                 
                 result = response.json()
                 content = result.get('choices', [{}])[0].get('message', {}).get('content', '')
@@ -565,6 +580,8 @@ Always respond with valid JSON containing step-by-step solutions."""
                     if attempt < self.max_retries - 1:
                         time.sleep(2)
                         continue
+                    # Last attempt failed, break to try Vertex AI fallback
+                    break
                     
             except (requests.Timeout, requests.exceptions.ReadTimeout) as e:
                 timeout_str = f" (timeout: {timeout}s)" if timeout else ""
@@ -603,7 +620,31 @@ Always respond with valid JSON containing step-by-step solutions."""
                     time.sleep(1)  # Brief wait before retry
                     continue
         
-        logger.error("All DeepSeek retry attempts failed for Physics question")
+        logger.error("All DeepSeek retry attempts failed for Physics question, trying Vertex AI fallback")
+        
+        # FALLBACK: Try Vertex AI when DeepSeek fails
+        try:
+            from services.vertex_service import vertex_service
+            
+            if vertex_service.is_available():
+                logger.info(f"🔄 Falling back to Vertex AI for Physics {question_type}")
+                
+                system_message = """You are a SENIOR A-LEVEL PHYSICS TEACHER (15+ years) AND an examiner-style question designer. You teach and assess for BOTH ZIMSEC A Level Physics and Cambridge International AS & A Level Physics 9702. Always respond with valid JSON containing step-by-step solutions."""
+                full_prompt = f"{system_message}\n\n{prompt}"
+                
+                result = vertex_service.generate_text(prompt=full_prompt, model="gemini-2.5-flash")
+                
+                if result and result.get('success'):
+                    text = result['text']
+                    question_data = self._parse_question_response(text, question_type)
+                    if question_data:
+                        logger.info(f"✅ Successfully generated Physics {question_type} with Vertex AI fallback")
+                        return question_data
+            else:
+                logger.warning("Vertex AI not available for fallback")
+        except Exception as e:
+            logger.error(f"Error in Vertex AI fallback: {e}")
+        
         return None
     
     def _parse_question_response(self, content: str, question_type: str = "mcq") -> Optional[Dict]:

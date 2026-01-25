@@ -74,11 +74,46 @@ class AdvancedCreditService:
             logger.error(f"Error refunding credits to {user_id}: {e}")
             return False
 
-    def check_and_deduct_credits(self, user_id: str, action: str, difficulty: Optional[str] = None) -> Dict:
-        """Check if user has sufficient credits and deduct them"""
+    def check_and_deduct_credits(self, user_id: str, action: str, difficulty: Optional[str] = None, platform: str = 'mobile') -> Dict:
+        """
+        Check if user has sufficient credits and deduct them
+        
+        Args:
+            user_id: User ID
+            action: Action key
+            difficulty: Optional difficulty level
+            platform: 'whatsapp' for WhatsApp bot (uses Option B), 'mobile' for mobile app (uses database)
+        """
         try:
+            # WhatsApp bot uses Option B with command bundling
+            if platform == 'whatsapp':
+                # Import command tracker for Option B implementation
+                from services.command_credit_tracker import command_credit_tracker
+                
+                # Check if this is a command action (bundled: 1 credit = 2 commands)
+                tracker_result = command_credit_tracker.should_deduct_credit(user_id, action)
+                
+                if not tracker_result.get('should_deduct', True):
+                    # Command in bundle - don't deduct yet
+                    commands_used = tracker_result.get('commands_used', 0)
+                    commands_remaining = tracker_result.get('commands_remaining', 0)
+                    
+                    return {
+                        'success': True,
+                        'deducted': 0,
+                        'is_bundled_command': True,
+                        'commands_used': commands_used,
+                        'commands_remaining': commands_remaining,
+                        'message': f"✅ Command {commands_used} of 2 - No credit deducted yet. {commands_remaining} remaining in bundle."
+                    }
+            
+            # Either not a command, or bundle complete, or mobile app - proceed with normal deduction
             current_credits = get_user_credits(user_id)
-            required_credits = self.get_credit_cost(action, difficulty)
+            required_credits = self.get_credit_cost(action, difficulty, platform=platform)
+            
+            # For commands when bundle is complete, use 1 credit (10 units)
+            if tracker_result.get('is_command') and tracker_result.get('bundle_complete'):
+                required_credits = 10  # 1 credit for 2 commands
             
             # Logic: verify locally first to save an RPC call if obviously insufficient
             if current_credits >= required_credits:
@@ -86,17 +121,28 @@ class AdvancedCreditService:
                 transaction_type = f"{action}_usage"
                 description = f"Used {action} feature"
                 
+                # Special description for bundled commands
+                if tracker_result.get('is_command') and tracker_result.get('bundle_complete'):
+                    description = f"Used 2 commands (bundle: {action})"
+                
                 # Use updated external_db.deduct_credits (atomic RPC preferred)
                 if deduct_credits(user_id, required_credits, transaction_type, description):
                     # We fetch the new balance again or trust the change?
                     # Ideally deduct_credits returns the new balance but currently returns bool
                     # For UI responsiveness, we calculate locally. Sync happens via DB next fetch.
                     new_balance = current_credits - required_credits
+                    
+                    message = f"Credits deducted: {format_credits(required_credits)}. New balance: {format_credits(new_balance)}"
+                    if tracker_result.get('is_command') and tracker_result.get('bundle_complete'):
+                        message = f"✅ Bundle complete! 1 credit deducted for 2 commands. Balance: {format_credits(new_balance)}"
+                    
                     return {
                         'success': True,
                         'deducted': required_credits,
                         'new_balance': new_balance,
-                        'message': f"Credits deducted: {required_credits}. New balance: {new_balance}"
+                        'is_bundled_command': tracker_result.get('is_command', False),
+                        'bundle_complete': tracker_result.get('bundle_complete', False),
+                        'message': message
                     }
                 else:
                     return {
@@ -105,13 +151,14 @@ class AdvancedCreditService:
                         'message': 'Error processing transaction'
                     }
             else:
+                shortage = required_credits - current_credits
                 return {
                     'success': False,
                     'insufficient': True,
                     'current_credits': current_credits,
                     'required_credits': required_credits,
-                    'shortage': required_credits - current_credits,
-                    'message': f"Insufficient credits. You need {required_credits} but have {current_credits}"
+                    'shortage': shortage,
+                    'message': f"Insufficient credits. You need {format_credits(required_credits)} but have {format_credits(current_credits)}"
                 }
                 
         except Exception as e:
@@ -122,81 +169,44 @@ class AdvancedCreditService:
                 'message': '❌ System error occurred'
             }
     
-    def get_credit_cost(self, action: str, difficulty: Optional[str] = None) -> int:
-        """Get credit cost for a specific action from database"""
+    def get_credit_cost(self, action: str, difficulty: Optional[str] = None, platform: str = 'mobile') -> int:
+        """
+        Get credit cost for a specific action
+        
+        Args:
+            action: Action key (e.g., 'math_topical', 'combined_science_exam')
+            difficulty: Optional difficulty level
+            platform: 'whatsapp' for WhatsApp bot (uses Option B), 'mobile' for mobile app (uses database)
+        
+        Returns:
+            Credit cost in units (10 units = 1 credit)
+        """
         try:
+            # WhatsApp bot uses Option B costs from config.py (not database)
+            if platform == 'whatsapp':
+                # Use Option B costs from config.py
+                from config import Config
+                option_b_cost = Config.CREDIT_COSTS.get(action)
+                if option_b_cost is not None:
+                    logger.debug(f"WhatsApp Option B cost for '{action}': {option_b_cost} units")
+                    return option_b_cost
+                # Fallback to mapped action if direct lookup fails
+                action_mapping = self._get_action_mapping()
+                mapped_action = action_mapping.get(action, action)
+                option_b_cost = Config.CREDIT_COSTS.get(mapped_action)
+                if option_b_cost is not None:
+                    logger.debug(f"WhatsApp Option B cost for '{action}' (mapped to '{mapped_action}'): {option_b_cost} units")
+                    return option_b_cost
+                # Final fallback
+                logger.warning(f"WhatsApp: No Option B cost found for '{action}', using fallback: 10 units")
+                return 10  # Default 1 credit for WhatsApp
+            
+            # Mobile app uses database (original behavior - UNCHANGED)
             # Import here to avoid circular imports
             from database.credit_costs_db import credit_cost_service
             
             # Map actions to standardized keys
-            action_mapping = {
-                # Combined Science
-                'combined_science_topical': 'combined_science_topical',
-                'combined_science_topical_mcq': 'combined_science_topical_mcq',
-                'combined_science_topical_structured': 'combined_science_topical_structured',
-                'combined_science_exam': 'combined_science_exam',
-                
-                # Mathematics
-                'math_topical': 'math_topical',
-                'math_exam': 'math_exam',
-                'math_quiz': 'math_quiz',
-                'math_graph_practice': 'math_graph_practice',
-                'graph_practice': 'math_graph_practice',
-                
-                # English
-                'english_topical': 'english_topical',
-                'english_comprehension': 'english_comprehension',
-                'english_essay_writing': 'english_essay_writing',
-                'english_essay_marking': 'english_essay_marking',
-                'english_comprehension_grading': 'english_comprehension_grading',
-                'english_summary_grading': 'english_summary_grading',
-                
-                # Audio Features
-                'audio_feature': 'audio_feature',
-                'voice_chat': 'voice_chat',
-
-                # Flashcards
-                'flashcard_single': 'flashcard_single',
-                
-                # Legacy mappings - map to new standardized keys
-                'math': 'math_topical',
-                'science': 'combined_science_topical',
-                'english': 'english_topical',
-                'image_solve': 'image_solve',
-                'graph_generation': 'math_graph_practice',
-
-                # A-Level mappings
-                'a_level_pure_math_topical': 'a_level_pure_math_topical',
-                'a_level_pure_math_topical_mcq': 'a_level_pure_math_topical_mcq',
-                'a_level_pure_math_topical_structured': 'a_level_pure_math_topical_structured',
-                'a_level_pure_math_exam': 'a_level_pure_math_exam',
-                'a_level_chemistry_topical': 'a_level_chemistry_topical',
-                'a_level_chemistry_topical_mcq': 'a_level_chemistry_topical_mcq',
-                'a_level_chemistry_topical_structured': 'a_level_chemistry_topical_structured',
-                'a_level_chemistry_exam': 'a_level_chemistry_exam',
-                'a_level_physics_topical': 'a_level_physics_topical',
-                'a_level_physics_topical_mcq': 'a_level_physics_topical_mcq',
-                'a_level_physics_topical_structured': 'a_level_physics_topical_structured',
-                'a_level_physics_exam': 'a_level_physics_exam',
-                'a_level_biology_topical_mcq': 'a_level_biology_topical_mcq',
-                'a_level_biology_topical_structured': 'a_level_biology_topical_structured',
-                'a_level_biology_topical_essay': 'a_level_biology_topical_essay',
-                'a_level_biology_exam_mcq': 'a_level_biology_exam_mcq',
-                'a_level_biology_exam_structured': 'a_level_biology_exam_structured',
-                'a_level_biology_exam_essay': 'a_level_biology_exam_essay',
-
-                # Project assistant
-                'project_assistant_start': 'project_assistant_start',
-                'project_assistant_followup': 'project_assistant_followup',
-                'project_assistant_batch': 'project_assistant_batch',
-                'project_web_search': 'project_web_search',
-                'project_deep_research': 'project_deep_research',
-                'project_transcribe': 'project_transcribe',
-                'project_image_generation': 'project_image_generation',
-
-                # Virtual lab
-                'virtual_lab_knowledge_check': 'virtual_lab_knowledge_check',
-            }
+            action_mapping = self._get_action_mapping()
             
             # Get the mapped action key
             mapped_action = action_mapping.get(action, action)
@@ -204,7 +214,7 @@ class AdvancedCreditService:
             # Get cost from database service (falls back to config if database unavailable)
             cost = credit_cost_service.get_credit_cost(mapped_action)
             
-            logger.debug(f"Credit cost for '{action}' (mapped to '{mapped_action}') with difficulty '{difficulty}': {cost}")
+            logger.debug(f"Mobile app credit cost for '{action}' (mapped to '{mapped_action}') with difficulty '{difficulty}': {cost}")
             return cost
             
         except Exception as e:
@@ -213,6 +223,77 @@ class AdvancedCreditService:
             fallback_cost = self.credit_costs.get(action, 5)
             logger.warning(f"Using fallback cost for '{action}': {fallback_cost}")
             return fallback_cost
+    
+    def _get_action_mapping(self) -> dict:
+        """Get action key mapping dictionary"""
+        return {
+            # Combined Science
+            'combined_science_topical': 'combined_science_topical',
+            'combined_science_topical_mcq': 'combined_science_topical_mcq',
+            'combined_science_topical_structured': 'combined_science_topical_structured',
+            'combined_science_exam': 'combined_science_exam',
+            
+            # Mathematics
+            'math_topical': 'math_topical',
+            'math_exam': 'math_exam',
+            'math_quiz': 'math_quiz',
+            'math_graph_practice': 'math_graph_practice',
+            'graph_practice': 'math_graph_practice',
+            
+            # English
+            'english_topical': 'english_topical',
+            'english_comprehension': 'english_comprehension',
+            'english_essay_writing': 'english_essay_writing',
+            'english_essay_marking': 'english_essay_marking',
+            'english_comprehension_grading': 'english_comprehension_grading',
+            'english_summary_grading': 'english_summary_grading',
+            
+            # Audio Features
+            'audio_feature': 'audio_feature',
+            'voice_chat': 'voice_chat',
+
+            # Flashcards
+            'flashcard_single': 'flashcard_single',
+            
+            # Legacy mappings - map to new standardized keys
+            'math': 'math_topical',
+            'science': 'combined_science_topical',
+            'english': 'english_topical',
+            'image_solve': 'image_solve',
+            'graph_generation': 'math_graph_practice',
+
+            # A-Level mappings
+            'a_level_pure_math_topical': 'a_level_pure_math_topical',
+            'a_level_pure_math_topical_mcq': 'a_level_pure_math_topical_mcq',
+            'a_level_pure_math_topical_structured': 'a_level_pure_math_topical_structured',
+            'a_level_pure_math_exam': 'a_level_pure_math_exam',
+            'a_level_chemistry_topical': 'a_level_chemistry_topical',
+            'a_level_chemistry_topical_mcq': 'a_level_chemistry_topical_mcq',
+            'a_level_chemistry_topical_structured': 'a_level_chemistry_topical_structured',
+            'a_level_chemistry_exam': 'a_level_chemistry_exam',
+            'a_level_physics_topical': 'a_level_physics_topical',
+            'a_level_physics_topical_mcq': 'a_level_physics_topical_mcq',
+            'a_level_physics_topical_structured': 'a_level_physics_topical_structured',
+            'a_level_physics_exam': 'a_level_physics_exam',
+            'a_level_biology_topical_mcq': 'a_level_biology_topical_mcq',
+            'a_level_biology_topical_structured': 'a_level_biology_topical_structured',
+            'a_level_biology_topical_essay': 'a_level_biology_topical_essay',
+            'a_level_biology_exam_mcq': 'a_level_biology_exam_mcq',
+            'a_level_biology_exam_structured': 'a_level_biology_exam_structured',
+            'a_level_biology_exam_essay': 'a_level_biology_exam_essay',
+
+            # Project assistant
+            'project_assistant_start': 'project_assistant_start',
+            'project_assistant_followup': 'project_assistant_followup',
+            'project_assistant_batch': 'project_assistant_batch',
+            'project_web_search': 'project_web_search',
+            'project_deep_research': 'project_deep_research',
+            'project_transcribe': 'project_transcribe',
+            'project_image_generation': 'project_image_generation',
+
+            # Virtual lab
+            'virtual_lab_knowledge_check': 'virtual_lab_knowledge_check',
+        }
     
     def award_registration_credits(self, user_id: str) -> bool:
         """Award registration bonus credits to new user"""

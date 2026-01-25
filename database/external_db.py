@@ -46,6 +46,7 @@ def create_users_registration_table():
             date_of_birth VARCHAR(10) NOT NULL,
             nerdx_id VARCHAR(10) UNIQUE NOT NULL,
             referred_by_nerdx_id VARCHAR(10),
+            whatsapp_number VARCHAR(255),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
@@ -53,6 +54,7 @@ def create_users_registration_table():
         CREATE INDEX IF NOT EXISTS idx_users_registration_chat_id ON users_registration(chat_id);
         CREATE INDEX IF NOT EXISTS idx_users_registration_nerdx_id ON users_registration(nerdx_id);
         CREATE INDEX IF NOT EXISTS idx_users_registration_referred_by ON users_registration(referred_by_nerdx_id);
+        CREATE INDEX IF NOT EXISTS idx_users_registration_whatsapp_number ON users_registration(whatsapp_number);
 
         -- Enable Row Level Security
         ALTER TABLE users_registration ENABLE ROW LEVEL SECURITY;
@@ -92,11 +94,13 @@ def create_users_registration_table():
             date_of_birth VARCHAR(10) NOT NULL,
             nerdx_id VARCHAR(10) UNIQUE NOT NULL,
             referred_by_nerdx_id VARCHAR(10),
+            whatsapp_number VARCHAR(255),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
         CREATE INDEX IF NOT EXISTS idx_users_registration_referred_by ON users_registration(referred_by_nerdx_id);
+        CREATE INDEX IF NOT EXISTS idx_users_registration_whatsapp_number ON users_registration(whatsapp_number);
 
         -- Enable Row Level Security
         ALTER TABLE users_registration ENABLE ROW LEVEL SECURITY;
@@ -1015,7 +1019,7 @@ def get_credit_breakdown(user_id: str) -> dict:
 
 def claim_welcome_bonus(user_id: str) -> dict:
     """
-    Award welcome bonus (75 credits) to a first-time user.
+    Award welcome bonus (150 credits) to a first-time user.
     Returns: {success: True/False, awarded: True/False, credits: amount}
     """
     try:
@@ -1025,23 +1029,31 @@ def claim_welcome_bonus(user_id: str) -> dict:
                                       filters={"chat_id": f"eq.{user_id}"})
         
         if not result or len(result) == 0:
-            logger.warning(f"User {user_id} not found for welcome bonus")
-            return {"success": False, "awarded": False, "message": "User not found"}
+            logger.error(f"❌ User {user_id} not found in users_registration table for welcome bonus")
+            logger.error(f"   This may indicate the user was not properly created in the database")
+            return {"success": False, "awarded": False, "message": "User not found in database"}
         
         user_data = result[0]
         already_claimed = user_data.get('welcome_bonus_claimed', False)
+        current_credits = user_data.get('credits', 0) or 0
         
-        if already_claimed:
-            logger.info(f"User {user_id} already claimed welcome bonus")
+        # Check if user already claimed but with old amount (less than new bonus)
+        if already_claimed and current_credits >= WELCOME_BONUS_CREDITS:
+            logger.info(f"User {user_id} already claimed welcome bonus with full amount")
             return {"success": True, "awarded": False, "message": "Already claimed"}
         
-        # Award welcome bonus
-        current_credits = user_data.get('credits', 0) or 0
-        if 0 < current_credits < WELCOME_BONUS_CREDITS:
+        # Upgrade existing users who claimed with old amount, or award to new users
+        if already_claimed and current_credits < WELCOME_BONUS_CREDITS:
+            # Upgrade from old bonus (75 credits) to new bonus (150 credits)
+            new_credits = WELCOME_BONUS_CREDITS
+            credits_change = WELCOME_BONUS_CREDITS - current_credits
+            logger.info(f"Upgrading welcome bonus for {user_id} from {current_credits} to {WELCOME_BONUS_CREDITS} units")
+        elif 0 < current_credits < WELCOME_BONUS_CREDITS:
             # Fix legacy credit values stored without unit conversion
             new_credits = WELCOME_BONUS_CREDITS
             credits_change = WELCOME_BONUS_CREDITS - current_credits
         else:
+            # Award full welcome bonus to new user
             new_credits = current_credits + WELCOME_BONUS_CREDITS
             credits_change = WELCOME_BONUS_CREDITS
         
@@ -1056,34 +1068,42 @@ def claim_welcome_bonus(user_id: str) -> dict:
         if update_result:
             # Sync to user_stats
             try:
-                make_supabase_request("PATCH", "user_stats", 
+                sync_result = make_supabase_request("PATCH", "user_stats", 
                                     {"credits": new_credits, "welcome_bonus_claimed": True}, 
                                     filters={"user_id": f"eq.{user_id}"}, use_service_role=True)
-            except Exception:
-                pass
+                if not sync_result:
+                    logger.warning(f"Failed to sync welcome bonus to user_stats for {user_id}")
+            except Exception as sync_error:
+                logger.error(f"Error syncing welcome bonus to user_stats for {user_id}: {sync_error}")
+                # Don't fail the whole operation, but log the error
             
             # Log transaction
             try:
+                is_upgrade = already_claimed and current_credits < WELCOME_BONUS_CREDITS
+                transaction_type = "welcome_bonus_upgrade" if is_upgrade else "welcome_bonus"
+                description = f"Welcome bonus upgrade: {format_credits(credits_change)} credits" if is_upgrade else f"Welcome bonus: {format_credits(credits_change)} credits"
+                
                 transaction = {
                     "user_id": user_id,
                     "action": "welcome_bonus",
-                    "transaction_type": "welcome_bonus",
+                    "transaction_type": transaction_type,
                     "credits_change": credits_change,
                     "balance_before": current_credits,
                     "balance_after": new_credits,
-                    "description": f"Welcome bonus: {format_credits(credits_change)} credits",
+                    "description": description,
                     "transaction_date": datetime.utcnow().isoformat()
                 }
                 make_supabase_request("POST", "credit_transactions", transaction, use_service_role=True)
             except Exception as e:
                 logger.warning(f"Failed to log welcome bonus transaction: {e}")
             
-            logger.info(f"✅ Awarded {WELCOME_BONUS_CREDITS} units welcome bonus to {user_id}")
+            action_msg = "Upgraded" if already_claimed else "Awarded"
+            logger.info(f"✅ {action_msg} {WELCOME_BONUS_CREDITS} units welcome bonus to {user_id}")
             return {
                 "success": True,
                 "awarded": True,
                 "credits": credits_change,
-                "message": f"You received {format_credits(credits_change)} welcome credits!"
+                "message": f"You received {format_credits(credits_change)} welcome credits!" if not already_claimed else f"Welcome bonus upgraded! You received {format_credits(credits_change)} additional credits!"
             }
         
         return {"success": False, "awarded": False, "message": "Failed to update credits"}
@@ -1173,11 +1193,25 @@ def check_nerdx_id_exists(nerdx_id):
         return False
 
 def get_user_registration(chat_id):
-    """Get user registration data - matches backup function exactly"""
+    """Get user registration data - checks chat_id, whatsapp_number, and email"""
     try:
+        # First try by chat_id (existing behavior)
         result = make_supabase_request("GET", "users_registration", filters={"chat_id": f"eq.{chat_id}"})
         if result and len(result) > 0:
             return result[0]
+        
+        # If not found, try by whatsapp_number (for linked accounts)
+        result = make_supabase_request("GET", "users_registration", filters={"whatsapp_number": f"eq.{chat_id}"}, use_service_role=True)
+        if result and len(result) > 0:
+            return result[0]
+        
+        # If not found, try by email (for mobile app users)
+        if '@' in str(chat_id):
+            email_lower = str(chat_id).strip().lower()
+            result = make_supabase_request("GET", "users_registration", filters={"email": f"eq.{email_lower}"}, use_service_role=True)
+            if result and len(result) > 0:
+                return result[0]
+        
         return None
     except Exception as e:
         logger.error(f"Error getting user registration: {e}")
@@ -1255,7 +1289,9 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
             'date_of_birth': formatted_date,
             'nerdx_id': nerdx_id,
             'referred_by_nerdx_id': referred_by_nerdx_id,
-            'registration_date': datetime.utcnow().isoformat()
+            'registration_date': datetime.utcnow().isoformat(),
+            'credits': 0,  # Explicitly set to 0 - welcome bonus will add 1500 units
+            'welcome_bonus_claimed': False  # Explicitly set to False - will be set to True by claim_welcome_bonus()
         }
 
         # Add optional auth fields if provided
@@ -1512,6 +1548,76 @@ def get_referral_stats(nerdx_id):
             'total_credits_earned': 0,
             'recent_referrals': []
         }
+
+def search_users_by_name(name, surname):
+    """Search users by exact name and surname match for account linking"""
+    try:
+        name_clean = name.strip().title() if name else ""
+        surname_clean = surname.strip().title() if surname else ""
+        
+        if not name_clean or not surname_clean:
+            return []
+        
+        # Search for users with matching name and surname
+        # Supabase REST API: multiple filter params are ANDed together
+        filters = {
+            "name": f"eq.{name_clean}",
+            "surname": f"eq.{surname_clean}"
+        }
+        
+        result = make_supabase_request("GET", "users_registration", filters=filters, use_service_role=True)
+        
+        if result and len(result) > 0:
+            logger.info(f"Found {len(result)} user(s) with name '{name_clean}' and surname '{surname_clean}'")
+            return result
+        else:
+            logger.info(f"No users found with name '{name_clean}' and surname '{surname_clean}'")
+            return []
+            
+    except Exception as e:
+        logger.error(f"Error searching users by name: {e}")
+        return []
+
+def link_whatsapp_to_account(user_id, whatsapp_number):
+    """Link WhatsApp number to existing mobile app account"""
+    try:
+        whatsapp_clean = whatsapp_number.strip() if whatsapp_number else None
+        
+        if not whatsapp_clean:
+            logger.error("Cannot link: WhatsApp number is empty")
+            return False
+        
+        # Check if this WhatsApp number is already linked to another account
+        existing = make_supabase_request("GET", "users_registration", 
+                                       filters={"whatsapp_number": f"eq.{whatsapp_clean}"}, 
+                                       use_service_role=True)
+        
+        if existing and len(existing) > 0:
+            existing_user_id = existing[0].get('id')
+            if existing_user_id != user_id:
+                logger.warning(f"WhatsApp number {whatsapp_clean} is already linked to another account")
+                return False
+        
+        # Update the user account with WhatsApp number
+        update_data = {
+            "whatsapp_number": whatsapp_clean,
+            "updated_at": datetime.utcnow().isoformat()
+        }
+        
+        result = make_supabase_request("PATCH", "users_registration", update_data,
+                                      filters={"id": f"eq.{user_id}"}, 
+                                      use_service_role=True)
+        
+        if result:
+            logger.info(f"Successfully linked WhatsApp number {whatsapp_clean} to user ID {user_id}")
+            return True
+        else:
+            logger.error(f"Failed to link WhatsApp number to user ID {user_id}")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Error linking WhatsApp to account: {e}")
+        return False
 
 def get_random_mcq_question(category=None):
     """Get a random MCQ question"""

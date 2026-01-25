@@ -567,9 +567,19 @@ Return ONLY valid JSON strictly using this structure (no markdown fences or comm
 
         return None
 
-    def generate_grammar_question(self, last_question_type: Optional[str] = None) -> Optional[Dict]:
-        """Retrieve grammar questions using DeepSeek AI first with Gemini fallback"""
-        # Primary: DeepSeek AI generation
+    def generate_grammar_question(self, last_question_type: Optional[str] = None, platform: str = 'mobile') -> Optional[Dict]:
+        """
+        Retrieve grammar questions using AI based on platform
+        
+        Args:
+            last_question_type: Last question type to avoid repetition
+            platform: 'whatsapp' for Vertex AI, 'mobile' for DeepSeek (default)
+        """
+        # WhatsApp bot: Use Vertex AI
+        if platform == 'whatsapp':
+            return self._generate_grammar_with_vertex_ai(last_question_type)
+        
+        # Mobile app: Use DeepSeek AI first with Gemini fallback (unchanged)
         deepseek_response = self.generate_deepseek_grammar_question(last_question_type=last_question_type)
         if deepseek_response and deepseek_response.get('success'):
             return deepseek_response
@@ -1141,12 +1151,14 @@ Return ONLY valid JSON (NO markdown formatting, NO additional text):
             
         return None
 
-    def generate_comprehension(self, theme: str = None, form_level: int = 4) -> Dict:
-        """Generate comprehension passage - tries DeepSeek first, then Gemini, then fallback
+    def generate_comprehension(self, theme: str = None, form_level: int = 4, platform: str = 'mobile') -> Dict:
+        """
+        Generate comprehension passage using AI based on platform
         
         Args:
             theme: Optional theme for the passage
             form_level: ZIMSEC form level (1-4), defaults to 4 for O-Level
+            platform: 'whatsapp' for Vertex AI, 'mobile' for DeepSeek (default)
             
         Returns:
             Dictionary with passage, title, and questions
@@ -1167,22 +1179,33 @@ Return ONLY valid JSON (NO markdown formatting, NO additional text):
             ]
             theme = random.choice(themes)
         
-        # Try DeepSeek first
-        if self.deepseek_api_key:
-            try:
-                deepseek_result = self._generate_deepseek_comprehension(theme, form_level)
-                if deepseek_result:
-                    logger.info("Generated comprehension using DeepSeek AI")
-                    return deepseek_result
-            except Exception as e:
-                logger.warning(f"DeepSeek comprehension generation failed: {e}")
+        # WhatsApp bot: Use Vertex AI
+        if platform == 'whatsapp':
+            result = self._generate_comprehension_with_vertex_ai(theme, form_level)
+            if result:
+                logger.info("Generated comprehension using Vertex AI for WhatsApp")
+                return result
+            # Fallback to DeepSeek if Vertex AI fails
+            logger.info("Vertex AI failed, falling back to DeepSeek for WhatsApp")
+            platform = 'mobile'
         
-        # Try Gemini as fallback
-        gemini_result = self.generate_gemini_comprehension_passage(theme, form_level)
-        if gemini_result:
-            logger.info("Generated comprehension using Gemini AI")
-            return gemini_result
+        # Mobile app: Try DeepSeek first, then Gemini, then fallback (unchanged)
+        if platform == 'mobile':
+            if self.deepseek_api_key:
+                try:
+                    deepseek_result = self._generate_deepseek_comprehension(theme, form_level)
+                    if deepseek_result:
+                        logger.info("Generated comprehension using DeepSeek AI")
+                        return deepseek_result
+                except Exception as e:
+                    logger.warning(f"DeepSeek comprehension generation failed: {e}")
             
+            # Try Gemini as fallback
+            gemini_result = self.generate_gemini_comprehension_passage(theme, form_level)
+            if gemini_result:
+                logger.info("Generated comprehension using Gemini AI")
+                return gemini_result
+        
         # Final fallback
         logger.info("Using fallback comprehension passage")
         return self._get_fallback_comprehension()

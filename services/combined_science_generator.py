@@ -21,10 +21,18 @@ class CombinedScienceGenerator:
         self.api_url = 'https://api.deepseek.com/chat/completions'
         self.deepseek_model = get_deepseek_chat_model()
         
-        # O-Level appropriate settings
-        self.max_retries = 2
-        self.timeouts = [25, 40]  # Reasonable timeouts for O-Level questions
+        # O-Level appropriate settings - optimized for reliability
+        self.max_retries = 4  # Increased from 2 to 4 for better reliability
+        self.timeouts = [30, 45, 60, 75]  # Progressive timeouts with more generous limits
         self.retry_delay = 2
+        self.connect_timeout = 10  # Connection timeout
+        
+        # Create a session for connection pooling and reuse
+        self.session = requests.Session()
+        self.session.headers.update({
+            'Content-Type': 'application/json',
+            'User-Agent': 'NerdX-Education/1.0'
+        })
         
         # ZIMSEC O-Level learning objectives per topic
         self.learning_objectives = {
@@ -515,18 +523,23 @@ class CombinedScienceGenerator:
             }
         }
     
-    def generate_topical_question(self, subject: str, topic: str, difficulty: str = 'medium', user_id: str = None) -> Optional[Dict]:
-        """Generate O-Level appropriate topical question with professional explanation"""
+    def generate_topical_question(self, subject: str, topic: str, difficulty: str = 'medium', user_id: str = None, platform: str = 'mobile') -> Optional[Dict]:
+        """
+        Generate O-Level appropriate topical question with professional explanation
+        
+        Args:
+            subject: Science subject (Biology, Chemistry, Physics)
+            topic: Topic name
+            difficulty: Difficulty level (easy, medium, difficult)
+            user_id: User ID for tracking
+            platform: 'whatsapp' for Vertex AI, 'mobile' for DeepSeek (default)
+        """
         try:
-            if not self.api_key:
-                logger.error("DeepSeek API key not configured")
-                return self._get_fallback_question(subject, topic, difficulty, user_id)
-            
             # Create O-Level appropriate prompt
             prompt = self._create_olevel_prompt(subject, topic, difficulty)
             
-            # Generate question using DeepSeek
-            result = self._call_deepseek_api(prompt, f"{subject}_{topic}_{difficulty}")
+            # Generate question using AI based on platform
+            result = self._generate_with_ai(prompt, f"{subject}_{topic}_{difficulty}", platform)
             
             if result:
                 # Validate and enhance the result
@@ -539,7 +552,7 @@ class CombinedScienceGenerator:
             logger.error(f"Error generating {subject} question for {topic}: {e}")
             return self._get_fallback_question(subject, topic, difficulty, user_id)
 
-    def generate_structured_question(self, subject: str, topic: str, difficulty: str = 'medium', user_id: str = None) -> Optional[Dict]:
+    def generate_structured_question(self, subject: str, topic: str, difficulty: str = 'medium', user_id: str = None, platform: str = 'mobile') -> Optional[Dict]:
         """
         Generate a ZIMSEC-style O-Level *Structured* question (not MCQ).
 
@@ -548,29 +561,37 @@ class CombinedScienceGenerator:
         - stem/context
         - parts with labels and marks
         - an internal marking rubric (used for AI evaluation)
+        
+        Args:
+            subject: Science subject (Biology, Chemistry, Physics)
+            topic: Topic name
+            difficulty: Difficulty level (easy, medium, difficult)
+            user_id: User ID for tracking
+            platform: 'whatsapp' for Vertex AI, 'mobile' for DeepSeek (default)
         """
         try:
-            if not self.api_key:
-                logger.error("DeepSeek API key not configured (structured)")
-                return self._get_fallback_structured_question(subject, topic, difficulty, user_id)
-
             prompt = self._create_olevel_structured_prompt(subject, topic, difficulty)
-            result = self._call_deepseek_api(prompt, f"{subject}_{topic}_{difficulty}_structured")
+            result = self._generate_with_ai(prompt, f"{subject}_{topic}_{difficulty}_structured", platform)
 
             if result:
                 return self._validate_and_enhance_structured_question(result, subject, topic, difficulty, user_id)
 
-            logger.warning(f"DeepSeek structured generation failed for {subject}/{topic}, using fallback")
+            logger.warning(f"AI structured generation failed for {subject}/{topic}, using fallback")
             return self._get_fallback_structured_question(subject, topic, difficulty, user_id)
 
         except Exception as e:
             logger.error(f"Error generating structured {subject} question for {topic}: {e}")
             return self._get_fallback_structured_question(subject, topic, difficulty, user_id)
 
-    def evaluate_structured_answer(self, structured_question: Dict[str, Any], student_answer: str) -> Dict[str, Any]:
+    def evaluate_structured_answer(self, structured_question: Dict[str, Any], student_answer: str, platform: str = 'mobile') -> Dict[str, Any]:
         """
-        Evaluate a student's answer to a structured question using DeepSeek (preferred),
+        Evaluate a student's answer to a structured question using AI based on platform,
         falling back to a heuristic rubric matcher if needed.
+        
+        Args:
+            structured_question: The structured question dict
+            student_answer: The student's answer text
+            platform: 'whatsapp' for Vertex AI, 'mobile' for DeepSeek (default)
         """
         try:
             if not structured_question or structured_question.get('question_type') != 'structured':
@@ -586,12 +607,8 @@ class CombinedScienceGenerator:
             total_marks = int(structured_question.get('total_marks') or 0)
             rubric = structured_question.get('marking_rubric') or structured_question.get('rubric') or {}
 
-            if not self.api_key:
-                logger.warning("DeepSeek API key not configured (structured evaluation) - using fallback evaluator")
-                return self._fallback_evaluate_structured_answer(structured_question, student_answer)
-
             prompt = self._create_structured_evaluation_prompt(structured_question, rubric, student_answer)
-            result = self._call_deepseek_api(prompt, "structured_evaluation")
+            result = self._generate_with_ai(prompt, "structured_evaluation", platform)
 
             if isinstance(result, dict) and result.get('success') is True:
                 # Ensure core fields exist
@@ -603,8 +620,8 @@ class CombinedScienceGenerator:
                         result['percentage'] = 0.0
                 return result
 
-            # If DeepSeek returned something unexpected, fallback.
-            logger.warning("DeepSeek structured evaluation returned invalid result - using fallback")
+            # If AI returned something unexpected, fallback.
+            logger.warning("AI structured evaluation returned invalid result - using fallback")
             return self._fallback_evaluate_structured_answer(structured_question, student_answer)
 
         except Exception as e:
@@ -1269,15 +1286,91 @@ Generate a high-quality, professional exam-style {question_style.replace('_', ' 
 
         return prompt
 
+    def _generate_with_ai(self, prompt: str, generation_type: str, platform: str = 'mobile') -> Optional[Dict]:
+        """
+        Generate content using AI based on platform
+        
+        Args:
+            prompt: The prompt for generation
+            generation_type: Type of generation (for logging)
+            platform: 'whatsapp' for Vertex AI, 'mobile' for DeepSeek (default)
+        
+        Returns:
+            Dict with generated content or None
+        """
+        # WhatsApp bot: Use Vertex AI
+        if platform == 'whatsapp':
+            from services.vertex_service import vertex_service
+            
+            if vertex_service.is_available():
+                logger.info(f"Using Vertex AI for WhatsApp bot: {generation_type}")
+                
+                # Create system message for Vertex AI
+                system_message = "You are a professional O-Level science tutor with 10+ years experience teaching ZIMSEC Combined Science to Zimbabwean teenagers. You create engaging, age-appropriate questions that help students understand concepts clearly. Your explanations are simple, encouraging, and educational."
+                
+                # Combine system and user messages for Vertex AI
+                full_prompt = f"{system_message}\n\n{prompt}"
+                
+                result = vertex_service.generate_text(prompt=full_prompt, model="gemini-2.5-flash")
+                
+                if result and result.get('success'):
+                    text = result['text']
+                    logger.info(f"Raw Vertex AI response for {generation_type}: {text[:200]}...")
+                    
+                    # Extract JSON from response (same logic as DeepSeek)
+                    json_start = text.find('{')
+                    json_end = text.rfind('}') + 1
+                    
+                    if json_start >= 0 and json_end > json_start:
+                        json_str = text[json_start:json_end]
+                        try:
+                            question_data = json.loads(json_str)
+                            logger.info(f"✅ Successfully generated {generation_type} with Vertex AI")
+                            return question_data
+                        except json.JSONDecodeError as e:
+                            logger.error(f"JSON parsing failed from Vertex AI for {generation_type}: {e}. Raw JSON: {json_str[:200]}...")
+                    else:
+                        logger.error(f"No valid JSON found in Vertex AI response for {generation_type}. Content: {text[:500]}...")
+                
+                # Fallback to DeepSeek if Vertex AI unavailable or failed
+                logger.info(f"Falling back to DeepSeek for {generation_type}")
+                return self._call_deepseek_api(prompt, generation_type)
+            else:
+                # Vertex AI not available, fallback to DeepSeek
+                logger.info(f"Vertex AI not available, falling back to DeepSeek for {generation_type}")
+                return self._call_deepseek_api(prompt, generation_type)
+        
+        # Mobile app: Always use DeepSeek (unchanged)
+        else:
+            return self._call_deepseek_api(prompt, generation_type)
     
     def _call_deepseek_api(self, prompt: str, generation_type: str) -> Optional[Dict]:
-        """Call DeepSeek API with O-Level appropriate settings"""
+        """Call DeepSeek API with O-Level appropriate settings (used by mobile app and as fallback)
+        Falls back to Vertex AI if DeepSeek fails
         
+        Enhanced with:
+        - Connection pooling via session reuse
+        - Progressive timeouts
+        - Exponential backoff with jitter
+        - Better rate limit handling
+        - Pre-flight validation
+        """
+        
+        # Pre-flight validation
+        if not self.api_key:
+            logger.error("DeepSeek API key not configured")
+            return None
+        
+        if not prompt or len(prompt.strip()) == 0:
+            logger.error("Empty prompt provided to DeepSeek API")
+            return None
+        
+        # Prepare headers with auth
         headers = {
-            'Content-Type': 'application/json',
             'Authorization': f'Bearer {self.api_key}'
         }
         
+        # Prepare request data
         data = {
             "model": self.deepseek_model,
             "messages": [
@@ -1295,17 +1388,26 @@ Generate a high-quality, professional exam-style {question_style.replace('_', ' 
             "max_tokens": 1500   # Sufficient for O-Level questions and explanations
         }
         
+        # Retry with progressive timeouts and exponential backoff
         for attempt in range(self.max_retries):
             timeout = self.timeouts[min(attempt, len(self.timeouts) - 1)]
+            
+            # Exponential backoff with jitter (adds randomness to prevent thundering herd)
+            if attempt > 0:
+                import random
+                backoff_delay = self.retry_delay * (2 ** (attempt - 1)) + random.uniform(0, 1)
+                logger.info(f"Waiting {backoff_delay:.2f}s before retry {attempt + 1}/{self.max_retries}")
+                time.sleep(backoff_delay)
             
             try:
                 logger.info(f"DeepSeek O-Level {generation_type} attempt {attempt + 1}/{self.max_retries} (timeout: {timeout}s)")
                 
-                response = requests.post(
+                # Use session for connection pooling and reuse
+                response = self.session.post(
                     self.api_url,
                     headers=headers,
                     json=data,
-                    timeout=timeout
+                    timeout=(self.connect_timeout, timeout)  # (connect, read) timeout tuple
                 )
                 
                 if response.status_code == 200:
@@ -1334,10 +1436,21 @@ Generate a high-quality, professional exam-style {question_style.replace('_', ' 
                         if attempt < self.max_retries - 1:
                             time.sleep(self.retry_delay)
                             continue
-                else:
-                    logger.error(f"DeepSeek API error: {response.status_code} - {response.text}")
+                elif response.status_code == 429:
+                    # Rate limit - wait longer before retry
+                    retry_after = int(response.headers.get('Retry-After', 10))
+                    logger.warning(f"DeepSeek rate limit hit (429), waiting {retry_after}s before retry")
                     if attempt < self.max_retries - 1:
-                        time.sleep(self.retry_delay)
+                        time.sleep(retry_after)
+                        continue
+                elif response.status_code == 503:
+                    # Service unavailable - wait and retry
+                    logger.warning(f"DeepSeek service unavailable (503), will retry")
+                    if attempt < self.max_retries - 1:
+                        continue
+                else:
+                    logger.error(f"DeepSeek API error: {response.status_code} - {response.text[:200]}")
+                    if attempt < self.max_retries - 1:
                         continue
                         
             except requests.exceptions.Timeout:
@@ -1352,7 +1465,45 @@ Generate a high-quality, professional exam-style {question_style.replace('_', ' 
                     time.sleep(self.retry_delay)
                     continue
         
-        logger.error(f"Failed to generate {generation_type} after {self.max_retries} attempts")
+        logger.error(f"Failed to generate {generation_type} after {self.max_retries} attempts, trying Vertex AI fallback")
+        
+        # FALLBACK: Try Vertex AI if DeepSeek fails
+        try:
+            from services.vertex_service import vertex_service
+            
+            if vertex_service.is_available():
+                logger.info(f"🔄 Falling back to Vertex AI for {generation_type} after DeepSeek failure")
+                
+                system_message = "You are a professional O-Level science tutor with 10+ years experience teaching ZIMSEC Combined Science to Zimbabwean teenagers. You create engaging, age-appropriate questions that help students understand concepts clearly. Your explanations are simple, encouraging, and educational."
+                full_prompt = f"{system_message}\n\n{prompt}"
+                
+                result = vertex_service.generate_text(prompt=full_prompt, model="gemini-2.5-flash")
+                
+                if result and result.get('success'):
+                    text = result['text']
+                    logger.info(f"Raw Vertex AI response for {generation_type}: {text[:200]}...")
+                    
+                    # Extract JSON from response
+                    json_start = text.find('{')
+                    json_end = text.rfind('}') + 1
+                    
+                    if json_start >= 0 and json_end > json_start:
+                        json_str = text[json_start:json_end]
+                        try:
+                            question_data = json.loads(json_str)
+                            logger.info(f"✅ Successfully generated {generation_type} with Vertex AI fallback")
+                            return question_data
+                        except json.JSONDecodeError as e:
+                            logger.error(f"JSON parsing failed from Vertex AI for {generation_type}: {e}")
+                    else:
+                        logger.error(f"No valid JSON found in Vertex AI response for {generation_type}")
+                else:
+                    logger.warning(f"Vertex AI fallback also failed for {generation_type}")
+            else:
+                logger.warning(f"Vertex AI not available for fallback after DeepSeek failure")
+        except Exception as e:
+            logger.error(f"Error in Vertex AI fallback: {e}")
+        
         return None
     
     def _validate_and_enhance_question(self, question_data: Dict, subject: str, topic: str, difficulty: str, user_id: str = None) -> Dict:

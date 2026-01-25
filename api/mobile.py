@@ -147,21 +147,22 @@ def _get_exam_session_cost_units(
     is_a_level = level_key == 'A_LEVEL' or 'a_level' in subject_key
 
     if is_a_level and 'biology' in subject_key:
-        mcq_cost = 3
-        structured_cost = 5
+        mcq_cost = 3  # 0.25 credit
+        structured_cost = 5  # 0.5 credit
     elif is_a_level:
-        mcq_cost = 5
-        structured_cost = 5
+        mcq_cost = 5  # 0.5 credit
+        structured_cost = 5  # 0.5 credit
     else:
         if 'math' in subject_key:
-            mcq_cost = 5
-            structured_cost = 5
+            mcq_cost = 5  # 0.5 credit
+            structured_cost = 5  # 0.5 credit
         elif any(key in subject_key for key in ['biology', 'chemistry', 'physics', 'combined_science']):
-            mcq_cost = 5
-            structured_cost = 5
+            mcq_cost = 5  # 0.5 credit
+            structured_cost = 5  # 0.5 credit
         else:
-            mcq_cost = 10
-            structured_cost = 10
+            # English and other subjects
+            mcq_cost = 5  # 0.5 credit
+            structured_cost = 5  # 0.5 credit
 
     if question_mode == 'MCQ_ONLY':
         return mcq_cost * total_questions
@@ -181,14 +182,15 @@ def _get_exam_question_cost_units(subject: str, level: str, question_type: str) 
     q_type = (question_type or 'MCQ').upper()
 
     if is_a_level and 'biology' in subject_key:
-        return 3 if q_type == 'MCQ' else 5
+        return 3 if q_type == 'MCQ' else 5  # 0.25 credit for MCQ, 0.5 credit for structured/essay
     if is_a_level:
-        return 5
+        return 5  # 0.5 credit
     if 'math' in subject_key:
-        return 5
+        return 5  # 0.5 credit
     if any(key in subject_key for key in ['biology', 'chemistry', 'physics', 'combined_science']):
-        return 5
-    return 10
+        return 5  # 0.5 credit
+    # English and other subjects
+    return 5  # 0.5 credit
 
 # JWT Secret Key (should be in environment variable)
 JWT_SECRET = os.environ.get('JWT_SECRET', 'nerdx-mobile-secret-key-change-in-production')
@@ -739,6 +741,25 @@ def register():
                 logger.error(f"Failed to retrieve user data for {user_identifier} after registration")
                 return jsonify({'success': False, 'message': 'Post-registration data retrieval failed'}), 500
 
+            # CREDIT SYSTEM CHECKS
+            # 1. Claim welcome bonus (one-time 150 credits)
+            welcome_result = claim_welcome_bonus(user_identifier)
+            
+            # 2. Get latest credit breakdown
+            credit_info = get_credit_breakdown(user_identifier)
+            credit_info_display = {
+                **credit_info,
+                "total": _credits_display(credit_info.get("total", 0)),
+                "free_credits": _credits_display(credit_info.get("free_credits", 0)),
+                "purchased_credits": _credits_display(credit_info.get("purchased_credits", 0)),
+            }
+            
+            # Prepare notifications
+            notifications = {
+                "welcome_bonus": welcome_result.get("awarded", False),
+                "welcome_message": welcome_result.get("message")
+            }
+
             return jsonify({
                 'success': True,
                 'token': token,
@@ -749,8 +770,10 @@ def register():
                     'surname': surname,
                     'email': email,
                     'phone_number': phone_number,
-                    'credits': _credits_display(Config.REGISTRATION_BONUS),
+                    'credits': credit_info_display.get("total", "0.0"),
+                    'credit_breakdown': credit_info_display,
                 },
+                'notifications': notifications,
                 'message': 'Registration successful'
             }), 201
             

@@ -15,6 +15,9 @@ import uuid
 
 logger = logging.getLogger(__name__)
 
+# Debug log path - works on both local Windows and Render Linux
+DEBUG_LOG_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.cursor', 'debug.log')
+
 class PaynowService:
     """
     Complete Paynow integration service for USD EcoCash payments

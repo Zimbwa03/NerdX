@@ -49,12 +49,12 @@ class MessageThrottle:
         # Maximum time a lock can be held (in seconds)
         self.max_lock_duration = 30.0  # 30 seconds max lock time
         
-    def can_send_message(self, user_id: str) -> bool:
-        """Check if we can send a message to this user"""
+    def can_send_message(self, user_id: str, ignore_lock: bool = False) -> bool:
+        """Check if we can send a message to this user."""
         current_time = time.time()
         
         # Check if user is locked (message in progress)
-        if self.user_locks[user_id]:
+        if self.user_locks[user_id] and not ignore_lock:
             logger.warning(f"Message blocked for {user_id} - concurrent send detected")
             return False
         

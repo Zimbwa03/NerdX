@@ -357,8 +357,10 @@ class UserService:
                 message += f"📅 **Date of Birth**: {session['date_of_birth']}\n"
                 message += f"📱 **WhatsApp**: {whatsapp_id}\n\n"
                 message += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-                message += "💎 **Welcome Bonus**: +75 Credits\n"
+                from config import Config
                 from utils.credit_units import format_credits
+                welcome_bonus_display = format_credits(Config.REGISTRATION_BONUS)
+                message += f"💎 **Welcome Bonus**: +{welcome_bonus_display} Credits\n"
                 message += f"💳 **Total Credits**: {format_credits(final_credits)} credits\n\n"
 
                 if referral_code:
@@ -484,6 +486,91 @@ class UserService:
             'next_threshold': None,
             'progress_percent': 100.0
         }
+
+    def link_mobile_account(self, whatsapp_id: str, name: str, surname: str, email: Optional[str] = None) -> Dict:
+        """Link WhatsApp account to existing mobile app account by name and surname"""
+        try:
+            from database.external_db import search_users_by_name, link_whatsapp_to_account, get_user_registration
+            
+            # Search for users with matching name and surname
+            matching_users = search_users_by_name(name, surname)
+            
+            if not matching_users or len(matching_users) == 0:
+                return {
+                    'success': False,
+                    'message': f'No account found with name "{name} {surname}".\n\nIf you haven\'t registered on the mobile app yet, you can:\n• Type *REGISTER* to create a new WhatsApp account\n• Or download the NerdX mobile app first and then link your account here.'
+                }
+            
+            # If multiple matches, require email verification
+            if len(matching_users) > 1:
+                if not email:
+                    return {
+                        'success': False,
+                        'requires_email': True,
+                        'message': f'Multiple accounts found with name "{name} {surname}".\n\nPlease enter your email address to verify your account:',
+                        'matching_count': len(matching_users)
+                    }
+                else:
+                    # Verify email matches one of the users
+                    email_lower = email.strip().lower()
+                    matched_user = None
+                    for user in matching_users:
+                        if user.get('email', '').lower() == email_lower:
+                            matched_user = user
+                            break
+                    
+                    if not matched_user:
+                        return {
+                            'success': False,
+                            'message': f'Email does not match any account with name "{name} {surname}".\n\nPlease check your email and try again, or type *REGISTER* to create a new account.'
+                        }
+                    
+                    # Link the matched account
+                    matched_user_id = matched_user.get('id')
+                    if link_whatsapp_to_account(matched_user_id, whatsapp_id):
+                        return {
+                            'success': True,
+                            'message': f'✅ *Account Linked Successfully!*\n\nYour WhatsApp account is now linked to your mobile app account.\n\n🆔 *NerdX ID*: {matched_user.get("nerdx_id", "N/A")}\n📧 *Email*: {email}\n\nYou can now use all NerdX features on WhatsApp! Type *MENU* to get started.',
+                            'user_data': matched_user
+                        }
+                    else:
+                        return {
+                            'success': False,
+                            'message': 'Failed to link account. Please try again or contact support.'
+                        }
+            
+            # Single match - link directly
+            matched_user = matching_users[0]
+            matched_user_id = matched_user.get('id')
+            
+            # Check if this WhatsApp number is already linked to a different account
+            existing_user = get_user_registration(whatsapp_id)
+            if existing_user and existing_user.get('id') != matched_user_id:
+                return {
+                    'success': False,
+                    'message': 'This WhatsApp number is already linked to another account. Please contact support if you need to change this.'
+                }
+            
+            # Link the account
+            if link_whatsapp_to_account(matched_user_id, whatsapp_id):
+                user_email = matched_user.get('email', 'Not provided')
+                return {
+                    'success': True,
+                    'message': f'✅ *Account Linked Successfully!*\n\nYour WhatsApp account is now linked to your mobile app account.\n\n🆔 *NerdX ID*: {matched_user.get("nerdx_id", "N/A")}\n📧 *Email*: {user_email}\n\nYou can now use all NerdX features on WhatsApp! Type *MENU* to get started.',
+                    'user_data': matched_user
+                }
+            else:
+                return {
+                    'success': False,
+                    'message': 'Failed to link account. Please try again or contact support.'
+                }
+                
+        except Exception as e:
+            logger.error(f"Error linking mobile account: {e}")
+            return {
+                'success': False,
+                'message': 'An error occurred while linking your account. Please try again later.'
+            }
 
     def update_user_activity(self, whatsapp_id: str, activity_type: str, metadata: Optional[Dict] = None):
         """Update user activity and maintain streak"""

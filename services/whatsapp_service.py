@@ -42,7 +42,7 @@ class WhatsAppService:
         # Quality monitoring
         self.quality_monitor = quality_monitor
 
-    def _format_options_message(self, message: str, options: List[str], prompt: str) -> str:
+    def _format_options_message(self, message: str, options: List[str], prompt: str, start_index: int = 1) -> str:
         """Format a clean, professional menu message for text-only WhatsApp."""
         base = (message or "").strip()
         lines = []
@@ -54,7 +54,7 @@ class WhatsAppService:
                 lines.append("")
             lines.append("*Options*")
             lines.append("------------------------------")
-            for i, option_text in enumerate(options, 1):
+            for i, option_text in enumerate(options, start_index):
                 lines.append(f"{i}. {option_text}")
             lines.append("------------------------------")
 
@@ -247,14 +247,14 @@ class WhatsAppService:
                     logger.info(f"Allowing critical user response to {to} despite quality throttling")
             
             # CRITICAL: Check throttle to prevent message chains (but allow critical messages)
-            if not message_throttle.can_send_message(to):
+            if not message_throttle.can_send_message(to, ignore_lock=assume_lock):
                 if not is_critical:
                     delay = message_throttle.throttle_delay(to)
                     if delay > 0:
                         logger.info(f"Throttling message to {to}, waiting {delay:.2f}s")
                         time.sleep(delay)
                         # Recheck after delay
-                        if not message_throttle.can_send_message(to):
+                        if not message_throttle.can_send_message(to, ignore_lock=assume_lock):
                             logger.warning(f"Message to {to} blocked by throttle - too many messages")
                             return False
                 else:
@@ -540,12 +540,17 @@ class WhatsAppService:
             
             try:
                 # First send message with first 3 buttons
+                start_index = 1
                 first_group = buttons[:3]
-                if not self.send_single_button_group(to, message, first_group):
+                if not self.send_single_button_group(
+                    to,
+                    message,
+                    first_group,
+                    start_index=start_index,
+                    store_menu=False
+                ):
                     return False
-                
-                # Record the message
-                message_throttle.record_message_sent(to)
+                start_index += len(first_group)
                 
                 # Send remaining buttons in groups of 3 with PROPER DELAYS
                 remaining_buttons = buttons[3:]
@@ -557,16 +562,21 @@ class WhatsAppService:
                     time.sleep(message_throttle.min_delay_between_messages)
                     
                     # Check throttle before sending next group
-                    if not message_throttle.can_send_message(to):
+                    if not message_throttle.can_send_message(to, ignore_lock=True):
                         logger.warning(f"Stopping grouped buttons - rate limit reached for {to}")
                         break
                     
                     # Send continuation message with current group
                     continuation_message = "📋 *More Options:*"
-                    if not self.send_single_button_group(to, continuation_message, current_group):
+                    if not self.send_single_button_group(
+                        to,
+                        continuation_message,
+                        current_group,
+                        start_index=start_index,
+                        store_menu=False
+                    ):
                         return False
-                    
-                    message_throttle.record_message_sent(to)
+                    start_index += len(current_group)
                 
                 logger.info(f"Grouped buttons sent successfully to {to}")
                 return True
@@ -578,8 +588,15 @@ class WhatsAppService:
             logger.error(f"Error sending grouped buttons: {e}")
             return False
 
-    def send_single_button_group(self, to: str, message: str, buttons: List[Dict]) -> bool:
-        """Send a single group of buttons as text options (Twilio doesn't support interactive buttons)"""
+    def send_single_button_group(
+        self,
+        to: str,
+        message: str,
+        buttons: List[Dict],
+        start_index: int = 1,
+        store_menu: bool = True
+    ) -> bool:
+        """Send a single group of buttons as text options (Twilio doesn't support interactive buttons)."""
         try:
             # Normalize formatting for WhatsApp menus
             message = self._normalize_whatsapp_formatting(message)
@@ -590,7 +607,8 @@ class WhatsAppService:
                 return False
             
             # Store menu options for text-based selection routing
-            menu_router.store_menu(to, buttons, source="button_group")
+            if store_menu:
+                menu_router.store_menu(to, buttons, source="button_group")
 
             # Convert buttons to a professional text menu
             option_texts = []
@@ -601,7 +619,8 @@ class WhatsAppService:
             full_message = self._format_options_message(
                 message,
                 option_texts,
-                "Reply with the option number or name."
+                "Reply with the option number or name.",
+                start_index=start_index
             )
 
             # Send as regular text message via Twilio

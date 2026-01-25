@@ -21,6 +21,17 @@ class ComputerScienceGenerator:
         self.api_key = os.environ.get('DEEPSEEK_API_KEY')
         self.api_url = "https://api.deepseek.com/v1/chat/completions"
         self.model = get_deepseek_chat_model()
+        self.max_retries = 4  # Increased retries for better reliability
+        self.timeouts = [30, 45, 60, 75]  # Progressive timeouts
+        self.retry_delay = 2
+        self.connect_timeout = 10  # Connection timeout
+        
+        # Create a session for connection pooling and reuse
+        self.session = requests.Session()
+        self.session.headers.update({
+            'Content-Type': 'application/json',
+            'User-Agent': 'NerdX-Education/1.0'
+        })
         
         # Computer Science Topics with Subtopics (ZIMSEC & Cambridge O-Level 2210)
         self.topics = {
@@ -464,65 +475,158 @@ Difficulty: {difficulty}
 Generate an essay question now:"""
 
     def _call_deepseek_api(self, prompt: str, generation_type: str) -> Optional[Dict]:
-        """Call DeepSeek API with appropriate settings"""
+        """Call DeepSeek API with appropriate settings and retries"""
         if not self.api_key:
             logger.error("DeepSeek API key not configured")
             return None
         
-        try:
-            headers = {
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json"
-            }
-            
-            payload = {
-                "model": self.model,
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": "You are an expert O-Level Computer Science examiner. Generate educational questions in valid JSON format only."
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
-                "temperature": 0.7,
-                "max_tokens": 2000
-            }
-            
-            response = requests.post(
-                self.api_url,
-                headers=headers,
-                json=payload,
-                timeout=30
-            )
-            
-            if response.status_code == 200:
-                result = response.json()
-                content = result.get('choices', [{}])[0].get('message', {}).get('content', '')
-                
-                # Parse JSON from response
-                try:
-                    # Try to extract JSON from the response
-                    if '```json' in content:
-                        json_str = content.split('```json')[1].split('```')[0].strip()
-                    elif '```' in content:
-                        json_str = content.split('```')[1].split('```')[0].strip()
-                    else:
-                        json_str = content.strip()
-                    
-                    return json.loads(json_str)
-                except json.JSONDecodeError as e:
-                    logger.error(f"Failed to parse JSON response: {e}")
-                    return None
-            else:
-                logger.error(f"DeepSeek API error: {response.status_code}")
-                return None
-                
-        except Exception as e:
-            logger.error(f"Error calling DeepSeek API: {e}")
+        # Pre-flight validation
+        if not prompt or len(prompt.strip()) == 0:
+            logger.error("Empty prompt provided to DeepSeek API")
             return None
+        
+        headers = {
+            "Authorization": f"Bearer {self.api_key}"
+        }
+        
+        payload = {
+            "model": self.model,
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You are an expert O-Level Computer Science examiner. Generate educational questions in valid JSON format only."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            "temperature": 0.7,
+            "max_tokens": 2000
+        }
+        
+        # Retry with progressive timeouts
+        for attempt in range(self.max_retries):
+            timeout = self.timeouts[min(attempt, len(self.timeouts) - 1)]
+            
+            # Exponential backoff with jitter
+            if attempt > 0:
+                import random
+                backoff_delay = self.retry_delay * (2 ** (attempt - 1)) + random.uniform(0, 1)
+                logger.info(f"Waiting {backoff_delay:.2f}s before retry {attempt + 1}/{self.max_retries}")
+                time.sleep(backoff_delay)
+            
+            try:
+                logger.info(f"DeepSeek CS {generation_type} attempt {attempt + 1}/{self.max_retries} (timeout: {timeout}s)")
+                
+                # Use session for connection pooling
+                self.session.headers.update(headers)
+                response = self.session.post(
+                    self.api_url,
+                    json=payload,
+                    timeout=(self.connect_timeout, timeout)
+                )
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    content = result.get('choices', [{}])[0].get('message', {}).get('content', '')
+                    
+                    # Parse JSON from response
+                    try:
+                        # Try to extract JSON from the response
+                        if '```json' in content:
+                            json_str = content.split('```json')[1].split('```')[0].strip()
+                        elif '```' in content:
+                            json_str = content.split('```')[1].split('```')[0].strip()
+                        else:
+                            json_str = content.strip()
+                        
+                        logger.info(f"✅ Successfully generated CS {generation_type} on attempt {attempt + 1}")
+                        return json.loads(json_str)
+                    except json.JSONDecodeError as e:
+                        logger.error(f"Failed to parse JSON response: {e}")
+                        if attempt < self.max_retries - 1:
+                            continue
+                        break
+                        
+                elif response.status_code == 429:
+                    # Rate limit
+                    retry_after = int(response.headers.get('Retry-After', 10))
+                    logger.warning(f"DeepSeek rate limit hit (429), waiting {retry_after}s")
+                    if attempt < self.max_retries - 1:
+                        time.sleep(retry_after)
+                        continue
+                elif response.status_code == 503:
+                    # Service unavailable
+                    logger.warning(f"DeepSeek service unavailable (503)")
+                    if attempt < self.max_retries - 1:
+                        continue
+                else:
+                    logger.error(f"DeepSeek API error: {response.status_code}")
+                    if attempt < self.max_retries - 1:
+                        continue
+                        
+            except requests.exceptions.Timeout:
+                logger.warning(f"DeepSeek timeout on attempt {attempt + 1}/{self.max_retries}")
+                if attempt < self.max_retries - 1:
+                    continue
+            except requests.exceptions.ConnectionError as e:
+                logger.error(f"DeepSeek connection error on attempt {attempt + 1}: {e}")
+                if attempt < self.max_retries - 1:
+                    import random
+                    wait_time = min(2 ** attempt, 5) + random.uniform(0, 1)
+                    time.sleep(wait_time)
+                    continue
+            except Exception as e:
+                logger.error(f"Error calling DeepSeek API on attempt {attempt + 1}: {e}")
+                if attempt < self.max_retries - 1:
+                    continue
+        
+        # FALLBACK: Try Vertex AI when DeepSeek fails
+        logger.error(f"DeepSeek failed for {generation_type}, trying Vertex AI fallback")
+        try:
+            from services.vertex_service import vertex_service
+            
+            if vertex_service.is_available():
+                logger.info(f"🔄 Falling back to Vertex AI for Computer Science {generation_type}")
+                
+                # Create system message for Vertex AI
+                system_message = "You are an expert O-Level Computer Science examiner. Generate educational questions in valid JSON format only."
+                full_prompt = f"{system_message}\n\n{prompt}"
+                
+                result = vertex_service.generate_text(prompt=full_prompt, model="gemini-2.5-flash")
+                
+                if result and result.get('success'):
+                    text = result['text']
+                    logger.info(f"Raw Vertex AI response for {generation_type}: {text[:200]}...")
+                    
+                    # Extract JSON from response
+                    try:
+                        if '```json' in text:
+                            json_str = text.split('```json')[1].split('```')[0].strip()
+                        elif '```' in text:
+                            json_str = text.split('```')[1].split('```')[0].strip()
+                        else:
+                            json_start = text.find('{')
+                            json_end = text.rfind('}') + 1
+                            if json_start != -1 and json_end > json_start:
+                                json_str = text[json_start:json_end]
+                            else:
+                                json_str = text.strip()
+                        
+                        question_data = json.loads(json_str)
+                        logger.info(f"✅ Successfully generated Computer Science {generation_type} with Vertex AI fallback")
+                        return question_data
+                    except json.JSONDecodeError as e:
+                        logger.error(f"JSON parsing failed from Vertex AI for {generation_type}: {e}")
+                else:
+                    logger.error(f"Vertex AI fallback failed: {result.get('error', 'Unknown error') if result else 'No result'}")
+            else:
+                logger.warning("Vertex AI not available for fallback")
+        except Exception as e:
+            logger.error(f"Error in Vertex AI fallback: {e}")
+        
+        return None
     
     def _validate_and_enhance_question(self, question_data: Dict, topic: str, 
                                        difficulty: str, user_id: str = None) -> Dict:

@@ -189,10 +189,18 @@ class ALevelBiologyGenerator:
         self.deepseek_api_key = os.environ.get('DEEPSEEK_API_KEY')
         self.deepseek_url = "https://api.deepseek.com/v1/chat/completions"
         self.deepseek_model = get_deepseek_chat_model()
-        self.max_retries = 2  # Reduced to 2 attempts for faster failure recovery
+        self.max_retries = 4  # Increased from 2 to 4 for better reliability
         # Timeout varies by question type - structured/essay need more time
         # Optimized timeouts - balanced for speed and reliability
-        self.timeout_base = 20  # Base timeout for MCQ (reduced from 30 for faster response)
+        self.timeout_base = 25  # Base timeout for MCQ (increased for better reliability)
+        self.connect_timeout = 10  # Connection timeout
+        
+        # Create a session for connection pooling and reuse
+        self.session = requests.Session()
+        self.session.headers.update({
+            'Content-Type': 'application/json',
+            'User-Agent': 'NerdX-Education/1.0'
+        })
         
         # Gemini configuration (fallback)
         self.gemini_api_key = os.environ.get('GEMINI_API_KEY')
@@ -248,13 +256,33 @@ class ALevelBiologyGenerator:
             logger.info(f"Trying DeepSeek (primary) for A Level Biology {question_type} on {topic_name}")
             question_data = self._call_deepseek(prompt, question_type)
             
-            # FALLBACK: If DeepSeek fails, try Gemini
-            if not question_data and self._gemini_configured:
-                logger.warning(f"DeepSeek failed, falling back to Gemini for {question_type} on {topic_name}")
-                question_data = self._call_gemini(prompt, question_type)
-                if question_data:
-                    ai_model = 'gemini'
-                    logger.info(f"Gemini successfully generated {question_type} for {topic_name}")
+            # FALLBACK: If DeepSeek fails, try Vertex AI first, then Gemini
+            if not question_data:
+                # Try Vertex AI fallback first
+                try:
+                    from services.vertex_service import vertex_service
+                    
+                    if vertex_service.is_available():
+                        logger.warning(f"DeepSeek failed, falling back to Vertex AI for {question_type} on {topic_name}")
+                        # Create system message
+                        system_message = """You are a SENIOR A-LEVEL BIOLOGY TEACHER (15+ years) AND an examiner-style question designer. You teach and assess for BOTH ZIMSEC A Level Biology 6030 and Cambridge International AS & A Level Biology 9700. Always respond with valid JSON."""
+                        full_prompt = f"{system_message}\n\n{prompt}"
+                        result = vertex_service.generate_text(prompt=full_prompt, model="gemini-2.5-flash")
+                        if result and result.get('success'):
+                            question_data = self._parse_response(result['text'], question_type)
+                            if question_data:
+                                ai_model = 'vertex_ai'
+                                logger.info(f"✅ Vertex AI successfully generated {question_type} for {topic_name}")
+                except Exception as e:
+                    logger.error(f"Error in Vertex AI fallback: {e}")
+                
+                # If Vertex AI also failed, try Gemini
+                if not question_data and self._gemini_configured:
+                    logger.warning(f"Vertex AI failed, falling back to Gemini for {question_type} on {topic_name}")
+                    question_data = self._call_gemini(prompt, question_type)
+                    if question_data:
+                        ai_model = 'gemini'
+                        logger.info(f"Gemini successfully generated {question_type} for {topic_name}")
             
             if question_data:
                 question_data['subject'] = 'A Level Biology'
@@ -719,21 +747,39 @@ Always respond with valid JSON containing step-by-step solutions."""
                 logger.info(f"DeepSeek Biology {question_type} attempt {attempt + 1}/{self.max_retries} (timeout: {timeout}s, max_tokens: {max_tokens})")
                 
                 # Use session for connection pooling and better performance
-                session = requests.Session()
-                session.headers.update(headers)
+                # Add auth header to session
+                self.session.headers.update(headers)
+                
+                # Exponential backoff with jitter
+                if attempt > 0:
+                    import random
+                    backoff_delay = 1 * (2 ** (attempt - 1)) + random.uniform(0, 1)
+                    logger.info(f"Waiting {backoff_delay:.2f}s before retry {attempt + 1}/{self.max_retries}")
+                    time.sleep(backoff_delay)
                 
                 try:
-                    response = session.post(
+                    response = self.session.post(
                         self.deepseek_url,
                         json=payload,
-                        timeout=timeout
+                        timeout=(self.connect_timeout, timeout)  # (connect, read) timeout tuple
                     )
-                finally:
-                    session.close()
                 
-                if response.status_code != 200:
+                if response.status_code == 429:
+                    # Rate limit - wait longer before retry
+                    retry_after = int(response.headers.get('Retry-After', 10))
+                    logger.warning(f"DeepSeek rate limit hit (429), waiting {retry_after}s before retry")
+                    if attempt < self.max_retries - 1:
+                        time.sleep(retry_after)
+                        continue
+                elif response.status_code == 503:
+                    # Service unavailable - wait and retry
+                    logger.warning(f"DeepSeek service unavailable (503), will retry")
+                    if attempt < self.max_retries - 1:
+                        continue
+                elif response.status_code != 200:
                     logger.error(f"DeepSeek API error: {response.status_code} - {response.text[:200]}")
-                    continue
+                    if attempt < self.max_retries - 1:
+                        continue
                 
                 result = response.json()
                 content = result.get('choices', [{}])[0].get('message', {}).get('content', '')
@@ -794,7 +840,63 @@ Always respond with valid JSON containing step-by-step solutions."""
                     time.sleep(1)
                 continue
         
-        logger.error(f"All {self.max_retries} DeepSeek attempts failed for Biology {question_type} question")
+        logger.error(f"All {self.max_retries} DeepSeek attempts failed for Biology {question_type} question, trying Vertex AI fallback")
+        
+        # FALLBACK: Try Vertex AI when DeepSeek fails
+        try:
+            from services.vertex_service import vertex_service
+            
+            if vertex_service.is_available():
+                logger.info(f"🔄 Falling back to Vertex AI for Biology {question_type}")
+                
+                # Create system message for Vertex AI
+                system_message = """You are a SENIOR A-LEVEL BIOLOGY TEACHER (15+ years) AND an examiner-style question designer. You teach and assess for BOTH ZIMSEC A Level Biology 6030 and Cambridge International AS & A Level Biology 9700.
+
+ROLE: SENIOR A-LEVEL BIOLOGY TEACHER & EXAMINER
+
+NON-NEGOTIABLE RULES:
+1. SYLLABUS-LOCKED: Only generate content examinable for ZIMSEC 6030 and Cambridge 9700
+2. NO LEAKAGE: Do NOT introduce off-syllabus topics or university-level methods
+3. EXAM AUTHENTICITY: Use real exam command words and structure
+4. ORIGINALITY: Generate ORIGINAL questions with the same SKILL pattern (not verbatim past papers)
+5. MARKING REALISM: Provide method marks + accuracy marks + common errors
+6. TOPIC INTEGRATION: Use mixed questions combining topics the way real papers do
+
+You create rigorous, high-quality questions that test deep biological understanding.
+Always use correct biological terminology and provide detailed marking schemes with step-by-step explanations.
+
+CRITICAL: Use PLAIN TEXT Unicode notation - NEVER use LaTeX or $ symbols:
+- ABSOLUTELY NO delimiters like $.
+- Use subscripts: CO₂, O₂, H₂O, ATP, NADH (NOT CO_2 or $CO_2$)
+- Use superscripts: 10⁶, 10⁻⁹ (NOT 10^6)
+- Use μm, μg for micro units
+- Use → for arrows in reactions
+
+Always respond with valid JSON containing step-by-step solutions."""
+                
+                # Combine system and user messages for Vertex AI
+                full_prompt = f"{system_message}\n\n{prompt}"
+                
+                result = vertex_service.generate_text(prompt=full_prompt, model="gemini-2.5-flash")
+                
+                if result and result.get('success'):
+                    text = result['text']
+                    logger.info(f"Raw Vertex AI response for {question_type}: {text[:200]}...")
+                    
+                    # Parse the response using the same method as DeepSeek
+                    question_data = self._parse_response(text, question_type)
+                    if question_data:
+                        logger.info(f"✅ Successfully generated Biology {question_type} with Vertex AI fallback")
+                        return question_data
+                    else:
+                        logger.error(f"Failed to parse Vertex AI response for {question_type}")
+                else:
+                    logger.error(f"Vertex AI fallback failed: {result.get('error', 'Unknown error') if result else 'No result'}")
+            else:
+                logger.warning("Vertex AI not available for fallback")
+        except Exception as e:
+            logger.error(f"Error in Vertex AI fallback: {e}")
+        
         return None
     
     def _call_gemini(self, prompt: str, question_type: str = "mcq") -> Optional[Dict]:

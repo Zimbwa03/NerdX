@@ -63,14 +63,22 @@ class AIService:
             from utils.fallback_questions import generate_fallback_math_questions
             return generate_fallback_math_questions(topic, difficulty, count)
 
-    def generate_math_question(self, topic: str, difficulty: str, user_id: str = None) -> Optional[Dict]:
-        """Generate a mathematics question using DeepSeek AI with improved timeouts"""
+    def generate_math_question(self, topic: str, difficulty: str, user_id: str = None, platform: str = 'mobile') -> Optional[Dict]:
+        """
+        Generate a mathematics question using AI
+        
+        Args:
+            topic: Math topic
+            difficulty: Difficulty level (easy, medium, difficult)
+            user_id: User ID for tracking
+            platform: 'whatsapp' for Vertex AI, 'mobile' for DeepSeek (default)
+        """
         try:
             # Use the dedicated math question generator for better performance
             from services.math_question_generator import math_question_generator
             
             # Call the dedicated generator with proper parameters
-            question_data = math_question_generator.generate_question("Mathematics", topic, difficulty, user_id)
+            question_data = math_question_generator.generate_question("Mathematics", topic, difficulty, user_id, platform=platform)
             
             if question_data:
                 logger.info(f"✅ Successfully generated math question for {topic}/{difficulty}")
@@ -83,64 +91,34 @@ class AIService:
             logger.error(f"Error in generate_math_question: {e}")
             return None
 
-    def generate_science_question(self, subject: str, topic: str, difficulty: str) -> Optional[Dict]:
-        """Generate a science question using AI"""
+    def generate_science_question(self, subject: str, topic: str, difficulty: str, platform: str = 'mobile') -> Optional[Dict]:
+        """
+        Generate a ZIMSEC O-level Combined Science question using AI
+        
+        Args:
+            subject: Science subject (Biology, Chemistry, Physics)
+            topic: Topic name
+            difficulty: Difficulty level (easy, medium, difficult)
+            platform: 'whatsapp' for Vertex AI, 'mobile' for DeepSeek (default)
+        """
         try:
-            difficulty_descriptions = {
-                "easy": "Direct application of basic concepts, straightforward calculations, minimal steps",
-                "medium": "Requires understanding of multiple concepts, moderate calculations, 2-3 steps",
-                "difficult": "Complex problem-solving, multi-step reasoning, synthesis of several concepts"
-            }
-
-            prompt = f"""
-You are ScienceMentor, an expert O-Level Science tutor for ZIMSEC curriculum.
-
-CRITICAL INSTRUCTION: Generate EXACTLY ONE single question - never return arrays or multiple questions.
-
-Subject: {subject}
-Topic: {topic}
-Difficulty: {difficulty} - {difficulty_descriptions[difficulty]}
-
-STRICT REQUIREMENTS:
-1. NEVER use arrays or lists - generate ONE single question only
-2. Questions must be ZIMSEC O-Level Mathematics standard (Forms 1-4, 2015-2022)
-3. Use simple mathematical notation (x², not complex LaTeX)
-4. Provide clear, step-by-step solutions with explanations
-5. Make the question educational and unique
-
-MANDATORY JSON FORMAT (single object, not array):
-{{
-    "question": "A clear mathematics problem statement",
-    "solution": "Step 1: Clear explanation\\nStep 2: Next step\\nStep 3: Final answer",
-    "points": {10 if difficulty == 'easy' else 20 if difficulty == 'medium' else 50}
-}}
-
-EXAMPLE for {topic}:
-- Question should be concise and clear
-- Solution should show ALL working steps
-- Points are: Easy=10, Medium=20, Difficult=50
-
-Generate ONE question now (not multiple, not an array):
-"""
-
-            return self._call_deepseek_api(prompt)
-
-        except Exception as e:
-            logger.error(f"Error generating math question: {e}")
-            return None
-
-    def generate_science_question(self, subject: str, topic: str, difficulty: str) -> Optional[Dict]:
-        """Generate a ZIMSEC O-level Combined Science question using DeepSeek AI (primary)"""
-        try:
-            # DeepSeek AI is now the primary provider for science
-            return self._generate_science_with_deepseek(subject, topic, difficulty)
+            # Generate science question with platform-aware AI
+            return self._generate_science_with_deepseek(subject, topic, difficulty, platform)
 
         except Exception as e:
             logger.error(f"Error generating science question: {e}")
             return None
 
-    def _generate_science_with_deepseek(self, subject: str, topic: str, difficulty: str) -> Optional[Dict]:
-        """Generate science question using DeepSeek AI (primary provider)"""
+    def _generate_science_with_deepseek(self, subject: str, topic: str, difficulty: str, platform: str = 'mobile') -> Optional[Dict]:
+        """
+        Generate science question using AI based on platform
+        
+        Args:
+            subject: Science subject (Biology, Chemistry, Physics)
+            topic: Topic name
+            difficulty: Difficulty level (easy, medium, difficult)
+            platform: 'whatsapp' for Vertex AI, 'mobile' for DeepSeek (default)
+        """
         try:
             difficulty_map = {
                 "easy": "Basic recall and understanding of fundamental concepts",
@@ -192,10 +170,10 @@ MANDATORY JSON FORMAT:
 Generate ONE high-quality {subject} MCQ question for {topic} now:
 """
 
-            return self._call_deepseek_api(prompt)
+            return self._generate_with_ai(prompt, platform)
 
         except Exception as e:
-            logger.error(f"Error generating science question with DeepSeek: {e}")
+            logger.error(f"Error generating science question: {e}")
             return None
 
     def _validate_science_question_data(self, data: Dict) -> bool:
@@ -232,17 +210,31 @@ Generate ONE high-quality {subject} MCQ question for {topic} now:
 
         return True
 
-    def generate_english_question(self, topic: str, difficulty: str) -> Optional[Dict]:
-        """Generate an English question using DeepSeek AI (primary provider)"""
+    def generate_english_question(self, topic: str, difficulty: str, platform: str = 'mobile') -> Optional[Dict]:
+        """
+        Generate an English question using AI
+        
+        Args:
+            topic: English topic
+            difficulty: Difficulty level (easy, medium, difficult)
+            platform: 'whatsapp' for Vertex AI, 'mobile' for DeepSeek (default)
+        """
         try:
-            return self._generate_english_with_deepseek(topic, difficulty)
+            return self._generate_english_with_deepseek(topic, difficulty, platform)
 
         except Exception as e:
             logger.error(f"Error generating English question: {e}")
             return None
 
-    def _generate_english_with_deepseek(self, topic: str, difficulty: str) -> Optional[Dict]:
-        """Generate English question using DeepSeek AI (primary provider)"""
+    def _generate_english_with_deepseek(self, topic: str, difficulty: str, platform: str = 'mobile') -> Optional[Dict]:
+        """
+        Generate English question using AI based on platform
+        
+        Args:
+            topic: English topic
+            difficulty: Difficulty level (easy, medium, difficult)
+            platform: 'whatsapp' for Vertex AI, 'mobile' for DeepSeek (default)
+        """
         try:
             # ZIMSEC O-Level English topic-specific learning objectives
             english_objectives = {
@@ -437,14 +429,70 @@ CRITICAL REQUIREMENTS:
 
 Generate a high-quality, professional ZIMSEC exam-style question now!"""
 
-            return self._call_deepseek_api(prompt)
+            return self._generate_with_ai(prompt, platform)
 
         except Exception as e:
-            logger.error(f"Error generating English question with DeepSeek: {e}")
+            logger.error(f"Error generating English question: {e}")
             return None
 
+    def _generate_with_ai(self, prompt: str, platform: str = 'mobile', fallback_to_deepseek: bool = True) -> Optional[Dict]:
+        """
+        Generate text using AI based on platform
+        
+        Args:
+            prompt: The prompt for AI generation
+            platform: 'whatsapp' for Vertex AI, 'mobile' for DeepSeek (default)
+            fallback_to_deepseek: If True, fallback to DeepSeek if Vertex AI unavailable
+        
+        Returns:
+            Dict with question data or None
+        """
+        # WhatsApp bot: Use Vertex AI
+        if platform == 'whatsapp':
+            from services.vertex_service import vertex_service
+            
+            if vertex_service.is_available():
+                logger.info("Using Vertex AI for WhatsApp bot")
+                result = vertex_service.generate_text(prompt=prompt, model="gemini-2.5-flash")
+                if result and result.get('success'):
+                    text = result['text']
+                    # Extract JSON from response (same logic as DeepSeek)
+                    try:
+                        json_start = text.find('{')
+                        json_end = text.rfind('}') + 1
+                        if json_start >= 0 and json_end > json_start:
+                            json_str = text[json_start:json_end]
+                            question_data = json.loads(json_str)
+                            
+                            # Validate response structure
+                            if self._validate_question_data(question_data):
+                                logger.info("✅ Successfully generated question with Vertex AI")
+                                return question_data
+                            else:
+                                logger.warning("Invalid question format from Vertex AI")
+                        else:
+                            logger.warning("No JSON found in Vertex AI response")
+                    except json.JSONDecodeError as e:
+                        logger.error(f"Failed to parse JSON from Vertex AI response: {e}")
+                
+                # Fallback to DeepSeek if Vertex AI unavailable or failed
+                if fallback_to_deepseek:
+                    logger.info("Falling back to DeepSeek for WhatsApp bot")
+                    return self._call_deepseek_api(prompt)
+            else:
+                # Vertex AI not available, fallback to DeepSeek
+                if fallback_to_deepseek:
+                    logger.info("Vertex AI not available, falling back to DeepSeek")
+                    return self._call_deepseek_api(prompt)
+        
+        # Mobile app: Always use DeepSeek (unchanged)
+        else:
+            return self._call_deepseek_api(prompt)
+        
+        return None
+
     def _call_deepseek_api(self, prompt: str) -> Optional[Dict]:
-        """Make API call to DeepSeek with retry logic"""
+        """Make API call to DeepSeek with retry logic (used by mobile app and as fallback)"""
         try:
             headers = {
                 'Authorization': f'Bearer {self.deepseek_api_key}',

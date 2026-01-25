@@ -269,10 +269,16 @@ class ExamSessionService:
         self,
         session_id: str,
         question_index: int = None,
+        platform: str = 'mobile',
     ) -> Optional[Dict]:
         """
-        Generate the next question using DeepSeek.
+        Generate the next question using AI based on platform.
         One question at a time, no pre-generation.
+        
+        Args:
+            session_id: Exam session ID
+            question_index: Optional question index
+            platform: 'whatsapp' for Vertex AI, 'mobile' for DeepSeek (default)
         """
         session = self._sessions.get(session_id)
         if not session:
@@ -300,7 +306,7 @@ class ExamSessionService:
         target_topic = self._get_topic_for_index(session, idx)
 
         for attempt in range(1, max_attempts + 1):
-            question = self._call_deepseek_generate(session, idx)
+            question = self._call_deepseek_generate(session, idx, platform=platform)
             if not question:
                 continue
 
@@ -340,8 +346,15 @@ class ExamSessionService:
         
         return question
     
-    def _call_deepseek_generate(self, session: Dict, question_index: int) -> Optional[Dict]:
-        """Call DeepSeek API to generate a single question."""
+    def _call_deepseek_generate(self, session: Dict, question_index: int, platform: str = 'mobile') -> Optional[Dict]:
+        """
+        Call AI API to generate a single question based on platform
+        
+        Args:
+            session: Exam session dict
+            question_index: Index of the question
+            platform: 'whatsapp' for Vertex AI, 'mobile' for DeepSeek (default)
+        """
         if not self.api_key:
             logger.error("DEEPSEEK_API_KEY not configured")
             return self._get_fallback_question(session)
@@ -351,6 +364,15 @@ class ExamSessionService:
         
         # Build prompt
         prompt = self._build_question_prompt(session, question_index, question_type)
+        
+        # WhatsApp bot: Use Vertex AI
+        if platform == 'whatsapp':
+            return self._generate_with_vertex_ai(session, question_index, prompt)
+        
+        # Mobile app: Use DeepSeek (unchanged)
+        if not self.api_key:
+            logger.error("DEEPSEEK_API_KEY not configured")
+            return self._get_fallback_question(session)
         
         try:
             response = requests.post(
@@ -555,8 +577,75 @@ Requirements:
 - Clear marking allocation (1 mark per point typically)
 - Exam-appropriate language"""
     
+    def _generate_with_vertex_ai(self, session: Dict, question_index: int, prompt: str) -> Optional[Dict]:
+        """Generate exam question using Vertex AI (for WhatsApp bot)"""
+        try:
+            from services.vertex_service import vertex_service
+            
+            if not vertex_service.is_available():
+                logger.warning("Vertex AI not available, falling back to DeepSeek")
+                return self._call_deepseek_generate(session, question_index, platform='mobile')
+            
+            system_message = "You are a professional exam question generator for ZIMSEC/Cambridge-style exams. Generate exactly one question in the specified JSON format. Be rigorous but fair."
+            full_prompt = f"{system_message}\n\n{prompt}"
+            
+            result = vertex_service.generate_text(prompt=full_prompt, model="gemini-2.5-flash")
+            
+            if result and result.get('success'):
+                content = result['text']
+                
+                # Extract JSON (same logic as DeepSeek)
+                try:
+                    if '```json' in content:
+                        start = content.find('```json') + 7
+                        end = content.find('```', start)
+                        if end > start:
+                            content = content[start:end].strip()
+                    elif '```' in content:
+                        start = content.find('```') + 3
+                        end = content.find('```', start)
+                        if end > start:
+                            content = content[start:end].strip()
+                    
+                    json_start = content.find('{')
+                    json_end = content.rfind('}') + 1
+                    
+                    if json_start >= 0 and json_end > json_start:
+                        json_str = content[json_start:json_end]
+                        question_data = json.loads(json_str)
+                    else:
+                        question_data = json.loads(content)
+                    
+                    # Add metadata (same as DeepSeek)
+                    import uuid
+                    from datetime import datetime
+                    question_data["id"] = str(uuid.uuid4())
+                    question_data["generated_at"] = datetime.utcnow().isoformat()
+                    question_data["question_index"] = question_index
+                    
+                    username = session.get("username", "Student")
+                    if question_index == 0:
+                        question_data["prompt_to_student"] = f"Let's go, {username}! Here's your first question."
+                    else:
+                        question_data["prompt_to_student"] = f"Great work, {username}! Here's question {question_index + 1}."
+                    
+                    logger.info(f"✅ Generated exam question {question_index + 1} with Vertex AI")
+                    return question_data
+                    
+                except json.JSONDecodeError as e:
+                    logger.error(f"JSON parsing error in Vertex AI exam session: {e}")
+                    return self._call_deepseek_generate(session, question_index, platform='mobile')
+            
+            # Fallback to DeepSeek
+            logger.info("Vertex AI exam generation failed, falling back to DeepSeek")
+            return self._call_deepseek_generate(session, question_index, platform='mobile')
+            
+        except Exception as e:
+            logger.error(f"Error generating exam question with Vertex AI: {e}")
+            return self._call_deepseek_generate(session, question_index, platform='mobile')
+    
     def _get_fallback_question(self, session: Dict) -> Dict:
-        """Return a fallback question when DeepSeek fails."""
+        """Return a fallback question when AI fails."""
         subject = session["subject"].lower()
         subject_key = subject.replace(" ", "_").replace("-", "_")
         

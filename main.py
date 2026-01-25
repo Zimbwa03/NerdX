@@ -62,4 +62,6 @@ if __name__ == '__main__':
     logging.info("NerdX Quiz Bot startup")
     # Get port from environment variable (Render provides this) or default to 5000
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    # Enable debug mode for local development
+    debug_mode = os.environ.get('FLASK_DEBUG', '0') == '1' or os.environ.get('FLASK_ENV') == 'development'
+    app.run(host='0.0.0.0', port=port, debug=debug_mode)

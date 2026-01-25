@@ -208,14 +208,23 @@ class MathQuestionGenerator:
         # Support environment variables for timeout configuration
         self.base_timeout = int(os.environ.get("DEEPSEEK_TIMEOUT_SECONDS", "30"))
         self.connect_timeout = int(os.environ.get("DEEPSEEK_CONNECT_TIMEOUT_SECONDS", "5"))
-        self.max_retries = 3  # Retry up to 3 times
-        # Progressive timeouts based on base_timeout: 1x, 1.5x, 2x
+        self.max_retries = 4  # Increased from 3 to 4 for better reliability
+        # Progressive timeouts based on base_timeout: 1x, 1.5x, 2x, 2.5x
         self.timeouts = [
             self.base_timeout,
             int(self.base_timeout * 1.5),
-            self.base_timeout * 2
+            self.base_timeout * 2,
+            int(self.base_timeout * 2.5)
         ]
-        self.retry_delay = 2   # Delay between retries (seconds)
+        self.retry_delay = 2   # Base delay between retries (seconds)
+        self.connect_timeout = 10  # Connection timeout
+        
+        # Create a session for connection pooling and reuse
+        self.session = requests.Session()
+        self.session.headers.update({
+            'Content-Type': 'application/json',
+            'User-Agent': 'NerdX-Education/1.0'
+        })
     
     def _init_gemini_client(self):
         """Initialize Gemini client with Vertex AI or API key."""
@@ -259,10 +268,20 @@ class MathQuestionGenerator:
             logger.error(f"Failed to configure Gemini: {e}")
             self._gemini_configured = False
 
-    def generate_question(self, subject: str, topic: str, difficulty: str = 'medium', user_id: str = None, timeout_seconds: Optional[float] = None) -> Optional[Dict]:
+    def generate_question(self, subject: str, topic: str, difficulty: str = 'medium', user_id: str = None, timeout_seconds: Optional[float] = None, platform: str = 'mobile') -> Optional[Dict]:
         """
-        Generate a question using DeepSeek AI (primary) with Gemini fallback.
-        DeepSeek excels at step-by-step mathematical reasoning.
+        Generate a question using AI based on platform.
+        
+        Args:
+            subject: Subject name (e.g., "Mathematics")
+            topic: Topic name
+            difficulty: Difficulty level (easy, medium, difficult)
+            user_id: User ID for tracking
+            timeout_seconds: Optional timeout override
+            platform: 'whatsapp' for Vertex AI, 'mobile' for DeepSeek (default)
+        
+        Returns:
+            Dict with question data or None
         """
         try:
             # Get recent AI topics for this user to avoid repetition
@@ -277,59 +296,99 @@ class MathQuestionGenerator:
                     logger.info("Question history service not available, continuing without anti-repetition")
                     recent_topics = set()
             
-            # PRIMARY: Try DeepSeek AI first (better for step-by-step math reasoning)
-            if not self.deepseek_api_key:
-                logger.error(f"❌ DeepSeek API key not configured - cannot generate questions for {subject}/{topic}")
-                return None  # Return None instead of fallback - let API endpoint handle retry/error
-            
-            logger.info(f"Trying DeepSeek AI (primary) for {subject}/{topic}")
             prompt = self._create_question_prompt(subject, topic, difficulty, recent_topics)
             
-            # Retry with progressive timeouts, respecting timeout_seconds parameter if provided
-            # Calculate timeouts based on remaining budget
-            base_timeouts = self.timeouts.copy()
-            if timeout_seconds is not None:
-                # Cap all timeouts to the remaining budget
-                base_timeouts = [max(5, int(min(t, timeout_seconds))) for t in base_timeouts]
-            
-            for attempt in range(self.max_retries):
-                timeout = base_timeouts[min(attempt, len(base_timeouts) - 1)]
-                logger.info(f"DeepSeek AI attempt {attempt + 1}/{self.max_retries} (timeout: {timeout}s) for {subject}/{topic}")
-                
-                try:
-                    response = self._send_api_request(prompt, timeout=timeout)
-                    if response:
-                        question_data = self._validate_and_format_question(response, subject, topic, difficulty, user_id)
-                        if question_data:
-                            question_data['source'] = 'deepseek_ai'
-                            logger.info(f"✅ DeepSeek AI generated question for {subject}/{topic} on attempt {attempt + 1}")
-                            return question_data
-                        else:
-                            logger.warning(f"⚠️ DeepSeek response validation failed for {subject}/{topic} on attempt {attempt + 1}")
+            # WhatsApp bot: Use Vertex AI
+            if platform == 'whatsapp':
+                logger.info(f"Using Vertex AI for WhatsApp bot: {subject}/{topic}")
+                response = self._generate_with_vertex_ai(prompt, timeout_seconds)
+                if response:
+                    question_data = self._validate_and_format_question(response, subject, topic, difficulty, user_id)
+                    if question_data:
+                        question_data['source'] = 'vertex_ai'
+                        logger.info(f"✅ Vertex AI generated question for {subject}/{topic}")
+                        return question_data
                     else:
-                        logger.warning(f"⚠️ Empty response from DeepSeek API for {subject}/{topic} on attempt {attempt + 1}")
-                
-                except requests.exceptions.Timeout:
-                    logger.warning(f"⚠️ DeepSeek API timeout on attempt {attempt + 1}/{self.max_retries} (waited {timeout}s) for {subject}/{topic}")
-                    if attempt < self.max_retries - 1:
-                        time.sleep(self.retry_delay)
-                    continue
-                
-                except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as e:
-                    logger.warning(f"⚠️ DeepSeek API connection error on attempt {attempt + 1}/{self.max_retries}: {e}")
-                    if attempt < self.max_retries - 1:
-                        time.sleep(self.retry_delay)
-                    continue
-                
-                except Exception as e:
-                    logger.error(f"❌ DeepSeek API error on attempt {attempt + 1}/{self.max_retries} for {subject}/{topic}: {e}", exc_info=True)
-                    if attempt < self.max_retries - 1:
-                        time.sleep(self.retry_delay)
-                    continue
+                        logger.warning(f"⚠️ Vertex AI response validation failed for {subject}/{topic}")
+                        # Fallback to DeepSeek
+                        logger.info("Falling back to DeepSeek for WhatsApp bot")
+                        platform = 'mobile'  # Fall through to DeepSeek
             
-            # All attempts failed
-            logger.error(f"❌ Failed to generate question for {subject}/{topic} after {self.max_retries} attempts - returning None for retry")
-            return None
+            # Mobile app: Use DeepSeek (or fallback for WhatsApp)
+            if platform == 'mobile':
+                if not self.deepseek_api_key:
+                    logger.error(f"❌ DeepSeek API key not configured - cannot generate questions for {subject}/{topic}")
+                    return None
+                
+                logger.info(f"Trying DeepSeek AI (primary) for {subject}/{topic}")
+                
+                # Retry with progressive timeouts, respecting timeout_seconds parameter if provided
+                base_timeouts = self.timeouts.copy()
+                if timeout_seconds is not None:
+                    base_timeouts = [max(5, int(min(t, timeout_seconds))) for t in base_timeouts]
+                
+                for attempt in range(self.max_retries):
+                    timeout = base_timeouts[min(attempt, len(base_timeouts) - 1)]
+                    logger.info(f"DeepSeek AI attempt {attempt + 1}/{self.max_retries} (timeout: {timeout}s) for {subject}/{topic}")
+                    
+                    try:
+                        # Pre-flight validation
+                        if not prompt or len(prompt.strip()) == 0:
+                            logger.error("Empty prompt provided to DeepSeek API")
+                            continue
+                        
+                        response = self._send_api_request(prompt, timeout=timeout)
+                        if response:
+                            question_data = self._validate_and_format_question(response, subject, topic, difficulty, user_id)
+                            if question_data:
+                                question_data['source'] = 'deepseek_ai'
+                                logger.info(f"✅ DeepSeek AI generated question for {subject}/{topic} on attempt {attempt + 1}")
+                                return question_data
+                            else:
+                                logger.warning(f"⚠️ DeepSeek response validation failed for {subject}/{topic} on attempt {attempt + 1}")
+                        else:
+                            logger.warning(f"⚠️ Empty response from DeepSeek API for {subject}/{topic} on attempt {attempt + 1}")
+                    
+                    except requests.exceptions.Timeout:
+                        logger.warning(f"⚠️ DeepSeek API timeout on attempt {attempt + 1}/{self.max_retries} (waited {timeout}s) for {subject}/{topic}")
+                        if attempt < self.max_retries - 1:
+                            time.sleep(self.retry_delay)
+                        continue
+                    
+                    except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as e:
+                        logger.warning(f"⚠️ DeepSeek API connection error on attempt {attempt + 1}/{self.max_retries}: {e}")
+                        if attempt < self.max_retries - 1:
+                            time.sleep(self.retry_delay)
+                        continue
+                    
+                    except Exception as e:
+                        logger.error(f"❌ DeepSeek API error on attempt {attempt + 1}/{self.max_retries} for {subject}/{topic}: {e}", exc_info=True)
+                        if attempt < self.max_retries - 1:
+                            time.sleep(self.retry_delay)
+                        continue
+                
+                # All attempts failed - try Vertex AI fallback
+                logger.error(f"❌ Failed to generate question for {subject}/{topic} after {self.max_retries} attempts, trying Vertex AI fallback")
+                
+                # FALLBACK: Try Vertex AI when DeepSeek fails
+                try:
+                    from services.vertex_service import vertex_service
+                    
+                    if vertex_service.is_available():
+                        logger.info(f"🔄 Falling back to Vertex AI for {subject}/{topic}")
+                        response = self._generate_with_vertex_ai(prompt, timeout_seconds)
+                        if response:
+                            question_data = self._validate_and_format_question(response, subject, topic, difficulty, user_id)
+                            if question_data:
+                                question_data['source'] = 'vertex_ai_fallback'
+                                logger.info(f"✅ Vertex AI fallback successfully generated question for {subject}/{topic}")
+                                return question_data
+                    else:
+                        logger.warning("Vertex AI not available for fallback")
+                except Exception as e:
+                    logger.error(f"Error in Vertex AI fallback: {e}")
+                
+                return None
 
         except Exception as e:
             logger.error(f"❌ Critical error in generate_question for {subject}/{topic}: {e}", exc_info=True)
@@ -768,12 +827,75 @@ Generate the question now:"""
 
         return prompt
 
+    def _generate_with_vertex_ai(self, prompt: str, timeout_seconds: Optional[float] = None) -> Optional[Dict]:
+        """
+        Generate question using Vertex AI (for WhatsApp bot)
+        
+        Args:
+            prompt: The prompt for question generation
+            timeout_seconds: Optional timeout override
+        
+        Returns:
+            Dict with question data or None
+        """
+        try:
+            from services.vertex_service import vertex_service
+            
+            if not vertex_service.is_available():
+                logger.warning("Vertex AI not available, will fallback to DeepSeek")
+                return None
+            
+            logger.info("Using Vertex AI for question generation")
+            result = vertex_service.generate_text(prompt=prompt, model="gemini-2.5-flash")
+            
+            if result and result.get('success'):
+                text = result['text']
+                logger.info(f"Raw Vertex AI response: {text[:200]}...")
+                
+                # Extract JSON from response (same logic as DeepSeek)
+                json_start = text.find('{')
+                json_end = text.rfind('}') + 1
+                
+                if json_start >= 0 and json_end > json_start:
+                    json_str = text[json_start:json_end]
+                    try:
+                        question_data = json.loads(json_str)
+                        logger.info(f"Successfully generated question with Vertex AI: {question_data.get('question', '')[:100]}...")
+                        return question_data
+                    except json.JSONDecodeError as e:
+                        logger.error(f"JSON parsing failed from Vertex AI: {e}. Raw JSON: {json_str[:200]}...")
+                        return None
+                else:
+                    logger.error(f"No valid JSON found in Vertex AI response. Content: {text[:500]}...")
+                    return None
+            else:
+                logger.warning(f"Vertex AI generation failed: {result.get('error', 'Unknown error')}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Error generating with Vertex AI: {e}")
+            return None
+
     def _send_api_request(self, prompt: str, timeout: int = 30) -> Optional[Dict]:
-        """Send request to DeepSeek API with configurable timeout"""
+        """Send request to DeepSeek API with configurable timeout (used by mobile app and as fallback)
+        
+        Enhanced with:
+        - Connection pooling via session reuse
+        - Better error handling for rate limits
+        - Pre-flight validation
+        """
+
+        # Pre-flight validation
+        if not self.api_key:
+            logger.error("DeepSeek API key not configured")
+            return None
+        
+        if not prompt or len(prompt.strip()) == 0:
+            logger.error("Empty prompt provided to DeepSeek API")
+            return None
 
         headers = {
-            'Authorization': f'Bearer {self.api_key}',
-            'Content-Type': 'application/json'
+            'Authorization': f'Bearer {self.api_key}'
         }
 
         data = {
@@ -784,9 +906,10 @@ Generate the question now:"""
         }
 
         try:
-            response = requests.post(
+            # Use session for connection pooling and reuse
+            self.session.headers.update(headers)
+            response = self.session.post(
                 self.api_url,
-                headers=headers,
                 json=data,
                 timeout=(self.connect_timeout, timeout)
             )
@@ -816,9 +939,18 @@ Generate the question now:"""
                 else:
                     logger.error(f"No valid JSON found in AI response. Content: {content[:500]}...")
                     return None
-            else:
-                logger.error(f"AI API error: {response.status_code} - {response.text}")
-                return None
+                elif response.status_code == 429:
+                    # Rate limit - return special indicator for retry logic
+                    retry_after = int(response.headers.get('Retry-After', 10))
+                    logger.warning(f"DeepSeek rate limit hit (429), should wait {retry_after}s")
+                    return None
+                elif response.status_code == 503:
+                    # Service unavailable - return None for retry
+                    logger.warning(f"DeepSeek service unavailable (503)")
+                    return None
+                else:
+                    logger.error(f"AI API error: {response.status_code} - {response.text[:200]}")
+                    return None
 
         except requests.exceptions.Timeout:
             logger.warning(f"AI API request timed out after {timeout}s (connect timeout {self.connect_timeout}s)")
