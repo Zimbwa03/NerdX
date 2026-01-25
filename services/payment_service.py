@@ -721,7 +721,22 @@ class PaymentService:
             
             # Check with Paynow if poll_url exists
             if poll_url and paynow_service.is_available():
+                # #region agent log
+                import json
+                try:
+                    with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                        f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"F","location":"payment_service.py:723","message":"BEFORE checking Paynow status","data":{"reference_code":reference_code,"current_status":current_status,"poll_url":poll_url},"timestamp":int(__import__('time').time()*1000)})+'\n')
+                except: pass
+                # #endregion
+                
                 paynow_status = paynow_service.check_payment_status(poll_url)
+                
+                # #region agent log
+                try:
+                    with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                        f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"F","location":"payment_service.py:727","message":"AFTER checking Paynow status","data":{"paynow_success":paynow_status.get('success'),"paynow_status":paynow_status.get('status'),"paynow_paid":paynow_status.get('paid')},"timestamp":int(__import__('time').time()*1000)})+'\n')
+                except: pass
+                # #endregion
                 
                 if paynow_status['success']:
                     # Update database if status changed
@@ -738,11 +753,59 @@ class PaymentService:
                                 'message': 'Payment confirmed and credits added!'
                             }
                     
-                    # Update status in database
+                    # CRITICAL FIX: Don't overwrite "initiated" status with "cancelled" too quickly
+                    # Paynow may return "Cancelled" immediately if payment wasn't properly sent
+                    # Only update to cancelled if it's been more than 30 seconds since creation
+                    paynow_returned_status = paynow_status.get('status', '').lower()
+                    
+                    # If status is cancelled but payment was just initiated, don't update yet
+                    # Give Paynow time to actually send the USSD prompt
+                    if paynow_returned_status == 'cancelled' and current_status == 'initiated':
+                        from datetime import datetime, timedelta
+                        created_at_str = payment.get('created_at')
+                        if created_at_str:
+                            try:
+                                if isinstance(created_at_str, str):
+                                    created_at = datetime.fromisoformat(created_at_str.replace('Z', '+00:00'))
+                                else:
+                                    created_at = created_at_str
+                                
+                                time_since_creation = (datetime.now(created_at.tzinfo) - created_at).total_seconds()
+                                
+                                # Only update to cancelled if it's been more than 60 seconds
+                                # This prevents premature cancellation before USSD prompt is sent
+                                if time_since_creation < 60:
+                                    logger.warning(f"⚠️ Paynow returned 'cancelled' for {reference_code} but payment was just initiated ({time_since_creation:.1f}s ago). Keeping status as 'initiated'.")
+                                    # #region agent log
+                                    try:
+                                        with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                                            f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"F","location":"payment_service.py:750","message":"IGNORING premature cancelled status","data":{"reference_code":reference_code,"time_since_creation":time_since_creation},"timestamp":int(__import__('time').time()*1000)})+'\n')
+                                    except: pass
+                                    # #endregion
+                                    # Return current status without updating
+                                    return {
+                                        'success': True,
+                                        'status': current_status,
+                                        'paid': False,
+                                        'amount': payment.get('amount', 0),
+                                        'credits': payment.get('credits', 0),
+                                        'message': 'Payment still processing - please check your phone for USSD prompt'
+                                    }
+                            except Exception as time_error:
+                                logger.warning(f"Error parsing created_at: {time_error}")
+                    
+                    # Update status in database (only if not cancelled too early)
                     update_data = {
-                        'status': 'paid' if paynow_status['paid'] else paynow_status.get('status', 'pending'),
+                        'status': 'paid' if paynow_status['paid'] else paynow_returned_status if paynow_returned_status else 'pending',
                         'paynow_reference': paynow_status.get('paynow_reference')
                     }
+                    
+                    # #region agent log
+                    try:
+                        with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                            f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"F","location":"payment_service.py:770","message":"UPDATING payment status in database","data":{"reference_code":reference_code,"new_status":update_data.get('status')},"timestamp":int(__import__('time').time()*1000)})+'\n')
+                    except: pass
+                    # #endregion
                     
                     make_supabase_request(
                         "PATCH", 

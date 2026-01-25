@@ -413,6 +413,13 @@ class PaynowService:
         Returns:
             Dict with current payment status
         """
+        # #region agent log
+        import json
+        try:
+            with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"F","location":"paynow_service.py:406","message":"check_payment_status ENTRY","data":{"poll_url":poll_url},"timestamp":int(__import__('time').time()*1000)})+'\n')
+        except: pass
+        # #endregion
         try:
             if not self.is_available():
                 return {
@@ -421,7 +428,24 @@ class PaynowService:
                     'message': 'Payment service unavailable'
                 }
             
+            # #region agent log
+            try:
+                with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"F","location":"paynow_service.py:424","message":"BEFORE calling check_transaction_status","data":{"poll_url":poll_url},"timestamp":int(__import__('time').time()*1000)})+'\n')
+            except: pass
+            # #endregion
+            
             status = self.paynow_client.check_transaction_status(poll_url)
+            
+            # #region agent log
+            try:
+                with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    status_data = {"status":status.status if hasattr(status,'status') else None,"paid":status.paid if hasattr(status,'paid') else None}
+                    if hasattr(status,'amount'): status_data["amount"] = status.amount
+                    if hasattr(status,'reference'): status_data["reference"] = status.reference
+                    f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"F","location":"paynow_service.py:430","message":"AFTER calling check_transaction_status","data":status_data,"timestamp":int(__import__('time').time()*1000)})+'\n')
+            except: pass
+            # #endregion
             
             logger.info(f"📊 Payment status check: {status.status}")
             
@@ -438,6 +462,12 @@ class PaynowService:
             
         except Exception as e:
             logger.error(f"🚨 Status check error: {e}")
+            # #region agent log
+            try:
+                with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"F","location":"paynow_service.py:445","message":"EXCEPTION in check_payment_status","data":{"exception_type":type(e).__name__,"exception_message":str(e)},"timestamp":int(__import__('time').time()*1000)})+'\n')
+            except: pass
+            # #endregion
             return {
                 'success': False,
                 'status': 'ERROR',
