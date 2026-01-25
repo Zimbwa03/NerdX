@@ -596,7 +596,7 @@ class PaymentService:
             )
             # #region agent log
             try:
-                with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                     f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"E","location":"payment_service.py:591","message":"AFTER calling paynow_service.create_usd_ecocash_payment","data":{"success":payment_result.get('success'),"has_error":'error' in payment_result,"error":payment_result.get('error')},"timestamp":int(__import__('time').time()*1000)})+'\n')
             except: pass
             # #endregion
