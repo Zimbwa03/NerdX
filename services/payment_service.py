@@ -582,7 +582,6 @@ class PaymentService:
             
             # #region agent log
             import json
-            from services.paynow_service import get_debug_log_path
             try:
                 with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                     f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"E","location":"payment_service.py:583","message":"BEFORE calling paynow_service.create_usd_ecocash_payment","data":{"phone_number":phone_number,"amount":package['price'],"reference_code":reference_code},"timestamp":int(__import__('time').time()*1000)})+'\n')
@@ -779,7 +778,7 @@ class PaymentService:
                                     logger.warning(f"⚠️ Paynow returned 'cancelled' for {reference_code} but payment was just initiated ({time_since_creation:.1f}s ago). Keeping status as 'initiated'.")
                                     # #region agent log
                                     try:
-                                        with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                                        with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                                             f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"F","location":"payment_service.py:750","message":"IGNORING premature cancelled status","data":{"reference_code":reference_code,"time_since_creation":time_since_creation},"timestamp":int(__import__('time').time()*1000)})+'\n')
                                     except: pass
                                     # #endregion

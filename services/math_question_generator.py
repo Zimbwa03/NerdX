@@ -939,18 +939,18 @@ Generate the question now:"""
                 else:
                     logger.error(f"No valid JSON found in AI response. Content: {content[:500]}...")
                     return None
-                elif response.status_code == 429:
-                    # Rate limit - return special indicator for retry logic
-                    retry_after = int(response.headers.get('Retry-After', 10))
-                    logger.warning(f"DeepSeek rate limit hit (429), should wait {retry_after}s")
-                    return None
-                elif response.status_code == 503:
-                    # Service unavailable - return None for retry
-                    logger.warning(f"DeepSeek service unavailable (503)")
-                    return None
-                else:
-                    logger.error(f"AI API error: {response.status_code} - {response.text[:200]}")
-                    return None
+            elif response.status_code == 429:
+                # Rate limit - return special indicator for retry logic
+                retry_after = int(response.headers.get('Retry-After', 10))
+                logger.warning(f"DeepSeek rate limit hit (429), should wait {retry_after}s")
+                return None
+            elif response.status_code == 503:
+                # Service unavailable - return None for retry
+                logger.warning(f"DeepSeek service unavailable (503)")
+                return None
+            else:
+                logger.error(f"AI API error: {response.status_code} - {response.text[:200]}")
+                return None
 
         except requests.exceptions.Timeout:
             logger.warning(f"AI API request timed out after {timeout}s (connect timeout {self.connect_timeout}s)")
